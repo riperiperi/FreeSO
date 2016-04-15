@@ -13,6 +13,7 @@ using FSO.Files.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.NetPlay.Model;
 using System.IO;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -26,14 +27,14 @@ namespace FSO.SimAntics.Primitives
         public static VMPrimitiveExitCode ExecuteGeneric(VMStackFrame context, VMPrimitiveOperand args, STR table)
         {
             var operand = (VMDialogOperand)args;
-            var curDialog = context.Thread.BlockingDialog;
-            if (context.Thread.BlockingDialog == null)
+            var curDialog = (VMDialogResult)context.Thread.BlockingState;
+            if (curDialog == null)
             {
                 VMDialogHandler.ShowDialog(context, operand, table);
 
                 if ((operand.Flags & VMDialogFlags.Continue) == 0)
                 {
-                    context.Thread.BlockingDialog = new VMDialogResult
+                    context.Thread.BlockingState = new VMDialogResult
                     {
                         Type = operand.Type
                     };
@@ -45,7 +46,7 @@ namespace FSO.SimAntics.Primitives
             {
                 if (curDialog.Responded)
                 {
-                    context.Thread.BlockingDialog = null;
+                    context.Thread.BlockingState = null;
                     switch (curDialog.Type)
                     {
                         default:
@@ -160,28 +161,27 @@ namespace FSO.SimAntics.Primitives
         UserBitmap = 8
     }
 
-    public class VMDialogResult : VMSerializable
+    public class VMDialogResult : VMAsyncState
     {
         public int Timeout = 30 * 60;
-        public bool Responded;
         public byte ResponseCode; //0,1,2 = yes/ok,no,cancel.
         public string ResponseText;
 
         public VMDialogType Type; //used for input sanitization
 
-        public void SerializeInto(BinaryWriter writer)
+        public override void SerializeInto(BinaryWriter writer)
         {
+            base.SerializeInto(writer);
             writer.Write(Timeout);
-            writer.Write(Responded);
             writer.Write(ResponseCode);
             writer.Write((ResponseText == null)?"":ResponseText);
             writer.Write((byte)Type);
         }
 
-        public void Deserialize(BinaryReader reader)
+        public override void Deserialize(BinaryReader reader)
         {
+            base.Deserialize(reader);
             Timeout = reader.ReadInt32();
-            Responded = reader.ReadBoolean();
             ResponseCode = reader.ReadByte();
             ResponseText = reader.ReadString();
             Type = (VMDialogType)reader.ReadByte();

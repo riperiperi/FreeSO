@@ -291,7 +291,11 @@ namespace GonzoNet
                 return;
             }
 
-            if (NumBytesRead == 0) return;
+            if (NumBytesRead == 0)
+            {
+                Disconnect();
+                return;
+            }
 
             byte[] TmpBuf = new byte[NumBytesRead];
             Buffer.BlockCopy(m_RecvBuf, 0, TmpBuf, 0, NumBytesRead);

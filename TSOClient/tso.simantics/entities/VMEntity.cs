@@ -23,6 +23,7 @@ using FSO.SimAntics.Model.Routing;
 using FSO.SimAntics.Marshals.Threads;
 using FSO.SimAntics.Marshals;
 using FSO.Common.Utils;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics
 {
@@ -46,6 +47,15 @@ namespace FSO.SimAntics
         //own properties (for instance)
         public short ObjectID;
         public uint PersistID;
+        public VMPlatformState PlatformState;
+        public VMTSOEntityState TSOState
+        {
+            get
+            {
+                return (PlatformState != null && PlatformState is VMTSOEntityState) ? (VMTSOEntityState)PlatformState : null;
+            }
+        }
+
         public short[] ObjectData;
         public LinkedList<short> MyList = new LinkedList<short>();
         public List<VMSoundEntry> SoundThreads;
@@ -366,6 +376,7 @@ namespace FSO.SimAntics
             if (this.Thread == null) return;
             this.Thread.Stack.Clear();
             this.Thread.Queue.Clear();
+            this.Thread.BlockingState = null;
 
             if (EntryPoints[3].ActionFunction != 0) ExecuteEntryPoint(3, context, true); //Reset
             if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
@@ -992,6 +1003,7 @@ namespace FSO.SimAntics
 
             target.ObjectID = ObjectID;
             target.PersistID = PersistID;
+            target.PlatformState = PlatformState;
             target.ObjectData = ObjectData;
             target.MyList = newList;
 
@@ -1018,6 +1030,7 @@ namespace FSO.SimAntics
         {
             ObjectID = input.ObjectID;
             PersistID = input.PersistID;
+            PlatformState = input.PlatformState;
             ObjectData = input.ObjectData;
             MyList = new LinkedList<short>(input.MyList);
 

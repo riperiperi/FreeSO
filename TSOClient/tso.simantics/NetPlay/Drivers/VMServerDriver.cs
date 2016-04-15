@@ -17,6 +17,7 @@ using ProtocolAbstractionLibraryD;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.NetPlay.SandboxMode;
 using System.Threading;
+using FSO.SimAntics.Engine.TSOTransaction;
 
 namespace FSO.SimAntics.NetPlay.Drivers
 {
@@ -44,6 +45,8 @@ namespace FSO.SimAntics.NetPlay.Drivers
             listener.Initialize(new IPEndPoint(IPAddress.Any, port));
             listener.OnConnected += SendLotState;
             listener.OnDisconnected += LotDC;
+
+            GlobalLink = new VMTSOGlobalLinkStub(); //final server will use DB hooked class
 
             ClientsToDC = new HashSet<NetworkClient>();
             ClientsToSync = new HashSet<NetworkClient>();
@@ -136,9 +139,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 tick.Commands = new List<VMNetCommand>(QueuedCmds);
                 tick.TickID = TickID++;
                 tick.RandomSeed = vm.Context.RandomSeed;
-
-                InternalTick(vm, tick);
                 QueuedCmds.Clear();
+                InternalTick(vm, tick);
+                
 
                 TickBuffer.Add(tick);
                 if (TickBuffer.Count >= TICKS_PER_PACKET)

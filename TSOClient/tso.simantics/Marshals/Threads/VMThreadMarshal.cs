@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.Marshals.Threads
 {
@@ -17,7 +18,7 @@ namespace FSO.SimAntics.Marshals.Threads
         public int[] TempXL = new int[2];
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 
-        public VMDialogResult BlockingDialog; //NULLable
+        public VMAsyncState BlockingState; //NULLable
         public bool Interrupt;
 
         public ushort ActionUID;
@@ -39,8 +40,8 @@ namespace FSO.SimAntics.Marshals.Threads
             foreach (var item in TempXL) writer.Write(item);
             writer.Write((byte)LastStackExitCode);
 
-            writer.Write(BlockingDialog != null);
-            if (BlockingDialog != null) BlockingDialog.SerializeInto(writer);
+            writer.Write(BlockingState != null);
+            if (BlockingState != null) VMAsyncState.SerializeGeneric(writer, BlockingState);
             writer.Write(Interrupt);
 
             writer.Write(ActionUID);
@@ -71,12 +72,8 @@ namespace FSO.SimAntics.Marshals.Threads
             for (int i = 0; i < 2; i++) TempXL[i] = reader.ReadInt32();
             LastStackExitCode = (VMPrimitiveExitCode)reader.ReadByte();
 
-            if (reader.ReadBoolean())
-            {
-                BlockingDialog = new VMDialogResult();
-                BlockingDialog.Deserialize(reader);
-            }
-            else BlockingDialog = null;
+            if (reader.ReadBoolean()) BlockingState = VMAsyncState.DeserializeGeneric(reader);
+            else BlockingState = null;
             Interrupt = reader.ReadBoolean();
 
             ActionUID = reader.ReadUInt16();

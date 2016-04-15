@@ -57,6 +57,9 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.TestStackObject:
                     return (context.StackObject != null) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                case VMGenericTSOCallMode.DoIOwnThisObject:
+                    context.Thread.TempRegisters[0] = 1;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
             }

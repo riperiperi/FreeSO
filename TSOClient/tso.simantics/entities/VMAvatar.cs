@@ -23,6 +23,7 @@ using FSO.SimAntics.NetPlay.Model;
 using System.IO;
 using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Entities;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics
 {
@@ -35,7 +36,6 @@ namespace FSO.SimAntics
         /** Animation vars **/
 
         public List<VMAnimationState> Animations;
-
         public VMAnimationState CurrentAnimationState {
             get
             {
@@ -54,7 +54,7 @@ namespace FSO.SimAntics
             {
                 m_Message = value;
                 SetPersonData(VMPersonDataVariable.ChatBaloonOn, 1);
-                MessageTimeout = 150 + value.Length/2;
+                MessageTimeout = 150 + value.Length / 2;
             }
         }
 
@@ -164,6 +164,7 @@ namespace FSO.SimAntics
             : base(obj)
         {
             Name = "Sim";
+            PlatformState = new VMTSOAvatarState(); //todo: ts1 switch
             BodyStrings = Object.Resource.Get<STR>(Object.OBJ.BodyStringID);
 
             SetAvatarType(BodyStrings);

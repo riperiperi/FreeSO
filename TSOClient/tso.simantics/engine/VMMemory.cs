@@ -171,7 +171,7 @@ namespace FSO.SimAntics.Engine.Utils
                     
                 case VMVariableScope.TempXL: //42
                     //this needs a really intricate special case for specific operations.
-                    throw new VMSimanticsException("Not implemented...", context);
+                    throw new VMSimanticsException("Caller function does not support TempXL!", context);
 
                 case VMVariableScope.CityTime: //43
                     //return GetCityTime(data)

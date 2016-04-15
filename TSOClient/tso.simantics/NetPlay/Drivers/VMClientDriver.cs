@@ -47,6 +47,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
             OnStateChange += callback;
             Client.Connect(null);
 
+            GlobalLink = null; //transactions only performed by server. transaction results
+            //are passed back to the clients as commands (for the primitive, at least)
+
             TickBuffer = new Queue<VMNetTick>();
         }
 

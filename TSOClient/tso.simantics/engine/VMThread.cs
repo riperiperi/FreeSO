@@ -13,6 +13,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Marshals.Threads;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.Engine
 {
@@ -39,7 +40,7 @@ namespace FSO.SimAntics.Engine
         public int[] TempXL = new int[2];
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 
-        public VMDialogResult BlockingDialog; 
+        public VMAsyncState BlockingState; 
         public bool Interrupt;
 
         private ushort ActionUID;
@@ -560,7 +561,7 @@ namespace FSO.SimAntics.Engine
                 TempXL = TempXL,
                 LastStackExitCode = LastStackExitCode,
 
-                BlockingDialog = BlockingDialog,
+                BlockingState = BlockingState,
 
                 Interrupt = Interrupt,
 
@@ -582,7 +583,7 @@ namespace FSO.SimAntics.Engine
             TempXL = input.TempXL;
             LastStackExitCode = input.LastStackExitCode;
 
-            BlockingDialog = input.BlockingDialog;
+            BlockingState = input.BlockingState;
             Interrupt = input.Interrupt;
             ActionUID = input.ActionUID;
             DialogCooldown = input.DialogCooldown;

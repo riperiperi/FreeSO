@@ -22,6 +22,7 @@ using FSO.SimAntics.Marshals;
 using FSO.LotView.Components;
 using FSO.SimAntics.Marshals.Threads;
 using FSO.SimAntics.Entities;
+using FSO.SimAntics.Engine.TSOTransaction;
 
 namespace FSO.SimAntics
 {
@@ -69,6 +70,15 @@ namespace FSO.SimAntics
         public delegate void VMRefreshHandler();
         public delegate void VMBreakpointHandler(VMEntity entity);
 
+        public IVMTSOGlobalLink GlobalLink
+        {
+            get
+            {
+                return Driver.GlobalLink;
+            }
+        }
+        public VMTSOGlobalLinkStub CheckGlobalLink = new VMTSOGlobalLinkStub();
+
         /// <summary>
         /// Constructs a new Virtual Machine instance.
         /// </summary>
@@ -99,6 +109,11 @@ namespace FSO.SimAntics
                 return ObjectsById[id];
             }
             return null;
+        }
+
+        public VMEntity GetObjectByPersist(uint id)
+        {
+            return Entities.FirstOrDefault(x => x.PersistID == id);
         }
 
         /// <summary>

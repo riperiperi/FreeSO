@@ -1,4 +1,5 @@
 ﻿using FSO.SimAntics.NetPlay.Model;
+using FSO.SimAntics.Primitives;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,10 +17,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             VMEntity caller = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
             //TODO: check if net user owns caller!
-            if (caller == null || caller is VMGameObject || caller.Thread.BlockingDialog == null) return false;
-            caller.Thread.BlockingDialog.Responded = true;
-            caller.Thread.BlockingDialog.ResponseCode = ResponseCode;
-            caller.Thread.BlockingDialog.ResponseText = ResponseText;
+            if (caller == null || caller is VMGameObject || 
+                caller.Thread.BlockingState == null || !(caller.Thread.BlockingState is VMDialogResult)) return false;
+            var state = (VMDialogResult)caller.Thread.BlockingState;
+            state.Responded = true;
+            state.ResponseCode = ResponseCode;
+            state.ResponseText = ResponseText;
             return true;
         }
 

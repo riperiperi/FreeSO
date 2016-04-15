@@ -19,6 +19,7 @@ using FSO.Common.Utils;
 using FSO.Content.Model;
 using FSO.SimAntics.Model.Routing;
 using FSO.SimAntics.Marshals;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics
 {
@@ -30,6 +31,7 @@ namespace FSO.SimAntics
         public VMGameObject(GameObject def, ObjectComponent worldUI) : base(def)
         {
             this.WorldUI = worldUI;
+            PlatformState = new VMTSOObjectState(); //todo: ts1 switch
         }
 
         public override void SetDynamicSpriteFlag(ushort index, bool set)
@@ -88,6 +90,7 @@ namespace FSO.SimAntics
 
         public override void Init(FSO.SimAntics.VMContext context){
             if (UseWorld) WorldUI.ObjectID = ObjectID;
+            PersistID = (uint)ObjectID; //temporary til theres a system to manage these
             if (Slots != null && Slots.Slots.ContainsKey(0))
             {
                 Contained = new VMEntity[Slots.Slots[0].Count];

@@ -11,12 +11,14 @@ using System.Text;
 using GonzoNet;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.SimAntics.Engine.TSOTransaction;
 
 namespace FSO.SimAntics.NetPlay
 {
     public abstract class VMNetDriver
     {
         public bool ExceptionOnDesync;
+        public IVMTSOGlobalLink GlobalLink;
         public abstract void SendCommand(VMNetCommandBodyAbstract cmd);
         public abstract bool Tick(VM vm);
         public abstract string GetUserIP(uint uid);

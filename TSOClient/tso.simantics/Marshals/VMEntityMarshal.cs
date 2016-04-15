@@ -7,6 +7,7 @@ using System.IO;
 using FSO.LotView.Model;
 using FSO.LotView;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.Marshals
 {
@@ -14,6 +15,7 @@ namespace FSO.SimAntics.Marshals
     {
         public short ObjectID;
         public uint PersistID;
+        public VMPlatformState PlatformState;
         public short[] ObjectData;
         public short[] MyList;
 
@@ -39,6 +41,11 @@ namespace FSO.SimAntics.Marshals
         {
             ObjectID = reader.ReadInt16();
             PersistID = reader.ReadUInt32();
+
+            if (this is VMGameObjectMarshal) PlatformState = new VMTSOObjectState();
+            else PlatformState = new VMTSOAvatarState();
+
+            PlatformState.Deserialize(reader);
 
             var datas = reader.ReadInt32();
             ObjectData = new short[datas];
@@ -86,6 +93,7 @@ namespace FSO.SimAntics.Marshals
         {
             writer.Write(ObjectID);
             writer.Write(PersistID);
+            PlatformState.SerializeInto(writer);
             writer.Write(ObjectData.Length);
             foreach (var item in ObjectData) writer.Write(item);
             writer.Write(MyList.Length);

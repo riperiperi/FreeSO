@@ -17,6 +17,7 @@ using FSO.SimAntics;
 using FSO.SimAntics.Model;
 using FSO.LotView;
 using FSO.Client.Network;
+using Microsoft.Xna.Framework;
 
 namespace FSO.Client.UI.Panels
 {
@@ -26,8 +27,6 @@ namespace FSO.Client.UI.Panels
     public class UIUCP : UIContainer
     {
         private CoreGameScreen Game; //the main screen
-        public int SelectedSimID;
-
         private UISelectHouseView SelWallsPanel; //select view panel that is created when clicking the current walls mode
 
         /// <summary>
@@ -90,6 +89,9 @@ namespace FSO.Client.UI.Panels
         private UIDestroyablePanel Panel;
         private int CurrentPanel;
 
+        private uint OldMoney;
+        private int MoneyHighlightFrames;
+
         public UIUCP(UIScreen owner)
         {
 
@@ -146,6 +148,8 @@ namespace FSO.Client.UI.Panels
             SecondFloorButton.Selected = (Game.Level == Game.Stories);
             FirstFloorButton.Selected = (Game.Level == 1);
 
+            MoneyText.CaptionStyle = MoneyText.CaptionStyle.Clone();
+
             SetInLot(false);
             SetMode(UCPMode.CityMode);
         }
@@ -198,12 +202,35 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
+            if (MoneyHighlightFrames > 0)
+            {
+                if (--MoneyHighlightFrames == 0) MoneyText.CaptionStyle.Color = TextStyle.DefaultLabel.Color;
+            }
+
             int min = NetworkFacade.ServerTime.Minute;
             int hour = NetworkFacade.ServerTime.Hour;
-            if (Game.InLot) //if ingame, use time from ingame clock (should be very close to server time anyways, if we set the game pacing up right...)
+            uint budget = 0;
+            if (Game.InLot) 
             {
+                // if ingame, use time from ingame clock 
+                // (should be very close to server time anyways, if we set the game pacing up right...)
                 min = Game.vm.Context.Clock.Minutes;
                 hour = Game.vm.Context.Clock.Hours;
+
+                // update with ingame budget.
+                var cont = Game.LotController;
+                if (cont.ActiveEntity != null && cont.ActiveEntity is VMAvatar)
+                {
+                    var avatar = (VMAvatar)cont.ActiveEntity;
+                    budget = avatar.TSOState.Budget.Value;
+                }
+            }
+
+            if (budget != OldMoney)
+            {
+                OldMoney = budget;
+                MoneyText.CaptionStyle.Color = Color.White;
+                MoneyHighlightFrames = 45;
             }
 
             string suffix = (hour > 11) ? "pm" : "am";
@@ -211,6 +238,8 @@ namespace FSO.Client.UI.Panels
             if (hour == 0) hour = 12;
 
             TimeText.Caption = hour.ToString() + ":" + ZeroPad(min.ToString(), 2) + " " + suffix;
+
+            MoneyText.Caption = "$" + budget.ToString("##,#0");
 
             base.Update(state);
         }

@@ -44,6 +44,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             avatar.BodyOutfit = BodyID;
             avatar.HeadOutfit = HeadID;
 
+            if (ActorUID == uint.MaxValue - 1)
+            {
+                avatar.SetValue(VMStackObjectVariable.Hidden, 1);
+                avatar.Position = LotTilePos.OUT_OF_WORLD;
+                avatar.SetFlag(VMEntityFlags.HasZeroExtent, true);
+                avatar.SetPersonData(VMPersonDataVariable.IsGhost, 1); //oooooOOooooOo
+            }
+
             var tempName = Name;
             int i = 1;
             while (vm.Entities.Any(x => (x is VMAvatar) && ((VMAvatar)x).Name == tempName))
