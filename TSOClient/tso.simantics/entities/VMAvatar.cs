@@ -697,6 +697,7 @@ namespace FSO.SimAntics
 
         public override Texture2D GetIcon(GraphicsDevice gd, int store)
         {
+            if (Avatar.Head == null && Avatar.Body == null) return null;
             Outfit ThumbOutfit = (Avatar.Head == null) ? Avatar.Body : Avatar.Head;
             var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
             var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
