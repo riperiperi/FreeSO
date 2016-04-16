@@ -15,18 +15,11 @@ namespace FSO.SimAntics.Marshals
         {
             base.Deserialize(reader);
             Direction = (Direction)reader.ReadByte();
-
-            //var slots = reader.ReadInt32();
-            //SlotContainees = new short[slots];
-            //for (int i = 0; i < slots; i++) SlotContainees[i] = reader.ReadInt16();
         }
         public override void SerializeInto(BinaryWriter writer)
         {
             base.SerializeInto(writer);
             writer.Write((byte)Direction);
-
-            //writer.Write(SlotContainees.Length);
-            //foreach (var item in SlotContainees) { writer.Write(item); }
         }
     }
 }

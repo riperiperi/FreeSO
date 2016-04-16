@@ -18,6 +18,7 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.NetPlay.SandboxMode;
 using System.Threading;
 using FSO.SimAntics.Engine.TSOTransaction;
+using System.Diagnostics;
 
 namespace FSO.SimAntics.NetPlay.Drivers
 {
@@ -85,7 +86,13 @@ namespace FSO.SimAntics.NetPlay.Drivers
         private void SendState(VM vm)
         {
             if (ClientsToSync.Count == 0) return;
+            Console.WriteLine("== SERIAL: Sending State to Client... ==");
+
+            var watch = new Stopwatch();
+            watch.Start();
+
             var state = vm.Save();
+            Console.WriteLine("== STATE: Intermediate - after save... " + watch.ElapsedMilliseconds + " ms. ==");
             var cmd = new VMNetCommand(new VMStateSyncCmd { State = state });
 
             //currently just hack this on the tick system. will change when we switch to not gonzonet
@@ -100,13 +107,16 @@ namespace FSO.SimAntics.NetPlay.Drivers
             byte[] data;
             using (var stream = new MemoryStream())
             {
+                Console.WriteLine("== STATE: Intermediate - before serialize... " + watch.ElapsedMilliseconds + " ms. ==");
                 using (var writer = new BinaryWriter(stream))
                 {
                     ticks.SerializeInto(writer);
                 }
 
+                Console.WriteLine("== STATE: Intermediate - before toArray... " + watch.ElapsedMilliseconds + " ms. ==");
                 data = stream.ToArray();
             }
+            Console.WriteLine("== STATE: Intermediate - before send... " + watch.ElapsedMilliseconds + " ms. ==");
 
             byte[] packet;
 
@@ -120,6 +130,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
             }
             foreach (var client in ClientsToSync) client.Send(packet);
             ClientsToSync.Clear();
+
+            watch.Stop();
+            Console.WriteLine("== SERIAL: DONE! State send took "+watch.ElapsedMilliseconds+" ms. ==");
         }
 
         public override void SendCommand(VMNetCommandBodyAbstract cmd)

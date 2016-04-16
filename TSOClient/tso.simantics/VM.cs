@@ -218,6 +218,7 @@ namespace FSO.SimAntics
             entity.ObjectID = ObjectId;
             ObjectsById.Add(entity.ObjectID, entity);
             AddToObjList(this.Entities, entity);
+            if (!entity.GhostImage) Context.SetToNextCache.NewObject(entity);
             ObjectId = NextObjID();
         }
 
@@ -245,6 +246,7 @@ namespace FSO.SimAntics
         {
             if (Entities.Contains(entity))
             {
+                Context.SetToNextCache.RemoveObject(entity);
                 this.Entities.Remove(entity);
                 ObjectsById.Remove(entity.ObjectID);
                 if (entity.ObjectID < ObjectId) ObjectId = entity.ObjectID; //this id is now the smallest free object id.
@@ -435,6 +437,7 @@ namespace FSO.SimAntics
                 }
                 realEnt.GenerateTreeByName(Context);
                 Entities.Add(realEnt);
+                Context.SetToNextCache.NewObject(realEnt);
                 ObjectsById.Add(ent.ObjectID, realEnt);
             }
 

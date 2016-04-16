@@ -1,5 +1,6 @@
 ﻿using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.NetPlay.Model;
 using FSO.Vitaboy;
 using System;
 using System.Collections.Generic;
@@ -97,9 +98,11 @@ namespace FSO.SimAntics.Marshals
             foreach (var item in MotiveChanges) { item.SerializeInto(writer); }
             MotiveDecay.SerializeInto(writer);
             writer.Write(PersonData.Length);
-            foreach (var item in PersonData) { writer.Write(item); }
+            writer.Write(VMSerializableUtils.ToByteArray(PersonData));
+            //foreach (var item in PersonData) { writer.Write(item); }
             writer.Write(MotiveData.Length);
-            foreach (var item in MotiveData) { writer.Write(item); }
+            writer.Write(VMSerializableUtils.ToByteArray(MotiveData));
+            //foreach (var item in MotiveData) { writer.Write(item); }
             writer.Write(HandObject);
             writer.Write(RadianDirection);
 

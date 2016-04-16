@@ -8,6 +8,7 @@ using FSO.LotView.Model;
 using FSO.LotView;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
+using System.Runtime.InteropServices;
 
 namespace FSO.SimAntics.Marshals
 {
@@ -95,9 +96,11 @@ namespace FSO.SimAntics.Marshals
             writer.Write(PersistID);
             PlatformState.SerializeInto(writer);
             writer.Write(ObjectData.Length);
-            foreach (var item in ObjectData) writer.Write(item);
+            writer.Write(VMSerializableUtils.ToByteArray(ObjectData));
+            //foreach (var item in ObjectData) writer.Write(item);
             writer.Write(MyList.Length);
-            foreach (var item in MyList) writer.Write(item);
+            writer.Write(VMSerializableUtils.ToByteArray(MyList));
+            //foreach (var item in MyList) writer.Write(item);
 
             writer.Write(Headline != null);
             if (Headline != null) Headline.SerializeInto(writer);
@@ -109,12 +112,14 @@ namespace FSO.SimAntics.Marshals
             writer.Write(MainStackOBJ);
 
             writer.Write(Contained.Length); //object ids
-            foreach (var item in Contained) writer.Write(item);
+            writer.Write(VMSerializableUtils.ToByteArray(Contained));
+            //foreach (var item in Contained) writer.Write(item);
             writer.Write(Container);
             writer.Write(ContainerSlot);
 
             writer.Write(Attributes.Length);
-            foreach (var item in Attributes) writer.Write(item);
+            writer.Write(VMSerializableUtils.ToByteArray(Attributes));
+            //foreach (var item in Attributes) writer.Write(item);
             writer.Write(MeToObject.Length);
             foreach (var item in MeToObject) item.SerializeInto(writer);
 
@@ -128,7 +133,7 @@ namespace FSO.SimAntics.Marshals
         public ushort Target;
         public short[] Values;
 
-        public void Deserialize(BinaryReader reader)
+        public virtual void Deserialize(BinaryReader reader)
         {
             Target = reader.ReadUInt16();
             var rels = reader.ReadInt32();
@@ -139,11 +144,11 @@ namespace FSO.SimAntics.Marshals
             }
         }
 
-        public void SerializeInto(BinaryWriter writer)
+        public virtual void SerializeInto(BinaryWriter writer)
         {
             writer.Write(Target);
             writer.Write(Values.Length);
-            foreach (var val in Values) writer.Write(val);
+            writer.Write(VMSerializableUtils.ToByteArray(Values));
         }
     }
 }

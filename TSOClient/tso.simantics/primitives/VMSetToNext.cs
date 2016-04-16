@@ -14,11 +14,21 @@ using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
 using Microsoft.Xna.Framework;
 using System.IO;
+using FSO.LotView.Model;
 
 namespace FSO.SimAntics.Primitives
 {
+
     public class VMSetToNext : VMPrimitiveHandler
     {
+        //position steps for object adjacent to object in local
+        private static Point[] AdjStep =
+        {
+            new Point(0, -1),
+            new Point(1, 0),
+            new Point(0, 1),
+            new Point(-1, 0),
+        };
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMSetToNextOperand)args;
@@ -69,7 +79,6 @@ namespace FSO.SimAntics.Primitives
             }
             else if (operand.SearchType == VMSetToNextSearchType.ObjectAdjacentToObjectInLocal)
             {
-                VMEntity[] adjOpt = null;
                 VMEntity anchor = context.VM.GetObjectById((short)context.Locals[operand.Local]);
                 int ptrDir = -1;
 
@@ -79,35 +88,39 @@ namespace FSO.SimAntics.Primitives
                     ptrDir = getAdjDir(anchor, Pointer);
                     if (ptrDir == 3) return VMPrimitiveExitCode.GOTO_FALSE; //reached end
                 }
-                adjOpt = new VMEntity[3 - ptrDir];
 
-                for (int i = 0; i < entities.Count; i++) //generic search through all objects
+                //iterate through all following dirs til we find an object
+                for (int i=ptrDir+1; i<4; i++)
                 {
-                    var temp = entities[i];
+                    var off = AdjStep[i];
+                    var adj = context.VM.Context.SetToNextCache.GetObjectsAt(LotTilePos.FromBigTile(
+                        (short)(anchor.Position.TileX + off.X),
+                        (short)(anchor.Position.TileY + off.Y),
+                        anchor.Position.Level));
 
-                    int xDist = Math.Abs(temp.Position.TileX - anchor.Position.TileX);
-                    int yDist = Math.Abs(temp.Position.TileY - anchor.Position.TileY);
-                    int dir = getAdjDir(anchor, temp);
-
-                    if ((dir > ptrDir) && adjOpt[(dir - ptrDir) - 1]==null && (temp.Position.Level == anchor.Position.Level) && 
-                        (xDist < 2 && yDist < 2) && ((xDist == 1) ^ (yDist == 1)))
+                    if (adj != null && adj.Count > 0)
                     {
-                        adjOpt[(dir - ptrDir) - 1] = temp;
-                        if ((dir - ptrDir) == 1) break; //exit early
-                    }
-                }
-
-                for (int i=0; i<adjOpt.Length; i++)
-                {
-                    if (adjOpt[i] != null)
-                    {
-                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, adjOpt[i].ObjectID);
+                        //lists are ordered by object id. first is the smallest.
+                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, adj[0].ObjectID);
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                 }
                 return VMPrimitiveExitCode.GOTO_FALSE;
 
             } else {
+
+                //if we've cached the search type, use that instead of all objects
+                switch (operand.SearchType)
+                {
+                    case VMSetToNextSearchType.ObjectOnSameTile:
+                        entities = context.VM.Context.SetToNextCache.GetObjectsAt(Pointer.Position); break;
+                    case VMSetToNextSearchType.Person:
+                        entities = context.VM.Context.SetToNextCache.Avatars; break;
+                    case VMSetToNextSearchType.ObjectOfType:
+                        entities = context.VM.Context.SetToNextCache.GetObjectsByGUID(operand.GUID); break;
+                }
+                if (entities == null) return VMPrimitiveExitCode.GOTO_FALSE;
+
                 bool loop = (operand.SearchType == VMSetToNextSearchType.ObjectOnSameTile);
                 VMEntity first = null;
 
@@ -117,21 +130,10 @@ namespace FSO.SimAntics.Primitives
                     bool found = false;
                     if (temp.ObjectID > targetValue || loop)
                     {
-                        VMEntity temp2; //used in some places
-
                         switch (operand.SearchType)
-                        { //search types
-                            case VMSetToNextSearchType.Object:
-                                found = true;
-                                break;
-                            case VMSetToNextSearchType.Person:
-                                found = (temp.GetType() == typeof(VMAvatar));
-                                break;
+                        { //manual search types
                             case VMSetToNextSearchType.NonPerson:
                                 found = (temp.GetType() == typeof(VMGameObject));
-                                break;
-                            case VMSetToNextSearchType.ObjectOfType:
-                                found = (temp.Object.OBJ.GUID == operand.GUID);
                                 break;
                             case VMSetToNextSearchType.NeighborId:
                                 throw new VMSimanticsException("Not implemented!", context);
@@ -140,14 +142,13 @@ namespace FSO.SimAntics.Primitives
                                 break;
                             case VMSetToNextSearchType.NeighborOfType:
                                 throw new VMSimanticsException("Not implemented!", context);
-                            case VMSetToNextSearchType.ObjectOnSameTile:
-                                temp2 = Pointer; 
-                                found = (temp.Position.Level == temp2.Position.Level) && (temp.Position.TileX == temp2.Position.TileX) && (temp.Position.TileY == temp2.Position.TileY);
-                                break;
                             case VMSetToNextSearchType.Career:
                                 throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.ClosestHouse:
                                 throw new VMSimanticsException("Not implemented!", context);
+                            default:
+                                //set to next object, or cached search.
+                                found = true; break;
                         }
                         if (temp.ObjectID <= targetValue && found)
                         {

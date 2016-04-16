@@ -66,26 +66,39 @@ namespace FSO.SimAntics.Marshals
         {
             writer.Write(new char[] { 'F', 'S', 'O', 'v' });
 
+            var timer = new System.Diagnostics.Stopwatch();
+            timer.Start();
+
             Context.SerializeInto(writer);
+            Console.WriteLine("== SERIAL: Context done... " + timer.ElapsedMilliseconds + " ms ==");
+
             writer.Write(Entities.Length);
             foreach (var ent in Entities)
             {
                 byte type = (byte)((ent is VMAvatarMarshal) ? 1 : 0);
-                writer.Write(type);              
+                writer.Write(type);
                 ent.SerializeInto(writer);
             }
+            Console.WriteLine("== SERIAL: Ents done... " + timer.ElapsedMilliseconds + " ms ==");
 
             writer.Write(Threads.Length);
             foreach(var thr in Threads) thr.SerializeInto(writer);
 
+            Console.WriteLine("== SERIAL: Threads done... " + timer.ElapsedMilliseconds + " ms ==");
+
             writer.Write(MultitileGroups.Length);
             foreach (var grp in MultitileGroups) grp.SerializeInto(writer);
+
+            Console.WriteLine("== SERIAL: Groups done... " + timer.ElapsedMilliseconds + " ms ==");
 
             writer.Write(GlobalState.Length);
             foreach (var val in GlobalState)
             {
                 writer.Write(val);
             }
+
+            Console.WriteLine("== SERIAL: Globals done... " + timer.ElapsedMilliseconds + " ms ==");
+
             writer.Write(ObjectId);
         }
     }

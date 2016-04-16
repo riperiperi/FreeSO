@@ -53,8 +53,8 @@ namespace FSO.SimAntics
         public ulong RandomSeed;
 
         public GameGlobal Globals;
+        public VMSetToNextCache SetToNextCache;
         public VMRoomInfo[] RoomInfo;
-        private List<Dictionary<int, List<short>>> ObjectsAt = new List<Dictionary<int, List<short>>>(); //used heavily for routing
         
         public VM VM;
 
@@ -64,6 +64,7 @@ namespace FSO.SimAntics
             //oldContext is passed in case we need to inherit certain things, like the ambient sound player
             this.World = world;
             this.Clock = new VMClock();
+            this.SetToNextCache = new VMSetToNextCache(this);
 
             if (oldContext == null)
             {
@@ -573,9 +574,11 @@ namespace FSO.SimAntics
             if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0)
                 RefreshLighting(room, true);
 
-            while (pos.Level > ObjectsAt.Count) ObjectsAt.Add(new Dictionary<int, List<short>>());
+            SetToNextCache.RegisterObjectPos(obj);
+
+            /*while (pos.Level > ObjectsAt.Count) ObjectsAt.Add(new Dictionary<int, List<short>>());
             if (!ObjectsAt[pos.Level-1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID] = new List<short>();
-            ObjectsAt[pos.Level - 1][pos.TileID].Add(obj.ObjectID);
+            ObjectsAt[pos.Level - 1][pos.TileID].Add(obj.ObjectID);*/
         }
 
         public void UnregisterObjectPos(VMEntity obj)
@@ -593,16 +596,15 @@ namespace FSO.SimAntics
             if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0)
                 RefreshLighting(room, true);
 
-            if (ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID].Remove(obj.ObjectID);
+            SetToNextCache.UnregisterObjectPos(obj);
         }
 
         public bool CheckWallValid(LotTilePos pos, WallTile wall)
         {
-            if (pos.Level < 1 || pos.Level > ObjectsAt.Count || !ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return true;
-            var objs = ObjectsAt[pos.Level - 1][pos.TileID];
-            foreach (var id in objs)
+            var objs = SetToNextCache.GetObjectsAt(pos);
+            if (objs == null) return true;
+            foreach (var obj in objs)
             {
-                var obj = VM.GetObjectById(id);
                 if (obj.WallChangeValid(wall, obj.Direction, false) != VMPlacementError.Success) return false;
             }
             return true;
@@ -610,11 +612,10 @@ namespace FSO.SimAntics
 
         public bool CheckFloorValid(LotTilePos pos, FloorTile floor)
         {
-            if (pos.Level < 1 || pos.Level > ObjectsAt.Count || !ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return true;
-            var objs = ObjectsAt[pos.Level - 1][pos.TileID];
-            foreach (var id in objs)
+            var objs = SetToNextCache.GetObjectsAt(pos);
+            if (objs == null) return true;
+            foreach (var obj in objs)
             {
-                var obj = VM.GetObjectById(id);
                 if (obj.FloorChangeValid(floor, pos.Level) != VMPlacementError.Success) return false;
             }
             return true;
@@ -622,13 +623,12 @@ namespace FSO.SimAntics
 
         public VMSolidResult SolidToAvatars(LotTilePos pos)
         {
-            if (IsOutOfBounds(pos) || (pos.Level < 1 || pos.Level > ObjectsAt.Count) || 
+            if (IsOutOfBounds(pos) || (pos.Level < 1) || 
                 (pos.Level != 1 && Architecture.GetFloor(pos.TileX, pos.TileY, pos.Level).Pattern == 0)) return new VMSolidResult { Solid = true };
-            if (!ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return new VMSolidResult();
-                var objs = ObjectsAt[pos.Level - 1][pos.TileID];
-            foreach (var id in objs)
+            var objs = SetToNextCache.GetObjectsAt(pos);
+            if (objs == null) return new VMSolidResult();
+            foreach (var obj in objs)
             {
-                var obj = VM.GetObjectById(id);
                 if (obj == null) continue;
                 var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
                 if (((flags & VMEntityFlags.DisallowPersonIntersection) > 0) || (flags & (VMEntityFlags.AllowPersonIntersection | VMEntityFlags.HasZeroExtent)) == 0) 
@@ -889,7 +889,10 @@ namespace FSO.SimAntics
         public void RemoveObjectInstance(VMEntity target)
         {
             target.PrePositionChange(this);
-            if (!target.GhostImage) VM.RemoveEntity(target);
+            if (!target.GhostImage)
+            {
+                VM.RemoveEntity(target);
+            }
             if (UseWorld)
             {
                 if (target is VMGameObject) Blueprint.RemoveObject((ObjectComponent)target.WorldUI);

@@ -97,9 +97,9 @@ namespace FSO.LotView.Components
                 if (blueprint != null && dgrp.DGRP != value)
                 {
                     blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-                    dgrp.DGRP = value;
                     DynamicCounter = 0;
                 }
+                dgrp.DGRP = value;
             }
         }
 
@@ -129,10 +129,13 @@ namespace FSO.LotView.Components
             get{
                 return _DynamicSpriteFlags;
             }set{
-                _DynamicSpriteFlags = value;
-                if (dgrp != null){
+                
+                if (dgrp != null && _DynamicSpriteFlags != value){
                     dgrp.DynamicSpriteFlags = value;
+                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                    DynamicCounter = 0;
                 }
+                _DynamicSpriteFlags = value;
             }
         }
 

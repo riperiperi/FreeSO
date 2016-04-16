@@ -36,7 +36,7 @@ namespace FSO.SimAntics.Marshals.Threads
             writer.Write(Queue.Length);
             foreach (var item in Queue) item.SerializeInto(writer);
 
-            foreach (var item in TempRegisters) writer.Write(item);
+            writer.Write(VMSerializableUtils.ToByteArray(TempRegisters));
             foreach (var item in TempXL) writer.Write(item);
             writer.Write((byte)LastStackExitCode);
 

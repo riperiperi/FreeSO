@@ -51,9 +51,9 @@ namespace FSO.SimAntics.Marshals.Threads
             writer.Write(StackObject);
             writer.Write(CodeOwnerGUID);
             writer.Write((Locals == null)?-1:Locals.Length);
-            if (Locals != null) foreach (var item in Locals) writer.Write(item);
+            if (Locals != null) writer.Write(VMSerializableUtils.ToByteArray(Locals));
             writer.Write((Args == null) ? -1 : Args.Length);
-            if (Args != null) foreach (var item in Args) writer.Write(item);
+            if (Args != null) writer.Write(VMSerializableUtils.ToByteArray(Args));
         }
     }
 }

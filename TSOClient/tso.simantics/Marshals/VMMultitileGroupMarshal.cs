@@ -34,7 +34,7 @@ namespace FSO.SimAntics.Marshals
         {
             writer.Write(MultiTile);
             writer.Write(Objects.Length);
-            foreach (var item in Objects) writer.Write(item);
+            writer.Write(VMSerializableUtils.ToByteArray(Objects));
             foreach (var item in Offsets) item.SerializeInto(writer);
         }
     }
