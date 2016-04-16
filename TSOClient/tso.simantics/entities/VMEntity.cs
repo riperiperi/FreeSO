@@ -96,7 +96,7 @@ namespace FSO.SimAntics
         public Dictionary<ushort, List<short>> MeToObject;
         //todo, special system for server persistent avatars and pets
 
-        public uint DynamicSpriteFlags; /** Used to show/hide dynamic sprites **/
+        public ulong DynamicSpriteFlags; /** Used to show/hide dynamic sprites **/
         public VMObstacle Footprint;
 
         private LotTilePos _Position = new LotTilePos(LotTilePos.OUT_OF_WORLD);
@@ -547,7 +547,7 @@ namespace FSO.SimAntics
 
         public bool IsDynamicSpriteFlagSet(ushort index)
         {
-            return (DynamicSpriteFlags & (0x1 << index)) > 0;
+            return (DynamicSpriteFlags & ((ulong)0x1 << index)) > 0;
         }
 
         public virtual void SetDynamicSpriteFlag(ushort index, bool set)
@@ -556,7 +556,7 @@ namespace FSO.SimAntics
                 uint bitflag = (uint)(0x1 << index);
                 DynamicSpriteFlags = DynamicSpriteFlags | bitflag;
             } else {
-                DynamicSpriteFlags = (uint)(DynamicSpriteFlags & (~(0x1 << index)));
+                DynamicSpriteFlags = (uint)(DynamicSpriteFlags & (~((ulong)0x1 << index)));
             }
         }
 

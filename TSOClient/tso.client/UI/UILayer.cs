@@ -184,7 +184,7 @@ namespace FSO.Client.UI
             mainUI.Add(dialogContainer);
 
             // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new UISpriteBatch(GraphicsDevice, 3);
+            SpriteBatch = new UISpriteBatch(GraphicsDevice, 3);
 
             GameFacade.OnContentLoaderReady += new BasicEventHandler(GameFacade_OnContentLoaderReady);
             m_G.GraphicsDevice.DeviceReset += new EventHandler<EventArgs>(GraphicsDevice_DeviceReset);
@@ -455,7 +455,7 @@ namespace FSO.Client.UI
 
         #region IGraphicsLayer Members
 
-        UISpriteBatch spriteBatch;
+        public UISpriteBatch SpriteBatch;
 
         public void PreDraw(GraphicsDevice device)
         {
@@ -472,17 +472,17 @@ namespace FSO.Client.UI
                 }
             }
 
-            spriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
-            this.PreDraw(spriteBatch);
-            spriteBatch.End();
+            SpriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
+            this.PreDraw(SpriteBatch);
+            SpriteBatch.End();
         }
 
         public void Draw(GraphicsDevice device)
         {
 
-            spriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
-            this.Draw(spriteBatch);
-            spriteBatch.End();
+            SpriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
+            this.Draw(SpriteBatch);
+            SpriteBatch.End();
         }
 
         #endregion

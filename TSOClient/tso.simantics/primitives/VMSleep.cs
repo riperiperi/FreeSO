@@ -28,18 +28,10 @@ namespace FSO.SimAntics.Primitives
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
-            var ticks = VMMemory.GetVariable(context, FSO.SimAntics.Engine.Scopes.VMVariableScope.Parameters, operand.StackVarToDec);
-            ticks--;
-
-            if (ticks < 0)
-            {
+            if (--context.Args[operand.StackVarToDec] < 0)
                 return VMPrimitiveExitCode.GOTO_TRUE;
-            }
             else
-            {
-                VMMemory.SetVariable(context, FSO.SimAntics.Engine.Scopes.VMVariableScope.Parameters, operand.StackVarToDec, ticks);
                 return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
-            }
         }
     }
 

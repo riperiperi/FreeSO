@@ -34,7 +34,7 @@ namespace FSO.SimAntics.Marshals
         public short[] Attributes;
         public VMEntityRelationshipMarshal[] MeToObject;
 
-        public uint DynamicSpriteFlags;
+        public ulong DynamicSpriteFlags;
         public LotTilePos Position;
 
         public virtual void Deserialize(BinaryReader reader)
@@ -118,7 +118,7 @@ namespace FSO.SimAntics.Marshals
             writer.Write(MeToObject.Length);
             foreach (var item in MeToObject) item.SerializeInto(writer);
 
-            writer.Write(DynamicSpriteFlags); /** Used to show/hide dynamic sprites **/
+            writer.Write((uint)DynamicSpriteFlags); /** Used to show/hide dynamic sprites **/
             Position.SerializeInto(writer);
         }
     }
