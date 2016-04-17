@@ -21,6 +21,7 @@ namespace FSO.Common.Utils
         private static Texture2D InteractionActive;
         private static Texture2D CatalogInactive;
         private static Texture2D CatalogActive;
+        private static Texture2D CatalogDisabled;
         private static Texture2D PieBG;
         private static Texture2D[] WallZBuffer;
         private static Texture2D[] AirTiles;
@@ -48,6 +49,12 @@ namespace FSO.Common.Utils
         {
             if (CatalogInactive == null) CatalogInactive = GenerateCatalogIconBorder(gd, new Color(140, 170, 206), new Color(56, 88, 120));
             return CatalogInactive;
+        }
+
+        public static Texture2D GetCatalogDisabled(GraphicsDevice gd)
+        {
+            if (CatalogDisabled == null) CatalogDisabled = GenerateCatalogIconBorder(gd, new Color(255, 0, 0), new Color(56, 88, 120));
+            return CatalogDisabled;
         }
 
         public static Texture2D GetCatalogActive(GraphicsDevice gd)

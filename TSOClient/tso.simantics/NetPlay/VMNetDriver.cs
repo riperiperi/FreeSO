@@ -45,9 +45,12 @@ namespace FSO.SimAntics.NetPlay
             foreach(var cmd in tick.Commands)
             {
                 if (cmd.Command is VMStateSyncCmd) doTick = false;
-                cmd.Command.Execute(vm);
+
+                var caller = vm.GetObjectByPersist(cmd.Command.ActorUID);
+                if (!(caller is VMAvatar)) caller = null;
+                cmd.Command.Execute(vm, (VMAvatar)caller);
             }
-            if (doTick)
+            if (doTick && vm.Context.Ready)
             {
                 vm.InternalTick();
                 if (DesyncCooldown > 0) DesyncCooldown--;

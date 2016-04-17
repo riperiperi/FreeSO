@@ -177,9 +177,11 @@ namespace FSO.Client.Utils
                 if (m_fade < 1) m_fade += 0.1f;
                 if (m_fade > 1) m_fade = 1;
 
+                state.UIState.TooltipProperties.Show = true;
                 state.UIState.TooltipProperties.UpdateDead = false;
                 state.UIState.TooltipProperties.Position = m_position;
                 state.UIState.TooltipProperties.Opacity = m_fade;
+                state.UIState.Tooltip = Target.Tooltip;
                 /** fade in **/
                 if (!Target.GetBounds().Contains(pt2) || !GameFacade.Focus || !Target.WillDraw())
                 {

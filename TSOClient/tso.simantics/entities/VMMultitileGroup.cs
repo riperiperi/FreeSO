@@ -22,6 +22,7 @@ namespace FSO.SimAntics.Entities
     public class VMMultitileGroup
     {
         public bool MultiTile;
+        public int Price;
         public List<VMEntity> Objects = new List<VMEntity>();
         public List<LotTilePos> Offsets = new List<LotTilePos>();
 
@@ -262,6 +263,7 @@ namespace FSO.SimAntics.Entities
             return new VMMultitileGroupMarshal
             {
                 MultiTile = MultiTile,
+                Price = Price,
                 Objects = objs,
                 Offsets = Offsets.ToArray()
             };
@@ -270,6 +272,7 @@ namespace FSO.SimAntics.Entities
         public virtual void Load(VMMultitileGroupMarshal input, VMContext context)
         {
             MultiTile = input.MultiTile;
+            Price = input.Price;
             Objects = new List<VMEntity>();
             foreach (var id in input.Objects)
             {

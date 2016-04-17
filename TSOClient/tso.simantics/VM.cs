@@ -140,7 +140,7 @@ namespace FSO.SimAntics
                 //fractional animation for avatars
                 foreach (var obj in Entities)
                 {
-                    if (obj is VMAvatar) ((VMAvatar)obj).FractionalAnim(0.5f); 
+                    if (obj is VMAvatar) ((VMAvatar)obj).FractionalAnim(0.5f);
                 }
             }
             AlternateTick = !AlternateTick;
@@ -149,6 +149,11 @@ namespace FSO.SimAntics
         public void SendCommand(VMNetCommandBodyAbstract cmd)
         {
             cmd.ActorUID = MyUID;
+            Driver.SendCommand(cmd);
+        }
+
+        public void ForwardCommand(VMNetCommandBodyAbstract cmd)
+        {
             Driver.SendCommand(cmd);
         }
 
@@ -343,8 +348,10 @@ namespace FSO.SimAntics
 
         public VMSandboxRestoreState Sandbox()
         {
-            var state = new VMSandboxRestoreState { Entities = Entities, ObjectId = ObjectId, ObjectsById = ObjectsById };
+            var state = new VMSandboxRestoreState { Entities = Entities, ObjectId = ObjectId,
+                ObjectsById = ObjectsById, SetToNext = Context.SetToNextCache };
 
+            Context.SetToNextCache = new VMSetToNextCache(Context);
             Entities = new List<VMEntity>();
             ObjectsById = new Dictionary<short, VMEntity>();
             ObjectId = 1;
@@ -357,6 +364,7 @@ namespace FSO.SimAntics
             Entities = state.Entities;
             ObjectsById = state.ObjectsById;
             ObjectId = state.ObjectId;
+            Context.SetToNextCache = state.SetToNext;
         }
 
         #region VM Marshalling Functions
@@ -491,5 +499,6 @@ namespace FSO.SimAntics
         public List<VMEntity> Entities;
         public Dictionary<short, VMEntity> ObjectsById;
         public short ObjectId = 1;
+        public VMSetToNextCache SetToNext;
     }
 }

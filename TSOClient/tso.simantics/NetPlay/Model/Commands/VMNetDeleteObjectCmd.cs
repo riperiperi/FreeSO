@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Primitives;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -18,17 +19,35 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public short ObjectID;
         public bool CleanupAll;
-        public override bool Execute(VM vm)
+        public override bool Execute(VM vm, VMAvatar caller)
         {
             VMEntity obj = vm.GetObjectById(ObjectID);
-            var avaEnt = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
-            if (obj == null || avaEnt == null || (obj is VMAvatar) || !(avaEnt is VMAvatar)) return false;
+            if (obj == null || caller == null || (obj is VMAvatar)) return false;
             obj.Delete(CleanupAll, vm.Context);
 
-            var avatar = (VMAvatar)avaEnt;
-            vm.SignalChatEvent(new VMChatEvent(avaEnt.PersistID, VMChatEventType.Arch,
-                avatar.Name,
-                vm.GetUserIP(avaEnt.PersistID),
+            //TODO: Check if user is owner of object. Maybe sendback to owner inventory if a roommate deletes.
+
+            // If we're the server, tell the global server to give their money back.
+            if (vm.GlobalLink != null)
+            {
+                vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, obj.MultitileGroup.Price,
+                (bool success, uint uid1, uint budget1, uint uid2, uint budget2) =>
+                {
+                    vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
+                    { //update budgets on clients. id of 0 means there is no target thread.
+                        Responded = true,
+                        Success = success,
+                        UID1 = uid1,
+                        Budget1 = budget1,
+                        UID2 = uid2,
+                        Budget2 = budget2
+                    }));
+                });
+            }
+
+            vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
+                caller.Name,
+                vm.GetUserIP(caller.PersistID),
                 "deleted " + obj.ToString()
             ));
 

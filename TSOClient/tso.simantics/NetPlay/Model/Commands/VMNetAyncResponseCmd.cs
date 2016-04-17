@@ -33,11 +33,15 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm)
         {
-            VMEntity obj = vm.GetObjectById(ID);
             var type = State.GetType();
-            //we can only update an object's blocking state if it exists and is of the same type exactly.
-            if (obj == null || obj.Thread.BlockingState == null || obj.Thread.BlockingState.GetType() != type) return false;
-            obj.Thread.BlockingState = State;
+            //if ID is 0, there is no thread to unblock, and we just have to do the extra functionality below.
+            if (ID != 0)
+            {
+                VMEntity obj = vm.GetObjectById(ID);
+                //we can only update an object's blocking state if it exists and is of the same type exactly.
+                if (obj == null || obj.Thread.BlockingState == null || obj.Thread.BlockingState.GetType() != type) return false;
+                obj.Thread.BlockingState = State;
+            }
 
             if (type == typeof(VMTransferFundsState))
             {

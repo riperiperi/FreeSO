@@ -317,6 +317,9 @@ namespace FSO.Client.UI.Panels
             var obj = entity.Object;
             var def = entity.MasterDefinition;
             if (def == null) def = entity.Object.OBJ;
+
+            var item = Content.Content.Get().WorldCatalog.GetItemByGUID(def.GUID);
+
             CTSS catString = obj.Resource.Get<CTSS>(def.CatalogStringsID);
             if (catString != null)
             {
@@ -328,8 +331,12 @@ namespace FSO.Client.UI.Panels
                 DescriptionText.CurrentText = entity.ToString();
                 ObjectNameText.Caption = entity.ToString();
             }
+
+            int price = def.Price;
+            if (item != null) price = (int)item.Price;
+
             StringBuilder motivesString = new StringBuilder();
-            motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", def.Price);
+            motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", price);
             if (def.RatingHunger != 0) { motivesString.AppendFormat(AdStrings[0], def.RatingHunger); }
             if (def.RatingComfort != 0) { motivesString.AppendFormat(AdStrings[1], def.RatingComfort); }
             if (def.RatingHygiene != 0) { motivesString.AppendFormat(AdStrings[2], def.RatingHygiene); }
@@ -348,6 +355,12 @@ namespace FSO.Client.UI.Panels
             ObjectOwnerText.Caption = GameFacade.Strings.GetString("206", "24", new string[] { "You" });
 
             SpecificTabButton.Disabled = !bought;
+
+            if (bought)
+            {
+                ForSalePrice.CurrentText = GameFacade.Strings.GetString("206", "25", new string[] { " $" + entity.MultitileGroup.Price });
+                ForSalePrice.SetSize(250, ForSalePrice.Height);
+            }
 
             if (entity is VMGameObject) {
                 var objects = entity.MultitileGroup.Objects;

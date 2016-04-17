@@ -11,12 +11,14 @@ namespace FSO.SimAntics.Marshals
     public class VMMultitileGroupMarshal : VMSerializable
     {
         public bool MultiTile;
+        public int Price;
         public short[] Objects;
         public LotTilePos[] Offsets;
 
         public void Deserialize(BinaryReader reader)
         {
             MultiTile = reader.ReadBoolean();
+            Price = reader.ReadInt32();
 
             var objs = reader.ReadInt32();
             Objects = new short[objs];
@@ -33,6 +35,7 @@ namespace FSO.SimAntics.Marshals
         public void SerializeInto(BinaryWriter writer)
         {
             writer.Write(MultiTile);
+            writer.Write(Price);
             writer.Write(Objects.Length);
             writer.Write(VMSerializableUtils.ToByteArray(Objects));
             foreach (var item in Offsets) item.SerializeInto(writer);

@@ -85,7 +85,7 @@ namespace FSO.SimAntics.Marshals
                 MeToObject[i].Deserialize(reader);
             }
 
-            DynamicSpriteFlags = reader.ReadUInt32();
+            DynamicSpriteFlags = reader.ReadUInt64();
             Position = new LotTilePos();
             Position.Deserialize(reader);
         }
@@ -123,7 +123,7 @@ namespace FSO.SimAntics.Marshals
             writer.Write(MeToObject.Length);
             foreach (var item in MeToObject) item.SerializeInto(writer);
 
-            writer.Write((uint)DynamicSpriteFlags); /** Used to show/hide dynamic sprites **/
+            writer.Write(DynamicSpriteFlags); /** Used to show/hide dynamic sprites **/
             Position.SerializeInto(writer);
         }
     }

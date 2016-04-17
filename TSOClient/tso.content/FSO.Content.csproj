@@ -106,6 +106,7 @@
     <Compile Include="ResAction.cs" />
     <Compile Include="WorldFloorProvider.cs" />
     <Compile Include="WorldGlobalProvider.cs" />
+    <Compile Include="WorldObjectCatalog.cs" />
     <Compile Include="WorldObjectGlobals.cs" />
     <Compile Include="WorldObjectProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

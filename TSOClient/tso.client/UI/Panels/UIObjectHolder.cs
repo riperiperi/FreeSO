@@ -239,7 +239,6 @@ namespace FSO.Client.UI.Panels
             if (Holding != null)
             {
                 if (MouseClicked) Holding.Clicked = true;
-                //TODO: crash if placed out of world
                 if (MouseIsDown && Holding.Clicked)
                 {
                     bool updatePos = MouseClicked;

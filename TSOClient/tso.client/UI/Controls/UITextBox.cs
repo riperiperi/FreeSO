@@ -81,6 +81,13 @@ namespace FSO.Client.UI.Controls
         public string CurrentText
         {
             get { return m_SBuilder.ToString(); }
+            set
+            {
+                m_SBuilder = new StringBuilder(value);
+                SelectionStart = Math.Max(0, Math.Min(SelectionStart, value.Length - 1));
+                SelectionEnd = -1; //todo: move along maybe?
+                m_DrawDirty = true;
+            }
         }
 
         public void Clear()

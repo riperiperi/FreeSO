@@ -46,6 +46,7 @@ namespace FSO.SimAntics
                 _Arch = value;
             }
         }
+        public bool Ready { get { return (_Arch != null); } }
 
         public World World { get; internal set; }
         public VMPrimitiveRegistration[] Primitives = new VMPrimitiveRegistration[256];
@@ -709,7 +710,8 @@ namespace FSO.SimAntics
             var objs = RoomInfo[room].Entities;
             foreach (var obj in objs)
             {
-                if (obj.MultitileGroup == target.MultitileGroup || (obj is VMAvatar && allowAvatars)) continue;
+                if (obj.MultitileGroup == target.MultitileGroup || (obj is VMAvatar && allowAvatars) 
+                    || (target.GhostImage && target.GhostOriginal != null && target.GhostOriginal.Objects.Contains(obj))) continue;
                 var oFoot = obj.Footprint;
 
                 if (oFoot != null && oFoot.Intersects(footprint)
@@ -774,7 +776,9 @@ namespace FSO.SimAntics
 
             if (newGroup != null)
             {
+                newGroup.Price = group.Price;
                 for (int i=0; i < Math.Min(newGroup.Objects.Count, group.Objects.Count); i++) {
+                    newGroup.Objects[i].GhostOriginal = group;
                     newGroup.Objects[i].SetValue(VMStackObjectVariable.Graphic, group.Objects[i].GetValue(VMStackObjectVariable.Graphic));
                     newGroup.Objects[i].DynamicSpriteFlags = group.Objects[i].DynamicSpriteFlags;
                     newGroup.Objects[i].SetDynamicSpriteFlag(0, group.Objects[i].IsDynamicSpriteFlagSet(0));

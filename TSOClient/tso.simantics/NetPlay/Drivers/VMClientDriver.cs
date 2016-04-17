@@ -180,7 +180,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
             }
             if (!vm.Ready)
             {
-                if (ExecutedAnything)
+                if (ExecutedAnything && vm.Context.Ready)
                 {
                     OnStateChange(3, 0f);
                     return true;

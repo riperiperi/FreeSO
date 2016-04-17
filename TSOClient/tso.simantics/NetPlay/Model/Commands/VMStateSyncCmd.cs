@@ -18,9 +18,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             return true;
         }
 
-        public override bool Verify(VM vm)
+        public override bool Verify(VM vm, VMAvatar caller)
         {
-            return base.Verify(vm);
+            return !FromNet;
         }
 
         #region VMSerializable Members

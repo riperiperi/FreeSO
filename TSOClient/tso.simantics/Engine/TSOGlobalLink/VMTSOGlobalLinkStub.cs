@@ -22,7 +22,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
 
                 new System.Threading.Thread(() =>
                 {
-                    System.Threading.Thread.Sleep(250);
+                    //System.Threading.Thread.Sleep(250);
                     callback(result,
                         uid1, (obj1 == null) ? 0 : obj1.TSOState.Budget.Value,
                         uid2, (obj2 == null) ? 0 : obj2.TSOState.Budget.Value);

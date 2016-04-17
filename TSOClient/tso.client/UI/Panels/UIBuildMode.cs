@@ -20,6 +20,7 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Controls.Catalog;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels.LotControls;
+using FSO.Client.UI.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -206,6 +207,12 @@ namespace FSO.Client.UI.Panels
         {
             Holder.ClearSelected();
             var item = CurrentCategory[selection];
+
+            if (LotController.ActiveEntity != null && item.Price > LotController.ActiveEntity.TSOState.Budget.Value) {
+                HIT.HITVM.Get().PlaySoundEvent(UISounds.Error);
+                return;
+            }
+
             if (OldSelection != -1) Catalog.SetActive(OldSelection, false);
             Catalog.SetActive(selection, true);
 
@@ -310,6 +317,8 @@ namespace FSO.Client.UI.Panels
                 if (Opacity < 1) Opacity += 1f / 20f;
                 else Opacity = 1;
             }
+
+            if (LotController.ActiveEntity != null) Catalog.Budget = (int)LotController.ActiveEntity.TSOState.Budget.Value;
             base.Update(state);
         }
     }

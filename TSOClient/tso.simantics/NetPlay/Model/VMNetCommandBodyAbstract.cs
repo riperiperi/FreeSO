@@ -17,7 +17,9 @@ namespace FSO.SimAntics.NetPlay.Model
         public uint ActorUID;
         public bool FromNet = false;
 
-        public abstract bool Execute(VM vm);
+        public virtual bool Execute(VM vm) { return true; }
+
+        public virtual bool Execute(VM vm, VMAvatar caller) { return Execute(vm); }
 
         public virtual void Deserialize(BinaryReader reader) {
             FromNet = true;
@@ -31,7 +33,12 @@ namespace FSO.SimAntics.NetPlay.Model
         //if "Verify" returns true, the server runs the command and it is sent to clients
         //this prevents forwarding bogus requests - though some verifications are performed as the command is sequenced.
         //certain commands like "StateSyncCommand" cannot be forwarded from clients.
-        public virtual bool Verify(VM vm)
+
+        //note - that returning false from here will only prevent the command from being forwarded IMMEDIATELY.
+        //Architecture and Buy Object commands perform asynchronous transactions and then resend their command on success later.
+
+        //verify is not run on clients.
+        public virtual bool Verify(VM vm, VMAvatar caller)
         {
             return true;
         }

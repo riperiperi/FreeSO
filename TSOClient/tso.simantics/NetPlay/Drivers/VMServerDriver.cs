@@ -148,6 +148,14 @@ namespace FSO.SimAntics.NetPlay.Drivers
             HandleClients();
 
             lock (QueuedCmds) {
+                //verify the queued commands. Remove ones which fail (or defer til later)
+                for (int i=0; i<QueuedCmds.Count; i++)
+                {
+                    var caller = vm.GetObjectByPersist(QueuedCmds[i].Command.ActorUID);
+                    if (!(caller is VMAvatar)) caller = null;
+                    if (!QueuedCmds[i].Command.Verify(vm, (VMAvatar)caller)) QueuedCmds.RemoveAt(i--);
+                }
+
                 var tick = new VMNetTick();
                 tick.Commands = new List<VMNetCommand>(QueuedCmds);
                 tick.TickID = TickID++;
@@ -155,7 +163,6 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 QueuedCmds.Clear();
                 InternalTick(vm, tick);
                 
-
                 TickBuffer.Add(tick);
                 if (TickBuffer.Count >= TICKS_PER_PACKET)
                 {
