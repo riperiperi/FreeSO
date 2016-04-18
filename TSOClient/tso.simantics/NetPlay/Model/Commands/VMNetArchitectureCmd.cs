@@ -16,10 +16,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     public class VMNetArchitectureCmd : VMNetCommandBodyAbstract
     {
         public List<VMArchitectureCommand> Commands;
+        public bool Verified;
 
         public override bool Execute(VM vm)
         {
-            for (int i=0; i<Commands.Count; i++)
+            for (int i = 0; i < Commands.Count; i++)
             {
                 var cmd = Commands[i];
                 cmd.CallerUID = ActorUID;
@@ -27,6 +28,26 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             }
             vm.Context.Architecture.RunCommands(Commands, false);
             return true;
+        }
+
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            //since architecture commands must be run in order, we need to run all architecture commands synchronously.
+            //it must be queued on the global link.
+
+            if (caller == null) return false; //caller must be on lot
+            if (Verified) return true;
+
+            for (int i = 0; i < Commands.Count; i++)
+            {
+                var cmd = Commands[i];
+                cmd.CallerUID = ActorUID;
+                Commands[i] = cmd;
+            }
+
+            vm.GlobalLink.QueueArchitecture(this);
+
+            return false;
         }
 
         #region VMSerializable Members

@@ -18,6 +18,7 @@ using FSO.Content.Framework;
 using System.Text.RegularExpressions;
 using FSO.Content.Codecs;
 using Microsoft.Xna.Framework.Graphics;
+using FSO.Common.Utils;
 
 namespace FSO.Content
 {
@@ -86,6 +87,18 @@ namespace FSO.Content
                 floorID++;
             }
 
+            var waterStrs = buildGlobals.Get<STR>(0x85);
+            //add pools for catalog logic
+            Entries.Add(65535, new FloorReference(this)
+            {
+                ID = 65535,
+                FileName = "global",
+
+                Price = int.Parse(waterStrs.GetString(0)),
+                Name = waterStrs.GetString(1),
+                Description = waterStrs.GetString(2)
+            });
+
             floorID = 256;
 
             var archives = new string[]
@@ -128,6 +141,7 @@ namespace FSO.Content
                 }
                 archive.Close();
             }
+
             NumFloors = floorID;
             this.Floors = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*/floors.*\\.far"));
             Floors.Init();
@@ -143,10 +157,11 @@ namespace FSO.Content
         {
             if (id < 256)
             {
-                return ById[id].Near.Frames[0].GetTexture(device);
+                return TextureUtils.Copy(device, ById[id].Near.Frames[0].GetTexture(device));
             } else if (id == 65535)
             {
-                return FloorGlobals.Get<SPR2>(0x420).Frames[0].GetTexture(device);
+                
+                return TextureUtils.Copy(device, FloorGlobals.Get<SPR2>(0x420).Frames[0].GetTexture(device));
             }
             else return this.Floors.ThrowawayGet(Entries[(ushort)id].FileName).Get<SPR2>(513).Frames[0].GetTexture(device);
         }

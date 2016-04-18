@@ -43,7 +43,7 @@ namespace FSO.LotView.Components
         public TerrainComponent(Rectangle size){
             this.Size = size;
             this.Effect = WorldContent.GrassEffect;
-            LotType = LotTypes.Snow; //(LotTypes)(new Random()).Next(4);
+            LotType = LotTypes.Grass; //(LotTypes)(new Random()).Next(4);
 
             UpdateLotType();
             GenerateGrassStates();

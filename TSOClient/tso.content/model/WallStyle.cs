@@ -15,6 +15,9 @@ namespace FSO.Content.Model
     public class WallStyle
     {
         public ushort ID;
+        public string Name;
+        public string Description;
+        public int Price;
         public SPR WallsUpNear;
         public SPR WallsUpMedium;
         public SPR WallsUpFar;

@@ -379,6 +379,22 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        public void SetInfo(Texture2D thumb, string name, string description, int price)
+        {
+            DescriptionText.CurrentText = name + "\r\n" + description;
+            ObjectNameText.Caption = name;
+
+            StringBuilder motivesString = new StringBuilder();
+            motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", price);
+            MotivesText.CurrentText = motivesString.ToString();
+
+            SpecificTabButton.Disabled = true;
+
+            if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
+            Thumbnail.Texture = thumb;
+            UpdateImagePosition();
+        }
+
         private void UpdateImagePosition() {
             var thumb = Thumbnail.Texture;
             if (thumb == null) return;

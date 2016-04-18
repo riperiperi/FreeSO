@@ -1050,11 +1050,6 @@ namespace FSO.Client.UI.Framework
         }
 
         /// <summary>
-        /// Used to control Tooltip visibility and position on elements that draw it
-        /// </summary>
-        public UITooltipProperties TooltipProperties;
-
-        /// <summary>
         /// Little utility to make it easier to do work outside of the UI thread
         /// </summary>
         public void Async(AsyncHandler handler)

@@ -199,6 +199,12 @@ namespace FSO.Client.UI.Panels
 
             NextPageButton.Disabled = (total == 1);
 
+            if (LotController.CustomControl != null)
+            {
+                LotController.CustomControl.Release();
+                LotController.CustomControl = null;
+            }
+
             PreviousPageButton.Disabled = true;
             return;
         }
@@ -224,7 +230,12 @@ namespace FSO.Client.UI.Panels
 
             if (item.Special != null)
             {
-                QueryPanel.Active = false;
+                var res = item.Special.Res;
+                var resID = item.Special.ResID;
+                QueryPanel.SetInfo(res.GetIcon(resID), res.GetName(resID), res.GetDescription(resID), res.GetPrice(resID));
+                QueryPanel.Mode = 1;
+                QueryPanel.Tab = 0;
+                QueryPanel.Active = true;
                 LotController.CustomControl = (UICustomLotControl)Activator.CreateInstance(item.Special.Control, vm, LotController.World, LotController, item.Special.Parameters);
             }
             else

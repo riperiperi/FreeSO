@@ -117,10 +117,11 @@ namespace FSO.Client.UI.Controls.Catalog
             for (int i = 0; i < floors.Count; i++)
             {
                 var floor = (FloorReference)floors[i];
-                _Catalog[9].Insert(0, new UICatalogElement
+                sbyte category = (sbyte)((floor.ID >= 65534)?5:9);
+                _Catalog[category].Insert(0, new UICatalogElement
                 {
                     Name = floor.Name,
-                    Category = 9,
+                    Category = category,
                     Price = (uint)floor.Price,
                     Special = new UISpecialCatalogElement
                     {
@@ -131,20 +132,6 @@ namespace FSO.Client.UI.Controls.Catalog
                     }
                 });
             }
-
-            _Catalog[5].Insert(0, new UICatalogElement
-            {
-                Name = "Pool",
-                Category = 5,
-                Price = (uint)0,
-                Special = new UISpecialCatalogElement
-                {
-                    Control = typeof(UIFloorPainter),
-                    ResID = 65535,
-                    Res = res,
-                    Parameters = new List<int> { (int)65535 } //pattern
-                }
-            });
         }
 
         private static void AddWallStyles()
@@ -153,11 +140,13 @@ namespace FSO.Client.UI.Controls.Catalog
 
             for (int i = 0; i < WallStyleIDs.Length; i++)
             {
+                var walls = Content.Content.Get().WorldWalls;
+                var style = walls.GetWallStyle((ulong)WallStyleIDs[i]);
                 _Catalog[7].Insert(0, new UICatalogElement
                 {
-                    Name = "Wall",
+                    Name = style.Name,
                     Category = 7,
-                    Price = 0,
+                    Price = (uint)style.Price,
                     Special = new UISpecialCatalogElement
                     {
                         Control = typeof(UIWallPlacer),

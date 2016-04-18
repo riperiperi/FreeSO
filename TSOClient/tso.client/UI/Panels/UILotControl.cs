@@ -273,6 +273,7 @@ namespace FSO.Client.UI.Panels
                     {
                         HITVM.Get().PlaySoundEvent(UISounds.Error);
                         state.UIState.TooltipProperties.Show = true;
+                        state.UIState.TooltipProperties.Color = Color.Black;
                         state.UIState.TooltipProperties.Opacity = 1;
                         state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
                             state.MouseState.Y);
@@ -350,6 +351,7 @@ namespace FSO.Client.UI.Panels
                         if (obj is VMAvatar && !TipIsError)
                         {
                             state.UIState.TooltipProperties.Show = true;
+                            state.UIState.TooltipProperties.Color = Color.Black;
                             state.UIState.TooltipProperties.Opacity = 1;
                             state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
                                 state.MouseState.Y);

@@ -74,6 +74,13 @@ namespace FSO.Client.UI.Panels
             }
             Holding.TilePosOffset = new Vector2(0, 0);
             Holding.CursorTiles = CursorTiles;
+
+            uint guid;
+            var bobj = Group.BaseObject;
+            guid = bobj.Object.OBJ.GUID;
+            if (bobj.MasterDefinition != null) guid = bobj.MasterDefinition.GUID;
+            var catalogItem = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
+            if (catalogItem != null) Holding.Price = (int)catalogItem.Price;
         }
 
         public void MoveSelected(Vector2 pos, sbyte level)
@@ -269,9 +276,12 @@ namespace FSO.Client.UI.Panels
                     if (updatePos)
                     {
                         MoveSelected(Holding.TilePos, Holding.Level);
+                        if (Holding.CanPlace == VMPlacementError.Success && ParentControl.ActiveEntity != null && ParentControl.ActiveEntity.TSOState.Budget.Value < Holding.Price)
+                            Holding.CanPlace = VMPlacementError.InsufficientFunds;
                         if (Holding.CanPlace != VMPlacementError.Success)
                         {
                             state.UIState.TooltipProperties.Show = true;
+                            state.UIState.TooltipProperties.Color = Color.Black;
                             state.UIState.TooltipProperties.Opacity = 1;
                             state.UIState.TooltipProperties.Position = new Vector2(MouseDownX,
                                 MouseDownY);
@@ -318,6 +328,7 @@ namespace FSO.Client.UI.Panels
                     else
                     {
                         state.UIState.TooltipProperties.Show = true;
+                        state.UIState.TooltipProperties.Color = Color.Black;
                         state.UIState.TooltipProperties.Opacity = 1;
                         state.UIState.TooltipProperties.Position = new Vector2(MouseDownX,
                             MouseDownY);
@@ -348,6 +359,7 @@ namespace FSO.Client.UI.Panels
         public bool Clicked;
         public VMPlacementError CanPlace;
         public sbyte Level;
+        public int Price;
 
         public bool IsBought
         {

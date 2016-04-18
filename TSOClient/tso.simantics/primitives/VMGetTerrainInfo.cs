@@ -18,11 +18,10 @@ namespace FSO.SimAntics.Primitives
 
             if (obj.Position == LotTilePos.OUT_OF_WORLD) return VMPrimitiveExitCode.GOTO_FALSE;
 
-            for (int i=0; i<5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 if (operand.Unknown[i] != 0) { }
             }
-            
 
             //TODO: all.
 

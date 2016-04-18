@@ -18,6 +18,7 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Content.Framework;
 using FSO.Content.Codecs;
 using System.Text.RegularExpressions;
+using FSO.Common.Utils;
 
 namespace FSO.Content
 {
@@ -44,11 +45,32 @@ namespace FSO.Content
             this.ContentManager = contentManager;
         }
 
+        public ushort[] WallStyleIDs =
+        {
+            0x1, //wall
+            0x2, //picket fence
+            0xD, //iron fence
+            0xC, //privacy fence
+            0xE //banisters
+        };
+
+        public ushort[] WallStylePatterns =
+        {
+            0, //wall
+            248, //picket fence
+            250, //iron fence
+            249, //privacy fence
+            251, //banisters
+        };
+
+        public Dictionary<ushort, int> WallStyleToIndex;
+
         /// <summary>
         /// Initiates loading of walls.
         /// </summary>
         public void Init()
         {
+            WallStyleToIndex = WallStyleIDs.ToDictionary(x => x, x => Array.IndexOf(WallStyleIDs, x));
 
             this.Entries = new Dictionary<ushort, WallReference>();
             this.ById = new Dictionary<ushort, Wall>();
@@ -62,6 +84,7 @@ namespace FSO.Content
             var buildGlobals = new IffFile(buildGlobalsPath); //todo: centralize?
 
             /** Get wall styles from globals file **/
+            var styleStrs = buildGlobals.Get<STR>(0x81);
             ushort wallID = 1;
             for (ushort i = 2; i < 512; i+=2)
             {
@@ -80,6 +103,18 @@ namespace FSO.Content
                     neard = near;
                 }
 
+                string name = null, description = null;
+                int price = -1;
+                int buyIndex = -1;
+                WallStyleToIndex.TryGetValue(wallID, out buyIndex);
+                
+                if (buyIndex != -1)
+                {
+                    price = int.Parse(styleStrs.GetString(buyIndex * 3));
+                    name = styleStrs.GetString(buyIndex * 3 + 1);
+                    description = styleStrs.GetString(buyIndex * 3 + 2);
+                }
+
                 this.AddWallStyle(new WallStyle
                 {
                     ID = wallID,
@@ -88,7 +123,11 @@ namespace FSO.Content
                     WallsUpNear = near,
                     WallsDownFar = fard,
                     WallsDownMedium = mediumd,
-                    WallsDownNear = neard
+                    WallsDownNear = neard,
+
+                    Price = price,
+                    Name = name,
+                    Description = description
                 });
 
                 wallID++;
@@ -233,7 +272,7 @@ namespace FSO.Content
             if (id < 256)
             {
                 var spr = ById[id].Medium;
-                return (spr == null)?null:spr.Frames[2].GetTexture(device);
+                return TextureUtils.Copy(device, (spr == null)?null:spr.Frames[2].GetTexture(device));
             }
             else
             {

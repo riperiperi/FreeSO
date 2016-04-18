@@ -81,6 +81,8 @@ namespace FSO.Client.UI.Panels.LotControls
         public void Release()
         {
             WallCursor.Delete(vm.Context);
+            vm.Context.Architecture.Commands.Clear();
+            vm.Context.Architecture.SignalRedraw();
         }
 
         public void Update(UpdateState state, bool scrolled)
@@ -170,6 +172,28 @@ namespace FSO.Client.UI.Panels.LotControls
             foreach (var cmd in Commands)
             {
                 cmds.Add(cmd);
+            }
+
+            if (cmds.Count > 0)
+            {
+                var cost = vm.Context.Architecture.LastTestCost;
+                if (cost != 0)
+                {
+                    var disallowed = Parent.ActiveEntity != null && cost > Parent.ActiveEntity.TSOState.Budget.Value;
+                    state.UIState.TooltipProperties.Show = true;
+                    state.UIState.TooltipProperties.Color = disallowed ? Color.DarkRed : Color.Black;
+                    state.UIState.TooltipProperties.Opacity = 1;
+                    state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X, state.MouseState.Y);
+                    state.UIState.Tooltip = (cost < 0) ? ("-$" + (-cost)) : ("$" + cost);
+                    state.UIState.TooltipProperties.UpdateDead = false;
+
+                    if (disallowed) HITVM.Get().PlaySoundEvent(UISounds.Error);
+                }
+                else
+                {
+                    state.UIState.TooltipProperties.Show = false;
+                    state.UIState.TooltipProperties.Opacity = 0;
+                }
             }
 
             WallCursor.SetVisualPosition(new Vector3(cursor.X+0.5f, cursor.Y+0.5f, (World.State.Level-1)*2.95f), (Direction)(1<<((3-CursorDir)*2)), vm.Context);

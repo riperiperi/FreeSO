@@ -10,15 +10,16 @@ namespace FSO.Common.Rendering.Framework.Model
     {
         public int Width;
         public int Height;
-        public UITooltipProperties TooltipProperties;
+        public UITooltipProperties TooltipProperties = new UITooltipProperties();
         public string Tooltip;
     }
 
-    public struct UITooltipProperties
+    public class UITooltipProperties
     {
         public float Opacity;
         public Vector2 Position;
         public bool Show;
+        public Color Color = Color.Black;
         public bool UpdateDead;
     }
 }

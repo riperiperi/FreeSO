@@ -198,6 +198,7 @@ namespace FSO.SimAntics
 
         public void InternalTick()
         {
+            if (GlobalLink != null) GlobalLink.Tick(this);
             Context.Clock.Tick();
             GlobalState[6] = (short)Context.Clock.Seconds;
             GlobalState[5] = (short)Context.Clock.Minutes;

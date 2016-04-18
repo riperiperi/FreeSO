@@ -59,6 +59,7 @@ namespace FSO.IDE
 
             HookedVM.SendCommand(new VMNetBuyObjectCmd
             {
+                Verified = true,
                 GUID = GUID,
                 dir = LotView.Model.Direction.NORTH,
                 level = HookedVM.Context.World.State.Level,

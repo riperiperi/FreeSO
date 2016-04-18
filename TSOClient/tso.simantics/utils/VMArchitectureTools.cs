@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FSO.LotView.Model;
+using FSO.Content;
 
 namespace FSO.SimAntics.Utils
 {
@@ -261,10 +262,12 @@ namespace FSO.SimAntics.Utils
             return direction;
         }
 
-        public static int WallPatternDot(VMArchitecture target, Point pos, ushort pattern, int direction, int altDir, sbyte level)
+        public static PatternReplaceCount WallPatternDot(VMArchitecture target, Point pos, ushort pattern, int direction, int altDir, sbyte level)
         {
-            if (pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y > target.Height) return -1;
+            if (pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y > target.Height) return new PatternReplaceCount { Total = -1 };
 
+            //pattern replace count used a little differently here. cost still stores replaced cost, but total stores replaced direction.
+            PatternReplaceCount replaceCost = new PatternReplaceCount(false);
             ushort replaced = 0;
             var wall = target.GetWall((short)pos.X, (short)pos.Y, level);
             //direction starts lefttop, righttop
@@ -283,7 +286,10 @@ namespace FSO.SimAntics.Utils
                     wall.BottomLeftPattern = pattern;
                 }
                 target.SetWall((short)pos.X, (short)pos.Y, level, wall);
-                return (replaced == pattern) ? -1 : direction;
+                if (replaced == pattern) return new PatternReplaceCount { Total = -1 };
+                replaceCost.Add(replaced);
+                replaceCost.Total = direction;
+                return replaceCost;
             }
             else if ((wall.Segments & WallSegments.VerticalDiag) > 0 && wall.TopRightStyle == 1)
             {
@@ -300,14 +306,17 @@ namespace FSO.SimAntics.Utils
                     wall.BottomRightPattern = pattern;
                 }
                 target.SetWall((short)pos.X, (short)pos.Y, level, wall);
-                return (replaced == pattern) ? -1 : direction;
+                if (replaced == pattern) return new PatternReplaceCount { Total = -1 };
+                replaceCost.Add(replaced);
+                replaceCost.Total = direction;
+                return replaceCost;
             }
 
             if ((wall.Segments & (WallSegments)(1 << direction)) > 0) { }
             else if ((wall.Segments & (WallSegments)(1 << altDir)) > 0) direction = altDir;
             else
             {
-                return -1;
+                return new PatternReplaceCount { Total = -1 };
             }
 
             if (direction == 0 && wall.TopLeftThick) { replaced = wall.TopLeftPattern; wall.TopLeftPattern = pattern; }
@@ -315,15 +324,19 @@ namespace FSO.SimAntics.Utils
             else if (direction == 2 && pos.X < target.Width && target.GetWall((short)(pos.X + 1), (short)pos.Y, level).TopLeftThick) { replaced = wall.BottomRightPattern; wall.BottomRightPattern = pattern; }
             else if (direction == 3 && pos.Y < target.Height && target.GetWall((short)pos.X, (short)(pos.Y + 1), level).TopRightThick) { replaced = wall.BottomLeftPattern; wall.BottomLeftPattern = pattern; }
             target.SetWall((short)pos.X, (short)pos.Y, level, wall);
-            return (replaced == pattern)?-1:direction;
+
+            if (replaced == pattern) return new PatternReplaceCount { Total = -1 };
+            replaceCost.Add(replaced);
+            replaceCost.Total = direction;
+            return replaceCost;
         }
 
         /// <summary>
         /// Fills a room with a certain wall pattern. Returns walls covered
         /// </summary>
-        public static int WallPatternFill(VMArchitecture target, Point pos, ushort pattern, sbyte level) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
+        public static PatternReplaceCount WallPatternFill(VMArchitecture target, Point pos, ushort pattern, sbyte level) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
         {
-            if (pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y >= target.Height) return 0;
+            if (pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y >= target.Height) return new PatternReplaceCount();
 
             pos.X = Math.Max(Math.Min(pos.X, target.Width-1), 0);
             pos.Y = Math.Max(Math.Min(pos.Y, target.Height-1), 0);
@@ -331,7 +344,7 @@ namespace FSO.SimAntics.Utils
 
             var width = target.Width;
             var height = target.Height;
-            int wallsCovered = 0;
+            PatternReplaceCount wallsCovered = new PatternReplaceCount(false);
 
             byte[] Map = new byte[target.Width * target.Height];
 
@@ -360,7 +373,7 @@ namespace FSO.SimAntics.Utils
                 {
                     if (mainWalls.BottomRightPattern != pattern && PXWalls.TopLeftThick)
                     {
-                        wallsCovered++;
+                        wallsCovered.Add(mainWalls.BottomRightPattern);
                         mainWalls.BottomRightPattern = pattern;
                     }
                 }
@@ -371,7 +384,7 @@ namespace FSO.SimAntics.Utils
                 {
                     if (mainWalls.TopLeftPattern != pattern && mainWalls.TopLeftThick)
                     {
-                        wallsCovered++;
+                        wallsCovered.Add(mainWalls.TopLeftPattern); ;
                         mainWalls.TopLeftPattern = pattern;
                     }
                 }
@@ -382,7 +395,7 @@ namespace FSO.SimAntics.Utils
                 {
                     if (mainWalls.BottomLeftPattern != pattern && PYWalls.TopRightThick)
                     {
-                        wallsCovered++;
+                        wallsCovered.Add(mainWalls.BottomLeftPattern);
                         mainWalls.BottomLeftPattern = pattern;
                     }
                 }
@@ -393,7 +406,7 @@ namespace FSO.SimAntics.Utils
                 {
                     if (mainWalls.TopRightPattern != pattern && mainWalls.TopRightThick)
                     {
-                        wallsCovered++;
+                        wallsCovered.Add(mainWalls.TopRightPattern);
                         mainWalls.TopRightPattern = pattern;
                     }
                 }
@@ -403,9 +416,9 @@ namespace FSO.SimAntics.Utils
             return wallsCovered;
         }
 
-        private static int SpreadOnto(WallTile[] walls, int x, int y, int inDir, byte[] map, int width, int height, Stack<Point> spread, ushort pattern, bool floorMode)
+        private static PatternReplaceCount SpreadOnto(WallTile[] walls, int x, int y, int inDir, byte[] map, int width, int height, Stack<Point> spread, ushort pattern, bool floorMode)
         {
-            int filled = 0;
+            PatternReplaceCount filled = new PatternReplaceCount(false);
             var wall = walls[x + y * width];
             if ((wall.Segments & WallSegments.HorizontalDiag) > 0 && (wall.TopRightStyle == 1 || floorMode))
             {
@@ -414,7 +427,7 @@ namespace FSO.SimAntics.Utils
                     //bottom (bottom right pattern)
                     if (!floorMode && wall.BottomLeftPattern != pattern)
                     {
-                        filled++;
+                        filled.Add(wall.BottomLeftPattern);
                         wall.BottomLeftPattern = pattern;
                     }
                     map[x + y * width] |= 1;
@@ -423,7 +436,7 @@ namespace FSO.SimAntics.Utils
                     //top (bottom left pattern)
                     if (!floorMode && wall.BottomRightPattern != pattern)
                     {
-                        filled++;
+                        filled.Add(wall.BottomRightPattern);
                         wall.BottomRightPattern = pattern;
                     }
                     map[x + y * width] |= 2;
@@ -437,7 +450,7 @@ namespace FSO.SimAntics.Utils
                     //left
                     if (!floorMode && wall.BottomRightPattern != pattern)
                     {
-                        filled++;
+                        filled.Add(wall.BottomRightPattern);
                         wall.BottomRightPattern = pattern;
                     }
                     map[x + y * width] |= 1;
@@ -447,7 +460,7 @@ namespace FSO.SimAntics.Utils
                     //right
                     if (!floorMode && wall.BottomLeftPattern != pattern)
                     {
-                        filled++;
+                        filled.Add(wall.BottomLeftPattern);
                         wall.BottomLeftPattern = pattern;
                     }
                     map[x + y * width] |= 2;
@@ -466,9 +479,9 @@ namespace FSO.SimAntics.Utils
         /// <summary>
         /// Fills a room with a certain Floor pattern. Returns floors covered
         /// </summary>
-        public static int FloorPatternFill(VMArchitecture target, Point pos, ushort pattern, sbyte level) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
+        public static PatternReplaceCount FloorPatternFill(VMArchitecture target, Point pos, ushort pattern, sbyte level) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
         {
-            if (pattern > 65533 || pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y >= target.Height) return 0;
+            if (pattern > 65533 || pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y >= target.Height) return new PatternReplaceCount();
 
             pos.X = Math.Max(Math.Min(pos.X, target.Width - 1), 0);
             pos.Y = Math.Max(Math.Min(pos.Y, target.Height - 1), 0);
@@ -476,7 +489,7 @@ namespace FSO.SimAntics.Utils
 
             var width = target.Width;
             var height = target.Height;
-            int floorsCovered = 0;
+            PatternReplaceCount floorsCovered = new PatternReplaceCount(true);
 
             byte[] Map = new byte[target.Width * target.Height];
 
@@ -506,12 +519,12 @@ namespace FSO.SimAntics.Utils
 
                         if ((flags & 1) == 1 && wall.TopLeftPattern != pattern)
                         {
-                            floorsCovered++;
+                            floorsCovered.Add(wall.TopLeftPattern);
                             wall.TopLeftPattern = pattern;
                         }
                         else if ((flags & 2) == 2 && wall.TopLeftStyle != pattern)
                         {
-                            floorsCovered++;
+                            floorsCovered.Add(wall.TopLeftStyle);
                             wall.TopLeftStyle = pattern;
                         }
 
@@ -523,12 +536,11 @@ namespace FSO.SimAntics.Utils
                     //normal tile, draw a floor here.
                     if (floor.Pattern != pattern)
                     {
+                        var old = floor.Pattern;
                         floor.Pattern = pattern;
-                        if (target.SetFloor((short)item.X, (short)item.Y, level, floor, false)) floorsCovered += 2;
+                        if (target.SetFloor((short)item.X, (short)item.Y, level, floor, false)) floorsCovered.DAdd(old);
                     }
-
                 }
-
 
                 if (Map[plusX + item.Y * width] < 3 && (mainWalls.Segments & WallSegments.BottomRight) == 0)
                     SpreadOnto(walls, plusX, item.Y, 0, Map, width, height, spread, pattern, true);
@@ -547,13 +559,13 @@ namespace FSO.SimAntics.Utils
             return floorsCovered;
         }
 
-        public static int FloorPatternRect(VMArchitecture target, Rectangle rect, ushort dir, ushort pattern, sbyte level) //returns floors covered
+        public static PatternReplaceCount FloorPatternRect(VMArchitecture target, Rectangle rect, ushort dir, ushort pattern, sbyte level) //returns floors covered
         {
-            int floorsCovered = 0;
+            PatternReplaceCount floorsCovered = new PatternReplaceCount(true);
             if (rect.Width == 0 && rect.Height == 0)
             {
                 //dot mode, just fill a tile. can be a diagonal.
-                if (rect.X < 0 || rect.X >= target.Width || rect.Y < 0 || rect.Y >= target.Width) return 0;
+                if (rect.X < 0 || rect.X >= target.Width || rect.Y < 0 || rect.Y >= target.Width) return floorsCovered;
                 var wall = target.GetWall((short)rect.X, (short)rect.Y, level);
                 if ((wall.Segments & AnyDiag) > 0 && pattern < 65534)
                 {
@@ -562,7 +574,7 @@ namespace FSO.SimAntics.Utils
                     {
                         if (wall.TopLeftStyle != pattern)
                         {
-                            floorsCovered++;
+                            floorsCovered.Add(wall.TopLeftStyle);
                             wall.TopLeftStyle = pattern;
                         }
                     }
@@ -570,7 +582,7 @@ namespace FSO.SimAntics.Utils
                     {
                         if (wall.TopLeftPattern != pattern)
                         {
-                            floorsCovered++;
+                            floorsCovered.Add(wall.TopLeftPattern);
                             wall.TopLeftPattern = pattern;
                         }
                     }
@@ -581,8 +593,9 @@ namespace FSO.SimAntics.Utils
                     var floor = target.GetFloor((short)rect.X, (short)rect.Y, level);
                     if (floor.Pattern != pattern)
                     {
+                        var old = floor.Pattern;
                         floor.Pattern = pattern;
-                        if (target.SetFloor((short)rect.X, (short)rect.Y, level, floor, false)) floorsCovered += 2;
+                        if (target.SetFloor((short)rect.X, (short)rect.Y, level, floor, false)) floorsCovered.DAdd(old);
                     }
                 }
                 return floorsCovered;
@@ -601,13 +614,13 @@ namespace FSO.SimAntics.Utils
                         if (wall.TopLeftStyle != pattern)
                         {
                             wall.TopLeftStyle = pattern;
-                            floorsCovered++;
+                            floorsCovered.Add(wall.TopLeftStyle);
                         }
 
                         if (wall.TopLeftPattern != pattern)
                         {
                             wall.TopLeftPattern = pattern;
-                            floorsCovered++;
+                            floorsCovered.Add(wall.TopLeftPattern);
                         }
                         target.SetWall((short)x, (short)y, level, wall);
                     }
@@ -616,8 +629,9 @@ namespace FSO.SimAntics.Utils
                         var floor = target.GetFloor((short)x, (short)y, level);
                         if (floor.Pattern != pattern)
                         {
+                            var old = floor.Pattern;
                             floor.Pattern = pattern;
-                            if (target.SetFloor((short)x, (short)y, level, floor, false)) floorsCovered += 2;
+                            if (target.SetFloor((short)x, (short)y, level, floor, false)) floorsCovered.DAdd(old);
                         }
                     }
                 }
@@ -625,5 +639,71 @@ namespace FSO.SimAntics.Utils
             return floorsCovered;
         }
 
+    }
+    
+    public struct PatternReplaceCount
+    {
+        public int Cost;
+        public int Total;
+        public bool FloorMode;
+
+        public static WorldFloorProvider Floors;
+        public static WorldWallProvider Walls;
+
+        public PatternReplaceCount(bool floor) {
+            if (Floors == null)
+            {
+                var content = Content.Content.Get();
+                Walls = content.WorldWalls;
+                Floors = content.WorldFloors;
+            }
+            FloorMode = floor; Cost = 0; Total = 0;
+        }
+
+        public static PatternReplaceCount operator +(PatternReplaceCount p1, PatternReplaceCount p2)
+        {
+            p1.Cost += p2.Cost;
+            p1.Total += p2.Total;
+            return p1;
+        }
+
+        public void Add(ushort id)
+        {
+            int value = (FloorMode) ? GetFloorPrice(id) : GetPatternPrice(id);
+            Cost += value;
+            Total++;
+        }
+
+        public void DAdd(ushort id)
+        {
+            int value = (FloorMode) ? GetFloorPrice(id) : GetPatternPrice(id);
+            Cost += value*2;
+            Total += 2;
+        }
+
+        private static int GetPatternPrice(ushort id)
+        {
+            var pref = GetPatternRef(id);
+            return (pref == null) ? 0 : pref.Price;
+        }
+
+        private static int GetFloorPrice(ushort id)
+        {
+            var fref = GetFloorRef(id);
+            return (fref == null) ? 0 : fref.Price;
+        }
+
+        private static WallReference GetPatternRef(ushort id)
+        {
+            WallReference result = null;
+            Walls.Entries.TryGetValue(id, out result);
+            return result;
+        }
+        private static FloorReference GetFloorRef(ushort id)
+        {
+            FloorReference result = null;
+            Floors.Entries.TryGetValue(id, out result);
+            return result;
+        }
     }
 }
