@@ -276,7 +276,8 @@ namespace FSO.Client.UI.Panels
                     if (updatePos)
                     {
                         MoveSelected(Holding.TilePos, Holding.Level);
-                        if (Holding.CanPlace == VMPlacementError.Success && ParentControl.ActiveEntity != null && ParentControl.ActiveEntity.TSOState.Budget.Value < Holding.Price)
+                        if (!Holding.IsBought && Holding.CanPlace == VMPlacementError.Success && 
+                            ParentControl.ActiveEntity != null && ParentControl.ActiveEntity.TSOState.Budget.Value < Holding.Price)
                             Holding.CanPlace = VMPlacementError.InsufficientFunds;
                         if (Holding.CanPlace != VMPlacementError.Success)
                         {
