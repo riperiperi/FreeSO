@@ -27,6 +27,7 @@ namespace FSO.Common.Rendering.Framework.Model
         public bool TouchMode;
 
         public KeyboardState PreviousKeyboardState;
+        public List<char> FrameTextInput;
 
         /** A Place to keep shared variables, clears every update cycle **/
         public Dictionary<string, object> SharedData = new Dictionary<string, object>();

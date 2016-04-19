@@ -95,6 +95,7 @@ namespace FSO.Client
             base.Screen.Layers.Add(SceneMgr);
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
+            this.Window.TextInput += GameScreen.TextInput;
             if (!GlobalSettings.Default.Windowed) Graphics.ToggleFullScreen();
         }
 

@@ -36,6 +36,12 @@ namespace FSO.Common.Rendering.Framework
             State = new UpdateState();
         }
 
+        private static List<char> TextCharacters = new List<char>();
+        public static void TextInput(object sender, TextInputEventArgs e)
+        {
+            TextCharacters.Add(e.Character);
+        }
+
         /// <summary>
         /// Adds a graphical element to this scene.
         /// </summary>
@@ -51,6 +57,7 @@ namespace FSO.Common.Rendering.Framework
 
             State.Time = time;
             State.PreviousKeyboardState = State.KeyboardState;
+            State.FrameTextInput = TextCharacters;
 
             if (hasFocus)
             {
@@ -70,6 +77,8 @@ namespace FSO.Common.Rendering.Framework
             foreach (var layer in Layers){
                 layer.Update(State);
             }
+
+            TextCharacters.Clear();
         }
 
         private void TouchStub(UpdateState state)
