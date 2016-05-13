@@ -110,7 +110,19 @@ namespace FSO.SimAntics.Engine
 
             if ((Flags & SLOTFlags.SnapToDirection) > 0)
             { //snap to the specified direction, on the specified point.
-                if (((int)Flags & 255) == 0) Flags |= SLOTFlags.NORTH;
+                double baseRot;
+                if (Slot.Facing > SLOTFacing.FaceAwayFromObject)
+                {
+                    // bit of a legacy thing here. Facing field did not use to exist,
+                    // which is why SnapToDirection was hacked to use the directional flags.
+                    // now that it exists, it is used instead, to encode the same information...
+                    // just transform back into old format.
+                    Flags |= (SLOTFlags)(1 << (int)Slot.Facing);
+                }
+                else
+                {
+                    if (((int)Flags & 255) == 0) Flags |= SLOTFlags.NORTH;
+                }
 
                 var flagRot = DirectionUtils.PosMod(obj.RadianDirection+FlagsAsRad(Flags), Math.PI*2);
                 if (flagRot > Math.PI) flagRot -= Math.PI * 2;

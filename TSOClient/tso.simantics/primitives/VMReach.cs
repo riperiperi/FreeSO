@@ -82,10 +82,10 @@ namespace FSO.SimAntics.Primitives
                     avatar.Animations.Clear();
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 } 
-                else if (avatar.CurrentAnimationState.EventFired)
+                else if (avatar.CurrentAnimationState.EventQueue.Count > 0)
                 {
 
-                    if (avatar.CurrentAnimationState.EventCode == 0)
+                    if (avatar.CurrentAnimationState.EventQueue[0] == 0)
                     {
                         //do the grab/drop
                         if (operand.Mode == 0)
@@ -124,8 +124,7 @@ namespace FSO.SimAntics.Primitives
                             }
                         }
                     }
-
-                    avatar.CurrentAnimationState.EventFired = false; //clear fired flag
+                    avatar.CurrentAnimationState.EventQueue.RemoveAt(0);
                     return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                 }
                 else

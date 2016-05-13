@@ -17,8 +17,7 @@ namespace FSO.SimAntics.Model
     public class VMAnimationState {
         public Animation Anim;
         public float CurrentFrame;
-        public short EventCode;
-        public bool EventFired;
+        public List<short> EventQueue = new List<short>();
         public bool EndReached;
         public bool PlayingBackwards;
         public float Speed = 1.0f;
@@ -60,8 +59,7 @@ namespace FSO.SimAntics.Model
             {
                 Anim = Anim.Name,
                 CurrentFrame = CurrentFrame,
-                EventCode = EventCode,
-                EventFired = EventFired,
+                EventQueue = EventQueue.ToArray(),
                 EndReached = EndReached,
                 PlayingBackwards = PlayingBackwards,
                 Speed = Speed,
@@ -74,8 +72,7 @@ namespace FSO.SimAntics.Model
         {
             Anim = FSO.Content.Content.Get().AvatarAnimations.Get(input.Anim + ".anim");
             CurrentFrame = input.CurrentFrame;
-            EventCode = input.EventCode;
-            EventFired = input.EventFired;
+            EventQueue = new List<short>(input.EventQueue);
             EndReached = input.EndReached;
             PlayingBackwards = input.PlayingBackwards;
             Speed = input.Speed;

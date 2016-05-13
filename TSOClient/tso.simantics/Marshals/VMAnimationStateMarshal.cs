@@ -12,8 +12,7 @@ namespace FSO.SimAntics.Marshals
     {
         public string Anim;
         public float CurrentFrame;
-        public short EventCode;
-        public bool EventFired;
+        public short[] EventQueue;
         public bool EndReached;
         public bool PlayingBackwards;
         public float Speed;
@@ -30,8 +29,9 @@ namespace FSO.SimAntics.Marshals
         {
             Anim = reader.ReadString();
             CurrentFrame = reader.ReadSingle();
-            EventCode = reader.ReadInt16();
-            EventFired = reader.ReadBoolean();
+            var size = reader.ReadByte();
+            EventQueue = new short[size];
+            for (int i = 0; i < EventQueue.Length; i++) EventQueue[i] = reader.ReadInt16();
             EndReached = reader.ReadBoolean();
             PlayingBackwards = reader.ReadBoolean();
             Speed = reader.ReadSingle();
@@ -43,8 +43,8 @@ namespace FSO.SimAntics.Marshals
         {
             writer.Write(Anim);
             writer.Write(CurrentFrame);
-            writer.Write(EventCode);
-            writer.Write(EventFired);
+            writer.Write(EventQueue.Length);
+            foreach (var evt in EventQueue) writer.Write(evt);
             writer.Write(EndReached);
             writer.Write(PlayingBackwards);
             writer.Write(Speed);

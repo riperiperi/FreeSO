@@ -344,8 +344,7 @@ namespace FSO.SimAntics
             if (evt != null)
             {
                 var eventValue = short.Parse(evt);
-                avatar.CurrentAnimationState.EventCode = eventValue;
-                avatar.CurrentAnimationState.EventFired = true;
+                avatar.CurrentAnimationState.EventQueue.Add(eventValue);
             }
             var rhevt = tp.Properties["righthand"];
             if (rhevt != null)

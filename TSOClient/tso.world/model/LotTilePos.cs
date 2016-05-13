@@ -64,6 +64,11 @@ namespace FSO.LotView.Model
             return new LotTilePos((short)(c1.x - c2.x), (short)(c1.y - c2.y), (sbyte)(c1.Level - c2.Level));
         }
 
+        public static LotTilePos operator /(LotTilePos c1, int div) //use for offsets ONLY!
+        {
+            return new LotTilePos((short)(c1.x/div), (short)(c1.y/div), (sbyte)(c1.Level/div));
+        }
+
         public static bool operator ==(LotTilePos c1, LotTilePos c2) //are these necessary?
         {
             return equals(c1, c2);

@@ -71,24 +71,24 @@ namespace FSO.SimAntics.Engine.Primitives
                 }
                 else
                 {
-                    if (avatar.CurrentAnimationState.EndReached)
+                    if (avatar.CurrentAnimationState.EventQueue.Count > 0) //favor events over end. do not want to miss any.
                     {
-                        avatar.Animations.Clear();
-                        return VMPrimitiveExitCode.GOTO_TRUE;
-                    }
-                    else if (avatar.CurrentAnimationState.EventFired)
-                    {
-                        avatar.CurrentAnimationState.EventFired = false; //clear fired flag
+                        var code = avatar.CurrentAnimationState.EventQueue[0];
+                        avatar.CurrentAnimationState.EventQueue.RemoveAt(0);
                         if (operand.StoreFrameInLocal)
                         {
-                            VMMemory.SetVariable(context, VMVariableScope.Local, operand.LocalEventNumber, avatar.CurrentAnimationState.EventCode);
+                            VMMemory.SetVariable(context, VMVariableScope.Local, operand.LocalEventNumber, code);
                         }
                         else
                         {
-                            VMMemory.SetVariable(context, VMVariableScope.Parameters, 0, avatar.CurrentAnimationState.EventCode);
+                            VMMemory.SetVariable(context, VMVariableScope.Parameters, 0, code);
                         }
                         return VMPrimitiveExitCode.GOTO_FALSE;
-
+                    }
+                    else if (avatar.CurrentAnimationState.EndReached)
+                    {
+                        avatar.Animations.Clear();
+                        return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                     else
                     {
