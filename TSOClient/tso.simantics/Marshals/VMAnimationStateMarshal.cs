@@ -43,7 +43,7 @@ namespace FSO.SimAntics.Marshals
         {
             writer.Write(Anim);
             writer.Write(CurrentFrame);
-            writer.Write(EventQueue.Length);
+            writer.Write((byte)EventQueue.Length);
             foreach (var evt in EventQueue) writer.Write(evt);
             writer.Write(EndReached);
             writer.Write(PlayingBackwards);
