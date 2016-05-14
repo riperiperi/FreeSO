@@ -48,8 +48,13 @@ namespace FSO.SimAntics.Primitives
                     obj.SetPosition(LotTilePos.OUT_OF_WORLD, Direction.NORTH, context.VM.Context);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case 2:
-                    //"smoke cloud" - not sure what this does.
-                    break;
+                    //"smoke cloud" - halfway between callee and caller (is "caller" actually reference object?)
+                    var smokePos = context.Callee.Position;
+                    smokePos += context.Caller.Position;
+                    smokePos /= 2;
+                    smokePos -= new LotTilePos(8, 8, 0); //smoke is 2x2... offset to center it.
+                    return (obj.SetPosition(smokePos, Direction.NORTH, context.VM.Context).Status == VMPlacementError.Success)?
+                        VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                 case 3:
                 case 4:
                     //along object vector

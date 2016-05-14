@@ -291,6 +291,8 @@ namespace FSO.SimAntics
                     float volume = (SoundThreads[i].Pan) ? 1 - (float)Math.Max(0, Math.Min(1, Math.Sqrt(scrPos.X * scrPos.X + scrPos.Y * scrPos.Y) / worldSpace.WorldPxWidth)) : 1;
 
                     if (SoundThreads[i].Zoom) volume /= 4 - (int)worldState.Zoom;
+                    if (Position.Level > worldState.Level) volume /= 4;
+                    else if (Position.Level != worldState.Level) volume /= 2;
 
                     SoundThreads[i].Sound.SetVolume(volume, pan);
 

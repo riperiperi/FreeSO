@@ -20,7 +20,7 @@ namespace FSO.SimAntics.Engine
     {
         //should use a Trie for this in future, for performance reasons
         private static string[] valid = {
-            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "NameLocal:", "DynamicObjectName", "\r\n"
+            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "NameLocal:", "DynamicObjectName", "MoneyXL:", "\r\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -138,6 +138,8 @@ namespace FSO.SimAntics.Engine
                                     output.Append(context.Caller.ToString()); break;
                                 case "TempXL:":
                                     output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.TempXL, values[0]).ToString()); break;
+                                case "MoneyXL:":
+                                    output.Append("$" + VMMemory.GetBigVariable(context, Scopes.VMVariableScope.TempXL, values[0]).ToString("##,#0")); break;
                                 case "Temp:":
                                     output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Temps, values[0]).ToString()); break;
                                 case "$":
@@ -169,7 +171,13 @@ namespace FSO.SimAntics.Engine
                                     }
 
                                     ushort index = (ushort)context.Locals[values[0]];
-                                    if (res != null) output.Append(res.GetString(index));
+                                    if (res != null)
+                                    {
+                                        var str = res.GetString(index);
+                                        output.Append(ParseDialogString(context, str, res)); // recursive command parsing!
+                                        // this is needed for the crafting table.
+                                        // though it is also, completely insane?
+                                    }
                                     break;
                                 case "Local:":
                                     output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]).ToString()); break;

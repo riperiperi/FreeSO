@@ -140,8 +140,8 @@ namespace FSO.Client.UI.Panels.WorldUI
 
                 if (Headline.Operand.Crossed)
                 {
-                    Texture2D Cross = Sprites.Get<SPR>(67).Frames[ZoomFrame].GetTexture(GD);
-                    batch.Draw(Cross, new Vector2(Texture.Width / 2 - Cross.Width / 2, Texture.Height / 2 - Cross.Height / 2), Color.White);
+                    Texture2D Cross = Sprites.Get<SPR>(0x67).Frames[ZoomFrame].GetTexture(GD);
+                    batch.Draw(Cross, new Vector2(Texture.Width / 2 - Cross.Width / 2, Texture.Height / 2 - Cross.Height / 4), Color.White);
                 }
 
                 if (DrawSkill)
