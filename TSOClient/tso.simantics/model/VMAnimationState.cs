@@ -18,6 +18,7 @@ namespace FSO.SimAntics.Model
         public Animation Anim;
         public float CurrentFrame;
         public List<short> EventQueue = new List<short>();
+        public byte EventsRun; //total # of xevts fired during anim. up to short if anything uses more than 255.
         public bool EndReached;
         public bool PlayingBackwards;
         public float Speed = 1.0f;
@@ -60,6 +61,7 @@ namespace FSO.SimAntics.Model
                 Anim = Anim.Name,
                 CurrentFrame = CurrentFrame,
                 EventQueue = EventQueue.ToArray(),
+                EventsRun = EventsRun,
                 EndReached = EndReached,
                 PlayingBackwards = PlayingBackwards,
                 Speed = Speed,
@@ -73,6 +75,7 @@ namespace FSO.SimAntics.Model
             Anim = FSO.Content.Content.Get().AvatarAnimations.Get(input.Anim + ".anim");
             CurrentFrame = input.CurrentFrame;
             EventQueue = new List<short>(input.EventQueue);
+            EventsRun = input.EventsRun;
             EndReached = input.EndReached;
             PlayingBackwards = input.PlayingBackwards;
             Speed = input.Speed;

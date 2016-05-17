@@ -71,21 +71,29 @@ namespace FSO.SimAntics.Engine.Primitives
                 }
                 else
                 {
-                    if (avatar.CurrentAnimationState.EventQueue.Count > 0) //favor events over end. do not want to miss any.
+                    var cAnim = avatar.CurrentAnimationState;
+
+                    //SPECIAL CASE: if we are ending the animation, and the number of events run < expected events
+                    //forcefully run those events, with id as their event number. (required for bath drain)
+                    if (cAnim.EndReached)
                     {
-                        var code = avatar.CurrentAnimationState.EventQueue[0];
-                        avatar.CurrentAnimationState.EventQueue.RemoveAt(0);
+                        while (cAnim.EventsRun < operand.ExpectedEventCount)
+                        {
+                            cAnim.EventQueue.Add(cAnim.EventsRun++);
+                        }
+                    }
+
+                    if (cAnim.EventQueue.Count > 0) //favor events over end. do not want to miss any.
+                    {
+                        var code = cAnim.EventQueue[0];
+                        cAnim.EventQueue.RemoveAt(0);
                         if (operand.StoreFrameInLocal)
-                        {
                             VMMemory.SetVariable(context, VMVariableScope.Local, operand.LocalEventNumber, code);
-                        }
                         else
-                        {
                             VMMemory.SetVariable(context, VMVariableScope.Parameters, 0, code);
-                        }
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     }
-                    else if (avatar.CurrentAnimationState.EndReached)
+                    else if (cAnim.EndReached)
                     {
                         avatar.Animations.Clear();
                         return VMPrimitiveExitCode.GOTO_TRUE;

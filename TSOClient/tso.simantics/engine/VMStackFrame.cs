@@ -27,7 +27,7 @@ namespace FSO.SimAntics.Engine
 
         /** Routine that this context relates to **/
         public VMRoutine Routine;
-
+        
         /** Current instruction **/
         public ushort InstructionPointer;
 
@@ -39,6 +39,12 @@ namespace FSO.SimAntics.Engine
 
         /** An object selected by the code to perform operations on. **/
         public VMEntity StackObject;
+        
+        /** Indicates that the current stack frame is part of an action tree.
+         ** Set by "idle for input, allow push", when an interaction is selected.
+         ** Used to stop recursive interactions, is only false when within "main".
+         **/
+        public bool ActionTree;
 
         /** Used to get strings and other resources (for primitives) from the code owner, as it may not be the callee but instead a semiglobal or global. **/
         public GameIffResource ScopeResource {
