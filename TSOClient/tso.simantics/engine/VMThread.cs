@@ -182,9 +182,9 @@ namespace FSO.SimAntics.Engine
             }
 
             if (DialogCooldown > 0) DialogCooldown--;
-//#if !DEBUG
+#if !DEBUG
             try {
-                //#endif
+#endif
                 if (!Entity.Dead)
                 {
                     EvaluateQueuePriorities();
@@ -223,12 +223,8 @@ namespace FSO.SimAntics.Engine
                         Entity.Reset(Context);
                     }
                 }
-                else
-                {
-                    Queue.Clear();
-                }
 
-//#if !DEBUG
+#if !DEBUG
             } catch (Exception e) {
                 if (Stack.Count == 0) return; //???
                 var context = Stack[Stack.Count - 1];
@@ -255,7 +251,7 @@ namespace FSO.SimAntics.Engine
 
                 if (Delete) Entity.Delete(true, context.VM.Context);
             }
-//#endif
+#endif
 
             //Interrupt = true;
         }
@@ -265,11 +261,15 @@ namespace FSO.SimAntics.Engine
             int CurrentPriority = (int)Queue[0].Priority;
             for (int i = 1; i < Queue.Count; i++)
             {
+                if (Queue[i].Callee == null || Queue[i].Callee.Dead)
+                {
+                    Queue.RemoveAt(i--); //remove interactions to dead objects
+                    continue;
+                }
                 if ((int)Queue[i].Priority > CurrentPriority)
                 {
                     Queue[0].Cancelled = true;
                     Entity.SetFlag(VMEntityFlags.InteractionCanceled, true);
-                    break;
                 }
             }
         }
@@ -477,6 +477,7 @@ namespace FSO.SimAntics.Engine
 
         public void Pop(VMPrimitiveExitCode result){
             var contextSwitch = (Stack.Count > 1) && Stack.LastOrDefault().ActionTree != Stack[Stack.Count - 2].ActionTree;
+            if (contextSwitch && !Stack.LastOrDefault().ActionTree) { }
             Stack.RemoveAt(Stack.Count - 1);
             LastStackExitCode = result;
 

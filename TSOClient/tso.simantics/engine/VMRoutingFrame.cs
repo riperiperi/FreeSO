@@ -847,7 +847,7 @@ namespace FSO.SimAntics.Engine
 
             //check if the shoo interaction is present on their action queue. callee GUID (destination obj) and 
             //interaction id must match.
-            if (avatar.Thread.Queue.Any(x => x.Callee.Object.GUID == GOTO_GUID && x.InteractionNumber == SHOO_INTERACTION)) return false;
+            if (avatar.Thread.Queue.Any(x => x.Callee != null && x.Callee.Object.GUID == GOTO_GUID && x.InteractionNumber == SHOO_INTERACTION)) return false;
 
             return true;
         }
@@ -1058,6 +1058,7 @@ namespace FSO.SimAntics.Engine
                 CodeOwnerGUID = start.CodeOwnerGUID,
                 Locals = start.Locals,
                 Args = start.Args,
+                ActionTree = start.ActionTree,
                 //above is stack frame stuff
 
                 Rooms = Rooms.ToArray(),

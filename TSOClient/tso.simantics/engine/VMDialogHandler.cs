@@ -57,6 +57,8 @@ namespace FSO.SimAntics.Engine
             StringBuilder command = new StringBuilder();
             StringBuilder output = new StringBuilder();
 
+            if (input == null) return "Missing String!!!";
+
             for (int i = 0; i < input.Length; i++)
             {
                 if (state == 0)

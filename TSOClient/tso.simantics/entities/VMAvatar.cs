@@ -341,6 +341,12 @@ namespace FSO.SimAntics
         {
             base.Reset(context);
             Animations.Clear();
+            if (Headline != null)
+            {
+                HeadlineRenderer.Dispose();
+                Headline = null;
+                HeadlineRenderer = null;
+            }
             foreach (var aprName in BoundAppearances)
             {
                 //remove all appearances, so we don't have stuff stuck to us.
