@@ -34,12 +34,14 @@ namespace FSO.SimAntics.Engine.Primitives
                 if (ent.EntryPoints[entry].ConditionFunction != 0) //check if we can definitely execute this...
                 {
                     var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entry].ConditionFunction, context.VM.Context);
-                    Execute = (VMThread.EvaluateCheck(context.VM.Context, context.Caller, new VMQueuedAction()
+                    Execute = (VMThread.EvaluateCheck(context.VM.Context, context.Caller, new VMStackFrame()
                     {
+                        Caller = context.Caller,
                         Callee = ent,
                         CodeOwner = Behavior.owner,
                         StackObject = ent,
                         Routine = context.VM.Assemble(Behavior.bhav),
+                        Args = new short[4]
                     }) == VMPrimitiveExitCode.RETURN_TRUE);
 
                 }
@@ -59,9 +61,10 @@ namespace FSO.SimAntics.Engine.Primitives
                         Caller = context.Caller,
                         Callee = ent,
                         CodeOwner = Behavior.owner,
-                        StackObject = ent
+                        StackObject = ent,
+                        ActionTree = context.ActionTree
                     };
-                    if (operand.Flags > 0) context.Thread.Queue[0].IconOwner = context.StackObject;
+                    if (operand.Flags > 0 && context.ActionTree) context.Thread.Queue[0].IconOwner = context.StackObject;
                     childFrame.Args = new short[routine.Arguments];
                     context.Thread.Push(childFrame);
                     return VMPrimitiveExitCode.CONTINUE;

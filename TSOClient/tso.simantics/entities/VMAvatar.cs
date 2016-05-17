@@ -337,6 +337,19 @@ namespace FSO.SimAntics
             SetPersonData(VMPersonDataVariable.BodySkill, 1000);
         }
 
+        public override void Reset(VMContext context)
+        {
+            base.Reset(context);
+            Animations.Clear();
+            foreach (var aprName in BoundAppearances)
+            {
+                //remove all appearances, so we don't have stuff stuck to us.
+                var apr = FSO.Content.Content.Get().AvatarAppearances.Get(aprName);
+                Avatar.RemoveAccessory(apr);
+            }
+            BoundAppearances.Clear();
+        }
+
         private void HandleTimePropsEvent(TimePropertyListItem tp)
         {
             VMAvatar avatar = this;
@@ -543,7 +556,7 @@ namespace FSO.SimAntics
             switch (variable)
             {
                 case VMPersonDataVariable.Priority:
-                    if (Thread.Queue.Count != 0) Thread.Queue[0].Priority = value;
+                    if (Thread.Queue.Count != 0 && Thread.Stack.LastOrDefault().ActionTree) Thread.Queue[0].Priority = value;
                     return true;
             }
             PersonData[(ushort)variable] = value;

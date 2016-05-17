@@ -49,6 +49,22 @@ namespace FSO.SimAntics.Engine
 
         public VMActionCallback Callback;
 
+        public VMStackFrame ToStackFrame(VMEntity caller)
+        {
+            var frame = new VMStackFrame
+            {
+                Caller = caller,
+                Callee = Callee,
+                CodeOwner = CodeOwner,
+                Routine = Routine,
+                StackObject = StackObject,
+                ActionTree = true
+            };
+            if (Args == null) frame.Args = new short[4]; //always 4? i got crashes when i used the value provided by the routine, when for that same routine edith displayed 4 in the properties...
+            else frame.Args = Args; //WARNING - if you use this, the args array MUST have the same number of elements the routine is expecting!
+            return frame;
+        }
+
         #region VM Marshalling Functions
         public VMQueuedActionMarshal Save()
         {

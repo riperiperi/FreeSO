@@ -396,12 +396,14 @@ namespace FSO.SimAntics.Engine
                 if (ent.EntryPoints[entryPoint].ConditionFunction != 0) //check if we can definitely execute this...
                 {
                     var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entryPoint].ConditionFunction, VM.Context);
-                    Execute = (VMThread.EvaluateCheck(VM.Context, Caller, new VMQueuedAction()
+                    Execute = (VMThread.EvaluateCheck(VM.Context, Caller, new VMStackFrame()
                     {
+                        Caller = Caller,
                         Callee = ent,
                         CodeOwner = Behavior.owner,
                         StackObject = ent,
                         Routine = VM.Assemble(Behavior.bhav),
+                        Args = new short[4]
                     }) == VMPrimitiveExitCode.RETURN_TRUE);
 
                 }
@@ -421,7 +423,8 @@ namespace FSO.SimAntics.Engine
                         Caller = Caller,
                         Callee = ent,
                         CodeOwner = Behavior.owner,
-                        StackObject = ent
+                        StackObject = ent,
+                        ActionTree = ActionTree
                     };
                     childFrame.Args = new short[routine.Arguments];
                     Thread.Push(childFrame);

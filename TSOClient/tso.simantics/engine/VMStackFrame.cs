@@ -125,7 +125,8 @@ namespace FSO.SimAntics.Engine
                 StackObject = (StackObject == null) ? (short)0 : StackObject.ObjectID,
                 CodeOwnerGUID = CodeOwner.OBJ.GUID,
                 Locals = Locals,
-                Args = Args
+                Args = Args,
+                ActionTree = ActionTree
             };
         }
 
@@ -145,6 +146,7 @@ namespace FSO.SimAntics.Engine
             StackObject = context.VM.GetObjectById(input.StackObject);
             Locals = input.Locals;
             Args = input.Args;
+            ActionTree = input.ActionTree;
         }
 
         public VMStackFrame(VMStackFrameMarshal input, VMContext context, VMThread thread)

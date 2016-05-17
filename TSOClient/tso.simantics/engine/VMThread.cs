@@ -54,11 +54,17 @@ namespace FSO.SimAntics.Engine
         // the maximum number of primitives a thread can execute in one frame. Tweak appropriately.
         public static readonly int MAX_LOOP_COUNT = 500000;
 
-        public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMQueuedAction action)
+        public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMStackFrame initFrame)
         {
-            return EvaluateCheck(context, entity, action, null);
+            return EvaluateCheck(context, entity, initFrame, null, null);
         }
-        public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMQueuedAction action, List<VMPieMenuInteraction> actionStrings)
+
+        public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMStackFrame initFrame, VMQueuedAction action)
+        {
+            return EvaluateCheck(context, entity, initFrame, action, null);
+        }
+
+        public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMStackFrame initFrame, VMQueuedAction action, List<VMPieMenuInteraction> actionStrings)
         {
             var temp = new VMThread(context, entity, 5);
             if (entity.Thread != null)
@@ -68,8 +74,9 @@ namespace FSO.SimAntics.Engine
             }
             temp.IsCheck = true;
             temp.ActionStrings = actionStrings; //generate and place action strings in here
-            temp.EnqueueAction(action);
-            while (temp.Queue.Count > 0 && temp.DialogCooldown == 0) //keep going till we're done! idling is for losers!
+            temp.Push(initFrame);
+            if (action != null) temp.Queue.Add(action); //this check runs an action. We may need its interaction number, etc.
+            while (temp.Stack.Count > 0 && temp.DialogCooldown == 0) //keep going till we're done! idling is for losers!
             {
                 temp.Tick();
                 temp.ThreadBreak = VMThreadBreakMode.Active; //cannot breakpoint in check trees
@@ -79,6 +86,7 @@ namespace FSO.SimAntics.Engine
 
         public bool RunInMyStack(BHAV bhav, GameObject CodeOwner, short[] passVars, VMEntity stackObj)
         {
+            //a little bit hacky. We may not need to do as serious a context switch as this.
             var OldStack = Stack;
             var OldQueue = Queue;
             var OldCheck = IsCheck;
@@ -93,13 +101,8 @@ namespace FSO.SimAntics.Engine
                 Stack = new List<VMStackFrame>();
             }
 
-            if (Queue.Count > 0)
-            {
-                Queue = new List<VMQueuedAction>() { Queue[0] };
-            } else
-            {
-                Queue = new List<VMQueuedAction>();
-            }
+            Queue = new List<VMQueuedAction>();
+            if (Queue.Count > 0) Queue.Add(Queue[0]);
             IsCheck = true;
 
             ExecuteSubRoutine(prevFrame, bhav, CodeOwner, new VMSubRoutineOperand(passVars));
@@ -140,6 +143,31 @@ namespace FSO.SimAntics.Engine
             this.Queue = new List<VMQueuedAction>();
         }
 
+        /// <summary>
+        /// Checks to see if it can push an interaction, and pushes it.
+        /// Returns true on success, false on failure.
+        /// </summary>
+        public bool AttemptPush()
+        {
+            while (Queue.Count > 0)
+            {
+                var item = Queue[0];
+                if (item.Cancelled) Entity.SetFlag(VMEntityFlags.InteractionCanceled, true);
+                if (IsCheck || (item.Mode != VMQueueMode.ParentIdle || !Entity.GetFlag(VMEntityFlags.InteractionCanceled)))
+                {
+                    //TODO: execute check tree (and other checks!) on interaction again unless flags specify otherwise
+                    //will stop some weird timing bugs.
+                    ExecuteAction(item);
+                    return true;
+                }
+                else
+                {
+                    Queue.RemoveAt(0); //keep going.
+                }
+            }
+            return false;
+        }
+
         public void Tick(){
             if (ThreadBreak == VMThreadBreakMode.Pause) return;
             else if (ThreadBreak == VMThreadBreakMode.Immediate)
@@ -155,28 +183,17 @@ namespace FSO.SimAntics.Engine
 
             if (DialogCooldown > 0) DialogCooldown--;
 //#if !DEBUG
-            try {
+//            try {
                 //#endif
                 if (!Entity.Dead)
                 {
                     EvaluateQueuePriorities();
                     if (Stack.Count == 0)
                     {
-                        if (Queue.Count == 0)
-                        {
-                            //todo: should restart main
-                            return;
-                        }
-                        var item = Queue[0];
-                        if (item.Cancelled) Entity.SetFlag(VMEntityFlags.InteractionCanceled, true);
-                        if (IsCheck || (item.Mode != VMQueueMode.ParentIdle || !Entity.GetFlag(VMEntityFlags.InteractionCanceled)))
-                            ExecuteAction(item);
-                        else {
-                            Queue.RemoveAt(0);
-                            return;
-                        }
+                        if (IsCheck) return; //running out of execution means check trees have ended.
+                        Entity.ExecuteEntryPoint(1, Context, false);
                     }
-                    if (!Queue[0].Callee.Dead)
+                    if ((!Stack.LastOrDefault().ActionTree) || (!Queue[0].Callee.Dead)) //main or our target is not dead
                     {
                         if (ThreadBreak == VMThreadBreakMode.ReturnTrue)
                         {
@@ -193,7 +210,6 @@ namespace FSO.SimAntics.Engine
                             return;
                         }
                         ContinueExecution = true;
-                        var interaction = Queue[0];
                         while (ContinueExecution)
                         {
                             if (TicksThisFrame++ > MAX_LOOP_COUNT) throw new Exception("Thread entered infinite loop! ( >"+MAX_LOOP_COUNT+" primitives)");
@@ -201,21 +217,17 @@ namespace FSO.SimAntics.Engine
                             NextInstruction();
                         }
 
-                        //clear "interaction cancelled" if we're going into the next action.
-                        if (Stack.Count == 0 && interaction.Mode != VMQueueMode.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
                     }
                     else //interaction owner is dead, rip
                     {
-                        Stack.Clear();
-                        if (Queue[0].Callback != null) Queue[0].Callback.Run(Entity);
-                        if (Queue.Count > 0) Queue.RemoveAt(0);
+                        Entity.Reset(Context);
                     }
                 }
                 else
                 {
                     Queue.Clear();
                 }
-
+/*
 //#if !DEBUG
             } catch (Exception e) {
                 var context = Stack[Stack.Count - 1];
@@ -243,6 +255,7 @@ namespace FSO.SimAntics.Engine
                 if (Delete) Entity.Delete(true, context.VM.Context);
             }
 //#endif
+*/
             //Interrupt = true;
         }
 
@@ -283,7 +296,8 @@ namespace FSO.SimAntics.Engine
                 CodeOwner = frame.CodeOwner,
                 StackObject = frame.StackObject,
                 Thread = this,
-                CallFailureTrees = failureTrees
+                CallFailureTrees = failureTrees,
+                ActionTree = frame.ActionTree
             };
 
             Stack.Add(childFrame);
@@ -304,7 +318,8 @@ namespace FSO.SimAntics.Engine
                 Caller = frame.Caller,
                 Callee = frame.Callee,
                 CodeOwner = codeOwner,
-                StackObject = frame.StackObject
+                StackObject = frame.StackObject,
+                ActionTree = frame.ActionTree
             };
             childFrame.Args = new short[(routine.Arguments>4)?routine.Arguments:4];
             for (var i = 0; i < childFrame.Args.Length; i++){
@@ -455,41 +470,36 @@ namespace FSO.SimAntics.Engine
         }
 
         private void ExecuteAction(VMQueuedAction action){
-            var frame = new VMStackFrame {
-                Caller = Entity,
-                Callee = action.Callee,
-                CodeOwner = action.CodeOwner,
-                Routine = action.Routine,
-                StackObject = action.StackObject
-            };
-            if (action.Args == null) frame.Args = new short[4]; //always 4? i got crashes when i used the value provided by the routine, when for that same routine edith displayed 4 in the properties...
-            else frame.Args = action.Args; //WARNING - if you use this, the args array MUST have the same number of elements the routine is expecting!
-            
+            var frame = action.ToStackFrame(Entity);
             Push(frame);
         }
 
         public void Pop(VMPrimitiveExitCode result){
+            var contextSwitch = (Stack.Count > 1) && Stack.LastOrDefault().ActionTree != Stack[Stack.Count - 2].ActionTree;
             Stack.RemoveAt(Stack.Count - 1);
             LastStackExitCode = result;
 
+            if (contextSwitch) //interaction switching back to main (it cannot be the other way...)
+            {
+                var interaction = Queue[0];
+                //clear "interaction cancelled" since we are leaving the interaction
+                if (interaction.Mode != VMQueueMode.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
+                if (interaction.Callback != null) interaction.Callback.Run(Entity);
+                if (Queue.Count > 0) Queue.RemoveAt(0);
+                ContinueExecution = true; //continue where the Allow Push idle left off
+            }
             if (Stack.Count > 0)
             {
                 if (result == VMPrimitiveExitCode.RETURN_TRUE)
-                {
                     result = VMPrimitiveExitCode.GOTO_TRUE;
-                }
                 if (result == VMPrimitiveExitCode.RETURN_FALSE)
-                {
                     result = VMPrimitiveExitCode.GOTO_FALSE;
-                }
-
                 var currentFrame = Stack.Last();
                 HandleResult(currentFrame, currentFrame.GetCurrentInstruction(), result);
             }
-            else //interaction finished!
+            else // :(
             {
-                if (Queue[0].Callback != null) Queue[0].Callback.Run(Entity);
-                if (Queue.Count > 0) Queue.RemoveAt(0);
+                ContinueExecution = false;
             }
         }
 
@@ -514,7 +524,8 @@ namespace FSO.SimAntics.Engine
         {
             if (!IsCheck && (invocation.Flags & TTABFlags.RunImmediately) > 0)
             {
-                EvaluateCheck(Context, Entity, invocation);
+                var frame = invocation.ToStackFrame(Entity);
+                EvaluateCheck(Context, Entity, frame, invocation);
                 return;
             }
 

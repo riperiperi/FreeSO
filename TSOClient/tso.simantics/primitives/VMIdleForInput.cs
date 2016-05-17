@@ -23,13 +23,14 @@ namespace FSO.SimAntics.Primitives
         {
             var operand = (VMIdleForInputOperand)args;
 
-            //TODO: wrong, breaks bbq
-            if (operand.AllowPush == 1 && context.Thread.Queue.Count > 1)
-            { //if there are any more interactions, we have been interrupted
-                return VMPrimitiveExitCode.INTERRUPT;
+            //if we're main, attempt to run a queued interaction. We just idle if this fails.
+            if (operand.AllowPush == 1 && !context.ActionTree && context.Thread.AttemptPush())
+            {
+                return VMPrimitiveExitCode.CONTINUE; //control handover
+                //TODO: does this forcefully end the rest of the idle? (force a true return, must loop back to run again)
             }
 
-            if (context.Thread.Queue[0].Cancelled)
+            if (context.ActionTree && context.Thread.Queue[0].Cancelled)
             {
                 context.Caller.SetFlag(VMEntityFlags.NotifiedByIdleForInput, true);
                 return VMPrimitiveExitCode.GOTO_TRUE;

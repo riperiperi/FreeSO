@@ -17,6 +17,7 @@ namespace FSO.SimAntics.Marshals.Threads
         public uint CodeOwnerGUID;
         public short[] Locals;
         public short[] Args;
+        public bool ActionTree;
 
         public virtual void Deserialize(BinaryReader reader)
         {
@@ -40,6 +41,8 @@ namespace FSO.SimAntics.Marshals.Threads
                 Args = new short[argsN];
                 for (int i = 0; i < argsN; i++) Args[i] = reader.ReadInt16();
             }
+
+            ActionTree = reader.ReadBoolean();
         }
 
         public virtual void SerializeInto(BinaryWriter writer)
@@ -54,6 +57,7 @@ namespace FSO.SimAntics.Marshals.Threads
             if (Locals != null) writer.Write(VMSerializableUtils.ToByteArray(Locals));
             writer.Write((Args == null) ? -1 : Args.Length);
             if (Args != null) writer.Write(VMSerializableUtils.ToByteArray(Args));
+            writer.Write(ActionTree);
         }
     }
 }

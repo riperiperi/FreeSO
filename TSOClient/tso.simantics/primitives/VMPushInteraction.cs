@@ -33,7 +33,9 @@ namespace FSO.SimAntics.Engine.Primitives
             switch (operand.Priority)
             {
                 case VMPushPriority.Inherited:
-                    priority = Math.Max((short)1, context.Thread.Queue[0].Priority); break;
+                    short oldPrio = 1;
+                    if (context.ActionTree) oldPrio = context.Thread.Queue[0].Priority;
+                    priority = Math.Max((short)1, oldPrio); break;
                 case VMPushPriority.Maximum:
                     priority = (short)VMQueuePriority.Maximum; break;
                 case VMPushPriority.Autonomous:

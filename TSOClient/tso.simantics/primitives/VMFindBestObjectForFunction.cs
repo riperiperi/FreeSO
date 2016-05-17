@@ -79,11 +79,13 @@ namespace FSO.SimAntics.Engine.Primitives
 
                         var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entry].ConditionFunction, context.VM.Context);
 
-                        var test = VMThread.EvaluateCheck(context.VM.Context, context.Caller, new VMQueuedAction(){
+                        var test = VMThread.EvaluateCheck(context.VM.Context, context.Caller, new VMStackFrame(){
+                            Caller = context.Caller,
                             Callee = ent,
                             CodeOwner = Behavior.owner,
                             StackObject = ent,
                             Routine = context.VM.Assemble(Behavior.bhav),
+                            Args = new short[4]
                         });
                         
                         Execute = (test == VMPrimitiveExitCode.RETURN_TRUE);

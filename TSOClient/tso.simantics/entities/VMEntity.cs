@@ -441,6 +441,7 @@ namespace FSO.SimAntics
 
         public bool ExecuteEntryPoint(int entry, VMContext context, bool runImmediately, VMEntity stackOBJ, short[] args)
         {
+            if (args == null) args = new short[4];
             if (entry == 11)
             {
                 //user placement, hack to do auto floor removal/placement for stairs
@@ -490,23 +491,25 @@ namespace FSO.SimAntics
                 if (bhav != null)
                 {
                     var routine = context.VM.Assemble(bhav);
-                    var action = new VMQueuedAction
+                    var frame = new VMStackFrame
                     {
+                        Caller = this,
                         Callee = this,
                         CodeOwner = CodeOwner,
-                        /** Main function **/
-                        StackObject = stackOBJ,
                         Routine = routine,
+                        StackObject = stackOBJ,
                         Args = args
                     };
 
                     if (runImmediately)
                     {
-                        var checkResult = VMThread.EvaluateCheck(context, this, action);
+                        var checkResult = VMThread.EvaluateCheck(context, this, frame);
                         result = (checkResult == VMPrimitiveExitCode.RETURN_TRUE);
                     }
                     else
-                        this.Thread.EnqueueAction(action);
+                    {
+                        Thread.Push(frame);
+                    }
                 }
 
                 if (GhostImage && runImmediately)
@@ -674,13 +677,15 @@ namespace FSO.SimAntics
                     var Behavior = GetBHAVWithOwner(action.TestFunction, vm.Context);
                     if (Behavior != null) //can be null (bhav removed or missing)! if it is, just act like it was 0.
                     {
-                        CanRun = (VMThread.EvaluateCheck(vm.Context, caller, new VMQueuedAction()
+                        CanRun = (VMThread.EvaluateCheck(vm.Context, caller, new VMStackFrame()
                         {
+                            Caller = caller,
                             Callee = this,
                             CodeOwner = Behavior.owner,
                             StackObject = this,
                             Routine = vm.Assemble(Behavior.bhav),
-                        }, actionStrings) == VMPrimitiveExitCode.RETURN_TRUE);
+                            Args = new short[4]
+                        }, null, actionStrings) == VMPrimitiveExitCode.RETURN_TRUE);
                         if (caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1) CanRun = false;
                     }
                 }
