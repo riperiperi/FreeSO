@@ -192,6 +192,7 @@ namespace FSO.SimAntics.Engine
                     {
                         if (IsCheck) return; //running out of execution means check trees have ended.
                         Entity.ExecuteEntryPoint(1, Context, false);
+                        if (Stack.Count == 0) return;
                     }
                     if ((!Stack.LastOrDefault().ActionTree) || (!Queue[0].Callee.Dead)) //main or our target is not dead
                     {
@@ -229,6 +230,7 @@ namespace FSO.SimAntics.Engine
 
 //#if !DEBUG
             } catch (Exception e) {
+                if (Stack.Count == 0) return; //???
                 var context = Stack[Stack.Count - 1];
                 bool Delete = ((Entity is VMGameObject) && (DialogCooldown > 30 * 20 - 10));
                 if (DialogCooldown == 0)

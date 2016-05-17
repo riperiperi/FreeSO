@@ -24,6 +24,9 @@ namespace FSO.SimAntics.Primitives
 
             switch (operand.Call)
             {
+                case VMGenericTSOCallMode.GetInteractionResult:
+                    context.Thread.TempRegisters[0] = 2; //0=none, 1=reject, 2=accept, 3=pet
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.GetIsPendingDeletion:
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 case VMGenericTSOCallMode.IsTemp0AvatarIgnoringTemp1Avatar:
