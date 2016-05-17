@@ -183,7 +183,7 @@ namespace FSO.SimAntics.Engine
 
             if (DialogCooldown > 0) DialogCooldown--;
 //#if !DEBUG
-//            try {
+            try {
                 //#endif
                 if (!Entity.Dead)
                 {
@@ -216,7 +216,6 @@ namespace FSO.SimAntics.Engine
                             ContinueExecution = false;
                             NextInstruction();
                         }
-
                     }
                     else //interaction owner is dead, rip
                     {
@@ -227,7 +226,7 @@ namespace FSO.SimAntics.Engine
                 {
                     Queue.Clear();
                 }
-/*
+
 //#if !DEBUG
             } catch (Exception e) {
                 var context = Stack[Stack.Count - 1];
@@ -255,7 +254,7 @@ namespace FSO.SimAntics.Engine
                 if (Delete) Entity.Delete(true, context.VM.Context);
             }
 //#endif
-*/
+
             //Interrupt = true;
         }
 
