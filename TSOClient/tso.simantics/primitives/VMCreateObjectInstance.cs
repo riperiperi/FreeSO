@@ -114,14 +114,18 @@ namespace FSO.SimAntics.Engine.Primitives
             }
             if ((operand.Flags & (1 << 6)) > 0)
             {
-                var interaction = operand.InteractionCallback;
+                short interaction = operand.InteractionCallback;
                 if (interaction == 254 && context.ActionTree)
                 {
                     var temp = context.Thread.Queue[0].InteractionNumber;
                     if (temp == -1) throw new VMSimanticsException("Set callback as 'this interaction' when queue item has no interaction number!", context);
-                    interaction = (byte)temp;
+                    interaction = (short)temp;
+                } else if (interaction == 252 || interaction == 253) {
+                    interaction = context.Thread.TempRegisters[0];
                 }
-                var callback = new VMActionCallback(context.VM, interaction, context.Callee, context.StackObject, context.Caller, true);
+                //target is existing stack object. (where we get the interaction/tree from)
+                var callback = new VMActionCallback(context.VM, interaction, context.StackObject, context.StackObject, 
+                    context.Caller, true, (operand.InteractionCallback == 252));
                 callback.Run(obj);
             }
             else context.StackObject = obj;

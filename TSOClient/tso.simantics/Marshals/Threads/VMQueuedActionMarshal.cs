@@ -97,10 +97,11 @@ namespace FSO.SimAntics.Marshals.Threads
 
         //type 1 variables
         public short Target;
-        public byte Interaction;
+        public short Interaction;
         public bool SetParam;
         public short StackObject;
         public short Caller;
+        public bool IsTree;
 
         public void SerializeInto(BinaryWriter writer)
         {
@@ -110,6 +111,7 @@ namespace FSO.SimAntics.Marshals.Threads
             writer.Write(SetParam);
             writer.Write(StackObject);
             writer.Write(Caller);
+            writer.Write(IsTree);
         }
 
         public void Deserialize(BinaryReader reader)
@@ -120,6 +122,7 @@ namespace FSO.SimAntics.Marshals.Threads
             SetParam = reader.ReadBoolean();
             StackObject = reader.ReadInt16();
             Caller = reader.ReadInt16();
+            IsTree = reader.ReadBoolean();
         }
     }
 }

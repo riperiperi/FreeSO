@@ -44,16 +44,33 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTSOCallMode.HasTemporaryID:
                     return VMPrimitiveExitCode.GOTO_FALSE; //used by real game to check if object is persistently tracked probably.
                 case VMGenericTSOCallMode.SwapMyAndStackObjectsSlots:
+                    var cont1 = context.Caller.Container;
+                    var cont2 = context.StackObject.Container;
+                    var contS1 = context.Caller.ContainerSlot;
+                    var contS2 = context.StackObject.ContainerSlot;
+                    if (cont1 != null && cont2 != null)
+                    {
+                        cont1.ClearSlot(contS1);
+                        cont2.ClearSlot(contS2);
+                        cont1.PlaceInSlot(context.StackObject, contS1, false, context.VM.Context);
+                        cont2.PlaceInSlot(context.Caller, contS2, false, context.VM.Context);
+                    }
+                    /*
+                     * well here's some code to swap slots... but this function actually swaps containers
                     int total = Math.Min(context.StackObject.TotalSlots(), context.Caller.TotalSlots());
                     for (int i = 0; i < total; i++)
                     {
                         VMEntity temp1 = context.Caller.GetSlot(i);
                         VMEntity temp2 = context.StackObject.GetSlot(i);
-                        context.Caller.ClearSlot(i);
-                        context.StackObject.ClearSlot(i);
-                        context.Caller.PlaceInSlot(temp2, i, false, context.VM.Context); //slot to slot needs no cleanup
-                        context.StackObject.PlaceInSlot(temp1, i, false, context.VM.Context);
+                        if (temp1 != null) context.Caller.ClearSlot(i);
+                        if (temp2 != null)
+                        {
+                            context.StackObject.ClearSlot(i);
+                            context.Caller.PlaceInSlot(temp2, i, false, context.VM.Context); //slot to slot needs no cleanup
+                        }
+                        if (temp1 != null) context.StackObject.PlaceInSlot(temp1, i, false, context.VM.Context);
                     }
+                    */
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.ReturnLotCategory:
                     context.Thread.TempRegisters[0] = 6; //skills lot. see #Lot Types in global.iff

@@ -20,13 +20,14 @@ namespace FSO.SimAntics.Engine
 
         //type 1 variables
         private VMEntity Target;
-        private byte Interaction;
+        private short Interaction;
         private bool SetParam;
         private VM vm;
         private VMEntity StackObject;
         private VMEntity Caller;
+        private bool IsTree; //true if we're calling a tree instead of an interaction number
 
-        public VMActionCallback(VM vm, byte interactionNumber, VMEntity target, VMEntity stackObj, VMEntity caller, bool paramAsObjectID) //type 1: interaction callback
+        public VMActionCallback(VM vm, short interactionNumber, VMEntity target, VMEntity stackObj, VMEntity caller, bool paramAsObjectID, bool isTree) //type 1: interaction callback
         {
             this.type = 1;
             this.Target = target;
@@ -35,6 +36,7 @@ namespace FSO.SimAntics.Engine
             this.StackObject = stackObj;
             this.vm = vm;
             this.Caller = caller;
+            this.IsTree = isTree;
         }
 
         //type 2 will be function callback.
@@ -43,8 +45,21 @@ namespace FSO.SimAntics.Engine
             if (type == 1) {
                 BHAV bhav;
                 GameObject CodeOwner = null;
-                var Action = Target.TreeTable.InteractionByIndex[Interaction];
-                ushort ActionID = Action.ActionFunction;
+                ushort ActionID;
+                TTABFlags ActionFlags;
+                string ActionName = "";
+                if (IsTree)
+                {
+                    ActionFlags = TTABFlags.Leapfrog;
+                    ActionID = (ushort)Interaction;
+                }
+                else
+                {
+                    var Action = Target.TreeTable.InteractionByIndex[(byte)Interaction];
+                    ActionID = Action.ActionFunction;
+                    ActionFlags = Action.Flags;
+                    ActionName = Target.TreeTableStrings.GetString((int)Action.TTAIndex);
+                }
 
                 if (ActionID < 4096)
                 { //global
@@ -54,13 +69,14 @@ namespace FSO.SimAntics.Engine
                 else if (ActionID < 8192)
                 { //local
                     bhav = Target.Object.Resource.Get<BHAV>(ActionID);
-                    
                 }
                 else
                 { //semi-global
                     bhav = Target.SemiGlobal.Get<BHAV>(ActionID);
                     //CodeOwner = Target.SemiGlobal.Resource;
                 }
+                if (bhav == null) return; //???
+                if (IsTree) ActionName = bhav.ChunkLabel;
 
                 CodeOwner = Target.Object;
                 var routine = vm.Assemble(bhav);
@@ -73,12 +89,12 @@ namespace FSO.SimAntics.Engine
                         Callee = Target,
                         CodeOwner = CodeOwner,
                         Routine = routine,
-                        Name = Target.TreeTableStrings.GetString((int)Action.TTAIndex),
+                        Name = ActionName,
                         StackObject = this.StackObject,
                         Args = args,
                         InteractionNumber = Interaction,
                         Priority = (short)VMQueuePriority.Maximum, //not sure if this is meant to be the case!
-                        Flags = (TTABFlags)Action.Flags
+                        Flags = ActionFlags
                     }
                 );
             }
@@ -95,6 +111,7 @@ namespace FSO.SimAntics.Engine
                 SetParam = SetParam,
                 StackObject = (StackObject == null) ? (short)0 : StackObject.ObjectID,
                 Caller = (Caller == null) ? (short)0 : Caller.ObjectID,
+                IsTree = IsTree
             };
         }
 
@@ -106,6 +123,7 @@ namespace FSO.SimAntics.Engine
             SetParam = input.SetParam;
             StackObject = context.VM.GetObjectById(input.StackObject);
             Caller = context.VM.GetObjectById(input.Caller);
+            IsTree = input.IsTree;
         }
 
         public VMActionCallback(VMActionCallbackMarshal input, VMContext context)
