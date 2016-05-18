@@ -50,8 +50,8 @@ namespace FSO.SimAntics.Primitives
                     var contS2 = context.StackObject.ContainerSlot;
                     if (cont1 != null && cont2 != null)
                     {
-                        cont1.ClearSlot(contS1);
-                        cont2.ClearSlot(contS2);
+                        context.Caller.PrePositionChange(context.VM.Context);
+                        context.StackObject.PrePositionChange(context.VM.Context);
                         cont1.PlaceInSlot(context.StackObject, contS1, false, context.VM.Context);
                         cont2.PlaceInSlot(context.Caller, contS2, false, context.VM.Context);
                     }

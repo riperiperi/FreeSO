@@ -118,11 +118,13 @@ namespace FSO.SimAntics
             set
             {
                 _Position = value;
+                /*
                 for (int i = 0; i < TotalSlots(); i++)
                 {
                     var obj = GetSlot(i);
                     if (obj != null) obj.Position = _Position; //TODO: is physical position the same as the slot offset position?
                 }
+                */
                 VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level - 1) * 2.95f);
             }
         }

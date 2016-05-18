@@ -490,6 +490,7 @@ namespace FSO.SimAntics
             {
                 RefreshLighting(i, i==(RoomInfo.Length-1));
             }
+            if (VM.UseWorld) World.InvalidateZoom();
         }
 
         public void RefreshLighting(ushort room, bool commit)
@@ -576,10 +577,6 @@ namespace FSO.SimAntics
                 RefreshLighting(room, true);
 
             SetToNextCache.RegisterObjectPos(obj);
-
-            /*while (pos.Level > ObjectsAt.Count) ObjectsAt.Add(new Dictionary<int, List<short>>());
-            if (!ObjectsAt[pos.Level-1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID] = new List<short>();
-            ObjectsAt[pos.Level - 1][pos.TileID].Add(obj.ObjectID);*/
         }
 
         public void UnregisterObjectPos(VMEntity obj)

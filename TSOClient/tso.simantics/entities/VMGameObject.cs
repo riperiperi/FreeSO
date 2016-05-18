@@ -241,6 +241,7 @@ namespace FSO.SimAntics
                 }
                 return; 
             }
+            context.UnregisterObjectPos(this);
             if (Container != null)
             {
                 Container.ClearSlot(ContainerSlot);
@@ -260,8 +261,6 @@ namespace FSO.SimAntics
             }
             SetWallUse(arch, false);
             if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, false);
-
-            context.UnregisterObjectPos(this);
             base.PrePositionChange(context);
         }
 
@@ -295,10 +294,13 @@ namespace FSO.SimAntics
             {
                 if (Contained[i] != null)
                 {
+                    context.UnregisterObjectPos(Contained[i]);
                     Contained[i].Position = Position;
-                    Contained[i].SetRoom(room);
+                    Contained[i].PositionChange(context, noEntryPoint); //recursive
                 }
             }
+
+            context.RegisterObjectPos(this);
 
             if (Container != null) return;
             if (Position == LotTilePos.OUT_OF_WORLD) return;
@@ -331,8 +333,6 @@ namespace FSO.SimAntics
             }
             SetWallUse(arch, true);
             if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, true);
-
-            context.RegisterObjectPos(this);
 
             if (EntryPoints[8].ActionFunction != 0) UpdateDynamicMultitile(context);
 

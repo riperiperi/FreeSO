@@ -605,14 +605,14 @@ namespace FSO.SimAntics
 
             if (HandObject != null)
             {
+                context.UnregisterObjectPos(HandObject);
                 HandObject.Position = Position;
-                HandObject.SetRoom(room);
+                HandObject.PositionChange(context, noEntryPoint);
             }
 
+            context.RegisterObjectPos(this);
             if (Container != null) return;
             if (Position == LotTilePos.OUT_OF_WORLD) return;
-
-            context.RegisterObjectPos(this);
 
             base.PositionChange(context, noEntryPoint);
         }
