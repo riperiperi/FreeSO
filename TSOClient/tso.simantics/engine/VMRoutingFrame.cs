@@ -396,15 +396,19 @@ namespace FSO.SimAntics.Engine
                 if (ent.EntryPoints[entryPoint].ConditionFunction != 0) //check if we can definitely execute this...
                 {
                     var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entryPoint].ConditionFunction, VM.Context);
-                    Execute = (VMThread.EvaluateCheck(VM.Context, Caller, new VMStackFrame()
+                    if (Behavior != null)
                     {
-                        Caller = Caller,
-                        Callee = ent,
-                        CodeOwner = Behavior.owner,
-                        StackObject = ent,
-                        Routine = VM.Assemble(Behavior.bhav),
-                        Args = new short[4]
-                    }) == VMPrimitiveExitCode.RETURN_TRUE);
+                        Execute = (VMThread.EvaluateCheck(VM.Context, Caller, new VMStackFrame()
+                        {
+                            Caller = Caller,
+                            Callee = ent,
+                            CodeOwner = Behavior.owner,
+                            StackObject = ent,
+                            Routine = VM.Assemble(Behavior.bhav),
+                            Args = new short[4]
+                        }) == VMPrimitiveExitCode.RETURN_TRUE);
+                    }
+                    else Execute = true;
 
                 }
                 else
@@ -416,6 +420,7 @@ namespace FSO.SimAntics.Engine
                 {
                     //push it onto our stack, except now the object owns our soul! when we are returned to we can evaluate the result and determine if the action failed.
                     var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entryPoint].ActionFunction, VM.Context);
+                    if (Behavior == null) return false; //invalid id
                     var routine = VM.Assemble(Behavior.bhav);
                     var childFrame = new VMStackFrame
                     {

@@ -472,32 +472,18 @@ namespace FSO.SimAntics
                     }
                 }
 
-                BHAV bhav;
-                GameObject CodeOwner;
+
                 ushort ActionID = EntryPoints[entry].ActionFunction;
-                if (ActionID < 4096)
-                { //global
-                    bhav = context.Globals.Resource.Get<BHAV>(ActionID);
-                }
-                else if (ActionID < 8192)
-                { //local
-                    bhav = Object.Resource.Get<BHAV>(ActionID);
-                }
-                else
-                { //semi-global
-                    bhav = SemiGlobal.Get<BHAV>(ActionID);
-                }
+                var tree = GetBHAVWithOwner(ActionID, context);
 
-                CodeOwner = Object;
-
-                if (bhav != null)
+                if (tree != null)
                 {
-                    var routine = context.VM.Assemble(bhav);
+                    var routine = context.VM.Assemble(tree.bhav);
                     var frame = new VMStackFrame
                     {
                         Caller = this,
                         Callee = this,
-                        CodeOwner = CodeOwner,
+                        CodeOwner = tree.owner,
                         Routine = routine,
                         StackObject = stackOBJ,
                         Args = args
@@ -533,12 +519,10 @@ namespace FSO.SimAntics
             if (ActionID < 4096)
             { //global
                 bhav = context.Globals.Resource.Get<BHAV>(ActionID);
-                //CodeOwner = context.Globals.Resource;
             }
             else if (ActionID < 8192)
             { //local
                 bhav = Object.Resource.Get<BHAV>(ActionID);
-
             }
             else
             { //semi-global
@@ -690,6 +674,7 @@ namespace FSO.SimAntics
                         }, null, actionStrings) == VMPrimitiveExitCode.RETURN_TRUE);
                         if (caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1) CanRun = false;
                     }
+                    else CanRun = true;
                 }
                 else
                 {

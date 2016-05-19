@@ -78,17 +78,20 @@ namespace FSO.SimAntics.Engine.Primitives
                     if (ent.EntryPoints[entry].ConditionFunction != 0) {
 
                         var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entry].ConditionFunction, context.VM.Context);
+                        if (Behavior != null)
+                        {
+                            var test = VMThread.EvaluateCheck(context.VM.Context, context.Caller, new VMStackFrame()
+                            {
+                                Caller = context.Caller,
+                                Callee = ent,
+                                CodeOwner = Behavior.owner,
+                                StackObject = ent,
+                                Routine = context.VM.Assemble(Behavior.bhav),
+                                Args = new short[4]
+                            });
 
-                        var test = VMThread.EvaluateCheck(context.VM.Context, context.Caller, new VMStackFrame(){
-                            Caller = context.Caller,
-                            Callee = ent,
-                            CodeOwner = Behavior.owner,
-                            StackObject = ent,
-                            Routine = context.VM.Assemble(Behavior.bhav),
-                            Args = new short[4]
-                        });
-                        
-                        Execute = (test == VMPrimitiveExitCode.RETURN_TRUE);
+                            Execute = (test == VMPrimitiveExitCode.RETURN_TRUE);
+                        } else Execute = true;
 
                     } else {
                         Execute = true;

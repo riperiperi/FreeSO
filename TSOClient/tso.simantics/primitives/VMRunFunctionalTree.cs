@@ -34,16 +34,19 @@ namespace FSO.SimAntics.Engine.Primitives
                 if (ent.EntryPoints[entry].ConditionFunction != 0) //check if we can definitely execute this...
                 {
                     var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entry].ConditionFunction, context.VM.Context);
-                    Execute = (VMThread.EvaluateCheck(context.VM.Context, context.Caller, new VMStackFrame()
+                    if (Behavior != null)
                     {
-                        Caller = context.Caller,
-                        Callee = ent,
-                        CodeOwner = Behavior.owner,
-                        StackObject = ent,
-                        Routine = context.VM.Assemble(Behavior.bhav),
-                        Args = new short[4]
-                    }) == VMPrimitiveExitCode.RETURN_TRUE);
-
+                        Execute = (VMThread.EvaluateCheck(context.VM.Context, context.Caller, new VMStackFrame()
+                        {
+                            Caller = context.Caller,
+                            Callee = ent,
+                            CodeOwner = Behavior.owner,
+                            StackObject = ent,
+                            Routine = context.VM.Assemble(Behavior.bhav),
+                            Args = new short[4]
+                        }) == VMPrimitiveExitCode.RETURN_TRUE);
+                    }
+                    else Execute = true;
                 }
                 else
                 {
@@ -53,14 +56,15 @@ namespace FSO.SimAntics.Engine.Primitives
                 if (Execute)
                 {
                     //push it onto our stack, except now the stack object owns our soul!
-                    var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entry].ActionFunction, context.VM.Context);
-                    var routine = context.VM.Assemble(Behavior.bhav);
+                    var tree = ent.GetBHAVWithOwner(ent.EntryPoints[entry].ActionFunction, context.VM.Context);
+                    if (tree == null) return VMPrimitiveExitCode.GOTO_FALSE; //does not exist
+                    var routine = context.VM.Assemble(tree.bhav);
                     var childFrame = new VMStackFrame
                     {
                         Routine = routine,
                         Caller = context.Caller,
                         Callee = ent,
-                        CodeOwner = Behavior.owner,
+                        CodeOwner = tree.owner,
                         StackObject = ent,
                         ActionTree = context.ActionTree
                     };
