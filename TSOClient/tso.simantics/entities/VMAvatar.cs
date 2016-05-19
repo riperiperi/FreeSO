@@ -629,14 +629,14 @@ namespace FSO.SimAntics
                 }
                 return;
             }
+
+            context.UnregisterObjectPos(this);
             if (Container != null)
             {
                 Container.ClearSlot(ContainerSlot);
                 return;
             }
             if (Position == LotTilePos.OUT_OF_WORLD) return;
-
-            context.UnregisterObjectPos(this);
             base.PrePositionChange(context);
         }
 
