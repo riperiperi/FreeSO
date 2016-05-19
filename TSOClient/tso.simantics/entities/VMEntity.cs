@@ -472,7 +472,6 @@ namespace FSO.SimAntics
                     }
                 }
 
-
                 ushort ActionID = EntryPoints[entry].ActionFunction;
                 var tree = GetBHAVWithOwner(ActionID, context);
 
