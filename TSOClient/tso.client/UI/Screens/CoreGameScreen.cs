@@ -48,6 +48,7 @@ namespace FSO.Client.UI.Screens
 
         private bool Connecting;
         private UILoginProgress ConnectingDialog;
+        private Queue<SimConnectStateChange> StateChanges;
 
         private Terrain CityRenderer; //city view
 
@@ -190,6 +191,7 @@ namespace FSO.Client.UI.Screens
             CityRenderer.RegenData = true;
 
             CityRenderer.SetTimeOfDay(0.5);
+            StateChanges = new Queue<SimConnectStateChange>();
 
             /**
             * Music
@@ -328,6 +330,15 @@ namespace FSO.Client.UI.Screens
                     CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));
             }
 
+            lock (StateChanges)
+            {
+                while (StateChanges.Count > 0)
+                {
+                    var e = StateChanges.Dequeue();
+                    ClientStateChangeProcess(e.State, e.Progress);
+                }
+            }
+
             if (vm != null) vm.Update();
         }
 
@@ -335,7 +346,7 @@ namespace FSO.Client.UI.Screens
         {
             if (ZoomLevel < 4) ZoomLevel = 5;
             vm.Context.Ambience.Kill();
-            vm.CloseNet();
+            vm.CloseNet(VMCloseNetReason.LeaveLot);
             GameFacade.Scenes.Remove(World);
             this.Remove(LotController);
             ucp.SetPanel(-1);
@@ -344,23 +355,35 @@ namespace FSO.Client.UI.Screens
 
         public void ClientStateChange(int state, float progress)
         {
+            lock (StateChanges) StateChanges.Enqueue(new SimConnectStateChange(state, progress));
+        }
+
+        public void ClientStateChangeProcess(int state, float progress)
+        {
             //TODO: queue these up and try and sift through them in an update loop to avoid UI issues. (on main thread)
             if (state == 4) //disconnected
             {
-                var alert = UIScreen.ShowAlert(new UIAlertOptions
+                var reason = (VMCloseNetReason)progress;
+                if (reason == VMCloseNetReason.Unspecified)
                 {
-                    Title = GameFacade.Strings.GetString("222", "3"),
-                    Message = GameFacade.Strings.GetString("222", "2", new string[] { "0" }),
-                }, true);
+                    var alert = UIScreen.ShowAlert(new UIAlertOptions
+                    {
+                        Title = GameFacade.Strings.GetString("222", "3"),
+                        Message = GameFacade.Strings.GetString("222", "2", new string[] { "0" }),
+                    }, true);
 
-                if (Connecting)
+                    if (Connecting)
+                    {
+                        UIScreen.RemoveDialog(ConnectingDialog);
+                        ConnectingDialog = null;
+                        Connecting = false;
+                    }
+
+                    alert.ButtonMap[UIAlertButtonType.OK].OnButtonClick += DisconnectedOKClick;
+                } else
                 {
-                    UIScreen.RemoveDialog(ConnectingDialog);
-                    ConnectingDialog = null;
-                    Connecting = false;
+                    DisconnectedOKClick(null);
                 }
-
-                alert.ButtonMap[UIAlertButtonType.OK].OnButtonClick += DisconnectedOKClick;
             }
 
             if (ConnectingDialog == null) return;
@@ -546,6 +569,16 @@ namespace FSO.Client.UI.Screens
 
             if (CityRenderer != null) CityRenderer.UIMouseEvent(type.ToString()); //all the city renderer needs are events telling it if the mouse is over it or not.
             //if the mouse is over it, the city renderer will handle the rest.
+        }
+    }
+
+    public class SimConnectStateChange
+    {
+        public int State;
+        public float Progress;
+        public SimConnectStateChange(int state, float progress)
+        {
+            State = state; Progress = progress;
         }
     }
 }

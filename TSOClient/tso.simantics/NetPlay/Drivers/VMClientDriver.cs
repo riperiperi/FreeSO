@@ -75,7 +75,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
             VMHook.ReplaceNet(new VMServerDriver(37564));
 #else
-            if (OnStateChange != null) OnStateChange(4, 0f);
+            if (OnStateChange != null) OnStateChange(4, (float)CloseReason);
 #endif
         }
 

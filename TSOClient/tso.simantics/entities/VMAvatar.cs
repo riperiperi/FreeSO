@@ -340,7 +340,7 @@ namespace FSO.SimAntics
         public override void Reset(VMContext context)
         {
             base.Reset(context);
-            Animations.Clear();
+            if (Animations != null) Animations.Clear();
             if (Headline != null)
             {
                 HeadlineRenderer.Dispose();
@@ -563,6 +563,9 @@ namespace FSO.SimAntics
             {
                 case VMPersonDataVariable.Priority:
                     if (Thread.Queue.Count != 0 && Thread.Stack.LastOrDefault().ActionTree) Thread.Queue[0].Priority = value;
+                    return true;
+                case VMPersonDataVariable.RenderDisplayFlags:
+                    if (WorldUI != null) ((AvatarComponent)WorldUI).DisplayFlags = (AvatarDisplayFlags)value;
                     return true;
             }
             PersonData[(ushort)variable] = value;
@@ -799,6 +802,7 @@ namespace FSO.SimAntics
             var gender = GetPersonData(VMPersonDataVariable.Gender);
             InitBodyData(context);
             SetPersonData(VMPersonDataVariable.Gender, gender);
+            SetPersonData(VMPersonDataVariable.RenderDisplayFlags, GetPersonData(VMPersonDataVariable.RenderDisplayFlags));
             BodyOutfit = input.BodyOutfit;
             HeadOutfit = input.HeadOutfit;
         }

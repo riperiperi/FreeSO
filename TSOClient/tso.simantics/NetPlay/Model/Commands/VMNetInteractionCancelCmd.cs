@@ -20,45 +20,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             VMEntity caller = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
             if (caller == null) return false;
 
-            var interaction = caller.Thread.Queue.FirstOrDefault(x => x.UID == ActionUID);
-            if (interaction != null)
-            {
-                interaction.Cancelled = true;
-                //cancel any idle parents after this interaction
-                var index = caller.Thread.Queue.IndexOf(interaction);
-
-                if (interaction.Mode == Engine.VMQueueMode.ParentIdle)
-                {
-                    for (int i = index + 1; i < caller.Thread.Queue.Count; i++)
-                    {
-                        if (caller.Thread.Queue[i].Mode == Engine.VMQueueMode.ParentIdle)
-                        {
-                            if (interaction.Mode == Engine.VMQueueMode.ParentIdle) caller.Thread.Queue.RemoveAt(i--);
-                            else
-                            {
-                                caller.Thread.Queue[i].Cancelled = true;
-                                caller.Thread.Queue[i].Priority = 0;
-                            }
-                        }
-                        else if (caller.Thread.Queue[i].Mode == Engine.VMQueueMode.ParentExit)
-                        {
-                            caller.Thread.Queue[i].Cancelled = true;
-                            caller.Thread.Queue[i].Priority = 0;
-                        }
-                        //parent exit needs to "appear" like it is cancelled.
-                    }
-                }
-
-                if (caller.Thread.Queue[0] != interaction && interaction.Mode == Engine.VMQueueMode.Normal)
-                {
-                    caller.Thread.Queue.Remove(interaction);
-                }
-                else
-                {
-                    caller.SetFlag(VMEntityFlags.InteractionCanceled, true);
-                    interaction.Priority = 0;
-                }
-            }
+            caller.Thread.CancelAction(ActionUID);
 
             return true;
 

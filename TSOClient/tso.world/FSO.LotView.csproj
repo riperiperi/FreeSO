@@ -44,6 +44,7 @@
     <Compile Include="Components\ObjectComponent.cs" />
     <Compile Include="Components\TerrainComponent.cs" />
     <Compile Include="Components\WallComponent.cs" />
+    <Compile Include="Model\AvatarDisplayFlags.cs" />
     <Compile Include="Model\Blueprint.cs" />
     <Compile Include="Model\Direction.cs" />
     <Compile Include="Model\FloorTile.cs" />

@@ -168,8 +168,9 @@ namespace FSO.SimAntics
             Driver.OnPacket(Client, Packet);
         }
 
-        public void CloseNet()
+        public void CloseNet(VMCloseNetReason reason)
         {
+            Driver.CloseReason = reason;
             Driver.CloseNet();
         }
 

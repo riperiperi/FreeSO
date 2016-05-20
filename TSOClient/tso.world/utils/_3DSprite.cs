@@ -21,6 +21,7 @@ namespace FSO.LotView.Utils
         public Avatar Geometry;
         public short ObjectID;
         public ushort Room;
+        public Color Color;
     }
 
     public enum _3DSpriteEffect {

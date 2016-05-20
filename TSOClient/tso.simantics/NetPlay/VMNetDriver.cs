@@ -22,6 +22,7 @@ namespace FSO.SimAntics.NetPlay
         public abstract void SendCommand(VMNetCommandBodyAbstract cmd);
         public abstract bool Tick(VM vm);
         public abstract string GetUserIP(uint uid);
+        public VMCloseNetReason CloseReason;
 
         private int DesyncCooldown = 0;
 
@@ -58,5 +59,11 @@ namespace FSO.SimAntics.NetPlay
         }
         public abstract void CloseNet();
         public abstract void OnPacket(NetworkClient client, ProcessedPacket packet);
+    }
+
+    public enum VMCloseNetReason
+    {
+        Unspecified = 0,
+        LeaveLot = 1
     }
 }

@@ -35,6 +35,7 @@ namespace FSO.LotView.Components
 
         public double RadianDirection;
         public override ushort Room { get; set; }
+        public AvatarDisplayFlags DisplayFlags;
 
         private Direction _Direction;
         public override Direction Direction
@@ -105,7 +106,8 @@ namespace FSO.LotView.Components
             if (!Visible) return;
 
             if (Avatar != null){
-                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, Room); //negated so avatars spin clockwise
+                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, Room, 
+                    ((DisplayFlags & AvatarDisplayFlags.ShowAsGhost) > 0)?new Color(32, 255, 96)*0.66f:Color.White); 
             }
 
             if (Headline != null)

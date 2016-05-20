@@ -555,6 +555,49 @@ namespace FSO.SimAntics.Engine
             EvaluateQueuePriorities();
         }
 
+        public void CancelAction(ushort actionUID)
+        {
+            var interaction = Queue.FirstOrDefault(x => x.UID == actionUID);
+            if (interaction != null)
+            {
+                interaction.Cancelled = true;
+                //cancel any idle parents after this interaction
+                var index = Queue.IndexOf(interaction);
+
+                if (interaction.Mode == Engine.VMQueueMode.ParentIdle)
+                {
+                    for (int i = index + 1; i < Queue.Count; i++)
+                    {
+                        if (Queue[i].Mode == Engine.VMQueueMode.ParentIdle)
+                        {
+                            if (interaction.Mode == Engine.VMQueueMode.ParentIdle) Queue.RemoveAt(i--);
+                            else
+                            {
+                                Queue[i].Cancelled = true;
+                                Queue[i].Priority = 0;
+                            }
+                        }
+                        else if (Queue[i].Mode == Engine.VMQueueMode.ParentExit)
+                        {
+                            Queue[i].Cancelled = true;
+                            Queue[i].Priority = 0;
+                        }
+                        //parent exit needs to "appear" like it is cancelled.
+                    }
+                }
+
+                if (index != 0 && interaction.Mode == Engine.VMQueueMode.Normal)
+                {
+                    Queue.Remove(interaction);
+                }
+                else
+                {
+                    Entity.SetFlag(VMEntityFlags.InteractionCanceled, true);
+                    interaction.Priority = 0;
+                }
+            }
+        }
+
         #region VM Marshalling Functions
         public virtual VMThreadMarshal Save()
         {

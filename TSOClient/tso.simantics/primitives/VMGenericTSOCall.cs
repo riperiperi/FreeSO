@@ -80,6 +80,20 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTSOCallMode.DoIOwnThisObject:
                     context.Thread.TempRegisters[0] = 1;
                     return VMPrimitiveExitCode.GOTO_TRUE;
+
+
+                // Global server calls
+                case VMGenericTSOCallMode.LeaveLot:
+                    if (context.VM.GlobalLink != null)
+                    {
+                        context.VM.GlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
+                    }
+                    else
+                    {
+                        // use our stub to remove the sim and potentially disconnect the client.
+                        context.VM.CheckGlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
+                    }
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
             }
