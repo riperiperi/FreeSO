@@ -73,6 +73,7 @@
     <Compile Include="Engine\Routing\VMRectRouter.cs" />
     <Compile Include="Engine\TSOGlobalLink\IVMTSOGlobalLink.cs" />
     <Compile Include="Engine\TSOGlobalLink\VMTSOGlobalLinkStub.cs" />
+    <Compile Include="Engine\TSOGlobalLink\VMTSOStandaloneDatabase.cs" />
     <Compile Include="Engine\VMDialogHandler.cs" />
     <Compile Include="Engine\VMActionCallback.cs" />
     <Compile Include="Engine\Scopes\VMAnimationScope.cs" />

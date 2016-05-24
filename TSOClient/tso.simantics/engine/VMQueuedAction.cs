@@ -18,7 +18,8 @@ namespace FSO.SimAntics.Engine
     {
         public VMQueuedAction() { }
 
-        public VMRoutine Routine;
+        public VMRoutine ActionRoutine;
+        public VMRoutine CheckRoutine;
         public VMEntity Callee;
         public VMEntity StackObject; //set to callee for interactions
 
@@ -44,6 +45,7 @@ namespace FSO.SimAntics.Engine
         public short Priority = (short)VMQueuePriority.Idle;
         public VMQueueMode Mode = VMQueueMode.Normal;
         public TTABFlags Flags;
+        public TSOFlags Flags2 = (TSOFlags)0x1f;
 
         public ushort UID; //a wraparound ID that is just here so that a specific interaction can be reliably "cancelled" by a client.
 
@@ -56,7 +58,7 @@ namespace FSO.SimAntics.Engine
                 Caller = caller,
                 Callee = Callee,
                 CodeOwner = CodeOwner,
-                Routine = Routine,
+                Routine = ActionRoutine,
                 StackObject = StackObject,
                 ActionTree = true
             };
@@ -70,7 +72,8 @@ namespace FSO.SimAntics.Engine
         {
             return new VMQueuedActionMarshal
             {
-                RoutineID = Routine.ID,
+                RoutineID = ActionRoutine.ID,
+                CheckRoutineID = (CheckRoutine == null) ? (ushort)0 : CheckRoutine.ID,
                 Callee = (Callee == null) ? (short)0 : Callee.ObjectID,
                 StackObject = (StackObject == null) ? (short)0 : StackObject.ObjectID,
                 IconOwner = (IconOwner == null) ? (short)0 : IconOwner.ObjectID,
@@ -82,6 +85,7 @@ namespace FSO.SimAntics.Engine
                 Priority = Priority,
                 Mode = Mode,
                 Flags = Flags,
+                Flags2 = Flags2,
                 UID = UID,
                 Callback = (Callback == null)?null:Callback.Save()
             };
@@ -95,7 +99,15 @@ namespace FSO.SimAntics.Engine
             if (input.RoutineID >= 8192) bhav = CodeOwner.Resource.SemiGlobal.Get<BHAV>(input.RoutineID);
             else if (input.RoutineID >= 4096) bhav = CodeOwner.Resource.Get<BHAV>(input.RoutineID);
             else bhav = context.Globals.Resource.Get<BHAV>(input.RoutineID);
-            Routine = context.VM.Assemble(bhav);
+            ActionRoutine = context.VM.Assemble(bhav);
+
+            if (input.CheckRoutineID != 0)
+            {
+                if (input.CheckRoutineID >= 8192) bhav = CodeOwner.Resource.SemiGlobal.Get<BHAV>(input.CheckRoutineID);
+                else if (input.CheckRoutineID >= 4096) bhav = CodeOwner.Resource.Get<BHAV>(input.CheckRoutineID);
+                else bhav = context.Globals.Resource.Get<BHAV>(input.CheckRoutineID);
+                CheckRoutine = context.VM.Assemble(bhav);
+            }
 
             Callee = context.VM.GetObjectById(input.Callee);
             StackObject = context.VM.GetObjectById(input.StackObject);
@@ -107,6 +119,7 @@ namespace FSO.SimAntics.Engine
             Priority = input.Priority;
             Mode = input.Mode;
             Flags = input.Flags;
+            Flags2 = input.Flags2;
             UID = input.UID;
             Callback = (input.Callback == null)?null:new VMActionCallback(input.Callback, context);
         }

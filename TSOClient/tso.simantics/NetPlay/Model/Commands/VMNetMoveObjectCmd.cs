@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -22,20 +23,19 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public sbyte level;
         public Direction dir;
 
-        public override bool Execute(VM vm)
+        public override bool Execute(VM vm, VMAvatar caller)
         {
             VMEntity obj = vm.GetObjectById(ObjectID);
-            var avaEnt = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
-            if (obj == null || avaEnt == null || (obj is VMAvatar) || !(avaEnt is VMAvatar)) return false;
+            if (obj == null || caller == null || (obj is VMAvatar)) return false;
+            if (((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate) return false;
             var result = obj.SetPosition(new LotTilePos(x, y, level), dir, vm.Context);
             if (result.Status == VMPlacementError.Success)
             {
                 obj.MultitileGroup.ExecuteEntryPoint(11, vm.Context); //User Placement
 
-                var avatar = (VMAvatar)avaEnt;
-                vm.SignalChatEvent(new VMChatEvent(avaEnt.PersistID, VMChatEventType.Arch,
-                    avatar.Name,
-                    vm.GetUserIP(avaEnt.PersistID),
+                vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
+                    caller.Name,
+                    vm.GetUserIP(caller.PersistID),
                     "moved " + obj.ToString() +" to (" + x / 16f + ", " + y / 16f + ", " + level + ")"
                 ));
 

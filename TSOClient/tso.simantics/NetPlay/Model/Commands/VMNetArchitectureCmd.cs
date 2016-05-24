@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -35,8 +36,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             //since architecture commands must be run in order, we need to run all architecture commands synchronously.
             //it must be queued on the global link.
 
-            if (caller == null) return false; //caller must be on lot
             if (Verified) return true;
+            if (caller == null || //caller must be on lot, have build permissions
+                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.BuildBuyRoommate) return false; 
 
             for (int i = 0; i < Commands.Count; i++)
             {

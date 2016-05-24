@@ -44,8 +44,6 @@ namespace FSO.SimAntics
         }
         public VMAnimationState CarryAnimationState;
 
-
-        public string Name;
         private string m_Message = "";
         public string Message
         {
@@ -160,10 +158,27 @@ namespace FSO.SimAntics
             }
         }
 
+        public bool IsDog
+        {
+            get
+            {
+                var gender = GetPersonData(VMPersonDataVariable.Gender);
+                return (gender & 8) > 0;
+            }
+        }
+
+        public bool IsCat
+        {
+            get
+            {
+                var gender = GetPersonData(VMPersonDataVariable.Gender);
+                return (gender & 16) > 0; //flags are dog, cat.
+            }
+        }
+
         public VMAvatar(GameObject obj)
             : base(obj)
         {
-            Name = "Sim";
             PlatformState = new VMTSOAvatarState(); //todo: ts1 switch
             BodyStrings = Object.Resource.Get<STR>(Object.OBJ.BodyStringID);
 
@@ -738,7 +753,6 @@ namespace FSO.SimAntics
                 Animations = anims,
                 CarryAnimationState = (CarryAnimationState == null) ? null : CarryAnimationState.Save(), //NULLable
 
-                Name = Name,
                 Message = Message,
 
                 MessageTimeout = MessageTimeout,
@@ -768,7 +782,6 @@ namespace FSO.SimAntics
             foreach (var anim in input.Animations) Animations.Add(new VMAnimationState(anim));
             CarryAnimationState = (input.CarryAnimationState == null) ? null : new VMAnimationState(input.CarryAnimationState); 
 
-            Name = input.Name;
             Message = input.Message;
 
             MessageTimeout = input.MessageTimeout;

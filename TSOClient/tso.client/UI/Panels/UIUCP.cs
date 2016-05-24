@@ -18,6 +18,7 @@ using FSO.SimAntics.Model;
 using FSO.LotView;
 using FSO.Client.Network;
 using Microsoft.Xna.Framework;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -223,7 +224,17 @@ namespace FSO.Client.UI.Panels
                 {
                     var avatar = (VMAvatar)cont.ActiveEntity;
                     budget = avatar.TSOState.Budget.Value;
+
+                    //check if we have build/buy permissions
+                    //TODO: global build/buy enable/disable (via the global calls)
+                    BuyModeButton.Disabled = ((VMTSOAvatarState)(avatar.TSOState)).Permissions
+                        < VMTSOAvatarPermissions.Roommate;
+                    BuildModeButton.Disabled = ((VMTSOAvatarState)(avatar.TSOState)).Permissions
+                        < VMTSOAvatarPermissions.BuildBuyRoommate;
+                    HouseModeButton.Disabled = BuyModeButton.Disabled;
                 }
+
+                if (CurrentPanel == 2 && BuyModeButton.Disabled || CurrentPanel == 3 && BuildModeButton.Disabled) SetPanel(-1);
             }
 
             if (budget != OldMoney)
@@ -362,6 +373,7 @@ namespace FSO.Client.UI.Panels
                         LiveModeButton.Selected = true;
                         break;
                     default:
+                        if (Game.InLot) Game.LotController.PanelActive = false;
                         break;
                 }
                 CurrentPanel = newPanel;

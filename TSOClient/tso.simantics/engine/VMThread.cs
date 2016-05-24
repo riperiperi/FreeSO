@@ -153,10 +153,8 @@ namespace FSO.SimAntics.Engine
             {
                 var item = Queue[0];
                 if (item.Cancelled) Entity.SetFlag(VMEntityFlags.InteractionCanceled, true);
-                if (IsCheck || (item.Mode != VMQueueMode.ParentIdle || !Entity.GetFlag(VMEntityFlags.InteractionCanceled)))
+                if (IsCheck || ((item.Mode != VMQueueMode.ParentIdle || !Entity.GetFlag(VMEntityFlags.InteractionCanceled)) && CheckAction(item) != null))
                 {
-                    //TODO: execute check tree (and other checks!) on interaction again unless flags specify otherwise
-                    //will stop some weird timing bugs.
                     ExecuteAction(item);
                     return true;
                 }
@@ -470,11 +468,6 @@ namespace FSO.SimAntics.Engine
             Context.VM.BreakpointHit(Entity);
         }
 
-        private void ExecuteAction(VMQueuedAction action){
-            var frame = action.ToStackFrame(Entity);
-            Push(frame);
-        }
-
         public void Pop(VMPrimitiveExitCode result){
             var contextSwitch = (Stack.Count > 1) && Stack.LastOrDefault().ActionTree != Stack[Stack.Count - 2].ActionTree;
             if (contextSwitch && !Stack.LastOrDefault().ActionTree) { }
@@ -596,6 +589,89 @@ namespace FSO.SimAntics.Engine
                     interaction.Priority = 0;
                 }
             }
+        }
+
+        private void ExecuteAction(VMQueuedAction action)
+        {
+            var frame = action.ToStackFrame(Entity);
+            Push(frame);
+        }
+
+        public List<VMPieMenuInteraction> CheckAction(VMQueuedAction action)
+        {
+            // 1. check action flags for permissions (if we are avatar)
+            // 2. run check tree
+
+            // rules:
+            // Dogs/Cats means people CANNOT use these interactions. (DogsFlag|CatsFlag & IsDog|IsCat)
+
+            // When Allow Object Owner is OFF it disallows the object owner, otherwise no effect
+            // Visitors, Roommates, Ghosts have this same negative effect.
+            // Friends apprars to override Owner, Visitors, Roommates
+
+            // Allow CSRs:positive effect.
+
+            if (action == null) return null;
+            var result = new List<VMPieMenuInteraction>();
+
+            if (Entity is VMAvatar && ((action.Flags2 & TSOFlags.AllowCSRs) == 0)) //just let everyone use the CSR interactions
+            {
+                var avatar = (VMAvatar)Entity;
+
+                if (avatar.GetSlot(0) != null && (action.Flags | TTABFlags.TSOAvailableCarrying) == 0) return null;
+
+                if ((action.Flags & (TTABFlags.AllowCats | TTABFlags.AllowDogs)) > 0)
+                {
+                    //interaction can only be performed by cats or dogs
+                    if (!avatar.IsPet) return null;
+                    //check we're the correct type
+                    if (avatar.IsCat && (action.Flags & TTABFlags.AllowCats) == 0) return null;
+                    if (avatar.IsDog && (action.Flags & TTABFlags.AllowDogs) == 0) return null;
+                }
+                else if (avatar.IsPet) return null; //not allowed
+
+                if ((action.Flags & TTABFlags.TSOIsRepair) > 0) return null;
+
+                TSOFlags tsoState =
+                    ((!(action.Callee is VMGameObject) || avatar.PersistID == ((VMTSOObjectState)action.Callee.TSOState).OwnerID)
+                    ? TSOFlags.AllowObjectOwner : 0)
+                    | ((((VMTSOAvatarState)avatar.TSOState).Permissions == VMTSOAvatarPermissions.Visitor) ? TSOFlags.AllowVisitors : 0)
+                    | ((((VMTSOAvatarState)avatar.TSOState).Permissions >= VMTSOAvatarPermissions.Roommate) ? TSOFlags.AllowRoommates : 0)
+                    | ((((VMTSOAvatarState)avatar.TSOState).Permissions == VMTSOAvatarPermissions.Admin) ? TSOFlags.AllowCSRs : 0)
+                    | ((avatar.GetPersonData(VMPersonDataVariable.IsGhost) > 0) ? TSOFlags.AllowGhost : 0)
+                    | TSOFlags.AllowFriends;
+                TSOFlags tsoCompare = action.Flags2;
+
+                //DEBUG: enable debug interction for all roommates. change to only CSRs for production!
+                if ((action.Flags & TTABFlags.Debug) > 0) {
+
+                    if ((tsoState & TSOFlags.AllowRoommates) > 0)
+                        return result; //do not bother running check
+                    else
+                        return null; //disable debug for everyone else.
+                }
+
+                if ((action.Flags & TTABFlags.TSOAvailableWhenDead) > 0) tsoCompare |= TSOFlags.AllowGhost;
+                if ((action.Flags & TTABFlags.AllowVisitors) > 0) tsoCompare |= TSOFlags.AllowVisitors; //wrong!!!!!!!!!!!!!!
+
+                //NEGATIVE EFFECTS:
+                var negMask = (TSOFlags.AllowVisitors | TSOFlags.AllowRoommates | TSOFlags.AllowObjectOwner | TSOFlags.AllowGhost);
+
+                var negatedFlags = (~tsoCompare) & negMask;
+                if ((negatedFlags & tsoState) > 0) return null; //we are disallowed
+                //if ((tsoCompare & TSOFlags.AllowCSRs) > 0) return null; // && (tsoState & TSOFlags.AllowCSRs) == 0
+            }
+            if (action.CheckRoutine != null && EvaluateCheck(Context, Entity, new VMStackFrame()
+            {
+                Caller = Entity,
+                Callee = action.Callee,
+                CodeOwner = action.CodeOwner,
+                StackObject = action.StackObject,
+                Routine = action.CheckRoutine,
+                Args = new short[4]
+            }, null, result) != VMPrimitiveExitCode.RETURN_TRUE) return null;
+
+            return result;
         }
 
         #region VM Marshalling Functions

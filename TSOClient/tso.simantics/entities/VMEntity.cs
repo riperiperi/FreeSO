@@ -111,6 +111,20 @@ namespace FSO.SimAntics
         public OBJD MasterDefinition; //if this object is multitile, its master definition will be stored here.
         public OBJfFunctionEntry[] EntryPoints;  /** Entry points for specific events, eg. init, main, clean... **/
 
+        public string Name
+        {
+            get
+            {
+                if (MultitileGroup.Name != "") return MultitileGroup.Name;
+                if (this is VMAvatar) return "Sim";
+                else return this.ToString();
+            }
+            set
+            {
+                MultitileGroup.Name = value;
+            }
+        }
+
         //positioning properties
         public LotTilePos Position
         {
@@ -652,41 +666,20 @@ namespace FSO.SimAntics
 
             for (int i = 0; i < TreeTable.Interactions.Length; i++)
             {
-                var action = TreeTable.Interactions[i];
-                var actionStrings = new List<VMPieMenuInteraction>();
+                var id = TreeTable.Interactions[i].TTAIndex;
+                var action = GetAction((int)id, caller, vm.Context);
 
-                bool CanRun = false;
-                if (action.TestFunction != 0 && (((TTABFlags)action.Flags & TTABFlags.Debug) != TTABFlags.Debug))
-                {
-                    caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] = 0;
-                    var Behavior = GetBHAVWithOwner(action.TestFunction, vm.Context);
-                    if (Behavior != null) //can be null (bhav removed or missing)! if it is, just act like it was 0.
-                    {
-                        CanRun = (VMThread.EvaluateCheck(vm.Context, caller, new VMStackFrame()
-                        {
-                            Caller = caller,
-                            Callee = this,
-                            CodeOwner = Behavior.owner,
-                            StackObject = this,
-                            Routine = vm.Assemble(Behavior.bhav),
-                            Args = new short[4]
-                        }, null, actionStrings) == VMPrimitiveExitCode.RETURN_TRUE);
-                        if (caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1) CanRun = false;
-                    }
-                    else CanRun = true;
-                }
-                else
-                {
-                    CanRun = true;
-                }
+                caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] = 0;
+                var actionStrings = caller.Thread.CheckAction(action);
+                if (caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1) continue;
 
-                if (CanRun)
+                if (actionStrings != null)
                 {
                     if (actionStrings.Count > 0)
                     {
                         foreach (var actionS in actionStrings)
                         {
-                            actionS.ID = (byte)action.TTAIndex;
+                            actionS.ID = (byte)id;
                             pie.Add(actionS);
                         }
                     }
@@ -696,8 +689,8 @@ namespace FSO.SimAntics
                         {
                             pie.Add(new VMPieMenuInteraction()
                             {
-                                Name = TreeTableStrings.GetString((int)action.TTAIndex),
-                                ID = (byte)action.TTAIndex
+                                Name = TreeTableStrings.GetString((int)id),
+                                ID = (byte)id
                             });
                         }
                     }
@@ -706,6 +699,46 @@ namespace FSO.SimAntics
 
             return pie;
         }
+        
+        public VMQueuedAction GetAction(int interaction, VMEntity caller, VMContext context)
+        {
+            return GetAction(interaction, caller, context, null);
+        }
+
+        public VMQueuedAction GetAction(int interaction, VMEntity caller, VMContext context, short[] args)
+        {
+            if (!TreeTable.InteractionByIndex.ContainsKey((uint)interaction)) return null;
+            var Action = TreeTable.InteractionByIndex[(uint)interaction];
+
+            ushort actionID = Action.ActionFunction;
+            var aTree = GetBHAVWithOwner(actionID, context);
+            if (aTree == null) return null;
+            var aRoutine = context.VM.Assemble(aTree.bhav);
+
+            VMRoutine cRoutine = null;
+            ushort checkID = Action.TestFunction;
+            if (checkID != 0)
+            {
+                var cTree = GetBHAVWithOwner(checkID, context);
+                if (cTree != null) cRoutine = context.VM.Assemble(cTree.bhav);
+            }
+
+            return new VMQueuedAction
+            {
+                Callee = this,
+                IconOwner = this,
+                CodeOwner = aTree.owner,
+                ActionRoutine = aRoutine,
+                CheckRoutine = cRoutine,
+                Name = TreeTableStrings.GetString((int)Action.TTAIndex),
+                StackObject = this,
+                Args = args,
+                InteractionNumber = interaction,
+                Priority = (short)VMQueuePriority.UserDriven,
+                Flags = Action.Flags,
+                Flags2 = Action.Flags2,
+            };
+        }
 
         public void PushUserInteraction(int interaction, VMEntity caller, VMContext context)
         {
@@ -713,30 +746,8 @@ namespace FSO.SimAntics
         }
         public void PushUserInteraction(int interaction, VMEntity caller, VMContext context, short[] args)
         {
-            if (!TreeTable.InteractionByIndex.ContainsKey((uint)interaction)) return;
-            var Action = TreeTable.InteractionByIndex[(uint)interaction];
-            ushort ActionID = Action.ActionFunction;
-
-            var function = GetBHAVWithOwner(ActionID, context);
-            if (function == null) return;
-
-            VMEntity carriedObj = caller.GetSlot(0);
-
-            var routine = context.VM.Assemble(function.bhav);
-            caller.Thread.EnqueueAction(
-                new FSO.SimAntics.Engine.VMQueuedAction
-                {
-                    Callee = this,
-                    CodeOwner = function.owner,
-                    Routine = routine,
-                    Name = TreeTableStrings.GetString((int)Action.TTAIndex),
-                    StackObject = this,
-                    Args = args,
-                    InteractionNumber = interaction,
-                    Priority = (short)VMQueuePriority.UserDriven,
-                    Flags = (TTABFlags)Action.Flags
-                }
-            );
+            var action = GetAction(interaction, caller, context, args);
+            if (action != null) caller.Thread.EnqueueAction(action);
         }
 
         public VMPlacementResult PositionValid(LotTilePos pos, Direction direction, VMContext context)

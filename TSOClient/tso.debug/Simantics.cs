@@ -151,7 +151,7 @@ namespace FSO.Debug
             if (bhav != null)
             {
                 ActiveEntity.Thread.EnqueueAction(new FSO.SimAntics.Engine.VMQueuedAction() {
-                    Routine = vm.Assemble(bhav),
+                    ActionRoutine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
                     StackObject = SelectedEntity,
                     CodeOwner = SelectedEntity.Object,
@@ -187,7 +187,7 @@ namespace FSO.Debug
             {
                 ActiveEntity.Thread.EnqueueAction(new VMQueuedAction()
                 {
-                    Routine = vm.Assemble(bhav),
+                    ActionRoutine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
                     StackObject = SelectedEntity,
                     CodeOwner = SelectedEntity.Object,

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Primitives;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -93,7 +94,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override bool Verify(VM vm, VMAvatar caller)
         {
             if (Verified) return true; //set internally when transaction succeeds. trust that the verification happened.
-            if (caller == null) return false;
+            if (caller == null || //caller must be on lot, have build permissions
+                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate)
+                return false;
 
             //get entry in catalog. first verify if it can be bought at all. (if not, error out)
             //TODO: error feedback for client

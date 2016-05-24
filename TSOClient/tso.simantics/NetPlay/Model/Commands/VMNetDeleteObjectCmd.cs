@@ -12,6 +12,7 @@ using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Primitives;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -21,6 +22,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public bool CleanupAll;
         public override bool Execute(VM vm, VMAvatar caller)
         {
+            if (((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate) return false;
             VMEntity obj = vm.GetObjectById(ObjectID);
             if (obj == null || caller == null || (obj is VMAvatar)) return false;
             obj.Delete(CleanupAll, vm.Context);

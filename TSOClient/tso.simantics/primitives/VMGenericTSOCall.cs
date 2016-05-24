@@ -12,6 +12,7 @@ using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.SimAntics.Model;
 using System.IO;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -24,26 +25,8 @@ namespace FSO.SimAntics.Primitives
 
             switch (operand.Call)
             {
-                case VMGenericTSOCallMode.GetInteractionResult:
-                    context.Thread.TempRegisters[0] = 2; //0=none, 1=reject, 2=accept, 3=pet
-                    return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMGenericTSOCallMode.GetIsPendingDeletion:
-                    return VMPrimitiveExitCode.GOTO_FALSE;
-                case VMGenericTSOCallMode.IsTemp0AvatarIgnoringTemp1Avatar:
-                    context.Thread.TempRegisters[0] = 0;
-                    return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMGenericTSOCallMode.IsGlobalBroken:
-                    return VMPrimitiveExitCode.GOTO_FALSE;
-                case VMGenericTSOCallMode.GetLotOwner:
-                case VMGenericTSOCallMode.StackObjectOwnerID:
-                    context.Thread.TempRegisters[0] = context.Caller.ObjectID;
-                    return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMGenericTSOCallMode.SetActionIconToStackObject:
-                    context.Thread.Queue[0].IconOwner = context.StackObject;
-                    return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMGenericTSOCallMode.HasTemporaryID:
-                    return VMPrimitiveExitCode.GOTO_FALSE; //used by real game to check if object is persistently tracked probably.
-                case VMGenericTSOCallMode.SwapMyAndStackObjectsSlots:
+                // 0. HOUSE TUTORIAL COMPLETE
+                case VMGenericTSOCallMode.SwapMyAndStackObjectsSlots: //1
                     var cont1 = context.Caller.Container;
                     var cont2 = context.StackObject.Container;
                     var contS1 = context.Caller.ContainerSlot;
@@ -55,35 +38,54 @@ namespace FSO.SimAntics.Primitives
                         cont1.PlaceInSlot(context.StackObject, contS1, false, context.VM.Context);
                         cont2.PlaceInSlot(context.Caller, contS2, false, context.VM.Context);
                     }
-                    /*
-                     * well here's some code to swap slots... but this function actually swaps containers
-                    int total = Math.Min(context.StackObject.TotalSlots(), context.Caller.TotalSlots());
-                    for (int i = 0; i < total; i++)
-                    {
-                        VMEntity temp1 = context.Caller.GetSlot(i);
-                        VMEntity temp2 = context.StackObject.GetSlot(i);
-                        if (temp1 != null) context.Caller.ClearSlot(i);
-                        if (temp2 != null)
-                        {
-                            context.StackObject.ClearSlot(i);
-                            context.Caller.PlaceInSlot(temp2, i, false, context.VM.Context); //slot to slot needs no cleanup
-                        }
-                        if (temp1 != null) context.StackObject.PlaceInSlot(temp1, i, false, context.VM.Context);
-                    }
-                    */
                     return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMGenericTSOCallMode.ReturnLotCategory:
-                    context.Thread.TempRegisters[0] = 6; //skills lot. see #Lot Types in global.iff
+                case VMGenericTSOCallMode.SetActionIconToStackObject: //2
+                    context.Thread.Queue[0].IconOwner = context.StackObject;
                     return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMGenericTSOCallMode.TestStackObject:
-                    return (context.StackObject != null) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
-                case VMGenericTSOCallMode.DoIOwnThisObject:
-                    context.Thread.TempRegisters[0] = 1;
+                // 3. DO NOT USE
+                case VMGenericTSOCallMode.IsStackObjectARoommate: //4 
+                    return (context.StackObject is VMGameObject 
+                        || ((VMTSOAvatarState)context.StackObject.TSOState).Permissions < VMTSOAvatarPermissions.Roommate)
+                        ? VMPrimitiveExitCode.GOTO_FALSE : VMPrimitiveExitCode.GOTO_TRUE;
+                // 5. Combine Assets of family in Temp0
+                // 6. Remove From Family
+                // 7. Make New Neighbour
+                // 8. Family Sims1 Tutorial Complete
+                // 9. Architecture Sims1 Tutorial Complete
+                // 10. Disable Build/Buy
+                // 11. Enable Build/Buy
+                // 12. Distance to camera in Temp0
+                // 13. Abort Interactions
+                // 14. House Radio Station equals Temp0 (TODO)
+                // 15. My Routing Footprint equals Temp0
+                // 16. Change Normal Output
+                case VMGenericTSOCallMode.GetInteractionResult: //17
+                    context.Thread.TempRegisters[0] = 2; //0=none, 1=reject, 2=accept, 3=pet
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.SetInteractionResult: //18
+                    //todo: set interaction result to value of temp 0. UNUSED.
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.DoIOwnThisObject: //19
+                    context.Thread.TempRegisters[0] = (context.StackObject is VMAvatar
+                    || ((VMTSOObjectState)context.StackObject.TSOState).OwnerID != context.Caller.PersistID)
+                    ? (short)0 : (short)1;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.DoesTheLocalMachineSimOwnMe: //20
+                    context.Thread.TempRegisters[1] = 1; //TODO
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.MakeMeStackObjectsOwner: //21
+                    if (context.StackObject is VMAvatar) return VMPrimitiveExitCode.GOTO_TRUE;
+                    ((VMTSOObjectState)context.StackObject.TSOState).OwnerID = context.Caller.PersistID;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                //TODO: may need to update in global server
+                // 22. Get Permissions (TODO)
+                // 23. Set Permissions (TODO)
+                case VMGenericTSOCallMode.AskStackObjectToBeRoommate: //24
+                    // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+                    // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
-
-                // Global server calls
-                case VMGenericTSOCallMode.LeaveLot:
+                case VMGenericTSOCallMode.LeaveLot: //25
                     if (context.VM.GlobalLink != null)
                     {
                         context.VM.GlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
@@ -94,6 +96,93 @@ namespace FSO.SimAntics.Primitives
                         context.VM.CheckGlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
+
+                // 26. UNUSED
+                // 27. Kickout Roommate (TODO)
+                // 28. Kickout Visitor (TODO)
+                case VMGenericTSOCallMode.StackObjectOwnerID: //29
+                    //attempt to find owner on lot. null stack object if not present
+                    if (context.StackObject is VMAvatar) context.Thread.TempRegisters[0] = 0;
+                    else
+                    {
+                        var owner = context.VM.GetObjectByPersist(((VMTSOObjectState)context.StackObject.TSOState).OwnerID);
+                        context.Thread.TempRegisters[0] = (owner == null) ? (short)0 : owner.ObjectID;
+                    }
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+
+                //30. Create Cheat Neighbour
+                case VMGenericTSOCallMode.IsTemp0AvatarIgnoringTemp1Avatar: //31
+                    context.Thread.TempRegisters[0] = 0;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                //32. Play Next Song on Radio Station in Temp 0 (TODO)
+                //33. Temp0 Avatar Unignore Temp1 Avatar
+                case VMGenericTSOCallMode.GlobalRepairCostInTempXL0: //34
+                    context.Thread.TempXL[0] = 0; //TODO
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                //35. Global Repair State (TODO)
+                case VMGenericTSOCallMode.IsGlobalBroken: //36
+                    return VMPrimitiveExitCode.GOTO_FALSE; //TODO
+                // 37. UNUSED
+                case VMGenericTSOCallMode.MayAddRoommate: //38
+                    // TODO: Make only lot owner able to do this
+                    // for testing purposes, build roommates are kind of "global moderators"
+                    // also, can't add roommate if we have 8 roommates.
+                    context.Thread.TempRegisters[0] = (context.StackObject is VMGameObject
+                        || ((VMTSOAvatarState)context.StackObject.TSOState).Permissions < VMTSOAvatarPermissions.BuildBuyRoommate)
+                        ? (short)0 : (short)2;
+                    // 2 is "true". not sure what 1 is. (interaction shows up, but fails on trying to run it. likely "guessed" state for client)
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.ReturnLotCategory: //39
+                    context.Thread.TempRegisters[0] = 6; //skills lot. see #Lot Types in global.iff
+                    //TODO: set based on lot state
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.TestStackObject: //40
+                    return (context.StackObject != null) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                case VMGenericTSOCallMode.GetCurrentValue: //41
+                    //stack object price in TempXL 0
+                    context.Thread.TempXL[0] = context.StackObject.MultitileGroup.Price;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.IsRegionEmpty: //42
+                    //is temp0 radius (in full tiles) around stack object empty?
+                    //used for resurrect. TODO.
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                //43. Set Spotlight Status (TODO: GLOBAL SERVER)
+                //44. Is Full Refund (TODO: small grace period after purchase/until user exits buy mode)
+                //45. Refresh buy/build (TODO? we probably don't need this)
+                case VMGenericTSOCallMode.GetLotOwner: //46
+                    // TODO! global lot state not in yet
+                    context.Thread.TempRegisters[0] = context.Caller.ObjectID;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.CopyDynObjNameFromTemp0ToTemp1: //47
+                    var obj1 = context.VM.GetObjectById(context.Thread.TempRegisters[0]);
+                    var obj2 = context.VM.GetObjectById(context.Thread.TempRegisters[1]);
+                    obj2.Name = obj1.Name;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.GetIsPendingDeletion: //48
+                    return VMPrimitiveExitCode.GOTO_FALSE;
+                //49. Pet Ran Away
+                //50. Set Original Purchase Price (TODO: parrot, snowman. should set to temp0)
+                case VMGenericTSOCallMode.HasTemporaryID: //51
+                    //persist ID should be 0 til we get one.
+                    return (context.StackObject.PersistID == 0)?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
+                case VMGenericTSOCallMode.SetStackObjOwnerToTemp0: //52
+                    var obj = context.VM.GetObjectById(context.Thread.TempRegisters[0]); 
+                    if (context.StackObject is VMAvatar || obj == null) return VMPrimitiveExitCode.GOTO_TRUE;
+
+                    ((VMTSOObjectState)context.StackObject.TSOState).OwnerID = obj.PersistID;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                //53. Is On Editable Tile
+                //54. Set Stack Object's Crafter Name To Avatar in Temp 0
+                case VMGenericTSOCallMode.CalcHarvestComponents: //55
+                    //TODO: where does this come from?
+                    context.Thread.TempRegisters[0] = 1;
+                    context.Thread.TempRegisters[1] = 1;
+                    context.Thread.TempRegisters[2] = 1;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.IsStackObjectForSale: //56. TODO
+                    return VMPrimitiveExitCode.GOTO_FALSE;
+
+                //TODO: may need to update in global server
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
             }

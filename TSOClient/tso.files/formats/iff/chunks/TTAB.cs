@@ -386,29 +386,34 @@ namespace FSO.Files.Formats.IFF.Chunks
 
     public enum TTABFlags
     {
-        AllowVisitors = 1,
-        Joinable = 1 << 1,
-        RunImmediately = 1 << 2,
-        AllowConsecutive = 1 << 3,
+        AllowVisitors = 1, //COVERED, TODO for no TSOFlags? (default to only roomies, unless this flag set)
+        Joinable = 1 << 1, //TODO
+        RunImmediately = 1 << 2, //COVERED
+        AllowConsecutive = 1 << 3, //TODO
 
-        Debug = 1 << 7,
-        AutoFirstSelect = 1 << 8,
-        Leapfrog = 1 << 9,
-        MustRun = 1 << 10,
-        AllowDogs = 1 << 11,
-        AllowCats = 1 << 12
+        Debug = 1 << 7, //COVERED: only available to roomies for now
+        AutoFirstSelect = 1 << 8, //TODO (autonomus first select?)
+        Leapfrog = 1 << 9, //COVERED
+        MustRun = 1 << 10, //TODO (where would this NOT run?)
+        AllowDogs = 1 << 11, //COVERED
+        AllowCats = 1 << 12, //COVERED
+
+        TSOAvailableCarrying = 1 << 16, //COVERED
+        TSOIsRepair = 1 << 17, //TODO (only available when wear = 0)
+        TSORunCheckAlways = 1 << 18, //TODO
+        TSOAvailableWhenDead = 1<<19 //COVERED
     }
 
     public enum TSOFlags
     {
-        AllowNonRoomie = 1,
-        AllowObjectOwner = 1 << 1,
-        AllowRoommates = 1 << 2,
-        AllowFriends = 1 << 3,
-        AllowVisitors = 1 << 4,
-        AllowGhost = 1 << 5,
-        UnderParentalControl = 1 << 6,
-        AllowCSRs = 1 << 7
+        AllowNonRoomie = 1, //TODO: what is this for?
+        AllowObjectOwner = 1 << 1, //COVERED
+        AllowRoommates = 1 << 2, //COVERED
+        AllowFriends = 1 << 3, //TODO
+        AllowVisitors = 1 << 4, //COVERED
+        AllowGhost = 1 << 5, //COVERED
+        UnderParentalControl = 1 << 6, //TODO: interactions always available
+        AllowCSRs = 1 << 7 //COVERED: only available to admins
     }
 
     public enum InteractionMaskFlags

@@ -114,7 +114,7 @@ namespace Charvatia
                     state.Update();
                 } catch (Exception e)
                 {
-                    state.CloseNet();
+                    state.CloseNet(VMCloseNetReason.LeaveLot);
                     Console.WriteLine(e.ToString());
                     var exporter = new VMWorldExporter();
                     exporter.SaveHouse(state, Path.Combine(Settings.Default.GamePath + "housedata/blueprints/" + Settings.Default.DebugLot));

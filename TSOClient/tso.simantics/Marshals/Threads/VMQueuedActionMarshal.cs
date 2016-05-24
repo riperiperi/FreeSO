@@ -12,6 +12,7 @@ namespace FSO.SimAntics.Marshals.Threads
     public class VMQueuedActionMarshal : VMSerializable
     {
         public ushort RoutineID;
+        public ushort CheckRoutineID;
         public short Callee;
         public short StackObject; 
         public short IconOwner; 
@@ -26,6 +27,7 @@ namespace FSO.SimAntics.Marshals.Threads
         public short Priority;
         public VMQueueMode Mode;
         public TTABFlags Flags;
+        public TSOFlags Flags2;
 
         public ushort UID; 
 
@@ -34,6 +36,7 @@ namespace FSO.SimAntics.Marshals.Threads
         public void SerializeInto(BinaryWriter writer)
         {
             writer.Write(RoutineID);
+            writer.Write(CheckRoutineID);
             writer.Write(Callee);
             writer.Write(StackObject);
             writer.Write(IconOwner);
@@ -50,6 +53,7 @@ namespace FSO.SimAntics.Marshals.Threads
             writer.Write((short)Priority);
             writer.Write((byte)Mode);
             writer.Write((uint)Flags);
+            writer.Write((uint)Flags2);
 
             writer.Write(UID);
 
@@ -80,6 +84,7 @@ namespace FSO.SimAntics.Marshals.Threads
             Priority = reader.ReadInt16();
             Mode = (VMQueueMode)reader.ReadByte();
             Flags = (TTABFlags)reader.ReadUInt32();
+            Flags2 = (TSOFlags)reader.ReadUInt32();
 
             UID = reader.ReadUInt16();
             

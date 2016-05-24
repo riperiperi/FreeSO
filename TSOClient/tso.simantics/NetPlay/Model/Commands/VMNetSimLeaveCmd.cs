@@ -43,7 +43,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     {
                         Callee = sim,
                         CodeOwner = tree.owner,
-                        Routine = routine,
+                        ActionRoutine = routine,
                         Name = "Leave Lot",
                         StackObject = sim,
                         Args = new short[4],

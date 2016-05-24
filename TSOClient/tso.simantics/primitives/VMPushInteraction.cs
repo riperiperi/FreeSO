@@ -50,35 +50,14 @@ namespace FSO.SimAntics.Engine.Primitives
                     priority = (short)VMQueuePriority.Idle; mode = VMQueueMode.Idle; break;
             }
 
-            var Action = interactionSource.TreeTable.InteractionByIndex[operand.Interaction];
-            ushort ActionID = Action.ActionFunction;
+            var action = interactionSource.GetAction(operand.Interaction, context.StackObject, context.VM.Context);
+            if (action == null) return VMPrimitiveExitCode.GOTO_FALSE;
+            action.IconOwner = context.VM.GetObjectById((short)context.Locals[operand.IconLocation]);
+            action.Mode = mode;
+            action.Priority = priority;
+            if (operand.PushHeadContinuation) action.Flags |= TTABFlags.Leapfrog;
 
-            var tree = interactionSource.GetBHAVWithOwner(ActionID, context.VM.Context);
-
-            if (tree == null) return VMPrimitiveExitCode.GOTO_FALSE;
-
-            VMEntity IconOwner = null;
-            if (operand.UseCustomIcon)
-            {
-                IconOwner = context.VM.GetObjectById((short)context.Locals[operand.IconLocation]);
-            }
-
-            var routine = context.VM.Assemble(tree.bhav);
-            context.StackObject.Thread.EnqueueAction(
-                new FSO.SimAntics.Engine.VMQueuedAction
-                {
-                    Callee = interactionSource,
-                    CodeOwner = tree.owner,
-                    Routine = routine,
-                    Name = interactionSource.TreeTableStrings.GetString((int)Action.TTAIndex),
-                    StackObject = interactionSource,
-                    InteractionNumber = operand.Interaction,
-                    IconOwner = IconOwner,
-                    Priority = priority,
-                    Mode = mode,
-                    Flags = (TTABFlags)Action.Flags | (operand.PushHeadContinuation?TTABFlags.Leapfrog:0)
-                }
-            );
+            context.StackObject.Thread.EnqueueAction(action);
 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

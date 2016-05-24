@@ -87,7 +87,7 @@ namespace FSO.SimAntics.Engine
                     {
                         Callee = Target,
                         CodeOwner = CodeOwner,
-                        Routine = routine,
+                        ActionRoutine = routine,
                         Name = ActionName,
                         StackObject = this.StackObject,
                         Args = args,
