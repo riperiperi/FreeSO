@@ -106,7 +106,7 @@ namespace FSO.SimAntics.Marshals
             timer.Start();
 
             Context.SerializeInto(writer);
-            Console.WriteLine("== SERIAL: Context done... " + timer.ElapsedMilliseconds + " ms ==");
+            //Console.WriteLine("== SERIAL: Context done... " + timer.ElapsedMilliseconds + " ms ==");
 
             writer.Write(Entities.Length);
             foreach (var ent in Entities)
@@ -115,17 +115,17 @@ namespace FSO.SimAntics.Marshals
                 writer.Write(type);
                 ent.SerializeInto(writer);
             }
-            Console.WriteLine("== SERIAL: Ents done... " + timer.ElapsedMilliseconds + " ms ==");
+            //Console.WriteLine("== SERIAL: Ents done... " + timer.ElapsedMilliseconds + " ms ==");
 
             writer.Write(Threads.Length);
             foreach (var thr in Threads) thr.SerializeInto(writer);
 
-            Console.WriteLine("== SERIAL: Threads done... " + timer.ElapsedMilliseconds + " ms ==");
+            //Console.WriteLine("== SERIAL: Threads done... " + timer.ElapsedMilliseconds + " ms ==");
 
             writer.Write(MultitileGroups.Length);
             foreach (var grp in MultitileGroups) grp.SerializeInto(writer);
 
-            Console.WriteLine("== SERIAL: Groups done... " + timer.ElapsedMilliseconds + " ms ==");
+            //Console.WriteLine("== SERIAL: Groups done... " + timer.ElapsedMilliseconds + " ms ==");
 
             writer.Write(GlobalState.Length);
             foreach (var val in GlobalState)
@@ -134,7 +134,7 @@ namespace FSO.SimAntics.Marshals
             }
             PlatformState.SerializeInto(writer);
 
-            Console.WriteLine("== SERIAL: Globals done... " + timer.ElapsedMilliseconds + " ms ==");
+            //Console.WriteLine("== SERIAL: Globals done... " + timer.ElapsedMilliseconds + " ms ==");
 
             writer.Write(ObjectId);
 

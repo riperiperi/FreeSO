@@ -14,7 +14,7 @@ using System.Text;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
-    class VMNetSimLeaveCmd : VMNetCommandBodyAbstract
+    public class VMNetSimLeaveCmd : VMNetCommandBodyAbstract
     {
         private readonly ushort LEAVE_LOT_TREE = 8373;
 

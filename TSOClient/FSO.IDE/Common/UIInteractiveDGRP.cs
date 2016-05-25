@@ -117,7 +117,7 @@ namespace FSO.IDE.Common
                 world.Initialize(GameFacade.Scenes);
                 var context = new VMContext(world);
 
-                TempVM = new VM(context, new VMServerDriver(37565), new VMNullHeadlineProvider());
+                TempVM = new VM(context, new VMServerDriver(37565, null), new VMNullHeadlineProvider());
                 TempVM.Init();
 
                 var blueprint = new Blueprint(32, 32);

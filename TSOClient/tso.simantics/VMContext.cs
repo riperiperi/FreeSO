@@ -495,6 +495,7 @@ namespace FSO.SimAntics
 
         public void RefreshLighting(ushort room, bool commit)
         {
+            if (RoomInfo == null) return;
             var info = RoomInfo[room];
             info.Light.AmbientLight = 0;
             info.Light.OutsideLight = 0;

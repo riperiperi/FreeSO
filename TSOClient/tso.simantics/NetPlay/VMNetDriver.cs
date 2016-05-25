@@ -64,6 +64,7 @@ namespace FSO.SimAntics.NetPlay
     public enum VMCloseNetReason
     {
         Unspecified = 0,
-        LeaveLot = 1
+        LeaveLot = 1,
+        ServerShutdown = 2,
     }
 }

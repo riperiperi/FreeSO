@@ -35,12 +35,14 @@ namespace FSO.SimAntics.NetPlay.Drivers
         private Listener listener;
         private HashSet<NetworkClient> ClientsToDC;
         private HashSet<NetworkClient> ClientsToSync;
+        private event VMServerClosedHandler OnShutdown;
+        public delegate void VMServerClosedHandler(VMCloseNetReason reason);
 
         public BanList SandboxBans;
 
         private uint TickID = 0;
 
-        public VMServerDriver(int port)
+        public VMServerDriver(int port, VMServerClosedHandler onShutdown)
         {
             listener = new Listener(EncryptionMode.NoEncryption);
             listener.Initialize(new IPEndPoint(IPAddress.Any, port));
@@ -55,6 +57,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
             TickBuffer = new List<VMNetTick>();
             ClientToUID = new Dictionary<NetworkClient, uint>();
             UIDtoClient = new Dictionary<uint, NetworkClient>();
+            if (onShutdown != null) OnShutdown += onShutdown;
 
             SandboxBans = new BanList();
         }
@@ -86,13 +89,13 @@ namespace FSO.SimAntics.NetPlay.Drivers
         private void SendState(VM vm)
         {
             if (ClientsToSync.Count == 0) return;
-            Console.WriteLine("== SERIAL: Sending State to Client... ==");
+            //Console.WriteLine("== SERIAL: Sending State to Client... ==");
 
             var watch = new Stopwatch();
             watch.Start();
 
             var state = vm.Save();
-            Console.WriteLine("== STATE: Intermediate - after save... " + watch.ElapsedMilliseconds + " ms. ==");
+            //Console.WriteLine("== STATE: Intermediate - after save... " + watch.ElapsedMilliseconds + " ms. ==");
             var cmd = new VMNetCommand(new VMStateSyncCmd { State = state });
 
             //currently just hack this on the tick system. will change when we switch to not gonzonet
@@ -107,16 +110,16 @@ namespace FSO.SimAntics.NetPlay.Drivers
             byte[] data;
             using (var stream = new MemoryStream())
             {
-                Console.WriteLine("== STATE: Intermediate - before serialize... " + watch.ElapsedMilliseconds + " ms. ==");
+                //Console.WriteLine("== STATE: Intermediate - before serialize... " + watch.ElapsedMilliseconds + " ms. ==");
                 using (var writer = new BinaryWriter(stream))
                 {
                     ticks.SerializeInto(writer);
                 }
 
-                Console.WriteLine("== STATE: Intermediate - before toArray... " + watch.ElapsedMilliseconds + " ms. ==");
+                //Console.WriteLine("== STATE: Intermediate - before toArray... " + watch.ElapsedMilliseconds + " ms. ==");
                 data = stream.ToArray();
             }
-            Console.WriteLine("== STATE: Intermediate - before send... " + watch.ElapsedMilliseconds + " ms. ==");
+            //Console.WriteLine("== STATE: Intermediate - before send... " + watch.ElapsedMilliseconds + " ms. ==");
 
             byte[] packet;
 
@@ -132,7 +135,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
             ClientsToSync.Clear();
 
             watch.Stop();
-            Console.WriteLine("== SERIAL: DONE! State send took "+watch.ElapsedMilliseconds+" ms. ==");
+            //Console.WriteLine("== SERIAL: DONE! State send took "+watch.ElapsedMilliseconds+" ms. ==");
         }
 
         public override void SendCommand(VMNetCommandBodyAbstract cmd)
@@ -338,6 +341,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
         public override void CloseNet()
         {
             listener.Close();
+            if (OnShutdown != null) OnShutdown(CloseReason);
         }
 
         public void BanUser(VM vm, string name)

@@ -20,14 +20,14 @@ namespace FSO.SimAntics.Primitives
     public class VMFindLocationFor : VMPrimitiveHandler
     {
         private static LotTilePos[] DirectionVectors = {
-            LotTilePos.FromBigTile(16, 0, 0),
-            LotTilePos.FromBigTile(16, 16, 0),
-            LotTilePos.FromBigTile(0, 16, 0),
-            LotTilePos.FromBigTile(-16, 16, 0),
-            LotTilePos.FromBigTile(-16, 0, 0),
-            LotTilePos.FromBigTile(-16, -16, 0),
-            LotTilePos.FromBigTile(0, -16, 0),
-            LotTilePos.FromBigTile(16, -16, 0),
+            new LotTilePos(16, 0, 0),
+            new LotTilePos(16, 16, 0),
+            new LotTilePos(0, 16, 0),
+            new LotTilePos(-16, 16, 0),
+            new LotTilePos(-16, 0, 0),
+            new LotTilePos(-16, -16, 0),
+            new LotTilePos(0, -16, 0),
+            new LotTilePos(16, -16, 0),
         };
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
@@ -72,12 +72,12 @@ namespace FSO.SimAntics.Primitives
             LotTilePos step = DirectionVectors[dir];
             for (int i = 0; i < 32; i++)
             {
-                if (obj.SetPosition(new LotTilePos(refObj.Position) + step * i,
+                if (obj.SetPosition(new LotTilePos(refObj.Position) + step * (i/2),
                     (Direction)(1 << (dir)), context).Status == VMPlacementError.Success)
                     return true;
-                if (i != 0)
+                if (i%2 != 0)
                 {
-                    if (obj.SetPosition(new LotTilePos(refObj.Position) - step * i,
+                    if (obj.SetPosition(new LotTilePos(refObj.Position) - step * (i/2),
                         (Direction)(1 << (dir)), context).Status == VMPlacementError.Success)
                         return true;
                 }

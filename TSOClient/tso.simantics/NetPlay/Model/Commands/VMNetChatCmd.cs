@@ -103,6 +103,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                             vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Made " + sim.Name + " a visitor."));
                         }
                         break;
+                    case "close":
+                        if (FromNet) return false;
+                        vm.CloseNet(VMCloseNetReason.ServerShutdown);
+                        break;
                 }
                 return true;
             }

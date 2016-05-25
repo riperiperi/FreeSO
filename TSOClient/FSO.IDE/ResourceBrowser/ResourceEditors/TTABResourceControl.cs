@@ -27,15 +27,22 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         private static string[] MotiveNames =
         {
+            "HappyLife: ",
+            "HappyWeek: ",
+            "HappyDay: ",
+            "Mood: ",
+            "(UNUSED) Physical: ",
             "Energy: ",
             "Comfort: ",
             "Hunger: ",
             "Hygiene: ",
             "Bladder: ",
+            "(UNUSED) Mental: ",
+            "Sleep State: ",
+            "(UNUSED) Stress: ",
             "Room: ",
             "Social: ",
             "Fun: ",
-            "Mood: "
         };
 
         private static string[] VaryNames =
@@ -229,7 +236,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             MotiveBox.Enabled = enabled;
 
             InteractionPathName.Text = GetTTA(Selected.TTAIndex);
-            //AutonomyInput.Value = Selected.AutonomyThreshold;
+            AutonomyInput.Value = Selected.AutonomyThreshold;
             AttenuationCombo.Text = Selected.AttenuationValue.ToString();
             JoinInput.Value = Math.Max(-1, Selected.JoiningIndex);
 
@@ -314,7 +321,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
             var oldInd = MotiveList.SelectedIndex;
             MotiveList.Items.Clear();
-            for (int i = 0; i < MotiveNames.Length; i++)
+            for (int i = 0; i < Selected.MotiveEntries.Length; i++)
             {
                 var item = Selected.MotiveEntries[i];
                 bool hasEffect = (item.EffectRangeMinimum > 0 || item.EffectRangeMaximum > 0);

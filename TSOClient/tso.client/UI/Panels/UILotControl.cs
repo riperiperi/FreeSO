@@ -264,7 +264,7 @@ namespace FSO.Client.UI.Panels
                         }
                         obj = obj.MultitileGroup.GetInteractionGroupLeader(obj);
 
-                        var menu = obj.GetPieMenu(vm, ActiveEntity);
+                        var menu = obj.GetPieMenu(vm, ActiveEntity, false);
                         if (menu.Count != 0)
                         {
                             PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
@@ -344,7 +344,7 @@ namespace FSO.Client.UI.Panels
                         if (ObjectHover > 0)
                         {
                             var obj = vm.GetObjectById(ObjectHover);
-                            var menu = obj.GetPieMenu(vm, ActiveEntity);
+                            var menu = obj.GetPieMenu(vm, ActiveEntity, false);
                             InteractionsAvailable = (menu.Count > 0);
                         }
                     }

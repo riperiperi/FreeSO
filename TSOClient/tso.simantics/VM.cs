@@ -141,7 +141,8 @@ namespace FSO.SimAntics
             //TODO: all avatars with persist ID are not npcs in TSO. right now though everything has a persist ID...
             foreach (var avatar in avatars) avatar.Delete(true, Context);
 
-            //TODO: reset tree on objects?
+            var ents = new List<VMEntity>(Entities);
+            //foreach (var ent in ents) ent.Reset(Context); duplicates dogs apparently?? tf
         }
 
         private bool AlternateTick;

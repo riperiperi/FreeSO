@@ -84,6 +84,7 @@ namespace FSO.Content
 
             //init local objects, piff clones
 
+            Directory.CreateDirectory("Content/Objects");
             string[] paths = Directory.GetFiles("Content/Objects", "*.iff", SearchOption.AllDirectories);
             for (int i = 0; i < paths.Length; i++)
             {

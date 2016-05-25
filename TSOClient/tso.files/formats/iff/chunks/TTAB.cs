@@ -23,6 +23,14 @@ namespace FSO.Files.Formats.IFF.Chunks
         public TTABInteraction[] Interactions = new TTABInteraction[0];
         public Dictionary<uint, TTABInteraction> InteractionByIndex = new Dictionary<uint, TTABInteraction>();
 
+        public static float[] AttenuationValues = {
+            0, //custom
+            0, //none
+            0.002f, //low
+            0.02f, //medium
+            0.1f, //high (falloff entirely in 10 tiles)
+            };
+
         /// <summary>
         /// Reads a TTAB chunk from a stream.
         /// </summary>

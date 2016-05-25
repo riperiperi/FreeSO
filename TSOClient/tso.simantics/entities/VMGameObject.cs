@@ -131,6 +131,7 @@ namespace FSO.SimAntics
 
         public override string ToString()
         {
+            if (MultitileGroup.Name != "") return MultitileGroup.Name;
             var strings = Object.Resource.Get<CTSS>(Object.OBJ.CatalogStringsID);
             if (strings != null){
                 return strings.GetString(0);

@@ -426,7 +426,7 @@ namespace FSO.Client.UI.Screens
             VMNetDriver driver;
             if (host)
             {
-                driver = new VMServerDriver(37564);
+                driver = new VMServerDriver(37564, null);
             }
             else
             {

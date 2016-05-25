@@ -9,7 +9,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
 {
     public class VMTSOAvatarState : VMTSOEntityState
     {
-        public VMTSOAvatarPermissions Permissions = VMTSOAvatarPermissions.BuildBuyRoommate;
+        public VMTSOAvatarPermissions Permissions = VMTSOAvatarPermissions.Visitor;
         public HashSet<uint> IgnoredAvatars = new HashSet<uint>();
 
         public override void Deserialize(BinaryReader reader)

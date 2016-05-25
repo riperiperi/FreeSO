@@ -21,6 +21,7 @@ namespace FSO.SimAntics.Primitives
             var operand = (VMStopAllSoundsOperand)args;
 
             var owner = (operand.Flags == 1)?context.StackObject:context.Caller;
+            if (owner == null) return VMPrimitiveExitCode.GOTO_TRUE;
             var threads = owner.SoundThreads;
 
             for (int i = 0; i < threads.Count; i++)

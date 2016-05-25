@@ -395,7 +395,7 @@ namespace FSO.SimAntics
             this.Thread.Stack.Clear();
             this.Thread.Queue.Clear();
             this.Thread.BlockingState = null;
-
+            
             if (EntryPoints[3].ActionFunction != 0) ExecuteEntryPoint(3, context, true); //Reset
             if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
         }
@@ -659,7 +659,7 @@ namespace FSO.SimAntics
             SetValue(VMStackObjectVariable.Room, (short)room);
         }
 
-        public List<VMPieMenuInteraction> GetPieMenu(VM vm, VMEntity caller)
+        public List<VMPieMenuInteraction> GetPieMenu(VM vm, VMEntity caller, bool includeHidden)
         {
             var pie = new List<VMPieMenuInteraction>();
             if (TreeTable == null) return pie;
@@ -672,7 +672,7 @@ namespace FSO.SimAntics
                 caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] = 0;
                 if (action != null) action.Flags &= ~TTABFlags.MustRun;
                 var actionStrings = caller.Thread.CheckAction(action);
-                if (caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1) continue;
+                if (caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1 && !includeHidden) continue;
 
                 if (actionStrings != null)
                 {
@@ -681,6 +681,7 @@ namespace FSO.SimAntics
                         foreach (var actionS in actionStrings)
                         {
                             actionS.ID = (byte)id;
+                            actionS.Entry = TreeTable.Interactions[i];
                             pie.Add(actionS);
                         }
                     }
@@ -691,7 +692,8 @@ namespace FSO.SimAntics
                             pie.Add(new VMPieMenuInteraction()
                             {
                                 Name = TreeTableStrings.GetString((int)id),
-                                ID = (byte)id
+                                ID = (byte)id,
+                                Entry = TreeTable.Interactions[i]
                             });
                         }
                     }
@@ -1180,6 +1182,7 @@ namespace FSO.SimAntics
         public string Name;
         public short Param0;
         public byte ID;
+        public TTABInteraction Entry;
     }
 
     public struct VMSoundEntry

@@ -86,6 +86,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             }
             Name = tempName;
 
+            if (FromNet && RequesterID == uint.MaxValue - 1) return false; //only server can set themselves as server...
             RequesterID = ActorUID;
             vm.GlobalLink.ObtainAvatarFromTicket(vm, Ticket, (uint persistID, VMTSOAvatarPermissions permissions) =>
                 {

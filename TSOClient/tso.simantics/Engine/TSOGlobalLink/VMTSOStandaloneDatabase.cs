@@ -67,6 +67,7 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink
                 var rand = new Random();
                 uint ID = ((uint)rand.Next())+65536;
                 while (TakenAvatarPersist.Contains(ID)) ID = ((uint)rand.Next()) + 65536;
+                if (idString == "local:server") ID = uint.MaxValue - 1;
                 //ok so we got one, add it to db
                 IpNameToPersist.Add(idString, ID);
                 TakenAvatarPersist.Add(ID);
