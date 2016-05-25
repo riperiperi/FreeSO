@@ -19,6 +19,7 @@ using FSO.HIT;
 using FSO.Client.UI.Model;
 using FSO.LotView;
 using FSO.LotView.Components;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -312,7 +313,7 @@ namespace FSO.Client.UI.Panels
             base.Update(state);
         }
 
-        public void SetInfo(VMEntity entity, bool bought)
+        public void SetInfo(VM vm, VMEntity entity, bool bought)
         {
             var obj = entity.Object;
             var def = entity.MasterDefinition;
@@ -352,7 +353,16 @@ namespace FSO.Client.UI.Panels
             }
 
             MotivesText.CurrentText = motivesString.ToString();
-            ObjectOwnerText.Caption = GameFacade.Strings.GetString("206", "24", new string[] { "You" });
+
+            string owner = "Nobody";
+            if (entity is VMGameObject && ((VMTSOObjectState)entity.TSOState).OwnerID > 0)
+            {
+                var ownerID = ((VMTSOObjectState)entity.TSOState).OwnerID;
+                var ownerEnt = vm.GetObjectByPersist(ownerID);
+                owner = (ownerEnt != null) ? owner = ownerEnt.Name : "(offline user)";
+            }
+
+            ObjectOwnerText.Caption = GameFacade.Strings.GetString("206", "24", new string[] { owner });
 
             SpecificTabButton.Disabled = !bought;
 

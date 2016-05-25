@@ -6,6 +6,8 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay;
+using FSO.SimAntics.Engine.TSOGlobalLink;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.Engine.TSOTransaction
 {
@@ -17,6 +19,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public class VMTSOGlobalLinkStub : IVMTSOGlobalLink
     {
         private Queue<VMNetArchitectureCmd> ArchBuffer = new Queue<VMNetArchitectureCmd>();
+        public VMTSOStandaloneDatabase Database = new VMTSOStandaloneDatabase();
         private bool WaitingOnArch;
 
         public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback)
@@ -119,6 +122,43 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             }
             avatar.Delete(true, vm.Context);
             vm.Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Leave, avatar.Name));
+        }
+
+        public void RequestRoommate(VM vm, VMAvatar avatar)
+        {
+            //in final game: signal to city server persistant roommate request state.
+            //right now: immedaiately add as roommate
+            vm.ForwardCommand(new VMChangePermissionsCmd()
+            {
+                TargetUID = avatar.PersistID,
+                Level = VMTSOAvatarPermissions.Roommate,
+                Verified = true
+            });
+        }
+
+        public void RemoveRoommate(VM vm, VMAvatar avatar)
+        {
+            //in final game: signal to city server persistant roommate request state.
+            //right now: immedaiately remove
+            vm.ForwardCommand(new VMChangePermissionsCmd()
+            {
+                TargetUID = avatar.PersistID,
+                Level = VMTSOAvatarPermissions.Visitor,
+                Verified = true
+            });
+        }
+
+        public void ObtainAvatarFromTicket(VM vm, string ticket, VMAsyncAvatarCallback callback)
+        {
+            //gets an avatar from our stub database based on their ticket
+            var uid = Database.FindOrAddAvatar(ticket);
+
+            var permissions = VMTSOAvatarPermissions.Visitor;
+            if (Database.Administrators.Contains(uid)) permissions = VMTSOAvatarPermissions.Admin;
+            else if (vm.TSOState.BuildRoommates.Contains(uid)) permissions = VMTSOAvatarPermissions.BuildBuyRoommate;
+            else if (vm.TSOState.Roommates.Contains(uid)) permissions = VMTSOAvatarPermissions.Roommate;
+
+            callback(uid, permissions);
         }
     }
 }

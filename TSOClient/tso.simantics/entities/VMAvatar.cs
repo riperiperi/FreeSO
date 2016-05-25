@@ -343,7 +343,6 @@ namespace FSO.SimAntics
 
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
             SetPersonData(VMPersonDataVariable.OnlineJobID, 1); //for testing wash hands after toilet
-            SetPersonData(VMPersonDataVariable.IsHousemate, 2);
 
             SetPersonData(VMPersonDataVariable.CreativitySkill, 1000);
             SetPersonData(VMPersonDataVariable.CookingSkill, 1000);
@@ -547,6 +546,9 @@ namespace FSO.SimAntics
             {
                 case VMPersonDataVariable.Priority:
                     return (Thread.Queue.Count == 0) ? (short)0 : Thread.Queue[0].Priority;
+                case VMPersonDataVariable.IsHousemate:
+                    var level = ((VMTSOAvatarState)TSOState).Permissions;
+                    return (short)((level >= VMTSOAvatarPermissions.BuildBuyRoommate)?2:((level >= VMTSOAvatarPermissions.Roommate)?1:0));
             }
             return PersonData[(ushort)variable];
             

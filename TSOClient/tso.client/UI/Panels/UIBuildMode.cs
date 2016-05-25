@@ -241,7 +241,7 @@ namespace FSO.Client.UI.Panels
             else
             {
                 BuyItem = vm.Context.CreateObjectInstance(item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
-                QueryPanel.SetInfo(BuyItem.Objects[0], false);
+                QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
                 QueryPanel.Mode = 1;
                 QueryPanel.Tab = 0;
                 QueryPanel.Active = true;
@@ -279,7 +279,7 @@ namespace FSO.Client.UI.Panels
             QueryPanel.Mode = 0;
             QueryPanel.Active = true;
             QueryPanel.Tab = 1;
-            QueryPanel.SetInfo(holding.Group.BaseObject, holding.IsBought);
+            QueryPanel.SetInfo(LotController.vm, holding.Group.BaseObject, holding.IsBought);
         }
         private void HolderPutDown(UIObjectSelection holding, UpdateState state)
         {

@@ -64,6 +64,7 @@ namespace FSO.SimAntics.Marshals.Threads
         public void Deserialize(BinaryReader reader)
         {
             RoutineID = reader.ReadUInt16();
+            CheckRoutineID = reader.ReadUInt16();
             Callee = reader.ReadInt16();
             StackObject = reader.ReadInt16();
             IconOwner = reader.ReadInt16();

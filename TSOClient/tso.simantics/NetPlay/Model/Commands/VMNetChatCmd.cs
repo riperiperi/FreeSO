@@ -4,6 +4,8 @@
  * http://mozilla.org/MPL/2.0/. 
  */
 
+using FSO.SimAntics.Engine.TSOTransaction;
+using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Drivers;
 using System;
 using System.Collections.Generic;
@@ -17,22 +19,20 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public string Message;
 
-        public override bool Execute(VM vm)
+        public override bool Execute(VM vm, VMAvatar avatar)
         {
-            VMEntity caller = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
-            //TODO: check if net user owns caller!
-            if (caller == null || caller is VMGameObject) return false;
+            if (avatar == null) return false;
 
-            var avatar = (VMAvatar)caller;
             if (Message[0] == '/')
             {
                 var spaceIndex = Message.IndexOf(' ');
                 if (spaceIndex == -1) spaceIndex = Message.Length;
-                if (FromNet || !(vm.Driver is VMServerDriver)) return false;
+                if ((FromNet && ((VMTSOAvatarState)avatar.TSOState).Permissions < VMTSOAvatarPermissions.Admin) || !(vm.Driver is VMServerDriver)) return false;
                 //commands are only run from the server sim right now
                 var cmd = Message.Substring(1, spaceIndex - 1);
                 var args = Message.Substring(Math.Min(Message.Length, spaceIndex + 1), Math.Max(0, Message.Length - (spaceIndex + 1)));
                 var server = (VMServerDriver)vm.Driver;
+                VMEntity sim;
                 switch (cmd.ToLower())
                 {
                     case "ban":
@@ -50,6 +50,58 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         string result = "";
                         foreach (var ban in server.SandboxBans.List()) result += ban + "\r\n";
                         vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "==== BANNED IPS: ==== \r\n"+result));
+                        break;
+                    case "builder":
+                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLower().Trim(' ') == args.ToLower().Trim(' ')).FirstOrDefault();
+                        if (sim != null)
+                        {
+                            vm.ForwardCommand(new VMChangePermissionsCmd()
+                            {
+                                TargetUID = sim.PersistID,
+                                Level = VMTSOAvatarPermissions.BuildBuyRoommate,
+                                Verified = true
+                            });
+                            vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Made " + sim.Name + " a build-roommate."));
+                        }
+                        break;
+                    case "admin":
+                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLower().Trim(' ') == args.ToLower().Trim(' ')).FirstOrDefault();
+                        if (sim != null)
+                        {
+                            vm.ForwardCommand(new VMChangePermissionsCmd()
+                            {
+                                TargetUID = sim.PersistID,
+                                Level = VMTSOAvatarPermissions.Admin,
+                                Verified = true
+                            });
+                            vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Made " + sim.Name + " an admin."));
+                        }
+                        break;
+                    case "roomie":
+                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLower().Trim(' ') == args.ToLower().Trim(' ')).FirstOrDefault();
+                        if (sim != null)
+                        {
+                            vm.ForwardCommand(new VMChangePermissionsCmd()
+                            {
+                                TargetUID = sim.PersistID,
+                                Level = VMTSOAvatarPermissions.Roommate,
+                                Verified = true
+                            });
+                            vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Made " + sim.Name + " a roommate."));
+                        }
+                        break;
+                    case "visitor":
+                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLower().Trim(' ') == args.ToLower().Trim(' ')).FirstOrDefault();
+                        if (sim != null)
+                        {
+                            vm.ForwardCommand(new VMChangePermissionsCmd()
+                            {
+                                TargetUID = sim.PersistID,
+                                Level = VMTSOAvatarPermissions.Visitor,
+                                Verified = true
+                            });
+                            vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Made " + sim.Name + " a visitor."));
+                        }
                         break;
                 }
                 return true;

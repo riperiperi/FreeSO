@@ -614,7 +614,7 @@ namespace FSO.SimAntics.Engine
             if (action == null) return null;
             var result = new List<VMPieMenuInteraction>();
 
-            if (Entity is VMAvatar && ((action.Flags2 & TSOFlags.AllowCSRs) == 0)) //just let everyone use the CSR interactions
+            if (((action.Flags & TTABFlags.MustRun) == 0) && Entity is VMAvatar && ((action.Flags2 & TSOFlags.AllowCSRs) == 0)) //just let everyone use the CSR interactions
             {
                 var avatar = (VMAvatar)Entity;
 
@@ -652,16 +652,21 @@ namespace FSO.SimAntics.Engine
                 }
 
                 if ((action.Flags & TTABFlags.TSOAvailableWhenDead) > 0) tsoCompare |= TSOFlags.AllowGhost;
-                if ((action.Flags & TTABFlags.AllowVisitors) > 0) tsoCompare |= TSOFlags.AllowVisitors; //wrong!!!!!!!!!!!!!!
+                if ((action.Flags & TTABFlags.AllowVisitors) > 0) tsoCompare |= TSOFlags.AllowVisitors; //wrong???????
 
-                //NEGATIVE EFFECTS:
-                var negMask = (TSOFlags.AllowVisitors | TSOFlags.AllowRoommates | TSOFlags.AllowObjectOwner | TSOFlags.AllowGhost);
+                var posMask = (TSOFlags.AllowObjectOwner);
+                if (((tsoState & posMask) & (tsoCompare & posMask)) == 0)
+                {
+                    //NEGATIVE EFFECTS:
+                    var negMask = (TSOFlags.AllowVisitors | TSOFlags.AllowRoommates | TSOFlags.AllowGhost);
 
-                var negatedFlags = (~tsoCompare) & negMask;
-                if ((negatedFlags & tsoState) > 0) return null; //we are disallowed
-                //if ((tsoCompare & TSOFlags.AllowCSRs) > 0) return null; // && (tsoState & TSOFlags.AllowCSRs) == 0
+                    var negatedFlags = (~tsoCompare) & negMask;
+                    if ((negatedFlags & tsoState) > 0) return null; //we are disallowed
+                                                                    //if ((tsoCompare & TSOFlags.AllowCSRs) > 0) return null; // && (tsoState & TSOFlags.AllowCSRs) == 0
+                }
             }
-            if (action.CheckRoutine != null && EvaluateCheck(Context, Entity, new VMStackFrame()
+            if (((action.Flags & TTABFlags.MustRun) == 0 || ((action.Flags & TTABFlags.TSORunCheckAlways) > 0)) 
+                && action.CheckRoutine != null && EvaluateCheck(Context, Entity, new VMStackFrame()
             {
                 Caller = Entity,
                 Callee = action.Callee,

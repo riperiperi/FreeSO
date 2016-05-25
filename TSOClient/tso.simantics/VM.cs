@@ -23,6 +23,7 @@ using FSO.LotView.Components;
 using FSO.SimAntics.Marshals.Threads;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Engine.TSOTransaction;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics
 {
@@ -48,6 +49,11 @@ namespace FSO.SimAntics
 
         public List<VMEntity> Entities = new List<VMEntity>();
         public short[] GlobalState;
+        public VMPlatformState PlatformState;
+        public VMTSOLotState TSOState
+        {
+            get { return (PlatformState != null && PlatformState is VMTSOLotState) ? (VMTSOLotState)PlatformState : null; }
+        }
         public string LotName;
 
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
@@ -122,10 +128,20 @@ namespace FSO.SimAntics
         public void Init()
         {
             Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
+            PlatformState = new VMTSOLotState();
             GlobalState = new short[33];
             GlobalState[20] = 255; //Game Edition. Basically, what "expansion packs" are running. Let's just say all of them.
             GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
+        }
+
+        public void Reset()
+        {
+            var avatars = new List<VMEntity>(Entities.Where(x => x is VMAvatar && x.PersistID > 65535));
+            //TODO: all avatars with persist ID are not npcs in TSO. right now though everything has a persist ID...
+            foreach (var avatar in avatars) avatar.Delete(true, Context);
+
+            //TODO: reset tree on objects?
         }
 
         private bool AlternateTick;
@@ -401,6 +417,7 @@ namespace FSO.SimAntics
                 Threads = threads,
                 MultitileGroups = mult.ToArray(),
                 GlobalState = GlobalState,
+                PlatformState = PlatformState,
                 ObjectId = ObjectId
             };
         }
@@ -473,6 +490,7 @@ namespace FSO.SimAntics
             foreach (var ent in Entities) ent.PositionChange(Context, true);
 
             GlobalState = input.GlobalState;
+            PlatformState = input.PlatformState;
             ObjectId = input.ObjectId;
 
             //just a few final changes to refresh everything, and avoid signalling objects

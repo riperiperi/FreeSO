@@ -27,24 +27,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override void Deserialize(BinaryReader reader)
         {
             State = new VMMarshal();
-            using (var decomp = new GZipStream(reader.BaseStream, CompressionMode.Decompress))
-            {
-                using (var bin = new BinaryReader(decomp))
-                {
-                    State.Deserialize(bin);
-                }
-            }
+            State.Deserialize(reader);
         }
 
         public override void SerializeInto(BinaryWriter writer)
         {
-            using (var comp = new GZipStream(writer.BaseStream, CompressionMode.Compress))
-            {
-                using (var bin = new BinaryWriter(comp))
-                {
-                    State.SerializeInto(bin);
-                }
-            }
+            State.SerializeInto(writer);
         }
         #endregion
     }

@@ -33,6 +33,7 @@ using FSO.SimAntics.NetPlay;
 using FSO.Client.UI.Controls;
 using FSO.Client.Debug;
 using FSO.Client.UI.Panels.WorldUI;
+using FSO.SimAntics.Engine.TSOTransaction;
 
 namespace FSO.Client.UI.Screens
 {
@@ -447,23 +448,38 @@ namespace FSO.Client.UI.Screens
 
             if (host)
             {
-                short jobLevel = -1;
+                //check: do we have an fsov to try loading from?
 
-                //quick hack to find the job level from the chosen blueprint
-                //the final server will know this from the fact that it wants to create a job lot in the first place...
                 string filename = Path.GetFileName(path);
                 try
                 {
-                    if (filename.StartsWith("nightclub") || filename.StartsWith("restaurant") || filename.StartsWith("robotfactory"))
-                        jobLevel = Convert.ToInt16(filename.Substring(filename.Length - 9, 2));
+                    using (var file = new BinaryReader(File.OpenRead("Content/LocalHouse/"+filename.Substring(0, filename.Length-4)+".fsov")))
+                    {
+                        var marshal = new SimAntics.Marshals.VMMarshal();
+                        marshal.Deserialize(file);
+                        vm.Load(marshal);
+                        vm.Reset();
+                    }
                 }
-                catch (Exception) { }
+                catch (Exception) {
+                    short jobLevel = -1;
 
-                vm.SendCommand(new VMBlueprintRestoreCmd
-                {
-                    JobLevel = jobLevel,
-                    XMLData = File.ReadAllBytes(path)
-                });
+                    //quick hack to find the job level from the chosen blueprint
+                    //the final server will know this from the fact that it wants to create a job lot in the first place...
+
+                    try
+                    {
+                        if (filename.StartsWith("nightclub") || filename.StartsWith("restaurant") || filename.StartsWith("robotfactory"))
+                            jobLevel = Convert.ToInt16(filename.Substring(filename.Length - 9, 2));
+                    }
+                    catch (Exception) { }
+
+                    vm.SendCommand(new VMBlueprintRestoreCmd
+                    {
+                        JobLevel = jobLevel,
+                        XMLData = File.ReadAllBytes(path)
+                    });
+                }
             }
 
             uint simID = (uint)(new Random()).Next();
@@ -480,7 +496,6 @@ namespace FSO.Client.UI.Screens
             });
 
             LotController = new UILotControl(vm, World);
-            LotController.SelectedSimID = simID;
             this.AddAt(0, LotController);
 
             vm.Context.Clock.Hours = 10;
@@ -539,11 +554,16 @@ namespace FSO.Client.UI.Screens
         private void SaveHouseButton_OnButtonClick(UIElement button)
         {
             if (vm == null) return;
-
-
+            
             var exporter = new VMWorldExporter();
             exporter.SaveHouse(vm, GameFacade.GameFilePath("housedata/blueprints/house_00.xml"));
-
+            var marshal = vm.Save();
+            Directory.CreateDirectory("Content/LocalHouse/");
+            using (var output = new FileStream("Content/LocalHouse/house_00.fsov", FileMode.Create))
+            {
+                marshal.SerializeInto(new BinaryWriter(output));
+            }
+            ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Save();
         }
 
         public void CloseInbox()

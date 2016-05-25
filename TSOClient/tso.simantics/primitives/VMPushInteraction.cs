@@ -55,6 +55,7 @@ namespace FSO.SimAntics.Engine.Primitives
             action.IconOwner = context.VM.GetObjectById((short)context.Locals[operand.IconLocation]);
             action.Mode = mode;
             action.Priority = priority;
+            action.Flags |= TTABFlags.MustRun;
             if (operand.PushHeadContinuation) action.Flags |= TTABFlags.Leapfrog;
 
             context.StackObject.Thread.EnqueueAction(action);

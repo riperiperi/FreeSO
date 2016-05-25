@@ -31,7 +31,8 @@ namespace FSO.SimAntics.NetPlay.Model
             { VMCommandType.StateSync, typeof(VMStateSyncCmd) },
             { VMCommandType.RequestResync, typeof(VMRequestResyncCmd) },
             { VMCommandType.GenericDialog, typeof(VMGenericDialogCommand) },
-            { VMCommandType.AsyncResponse, typeof(VMNetAsyncResponseCmd) }
+            { VMCommandType.AsyncResponse, typeof(VMNetAsyncResponseCmd) },
+            { VMCommandType.ChangePermissions, typeof(VMChangePermissionsCmd) }
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -90,6 +91,7 @@ namespace FSO.SimAntics.NetPlay.Model
         StateSync = 12,
         RequestResync = 13,
         GenericDialog = 14,
-        AsyncResponse = 15
+        AsyncResponse = 15,
+        ChangePermissions = 16,
     }
 }

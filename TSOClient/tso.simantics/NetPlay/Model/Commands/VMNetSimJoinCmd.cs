@@ -12,6 +12,8 @@ using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.TSOPlatform;
+using GonzoNet;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -19,13 +21,24 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public ushort Version = CurVer;
 
+        //TODO: replace with VMPersistAvatarBlock (obtained from global server)
+        
+        public uint RequesterID; //just here to notify client that this join was meant for them. = old ActorUID (random)
+        //do NOT make this the ticket in future. randomly distributing the auth ticket to everyone on server is a dumb idea
+
         public ulong HeadID;
         public ulong BodyID;
         public byte SkinTone;
         public bool Gender;
         public string Name;
+        public VMTSOAvatarPermissions Permissions;
 
         public static ushort CurVer = 0xFFF1;
+
+        //variables used locally for deferred avatar loading
+        public bool Verified;
+        public string Ticket; //right now this is ip:name. in future will be provided by city
+        public NetworkClient Client; //REPLACE WHEN MOVING OFF GONZONET!!
 
         public override bool Execute(VM vm)
         {
@@ -43,6 +56,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             avatar.DefaultSuits.Daywear = BodyID;
             avatar.BodyOutfit = BodyID;
             avatar.HeadOutfit = HeadID;
+            avatar.Name = Name;
+            ((VMTSOAvatarState)avatar.TSOState).Permissions = Permissions;
 
             if (ActorUID == uint.MaxValue - 1)
             {
@@ -52,17 +67,35 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 avatar.SetPersonData(VMPersonDataVariable.IsGhost, 1); //oooooOOooooOo
             }
 
-            var tempName = Name;
+            if (RequesterID == vm.MyUID) vm.MyUID = ActorUID; //we're this sim! try send commands as them.
+            vm.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Join, avatar.Name));
+
+            return true;
+        }
+
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            if (Verified == true) return true;
+            if (Ticket == null) Ticket = "local" + ":" + Name;
+
+            var tempName = Name; //obviously not a concern for final server. but for now... prevents people logging in with 2x same persist
             int i = 1;
             while (vm.Entities.Any(x => (x is VMAvatar) && ((VMAvatar)x).Name == tempName))
             {
                 tempName = Name + " (" + (i++) + ")";
             }
-            avatar.Name = tempName;
+            Name = tempName;
 
-            vm.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Join, avatar.Name));
-
-            return true;
+            RequesterID = ActorUID;
+            vm.GlobalLink.ObtainAvatarFromTicket(vm, Ticket, (uint persistID, VMTSOAvatarPermissions permissions) =>
+                {
+                    //TODO: a lot more persist state
+                    this.ActorUID = persistID;
+                    this.Permissions = permissions;
+                    this.Verified = true;
+                    vm.ForwardCommand(this);
+                });
+            return false;
         }
 
         #region VMSerializable Members
@@ -70,23 +103,26 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             base.SerializeInto(writer);
             writer.Write(Version);
+            writer.Write(RequesterID);
             writer.Write(HeadID);
             writer.Write(BodyID);
             writer.Write(SkinTone);
             writer.Write(Gender);
             writer.Write(Name);
+            writer.Write((byte)Permissions);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
             Version = reader.ReadUInt16();
-
+            RequesterID = reader.ReadUInt32();
             HeadID = reader.ReadUInt64();
             BodyID = reader.ReadUInt64();
             SkinTone = reader.ReadByte();
             Gender = reader.ReadBoolean();
             Name = reader.ReadString();
+            Permissions = (VMTSOAvatarPermissions)reader.ReadByte();
         }
         #endregion
     }

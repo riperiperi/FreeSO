@@ -154,6 +154,18 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     var caller = vm.GetObjectByPersist(QueuedCmds[i].Command.ActorUID);
                     if (!(caller is VMAvatar)) caller = null;
                     if (!QueuedCmds[i].Command.Verify(vm, (VMAvatar)caller)) QueuedCmds.RemoveAt(i--);
+                    else if (QueuedCmds[i].Type == VMCommandType.SimJoin)
+                    {
+                        var cmd = (VMNetSimJoinCmd)QueuedCmds[i].Command;
+                        if (cmd.Client != null)
+                        {
+                            lock (ClientToUID)
+                            {
+                                ClientToUID.Add(cmd.Client, cmd.ActorUID);
+                                UIDtoClient.Add(cmd.ActorUID, cmd.Client);
+                            }
+                        }
+                    }
                 }
 
                 var tick = new VMNetTick();
@@ -300,11 +312,11 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     ClientsToDC.Add(client);
                     return;
                 }
-                lock (ClientToUID)
-                {
-                    ClientToUID.Add(client, cmd.Command.ActorUID);
-                    UIDtoClient.Add(cmd.Command.ActorUID, client);
-                }
+
+                ((VMNetSimJoinCmd)cmd.Command).Ticket = client.RemoteIP+":"+((VMNetSimJoinCmd)cmd.Command).Name;
+                ((VMNetSimJoinCmd)cmd.Command).Client = client; //remember client so we can bind it to persist id later
+                SendCommand(cmd.Command); //just go for it. will start the avatar retrieval process.
+                return;
             }
             else if (cmd.Type == VMCommandType.RequestResync)
             {

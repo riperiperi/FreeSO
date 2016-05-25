@@ -5,11 +5,16 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using FSO.SimAntics.Marshals.Threads;
+using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.TSOPlatform;
+using System.IO.Compression;
 
 namespace FSO.SimAntics.Marshals
 {
     public class VMMarshal : VMSerializable
     {
+        public int Version = 1;
+        public bool Compressed = true;
         public VMContextMarshal Context;
 
         public VMEntityMarshal[] Entities;
@@ -17,11 +22,26 @@ namespace FSO.SimAntics.Marshals
         public VMMultitileGroupMarshal[] MultitileGroups;
 
         public short[] GlobalState;
+        public VMPlatformState PlatformState;
         public short ObjectId = 1;
 
         public void Deserialize(BinaryReader reader)
         {
             if (new string(reader.ReadChars(4)) != "FSOv") return;
+
+            Version = reader.ReadInt32();
+            Compressed = reader.ReadBoolean();
+
+            var uReader = reader;
+            MemoryStream cStream = null;
+            GZipStream zipStream = null;
+            if (Compressed)
+            {
+                var length = reader.ReadInt32();
+                cStream = new MemoryStream(reader.ReadBytes(length));
+                zipStream = new GZipStream(cStream, CompressionMode.Decompress);
+                reader = new BinaryReader(zipStream);
+            }
 
             Context = new VMContextMarshal();
             Context.Deserialize(reader);
@@ -59,12 +79,28 @@ namespace FSO.SimAntics.Marshals
                 GlobalState[i] = reader.ReadInt16();
             }
 
+            //assume TSO for now
+            PlatformState = new VMTSOLotState();
+            PlatformState.Deserialize(reader);
+
             ObjectId = reader.ReadInt16();
         }
 
         public void SerializeInto(BinaryWriter writer)
         {
             writer.Write(new char[] { 'F', 'S', 'O', 'v' });
+            writer.Write(Version);
+            writer.Write(Compressed);
+
+            var uWriter = writer;
+            MemoryStream cStream = null;
+            GZipStream zipStream = null;
+            if (Compressed)
+            {
+                cStream = new MemoryStream();
+                zipStream = new GZipStream(cStream, CompressionMode.Compress);
+                writer = new BinaryWriter(zipStream);
+            }
 
             var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
@@ -82,7 +118,7 @@ namespace FSO.SimAntics.Marshals
             Console.WriteLine("== SERIAL: Ents done... " + timer.ElapsedMilliseconds + " ms ==");
 
             writer.Write(Threads.Length);
-            foreach(var thr in Threads) thr.SerializeInto(writer);
+            foreach (var thr in Threads) thr.SerializeInto(writer);
 
             Console.WriteLine("== SERIAL: Threads done... " + timer.ElapsedMilliseconds + " ms ==");
 
@@ -96,10 +132,20 @@ namespace FSO.SimAntics.Marshals
             {
                 writer.Write(val);
             }
+            PlatformState.SerializeInto(writer);
 
             Console.WriteLine("== SERIAL: Globals done... " + timer.ElapsedMilliseconds + " ms ==");
 
             writer.Write(ObjectId);
+
+            if (Compressed)
+            {
+                writer.Close();
+                zipStream.Close();
+                var data = cStream.ToArray();
+                uWriter.Write(data.Length);
+                uWriter.Write(data);
+            }
         }
     }
 }

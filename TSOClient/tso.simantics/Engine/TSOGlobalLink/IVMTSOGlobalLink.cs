@@ -1,4 +1,5 @@
-﻿using FSO.SimAntics.NetPlay.Model.Commands;
+﻿using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +11,13 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     {
         void LeaveLot(VM vm, VMAvatar avatar);
         void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback);
+        void RequestRoommate(VM vm, VMAvatar avatar);
+        void RemoveRoommate(VM vm, VMAvatar avatar);
+        void ObtainAvatarFromTicket(VM vm, string ticket, VMAsyncAvatarCallback callback);
         void QueueArchitecture(VMNetArchitectureCmd cmd);
         void Tick(VM vm);
     }
 
     public delegate void VMAsyncTransactionCallback(bool success, uint uid1, uint budget1, uint uid2, uint budget2);
+    public delegate void VMAsyncAvatarCallback(uint persistID, VMTSOAvatarPermissions permissions); //TODO: VMPersistAvatarBlock
 }

@@ -15,7 +15,6 @@ namespace FSO.SimAntics.Marshals
         public VMAnimationStateMarshal[] Animations;
         public VMAnimationStateMarshal CarryAnimationState; //NULLable
 
-        public string Name;
         public string Message = "";
 
         public int MessageTimeout;
@@ -45,7 +44,6 @@ namespace FSO.SimAntics.Marshals
             var carry = reader.ReadBoolean();
             if (carry) CarryAnimationState = new VMAnimationStateMarshal(reader);
 
-            Name = reader.ReadString();
             Message = reader.ReadString();
             MessageTimeout = reader.ReadInt32();
 
@@ -90,7 +88,6 @@ namespace FSO.SimAntics.Marshals
             writer.Write(CarryAnimationState != null);
             if (CarryAnimationState != null) CarryAnimationState.SerializeInto(writer);
 
-            writer.Write(Name);
             writer.Write(Message);
             writer.Write(MessageTimeout);
 

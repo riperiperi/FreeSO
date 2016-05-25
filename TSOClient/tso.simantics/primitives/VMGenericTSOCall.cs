@@ -81,8 +81,8 @@ namespace FSO.SimAntics.Primitives
                 // 22. Get Permissions (TODO)
                 // 23. Set Permissions (TODO)
                 case VMGenericTSOCallMode.AskStackObjectToBeRoommate: //24
-                    // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-                    // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+                    //0 = initiate. 1 = accept. 2 = reject.
+                    if (context.Thread.TempRegisters[0] == 1 && context.VM.GlobalLink != null) context.VM.GlobalLink.RequestRoommate(context.VM, (VMAvatar)context.StackObject);
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
                 case VMGenericTSOCallMode.LeaveLot: //25
@@ -98,7 +98,10 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
                 // 26. UNUSED
-                // 27. Kickout Roommate (TODO)
+                case VMGenericTSOCallMode.KickoutRoommate:
+                    if (context.VM.GlobalLink != null) context.VM.GlobalLink.RemoveRoommate(context.VM, (VMAvatar)context.StackObject);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+
                 // 28. Kickout Visitor (TODO)
                 case VMGenericTSOCallMode.StackObjectOwnerID: //29
                     //attempt to find owner on lot. null stack object if not present
@@ -127,9 +130,7 @@ namespace FSO.SimAntics.Primitives
                     // TODO: Make only lot owner able to do this
                     // for testing purposes, build roommates are kind of "global moderators"
                     // also, can't add roommate if we have 8 roommates.
-                    context.Thread.TempRegisters[0] = (context.StackObject is VMGameObject
-                        || ((VMTSOAvatarState)context.StackObject.TSOState).Permissions < VMTSOAvatarPermissions.BuildBuyRoommate)
-                        ? (short)0 : (short)2;
+                    context.Thread.TempRegisters[0] = 2;
                     // 2 is "true". not sure what 1 is. (interaction shows up, but fails on trying to run it. likely "guessed" state for client)
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.ReturnLotCategory: //39

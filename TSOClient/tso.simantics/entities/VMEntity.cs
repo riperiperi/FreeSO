@@ -670,6 +670,7 @@ namespace FSO.SimAntics
                 var action = GetAction((int)id, caller, vm.Context);
 
                 caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] = 0;
+                if (action != null) action.Flags &= ~TTABFlags.MustRun;
                 var actionStrings = caller.Thread.CheckAction(action);
                 if (caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1) continue;
 

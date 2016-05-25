@@ -82,6 +82,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             }
 
             group.Price = (int)salePrice;
+            foreach (var obj in group.Objects) {
+                if (obj is VMGameObject) ((VMTSOObjectState)obj.TSOState).OwnerID = caller.PersistID;
+            }
 
             vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
                 caller.Name,

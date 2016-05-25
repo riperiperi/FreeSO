@@ -52,7 +52,12 @@ namespace FSO.Client.UI.Panels
         public FSO.SimAntics.VM vm;
         public LotView.World World;
         public VMEntity ActiveEntity;
-        public uint SelectedSimID;
+        public uint SelectedSimID {
+            get
+            {
+                return (vm == null) ? 0 : vm.MyUID;
+            }
+        }
         public short ObjectHover;
         public bool InteractionsAvailable;
         public UIInteractionQueue Queue;
