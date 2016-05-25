@@ -733,7 +733,7 @@ namespace FSO.SimAntics
                 CodeOwner = aTree.owner,
                 ActionRoutine = aRoutine,
                 CheckRoutine = cRoutine,
-                Name = TreeTableStrings.GetString((int)Action.TTAIndex),
+                Name = (TreeTableStrings==null)?"":TreeTableStrings.GetString((int)Action.TTAIndex),
                 StackObject = this,
                 Args = args,
                 InteractionNumber = interaction,

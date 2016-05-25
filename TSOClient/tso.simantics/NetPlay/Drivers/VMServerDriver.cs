@@ -360,6 +360,25 @@ namespace FSO.SimAntics.NetPlay.Drivers
             }
         }
 
+        public void KickUser(VM vm, string name)
+        {
+            var sims = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLower().Trim(' ') == name.ToLower().Trim(' '));
+            lock (ClientToUID)
+            {
+                foreach (var sim in sims)
+                {
+                    if (UIDtoClient.ContainsKey(sim.PersistID))
+                    {
+                        var client = UIDtoClient[sim.PersistID];
+                        new Thread(() =>
+                        {
+                            client.Disconnect();
+                        }).Start();
+                    }
+                }
+            }
+        }
+
         public void BanIP(string ip)
         {
             var cleanIP = ip.Trim(' ').ToLower();

@@ -13,6 +13,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Model;
 using System.IO;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.NetPlay.Drivers;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -102,7 +103,14 @@ namespace FSO.SimAntics.Primitives
                     if (context.VM.GlobalLink != null) context.VM.GlobalLink.RemoveRoommate(context.VM, (VMAvatar)context.StackObject);
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
-                // 28. Kickout Visitor (TODO)
+                case VMGenericTSOCallMode.KickoutVisitor:
+                    if (context.VM.GlobalLink != null)
+                    {
+                        var server = (VMServerDriver)context.VM.Driver;
+                        server.KickUser(context.VM, context.StackObject.Name);
+                    }
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+
                 case VMGenericTSOCallMode.StackObjectOwnerID: //29
                     //attempt to find owner on lot. null stack object if not present
                     if (context.StackObject is VMAvatar) context.Thread.TempRegisters[0] = 0;

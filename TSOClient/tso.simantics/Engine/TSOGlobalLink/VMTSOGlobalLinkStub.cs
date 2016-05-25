@@ -158,7 +158,12 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             else if (vm.TSOState.BuildRoommates.Contains(uid)) permissions = VMTSOAvatarPermissions.BuildBuyRoommate;
             else if (vm.TSOState.Roommates.Contains(uid)) permissions = VMTSOAvatarPermissions.Roommate;
 
-            callback(uid, permissions);
+            //TODO!!!!!! This is a HACK to make sure SimJoin commands get sent AFTER the state sync.
+            new System.Threading.Thread(() =>
+            {
+                System.Threading.Thread.Sleep(100);
+                callback(uid, permissions);
+            }).Start();
         }
     }
 }

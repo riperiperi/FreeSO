@@ -33,7 +33,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public string Name;
         public VMTSOAvatarPermissions Permissions;
 
-        public static ushort CurVer = 0xFFF1;
+        public static ushort CurVer = 0xFFF0;
 
         //variables used locally for deferred avatar loading
         public bool Verified;
@@ -75,6 +75,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
+            Name = Name.Replace("\r\n", "");
             if (Verified == true) return true;
             if (Ticket == null) Ticket = "local" + ":" + Name;
 
