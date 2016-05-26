@@ -47,8 +47,8 @@ namespace Charvatia
                 var marshal = new VMMarshal();
                 marshal.Deserialize(file);
                 vm.Load(marshal);
-                vm.Reset();
                 CleanLot();
+                vm.Reset();
             }
         }
 
@@ -132,7 +132,7 @@ namespace Charvatia
             }
             catch (Exception) { } //if something bad happens just immediately try to delete everyone
 
-            avatars = new List<VMEntity>(state.Entities.Where(x => x is VMAvatar && x.PersistID > 65535));
+            avatars = new List<VMEntity>(state.Entities.Where(x => x is VMAvatar && (x.PersistID > 65535 || (!(x as VMAvatar).IsPet))));
             foreach (var avatar in avatars) avatar.Delete(true, state.Context);
         }
 

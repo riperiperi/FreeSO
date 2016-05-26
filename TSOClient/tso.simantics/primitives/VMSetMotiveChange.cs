@@ -36,13 +36,15 @@ namespace FSO.SimAntics.Primitives
                 var MaxValue = VMMemory.GetVariable(context, (VMVariableScope)operand.MaxOwner, operand.MaxData);
                 if (operand.Once) {
                     var motive = avatar.GetMotiveData(operand.Motive);
+
+                    if (((rate > 0) && (motive > MaxValue)) || ((rate < 0) && (motive < MaxValue))) { return VMPrimitiveExitCode.GOTO_TRUE; }
+                    // ^ we're already over, do nothing. (do NOT clamp)
+
                     motive += rate;
                     if (((rate > 0) && (motive > MaxValue)) || ((rate < 0) && (motive < MaxValue))) { motive = MaxValue; }
                     avatar.SetMotiveData(operand.Motive, motive);
                 }
                 else avatar.SetMotiveChange(operand.Motive, rate, MaxValue);
-
-
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;

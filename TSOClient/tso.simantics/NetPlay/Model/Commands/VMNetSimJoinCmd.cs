@@ -91,6 +91,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             RequesterID = ActorUID;
             vm.GlobalLink.ObtainAvatarFromTicket(vm, Ticket, (uint persistID, VMTSOAvatarPermissions permissions) =>
                 {
+                    //first, verify if their sim has left the lot yet. if not, they cannot join until they have left.
+                    //(only really happens with an immediate rejoin)
+                    if (vm.Entities.FirstOrDefault(x => x.PersistID == persistID) != null)
+                    {
+                        Client.Disconnect(); //would like to send a message but need a rework of VMServerDriver to make it happen
+                        return;
+                    }
+
                     //TODO: a lot more persist state
                     this.ActorUID = persistID;
                     this.Permissions = permissions;

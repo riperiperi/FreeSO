@@ -563,7 +563,7 @@ namespace FSO.Client.UI.Screens
             {
                 marshal.SerializeInto(new BinaryWriter(output));
             }
-            ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Save();
+            if (vm.GlobalLink != null) ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Save();
         }
 
         public void CloseInbox()

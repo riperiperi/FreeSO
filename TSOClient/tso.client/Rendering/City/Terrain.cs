@@ -1262,6 +1262,7 @@ namespace FSO.Client.Rendering.City
                         }
                         else
                         {
+                            /*
                             if (m_SelTile[0] != -1 && m_SelTile[1] != -1)
                             {
                                 m_SelTileTmp[0] = m_SelTile[0];
@@ -1277,6 +1278,7 @@ namespace FSO.Client.Rendering.City
 
                                 m_BuyPropertyAlert = UIScreen.ShowAlert(AlertOptions, true);
                             }
+                            */
                         }
 
                         CurrentUIScr.ucp.UpdateZoomButton();

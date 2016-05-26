@@ -1,4 +1,5 @@
-﻿using FSO.SimAntics.Model.TSOPlatform;
+﻿using FSO.SimAntics.Engine.TSOTransaction;
+using FSO.SimAntics.Model.TSOPlatform;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,11 +20,15 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             var oldState = ((VMTSOAvatarState)obj.TSOState).Permissions;
 
+            if (vm.GlobalLink != null && oldState >= VMTSOAvatarPermissions.Admin)
+                ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Administrators.Remove(obj.PersistID);
             if (oldState >= VMTSOAvatarPermissions.Roommate) vm.TSOState.Roommates.Remove(obj.PersistID);
             if (oldState >= VMTSOAvatarPermissions.BuildBuyRoommate) vm.TSOState.BuildRoommates.Remove(obj.PersistID);
             ((VMTSOAvatarState)obj.TSOState).Permissions = Level;
             if (Level >= VMTSOAvatarPermissions.Roommate) vm.TSOState.Roommates.Add(obj.PersistID);
             if (Level >= VMTSOAvatarPermissions.BuildBuyRoommate) vm.TSOState.BuildRoommates.Add(obj.PersistID);
+            if (vm.GlobalLink != null && Level >= VMTSOAvatarPermissions.Admin)
+                ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Administrators.Add(obj.PersistID);
 
             return base.Execute(vm);
         }

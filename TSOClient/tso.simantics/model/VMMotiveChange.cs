@@ -37,10 +37,12 @@ namespace FSO.SimAntics.Model
                 if (Math.Abs(fractional) >= 1)
                 {
                     var motive = avatar.GetMotiveData(Motive);
+                    if (((rate > 0) && (motive > MaxValue)) || ((rate < 0) && (motive < MaxValue))) { return; } //we're already over, do nothing. (do NOT clamp)
                     motive += (short)(fractional);
                     fractional %= 1.0;
 
-                    if (((rate > 0) && (motive > MaxValue)) || ((rate < 0) && (motive < MaxValue))) { motive = MaxValue; Clear(); }
+                    if (((rate > 0) && (motive > MaxValue)) || ((rate < 0) && (motive < MaxValue))) { motive = MaxValue; }
+                    //DO NOT CLEAR MOTIVE WHEN IT HITS MAX VALUE! fixes pet, maybe shower.
                     avatar.SetMotiveData(Motive, motive);
                 }
             }

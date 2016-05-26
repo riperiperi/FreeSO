@@ -52,7 +52,7 @@ namespace FSO.SimAntics.Engine.Primitives
 
             var action = interactionSource.GetAction(operand.Interaction, context.StackObject, context.VM.Context);
             if (action == null) return VMPrimitiveExitCode.GOTO_FALSE;
-            action.IconOwner = context.VM.GetObjectById((short)context.Locals[operand.IconLocation]);
+            if (operand.UseCustomIcon) action.IconOwner = context.VM.GetObjectById((short)context.Locals[operand.IconLocation]);
             action.Mode = mode;
             action.Priority = priority;
             action.Flags |= TTABFlags.MustRun;

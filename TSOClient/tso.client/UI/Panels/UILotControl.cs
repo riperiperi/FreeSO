@@ -32,6 +32,7 @@ using FSO.SimAntics.Primitives;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Client.Debug;
 using FSO.SimAntics.NetPlay.Model;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -360,7 +361,7 @@ namespace FSO.Client.UI.Panels
                             state.UIState.TooltipProperties.Opacity = 1;
                             state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
                                 state.MouseState.Y);
-                            state.UIState.Tooltip = obj.ToString();
+                            state.UIState.Tooltip = GetAvatarString(obj as VMAvatar);
                             state.UIState.TooltipProperties.UpdateDead = false;
                             ShowTooltip = true;
                         }
@@ -407,6 +408,26 @@ namespace FSO.Client.UI.Panels
                 CursorManager.INSTANCE.SetCursor(cursor);
             }
 
+        }
+
+        private string GetAvatarString(VMAvatar ava)
+        {
+            int prefixNum = 3;
+            if (ava.IsPet) prefixNum = 5;
+            else if (ava.PersistID < 65536) prefixNum = 4;
+            else
+            {
+                var permissionsLevel = ((VMTSOAvatarState)ava.TSOState).Permissions;
+                switch (permissionsLevel)
+                {
+                    case VMTSOAvatarPermissions.Visitor: prefixNum = 3; break;
+                    case VMTSOAvatarPermissions.Roommate:
+                    case VMTSOAvatarPermissions.BuildBuyRoommate: prefixNum = 2; break;
+                    case VMTSOAvatarPermissions.Admin:
+                    case VMTSOAvatarPermissions.Owner: prefixNum = 1; break;
+                }
+            }
+            return GameFacade.Strings.GetString("217", prefixNum.ToString()) + ava.ToString();
         }
 
         public void RefreshCut()
