@@ -133,7 +133,7 @@ namespace FSO.Content
                     return utk.DecompressedWav;
                 }
                 else
-                    return dat; //either wav or mp3, bass.net can explicitly read these.
+                    return dat; //either wav or mp3.
             }
             else
                 Debug.WriteLine("Couldn't find sound!");

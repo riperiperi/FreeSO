@@ -23,7 +23,7 @@ namespace Charvatia
         static void Main(string[] args)
         {
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-            Console.Title = "Charvatia 1.1.0";
+            Console.Title = "Charvatia 1.1.1";
             Init();
         }
 

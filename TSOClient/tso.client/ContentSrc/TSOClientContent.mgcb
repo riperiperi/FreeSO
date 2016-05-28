@@ -13,40 +13,28 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin ComicSans.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:ComicSans.spritefont
-
-#begin ComicSansSmall.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:ComicSansSmall.spritefont
-
 #begin Fonts/ProjectDollhouse_12px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
+/processorParam:TextureFormat=Color
 /build:Fonts/ProjectDollhouse_12px.spritefont
 
 #begin Fonts/ProjectDollhouse_14px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
+/processorParam:TextureFormat=Color
 /build:Fonts/ProjectDollhouse_14px.spritefont
 
 #begin Fonts/ProjectDollhouse_16px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
+/processorParam:TextureFormat=Color
 /build:Fonts/ProjectDollhouse_16px.spritefont
 
 #begin Fonts/ProjectDollhouse_10px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
+/processorParam:TextureFormat=Color
 /build:Fonts/ProjectDollhouse_10px.spritefont
 
 #begin Effects/2DWorldBatch.fx
@@ -81,6 +69,7 @@
 /processorParam:GenerateMipmaps=False
 /processorParam:PremultiplyAlpha=True
 /processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/gridTexture.png
 

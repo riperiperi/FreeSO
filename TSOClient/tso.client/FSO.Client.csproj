@@ -26,6 +26,8 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -38,6 +40,7 @@
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <UseVSHostingProcess>false</UseVSHostingProcess>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -48,6 +51,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>FreeSO.ico</ApplicationIcon>
@@ -56,6 +60,7 @@
     <Compile Include="Debug\IDEHook.cs" />
     <Compile Include="GameStartProxy.cs" />
     <Compile Include="UI\Framework\UIExternalContainer.cs" />
+    <Compile Include="UI\Model\UIMusic.cs" />
     <Compile Include="UI\Panels\UIChatBalloon.cs" />
     <Compile Include="UI\Panels\UIPropertyLog.cs" />
     <Compile Include="UI\Panels\UIChatDialog.cs" />
@@ -171,9 +176,6 @@
       <Link>Monogame\Windows\SharpDX.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="bass.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="ContentSrc\Effects\2DWorldBatch.fx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -237,7 +239,6 @@
     <Compile Include="Rendering\City\LotTileEntry.cs" />
     <Compile Include="Rendering\City\MeshVertex.cs" />
     <Compile Include="Rendering\City\Terrain.cs" />
-    <Compile Include="Sound\SoundManager.cs" />
     <Compile Include="UI\Controls\Catalog\UICatalog.cs" />
     <Compile Include="UI\Controls\Catalog\UICatalogResProvider.cs" />
     <Compile Include="UI\Controls\Catalog\UICatalogItem.cs" />
@@ -344,7 +345,6 @@
     </Compile>
     <Compile Include="Network\Events\CityViewEvent.cs" />
     <Compile Include="TSOGame.cs" />
-    <Compile Include="Sound\MusicTrack.cs" />
     <Compile Include="Network\Events\CityTransitionEvent.cs" />
     <Compile Include="Network\Events\LoginEvent.cs" />
     <Compile Include="Network\Events\PacketError.cs" />
@@ -361,12 +361,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Content Include="Game.ico" />
+    <Content Include="sdl2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Bass.Net, Version=2.4.9.1, Culture=neutral, PublicKeyToken=b7566c273e6ef480, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Dependencies\Bass.Net.dll</HintPath>
-    </Reference>
     <Reference Include="GOLD Engine, Version=5.0.4337.25397, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Dependencies\GOLD Engine.dll</HintPath>
@@ -393,7 +393,6 @@
     <Content Include="Content\Blueprints\empty_lot.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Dependencies\Bass.Net.dll" />
     <Content Include="Dependencies\GOLD Engine.dll" />
     <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />
     <Content Include="Dependencies\nunit.framework.dll" />
@@ -434,7 +433,10 @@
     <Content Include="Resources\folder-horizontal.png" />
     <Content Include="Resources\magnifier-left.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Content\DX\Textures\" />
+    <Folder Include="Content\OGL\Textures\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\OpenTK.dll.config">
       <Link>OpenTK.dll.config</Link>
@@ -450,12 +452,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Patch\WORKAROUND_poolladder.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\ComicSans.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\ComicSansSmall.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\DX\Effects\2DWorldBatch.xnb">
@@ -494,15 +490,6 @@
     <Content Include="Content\DX\Fonts\Trebuchet_14px.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\DX\Textures\gridTexture.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\ComicSans.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\ComicSansSmall.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Content\OGL\Effects\2DWorldBatch.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -537,9 +524,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\OGL\Fonts\Trebuchet_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Textures\gridTexture.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Monogame\MacOS\OpenTK.dll.config">
@@ -616,16 +600,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Linux.csproj">
-      <Project>{35253ce1-c864-4cd3-8249-4d1319748e8f}</Project>
-      <Name>MonoGame.Framework.Linux</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
-      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
-      <Name>MonoGame.Framework.Windows</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
       <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
       <Name>MonoGame.Framework.WindowsGL</Name>

@@ -1,0 +1,471 @@
+<ConversionLog>
+    <Settings>
+        <Setting
+            Name = "LogFile"
+            Value = "Erik.xml"
+        />
+        <Setting
+            Name = "ProjectName"
+            Value = "Erik"
+        />
+        <Setting
+            Name = "OutputDir"
+            Value = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET"
+        />
+        <Setting
+            Name = "ProjectPath"
+            Value = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl"
+        />
+    </Settings>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\player\AudioDevice.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\AudioDevice.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\player\AudioDeviceBase.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\AudioDeviceBase.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\player\AudioDeviceFactory.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\AudioDeviceFactory.cs"
+    >
+        <Class Name = "javazoom.jl.player.AudioDeviceFactory" >
+            <Section Name = "instantiate(java.lang.ClassLoader,java.lang.String)" >
+                <Issue
+                    Type = "ToDo"
+                    Number = "1092"
+                    Severity = "2"
+                >Format of parameters of method 'java.lang.Class.forName' are different in the equivalent in .NET.</Issue>
+                <Issue
+                    Type = "Compile"
+                    Number = "1000"
+                    LinkKeywordParam = "_javalangClassLoader"
+                    Severity = "1"
+                >Method 'java.lang.ClassLoader.loadClass' was not converted.</Issue>
+            </Section>
+        </Class>
+        <Issue
+            Type = "Compile"
+            Number = "1000"
+            LinkKeywordParam = "_javalangClassLoader"
+            Severity = "1"
+        >Class 'java.lang.ClassLoader' was not converted.</Issue>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\player\FactoryRegistry.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\FactoryRegistry.cs"
+    >
+        <Class Name = "javazoom.jl.player.FactoryRegistry" >
+            <Section Name = "getFactoriesPriority()" >
+                <Issue
+                    Type = "ToDo"
+                    Number = "1073"
+                    Severity = "2"
+                >Method 'java.util.Enumeration.hasMoreElements' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                <Issue
+                    Type = "ToDo"
+                    Number = "1073"
+                    Severity = "2"
+                >Method 'java.util.Enumeration.nextElement' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+            </Section>
+        </Class>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\player\JavaSoundAudioDevice.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\JavaSoundAudioDevice.cs"
+    >
+        <Class Name = "javazoom.jl.player.JavaSoundAudioDevice" >
+            <Section Name = "millisecondsToBytes(AudioFormat,int)" >
+                <Issue
+                    Type = "Runtime"
+                    Number = "1042"
+                    Severity = "3"
+                >Narrowing conversions may produce unexpected results in C#.</Issue>
+            </Section>
+        </Class>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\player\JavaSoundAudioDeviceFactory.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\JavaSoundAudioDeviceFactory.cs"
+    >
+        <Class Name = "javazoom.jl.player.JavaSoundAudioDeviceFactory" >
+            <Section Name = "createAudioDeviceImpl()" >
+                <Issue
+                    Type = "Compile"
+                    Number = "1000"
+                    LinkKeywordParam = "_javalangClassLoader"
+                    Severity = "1"
+                >Class 'java.lang.ClassLoader' was not converted.</Issue>
+                <Issue
+                    Type = "Compile"
+                    Number = "1000"
+                    LinkKeywordParam = "_javalangClassgetClassLoader"
+                    Severity = "1"
+                >Method 'java.lang.Class.getClassLoader' was not converted.</Issue>
+            </Section>
+        </Class>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\player\jlp.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\jlp.cs"
+    >
+        <Class Name = "javazoom.jl.player.jlp" >
+            <Section Name = "getURLInputStream()" >
+                <Issue
+                    Type = "ToDo"
+                    Number = "1132"
+                    Severity = "3"
+                >Class 'java.net.URL' was converted to a 'System.Uri' which does not throw an exception if a URL specifies an unknown protocol.</Issue>
+            </Section>
+        </Class>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\player\NullAudioDevice.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\NullAudioDevice.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\player\Player.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\Player.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\player\PlayerApplet.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\PlayerApplet.cs"
+    >
+        <Class Name = "javazoom.jl.player.PlayerApplet" >
+            <Section Name = "getAudioFileName()" >
+                <Issue
+                    Type = "Compile"
+                    Number = "1000"
+                    LinkKeywordParam = "_javaappletAppletgetParameter_javalangString"
+                    Severity = "1"
+                >Method 'java.applet.Applet.getParameter' was not converted.</Issue>
+                <Issue
+                    Type = "ToDo"
+                    Number = "1167"
+                    Severity = "2"
+                >Applet parameter was not converted because it requires a string literal as parameter name.</Issue>
+            </Section>
+            <Section Name = "getAudioURL()" >
+                <Issue
+                    Type = "ToDo"
+                    Number = "1132"
+                    Severity = "3"
+                >Class 'java.net.URL' was converted to a 'System.Uri' which does not throw an exception if a URL specifies an unknown protocol.</Issue>
+                <Issue
+                    Type = "Compile"
+                    Number = "1000"
+                    LinkKeywordParam = "_javaappletAppletgetDocumentBase"
+                    Severity = "1"
+                >Method 'java.applet.Applet.getDocumentBase' was not converted.</Issue>
+            </Section>
+        </Class>
+        <Issue
+            Type = "ToDo"
+            Number = "1143"
+            Severity = "3"
+        >The equivalent of method 'java.applet.Applet.init' is not an override method.</Issue>
+        <Issue
+            Type = "ToDo"
+            Number = "1143"
+            Severity = "3"
+        >The equivalent of method 'java.applet.Applet.start' is not an override method.</Issue>
+        <Issue
+            Type = "ToDo"
+            Number = "1143"
+            Severity = "3"
+        >The equivalent of method 'java.applet.Applet.stop' is not an override method.</Issue>
+        <Issue
+            Type = "ToDo"
+            Number = "5000"
+            Severity = "2"
+        >This function is not marked as virtual in the base class.</Issue>
+        <Issue
+            Type = "ToDo"
+            Number = "1143"
+            Severity = "3"
+        >The equivalent of method 'java.lang.Runnable.run' is not an override method.</Issue>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\BitReserve.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\BitReserve.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\Header.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\Header.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\BitstreamErrors.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\BitstreamErrors.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\BitstreamException.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\BitstreamException.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\Control.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\Control.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\Crc16.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\Crc16.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\Decoder.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\Decoder.cs"
+    >
+        <Issue
+            Type = "ToDo"
+            Number = "1143"
+            Severity = "3"
+        >The equivalent of method 'java.lang.Object.clone' is not an override method.</Issue>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\DecoderErrors.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\DecoderErrors.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\DecoderException.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\DecoderException.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\Equalizer.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\Equalizer.cs"
+    >
+        <Issue
+            Type = "ToDo"
+            Number = "1137"
+            Severity = "2"
+        >Method 'setFrom' was converted to a set modifier. This name conflicts with another property.</Issue>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\FrameDecoder.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\FrameDecoder.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\huffcodetab.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\huffcodetab.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\InputStreamSource.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\InputStreamSource.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\JavaLayerError.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\JavaLayerError.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\JavaLayerErrors.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\JavaLayerErrors.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\JavaLayerException.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\JavaLayerException.cs"
+    >
+        <Issue
+            Type = "ToDo"
+            Number = "1143"
+            Severity = "3"
+        >The equivalent of method 'java.lang.Throwable.printStackTrace' is not an override method.</Issue>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\JavaLayerHook.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\JavaLayerHook.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\JavaLayerUtils.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\JavaLayerUtils.cs"
+    >
+        <Class Name = "javazoom.jl.decoder.JavaLayerUtils" >
+            <Section Name = "deserialize(java.io.InputStream)" >
+                <Issue
+                    Type = "Runtime"
+                    Number = "1101"
+                    Severity = "2"
+                >Method 'java.io.ObjectInputStream.readObject' was converted to 'SupportClass.Deserialize' which may throw an exception.</Issue>
+                <Issue
+                    Type = "ToDo"
+                    Number = "1043"
+                    Severity = "2"
+                >The equivalent in .NET for method 'java.lang.Throwable.toString' may return a different value.</Issue>
+            </Section>
+            <Section Name = "getResourceAsStream(java.lang.String)" >
+                <Issue
+                    Type = "Compile"
+                    Number = "1000"
+                    LinkKeywordParam = "_javalangClassgetResourceAsStream_javalangString"
+                    Severity = "1"
+                >Method 'java.lang.Class.getResourceAsStream' was not converted.</Issue>
+            </Section>
+        </Class>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\LayerIDecoder.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\LayerIDecoder.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\LayerIIIDecoder.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\LayerIIIDecoder.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\Manager.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\Manager.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\Obuffer.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\Obuffer.cs"
+    >
+        <Class Name = "javazoom.jl.decoder.Obuffer" >
+            <Section Name = "clip(float)" >
+                <Issue
+                    Type = "Runtime"
+                    Number = "1042"
+                    Severity = "3"
+                >Narrowing conversions may produce unexpected results in C#.</Issue>
+            </Section>
+        </Class>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\OutputChannels.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\OutputChannels.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\SampleBuffer.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\SampleBuffer.cs"
+    >
+        <Class Name = "javazoom.jl.decoder.SampleBuffer" >
+            <Section Name = "appendSamples(int,float[])" >
+                <Issue
+                    Type = "Runtime"
+                    Number = "1042"
+                    Severity = "3"
+                >Narrowing conversions may produce unexpected results in C#.</Issue>
+            </Section>
+        </Class>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\Source.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\Source.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\SynthesisFilter.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\SynthesisFilter.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\LayerIIDecoder.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\LayerIIDecoder.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\decoder\Bitstream.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\Bitstream.cs"
+    >
+        <Class Name = "javazoom.jl.decoder.Bitstream" >
+            <Section Name = "close()" >
+                <Issue
+                    Type = "ToDo"
+                    Number = "1073"
+                    LinkKeywordParam = "_javaioFilterInputStreamclose"
+                    Severity = "2"
+                >Method 'java.io.FilterInputStream.close' was converted to 'System.IO.BinaryReader.Close' which has a different behavior.</Issue>
+            </Section>
+        </Class>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\converter\Converter.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\Converter.cs"
+    >
+        <Class Name = "javazoom.jl.converter.Converter" >
+            <Section Name = "convert(java.io.InputStream,java.lang.String,javazoom.jl.converter.Converter.ProgressListener,javazoom.jl.decoder.Decoder.Params)" >
+                <Issue
+                    Type = "Compile"
+                    Number = "1000"
+                    LinkKeywordParam = "_javaioInputStreammark_int"
+                    Severity = "1"
+                >Method 'java.io.InputStream.mark' was not converted.</Issue>
+                <Issue
+                    Type = "Compile"
+                    Number = "1000"
+                    LinkKeywordParam = "_javaioInputStreamreset"
+                    Severity = "1"
+                >Method 'java.io.InputStream.reset' was not converted.</Issue>
+                <Issue
+                    Type = "Compile"
+                    Number = "1000"
+                    LinkKeywordParam = "_javaioInputStreammarkSupported"
+                    Severity = "1"
+                >Method 'java.io.InputStream.markSupported' was not converted.</Issue>
+            </Section>
+        </Class>
+        <Class Name = "javazoom.jl.converter.Converter.PrintWriterProgressListener" >
+            <Section Name = "newStdOut(int)" >
+                <Issue
+                    Type = "Compile"
+                    Number = "1109"
+                    Severity = "2"
+                >'java.lang.System.out' was converted to 'System.Console.Out' which is not valid in this expression.</Issue>
+            </Section>
+            <Section Name = "parsedFrame(int,javazoom.jl.decoder.Header)" >
+                <Issue
+                    Type = "ToDo"
+                    Number = "1043"
+                    Severity = "2"
+                >The equivalent in .NET for method 'java.Object.toString' may return a different value.</Issue>
+                <Issue
+                    Type = "ToDo"
+                    Number = "1043"
+                    Severity = "2"
+                >The equivalent in .NET for method 'java.Object.toString' may return a different value.</Issue>
+            </Section>
+            <Section Name = "readFrame(int,javazoom.jl.decoder.Header)" >
+                <Issue
+                    Type = "ToDo"
+                    Number = "1043"
+                    Severity = "2"
+                >The equivalent in .NET for method 'java.Object.toString' may return a different value.</Issue>
+                <Issue
+                    Type = "ToDo"
+                    Number = "1043"
+                    Severity = "2"
+                >The equivalent in .NET for method 'java.Object.toString' may return a different value.</Issue>
+            </Section>
+            <Section Name = "decodedFrame(int,javazoom.jl.decoder.Header,javazoom.jl.decoder.Obuffer)" >
+                <Issue
+                    Type = "ToDo"
+                    Number = "1043"
+                    Severity = "2"
+                >The equivalent in .NET for method 'java.Object.toString' may return a different value.</Issue>
+            </Section>
+        </Class>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\converter\jlc.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\jlc.cs"
+    >
+        <Class Name = "javazoom.jl.converter.jlc" >
+            <Section Name = "main(java.lang.String[])" >
+                <Issue
+                    Type = "Compile"
+                    Number = "1109"
+                    Severity = "2"
+                >'java.lang.System.out' was converted to 'System.Console.Out' which is not valid in this expression.</Issue>
+            </Section>
+        </Class>
+    </File>
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\converter\RiffFile.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\RiffFile.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\converter\WaveFile.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\WaveFile.cs"
+    />
+    <File
+        OldPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\converter\WaveFileObuffer.java"
+        NewPath = "C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET\WaveFileObuffer.cs"
+    />
+    <Issue
+        Type = "Global Warning"
+        Number = "4007"
+        Severity = "2"
+    >The startup class  doesn't exist in the project</Issue>
+</ConversionLog>
+

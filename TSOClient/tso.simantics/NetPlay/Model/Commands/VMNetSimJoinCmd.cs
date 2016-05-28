@@ -93,7 +93,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 {
                     //first, verify if their sim has left the lot yet. if not, they cannot join until they have left.
                     //(only really happens with an immediate rejoin)
-                    if (vm.Entities.FirstOrDefault(x => x.PersistID == persistID) != null)
+                    if (vm.Entities.FirstOrDefault(x => x.PersistID == persistID) != null && Client != null)
                     {
                         Client.Disconnect(); //would like to send a message but need a rework of VMServerDriver to make it happen
                         return;

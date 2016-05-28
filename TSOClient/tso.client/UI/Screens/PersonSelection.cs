@@ -22,6 +22,8 @@ using FSO.Vitaboy;
 using FSO.Files;
 using FSO.Client.Network;
 using FSO.Common.Utils;
+using FSO.HIT;
+using FSO.Client.UI.Model;
 
 namespace FSO.Client.UI.Screens
 {
@@ -155,16 +157,7 @@ namespace FSO.Client.UI.Screens
             /**
              * Music
              */
-            var tracks = new string[]{
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas1_v2.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas2_v2.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas3.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas4.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas5.mp3"
-            };
-            PlayBackgroundMusic(
-                tracks
-            );
+            HITVM.Get().PlaySoundEvent(UIMusic.SAS);
 
             NetworkFacade.Controller.OnCityToken += new OnCityTokenDelegate(Controller_OnCityToken);
             NetworkFacade.Controller.OnPlayerAlreadyOnline += new OnPlayerAlreadyOnlineDelegate(Controller_OnPlayerAlreadyOnline);

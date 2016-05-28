@@ -246,6 +246,7 @@ namespace FSO.Common.Rendering.Framework.IO
                     if (j >= state.NewKeys.Count) value = state.FrameTextInput[j - state.NewKeys.Count];
                     else if (state.FrameTextInput != null) continue;
                     else value = TranslateChar(key, result.ShiftDown, result.CapsDown, result.NumLockDown);
+                    if (value == '\x77E1') { }
                     /** For now we dont support tabs in text **/
                     if (value != '\0' && value != '\t')
                     {

@@ -7,7 +7,6 @@ http://mozilla.org/MPL/2.0/.
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Un4seen.Bass;
 using System.Threading;
 using LogThis;
 using FSO.Common.Rendering.Framework;
@@ -58,7 +57,6 @@ namespace FSO.Client
             FSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
             base.Initialize();
 
-            GameFacade.SoundManager = new FSO.Client.Sound.SoundManager();
             GameFacade.GameThread = Thread.CurrentThread;
 
             SceneMgr = new _3DLayer();
@@ -75,19 +73,15 @@ namespace FSO.Client
             /** Init any computed values **/
             GameFacade.Init();
 
+            //init audio now
+            HITVM.Init();
+
             GameFacade.Strings = new ContentStrings();
             GameFacade.Controller.StartLoading();
 
             GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
 
-            if (!GameFacade.Linux)
-            {
-                BassNet.Registration("afr088@hotmail.com", "2X3163018312422");
-                Bass.BASS_Init(-1, 8000, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero, System.Guid.Empty);
-            }
-
             this.IsMouseVisible = true;
-
             this.IsFixedTimeStep = true;
 
             WorldContent.Init(this.Services, Content.RootDirectory);
@@ -129,7 +123,7 @@ namespace FSO.Client
                 GameFacade.EdithFont.AddSize(12, Content.Load<SpriteFont>("Fonts/Trebuchet_12px"));
                 GameFacade.EdithFont.AddSize(14, Content.Load<SpriteFont>("Fonts/Trebuchet_14px"));
 
-                vitaboyEffect = GameFacade.Game.Content.Load<Effect>("Effects/Vitaboy");
+                vitaboyEffect = Content.Load<Effect>("Effects/Vitaboy");
                 uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"), Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
             }
             catch (Exception e)
@@ -157,9 +151,7 @@ namespace FSO.Client
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-
             NetworkFacade.Client.ProcessPackets();
-            GameFacade.SoundManager.MusicUpdate();
             if (HITVM.Get() != null) HITVM.Get().Tick();
 
             base.Update(gameTime);

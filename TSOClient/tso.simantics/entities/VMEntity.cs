@@ -24,6 +24,7 @@ using FSO.SimAntics.Marshals.Threads;
 using FSO.SimAntics.Marshals;
 using FSO.Common.Utils;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.Model.Sound;
 
 namespace FSO.SimAntics
 {
@@ -259,7 +260,7 @@ namespace FSO.SimAntics
                     WorldUI.Headline = HeadlineRenderer.DrawFrame(Thread.Context.World);
                 }
             }
-            if (UseWorld && Headline == null)
+            if (UseWorld && Headline == null && WorldUI.Headline != null)
             {
                 WorldUI.Headline = null;
             }
@@ -314,6 +315,16 @@ namespace FSO.SimAntics
 
                 }
             }
+        }
+
+        public List<VMSoundTransfer> GetActiveSounds()
+        {
+            var result = new List<VMSoundTransfer>();
+            foreach (var snd in SoundThreads)
+            {
+                result.Add(new VMSoundTransfer(ObjectID, Object.OBJ.GUID, snd));
+            }
+            return result;
         }
 
         public OBJfFunctionEntry[] GenerateFunctionTable(OBJD obj)
@@ -473,7 +484,7 @@ namespace FSO.SimAntics
             }
 
             bool result = false;
-            if (EntryPoints[entry].ActionFunction > 255)
+            if (entry < EntryPoints.Length && EntryPoints[entry].ActionFunction > 255)
             {
                 VMSandboxRestoreState SandboxState = null;
                 if (GhostImage && runImmediately)
@@ -1185,12 +1196,5 @@ namespace FSO.SimAntics
         public TTABInteraction Entry;
     }
 
-    public struct VMSoundEntry
-    {
-        public HITSound Sound;
-        public bool Pan;
-        public bool Zoom;
-        public bool Loop;
-        public string Name;
-    }
+
 }

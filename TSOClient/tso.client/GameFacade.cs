@@ -12,7 +12,6 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.Debug;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Model;
-using FSO.Client.Sound;
 using System.IO;
 using System.Threading;
 using FSO.Client.Utils;
@@ -41,7 +40,6 @@ namespace FSO.Client
         public static TSOClientTools DebugWindow;
         public static Font MainFont;
         public static Font EdithFont;
-        public static SoundManager SoundManager;
         public static UpdateState LastUpdateState;
         public static Thread GameThread;
         public static bool Focus = true;

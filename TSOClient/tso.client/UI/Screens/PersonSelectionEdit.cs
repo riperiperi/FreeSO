@@ -22,6 +22,7 @@ using FSO.Common.Utils;
 using FSO.Vitaboy;
 using FSO.Content;
 using FSO.Client.GameContent;
+using FSO.Client.UI.Model;
 
 namespace FSO.Client.UI.Screens
 {
@@ -137,9 +138,11 @@ namespace FSO.Client.UI.Screens
             /**
              * Music
              */
+            HIT.HITVM.Get().PlaySoundEvent(UIMusic.CAS);
+            /*
             PlayBackgroundMusic(
                 new string[] { GlobalSettings.Default.StartupPath + "\\music\\modes\\create\\tsocas1_v2.mp3" }
-            );
+            );*/
 
             SimBox = new UISim(Guid.NewGuid().ToString());
 

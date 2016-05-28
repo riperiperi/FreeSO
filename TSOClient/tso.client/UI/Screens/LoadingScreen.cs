@@ -13,6 +13,8 @@ using FSO.Client.UI.Controls;
 using System.Timers;
 using FSO.HIT;
 using FSO.Client.GameContent;
+using FSO.Common.Audio;
+using FSO.Client.UI.Model;
 
 namespace FSO.Client.UI.Screens
 {
@@ -27,6 +29,8 @@ namespace FSO.Client.UI.Screens
 
         public LoadingScreen()
         {
+            HITVM.Get().PlaySoundEvent(UIMusic.LoadLoop);
+
             /**
              * Scale the whole screen to 1024
              */
@@ -119,8 +123,6 @@ namespace FSO.Client.UI.Screens
                     {
                         /** No more labels to show! Preload must be complete :) **/
                         CheckProgressTimer.Stop();
-                        //init audio now
-                        HITVM.Init();
                         GameFacade.Controller.ShowPersonCreation(new ProtocolAbstractionLibraryD.CityInfo(false));
                     }
                 }

@@ -24,6 +24,7 @@ using FSO.SimAntics.Marshals.Threads;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.Model.Sound;
 
 namespace FSO.SimAntics
 {
@@ -425,6 +426,7 @@ namespace FSO.SimAntics
 
         public void Load(VMMarshal input)
         {
+            var clientJoin = (Context.Architecture == null);
             var oldWorld = Context.World;
             Context = new VMContext(input.Context, Context);
             Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
@@ -432,11 +434,14 @@ namespace FSO.SimAntics
             Context.Architecture.RegenRoomMap();
             Context.RegeneratePortalInfo();
 
+            var oldSounds = new List<VMSoundTransfer>();
+
             if (Entities != null) //free any object resources here.
             {
                 foreach (var obj in Entities)
                 {
                     if (obj.HeadlineRenderer != null) obj.HeadlineRenderer.Dispose();
+                    oldSounds.AddRange(obj.GetActiveSounds());
                 }
             }
 
@@ -501,6 +506,23 @@ namespace FSO.SimAntics
             Context.Architecture.RegenRoomMap();
             Context.RegeneratePortalInfo();
             Context.Architecture.WallDirtyState(input.Context.Architecture);
+
+            foreach (var snd in oldSounds)
+            {
+                //find new owners
+                var obj = GetObjectById(snd.SourceID);
+                if (obj == null || obj.Object.GUID != snd.SourceGUID) snd.SFX.Sound.RemoveOwner(snd.SourceID);
+                else obj.SoundThreads.Add(snd.SFX); // successfully transfer sound to new object
+            }
+
+            if (clientJoin)
+            {
+                //run clientJoin functions to play object sounds, update some gfx.
+                foreach (var obj in Entities)
+                {
+                    obj.ExecuteEntryPoint(30, Context, true);
+                }
+            }
 
             if (OnFullRefresh != null) OnFullRefresh();
         }

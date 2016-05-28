@@ -13,6 +13,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Engine;
 using FSO.HIT;
 using System.IO;
+using FSO.SimAntics.Model.Sound;
 
 namespace FSO.SimAntics.Primitives
 {

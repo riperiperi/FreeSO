@@ -297,7 +297,9 @@ namespace FSO.LotView
                         if (info.Layer == WorldObjectRenderLayer.STATIC){
                             redrawStaticObjects = true;
                             recacheObjects = true;
+                            info.Layer = WorldObjectRenderLayer.DYNAMIC;
                         }
+                        if (item.Component is ObjectComponent) ((ObjectComponent)item.Component).DynamicCounter = 0;
                         break;
                     case BlueprintDamageType.OBJECT_GRAPHIC_CHANGE:
                         /** Redraw if its in static layer **/
@@ -307,6 +309,7 @@ namespace FSO.LotView
                             recacheObjects = true;
                             info.Layer = WorldObjectRenderLayer.DYNAMIC;
                         }
+                        if (item.Component is ObjectComponent) ((ObjectComponent)item.Component).DynamicCounter = 0;
                         break;
                     case BlueprintDamageType.OBJECT_RETURN_TO_STATIC:
                         info = GetRenderInfo(item.Component);

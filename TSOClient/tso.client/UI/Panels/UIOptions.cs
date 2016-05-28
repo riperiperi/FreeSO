@@ -164,7 +164,6 @@ namespace FSO.Client.UI.Panels
             else if (elm == AmbienceSlider) GlobalSettings.Default.AmbienceVolume = (byte)elm.Value;
 
             GlobalSettings.Default.Save();
-            GameFacade.SoundManager.UpdateMusicVolume();
         }
     }
 

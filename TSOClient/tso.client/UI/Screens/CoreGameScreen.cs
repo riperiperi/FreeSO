@@ -82,7 +82,7 @@ namespace FSO.Client.UI.Screens
                         Title.SetTitle(LotController.GetLotTitle());
                         if (m_ZoomLevel > 3)
                         {
-                            PlayBackgroundMusic(new string[] { "none" }); //disable city music
+                            HITVM.Get().PlaySoundEvent(UIMusic.None);
                             if (CityRenderer != null) CityRenderer.Visible = false;
                             gizmo.Visible = false;
                             LotController.Visible = true;
@@ -104,7 +104,7 @@ namespace FSO.Client.UI.Screens
                         if (m_ZoomLevel < 4)
                         { //coming from lot view... snap zoom % to 0 or 1
                             CityRenderer.m_ZoomProgress = (value == 4) ? 1 : 0;
-                            PlayBackgroundMusic(CityMusic); //play the city music as well
+                            HITVM.Get().PlaySoundEvent(UIMusic.Map); //play the city music as well
                             CityRenderer.Visible = true;
                             gizmo.Visible = true;
                             if (World != null)
@@ -204,7 +204,7 @@ namespace FSO.Client.UI.Screens
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap3.mp3",
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap4_v1.mp3"
             };
-            PlayBackgroundMusic(CityMusic);
+            HITVM.Get().PlaySoundEvent(UIMusic.Map);
 
             /*VMDebug = new UIButton()
             {

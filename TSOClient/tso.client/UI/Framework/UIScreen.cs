@@ -22,15 +22,7 @@ namespace FSO.Client.UI.Framework
 
         public virtual void OnHide()
         {
-            //stopping background music should be handled by the screen itself, so that music can play between screens.
-        }
 
-        private int backgroundTrack = -1;
-        public void PlayBackgroundMusic(string[] paths)
-        {
-            backgroundTrack = GameFacade.SoundManager.PlayBackgroundMusic(
-                paths
-            );
         }
 
         public static UIScreen Current

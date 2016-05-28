@@ -58,6 +58,9 @@ namespace FSO.SimAntics.Primitives
                 // 12. Distance to camera in Temp0
                 // 13. Abort Interactions
                 // 14. House Radio Station equals Temp0 (TODO)
+                case VMGenericTSOCallMode.HouseRadioStationEqualsTemp0:
+                    context.VM.SetGlobalValue(31, context.Thread.TempRegisters[0]);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 // 15. My Routing Footprint equals Temp0
                 // 16. Change Normal Output
                 case VMGenericTSOCallMode.GetInteractionResult: //17

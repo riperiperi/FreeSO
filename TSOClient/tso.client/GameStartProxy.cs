@@ -14,7 +14,7 @@ namespace FSO.Client
             {
                 GameFacade.DirectX = useDX;
                 World.DirectX = useDX;
-                game.Run();
+                game.Run(Microsoft.Xna.Framework.GameRunBehavior.Synchronous);
             }
         }
     }

@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mp3Sharp", "Mp3Sharp\Mp3Sharp.csproj", "{834CAB58-648D-47CC-AC6F-D01C08C809A4}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagedDirectSoundDemo", "ManagedDirectsoundDemo\ManagedDirectSoundDemo.csproj", "{8C85B99A-9915-4896-A8E8-891726C0A316}"
+	ProjectSection(ProjectDependencies) = postProject
+		{834CAB58-648D-47CC-AC6F-D01C08C809A4} = {834CAB58-648D-47CC-AC6F-D01C08C809A4}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{834CAB58-648D-47CC-AC6F-D01C08C809A4}.Debug.ActiveCfg = Debug|.NET
+		{834CAB58-648D-47CC-AC6F-D01C08C809A4}.Debug.Build.0 = Debug|.NET
+		{834CAB58-648D-47CC-AC6F-D01C08C809A4}.Release.ActiveCfg = Release|.NET
+		{834CAB58-648D-47CC-AC6F-D01C08C809A4}.Release.Build.0 = Release|.NET
+		{8C85B99A-9915-4896-A8E8-891726C0A316}.Debug.ActiveCfg = Debug|.NET
+		{8C85B99A-9915-4896-A8E8-891726C0A316}.Debug.Build.0 = Debug|.NET
+		{8C85B99A-9915-4896-A8E8-891726C0A316}.Release.ActiveCfg = Release|.NET
+		{8C85B99A-9915-4896-A8E8-891726C0A316}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

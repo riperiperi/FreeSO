@@ -32,7 +32,7 @@ namespace FSO.LotView.Components
         private DGRPRenderer dgrp;
         public WorldObjectRenderInfo renderInfo;
         public Blueprint blueprint;
-        private int DynamicCounter; //how long this sprite has been dynamic without changing sprite
+        public int DynamicCounter; //how long this sprite has been dynamic without changing sprite
         public List<SLOTItem> ContainerSlots;
         public new bool Visible {
             get { return _Visible; }
@@ -109,7 +109,7 @@ namespace FSO.LotView.Components
         {
             get
             {
-                return _ForceDynamic;
+                return (_ForceDynamic || Headline != null);
             }
             set
             {
@@ -218,9 +218,8 @@ namespace FSO.LotView.Components
         }
 
         public override void Draw(GraphicsDevice device, WorldState world){
-            if (this.DrawGroup == null) { return; }
             if (!Visible) return;
-            dgrp.Draw(world);
+            if (this.DrawGroup != null) dgrp.Draw(world);
 
             if (Headline != null)
             {

@@ -16,11 +16,9 @@ using FSO.Client.Network;
 using FSO.Client.Network.Events;
 
 using GonzoNet;
-using FSO.Files.XA;
-using FSO.Content;
-using Un4seen.Bass;
-using System.Runtime.InteropServices;
 using FSO.Client.GameContent;
+using FSO.Client.UI.Model;
+using FSO.HIT;
 
 namespace FSO.Client.UI.Screens
 {
@@ -33,7 +31,7 @@ namespace FSO.Client.UI.Screens
 
         public LoginScreen()
         {
-            PlayBackgroundMusic(new string[] { "none" });
+            HITVM.Get().PlaySoundEvent(UIMusic.None);
 
             /**
              * Scale the whole screen to 1024

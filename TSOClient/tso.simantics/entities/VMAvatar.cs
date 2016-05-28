@@ -24,6 +24,7 @@ using System.IO;
 using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.Model.Sound;
 
 namespace FSO.SimAntics
 {

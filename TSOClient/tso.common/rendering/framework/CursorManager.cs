@@ -54,11 +54,12 @@ namespace FSO.Common.Rendering.Framework
 
         public void SetCursor(CursorType type)
         {
+            /*
             if (m_CursorMap.ContainsKey(type))
             {
-                //CurrentCursor = type;
-                //if (type != CursorType.Normal) Cursor.Current = m_CursorMap[type];
-            }
+                CurrentCursor = type;
+                if (type != CursorType.Normal) Cursor.Current = m_CursorMap[type];
+            }*/
         }
 
         public void Init(string basepath)
