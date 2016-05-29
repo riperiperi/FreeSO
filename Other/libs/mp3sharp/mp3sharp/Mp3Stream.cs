@@ -47,13 +47,13 @@ namespace Mp3Sharp
 		/// Creates a new stream instance using the provided filename, and the default chunk size of 4096 bytes.
 		/// </summary>
 		public Mp3Stream(string fileName)
-			:this(new FileStream(fileName, FileMode.Open))
+			:this(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
 		{ }
 		/// <summary>
 		/// Creates a new stream instance using the provided filename and chunk size.
 		/// </summary>
 		public Mp3Stream(string fileName, int chunkSize)
-			:this(new FileStream(fileName, FileMode.Open), chunkSize)
+			:this(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), chunkSize)
 		{ }
 		/// <summary>
 		/// Creates a new stream instance using the provided stream as a source, and the default chunk size of 4096 bytes.

@@ -347,6 +347,14 @@ namespace FSO.Client.UI.Screens
         {
             if (ZoomLevel < 4) ZoomLevel = 5;
             vm.Context.Ambience.Kill();
+            foreach (var ent in vm.Entities) { //stop object sounds
+                var threads = ent.SoundThreads;
+                for (int i = 0; i < threads.Count; i++)
+                {
+                    threads[i].Sound.RemoveOwner(ent.ObjectID);
+                }
+                threads.Clear();
+            }
             vm.CloseNet(VMCloseNetReason.LeaveLot);
             GameFacade.Scenes.Remove(World);
             this.Remove(LotController);

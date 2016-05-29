@@ -50,15 +50,13 @@ namespace FSO.Client.Utils
                 }
 
                 //DirectoryCopy(contentDir, "Content/", true);
-                //File.Delete("Monogame.Framework.dll");
+                if (File.Exists("Monogame.Framework.dll")) File.Delete("Monogame.Framework.dll");
 
                 AssemblyDir = monogameDir;
-            } catch (Exception)
+            } catch (Exception e)
             {
-                MessageBox.Show("Unable to link Monogame. Continuing...");
+                MessageBox.Show("Unable to link Monogame. Continuing... ("+e.ToString()+")");
             }
-
-            //File.Delete("Monogame.Framework.dll"); //for upgraded versions. Monogame is now in a sub directory.
 
             return preferDX11;
         }

@@ -37,8 +37,7 @@ namespace FSO.SimAntics.Primitives
                     slot = VMMemory.GetSlot(context, VMSlotScope.StackVariable, operand.Index);
                     break;
                 case VMSnapSlotScope.BeContained:
-                    context.StackObject.PlaceInSlot(context.Caller, 0, true, context.VM.Context);
-                break;
+                    return (context.StackObject.PlaceInSlot(context.Caller, 0, true, context.VM.Context)) ? VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
                 case VMSnapSlotScope.InFront:
                     slot = new SLOTItem { Type = 3, Standing = 1, MinProximity = 16, Rsflags = SLOTFlags.NORTH };
                     break;
@@ -56,7 +55,7 @@ namespace FSO.SimAntics.Primitives
                 var locations = parser.FindAvaliableLocations(obj, context.VM.Context, avatar);
                 if (slot.SnapTargetSlot > -1)
                 {
-                    context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot, true, context.VM.Context);
+                    if (!context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot, true, context.VM.Context)) return VMPrimitiveExitCode.GOTO_FALSE;
                     if (locations.Count > 0) avatar.RadianDirection = ((slot.Rsflags & SLOTFlags.SnapToDirection) > 0) ? locations[0].RadianDirection: avatar.RadianDirection;
                 }
                 else
@@ -75,7 +74,6 @@ namespace FSO.SimAntics.Primitives
                     }
                 }
             }
-
             return VMPrimitiveExitCode.GOTO_TRUE; 
         }
 

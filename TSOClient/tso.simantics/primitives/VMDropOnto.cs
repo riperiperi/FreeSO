@@ -28,8 +28,7 @@ namespace FSO.SimAntics.Primitives
                 var itemTest = context.StackObject.GetSlot(dest);
                 if (itemTest == null)
                 {
-                    context.StackObject.PlaceInSlot(item, dest, true, context.VM.Context); //slot to slot needs no cleanup
-                    return VMPrimitiveExitCode.GOTO_TRUE;
+                    return (context.StackObject.PlaceInSlot(item, dest, true, context.VM.Context)) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                 }
                 else return VMPrimitiveExitCode.GOTO_FALSE; //cannot replace items currently in slots
             }

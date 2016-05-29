@@ -668,8 +668,9 @@ namespace FSO.SimAntics
             return 1;
         }
 
-        public override void PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context)
+        public override bool PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context)
         {
+            if (GetSlot(slot) != null) return false;
             if (cleanOld) obj.PrePositionChange(context);
 
             if (!obj.GhostImage)
@@ -693,6 +694,7 @@ namespace FSO.SimAntics
             }
             obj.Position = Position; //TODO: is physical position the same as the slot offset position?
             if (cleanOld) obj.PositionChange(context, false);
+            return true;
         }
 
         public override int GetSlotHeight(int slot)

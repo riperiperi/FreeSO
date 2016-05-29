@@ -37,7 +37,6 @@ namespace FSO.Common.Audio
             Inst.BufferNeeded += SubmitBufferAsync;
             SubmitBuffer(null, null);
             SubmitBuffer(null, null);
-            SubmitBuffer(null, null);
 
             NextBuffers = new List<byte[]>();
             NextSizes = new List<int>();
@@ -137,7 +136,7 @@ namespace FSO.Common.Audio
                 {
                     if (NextBuffers.Count > 0)
                     {
-                        Inst.SubmitBuffer(NextBuffers[0], 0, NextSizes[0]);
+                        if (NextSizes[0] > 0) Inst.SubmitBuffer(NextBuffers[0], 0, NextSizes[0]);
                         NextBuffers.RemoveAt(0);
                         NextSizes.RemoveAt(0);
                         Requests++;

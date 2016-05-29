@@ -36,8 +36,10 @@ namespace FSO.SimAntics.Primitives
                     {
                         context.Caller.PrePositionChange(context.VM.Context);
                         context.StackObject.PrePositionChange(context.VM.Context);
-                        cont1.PlaceInSlot(context.StackObject, contS1, false, context.VM.Context);
-                        cont2.PlaceInSlot(context.Caller, contS2, false, context.VM.Context);
+                        cont1.ClearSlot(contS1);
+                        cont2.ClearSlot(contS2);
+                        cont1.PlaceInSlot(context.StackObject, contS1, true, context.VM.Context);
+                        cont2.PlaceInSlot(context.Caller, contS2, true, context.VM.Context);
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.SetActionIconToStackObject: //2

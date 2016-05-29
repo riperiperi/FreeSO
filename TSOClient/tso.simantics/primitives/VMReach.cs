@@ -109,7 +109,7 @@ namespace FSO.SimAntics.Primitives
                                 var item = context.StackObject.GetSlot(slotNum);
                                 if (item != null)
                                 {
-                                    context.Caller.PlaceInSlot(item, 0, true, context.VM.Context);
+                                    if (!context.Caller.PlaceInSlot(item, 0, true, context.VM.Context)) failed = true;
                                 }
                                 else failed = true; //can't grab from an empty space
                             }
@@ -118,7 +118,7 @@ namespace FSO.SimAntics.Primitives
                                 var itemTest = context.StackObject.GetSlot(slotNum);
                                 if (itemTest == null)
                                 {
-                                    context.StackObject.PlaceInSlot(holding, slotNum, true, context.VM.Context);
+                                    if (!context.StackObject.PlaceInSlot(holding, slotNum, true, context.VM.Context)) failed = true;
                                 }
                                 else failed = true; //can't drop in an occupied space
                             }

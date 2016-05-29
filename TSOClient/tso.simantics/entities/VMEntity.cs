@@ -658,7 +658,7 @@ namespace FSO.SimAntics
         // Begin Container SLOTs interface
 
         public abstract int TotalSlots();
-        public abstract void PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context);
+        public abstract bool PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context);
         public abstract VMEntity GetSlot(int slot);
         public abstract void ClearSlot(int slot);
         public abstract int GetSlotHeight(int slot);

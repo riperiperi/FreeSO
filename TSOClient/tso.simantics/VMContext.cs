@@ -440,8 +440,10 @@ namespace FSO.SimAntics
         public ulong NextRandom(ulong max)
         {
             if (max == 0) return 0;
-            RandomSeed = (RandomSeed * 274876858367) + 1046527;
-            return RandomSeed % max;
+            RandomSeed ^= RandomSeed >> 12;
+            RandomSeed ^= RandomSeed << 25;
+            RandomSeed ^= RandomSeed >> 27;
+            return (RandomSeed * (ulong)(2685821657736338717)) % max;
         }
 
         private void WallsChanged(VMArchitecture caller)

@@ -33,7 +33,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public string Name;
         public VMTSOAvatarPermissions Permissions;
 
-        public static ushort CurVer = 0xFFF0;
+        public static ushort CurVer = 0xFFEF;
 
         //variables used locally for deferred avatar loading
         public bool Verified;
@@ -62,7 +62,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (ActorUID == uint.MaxValue - 1)
             {
                 avatar.SetValue(VMStackObjectVariable.Hidden, 1);
-                avatar.Position = LotTilePos.OUT_OF_WORLD;
+                avatar.SetPosition(LotTilePos.OUT_OF_WORLD, Direction.NORTH, vm.Context);
                 avatar.SetFlag(VMEntityFlags.HasZeroExtent, true);
                 avatar.SetPersonData(VMPersonDataVariable.IsGhost, 1); //oooooOOooooOo
             }
