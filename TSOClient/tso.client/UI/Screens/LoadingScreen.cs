@@ -88,6 +88,8 @@ namespace FSO.Client.UI.Screens
             CheckProgressTimer.Elapsed += new ElapsedEventHandler(CheckProgressTimer_Elapsed);
             CheckProgressTimer.Start();
 
+            if (!GlobalSettings.Default.Windowed) GameFacade.GraphicsDeviceManager.ToggleFullScreen();
+
             //GameFacade.Screens.Tween.To(rect, 10.0f, new Dictionary<string, float>() {
             //    {"X", 500.0f}
             //}, TweenQuad.EaseInOut);

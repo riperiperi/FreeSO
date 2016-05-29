@@ -21,7 +21,7 @@ namespace FSO.SimAntics.Engine
 {
     public class VMSlotParser
     {
-        public const double ANGLE_ERROR = 0.01f;
+        public const double ANGLE_ERROR = -0.1f;
 
         public List<VMFindLocationResult> Results;
         public VMRouteFailCode FailCode = VMRouteFailCode.NoValidGoals;

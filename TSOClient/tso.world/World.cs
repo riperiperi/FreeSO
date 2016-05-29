@@ -282,6 +282,10 @@ namespace FSO.LotView
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            foreach (var ent in Blueprint.Objects)
+            {
+                ent.Update(null, State);
+            }
             /** Check for mouse scrolling **/
         }
 

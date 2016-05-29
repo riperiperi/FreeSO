@@ -217,6 +217,17 @@ namespace FSO.LotView.Components
             return world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
         }
 
+        public override void Update(GraphicsDevice device, WorldState world)
+        {
+            bool forceDynamic = ForceDynamic;
+            if (Container != null && Container is ObjectComponent)
+            {
+                forceDynamic = ((ObjectComponent)Container).ForceDynamic;
+                if (forceDynamic && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+            }
+            if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC && !forceDynamic && DynamicCounter++ > 120 && blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
+        }
+
         public override void Draw(GraphicsDevice device, WorldState world){
             if (!Visible) return;
             if (this.DrawGroup != null) dgrp.Draw(world);
@@ -239,13 +250,6 @@ namespace FSO.LotView.Components
                     ((int)headPx.Y-Headline.Height/2)+ (int)off.Y, Headline.Width, Headline.Height);
                 world._2D.Draw(item);
             }
-
-            bool forceDynamic = ForceDynamic;
-            if (Container != null && Container is ObjectComponent) {
-                forceDynamic = ((ObjectComponent)Container).ForceDynamic;
-                if (forceDynamic && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-            }
-            if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC && !forceDynamic && DynamicCounter++ > 120 && blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
         }
     }
 }

@@ -26,6 +26,7 @@ namespace FSO.LotView
         }
 
         public abstract void Draw(GraphicsDevice device, WorldState world);
+        public virtual void Update(GraphicsDevice device, WorldState world) { }
 
         public virtual void OnRotationChanged(WorldState world){
             OnWorldChanged(world);

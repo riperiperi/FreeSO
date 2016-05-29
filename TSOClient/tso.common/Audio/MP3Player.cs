@@ -23,6 +23,7 @@ namespace FSO.Common.Audio
         private AutoResetEvent DecodeNext;
         private AutoResetEvent BufferDone;
         private bool EndOfStream;
+        private Thread MainThread; //keep track of this, terminate when it closes.
 
         public MP3Player(string path)
         {
@@ -41,11 +42,12 @@ namespace FSO.Common.Audio
             NextBuffers = new List<byte[]>();
             NextSizes = new List<int>();
             Requests = 1;
+            MainThread = Thread.CurrentThread;
             DecoderThread = new Thread(() =>
             {
                 try
                 {
-                    while (true)
+                    while (MainThread.IsAlive)
                     {
                         DecodeNext.WaitOne(128);
                         bool go;

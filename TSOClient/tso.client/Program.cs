@@ -18,7 +18,7 @@ namespace FSO.Client
     public static class Program
     {
 
-        public static bool UseDX;
+        public static bool UseDX = true;
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -43,7 +43,7 @@ namespace FSO.Client
             if (linux) gameLocator = new LinuxLocator();
             else gameLocator = new WindowsLocator();
 
-            bool useDX = false;
+            bool useDX = true; //temporary while SDL issues are fixed
 
             #region User resolution parmeters
 
@@ -78,6 +78,10 @@ namespace FSO.Client
                             case "dx11":
                             case "dx":
                                 useDX = true;
+                                break;
+                            case "gl":
+                            case "ogl":
+                                useDX = false;
                                 break;
                         }
                     }

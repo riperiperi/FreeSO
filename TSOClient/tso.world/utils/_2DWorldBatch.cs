@@ -461,7 +461,7 @@ namespace FSO.LotView.Utils
             if (LotView.World.DirectX)
             {
                 this.Projection = Matrix.CreateOrthographicOffCenter(
-                    transX - 1f, transX + width - 1f, transY - height - 0f, transY - 0f, 0, 1);
+                    transX - 2f, transX + width - 2f, transY - height - 0f, transY - 0f, 0, 1);
             }
             else
             {
