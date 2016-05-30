@@ -116,13 +116,15 @@ namespace FSO.Files.Formats.IFF.Chunks
         private Texture2D ZCache;
         private Texture2D PixelCache;
 
+        private Texture2D PackedCache;
+
         public int Width { get; internal set; }
         public int Height { get; internal set; }
         public uint Flags { get; internal set; }
         public ushort PaletteID { get; set; }
         public ushort TransparentColorIndex { get; internal set; }
         public Vector2 Position { get; internal set; }
-        
+
         private SPR2 Parent;
 
         public SPR2Frame(SPR2 parent)
@@ -178,7 +180,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                 var data = sprStream.ToArray();
                 io.WriteUInt32(1001);
-                io.WriteUInt32((uint)data.Length+8);
+                io.WriteUInt32((uint)data.Length + 8);
                 io.WriteBytes(data);
             }
         }
@@ -197,14 +199,14 @@ namespace FSO.Files.Formats.IFF.Chunks
             var hasAlpha = (this.Flags & 0x04) == 0x04;
 
             var numPixels = this.Width * this.Height;
-            if (hasPixels){
+            if (hasPixels) {
                 this.PixelData = new Color[numPixels];
                 this.PalData = new byte[numPixels];
             }
-            if (hasZBuffer){
+            if (hasZBuffer) {
                 this.ZBufferData = new byte[numPixels];
             }
-            if (hasAlpha){
+            if (hasAlpha) {
                 this.AlphaData = new byte[numPixels];
             }
 
@@ -270,7 +272,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                                     if (pxWithAlpha)
                                     {
                                         /** Padding? **/
-                                        if ((pxCount * 3) % 2 != 0){
+                                        if ((pxCount * 3) % 2 != 0) {
                                             bytes--;
                                             io.ReadByte();
                                         }
@@ -283,7 +285,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                                         this.PixelData[offset] = transparentPixel;
                                         this.PalData[offset] = (byte)TransparentColorIndex;
                                         this.PixelData[offset].A = 0;
-                                        if (hasZBuffer){
+                                        if (hasZBuffer) {
                                             this.ZBufferData[offset] = 255;
                                         }
                                         x++;
@@ -337,8 +339,8 @@ namespace FSO.Files.Formats.IFF.Chunks
                         {
                             for (var col = 0; col < Width; col++)
                             {
-                                var offset = ((y+row) * Width) + col;
-                                if (hasPixels) 
+                                var offset = ((y + row) * Width) + col;
+                                if (hasPixels)
                                 {
                                     this.PixelData[offset] = transparentPixel;
                                     this.PalData[offset] = (byte)TransparentColorIndex;
@@ -404,6 +406,32 @@ namespace FSO.Files.Formats.IFF.Chunks
         }
 
         /// <summary>
+        /// Gets a (packed) texture representing this SPR2Frame.
+        /// </summary>
+        /// <param name="device">GraphicsDevice instance used for drawing.</param>
+        /// <returns>A Texture2D instance holding the texture data.</returns>
+        public Texture2D GetPackedTexture(GraphicsDevice device)
+        {
+            if (PackedCache == null)
+            {
+                if (this.Width == 0 || this.Height == 0)
+                {
+                    return null;
+                }
+
+                var texData = new Color[PalData.Length];
+                for (int i = 0; i < texData.Length; i++)
+                {
+                    texData[i] = new Color(PalData[i], (ZBufferData == null) ? (byte)0 : ZBufferData[i], PixelData[i].A);
+                }
+
+                PackedCache = new Texture2D(device, this.Width, this.Height);
+                PackedCache.SetData<Color>(texData);
+            }
+            return PackedCache;
+        }
+
+        /// <summary>
         /// Generates windows bitmaps for the appearance of this sprite.
         /// </summary>
         /// <param name="tWidth"></param>
@@ -426,15 +454,15 @@ namespace FSO.Files.Formats.IFF.Chunks
             }
 
             int index = 0;
-            for (int y=0; y<tHeight; y++)
+            for (int y = 0; y < tHeight; y++)
             {
-                for (int x=0; x<tWidth; x++) {
+                for (int x = 0; x < tWidth; x++) {
                     Color col;
                     byte depth = 255;
 
-                    if (x >= pos.X && x < pos.X+Width && y >= pos.Y && y < pos.Y+Height)
+                    if (x >= pos.X && x < pos.X + Width && y >= pos.Y && y < pos.Y + Height)
                     {
-                        col = PixelData[(int)(x - pos.X) + (int)(y-pos.Y)*Width];
+                        col = PixelData[(int)(x - pos.X) + (int)(y - pos.Y) * Width];
                         if (col.A == 0) col = new Color(0xFF, 0xFF, 0x00, 0x00);
                         if (ZBufferData != null)
                         {
@@ -447,13 +475,13 @@ namespace FSO.Files.Formats.IFF.Chunks
                     }
 
                     data[0][index] = col.B;
-                    data[0][index+1] = col.G;
-                    data[0][index+2] = col.R;
+                    data[0][index + 1] = col.G;
+                    data[0][index + 2] = col.R;
                     data[0][index + 3] = 255;
 
                     data[1][index] = col.A;
-                    data[1][index+1] = col.A;
-                    data[1][index+2] = col.A;
+                    data[1][index + 1] = col.A;
+                    data[1][index + 2] = col.A;
                     data[1][index + 3] = 255;
 
                     data[2][index] = depth;
@@ -497,14 +525,27 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         public WorldTexture GetWorldTexture(GraphicsDevice device)
         {
+            /*
             var result = new WorldTexture
             {
                 Pixel = this.GetTexture(device)
             };
             if (this.ZBufferData != null){
                 result.ZBuffer = this.GetZTexture(device);
-            }
+            }*/
+            var result = new WorldTexture
+            {
+                Pixel = this.GetPackedTexture(device),
+                Palette = this.GetPaletteTexture(device)
+            };
+            if (result.Pixel == null) return null;
             return result;
+        }
+
+        public Texture2D GetPaletteTexture(GraphicsDevice device) {
+            var palette = Parent.ChunkParent.Get<PALT>(this.PaletteID);
+            if (palette != null) return palette.GetPalTexture(device);
+            return null; 
         }
 
         #endregion

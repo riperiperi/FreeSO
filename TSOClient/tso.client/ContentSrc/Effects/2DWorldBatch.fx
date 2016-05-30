@@ -7,10 +7,12 @@ float4x4 rotProjection : ViewProjection;
 float worldUnitsPerTile = 2.5;
 float3 dirToFront;
 float4 offToBack;
+bool usePalette;
 
 texture pixelTexture : Diffuse;
 texture depthTexture : Diffuse;
 texture maskTexture : Diffuse;
+texture paletteTexture : Diffuse;
 texture ambientLight : Diffuse;
 
 sampler pixelSampler = sampler_state {
@@ -31,19 +33,54 @@ sampler maskSampler = sampler_state {
     MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
 };
 
+sampler paletteSampler = sampler_state {
+	texture = <paletteTexture>;
+	AddressU = CLAMP; AddressV = CLAMP; AddressW = CLAMP;
+	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
+};
+
 sampler ambientSampler = sampler_state {
 	texture = <ambientLight>;
 	AddressU = CLAMP; AddressV = CLAMP; AddressW = CLAMP;
 	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
 };
 
-
 float dpth(float4 v) {
-    #if SM4
-        return v.a;
-    #else
-        return v.r;
-    #endif
+#if SM4
+	return v.a;
+#else
+	return v.r;
+#endif
+}
+
+void getColDepth(float2 texCoords, out float4 col, out float depth) {
+	if (usePalette == true) {
+		float3 packed = tex2D(pixelSampler, texCoords).rgb;
+		//r = colourID, g=depth, b=alpha
+		packed.r *= 256.0;
+		col = float4(0,0,0,0);
+		col.rgb = tex2D(paletteSampler, float2(((packed.r%16.0)+0.5)/16.0, (floor(packed.r / 16.0) + 0.5)/16.0)).rgb;
+		col.a = packed.b;
+		depth = packed.g;
+	}
+	else {
+		col = tex2D(pixelSampler, texCoords);
+		depth = dpth(tex2D(depthSampler, texCoords));
+	}
+}
+
+void getCol(float2 texCoords, out float4 col) {
+	if (usePalette == true) {
+		float3 packed = tex2D(pixelSampler, texCoords).rgb;
+		//r = colourID, g=depth, b=alpha
+		packed.r *= 256.0;
+		col = float4(0, 0, 0, 0);
+		col.rgb = tex2D(paletteSampler, float2(((packed.r%16.0) + 0.5)/16.0, (floor(packed.r / 16.0) + 0.5)/16.0)).rgb;
+		col.a = packed.b;
+	}
+	else {
+		col = tex2D(pixelSampler, texCoords);
+	}
 }
 
 /**
@@ -68,7 +105,7 @@ SimpleVertex vsSimple(SimpleVertex v){
 }
 
 void psSimple(SimpleVertex v, out float4 color: COLOR0){
-	color = tex2D( pixelSampler, v.texCoords);
+	getCol(v.texCoords, color);
 	color.rgb *= color.a; //"pre"multiply, just here for experimentation
 	if (color.a == 0) discard;
 }
@@ -90,7 +127,10 @@ technique drawSimple {
 }
 
 void psIDSimple(SimpleVertex v, out float4 color: COLOR0){
-	color = float4(v.objectID, 0.0, 0.0, min(tex2D( pixelSampler, v.texCoords).a*255.0, 1.0));
+	float4 oColor;
+	getCol(v.texCoords, oColor);
+
+	color = float4(v.objectID, 0.0, 0.0, min(oColor.a*255.0, 1.0));
 	if (color.a == 0) discard;
 }
 
@@ -187,7 +227,8 @@ ZVertexOut restoreZSprite(ZVertexIn v){
 }
 
 void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
-	color = tex2D(pixelSampler, v.texCoords);
+	float depPx;
+	getColDepth(v.texCoords, color, depPx);
 	if (color.a == 0) discard;
 
 	if (floor(v.roomVec.x * 256) == 254 && floor(v.roomVec.y*256)==255) color = float4(float3(1.0, 1.0, 1.0)-color.xyz, color.a);
@@ -196,19 +237,21 @@ void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 
 	color.rgb *= color.a; //"pre"multiply, just here for experimentation
 
-    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4;
+    float difference = (1-depPx)/0.4;
     depth = (v.backDepth + (difference*v.frontDepth));
 }
 
 //walls work the same as z sprites, except with an additional mask texture.
 
 void psZWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
-    color = tex2D(pixelSampler, v.texCoords) * tex2D(ambientSampler, v.roomVec);
+	float depPx;
+	getColDepth(v.texCoords, color, depPx);
+    color *= tex2D(ambientSampler, v.roomVec);
     color.a = tex2D(maskSampler, v.texCoords).a;
 	if (color.a == 0) discard;
 	color.rgb *= color.a; //"pre"multiply, just here for experimentation
     
-    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4;
+    float difference = (1-depPx)/0.4;
     depth = (v.backDepth + (difference*v.frontDepth));
 }
 
@@ -258,9 +301,12 @@ technique drawZWall {
  */
 
 void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
-	float4 pixel = tex2D(pixelSampler, v.texCoords);
+	float4 pixel;
+	float depPx;
+	getColDepth(v.texCoords, pixel, depPx);
+
 	if (pixel.a <= 0.01) discard;
-    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
+    float difference = (1-depPx)/0.4; 
     depth = (v.backDepth + (difference*v.frontDepth));
     
     color = pixel * tex2D(ambientSampler, v.roomVec);
@@ -287,11 +333,14 @@ technique drawZSpriteDepthChannel {
 }
 
 void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
-	float4 pixel = tex2D(pixelSampler, v.texCoords);
+	float4 pixel;
+	float depPx;
+	getColDepth(v.texCoords, pixel, depPx);
+
     pixel.a = tex2D(maskSampler, v.texCoords).a;
 	if (pixel.a <= 0.01) discard;
 
-    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
+    float difference = (1-depPx)/0.4; 
     depth = (v.backDepth + (difference*v.frontDepth));
     
     color = pixel * tex2D(ambientSampler, v.roomVec);
@@ -329,9 +378,11 @@ technique drawZWallDepthChannel {
  */
 
 void psZIDSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
-	float4 pixel = tex2D(pixelSampler, v.texCoords);
+	float4 pixel;
+	float depPx;
+	getColDepth(v.texCoords, pixel, depPx);
 	if (pixel.a < 0.1) discard;
-    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
+    float difference = (1-depPx)/0.4; 
     depth = (v.backDepth + (difference*v.frontDepth));
 
     color = float4(v.objectID, v.objectID, v.objectID, 1);

@@ -131,7 +131,7 @@ namespace FSO.LotView.Utils
                         {
                             if (sprite == null) continue;
                             var texture = world._2D.GetWorldTexture(sprite);
-                            if (texture == null || texture.ZBuffer == null) { continue; }
+                            if (texture == null || (texture.ZBuffer == null && texture.Palette == null)) { continue; }
 
                             var isDynamic = sprite.SpriteID >= DynamicSpriteBaseID && sprite.SpriteID < (DynamicSpriteBaseID + NumDynamicSprites);
                             if (isDynamic)
@@ -147,6 +147,7 @@ namespace FSO.LotView.Utils
                             var item = new _2DSprite();
                             item.Pixel = texture.Pixel;
                             item.Depth = texture.ZBuffer;
+                            item.Palette = texture.Palette;
                             if (texture.ZBuffer != null)
                             {
                                 item.RenderMode = _2DBatchRenderMode.Z_BUFFER;

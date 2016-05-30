@@ -33,6 +33,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             }
         }
 
+        public Texture2D PalTexCache;
         public Color[] Colors;
         public int References = 0;
 
@@ -85,6 +86,16 @@ namespace FSO.Files.Formats.IFF.Chunks
                 if (data[i].A != 0 && data[i] != Colors[i]) return false;
             }
             return true;
+        }
+
+        public Texture2D GetPalTexture(GraphicsDevice device)
+        {
+            if (PalTexCache == null)
+            {
+                PalTexCache = new Texture2D(device, 16, 16, false, SurfaceFormat.Color);
+                PalTexCache.SetData<Color>(this.Colors);
+            }
+            return PalTexCache;
         }
     }
 }

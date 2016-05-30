@@ -12,6 +12,7 @@ namespace FSO.LotView.Utils
         public short[] Indices;
 
         public Texture2D Pixel;
+        public Texture2D Palette;
         public Texture2D Depth;
         public Texture2D Mask;
         public EffectTechnique Technique;

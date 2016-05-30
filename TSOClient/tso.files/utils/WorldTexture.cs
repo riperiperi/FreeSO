@@ -19,5 +19,6 @@ namespace FSO.Files.Utils
     {
         public Texture2D Pixel;
         public Texture2D ZBuffer;
+        public Texture2D Palette;
     }
 }

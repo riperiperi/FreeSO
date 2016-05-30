@@ -282,6 +282,7 @@ namespace FSO.LotView.Utils
                     grouping = new _2DSpriteTextureGroup
                     {
                         Pixel = sprite.Pixel,
+                        Palette = sprite.Palette,
                         Depth = sprite.Depth,
                         Mask = sprite.Mask
                     };
@@ -355,6 +356,8 @@ namespace FSO.LotView.Utils
         {
             var effect = this.Effect;
             effect.Parameters["pixelTexture"].SetValue(group.Pixel);
+            if (group.Palette != null) effect.Parameters["paletteTexture"].SetValue(group.Palette);
+            effect.Parameters["usePalette"].SetValue(group.Palette != null);
             if (group.Depth != null) effect.Parameters["depthTexture"].SetValue(group.Depth);
             if (group.Mask != null) effect.Parameters["maskTexture"].SetValue(group.Mask);
 
@@ -425,6 +428,7 @@ namespace FSO.LotView.Utils
                 var dg = new _2DDrawGroup()
                 {
                     Pixel = group.Pixel,
+                    Palette = group.Palette,
                     Depth = group.Depth,
                     Mask = group.Mask,
 
@@ -619,6 +623,7 @@ namespace FSO.LotView.Utils
     public class _2DSpriteTextureGroup
     {
         public Texture2D Pixel;
+        public Texture2D Palette;
         public Texture2D Depth;
         public Texture2D Mask;
         public List<_2DSprite> Sprites = new List<_2DSprite>();

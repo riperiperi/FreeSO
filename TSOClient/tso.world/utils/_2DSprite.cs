@@ -22,6 +22,7 @@ namespace FSO.LotView.Utils
         public Texture2D Pixel;
         public Texture2D Depth;
         public Texture2D Mask;
+        public Texture2D Palette;
         public Vector3 TilePosition;
         public Vector3 WorldPosition;
         public short ObjectID; //used for mouse hit test render mode
