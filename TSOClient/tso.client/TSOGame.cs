@@ -16,6 +16,8 @@ using FSO.Client.Network;
 using FSO.Client.UI;
 using FSO.Client.GameContent;
 using FSO.Common;
+using Microsoft.Xna.Framework.Audio;
+using System.Windows.Forms;
 
 namespace FSO.Client
 {
@@ -31,11 +33,12 @@ namespace FSO.Client
         {
             GameFacade.Game = this;
             Content.RootDirectory = FSOEnvironment.GFXContentDir;
-            Graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
+            Graphics.SynchronizeWithVerticalRetrace = GameFacade.DirectX || GlobalSettings.Default.Windowed; //why was this disabled
 
             Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
+            Graphics.HardwareModeSwitch = false;
             Graphics.ApplyChanges();
 
             //disabled for now. It's a hilarious mess and is causing linux to freak out.
@@ -81,6 +84,14 @@ namespace FSO.Client
 
             GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
 
+            try {
+                var audioTest = new SoundEffect(new byte[2], 44100, AudioChannels.Mono); //initialises XAudio.
+                audioTest.CreateInstance().Play();
+            } catch (Exception e)
+            {
+                MessageBox.Show("Failed to initialize audio: \r\n\r\n" + e.StackTrace);
+            }
+
             this.IsMouseVisible = true;
             this.IsFixedTimeStep = true;
 
@@ -90,6 +101,12 @@ namespace FSO.Client
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
             this.Window.TextInput += GameScreen.TextInput;
+            this.Window.Title = "FreeSO";
+
+            if (!GlobalSettings.Default.Windowed)
+            {
+                GameFacade.GraphicsDeviceManager.ToggleFullScreen();
+            }
         }
 
         void RegainFocus(object sender, EventArgs e)

@@ -107,6 +107,7 @@ namespace FSO.Client.UI.Panels.WorldUI
                 Invalidated = true;
                 LastZoom = world.State.Zoom;
                 RecalculateTarget();
+                if (Texture == null) return null;
             }
             var GD = GameFacade.GraphicsDevice;
             var batch = GameFacade.Screens.SpriteBatch;

@@ -15,6 +15,7 @@ using FSO.Common;
 
 namespace FSO.Client
 {
+
     public static class Program
     {
 
@@ -43,7 +44,7 @@ namespace FSO.Client
             if (linux) gameLocator = new LinuxLocator();
             else gameLocator = new WindowsLocator();
 
-            bool useDX = true; //temporary while SDL issues are fixed
+            bool useDX = false;
 
             #region User resolution parmeters
 
@@ -98,6 +99,12 @@ namespace FSO.Client
             #endregion
 
             UseDX = MonogameLinker.Link(useDX);
+
+            /*if (GlobalSettings.Default.Windowed == false && !UseDX)
+            {
+                //temporary while SDL issues are fixed
+                MessageBox.Show("Fullscreen is currently disabled on OpenGL. Please switch to DirectX (-dx flag) if you really need to use fullscreen.");
+            }*/
 
             var path = gameLocator.FindTheSimsOnline();
 

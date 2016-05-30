@@ -184,7 +184,8 @@ namespace FSO.Client.Rendering.City
             m_Snow = LoadTex(gamepath + "gamedata/terrain/newformat/sn.tga");
             m_Forest = LoadTex(gamepath + "gamedata/farzoom/forest00a.tga");
             m_DefaultHouse = LoadTex(gamepath + "userdata/houses/defaulthouse.bmp");//, new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
-            TextureUtils.ManualTextureMaskSingleThreaded(ref m_DefaultHouse, new uint[] { new Color(0x00, 0x00, 0x00, 0xFF).PackedValue });
+            //Can crash on some setups on dx11?
+            //TextureUtils.ManualTextureMaskSingleThreaded(ref m_DefaultHouse, new uint[] { new Color(0x00, 0x00, 0x00, 0xFF).PackedValue });
 
             byte[] bytes = GameContent.ContentManager.GetResourceFromLongID(0x0000032F00000001);
             using (var stream = new MemoryStream(bytes))

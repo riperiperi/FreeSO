@@ -178,6 +178,7 @@ namespace FSO.Common.Rendering.Framework.IO
                     }
                     else if (result.CtrlDown)
                     {
+                        if (key != Keys.LeftControl) { }
                         switch (key)
                         {
                             case Keys.A:
