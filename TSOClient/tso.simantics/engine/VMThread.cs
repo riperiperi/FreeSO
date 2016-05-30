@@ -180,7 +180,7 @@ namespace FSO.SimAntics.Engine
             }
 
             if (DialogCooldown > 0) DialogCooldown--;
-#if !DEBUG
+#if !THROW_SIMANTICS
             try {
 #endif
                 if (!Entity.Dead)
@@ -222,7 +222,7 @@ namespace FSO.SimAntics.Engine
                     }
                 }
 
-#if !DEBUG
+#if !THROW_SIMANTICS
             } catch (Exception e) {
                 if (Stack.Count == 0) return; //???
                 var context = Stack[Stack.Count - 1];

@@ -229,7 +229,9 @@ namespace FSO.LotView.Components
         }
 
         public override void Draw(GraphicsDevice device, WorldState world){
+#if !DEBUG 
             if (!Visible) return;
+#endif
             if (this.DrawGroup != null) dgrp.Draw(world);
 
             if (Headline != null)

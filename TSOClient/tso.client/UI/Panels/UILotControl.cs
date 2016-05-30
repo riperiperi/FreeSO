@@ -80,6 +80,8 @@ namespace FSO.Client.UI.Panels
         private int RMBScrollX;
         private int RMBScrollY;
 
+        public UICheatHandler Cheats;
+
         // NOTE: Blocking dialog system assumes that nothing goes wrong with data transmission (which it shouldn't, because we're using TCP)
         // and that the code actually blocks further dialogs from appearing while waiting for a response.
         // If we are to implement controlling multiple sims, this must be changed.
@@ -120,6 +122,8 @@ namespace FSO.Client.UI.Panels
             vm.OnChatEvent += Vm_OnChatEvent;
             vm.OnDialog += vm_OnDialog;
             vm.OnBreakpoint += Vm_OnBreakpoint;
+
+            Cheats = new UICheatHandler(this);
         }
 
         private void Vm_OnChatEvent(VMChatEvent evt)
@@ -438,6 +442,7 @@ namespace FSO.Client.UI.Panels
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            Cheats.Update(state);
 
             if (!vm.Ready) return;
 

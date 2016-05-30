@@ -62,6 +62,7 @@
     <Compile Include="UI\Controls\UIPersonIcon.cs" />
     <Compile Include="UI\Framework\UIExternalContainer.cs" />
     <Compile Include="UI\Model\UIMusic.cs" />
+    <Compile Include="UI\Panels\LotControls\UICheatHandler.cs" />
     <Compile Include="UI\Panels\UIChatBalloon.cs" />
     <Compile Include="UI\Panels\UIPersonGrid.cs" />
     <Compile Include="UI\Panels\UIPropertyLog.cs" />

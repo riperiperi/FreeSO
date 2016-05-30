@@ -112,11 +112,18 @@ namespace FSO.Client.UI.Panels
             message = message.Replace("\r\n", "");
             if (message != "" && Owner.ActiveEntity != null)
             {
-                vm.SendCommand(new VMNetChatCmd
+                if (message[0] == '!')
                 {
-                    ActorUID = Owner.ActiveEntity.PersistID,
-                    Message = message
-                });
+                    Owner.Cheats.SubmitCommand(message);
+                }
+                else
+                {
+                    vm.SendCommand(new VMNetChatCmd
+                    {
+                        ActorUID = Owner.ActiveEntity.PersistID,
+                        Message = message
+                    });
+                }
             }
         }
 
