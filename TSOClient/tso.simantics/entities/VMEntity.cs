@@ -133,13 +133,6 @@ namespace FSO.SimAntics
             set
             {
                 _Position = value;
-                /*
-                for (int i = 0; i < TotalSlots(); i++)
-                {
-                    var obj = GetSlot(i);
-                    if (obj != null) obj.Position = _Position; //TODO: is physical position the same as the slot offset position?
-                }
-                */
                 VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level - 1) * 2.95f);
             }
         }
@@ -662,6 +655,19 @@ namespace FSO.SimAntics
         public abstract VMEntity GetSlot(int slot);
         public abstract void ClearSlot(int slot);
         public abstract int GetSlotHeight(int slot);
+
+        public void RecurseSlotPositionChange(VMContext context, bool noEntryPoint)
+        {
+            context.UnregisterObjectPos(this);
+            var total = TotalSlots();
+            for (int i=0; i<total; i++)
+            {
+                var obj = GetSlot(i);
+                if (obj != null) obj.RecurseSlotPositionChange(context, noEntryPoint);
+            }
+            Position = Position;
+            PositionChange(context, noEntryPoint);
+        }
 
         // End Container SLOTs interface
 

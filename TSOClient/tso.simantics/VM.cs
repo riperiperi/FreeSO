@@ -441,6 +441,7 @@ namespace FSO.SimAntics
             {
                 foreach (var obj in Entities)
                 {
+                    obj.Dead = true;
                     if (obj.HeadlineRenderer != null) obj.HeadlineRenderer.Dispose();
                     oldSounds.AddRange(obj.GetActiveSounds());
                 }

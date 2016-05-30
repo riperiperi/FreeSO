@@ -368,7 +368,6 @@ namespace FSO.Client.UI.Panels
                         Panel = new UILiveMode(Game.LotController);
                         Panel.X = 177;
                         Panel.Y = 63;
-                        ((UILiveMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         LiveModeButton.Selected = true;
                         break;

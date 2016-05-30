@@ -24,7 +24,7 @@ namespace FSO.Client.UI.Panels
     {
         public UIImage Background;
         public UIImage Divider;
-        public UIImage Thumbnail;
+        public UIPersonIcon Thumb;
         public UIMotiveDisplay MotiveDisplay;
         public Texture2D DividerImg { get; set; }
         public Texture2D PeopleListBackgroundImg { get; set; }
@@ -36,12 +36,15 @@ namespace FSO.Client.UI.Panels
         public UIButton EODCloseButton { get; set; }
         public UIButton EODExpandButton { get; set; }
         public UIButton EODContractButton { get; set; }
-
         public UIButton MoodPanelButton;
+
+        public UIButton PreviousPageButton { get; set; }
+        public UIButton NextPageButton { get; set; }
 
         public UILabel MotivesLabel { get; set; }
 
-        public FSO.SimAntics.VM vm;
+        public UIPersonGrid PersonGrid;
+
         UILotControl LotController;
         private VMAvatar SelectedAvatar
         {
@@ -53,10 +56,11 @@ namespace FSO.Client.UI.Panels
         private VMAvatar LastSelected;
 
         public UILiveMode (UILotControl lotController) {
-            var script = this.RenderScript("livepanel"+((GlobalSettings.Default.GraphicsWidth < 1024)?"":"1024")+".uis");
+            var small800 = (GlobalSettings.Default.GraphicsWidth < 1024);
+            var script = this.RenderScript("livepanel"+(small800?"":"1024")+".uis");
             LotController = lotController;
 
-            Background = new UIImage(GetTexture((GlobalSettings.Default.GraphicsWidth < 1024) ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
+            Background = new UIImage(GetTexture(small800 ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
             Background.Y = 33;
             this.AddAt(0, Background);
 
@@ -80,11 +84,6 @@ namespace FSO.Client.UI.Panels
             MoodPanelButton.Position = new Vector2(31, 63);
             this.Add(MoodPanelButton);
 
-            Thumbnail = new UIImage();
-            Thumbnail.Size = new Point(32, 32); 
-            Thumbnail.Position = new Vector2(65, 74);
-            this.Add(Thumbnail);
-
             MotiveDisplay = new UIMotiveDisplay();
             MotiveDisplay.Position = new Vector2(165, 56);
             this.Add(MotiveDisplay);
@@ -93,6 +92,17 @@ namespace FSO.Client.UI.Panels
             EODCloseButton.Visible = false;
             EODExpandButton.Visible = false;
             EODContractButton.Visible = false;
+
+            PersonGrid = new UIPersonGrid(LotController.vm);
+            Add(PersonGrid);
+            PersonGrid.Position = new Vector2(409, 51);
+            if (small800) {
+                PersonGrid.Columns = 4;
+                PersonGrid.DrawPage();
+            }
+
+            NextPageButton.OnButtonClick += (UIElement btn) => { PersonGrid.NextPage(); };
+            PreviousPageButton.OnButtonClick += (UIElement btn) => { PersonGrid.PreviousPage(); };
         }
 
         public override void Destroy()
@@ -107,8 +117,10 @@ namespace FSO.Client.UI.Panels
             {
                 if (SelectedAvatar != LastSelected)
                 {
-                    Thumbnail.Texture = SelectedAvatar.GetIcon(GameFacade.GraphicsDevice, 0);
-                    Thumbnail.Tooltip = SelectedAvatar.Name;
+                    if (Thumb != null) Remove(Thumb);
+                    Thumb = new UIPersonIcon(SelectedAvatar, LotController.vm);
+                    Thumb.Position = new Vector2(64, 73);
+                    Add(Thumb);
                     LastSelected = SelectedAvatar;
                 }
                 
