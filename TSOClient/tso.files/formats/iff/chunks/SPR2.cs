@@ -399,6 +399,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
                 PixelCache = new Texture2D(device, this.Width, this.Height);
                 PixelCache.SetData<Color>(this.PixelData);
+                if (!IffFile.RETAIN_CHUNK_DATA) PixelData = null;
             }
             return PixelCache;
         }
@@ -483,12 +484,13 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             if (ZCache == null)
             {
-                if (this.Width == 0 || this.Height == 0)
+                if (ZBufferData == null || this.Width == 0 || this.Height == 0)
                 {
                     return null;
                 }
                 ZCache = new Texture2D(device, this.Width, this.Height, false, SurfaceFormat.Alpha8);
                 ZCache.SetData<byte>(this.ZBufferData);
+                if (!IffFile.RETAIN_CHUNK_DATA) ZBufferData = null;
             }
             return ZCache;
         }
@@ -501,9 +503,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             {
                 Pixel = this.GetTexture(device)
             };
-            if (this.ZBufferData != null){
-                result.ZBuffer = this.GetZTexture(device);
-            }
+            result.ZBuffer = this.GetZTexture(device);
             return result;
         }
 

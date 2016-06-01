@@ -235,6 +235,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             {
                 PixelCache = new Texture2D(device, Math.Max(1,this.Width), Math.Max(1,this.Height));
                 PixelCache.SetData<Color>(this.Data);
+                if (!IffFile.RETAIN_CHUNK_DATA) Data = null;
             }
             return PixelCache;
         }
