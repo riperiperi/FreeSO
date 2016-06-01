@@ -25,6 +25,7 @@ namespace FSO.SimAntics.Marshals
         public short[] MotiveData = new short[16];
         public short HandObject;
         public float RadianDirection;
+        public int KillTimeout = -1; //version 2
 
         public VMAvatarDefaultSuits DefaultSuits;
         public string[] BoundAppearances;
@@ -32,6 +33,11 @@ namespace FSO.SimAntics.Marshals
         public ulong BodyOutfit;
         public ulong HeadOutfit;
         public AppearanceType SkinTone;
+
+        public int Version;
+
+        public VMAvatarMarshal() { }
+        public VMAvatarMarshal(int version) { Version = version; }
 
         public override void Deserialize(BinaryReader reader)
         {
@@ -68,6 +74,8 @@ namespace FSO.SimAntics.Marshals
             HandObject = reader.ReadInt16();
             RadianDirection = reader.ReadSingle();
 
+            if (Version > 1) KillTimeout = reader.ReadInt32();
+
             DefaultSuits = new VMAvatarDefaultSuits(reader);
 
             var aprs = reader.ReadInt32();
@@ -102,6 +110,8 @@ namespace FSO.SimAntics.Marshals
             //foreach (var item in MotiveData) { writer.Write(item); }
             writer.Write(HandObject);
             writer.Write(RadianDirection);
+
+            writer.Write(KillTimeout);
 
             DefaultSuits.SerializeInto(writer);
             writer.Write(BoundAppearances.Length);

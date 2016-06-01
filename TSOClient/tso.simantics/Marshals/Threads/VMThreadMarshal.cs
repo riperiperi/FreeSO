@@ -22,7 +22,12 @@ namespace FSO.SimAntics.Marshals.Threads
         public bool Interrupt;
 
         public ushort ActionUID;
-        public int DialogCooldown; 
+        public int DialogCooldown;
+
+        public int Version;
+
+        public VMThreadMarshal() { }
+        public VMThreadMarshal(int version) { Version = version; }
 
         public void SerializeInto(BinaryWriter writer)
         {
@@ -72,7 +77,7 @@ namespace FSO.SimAntics.Marshals.Threads
             for (int i = 0; i < 2; i++) TempXL[i] = reader.ReadInt32();
             LastStackExitCode = (VMPrimitiveExitCode)reader.ReadByte();
 
-            if (reader.ReadBoolean()) BlockingState = VMAsyncState.DeserializeGeneric(reader);
+            if (reader.ReadBoolean()) BlockingState = VMAsyncState.DeserializeGeneric(reader, Version);
             else BlockingState = null;
             Interrupt = reader.ReadBoolean();
 

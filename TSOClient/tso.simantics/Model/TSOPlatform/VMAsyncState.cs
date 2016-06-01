@@ -17,11 +17,12 @@ namespace FSO.SimAntics.Model.TSOPlatform
         };
         public static Dictionary<Type, VMAsyncStateType> TypeMarshal = TypeResolve.ToDictionary(x => x.Value, x => x.Key);
 
-        public static VMAsyncState DeserializeGeneric(BinaryReader reader)
+        public static VMAsyncState DeserializeGeneric(BinaryReader reader, int version)
         {
             var type = (VMAsyncStateType)reader.ReadByte();
             Type cmdType = TypeResolve[type];
             var state = (VMAsyncState)Activator.CreateInstance(cmdType);
+            state.Version = version;
             state.Deserialize(reader);
             return state;
         }
@@ -33,14 +34,19 @@ namespace FSO.SimAntics.Model.TSOPlatform
         }
 
         public bool Responded;
+        public int WaitTime;
+        public int Version;
+
         public virtual void Deserialize(BinaryReader reader)
         {
             Responded = reader.ReadBoolean();
+            if (Version > 1) WaitTime = reader.ReadInt32();
         }
 
         public virtual void SerializeInto(BinaryWriter writer)
         {
             writer.Write(Responded);
+            writer.Write(WaitTime);
         }
     }
 

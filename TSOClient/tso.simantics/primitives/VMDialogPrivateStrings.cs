@@ -19,6 +19,8 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMDialogPrivateStrings : VMPrimitiveHandler
     {
+        public static readonly int DIALOG_MAX_WAITTIME = 60 * 30;
+
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             return ExecuteGeneric(context, args, context.ScopeResource.Get<STR>(301));
@@ -44,7 +46,7 @@ namespace FSO.SimAntics.Primitives
             }
             else
             {
-                if (curDialog.Responded)
+                if (curDialog.Responded || curDialog.WaitTime > DIALOG_MAX_WAITTIME)
                 {
                     context.Thread.BlockingState = null;
                     switch (curDialog.Type)

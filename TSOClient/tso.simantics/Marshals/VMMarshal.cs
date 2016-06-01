@@ -13,7 +13,9 @@ namespace FSO.SimAntics.Marshals
 {
     public class VMMarshal : VMSerializable
     {
-        public int Version = 1;
+        public static readonly int LATEST_VERSION = 2;
+
+        public int Version = LATEST_VERSION;
         public bool Compressed = true;
         public VMContextMarshal Context;
 
@@ -51,7 +53,7 @@ namespace FSO.SimAntics.Marshals
             for (int i=0; i<ents; i++)
             {
                 var type = reader.ReadByte();
-                var ent = (type == 1) ? (VMEntityMarshal) new VMAvatarMarshal() : new VMGameObjectMarshal();
+                var ent = (type == 1) ? (VMEntityMarshal) new VMAvatarMarshal(Version) : new VMGameObjectMarshal();
                 ent.Deserialize(reader);
                 Entities[i] = ent;
             }
@@ -60,7 +62,7 @@ namespace FSO.SimAntics.Marshals
             Threads = new VMThreadMarshal[thrN];
             for (int i = 0; i < thrN; i++)
             {
-                Threads[i] = new VMThreadMarshal();
+                Threads[i] = new VMThreadMarshal(Version);
                 Threads[i].Deserialize(reader);
             }
 

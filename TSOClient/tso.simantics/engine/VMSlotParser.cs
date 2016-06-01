@@ -132,10 +132,10 @@ namespace FSO.SimAntics.Engine
             }
             else
             {
-                if (((int)Flags & 255) == 0)
+                if (((int)Flags & 255) == 0 || Slot.Offset != new Vector3())
                 {
                     //exact position
-                    Flags |= (SLOTFlags)255;
+                    //Flags |= (SLOTFlags)255;
 
                     // special case, walk directly to point. 
                     VerifyAndAddLocation(obj, circleCtr, center, Flags, Double.MaxValue, context, caller, float.NaN);
@@ -154,7 +154,7 @@ namespace FSO.SimAntics.Engine
                         double distance = Math.Sqrt(x * x + y * y);
                         if (distance >= MinProximity - 0.01 && distance <= MaxProximity + 0.01 && (ignoreRooms || context.VM.Context.GetRoomAt(new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level)) == room)) //slot is within proximity
                         {
-                            var routeEntryFlags = (GetSearchDirection(center, pos, obj.RadianDirection) & Flags); //the route needs to know what conditions it fulfilled
+                            var routeEntryFlags = (GetSearchDirection(circleCtr, pos, obj.RadianDirection) & Flags); //the route needs to know what conditions it fulfilled
                             if (routeEntryFlags > 0) //within search location
                             {
                                 double baseScore = ((maxScore - Math.Abs(DesiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f);

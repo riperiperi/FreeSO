@@ -179,6 +179,7 @@ namespace FSO.SimAntics.Engine
                 RoutineDirty = false;
             }
 
+            if (BlockingState != null) BlockingState.WaitTime++;
             if (DialogCooldown > 0) DialogCooldown--;
 #if !THROW_SIMANTICS
             try {

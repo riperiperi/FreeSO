@@ -92,6 +92,7 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
                 case VMGenericTSOCallMode.LeaveLot: //25
+                    ((VMAvatar)context.Caller).UserLeaveLot();
                     if (context.VM.GlobalLink != null)
                     {
                         context.VM.GlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
@@ -114,6 +115,7 @@ namespace FSO.SimAntics.Primitives
                         var server = (VMServerDriver)context.VM.Driver;
                         server.KickUser(context.VM, context.StackObject.Name);
                     }
+                    ((VMAvatar)context.StackObject).UserLeaveLot();
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
                 case VMGenericTSOCallMode.StackObjectOwnerID: //29

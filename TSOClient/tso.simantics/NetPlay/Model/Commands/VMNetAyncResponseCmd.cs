@@ -1,4 +1,5 @@
 ﻿using FSO.SimAntics.Engine.TSOTransaction;
+using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.Primitives;
@@ -72,7 +73,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             base.Deserialize(reader);
             ID = reader.ReadInt16();
-            State = VMAsyncState.DeserializeGeneric(reader);
+            State = VMAsyncState.DeserializeGeneric(reader, VMMarshal.LATEST_VERSION);
         }
         #endregion
     }

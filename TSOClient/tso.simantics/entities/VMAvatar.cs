@@ -25,6 +25,7 @@ using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model.Sound;
+using FSO.SimAntics.Engine;
 
 namespace FSO.SimAntics
 {
@@ -66,6 +67,10 @@ namespace FSO.SimAntics
         private short[] MotiveData = new short[16];
         private VMEntity HandObject;
         private float _RadianDirection;
+
+        private int KillTimeout = -1;
+        private static readonly int FORCE_DELETE_TIMEOUT = 60 * 30;
+        private readonly ushort LEAVE_LOT_TREE = 8373;
 
         /*
             APPEARANCE DATA
@@ -515,6 +520,46 @@ namespace FSO.SimAntics
             avatar.Avatar.ReloadSkeleton();
 
             PersonData[(int)VMPersonDataVariable.TickCounter]++;
+            if (KillTimeout > -1)
+            {
+                if (++KillTimeout > FORCE_DELETE_TIMEOUT) Delete(true, Thread.Context);
+                else
+                {
+                    SetPersonData(VMPersonDataVariable.RenderDisplayFlags, 1);
+                    SetValue(VMStackObjectVariable.Hidden, (short)((KillTimeout % 30) / 15));
+                    if (Thread.BlockingState != null) Thread.BlockingState.WaitTime = Math.Max(Thread.BlockingState.WaitTime, 1000000); //make most things time out
+                    UserLeaveLot(); //keep forcing
+                }
+            }
+        }
+
+        public void UserLeaveLot()
+        {
+            if (Thread.Queue.Exists(x => x.ActionRoutine.ID == LEAVE_LOT_TREE && Thread.Queue.IndexOf(x) < 2)) return; //we're already leaving
+            var actions = new List<VMQueuedAction>(Thread.Queue);
+            foreach (var action in actions)
+            {
+                Thread.CancelAction(action.UID);
+            }
+
+            var tree = GetBHAVWithOwner(LEAVE_LOT_TREE, Thread.Context);
+            var routine = Thread.Context.VM.Assemble(tree.bhav);
+
+            Thread.EnqueueAction(
+                new FSO.SimAntics.Engine.VMQueuedAction
+                {
+                    Callee = this,
+                    CodeOwner = tree.owner,
+                    ActionRoutine = routine,
+                    Name = "Leave Lot",
+                    StackObject = this,
+                    Args = new short[4],
+                    InteractionNumber = -1,
+                    Priority = short.MaxValue,
+                    Flags = TTABFlags.Leapfrog | TTABFlags.MustRun
+                }
+            );
+            if (KillTimeout == -1) KillTimeout = 0;
         }
 
         public void FractionalAnim(float fraction)
@@ -552,7 +597,6 @@ namespace FSO.SimAntics
                     return (short)((level >= VMTSOAvatarPermissions.BuildBuyRoommate)?2:((level >= VMTSOAvatarPermissions.Roommate)?1:0));
             }
             return PersonData[(ushort)variable];
-            
         }
 
         public virtual void SetMotiveChange(VMMotive motive, short PerHourChange, short MaxValue)
@@ -769,6 +813,7 @@ namespace FSO.SimAntics
                 MotiveData = MotiveData,
                 HandObject = (HandObject == null) ? (short)0 : HandObject.ObjectID,
                 RadianDirection = RadianDirection,
+                KillTimeout = KillTimeout,
                 DefaultSuits = DefaultSuits,
 
                 BoundAppearances = BoundAppearances.ToArray(),
@@ -797,6 +842,7 @@ namespace FSO.SimAntics
             PersonData = input.PersonData;
             MotiveData = input.MotiveData;
             RadianDirection = input.RadianDirection;
+            KillTimeout = input.KillTimeout;
             DefaultSuits = input.DefaultSuits;
 
             BoundAppearances = new HashSet<string>(input.BoundAppearances);
