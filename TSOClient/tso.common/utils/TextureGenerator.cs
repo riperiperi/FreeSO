@@ -15,6 +15,7 @@ namespace FSO.Common.Utils
 {
     public class TextureGenerator //a fun class for cpu generating textures
     {
+        private static Texture2D PxWhite;
         private static Texture2D PieButtonImg;
 
         private static Texture2D InteractionInactive;
@@ -26,6 +27,12 @@ namespace FSO.Common.Utils
         private static Texture2D[] WallZBuffer;
         private static Texture2D[] AirTiles;
         private static Texture2D MotiveArrow; //actually a diamond, clip to get required direction
+
+        public static Texture2D GetPxWhite(GraphicsDevice gd)
+        {
+            if (PxWhite == null) PxWhite = TextureUtils.TextureFromColor(gd, Color.White);
+            return PxWhite;
+        }
 
         public static Texture2D GetPieButtonImg(GraphicsDevice gd)
         {

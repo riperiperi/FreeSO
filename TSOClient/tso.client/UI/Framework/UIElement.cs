@@ -940,7 +940,7 @@ namespace FSO.Client.UI.Framework
             {
                 var test = e;
             }
-            return new Texture2D(GameFacade.GraphicsDevice, 1, 1);
+            return new Texture2D(GameFacade.GraphicsDevice, 1, 1); //TODO: use cache for empty textures, so we don't accidentally create a ton
         }
 
         //These do not seem to be neccessary when maximizing and minimizing.

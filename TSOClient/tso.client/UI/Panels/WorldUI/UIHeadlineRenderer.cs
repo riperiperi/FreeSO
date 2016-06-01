@@ -60,7 +60,7 @@ namespace FSO.Client.UI.Panels.WorldUI
             if (Sprites == null)
             {
                 Sprites = new Files.Formats.IFF.IffFile(Content.Content.Get().GetPath("objectdata/globals/sprites.iff"));
-                WhitePx = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, Color.White);
+                WhitePx = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
             }
 
             if (Headline.Operand.Group != VMSetBalloonHeadlineOperandGroup.Algorithmic)

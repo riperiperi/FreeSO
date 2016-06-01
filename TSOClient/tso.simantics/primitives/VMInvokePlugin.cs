@@ -25,14 +25,13 @@ namespace FSO.SimAntics.Primitives
 
     public class VMInvokePluginOperand : VMPrimitiveOperand 
     {
-        public byte[] unknown;
-        //byte 1: location of person id
-        //byte 2: location of object id
-        //byte 3: location of event target (var that event id goes into. value goes in temp 0)
-        //byte 4: Joinable? (1/0)
+        public byte PersonLocal;
+        public byte ObjectLocal;
+        public byte EventLocal; //target of event id. values go in temp0
+        public bool Joinable;
 
-        //bytes 5-8: unknown (id? it's like a guid or something)
-        //sign: 160 86 99 42
+        public uint PluginID;
+        //sign: 0x2a6356a0
         //pizzamakerplugin: 57 174 71 234
 
         #region VMPrimitiveOperand Members
@@ -40,7 +39,12 @@ namespace FSO.SimAntics.Primitives
         {
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
-                unknown = io.ReadBytes(8);
+                PersonLocal = io.ReadByte();
+                ObjectLocal = io.ReadByte();
+                EventLocal = io.ReadByte();
+                Joinable = io.ReadByte()>0;
+
+                PluginID = io.ReadUInt32();
             }
         }
 

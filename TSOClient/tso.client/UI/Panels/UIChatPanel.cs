@@ -29,7 +29,6 @@ namespace FSO.Client.UI.Panels
         private TextStyle Style;
         private UITextBox TextBox;
 
-        private Texture2D m_SelectionTexture;
         private Color m_SelectionFillColor;
         public Color SelectionFillColor
         {
@@ -40,7 +39,6 @@ namespace FSO.Client.UI.Panels
             set
             {
                 m_SelectionFillColor = value;
-                m_SelectionTexture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, value);
             }
         }
 

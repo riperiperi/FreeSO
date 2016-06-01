@@ -46,7 +46,7 @@ namespace FSO.Client.UI.Controls
         public UIMotiveDisplay()
         {
             MotiveValues = new short[8];
-            Filler = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, Color.White);
+            Filler = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
             for (int i = 0; i < 8; i++) ChangeBuffer[i] = new Queue<int>();
         }
 

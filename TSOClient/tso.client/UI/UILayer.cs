@@ -16,6 +16,7 @@ using FSO.Common.Rendering.Framework;
 using System.Diagnostics;
 using FSO.Client.Utils;
 using FSO.Common.Rendering.Framework.IO;
+using FSO.Common.Utils;
 
 namespace FSO.Client.UI
 {
@@ -380,8 +381,7 @@ namespace FSO.Client.UI
             position.X = Math.Min(position.X, GlobalSettings.Default.GraphicsWidth - width);
             position.Y = Math.Max(position.Y, height);
 
-            var whiteRectangle = new Texture2D(batch.GraphicsDevice, 1, 1);
-            whiteRectangle.SetData(new[] { Color.White });
+            var whiteRectangle = TextureGenerator.GetPxWhite(batch.GraphicsDevice);
 
             batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, height), Color.White*opacity); //note: in XNA4 colours need to be premultiplied
 

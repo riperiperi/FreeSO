@@ -157,6 +157,12 @@
     <Compile Include="Model\VMStackObjectVariable.cs" />
     <Compile Include="NetPlay\Drivers\VMClientDriver.cs" />
     <Compile Include="NetPlay\Drivers\VMServerDriver.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODHandler.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODSignsPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Model\VMEODEvent.cs" />
+    <Compile Include="NetPlay\EODs\Model\VMEODNetCommand.cs" />
+    <Compile Include="NetPlay\EODs\Model\VMEODPluginThreadState.cs" />
+    <Compile Include="NetPlay\EODs\VMEODServer.cs" />
     <Compile Include="NetPlay\Model\Commands\VMChangePermissionsCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMGenericDialogCommand.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAyncResponseCmd.cs" />
@@ -165,6 +171,7 @@
     <Compile Include="NetPlay\Model\Commands\VMBlueprintRestoreCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetBuyObjectCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChatCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetEODEventCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetGotoCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetInteractionCancelCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetInteractionCmd.cs" />

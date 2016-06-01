@@ -156,7 +156,7 @@ namespace FSO.Client.UI.Controls
             set
             {
                 m_FrameColor = value;
-                m_FrameTexture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, value);
+                m_FrameTexture = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
             }
         }
 
@@ -763,8 +763,8 @@ namespace FSO.Client.UI.Controls
                     {
                         m_DrawCmds.Add(new TextDrawCmd_SelectionBox
                         {
-                            BlendColor = new Color(0xFF, 0xFF, 0xFF, 200),
-                            Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.SelectionBoxColor),
+                            BlendColor = TextStyle.SelectionBoxColor,
+                            Texture = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice),
                             Position = segmentPosition,
                             Scale = new Vector2(segmentSize.X, m_LineHeight) * _Scale
                         });
@@ -820,7 +820,8 @@ namespace FSO.Client.UI.Controls
                 {
                     Scale = new Vector2(_Scale.X, m_LineHeight * _Scale.Y),
                     Position = LocalPoint(cursorPosition),
-                    Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.CursorColor)
+                    Texture = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice),
+                    Color = TextStyle.CursorColor
                 });
             }
 
@@ -978,7 +979,7 @@ namespace FSO.Client.UI.Controls
              */
             if (m_frameBlinkOn && m_frameBlink)
             {
-                DrawingUtils.DrawBorder(batch, LocalRect(0, 0, m_Width, m_Height), 1, m_FrameTexture, Color.White);
+                DrawingUtils.DrawBorder(batch, LocalRect(0, 0, m_Width, m_Height), 1, m_FrameTexture, m_FrameColor);
             }
             
             /**
