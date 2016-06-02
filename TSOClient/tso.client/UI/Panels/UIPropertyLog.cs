@@ -114,5 +114,11 @@ namespace FSO.Client.UI.Panels
                     return "";
             }
         }
+
+        public override void Draw(UISpriteBatch batch)
+        {
+            if (!Visible) return;
+            base.Draw(batch);
+        }
     }
 }

@@ -147,15 +147,24 @@ namespace FSO.Client.UI.Framework
                                 currentLineWidth = 0;
                             }
 
+                            // binary search, makes this a bit faster?
+                            // we can safely say that no character is thinner than 4px, so set max substring to maxwidth/4
                             float width = allowedWidth + 1;
-                            int j = word.Length;
-                            while (width > allowedWidth)
+                            int min = 1;
+                            int max = Math.Min(word.Length, (int)allowedWidth / 4);
+                            int mid = (min + max) / 2;
+                            while (max-min > 1)
                             {
-                                width = TextStyle.MeasureString(word.Substring(0, --j)).X;
+                                width = TextStyle.MeasureString(word.Substring(0, mid)).X;                    
+                                if (width > allowedWidth)
+                                    max = mid;
+                                else
+                                    min = mid;
+                                mid = (max + min) / 2;
                             }
-                            currentLine.Append(word.Substring(0, j));
+                            currentLine.Append(word.Substring(0, min));
                             currentLineWidth += width;
-                            word = word.Substring(j);
+                            word = word.Substring(min);
 
                             m_Lines.Add(new UITextEditLine
                             {

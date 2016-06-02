@@ -73,12 +73,13 @@ namespace FSO.Client.UI.Panels
             Name = name;
             Message = message;
             Offscreen = false;
+            if (message == "") name = "";
             TextChanged();
         }
 
         private void TextChanged()
         {
-            BodyText = ((Offscreen) ? "[" + Name + "] " : "") + Message;
+            BodyText = ((Offscreen && Message != "") ? "[" + Name + "] " : "") + Message;
 
             var textW = Math.Max(130, Message.Length/2);
             BodyTextLabels = TextRenderer.ComputeText(BodyText, new TextRendererOptions

@@ -21,6 +21,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm, VMAvatar avatar)
         {
+            Message = Message.Substring(0, Math.Min(Message.Length, 200));
             if (avatar == null) return false;
 
             if (Message[0] == '/')
@@ -121,6 +122,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         #region VMSerializable Members
         public override void SerializeInto(BinaryWriter writer)
         {
+            Message = Message.Substring(0, Math.Min(Message.Length, 200));
             base.SerializeInto(writer);
             writer.Write(Message);
         }

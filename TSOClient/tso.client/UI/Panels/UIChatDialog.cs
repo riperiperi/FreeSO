@@ -108,6 +108,12 @@ namespace FSO.Client.UI.Panels
             RenderEvents();
         }
 
+        public override void Draw(UISpriteBatch batch)
+        {
+            if (!Visible) return;
+            base.Draw(batch);
+        }
+
         public void RenderEvents()
         {
             Caption = GameFacade.Strings.GetString("261", "1", new string[] { Visitors.ToString(), LotName });
