@@ -233,7 +233,7 @@ namespace FSO.SimAntics
                 Context.NextRandom(1);
                 obj.Tick(); //run object specific tick behaviors, like lockout count decrement
             }
-            Context.SetToNextCache.VerifyPositions();
+            //Context.SetToNextCache.VerifyPositions(); use only for debug!
         }
 
         /// <summary>
