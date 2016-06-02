@@ -35,7 +35,8 @@ namespace FSO.SimAntics.Model
                 tile = new List<VMEntity>();
                 TileToObjects.Add(off, tile);
             }
-            VM.AddToObjList(tile, ent);
+            if (!tile.Contains(ent)) VM.AddToObjList(tile, ent); //shouldn't be a problem any more, but just in case check first.
+            else { }
         }
 
         public void UnregisterObjectPos(VMEntity ent)
@@ -46,6 +47,31 @@ namespace FSO.SimAntics.Model
             if (tile == null) return; //???
             tile.Remove(ent);
             if (tile.Count == 0) TileToObjects.Remove(off);
+        }
+
+        /// <summary>
+        /// Debug function. Call to make sure positions are correctly registered.
+        /// </summary>
+        public void VerifyPositions()
+        {
+            foreach (var objs in TileToObjects)
+            {
+                var off = objs.Key;
+                var tileX = off%Context.Architecture.Width;
+                var tileY = (off / Context.Architecture.Width) % (Context.Architecture.Height);
+                var level = (off / (Context.Architecture.Width * Context.Architecture.Height)) + 1;
+
+                foreach (var obj in objs.Value)
+                {
+                    if (off == -1)
+                    {
+                        if (obj.Position != LotTilePos.OUT_OF_WORLD) throw new Exception("Should be out of World!");
+                    }
+                    else if (obj.Position.TileX != tileX || obj.Position.TileY != tileY || obj.Position.Level != level)
+                        throw new Exception("Invalid Position Assignment!!");
+                    if (obj.Dead) throw new Exception("but it's dead!");
+                }
+            }
         }
 
         public void NewObject(VMEntity obj)

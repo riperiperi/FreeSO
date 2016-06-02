@@ -233,6 +233,7 @@ namespace FSO.SimAntics
                 Context.NextRandom(1);
                 obj.Tick(); //run object specific tick behaviors, like lockout count decrement
             }
+            Context.SetToNextCache.VerifyPositions();
         }
 
         /// <summary>
@@ -495,7 +496,10 @@ namespace FSO.SimAntics
                 new VMMultitileGroup(multi, Context); //should self register
             }
 
-            foreach (var ent in Entities) ent.PositionChange(Context, true);
+            foreach (var ent in Entities)
+            {
+                if (ent.Container == null) ent.PositionChange(Context, true); //called recursively for contained objects.
+            }
 
             GlobalState = input.GlobalState;
             PlatformState = input.PlatformState;

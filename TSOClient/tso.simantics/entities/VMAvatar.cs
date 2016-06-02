@@ -26,6 +26,7 @@ using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model.Sound;
 using FSO.SimAntics.Engine;
+using FSO.SimAntics.Primitives;
 
 namespace FSO.SimAntics
 {
@@ -446,11 +447,16 @@ namespace FSO.SimAntics
             {
                 MotiveDecay.Tick(this, Thread.Context);
                 SetPersonData(VMPersonDataVariable.OnlineJobGrade, Math.Max((short)0, Thread.Context.VM.GetGlobalValue(11))); //force job grade to what we expect
+                if (Position == LotTilePos.OUT_OF_WORLD)
+                {
+                    //uh oh!
+                    var mailbox = Thread.Context.VM.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
+                    if (mailbox != null) VMFindLocationFor.FindLocationFor(this, mailbox, Thread.Context);
+                }
             }
 
             //animation update for avatars
             VMAvatar avatar = this;
-            if (avatar.Position == LotTilePos.OUT_OF_WORLD) avatar.Position = new LotTilePos(8, 8, 1);
             float totalWeight = 0f;
             foreach (var state in Animations)
             {
