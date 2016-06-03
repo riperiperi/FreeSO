@@ -33,12 +33,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
-            if (Blacklist.Contains(GUID) || caller == null || item == null) return false;
+            if (Blacklist.Contains(GUID) || caller == null) return false;
 
             //careful here! if the object can't be placed, we have to give the user their money back.
             if (TryPlace(vm, caller)) return true;
-            else if (vm.GlobalLink != null)
-            {
+            else if (vm.GlobalLink != null && item != null)
+            { 
                 vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, (int)item.Price,
                 (bool success, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
@@ -71,7 +71,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 return false;
             }
 
-            int salePrice = (int)item.Price;
+            int salePrice = 0;
+            if (item != null) salePrice = (int)item.Price;
             var def = group.BaseObject.MasterDefinition;
             if (def == null) def = group.BaseObject.Object.OBJ;
             var limit = def.DepreciationLimit;
@@ -106,7 +107,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
 
-            if (item == null || item.Category == -1) return false; //not purchasable
+            if (item == null || item.Category == -1)
+            {
+                if (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Admin) return true;
+                return false; //not purchasable
+            }
 
             //TODO: fine grained purchase control based on user status
 
