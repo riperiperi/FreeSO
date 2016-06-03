@@ -398,7 +398,7 @@ namespace FSO.IDE.EditorComponent
             if (Name == "") Name = value.ToString();
             Value = value;
             Description = desc;
-            Total = (value.ToString() + " " + name).ToLower();
+            Total = (value.ToString() + " " + name).ToLowerInvariant();
         }
 
         public override string ToString()

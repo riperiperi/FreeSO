@@ -95,7 +95,7 @@ namespace FSO.IDE.Common
         public bool SearchMatch(string[] words)
         {
             if (words == null) return true;
-            if (Total == null) Total = (Filename + " " + Name).ToLower();
+            if (Total == null) Total = (Filename + " " + Name).ToLowerInvariant();
 
             LastSearchScore = 0;
             foreach (var word in words)

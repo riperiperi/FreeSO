@@ -42,7 +42,7 @@ namespace FSO.IDE
             ObjectTree.BeginUpdate();
             VisibleNodes = new List<TreeNode>();
 
-            string[] searchTerms = (ObjectSearch.Text == "") ? null : ObjectSearch.Text.ToLower().Split(' ');
+            string[] searchTerms = (ObjectSearch.Text == "") ? null : ObjectSearch.Text.ToLowerInvariant().Split(' ');
             SourceNodeToEnt = new Dictionary<TreeNode, ObjectRegistryEntry>();
             ObjectTree.Nodes.Clear();
 

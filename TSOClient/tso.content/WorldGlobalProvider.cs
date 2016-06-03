@@ -48,7 +48,7 @@ namespace FSO.Content
         /// <returns>A GameGlobal instance containing the resource.</returns>
         public GameGlobal Get(string filename)
         {
-            filename = filename.ToLower();
+            filename = filename.ToLowerInvariant();
             lock (Cache)
             {
                 if (Cache.ContainsKey(filename))

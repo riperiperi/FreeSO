@@ -110,7 +110,7 @@ namespace FSO.Content.Framework
 
                 Far3ProviderEntry<T> entry;
 
-                if (EntriesByName.TryGetValue(Filename.ToLower(), out entry))
+                if (EntriesByName.TryGetValue(Filename.ToLowerInvariant(), out entry))
                 {
                     return Get(entry);
                 }
@@ -187,7 +187,7 @@ namespace FSO.Content.Framework
                         EntriesById.Add(referenceItem.ID, referenceItem);
                         if (entry.Filename != null)
                         {
-                            EntriesByName.Add(entry.Filename.ToLower(), referenceItem);
+                            EntriesByName.Add(entry.Filename.ToLowerInvariant(), referenceItem);
                         }
                     }
                 }

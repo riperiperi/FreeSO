@@ -346,7 +346,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public void BanUser(VM vm, string name)
         {
-            var sims = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLower().Trim(' ') == name.ToLower().Trim(' '));
+            var sims = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == name.ToLowerInvariant().Trim(' '));
             lock (ClientToUID) {
                 foreach (var sim in sims)
                 {
@@ -362,7 +362,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public void KickUser(VM vm, string name)
         {
-            var sims = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLower().Trim(' ') == name.ToLower().Trim(' '));
+            var sims = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == name.ToLowerInvariant().Trim(' '));
             lock (ClientToUID)
             {
                 foreach (var sim in sims)
@@ -381,13 +381,13 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public void BanIP(string ip)
         {
-            var cleanIP = ip.Trim(' ').ToLower();
+            var cleanIP = ip.Trim(' ').ToLowerInvariant();
             var badClients = new List<NetworkClient>();
             lock (listener.Clients)
             {
                 foreach (var client in listener.Clients)
                 {
-                    if (client.RemoteIP.ToLower() == cleanIP) {
+                    if (client.RemoteIP.ToLowerInvariant() == cleanIP) {
                         SendGenericMessage(client, "Yikes", "You have just been banned from this sandbox server!");
                         badClients.Add(client);
                     }

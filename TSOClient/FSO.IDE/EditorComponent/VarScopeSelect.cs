@@ -199,7 +199,7 @@ namespace FSO.IDE.EditorComponent
         public void RefreshScopeTree()
         {
             VisibleNodes = new List<TreeNode>();
-            string[] searchTerms = (SourceSearch.Text == "") ? null : SourceSearch.Text.ToLower().Split(' ');
+            string[] searchTerms = (SourceSearch.Text == "") ? null : SourceSearch.Text.ToLowerInvariant().Split(' ');
             SourceNodeToDef = new Dictionary<TreeNode, ScopeDefinition>();
             SourceTree.Nodes.Clear();
             TreeNode firstNode = null;
@@ -247,7 +247,7 @@ namespace FSO.IDE.EditorComponent
 
         public void RefreshDataList(bool skipSearch)
         {
-            string[] searchTerms = (skipSearch || DataSearch.Text == "") ? null : DataSearch.Text.ToLower().Split(' ');
+            string[] searchTerms = (skipSearch || DataSearch.Text == "") ? null : DataSearch.Text.ToLowerInvariant().Split(' ');
 
             DataList.Items.Clear();
             if (SelectedDef == null)
@@ -456,7 +456,7 @@ namespace FSO.IDE.EditorComponent
             Name = name;
             Group = group;
             Description = desc;
-            Total = (((Group == ScopeGroup.Other) ? "" : VarScopeSelect.Categories[(int)Group] + " ") + Name).ToLower();
+            Total = (((Group == ScopeGroup.Other) ? "" : VarScopeSelect.Categories[(int)Group] + " ") + Name).ToLowerInvariant();
         }
 
         public override string ToString()

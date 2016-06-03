@@ -37,13 +37,13 @@ namespace FSO.IDE.EditorComponent
 
         public void RefreshAllList()
         {
-            var searchString = new Regex(".*" + SearchBox.Text.ToLower() + ".*");
+            var searchString = new Regex(".*" + SearchBox.Text.ToLowerInvariant() + ".*");
 
             AllList.Items.Clear();
             var anims = Content.Content.Get().AvatarAnimations.AnimationsByName;
             foreach (var anim in anims)
             {
-                var name = anim.Key.Substring(0, anim.Key.Length - 5).ToLower();
+                var name = anim.Key.Substring(0, anim.Key.Length - 5).ToLowerInvariant();
                 if (searchString.IsMatch(name)) AllList.Items.Add(name); //keys are names
             }
         }

@@ -30,18 +30,18 @@ namespace FSO.SimAntics.NetPlay.SandboxMode
 
         public bool Contains(string host)
         {
-            return BannedHosts.Contains(host.ToLower());
+            return BannedHosts.Contains(host.ToLowerInvariant());
         }
 
         public void Add(string host)
         {
-            BannedHosts.Add(host.ToLower());
+            BannedHosts.Add(host.ToLowerInvariant());
             Write();
         }
 
         public void Remove(string host)
         {
-            BannedHosts.Remove(host.ToLower());
+            BannedHosts.Remove(host.ToLowerInvariant());
             Write();
         }
 

@@ -41,7 +41,7 @@ namespace FSO.Client.UI.Panels.LotControls
             var args = msg.Substring(Math.Min(msg.Length, spaceIndex + 1), Math.Max(0, msg.Length - (spaceIndex + 1)));
             string response = "("+msg+") ";
             try {
-                switch (cmd.ToLower())
+                switch (cmd.ToLowerInvariant())
                 {
                     case "objat":
                         //!objat (objects at mouse position)

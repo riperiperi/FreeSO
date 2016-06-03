@@ -159,7 +159,7 @@ namespace FSO.HIT
 
         public HITSound PlaySoundEvent(string evt)
         {
-            evt = evt.ToLower();
+            evt = evt.ToLowerInvariant();
             if (ActiveEvents.ContainsKey(evt))
             {
                 if (ActiveEvents[evt].Dead) ActiveEvents.Remove(evt); //if the last event is dead, remove and make a new one

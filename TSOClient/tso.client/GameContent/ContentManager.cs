@@ -272,7 +272,7 @@ namespace FSO.Client.GameContent
 
                 string path = m_Resources[ID].Replace('\\', '/');
                 result.FilePath = path;
-                result.FileExtension = Path.GetExtension(path).ToLower();
+                result.FileExtension = Path.GetExtension(path).ToLowerInvariant();
 
                 if (!path.EndsWith(".dat"))
                 {

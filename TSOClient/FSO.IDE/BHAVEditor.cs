@@ -256,14 +256,14 @@ namespace FSO.IDE
 
         private void UpdatePrimitiveList()
         {
-            var searchString = new Regex(".*" + SearchBox.Text.ToLower() + ".*");
+            var searchString = new Regex(".*" + SearchBox.Text.ToLowerInvariant() + ".*");
             PrimitiveList.ClearSelected();
             lock (EditorLock) Editor.ClearPlacement();
             PrimitiveList.Items.Clear();
 
             foreach (var prim in CurrentFullList)
             {
-                if (searchString.IsMatch(prim.ToString().ToLower())) PrimitiveList.Items.Add(prim);
+                if (searchString.IsMatch(prim.ToString().ToLowerInvariant())) PrimitiveList.Items.Add(prim);
             }
         }
 

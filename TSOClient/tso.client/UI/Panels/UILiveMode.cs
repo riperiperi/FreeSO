@@ -42,6 +42,7 @@ namespace FSO.Client.UI.Panels
         public UIButton NextPageButton { get; set; }
 
         public UILabel MotivesLabel { get; set; }
+        public UIImage PeopleListBg;
 
         public UIPersonGrid PersonGrid;
 
@@ -69,7 +70,7 @@ namespace FSO.Client.UI.Panels
             MotivesLabel.Alignment = TextAlignment.Left;
             MotivesLabel.Position -= new Vector2(0, 5);
 
-            var PeopleListBg = new UIImage(PeopleListBackgroundImg);
+            PeopleListBg = new UIImage(PeopleListBackgroundImg);
             PeopleListBg.Position = new Microsoft.Xna.Framework.Vector2(375, 38);
             this.AddAt(1, PeopleListBg);
 
@@ -103,11 +104,36 @@ namespace FSO.Client.UI.Panels
 
             NextPageButton.OnButtonClick += (UIElement btn) => { PersonGrid.NextPage(); };
             PreviousPageButton.OnButtonClick += (UIElement btn) => { PersonGrid.PreviousPage(); };
+            SetInEOD(false, false);
+        }
+
+        public void SetInEOD(bool inEOD, bool tall)
+        {
+            EODHelpButton.Visible = inEOD;
+            EODCloseButton.Visible = inEOD;
+            EODExpandButton.Visible = false; //todo
+            EODContractButton.Visible = inEOD;
+
+            Divider.Visible = !inEOD;
+            MotiveDisplay.Visible = !inEOD;
+            PersonGrid.Visible = !inEOD;
+            MotivesLabel.Visible = !inEOD;
+            PeopleListBg.Visible = !inEOD;
+            PreviousPageButton.Visible = !inEOD;
+            NextPageButton.Visible = !inEOD;
+
+            MoodPanelButton.Position = (inEOD)?new Vector2(20,7): new Vector2(31,63);
+            UpdateThumbPosition();
         }
 
         public override void Destroy()
         {
             //nothing to detach from here
+        }
+
+        public void UpdateThumbPosition()
+        {
+            if (Thumb != null) Thumb.Position = MoodPanelButton.Position + new Vector2(33, 10);
         }
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
@@ -119,7 +145,7 @@ namespace FSO.Client.UI.Panels
                 {
                     if (Thumb != null) Remove(Thumb);
                     Thumb = new UIPersonIcon(SelectedAvatar, LotController.vm);
-                    Thumb.Position = new Vector2(64, 73);
+                    UpdateThumbPosition();
                     Add(Thumb);
                     LastSelected = SelectedAvatar;
                 }

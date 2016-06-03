@@ -125,7 +125,7 @@ namespace FSO.HIT.Events
         public HITTVOn(uint TrackID)
         {
             Station = new string(new char[] { (char)(TrackID & 0xFF), (char)((TrackID>>8) & 0xFF), (char)((TrackID>>16) & 0xFF), (char)((TrackID>>24) & 0xFF) });
-            if (StationPaths.ContainsKey(Station)) LoadStation(StationPaths[Station].ToLower());
+            if (StationPaths.ContainsKey(Station)) LoadStation(StationPaths[Station].ToLowerInvariant());
         }
 
         public HITTVOn(uint id, bool IDMode)
@@ -144,7 +144,7 @@ namespace FSO.HIT.Events
             else
             {
                 MusicModes.TryGetValue((int)id, out Station);
-                if (StationPaths.ContainsKey(Station)) LoadStation(StationPaths[Station].ToLower());
+                if (StationPaths.ContainsKey(Station)) LoadStation(StationPaths[Station].ToLowerInvariant());
             }
         }
 

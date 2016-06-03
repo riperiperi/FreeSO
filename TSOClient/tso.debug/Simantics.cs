@@ -41,7 +41,7 @@ namespace FSO.Debug
 
             var showSims = menuShowSims.Checked;
             var showObjects = menuShowObjects.Checked;
-            var search = textBox1.Text.ToLower();
+            var search = textBox1.Text.ToLowerInvariant();
 
             foreach (var entity in all){
                 if (entity is VMAvatar){
@@ -51,7 +51,7 @@ namespace FSO.Debug
                 }
 
                 if (search.Length > 0){
-                    var toString = entity.ToString().ToLower();
+                    var toString = entity.ToString().ToLowerInvariant();
                     if (toString.IndexOf(search) == -1){
                         continue;
                     }

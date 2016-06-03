@@ -116,7 +116,7 @@ namespace FSO.Files
 
                     Entry.KeyValues.Add(Key, Val);
 				}
-                EntriesByName.Add(Entry.EntryName.ToLower(), Entry);
+                EntriesByName.Add(Entry.EntryName.ToLowerInvariant(), Entry);
 			}
 		}
 

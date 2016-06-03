@@ -48,7 +48,7 @@ namespace FSO.Files.HIT
                 string line = io.ReadLine();
                 string[] Values = line.Split(' ');
 
-                var name = Values[0].ToLower();
+                var name = Values[0].ToLowerInvariant();
                 if (!Constants.ContainsKey(name)) Constants.Add(name, Convert.ToInt32(Values[1])); //the repeats are just labels for locations (usually called gotit)
             }
 

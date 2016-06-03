@@ -34,7 +34,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 var args = Message.Substring(Math.Min(Message.Length, spaceIndex + 1), Math.Max(0, Message.Length - (spaceIndex + 1)));
                 var server = (VMServerDriver)vm.Driver;
                 VMEntity sim;
-                switch (cmd.ToLower())
+                switch (cmd.ToLowerInvariant())
                 {
                     case "ban":
                         server.BanUser(vm, args);
@@ -44,7 +44,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Added " + args + " to the IP ban list."));
                         break;
                     case "unban":
-                        server.SandboxBans.Remove(args.ToLower().Trim(' '));
+                        server.SandboxBans.Remove(args.ToLowerInvariant().Trim(' '));
                         vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Removed " + args + " from the IP ban list."));
                         break;
                     case "banlist":
@@ -53,7 +53,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "==== BANNED IPS: ==== \r\n"+result));
                         break;
                     case "builder":
-                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLower().Trim(' ') == args.ToLower().Trim(' ')).FirstOrDefault();
+                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
                         if (sim != null)
                         {
                             vm.ForwardCommand(new VMChangePermissionsCmd()
@@ -66,7 +66,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         }
                         break;
                     case "admin":
-                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLower().Trim(' ') == args.ToLower().Trim(' ')).FirstOrDefault();
+                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
                         if (sim != null)
                         {
                             vm.ForwardCommand(new VMChangePermissionsCmd()
@@ -79,7 +79,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         }
                         break;
                     case "roomie":
-                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLower().Trim(' ') == args.ToLower().Trim(' ')).FirstOrDefault();
+                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
                         if (sim != null)
                         {
                             vm.ForwardCommand(new VMChangePermissionsCmd()
@@ -92,7 +92,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         }
                         break;
                     case "visitor":
-                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLower().Trim(' ') == args.ToLower().Trim(' ')).FirstOrDefault();
+                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
                         if (sim != null)
                         {
                             vm.ForwardCommand(new VMChangePermissionsCmd()
