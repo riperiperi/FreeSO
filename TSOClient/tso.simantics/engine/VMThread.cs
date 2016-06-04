@@ -642,6 +642,8 @@ namespace FSO.SimAntics.Engine
                     | ((avatar.GetPersonData(VMPersonDataVariable.IsGhost) > 0) ? TSOFlags.AllowGhost : 0)
                     | TSOFlags.AllowFriends;
                 TSOFlags tsoCompare = action.Flags2;
+                //if flags are empty apart from "Non-Empty", force everything but visitor. (a kind of default state)
+                if (tsoCompare == TSOFlags.NonEmpty) tsoCompare |= TSOFlags.AllowFriends | TSOFlags.AllowRoommates | TSOFlags.AllowObjectOwner;
 
                 //DEBUG: enable debug interction for all roommates. change to only CSRs for production!
                 if ((action.Flags & TTABFlags.Debug) > 0) {

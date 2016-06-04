@@ -254,13 +254,8 @@ namespace FSO.Files.Formats.IFF.Chunks
                                             pxColor.A = (byte)(alpha * 8.2258064516129032258064516129032);
                                             bytes--;
                                         }
-                                        else
-                                        {
-                                            if (pxValue == TransparentColorIndex)
-                                            {
-                                                pxColor.A = 0;
-                                            }
-                                        }
+                                        //this mode draws the transparent colour as solid for some reason.
+                                        //fixes backdrop theater
                                         var offset = (y * Width) + x;
                                         this.PixelData[offset] = pxColor;
                                         this.PalData[offset] = pxValue;
@@ -297,11 +292,13 @@ namespace FSO.Files.Formats.IFF.Chunks
                                         var offset = (y * Width) + x;
                                         var pxColor = palette.Colors[pxIndex];
                                         byte z = 0;
-                                        if (pxIndex == TransparentColorIndex)
+
+                                        //not sure if this should happen
+                                        /*if (pxIndex == TransparentColorIndex)
                                         {
                                             pxColor.A = 0;
                                             z = 255;
-                                        }
+                                        }*/
                                         this.PixelData[offset] = pxColor;
                                         this.PalData[offset] = pxIndex;
                                         if (hasZBuffer)

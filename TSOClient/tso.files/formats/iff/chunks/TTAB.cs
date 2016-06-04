@@ -414,7 +414,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
     public enum TSOFlags
     {
-        AllowNonRoomie = 1, //TODO: what is this for?
+        NonEmpty = 1, //if this is the only flag set, flags aren't empty intentionally. force Owner, Roommates, Friends to on
         AllowObjectOwner = 1 << 1, //COVERED
         AllowRoommates = 1 << 2, //COVERED
         AllowFriends = 1 << 3, //TODO
