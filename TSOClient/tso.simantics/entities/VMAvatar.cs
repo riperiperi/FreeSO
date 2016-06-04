@@ -356,6 +356,9 @@ namespace FSO.SimAntics
             SetPersonData(VMPersonDataVariable.CharismaSkill, 1000);
             SetPersonData(VMPersonDataVariable.LogicSkill, 1000);
             SetPersonData(VMPersonDataVariable.BodySkill, 1000);
+
+            SetPersonData(VMPersonDataVariable.NumOutgoingFriends, 100);
+            SetPersonData(VMPersonDataVariable.IncomingFriends, 100);
         }
 
         public override void Reset(VMContext context)

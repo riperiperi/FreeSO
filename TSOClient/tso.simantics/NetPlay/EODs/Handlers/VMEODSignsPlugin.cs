@@ -10,6 +10,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
     {
         //temp 0 contains VMEODSignsMode
         //temp 1 contains max chars
+
+        public VMEODSignsPlugin(VMEODServer server) : base(server)
+        {
+
+        }
     }
 
     public enum VMEODSignsMode
