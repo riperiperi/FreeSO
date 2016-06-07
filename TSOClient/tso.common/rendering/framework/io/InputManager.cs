@@ -38,6 +38,11 @@ namespace FSO.Common.Rendering.Framework.IO
             }
         }
 
+        public IFocusableUI GetFocus()
+        {
+            return LastFocus;
+        }
+
         [DllImport("user32.dll")]
         static extern int MapVirtualKey(uint uCode, uint uMapType);
 

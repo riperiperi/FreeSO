@@ -11,6 +11,8 @@ using System.Text;
 using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.NetPlay.EODs.Model;
+using FSO.SimAntics.Engine.Scopes;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -19,7 +21,51 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMInvokePluginOperand)args;
-            return VMPrimitiveExitCode.GOTO_TRUE;
+
+            if (context.Thread.BlockingState != null && context.Thread.BlockingState is VMEODPluginThreadState)
+            {
+                var eodState = (VMEODPluginThreadState)context.Thread.BlockingState;
+                if (eodState.Events.Count > 0)
+                {
+                    //pop off an event.
+                    var evt = eodState.Events[0];
+                    eodState.Events.RemoveAt(0);
+                    context.Locals[operand.EventLocal] = evt.Code;
+                    for (int i = 0; i < evt.Data.Length; i++)
+                    {
+                        context.Thread.TempRegisters[i] = evt.Data[i];
+                    }
+                    return VMPrimitiveExitCode.GOTO_FALSE;
+                }
+                else if (eodState.Ended)
+                {
+                    context.Thread.BlockingState = null;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                }
+            } else {
+                //not connected. initiate connection.
+                var objID = context.Locals[operand.ObjectLocal];
+                var personID = context.Locals[operand.PersonLocal];
+                if (context.VM.IsServer)
+                {
+                    context.VM.EODHost.Connect(operand.PluginID, context.Caller,
+                        context.VM.GetObjectById(objID),
+                        (VMAvatar)context.VM.GetObjectById(personID),
+                        operand.Joinable,
+                        context.VM
+                        );
+                }
+                context.Thread.BlockingState = new VMEODPluginThreadState()
+                {
+                    ObjectID = objID,
+                    AvatarID = personID,
+                    Joinable = operand.Joinable,
+                    Ended = false
+                };
+            }
+
+            context.Thread.TempRegisters[0] = 0;
+            return VMPrimitiveExitCode.GOTO_FALSE;
         }
     }
 

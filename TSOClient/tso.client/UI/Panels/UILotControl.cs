@@ -33,6 +33,7 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Client.Debug;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.Client.UI.Panels.EODs;
 
 namespace FSO.Client.UI.Panels
 {
@@ -69,6 +70,7 @@ namespace FSO.Client.UI.Panels
         public UIQueryPanel QueryPanel;
 
         public UICustomLotControl CustomControl;
+        public UIEODController EODs;
 
         public int WallsMode;
 
@@ -124,6 +126,7 @@ namespace FSO.Client.UI.Panels
             vm.OnBreakpoint += Vm_OnBreakpoint;
 
             Cheats = new UICheatHandler(this);
+            EODs = new UIEODController(this);
         }
 
         private void Vm_OnChatEvent(VMChatEvent evt)

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using FSO.SimAntics.Primitives;
+using FSO.SimAntics.NetPlay.EODs.Model;
 
 namespace FSO.SimAntics.Model.TSOPlatform
 {
@@ -13,7 +14,9 @@ namespace FSO.SimAntics.Model.TSOPlatform
         public static Dictionary<VMAsyncStateType, Type> TypeResolve = new Dictionary<VMAsyncStateType, System.Type>()
         {
             { VMAsyncStateType.TransferFunds, typeof(VMTransferFundsState) },
-            { VMAsyncStateType.DialogResult, typeof(VMDialogResult) }
+            { VMAsyncStateType.DialogResult, typeof(VMDialogResult) },
+            { VMAsyncStateType.PluginState, typeof(VMEODPluginThreadState) }
+
         };
         public static Dictionary<Type, VMAsyncStateType> TypeMarshal = TypeResolve.ToDictionary(x => x.Value, x => x.Key);
 
@@ -53,6 +56,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
     public enum VMAsyncStateType : byte
     {
         TransferFunds = 0,
-        DialogResult = 1
+        DialogResult = 1,
+        PluginState = 2
     }
 }

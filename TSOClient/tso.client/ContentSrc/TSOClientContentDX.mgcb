@@ -13,29 +13,29 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin Fonts/ProjectDollhouse_12px.spritefont
+#begin Fonts/FreeSO_12px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:TextureFormat=Color
-/build:Fonts/ProjectDollhouse_12px.spritefont
+/build:Fonts/FreeSO_12px.spritefont
 
-#begin Fonts/ProjectDollhouse_14px.spritefont
+#begin Fonts/FreeSO_14px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:TextureFormat=Color
-/build:Fonts/ProjectDollhouse_14px.spritefont
+/build:Fonts/FreeSO_14px.spritefont
 
-#begin Fonts/ProjectDollhouse_16px.spritefont
+#begin Fonts/FreeSO_16px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:TextureFormat=Color
-/build:Fonts/ProjectDollhouse_16px.spritefont
+/build:Fonts/FreeSO_16px.spritefont
 
-#begin Fonts/ProjectDollhouse_10px.spritefont
+#begin Fonts/FreeSO_10px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:TextureFormat=Color
-/build:Fonts/ProjectDollhouse_10px.spritefont
+/build:Fonts/FreeSO_10px.spritefont
 
 #begin Effects/2DWorldBatch.fx
 /importer:EffectImporter

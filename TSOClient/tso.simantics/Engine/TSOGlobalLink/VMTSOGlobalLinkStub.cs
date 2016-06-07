@@ -165,5 +165,21 @@ namespace FSO.SimAntics.Engine.TSOTransaction
                 callback(uid, permissions);
             }).Start();
         }
+
+        public void LoadPluginPersist(VM vm, uint objectPID, uint pluginID, VMAsyncPluginLoadCallback callback)
+        {
+            var dat = Database.LoadPluginPersist(objectPID, pluginID);
+
+            new System.Threading.Thread(() =>
+            {
+                System.Threading.Thread.Sleep(100);
+                callback(dat);
+            }).Start();
+        }
+
+        public void SavePluginPersist(VM vm, uint objectPID, uint pluginID, byte[] data)
+        {
+            Database.SavePluginPersist(objectPID, pluginID, data);
+        }
     }
 }

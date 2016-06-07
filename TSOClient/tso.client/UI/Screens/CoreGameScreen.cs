@@ -526,6 +526,7 @@ namespace FSO.Client.UI.Screens
 
             vm.OnFullRefresh += VMRefreshed;
             vm.OnChatEvent += Vm_OnChatEvent;
+            vm.OnEODMessage += LotController.EODs.OnEODMessage;
 
         }
 

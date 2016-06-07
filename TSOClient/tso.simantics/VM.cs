@@ -25,6 +25,9 @@ using FSO.SimAntics.Entities;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model.Sound;
+using FSO.SimAntics.NetPlay.EODs;
+using FSO.SimAntics.NetPlay.Drivers;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.SimAntics
 {
@@ -44,6 +47,12 @@ namespace FSO.SimAntics
                 VMEntity.UseWorld = value;
             }
         }
+
+        public bool IsServer
+        {
+            get { return GlobalLink != null; }
+        }
+
         private const long TickInterval = 33 * TimeSpan.TicksPerMillisecond;
 
         public VMContext Context { get; internal set; }
@@ -71,11 +80,13 @@ namespace FSO.SimAntics
         public event VMChatEventHandler OnChatEvent;
         public event VMRefreshHandler OnFullRefresh;
         public event VMBreakpointHandler OnBreakpoint;
+        public event VMEODMessageHandler OnEODMessage;
 
         public delegate void VMDialogHandler(VMDialogInfo info);
         public delegate void VMChatEventHandler(VMChatEvent evt);
         public delegate void VMRefreshHandler();
         public delegate void VMBreakpointHandler(VMEntity entity);
+        public delegate void VMEODMessageHandler(VMNetEODMessageCmd msg);
 
         public IVMTSOGlobalLink GlobalLink
         {
@@ -84,6 +95,7 @@ namespace FSO.SimAntics
                 return Driver.GlobalLink;
             }
         }
+        public VMEODHost EODHost; //only present if we're a server
         public VMTSOGlobalLinkStub CheckGlobalLink = new VMTSOGlobalLinkStub();
 
         /// <summary>
@@ -134,6 +146,7 @@ namespace FSO.SimAntics
             GlobalState[20] = 255; //Game Edition. Basically, what "expansion packs" are running. Let's just say all of them.
             GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
+            if (Driver is VMServerDriver) EODHost = new VMEODHost();
         }
 
         public void Reset()
@@ -219,6 +232,7 @@ namespace FSO.SimAntics
         public void InternalTick()
         {
             if (GlobalLink != null) GlobalLink.Tick(this);
+            if (EODHost != null) EODHost.Tick();
             Context.Clock.Tick();
             GlobalState[6] = (short)Context.Clock.Seconds;
             GlobalState[5] = (short)Context.Clock.Minutes;
@@ -366,6 +380,11 @@ namespace FSO.SimAntics
         public void SignalChatEvent(VMChatEvent evt)
         {
             if (OnChatEvent != null) OnChatEvent(evt);
+        }
+
+        public void SignalEODMessage(VMNetEODMessageCmd msg)
+        {
+            if (OnEODMessage != null) OnEODMessage(msg);
         }
 
         public VMSandboxRestoreState Sandbox()

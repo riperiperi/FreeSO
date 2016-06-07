@@ -206,7 +206,7 @@ namespace FSO.Client.UI.Controls
         /// </summary>
         public float Width
         {
-            get { return m_Height; }
+            get { return m_Width; }
         }
         
         /// <summary>
@@ -258,6 +258,7 @@ namespace FSO.Client.UI.Controls
         /**
          * Interaction Functionality
          */
+         
         public void OnMouseEvent(UIMouseEventType evt, UpdateState state)
         {
             if (m_IsReadOnly) { return; }
@@ -957,6 +958,7 @@ namespace FSO.Client.UI.Controls
         /// <param name="batch"></param>
         public override void Draw(UISpriteBatch batch)
         {
+            if (m_Slider != null) m_Slider.Visible = Visible;
             if (!Visible) { return; }
 
             if (m_DrawDirty)
@@ -1109,12 +1111,33 @@ namespace FSO.Client.UI.Controls
 
         #region Scrollbar
 
+        [UIAttribute("scrollbarImage")]
+        public Texture2D ScrollbarImage { get; set; }
+
+        [UIAttribute("scrollbarGutter")]
+        public int ScrollbarGutter { get; set; }
+
         private UISlider m_Slider;
 
         public void AttachSlider(UISlider slider)
         {
             m_Slider = slider;
             m_Slider.OnChange += new ChangeDelegate(m_Slider_OnChange);
+        }
+
+        public void InitDefaultSlider()
+        {
+            m_Slider = new UISlider();
+            m_Slider.Texture = ScrollbarImage;
+            AttachSlider(m_Slider);
+            PositionChildSlider();
+            Parent.Add(m_Slider);
+        }
+
+        public void PositionChildSlider()
+        {
+            m_Slider.Position = this.Position + new Vector2(this.Width + ScrollbarGutter, 0);
+            m_Slider.SetSize(1, this.Height);
         }
 
         void m_Slider_OnChange(UIElement element)

@@ -15,9 +15,13 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void RemoveRoommate(VM vm, VMAvatar avatar);
         void ObtainAvatarFromTicket(VM vm, string ticket, VMAsyncAvatarCallback callback);
         void QueueArchitecture(VMNetArchitectureCmd cmd);
+        void LoadPluginPersist(VM vm, uint objectPID, uint pluginID, VMAsyncPluginLoadCallback callback);
+        void SavePluginPersist(VM vm, uint objectPID, uint pluginID, byte[] data);
+
         void Tick(VM vm);
     }
 
     public delegate void VMAsyncTransactionCallback(bool success, uint uid1, uint budget1, uint uid2, uint budget2);
     public delegate void VMAsyncAvatarCallback(uint persistID, VMTSOAvatarPermissions permissions); //TODO: VMPersistAvatarBlock
+    public delegate void VMAsyncPluginLoadCallback(byte[] data); //null if none available
 }

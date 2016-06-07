@@ -9,12 +9,14 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink
 {
     public class VMTSOStandaloneDatabase : VMSerializable
     {
-        public int Version = 1;
+        public static readonly int CURRENT_VERSION = 2;
+        public int Version = CURRENT_VERSION;
+
         public Dictionary<string, uint> IpNameToPersist;
         public HashSet<uint> TakenAvatarPersist; //COPY of above.Values, range 65536-int.maxvalue-1
         public HashSet<uint> Administrators;
 
-        public Dictionary<uint, string> SignsPluginStorage;
+        public Dictionary<uint, Dictionary<uint, byte[]>> PluginStorage;
         //todo: inventory
         //todo: skills, motives...
 
@@ -43,7 +45,7 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink
             IpNameToPersist = new Dictionary<string, uint>();
             TakenAvatarPersist = new HashSet<uint>();
             Administrators = new HashSet<uint>();
-            SignsPluginStorage = new Dictionary<uint, string>();
+            PluginStorage = new Dictionary<uint, Dictionary<uint, byte[]>>();
         }
 
         public void Save()
@@ -76,10 +78,35 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink
             }
         }
 
+        public void SavePluginPersist(uint obj, uint plugin, byte[] data)
+        {
+            Dictionary<uint, byte[]> objDat = null;
+            if (!PluginStorage.TryGetValue(obj, out objDat))
+            {
+                objDat = new Dictionary<uint, byte[]>();
+                PluginStorage.Add(obj, objDat);
+                objDat.Add(plugin, data);
+                return;
+            }
+            objDat[plugin] = data;
+        }
+
+        public byte[] LoadPluginPersist(uint obj, uint plugin)
+        {
+            Dictionary<uint, byte[]> objDat = null;
+            if (!PluginStorage.TryGetValue(obj, out objDat))
+            {
+                return null;
+            }
+            byte[] dat = null;
+            objDat.TryGetValue(plugin, out dat);
+            return dat;
+        }
+
         public void SerializeInto(BinaryWriter writer)
         {
             writer.Write(new char[] { 'F', 'S', 'O', 'd' });
-            writer.Write(Version);
+            writer.Write(CURRENT_VERSION);
             writer.Write(IpNameToPersist.Count);
             foreach (var avaP in IpNameToPersist)
             {
@@ -90,11 +117,17 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink
             writer.Write(Administrators.Count);
             foreach (var admin in Administrators) writer.Write(admin);
 
-            writer.Write(SignsPluginStorage.Count);
-            foreach (var sign in SignsPluginStorage)
+            writer.Write(PluginStorage.Count);
+            foreach (var owner in PluginStorage)
             {
-                writer.Write(sign.Key);
-                writer.Write(sign.Value);
+                writer.Write(owner.Key);
+                writer.Write(owner.Value.Count);
+                foreach (var data in owner.Value)
+                {
+                    writer.Write(data.Key);
+                    writer.Write(data.Value.Length);
+                    writer.Write(data.Value);
+                }
             }
         }
 
@@ -117,11 +150,23 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink
                 Administrators.Add(reader.ReadUInt32());
             }
 
-            var signs = reader.ReadInt32();
-            SignsPluginStorage = new Dictionary<uint, string>();
-            for (int i = 0; i < signs; i++)
+            PluginStorage = new Dictionary<uint, Dictionary<uint, byte[]>>();
+            if (Version > 1)
             {
-                SignsPluginStorage.Add(reader.ReadUInt32(), reader.ReadString());
+                var objs = reader.ReadInt32();
+                for (int i = 0; i < objs; i++)
+                {
+                    var ownerID = reader.ReadUInt32();
+                    var ownerPlugins = new Dictionary<uint, byte[]>();
+                    var plugins = reader.ReadInt32();
+                    for (int j=0; j<plugins; j++)
+                    {
+                        var plugin = reader.ReadUInt32();
+                        var byteCount = reader.ReadInt32();
+                        ownerPlugins.Add(plugin, reader.ReadBytes(byteCount));
+                    }
+                    PluginStorage.Add(ownerID, ownerPlugins);
+                }
             }
         }
     }

@@ -21,7 +21,6 @@ Looking for something to do? Check out the issues tagged as [good for new contri
 ## Prerequisites
 * [Visual Studio 2015](https://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs.aspx)
 * [MonoGame](http://www.monogame.net): Stable or Development Builds
-* [Bass.NET](http://www.un4seen.com/filez/4/Bass24.Net.zip)
 
 # License
 > This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.

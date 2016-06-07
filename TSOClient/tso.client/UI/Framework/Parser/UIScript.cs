@@ -411,6 +411,7 @@ namespace FSO.Client.UI.Framework.Parser
         {
             NamedObjects.Add(id, value);
 
+            id = id.Replace("-", "");
             var prop = targetType.GetProperty(id);
             if (prop != null)
             {

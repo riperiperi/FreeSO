@@ -1351,7 +1351,6 @@ namespace FSO.Client.Rendering.City
                     m_TargVOffX += (m_MouseState.X - m_MouseStart.X) / 1000; //move by fraction of distance between the mouse and where it started in both axis
                     m_TargVOffY -= (m_MouseState.Y - m_MouseStart.Y) / 1000;
                     
-                    //it's your duty to deal with the mouse cursor stuff when moving into PD!
 
                     /*var dir = Math.Round((Math.Atan2(m_MouseStart.X - m_MouseState.Y,
                         m_MouseState.X - m_MouseStart.X) / Math.PI) * 4) + 4;

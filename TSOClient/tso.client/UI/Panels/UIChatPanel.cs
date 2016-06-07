@@ -143,10 +143,15 @@ namespace FSO.Client.UI.Panels
             if (HistoryDialog.Visible) TextBox.Visible = false;
             else
             {
-                if (state.NewKeys.Contains(Keys.Enter))
+                var lastFocus = state.InputManager.GetFocus();
+                if (state.NewKeys.Contains(Keys.Enter) && (Owner.EODs.ActiveEOD == null ||
+                        lastFocus == null || lastFocus == TextBox ||
+                        lastFocus == HistoryDialog.ChatEntryTextEdit
+                        ))
                 {
                     if (!TextBox.Visible) TextBox.Clear();
                     TextBox.Visible = !TextBox.Visible;
+
                     if (TextBox.Visible) state.InputManager.SetFocus(TextBox);
                 }
             }

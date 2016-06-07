@@ -113,6 +113,7 @@ namespace FSO.Client.UI.Controls
 
         public override void Draw(UISpriteBatch batch)
         {
+            if (!Visible) return;
             for (int i = 0; i < 4; i++)
             {
                 DrawMotive(batch, 20, 13 + 20 * i, i); //left side

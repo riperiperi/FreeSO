@@ -14,7 +14,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Model
         public short ObjectID;
         public bool Joinable;
         public bool Ended;
-        List<VMEODEvent> Events = new List<VMEODEvent>();
+        public List<VMEODEvent> Events = new List<VMEODEvent>();
 
         public override void SerializeInto(BinaryWriter writer)
         {
