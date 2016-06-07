@@ -20,6 +20,20 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             Server = server;
         }
 
+        public virtual void OnConnection(VMEODClient client)
+        {
+
+        }
+
+        public virtual void OnDisconnection(VMEODClient client)
+        {
+
+        }
+
+        public virtual void Tick()
+        {
+
+        }
     }
 
     public delegate void EODPlaintextEventHandler(string evt, string body);

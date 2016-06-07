@@ -33,8 +33,8 @@ namespace FSO.Client
         {
             GameFacade.Game = this;
             Content.RootDirectory = FSOEnvironment.GFXContentDir;
-            Graphics.SynchronizeWithVerticalRetrace = GameFacade.DirectX || GlobalSettings.Default.Windowed; //why was this disabled
-
+            Graphics.SynchronizeWithVerticalRetrace = true; //GameFacade.DirectX || GlobalSettings.Default.Windowed; //why was this disabled
+            
             Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
@@ -130,21 +130,21 @@ namespace FSO.Client
             try
             {
                 GameFacade.MainFont = new FSO.Client.UI.Framework.Font();
-                GameFacade.MainFont.AddSize(10, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_10px"));
-                GameFacade.MainFont.AddSize(12, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"));
-                GameFacade.MainFont.AddSize(14, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_14px"));
-                GameFacade.MainFont.AddSize(16, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
+                GameFacade.MainFont.AddSize(10, Content.Load<SpriteFont>("Fonts/FreeSO_10px"));
+                GameFacade.MainFont.AddSize(12, Content.Load<SpriteFont>("Fonts/FreeSO_12px"));
+                GameFacade.MainFont.AddSize(14, Content.Load<SpriteFont>("Fonts/FreeSO_14px"));
+                GameFacade.MainFont.AddSize(16, Content.Load<SpriteFont>("Fonts/FreeSO_16px"));
 
                 GameFacade.EdithFont = new FSO.Client.UI.Framework.Font();
                 GameFacade.EdithFont.AddSize(12, Content.Load<SpriteFont>("Fonts/Trebuchet_12px"));
                 GameFacade.EdithFont.AddSize(14, Content.Load<SpriteFont>("Fonts/Trebuchet_14px"));
 
                 vitaboyEffect = Content.Load<Effect>("Effects/Vitaboy");
-                uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"), Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
+                uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/FreeSO_12px"), Content.Load<SpriteFont>("Fonts/FreeSO_16px"));
             }
             catch (Exception e)
             {
-                System.Windows.Forms.MessageBox.Show("Content could not be loaded. Make sure that the Project Dollhouse content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
+                System.Windows.Forms.MessageBox.Show("Content could not be loaded. Make sure that the FreeSO content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
                 Exit();
             }
 
