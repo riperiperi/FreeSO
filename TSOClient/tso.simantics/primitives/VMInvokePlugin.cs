@@ -31,7 +31,7 @@ namespace FSO.SimAntics.Primitives
 
             if (context.Locals[operand.EventLocal] < 0)
             {
-                context.VM.EODHost.ForceDisconnectObj(context.Caller);
+                if (context.VM.EODHost != null) context.VM.EODHost.ForceDisconnectObj(context.Caller);
                 context.Thread.BlockingState = null;
             }
 
@@ -57,7 +57,7 @@ namespace FSO.SimAntics.Primitives
                     context.Thread.BlockingState = null;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
-            } else if (context.Locals[operand.EventLocal] == -2) {
+            } else if (context.Locals[operand.EventLocal] != -1) {
                 //not connected. initiate connection.
                 var objID = context.Locals[operand.ObjectLocal];
                 var personID = context.Locals[operand.PersonLocal];
@@ -77,6 +77,9 @@ namespace FSO.SimAntics.Primitives
                     Joinable = operand.Joinable,
                     Ended = false
                 };
+            } else
+            {
+                return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
             context.Locals[operand.EventLocal] = 0;

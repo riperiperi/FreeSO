@@ -123,6 +123,7 @@ namespace FSO.SimAntics.NetPlay.EODs
         }
 
         public void SendOBJEvent(VMEODEvent evt) {
+            if (Invoker.Thread.BlockingState == null) return; //shouldn't bother, we already closed it
             vm.SendCommand(new VMNetEODEventCmd
             {
                 ObjectID = Invoker.ObjectID,

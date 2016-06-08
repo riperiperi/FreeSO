@@ -25,7 +25,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             byte num = 0;
             if (!byte.TryParse(text, out num)) return;
-            ControllerClient.SendOBJEvent(new VMEODEvent(num, client.Avatar.ObjectID));
+            if (ControllerClient != null) ControllerClient.SendOBJEvent(new VMEODEvent(num, client.Avatar.ObjectID));
         }
 
         public override void OnConnection(VMEODClient client)

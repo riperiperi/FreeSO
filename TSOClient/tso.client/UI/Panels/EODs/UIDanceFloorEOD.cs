@@ -46,7 +46,6 @@ namespace FSO.Client.UI.Panels.EODs
             UIBackground = script.Create<UIImage>("UIBackground");
             AddAt(0, UIBackground);
 
-
             Dance001Button.OnButtonClick += (UIElement e) => { Dance(1); };
             Dance002Button.OnButtonClick += (UIElement e) => { Dance(2); };
             Dance003Button.OnButtonClick += (UIElement e) => { Dance(3); };
