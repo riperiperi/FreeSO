@@ -27,7 +27,8 @@ namespace FSO.SimAntics.NetPlay.EODs
     {
         public static Dictionary<uint, Type> IDToHandler = new Dictionary<uint, Type>()
         {
-            { 0x2a6356a0, typeof(VMEODSignsPlugin) }
+            { 0x2a6356a0, typeof(VMEODSignsPlugin) },
+            { 0x4a5be8ab, typeof(VMEODDanceFloorPlugin) }
         };
 
         public List<VMEODClient> Clients;
@@ -57,21 +58,21 @@ namespace FSO.SimAntics.NetPlay.EODs
             Handler.Tick();
         }
 
-        public void Deliver(VMNetEODMessageCmd msg)
+        public void Deliver(VMNetEODMessageCmd msg, VMEODClient client)
         {
             if (msg.Binary)
             {
                 EODBinaryEventHandler handle = null; 
                 if (Handler.BinaryHandlers.TryGetValue(msg.EventName, out handle))
                 {
-                    handle(msg.EventName, msg.BinData);
+                    handle(msg.EventName, msg.BinData, client);
                 }
             } else
             {
                 EODPlaintextEventHandler handle = null;
                 if (Handler.PlaintextHandlers.TryGetValue(msg.EventName, out handle))
                 {
-                    handle(msg.EventName, msg.TextData);
+                    handle(msg.EventName, msg.TextData, client);
                 }
             }
         }
@@ -93,11 +94,12 @@ namespace FSO.SimAntics.NetPlay.EODs
 
         public void Disconnect(VMEODClient client)
         {
-            client.SendOBJEvent(new VMEODEvent(-3)); //disconnect code
+            client.SendOBJEvent(new VMEODEvent(-1)); //disconnect code
             Clients.Remove(client);
             Handler.OnDisconnection(client);
             client.Send("eod_leave", "");
             vm.EODHost.UnregisterAvatar(client.Avatar); //avatar no longer using plugin
+            vm.EODHost.UnregisterInvoker(client.Invoker);
         }
 
         public void BroadcastObjectEvent(VMEODEvent evt)

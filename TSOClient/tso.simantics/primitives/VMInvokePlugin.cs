@@ -18,18 +18,32 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMInvokePlugin : VMPrimitiveHandler
     {
+        public static readonly HashSet<uint> IdleEvents = new HashSet<uint>()
+        {
+            0x2a6356a0,
+            0x4a5be8ab
+        };
+
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
+            //this probably shouldn't use an AsyncWaitState. I can see this having its own state.
             var operand = (VMInvokePluginOperand)args;
+
+            if (context.Locals[operand.EventLocal] < 0)
+            {
+                context.VM.EODHost.ForceDisconnectObj(context.Caller);
+                context.Thread.BlockingState = null;
+            }
 
             if (context.Thread.BlockingState != null && context.Thread.BlockingState is VMEODPluginThreadState)
             {
                 var eodState = (VMEODPluginThreadState)context.Thread.BlockingState;
-                if (eodState.Events.Count > 0)
+                while (eodState.Events.Count > 0)
                 {
                     //pop off an event.
                     var evt = eodState.Events[0];
                     eodState.Events.RemoveAt(0);
+                    if (evt.Code < 0) continue;
                     context.Locals[operand.EventLocal] = evt.Code;
                     for (int i = 0; i < evt.Data.Length; i++)
                     {
@@ -37,12 +51,13 @@ namespace FSO.SimAntics.Primitives
                     }
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 }
-                else if (eodState.Ended)
+
+                if (eodState.Ended)
                 {
                     context.Thread.BlockingState = null;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
-            } else {
+            } else if (context.Locals[operand.EventLocal] == -2) {
                 //not connected. initiate connection.
                 var objID = context.Locals[operand.ObjectLocal];
                 var personID = context.Locals[operand.PersonLocal];
@@ -64,8 +79,13 @@ namespace FSO.SimAntics.Primitives
                 };
             }
 
-            context.Thread.TempRegisters[0] = 0;
-            return VMPrimitiveExitCode.GOTO_FALSE;
+            context.Locals[operand.EventLocal] = 0;
+            if (IdleEvents.Contains(operand.PluginID))
+            {
+                context.Thread.TempRegisters[0] = 0;
+                return VMPrimitiveExitCode.GOTO_FALSE;
+            }
+            else return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
         }
     }
 
@@ -78,7 +98,7 @@ namespace FSO.SimAntics.Primitives
 
         public uint PluginID;
         //sign: 0x2a6356a0
-        //pizzamakerplugin: 57 174 71 234
+        //dancefloor: 0x4a5be8ab
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

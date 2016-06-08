@@ -903,6 +903,10 @@ namespace FSO.SimAntics
                 if (target is VMGameObject) Blueprint.RemoveObject((ObjectComponent)target.WorldUI);
                 else Blueprint.RemoveAvatar((AvatarComponent)target.WorldUI);
             }
+            if (VM.EODHost != null)
+            {
+                VM.EODHost.ForceDisconnectObj(target);
+            }
         }
 
         public void AddPrimitive(VMPrimitiveRegistration primitive){

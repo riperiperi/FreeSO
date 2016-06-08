@@ -378,6 +378,7 @@ namespace FSO.SimAntics
                 Avatar.RemoveAccessory(apr);
             }
             BoundAppearances.Clear();
+            if (context.VM.EODHost != null) context.VM.EODHost.ForceDisconnect(this);
         }
 
         private void HandleTimePropsEvent(TimePropertyListItem tp)
@@ -544,6 +545,7 @@ namespace FSO.SimAntics
 
         public void UserLeaveLot()
         {
+            if (Thread.Context.VM.EODHost != null) Thread.Context.VM.EODHost.ForceDisconnect(this); //try this a lot.
             if (Thread.Queue.Exists(x => x.ActionRoutine.ID == LEAVE_LOT_TREE && Thread.Queue.IndexOf(x) < 2)) return; //we're already leaving
             var actions = new List<VMQueuedAction>(Thread.Queue);
             foreach (var action in actions)

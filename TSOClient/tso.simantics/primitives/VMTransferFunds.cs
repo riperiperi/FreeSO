@@ -25,7 +25,7 @@ namespace FSO.SimAntics.Primitives
             var operand = (VMTransferFundsOperand)args;
 
             //first of all... are we in an async wait state?
-            if (context.Thread.BlockingState != null)
+            if (context.Thread.BlockingState != null && context.Thread.BlockingState is VMTransferFundsState)
             {
                 var state = (VMTransferFundsState)context.Thread.BlockingState; //crash here if not intended state.
                 if (state.Responded)

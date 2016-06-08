@@ -41,7 +41,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             PlaintextHandlers["close"] = P_Close;
         }
 
-        public void B_SetMessage(string evt, byte[] data)
+        public void B_SetMessage(string evt, byte[] data, VMEODClient client)
         {
             lock (this)
             {
@@ -60,12 +60,12 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                 Server.vm.GlobalLink.SavePluginPersist(Server.vm, Server.Object.PersistID, Server.PluginID, newData.Save());
 
-                foreach (var client in Server.Clients)
-                    client.SendOBJEvent(new VMEODEvent((short)VMEODSignsEvent.TurnOnWritingSign, (short)((Data.Text.Length > 0) ? 1 : 0)));
+                foreach (var cli in Server.Clients)
+                    cli.SendOBJEvent(new VMEODEvent((short)VMEODSignsEvent.TurnOnWritingSign, (short)((Data.Text.Length > 0) ? 1 : 0)));
             }
         }
 
-        public void P_Close(string evt, string text)
+        public void P_Close(string evt, string text, VMEODClient client)
         {
             Server.Shutdown();
         }

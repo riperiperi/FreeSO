@@ -320,7 +320,7 @@ namespace FSO.Client.UI.Panels
 
             PersonGrid.Columns = (eodPresent || (GlobalSettings.Default.GraphicsWidth < 1024)) ?4:9;
             PersonGrid.DrawPage();
-            PeopleListBg.Texture = (eodPresent) ? PeopleListEODBackgroundImg : PeopleListBackgroundImg;
+            PeopleListBg.Texture = (eodPresent && PeopleListEODBackgroundImg != null) ? PeopleListEODBackgroundImg : PeopleListBackgroundImg;
             PeopleListBg.SetSize(PeopleListBg.Texture.Width, PeopleListBg.Texture.Height);
             NextPageButton.Position = (eodPresent) ? (Vector2)Script.GetControlProperty("NextPageEODButton") : DefaultNextPagePos;
             Background.Texture = (eodPresent) ? BackgroundEODImg : DefaultBGImage;

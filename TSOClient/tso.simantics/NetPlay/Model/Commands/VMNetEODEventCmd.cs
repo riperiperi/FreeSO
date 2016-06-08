@@ -23,7 +23,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             var state = obj.Thread.BlockingState as VMEODPluginThreadState;
             state.Events.Add(Event);
 
-            if (Event.Code == -3) state.Ended = true;
+            if (Event.Code == -1) state.Ended = true;
 
             return true;
         }

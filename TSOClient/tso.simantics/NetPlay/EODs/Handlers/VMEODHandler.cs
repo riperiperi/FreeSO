@@ -36,6 +36,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         }
     }
 
-    public delegate void EODPlaintextEventHandler(string evt, string body);
-    public delegate void EODBinaryEventHandler(string evt, byte[] body);
+
+    public delegate void EODPlaintextEventHandler(string evt, string body, VMEODClient client);
+    public delegate void EODBinaryEventHandler(string evt, byte[] body, VMEODClient client);
+
+    public delegate void EODDirectPlaintextEventHandler(string evt, string body);
+    public delegate void EODDirectBinaryEventHandler(string evt, byte[] body);
 }

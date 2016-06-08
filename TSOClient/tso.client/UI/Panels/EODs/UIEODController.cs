@@ -13,7 +13,8 @@ namespace FSO.Client.UI.Panels.EODs
     {
         public static Dictionary<uint, Type> IDToHandler = new Dictionary<uint, Type>()
         {
-            { 0x2a6356a0, typeof(UISignsEOD) }
+            { 0x2a6356a0, typeof(UISignsEOD) },
+            { 0x4a5be8ab, typeof(UIDanceFloorEOD) }
         };
 
         //this class is a container so that it can hold EODs without them being active in Live Mode.
@@ -54,14 +55,14 @@ namespace FSO.Client.UI.Panels.EODs
                     if (ActiveEOD == null) return; //uh... what UI?
                     if (cmd.Binary)
                     {
-                        EODBinaryEventHandler handle = null;
+                        EODDirectBinaryEventHandler handle = null;
                         if (ActiveEOD.BinaryHandlers.TryGetValue(cmd.EventName, out handle))
                         {
                             handle(cmd.EventName, cmd.BinData);
                         }
                     } else
                     {
-                        EODPlaintextEventHandler handle = null;
+                        EODDirectPlaintextEventHandler handle = null;
                         if (ActiveEOD.PlaintextHandlers.TryGetValue(cmd.EventName, out handle))
                         {
                             handle(cmd.EventName, cmd.TextData);

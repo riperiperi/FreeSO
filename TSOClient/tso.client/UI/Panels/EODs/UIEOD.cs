@@ -11,15 +11,15 @@ namespace FSO.Client.UI.Panels.EODs
 {
     public abstract class UIEOD : UIContainer
     {
-        public Dictionary<string, EODPlaintextEventHandler> PlaintextHandlers;
-        public Dictionary<string, EODBinaryEventHandler> BinaryHandlers;
+        public Dictionary<string, EODDirectPlaintextEventHandler> PlaintextHandlers;
+        public Dictionary<string, EODDirectBinaryEventHandler> BinaryHandlers;
 
         public UIEODController Controller;
 
         public UIEOD(UIEODController controller)
         {
-            PlaintextHandlers = new Dictionary<string, EODPlaintextEventHandler>();
-            BinaryHandlers = new Dictionary<string, EODBinaryEventHandler>();
+            PlaintextHandlers = new Dictionary<string, EODDirectPlaintextEventHandler>();
+            BinaryHandlers = new Dictionary<string, EODDirectBinaryEventHandler>();
             Controller = controller;
         }
 

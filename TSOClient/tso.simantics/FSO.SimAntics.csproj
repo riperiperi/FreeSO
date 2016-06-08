@@ -158,6 +158,7 @@
     <Compile Include="NetPlay\Drivers\VMClientDriver.cs" />
     <Compile Include="NetPlay\Drivers\VMServerDriver.cs" />
     <Compile Include="NetPlay\EODs\Handlers\Data\VMEODSignsData.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODDanceFloorPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODHandler.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODSignsPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODStubPlugin.cs" />

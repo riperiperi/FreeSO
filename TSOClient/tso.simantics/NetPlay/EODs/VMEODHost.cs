@@ -1,4 +1,5 @@
-﻿using FSO.SimAntics.NetPlay.Model.Commands;
+﻿using FSO.SimAntics.NetPlay.EODs.Model;
+using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Primitives;
 using System;
 using System.Collections.Generic;
@@ -15,13 +16,13 @@ namespace FSO.SimAntics.NetPlay.EODs
 
         //
         public Dictionary<short, VMEODServer> InvokerToEOD; //find EOD for an Invoker
-        public Dictionary<short, VMEODServer> AvatarToEOD;
+        public Dictionary<uint, VMEODServer> AvatarToEOD;
 
         public VMEODHost()
         {
             JoinableEODs = new Dictionary<short, VMEODServer>();
             InvokerToEOD = new Dictionary<short, VMEODServer>();
-            AvatarToEOD = new Dictionary<short, VMEODServer>();
+            AvatarToEOD = new Dictionary<uint, VMEODServer>();
             Servers = new List<VMEODServer>();
         }
 
@@ -42,7 +43,7 @@ namespace FSO.SimAntics.NetPlay.EODs
             if (InvokerToEOD.ContainsKey(invoker.ObjectID)) return; //uh, what?
 
             VMEODServer server = null;
-            if (avatar != null && AvatarToEOD.ContainsKey(avatar.ObjectID))
+            if (avatar != null && AvatarToEOD.ContainsKey(avatar.PersistID))
             {
                 //avatar already using an EOD... quickly abort this attempt with the stub EOD.
                 joinable = false;
@@ -63,20 +64,47 @@ namespace FSO.SimAntics.NetPlay.EODs
                 server = new VMEODServer(UID, obj, joinable, vm);
             }
 
+            if (avatar != null) RegisterAvatar(avatar, server);
+            RegisterInvoker(invoker, server);
             server.Connect(new VMEODClient(invoker, avatar, vm, UID));
             Servers.Add(server);
-            if (avatar != null) RegisterAvatar(avatar, server);
         }
 
         public void Deliver(VMNetEODMessageCmd msg, VMAvatar avatar)
         {
             VMEODServer server = null;
-            if (AvatarToEOD.TryGetValue(avatar.ObjectID, out server))
+            if (AvatarToEOD.TryGetValue(avatar.PersistID, out server))
             {
                 var avatarClient = server.Clients.FirstOrDefault(x => x.Avatar == avatar);
                 if (avatarClient != null)
                 {
-                    server.Deliver(msg);
+                    server.Deliver(msg, avatarClient);
+                }
+            }
+        }
+
+        public void ForceDisconnectObj(VMEntity invoker)
+        {
+            VMEODServer server = null;
+            if (InvokerToEOD.TryGetValue(invoker.ObjectID, out server))
+            {
+                var invokerClient = server.Clients.FirstOrDefault(x => x.Invoker == invoker);
+                if (invokerClient != null)
+                {
+                    server.Disconnect(invokerClient);
+                }
+            }
+        }
+
+        public void ForceDisconnect(VMAvatar avatar)
+        {
+            VMEODServer server = null;
+            if (AvatarToEOD.TryGetValue(avatar.PersistID, out server))
+            {
+                var avatarClient = server.Clients.FirstOrDefault(x => x.Avatar == avatar);
+                if (avatarClient != null)
+                {
+                    server.Disconnect(avatarClient);
                 }
             }
         }
@@ -84,13 +112,25 @@ namespace FSO.SimAntics.NetPlay.EODs
         public void RegisterAvatar(VMAvatar avatar, VMEODServer server)
         {
             if (avatar == null) return;
-            AvatarToEOD.Add(avatar.ObjectID, server);
+            AvatarToEOD.Add(avatar.PersistID, server);
+        }
+
+        public void RegisterInvoker(VMEntity invoker, VMEODServer server)
+        {
+            if (invoker == null) return;
+            InvokerToEOD.Add(invoker.ObjectID, server);
         }
 
         public void UnregisterAvatar(VMAvatar avatar)
         {
             if (avatar == null) return;
-            AvatarToEOD.Remove(avatar.ObjectID);
+            AvatarToEOD.Remove(avatar.PersistID);
+        }
+
+        public void UnregisterInvoker(VMEntity invoker)
+        {
+            if (invoker == null) return;
+            InvokerToEOD.Remove(invoker.ObjectID);
         }
     }
 }

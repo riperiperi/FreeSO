@@ -63,6 +63,7 @@
     <Compile Include="UI\Framework\UIExternalContainer.cs" />
     <Compile Include="UI\Model\UIMusic.cs" />
     <Compile Include="UI\Panels\EODs\EODLiveModeOpt.cs" />
+    <Compile Include="UI\Panels\EODs\UIDanceFloorEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIEODController.cs" />
     <Compile Include="UI\Panels\EODs\UISignsEOD.cs" />
