@@ -61,10 +61,46 @@ namespace FSO.SimAntics.Primitives
                     context.Thread.EODConnection = null;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
-            } else if (context.Locals[operand.EventLocal] != -1) {
+            } else if (context.Locals[operand.EventLocal] == -2) {
                 //not connected. initiate connection.
                 var objID = context.Locals[operand.ObjectLocal];
                 var personID = context.Locals[operand.PersonLocal];
+
+                if (operand.Joinable)
+                {
+                    //does the target object exist? does it have a server already? make one.
+                    var serverObj = context.VM.GetObjectById(objID);
+                    if (serverObj == null) return VMPrimitiveExitCode.GOTO_TRUE; //no server
+                    if (serverObj.Thread.EODConnection == null)
+                    {
+                        //connect the server object
+
+                        serverObj.Thread.EODConnection = new VMEODPluginThreadState()
+                        {
+                            ObjectID = objID,
+                            AvatarID = 0,
+                            Joinable = true,
+                            Ended = false
+                        };
+                        if (context.VM.IsServer)
+                        {
+                            context.VM.EODHost.Connect(operand.PluginID, serverObj,
+                                serverObj,
+                                null,
+                                true,
+                                context.VM
+                                );
+                        }
+                    }
+                }
+
+                context.Thread.EODConnection = new VMEODPluginThreadState()
+                {
+                    ObjectID = objID,
+                    AvatarID = personID,
+                    Joinable = operand.Joinable,
+                    Ended = false
+                };
                 if (context.VM.IsServer)
                 {
                     context.VM.EODHost.Connect(operand.PluginID, context.Caller,
@@ -74,13 +110,7 @@ namespace FSO.SimAntics.Primitives
                         context.VM
                         );
                 }
-                context.Thread.EODConnection = new VMEODPluginThreadState()
-                {
-                    ObjectID = objID,
-                    AvatarID = personID,
-                    Joinable = operand.Joinable,
-                    Ended = false
-                };
+
             } else
             {
                 return VMPrimitiveExitCode.GOTO_TRUE;
