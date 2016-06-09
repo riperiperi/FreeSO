@@ -156,7 +156,12 @@ namespace FSO.SimAntics
             foreach (var avatar in avatars) avatar.Delete(true, Context);
 
             var ents = new List<VMEntity>(Entities);
-            foreach (var ent in ents) if (ent.Object.OBJ.GUID == 0x3929AADC) ent.Delete(true, Context);
+            foreach (var ent in ents)
+            {
+                if (ent.Thread.BlockingState != null) ent.Thread.BlockingState = null;
+                if (ent.Thread.EODConnection != null) ent.Thread.EODConnection = null;
+                if (ent.Object.OBJ.GUID == 0x3929AADC) ent.Delete(true, Context);
+            }
             //foreach (var ent in ents) ent.Reset(Context); duplicates dogs apparently?? tf
         }
 

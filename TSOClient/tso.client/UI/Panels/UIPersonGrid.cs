@@ -80,7 +80,7 @@ namespace FSO.Client.UI.Panels
                 {
                     var ind = startInd + x + Columns * y;
                     if (ind < Display.Count) {
-                        var icon = new UIPersonIcon(Display.ElementAt(ind), vm);
+                        var icon = new UIPersonIcon(Display.ElementAt(ind), vm, false);
                         CurrentIcons.Add(icon);
                         Add(icon);
                         icon.Position = new Vector2(x*(34+12), y*(34+11));

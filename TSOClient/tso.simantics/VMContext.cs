@@ -781,6 +781,7 @@ namespace FSO.SimAntics
                     newGroup.Objects[i].GhostOriginal = group;
                     newGroup.Objects[i].SetValue(VMStackObjectVariable.Graphic, group.Objects[i].GetValue(VMStackObjectVariable.Graphic));
                     newGroup.Objects[i].DynamicSpriteFlags = group.Objects[i].DynamicSpriteFlags;
+                    newGroup.Objects[i].DynamicSpriteFlags2 = group.Objects[i].DynamicSpriteFlags2;
                     newGroup.Objects[i].SetDynamicSpriteFlag(0, group.Objects[i].IsDynamicSpriteFlagSet(0));
                     newGroup.Objects[i].PlatformState = group.Objects[i].PlatformState;
                     if (newGroup.Objects[i] is VMGameObject) ((VMGameObject)newGroup.Objects[i]).RefreshGraphic();

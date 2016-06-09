@@ -28,6 +28,16 @@ namespace FSO.Client.UI.Panels.EODs
             Controller.CloseEOD();
         }
 
+        public void SetTip(string txt)
+        {
+            Controller.EODMessage = txt;
+        }
+
+        public void SetTime(int time)
+        {
+            Controller.EODTime = " "+((time<0)?"":((time/60)+":"+((time%60).ToString().PadLeft(2, '0'))));
+        }
+
         public void Send(string evt, string data)
         {
             Controller.Lot.vm.SendCommand(new VMNetEODMessageCmd

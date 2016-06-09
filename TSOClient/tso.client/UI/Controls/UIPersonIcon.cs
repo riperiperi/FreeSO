@@ -17,15 +17,17 @@ namespace FSO.Client.UI.Controls
         public VMAvatar Avatar;
         public VM vm;
         public VMTSOAvatarPermissions LastPermissions;
+        public bool Small;
 
         private Texture2D Overlay;
         private Texture2D Icon;
 
-        public UIPersonIcon(VMAvatar ava, VM vm)
+        public UIPersonIcon(VMAvatar ava, VM vm, bool small)
         {
             Avatar = ava;
             this.vm = vm;
 
+            Small = small;
             UpdateAvatarState(((VMTSOAvatarState)Avatar.TSOState).Permissions);
             OnButtonClick += CenterPerson;
         }
@@ -71,6 +73,12 @@ namespace FSO.Client.UI.Controls
             {
                 bgID = 0xCEF00000001; //peoplebuttontemplate_npclarge
             }
+
+            if (Small)
+            {
+                bgID += 0x00100000000;
+                overlayID += 0x00100000000;
+            }
             /*if (Avatar.PersistID == vm.MyUID)
             {
                 bgID = 0x25000000001; //personbuttontemplate_playerlarge
@@ -110,11 +118,13 @@ namespace FSO.Client.UI.Controls
 
             if (Icon != null)
             {
+                var pos = (Small) ? new Vector2(1, 1) : new Vector2(2, 2);
+                var targetSize = (Small) ? new Vector2(18, 18) : new Vector2(30, 30);
                 if (Icon.Width <= 45)
                 {
-                    DrawLocalTexture(SBatch, Icon, new Rectangle(0, 0, Icon.Width, Icon.Height), new Vector2(2, 2), new Vector2(30f / Icon.Width, 30f / Icon.Height));
+                    DrawLocalTexture(SBatch, Icon, new Rectangle(0, 0, Icon.Width, Icon.Height), pos, targetSize / new Vector2(Icon.Width, Icon.Height));
                 }
-                else DrawLocalTexture(SBatch, Icon, new Rectangle(0, 0, Icon.Width / 2, Icon.Height), new Vector2(2, 2), new Vector2(30f / (Icon.Width/2), 30f / Icon.Height));
+                else DrawLocalTexture(SBatch, Icon, new Rectangle(0, 0, Icon.Width / 2, Icon.Height), pos, targetSize / new Vector2((Icon.Width/2), Icon.Height));
             }
             if (Overlay != null) DrawLocalTexture(SBatch, Overlay, new Vector2());
             //draw the icon over the button

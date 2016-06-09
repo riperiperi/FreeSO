@@ -15,6 +15,9 @@ using FSO.HIT;
 using FSO.Client.GameContent;
 using FSO.Common.Audio;
 using FSO.Client.UI.Model;
+using System.IO;
+using FSO.Files;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.Client.UI.Screens
 {
@@ -35,11 +38,20 @@ namespace FSO.Client.UI.Screens
              * Scale the whole screen to 1024
              */
             BackgroundCtnr = new UIContainer();
-            BackgroundCtnr.ScaleX = BackgroundCtnr.ScaleY = ScreenWidth / 800.0f;
+            var scale = ScreenHeight / 600.0f;
+            BackgroundCtnr.ScaleX = BackgroundCtnr.ScaleY = scale;
 
             /** Background image **/
-            Background = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.setup));
+            Texture2D setupTex;
+            if (File.Exists("Content/setup.png"))
+            {
+                using (var logostrm = File.Open("Content/setup.png", FileMode.Open))
+                    setupTex = ImageLoader.FromStream(GameFacade.GraphicsDevice, logostrm);
+            }
+            else setupTex = GetTexture((ulong)FileIDs.UIFileIDs.setup);
+            Background = new UIImage(setupTex);
             BackgroundCtnr.Add(Background);
+            BackgroundCtnr.X = (ScreenWidth - (800 * scale)) / 2;
 
             //TODO: Letter spacing is a bit wrong on this label
             var lbl = new UILabel();

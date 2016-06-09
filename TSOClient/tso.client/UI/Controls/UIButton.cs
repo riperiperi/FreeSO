@@ -44,11 +44,14 @@ namespace FSO.Client.UI.Controls
 
         private Rectangle m_Bounds;
         private int m_Width;
+        private int m_Height;
         private int m_WidthDiv3;
         private bool m_Disabled;
         private bool m_HighlightNextDraw;
         private float m_ResizeWidth;
         private int m_ImageStates = 4;
+        private int m_ButtonFrames = 1;
+        private int m_ButtonFrame = 0;
         private int m_AutoMargins = -1;
         private UITooltipHandler m_TooltipHandler;
 
@@ -88,7 +91,7 @@ namespace FSO.Client.UI.Controls
             this.Texture = Texture;
 
             ClickHandler =
-                ListenForMouse(new Rectangle(0, 0, m_Width, m_Texture.Height), new UIMouseEvent(OnMouseEvent));
+                ListenForMouse(new Rectangle(0, 0, m_Width, m_Height), new UIMouseEvent(OnMouseEvent));
 
             m_TooltipHandler = UIUtils.GiveTooltip(this); //buttons can have tooltips
         }
@@ -98,7 +101,7 @@ namespace FSO.Client.UI.Controls
         {
             get
             {
-                return new Vector2(m_WidthDiv3, m_Texture.Height);
+                return new Vector2(m_WidthDiv3, m_Height);
             }
             set
             {
@@ -117,12 +120,40 @@ namespace FSO.Client.UI.Controls
             {
                 m_ImageStates = value; //recalculate button offsets
                 m_Width = m_Texture.Width/m_ImageStates;
+                m_Height = m_Texture.Height / m_ButtonFrames;
                 m_WidthDiv3 = m_Width / 3;
 
                 if (ClickHandler != null)
                 {
                     ClickHandler.Region.Width = (m_ResizeWidth == 0) ? m_Width : (int)m_ResizeWidth;
-                    ClickHandler.Region.Height = m_Texture.Height;
+                    ClickHandler.Region.Height = m_Height;
+                }
+            }
+        }
+
+        public int ButtonFrame
+        {
+            get { return m_ButtonFrame; }
+            set { m_ButtonFrame = value; }
+        }
+        
+        public int ButtonFrames
+        {
+            get
+            {
+                return m_ButtonFrames;
+            }
+            set
+            {
+                m_ButtonFrames = value; //recalculate button offsets
+                m_Width = m_Texture.Width / m_ImageStates;
+                m_Height = m_Texture.Height / m_ButtonFrames;
+                m_WidthDiv3 = m_Width / 3;
+
+                if (ClickHandler != null)
+                {
+                    ClickHandler.Region.Width = (m_ResizeWidth == 0) ? m_Width : (int)m_ResizeWidth;
+                    ClickHandler.Region.Height = m_Height;
                 }
             }
         }
@@ -179,12 +210,13 @@ namespace FSO.Client.UI.Controls
 
                 m_Width = m_Texture.Width / m_ImageStates;
                 m_WidthDiv3 = m_Width / 3;
+                m_Height = m_Texture.Height / m_ButtonFrames;
                 m_CurrentFrame = 0;
 
                 if (ClickHandler != null)
                 {
                     ClickHandler.Region.Width = (m_ResizeWidth == 0) ? m_Width : (int)m_ResizeWidth;
-                    ClickHandler.Region.Height = m_Texture.Height;
+                    ClickHandler.Region.Height = m_Height;
                 }
             } 
         }
@@ -334,24 +366,24 @@ namespace FSO.Client.UI.Controls
             }
             frame = Math.Min(m_ImageStates - 1, frame);
             int offset = frame * m_Width;
-
+            int vOffset = m_ButtonFrame * m_Height;
 
             if (Width != 0)
             {
                 //TODO: Work out these numbers once & cache them. Invalidate when texture or width changes
 
                 /** left **/
-                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset, 0, m_WidthDiv3, m_Texture.Height), Vector2.Zero);
+                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset, vOffset, m_WidthDiv3, m_Height), Vector2.Zero);
 
                 /** center **/
-                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset + m_WidthDiv3, 0, m_WidthDiv3, m_Texture.Height), new Vector2(m_WidthDiv3, 0), new Vector2( (Width - (m_WidthDiv3 * 2)) / m_WidthDiv3, 1.0f));
+                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset + m_WidthDiv3, vOffset, m_WidthDiv3, m_Height), new Vector2(m_WidthDiv3, 0), new Vector2( (Width - (m_WidthDiv3 * 2)) / m_WidthDiv3, 1.0f));
 
                 /** right **/
-                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset + (m_Width - m_WidthDiv3), 0, m_WidthDiv3, m_Texture.Height), new Vector2(Width - m_WidthDiv3, 0));
+                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset + (m_Width - m_WidthDiv3), vOffset, m_WidthDiv3, m_Height), new Vector2(Width - m_WidthDiv3, 0));
             }
             else
             {
-                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset, 0, m_Width, m_Texture.Height), Vector2.Zero);
+                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset, vOffset, m_Width, m_Height), Vector2.Zero);
             }
 
             /**

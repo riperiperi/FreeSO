@@ -124,6 +124,7 @@ namespace FSO.LotView.Components
         }
 
         private ulong _DynamicSpriteFlags = 0x00000000;
+        private ulong _DynamicSpriteFlags2 = 0x00000000;
         public ulong DynamicSpriteFlags
         {
             get{
@@ -136,6 +137,25 @@ namespace FSO.LotView.Components
                     DynamicCounter = 0;
                 }
                 _DynamicSpriteFlags = value;
+            }
+        }
+
+        public ulong DynamicSpriteFlags2
+        {
+            get
+            {
+                return _DynamicSpriteFlags2;
+            }
+            set
+            {
+
+                if (dgrp != null && _DynamicSpriteFlags2 != value)
+                {
+                    dgrp.DynamicSpriteFlags2 = value;
+                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                    DynamicCounter = 0;
+                }
+                _DynamicSpriteFlags2 = value;
             }
         }
 

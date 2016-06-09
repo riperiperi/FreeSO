@@ -21,7 +21,8 @@ namespace FSO.SimAntics.Primitives
         public static readonly HashSet<uint> IdleEvents = new HashSet<uint>()
         {
             0x2a6356a0,
-            0x4a5be8ab
+            0x4a5be8ab,
+            0xea47ae39
         };
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
@@ -29,15 +30,18 @@ namespace FSO.SimAntics.Primitives
             //this probably shouldn't use an AsyncWaitState. I can see this having its own state.
             var operand = (VMInvokePluginOperand)args;
 
-            if (context.Locals[operand.EventLocal] < 0)
+            var localEvt = context.Locals[operand.EventLocal];
+            if (localEvt < 0)
             {
                 if (context.VM.EODHost != null) context.VM.EODHost.ForceDisconnectObj(context.Caller);
-                context.Thread.BlockingState = null;
+                context.Thread.EODConnection = null;
             }
 
-            if (context.Thread.BlockingState != null && context.Thread.BlockingState is VMEODPluginThreadState)
+            if (context.Thread.EODConnection != null)
             {
-                var eodState = (VMEODPluginThreadState)context.Thread.BlockingState;
+                if (context.VM.EODHost != null) context.VM.EODHost.SimanticsDeliver(localEvt, context.Caller);
+
+                var eodState = context.Thread.EODConnection;
                 while (eodState.Events.Count > 0)
                 {
                     //pop off an event.
@@ -54,7 +58,7 @@ namespace FSO.SimAntics.Primitives
 
                 if (eodState.Ended)
                 {
-                    context.Thread.BlockingState = null;
+                    context.Thread.EODConnection = null;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
             } else if (context.Locals[operand.EventLocal] != -1) {
@@ -70,7 +74,7 @@ namespace FSO.SimAntics.Primitives
                         context.VM
                         );
                 }
-                context.Thread.BlockingState = new VMEODPluginThreadState()
+                context.Thread.EODConnection = new VMEODPluginThreadState()
                 {
                     ObjectID = objID,
                     AvatarID = personID,
@@ -102,6 +106,7 @@ namespace FSO.SimAntics.Primitives
         public uint PluginID;
         //sign: 0x2a6356a0
         //dancefloor: 0x4a5be8ab
+        //pizza: 0xea47ae39
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

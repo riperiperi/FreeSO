@@ -98,6 +98,7 @@ namespace FSO.SimAntics
         //todo, special system for server persistent avatars and pets
 
         public ulong DynamicSpriteFlags; /** Used to show/hide dynamic sprites **/
+        public ulong DynamicSpriteFlags2;
         public VMObstacle Footprint;
 
         private LotTilePos _Position = new LotTilePos(LotTilePos.OUT_OF_WORLD);
@@ -399,7 +400,8 @@ namespace FSO.SimAntics
             this.Thread.Stack.Clear();
             this.Thread.Queue.Clear();
             this.Thread.BlockingState = null;
-            
+            this.Thread.EODConnection = null;
+
             if (EntryPoints[3].ActionFunction != 0) ExecuteEntryPoint(3, context, true); //Reset
             if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
         }
@@ -555,16 +557,30 @@ namespace FSO.SimAntics
 
         public bool IsDynamicSpriteFlagSet(ushort index)
         {
-            return (DynamicSpriteFlags & ((ulong)0x1 << index)) > 0;
+            return (index > 63)? ((DynamicSpriteFlags2 & ((ulong)0x1 << (index-64))) > 0) :
+                (DynamicSpriteFlags & ((ulong)0x1 << index)) > 0;
         }
 
         public virtual void SetDynamicSpriteFlag(ushort index, bool set)
         {
             if (set) {
-                uint bitflag = (uint)(0x1 << index);
-                DynamicSpriteFlags = DynamicSpriteFlags | bitflag;
+                if (index > 63)
+                {
+                    uint bitflag = (uint)(0x1 << (index-64));
+                    DynamicSpriteFlags2 = DynamicSpriteFlags2 | bitflag;
+                } else {
+                    uint bitflag = (uint)(0x1 << index);
+                    DynamicSpriteFlags = DynamicSpriteFlags | bitflag;
+                }
             } else {
-                DynamicSpriteFlags = (uint)(DynamicSpriteFlags & (~((ulong)0x1 << index)));
+                if (index > 63)
+                {
+                    DynamicSpriteFlags2 = (uint)(DynamicSpriteFlags2 & (~((ulong)0x1 << (index-64))));
+                }
+                else
+                {
+                    DynamicSpriteFlags = (uint)(DynamicSpriteFlags & (~((ulong)0x1 << index)));
+                }
             }
         }
 
@@ -1047,6 +1063,7 @@ namespace FSO.SimAntics
             target.MeToObject = relArry;
 
             target.DynamicSpriteFlags = DynamicSpriteFlags;
+            target.DynamicSpriteFlags2 = DynamicSpriteFlags2;
             target.Position = _Position;
         }
 
@@ -1077,6 +1094,7 @@ namespace FSO.SimAntics
             foreach (var obj in input.MeToObject)  MeToObject[obj.Target] = new List<short>(obj.Values);
 
             DynamicSpriteFlags = input.DynamicSpriteFlags;
+            DynamicSpriteFlags2 = input.DynamicSpriteFlags2;
             Position = input.Position;
 
             if (UseWorld) WorldUI.Visible = GetValue(VMStackObjectVariable.Hidden) == 0;

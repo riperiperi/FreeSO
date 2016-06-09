@@ -29,6 +29,7 @@ namespace FSO.LotView.Utils
         public Rectangle Bounding;
         private List<DGRPRendererItem> Items = new List<DGRPRendererItem>();
         public ulong DynamicSpriteFlags = 0x00000000;
+        public ulong DynamicSpriteFlags2 = 0x00000000;
         public ushort DynamicSpriteBaseID;
         public ushort NumDynamicSprites;
 
@@ -137,8 +138,9 @@ namespace FSO.LotView.Utils
                             if (isDynamic)
                             {
                                 var dynamicIndex = (ushort)(sprite.SpriteID - DynamicSpriteBaseID);
-
-                                var isVisible = (DynamicSpriteFlags & ((ulong)0x1 << dynamicIndex)) > 0;
+                                
+                                var isVisible = (dynamicIndex > 63) ? ((DynamicSpriteFlags2 & ((ulong)0x1 << (dynamicIndex-64))) > 0):
+                                    ((DynamicSpriteFlags & ((ulong)0x1 << dynamicIndex)) > 0);
                                 if (!isVisible)
                                 {
                                     continue;

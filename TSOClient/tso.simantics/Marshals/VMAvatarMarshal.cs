@@ -34,10 +34,8 @@ namespace FSO.SimAntics.Marshals
         public ulong HeadOutfit;
         public AppearanceType SkinTone;
 
-        public int Version;
-
         public VMAvatarMarshal() { }
-        public VMAvatarMarshal(int version) { Version = version; }
+        public VMAvatarMarshal(int version) : base(version) { }
 
         public override void Deserialize(BinaryReader reader)
         {

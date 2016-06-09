@@ -17,10 +17,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             //notify thread of an EOD event.
             var obj = vm.GetObjectById(ObjectID);
-            if (obj == null || obj.Thread == null || obj.Thread.BlockingState == null || !(obj.Thread.BlockingState is VMEODPluginThreadState))
+            if (obj == null || obj.Thread == null || obj.Thread.EODConnection == null)
                 return false; //rats.
 
-            var state = obj.Thread.BlockingState as VMEODPluginThreadState;
+            var state = obj.Thread.EODConnection;
             state.Events.Add(Event);
 
             if (Event.Code == -1) state.Ended = true;

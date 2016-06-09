@@ -66,6 +66,7 @@
     <Compile Include="UI\Panels\EODs\UIDanceFloorEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIEODController.cs" />
+    <Compile Include="UI\Panels\EODs\UIPizzaMakerEOD.cs" />
     <Compile Include="UI\Panels\EODs\UISignsEOD.cs" />
     <Compile Include="UI\Panels\LotControls\UICheatHandler.cs" />
     <Compile Include="UI\Panels\UIChatBalloon.cs" />
@@ -394,6 +395,9 @@
     </Content>
     <Content Include="Content\DX\Fonts\FreeSO_16px.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\pizzamaker_animfix.piff">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\Icon.bmp" />
     <Content Include="sdl2.dll">

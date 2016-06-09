@@ -66,7 +66,14 @@ namespace FSO.Client.UI.Panels
         public UIImage EODSubShortLength { get; set; }
         public UIImage EODSubShortLengthTall { get; set; }
 
+        public UIImage EODMsgWinLong { get; set; }
+        public UIImage EODMsgWinShort { get; set; }
+        public UIImage EODTimer { get; set; }
+
         public Texture2D EODButtonImg { get; set; }
+
+        public UIListBox MsgWinTextEntry { get; set; }
+        public UITextEdit TimerTextEntry { get; set; }
 
         //normal stuff
         public UIButton MoodPanelButton;
@@ -184,6 +191,14 @@ namespace FSO.Client.UI.Panels
             Add(EODSubShortLength);
             Add(EODSubShortLengthTall);
 
+            EODMsgWinLong = script.Create<UIImage>("EODMsgWinLong");
+            EODMsgWinShort = script.Create<UIImage>("EODMsgWinShort");
+            EODTimer = script.Create<UIImage>("EODTimer");
+
+            AddAt(0, EODTimer);
+            AddAt(0, EODMsgWinLong);
+            AddAt(0, EODMsgWinShort);
+
             EODButton = new UIButton(EODButtonImg);
             Add(EODButton);
             EODButton.OnButtonClick += EODToggle;
@@ -193,6 +208,8 @@ namespace FSO.Client.UI.Panels
             NextPageButton.OnButtonClick += (UIElement btn) => { PersonGrid.NextPage(); };
             DefaultNextPagePos = NextPageButton.Position;
             PreviousPageButton.OnButtonClick += (UIElement btn) => { PersonGrid.PreviousPage(); };
+
+            MsgWinTextEntry.Items.Add(new UIListBoxItem("", ""));
 
             EODCloseBase = EODCloseButton.Position;
             EODHelpBase = EODHelpButton.Position;
@@ -242,6 +259,13 @@ namespace FSO.Client.UI.Panels
             EODSubMediumLengthTall.Visible = inEOD && tall && options.Length == EODLength.Medium;
             EODSubShortLength.Visible = inEOD && !tall && options.Length == EODLength.Short;
             EODSubShortLengthTall.Visible = inEOD && tall && options.Length == EODLength.Short;
+
+            EODMsgWinLong.Visible = inEOD && options.Tips == EODTextTips.Long;
+            EODMsgWinShort.Visible = inEOD && options.Tips == EODTextTips.Short;
+            EODTimer.Visible = inEOD && options.Timer == EODs.EODTimer.Normal;
+
+            MsgWinTextEntry.Visible = inEOD && options.Tips != EODTextTips.None;
+            TimerTextEntry.Visible = inEOD && options.Timer != EODs.EODTimer.None;
 
             MoodPanelButton.Position = (eodPresent) ? new Vector2(20, 7) : new Vector2(31, 63);
             if (EODImage.Texture != null) EODImage.Texture.Dispose();
@@ -322,7 +346,8 @@ namespace FSO.Client.UI.Panels
             PersonGrid.DrawPage();
             PeopleListBg.Texture = (eodPresent && PeopleListEODBackgroundImg != null) ? PeopleListEODBackgroundImg : PeopleListBackgroundImg;
             PeopleListBg.SetSize(PeopleListBg.Texture.Width, PeopleListBg.Texture.Height);
-            NextPageButton.Position = (eodPresent) ? (Vector2)Script.GetControlProperty("NextPageEODButton") : DefaultNextPagePos;
+
+            NextPageButton.Position = (eodPresent && !(GlobalSettings.Default.GraphicsWidth < 1024)) ? (Vector2)Script.GetControlProperty("NextPageEODButton") : DefaultNextPagePos;
             Background.Texture = (eodPresent) ? BackgroundEODImg : DefaultBGImage;
             Background.SetSize(Background.Texture.Width, Background.Texture.Height);
 
@@ -347,7 +372,7 @@ namespace FSO.Client.UI.Panels
                 if (SelectedAvatar != LastSelected)
                 {
                     if (Thumb != null) Remove(Thumb);
-                    Thumb = new UIPersonIcon(SelectedAvatar, LotController.vm);
+                    Thumb = new UIPersonIcon(SelectedAvatar, LotController.vm, false);
                     UpdateThumbPosition();
                     Add(Thumb);
                     LastSelected = SelectedAvatar;
@@ -361,6 +386,14 @@ namespace FSO.Client.UI.Panels
                 HideEOD = false;
                 SetInEOD(LotController.EODs.DisplayMode, LotController.EODs.ActiveEOD);
             }
+
+            if (LotController.EODs.EODMessage != (string)MsgWinTextEntry.Items[0].Data)
+            {
+                MsgWinTextEntry.Items[0].Data = LotController.EODs.EODMessage;
+                MsgWinTextEntry.Items[0].Columns[0] = LotController.EODs.EODMessage;
+            }
+            if (LotController.EODs.EODTime != TimerTextEntry.CurrentText)
+                TimerTextEntry.CurrentText = LotController.EODs.EODTime;
         }
 
         public override void Draw(UISpriteBatch batch)

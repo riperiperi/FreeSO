@@ -10,6 +10,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
     {
         public Dictionary<string, EODPlaintextEventHandler> PlaintextHandlers;
         public Dictionary<string, EODBinaryEventHandler> BinaryHandlers;
+        public Dictionary<short, EODSimanticsEventHandler> SimanticsHandlers;
 
         public VMEODServer Server;
 
@@ -17,6 +18,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             PlaintextHandlers = new Dictionary<string, EODPlaintextEventHandler>();
             BinaryHandlers = new Dictionary<string, EODBinaryEventHandler>();
+            SimanticsHandlers = new Dictionary<short, EODSimanticsEventHandler>();
             Server = server;
         }
 
@@ -39,6 +41,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
     public delegate void EODPlaintextEventHandler(string evt, string body, VMEODClient client);
     public delegate void EODBinaryEventHandler(string evt, byte[] body, VMEODClient client);
+    public delegate void EODSimanticsEventHandler(short evt, VMEODClient client);
 
     public delegate void EODDirectPlaintextEventHandler(string evt, string body);
     public delegate void EODDirectBinaryEventHandler(string evt, byte[] body);

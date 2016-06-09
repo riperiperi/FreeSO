@@ -167,7 +167,7 @@ namespace FSO.Files.XA
         /// <param name="InputBuffer">The data containing the stereo sample.</param>
         private void DecompressStereo(byte[] InputBuffer)
         {
-            if (InputBuffer.Length != 0x1E) return; //todo, deal with this correctly. Right now stereo audio is kind of totally fucked!
+            //if (InputBuffer.Length != 0x1E) return; //todo, deal with this correctly. Right now stereo audio is kind of totally fucked!
             byte bInput;
             uint i;
             int c1left, c2left, c1right, c2right, left, right;
@@ -183,7 +183,7 @@ namespace FSO.Files.XA
             c2right = (int)EATable[HINIBBLE(bInput) + 4];
             dright = (byte)(LONIBBLE(bInput) + 8);  // shift value for right channel
 
-            for (i = 2; i < 0x1E; i += 2)
+            for (i = 2; i < InputBuffer.Length-1; i += 2)
             {
                 left = HINIBBLE(InputBuffer[i]);  // HIGHER nibble for left channel
                 left = (left << 0x1c) >> dleft;

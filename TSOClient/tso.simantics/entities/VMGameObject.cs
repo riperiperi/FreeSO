@@ -39,6 +39,7 @@ namespace FSO.SimAntics
             base.SetDynamicSpriteFlag(index, set);
             if (this.WorldUI != null){
                 ((ObjectComponent)this.WorldUI).DynamicSpriteFlags = this.DynamicSpriteFlags;
+                ((ObjectComponent)this.WorldUI).DynamicSpriteFlags2 = this.DynamicSpriteFlags2;
             }
         }
 

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.NetPlay.EODs.Model;
 
 namespace FSO.SimAntics.Marshals.Threads
 {
@@ -19,6 +20,7 @@ namespace FSO.SimAntics.Marshals.Threads
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 
         public VMAsyncState BlockingState; //NULLable
+        public VMEODPluginThreadState EODConnection; //NULLable
         public bool Interrupt;
 
         public ushort ActionUID;
@@ -47,6 +49,8 @@ namespace FSO.SimAntics.Marshals.Threads
 
             writer.Write(BlockingState != null);
             if (BlockingState != null) VMAsyncState.SerializeGeneric(writer, BlockingState);
+            writer.Write(EODConnection != null);
+            if (EODConnection != null) EODConnection.SerializeInto(writer);
             writer.Write(Interrupt);
 
             writer.Write(ActionUID);
@@ -78,6 +82,12 @@ namespace FSO.SimAntics.Marshals.Threads
             LastStackExitCode = (VMPrimitiveExitCode)reader.ReadByte();
 
             if (reader.ReadBoolean()) BlockingState = VMAsyncState.DeserializeGeneric(reader, Version);
+            if (Version > 2 && reader.ReadBoolean())
+            {
+                EODConnection = new VMEODPluginThreadState();
+                EODConnection.Version = Version;
+                EODConnection.Deserialize(reader);
+            }
             else BlockingState = null;
             Interrupt = reader.ReadBoolean();
 

@@ -57,17 +57,18 @@ namespace FSO.SimAntics.NetPlay.EODs
                 {
                     server = new VMEODServer(UID, obj, joinable, vm);
                     JoinableEODs[obj.ObjectID] = server;
+                    Servers.Add(server);
                 }
             }
             else
             {
                 server = new VMEODServer(UID, obj, joinable, vm);
+                Servers.Add(server);
             }
 
             if (avatar != null) RegisterAvatar(avatar, server);
             RegisterInvoker(invoker, server);
             server.Connect(new VMEODClient(invoker, avatar, vm, UID));
-            Servers.Add(server);
         }
 
         public void Deliver(VMNetEODMessageCmd msg, VMAvatar avatar)
@@ -79,6 +80,19 @@ namespace FSO.SimAntics.NetPlay.EODs
                 if (avatarClient != null)
                 {
                     server.Deliver(msg, avatarClient);
+                }
+            }
+        }
+
+        public void SimanticsDeliver(short evt, VMEntity invoker)
+        {
+            VMEODServer server = null;
+            if (InvokerToEOD.TryGetValue(invoker.ObjectID, out server))
+            {
+                var invokerClient = server.Clients.FirstOrDefault(x => x.Invoker == invoker);
+                if (invokerClient != null)
+                {
+                    server.SimanticsDeliver(evt, invokerClient);
                 }
             }
         }

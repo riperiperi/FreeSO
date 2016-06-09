@@ -395,6 +395,7 @@ namespace FSO.Client.UI.Framework.Parser
         /// <returns></returns>
         public string GetString(string id)
         {
+            id = id.ToLowerInvariant();
             if (Strings.ContainsKey(id)) return Strings[id];
             else return "";
         }

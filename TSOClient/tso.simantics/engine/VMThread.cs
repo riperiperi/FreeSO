@@ -1,4 +1,6 @@
-﻿/*
+﻿#define THROW_SIMANTICS
+
+/*
  * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * http://mozilla.org/MPL/2.0/. 
@@ -14,6 +16,7 @@ using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Marshals.Threads;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.NetPlay.EODs.Model;
 
 namespace FSO.SimAntics.Engine
 {
@@ -40,7 +43,8 @@ namespace FSO.SimAntics.Engine
         public int[] TempXL = new int[2];
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 
-        public VMAsyncState BlockingState; 
+        public VMAsyncState BlockingState;
+        public VMEODPluginThreadState EODConnection;
         public bool Interrupt;
 
         private ushort ActionUID;
@@ -702,6 +706,7 @@ namespace FSO.SimAntics.Engine
                 LastStackExitCode = LastStackExitCode,
 
                 BlockingState = BlockingState,
+                EODConnection = EODConnection,
 
                 Interrupt = Interrupt,
 
@@ -724,6 +729,7 @@ namespace FSO.SimAntics.Engine
             LastStackExitCode = input.LastStackExitCode;
 
             BlockingState = input.BlockingState;
+            EODConnection = input.EODConnection;
             Interrupt = input.Interrupt;
             ActionUID = input.ActionUID;
             DialogCooldown = input.DialogCooldown;

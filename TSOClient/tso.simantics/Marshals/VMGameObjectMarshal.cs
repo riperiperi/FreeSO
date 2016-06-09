@@ -11,6 +11,9 @@ namespace FSO.SimAntics.Marshals
     {
         public Direction Direction;
 
+        public VMGameObjectMarshal() { }
+        public VMGameObjectMarshal(int version) : base(version) { }
+
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);

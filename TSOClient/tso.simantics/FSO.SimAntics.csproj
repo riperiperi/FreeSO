@@ -160,6 +160,7 @@
     <Compile Include="NetPlay\EODs\Handlers\Data\VMEODSignsData.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDanceFloorPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODHandler.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODPizzaMakerPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODSignsPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODStubPlugin.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODEvent.cs" />

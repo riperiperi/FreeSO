@@ -14,12 +14,16 @@ namespace FSO.Client.UI.Panels.EODs
         public static Dictionary<uint, Type> IDToHandler = new Dictionary<uint, Type>()
         {
             { 0x2a6356a0, typeof(UISignsEOD) },
-            { 0x4a5be8ab, typeof(UIDanceFloorEOD) }
+            { 0x4a5be8ab, typeof(UIDanceFloorEOD) },
+            { 0xea47ae39, typeof(UIPizzaMakerEOD) }
         };
 
         //this class is a container so that it can hold EODs without them being active in Live Mode.
         public UILotControl Lot;
         public EODLiveModeOpt DisplayMode;
+        public string EODMessage = "";
+        public string EODTime = "";
+
         public UIEOD ActiveEOD;
         public uint ActivePID;
 

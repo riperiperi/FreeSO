@@ -28,7 +28,8 @@ namespace FSO.SimAntics.NetPlay.EODs
         public static Dictionary<uint, Type> IDToHandler = new Dictionary<uint, Type>()
         {
             { 0x2a6356a0, typeof(VMEODSignsPlugin) },
-            { 0x4a5be8ab, typeof(VMEODDanceFloorPlugin) }
+            { 0x4a5be8ab, typeof(VMEODDanceFloorPlugin) },
+            { 0xea47ae39, typeof(VMEODPizzaMakerPlugin) }
         };
 
         public List<VMEODClient> Clients;
@@ -74,6 +75,15 @@ namespace FSO.SimAntics.NetPlay.EODs
                 {
                     handle(msg.EventName, msg.TextData, client);
                 }
+            }
+        }
+
+        public void SimanticsDeliver(short evt, VMEODClient client)
+        {
+            EODSimanticsEventHandler handle = null;
+            if (Handler.SimanticsHandlers.TryGetValue(evt, out handle))
+            {
+                handle(evt, client);
             }
         }
 
@@ -123,7 +133,7 @@ namespace FSO.SimAntics.NetPlay.EODs
         }
 
         public void SendOBJEvent(VMEODEvent evt) {
-            if (Invoker.Thread.BlockingState == null) return; //shouldn't bother, we already closed it
+            if (Invoker.Thread.EODConnection == null) return; //shouldn't bother, we already closed it
             vm.SendCommand(new VMNetEODEventCmd
             {
                 ObjectID = Invoker.ObjectID,

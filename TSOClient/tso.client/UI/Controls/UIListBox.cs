@@ -276,6 +276,7 @@ namespace FSO.Client.UI.Controls
 
         public override void Draw(UISpriteBatch batch)
         {
+            if (!Visible) return;
             for (var i = 0; i < VisibleRows; i++)
             {
                 int j = i + VerticalScrollPosition;
@@ -289,7 +290,8 @@ namespace FSO.Client.UI.Controls
                 if (selected)
                 {
                     /** Draw selection background **/
-                    DrawLocalTexture(batch, m_SelectionTexture, null, new Vector2(0, rowY), new Vector2(m_Width, RowHeight), m_SelectionFillColor);
+                    var white = TextureGenerator.GetPxWhite(batch.GraphicsDevice);
+                    DrawLocalTexture(batch, white, null, new Vector2(0, rowY), new Vector2(m_Width, RowHeight), m_SelectionFillColor);
                 }
 
                 var ts = TextStyle;
