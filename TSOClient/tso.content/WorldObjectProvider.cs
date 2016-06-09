@@ -134,7 +134,11 @@ namespace FSO.Content
                     lock (Entries)
                     {
                         Entries.TryGetValue(id, out reference);
-                        if (reference == null) return null;
+                        if (reference == null)
+                        {
+                            Console.WriteLine("Failed to get Object ID: " + id.ToString() + " (no resource)");
+                            return null;
+                        }
                         lock (ProcessedFiles)
                         {
                             //if a file is processed but an object in it is not in the cache, it may have changed.
@@ -193,6 +197,7 @@ namespace FSO.Content
                     //0x3BAA9787
                     if (!Cache.ContainsKey(id))
                     {
+                        Console.WriteLine("Failed to get Object ID: " + id.ToString() + " from resource " + resource.Name);
                         return null;
                     }
                     return Cache[id];

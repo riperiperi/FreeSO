@@ -566,20 +566,20 @@ namespace FSO.SimAntics
             if (set) {
                 if (index > 63)
                 {
-                    uint bitflag = (uint)(0x1 << (index-64));
+                    ulong bitflag = ((ulong)0x1 << (index-64));
                     DynamicSpriteFlags2 = DynamicSpriteFlags2 | bitflag;
                 } else {
-                    uint bitflag = (uint)(0x1 << index);
+                    ulong bitflag = ((ulong)0x1 << index);
                     DynamicSpriteFlags = DynamicSpriteFlags | bitflag;
                 }
             } else {
                 if (index > 63)
                 {
-                    DynamicSpriteFlags2 = (uint)(DynamicSpriteFlags2 & (~((ulong)0x1 << (index-64))));
+                    DynamicSpriteFlags2 = DynamicSpriteFlags2 & (~((ulong)0x1 << (index-64)));
                 }
                 else
                 {
-                    DynamicSpriteFlags = (uint)(DynamicSpriteFlags & (~((ulong)0x1 << index)));
+                    DynamicSpriteFlags = DynamicSpriteFlags & (~((ulong)0x1 << index));
                 }
             }
         }

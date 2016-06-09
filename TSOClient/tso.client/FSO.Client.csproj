@@ -370,6 +370,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Content Include="Content\Textures\splashSeg.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Game.ico" />
     <EmbeddedResource Include="Icon.bmp" />
     <Content Include="Content\OGL\Fonts\FreeSO_10px.xnb">

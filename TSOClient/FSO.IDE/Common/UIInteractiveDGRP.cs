@@ -103,6 +103,7 @@ namespace FSO.IDE.Common
             if (TargetTile != null && TargetTile is VMGameObject)
             {
                 TargetTile.DynamicSpriteFlags = 0;
+                TargetTile.DynamicSpriteFlags2 = 0;
                 TargetTile.SetDynamicSpriteFlag((ushort)i, true);
             }
             ForceUpdate();

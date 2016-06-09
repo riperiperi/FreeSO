@@ -18,6 +18,8 @@ using FSO.Client.UI.Model;
 using System.IO;
 using FSO.Files;
 using Microsoft.Xna.Framework.Graphics;
+using FSO.Common.Utils;
+using Microsoft.Xna.Framework;
 
 namespace FSO.Client.UI.Screens
 {
@@ -50,8 +52,21 @@ namespace FSO.Client.UI.Screens
             }
             else setupTex = GetTexture((ulong)FileIDs.UIFileIDs.setup);
             Background = new UIImage(setupTex);
+            var bgScale = 600f / setupTex.Height;
+            Background.SetSize(setupTex.Width * bgScale, 600);
+            Background.X = (800 - bgScale * setupTex.Width) / 2;
             BackgroundCtnr.Add(Background);
             BackgroundCtnr.X = (ScreenWidth - (800 * scale)) / 2;
+
+            Texture2D splashSeg;
+            using (var logostrm = File.Open("Content/Textures/splashSeg.png", FileMode.Open))
+                splashSeg = ImageLoader.FromStream(GameFacade.GraphicsDevice, logostrm);
+
+            var bgEdge = new UIImage(splashSeg).With9Slice(64, 64, 1, 1);
+            BackgroundCtnr.AddAt(0,bgEdge);
+            bgEdge.Y = -1;
+            bgEdge.X = Background.X-64;
+            bgEdge.SetSize(Background.Width+64*2, ScreenHeight + 2);
 
             //TODO: Letter spacing is a bit wrong on this label
             var lbl = new UILabel();
@@ -167,6 +182,12 @@ namespace FSO.Client.UI.Screens
         {
             InTween = false;
             CheckPreloadLabel();
+        }
+
+        public override void Draw(UISpriteBatch batch)
+        {
+            batch.Draw(TextureGenerator.GetPxWhite(batch.GraphicsDevice), new Rectangle(0, 0, ScreenWidth, ScreenHeight), new Color(0x09,0x18,0x2F));
+            base.Draw(batch);
         }
     }
 }
