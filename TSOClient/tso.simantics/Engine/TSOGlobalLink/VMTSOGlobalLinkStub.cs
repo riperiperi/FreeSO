@@ -29,11 +29,12 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             {
                 var obj1 = vm.GetObjectByPersist(uid1);
                 var obj2 = vm.GetObjectByPersist(uid2);
+                var finalAmount = amount;
 
                 new System.Threading.Thread(() =>
                 {
                     //System.Threading.Thread.Sleep(250);
-                    callback(result,
+                    callback(result, finalAmount,
                         uid1, (obj1 == null) ? 0 : obj1.TSOState.Budget.Value,
                         uid2, (obj2 == null) ? 0 : obj2.TSOState.Budget.Value);
                 }).Start();
@@ -89,7 +90,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
                         else { source = uint.MaxValue; target = cmd.ActorUID; }
                         WaitingOnArch = true;
                         PerformTransaction(vm, false, source, target, Math.Abs(cost),
-                            (bool success, uint uid1, uint budget1, uint uid2, uint budget2) =>
+                            (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                             {
                                 lock (ArchBuffer) WaitingOnArch = false;
                                 if (success)
@@ -101,6 +102,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
                                 { //update budgets on clients. id of 0 means there is no target thread.
                                     Responded = true,
                                     Success = success,
+                                    TransferAmount = transferAmount,
                                     UID1 = uid1,
                                     Budget1 = budget1,
                                     UID2 = uid2,

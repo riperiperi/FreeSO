@@ -39,6 +39,9 @@ namespace FSO.SimAntics.Engine
 
         /** An object selected by the code to perform operations on. **/
         public VMEntity StackObject;
+
+        /** If true, this stack frame is not a subroutine. Return with a continue. **/
+        public bool DiscardResult;
         
         /** Indicates that the current stack frame is part of an action tree.
          ** Set by "idle for input, allow push", when an interaction is selected.
@@ -126,7 +129,8 @@ namespace FSO.SimAntics.Engine
                 CodeOwnerGUID = CodeOwner.OBJ.GUID,
                 Locals = Locals,
                 Args = Args,
-                ActionTree = ActionTree
+                DiscardResult = DiscardResult,
+                ActionTree = ActionTree,
             };
         }
 
@@ -146,6 +150,7 @@ namespace FSO.SimAntics.Engine
             StackObject = context.VM.GetObjectById(input.StackObject);
             Locals = input.Locals;
             Args = input.Args;
+            DiscardResult = input.DiscardResult;
             ActionTree = input.ActionTree;
         }
 

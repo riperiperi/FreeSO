@@ -36,7 +36,11 @@ namespace FSO.SimAntics.Primitives
                         context.Thread.TempXL[0] = (int)state.Budget1;
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
-                    else return (state.Success) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                    else
+                    {
+                        context.Thread.TempXL[0] = state.TransferAmount; //final transfer amount put into tempxl0
+                        return (state.Success) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                    }
                 }
                 else return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
             }
@@ -53,9 +57,10 @@ namespace FSO.SimAntics.Primitives
                 case VMTransferFundsType.MaxisToMe:
                     target = context.Caller.PersistID; break;
                 case VMTransferFundsType.MaxisToStackObjectsOwner:
-                    //TODO: when TSOGameObjectState is in
+                    if (context.StackObject is VMGameObject) target = ((VMTSOObjectState)context.StackObject.TSOState).OwnerID;
                     break;
                 case VMTransferFundsType.StackObjectsOwnerToMaxis:
+                    if (context.StackObject is VMGameObject) source = ((VMTSOObjectState)context.StackObject.TSOState).OwnerID;
                     break;
                 case VMTransferFundsType.FromMeToStackObject:
                     source = context.Caller.PersistID; target = context.StackObject.PersistID; break;
@@ -66,14 +71,17 @@ namespace FSO.SimAntics.Primitives
                 case VMTransferFundsType.FromStackObjectToMaxis:
                     source = context.StackObject.PersistID; break;
                 case VMTransferFundsType.FromStackObjectToStackObjectOwner:
+                    source = context.StackObject.PersistID;
+                    if (context.StackObject is VMGameObject) target = ((VMTSOObjectState)context.StackObject.TSOState).OwnerID;
                     break;
                 case VMTransferFundsType.PutStackObjectCashIntoTempXL0:
                     source = context.StackObject.PersistID; amount = 0;
                     break;
                 case VMTransferFundsType.FromLotOwnerToMaxis:
-                    //TODO: when TSOLotState is in
+                    source = context.VM.TSOState.OwnerID;
                     break;
                 case VMTransferFundsType.FromMaxisToLotOwner:
+                    target = context.VM.TSOState.OwnerID;
                     break;
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
@@ -90,6 +98,7 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
                 if (!operand.JustTest) return VMPrimitiveExitCode.GOTO_FALSE;
+                context.Thread.TempXL[0] = amount;
                 if (context.VM.CheckGlobalLink.PerformTransaction(context.VM, true, source, target, amount))
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 return VMPrimitiveExitCode.GOTO_FALSE;
@@ -107,12 +116,13 @@ namespace FSO.SimAntics.Primitives
                     var id = context.Caller.ObjectID; //this thread's object id
                     var vm = context.VM;
                     context.VM.GlobalLink.PerformTransaction(context.VM, operand.JustTest, source, target, amount,
-                        (bool success, uint uid1, uint budget1, uint uid2, uint budget2) =>
+                        (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                         {
                             vm.SendCommand(new VMNetAsyncResponseCmd(id, new VMTransferFundsState
                             {
                                 Responded = true,
                                 Success = success,
+                                TransferAmount = transferAmount,
                                 UID1 = uid1,
                                 Budget1 = budget1,
                                 UID2 = uid2,
@@ -312,12 +322,14 @@ namespace FSO.SimAntics.Primitives
     public enum VMTransferFundsFlags : byte
     {
         JustTest = 0x1,
-        Subtract = 0x2
+        Subtract = 0x2,
+        PayoutMultiplier = 0x4
     }
 
     public class VMTransferFundsState : VMAsyncState
     {
         public bool Success;
+        public int TransferAmount;
         public uint UID1;
         public uint Budget1;
         public uint UID2;
@@ -327,6 +339,7 @@ namespace FSO.SimAntics.Primitives
         {
             base.Deserialize(reader);
             Success = reader.ReadBoolean();
+            TransferAmount = reader.ReadInt32();
             UID1 = reader.ReadUInt32();
             Budget1 = reader.ReadUInt32();
             UID2 = reader.ReadUInt32();
@@ -337,6 +350,7 @@ namespace FSO.SimAntics.Primitives
         {
             base.SerializeInto(writer);
             writer.Write(Success);
+            writer.Write(TransferAmount);
             writer.Write(UID1);
             writer.Write(Budget1);
             writer.Write(UID2);

@@ -40,12 +40,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             else if (vm.GlobalLink != null && item != null)
             { 
                 vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, (int)item.Price,
-                (bool success, uint uid1, uint budget1, uint uid2, uint budget2) =>
+                (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
                     vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
                     { //update budgets on clients. id of 0 means there is no target thread.
                         Responded = true,
                         Success = success,
+                        TransferAmount = transferAmount,
                         UID1 = uid1,
                         Budget1 = budget1,
                         UID2 = uid2,
@@ -117,7 +118,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             //perform the transaction. If it succeeds, requeue the command
             vm.GlobalLink.PerformTransaction(vm, false, caller.PersistID, uint.MaxValue, (int)item.Price,
-                (bool success, uint uid1, uint budget1, uint uid2, uint budget2) =>
+                (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
                     if (success)
                     {
@@ -128,6 +129,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     { //update budgets on clients. id of 0 means there is no target thread.
                         Responded = true,
                         Success = success,
+                        TransferAmount = transferAmount,
                         UID1 = uid1,
                         Budget1 = budget1,
                         UID2 = uid2,

@@ -1,4 +1,4 @@
-﻿#define THROW_SIMANTICS
+﻿//#define THROW_SIMANTICS
 
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
@@ -474,6 +474,7 @@ namespace FSO.SimAntics.Engine
         }
 
         public void Pop(VMPrimitiveExitCode result){
+            var discardResult = Stack[Stack.Count - 1].DiscardResult;
             var contextSwitch = (Stack.Count > 1) && Stack.LastOrDefault().ActionTree != Stack[Stack.Count - 2].ActionTree;
             if (contextSwitch && !Stack.LastOrDefault().ActionTree) { }
             Stack.RemoveAt(Stack.Count - 1);
@@ -490,9 +491,11 @@ namespace FSO.SimAntics.Engine
             }
             if (Stack.Count > 0)
             {
-                if (result == VMPrimitiveExitCode.RETURN_TRUE)
+                if (discardResult)
+                    result = VMPrimitiveExitCode.CONTINUE;
+                else if (result == VMPrimitiveExitCode.RETURN_TRUE)
                     result = VMPrimitiveExitCode.GOTO_TRUE;
-                if (result == VMPrimitiveExitCode.RETURN_FALSE)
+                else if (result == VMPrimitiveExitCode.RETURN_FALSE)
                     result = VMPrimitiveExitCode.GOTO_FALSE;
                 var currentFrame = Stack.Last();
                 HandleResult(currentFrame, currentFrame.GetCurrentInstruction(), result);
@@ -524,8 +527,11 @@ namespace FSO.SimAntics.Engine
         {
             if (!IsCheck && (invocation.Flags & TTABFlags.RunImmediately) > 0)
             {
+                //ExecuteAction(item);
+
                 var frame = invocation.ToStackFrame(Entity);
-                EvaluateCheck(Context, Entity, frame, invocation);
+                frame.DiscardResult = true;
+                Push(frame);
                 return;
             }
 

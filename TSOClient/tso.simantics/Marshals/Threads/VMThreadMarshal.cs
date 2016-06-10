@@ -63,7 +63,7 @@ namespace FSO.SimAntics.Marshals.Threads
             Stack = new VMStackFrameMarshal[stackN];
             for (int i = 0; i < stackN; i++) {
                 var type = reader.ReadByte();
-                Stack[i] = (type==1)?new VMRoutingFrameMarshal():new VMStackFrameMarshal();
+                Stack[i] = (type==1)?new VMRoutingFrameMarshal(Version):new VMStackFrameMarshal(Version);
                 Stack[i].Deserialize(reader);
             }
 

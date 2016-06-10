@@ -50,6 +50,9 @@ namespace FSO.SimAntics.Marshals.Threads
         public VMFindLocationResultMarshal[] Choices; //NULLable
         public VMFindLocationResultMarshal CurRoute; //NULLable
 
+        public VMRoutingFrameMarshal() { }
+        public VMRoutingFrameMarshal(int version) : base(version) { }
+
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
