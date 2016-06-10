@@ -12,6 +12,7 @@ using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics.Engine.Scopes;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -38,10 +39,10 @@ namespace FSO.SimAntics.Primitives
 
     public class VMGetDistanceToOperand : VMPrimitiveOperand
     { 
-        public ushort TempNum;
-        public byte Flags;
-        public byte ObjectScope;
-        public ushort OScopeData;
+        public ushort TempNum { get; set; }
+        public byte Flags { get; set; }
+        public VMVariableScope ObjectScope { get; set; }
+        public short OScopeData { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -50,8 +51,25 @@ namespace FSO.SimAntics.Primitives
             {
                 TempNum = io.ReadUInt16();
                 Flags = io.ReadByte();
-                ObjectScope = io.ReadByte();
-                OScopeData = io.ReadUInt16();
+                ObjectScope = (VMVariableScope)io.ReadByte();
+                OScopeData = io.ReadInt16();
+
+                if ((Flags & 1) == 0)
+                {
+                    ObjectScope = VMVariableScope.MyObject;
+                    OScopeData = 11;
+                }
+                Flags |= 1;
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(TempNum);
+                io.Write(Flags);
+                io.Write((byte)ObjectScope);
+                io.Write(OScopeData);
             }
         }
         #endregion

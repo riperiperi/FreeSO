@@ -20,8 +20,16 @@ namespace FSO.Files.Formats.IFF.Chunks
     /// </summary>
     public class TTAB : IffChunk
     {
-        public TTABInteraction[] Interactions;
-        public Dictionary<uint, TTABInteraction> InteractionByIndex;
+        public TTABInteraction[] Interactions = new TTABInteraction[0];
+        public Dictionary<uint, TTABInteraction> InteractionByIndex = new Dictionary<uint, TTABInteraction>();
+
+        public static float[] AttenuationValues = {
+            0, //custom
+            0, //none
+            0.002f, //low
+            0.02f, //medium
+            0.1f, //high (falloff entirely in 10 tiles)
+            };
 
         /// <summary>
         /// Reads a TTAB chunk from a stream.
@@ -32,9 +40,9 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
+                InteractionByIndex.Clear();
                 Interactions = new TTABInteraction[io.ReadUInt16()];
                 if (Interactions.Length == 0) return; //no interactions, don't bother reading remainder.
-                InteractionByIndex = new Dictionary<uint, TTABInteraction>();
                 var version = io.ReadUInt16();
                 IOProxy iop;
                 if (version != 9 && version != 10) iop = new TTABNormal(io);
@@ -47,10 +55,10 @@ namespace FSO.Files.Formats.IFF.Chunks
                 for (int i = 0; i < Interactions.Length; i++)
                 {
                     var result = new TTABInteraction();
-                    result.ActionFunction = iop.ReadUInt16();
+                    result.ActionFunction = iop.ReadUInt16();   
                     result.TestFunction = iop.ReadUInt16();
                     result.MotiveEntries = new TTABMotiveEntry[iop.ReadUInt32()];
-                    result.Flags = iop.ReadUInt32();
+                    result.Flags = (TTABFlags)iop.ReadUInt32();
                     result.TTAIndex = iop.ReadUInt32();
                     if (version > 6) result.AttenuationCode = iop.ReadUInt32();
                     result.AttenuationValue = iop.ReadFloat();
@@ -64,11 +72,69 @@ namespace FSO.Files.Formats.IFF.Chunks
                         if (version > 6) motive.PersonalityModifier = iop.ReadUInt16();
                         result.MotiveEntries[j] = motive;
                     }
-                    if (version > 9) result.Unknown = iop.ReadUInt32();
+                    if (version > 9)
+                    {
+                        result.Flags2 = (TSOFlags)iop.ReadUInt32();
+                    }
                     Interactions[i] = result;
                     InteractionByIndex.Add(result.TTAIndex, result);
                 }
             }
+        }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteUInt16((ushort)Interactions.Length);
+                io.WriteUInt16(8); //version. don't save to high version cause we can't write out using the complex io proxy.
+                for (int i = 0; i < Interactions.Length; i++)
+                {
+                    var action = Interactions[i];
+                    io.WriteUInt16(action.ActionFunction);
+                    io.WriteUInt16(action.TestFunction);
+                    io.WriteUInt32((uint)action.MotiveEntries.Length);
+                    io.WriteUInt32((uint)action.Flags);
+                    io.WriteUInt32(action.TTAIndex);
+                    io.WriteUInt32(action.AttenuationCode);
+                    io.WriteFloat(action.AttenuationValue);
+                    io.WriteUInt32(action.AutonomyThreshold);
+                    io.WriteInt32(action.JoiningIndex);
+                    for (int j=0; j < action.MotiveEntries.Length; j++)
+                    {
+                        var mot = action.MotiveEntries[j];
+                        io.WriteInt16(mot.EffectRangeMinimum);
+                        io.WriteInt16(mot.EffectRangeMaximum);
+                        io.WriteUInt16(mot.PersonalityModifier);
+                    }
+                    //TODO: write out TSOFlags
+                }
+            }
+            return true;
+        }
+
+        public void InsertInteraction(TTABInteraction action, int index)
+        {
+            var newInt = new TTABInteraction[Interactions.Length + 1];
+            if (index == -1) index = 0;
+            Array.Copy(Interactions, newInt, index); //copy before strings
+            newInt[index] = action;
+            Array.Copy(Interactions, index, newInt, index + 1, (Interactions.Length - index));
+            Interactions = newInt;
+
+            if (!InteractionByIndex.ContainsKey(action.TTAIndex)) InteractionByIndex.Add(action.TTAIndex, action);
+        }
+
+        public void DeleteInteraction(int index)
+        {
+            var action = Interactions[index];
+            var newInt = new TTABInteraction[Interactions.Length - 1];
+            if (index == -1) index = 0;
+            Array.Copy(Interactions, newInt, index); //copy before strings
+            Array.Copy(Interactions, index + 1, newInt, index, (Interactions.Length - (index + 1)));
+            Interactions = newInt;
+
+            if (InteractionByIndex.ContainsKey(action.TTAIndex)) InteractionByIndex.Remove(action.TTAIndex);
         }
     }
 
@@ -191,23 +257,128 @@ namespace FSO.Files.Formats.IFF.Chunks
     /// <summary>
     /// Represents an interaction in a TTAB chunk.
     /// </summary>
-    public struct TTABInteraction
+    public class TTABInteraction
     {
         public ushort ActionFunction;
         public ushort TestFunction;
         public TTABMotiveEntry[] MotiveEntries;
-        public uint Flags;
+        public TTABFlags Flags;
         public uint TTAIndex;
         public uint AttenuationCode;
         public float AttenuationValue;
         public uint AutonomyThreshold;
         public int JoiningIndex;
-        public uint Unknown;
+        public TSOFlags Flags2 = (TSOFlags)0x1f; //allow a lot of things
 
         public InteractionMaskFlags MaskFlags {
             get {
-                return (InteractionMaskFlags)((Unknown >> 4) & 0xF);
+                return (InteractionMaskFlags)(((int)Flags >> 16) & 0xF);
             }
+            set
+            {
+                Flags = (TTABFlags)(((int)Flags & 0xFFFF) | ((int)value << 16));
+            }
+        }
+
+        //ALLOW
+        public bool AllowVisitors
+        {
+            get { return (Flags & TTABFlags.AllowVisitors) > 0; }
+            set { Flags &= ~(TTABFlags.AllowVisitors); if (value) Flags |= TTABFlags.AllowVisitors; }
+        }
+        public bool AllowFriends
+        {
+            get { return (Flags2 & TSOFlags.AllowFriends) > 0; }
+            set { Flags2 &= ~(TSOFlags.AllowFriends); if (value) Flags2 |= TSOFlags.AllowFriends; }
+        }
+        public bool AllowRoommates
+        {
+            get { return (Flags2 & TSOFlags.AllowRoommates) > 0; }
+            set { Flags2 &= ~(TSOFlags.AllowRoommates); if (value) Flags2 |= TSOFlags.AllowRoommates; }
+        }
+        public bool AllowObjectOwner
+        {
+            get { return (Flags2 & TSOFlags.AllowObjectOwner) > 0; }
+            set { Flags2 &= ~(TSOFlags.AllowObjectOwner); if (value) Flags2 |= TSOFlags.AllowObjectOwner; }
+        }
+        public bool UnderParentalControl
+        {
+            get { return (Flags2 & TSOFlags.UnderParentalControl) > 0; }
+            set { Flags2 &= ~(TSOFlags.UnderParentalControl); if (value) Flags2 |= TSOFlags.UnderParentalControl; }
+        }
+        public bool AllowCSRs
+        {
+            get { return (Flags2 & TSOFlags.AllowCSRs) > 0; }
+            set { Flags2 &= ~(TSOFlags.AllowCSRs); if (value) Flags2 |= TSOFlags.AllowCSRs; }
+        }
+        public bool AllowGhosts
+        {
+            get { return (Flags2 & TSOFlags.AllowGhost) > 0; }
+            set { Flags2 &= ~(TSOFlags.AllowGhost); if (value) Flags2 |= TSOFlags.AllowGhost; }
+        }
+        public bool AllowCats
+        {
+            get { return (Flags & TTABFlags.AllowCats) > 0; }
+            set { Flags &= ~(TTABFlags.AllowCats); if (value) Flags |= TTABFlags.AllowCats; }
+        }
+        public bool AllowDogs
+        {
+            get { return (Flags & TTABFlags.AllowDogs) > 0; }
+            set { Flags &= ~(TTABFlags.AllowDogs); if (value) Flags |= TTABFlags.AllowDogs; }
+        }
+
+        //FLAGS
+        public bool Debug
+        {
+            get { return (Flags & TTABFlags.Debug) > 0; }
+            set { Flags &= ~(TTABFlags.Debug); if (value) Flags |= TTABFlags.Debug; }
+        }
+
+        public bool Leapfrog {
+            get { return (Flags & TTABFlags.Leapfrog) > 0; }
+            set { Flags &= ~(TTABFlags.Leapfrog); if (value) Flags |= TTABFlags.Leapfrog; }
+        }
+        public bool MustRun
+        {
+            get { return (Flags & TTABFlags.MustRun) > 0; }
+            set { Flags &= ~(TTABFlags.MustRun); if (value) Flags |= TTABFlags.MustRun; }
+        }
+        public bool AutoFirst
+        {
+            get { return (Flags & TTABFlags.AutoFirstSelect) > 0; }
+            set { Flags &= ~(TTABFlags.AutoFirstSelect); if (value) Flags |= TTABFlags.AutoFirstSelect; }
+        }
+        public bool RunImmediately
+        {
+            get { return (Flags & TTABFlags.RunImmediately) > 0; }
+            set { Flags &= ~(TTABFlags.RunImmediately); if (value) Flags |= TTABFlags.RunImmediately; }
+        }
+        public bool AllowConsecutive
+        {
+            get { return (Flags & TTABFlags.AllowConsecutive) > 0; }
+            set { Flags &= ~(TTABFlags.AllowConsecutive); if (value) Flags |= TTABFlags.AllowConsecutive; }
+        }
+
+
+        public bool Carrying
+        {
+            get { return (MaskFlags & InteractionMaskFlags.AvailableWhenCarrying) > 0; }
+            set { MaskFlags &= ~(InteractionMaskFlags.AvailableWhenCarrying); if (value) MaskFlags |= InteractionMaskFlags.AvailableWhenCarrying; }
+        }
+        public bool Repair
+        {
+            get { return (MaskFlags & InteractionMaskFlags.IsRepair) > 0; }
+            set { MaskFlags &= ~(InteractionMaskFlags.IsRepair); if (value) MaskFlags |= InteractionMaskFlags.IsRepair; }
+        }
+        public bool AlwaysCheck
+        {
+            get { return (MaskFlags & InteractionMaskFlags.RunCheckAlways) > 0; }
+            set { MaskFlags &= ~(InteractionMaskFlags.RunCheckAlways); if (value) MaskFlags |= InteractionMaskFlags.RunCheckAlways; }
+        }
+        public bool WhenDead
+        {
+            get { return (MaskFlags & InteractionMaskFlags.AvailableWhenDead) > 0; }
+            set { MaskFlags &= ~(InteractionMaskFlags.AvailableWhenDead); if (value) MaskFlags |= InteractionMaskFlags.AvailableWhenDead; }
         }
     }
 
@@ -223,7 +394,34 @@ namespace FSO.Files.Formats.IFF.Chunks
 
     public enum TTABFlags
     {
-        Debug = 1<<7
+        AllowVisitors = 1, //COVERED, TODO for no TSOFlags? (default to only roomies, unless this flag set)
+        Joinable = 1 << 1, //TODO
+        RunImmediately = 1 << 2, //COVERED
+        AllowConsecutive = 1 << 3, //TODO
+
+        Debug = 1 << 7, //COVERED: only available to roomies for now
+        AutoFirstSelect = 1 << 8, //TODO (autonomus first select?)
+        Leapfrog = 1 << 9, //COVERED
+        MustRun = 1 << 10, //TODO (where would this NOT run?)
+        AllowDogs = 1 << 11, //COVERED
+        AllowCats = 1 << 12, //COVERED
+
+        TSOAvailableCarrying = 1 << 16, //COVERED
+        TSOIsRepair = 1 << 17, //TODO (only available when wear = 0)
+        TSORunCheckAlways = 1 << 18, //TODO
+        TSOAvailableWhenDead = 1<<19 //COVERED
+    }
+
+    public enum TSOFlags
+    {
+        NonEmpty = 1, //if this is the only flag set, flags aren't empty intentionally. force Owner, Roommates, Friends to on
+        AllowObjectOwner = 1 << 1, //COVERED
+        AllowRoommates = 1 << 2, //COVERED
+        AllowFriends = 1 << 3, //TODO
+        AllowVisitors = 1 << 4, //COVERED
+        AllowGhost = 1 << 5, //COVERED
+        UnderParentalControl = 1 << 6, //TODO: interactions always available
+        AllowCSRs = 1 << 7 //COVERED: only available to admins
     }
 
     public enum InteractionMaskFlags

@@ -19,6 +19,7 @@ using FSO.Common.Utils;
 using FSO.SimAntics.Engine.Routing;
 using FSO.SimAntics.Model.Routing;
 using FSO.SimAntics.Primitives;
+using FSO.SimAntics.Marshals.Threads;
 
 namespace FSO.SimAntics.Engine
 {
@@ -59,7 +60,7 @@ namespace FSO.SimAntics.Engine
         private static int WAIT_TIMEOUT = 10 * 30; //10 seconds
         private static int MAX_RETRIES = 10;
 
-        private Stack<VMRoomPortal> Rooms;
+        private Stack<VMRoomPortal> Rooms = new Stack<VMRoomPortal>();
         private VMRoomPortal CurrentPortal;
 
         public LinkedList<Point> WalkTo;
@@ -86,7 +87,15 @@ namespace FSO.SimAntics.Engine
         {
             get
             {
-                return Caller.GetValue(VMStackObjectVariable.WalkStyle);
+                return (InPool)?(short)0:Caller.GetValue(VMStackObjectVariable.WalkStyle);
+            }
+        }
+
+        private bool InPool
+        {
+            get
+            {
+                return VM.Context.RoomInfo[VM.Context.GetRoomAt(Caller.Position)].Room.IsPool;
             }
         }
 
@@ -104,6 +113,8 @@ namespace FSO.SimAntics.Engine
         private List<VMFindLocationResult> Choices;
         private VMFindLocationResult CurRoute;
 
+        public VMRoutingFrame() { }
+        
         private void Init()
         {
             ParentRoute = GetParentFrame();
@@ -181,11 +192,8 @@ namespace FSO.SimAntics.Engine
         {
             State = VMRoutingFrameState.FAILED;
             var avatar = (VMAvatar)Caller;
-            if (CallFailureTrees)
+            if (CallFailureTrees && ParentRoute == null)
             {
-                avatar.SetPersonData(VMPersonDataVariable.Priority, 100); //TODO: what is this meant to be? what dictates it? 
-                //probably has to do with interaction priority.
-                //we just set it to 100 here so that failure trees work.
                 var bhav = Global.Resource.Get<BHAV>(ROUTE_FAIL_TREE);
                 Thread.ExecuteSubRoutine(this, bhav, CodeOwner, new VMSubRoutineOperand(new short[] { (short)code, (blocker==null)?(short)0:blocker.ObjectID, 0, 0 }));
             }
@@ -211,7 +219,7 @@ namespace FSO.SimAntics.Engine
             var DestRoom = VM.Context.GetRoomAt(dest);
             var MyRoom = VM.Context.GetRoomAt(Caller.Position);
 
-            IgnoreRooms = (Slot == null && (route.Flags & SLOTFlags.IgnoreRooms) > 0) || (Slot != null && (Slot.Rsflags & SLOTFlags.IgnoreRooms) > 0);
+            IgnoreRooms = (Slot != null && (Slot.Rsflags & SLOTFlags.IgnoreRooms) > 0);
 
             if (DestRoom == MyRoom || IgnoreRooms) return true; //we don't have to do any room finding for this
             else
@@ -326,7 +334,11 @@ namespace FSO.SimAntics.Engine
                 var ft = obj.Footprint;
 
                 var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
-                if (obj != Caller && ft != null && (obj is VMGameObject || AvatarsToConsider.Contains(obj)) && ((flags & VMEntityFlags.DisallowPersonIntersection) > 0 || (flags & VMEntityFlags.AllowPersonIntersection) == 0))
+                if (obj != Caller && ft != null &&
+                    (obj is VMGameObject || AvatarsToConsider.Contains(obj)) &&
+                    ((flags & VMEntityFlags.DisallowPersonIntersection) > 0 || (flags & VMEntityFlags.AllowPersonIntersection) == 0)
+                    && (!(Caller.ExecuteEntryPoint(5, VM.Context, true, obj, new short[] { obj.ObjectID, 0, 0, 0 })
+                        || obj.ExecuteEntryPoint(5, VM.Context, true, Caller, new short[] { Caller.ObjectID, 0, 0, 0 }))))
                     obstacles.Add(new VMObstacle(ft.x1-3, ft.y1-3, ft.x2+3, ft.y2+3));
             }
 
@@ -384,13 +396,19 @@ namespace FSO.SimAntics.Engine
                 if (ent.EntryPoints[entryPoint].ConditionFunction != 0) //check if we can definitely execute this...
                 {
                     var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entryPoint].ConditionFunction, VM.Context);
-                    Execute = (VMThread.EvaluateCheck(VM.Context, Caller, new VMQueuedAction()
+                    if (Behavior != null)
                     {
-                        Callee = ent,
-                        CodeOwner = Behavior.owner,
-                        StackObject = ent,
-                        Routine = VM.Assemble(Behavior.bhav),
-                    }) == VMPrimitiveExitCode.RETURN_TRUE);
+                        Execute = (VMThread.EvaluateCheck(VM.Context, Caller, new VMStackFrame()
+                        {
+                            Caller = Caller,
+                            Callee = ent,
+                            CodeOwner = Behavior.owner,
+                            StackObject = ent,
+                            Routine = VM.Assemble(Behavior.bhav),
+                            Args = new short[4]
+                        }) == VMPrimitiveExitCode.RETURN_TRUE);
+                    }
+                    else Execute = true;
 
                 }
                 else
@@ -402,6 +420,7 @@ namespace FSO.SimAntics.Engine
                 {
                     //push it onto our stack, except now the object owns our soul! when we are returned to we can evaluate the result and determine if the action failed.
                     var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entryPoint].ActionFunction, VM.Context);
+                    if (Behavior == null) return false; //invalid id
                     var routine = VM.Assemble(Behavior.bhav);
                     var childFrame = new VMStackFrame
                     {
@@ -409,7 +428,8 @@ namespace FSO.SimAntics.Engine
                         Caller = Caller,
                         Callee = ent,
                         CodeOwner = Behavior.owner,
-                        StackObject = ent
+                        StackObject = ent,
+                        ActionTree = ActionTree
                     };
                     childFrame.Args = new short[routine.Arguments];
                     Thread.Push(childFrame);
@@ -429,7 +449,6 @@ namespace FSO.SimAntics.Engine
         public VMPrimitiveExitCode Tick()
         {
             var avatar = (VMAvatar)Caller;
-            avatar.Velocity = new Vector3(0, 0, 0);
 
             if (State != VMRoutingFrameState.FAILED && avatar.GetFlag(VMEntityFlags.InteractionCanceled) && avatar.GetPersonData(VMPersonDataVariable.NonInterruptable) == 0)
             {
@@ -441,6 +460,7 @@ namespace FSO.SimAntics.Engine
             {
                 if (Velocity > 0) Velocity--;
 
+                if (avatar.Animations.Count < 3) StartWalkAnimation();
                 avatar.Animations[0].Weight = (8 - Velocity) / 8f;
                 avatar.Animations[1].Weight = (Velocity / 8f) * 0.66f;
                 avatar.Animations[2].Weight = (Velocity / 8f) * 0.33f;
@@ -483,8 +503,10 @@ namespace FSO.SimAntics.Engine
                         State = VMRoutingFrameState.INITIAL;
                         if (avatar.GetPersonData(VMPersonDataVariable.Posture) == 1) avatar.SetPersonData(VMPersonDataVariable.Posture, 0);
                     }
-                    else
-                        SoftFail(VMRouteFailCode.CantStand, null);
+                    else {
+                        var resultID = avatar.GetValue(VMStackObjectVariable.PrimitiveResultID);
+                        SoftFail(VMRouteFailCode.CantStand, (resultID == 0)? null : VM.GetObjectById(resultID));
+                    }
                     return VMPrimitiveExitCode.CONTINUE;
                 case VMRoutingFrameState.INITIAL:
                 case VMRoutingFrameState.ROOM_PORTAL:
@@ -615,7 +637,10 @@ namespace FSO.SimAntics.Engine
 
                             //reset animation, so that we're facing the correct direction afterwards.
                             avatar.Animations.Clear();
-                            var animation = FSO.Content.Content.Get().AvatarAnimations.Get(avatar.WalkAnimations[3] + ".anim");
+
+                            var anims = InPool ? avatar.SwimAnimations : avatar.WalkAnimations;
+
+                            var animation = FSO.Content.Content.Get().AvatarAnimations.Get(anims[3] + ".anim");
                             var state = new VMAnimationState(animation, false);
                             state.Loop = true;
                             avatar.Animations.Add(state);
@@ -827,7 +852,7 @@ namespace FSO.SimAntics.Engine
 
             //check if the shoo interaction is present on their action queue. callee GUID (destination obj) and 
             //interaction id must match.
-            if (avatar.Thread.Queue.Any(x => x.Callee.Object.GUID == GOTO_GUID && x.InteractionNumber == SHOO_INTERACTION)) return false;
+            if (avatar.Thread.Queue.Any(x => x.Callee != null && x.Callee.Object.GUID == GOTO_GUID && x.InteractionNumber == SHOO_INTERACTION)) return false;
 
             return true;
         }
@@ -840,7 +865,6 @@ namespace FSO.SimAntics.Engine
             if (State == VMRoutingFrameState.WALKING)
             {
                 //only wait if we're walking
-                avatar.Velocity = new Vector3(0, 0, 0);
                 WaitTime = Math.Max(waitTime, WaitTime);
             }
         }
@@ -894,7 +918,6 @@ namespace FSO.SimAntics.Engine
             TargetDirection = CurRoute.RadianDirection;
 
             avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)CurRoute.RouteEntryFlags);
-            avatar.Velocity = new Vector3();
 
             var directionDiff = DirectionUtils.Difference(Caller.RadianDirection, TargetDirection);
             if (!CurRoute.FaceAnywhere && CanPortalTurn() && Turn(directionDiff))
@@ -914,21 +937,22 @@ namespace FSO.SimAntics.Engine
             var obj = (VMAvatar)Caller;
             int off = (directionDiff > 0) ? 0 : 1;
             var absDiff = Math.Abs(directionDiff);
+            var anims = (InPool) ? obj.SwimAnimations : obj.WalkAnimations;
 
             string animName;
             if (absDiff >= Math.PI - 0.01) //full 180 turn
             {
-                animName = obj.WalkAnimations[4 + off];
+                animName = anims[4 + off];
                 TurnTweak = 0;
             }
             else if (absDiff >= (Math.PI / 2) - 0.01) //>=90 degree turn
             {
-                animName = obj.WalkAnimations[6 + off];
+                animName = anims[6 + off];
                 TurnTweak = (float)(absDiff - (Math.PI / 2));
             }
             else if (absDiff >= (Math.PI / 4) - 0.01) //>=45 degree turn
             {
-                animName = obj.WalkAnimations[8 + off];
+                animName = anims[8 + off];
                 TurnTweak = (float)(absDiff - (Math.PI / 4));
             }
             else
@@ -948,23 +972,26 @@ namespace FSO.SimAntics.Engine
         private void StartWalkAnimation()
         {
             var obj = (VMAvatar)Caller;
+            var pool = VM.Context.RoomInfo[VM.Context.GetRoomAt(Caller.Position)].Room.IsPool;
+            var anims = (pool) ? obj.SwimAnimations:obj.WalkAnimations;
+
             if (obj.Animations.Count == 3 && 
-                obj.Animations[0].Anim.Name == obj.WalkAnimations[3] &&
-                obj.Animations[1].Anim.Name == obj.WalkAnimations[(WalkStyle == 1) ? 21 : 20]) return; //hacky check to test if we're already doing a walking animation. 
+                obj.Animations[0].Anim.Name == anims[3] &&
+                obj.Animations[1].Anim.Name == anims[(WalkStyle == 1) ? 21 : 20]) return; //hacky check to test if we're already doing a walking animation. 
 
             //we set up a very specific collection of animations.
             //The original game gets its walk animation by confusingly combining two of the walk animations and running them at 1.5x speed.
             //We also want to store the standing pose in the first animation slot so that we can blend into and out of it with velocity.
 
             obj.Animations.Clear();
-            var anim = PlayAnim(obj.WalkAnimations[3], obj); //stand animation (TODO: what about swimming?)
+            var anim = PlayAnim(anims[3], obj); //stand animation (TODO: what about swimming?)
             anim.Weight = 0f;
             anim.Loop = true;
-            anim = PlayAnim(obj.WalkAnimations[(WalkStyle==1)?21:20], obj); //Run full:Walk Full
+            anim = PlayAnim(anims[(WalkStyle==1)?21:20], obj); //Run full:Walk Full
             anim.Weight = 0.66f;
             anim.Speed = 1.5f;
             anim.Loop = true;
-            anim = PlayAnim(obj.WalkAnimations[(WalkStyle == 1) ? 21 : 25], obj); //Run full:Walk Half
+            anim = PlayAnim(anims[(WalkStyle == 1 || pool) ? 21 : (obj.IsPet?20:25)], obj); //Run full:Walk Half
             anim.Weight = 0.33f;
             anim.Speed = 1.5f;
             anim.Loop = true;
@@ -993,7 +1020,7 @@ namespace FSO.SimAntics.Engine
             MoveFrames = 0;
 
             MoveTotalFrames = ((LotTilePos.Distance(CurrentWaypoint, Caller.Position) * 20) / 2);
-            if (((VMAvatar)Caller).IsPet) MoveTotalFrames *= 2;
+            if (((VMAvatar)Caller).IsPet || InPool) MoveTotalFrames *= 2;
             MoveTotalFrames = Math.Max(1, MoveTotalFrames/((WalkStyle == 1) ? 3 : 1));
 
             WalkDirection = Caller.RadianDirection;
@@ -1001,9 +1028,146 @@ namespace FSO.SimAntics.Engine
             TurnFrames = 10;
             return true;
         }
+
+        #region VM Marshalling Functions
+        public override VMStackFrameMarshal Save()
+        {
+            var start = base.Save();
+
+            var atC = new short[AvatarsToConsider.Count];
+            int i = 0;
+            foreach (var item in AvatarsToConsider)
+            {
+                atC[i++] = item.ObjectID;
+            }
+
+            VMFindLocationResultMarshal[] choices = null;
+
+            if (Choices != null)
+            {
+                choices = new VMFindLocationResultMarshal[Choices.Count];
+                i = 0;
+                foreach (var item in Choices)
+                {
+                    choices[i++] = item.Save();
+                }
+            }
+
+            return new VMRoutingFrameMarshal
+            {
+                RoutineID = start.RoutineID,
+                InstructionPointer = start.InstructionPointer,
+                Caller = start.Caller,
+                Callee = start.Callee,
+                StackObject = start.StackObject,
+                CodeOwnerGUID = start.CodeOwnerGUID,
+                Locals = start.Locals,
+                Args = start.Args,
+                ActionTree = start.ActionTree,
+                //above is stack frame stuff
+
+                Rooms = Rooms.ToArray(),
+                CurrentPortal = CurrentPortal,
+
+                WalkTo = (WalkTo==null)?null:WalkTo.ToArray(),
+                WalkDirection = WalkDirection,
+                TargetDirection = TargetDirection,
+                IgnoreRooms = IgnoreRooms,
+
+                State = State,
+                PortalTurns = PortalTurns,
+                WaitTime = WaitTime,
+                Timeout = Timeout,
+                Retries = Retries,
+
+                AttemptedChair = AttemptedChair,
+                TurnTweak = TurnTweak,
+                TurnFrames = TurnFrames,
+
+                MoveTotalFrames = MoveTotalFrames,
+                MoveFrames = MoveFrames,
+                Velocity = Velocity,
+
+                CallFailureTrees = CallFailureTrees,
+
+                IgnoredRooms = IgnoredRooms.ToArray(),
+                AvatarsToConsider = atC,
+
+                PreviousPosition = PreviousPosition,
+                CurrentWaypoint = CurrentWaypoint,
+
+                RoomRouteInvalid = RoomRouteInvalid,
+                Slot = Slot, //NULLable
+                Target = (Target == null) ? (short)0 : Target.ObjectID, //object id
+                Choices = choices, //NULLable
+                CurRoute = (CurRoute == null)?null:CurRoute.Save() //NULLable
+            };
+        }
+
+        public override void Load(VMStackFrameMarshal input, VMContext context)
+        {
+            base.Load(input, context);
+            var inR = (VMRoutingFrameMarshal)input;
+
+            Rooms = new Stack<VMRoomPortal>();
+            for (int i=inR.Rooms.Length-1; i>=0; i--) Rooms.Push(inR.Rooms[i]);
+            CurrentPortal = inR.CurrentPortal;
+
+            ParentRoute = GetParentFrame(); //should be able to, since all arrays are generated left to right, including the stacks.
+
+            WalkTo = (inR.WalkTo == null)?null:new LinkedList<Point>(inR.WalkTo);
+            WalkDirection = inR.WalkDirection;
+            TargetDirection = inR.TargetDirection;
+            IgnoreRooms = inR.IgnoreRooms;
+
+            State = inR.State;
+            PortalTurns = inR.PortalTurns;
+            WaitTime = inR.WaitTime;
+            Timeout = inR.Timeout;
+            Retries = inR.Retries;
+
+            AttemptedChair = inR.AttemptedChair;
+            TurnTweak = inR.TurnTweak;
+            TurnFrames = inR.TurnFrames;
+
+            MoveTotalFrames = inR.MoveTotalFrames;
+            MoveFrames = inR.MoveFrames;
+            Velocity = inR.Velocity;
+
+            CallFailureTrees = inR.CallFailureTrees;
+
+            IgnoredRooms = new HashSet<VMRoomPortal>(inR.IgnoredRooms);
+            AvatarsToConsider = new HashSet<VMAvatar>();
+
+            foreach (var avatar in inR.AvatarsToConsider)
+                AvatarsToConsider.Add((VMAvatar)context.VM.GetObjectById(avatar));
+
+            PreviousPosition = inR.PreviousPosition;
+            CurrentWaypoint = inR.CurrentWaypoint;
+
+            RoomRouteInvalid = inR.RoomRouteInvalid;
+            Slot = inR.Slot; //NULLable
+            Target = context.VM.GetObjectById(inR.Target); //object id
+            if (inR.Choices != null)
+            {
+                Choices = new List<VMFindLocationResult>();
+                foreach (var c in inR.Choices) Choices.Add(new VMFindLocationResult(c, context));
+            }
+            else Choices = null;
+            CurRoute = (inR.CurRoute == null)?null:new VMFindLocationResult(inR.CurRoute, context); //NULLable
+
+        }
+
+        public VMRoutingFrame(VMStackFrameMarshal input, VMContext context, VMThread thread)
+        {
+            Thread = thread;
+            Load(input, context);
+        }
+        #endregion
+
     }
 
-    public enum VMRoutingFrameState
+    public enum VMRoutingFrameState : byte
     {
         INITIAL,
     

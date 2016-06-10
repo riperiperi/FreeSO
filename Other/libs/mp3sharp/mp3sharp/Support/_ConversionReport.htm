@@ -1,0 +1,648 @@
+﻿<html>
+	<head>
+		<META HTTP-EQUIV="Content-Type" content="text/html; charset=utf-8">
+		<link rel="stylesheet" href="_ConversionReport_Files\ConversionReport.css">
+		<title>Erik Conversion Report</title>
+		
+		<script language="javascript">
+			function outliner () {
+				oMe = window.event.srcElement
+				//get child element
+				var child = document.all[event.srcElement.getAttribute("child",false)];
+				//if child element exists, expand or collapse it.
+				if (null != child)
+					child.className = child.className == "collapsed" ? "expanded" : "collapsed";
+			}
+		
+			function changepic() {
+				uMe = window.event.srcElement;
+				var check = uMe.src.toLowerCase();
+				if (check.lastIndexOf("conversionreport_plus.gif") != -1)		{
+					uMe.src = "_ConversionReport_Files/ConversionReport_Minus.gif"		}
+				else
+				{
+					uMe.src = "_ConversionReport_Files/ConversionReport_Plus.gif"
+				}
+			}
+		</script>
+		
+	</head>
+	<body topmargin="0" leftmargin="0" rightmargin="0" onclick="outliner();">
+		<h1>Conversion Report for Erik</h1>
+		
+		<p><span class="note">
+		<b>Time of Conversion:  </b>07/03/2003 16:35<br>
+		</span></p>
+		
+		<h2>List of Project Files</h2>
+		<table cellpadding="2" cellspacing="0" width="98%" border="1" bordercolor="white" class="infotable"></TR>
+			<tr>
+				<td nowrap class="header">New Filename</td>
+				<td nowrap class="header">Original Filename</td>
+				<td nowrap class="header">Status</td>
+				<td nowrap class="header">Errors</td>
+				<td nowrap class="header">Warnings</td>
+				<td nowrap class="header">Total Issues</td>
+			</tr>
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="Globals">&nbsp;(Global Issues)</td>
+			<td class="content"></td>
+			<td class="content"></td>
+			<td class="content">9</td>
+			<td class="content">1</td>
+			<td class="content">10</td>
+		</tr>
+			<tr class="collapsed" id="Globals" bgcolor="#ffffff"><td colspan="7">
+			<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Global conversion issues:</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">Global Warning</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca4007"'>The startup class  doesn't exist in the project</a></td></tr>
+						<tr><td width="10" class="issuecontent">2</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1137"'>Method 'setFrom' was converted to a set modifier. This name conflicts with another property.</a></td></tr>
+						<tr><td width="10" class="issuecontent">3</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca5000"'>This function is not marked as virtual in the base class.</a></td></tr>
+						<tr><td width="10" class="issuecontent">4</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">3</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1143"'>The equivalent of method 'java.applet.Applet.init' is not an override method.</a></td></tr>
+						<tr><td width="10" class="issuecontent">5</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">3</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1143"'>The equivalent of method 'java.applet.Applet.start' is not an override method.</a></td></tr>
+						<tr><td width="10" class="issuecontent">6</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">3</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1143"'>The equivalent of method 'java.applet.Applet.stop' is not an override method.</a></td></tr>
+						<tr><td width="10" class="issuecontent">7</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">3</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1143"'>The equivalent of method 'java.lang.Runnable.run' is not an override method.</a></td></tr>
+						<tr><td width="10" class="issuecontent">8</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">3</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1143"'>The equivalent of method 'java.lang.Object.clone' is not an override method.</a></td></tr>
+						<tr><td width="10" class="issuecontent">9</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">3</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1143"'>The equivalent of method 'java.lang.Throwable.printStackTrace' is not an override method.</a></td></tr>
+						<tr><td width="10" class="issuecontent">10</td><td class="issuecontent" width="15%">Compile Error</td><td class="issuecontent" width="5%">1</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1000_javalangClassLoader"'>Class 'java.lang.ClassLoader' was not converted.</a></td></tr>
+				</table></td></tr>
+			</table>
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue1">&nbsp;Converter.cs</td>
+			<td class="content">Converter.java</td>
+			<td class="content">
+		Converted with issues</td>	<td class="content">9</td>
+			<td class="content">0</td>
+			<td class="content">9</td>
+		</tr>
+			<tr class="collapsed" id="issue1" bgcolor="#ffffff"><td colspan="7">
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.converter.Converter.convert(java.io.InputStream,java.lang.String,javazoom.jl.converter.Converter.ProgressListener,javazoom.jl.decoder.Decoder.Params):</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">Compile Error</td><td class="issuecontent" width="5%">1</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1000_javaioInputStreammark_int"'>Method 'java.io.InputStream.mark' was not converted.</a></td></tr>
+						<tr><td width="10" class="issuecontent">2</td><td class="issuecontent" width="15%">Compile Error</td><td class="issuecontent" width="5%">1</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1000_javaioInputStreamreset"'>Method 'java.io.InputStream.reset' was not converted.</a></td></tr>
+						<tr><td width="10" class="issuecontent">3</td><td class="issuecontent" width="15%">Compile Error</td><td class="issuecontent" width="5%">1</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1000_javaioInputStreammarkSupported"'>Method 'java.io.InputStream.markSupported' was not converted.</a></td></tr>
+				</table></td></tr>
+				</table>
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.converter.Converter.PrintWriterProgressListener.newStdOut(int):</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">Compile Error</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1109"'>'java.lang.System.out' was converted to 'System.Console.Out' which is not valid in this expression.</a></td></tr>
+				</table></td></tr>
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.converter.Converter.PrintWriterProgressListener.parsedFrame(int,javazoom.jl.decoder.Header):</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1043"'>The equivalent in .NET for method 'java.Object.toString' may return a different value.</a></td></tr>
+						<tr><td width="10" class="issuecontent">2</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1043"'>The equivalent in .NET for method 'java.Object.toString' may return a different value.</a></td></tr>
+				</table></td></tr>
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.converter.Converter.PrintWriterProgressListener.readFrame(int,javazoom.jl.decoder.Header):</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1043"'>The equivalent in .NET for method 'java.Object.toString' may return a different value.</a></td></tr>
+						<tr><td width="10" class="issuecontent">2</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1043"'>The equivalent in .NET for method 'java.Object.toString' may return a different value.</a></td></tr>
+				</table></td></tr>
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.converter.Converter.PrintWriterProgressListener.decodedFrame(int,javazoom.jl.decoder.Header,javazoom.jl.decoder.Obuffer):</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1043"'>The equivalent in .NET for method 'java.Object.toString' may return a different value.</a></td></tr>
+				</table></td></tr>
+				</table>
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue2">&nbsp;jlc.cs</td>
+			<td class="content">jlc.java</td>
+			<td class="content">
+		Converted with issues</td>	<td class="content">1</td>
+			<td class="content">0</td>
+			<td class="content">1</td>
+		</tr>
+			<tr class="collapsed" id="issue2" bgcolor="#ffffff"><td colspan="7">
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.converter.jlc.main(java.lang.String[]):</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">Compile Error</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1109"'>'java.lang.System.out' was converted to 'System.Console.Out' which is not valid in this expression.</a></td></tr>
+				</table></td></tr>
+				</table>
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue3">&nbsp;RiffFile.cs</td>
+			<td class="content">RiffFile.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue3" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue4">&nbsp;WaveFile.cs</td>
+			<td class="content">WaveFile.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue4" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue5">&nbsp;WaveFileObuffer.cs</td>
+			<td class="content">WaveFileObuffer.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue5" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue6">&nbsp;BitReserve.cs</td>
+			<td class="content">BitReserve.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue6" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue7">&nbsp;Bitstream.cs</td>
+			<td class="content">Bitstream.java</td>
+			<td class="content">
+		Converted with issues</td>	<td class="content">1</td>
+			<td class="content">0</td>
+			<td class="content">1</td>
+		</tr>
+			<tr class="collapsed" id="issue7" bgcolor="#ffffff"><td colspan="7">
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.decoder.Bitstream.close():</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1073_javaioFilterInputStreamclose"'>Method 'java.io.FilterInputStream.close' was converted to 'System.IO.BinaryReader.Close' which has a different behavior.</a></td></tr>
+				</table></td></tr>
+				</table>
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue8">&nbsp;BitstreamErrors.cs</td>
+			<td class="content">BitstreamErrors.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue8" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue9">&nbsp;BitstreamException.cs</td>
+			<td class="content">BitstreamException.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue9" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue10">&nbsp;Control.cs</td>
+			<td class="content">Control.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue10" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue11">&nbsp;Crc16.cs</td>
+			<td class="content">Crc16.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue11" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue12">&nbsp;Decoder.cs</td>
+			<td class="content">Decoder.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue12" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue13">&nbsp;DecoderErrors.cs</td>
+			<td class="content">DecoderErrors.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue13" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue14">&nbsp;DecoderException.cs</td>
+			<td class="content">DecoderException.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue14" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue15">&nbsp;Equalizer.cs</td>
+			<td class="content">Equalizer.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue15" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue16">&nbsp;FrameDecoder.cs</td>
+			<td class="content">FrameDecoder.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue16" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue17">&nbsp;Header.cs</td>
+			<td class="content">Header.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue17" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue18">&nbsp;huffcodetab.cs</td>
+			<td class="content">huffcodetab.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue18" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue19">&nbsp;InputStreamSource.cs</td>
+			<td class="content">InputStreamSource.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue19" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue20">&nbsp;JavaLayerError.cs</td>
+			<td class="content">JavaLayerError.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue20" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue21">&nbsp;JavaLayerErrors.cs</td>
+			<td class="content">JavaLayerErrors.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue21" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue22">&nbsp;Mp3SharpException.cs</td>
+			<td class="content">Mp3SharpException.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue22" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue23">&nbsp;JavaLayerHook.cs</td>
+			<td class="content">JavaLayerHook.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue23" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue24">&nbsp;JavaLayerUtils.cs</td>
+			<td class="content">JavaLayerUtils.java</td>
+			<td class="content">
+		Converted with issues</td>	<td class="content">2</td>
+			<td class="content">1</td>
+			<td class="content">3</td>
+		</tr>
+			<tr class="collapsed" id="issue24" bgcolor="#ffffff"><td colspan="7">
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.decoder.JavaLayerUtils.deserialize(java.io.InputStream):</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1043"'>The equivalent in .NET for method 'java.lang.Throwable.toString' may return a different value.</a></td></tr>
+						<tr><td width="10" class="issuecontent">2</td><td class="issuecontent" width="15%">Runtime Warning</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1101"'>Method 'java.io.ObjectInputStream.readObject' was converted to 'SupportClass.Deserialize' which may throw an exception.</a></td></tr>
+				</table></td></tr>
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.decoder.JavaLayerUtils.getResourceAsStream(java.lang.String):</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">Compile Error</td><td class="issuecontent" width="5%">1</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1000_javalangClassgetResourceAsStream_javalangString"'>Method 'java.lang.Class.getResourceAsStream' was not converted.</a></td></tr>
+				</table></td></tr>
+				</table>
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue25">&nbsp;LayerIDecoder.cs</td>
+			<td class="content">LayerIDecoder.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue25" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue26">&nbsp;LayerIIDecoder.cs</td>
+			<td class="content">LayerIIDecoder.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue26" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue27">&nbsp;LayerIIIDecoder.cs</td>
+			<td class="content">LayerIIIDecoder.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue27" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue28">&nbsp;Manager.cs</td>
+			<td class="content">Manager.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue28" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue29">&nbsp;Obuffer.cs</td>
+			<td class="content">Obuffer.java</td>
+			<td class="content">
+		Converted with issues</td>	<td class="content">0</td>
+			<td class="content">1</td>
+			<td class="content">1</td>
+		</tr>
+			<tr class="collapsed" id="issue29" bgcolor="#ffffff"><td colspan="7">
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.decoder.Obuffer.clip(float):</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">Runtime Warning</td><td class="issuecontent" width="5%">3</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1042"'>Narrowing conversions may produce unexpected results in C#.</a></td></tr>
+				</table></td></tr>
+				</table>
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue30">&nbsp;OutputChannels.cs</td>
+			<td class="content">OutputChannels.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue30" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue31">&nbsp;SampleBuffer.cs</td>
+			<td class="content">SampleBuffer.java</td>
+			<td class="content">
+		Converted with issues</td>	<td class="content">0</td>
+			<td class="content">1</td>
+			<td class="content">1</td>
+		</tr>
+			<tr class="collapsed" id="issue31" bgcolor="#ffffff"><td colspan="7">
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.decoder.SampleBuffer.appendSamples(int,float[]):</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">Runtime Warning</td><td class="issuecontent" width="5%">3</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1042"'>Narrowing conversions may produce unexpected results in C#.</a></td></tr>
+				</table></td></tr>
+				</table>
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue32">&nbsp;Source.cs</td>
+			<td class="content">Source.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue32" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue33">&nbsp;SynthesisFilter.cs</td>
+			<td class="content">SynthesisFilter.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue33" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue34">&nbsp;AudioDevice.cs</td>
+			<td class="content">AudioDevice.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue34" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue35">&nbsp;AudioDeviceBase.cs</td>
+			<td class="content">AudioDeviceBase.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue35" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue36">&nbsp;AudioDeviceFactory.cs</td>
+			<td class="content">AudioDeviceFactory.java</td>
+			<td class="content">
+		Converted with issues</td>	<td class="content">2</td>
+			<td class="content">0</td>
+			<td class="content">2</td>
+		</tr>
+			<tr class="collapsed" id="issue36" bgcolor="#ffffff"><td colspan="7">
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.player.AudioDeviceFactory.instantiate(java.lang.ClassLoader,java.lang.String):</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1092"'>Format of parameters of method 'java.lang.Class.forName' are different in the equivalent in .NET.</a></td></tr>
+						<tr><td width="10" class="issuecontent">2</td><td class="issuecontent" width="15%">Compile Error</td><td class="issuecontent" width="5%">1</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1000_javalangClassLoader"'>Method 'java.lang.ClassLoader.loadClass' was not converted.</a></td></tr>
+				</table></td></tr>
+				</table>
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue37">&nbsp;FactoryRegistry.cs</td>
+			<td class="content">FactoryRegistry.java</td>
+			<td class="content">
+		Converted with issues</td>	<td class="content">2</td>
+			<td class="content">0</td>
+			<td class="content">2</td>
+		</tr>
+			<tr class="collapsed" id="issue37" bgcolor="#ffffff"><td colspan="7">
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.player.FactoryRegistry.getFactoriesPriority():</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1073"'>Method 'java.util.Enumeration.hasMoreElements' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</a></td></tr>
+						<tr><td width="10" class="issuecontent">2</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1073"'>Method 'java.util.Enumeration.nextElement' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</a></td></tr>
+				</table></td></tr>
+				</table>
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue38">&nbsp;JavaSoundAudioDevice.cs</td>
+			<td class="content">JavaSoundAudioDevice.java</td>
+			<td class="content">
+		Converted with issues</td>	<td class="content">0</td>
+			<td class="content">1</td>
+			<td class="content">1</td>
+		</tr>
+			<tr class="collapsed" id="issue38" bgcolor="#ffffff"><td colspan="7">
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.player.JavaSoundAudioDevice.millisecondsToBytes(AudioFormat,int):</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">Runtime Warning</td><td class="issuecontent" width="5%">3</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1042"'>Narrowing conversions may produce unexpected results in C#.</a></td></tr>
+				</table></td></tr>
+				</table>
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue39">&nbsp;JavaSoundAudioDeviceFactory.cs</td>
+			<td class="content">JavaSoundAudioDeviceFactory.java</td>
+			<td class="content">
+		Converted with issues</td>	<td class="content">2</td>
+			<td class="content">0</td>
+			<td class="content">2</td>
+		</tr>
+			<tr class="collapsed" id="issue39" bgcolor="#ffffff"><td colspan="7">
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.player.JavaSoundAudioDeviceFactory.createAudioDeviceImpl():</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">Compile Error</td><td class="issuecontent" width="5%">1</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1000_javalangClassLoader"'>Class 'java.lang.ClassLoader' was not converted.</a></td></tr>
+						<tr><td width="10" class="issuecontent">2</td><td class="issuecontent" width="15%">Compile Error</td><td class="issuecontent" width="5%">1</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1000_javalangClassgetClassLoader"'>Method 'java.lang.Class.getClassLoader' was not converted.</a></td></tr>
+				</table></td></tr>
+				</table>
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue40">&nbsp;jlp.cs</td>
+			<td class="content">jlp.java</td>
+			<td class="content">
+		Converted with issues</td>	<td class="content">1</td>
+			<td class="content">0</td>
+			<td class="content">1</td>
+		</tr>
+			<tr class="collapsed" id="issue40" bgcolor="#ffffff"><td colspan="7">
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.player.jlp.getURLInputStream():</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">3</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1132"'>Class 'java.net.URL' was converted to a 'System.Uri' which does not throw an exception if a URL specifies an unknown protocol.</a></td></tr>
+				</table></td></tr>
+				</table>
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue41">&nbsp;NullAudioDevice.cs</td>
+			<td class="content">NullAudioDevice.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue41" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue42">&nbsp;Player.cs</td>
+			<td class="content">Player.java</td>
+			<td class="content">
+		Converted</td>	<td class="content">0</td>
+			<td class="content">0</td>
+			<td class="content">0</td>
+		</tr>
+			<tr class="collapsed" id="issue42" bgcolor="#ffffff"><td colspan="7">
+			</td></tr>
+		<tr class="row">
+			<td class="content"><IMG alt="expand/collapse section" class="expandable" height="11" onclick=changepic() src="_ConversionReport_Files/ConversionReport_Plus.gif" width="9" child="issue43">&nbsp;PlayerApplet.cs</td>
+			<td class="content">PlayerApplet.java</td>
+			<td class="content">
+		Converted with issues</td>	<td class="content">4</td>
+			<td class="content">0</td>
+			<td class="content">4</td>
+		</tr>
+			<tr class="collapsed" id="issue43" bgcolor="#ffffff"><td colspan="7">
+				<table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.player.PlayerApplet.getAudioFileName():</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">2</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1167"'>Applet parameter was not converted because it requires a string literal as parameter name.</a></td></tr>
+						<tr><td width="10" class="issuecontent">2</td><td class="issuecontent" width="15%">Compile Error</td><td class="issuecontent" width="5%">1</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1000_javaappletAppletgetParameter_javalangString"'>Method 'java.applet.Applet.getParameter' was not converted.</a></td></tr>
+				</table></td></tr>
+				<tr><td colspan="4" class="content">Conversion Issues for javazoom.jl.player.PlayerApplet.getAudioURL():</td></tr>
+				<tr><td class="issuecontent"><table width="97%" border="1" bordercolor="#dcdcdc" rules="cols" class="issuetable">
+					<tr><td class="issuehdr">#</td><td class="issuehdr">Type</td><td class="issuehdr">Severity</td><td class="issuehdr">Description</td></tr>
+						<tr><td width="10" class="issuecontent">1</td><td class="issuecontent" width="15%">To Do</td><td class="issuecontent" width="5%">3</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1132"'>Class 'java.net.URL' was converted to a 'System.Uri' which does not throw an exception if a URL specifies an unknown protocol.</a></td></tr>
+						<tr><td width="10" class="issuecontent">2</td><td class="issuecontent" width="15%">Compile Error</td><td class="issuecontent" width="5%">1</td><td class="issuecontent"><a href='ms-help://MS.VSCC.2003/commoner/redir/redirect.htm?keyword="jlca1000_javaappletAppletgetDocumentBase"'>Method 'java.applet.Applet.getDocumentBase' was not converted.</a></td></tr>
+				</table></td></tr>
+				</table>
+			</td></tr>
+		<tr valign="top">
+			<td class="foot">43 File(s)</td>
+			<td class="foot">&nbsp;</td>
+			<td class="foot"></td>
+			<td class="foot">33</td>
+			<td class="foot">5</td>
+			<td class="foot">38</td>
+		</tr>
+		</table>
+		<p class="help">
+		</p>
+				<H3>Conversion Settings</H3>
+					<p><SPAN class="note">
+					<b>LogFile: </b> Erik.xml<br>
+					<b>OutputDir: </b> C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl\Erik.NET<br>
+					<b>ProjectName: </b> Erik<br>
+					<b>ProjectPath: </b> C:\Documents and Settings\rob\Desktop\javalayer0.2\src\javazoom\jl
+					</span>
+				</p>
+	</body>
+</html>

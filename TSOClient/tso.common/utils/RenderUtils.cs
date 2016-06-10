@@ -14,7 +14,7 @@ namespace FSO.Common.Utils
 {
     public class RenderUtils
     {
-        public static RenderTarget2D CreateRenderTarget(GraphicsDevice device, int numberLevels, SurfaceFormat surface, int width, int height)
+        public static RenderTarget2D CreateRenderTarget(GraphicsDevice device, int numberLevels, int multisample, SurfaceFormat surface, int width, int height)
         {
             //apparently in xna4, there is no way to check device format... (it looks for the closest format if desired is not supported) need to look into if this affects anything.
 
@@ -52,7 +52,7 @@ namespace FSO.Common.Utils
             // Create our render target
             return new RenderTarget2D(device,
                 width, height, (numberLevels>1), surface,
-                DepthFormat.Depth24, 0, RenderTargetUsage.PreserveContents);
+                DepthFormat.Depth24, multisample, RenderTargetUsage.PreserveContents);
         }
     }
 }

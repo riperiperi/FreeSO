@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -40,6 +41,17 @@ namespace FSO.SimAntics.Primitives
                 Zoom = (sbyte)io.ReadByte();
                 Flags = (sbyte)io.ReadByte();
                 StrIndex = (sbyte)io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Timeout);
+                io.Write(Size);
+                io.Write(Zoom);
+                io.Write(Flags);
+                io.Write(StrIndex);
             }
         }
         #endregion

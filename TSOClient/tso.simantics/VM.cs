@@ -18,6 +18,16 @@ using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.NetPlay.Model;
 using GonzoNet;
 using System.Collections.Concurrent;
+using FSO.SimAntics.Marshals;
+using FSO.LotView.Components;
+using FSO.SimAntics.Marshals.Threads;
+using FSO.SimAntics.Entities;
+using FSO.SimAntics.Engine.TSOTransaction;
+using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.Model.Sound;
+using FSO.SimAntics.NetPlay.EODs;
+using FSO.SimAntics.NetPlay.Drivers;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.SimAntics
 {
@@ -37,35 +47,73 @@ namespace FSO.SimAntics
                 VMEntity.UseWorld = value;
             }
         }
+
+        public bool IsServer
+        {
+            get { return GlobalLink != null; }
+        }
+
         private const long TickInterval = 33 * TimeSpan.TicksPerMillisecond;
 
         public VMContext Context { get; internal set; }
+
         public List<VMEntity> Entities = new List<VMEntity>();
         public short[] GlobalState;
-
-        private object ThreadLock;
+        public VMPlatformState PlatformState;
+        public VMTSOLotState TSOState
+        {
+            get { return (PlatformState != null && PlatformState is VMTSOLotState) ? (VMTSOLotState)PlatformState : null; }
+        }
+        public string LotName;
 
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
         private short ObjectId = 1;
 
-        private VMNetDriver Driver;
+        internal VMNetDriver Driver;
+        public VMHeadlineRendererProvider Headline;
 
         public bool Ready;
+        public bool BHAVDirty;
+        public uint MyUID; //UID of this client in the VM
 
         public event VMDialogHandler OnDialog;
+        public event VMChatEventHandler OnChatEvent;
+        public event VMRefreshHandler OnFullRefresh;
+        public event VMBreakpointHandler OnBreakpoint;
+        public event VMEODMessageHandler OnEODMessage;
 
         public delegate void VMDialogHandler(VMDialogInfo info);
+        public delegate void VMChatEventHandler(VMChatEvent evt);
+        public delegate void VMRefreshHandler();
+        public delegate void VMBreakpointHandler(VMEntity entity);
+        public delegate void VMEODMessageHandler(VMNetEODMessageCmd msg);
+
+        public IVMTSOGlobalLink GlobalLink
+        {
+            get
+            {
+                return Driver.GlobalLink;
+            }
+        }
+        public VMEODHost EODHost; //only present if we're a server
+        public VMTSOGlobalLinkStub CheckGlobalLink = new VMTSOGlobalLinkStub();
 
         /// <summary>
         /// Constructs a new Virtual Machine instance.
         /// </summary>
         /// <param name="context">The VMContext instance to use.</param>
-        public VM(VMContext context, VMNetDriver driver)
+        public VM(VMContext context, VMNetDriver driver, VMHeadlineRendererProvider headline)
         {
             context.VM = this;
-            ThreadLock = this;
             this.Context = context;
             this.Driver = driver;
+            Headline = headline;
+            OnBHAVChange += VM_OnBHAVChange;
+        }
+
+        private void VM_OnBHAVChange()
+        {
+            BHAVDirty = true;
         }
 
         /// <summary>
@@ -82,19 +130,40 @@ namespace FSO.SimAntics
             return null;
         }
 
+        public VMEntity GetObjectByPersist(uint id)
+        {
+            return Entities.FirstOrDefault(x => x.PersistID == id);
+        }
+
         /// <summary>
         /// Initializes this Virtual Machine.
         /// </summary>
         public void Init()
         {
             Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
+            PlatformState = new VMTSOLotState();
             GlobalState = new short[33];
             GlobalState[20] = 255; //Game Edition. Basically, what "expansion packs" are running. Let's just say all of them.
             GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
+            if (Driver is VMServerDriver) EODHost = new VMEODHost();
         }
 
-        private long LastTick = 0;
+        public void Reset()
+        {
+            var avatars = new List<VMEntity>(Entities.Where(x => x is VMAvatar && x.PersistID > 65535));
+            //TODO: all avatars with persist ID are not npcs in TSO. right now though everything has a persist ID...
+            foreach (var avatar in avatars) avatar.Delete(true, Context);
+
+            var ents = new List<VMEntity>(Entities);
+            foreach (var ent in ents)
+            {
+                if (ent.Thread.BlockingState != null) ent.Thread.BlockingState = null;
+                if (ent.Thread.EODConnection != null) ent.Thread.EODConnection = null;
+                if (ent.Object.OBJ.GUID == 0x3929AADC) ent.Delete(true, Context);
+            }
+            //foreach (var ent in ents) ent.Reset(Context); duplicates dogs apparently?? tf
+        }
 
         private bool AlternateTick;
         public void Update()
@@ -108,7 +177,7 @@ namespace FSO.SimAntics
                 //fractional animation for avatars
                 foreach (var obj in Entities)
                 {
-                    if (obj is VMAvatar) ((VMAvatar)obj).FractionalAnim(0.5f); 
+                    if (obj is VMAvatar) ((VMAvatar)obj).FractionalAnim(0.5f);
                 }
             }
             AlternateTick = !AlternateTick;
@@ -116,7 +185,19 @@ namespace FSO.SimAntics
 
         public void SendCommand(VMNetCommandBodyAbstract cmd)
         {
+            cmd.ActorUID = MyUID;
             Driver.SendCommand(cmd);
+        }
+
+        public void ForwardCommand(VMNetCommandBodyAbstract cmd)
+        {
+            Driver.SendCommand(cmd);
+        }
+
+        public string GetUserIP(uint uid)
+        {
+            if (uid == MyUID) return "local";
+            return Driver.GetUserIP(uid);
         }
 
         public void OnPacket(NetworkClient Client, ProcessedPacket Packet)
@@ -124,19 +205,39 @@ namespace FSO.SimAntics
             Driver.OnPacket(Client, Packet);
         }
 
-        public void CloseNet()
+        public void CloseNet(VMCloseNetReason reason)
         {
+            Driver.CloseReason = reason;
             Driver.CloseNet();
+        }
+
+        public void ReplaceNet(VMNetDriver driver)
+        {
+            lock (Driver)
+            {
+                Driver = driver;
+            }
         }
 
         private void Tick()
         {
-            if (Driver.Tick(this)) //returns true the first time we catch up to the state.
-                Ready = true;
+            if (BHAVDirty)
+            {
+                foreach (var ent in Entities) if (ent.Thread != null) ent.Thread.RoutineDirty = true;
+                BHAVDirty = false;
+            }
+
+            lock (Driver)
+            {
+                if (Driver.Tick(this)) //returns true the first time we catch up to the state.
+                    Ready = true;
+            }
         }
 
         public void InternalTick()
         {
+            if (GlobalLink != null) GlobalLink.Tick(this);
+            if (EODHost != null) EODHost.Tick();
             Context.Clock.Tick();
             GlobalState[6] = (short)Context.Clock.Seconds;
             GlobalState[5] = (short)Context.Clock.Minutes;
@@ -151,6 +252,7 @@ namespace FSO.SimAntics
                 Context.NextRandom(1);
                 obj.Tick(); //run object specific tick behaviors, like lockout count decrement
             }
+            //Context.SetToNextCache.VerifyPositions(); use only for debug!
         }
 
         /// <summary>
@@ -162,6 +264,7 @@ namespace FSO.SimAntics
             entity.ObjectID = ObjectId;
             ObjectsById.Add(entity.ObjectID, entity);
             AddToObjList(this.Entities, entity);
+            if (!entity.GhostImage) Context.SetToNextCache.NewObject(entity);
             ObjectId = NextObjID();
         }
 
@@ -189,6 +292,7 @@ namespace FSO.SimAntics
         {
             if (Entities.Contains(entity))
             {
+                Context.SetToNextCache.RemoveObject(entity);
                 this.Entities.Remove(entity);
                 ObjectsById.Remove(entity.ObjectID);
                 if (entity.ObjectID < ObjectId) ObjectId = entity.ObjectID; //this id is now the smallest free object id.
@@ -233,6 +337,7 @@ namespace FSO.SimAntics
         }
 
         private static Dictionary<BHAV, VMRoutine> _Assembled = new Dictionary<BHAV, VMRoutine>();
+        private static event VMBHAVChangeDelegate OnBHAVChange;
 
         /// <summary>
         /// Assembles a set of instructions.
@@ -254,6 +359,16 @@ namespace FSO.SimAntics
             }
         }
 
+        public static void BHAVChanged(BHAV bhav)
+        {
+            lock (_Assembled)
+            {
+                bhav.RuntimeVer++;
+                if (_Assembled.ContainsKey(bhav)) _Assembled.Remove(bhav);
+            }
+            if (OnBHAVChange != null) OnBHAVChange();
+        }
+
         /// <summary>
         /// Signals a Dialog to all listeners. (usually a UI)
         /// </summary>
@@ -263,10 +378,26 @@ namespace FSO.SimAntics
             if (OnDialog != null) OnDialog(info);
         }
 
+        /// <summary>
+        /// Signals a chat event to all listeners. (usually a UI)
+        /// </summary>
+        /// <param name="info">The chat event to pass along.</param>
+        public void SignalChatEvent(VMChatEvent evt)
+        {
+            if (OnChatEvent != null) OnChatEvent(evt);
+        }
+
+        public void SignalEODMessage(VMNetEODMessageCmd msg)
+        {
+            if (OnEODMessage != null) OnEODMessage(msg);
+        }
+
         public VMSandboxRestoreState Sandbox()
         {
-            var state = new VMSandboxRestoreState { Entities = Entities, ObjectId = ObjectId, ObjectsById = ObjectsById };
+            var state = new VMSandboxRestoreState { Entities = Entities, ObjectId = ObjectId,
+                ObjectsById = ObjectsById, SetToNext = Context.SetToNextCache };
 
+            Context.SetToNextCache = new VMSetToNextCache(Context);
             Entities = new List<VMEntity>();
             ObjectsById = new Dictionary<short, VMEntity>();
             ObjectId = 1;
@@ -279,13 +410,168 @@ namespace FSO.SimAntics
             Entities = state.Entities;
             ObjectsById = state.ObjectsById;
             ObjectId = state.ObjectId;
+            Context.SetToNextCache = state.SetToNext;
         }
+
+        #region VM Marshalling Functions
+        public VMMarshal Save()
+        {
+            var ents = new VMEntityMarshal[Entities.Count];
+            var threads = new VMThreadMarshal[Entities.Count];
+            var mult = new List<VMMultitileGroupMarshal>();
+
+            int i = 0;
+            foreach (var ent in Entities)
+            {
+                if (ent is VMAvatar)
+                {
+                    ents[i] = ((VMAvatar)ent).Save();
+                }
+                else
+                {
+                    ents[i] = ((VMGameObject)ent).Save();
+                }
+                threads[i++] = ent.Thread.Save();
+                if (ent.MultitileGroup.BaseObject == ent)
+                {
+                    mult.Add(ent.MultitileGroup.Save());
+                }
+            }
+
+            return new VMMarshal
+            {
+                Context = Context.Save(),
+                Entities = ents,
+                Threads = threads,
+                MultitileGroups = mult.ToArray(),
+                GlobalState = GlobalState,
+                PlatformState = PlatformState,
+                ObjectId = ObjectId
+            };
+        }
+
+        public void Load(VMMarshal input)
+        {
+            var clientJoin = (Context.Architecture == null);
+            var oldWorld = Context.World;
+            Context = new VMContext(input.Context, Context);
+            Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
+            Context.VM = this;
+            Context.Architecture.RegenRoomMap();
+            Context.RegeneratePortalInfo();
+
+            var oldSounds = new List<VMSoundTransfer>();
+
+            if (Entities != null) //free any object resources here.
+            {
+                foreach (var obj in Entities)
+                {
+                    obj.Dead = true;
+                    if (obj.HeadlineRenderer != null) obj.HeadlineRenderer.Dispose();
+                    oldSounds.AddRange(obj.GetActiveSounds());
+                }
+            }
+
+            Entities = new List<VMEntity>();
+            ObjectsById = new Dictionary<short, VMEntity>();
+            foreach (var ent in input.Entities)
+            {
+                VMEntity realEnt;
+                var objDefinition = FSO.Content.Content.Get().WorldObjects.Get(ent.GUID);
+                if (ent is VMAvatarMarshal)
+                {
+                    var avatar = new VMAvatar(objDefinition);
+                    avatar.Load((VMAvatarMarshal)ent);
+                    if (UseWorld) Context.Blueprint.AddAvatar((AvatarComponent)avatar.WorldUI);
+                    realEnt = avatar;
+                }
+                else
+                {
+                    var worldObject = new ObjectComponent(objDefinition);
+                    var obj = new VMGameObject(objDefinition, worldObject);
+                    obj.Load((VMGameObjectMarshal)ent);
+                    Context.Blueprint.AddObject((ObjectComponent)obj.WorldUI);
+                    Context.Blueprint.ChangeObjectLocation((ObjectComponent)obj.WorldUI, obj.Position);
+                    obj.Position = obj.Position;
+                    realEnt = obj;
+                }
+                realEnt.GenerateTreeByName(Context);
+                Entities.Add(realEnt);
+                Context.SetToNextCache.NewObject(realEnt);
+                ObjectsById.Add(ent.ObjectID, realEnt);
+            }
+
+            int i = 0;
+            foreach (var ent in input.Entities)
+            {
+                var threadMarsh = input.Threads[i];
+                var realEnt = Entities[i++];
+
+                realEnt.Thread = new VMThread(threadMarsh, Context, realEnt);
+
+                if (realEnt is VMAvatar)
+                    ((VMAvatar)realEnt).LoadCrossRef((VMAvatarMarshal)ent, Context);
+                else
+                    ((VMGameObject)realEnt).LoadCrossRef((VMGameObjectMarshal)ent, Context);
+            }
+
+            foreach (var multi in input.MultitileGroups)
+            {
+                new VMMultitileGroup(multi, Context); //should self register
+            }
+
+            foreach (var ent in Entities)
+            {
+                if (ent.Container == null) ent.PositionChange(Context, true); //called recursively for contained objects.
+            }
+
+            GlobalState = input.GlobalState;
+            PlatformState = input.PlatformState;
+            ObjectId = input.ObjectId;
+
+            //just a few final changes to refresh everything, and avoid signalling objects
+            var clock = Context.Clock;
+            Context.Architecture.SetTimeOfDay(clock.Hours / 24.0 + clock.Minutes / (24.0 * 60) + clock.Seconds / (24.0 * 60 * 60));
+
+            Context.Architecture.RegenRoomMap();
+            Context.RegeneratePortalInfo();
+            Context.Architecture.WallDirtyState(input.Context.Architecture);
+
+            foreach (var snd in oldSounds)
+            {
+                //find new owners
+                var obj = GetObjectById(snd.SourceID);
+                if (obj == null || obj.Object.GUID != snd.SourceGUID) snd.SFX.Sound.RemoveOwner(snd.SourceID);
+                else obj.SoundThreads.Add(snd.SFX); // successfully transfer sound to new object
+            }
+
+            if (clientJoin)
+            {
+                //run clientJoin functions to play object sounds, update some gfx.
+                foreach (var obj in Entities)
+                {
+                    obj.ExecuteEntryPoint(30, Context, true);
+                }
+            }
+
+            if (OnFullRefresh != null) OnFullRefresh();
+        }
+
+        internal void BreakpointHit(VMEntity entity)
+        {
+            if (OnBreakpoint == null) entity.Thread.ThreadBreak = VMThreadBreakMode.Active; //no handler..
+            else OnBreakpoint(entity);
+        }
+        #endregion
     }
+
+    public delegate void VMBHAVChangeDelegate();
 
     public class VMSandboxRestoreState
     {
         public List<VMEntity> Entities;
         public Dictionary<short, VMEntity> ObjectsById;
         public short ObjectId = 1;
+        public VMSetToNextCache SetToNext;
     }
 }

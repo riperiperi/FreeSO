@@ -13,6 +13,7 @@ using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
 using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
+using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -71,20 +72,25 @@ namespace FSO.SimAntics.Engine.Primitives
                     break;
                 case VMCreateObjectPosition.NextToMeInDirectionOfLocal:
                     tpos = new LotTilePos(context.Caller.Position);
-                    dir = (Direction)context.Locals[operand.LocalToUse];
-                    switch (dir)
+                    var udir = context.Locals[operand.LocalToUse];
+                    dir = Direction.NORTH;
+                    switch (udir)
                     {
-                        case FSO.LotView.Model.Direction.SOUTH:
-                            tpos.y += 16;
+                        case 0:
+                            dir = Direction.NORTH;
+                            tpos.y -= 16;
                             break;
-                        case FSO.LotView.Model.Direction.WEST:
-                            tpos.x -= 16;
-                            break;
-                        case FSO.LotView.Model.Direction.EAST:
+                        case 2:
+                            dir = Direction.EAST;
                             tpos.x += 16;
                             break;
-                        case FSO.LotView.Model.Direction.NORTH:
-                            tpos.y -= 16;
+                        case 4:
+                            dir = Direction.SOUTH;
+                            tpos.y += 16;
+                            break;
+                        case 6:
+                            dir = Direction.WEST;
+                            tpos.x -= 16;
                             break;
                     }
                     break;
@@ -92,23 +98,35 @@ namespace FSO.SimAntics.Engine.Primitives
                     throw new VMSimanticsException("Where do I put this??", context);
             }
 
-            var obj = context.VM.Context.CreateObjectInstance(operand.GUID, tpos, dir,
+            var mobj = context.VM.Context.CreateObjectInstance(operand.GUID, tpos, dir,
                 (operand.PassObjectIds && context.StackObject != null) ? (context.StackObject.ObjectID) : (short)0,
-                (operand.PassTemp0) ? (context.Thread.TempRegisters[0]) : (operand.PassObjectIds ? context.Caller.ObjectID : (short)0) , false).Objects[0];
+                (operand.PassTemp0) ? (context.Thread.TempRegisters[0]) : (operand.PassObjectIds ? context.Caller.ObjectID : (short)0) , false);
+
+            if (mobj == null) return VMPrimitiveExitCode.GOTO_FALSE;
+            var obj = mobj.Objects[0];
 
             if (operand.Position == VMCreateObjectPosition.InSlot0OfStackObject) context.StackObject.PlaceInSlot(obj, 0, true, context.VM.Context);
             else if (operand.Position == VMCreateObjectPosition.InMyHand) context.Caller.PlaceInSlot(obj, 0, true, context.VM.Context);
 
+            if (operand.Position != VMCreateObjectPosition.OutOfWorld && obj.Position == LotTilePos.OUT_OF_WORLD && obj.Container == null)
+            {
+                obj.Delete(true, context.VM.Context);
+                return VMPrimitiveExitCode.GOTO_FALSE;
+            }
             if ((operand.Flags & (1 << 6)) > 0)
             {
-                var interaction = operand.InteractionCallback;
-                if (interaction == 254)
+                short interaction = operand.InteractionCallback;
+                if (interaction == 254 && context.ActionTree)
                 {
-                    var temp = context.Caller.Thread.Queue[0].InteractionNumber;
+                    var temp = context.Thread.Queue[0].InteractionNumber;
                     if (temp == -1) throw new VMSimanticsException("Set callback as 'this interaction' when queue item has no interaction number!", context);
-                    interaction = (byte)temp;
+                    interaction = (short)temp;
+                } else if (interaction == 252 || interaction == 253) {
+                    interaction = context.Thread.TempRegisters[0];
                 }
-                var callback = new VMActionCallback(context.VM, interaction, context.Callee, context.StackObject, context.Caller, true);
+                //target is existing stack object. (where we get the interaction/tree from)
+                var callback = new VMActionCallback(context.VM, interaction, context.StackObject, context.StackObject, 
+                    context.Caller, true, (operand.InteractionCallback == 252));
                 callback.Run(obj);
             }
             else context.StackObject = obj;
@@ -119,11 +137,12 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMCreateObjectInstanceOperand : VMPrimitiveOperand
     {
-        public uint GUID;
-        public VMCreateObjectPosition Position;
+        public uint GUID { get; set; }
+        public VMCreateObjectPosition Position { get; set; }
         public byte Flags;
-        public byte LocalToUse;
-        public byte InteractionCallback;
+        public byte LocalToUse { get; set; }
+        public byte InteractionCallback { get; set; }
+
 
         public void Read(byte[] bytes)
         {
@@ -137,11 +156,27 @@ namespace FSO.SimAntics.Engine.Primitives
             }
         }
 
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(GUID);
+                io.Write((byte)Position);
+                io.Write(Flags);
+                io.Write(LocalToUse);
+                io.Write(InteractionCallback);
+            }
+        }
+
         public bool PassObjectIds
         {
             get
             {
                 return (Flags & 2) == 2;
+            }
+            set
+            {
+                if (value) Flags |= 2;
+                else Flags &= unchecked((byte)~2);
             }
         }
 
@@ -150,6 +185,11 @@ namespace FSO.SimAntics.Engine.Primitives
             get
             {
                 return (Flags & 16) == 16;
+            }
+            set
+            {
+                if (value) Flags |= 16;
+                else Flags &= unchecked((byte)~16);
             }
         }
     }

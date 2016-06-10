@@ -22,6 +22,24 @@ namespace FSO.Client.UI.Controls.Catalog
     public class UICatalog : UIContainer
     {
         private int Page;
+        private int _Budget;
+        public int Budget
+        {
+            get { return _Budget; }
+            set {
+                if (value != _Budget)
+                {
+                    if (CatalogItems != null)
+                    {
+                        for (int i = 0; i < CatalogItems.Length; i++)
+                        {
+                            CatalogItems[i].SetDisabled(CatalogItems[i].Info.Price > value);
+                        }
+                    }
+                    _Budget = value;
+                }
+            }
+        }
         private static List<UICatalogElement>[] _Catalog;
         public event CatalogSelectionChangeDelegate OnSelectionChange;
 
@@ -37,7 +55,7 @@ namespace FSO.Client.UI.Controls.Catalog
 
                     var packingslip = new XmlDocument();
                     
-                    packingslip.Load(Path.Combine(GlobalSettings.Default.StartupPath, "packingslips\\catalog.xml"));
+                    packingslip.Load(Path.Combine(GlobalSettings.Default.StartupPath, "packingslips/catalog.xml"));
                     var objectInfos = packingslip.GetElementsByTagName("P");
 
                     foreach (XmlNode objectInfo in objectInfos)
@@ -99,10 +117,11 @@ namespace FSO.Client.UI.Controls.Catalog
             for (int i = 0; i < floors.Count; i++)
             {
                 var floor = (FloorReference)floors[i];
-                _Catalog[9].Insert(0, new UICatalogElement
+                sbyte category = (sbyte)((floor.ID >= 65534)?5:9);
+                _Catalog[category].Insert(0, new UICatalogElement
                 {
                     Name = floor.Name,
-                    Category = 9,
+                    Category = category,
                     Price = (uint)floor.Price,
                     Special = new UISpecialCatalogElement
                     {
@@ -121,11 +140,13 @@ namespace FSO.Client.UI.Controls.Catalog
 
             for (int i = 0; i < WallStyleIDs.Length; i++)
             {
+                var walls = Content.Content.Get().WorldWalls;
+                var style = walls.GetWallStyle((ulong)WallStyleIDs[i]);
                 _Catalog[7].Insert(0, new UICatalogElement
                 {
-                    Name = "Wall",
+                    Name = style.Name,
                     Category = 7,
-                    Price = 0,
+                    Price = (uint)style.Price,
                     Special = new UISpecialCatalogElement
                     {
                         Control = typeof(UIWallPlacer),
@@ -209,6 +230,7 @@ namespace FSO.Client.UI.Controls.Catalog
                 elem.X = (i % halfPage) * 45 + 2;
                 elem.Y = (i / halfPage) * 45 + 2;
                 elem.OnMouseEvent += new ButtonClickDelegate(InnerSelect);
+                elem.SetDisabled(elem.Info.Price > Budget);
                 CatalogItems[i] = elem;
                 this.Add(elem);
             }
@@ -258,6 +280,7 @@ namespace FSO.Client.UI.Controls.Catalog
         public sbyte Category;
         public uint Price;
         public string Name;
+        public byte DisableLevel; //1 = only shopping, 2 = rare (unsellable?)
         public UISpecialCatalogElement Special;
     }
 

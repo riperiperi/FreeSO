@@ -114,6 +114,8 @@ namespace FSO.Client.UI.Controls
             set
             {
                 m_SBuilder = new StringBuilder(value);
+                SelectionStart = Math.Max(0, Math.Min(SelectionStart, value.Length - 1));
+                SelectionEnd = -1; //todo: move along maybe?
                 m_DrawDirty = true;
             }
         }
@@ -167,7 +169,7 @@ namespace FSO.Client.UI.Controls
             set
             {
                 m_FrameColor = value;
-                m_FrameTexture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, value);
+                m_FrameTexture = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
             }
         }
 
@@ -269,6 +271,7 @@ namespace FSO.Client.UI.Controls
         /**
          * Interaction Functionality
          */
+         
         public void OnMouseEvent(UIMouseEventType evt, UpdateState state)
         {
             if (m_IsReadOnly) { return; }
@@ -791,8 +794,8 @@ namespace FSO.Client.UI.Controls
                     {
                         m_DrawCmds.Add(new TextDrawCmd_SelectionBox
                         {
-                            BlendColor = new Color(0xFF, 0xFF, 0xFF, 200),
-                            Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.SelectionBoxColor),
+                            BlendColor = TextStyle.SelectionBoxColor,
+                            Texture = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice),
                             Position = segmentPosition,
                             Scale = new Vector2(segmentSize.X, m_LineHeight) * _Scale
                         });
@@ -849,7 +852,8 @@ namespace FSO.Client.UI.Controls
                 {
                     Scale = new Vector2(_Scale.X, m_LineHeight * _Scale.Y),
                     Position = LocalPoint(cursorPosition),
-                    Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.CursorColor)
+                    Texture = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice),
+                    Color = TextStyle.CursorColor
                 });
             }
 
@@ -985,6 +989,7 @@ namespace FSO.Client.UI.Controls
         /// <param name="batch"></param>
         public override void Draw(UISpriteBatch batch)
         {
+            if (m_Slider != null) m_Slider.Visible = Visible;
             if (!Visible) { return; }
 
             if (m_DrawDirty)
@@ -1007,7 +1012,7 @@ namespace FSO.Client.UI.Controls
              */
             if (m_frameBlinkOn && m_frameBlink)
             {
-                DrawingUtils.DrawBorder(batch, LocalRect(0, 0, m_Width, m_Height), 1, m_FrameTexture, Color.White);
+                DrawingUtils.DrawBorder(batch, LocalRect(0, 0, m_Width, m_Height), 1, m_FrameTexture, m_FrameColor);
             }
             
             /**
@@ -1137,12 +1142,33 @@ namespace FSO.Client.UI.Controls
 
         #region Scrollbar
 
+        [UIAttribute("scrollbarImage")]
+        public Texture2D ScrollbarImage { get; set; }
+
+        [UIAttribute("scrollbarGutter")]
+        public int ScrollbarGutter { get; set; }
+
         private UISlider m_Slider;
 
         public void AttachSlider(UISlider slider)
         {
             m_Slider = slider;
             m_Slider.OnChange += new ChangeDelegate(m_Slider_OnChange);
+        }
+
+        public void InitDefaultSlider()
+        {
+            m_Slider = new UISlider();
+            m_Slider.Texture = ScrollbarImage;
+            AttachSlider(m_Slider);
+            PositionChildSlider();
+            Parent.Add(m_Slider);
+        }
+
+        public void PositionChildSlider()
+        {
+            m_Slider.Position = this.Position + new Vector2(this.Width + ScrollbarGutter, 0);
+            m_Slider.SetSize(1, this.Height);
         }
 
         void m_Slider_OnChange(UIElement element)

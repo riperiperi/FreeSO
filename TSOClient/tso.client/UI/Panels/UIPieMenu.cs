@@ -35,9 +35,11 @@ namespace FSO.Client.UI.Panels
         public UILotControl m_Parent;
         public UIImage m_Bg;
 
-        private _3DScene HeadScene;
+        private _3DTargetScene HeadScene;
         private BasicCamera HeadCamera;
         private double m_BgGrow;
+
+        private bool ShiftDown; //shift activates IDE
 
         //This is a standard AdultVitaboyModel instance. Since nothing is needed but the head for pie menus,
         //the other parts of the body will be stripped from it (see constructor).
@@ -71,7 +73,7 @@ namespace FSO.Client.UI.Panels
 
             for (int i = 0; i < pie.Count; i++)
             {
-                string[] depth = pie[i].Name.Split('/');
+                string[] depth = (pie[i].Name == null)?new string[] { "???" } :pie[i].Name.Split('/');
 
                 var category = m_PieTree; //set category to root
                 for (int j = 0; j < depth.Length-1; j++) //iterate through categories
@@ -97,8 +99,9 @@ namespace FSO.Client.UI.Panels
                 var item = new UIPieMenuItem()
                 {
                     Category = false,
-                    Name = depth[depth.Length-1],
-                    ID = pie[i].ID
+                    Name = depth[depth.Length - 1],
+                    ID = pie[i].ID,
+                    Param0 = pie[i].Param0
                 };
                 if (!category.Children.ContainsKey(item.Name)) category.Children.Add(item.Name, item);
             }
@@ -121,16 +124,13 @@ namespace FSO.Client.UI.Panels
             HeadCamera.Position = new Vector3(0, 5.2f, 12.5f);
             HeadCamera.Target = new Vector3(0, 5.2f, 0.0f);
 
-            HeadScene = new _3DScene(GameFacade.Game.GraphicsDevice, HeadCamera);
+            HeadScene = new _3DTargetScene(GameFacade.Game.GraphicsDevice, HeadCamera, new Point(200,200), (GlobalSettings.Default.AntiAlias) ? 8 : 0);
             HeadScene.ID = "UIPieMenuHead";
-
-            //HeadCamera.NearPlane = 5;
-            //HeadCamera.FarPlane = 923840284;
-
-            //GameFacade.Game.GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
 
             m_Head.Scene = HeadScene;
             m_Head.Scale = new Vector3(1f);
+
+            HeadCamera.Zoom = 0f;
             HeadScene.Add(m_Head);
             GameFacade.Scenes.AddExternal(HeadScene); //AddExternal(HeadScene);
         }
@@ -149,11 +149,12 @@ namespace FSO.Client.UI.Panels
         public void RemoveSimScene()
         {
             GameFacade.Scenes.RemoveExternal(HeadScene);
+            HeadScene.Target.Dispose();
         }
 
         public void UpdateHeadPosition(int x, int y)
         {
-            HeadCamera.ProjectionOrigin = new Vector2(x, y);
+            HeadCamera.ProjectionOrigin = new Vector2(100, 100);
         }
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
@@ -162,13 +163,14 @@ namespace FSO.Client.UI.Panels
             if (m_BgGrow < 1)
             {
                 m_BgGrow += 1.0 / 30.0;
-                HeadCamera.Zoom = (float)m_BgGrow;
+                HeadCamera.Zoom = (float)m_BgGrow*5.12f;
 
                 m_Bg.SetSize((float)m_BgGrow * 200, (float)m_BgGrow * 200);
                 m_Bg.X = (float)m_BgGrow * (-100);
                 m_Bg.Y = (float)m_BgGrow * (-100);
             }
             RotateHeadCam(GlobalPoint(new Vector2(state.MouseState.X, state.MouseState.Y)));
+            ShiftDown = state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift);
         }
 
         public void RenderMenu()
@@ -306,7 +308,7 @@ namespace FSO.Client.UI.Panels
                     m_Parent.vm.SendCommand(new VMNetGotoCmd
                     {
                         Interaction = action.ID,
-                        CallerID = m_Caller.ObjectID,
+                        ActorUID = m_Caller.PersistID,
                         x = m_Obj.Position.x,
                         y = m_Obj.Position.y,
                         level = m_Obj.Position.Level
@@ -314,12 +316,29 @@ namespace FSO.Client.UI.Panels
                 }
                 else
                 {
-                    m_Parent.vm.SendCommand(new VMNetInteractionCmd
+                    if (Debug.IDEHook.IDE != null && ShiftDown) {
+                        if (m_Obj.TreeTable.InteractionByIndex.ContainsKey((uint)action.ID)) {
+                            var act = m_Obj.TreeTable.InteractionByIndex[(uint)action.ID];
+                            ushort ActionID = act.ActionFunction;
+
+                            var function = m_Obj.GetBHAVWithOwner(ActionID, m_Parent.vm.Context);
+
+                            Debug.IDEHook.IDE.IDEOpenBHAV(
+                                function.bhav,
+                                m_Obj.Object
+                            );
+                        }
+                    }
+                    else
                     {
-                        Interaction = action.ID,
-                        CallerID = m_Caller.ObjectID,
-                        CalleeID = m_Obj.ObjectID
-                    });
+                        m_Parent.vm.SendCommand(new VMNetInteractionCmd
+                        {
+                            Interaction = action.ID,
+                            ActorUID = m_Caller.PersistID,
+                            CalleeID = m_Obj.ObjectID,
+                            Param0 = action.Param0
+                        });
+                    }
                 }
                 HITVM.Get().PlaySoundEvent(UISounds.QueueAdd);
                 m_Parent.ClosePie();
@@ -327,19 +346,18 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        public override void PreDraw(UISpriteBatch batch)
+        {
+            HeadScene.Draw(GameFacade.GraphicsDevice);
+            base.PreDraw(batch);
+        }
+
         public override void Draw(UISpriteBatch batch)
         {
             base.Draw(batch);
             if (m_CurrentItem == m_PieTree)
             {
-                //var oldd = GameFacade.GraphicsDevice.DepthStencilBuffer;
-                //GameFacade.GraphicsDevice.DepthStencilBuffer = new DepthStencilBuffer(GameFacade.GraphicsDevice, oldd.Width, oldd.Height, oldd.Format);
-                //todo: how to do this in xna4...
-                GameFacade.GraphicsDevice.Clear(ClearOptions.DepthBuffer, new Vector4(0), 16777215, 0); //use a temp depth buffer for drawing this... this is an awful idea but will do until we get a better 3D UI element drawing system.
-                batch.Pause();
-                m_Head.Draw(GameFacade.GraphicsDevice);
-                batch.Resume();
-                //GameFacade.GraphicsDevice.DepthStencilBuffer = oldd;
+                DrawLocalTexture(batch, HeadScene.Target, new Vector2(-100, -100));
             } //if we're top level, draw head!
         }
     }
@@ -348,6 +366,7 @@ namespace FSO.Client.UI.Panels
     {
         public bool Category;
         public byte ID;
+        public short Param0;
         public string Name;
         public Dictionary<string, UIPieMenuItem> Children = new Dictionary<string, UIPieMenuItem>();
         public UIPieMenuItem Parent;

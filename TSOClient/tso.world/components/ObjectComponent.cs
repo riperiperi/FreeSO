@@ -14,10 +14,11 @@ using FSO.LotView.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
+using FSO.Common.Utils;
 
 namespace FSO.LotView.Components
 {
-    public class ObjectComponent : WorldComponent
+    public class ObjectComponent : EntityComponent
     {
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -26,23 +27,44 @@ namespace FSO.LotView.Components
         };
 
         public GameObject Obj;
+
         private DGRP DrawGroup;
         private DGRPRenderer dgrp;
         public WorldObjectRenderInfo renderInfo;
         public Blueprint blueprint;
-        private int DynamicCounter; //how long this sprite has been dynamic without changing sprite
+        public int DynamicCounter; //how long this sprite has been dynamic without changing sprite
         public List<SLOTItem> ContainerSlots;
-        public short ObjectID; //set this any time it changes so that hit test works.
+        public new bool Visible {
+            get { return _Visible; }
+            set {
+                if (_Visible != value)
+                {
+                    _Visible = value;
+                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                }
+            }
+        }
 
-        public Vector2 LastScreenPos; //used by vm to set sound volume and pa
-        public int LastZoomLevel;
+        public Rectangle Bounding { get { return dgrp.Bounding; } }
+
+        public override ushort Room
+        {
+            get
+            {
+                return dgrp.Room;
+            }
+            set
+            {
+                dgrp.Room = value;
+            }
+        }
 
         public override Vector3 GetSLOTPosition(int slot)
         {
-            var item = ContainerSlots[slot];
-            var off = item.Offset;
+            var item = (ContainerSlots != null && ContainerSlots.Count > slot)?ContainerSlots[slot]:null;
             if (item != null)
             {
+                var off = item.Offset;
                 var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((item.Height != 5) ? SLOT.HeightOffsets[item.Height-1] : off.Z) * (1 / 5.0f));
                 centerRelative = Vector3.Transform(centerRelative, Matrix.CreateRotationZ(RadianDirection));
 
@@ -56,11 +78,11 @@ namespace FSO.LotView.Components
             if (obj.OBJ.BaseGraphicID > 0)
             {
                 var gid = obj.OBJ.BaseGraphicID;
-                this.DrawGroup = obj.Resource.Get<DGRP>(gid);
-                dgrp = new DGRPRenderer(this.DrawGroup);
-                dgrp.DynamicSpriteBaseID = obj.OBJ.DynamicSpriteBaseId;
-                dgrp.NumDynamicSprites = obj.OBJ.NumDynamicSprites;
+                this.DrawGroup = obj.Resource.Get<DGRP>(gid);  
             }
+            dgrp = new DGRPRenderer(this.DrawGroup);
+            dgrp.DynamicSpriteBaseID = obj.OBJ.DynamicSpriteBaseId;
+            dgrp.NumDynamicSprites = obj.OBJ.NumDynamicSprites;
         }
 
         public DGRP DGRP
@@ -72,9 +94,12 @@ namespace FSO.LotView.Components
             set
             {
                 DrawGroup = value;
+                if (blueprint != null && dgrp.DGRP != value)
+                {
+                    blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                    DynamicCounter = 0;
+                }
                 dgrp.DGRP = value;
-                if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-                DynamicCounter = 0;
             }
         }
 
@@ -84,7 +109,7 @@ namespace FSO.LotView.Components
         {
             get
             {
-                return _ForceDynamic;
+                return (_ForceDynamic || Headline != null);
             }
             set
             {
@@ -98,16 +123,39 @@ namespace FSO.LotView.Components
 
         }
 
-        private uint _DynamicSpriteFlags = 0x00000000;
-        public uint DynamicSpriteFlags
+        private ulong _DynamicSpriteFlags = 0x00000000;
+        private ulong _DynamicSpriteFlags2 = 0x00000000;
+        public ulong DynamicSpriteFlags
         {
             get{
                 return _DynamicSpriteFlags;
             }set{
-                _DynamicSpriteFlags = value;
-                if (dgrp != null){
+                
+                if (dgrp != null && _DynamicSpriteFlags != value){
                     dgrp.DynamicSpriteFlags = value;
+                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                    DynamicCounter = 0;
                 }
+                _DynamicSpriteFlags = value;
+            }
+        }
+
+        public ulong DynamicSpriteFlags2
+        {
+            get
+            {
+                return _DynamicSpriteFlags2;
+            }
+            set
+            {
+
+                if (dgrp != null && _DynamicSpriteFlags2 != value)
+                {
+                    dgrp.DynamicSpriteFlags2 = value;
+                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                    DynamicCounter = 0;
+                }
+                _DynamicSpriteFlags2 = value;
             }
         }
 
@@ -179,29 +227,51 @@ namespace FSO.LotView.Components
             }
         }
 
-        //public override void OnPositionChanged(){
-        //    base.OnPositionChanged();
-        //    if (dgrp != null){
-        //        dgrp.Position = this.Position;
-        //    }
-        //}
+        public void ValidateSprite(WorldState world)
+        {
+            dgrp.ValidateSprite(world);
+        }
 
-        public override void Draw(GraphicsDevice device, WorldState world){
-            if (this.DrawGroup == null) { return; }
-            //world._2D.Draw(this.DrawGroup);
-            if (!world.TempDraw)
-            {
-                LastScreenPos = world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom-1];
-                LastZoomLevel = (int)world.Zoom;
-            }
-            dgrp.Draw(world);
+        public override Vector2 GetScreenPos(WorldState world)
+        {
+            return world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
+        }
 
+        public override void Update(GraphicsDevice device, WorldState world)
+        {
             bool forceDynamic = ForceDynamic;
-            if (Container != null && Container is ObjectComponent) {
+            if (Container != null && Container is ObjectComponent)
+            {
                 forceDynamic = ((ObjectComponent)Container).ForceDynamic;
                 if (forceDynamic && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
             }
             if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC && !forceDynamic && DynamicCounter++ > 120 && blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
+        }
+
+        public override void Draw(GraphicsDevice device, WorldState world){
+#if !DEBUG 
+            if (!Visible) return;
+#endif
+            if (this.DrawGroup != null) dgrp.Draw(world);
+
+            if (Headline != null)
+            {
+                var headOff = new Vector3(0, 0, 0.66f);
+                var headPx = world.WorldSpace.GetScreenFromTile(headOff);
+
+                var item = new _2DSprite();
+                item.Pixel = Headline;
+                item.Depth = TextureGenerator.GetWallZBuffer(device)[30];
+                item.RenderMode = _2DBatchRenderMode.Z_BUFFER;
+
+                item.SrcRect = new Rectangle(0, 0, Headline.Width, Headline.Height);
+                item.WorldPosition = headOff;
+                var off = PosCenterOffsets[(int)world.Zoom - 1];
+                item.DestRect = new Rectangle(
+                    ((int)headPx.X-Headline.Width/2) + (int)off.X, 
+                    ((int)headPx.Y-Headline.Height/2)+ (int)off.Y, Headline.Width, Headline.Height);
+                world._2D.Draw(item);
+            }
         }
     }
 }

@@ -20,6 +20,8 @@ using FSO.Vitaboy;
 using FSO.Content;
 using FSO.Client.Controllers;
 using System.Text.RegularExpressions;
+using FSO.Client.GameContent;
+using FSO.Client.UI.Model;
 
 namespace FSO.Client.UI.Screens
 {
@@ -95,16 +97,9 @@ namespace FSO.Client.UI.Screens
              * UI
              */
 
-            UIScript ui = null;
-            if (GlobalSettings.Default.ScaleUI)
-            {
-                ui = this.RenderScript("personselectionedit.uis");
-                this.Scale800x600 = true;
-            }
-            else
-            {
-                ui = this.RenderScript("personselectionedit" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
-            }
+            UIScript ui = this.RenderScript("personselectionedit1024.uis");
+
+            Position = new Vector2((GlobalSettings.Default.GraphicsWidth-1024)/2, (GlobalSettings.Default.GraphicsHeight-768)/2);
 
             m_ExitButton = (UIButton)ui["ExitButton"];
             m_ExitButton.OnButtonClick += new ButtonClickDelegate(m_ExitButton_OnButtonClick);
@@ -145,8 +140,10 @@ namespace FSO.Client.UI.Screens
             MaleButton.OnButtonClick += new ButtonClickDelegate(GenderButton_OnButtonClick);
 
             /** Backgrounds **/
-            var bg = new UIImage(BackgroundImage);
+            var bg = new UIImage(BackgroundImage).With9Slice(128,128, 84, 84);
             this.AddAt(0, bg);
+            bg.SetSize(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
+            bg.Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / -2, (GlobalSettings.Default.GraphicsHeight - 768) / -2);
 
             var offset = new Vector2(0, 0);
             if (BackgroundImageDialog != null)
@@ -163,22 +160,16 @@ namespace FSO.Client.UI.Screens
             /**
              * Music
              */
+            HIT.HITVM.Get().PlaySoundEvent(UIMusic.CAS);
+            /*
             PlayBackgroundMusic(
                 new string[] { GlobalSettings.Default.StartupPath + "\\music\\modes\\create\\tsocas1_v2.mp3" }
-            );
+            );*/
 
             SimBox = new UISim();
 
-            if (GlobalSettings.Default.ScaleUI)
-            {
-                SimBox.SimScale = 0.8f;
-                SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 140, offset.Y + 130);
-            }
-            else
-            {
-                SimBox.SimScale = 0.5f;
-                SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 140, offset.Y + 260);
-            }
+            SimBox.SimScale = 0.5f;
+            SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 70, offset.Y + 88);
 
             SimBox.AutoRotate = true;
             this.Add(SimBox);

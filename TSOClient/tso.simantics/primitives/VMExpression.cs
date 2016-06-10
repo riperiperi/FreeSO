@@ -12,6 +12,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics.Model;
+using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -244,7 +245,7 @@ namespace FSO.SimAntics.Engine.Primitives
                     var rhsList = VMMemory.GetList(context, operand.RhsOwner);
                     if (rhsList.Count == 0) return VMPrimitiveExitCode.GOTO_FALSE;
 
-                    switch (operand.LhsData)
+                    switch (operand.RhsData)
                     {
                         case 0: //front
                             lhsValue = rhsList.First.Value;
@@ -274,23 +275,35 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMExpressionOperand : VMPrimitiveOperand
     {
-        public ushort LhsData;
-        public ushort RhsData;
-        public byte IsSigned;
-        public VMExpressionOperator Operator;
-        public VMVariableScope LhsOwner;
-        public VMVariableScope RhsOwner;
+        public short LhsData {get; set;}
+        public short RhsData { get; set; }
+        public byte IsSigned { get; set; }
+        public VMExpressionOperator Operator { get; set; }
+        public VMVariableScope LhsOwner { get; set; }
+        public VMVariableScope RhsOwner { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
         {
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
-                LhsData = io.ReadUInt16();
-                RhsData = io.ReadUInt16();
+                LhsData = io.ReadInt16();
+                RhsData = io.ReadInt16();
                 IsSigned = io.ReadByte();
                 Operator = (VMExpressionOperator)io.ReadByte();
                 LhsOwner = (VMVariableScope)io.ReadByte();
                 RhsOwner = (VMVariableScope)io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(LhsData);
+                io.Write(RhsData);
+                io.Write(IsSigned);
+                io.Write((byte)Operator);
+                io.Write((byte)LhsOwner);
+                io.Write((byte)RhsOwner);
             }
         }
         #endregion

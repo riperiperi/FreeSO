@@ -10,6 +10,7 @@ using System.IO;
 using System.Text;
 using System.Collections.Concurrent;
 using FSO.Files.FAR3;
+using System.Globalization;
 
 namespace FSO.Files
 {
@@ -17,8 +18,19 @@ namespace FSO.Files
 	{
 		public string EntryName;
 		public uint KeyValueCount;
-		public ConcurrentDictionary<string, string> KeyValues;
-	}
+		public Dictionary<string, string> KeyValues;
+
+        public override string ToString()
+        {
+            return EntryName;
+        }
+
+        public float GetNum(string key)
+        {
+            CultureInfo floatParse = new CultureInfo("en-US");
+            return float.Parse(KeyValues[key], floatParse);
+        }
+    }
 
     //NOTE: important tuning variables:
     //28: object wear repair - important because this stuff doen't run in simantics anymore
@@ -35,7 +47,7 @@ namespace FSO.Files
         private BinaryReader m_Reader;
 
 		public uint EntryCount = 0;
-		public BlockingCollection<TuningEntry> Entries = new BlockingCollection<TuningEntry>();
+		public Dictionary<string, TuningEntry> EntriesByName = new Dictionary<string, TuningEntry>();
 
 		public Tuning(byte[] Data)
 		{
@@ -67,9 +79,7 @@ namespace FSO.Files
 
 			uint DecompressedSize = m_Reader.ReadUInt32();
 			uint CompressedSize = m_Reader.ReadUInt32();
-
-			//This is ALSO decompressed size...
-			uint StreamBodySize = m_Reader.ReadUInt32();
+			uint StreamBodySize = m_Reader.ReadUInt32(); //same as compressed size for all current examples
 			//Note: wiki.niotso.org says this is actually one byte Compressor and four bytes CompressionParameters.
 			ushort CompressionID = m_Reader.ReadUInt16();
 
@@ -77,7 +87,6 @@ namespace FSO.Files
 				throw (new Exception("Tuning.cs: Unknown CompressionID!"));
 
 			byte[] Dummy = m_Reader.ReadBytes(3);
-			//Why are there 11 bytes of decompressed size at the start of a COMPRESSION format? #wtfmaxis
 			uint DecompressedSize2 = (uint)((Dummy[0] << 0x10) | (Dummy[1] << 0x08) | +Dummy[2]);
 
 			Decompresser Dec = new Decompresser();
@@ -98,16 +107,16 @@ namespace FSO.Files
 				TuningEntry Entry = new TuningEntry();
 				Entry.EntryName = DecodeString(m_Reader);
 				Entry.KeyValueCount = m_Reader.ReadUInt32();
-				Entry.KeyValues = new ConcurrentDictionary<string, string>();
+				Entry.KeyValues = new Dictionary<string, string>();
 
 				for (int j = 0; j < Entry.KeyValueCount; j++)
 				{
 					string Key = DecodeString(m_Reader);
 					string Val = DecodeString(m_Reader);
 
-                    Entry.KeyValues.TryAdd(Key, Val);
+                    Entry.KeyValues.Add(Key, Val);
 				}
-                Entries.Add(Entry);
+                EntriesByName.Add(Entry.EntryName.ToLowerInvariant(), Entry);
 			}
 		}
 

@@ -49,21 +49,22 @@ namespace FSO.Common.Rendering.Framework
         public CursorManager(GameWindow window)
         {
             INSTANCE = this;
+            m_CursorMap = new Dictionary<CursorType, Cursor>();
             this.Window = window;
         }
 
         public void SetCursor(CursorType type)
         {
+            /*
             if (m_CursorMap.ContainsKey(type))
             {
                 CurrentCursor = type;
-                Cursor.Current = m_CursorMap[type];
-            }
+                if (type != CursorType.Normal) Cursor.Current = m_CursorMap[type];
+            }*/
         }
 
         public void Init(string basepath)
         {
-            m_CursorMap = new Dictionary<CursorType, Cursor>();
 
             var map = new Dictionary<CursorType, string>(){
                 {CursorType.Normal, "arrow.cur"},

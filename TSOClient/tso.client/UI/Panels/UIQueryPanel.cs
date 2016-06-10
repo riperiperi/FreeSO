@@ -19,6 +19,7 @@ using FSO.HIT;
 using FSO.Client.UI.Model;
 using FSO.LotView;
 using FSO.LotView.Components;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -312,11 +313,14 @@ namespace FSO.Client.UI.Panels
             base.Update(state);
         }
 
-        public void SetInfo(VMEntity entity, bool bought)
+        public void SetInfo(VM vm, VMEntity entity, bool bought)
         {
             var obj = entity.Object;
             var def = entity.MasterDefinition;
             if (def == null) def = entity.Object.OBJ;
+
+            var item = Content.Content.Get().WorldCatalog.GetItemByGUID(def.GUID);
+
             CTSS catString = obj.Resource.Get<CTSS>(def.CatalogStringsID);
             if (catString != null)
             {
@@ -328,8 +332,12 @@ namespace FSO.Client.UI.Panels
                 DescriptionText.CurrentText = entity.ToString();
                 ObjectNameText.Caption = entity.ToString();
             }
+
+            int price = def.Price;
+            if (item != null) price = (int)item.Price;
+
             StringBuilder motivesString = new StringBuilder();
-            motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", def.Price);
+            motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", price);
             if (def.RatingHunger != 0) { motivesString.AppendFormat(AdStrings[0], def.RatingHunger); }
             if (def.RatingComfort != 0) { motivesString.AppendFormat(AdStrings[1], def.RatingComfort); }
             if (def.RatingHygiene != 0) { motivesString.AppendFormat(AdStrings[2], def.RatingHygiene); }
@@ -345,9 +353,24 @@ namespace FSO.Client.UI.Panels
             }
 
             MotivesText.CurrentText = motivesString.ToString();
-            ObjectOwnerText.Caption = GameFacade.Strings.GetString("206", "24", new string[] { "You" });
+
+            string owner = "Nobody";
+            if (entity is VMGameObject && ((VMTSOObjectState)entity.TSOState).OwnerID > 0)
+            {
+                var ownerID = ((VMTSOObjectState)entity.TSOState).OwnerID;
+                var ownerEnt = vm.GetObjectByPersist(ownerID);
+                owner = (ownerEnt != null) ? owner = ownerEnt.Name : "(offline user)";
+            }
+
+            ObjectOwnerText.Caption = GameFacade.Strings.GetString("206", "24", new string[] { owner });
 
             SpecificTabButton.Disabled = !bought;
+
+            if (bought)
+            {
+                ForSalePrice.CurrentText = GameFacade.Strings.GetString("206", "25", new string[] { " $" + entity.MultitileGroup.Price });
+                ForSalePrice.SetSize(250, ForSalePrice.Height);
+            }
 
             if (entity is VMGameObject) {
                 var objects = entity.MultitileGroup.Objects;
@@ -364,6 +387,22 @@ namespace FSO.Client.UI.Panels
                 if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
                 Thumbnail.Texture = null;
             }
+        }
+
+        public void SetInfo(Texture2D thumb, string name, string description, int price)
+        {
+            DescriptionText.CurrentText = name + "\r\n" + description;
+            ObjectNameText.Caption = name;
+
+            StringBuilder motivesString = new StringBuilder();
+            motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", price);
+            MotivesText.CurrentText = motivesString.ToString();
+
+            SpecificTabButton.Disabled = true;
+
+            if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
+            Thumbnail.Texture = thumb;
+            UpdateImagePosition();
         }
 
         private void UpdateImagePosition() {

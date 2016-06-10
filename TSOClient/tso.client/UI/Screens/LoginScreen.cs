@@ -14,6 +14,8 @@ using FSO.Server.Protocol.Authorization;
 using FSO.Files;
 using FSO.Client.Utils;
 using FSO.Client.Regulators;
+using FSO.Client.UI.Model;
+using FSO.HIT;
 
 namespace FSO.Client.UI.Screens
 {
@@ -30,8 +32,8 @@ namespace FSO.Client.UI.Screens
         {
             this.Regulator = regulator;
 
+            HITVM.Get().PlaySoundEvent(UIMusic.None);
 
-            PlayBackgroundMusic(new string[] { "none" });
 
             /**
              * Scale the whole screen to 1024

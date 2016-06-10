@@ -48,7 +48,7 @@ namespace FSO.Content
         /// <returns>A GameGlobal instance containing the resource.</returns>
         public GameGlobal Get(string filename)
         {
-            filename = filename.ToLower();
+            filename = filename.ToLowerInvariant();
             lock (Cache)
             {
                 if (Cache.ContainsKey(filename))
@@ -94,6 +94,11 @@ namespace FSO.Content
     {
         public IffFile Iff;
         public OTFFile Tuning;
+
+        public override IffFile MainIff
+        {
+            get { return Iff; }
+        }
 
         public GameGlobalResource(IffFile iff, OTFFile tuning)
         {

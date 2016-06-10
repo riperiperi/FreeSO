@@ -37,6 +37,20 @@ namespace FSO.LotView.Utils
             }
         }
 
+        private Vector2 _ViewDimensions = new Vector2(-1, -1);
+        public Vector2 ViewDimensions
+        {
+            get
+            {
+                return _ViewDimensions;
+            }
+            set
+            {
+                _ViewDimensions = value;
+                m_ProjectionDirty = true;
+            }
+        }
+
         private Vector2 _CenterTile;
         public Vector2 CenterTile
         {
@@ -153,7 +167,37 @@ namespace FSO.LotView.Utils
             var hb = (float)(m_Device.Viewport.Width * isoScale);
             var vb = (float)(m_Device.Viewport.Height * isoScale);
 
-            m_Projection = Matrix.CreateOrthographicOffCenter(-hb, hb, -vb, vb, -300.0f, 300.0f);
+            var viewDim = (ViewDimensions.X == -1) ? new Vector2(m_Device.Viewport.Width, m_Device.Viewport.Height) : ViewDimensions;
+
+            var hb2 = (float)(viewDim.X * isoScale);
+            var vb2 = (float)(viewDim.Y * isoScale);
+
+            m_Projection = Matrix.CreateOrthographicOffCenter(-hb2, -hb2+(hb*2), vb2 - (vb * 2), vb2, -300.0f, 300.0f);
+        }
+
+        public Matrix GetRotationMatrix()
+        {
+            var rotationY = 0.0f;
+            switch (_Rotation)
+            {
+                case WorldRotation.TopLeft:
+                    rotationY = 315.0f;
+                    break;
+                case WorldRotation.TopRight:
+                    rotationY = 225.0f;
+                    break;
+                case WorldRotation.BottomRight:
+                    rotationY = 135.0f;
+                    break;
+                case WorldRotation.BottomLeft:
+                    rotationY = 45.0f;
+                    break;
+            }
+
+            var view = Matrix.Identity;
+            view *= Matrix.CreateRotationY(MathHelper.ToRadians(rotationY));
+            view *= Matrix.CreateRotationX(MathHelper.ToRadians(30.0f));
+            return view;
         }
 
         protected override void CalculateView()

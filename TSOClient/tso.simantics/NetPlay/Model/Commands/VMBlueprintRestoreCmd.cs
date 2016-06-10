@@ -17,6 +17,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     public class VMBlueprintRestoreCmd : VMNetCommandBodyAbstract
     {
         public byte[] XMLData;
+        public short JobLevel = -1;
 
         public override bool Execute(VM vm)
         {
@@ -34,6 +35,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 vm.Context.World.InitBlueprint(blueprint);
                 vm.Context.Blueprint = blueprint;
             }
+            vm.SetGlobalValue(11, JobLevel);
 
             return true;
         }
@@ -47,6 +49,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             {
                 writer.Write(XMLData.Length);
                 writer.Write(XMLData);
+                writer.Write(JobLevel);
             }
         }
 
@@ -54,6 +57,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             int length = reader.ReadInt32();
             XMLData = reader.ReadBytes(length);
+            JobLevel = reader.ReadInt16();
         }
 
         #endregion

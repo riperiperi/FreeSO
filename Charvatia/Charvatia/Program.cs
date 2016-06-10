@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 
@@ -18,7 +19,15 @@ namespace Charvatia
 {
     class Program
     {
+        private static CVMInstance inst;
         static void Main(string[] args)
+        {
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+            Console.Title = "Charvatia 1.1.1";
+            Init();
+        }
+
+        static void Init()
         {
             Console.WriteLine("Loading Content...");
             FSO.Content.Content.Init(Settings.Default.GamePath, null);
@@ -29,9 +38,24 @@ namespace Charvatia
             PacketHandlers.Register((byte)PacketType.VM_PACKET, false, 0, new OnPacketReceive(VMPacket));
 
             StartVM();
+            Stream inputStream = Console.OpenStandardInput();
 
             while (true)
-                Thread.Sleep(16);
+                inst.SendMessage(Console.ReadLine());
+        }
+
+        private static System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            try
+            {
+                var assemblyPath = Path.Combine("Monogame/Windows/", args.Name.Substring(0, args.Name.IndexOf(',')) + ".dll");
+                var assembly = Assembly.LoadFrom(assemblyPath);
+                return assembly;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         static private void VMPacket(NetworkClient client, ProcessedPacket packet)
@@ -41,12 +65,9 @@ namespace Charvatia
 
         static void StartVM()
         {
-            for (int i = 0; i < 200; i++)
-            {
-                var test = new CVMInstance(37564+i);
-                Console.WriteLine("Stunning success.");
-                test.Start();
-            }
+            inst = new CVMInstance(37564);
+            Console.WriteLine("Stunning success.");
+            inst.Start();
         }
     }
 }

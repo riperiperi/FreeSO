@@ -12,6 +12,8 @@ using FSO.Files.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Engine;
 using FSO.HIT;
+using System.IO;
+using FSO.SimAntics.Model.Sound;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -22,7 +24,7 @@ namespace FSO.SimAntics.Primitives
             if (!VM.UseWorld) return VMPrimitiveExitCode.GOTO_TRUE;
 
             var operand = (VMPlaySoundOperand)args;
-            FWAV fwav = context.CodeOwner.Get<FWAV>(operand.EventID);
+            FWAV fwav = context.ScopeResource.Get<FWAV>(operand.EventID);
             if (fwav == null) fwav = context.VM.Context.Globals.Resource.Get<FWAV>(operand.EventID);
 
             if (fwav != null)
@@ -55,10 +57,10 @@ namespace FSO.SimAntics.Primitives
 
     public class VMPlaySoundOperand : VMPrimitiveOperand {
 
-        public ushort EventID;
+        public ushort EventID { get; set; }
         public ushort Pad;
-        public byte Flags;
-        public byte Volume;
+        public byte Flags { get; set; }
+        public byte Volume { get; set; }
 
         #region VMPrimitiveOperand Members
 
@@ -69,6 +71,16 @@ namespace FSO.SimAntics.Primitives
                 Pad = io.ReadUInt16();
                 Flags = io.ReadByte();
                 Volume = io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(EventID);
+                io.Write(Pad);
+                io.Write(Flags);
+                io.Write(Volume);
             }
         }
 

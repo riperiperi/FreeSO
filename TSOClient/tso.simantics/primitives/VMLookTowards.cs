@@ -6,6 +6,7 @@ using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.LotView.Model;
 using FSO.Files.Formats.IFF.Chunks;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -23,6 +24,7 @@ namespace FSO.SimAntics.Primitives
             var result = new VMFindLocationResult();
             result.Position = new LotTilePos(sim.Position);
 
+            LotTilePos pos = new LotTilePos();
             switch (operand.Mode)
             {
                 case VMLookTowardsMode.HeadTowardsObject:
@@ -31,16 +33,27 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_TRUE; //does not work in TSO
                 case VMLookTowardsMode.BodyTowardsStackObj:
                     result.RadianDirection = (float)GetDirectionTo(sim.Position, context.StackObject.Position);
-                    result.Flags = RadianToFlags(result.RadianDirection);
                     break;
                 case VMLookTowardsMode.BodyAwayFromStackObj:
                     result.RadianDirection = (float)GetDirectionTo(sim.Position, context.StackObject.Position);
                     result.RadianDirection = (float)((result.RadianDirection + Math.PI) % (Math.PI*2));
-                    result.Flags = RadianToFlags(result.RadianDirection);
                     break;
-
+                case VMLookTowardsMode.BodyTowardsAverageStackObj:
+                    foreach (var obj in context.StackObject.MultitileGroup.Objects)
+                        pos += obj.Position;
+                    pos /= context.StackObject.MultitileGroup.Objects.Count;
+                    result.RadianDirection = (float)GetDirectionTo(sim.Position, pos);
+                    break;
+                case VMLookTowardsMode.BodyAwayFromAverageStackObj:
+                    foreach (var obj in context.StackObject.MultitileGroup.Objects)
+                        pos += obj.Position;
+                    pos /= context.StackObject.MultitileGroup.Objects.Count;
+                    result.RadianDirection = (float)GetDirectionTo(sim.Position, pos);
+                    result.RadianDirection = (float)((result.RadianDirection + Math.PI) % (Math.PI * 2));
+                    break;
             }
-            
+
+            if (context.Thread.IsCheck) return VMPrimitiveExitCode.GOTO_FALSE;
             var pathFinder = context.Thread.PushNewRoutingFrame(context, false); //use the path finder to do the turn animation.
             pathFinder.InitRoutes(new List<VMFindLocationResult>() { result });
 
@@ -60,7 +73,7 @@ namespace FSO.SimAntics.Primitives
 
     public class VMLookTowardsOperand : VMPrimitiveOperand
     {
-        public VMLookTowardsMode Mode;
+        public VMLookTowardsMode Mode { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -68,6 +81,13 @@ namespace FSO.SimAntics.Primitives
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
                 Mode = (VMLookTowardsMode)io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write((byte)Mode);
             }
         }
         #endregion
@@ -78,6 +98,8 @@ namespace FSO.SimAntics.Primitives
         HeadTowardsObject = 0,
         BodyTowardsCamera = 1,
         BodyTowardsStackObj = 2,
-        BodyAwayFromStackObj = 3
+        BodyAwayFromStackObj = 3,
+        BodyTowardsAverageStackObj = 4,
+        BodyAwayFromAverageStackObj = 5
     }
 }

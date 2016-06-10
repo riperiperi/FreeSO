@@ -1,10 +1,10 @@
-# FreeSO
+![image](http://freeso.org/wp-content/uploads/2016/03/freeso-logo.png)
 
 A full reimplementation of The Sims Online, using Monogame. FreeSO aims to be faithful to the original game as well as include quality of life changes such as hardware rendering, Hi-res output and >2 floor houses. 
 
 FreeSO currently depends on the original game files (objects, avatars, ui) to function, which are available for download from EA servers.
 
-![image](https://cloud.githubusercontent.com/assets/6294155/9020736/622dae10-3815-11e5-8e03-7b0cfb4261ff.png)
+![image](https://cloud.githubusercontent.com/assets/6294155/15116003/775020d0-15f9-11e6-87ec-6d5aa071aa37.png)
 
 # Contributing
 You can contribute to FreeSO by testing cutting edge features in the latest releases, filing bugs, and joining in the discussion on our forums!
@@ -21,7 +21,6 @@ Looking for something to do? Check out the issues tagged as [good for new contri
 ## Prerequisites
 * [Visual Studio 2015](https://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs.aspx)
 * [MonoGame](http://www.monogame.net): Stable or Development Builds
-* [Bass.NET](http://www.un4seen.com/filez/4/Bass24.Net.zip)
 
 # License
 > This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.

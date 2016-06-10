@@ -27,8 +27,14 @@ namespace FSO.SimAntics.NetPlay.Model
             { VMCommandType.MoveObject, typeof(VMNetMoveObjectCmd) },
             { VMCommandType.DeleteObject, typeof(VMNetDeleteObjectCmd) },
             { VMCommandType.Goto, typeof(VMNetGotoCmd) },
-            { VMCommandType.DialogResponse, typeof(VMNetDialogResponseCmd) }
-
+            { VMCommandType.DialogResponse, typeof(VMNetDialogResponseCmd) },
+            { VMCommandType.StateSync, typeof(VMStateSyncCmd) },
+            { VMCommandType.RequestResync, typeof(VMRequestResyncCmd) },
+            { VMCommandType.GenericDialog, typeof(VMGenericDialogCommand) },
+            { VMCommandType.AsyncResponse, typeof(VMNetAsyncResponseCmd) },
+            { VMCommandType.ChangePermissions, typeof(VMChangePermissionsCmd) },
+            { VMCommandType.EODObjEvent, typeof(VMNetEODEventCmd) },
+            { VMCommandType.EODMessage, typeof(VMNetEODMessageCmd) }
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -83,6 +89,13 @@ namespace FSO.SimAntics.NetPlay.Model
         MoveObject = 8,
         DeleteObject = 9,
         Goto = 10,
-        DialogResponse = 11
+        DialogResponse = 11,
+        StateSync = 12,
+        RequestResync = 13,
+        GenericDialog = 14,
+        AsyncResponse = 15,
+        ChangePermissions = 16,
+        EODObjEvent = 17,
+        EODMessage = 18
     }
 }

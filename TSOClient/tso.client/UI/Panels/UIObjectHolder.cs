@@ -36,6 +36,9 @@ namespace FSO.Client.UI.Panels
         private bool MouseIsDown;
         private bool MouseWasDown;
         private bool MouseClicked;
+
+        private int OldMX;
+        private int OldMY;
         public bool DirChanged;
         public bool ShowTooltip;
 
@@ -63,6 +66,7 @@ namespace FSO.Client.UI.Panels
             for (int i = 0; i < Group.Objects.Count; i++)
             {
                 var target = Group.Objects[i];
+                target.SetRoom(65534);
                 if (target is VMGameObject) ((ObjectComponent)target.WorldUI).ForceDynamic = true;
                 CursorTiles[i] = vm.Context.CreateObjectInstance(0x00000437, new LotTilePos(target.Position), FSO.LotView.Model.Direction.NORTH, true).Objects[0];
                 CursorTiles[i].SetPosition(new LotTilePos(0,0,1), Direction.NORTH, vm.Context);
@@ -70,6 +74,13 @@ namespace FSO.Client.UI.Panels
             }
             Holding.TilePosOffset = new Vector2(0, 0);
             Holding.CursorTiles = CursorTiles;
+
+            uint guid;
+            var bobj = Group.BaseObject;
+            guid = bobj.Object.OBJ.GUID;
+            if (bobj.MasterDefinition != null) guid = bobj.MasterDefinition.GUID;
+            var catalogItem = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
+            if (catalogItem != null) Holding.Price = (int)catalogItem.Price;
         }
 
         public void MoveSelected(Vector2 pos, sbyte level)
@@ -126,11 +137,6 @@ namespace FSO.Client.UI.Panels
             if (Holding != null)
             {
                 Holding.Group.Delete(vm.Context);
-                for (int i = 0; i < Holding.Group.Objects.Count; i++)
-                {
-                    var target = Holding.Group.Objects[i];
-                    if (target is VMGameObject) ((ObjectComponent)target.WorldUI).ForceDynamic = false;
-                }
 
                 for (int i = 0; i < Holding.CursorTiles.Length; i++) {
                     Holding.CursorTiles[i].Delete(true, vm.Context);
@@ -195,8 +201,8 @@ namespace FSO.Client.UI.Panels
                 }
             }
 
-            GameFacade.Screens.TooltipProperties.Show = false;
-            GameFacade.Screens.TooltipProperties.Opacity = 0;
+            state.UIState.TooltipProperties.Show = false;
+            state.UIState.TooltipProperties.Opacity = 0;
             ShowTooltip = false;
         }
 
@@ -223,7 +229,7 @@ namespace FSO.Client.UI.Panels
 
         public void Update(UpdateState state, bool scrolled)
         {
-            if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
+            if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
             MouseClicked = (MouseIsDown && (!MouseWasDown));
 
             if (Holding != null)
@@ -240,7 +246,6 @@ namespace FSO.Client.UI.Panels
             if (Holding != null)
             {
                 if (MouseClicked) Holding.Clicked = true;
-                //TODO: crash if placed out of world
                 if (MouseIsDown && Holding.Clicked)
                 {
                     bool updatePos = MouseClicked;
@@ -271,23 +276,27 @@ namespace FSO.Client.UI.Panels
                     if (updatePos)
                     {
                         MoveSelected(Holding.TilePos, Holding.Level);
+                        if (!Holding.IsBought && Holding.CanPlace == VMPlacementError.Success && 
+                            ParentControl.ActiveEntity != null && ParentControl.ActiveEntity.TSOState.Budget.Value < Holding.Price)
+                            Holding.CanPlace = VMPlacementError.InsufficientFunds;
                         if (Holding.CanPlace != VMPlacementError.Success)
                         {
-                            GameFacade.Screens.TooltipProperties.Show = true;
-                            GameFacade.Screens.TooltipProperties.Opacity = 1;
-                            GameFacade.Screens.TooltipProperties.Position = new Vector2(MouseDownX,
+                            state.UIState.TooltipProperties.Show = true;
+                            state.UIState.TooltipProperties.Color = Color.Black;
+                            state.UIState.TooltipProperties.Opacity = 1;
+                            state.UIState.TooltipProperties.Position = new Vector2(MouseDownX,
                                 MouseDownY);
-                            GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + Holding.CanPlace.ToString()
+                            state.UIState.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + Holding.CanPlace.ToString()
                                 + ((Holding.CanPlace == VMPlacementError.CannotPlaceComputerOnEndTable) ? "," : ""));
                             // comma added to curcumvent problem with language file. We should probably just index these with numbers?
-                            GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                            state.UIState.TooltipProperties.UpdateDead = false;
                             ShowTooltip = true;
                             HITVM.Get().PlaySoundEvent(UISounds.Error);
                         }
                         else
                         {
-                            GameFacade.Screens.TooltipProperties.Show = false;
-                            GameFacade.Screens.TooltipProperties.Opacity = 0;
+                            state.UIState.TooltipProperties.Show = false;
+                            state.UIState.TooltipProperties.Opacity = 0;
                             ShowTooltip = false;
                         }
                     }
@@ -298,7 +307,7 @@ namespace FSO.Client.UI.Panels
                     MoveSelected(tilePos, 1);
                 }
             }
-            else
+            else if (MouseClicked)
             {
                 //not holding an object, but one can be selected
                 var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
@@ -319,12 +328,13 @@ namespace FSO.Client.UI.Panels
                     }
                     else
                     {
-                        GameFacade.Screens.TooltipProperties.Show = true;
-                        GameFacade.Screens.TooltipProperties.Opacity = 1;
-                        GameFacade.Screens.TooltipProperties.Position = new Vector2(MouseDownX,
+                        state.UIState.TooltipProperties.Show = true;
+                        state.UIState.TooltipProperties.Color = Color.Black;
+                        state.UIState.TooltipProperties.Opacity = 1;
+                        state.UIState.TooltipProperties.Position = new Vector2(MouseDownX,
                             MouseDownY);
-                        GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + VMPlacementError.CantEffectFirstLevelFromSecondLevel.ToString());
-                        GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                        state.UIState.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + VMPlacementError.CantEffectFirstLevelFromSecondLevel.ToString());
+                        state.UIState.TooltipProperties.UpdateDead = false;
                         ShowTooltip = true;
                         HITVM.Get().PlaySoundEvent(UISounds.Error);
                     }
@@ -350,6 +360,7 @@ namespace FSO.Client.UI.Panels
         public bool Clicked;
         public VMPlacementError CanPlace;
         public sbyte Level;
+        public int Price;
 
         public bool IsBought
         {

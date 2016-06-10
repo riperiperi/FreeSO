@@ -13,6 +13,7 @@ using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using Microsoft.Xna.Framework;
 using FSO.LotView.Model;
+using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -20,7 +21,9 @@ namespace FSO.SimAntics.Engine.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMGotoRoutingSlotOperand)args;
-            
+
+            if (context.Thread.IsCheck) return VMPrimitiveExitCode.GOTO_FALSE;
+
             var slot = VMMemory.GetSlot(context, operand.Type, operand.Data);
             var obj = context.StackObject;
             var avatar = context.Caller;
@@ -39,15 +42,20 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMGotoRoutingSlotOperand : VMPrimitiveOperand
     {
-        public ushort Data;
-        public VMSlotScope Type;
-        public byte Flags;
+        public ushort Data { get; set; }
+        public VMSlotScope Type { get; set; }
+        public byte Flags { get; set; }
 
         public bool NoFailureTrees
         {
             get
             {
                 return (Flags & 1) > 0;
+            }
+            set
+            {
+                if (value) Flags |= 1;
+                else Flags &= 254;
             }
         }
 
@@ -57,6 +65,15 @@ namespace FSO.SimAntics.Engine.Primitives
                 Data = io.ReadUInt16();
                 Type = (VMSlotScope)io.ReadUInt16();
                 Flags = io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Data);
+                io.Write((ushort)Type);
+                io.Write(Flags);
             }
         }
         #endregion

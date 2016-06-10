@@ -14,6 +14,7 @@ using Microsoft.Xna.Framework;
 using FSO.LotView;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.LotView.Model;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -23,7 +24,9 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMGotoRelativePositionOperand)args;
-            
+
+            if (context.Thread.IsCheck) return VMPrimitiveExitCode.GOTO_FALSE;
+
             var obj = context.StackObject;
             var avatar = (VMAvatar)context.Caller;
 
@@ -51,17 +54,35 @@ namespace FSO.SimAntics.Primitives
     public class VMGotoRelativePositionOperand : VMPrimitiveOperand
     {
         /** How long to meander around objects **/
-        public ushort OldTrapCount;
-        public VMGotoRelativeLocation Location;
-        public VMGotoRelativeDirection Direction;
-        public ushort RouteCount;
-        public VMGotoRelativeFlags Flags;
+        public ushort OldTrapCount { get; set; }
+        public VMGotoRelativeLocation Location { get; set; }
+        public VMGotoRelativeDirection Direction { get; set; }
+        public ushort RouteCount { get; set; }
+        public VMGotoRelativeFlags Flags { get; set; }
 
         public bool NoFailureTrees
         {
             get
             {
                 return (Flags & VMGotoRelativeFlags.NoFailureTrees) > 0;
+            }
+            set
+            {
+                Flags = (Flags & ~VMGotoRelativeFlags.NoFailureTrees);
+                if (value) Flags |= VMGotoRelativeFlags.NoFailureTrees;
+            }
+        }
+
+        public bool AllowDiffAlt
+        {
+            get
+            {
+                return (Flags & VMGotoRelativeFlags.AllowDiffAlt) > 0;
+            }
+            set
+            {
+                Flags = (Flags & ~VMGotoRelativeFlags.AllowDiffAlt);
+                if (value) Flags |= VMGotoRelativeFlags.AllowDiffAlt;
             }
         }
 
@@ -73,6 +94,17 @@ namespace FSO.SimAntics.Primitives
                 Direction = (VMGotoRelativeDirection)((sbyte)io.ReadByte());
                 RouteCount = io.ReadUInt16();
                 Flags = (VMGotoRelativeFlags)io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(OldTrapCount);
+                io.Write((byte)Location);
+                io.Write((byte)Direction);
+                io.Write(RouteCount);
+                io.Write((byte)Flags);
             }
         }
         #endregion
@@ -106,7 +138,7 @@ namespace FSO.SimAntics.Primitives
     }
 
     [Flags]
-    public enum VMGotoRelativeFlags
+    public enum VMGotoRelativeFlags : byte
     {
         AllowDiffAlt = 0x1,
         NoFailureTrees = 0x2

@@ -19,10 +19,10 @@ namespace FSO.Client.GameContent
         public ContentStrings()
         {
             StringTable = new Dictionary<string, Dictionary<string, Dictionary<string, string>>>();
-            if (Directory.Exists(Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata\uitext\" + GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir")))
-                Load("UIText", Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata\uitext\" + GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir"));
+            if (Directory.Exists(Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/" + GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir")))
+                Load("UIText", Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/" + GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir"));
             else
-                Load("UIText", Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata\uitext\english.dir"));
+                Load("UIText", Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/english.dir"));
         }
 
         public string this[string dir, string table, string id]
@@ -53,15 +53,16 @@ namespace FSO.Client.GameContent
         /// <returns>The retrieved string, or null if not found.</returns>
         public string GetString(string dir, string table, string id)
         {
+            string value = "***MISSING***";
             if (StringTable.ContainsKey(dir))
             {
                 if (StringTable[dir].ContainsKey(table))
                 {
-                    return StringTable[dir][table][id];
+                    StringTable[dir][table].TryGetValue(id, out value);
                 }
             }
 
-            return null;
+            return value;
         }
 
         /// <summary>

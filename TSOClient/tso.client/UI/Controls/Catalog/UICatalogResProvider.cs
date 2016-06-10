@@ -15,5 +15,8 @@ namespace FSO.Client.UI.Controls.Catalog
     public interface UICatalogResProvider
     {
         Texture2D GetIcon(ulong id);
+        string GetName(ulong id);
+        string GetDescription(ulong id);
+        int GetPrice(ulong id);
     }
 }

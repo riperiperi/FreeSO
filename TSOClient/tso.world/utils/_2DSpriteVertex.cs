@@ -24,6 +24,7 @@ namespace FSO.LotView.Utils
         public Vector2 TextureCoordinate;
         public Vector3 WorldPosition;
         public Single ObjectID;
+        public Vector2 Room;
 
         /// <summary>
         /// Creates a new _2DSpriteVertex instance.
@@ -32,22 +33,24 @@ namespace FSO.LotView.Utils
         /// <param name="textureCoords">Texture coordinates of vertex.</param>
         /// <param name="worldPosition">Vertex' position in world.</param>
         /// <param name="objID">ID of object/sprite that this vertex belongs to.</param>
-        public _2DSpriteVertex(Vector3 position, Vector2 textureCoords, Vector3 worldPosition, Single objID)
+        public _2DSpriteVertex(Vector3 position, Vector2 textureCoords, Vector3 worldPosition, Single objID, ushort room)
         {
             this.Position = position;
             this.TextureCoordinate = textureCoords;
             this.WorldPosition = worldPosition;
             this.ObjectID = objID/65535.0f;
+            this.Room = new Vector2((room % 256) / 256f, (room / 256) / 256f);
         }
 
-        public static int SizeInBytes = sizeof(float) * 9;
+        public static int SizeInBytes = sizeof(float) * 11;
 
         public static VertexDeclaration VertexElements = new VertexDeclaration
         (
              new VertexElement( 0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0 ),
              new VertexElement( sizeof(float) * 3, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0 ),
              new VertexElement( sizeof(float) * 5, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 1 ),
-             new VertexElement( sizeof(float) * 8, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2 )
+             new VertexElement( sizeof(float) * 8, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2 ),
+             new VertexElement(sizeof(float) * 9, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 3)
         );
 
         VertexDeclaration IVertexType.VertexDeclaration

@@ -1,0 +1,3 @@
+[submodule "Other/libs/FSOMonoGame"]
+	path = Other/libs/FSOMonoGame
+	url = https://github.com/RHY3756547/FSOMonoGame.git

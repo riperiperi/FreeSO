@@ -20,8 +20,7 @@ namespace FSO.SimAntics.Primitives
         {
             var operand = (VMGrabOperand)args;
 
-            if (context.Caller.GetSlot(0) == null) context.Caller.PlaceInSlot(context.StackObject, 0, true, context.VM.Context);
-            else return VMPrimitiveExitCode.GOTO_FALSE;
+            return (context.Caller.PlaceInSlot(context.StackObject, 0, true, context.VM.Context)) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
@@ -36,6 +35,8 @@ namespace FSO.SimAntics.Primitives
             {
             }
         }
+
+        public void Write(byte[] bytes) { }
         #endregion
     }
 }

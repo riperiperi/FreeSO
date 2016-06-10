@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using FSO.Files.Utils;
 using FSO.SimAntics.Engine;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -41,6 +42,13 @@ namespace FSO.SimAntics.Primitives
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
                 Call = (VMOnlineJobsCallMode)io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write((byte)Call);
             }
         }
         #endregion

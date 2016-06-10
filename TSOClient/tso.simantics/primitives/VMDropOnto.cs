@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -27,9 +28,7 @@ namespace FSO.SimAntics.Primitives
                 var itemTest = context.StackObject.GetSlot(dest);
                 if (itemTest == null)
                 {
-                    context.Caller.ClearSlot(src);
-                    context.StackObject.PlaceInSlot(item, dest, false, context.VM.Context); //slot to slot needs no cleanup
-                    return VMPrimitiveExitCode.GOTO_TRUE;
+                    return (context.StackObject.PlaceInSlot(item, dest, true, context.VM.Context)) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                 }
                 else return VMPrimitiveExitCode.GOTO_FALSE; //cannot replace items currently in slots
             }
@@ -39,10 +38,10 @@ namespace FSO.SimAntics.Primitives
 
     public class VMDropOntoOperand : VMPrimitiveOperand
     {
-        public ushort SrcSlotMode;
-        public ushort SrcSlotNum;
-        public ushort DestSlotMode;
-        public ushort DestSlotNum;
+        public ushort SrcSlotMode { get; set; }
+        public ushort SrcSlotNum { get; set; }
+        public ushort DestSlotMode { get; set; }
+        public ushort DestSlotNum { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -53,6 +52,16 @@ namespace FSO.SimAntics.Primitives
                 SrcSlotNum = io.ReadUInt16();
                 DestSlotMode = io.ReadUInt16();
                 DestSlotNum = io.ReadUInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(SrcSlotMode);
+                io.Write(SrcSlotNum);
+                io.Write(DestSlotMode);
+                io.Write(DestSlotNum);
             }
         }
         #endregion

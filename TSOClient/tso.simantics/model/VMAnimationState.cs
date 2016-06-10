@@ -10,14 +10,15 @@ using System.Linq;
 using System.Text;
 using FSO.Vitaboy;
 using FSO.SimAntics.Utils;
+using FSO.SimAntics.Marshals;
 
 namespace FSO.SimAntics.Model
 {
     public class VMAnimationState {
         public Animation Anim;
         public float CurrentFrame;
-        public short EventCode;
-        public bool EventFired;
+        public List<short> EventQueue = new List<short>();
+        public byte EventsRun; //total # of xevts fired during anim. up to short if anything uses more than 255.
         public bool EndReached;
         public bool PlayingBackwards;
         public float Speed = 1.0f;
@@ -51,5 +52,41 @@ namespace FSO.SimAntics.Model
             /** Sort time property lists by time **/
             TimePropertyLists.Sort(new TimePropertyListItemSorter());
         }
+
+        #region VM Marshalling Functions
+        public VMAnimationStateMarshal Save()
+        {
+            return new VMAnimationStateMarshal
+            {
+                Anim = Anim.Name,
+                CurrentFrame = CurrentFrame,
+                EventQueue = EventQueue.ToArray(),
+                EventsRun = EventsRun,
+                EndReached = EndReached,
+                PlayingBackwards = PlayingBackwards,
+                Speed = Speed,
+                Weight = Weight,
+                Loop = Loop
+            };
+        }
+
+        public virtual void Load(VMAnimationStateMarshal input)
+        {
+            Anim = FSO.Content.Content.Get().AvatarAnimations.Get(input.Anim + ".anim");
+            CurrentFrame = input.CurrentFrame;
+            EventQueue = new List<short>(input.EventQueue);
+            EventsRun = input.EventsRun;
+            EndReached = input.EndReached;
+            PlayingBackwards = input.PlayingBackwards;
+            Speed = input.Speed;
+            Weight = input.Weight;
+            Loop = input.Loop;
+        }
+
+        public VMAnimationState(VMAnimationStateMarshal input)
+        {
+            Load(input);
+        }
+        #endregion
     }
 }

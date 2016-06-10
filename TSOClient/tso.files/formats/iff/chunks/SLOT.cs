@@ -51,8 +51,6 @@ namespace FSO.Files.Formats.IFF.Chunks
                  * The span for version 9 is 66. 
                  * The span for version 10 is 70.  **/
                 for (var i = 0; i < numSlots; i++){
-                    io.Mark();
-
                     var item = new SLOTItem();
                     item.Type = io.ReadUInt16();
                     item.Offset = new Vector3(
@@ -66,7 +64,6 @@ namespace FSO.Files.Formats.IFF.Chunks
                     var ground = io.ReadInt32();
                     var rsflags = io.ReadInt32();
                     var snaptargetslot = io.ReadInt32();
-                    var minproximity = io.ReadInt32();
 
                     //bonuses (0 means never)
                     item.Standing = standing; //score bonus for standing destinations
@@ -75,16 +72,16 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                     item.Rsflags = (SLOTFlags)rsflags;
                     item.SnapTargetSlot = snaptargetslot;
-                    item.MinProximity = minproximity;
 
                     if (version >= 6)
                     {
+                        var minproximity = io.ReadInt32();
                         var maxproximity = io.ReadInt32();
                         var optimalproximity = io.ReadInt32();
                         var i9 = io.ReadInt32();
                         var i10 = io.ReadInt32();
-                        
 
+                        item.MinProximity = minproximity;
                         item.MaxProximity = maxproximity;
                         item.OptimalProximity = optimalproximity;
                     }

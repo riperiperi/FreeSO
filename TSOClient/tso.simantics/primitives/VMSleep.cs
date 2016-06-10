@@ -12,6 +12,7 @@ using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics.Engine.Scopes;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -27,29 +28,28 @@ namespace FSO.SimAntics.Primitives
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
-            var ticks = VMMemory.GetVariable(context, FSO.SimAntics.Engine.Scopes.VMVariableScope.Parameters, operand.StackVarToDec);
-            ticks--;
-
-            if (ticks < 0)
-            {
+            if (--context.Args[operand.StackVarToDec] < 0)
                 return VMPrimitiveExitCode.GOTO_TRUE;
-            }
             else
-            {
-                VMMemory.SetVariable(context, FSO.SimAntics.Engine.Scopes.VMVariableScope.Parameters, operand.StackVarToDec, ticks);
                 return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
-            }
         }
     }
 
     public class VMSleepOperand : VMPrimitiveOperand
     {
-        public ushort StackVarToDec;
+        public short StackVarToDec { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
-                StackVarToDec = io.ReadUInt16();
+                StackVarToDec = io.ReadInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(StackVarToDec);
             }
         }
         #endregion

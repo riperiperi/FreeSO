@@ -12,6 +12,7 @@ using FSO.SimAntics.Engine;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -36,16 +37,25 @@ namespace FSO.SimAntics.Primitives
 
     public class VMTestObjectTypeOperand : VMPrimitiveOperand
     {
-        public uint GUID;
-        public ushort IdData;
-        public VMVariableScope IdOwner;
+        public uint GUID { get; set; }
+        public short IdData { get; set; }
+        public VMVariableScope IdOwner { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
                 GUID = io.ReadUInt32();
-                IdData = io.ReadUInt16();
+                IdData = io.ReadInt16();
                 IdOwner = (VMVariableScope)io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(GUID);
+                io.Write(IdData);
+                io.Write((byte)IdOwner);
             }
         }
         #endregion

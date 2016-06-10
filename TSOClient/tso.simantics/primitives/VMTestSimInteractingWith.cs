@@ -18,7 +18,9 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             //if caller's active interaction is with stack object, return true.
-            return (context.Caller.Thread.Queue[0].Callee == context.StackObject)?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
+            var callerActive = context.Caller.Thread.Stack.LastOrDefault();
+            return (callerActive != null && callerActive.ActionTree && context.Caller.Thread.Queue[0].Callee == context.StackObject) 
+                ? VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
         }
     }
 
@@ -32,6 +34,8 @@ namespace FSO.SimAntics.Primitives
                 //nothing! zip! zilch! nada!
             }
         }
+
+        public void Write(byte[] bytes) { }
         #endregion
     }
 }

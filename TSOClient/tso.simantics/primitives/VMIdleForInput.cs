@@ -13,6 +13,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Model;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -22,12 +23,14 @@ namespace FSO.SimAntics.Primitives
         {
             var operand = (VMIdleForInputOperand)args;
 
-            if (operand.AllowPush == 1 && context.Thread.Queue.Count > 1)
-            { //if there are any more interactions, we have been interrupted
-                return VMPrimitiveExitCode.INTERRUPT;
+            //if we're main, attempt to run a queued interaction. We just idle if this fails.
+            if (operand.AllowPush == 1 && !context.ActionTree && context.Thread.AttemptPush())
+            {
+                return VMPrimitiveExitCode.CONTINUE; //control handover
+                //TODO: does this forcefully end the rest of the idle? (force a true return, must loop back to run again)
             }
 
-            if (context.Thread.Queue[0].Cancelled)
+            if (context.ActionTree && context.Thread.Queue[0].Cancelled)
             {
                 context.Caller.SetFlag(VMEntityFlags.NotifiedByIdleForInput, true);
                 return VMPrimitiveExitCode.GOTO_TRUE;
@@ -56,16 +59,25 @@ namespace FSO.SimAntics.Primitives
 
     public class VMIdleForInputOperand : VMPrimitiveOperand
     {
-        public ushort StackVarToDec;
-        public ushort AllowPush;
+        public short StackVarToDec { get; set; }
+        public ushort AllowPush { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
         {
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
-                StackVarToDec = io.ReadUInt16();
+                StackVarToDec = io.ReadInt16();
                 AllowPush = io.ReadUInt16();
+            }
+        }
+
+        public void Write(byte[] bytes)
+        {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(StackVarToDec);
+                io.Write(AllowPush);
             }
         }
         #endregion

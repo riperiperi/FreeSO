@@ -28,5 +28,7 @@ namespace FSO.Common.Rendering.Framework.Camera
         float Zoom { get; set; }
         float AspectRatioMultiplier { get; set; }
 
+        void ProjectionDirty();
+
     }
 }

@@ -34,11 +34,12 @@ namespace FSO.LotView
 
         /** How many pixels from each edge of the screen before we start scrolling the view **/
         public int ScrollBounds = 20;
+        public static bool DirectX = false;
 
         public WorldState State;
-        private bool HasInitGPU;
-        private bool HasInitBlueprint;
-        private bool HasInit;
+        protected bool HasInitGPU;
+        protected bool HasInitBlueprint;
+        protected bool HasInit;
 
         private World2D _2DWorld = new World2D();
         private World3D _3DWorld = new World3D();
@@ -66,14 +67,15 @@ namespace FSO.LotView
              * state settings for the world and helper functions
              */
             State = new WorldState(layer.Device, layer.Device.Viewport.Width, layer.Device.Viewport.Height, this);
+            State.AmbientLight = new Texture2D(layer.Device, 256, 256);
             State._3D = new FSO.LotView.Utils._3DWorldBatch(State);
-            State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, World2D.NUM_2D_BUFFERS, World2D.BUFFER_SURFACE_FORMATS);
+            State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, World2D.NUM_2D_BUFFERS, World2D.BUFFER_SURFACE_FORMATS, World2D.SCROLL_BUFFER);
+            State._2D.AmbientLight = State.AmbientLight;
+
             base.Camera = State.Camera;
 
             HasInitGPU = true;
             HasInit = HasInitGPU & HasInitBlueprint;
-
-            _2DWorld.Initialize(layer);
         }
 
         public void InitBlueprint(Blueprint blueprint)
@@ -90,7 +92,7 @@ namespace FSO.LotView
         {
             if (Blueprint == null) { return; }
 
-            foreach (var item in Blueprint.All){
+            foreach (var item in Blueprint.Objects){
                 item.OnZoomChanged(State);
             }
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ZOOM));
@@ -100,7 +102,7 @@ namespace FSO.LotView
         {
             if (Blueprint == null) { return; }
 
-            foreach (var item in Blueprint.All)
+            foreach (var item in Blueprint.Objects)
             {
                 item.OnRotationChanged(State);
             }
@@ -111,7 +113,7 @@ namespace FSO.LotView
         {
             if (Blueprint == null) { return; }
 
-            foreach (var item in Blueprint.All){
+            foreach (var item in Blueprint.Objects){
                 item.OnScrollChanged(State);
             }
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.SCROLL));
@@ -280,6 +282,13 @@ namespace FSO.LotView
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            if (Blueprint != null)
+            {
+                foreach (var ent in Blueprint.Objects)
+                {
+                    ent.Update(null, State);
+                }
+            }
             /** Check for mouse scrolling **/
         }
 
@@ -311,10 +320,17 @@ namespace FSO.LotView
 
             State._3D.Begin(device);
             State._2D.Begin(this.State.Camera);
+
+            var pxOffset = -State.WorldSpace.GetScreenOffset();
+            State._2D.ResetMatrices(device.Viewport.Width, device.Viewport.Height);
             _3DWorld.DrawBefore2D(device, State);
+            
             _2DWorld.Draw(device, State);
-            State._2D.End();
+            State._2D.Pause();
+            State._2D.Resume();
             _3DWorld.DrawAfter2D(device, State);
+            State._2D.SetScroll(pxOffset);
+            State._2D.End();
             State._3D.End();
         }
 

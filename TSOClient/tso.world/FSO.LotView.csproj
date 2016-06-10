@@ -36,21 +36,27 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Icon.ico</ApplicationIcon>
+    <ApplicationIcon>
+    </ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Components\AvatarComponent.cs" />
+    <Compile Include="Components\EntityComponent.cs" />
     <Compile Include="Components\FloorComponent.cs" />
     <Compile Include="Components\ObjectComponent.cs" />
     <Compile Include="Components\TerrainComponent.cs" />
     <Compile Include="Components\WallComponent.cs" />
+    <Compile Include="Model\AvatarDisplayFlags.cs" />
     <Compile Include="Model\Blueprint.cs" />
     <Compile Include="Model\Direction.cs" />
     <Compile Include="Model\FloorTile.cs" />
     <Compile Include="Model\LotTilePos.cs" />
+    <Compile Include="Model\LotTypes.cs" />
+    <Compile Include="Model\RoomLighting.cs" />
+    <Compile Include="Model\ScrollBuffer.cs" />
     <Compile Include="Model\WallTile.cs" />
     <Compile Include="Model\WorldRotation.cs" />
     <Compile Include="Model\WorldZoom.cs" />
@@ -58,7 +64,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\DGRPRenderer.cs" />
     <Compile Include="Utils\IsometricTileIterator.cs" />
+    <Compile Include="Utils\TerrainVertex.cs" />
     <Compile Include="Utils\WorldCamera.cs" />
+    <Compile Include="Utils\_2DDrawGroup.cs" />
     <Compile Include="Utils\_2DSprite.cs" />
     <Compile Include="Utils\_2DSpriteSorter.cs" />
     <Compile Include="Utils\_2DSpriteVertex.cs" />
@@ -73,10 +81,6 @@
     <Compile Include="WorldState.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="MonoGame.Framework, Version=3.4.0.459, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Lidgren.Network">
       <HintPath>$(MSBuildExtensionsPath)\..\MonoGame\v3.0\Assemblies\WindowsGL\Lidgren.Network.dll</HintPath>
     </Reference>
@@ -90,11 +94,13 @@
     <Reference Include="System" />
     <Reference Include="System.Xml" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="Icon.ico" />
-  </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
+      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
+      <Name>MonoGame.Framework.Windows</Name>
+      <Private>False</Private>
+    </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
       <Name>FSO.Common</Name>

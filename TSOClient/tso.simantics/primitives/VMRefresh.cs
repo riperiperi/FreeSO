@@ -12,6 +12,7 @@ using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.SimAntics.Model;
 using FSO.Files.Formats.IFF.Chunks;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -34,11 +35,15 @@ namespace FSO.SimAntics.Primitives
             switch (operand.RefreshType)
             {
                 case 0: //graphic
-                    if (target.GetType() == typeof(VMGameObject))
+                    if (target is VMGameObject)
                     {
                         var TargObj = (VMGameObject)target;
                         TargObj.RefreshGraphic();
                     }
+                    break;
+                case 1:
+                    context.VM.Context.RefreshLighting(context.VM.Context.GetObjectRoom(target), true);
+                    if (target is VMGameObject) ((VMGameObject)target).RefreshLight();
                     break;
             }
 
@@ -48,8 +53,8 @@ namespace FSO.SimAntics.Primitives
 
     public class VMRefreshOperand : VMPrimitiveOperand
     {
-        public short TargetObject;
-        public short RefreshType;
+        public short TargetObject { get; set; }
+        public short RefreshType { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -57,6 +62,14 @@ namespace FSO.SimAntics.Primitives
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
                 TargetObject = io.ReadInt16();
                 RefreshType = io.ReadInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(TargetObject);
+                io.Write(RefreshType);
             }
         }
         #endregion

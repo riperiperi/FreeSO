@@ -23,7 +23,7 @@ namespace FSO.Client.UI.Screens
         public EALogo()
             : base()
         {
-            PlayBackgroundMusic(new string[] { GameFacade.GameFilePath("music\\stations\\latin\\latin3_7df26b84.mp3") });
+            //HITVM.Get().PlaySoundEvent(UIMusic.LoadLoop);
             /**
              * Scale the whole screen to 1024
              */

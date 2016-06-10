@@ -50,7 +50,7 @@ namespace FSO.Files.HIT
                 string[] Values = Lines[i].Split(',');
 
                 var Entry = new EVTEntry();
-                Entry.Name = Values[0].ToLower();
+                Entry.Name = Values[0].ToLowerInvariant();
                 Entry.EventType = ParseHexString(Values[1]);
                 Entry.TrackID = ParseHexString(Values[2]);
                 Entry.Unknown = ParseHexString(Values[3]);
@@ -66,7 +66,7 @@ namespace FSO.Files.HIT
         private uint ParseHexString(string input)
         {
             bool IsHex = false;
-            input = input.ToLower();
+            input = input.ToLowerInvariant();
 
             if (input == "") return 0;
             if (input.StartsWith("0x"))

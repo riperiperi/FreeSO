@@ -227,7 +227,7 @@ namespace FSO.Client.UI.Panels
         {
             var xmlHouses = new List<UIXMLLotEntry>();
 
-            string[] paths = Directory.GetFiles(@"Content\Blueprints\", "*.xml", SearchOption.AllDirectories);
+            string[] paths = Directory.GetFiles(@"Content/Blueprints/", "*.xml", SearchOption.AllDirectories);
             for (int i = 0; i < paths.Length; i++)
             {
                 string entry = paths[i];
@@ -235,7 +235,7 @@ namespace FSO.Client.UI.Panels
                 xmlHouses.Add(new UIXMLLotEntry { Filename = filename, Path = entry });
             }
 
-            paths = Directory.GetFiles(Path.Combine(GlobalSettings.Default.StartupPath, @"housedata\"), "*_00.xml", SearchOption.AllDirectories);
+            paths = Directory.GetFiles(Path.Combine(GlobalSettings.Default.StartupPath, @"housedata/"), "*_00.xml", SearchOption.AllDirectories);
             for (int i=0; i<paths.Length; i++)
             {
                 string entry = paths[i];

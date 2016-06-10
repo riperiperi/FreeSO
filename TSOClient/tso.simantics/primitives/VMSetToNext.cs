@@ -13,15 +13,26 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
 using Microsoft.Xna.Framework;
+using System.IO;
+using FSO.LotView.Model;
 
 namespace FSO.SimAntics.Primitives
 {
+
     public class VMSetToNext : VMPrimitiveHandler
     {
+        //position steps for object adjacent to object in local
+        private static Point[] AdjStep =
+        {
+            new Point(0, -1),
+            new Point(1, 0),
+            new Point(0, 1),
+            new Point(-1, 0),
+        };
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMSetToNextOperand)args;
-            var targetValue = VMMemory.GetVariable(context, operand.GetTargetOwner(), operand.GetTargetData());
+            var targetValue = VMMemory.GetVariable(context, operand.TargetOwner, operand.TargetData);
             var entities = context.VM.Entities;
 
             VMEntity Pointer = context.VM.GetObjectById(targetValue);
@@ -56,39 +67,73 @@ namespace FSO.SimAntics.Primitives
                     }
                     if (found)
                     {
-                        VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), bestID);
+                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, bestID);
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                     else
                     {
-                        VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), smallestID);
+                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, smallestID);
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                 }
+            }
+            else if (operand.SearchType == VMSetToNextSearchType.ObjectAdjacentToObjectInLocal)
+            {
+                VMEntity anchor = context.VM.GetObjectById((short)context.Locals[operand.Local]);
+                int ptrDir = -1;
+
+                targetValue = 0;
+                if (Pointer != null)
+                {
+                    ptrDir = getAdjDir(anchor, Pointer);
+                    if (ptrDir == 3) return VMPrimitiveExitCode.GOTO_FALSE; //reached end
+                }
+
+                //iterate through all following dirs til we find an object
+                for (int i=ptrDir+1; i<4; i++)
+                {
+                    var off = AdjStep[i];
+                    var adj = context.VM.Context.SetToNextCache.GetObjectsAt(LotTilePos.FromBigTile(
+                        (short)(anchor.Position.TileX + off.X),
+                        (short)(anchor.Position.TileY + off.Y),
+                        anchor.Position.Level));
+
+                    if (adj != null && adj.Count > 0)
+                    {
+                        //lists are ordered by object id. first is the smallest.
+                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, adj[0].ObjectID);
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
+                }
+                return VMPrimitiveExitCode.GOTO_FALSE;
+
             } else {
+
+                //if we've cached the search type, use that instead of all objects
+                switch (operand.SearchType)
+                {
+                    case VMSetToNextSearchType.ObjectOnSameTile:
+                        entities = context.VM.Context.SetToNextCache.GetObjectsAt(Pointer.Position); break;
+                    case VMSetToNextSearchType.Person:
+                        entities = context.VM.Context.SetToNextCache.Avatars; break;
+                    case VMSetToNextSearchType.ObjectOfType:
+                        entities = context.VM.Context.SetToNextCache.GetObjectsByGUID(operand.GUID); break;
+                }
+                if (entities == null) return VMPrimitiveExitCode.GOTO_FALSE;
+
                 bool loop = (operand.SearchType == VMSetToNextSearchType.ObjectOnSameTile);
                 VMEntity first = null;
+
                 for (int i=0; i<entities.Count; i++) //generic search through all objects
                 {
                     var temp = entities[i];
                     bool found = false;
                     if (temp.ObjectID > targetValue || loop)
                     {
-                        VMEntity temp2; //used in some places
-
                         switch (operand.SearchType)
-                        { //search types
-                            case VMSetToNextSearchType.Object:
-                                found = true;
-                                break;
-                            case VMSetToNextSearchType.Person:
-                                found = (temp.GetType() == typeof(VMAvatar));
-                                break;
+                        { //manual search types
                             case VMSetToNextSearchType.NonPerson:
                                 found = (temp.GetType() == typeof(VMGameObject));
-                                break;
-                            case VMSetToNextSearchType.ObjectOfType:
-                                found = (temp.Object.OBJ.GUID == operand.GUID);
                                 break;
                             case VMSetToNextSearchType.NeighborId:
                                 throw new VMSimanticsException("Not implemented!", context);
@@ -97,21 +142,13 @@ namespace FSO.SimAntics.Primitives
                                 break;
                             case VMSetToNextSearchType.NeighborOfType:
                                 throw new VMSimanticsException("Not implemented!", context);
-                            case VMSetToNextSearchType.ObjectOnSameTile:
-                                temp2 = Pointer; //.VM.GetObjectById((short)context.Locals[operand.Local]); //sure, it doesn't have this in the name, but it seems like the object is chosen from a local.
-                                found = (temp.Position.Level == temp2.Position.Level) && (temp.Position.TileX == temp2.Position.TileX) && (temp.Position.TileY == temp2.Position.TileY);
-                                break;
-                            case VMSetToNextSearchType.ObjectAdjacentToObjectInLocal:
-                                temp2 = context.VM.GetObjectById((short)context.Locals[operand.Local]);
-                                
-                                int xDist = Math.Abs(temp.Position.TileX - temp2.Position.TileX);
-                                int yDist = Math.Abs(temp.Position.TileY - temp2.Position.TileY);
-                                found = (temp.Position.Level == temp2.Position.Level) && (xDist <2 && yDist<2) && ((xDist==1)^(yDist==1));
-                                break;
                             case VMSetToNextSearchType.Career:
                                 throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.ClosestHouse:
                                 throw new VMSimanticsException("Not implemented!", context);
+                            default:
+                                //set to next object, or cached search.
+                                found = true; break;
                         }
                         if (temp.ObjectID <= targetValue && found)
                         {
@@ -122,7 +159,7 @@ namespace FSO.SimAntics.Primitives
                     }
                     if (found)
                     {
-                        VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), temp.ObjectID);
+                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, temp.ObjectID);
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                 }
@@ -132,7 +169,7 @@ namespace FSO.SimAntics.Primitives
                     if (first == null) return VMPrimitiveExitCode.GOTO_FALSE; //no elements of this kind at all.
                     else
                     {
-                        VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), first.ObjectID); //set to loop, so go back to lowest obj id.
+                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, first.ObjectID); //set to loop, so go back to lowest obj id.
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                     //loop around
@@ -142,31 +179,36 @@ namespace FSO.SimAntics.Primitives
             return VMPrimitiveExitCode.GOTO_FALSE; //ran out of objects to test
         }
 
+        private int getAdjDir(VMEntity src, VMEntity dest)
+        {
+            int diffX = dest.Position.TileX - src.Position.TileX;
+            int diffY = dest.Position.TileY - src.Position.TileY;
+
+            return getAdjDir(diffX, diffY);
+        }
+
+        private int getAdjDir(int diffX, int diffY)
+        {
+
+            //negative y is anchor
+            //positive x is 90 degrees
+
+            return (diffX == 0) ?
+                ((diffY < 0) ? 0 : 2) :
+                ((diffX < 0) ? 3 : 1);
+        }
 
     }
 
     public class VMSetToNextOperand : VMPrimitiveOperand
     {
-        public uint GUID;
-        public byte Flags;
-        public VMVariableScope TargetOwner;
-        public byte Local;
-        public ushort TargetData;
-        public VMSetToNextSearchType SearchType;
-
-        public VMVariableScope GetTargetOwner(){
-            if ((Flags & 0x80) == 0x80){
-                return TargetOwner;
-            }
-            return VMVariableScope.StackObjectID;
-        }
-
-        public ushort GetTargetData(){
-            if ((Flags & 0x80) == 0x80){
-                return TargetData;
-            }
-            return 0;
-        }
+        public uint GUID { get; set; }
+        public byte Flags { get; set; }
+        public VMVariableScope TargetOwner { get; set; }
+        public byte Local { get; set; }
+        public byte TargetData { get; set; }
+        public VMSetToNextSearchType SearchType {
+            get { return (VMSetToNextSearchType)(Flags & 0x7F); } set { Flags = (byte)(0x80 | ((byte)value & 0x7F)); } }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){
@@ -179,8 +221,24 @@ namespace FSO.SimAntics.Primitives
                 this.Local = io.ReadByte();
                 this.TargetData = io.ReadByte();
 
-                this.SearchType = (VMSetToNextSearchType)(this.Flags & 0x7F);
+                if ((Flags & 0x80) == 0)
+                {
+                    //clobber this, we should always set flag for saving.
+                    Flags |= 0x80;
+                    TargetOwner = VMVariableScope.StackObjectID;
+                    TargetData = 0;
+                }
+            }
+        }
 
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(GUID);
+                io.Write(Flags);
+                io.Write((byte)TargetOwner);
+                io.Write(Local);
+                io.Write(TargetData);
             }
         }
         #endregion

@@ -20,6 +20,7 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Controls.Catalog;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels.LotControls;
+using FSO.Client.UI.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -94,7 +95,7 @@ namespace FSO.Client.UI.Panels
 
             CategoryMap = new Dictionary<UIButton, int>
             {
-                { TerrainButton, 28 },
+                { TerrainButton, 29 },
                 { WaterButton, 5 },
                 { WallButton, 7 },
                 { WallpaperButton, 8 },
@@ -198,13 +199,26 @@ namespace FSO.Client.UI.Panels
 
             NextPageButton.Disabled = (total == 1);
 
+            if (LotController.CustomControl != null)
+            {
+                LotController.CustomControl.Release();
+                LotController.CustomControl = null;
+            }
+
             PreviousPageButton.Disabled = true;
             return;
         }
 
         void Catalog_OnSelectionChange(int selection)
         {
+            Holder.ClearSelected();
             var item = CurrentCategory[selection];
+
+            if (LotController.ActiveEntity != null && item.Price > LotController.ActiveEntity.TSOState.Budget.Value) {
+                HIT.HITVM.Get().PlaySoundEvent(UISounds.Error);
+                return;
+            }
+
             if (OldSelection != -1) Catalog.SetActive(OldSelection, false);
             Catalog.SetActive(selection, true);
 
@@ -216,18 +230,18 @@ namespace FSO.Client.UI.Panels
 
             if (item.Special != null)
             {
-                QueryPanel.Active = false;
+                var res = item.Special.Res;
+                var resID = item.Special.ResID;
+                QueryPanel.SetInfo(res.GetIcon(resID), res.GetName(resID), res.GetDescription(resID), res.GetPrice(resID));
+                QueryPanel.Mode = 1;
+                QueryPanel.Tab = 0;
+                QueryPanel.Active = true;
                 LotController.CustomControl = (UICustomLotControl)Activator.CreateInstance(item.Special.Control, vm, LotController.World, LotController, item.Special.Parameters);
             }
             else
             {
-                if (BuyItem != null && Holder.Holding != null && BuyItem == Holder.Holding.Group)
-                {
-                    BuyItem.Delete(vm.Context);
-                }
-
                 BuyItem = vm.Context.CreateObjectInstance(item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
-                QueryPanel.SetInfo(BuyItem.Objects[0], false);
+                QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
                 QueryPanel.Mode = 1;
                 QueryPanel.Tab = 0;
                 QueryPanel.Active = true;
@@ -265,7 +279,7 @@ namespace FSO.Client.UI.Panels
             QueryPanel.Mode = 0;
             QueryPanel.Active = true;
             QueryPanel.Tab = 1;
-            QueryPanel.SetInfo(holding.Group.BaseObject, holding.IsBought);
+            QueryPanel.SetInfo(LotController.vm, holding.Group.BaseObject, holding.IsBought);
         }
         private void HolderPutDown(UIObjectSelection holding, UpdateState state)
         {
@@ -314,6 +328,8 @@ namespace FSO.Client.UI.Panels
                 if (Opacity < 1) Opacity += 1f / 20f;
                 else Opacity = 1;
             }
+
+            if (LotController.ActiveEntity != null) Catalog.Budget = (int)LotController.ActiveEntity.TSOState.Budget.Value;
             base.Update(state);
         }
     }

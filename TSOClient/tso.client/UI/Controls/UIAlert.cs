@@ -38,6 +38,10 @@ namespace FSO.Client.UI.Controls
             {
                 return (TextBox == null) ? null : TextBox.CurrentText;
             }
+            set
+            {
+                if (TextBox != null) TextBox.CurrentText = value;
+            }
         }
 
         public UIAlert(UIAlertOptions options) : base(UIDialogStyle.Standard, true)
@@ -110,6 +114,7 @@ namespace FSO.Client.UI.Controls
         {
             var w = m_Options.Width;
             var h = m_Options.Height;
+
             h = Math.Max(h, Math.Max((int)IconSpace.Y, m_MessageText == null ? 0 : m_MessageText.BoundingBox.Height) + 16);
 
             if(_ProgressBar != null){
@@ -125,7 +130,6 @@ namespace FSO.Client.UI.Controls
             {
                 h += 32;
             }
-
 
             if (m_Options.TextEntry)
             {

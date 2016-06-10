@@ -64,7 +64,7 @@ namespace FSO.Content
             this.StationsById = new Dictionary<uint, AudioReference>();
             this.Modes = new List<AudioReference>();
 
-            var stationsRegEx = new Regex(@"music\\stations\\.*\.mp3");
+            var stationsRegEx = new Regex(@"music/stations/.*\.mp3");
 
             foreach (var file in ContentManager.AllFiles)
             {
@@ -133,7 +133,7 @@ namespace FSO.Content
                     return utk.DecompressedWav;
                 }
                 else
-                    return dat; //either wav or mp3, bass.net can explicitly read these.
+                    return dat; //either wav or mp3.
             }
             else
                 Debug.WriteLine("Couldn't find sound!");
@@ -197,10 +197,12 @@ namespace FSO.Content
             if (data != null)
             {
                 var stream = new MemoryStream(data);
-                var sfx = SoundEffect.FromStream(stream);
-                stream.Close();
-                SFXCache.Add(InstanceID, sfx);
-                return sfx; //remember to clear the sfx cache between lots!
+
+                    var sfx = SoundEffect.FromStream(stream);
+                    stream.Close();
+                    SFXCache.Add(InstanceID, sfx);
+                    return sfx; //remember to clear the sfx cache between lots!
+
             }
             else
             {

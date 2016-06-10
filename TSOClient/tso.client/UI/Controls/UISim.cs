@@ -19,6 +19,7 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework;
 using FSO.Vitaboy;
 using FSO.Common.Rendering.Framework.Camera;
+using FSO.LotView.Utils;
 
 namespace FSO.Client.UI.Controls
 {
@@ -28,13 +29,13 @@ namespace FSO.Client.UI.Controls
     /// </summary>
     public class UISim : UIElement
     {
-        private _3DScene Scene;
-        private BasicCamera Camera;
+        private _3DTargetScene Scene;
+        private WorldCamera Camera;
         public AdultVitaboyModel Avatar { get; internal set; }
 
         /** 45 degrees in either direction **/
         public float RotationRange = 45;
-        public float RotationStartAngle = 180;
+        public float RotationStartAngle = 45;
         public float RotationSpeed = new TimeSpan(0, 0, 10).Ticks;
         public bool AutoRotate = true;
 
@@ -56,17 +57,18 @@ namespace FSO.Client.UI.Controls
         
         private void UISimInit()
         {
-            Camera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
-            Scene = new _3DScene(GameFacade.Game.GraphicsDevice, Camera);
+            Camera = new WorldCamera(GameFacade.GraphicsDevice);
+            Camera.Zoom = LotView.WorldZoom.Near;
+            Camera.CenterTile = new Vector2(-1, -1);
+            Scene = new _3DTargetScene(GameFacade.Game.GraphicsDevice, Camera, new Point(140, 200), (GlobalSettings.Default.AntiAlias)?8:0);
             Scene.ID = "UISim";
 
             GameFacade.Game.GraphicsDevice.DeviceReset += new EventHandler<EventArgs>(GraphicsDevice_DeviceReset);
 
             Avatar = new AdultVitaboyModel();
             Avatar.Scene = Scene;
-            Avatar.Scale = new Vector3(0.45f);
+            
             Scene.Add(Avatar);
-
         }
 
         public UISim() : this(true)
@@ -85,15 +87,6 @@ namespace FSO.Client.UI.Controls
             Scene.DeviceReset(GameFacade.Game.GraphicsDevice);
         }
 
-        private void CalculateView()
-        {
-            var screen = GameFacade.Screens.CurrentUIScreen;
-            if (screen == null) { return; }
-
-            var globalLocation = screen.GlobalPoint(this.LocalPoint(Vector2.Zero));
-            Camera.ProjectionOrigin = globalLocation;
-        }
-
         public override void Update(UpdateState state)
         {
             base.Update(state);
@@ -108,36 +101,24 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        private Vector2 m_Size;
-        public override Vector2 Size
-        {
-            get { return m_Size; }
-            set
-            {
-                m_Size = value;
-                CalculateView();
-            }
-        }
-
-        protected override void CalculateMatrix()
-        {
-            base.CalculateMatrix();
-
-            /** Re-calculate the 3D world **/
-            CalculateView();
-        }
-
-        public override void Draw(UISpriteBatch batch)
+        public override void PreDraw(UISpriteBatch batch)
         {
             if (!UISpriteBatch.Invalidated)
             {
                 if (!_3DScene.IsInvalidated)
                 {
                     batch.Pause();
-                    Avatar.Draw(GameFacade.GraphicsDevice);
+                    Scene.Draw(GameFacade.GraphicsDevice);
                     batch.Resume();
+                    DrawLocalTexture(batch, Scene.Target, new Vector2());
                 }
             }
+            base.PreDraw(batch);
+        }
+
+        public override void Draw(UISpriteBatch batch)
+        {
+            DrawLocalTexture(batch, Scene.Target, new Vector2());
         }
     }
 }

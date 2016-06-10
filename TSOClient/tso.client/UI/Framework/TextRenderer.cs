@@ -56,11 +56,14 @@ namespace FSO.Client.UI.Framework
 
             var yPosition = topLeft.Y;
             var numLinesAdded = 0;
+            var realMaxWidth = 0;
             for (var i = 0; i < m_Lines.Count; i++)
             {
                 var lineOffset = (i*m_LineHeight < options.TopLeftIconSpace.Y) ? options.TopLeftIconSpace.X : 0;
                 var line = m_Lines[i];
                 var xPosition = topLeft.X+lineOffset;
+
+                if (line.LineWidth > realMaxWidth) realMaxWidth = (int)line.LineWidth;
 
                 /** Alignment **/
                 if (options.Alignment == TextAlignment.Center)
@@ -84,7 +87,8 @@ namespace FSO.Client.UI.Framework
                 position.Y += m_LineHeight;
             }
 
-            result.BoundingBox = new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)options.MaxWidth, (int)yPosition);
+            result.BoundingBox = new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)options.MaxWidth, (int)(yPosition-m_LineHeight));
+            result.MaxWidth = realMaxWidth;
             foreach (var cmd in drawCommands)
             {
                 cmd.Init();
@@ -143,15 +147,24 @@ namespace FSO.Client.UI.Framework
                                 currentLineWidth = 0;
                             }
 
+                            // binary search, makes this a bit faster?
+                            // we can safely say that no character is thinner than 4px, so set max substring to maxwidth/4
                             float width = allowedWidth + 1;
-                            int j = word.Length;
-                            while (width > allowedWidth)
+                            int min = 1;
+                            int max = Math.Min(word.Length, (int)allowedWidth / 4);
+                            int mid = (min + max) / 2;
+                            while (max-min > 1)
                             {
-                                width = TextStyle.MeasureString(word.Substring(0, --j)).X;
+                                width = TextStyle.MeasureString(word.Substring(0, mid)).X;                    
+                                if (width > allowedWidth)
+                                    max = mid;
+                                else
+                                    min = mid;
+                                mid = (max + min) / 2;
                             }
-                            currentLine.Append(word.Substring(0, j));
+                            currentLine.Append(word.Substring(0, min));
                             currentLineWidth += width;
-                            word = word.Substring(j);
+                            word = word.Substring(min);
 
                             m_Lines.Add(new UITextEditLine
                             {
@@ -238,6 +251,8 @@ namespace FSO.Client.UI.Framework
     {
         public List<ITextDrawCmd> DrawingCommands;
         public Rectangle BoundingBox;
+        public int MaxWidth;
+        public int Lines;
     }
 
     public class TextRendererOptions

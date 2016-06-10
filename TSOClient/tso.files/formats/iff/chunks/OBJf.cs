@@ -43,6 +43,23 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
             }
         }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteUInt32(0);
+                io.WriteUInt32(Version);
+                io.WriteCString("fJBO", 4);
+                io.WriteInt32(functions.Length);
+                foreach(var func in functions)
+                {
+                    io.WriteUInt16(func.ConditionFunction);
+                    io.WriteUInt16(func.ActionFunction);
+                }
+                return true;
+            }
+        }
     }
 
     public struct OBJfFunctionEntry {

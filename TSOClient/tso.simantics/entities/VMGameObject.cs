@@ -18,19 +18,20 @@ using FSO.SimAntics.Model;
 using FSO.Common.Utils;
 using FSO.Content.Model;
 using FSO.SimAntics.Model.Routing;
+using FSO.SimAntics.Marshals;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics
 {
     public class VMGameObject : VMEntity
     {
 
-        private VMEntity[] SlotContainees;
-
         /** Definition **/
 
         public VMGameObject(GameObject def, ObjectComponent worldUI) : base(def)
         {
             this.WorldUI = worldUI;
+            PlatformState = new VMTSOObjectState(); //todo: ts1 switch
         }
 
         public override void SetDynamicSpriteFlag(ushort index, bool set)
@@ -38,6 +39,7 @@ namespace FSO.SimAntics
             base.SetDynamicSpriteFlag(index, set);
             if (this.WorldUI != null){
                 ((ObjectComponent)this.WorldUI).DynamicSpriteFlags = this.DynamicSpriteFlags;
+                ((ObjectComponent)this.WorldUI).DynamicSpriteFlags2 = this.DynamicSpriteFlags2;
             }
         }
 
@@ -65,11 +67,34 @@ namespace FSO.SimAntics
         }
 
 
+        public override void SetRoom(ushort room)
+        {
+            base.SetRoom(room);
+            
+            // NOTE: if something computationally intensive happens here, take into account
+            // that the previous value of room may equal the new value if the client resyncs
+            // so checking for a difference and only acting when there is is likely a bad idea.
+            RefreshLight();
+        }
+
+        public void RefreshLight()
+        {
+            if (UseWorld)
+            {
+                var flags = (VMEntityFlags2)GetValue(VMStackObjectVariable.FlagField2);
+                WorldUI.Room = ((flags & VMEntityFlags2.GeneratesLight) > 0 && 
+                    GetValue(VMStackObjectVariable.LightingContribution)>0 && 
+                    (flags & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) == 0) 
+                    ? (ushort)65535 : (ushort)GetValue(VMStackObjectVariable.Room);
+            }
+        }
+
         public override void Init(FSO.SimAntics.VMContext context){
-            if (UseWorld) ((ObjectComponent)WorldUI).ObjectID = ObjectID;
+            if (UseWorld) WorldUI.ObjectID = ObjectID;
+            PersistID = (uint)ObjectID; //temporary til theres a system to manage these
             if (Slots != null && Slots.Slots.ContainsKey(0))
             {
-                SlotContainees = new VMEntity[Slots.Slots[0].Count];
+                Contained = new VMEntity[Slots.Slots[0].Count];
                 if (UseWorld) ((ObjectComponent)WorldUI).ContainerSlots = Slots.Slots[0];
             }
 
@@ -95,7 +120,7 @@ namespace FSO.SimAntics
             get { return _Direction; }
             set {
                 _Direction = value;
-                if (UseWorld) ((ObjectComponent)WorldUI).Direction = value;
+                if (UseWorld) WorldUI.Direction = value;
             }
         }
 
@@ -107,13 +132,14 @@ namespace FSO.SimAntics
 
         public override string ToString()
         {
+            if (MultitileGroup.Name != "") return MultitileGroup.Name;
             var strings = Object.Resource.Get<CTSS>(Object.OBJ.CatalogStringsID);
             if (strings != null){
                 return strings.GetString(0);
             }
             var label = Object.OBJ.ChunkLabel;
             if (label != null && label.Length > 0){
-                return label.TrimEnd('\0');
+                return label;
             }
             return Object.OBJ.GUID.ToString("X");
         }
@@ -122,21 +148,23 @@ namespace FSO.SimAntics
 
         public override int TotalSlots()
         {
-            if (SlotContainees == null) return 0;
-            return SlotContainees.Length;
+            if (Contained == null) return 0;
+            return Contained.Length;
         }
 
-        public override void PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context)
+        public override bool PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context)
         {
+            if (GetSlot(slot) == obj) return true; //already in slot
+            if (GetSlot(slot) != null) return false;
             if (cleanOld) obj.PrePositionChange(context);
 
-            if (SlotContainees != null)
+            if (Contained != null)
             {
-                if (slot > -1 && slot < SlotContainees.Length)
+                if (slot > -1 && slot < Contained.Length)
                 {
                     if (!obj.GhostImage)
                     {
-                        SlotContainees[slot] = obj;
+                        Contained[slot] = obj;
                         obj.Container = this;
                         obj.ContainerSlot = (short)slot;
                     }
@@ -147,17 +175,20 @@ namespace FSO.SimAntics
                         obj.WorldUI.ContainerSlot = slot;
                     }
                     obj.Position = Position; //TODO: is physical position the same as the slot offset position?
+                    if (cleanOld) obj.PositionChange(context, false);
+                    return true;
                 }
             }
+            return false;
         }
 
         public override VMEntity GetSlot(int slot)
         {
-            if (SlotContainees != null)
+            if (Contained != null)
             {
-                if (slot > -1 && slot < SlotContainees.Length)
+                if (slot > -1 && slot < Contained.Length)
                 {
-                    return SlotContainees[slot];
+                    return Contained[slot];
                 }
                 else
                 {
@@ -178,27 +209,28 @@ namespace FSO.SimAntics
 
         public override void ClearSlot(int slot)
         {
-            if (SlotContainees != null)
+            if (Contained != null)
             {
-                if (slot > -1 && slot < SlotContainees.Length)
+                if (slot > -1 && slot < Contained.Length)
                 {
-                    SlotContainees[slot].Container = null;
-                    SlotContainees[slot].ContainerSlot = -1;
+                    if (Contained[slot] == null) return; //what..
+                    Contained[slot].Container = null;
+                    Contained[slot].ContainerSlot = -1;
                     if (UseWorld)
                     {
-                        SlotContainees[slot].WorldUI.Container = null;
-                        SlotContainees[slot].WorldUI.ContainerSlot = -1;
+                        Contained[slot].WorldUI.Container = null;
+                        Contained[slot].WorldUI.ContainerSlot = -1;
                     }
-                    SlotContainees[slot] = null;
+                    Contained[slot] = null;
                 }
             }
         }
 
         // End Container SLOTs interface
 
-        public override Texture2D GetIcon(GraphicsDevice gd)
+        public override Texture2D GetIcon(GraphicsDevice gd, int store)
         {
-            var bmp = Object.Resource.Get<BMP>(Object.OBJ.CatalogStringsID);
+            var bmp = Object.Resource.Get<BMP>((ushort)(Object.OBJ.CatalogStringsID + store * 2000));
             if (bmp != null) return bmp.GetTexture(gd);
             else return null;
         }
@@ -215,6 +247,7 @@ namespace FSO.SimAntics
                 }
                 return; 
             }
+            context.UnregisterObjectPos(this);
             if (Container != null)
             {
                 Container.ClearSlot(ContainerSlot);
@@ -234,8 +267,6 @@ namespace FSO.SimAntics
             }
             SetWallUse(arch, false);
             if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, false);
-
-            context.UnregisterObjectPos(this);
             base.PrePositionChange(context);
         }
 
@@ -259,9 +290,24 @@ namespace FSO.SimAntics
                 
         }
 
-        public override void PositionChange(VMContext context)
+        public override void PositionChange(VMContext context, bool noEntryPoint)
         {
             if (GhostImage) return;
+
+            var room = context.GetObjectRoom(this);
+            SetRoom(room);
+            for (int i=0; i<Contained.Length; i++)
+            {
+                if (Contained[i] != null)
+                {
+                    context.UnregisterObjectPos(Contained[i]);
+                    Contained[i].Position = Position;
+                    Contained[i].PositionChange(context, noEntryPoint); //recursive
+                }
+            }
+
+            context.RegisterObjectPos(this);
+
             if (Container != null) return;
             if (Position == LotTilePos.OUT_OF_WORLD) return;
 
@@ -294,10 +340,33 @@ namespace FSO.SimAntics
             SetWallUse(arch, true);
             if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, true);
 
-            context.RegisterObjectPos(this);
+            if (EntryPoints[8].ActionFunction != 0) UpdateDynamicMultitile(context);
 
-            base.PositionChange(context);
+            base.PositionChange(context, noEntryPoint);
         }
 
+
+        #region VM Marshalling Functions
+        public VMGameObjectMarshal Save()
+        {
+            var gameObj = new VMGameObjectMarshal { Direction = Direction };
+            SaveEnt(gameObj);
+            return gameObj;
+        }
+
+        public void Load(VMGameObjectMarshal input)
+        {
+            base.Load(input);
+            Position = Position;
+            Direction = input.Direction;
+            if (UseWorld)
+            {
+                ((ObjectComponent)this.WorldUI).DynamicSpriteFlags = this.DynamicSpriteFlags;
+                WorldUI.ObjectID = ObjectID;
+                if (Slots != null && Slots.Slots.ContainsKey(0)) ((ObjectComponent)WorldUI).ContainerSlots = Slots.Slots[0];
+                RefreshGraphic();
+            }
+        }
+        #endregion
     }
 }

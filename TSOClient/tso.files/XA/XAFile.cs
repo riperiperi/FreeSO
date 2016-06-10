@@ -130,12 +130,12 @@ namespace FSO.Files.XA
         {
             uint dwDataSize = /*((m_DecompressedSize - 24) - (m_DecompressedSize - 24) / 15) * 4;*/m_DecompressedSize;
             uint dwFMTSize = 16;
-            uint dwRIFFSize = /*dwFMTSize + 8 + dwDataSize + 8 + 4;*/ dwDataSize + 4 + 4 + dwFMTSize + 4 + 9;
+            uint dwRIFFSize = /*dwFMTSize + 8 + dwDataSize + 8 + 4;*/ 8 + 4 + dwFMTSize + 4 + 4 + dwDataSize;
 
             m_Writer.Write(new char[] { 'R', 'I', 'F', 'F' });
             m_Writer.Write(dwRIFFSize); //Size of file minus this field and the above field.
             m_Writer.Write(new char[] { 'W', 'A', 'V', 'E', 'f', 'm', 't', ' ' });
-            m_Writer.Write(dwFMTSize); //Size of WAVEFORMATEX structure (all the data that comes after this field).
+            m_Writer.Write(dwFMTSize); //Size of WAVEFORMATEX structure (all before 'data').
             m_Writer.Write(m_Tag);
             m_Writer.Write(m_Channels);
             m_Writer.Write(m_SampleRate);
@@ -167,7 +167,7 @@ namespace FSO.Files.XA
         /// <param name="InputBuffer">The data containing the stereo sample.</param>
         private void DecompressStereo(byte[] InputBuffer)
         {
-            if (InputBuffer.Length != 0x1E) return; //todo, deal with this correctly. Right now stereo audio is kind of totally fucked!
+            //if (InputBuffer.Length != 0x1E) return; //todo, deal with this correctly. Right now stereo audio is kind of totally fucked!
             byte bInput;
             uint i;
             int c1left, c2left, c1right, c2right, left, right;
@@ -183,7 +183,7 @@ namespace FSO.Files.XA
             c2right = (int)EATable[HINIBBLE(bInput) + 4];
             dright = (byte)(LONIBBLE(bInput) + 8);  // shift value for right channel
 
-            for (i = 2; i < 0x1E; i += 2)
+            for (i = 2; i < InputBuffer.Length-1; i += 2)
             {
                 left = HINIBBLE(InputBuffer[i]);  // HIGHER nibble for left channel
                 left = (left << 0x1c) >> dleft;

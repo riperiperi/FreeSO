@@ -72,10 +72,6 @@ namespace FSO.Client.UI.Controls
             m_MouseEvent = ListenForMouse(new Rectangle(0, 0, 10, 10), new UIMouseEvent(OnMouseEvent));
         }
 
-
-        
-
-
         /**
          * Functionality
          */
@@ -86,6 +82,13 @@ namespace FSO.Client.UI.Controls
         public string CurrentText
         {
             get { return m_SBuilder.ToString(); }
+            set
+            {
+                m_SBuilder = new StringBuilder(value);
+                SelectionStart = Math.Max(0, Math.Min(SelectionStart, value.Length - 1));
+                SelectionEnd = -1; //todo: move along maybe?
+                m_DrawDirty = true;
+            }
         }
 
         public void Clear()
@@ -414,8 +417,8 @@ namespace FSO.Client.UI.Controls
 
                 /** Selection box **/
                 m_DrawCmds.Add(new TextDrawCmd_SelectionBox {
-                    BlendColor = new Color(0xFF, 0xFF, 0xFF, 200),
-                    Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.SelectionBoxColor),
+                    BlendColor = TextStyle.SelectionBoxColor,
+                    Texture = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice),
                     Position = selectionPosition,
                     Scale = new Vector2(selectionTxtSize.X, selectionTxtSize.Y) * _Scale
                 });
@@ -468,7 +471,8 @@ namespace FSO.Client.UI.Controls
             {
                 Scale = new Vector2(_Scale.X, (m_Height-(TextMargin.Top + TextMargin.Height)) * _Scale.Y),
                 Position = cursorPosition,
-                Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.Color)
+                Texture = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice),
+                Color = TextStyle.Color
             });
 
 
@@ -584,6 +588,7 @@ namespace FSO.Client.UI.Controls
     {
         public Vector2 Position;
         public Texture2D Texture;
+        public Color Color;
         public Vector2 Scale;
 
         public void Init()
@@ -594,7 +599,7 @@ namespace FSO.Client.UI.Controls
         {
             if (((ITextControl)ui).DrawCursor)
             {
-                batch.Draw(Texture, Position, null, Color.White, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+                batch.Draw(Texture, Position, null, Color, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
             }
         }
     }

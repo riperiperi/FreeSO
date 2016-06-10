@@ -11,27 +11,32 @@ using System.Text;
 using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.NetPlay.Model;
+using System.IO;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.Primitives
 {
     public class VMDialogPrivateStrings : VMPrimitiveHandler
     {
+        public static readonly int DIALOG_MAX_WAITTIME = 60 * 30;
+
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            return ExecuteGeneric(context, args, context.CodeOwner.Get<STR>(301));
+            return ExecuteGeneric(context, args, context.ScopeResource.Get<STR>(301));
         }
 
         public static VMPrimitiveExitCode ExecuteGeneric(VMStackFrame context, VMPrimitiveOperand args, STR table)
         {
             var operand = (VMDialogOperand)args;
-            var curDialog = context.Thread.BlockingDialog;
-            if (context.Thread.BlockingDialog == null)
+            var curDialog = (VMDialogResult)context.Thread.BlockingState;
+            if (curDialog == null)
             {
                 VMDialogHandler.ShowDialog(context, operand, table);
 
                 if ((operand.Flags & VMDialogFlags.Continue) == 0)
                 {
-                    context.Thread.BlockingDialog = new VMDialogResult
+                    context.Thread.BlockingState = new VMDialogResult
                     {
                         Type = operand.Type
                     };
@@ -41,9 +46,9 @@ namespace FSO.SimAntics.Primitives
             }
             else
             {
-                if (curDialog.Responded)
+                if (curDialog.Responded || curDialog.WaitTime > DIALOG_MAX_WAITTIME)
                 {
-                    context.Thread.BlockingDialog = null;
+                    context.Thread.BlockingState = null;
                     switch (curDialog.Type)
                     {
                         default:
@@ -106,6 +111,20 @@ namespace FSO.SimAntics.Primitives
                 Flags = (VMDialogFlags)io.ReadByte();
             }
         }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(CancelStringID);
+                io.Write(IconNameStringID);
+                io.Write(MessageStringID);
+                io.Write(YesStringID);
+                io.Write(NoStringID);
+                io.Write((byte)Type);
+                io.Write(TitleStringID);
+                io.Write((byte)Flags);
+            }
+        }
         #endregion
     }
 
@@ -144,13 +163,30 @@ namespace FSO.SimAntics.Primitives
         UserBitmap = 8
     }
 
-    public class VMDialogResult
+    public class VMDialogResult : VMAsyncState
     {
         public int Timeout = 30 * 60;
-        public bool Responded;
         public byte ResponseCode; //0,1,2 = yes/ok,no,cancel.
         public string ResponseText;
 
         public VMDialogType Type; //used for input sanitization
+
+        public override void SerializeInto(BinaryWriter writer)
+        {
+            base.SerializeInto(writer);
+            writer.Write(Timeout);
+            writer.Write(ResponseCode);
+            writer.Write((ResponseText == null)?"":ResponseText);
+            writer.Write((byte)Type);
+        }
+
+        public override void Deserialize(BinaryReader reader)
+        {
+            base.Deserialize(reader);
+            Timeout = reader.ReadInt32();
+            ResponseCode = reader.ReadByte();
+            ResponseText = reader.ReadString();
+            Type = (VMDialogType)reader.ReadByte();
+        }
     }
 }

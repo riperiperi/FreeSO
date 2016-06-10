@@ -37,10 +37,17 @@ namespace FSO.Client.UI.Controls
         };
         private Texture2D Filler;
 
+        private int[] OldMotives = new int[8];
+        private Queue<int>[] ChangeBuffer = new Queue<int>[8];
+        private int[] ArrowStates = new int[8];
+        private int[] TargetArrowStates = new int[8];
+        private bool FirstFrame = true;
+
         public UIMotiveDisplay()
         {
             MotiveValues = new short[8];
-            Filler = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, Color.White);
+            Filler = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
+            for (int i = 0; i < 8; i++) ChangeBuffer[i] = new Queue<int>();
         }
 
         private void DrawMotive(UISpriteBatch batch, int x, int y, int motive)
@@ -57,14 +64,56 @@ namespace FSO.Client.UI.Controls
 
             var temp = style.Color;
             style.Color = Color.Black;
-            DrawLocalString(batch, MotiveNames[motive], new Vector2(x+1, y - 12), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center); //shadow
+            DrawLocalString(batch, MotiveNames[motive], new Vector2(x+1, y - 14), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center); //shadow
 
             style.Color = temp;
-            DrawLocalString(batch, MotiveNames[motive], new Vector2(x, y - 13), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center);
+            DrawLocalString(batch, MotiveNames[motive], new Vector2(x, y - 15), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center);
+
+            var arrowState = ArrowStates[motive];
+            var arrow = TextureGenerator.GetMotiveArrow(batch.GraphicsDevice, Color.White, Color.Transparent);
+            if (arrowState > 0)
+            {
+                for (int i = 0; i < Math.Ceiling(arrowState / 60f); i++)
+                    DrawLocalTexture(batch, arrow, new Rectangle(2, 0, 3, 5), new Vector2(x + 61 + i*4, y), new Vector2(1, 1), new Color(0x00, 0xCB, 0x39) * Math.Min(1f, arrowState/60f-i));
+            } else if (arrowState < 0)
+            {
+                arrowState = -arrowState;
+                for (int i = 0; i < Math.Ceiling(arrowState / 60f); i++)
+                    DrawLocalTexture(batch, arrow, new Rectangle(0, 0, 3, 5), new Vector2(x-4 - i * 4, y), new Vector2(1, 1), new Color(0xD6, 0x00, 0x00) * Math.Min(1f, arrowState / 60f - i));
+            }
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+
+            for (int i = 0; i < 8; i++)
+            {
+                if (!FirstFrame) ChangeBuffer[i].Enqueue(MotiveValues[i] - OldMotives[i]);
+                if (ChangeBuffer[i].Count > 240) ChangeBuffer[i].Dequeue();
+
+                int sum = 0;
+                foreach (var c in ChangeBuffer[i]) sum += c;
+
+                var diff = sum / 2.5;
+                if (diff < 0) diff = Math.Floor(diff);
+                else if (diff > 0) diff = Math.Ceiling(diff);
+                TargetArrowStates[i] = Math.Max(Math.Min((int)diff, 5), -5) * 60;
+
+                OldMotives[i] = MotiveValues[i];
+            }
+            FirstFrame = false;
+
+            for (int i=0; i<8; i++)
+            {
+                if (TargetArrowStates[i] > ArrowStates[i]) ArrowStates[i]++;
+                else if (TargetArrowStates[i] < ArrowStates[i]) ArrowStates[i]--;
+            }
         }
 
         public override void Draw(UISpriteBatch batch)
         {
+            if (!Visible) return;
             for (int i = 0; i < 4; i++)
             {
                 DrawMotive(batch, 20, 13 + 20 * i, i); //left side

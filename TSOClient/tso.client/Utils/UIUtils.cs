@@ -189,15 +189,18 @@ namespace FSO.Client.Utils
                 if (m_fade < 1) m_fade += 0.1f;
                 if (m_fade > 1) m_fade = 1;
 
-                GameFacade.Screens.TooltipProperties.UpdateDead = false;
-                GameFacade.Screens.TooltipProperties.Position = m_position;
-                GameFacade.Screens.TooltipProperties.Opacity = m_fade;
+                state.UIState.TooltipProperties.Show = true;
+                state.UIState.TooltipProperties.Color = Color.Black;
+                state.UIState.TooltipProperties.UpdateDead = false;
+                state.UIState.TooltipProperties.Position = m_position;
+                state.UIState.TooltipProperties.Opacity = m_fade;
+                state.UIState.Tooltip = Target.Tooltip;
                 /** fade in **/
                 if (!Target.GetBounds().Contains(pt2) || !GameFacade.Focus || !Target.WillDraw())
                 {
                     m_active = false;
-                    GameFacade.Screens.TooltipProperties.Show = false;
-                    GameFacade.Screens.TooltipProperties.Opacity = 0;
+                    state.UIState.TooltipProperties.Show = false;
+                    state.UIState.TooltipProperties.Opacity = 0;
                     m_fade = 0;
                 }
             }
@@ -206,10 +209,11 @@ namespace FSO.Client.Utils
                 if (Target.GetBounds().Contains(pt2) && Target.Tooltip != null && Target.WillDraw() && GameFacade.Focus)
                 {
                     m_active = true;
-                    GameFacade.Screens.TooltipProperties.Show = true;
-                    GameFacade.Screens.TooltipProperties.Opacity = 0;
-                    GameFacade.Screens.TooltipProperties.UpdateDead = false;
-                    GameFacade.Screens.Tooltip = Target.Tooltip;
+                    state.UIState.TooltipProperties.Show = true;
+                    state.UIState.TooltipProperties.Color = Color.Black;
+                    state.UIState.TooltipProperties.Opacity = 0;
+                    state.UIState.TooltipProperties.UpdateDead = false;
+                    state.UIState.Tooltip = Target.Tooltip;
                     m_fade = 0;
 
                     m_position = new Vector2(state.MouseState.X, Target.LocalPoint(new Vector2(0, 0)).Y); //at top of element
@@ -223,13 +227,5 @@ namespace FSO.Client.Utils
         public List<string> Lines;
         public List<int> Positions;
         public int Height;
-    }
-
-    public struct UITooltipProperties
-    {
-        public float Opacity;
-        public Vector2 Position;
-        public bool Show;
-        public bool UpdateDead;
     }
 }

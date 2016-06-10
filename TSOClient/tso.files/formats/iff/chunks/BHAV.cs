@@ -1,11 +1,12 @@
 ﻿/*
- * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
- * If a copy of the MPL was not distributed with this file, You can obtain one at
- * http://mozilla.org/MPL/2.0/. 
- */
+* This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+* If a copy of the MPL was not distributed with this file, You can obtain one at
+* http://mozilla.org/MPL/2.0/. 
+*/
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using FSO.Files.Utils;
@@ -17,11 +18,13 @@ namespace FSO.Files.Formats.IFF.Chunks
     /// </summary>
     public class BHAV : IffChunk
     {
-        public BHAVInstruction[] Instructions;
+        public BHAVInstruction[] Instructions = new BHAVInstruction[0];
         public byte Type;
         public byte Args;
         public ushort Locals;
         public ushort Flags;
+
+        public uint RuntimeVer;
 
         /// <summary>
         /// Reads a BHAV from a stream.
@@ -76,6 +79,30 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
             }
         }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteUInt16(0x8003);
+                io.WriteByte(Type);
+                io.WriteByte(Args);
+                io.WriteByte((byte)Locals);
+                io.WriteBytes(new byte[] { 0, 0 });
+                io.WriteUInt16(Flags);
+                io.WriteUInt32((ushort)Instructions.Length);
+
+                foreach(var inst in Instructions)
+                {
+                    io.WriteUInt16(inst.Opcode);
+                    io.WriteByte(inst.TruePointer);
+                    io.WriteByte(inst.FalsePointer);
+                    io.WriteBytes(inst.Operand);
+                }
+            }
+            return true;
+        }
+
     }
 
     public class BHAVInstruction 
@@ -84,5 +111,6 @@ namespace FSO.Files.Formats.IFF.Chunks
         public byte TruePointer;
         public byte FalsePointer;
         public byte[] Operand;
+        public bool Breakpoint; //only used at runtime
     }
 }

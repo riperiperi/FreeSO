@@ -16,6 +16,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Model;
 using FSO.Content;
 using FSO.LotView.Model;
+using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -77,15 +78,20 @@ namespace FSO.SimAntics.Engine.Primitives
                     if (ent.EntryPoints[entry].ConditionFunction != 0) {
 
                         var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entry].ConditionFunction, context.VM.Context);
+                        if (Behavior != null)
+                        {
+                            var test = VMThread.EvaluateCheck(context.VM.Context, context.Caller, new VMStackFrame()
+                            {
+                                Caller = context.Caller,
+                                Callee = ent,
+                                CodeOwner = Behavior.owner,
+                                StackObject = ent,
+                                Routine = context.VM.Assemble(Behavior.bhav),
+                                Args = new short[4]
+                            });
 
-                        var test = VMThread.EvaluateCheck(context.VM.Context, context.Caller, new VMQueuedAction(){
-                            Callee = ent,
-                            CodeOwner = Behavior.owner,
-                            StackObject = ent,
-                            Routine = context.VM.Assemble(Behavior.bhav),
-                        });
-                        
-                        Execute = (test == VMPrimitiveExitCode.RETURN_TRUE);
+                            Execute = (test == VMPrimitiveExitCode.RETURN_TRUE);
+                        } else Execute = true;
 
                     } else {
                         Execute = true;
@@ -97,6 +103,7 @@ namespace FSO.SimAntics.Engine.Primitives
                         int score = 0;
                         if (ScoreVar[operand.Function] != VMStackObjectVariable.Invalid) {
                             score = ent.GetValue(ScoreVar[operand.Function]);
+                            if (ScoreVar[operand.Function] == VMStackObjectVariable.DirtyLevel && score < 800) continue; //only clean "dirty" things.
                         }
 
                         LotTilePos posDiff = ent.Position - context.Caller.Position;
@@ -122,7 +129,7 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMFindBestObjectForFunctionOperand : VMPrimitiveOperand
     {
-        public ushort Function;
+        public ushort Function { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -130,6 +137,13 @@ namespace FSO.SimAntics.Engine.Primitives
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
                 Function = io.ReadUInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Function);
             }
         }
         #endregion

@@ -20,7 +20,7 @@ namespace FSO.SimAntics.Engine
     {
         //should use a Trie for this in future, for performance reasons
         private static string[] valid = {
-            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "NameLocal:", "\r\n"
+            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "NameLocal:", "DynamicObjectName", "MoneyXL:", "Param", "\r\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -31,7 +31,7 @@ namespace FSO.SimAntics.Engine
                 Caller = context.Caller,
                 Icon = context.StackObject,
                 Operand = operand,
-                Message = ParseDialogString(context, source.GetString(operand.MessageStringID - 1), source),
+                Message = ParseDialogString(context, source.GetString(Math.Max(0, operand.MessageStringID - 1)), source),
                 Title = (operand.TitleStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.TitleStringID - 1), source),
                 IconName = (operand.IconNameStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.IconNameStringID - 1), source),
 
@@ -57,6 +57,8 @@ namespace FSO.SimAntics.Engine
             StringBuilder command = new StringBuilder();
             StringBuilder output = new StringBuilder();
 
+            if (input == null) return "Missing String!!!";
+
             for (int i = 0; i < input.Length; i++)
             {
                 if (state == 0)
@@ -81,13 +83,15 @@ namespace FSO.SimAntics.Engine
                         }
 
                         var cmdString = command.ToString();
-                        ushort[] values = new ushort[3];
+                        short[] values = new short[3];
                         if (cmdString.Length > 1 && cmdString[cmdString.Length - 1] == ':')
                         {
                             try
                             {
                                 if (cmdString == "DynamicStringLocal:")
                                 {
+                                    values[1] = -1;
+                                    values[2] = -1;
                                     for (int j=0; j<3; j++)
                                     {
                                         char next = input[++i];
@@ -99,12 +103,12 @@ namespace FSO.SimAntics.Engine
                                         }
                                         if (num == "")
                                         {
-                                            values[j] = 65535;
-                                            if (j == 1) values[2] = 65535;
+                                            values[j] = -1;
+                                            if (j == 1) values[2] = -1;
                                             break;
                                         }
-                                        values[j] = ushort.Parse(num);
-                                        if (i == input.Length) break;
+                                        values[j] = short.Parse(num);
+                                        if (i == input.Length || next != ':') break;
                                     }
                                 }
                                 else
@@ -116,7 +120,7 @@ namespace FSO.SimAntics.Engine
                                         num += next;
                                         next = (++i == input.Length) ? '!' : input[i];
                                     }
-                                    values[0] = ushort.Parse(num);
+                                    values[0] = short.Parse(num);
                                 }
                                 i--;
                             }
@@ -125,48 +129,71 @@ namespace FSO.SimAntics.Engine
 
                             }
                         }
-                        switch (cmdString)
+                        try
                         {
-                            case "Object":
-                                output.Append(context.StackObject.ToString()); break;
-                            case "Me":
-                                output.Append(context.Caller.ToString()); break;
-                            case "TempXL:":
-                                output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.TempXL, values[0]).ToString()); break;
-                            case "Temp:":
-                                output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Temps, values[0]).ToString()); break;
-                            case "$":
-                                output.Append("$"); i--; break;
-                            case "Attribute:":
-                                output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.MyObjectAttributes, values[0]).ToString()); break;
-                            case "DynamicStringLocal:":
-                                STR res = null;
-                                if (values[2] != 65535 && values[1] != 65535)
-                                {
-                                    VMEntity obj = context.VM.GetObjectById((short)context.Locals[values[2]]);
-                                    if (obj == null) break;
-                                    ushort tableID = (ushort)context.Locals[values[1]];
-                                    
-                                    {//local
-                                        if (obj.SemiGlobal != null) res = obj.SemiGlobal.Resource.Get<STR>(tableID);
-                                        if (res == null) res = obj.Object.Resource.Get<STR>(tableID);
-                                        if (res == null) res = context.Global.Resource.Get<STR>(tableID);
-                                    }
-                                } else
-                                {
-                                    res = source;
-                                }
+                            switch (cmdString)
+                            {
+                                case "Object":
+                                case "DynamicObjectName":
+                                    output.Append(context.StackObject.ToString()); break;
+                                case "Me":
+                                    output.Append(context.Caller.ToString()); break;
+                                case "TempXL:":
+                                    output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.TempXL, values[0]).ToString()); break;
+                                case "MoneyXL:":
+                                    output.Append("$" + VMMemory.GetBigVariable(context, Scopes.VMVariableScope.TempXL, values[0]).ToString("##,#0")); break;
+                                case "Temp:":
+                                    output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Temps, values[0]).ToString()); break;
+                                case "$":
+                                    output.Append("$"); i--; break;
+                                case "Attribute:":
+                                    output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.MyObjectAttributes, values[0]).ToString()); break;
+                                case "DynamicStringLocal:":
+                                    STR res = null;
+                                    if (values[2] != -1 && values[1] != -1)
+                                    {
+                                        VMEntity obj = context.VM.GetObjectById((short)context.Locals[values[2]]);
+                                        if (obj == null) break;
+                                        ushort tableID = (ushort)context.Locals[values[1]];
 
-                                ushort index = (ushort)context.Locals[values[0]];
-                                if (res != null) output.Append(res.GetString(index));
-                                break;
-                            case "Local:": 
-                                output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]).ToString()); break;
-                            case "NameLocal:":
-                                output.Append("(NameLocal)"); break;
-                            default:
-                                output.Append(cmdString);
-                                break;
+                                        {//local
+                                            if (obj.SemiGlobal != null) res = obj.SemiGlobal.Get<STR>(tableID);
+                                            if (res == null) res = obj.Object.Resource.Get<STR>(tableID);
+                                            if (res == null) res = context.Global.Resource.Get<STR>(tableID);
+                                        }
+                                    } else if (values[1] != -1)
+                                    {
+                                        //global table
+                                        ushort tableID = (ushort)context.Locals[values[1]];
+                                        res = context.Global.Resource.Get<STR>(tableID);
+
+                                    } else
+                                    {
+                                        res = source;
+                                    }
+
+                                    ushort index = (ushort)context.Locals[values[0]];
+                                    if (res != null)
+                                    {
+                                        var str = res.GetString(index);
+                                        output.Append(ParseDialogString(context, str, res)); // recursive command parsing!
+                                        // this is needed for the crafting table.
+                                        // though it is also, completely insane?
+                                    }
+                                    break;
+                                case "Local:":
+                                    output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]).ToString()); break;
+                                case "Param:":
+                                    output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Parameters, values[0]).ToString()); break;
+                                case "NameLocal:":
+                                    output.Append("(NameLocal)"); break;
+                                default:
+                                    output.Append(cmdString);
+                                    break;
+                            }
+                        } catch (Exception)
+                        {
+                            //something went wrong. just skip command
                         }
                         state = 0;
                     }

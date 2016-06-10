@@ -183,7 +183,7 @@ namespace FSO.Client.UI.Panels
             QueryPanel.Mode = 0;
             QueryPanel.Active = true;
             QueryPanel.Tab = 1;
-            QueryPanel.SetInfo(holding.Group.BaseObject, holding.IsBought);
+            QueryPanel.SetInfo(LotController.vm, holding.Group.BaseObject, holding.IsBought);
         }
         private void HolderPutDown(UIObjectSelection holding, UpdateState state)
         {
@@ -193,7 +193,7 @@ namespace FSO.Client.UI.Panels
                     //place another
                     var prevDir = holding.Dir;
                     Catalog_OnSelectionChange(OldSelection);
-                    Holder.Holding.Dir = prevDir;
+                    if (Holder.Holding != null) Holder.Holding.Dir = prevDir;
                 } else {
                     Catalog.SetActive(OldSelection, false);
                     OldSelection = -1;
@@ -229,18 +229,26 @@ namespace FSO.Client.UI.Panels
                 if (Opacity < 1) Opacity += 1f / 20f;
                 else Opacity = 1;
             }
+
+            if (LotController.ActiveEntity != null) Catalog.Budget = (int)LotController.ActiveEntity.TSOState.Budget.Value;
             base.Update(state);
         }
 
         void Catalog_OnSelectionChange(int selection)
         {
-            if (BuyItem != null && Holder.Holding != null && BuyItem == Holder.Holding.Group) {
-                BuyItem.Delete(vm.Context);
+            var item = CurrentCategory[selection];
+
+            if (LotController.ActiveEntity != null && item.Price > LotController.ActiveEntity.TSOState.Budget.Value)
+            {
+                HIT.HITVM.Get().PlaySoundEvent(Model.UISounds.Error);
+                return;
             }
+
             if (OldSelection != -1) Catalog.SetActive(OldSelection, false);
             Catalog.SetActive(selection, true);
-            BuyItem = vm.Context.CreateObjectInstance(CurrentCategory[selection].GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
-            QueryPanel.SetInfo(BuyItem.Objects[0], false);
+            BuyItem = vm.Context.CreateObjectInstance(item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
+            if (BuyItem == null) return; //uh
+            QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
             QueryPanel.Mode = 1;
             QueryPanel.Tab = 0;
             QueryPanel.Active = true;

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FSO.Files.Formats.IFF;
+using FSO.Files.Formats.IFF.Chunks;
 
 namespace FSO.SimAntics
 {
@@ -26,6 +27,9 @@ namespace FSO.SimAntics
 
         /** Run time info **/
         public VMFunctionRTI Rti;
+
+        public BHAV Chunk;
+        public uint RuntimeVer;
     }
 
 

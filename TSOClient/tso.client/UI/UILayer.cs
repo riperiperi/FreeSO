@@ -24,9 +24,10 @@ namespace FSO.Client.UI
     {
         private Microsoft.Xna.Framework.Game m_G;
         private List<UIScreen> m_Screens = new List<UIScreen>();
+        private List<UIExternalContainer> m_ExtContainers = new List<UIExternalContainer>();
         private List<IUIProcess> m_UIProcess = new List<IUIProcess>();
 
-        public UITooltipProperties TooltipProperties;
+        public UITooltipProperties TooltipProperties = new UITooltipProperties();
         public string Tooltip;
 
         private SpriteFont m_SprFontBig;
@@ -189,8 +190,8 @@ namespace FSO.Client.UI
             mainUI.Add(dialogContainer);
 
             // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new UISpriteBatch(GraphicsDevice, 3);
-            
+            SpriteBatch = new UISpriteBatch(GraphicsDevice, 3);
+            //GameFacade.OnContentLoaderReady += new BasicEventHandler(GameFacade_OnContentLoaderReady);
             m_G.GraphicsDevice.DeviceReset += new EventHandler<EventArgs>(GraphicsDevice_DeviceReset);
         }
 
@@ -252,6 +253,24 @@ namespace FSO.Client.UI
             }
         }
 
+        public void AddExternal(UIExternalContainer cont)
+        {
+            //todo: init?
+            lock (m_ExtContainers)
+            {
+                m_ExtContainers.Add(cont);
+            }
+        }
+
+        public void RemoveExternal(UIExternalContainer cont)
+        {
+            lock (m_ExtContainers)
+            {
+                //todo: release resources?
+                m_ExtContainers.Remove(cont);
+            }
+        }
+
         public void RemoveCurrent()
         {
             /** Remove all dialogs **/
@@ -300,13 +319,29 @@ namespace FSO.Client.UI
             state.MouseEvents.Clear();
 
             state.InputManager = inputManager;
+            Content.Content.Get().Changes.RunResModifications();
             mainUI.Update(state);
+
+            lock (m_ExtContainers)
+            {
+                var extCopy = new List<UIExternalContainer>(m_ExtContainers);
+                foreach (var ext in extCopy)
+                {
+                    lock (ext)
+                    {
+                        ext.Update(state);
+                    }
+                }
+            }
 
             /** Process external update handlers **/
             foreach (var item in m_UIProcess)
             {
                 item.Update(state);
             }
+
+            Tooltip = state.UIState.Tooltip;
+            TooltipProperties = state.UIState.TooltipProperties;
         }
 
         public void PreDraw(UISpriteBatch SBatch)
@@ -319,14 +354,14 @@ namespace FSO.Client.UI
             mainUI.Draw(SBatch);
 
             if (TooltipProperties.UpdateDead) TooltipProperties.Show = false;
-            if (Tooltip != null && TooltipProperties.Show) DrawTooltip(SBatch, TooltipProperties.Position, TooltipProperties.Opacity);
+            if (Tooltip != null && TooltipProperties.Show) DrawTooltip(SBatch, TooltipProperties.Position, TooltipProperties.Opacity, TooltipProperties.Color);
             TooltipProperties.UpdateDead = true;
         }
 
-        public void DrawTooltip(SpriteBatch batch, Vector2 position, float opacity)
+        public void DrawTooltip(SpriteBatch batch, Vector2 position, float opacity, Color color)
         {
             TextStyle style = TextStyle.DefaultLabel.Clone();
-            style.Color = Color.Black;
+            style.Color = color;
             style.Size = 8;
 
             var scale = new Vector2(1, 1);
@@ -343,23 +378,22 @@ namespace FSO.Client.UI
             position.X = Math.Min(position.X, GlobalSettings.Default.GraphicsWidth - width);
             position.Y = Math.Max(position.Y, height);
 
-            var whiteRectangle = new Texture2D(batch.GraphicsDevice, 1, 1);
-            whiteRectangle.SetData(new[] { Color.White });
+            var whiteRectangle = TextureGenerator.GetPxWhite(batch.GraphicsDevice);
 
             batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, height), Color.White*opacity); //note: in XNA4 colours need to be premultiplied
 
             //border
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, 1), new Color(0, 0, 0, opacity));
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X + width, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y, width, 1), new Color(0, 0, 0, opacity));
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, 1, height), color * opacity);
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, 1), color * opacity);
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X + width, (int)position.Y - height, 1, height), color * opacity);
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y, width, 1), color * opacity);
 
             position.Y -= height;
 
             for (int i = 0; i < wrapped.Lines.Count; i++)
             {
                 int thisWidth = (int)(style.SpriteFont.MeasureString(wrapped.Lines[i]).X * scale.X);
-                batch.DrawString(style.SpriteFont, wrapped.Lines[i], position + new Vector2((width - thisWidth) / 2, 0), new Color(0, 0, 0, opacity), 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+                batch.DrawString(style.SpriteFont, wrapped.Lines[i], position + new Vector2((width - thisWidth) / 2, 0), color*opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
                 position.Y += 13;
             }
         }
@@ -425,20 +459,34 @@ namespace FSO.Client.UI
 
         #region IGraphicsLayer Members
 
-        UISpriteBatch spriteBatch;
+        public UISpriteBatch SpriteBatch;
 
         public void PreDraw(GraphicsDevice device)
         {
-            spriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
-            this.PreDraw(spriteBatch);
-            spriteBatch.End();
+            lock (m_ExtContainers)
+            {
+                foreach (var ext in m_ExtContainers)
+                {
+                    lock (ext)
+                    {
+                        if (!ext.HasUpdated) ext.Update(null);
+                        ext.PreDraw(null);
+                        ext.Draw(null);
+                    }
+                }
+            }
+
+            SpriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
+            this.PreDraw(SpriteBatch);
+            SpriteBatch.End();
         }
 
         public void Draw(GraphicsDevice device)
         {
-            spriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
-            this.Draw(spriteBatch);
-            spriteBatch.End();
+
+            SpriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
+            this.Draw(SpriteBatch);
+            SpriteBatch.End();
         }
 
         #endregion

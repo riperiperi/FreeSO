@@ -122,6 +122,7 @@ namespace FSO.LotView.Components
         public Dictionary<ushort, Wall> WallCache = new Dictionary<ushort,Wall>();
         public Dictionary<ushort, WallStyle> WallStyleCache = new Dictionary<ushort,WallStyle>();
 
+        private uint TileRoom;
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
@@ -135,24 +136,23 @@ namespace FSO.LotView.Components
             var floorContent = Content.Content.Get().WorldFloors;
 
             //draw walls
-            
-
             for (sbyte level = 1; level <= world.Level; level++)
             {
                 int off = 0;
                 bool canCut = !(level < world.Level);
                 GenerateWallData(blueprint.Walls[level-1], blueprint.WallsAt[level-1], canCut);
+                var rMap = blueprint.RoomMap[level - 1];
                 for (short y = 0; y < blueprint.Height; y++)
                 { //ill decide on a reasonable system for components when it's finished ok pls :(
                     for (short x = 0; x < blueprint.Height; x++)
                     {
-
+                        TileRoom = (rMap == null)?1:rMap[x + y * blueprint.Width];
                         var comp = blueprint.GetWall(x, y, level);
                         if (comp.Segments != 0)
                         {
                             comp = RotateWall(world.Rotation, comp, x, y, level);
                             var tilePosition = new Vector3(x, y, (level-1) * 2.95f);
-                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                             world._2D.OffsetTile(tilePosition);
                             var myCuts = Cuts[off];
                             var cDown = canCut && WallsDownAt(x, y);
@@ -218,7 +218,7 @@ namespace FSO.LotView.Components
                                                 tlStyle = GetStyle(comp.TopLeftStyle); //return to normal if cutaway
                                                 var tilePosition2 = contOff;
 
-                                                world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
+                                                world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2));
                                                 world._2D.OffsetTile(tilePosition2);
                                                 int newWidth = 0;
                                                 bool downAtCont = canCut && WallsDownAt((short)(contOff.X), (short)(contOff.Y));
@@ -265,7 +265,7 @@ namespace FSO.LotView.Components
                                                     tlStyle = GetStyle(comp.TopLeftStyle);
 
 
-                                                    world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
+                                                    world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2));
                                                     world._2D.OffsetTile(tilePosition2);
                                                     int newWidth = 0;
 
@@ -295,7 +295,7 @@ namespace FSO.LotView.Components
                                                 }
                                             }
                                         }
-                                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                                         world._2D.OffsetTile(tilePosition);
                                     }
                                 }
@@ -350,7 +350,7 @@ namespace FSO.LotView.Components
                                                 trStyle = GetStyle(comp.TopRightStyle); //return to normal if cutaway
 
                                                 var tilePosition2 = contOff;
-                                                world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
+                                                world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2));
                                                 world._2D.OffsetTile(tilePosition2);
                                                 int newWidth = 0;
                                                 bool downAtCont = canCut && WallsDownAt((short)(contOff.X), (short)(contOff.Y));
@@ -399,7 +399,7 @@ namespace FSO.LotView.Components
                                                     trStyle = GetStyle(comp.TopRightStyle);
 
 
-                                                    world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
+                                                    world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2));
                                                     world._2D.OffsetTile(tilePosition2);
                                                     int newWidth = 0;
 
@@ -427,7 +427,7 @@ namespace FSO.LotView.Components
                                                 }
                                             }
                                         }
-                                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                                         world._2D.OffsetTile(tilePosition);
                                     }
                                 }
@@ -463,8 +463,11 @@ namespace FSO.LotView.Components
                                 }
 
                                 var trStyle = GetStyle(styleID);
-
+                                
+                                int roomSide = 16-((((int)world.Rotation+1)/2)%2) * 16;
                                 var _Sprite = GetWallSprite(trPattern, trStyle, 2, down, world);
+
+                                _Sprite.Room = (ushort)(TileRoom>>roomSide);
                                 if (_Sprite.Pixel != null)
                                 {
                                     world._2D.Draw(_Sprite);
@@ -475,11 +478,13 @@ namespace FSO.LotView.Components
                                     if (comp.TopLeftPattern != 0)
                                     {
                                         var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 3);
+                                        floor.Room = (ushort)(TileRoom >> roomSide);
                                         if (floor.Pixel != null) world._2D.Draw(floor);
                                     }
                                     if (comp.TopLeftStyle != 0)
                                     {
                                         var floor = GetFloorSprite(floorContent.Get(comp.TopLeftStyle), 0, world, 2);
+                                        floor.Room = (ushort)(TileRoom >> (16-roomSide));
                                         if (floor.Pixel != null) world._2D.Draw(floor);
                                     }
                                 }
@@ -514,7 +519,9 @@ namespace FSO.LotView.Components
 
                                 var trStyle = GetStyle(styleID);
 
+                                int roomSide = ((int)world.Rotation / 2) * 16;
                                 var _Sprite = GetWallSprite(trPattern, trStyle, 3, down, world);
+                                _Sprite.Room = (ushort)(TileRoom>>roomSide);
                                 if (_Sprite.Pixel != null)
                                 {
                                     world._2D.Draw(_Sprite);
@@ -525,11 +532,13 @@ namespace FSO.LotView.Components
                                     if (comp.TopLeftPattern != 0)
                                     {
                                         var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 1);
+                                        floor.Room = (ushort)(TileRoom >> roomSide);
                                         if (floor.Pixel != null) world._2D.Draw(floor);
                                     }
                                     if (comp.TopLeftStyle != 0)
                                     {
                                         var floor = GetFloorSprite(floorContent.Get(comp.TopLeftStyle), 0, world, 0);
+                                        floor.Room = (ushort)(TileRoom >> (16-roomSide));
                                         if (floor.Pixel != null) world._2D.Draw(floor);
                                     }
                                 }
@@ -556,7 +565,7 @@ namespace FSO.LotView.Components
                         {
                             flags = RotateJunction(world.Rotation, flags);
                             var tilePosition = new Vector3(x - 0.5f, y - 0.5f, yOff); //2.95 for walls up, 0.3 for walls down
-                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                             world._2D.OffsetTile(tilePosition);
 
                             var _Sprite = new _2DSprite()
@@ -587,6 +596,7 @@ namespace FSO.LotView.Components
                             }
                             _Sprite.Pixel = world._2D.GetTexture(sprite.Frames[JunctionMap[flags]]);
                             _Sprite.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, _Sprite.Pixel.Width, _Sprite.Pixel.Height);
+                            _Sprite.Room = 1;
                             world._2D.Draw(_Sprite);
                         }
 
@@ -726,18 +736,22 @@ namespace FSO.LotView.Components
                         }
                     }
                 }
+
+                bool hasXNext = DownJunctions.Length > off + 1;
+                bool hasYNext = DownJunctions.Length > off + width;
+
                 //add to relevant junctions
                 if ((wall.Segments & WallSegments.TopLeft) > 0 && !(wall.TopLeftDoor && result.TLCut > 0) && wall.TopLeftThick)
                 {
                     if (result.TLCut > 0)
                     {
                         DownJunctions[off] |= JunctionFlags.BottomLeft;
-                        if (y < height) DownJunctions[off + width] |= JunctionFlags.TopRight;
+                        if (y < height && hasYNext) DownJunctions[off + width] |= JunctionFlags.TopRight;
                     }
                     else
                     {
                         UpJunctions[off] |= JunctionFlags.BottomLeft;
-                        if (y < height) UpJunctions[off + width] |= JunctionFlags.TopRight;
+                        if (y < height && hasYNext) UpJunctions[off + width] |= JunctionFlags.TopRight;
                     }
                 }
 
@@ -746,12 +760,12 @@ namespace FSO.LotView.Components
                     if (result.TRCut > 0)
                     {
                         DownJunctions[off] |= JunctionFlags.BottomRight;
-                        if (x < width) DownJunctions[off + 1] |= JunctionFlags.TopLeft;
+                        if (x < width && hasXNext) DownJunctions[off + 1] |= JunctionFlags.TopLeft;
                     }
                     else
                     {
                         UpJunctions[off] |= JunctionFlags.BottomRight;
-                        if (x < width) UpJunctions[off + 1] |= JunctionFlags.TopLeft;
+                        if (x < width && hasXNext) UpJunctions[off + 1] |= JunctionFlags.TopLeft;
                     }
                 }
 
@@ -760,25 +774,25 @@ namespace FSO.LotView.Components
                     if (result.TRCut > 0)
                     {
                         DownJunctions[off] |= JunctionFlags.DiagBottom;
-                        if (x < width && y < height) DownJunctions[off + 1 + width] |= JunctionFlags.DiagTop;
+                        if (x < width && y < height && DownJunctions.Length > off + 1 + width) DownJunctions[off + 1 + width] |= JunctionFlags.DiagTop;
                     }
                     else
                     {
                         UpJunctions[off] |= JunctionFlags.DiagBottom;
-                        if (x < width && y < height) UpJunctions[off + 1 + width] |= JunctionFlags.DiagTop;
+                        if (x < width && y < height && DownJunctions.Length> off + 1 + width) UpJunctions[off + 1 + width] |= JunctionFlags.DiagTop;
                     }
                 }
                 else if (wall.Segments == WallSegments.HorizontalDiag && (wall.TopRightStyle == 1 || wall.TopRightStyle == 255))
                 {
                     if (result.TRCut > 0)
                     {
-                        if (x < width) DownJunctions[off + 1] |= JunctionFlags.DiagLeft;
-                        if (y < height) DownJunctions[off + width] |= JunctionFlags.DiagRight;
+                        if (x < width && hasXNext) DownJunctions[off + 1] |= JunctionFlags.DiagLeft;
+                        if (y < height && hasYNext) DownJunctions[off + width] |= JunctionFlags.DiagRight;
                     }
                     else
                     {
-                        if (x < width) UpJunctions[off + 1] |= JunctionFlags.DiagLeft;
-                        if (y < height) UpJunctions[off + width] |= JunctionFlags.DiagRight;
+                        if (x < width && hasXNext) UpJunctions[off + 1] |= JunctionFlags.DiagLeft;
+                        if (y < height && hasYNext) UpJunctions[off + width] |= JunctionFlags.DiagRight;
                     }
                 }
                 Cuts[off] = result;
@@ -856,6 +870,9 @@ namespace FSO.LotView.Components
                 _Sprite.Mask = world._2D.GetTexture(mask.Frames[rotation]);
                 _Sprite.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, _Sprite.Pixel.Width, _Sprite.Pixel.Height);
             }
+
+            _Sprite.Room = (ushort)TileRoom;
+
             return _Sprite;
         }
 
@@ -916,6 +933,8 @@ namespace FSO.LotView.Components
                     _Sprite.SrcRect.Height /= 2;
                     break;
             }
+
+            _Sprite.Room = (ushort)TileRoom;
 
             return _Sprite;
         }
@@ -1124,7 +1143,8 @@ namespace FSO.LotView.Components
                 SrcRect = _Sprite.SrcRect,
                 RenderMode = _2DBatchRenderMode.WALL,
                 Pixel = _Sprite.Pixel,
-                Depth = _Sprite.Depth
+                Depth = _Sprite.Depth,
+                Room = _Sprite.Room
             };
         }
     }

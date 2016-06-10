@@ -22,15 +22,10 @@ namespace FSO.LotView.Model
     public class Blueprint
     {
         public List<BlueprintDamage> Damage = new List<BlueprintDamage>();
-        private List<BlueprintOccupiedTile> OccupiedTiles = new List<BlueprintOccupiedTile>();
-        private WorldRotation OccupiedTilesOrder = WorldRotation.TopLeft;
-        private bool OccupiedTilesDirty = false;
 
         public int Width;
         public int Height;
         public sbyte Stories = 5;
-
-        public List<WorldComponent> All = new List<WorldComponent>();
 
         /// <summary>
         /// Only read these arrays, do not modify them!
@@ -40,24 +35,25 @@ namespace FSO.LotView.Model
         public WallComponent WallComp;
 
         public FloorTile[][] Floors;
-        public NewFloorComponent FloorComp;
+        public FloorComponent FloorComp;
 
         public bool[][] Supported; //directly the VM's copy at all times. DO NOT MODIFY.
-        
-        public BlueprintObjectList[] Objects;
 
-        public TerrainComponent Terrain;
-
-        /// <summary>
-        /// Avatars
-        /// </summary>
+        public List<ObjectComponent> Objects = new List<ObjectComponent>();
         public List<AvatarComponent> Avatars = new List<AvatarComponent>();
-
+        public TerrainComponent Terrain;
+        
         /// <summary>
         /// Walls Cutaway sections. Remember to manage these correctly - i.e remove when you're finished with them!
         /// </summary>
         /// 
         public List<Rectangle> Cutaway = new List<Rectangle>();
+
+        public Color OutsideColor = Color.White;
+        public RoomLighting[] Light = new RoomLighting[0];
+        public uint[][] RoomMap;
+
+        public Color[] RoomColors;
 
         public Blueprint(int width, int height){
             this.Width = width;
@@ -66,11 +62,13 @@ namespace FSO.LotView.Model
             var numTiles = width * height;
             this.WallComp = new WallComponent();
             WallComp.blueprint = this;
-            this.FloorComp = new NewFloorComponent();
+            this.FloorComp = new FloorComponent();
             FloorComp.blueprint = this;
 
+            RoomColors = new Color[65536];
             this.WallsAt = new List<int>[Stories];
             this.Walls = new WallTile[Stories][];
+            this.RoomMap = new uint[Stories][];
 
             this.Floors = new FloorTile[Stories][];
 
@@ -81,8 +79,28 @@ namespace FSO.LotView.Model
 
                 this.Floors[i] = new FloorTile[numTiles];
             }
+        }
 
-            this.Objects = new BlueprintObjectList[numTiles];
+        public void GenerateRoomLights()
+        {
+            var minOut = OutsideColor * (float)(150 / Math.Sqrt(OutsideColor.R * OutsideColor.R + OutsideColor.G * OutsideColor.G + OutsideColor.B * OutsideColor.B));
+
+            for (int i=0; i<Light.Length; i++)
+            {
+                var outside = OutsideColor * (Light[i].OutsideLight / 100f);
+                var ambient = Color.White * (Light[i].AmbientLight / 100f);
+
+                outside.R = Math.Max(minOut.R, outside.R);
+                outside.G = Math.Max(minOut.G, outside.G);
+                outside.B = Math.Max(minOut.B, outside.B);
+
+                RoomColors[i] = new Color(
+                    Math.Min(255, outside.R + ambient.R),
+                    Math.Min(255, outside.G + ambient.G),
+                    Math.Min(255, outside.B + ambient.B),
+                    255);
+            }
+            RoomColors[65535] = Color.White;
         }
 
         public void AddAvatar(AvatarComponent avatar){
@@ -98,6 +116,7 @@ namespace FSO.LotView.Model
         {
             Damage.Add(new BlueprintDamage(BlueprintDamageType.WALL_CHANGED, 0, 0, 1)); 
             //todo: should this even have a position? we're rerendering the whole thing atm
+            //should eventually consider level
         }
 
         public void SignalFloorChange()
@@ -116,108 +135,29 @@ namespace FSO.LotView.Model
             return Floors[level-1][offset];
         }
 
-        public BlueprintObjectList GetObjects(short tileX, short tileY)
-        {
-            var offset = GetOffset(tileX, tileY);
-            return Objects[offset];
-        }
-
-        public List<BlueprintOccupiedTile> GetOccupiedTiles(WorldRotation order){
-            if (OccupiedTilesDirty){
-                OccupiedTiles.Clear();
-
-                foreach (var tile in IsometricTileIterator.Tiles(order, 0, 0, (short)Width, (short)Height))
-                {
-                    var offset = GetOffset(tile.TileX, tile.TileY);
-                    var hasObject = Objects[offset] != null && Objects[offset].Objects.Count > 0;
-
-                    if (hasObject)
-                    {
-                        var inst = new BlueprintOccupiedTile();
-                        inst.TileX = tile.TileX;
-                        inst.TileY = tile.TileY;
-
-                        if (hasObject){
-                            inst.Type |= BlueprintOccupiedTileType.OBJECT;
-                        }
-                        OccupiedTiles.Add(inst);
-                    }
-                }
-                OccupiedTilesOrder = order;
-                OccupiedTilesDirty = false;
-            }
-            /** Has rotation changed? **/
-            if (order != OccupiedTilesOrder){
-                /** Re-sort **/
-                OccupiedTiles.Sort(new IsometricTileSorter<BlueprintOccupiedTile>(order));
-                OccupiedTilesOrder = order;
-            }
-
-            return OccupiedTiles;
-        }
-
         public void ChangeObjectLocation(ObjectComponent component, LotTilePos pos)
         {
             short tileX = (pos.x < 0) ? (short)0 : pos.TileX;
             short tileY = (pos.y < 0) ? (short)0 : pos.TileY;
             sbyte level = pos.Level;
-            /** It has never been placed before if tileX == -2 **/
-
-            if (component.TileX != -2){
-                var currentOffset = GetOffset(component.TileX, component.TileY);
-                var currentList = Objects[currentOffset];
-                if (currentList != null){
-                    currentList.RemoveObject(component);
-                }
-            }
-
-            if (tileX != -2)
-            {
-                var newOffset = GetOffset(tileX, tileY);
-                var newList = Objects[newOffset];
-                if (newList == null)
-                {
-                    newList = Objects[newOffset] = new BlueprintObjectList();
-                }
-                newList.AddObject(component);
-                if (!All.Contains(component))
-                {
-                    All.Add(component);
-                }
-            }
-            else if (All.Contains(component))
-            {
-                All.Remove(component);
-            }
-
 
             Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_MOVE, tileX, tileY, level) { Component = component });
-            OccupiedTilesDirty = true;
 
             component.blueprint = this;
             component.TileX = tileX;
             component.TileY = tileY;
             component.Level = level;
-            component.Position = new Microsoft.Xna.Framework.Vector3(pos.x / 16.0f, pos.y / 16.0f, (level - 1) * 3.0f);
+        }
+
+        public void AddObject(ObjectComponent component)
+        {
+            Objects.Add(component);
         }
 
         public void RemoveObject(ObjectComponent component)
         {
-            if (component.TileX >= 0)
-            {
-                var currentOffset = GetOffset(component.TileX, component.TileY);
-                var currentList = Objects[currentOffset];
-                if (currentList != null)
-                {
-                    currentList.RemoveObject(component);
-                }
-            }
-            if (All.Contains(component))
-            {
-                All.Remove(component);
-            }
             Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_MOVE, component.TileX, component.TileY, component.Level) { Component = component });
-            OccupiedTilesDirty = true;
+            Objects.Remove(component);
         }
 
         private ushort GetOffset(int tileX, int tileY){
@@ -276,7 +216,8 @@ namespace FSO.LotView.Model
         ROTATE,
         ZOOM,
         WALL_CUT_CHANGED,
-        LEVEL_CHANGED
+        LEVEL_CHANGED,
+        LIGHTING_CHANGED
     }
 
     public class BlueprintObjectList {

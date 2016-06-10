@@ -22,6 +22,8 @@ using FSO.Vitaboy;
 using FSO.Client.Regulators;
 using Ninject;
 using FSO.Client.Controllers;
+using FSO.HIT;
+using FSO.Client.UI.Model;
 
 namespace FSO.Client.UI.Screens
 {
@@ -140,14 +142,8 @@ namespace FSO.Client.UI.Screens
             /**
              * Music
              */
-            var tracks = new string[]{
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas1_v2.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas2_v2.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas3.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas4.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas5.mp3"
-            };
-            PlayBackgroundMusic(tracks);
+
+            HITVM.Get().PlaySoundEvent(UIMusic.SAS);
         }
 
         /// <summary>

@@ -42,6 +42,9 @@ namespace FSO.HIT
         private Dictionary<string, HITSound> ActiveEvents; //events that are active are reused for all objects calling that event.
         private List<HITSound> Sounds;
         private int[] Globals; //SimSpeed 0x64 to CampfireSize 0x87.
+        private HITTVOn TVEvent;
+        private HITTVOn MusicEvent;
+        private HITTVOn NextMusic;
 
         private List<FSCPlayer> FSCPlayers;
 
@@ -123,6 +126,16 @@ namespace FSO.HIT
                 if (!Sounds[i].Tick()) Sounds.RemoveAt(i--);
             }
 
+            if (NextMusic != null)
+            {
+                if (MusicEvent == null || MusicEvent.Dead)
+                {
+                    MusicEvent = NextMusic;
+                    Sounds.Add(NextMusic);
+                    NextMusic = null;
+                }
+            }
+
             for (int i = 0; i < FSCPlayers.Count; i++)
             {
                 FSCPlayers[i].Tick(1/60f);
@@ -146,7 +159,7 @@ namespace FSO.HIT
 
         public HITSound PlaySoundEvent(string evt)
         {
-            evt = evt.ToLower();
+            evt = evt.ToLowerInvariant();
             if (ActiveEvents.ContainsKey(evt))
             {
                 if (ActiveEvents[evt].Dead) ActiveEvents.Remove(evt); //if the last event is dead, remove and make a new one
@@ -190,6 +203,15 @@ namespace FSO.HIT
                     var thread = new HITTVOn(evtent.TrackID);
                     Sounds.Add(thread);
                     ActiveEvents.Add(evt, thread);
+                    return thread;
+                }
+                else if (evtent.EventType == HITEvents.kSetMusicMode)
+                {
+                    var thread = new HITTVOn(evtent.TrackID, true);
+                    ActiveEvents.Add(evt, thread);
+                    if (NextMusic != null) NextMusic.Kill();
+                    if (MusicEvent != null) MusicEvent.Fade();
+                    NextMusic = thread;
                     return thread;
                 }
                 else if (SubroutinePointer != 0)

@@ -16,6 +16,7 @@ namespace FSO.SimAntics.Model
     public struct VMArchitectureCommand : VMSerializable
     {
         public VMArchitectureCommandType Type;
+        public uint CallerUID;
         public int x;
         public int y;
         public sbyte level;

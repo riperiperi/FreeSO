@@ -19,6 +19,7 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.Utils;
 using FSO.Common.Utils;
+using FSO.SimAntics.NetPlay.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -28,9 +29,6 @@ namespace FSO.Client.UI.Panels
         private TextStyle Style;
         private UITextBox TextBox;
 
-        private int Margin = 25;
-
-        private Texture2D m_SelectionTexture;
         private Color m_SelectionFillColor;
         public Color SelectionFillColor
         {
@@ -41,13 +39,14 @@ namespace FSO.Client.UI.Panels
             set
             {
                 m_SelectionFillColor = value;
-                m_SelectionTexture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, value);
             }
         }
 
-        private List<UILabel> Labels;
+        private List<UIChatBalloon> Labels;
+        public List<Rectangle> InvalidAreas;
         private UILotControl Owner;
-
+        private UIChatDialog HistoryDialog;
+        private UIPropertyLog PropertyLog;
 
         private Color[] Colours = new Color[] {
             new Color(255, 255, 255),
@@ -58,10 +57,6 @@ namespace FSO.Client.UI.Panels
             new Color(255, 125, 125),
             new Color(125, 255, 125),
             new Color(0, 255, 255),
-            new Color(0, 0, 255),
-            new Color(0, 0, 0),
-            new Color(0, 255, 0),
-            new Color(255, 0, 0),
             new Color(255, 255, 0)
         };
 
@@ -73,7 +68,7 @@ namespace FSO.Client.UI.Panels
             Style = TextStyle.DefaultTitle.Clone();
             Style.Size = 16;
             Style.Shadow = true;
-            Labels = new List<UILabel>();
+            Labels = new List<UIChatBalloon>();
 
             TextBox = new UITextBox();
             TextBox.Visible = false;
@@ -81,33 +76,95 @@ namespace FSO.Client.UI.Panels
             TextBox.Position = new Vector2(25, 25);
             TextBox.SetSize(GlobalSettings.Default.GraphicsWidth - 50, 25);
 
-            TextBox.OnEnterPress += SendMessage;
+            TextBox.OnEnterPress += SendMessageElem;
 
             SelectionFillColor = new Color(0, 25, 70);
+
+            //-- populate invalid areas --
+            //chat bubbles will be pushed out of these areas
+            //when this happens, they will also begin displaying the name of the speaking avatar.
+
+            InvalidAreas = new List<Rectangle>();
+            InvalidAreas.Add(new Rectangle(-100000, -100000, 100020, 200000 + GlobalSettings.Default.GraphicsHeight)); //left
+            InvalidAreas.Add(new Rectangle(-100000, -100000, 200000 + GlobalSettings.Default.GraphicsWidth, 100020)); //top
+            InvalidAreas.Add(new Rectangle(GlobalSettings.Default.GraphicsWidth-20, -100000, 100020, 200000 + GlobalSettings.Default.GraphicsHeight)); //right
+            InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 20, 200000 +GlobalSettings.Default.GraphicsWidth, 100020)); //bottom
+            InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 230, 100230, 100230)); //ucp
+
+            HistoryDialog = new UIChatDialog();
+            HistoryDialog.Position = new Vector2(20, 20);
+            HistoryDialog.Visible = false;
+            HistoryDialog.Opacity = 0.75f;
+            HistoryDialog.OnSendMessage += SendMessage;
+            this.Add(HistoryDialog);
+
+            PropertyLog = new UIPropertyLog();
+            PropertyLog.Position = new Vector2(400, 20);
+            PropertyLog.Visible = false;
+            PropertyLog.Opacity = 0.75f;
+            this.Add(PropertyLog);
         }
 
-        private void SendMessage(UIElement element)
+        private void SendMessage(string message)
+        {
+            message = message.Replace("\r\n", "");
+            if (message != "" && Owner.ActiveEntity != null)
+            {
+                if (message[0] == '!')
+                {
+                    Owner.Cheats.SubmitCommand(message);
+                }
+                else
+                {
+                    vm.SendCommand(new VMNetChatCmd
+                    {
+                        ActorUID = Owner.ActiveEntity.PersistID,
+                        Message = message
+                    });
+                }
+            }
+        }
+
+        private void SendMessageElem(UIElement element)
         {
             string message = TextBox.CurrentText;
-            message = message.Replace("\r\n", "");
-            if (message != "")
-            {
-                vm.SendCommand(new VMNetChatCmd
-                {
-                    CallerID = Owner.ActiveEntity.ObjectID,
-                    Message = message
-                });
-            }
+            SendMessage(message);
             TextBox.Clear();
         }
 
         public override void Update(UpdateState state)
         {
             if (!VM.UseWorld) return;
-            if (state.NewKeys.Contains(Keys.Enter))
+
+            var botRect = InvalidAreas[3];
+            botRect.Y = GlobalSettings.Default.GraphicsHeight - ((Owner.PanelActive) ? 135 : 20);
+
+            InvalidAreas[3] = botRect;
+            if (HistoryDialog.Visible) TextBox.Visible = false;
+            else
             {
-                if (!TextBox.Visible) TextBox.Clear();
-                TextBox.Visible = !TextBox.Visible;
+                var lastFocus = state.InputManager.GetFocus();
+                if (state.NewKeys.Contains(Keys.Enter) && (Owner.EODs.ActiveEOD == null ||
+                        lastFocus == null || lastFocus == TextBox ||
+                        lastFocus == HistoryDialog.ChatEntryTextEdit
+                        ))
+                {
+                    if (!TextBox.Visible) TextBox.Clear();
+                    TextBox.Visible = !TextBox.Visible;
+
+                    if (TextBox.Visible) state.InputManager.SetFocus(TextBox);
+                }
+            }
+
+            if (state.NewKeys.Contains(Keys.H) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
+            {
+                state.InputManager.SetFocus(null);
+                HistoryDialog.Visible = !HistoryDialog.Visible;
+            }
+
+            if (state.NewKeys.Contains(Keys.P) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
+            {
+                PropertyLog.Visible = !PropertyLog.Visible;
             }
 
             var avatars = vm.Entities.Where(x => (x is VMAvatar)).ToList();
@@ -118,52 +175,33 @@ namespace FSO.Client.UI.Panels
             }
             while (avatars.Count > Labels.Count)
             { 
-                var label = new UILabel();
-                label.CaptionStyle = Style.Clone();
-                label.CaptionStyle.Color = Colours[Labels.Count % Colours.Length];
-                label.Alignment = TextAlignment.Center | TextAlignment.Middle;
-                Add(label);
-                Labels.Add(label);
+                var balloon = new UIChatBalloon(this);
+                balloon.Color = Colours[Labels.Count % Colours.Length];
+                AddAt(Children.Count - 2, balloon); //behind chat dialog and text box
+                Labels.Add(balloon);
             }
 
             for (int i=0; i<Labels.Count; i++)
             {
                 var label = Labels[i];
-                var avatar = avatars[i];
-                label.Caption = ((VMAvatar)avatar).Message;
-                label.Position = ((AvatarComponent)avatar.WorldUI).LastScreenPos + new Vector2(0, -175) / (1<<(3-(int)vm.Context.World.State.Zoom));
+                var avatar = (VMAvatar)avatars[i];
 
-                TextAlignment alignment = 0;
+                if (label.Message != avatar.Message)
+                    label.SetNameMessage(avatar.Name, avatar.Message);
 
-                if (label.Position.X < Margin)
+                if (avatar.MessageTimeout < 30)
                 {
-                    alignment |= TextAlignment.Left;
-                    label.Position = new Vector2(Margin, label.Position.Y);
+                    label.FadeTime = avatar.MessageTimeout / 3;
+                    label.Alpha = avatar.MessageTimeout / 30f;
                 }
-                else if (label.Position.X > GlobalSettings.Default.GraphicsWidth-Margin)
+                else
                 {
-                    alignment |= TextAlignment.Right;
-                    label.Position = new Vector2(GlobalSettings.Default.GraphicsWidth-Margin, label.Position.Y);
-                } else
-                {
-                    alignment |= TextAlignment.Center;
+                    if (label.FadeTime < 10) label.FadeTime++;
+                    label.Alpha = label.FadeTime / 10f;
                 }
 
-                if (label.Position.Y < Margin)
-                {
-                    alignment |= TextAlignment.Top;
-                    label.Position = new Vector2(label.Position.X, Margin);
-                }
-                else if (label.Position.Y > GlobalSettings.Default.GraphicsHeight - Margin)
-                {
-                    alignment |= TextAlignment.Bottom;
-                    label.Position = new Vector2(label.Position.X, GlobalSettings.Default.GraphicsHeight - Margin);
-                } else
-                {
-                    alignment |= TextAlignment.Middle;
-                }
-                label.Alignment = alignment;
-                label.Size = new Vector2(1, 1);
+                label.TargetPt = avatar.WorldUI.GetScreenPos(vm.Context.World.State) + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom));
+
             }
             base.Update(state);
         }
@@ -171,6 +209,17 @@ namespace FSO.Client.UI.Panels
         public override void Draw(UISpriteBatch batch)
         {
             base.Draw(batch);
+        }
+
+        public void ReceiveEvent(VMChatEvent evt)
+        {
+            if (evt.Type == VMChatEventType.Arch) PropertyLog.ReceiveEvent(evt);
+            else HistoryDialog.ReceiveEvent(evt);
+        }
+
+        public void SetLotName(string name)
+        {
+            HistoryDialog.LotName = name;
         }
     }
 }

@@ -4,6 +4,8 @@
  * http://mozilla.org/MPL/2.0/. 
  */
 
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Engine;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,27 +14,32 @@ using System.Text;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
-    class VMNetSimLeaveCmd : VMNetCommandBodyAbstract
+    public class VMNetSimLeaveCmd : VMNetCommandBodyAbstract
     {
-        public uint SimID;
+        private readonly ushort LEAVE_LOT_TREE = 8373;
 
-        public override bool Execute(VM vm)
+        public override bool Execute(VM vm, VMAvatar sim)
         {
-            var sim = vm.Entities.First(x => x is VMAvatar && x.PersistID == SimID);
+            if (sim != null && !sim.Dead)
+            {
+                // the user has left the lot with their sim still on it...
+                // force leave lot. generate an action with incredibly high priority and cancel current
+                // TODO: timeout for forceful removal
 
-            if (sim != null) sim.Delete(true, vm.Context);
+                sim.UserLeaveLot();
+            }
             return true;
         }
 
         #region VMSerializable Members
         public override void SerializeInto(BinaryWriter writer)
         {
-            writer.Write(SimID);
+            base.SerializeInto(writer);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
-            SimID = reader.ReadUInt32();
+            base.Deserialize(reader);
         }
         #endregion
     }

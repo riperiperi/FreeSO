@@ -37,6 +37,10 @@ namespace FSO.Common.Rendering.Framework.Camera
 
         public float AspectRatioMultiplier { get; set; }
 
+        public void ProjectionDirty()
+        {
+        }
+
         #endregion
     }
 }

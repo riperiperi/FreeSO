@@ -7,7 +7,6 @@ http://mozilla.org/MPL/2.0/.
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Un4seen.Bass;
 using System.Threading;
 using LogThis;
 using FSO.Common.Rendering.Framework;
@@ -23,6 +22,9 @@ using FSO.Common.DataService;
 using FSO.Server.DataService.Providers.Client;
 using FSO.Common.Domain;
 using FSO.Common.Utils;
+using FSO.Common;
+using Microsoft.Xna.Framework.Audio;
+using System.Windows.Forms;
 
 namespace FSO.Client
 {
@@ -37,14 +39,16 @@ namespace FSO.Client
         public TSOGame()
         {
             GameFacade.Game = this;
-            Content.RootDirectory = "Content";
-            Graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
-
+            Content.RootDirectory = FSOEnvironment.GFXContentDir;
+            Graphics.SynchronizeWithVerticalRetrace = true; //GameFacade.DirectX || GlobalSettings.Default.Windowed; //why was this disabled
+            
             Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
+            Graphics.HardwareModeSwitch = false;
             Graphics.ApplyChanges();
 
+            //might want to disable for linux
             Log.UseSensibleDefaults();
 
             Thread.CurrentThread.Name = "Game";
@@ -64,11 +68,13 @@ namespace FSO.Client
             );
             GameFacade.Kernel = kernel;
 
+            OperatingSystem os = Environment.OSVersion;
+            PlatformID pid = os.Platform;
+            GameFacade.Linux = (pid == PlatformID.MacOSX || pid == PlatformID.Unix);
 
             FSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
             base.Initialize();
 
-            GameFacade.SoundManager = new FSO.Client.Sound.SoundManager();
             GameFacade.GameThread = Thread.CurrentThread;
 
             SceneMgr = new _3DLayer();
@@ -78,22 +84,30 @@ namespace FSO.Client
             GameFacade.Screens = uiLayer;
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
+            GameFacade.GraphicsDeviceManager = Graphics;
             GameFacade.Cursor = new CursorManager(this.Window);
-            GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""));
+            if (!GameFacade.Linux) GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""));
 
             /** Init any computed values **/
             GameFacade.Init();
 
+            //init audio now
+            HITVM.Init();
+
             GameFacade.Strings = new ContentStrings();
             GameFacade.Controller.StartLoading();
 
-            GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None }; //no culling until i find a good way to do this in xna4 (apparently recreating state obj is bad?)
+            GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
 
-            BassNet.Registration("afr088@hotmail.com", "2X3163018312422");
-                Bass.BASS_Init(-1, 8000, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero, System.Guid.Empty);
+            try {
+                var audioTest = new SoundEffect(new byte[2], 44100, AudioChannels.Mono); //initialises XAudio.
+                audioTest.CreateInstance().Play();
+            } catch (Exception e)
+            {
+                MessageBox.Show("Failed to initialize audio: \r\n\r\n" + e.StackTrace);
+            }
 
             this.IsMouseVisible = true;
-
             this.IsFixedTimeStep = true;
 
             WorldContent.Init(this.Services, Content.RootDirectory);
@@ -101,7 +115,6 @@ namespace FSO.Client
             base.Screen.Layers.Add(SceneMgr);
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
-            if (!GlobalSettings.Default.Windowed) Graphics.ToggleFullScreen();
 
             //Bind ninject objects
             kernel.Bind<FSO.Content.Content>().ToConstant(FSO.Content.Content.Get());
@@ -112,6 +125,14 @@ namespace FSO.Client
             kernel.Get<cTSOSerializer>();
             var ds = kernel.Get<DataService>();
             ds.AddProvider(new ClientAvatarProvider());
+
+            this.Window.TextInput += GameScreen.TextInput;
+            this.Window.Title = "FreeSO";
+
+            if (!GlobalSettings.Default.Windowed)
+            {
+                GameFacade.GraphicsDeviceManager.ToggleFullScreen();
+            }
         }
 
         void RegainFocus(object sender, EventArgs e)
@@ -135,16 +156,21 @@ namespace FSO.Client
             try
             {
                 GameFacade.MainFont = new FSO.Client.UI.Framework.Font();
-                GameFacade.MainFont.AddSize(10, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_10px"));
-                GameFacade.MainFont.AddSize(12, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"));
-                GameFacade.MainFont.AddSize(14, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_14px"));
-                GameFacade.MainFont.AddSize(16, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
-                vitaboyEffect = GameFacade.Game.Content.Load<Effect>("Effects\\Vitaboy");
-                uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"), Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
+                GameFacade.MainFont.AddSize(10, Content.Load<SpriteFont>("Fonts/FreeSO_10px"));
+                GameFacade.MainFont.AddSize(12, Content.Load<SpriteFont>("Fonts/FreeSO_12px"));
+                GameFacade.MainFont.AddSize(14, Content.Load<SpriteFont>("Fonts/FreeSO_14px"));
+                GameFacade.MainFont.AddSize(16, Content.Load<SpriteFont>("Fonts/FreeSO_16px"));
+
+                GameFacade.EdithFont = new FSO.Client.UI.Framework.Font();
+                GameFacade.EdithFont.AddSize(12, Content.Load<SpriteFont>("Fonts/Trebuchet_12px"));
+                GameFacade.EdithFont.AddSize(14, Content.Load<SpriteFont>("Fonts/Trebuchet_14px"));
+
+                vitaboyEffect = Content.Load<Effect>("Effects/Vitaboy");
+                uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/FreeSO_12px"), Content.Load<SpriteFont>("Fonts/FreeSO_16px"));
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                System.Windows.Forms.MessageBox.Show("Content could not be loaded. Make sure that the Project Dollhouse content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
+                System.Windows.Forms.MessageBox.Show("Content could not be loaded. Make sure that the FreeSO content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
                 Exit();
             }
 
@@ -168,7 +194,7 @@ namespace FSO.Client
         protected override void Update(GameTime gameTime)
         {
             GameThread.UpdateExecuting = true;
-            GameFacade.SoundManager.MusicUpdate();
+
             if (HITVM.Get() != null) HITVM.Get().Tick();
 
             base.Update(gameTime);

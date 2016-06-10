@@ -110,19 +110,20 @@ namespace FSO.Client.Rendering.City
             new int[] {-1, -1},
         };
 
-        private Color[] m_TimeColors = new Color[] 
+        private Color[] m_TimeColors = new Color[]
         {
-            new Color(50, 70, 122),
-            new Color(60, 80, 132),
-            new Color(60, 80, 132),
+            new Color(50, 70, 122)*1.5f,
+            new Color(50, 70, 122)*1.5f,
+            new Color(60, 80, 132)*1.5f,
+            new Color(60, 80, 132)*1.5f,
             new Color(217, 109, 0),
-            new Color(235, 235, 235),
             new Color(255, 255, 255),
-            new Color(235, 235, 235),
+            new Color(255, 255, 255),
+            new Color(255, 255, 255),
+            new Color(255, 255, 255),
             new Color(217, 109, 0),
-            new Color(60, 80, 80),
-            new Color(60, 80, 132),
-            new Color(50, 70, 122)
+            new Color(60, 80, 80)*1.5f,
+            new Color(60, 80, 132)*1.5f,
         };
 
         private int m_Width, m_Height;
@@ -134,6 +135,9 @@ namespace FSO.Client.Rendering.City
         private UIAlert m_LotUnbuildableAlert;
         private Timer m_PacketTimer = new Timer(1000); //Timer for regulating packet interval.
         private static bool m_CanSend = false;
+
+        private RenderTarget2D ShadowTarget;
+        private int OldShadowRes;
 
         private Texture2D LoadTex(string Path)
         {
@@ -158,28 +162,29 @@ namespace FSO.Client.Rendering.City
         public void LoadContent(GraphicsDevice GfxDevice)
         {
             m_GraphicsDevice = GfxDevice;
-            VertexShader = GameFacade.Game.Content.Load<Effect>("Effects\\VerShader");
-            PixelShader = GameFacade.Game.Content.Load<Effect>("Effects\\PixShader");
-            Shader2D = GameFacade.Game.Content.Load<Effect>("Effects\\colorpoly2d");
+            VertexShader = GameFacade.Game.Content.Load<Effect>("Effects/VerShader");
+            PixelShader = GameFacade.Game.Content.Load<Effect>("Effects/PixShader");
+            Shader2D = GameFacade.Game.Content.Load<Effect>("Effects/colorpoly2D");
 
             String gamepath = GameFacade.GameFilePath("");
 
-            string CityStr = gamepath + "cities\\" + ((m_CityNumber >= 10) ? "city_00" + m_CityNumber.ToString() : "city_000" + m_CityNumber.ToString());
-            m_Elevation = LoadTex(CityStr + "\\elevation.bmp");
-            m_VertexColor = LoadTex(CityStr + "\\vertexcolor.bmp");
-            m_TerrainType = LoadTex(CityStr + "\\terraintype.bmp");
-            m_ForestType = LoadTex(CityStr + "\\foresttype.bmp");
-            m_ForestDensity = LoadTex(CityStr + "\\forestdensity.bmp");
-            m_RoadMap = LoadTex(CityStr + "\\roadmap.bmp");
+            string CityStr = gamepath + "cities/" + ((m_CityNumber >= 10) ? "city_00" + m_CityNumber.ToString() : "city_000" + m_CityNumber.ToString());
+            m_Elevation = LoadTex(CityStr + "/elevation.bmp");
+            m_VertexColor = LoadTex(CityStr + "/vertexcolor.bmp");
+            m_TerrainType = LoadTex(CityStr + "/terraintype.bmp");
+            m_ForestType = LoadTex(CityStr + "/foresttype.bmp");
+            m_ForestDensity = LoadTex(CityStr + "/forestdensity.bmp");
+            m_RoadMap = LoadTex(CityStr + "/roadmap.bmp");
 
-            m_Ground = LoadTex(gamepath + "gamedata\\terrain\\newformat\\gr.tga");
-            m_Rock = LoadTex(gamepath + "gamedata\\terrain\\newformat\\rk.tga");
-            m_Water = LoadTex(gamepath + "gamedata\\terrain\\newformat\\wt.tga");
-            m_Sand = LoadTex(gamepath + "gamedata\\terrain\\newformat\\sd.tga");
-            m_Snow = LoadTex(gamepath + "gamedata\\terrain\\newformat\\sn.tga");
-            m_Forest = LoadTex(gamepath + "gamedata\\farzoom\\forest00a.tga");
-            m_DefaultHouse = LoadTex(gamepath + "userdata\\houses\\defaulthouse.bmp");//, new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
-            TextureUtils.ManualTextureMaskSingleThreaded(ref m_DefaultHouse, new uint[] { new Color(0x00, 0x00, 0x00, 0xFF).PackedValue });
+            m_Ground = LoadTex(gamepath + "gamedata/terrain/newformat/gr.tga");
+            m_Rock = LoadTex(gamepath + "gamedata/terrain/newformat/rk.tga");
+            m_Water = LoadTex(gamepath + "gamedata/terrain/newformat/wt.tga");
+            m_Sand = LoadTex(gamepath + "gamedata/terrain/newformat/sd.tga");
+            m_Snow = LoadTex(gamepath + "gamedata/terrain/newformat/sn.tga");
+            m_Forest = LoadTex(gamepath + "gamedata/farzoom/forest00a.tga");
+            m_DefaultHouse = LoadTex(gamepath + "userdata/houses/defaulthouse.bmp");//, new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
+            //Can crash on some setups on dx11?
+            //TextureUtils.ManualTextureMaskSingleThreaded(ref m_DefaultHouse, new uint[] { new Color(0x00, 0x00, 0x00, 0xFF).PackedValue });
 
             m_LotOnline = UIElement.GetTexture(0x0000032F00000001);
             m_LotOffline = UIElement.GetTexture(0x0000033100000001);
@@ -194,27 +199,27 @@ namespace FSO.Client.Rendering.City
             for (int x = 0; x < 30; x = x + 2)
             {
                 Num = ZeroPad((x / 2).ToString(), 2);
-                m_TransA[x] = LoadTex(gamepath + "gamedata\\terrain\\newformat\\transa" + Num + "a.tga");
-                m_TransA[x + 1] = LoadTex(gamepath + "gamedata\\terrain\\newformat\\transa" + Num + "b.tga");
+                m_TransA[x] = LoadTex(gamepath + "gamedata/terrain/newformat/transa" + Num + "a.tga");
+                m_TransA[x + 1] = LoadTex(gamepath + "gamedata/terrain/newformat/transa" + Num + "b.tga");
             }
 
             for (int x = 0; x < 30; x = x + 2)
             {
                 Num = ZeroPad((x / 2).ToString(), 2);
-                TransB[x] = LoadTex(gamepath + "gamedata\\terrain\\newformat\\transb" + Num + "a.tga");
-                TransB[x + 1] = LoadTex(gamepath + "gamedata\\terrain\\newformat\\transb" + Num + "b.tga");
+                TransB[x] = LoadTex(gamepath + "gamedata/terrain/newformat/transb" + Num + "a.tga");
+                TransB[x + 1] = LoadTex(gamepath + "gamedata/terrain/newformat/transb" + Num + "b.tga");
             }
 
             for (int x = 0; x < 16; x++)
             {
                 Num = ZeroPad((x).ToString(), 2);
-                m_Roads[x] = LoadTex(gamepath + "gamedata\\terrain\\road" + Num + ".tga");
+                m_Roads[x] = LoadTex(gamepath + "gamedata/terrain/road" + Num + ".tga");
             }
 
             for (int x = 0; x < 16; x++)
             {
                 Num = ZeroPad((x).ToString(), 2);
-                m_RoadCorners[x] = LoadTex(gamepath + "gamedata\\terrain\\roadcorner" + Num + ".tga");
+                m_RoadCorners[x] = LoadTex(gamepath + "gamedata/terrain/roadcorner" + Num + ".tga");
             }
 
             m_Width = m_Elevation.Width;
@@ -498,12 +503,9 @@ namespace FSO.Client.Rendering.City
         /// <param name="spriteBatch">A spritebatch to draw with.</param>
         public void CreateTextureAtlas(SpriteBatch spriteBatch)
         {
-            RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, 512, 1024, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            //For some reason, we have to create a new depth stencil buffer with the same size
-            //as the rendertarget in order to set the rendertarget on the GraphicsDevice.
+            RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, 512, 1024, false, SurfaceFormat.Color, DepthFormat.Depth16, 0, RenderTargetUsage.PreserveContents);
             m_GraphicsDevice.SetRenderTarget(RTarget);
-
-            //m_GraphicsDevice.Clear(Color.CornflowerBlue);
+            m_GraphicsDevice.Clear(Color.Transparent);
 
             spriteBatch.Begin();
             spriteBatch.Draw(m_Ground, new Rectangle(0, 0, m_Ground.Width, m_Ground.Height), Color.White);
@@ -516,7 +518,6 @@ namespace FSO.Client.Rendering.City
             m_GraphicsDevice.SetRenderTarget(null);
 
             Atlas = RTarget;
-            //RTarget.Dispose(); //free up memory used by render target, as we have moved the data to a texture.
         }
 
         /// <summary>
@@ -525,10 +526,10 @@ namespace FSO.Client.Rendering.City
         /// <param name="spriteBatch">A spritebatch to draw with.</param>
         public void CreateTransparencyAtlas(SpriteBatch spriteBatch)
         {
-            RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, 1024, 256, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, 1024, 256, false, SurfaceFormat.Color, DepthFormat.Depth16, 0, RenderTargetUsage.PreserveContents);
             m_GraphicsDevice.SetRenderTarget(RTarget);
 
-            m_GraphicsDevice.Clear(Color.CornflowerBlue);
+            m_GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin();
 
@@ -1243,6 +1244,7 @@ namespace FSO.Client.Rendering.City
                         }
                         else
                         {
+                            /*
                             if (m_SelTile[0] != -1 && m_SelTile[1] != -1)
                             {
                                 m_SelTileTmp[0] = m_SelTile[0];
@@ -1250,6 +1252,7 @@ namespace FSO.Client.Rendering.City
 
                                 FindController<TerrainController>().ClickLot(m_SelTile[0], m_SelTile[1]);
                             }
+                            */
                         }
 
                         CurrentUIScr.ucp.UpdateZoomButton();
@@ -1320,7 +1323,6 @@ namespace FSO.Client.Rendering.City
                     m_TargVOffX += (m_MouseState.X - m_MouseStart.X) / 1000; //move by fraction of distance between the mouse and where it started in both axis
                     m_TargVOffY -= (m_MouseState.Y - m_MouseStart.Y) / 1000;
                     
-                    //it's your duty to deal with the mouse cursor stuff when moving into PD!
 
                     /*var dir = Math.Round((Math.Atan2(m_MouseStart.X - m_MouseState.Y,
                         m_MouseState.X - m_MouseStart.X) / Math.PI) * 4) + 4;
@@ -1376,8 +1378,12 @@ namespace FSO.Client.Rendering.City
 
         private Texture2D DrawDepth(Effect VertexShader, Effect PixelShader)
         {
-            RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, ShadowRes, ShadowRes, false, SurfaceFormat.Single, DepthFormat.Depth24, 0, RenderTargetUsage.PreserveContents);
-
+            if (ShadowTarget == null || OldShadowRes != ShadowRes) {
+                if (ShadowTarget != null) ShadowTarget.Dispose();
+                ShadowTarget = new RenderTarget2D(m_GraphicsDevice, ShadowRes, ShadowRes, false, SurfaceFormat.Single, DepthFormat.Depth24, 0, RenderTargetUsage.PreserveContents);
+                OldShadowRes = ShadowRes;
+            }
+            RenderTarget2D RTarget = ShadowTarget;
             m_GraphicsDevice.SetRenderTarget(RTarget);
 
             m_GraphicsDevice.Clear(Color.CornflowerBlue);
@@ -1388,9 +1394,8 @@ namespace FSO.Client.Rendering.City
             m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_MeshTris); //draw depth texture of city mesh to render target to use for shadowing.
 
             m_GraphicsDevice.SetRenderTarget(null);
-            Texture2D Return = RTarget; //todo: how to dispose of this safely
 
-            return Return;
+            return RTarget;
         }
 
         public void Draw2DPoly()
@@ -1502,14 +1507,6 @@ namespace FSO.Client.Rendering.City
             }
 
             m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_MeshTris);
-
-            if (ShadowsEnabled)
-            {
-                ShadowMap.Dispose(); //free up space used by this frame's shadow map.
-            }
-            else
-            {
-            }
 
             m_MovMatrix = ViewMatrix;
 

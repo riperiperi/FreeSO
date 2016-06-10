@@ -33,6 +33,9 @@ using FSO.SimAntics.NetPlay;
 using FSO.Client.UI.Controls;
 using FSO.Client.Controllers;
 using FSO.Client.Controllers.Panels;
+using FSO.Client.Debug;
+using FSO.Client.UI.Panels.WorldUI;
+using FSO.SimAntics.Engine.TSOTransaction;
 
 namespace FSO.Client.UI.Screens
 {
@@ -51,6 +54,7 @@ namespace FSO.Client.UI.Screens
 
         private bool Connecting;
         private UILoginProgress ConnectingDialog;
+        private Queue<SimConnectStateChange> StateChanges;
 
         private Terrain CityRenderer; //city view
         public UICustomTooltip CityTooltip;
@@ -95,10 +99,11 @@ namespace FSO.Client.UI.Screens
                     if (vm == null) ZoomLevel = 4; //call this again but set minimum cityrenderer view
                     else
                     {
+                        Title.SetTitle(LotController.GetLotTitle());
                         if (m_ZoomLevel > 3)
                         {
-                            PlayBackgroundMusic(new string[] { "none" }); //disable city music
-                            CityRenderer.Visible = false;
+                            HITVM.Get().PlaySoundEvent(UIMusic.None);
+                            if (CityRenderer != null) CityRenderer.Visible = false;
                             gizmo.Visible = false;
                             LotController.Visible = true;
                             World.Visible = true;
@@ -110,7 +115,8 @@ namespace FSO.Client.UI.Screens
                 }
                 else //cityrenderer! we'll need to recreate this if it doesn't exist...
                 {
-                    if (CityRenderer == null) ZoomLevel = 3; //set to far zoom... again, we should eventually create this.
+                    Title.SetTitle(city);
+                    if (CityRenderer == null) m_ZoomLevel = value; //set to far zoom... again, we should eventually create this.
                     else
                     {
 
@@ -118,7 +124,7 @@ namespace FSO.Client.UI.Screens
                         if (m_ZoomLevel < 4)
                         { //coming from lot view... snap zoom % to 0 or 1
                             CityRenderer.m_ZoomProgress = (value == 4) ? 1 : 0;
-                            PlayBackgroundMusic(CityMusic); //play the city music as well
+                            HITVM.Get().PlaySoundEvent(UIMusic.Map); //play the city music as well
                             CityRenderer.Visible = true;
                             gizmo.Visible = true;
                             if (World != null)
@@ -190,17 +196,11 @@ namespace FSO.Client.UI.Screens
 
         public CoreGameScreen()
         {
+            StateChanges = new Queue<SimConnectStateChange>();
             /**
             * Music
             */
-            CityMusic = new string[]{
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild1.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild3.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap2_v2.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap3.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap4_v1.mp3"
-            };
-            PlayBackgroundMusic(CityMusic);
+            HITVM.Get().PlaySoundEvent(UIMusic.Map);
 
             /*VMDebug = new UIButton()
             {
@@ -349,11 +349,23 @@ namespace FSO.Client.UI.Screens
             GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
             base.Update(state);
-            
-            if (ZoomLevel > 3 && CityRenderer.m_Zoomed != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed) ? 4 : 5;
 
-            if (InLot) //if we're in a lot, use the VM's more accurate time!
-                CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));
+            if (CityRenderer != null)
+            {
+                if (ZoomLevel > 3 && CityRenderer.m_Zoomed != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed) ? 4 : 5;
+
+                if (InLot) //if we're in a lot, use the VM's more accurate time!
+                    CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));
+            }
+
+            lock (StateChanges)
+            {
+                while (StateChanges.Count > 0)
+                {
+                    var e = StateChanges.Dequeue();
+                    ClientStateChangeProcess(e.State, e.Progress);
+                }
+            }
 
             if (vm != null) vm.Update();
         }
@@ -362,7 +374,15 @@ namespace FSO.Client.UI.Screens
         {
             if (ZoomLevel < 4) ZoomLevel = 5;
             vm.Context.Ambience.Kill();
-            vm.CloseNet();
+            foreach (var ent in vm.Entities) { //stop object sounds
+                var threads = ent.SoundThreads;
+                for (int i = 0; i < threads.Count; i++)
+                {
+                    threads[i].Sound.RemoveOwner(ent.ObjectID);
+                }
+                threads.Clear();
+            }
+            vm.CloseNet(VMCloseNetReason.LeaveLot);
             GameFacade.Scenes.Remove(World);
             this.Remove(LotController);
             ucp.SetPanel(-1);
@@ -371,23 +391,35 @@ namespace FSO.Client.UI.Screens
 
         public void ClientStateChange(int state, float progress)
         {
+            lock (StateChanges) StateChanges.Enqueue(new SimConnectStateChange(state, progress));
+        }
+
+        public void ClientStateChangeProcess(int state, float progress)
+        {
             //TODO: queue these up and try and sift through them in an update loop to avoid UI issues. (on main thread)
             if (state == 4) //disconnected
             {
-                var alert = UIScreen.GlobalShowAlert(new UIAlertOptions
+                var reason = (VMCloseNetReason)progress;
+                if (reason == VMCloseNetReason.Unspecified)
                 {
-                    Title = GameFacade.Strings.GetString("222", "3"),
-                    Message = GameFacade.Strings.GetString("222", "2", new string[] { "0" }),
-                }, true);
+                    var alert = UIScreen.GlobalShowAlert(new UIAlertOptions
+                    {
+                        Title = GameFacade.Strings.GetString("222", "3"),
+                        Message = GameFacade.Strings.GetString("222", "2", new string[] { "0" }),
+                    }, true);
 
-                if (Connecting)
+                    if (Connecting)
+                    {
+                        UIScreen.RemoveDialog(ConnectingDialog);
+                        ConnectingDialog = null;
+                        Connecting = false;
+                    }
+
+                    alert.ButtonMap[UIAlertButtonType.OK].OnButtonClick += DisconnectedOKClick;
+                } else
                 {
-                    UIScreen.RemoveDialog(ConnectingDialog);
-                    ConnectingDialog = null;
-                    Connecting = false;
+                    DisconnectedOKClick(null);
                 }
-
-                alert.ButtonMap[UIAlertButtonType.OK].OnButtonClick += DisconnectedOKClick;
             }
 
             if (ConnectingDialog == null) return;
@@ -429,7 +461,7 @@ namespace FSO.Client.UI.Screens
             VMNetDriver driver;
             if (host)
             {
-                driver = new VMServerDriver(37564);
+                driver = new VMServerDriver(37564, null);
             }
             else
             {
@@ -445,22 +477,52 @@ namespace FSO.Client.UI.Screens
                 driver = new VMClientDriver(path, 37564, ClientStateChange);
             }
 
-            vm = new VM(new VMContext(World), driver);
+            vm = new VM(new VMContext(World), driver, new UIHeadlineRendererProvider());
             vm.Init();
+            vm.LotName = (path == null) ? "localhost" : path.Split('/').LastOrDefault(); //quick hack just so we can remember where we are
 
             if (host)
             {
-                vm.SendCommand(new VMBlueprintRestoreCmd
+                //check: do we have an fsov to try loading from?
+
+                string filename = Path.GetFileName(path);
+                try
                 {
-                    XMLData = File.ReadAllBytes(path)
-                });
+                    using (var file = new BinaryReader(File.OpenRead("Content/LocalHouse/"+filename.Substring(0, filename.Length-4)+".fsov")))
+                    {
+                        var marshal = new SimAntics.Marshals.VMMarshal();
+                        marshal.Deserialize(file);
+                        vm.Load(marshal);
+                        vm.Reset();
+                    }
+                }
+                catch (Exception) {
+                    short jobLevel = -1;
+
+                    //quick hack to find the job level from the chosen blueprint
+                    //the final server will know this from the fact that it wants to create a job lot in the first place...
+
+                    try
+                    {
+                        if (filename.StartsWith("nightclub") || filename.StartsWith("restaurant") || filename.StartsWith("robotfactory"))
+                            jobLevel = Convert.ToInt16(filename.Substring(filename.Length - 9, 2));
+                    }
+                    catch (Exception) { }
+
+                    vm.SendCommand(new VMBlueprintRestoreCmd
+                    {
+                        JobLevel = jobLevel,
+                        XMLData = File.ReadAllBytes(path)
+                    });
+                }
             }
 
             uint simID = (uint)(new Random()).Next();
+            vm.MyUID = simID;
 
             vm.SendCommand(new VMNetSimJoinCmd
             {
-                SimID = simID,
+                ActorUID = simID,
                 HeadID = GlobalSettings.Default.DebugHead,
                 BodyID = GlobalSettings.Default.DebugBody,
                 SkinTone = (byte)GlobalSettings.Default.DebugSkin,
@@ -469,10 +531,9 @@ namespace FSO.Client.UI.Screens
             });
 
             LotController = new UILotControl(vm, World);
-            LotController.SelectedSimID = simID;
             this.AddAt(0, LotController);
 
-            vm.Context.Clock.Hours = 8;
+            vm.Context.Clock.Hours = 10;
             if (m_ZoomLevel > 3)
             {
                 World.Visible = false;
@@ -487,6 +548,28 @@ namespace FSO.Client.UI.Screens
             {
                 ZoomLevel = Math.Max(ZoomLevel, 4);
             }
+
+            if (IDEHook.IDE != null) IDEHook.IDE.StartIDE(vm);
+
+            vm.OnFullRefresh += VMRefreshed;
+            vm.OnChatEvent += Vm_OnChatEvent;
+            vm.OnEODMessage += LotController.EODs.OnEODMessage;
+
+        }
+
+        private void Vm_OnChatEvent(SimAntics.NetPlay.Model.VMChatEvent evt)
+        {
+            if (ZoomLevel < 4)
+            {
+                Title.SetTitle(LotController.GetLotTitle());
+            }
+        }
+
+        private void VMRefreshed()
+        {
+            if (vm == null) return;
+            LotController.ActiveEntity = null;
+            LotController.RefreshCut();
         }
 
         private void VMDebug_OnButtonClick(UIElement button)
@@ -507,11 +590,16 @@ namespace FSO.Client.UI.Screens
         private void SaveHouseButton_OnButtonClick(UIElement button)
         {
             if (vm == null) return;
-
-
+            
             var exporter = new VMWorldExporter();
             exporter.SaveHouse(vm, GameFacade.GameFilePath("housedata/blueprints/house_00.xml"));
-
+            var marshal = vm.Save();
+            Directory.CreateDirectory("Content/LocalHouse/");
+            using (var output = new FileStream("Content/LocalHouse/house_00.fsov", FileMode.Create))
+            {
+                marshal.SerializeInto(new BinaryWriter(output));
+            }
+            if (vm.GlobalLink != null) ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Save();
         }
 
         public void CloseInbox()
@@ -534,10 +622,19 @@ namespace FSO.Client.UI.Screens
 
         private void MouseHandler(UIMouseEventType type, UpdateState state)
         {
-            //todo: change handler to game engine when in simulation mode.
 
-            CityRenderer.UIMouseEvent(type.ToString()); //all the city renderer needs are events telling it if the mouse is over it or not.
+            if (CityRenderer != null) CityRenderer.UIMouseEvent(type.ToString()); //all the city renderer needs are events telling it if the mouse is over it or not.
             //if the mouse is over it, the city renderer will handle the rest.
+        }
+    }
+
+    public class SimConnectStateChange
+    {
+        public int State;
+        public float Progress;
+        public SimConnectStateChange(int state, float progress)
+        {
+            State = state; Progress = progress;
         }
     }
 }

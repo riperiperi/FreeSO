@@ -13,6 +13,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Engine.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -23,15 +24,27 @@ namespace FSO.SimAntics.Primitives
             var operand = (VMSetMotiveChangeOperand)args;
             var avatar = ((VMAvatar)context.Caller);
 
-            if ((operand.Flags & VMSetMotiveChangeFlags.ClearAll) > 0)
+            if (operand.Once) { }
+
+            if (operand.ClearAll)
             {
                 avatar.ClearMotiveChanges();
             }
             else
             {
-                var PerHourChange = VMMemory.GetVariable(context, (VMVariableScope)operand.DeltaOwner, (ushort)operand.DeltaData);
-                var MaxValue = VMMemory.GetVariable(context, (VMVariableScope)operand.MaxOwner, (ushort)operand.MaxData);
-                avatar.SetMotiveChange(operand.Motive, PerHourChange, MaxValue);
+                var rate = VMMemory.GetVariable(context, (VMVariableScope)operand.DeltaOwner, operand.DeltaData);
+                var MaxValue = VMMemory.GetVariable(context, (VMVariableScope)operand.MaxOwner, operand.MaxData);
+                if (operand.Once) {
+                    var motive = avatar.GetMotiveData(operand.Motive);
+
+                    if (((rate > 0) && (motive > MaxValue)) || ((rate < 0) && (motive < MaxValue))) { return VMPrimitiveExitCode.GOTO_TRUE; }
+                    // ^ we're already over, do nothing. (do NOT clamp)
+
+                    motive += rate;
+                    if (((rate > 0) && (motive > MaxValue)) || ((rate < 0) && (motive < MaxValue))) { motive = MaxValue; }
+                    avatar.SetMotiveData(operand.Motive, motive);
+                }
+                else avatar.SetMotiveChange(operand.Motive, rate, MaxValue);
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;
@@ -40,14 +53,40 @@ namespace FSO.SimAntics.Primitives
 
     public class VMSetMotiveChangeOperand : VMPrimitiveOperand {
 
-        public VMVariableScope DeltaOwner;
-        public ushort DeltaData;
+        public VMVariableScope DeltaOwner { get; set; }
+        public short DeltaData { get; set; }
 
-        public VMVariableScope MaxOwner;
-        public ushort MaxData;
+        public VMVariableScope MaxOwner { get; set; }
+        public short MaxData { get; set; }
 
         public VMSetMotiveChangeFlags Flags;
-        public VMMotive Motive;
+        public VMMotive Motive { get; set; }
+
+        public bool ClearAll
+        {
+            get
+            {
+                return (Flags & VMSetMotiveChangeFlags.ClearAll) > 0;
+            }
+            set
+            {
+                if (value) Flags |= VMSetMotiveChangeFlags.ClearAll;
+                else Flags &= ~VMSetMotiveChangeFlags.ClearAll;
+            }
+        }
+
+        public bool Once
+        {
+            get
+            {
+                return (Flags & VMSetMotiveChangeFlags.Once) > 0;
+            }
+            set
+            {
+                if (value) Flags |= VMSetMotiveChangeFlags.Once;
+                else Flags &= ~VMSetMotiveChangeFlags.Once;
+            }
+        }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){
@@ -58,8 +97,20 @@ namespace FSO.SimAntics.Primitives
                 Motive = (VMMotive)io.ReadByte();
                 Flags = (VMSetMotiveChangeFlags)io.ReadByte();
 
-                DeltaData = io.ReadUInt16();
-                MaxData = io.ReadUInt16();
+                DeltaData = io.ReadInt16();
+                MaxData = io.ReadInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write((byte)DeltaOwner);
+                io.Write((byte)MaxOwner);
+                io.Write((byte)Motive);
+                io.Write((byte)Flags);
+                io.Write(DeltaData);
+                io.Write(MaxData);
             }
         }
         #endregion
@@ -67,6 +118,7 @@ namespace FSO.SimAntics.Primitives
 
     [Flags]
     public enum VMSetMotiveChangeFlags {
-        ClearAll = 1
+        ClearAll = 1,
+        Once = 2,
     }
 }

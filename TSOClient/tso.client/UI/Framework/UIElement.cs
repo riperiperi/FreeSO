@@ -758,6 +758,43 @@ namespace FSO.Client.UI.Framework
             //}
         }
 
+        /// <summary>
+        /// Draws a texture to the UIElement. This method will deal with
+        /// the matrix calculations
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="texture"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="scale"></param>
+        /// <param name="blend"></param>
+        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color blend)
+        {
+            //if (!m_IsInvalidated)
+            //{
+            batch.Draw(texture, FlooredLocalPoint(to), from, new Color(_BlendColor.ToVector4()*blend.ToVector4()), 0.0f,
+                        new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
+            //}
+        }
+
+        public void DrawTiledTexture(SpriteBatch batch, Texture2D texture, Rectangle dest, Color blend)
+        {
+            //if (!m_IsInvalidated)
+            //{
+            var col = new Color(_BlendColor.ToVector4() * blend.ToVector4());
+            for (int x = 0; x < dest.Width; x+=texture.Width)
+            {
+                for (int y= 0; y<dest.Height; y += texture.Height)
+                {
+                    batch.Draw(texture, FlooredLocalPoint(new Vector2(dest.X+x, dest.Y+y)), new Rectangle(0, 0, Math.Min(texture.Width, dest.Width-x), Math.Min(texture.Height, dest.Height - y)), col, 0.0f,
+                        new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
+                }
+            }
+
+
+            //}
+        }
+
         private Dictionary<Rectangle, Vector4> _HitTestCache = new Dictionary<Rectangle, Vector4>();
 
         /// <summary>
@@ -794,6 +831,10 @@ namespace FSO.Client.UI.Framework
 
                 if (cache)
                 {
+                    globalLeft = globalPosition.X;
+                    globalTop = globalPosition.Y;
+                    globalRight = globalPosition.Right;
+                    globalBottom = globalPosition.Bottom;
                     _HitTestCache.Add(area, new Vector4(globalPosition.X, globalPosition.Y, globalPosition.Right, globalPosition.Bottom));
                 }
             }
@@ -870,8 +911,8 @@ namespace FSO.Client.UI.Framework
             catch (Exception e)
             {
             }
-            return null;
-            //return new Texture2D(GameFacade.GraphicsDevice, 1, 1);
+            //TODO: darren wants to return null here. that might break some existing code
+            return new Texture2D(GameFacade.GraphicsDevice, 1, 1);
         }
 
         //These do not seem to be neccessary when maximizing and minimizing.
@@ -979,11 +1020,6 @@ namespace FSO.Client.UI.Framework
                 return _Tooltip;
             }
         }
-
-        /// <summary>
-        /// Used to control Tooltip visibility and position on elements that draw it
-        /// </summary>
-        public UITooltipProperties TooltipProperties;
 
         /// <summary>
         /// Little utility to make it easier to do work outside of the UI thread

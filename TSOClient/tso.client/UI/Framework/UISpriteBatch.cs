@@ -27,20 +27,44 @@ namespace FSO.Client.UI.Framework
         /// </summary>
         /// <param name="gd"></param>
         /// <param name="numBuffers">The number of rendering buffers to pre-alloc</param>
-        public UISpriteBatch(GraphicsDevice gd, int numBuffers)
+        public UISpriteBatch(GraphicsDevice gd, int numBuffers, int width, int height, int multisample)
             : base(gd)
         {
+            _Width = width;
+            _Height = height;
+
             for (var i = 0; i < numBuffers; i++)
             {
                 Buffers.Add(
-                    RenderUtils.CreateRenderTarget(gd, 1, SurfaceFormat.Color, gd.Viewport.Width, gd.Viewport.Height)
+                    RenderUtils.CreateRenderTarget(gd, 1, multisample, SurfaceFormat.Color, width, height)
                 );
             }
 
             base.GraphicsDevice.DeviceReset += new EventHandler<EventArgs>(gd_DeviceReset);
         }
 
+        public UISpriteBatch(GraphicsDevice gd, int numBuffers) : this(gd, numBuffers, gd.Viewport.Width, gd.Viewport.Height, 0) { }
+        public UISpriteBatch(GraphicsDevice gd, int numBuffers, int width, int height) : this(gd, numBuffers, width, height, 0) { }
+
         public static bool Invalidated = false;
+
+        private int _Width;
+        public int Width
+        {
+            get
+            {
+                return _Width;
+            }
+        }
+
+        private int _Height;
+        public int Height
+        {
+            get
+            {
+                return _Height;
+            }
+        }
 
         private void gd_DeviceReset(object sender, EventArgs e)
         {
@@ -50,8 +74,8 @@ namespace FSO.Client.UI.Framework
             for (var i = 0; i < 3; i++)
             {
                 Buffers.Add(
-                    RenderUtils.CreateRenderTarget(base.GraphicsDevice, 1, SurfaceFormat.Color,
-                    base.GraphicsDevice.Viewport.Width, base.GraphicsDevice.Viewport.Height)
+                    RenderUtils.CreateRenderTarget(base.GraphicsDevice, 1, 0, SurfaceFormat.Color,
+                    Width, Height)
                 );
             }
 
@@ -74,6 +98,7 @@ namespace FSO.Client.UI.Framework
             this._SortMode = sortMode;
 
             this.Begin(sortMode, blendMode);
+            GraphicsDevice.RasterizerState = RasterizerState.CullNone;
         }
 
         public void Pause()

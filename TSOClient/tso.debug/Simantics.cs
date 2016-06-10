@@ -41,7 +41,7 @@ namespace FSO.Debug
 
             var showSims = menuShowSims.Checked;
             var showObjects = menuShowObjects.Checked;
-            var search = textBox1.Text.ToLower();
+            var search = textBox1.Text.ToLowerInvariant();
 
             foreach (var entity in all){
                 if (entity is VMAvatar){
@@ -51,7 +51,7 @@ namespace FSO.Debug
                 }
 
                 if (search.Length > 0){
-                    var toString = entity.ToString().ToLower();
+                    var toString = entity.ToString().ToLowerInvariant();
                     if (toString.IndexOf(search) == -1){
                         continue;
                     }
@@ -104,7 +104,7 @@ namespace FSO.Debug
 
             if (entity.SemiGlobal != null)
             {
-                var sglobbhavs = entity.SemiGlobal.Resource.List<BHAV>();
+                var sglobbhavs = entity.SemiGlobal.List<BHAV>();
                 if (bhavs != null)
                 {
                     foreach (var bhav in sglobbhavs)
@@ -151,11 +151,11 @@ namespace FSO.Debug
             if (bhav != null)
             {
                 ActiveEntity.Thread.EnqueueAction(new FSO.SimAntics.Engine.VMQueuedAction() {
-                    Routine = vm.Assemble(bhav),
+                    ActionRoutine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
                     StackObject = SelectedEntity,
-                    CodeOwner = SelectedEntity.Object.Resource,
-                    Priority = VMQueuePriority.UserDriven
+                    CodeOwner = SelectedEntity.Object,
+                    Priority = (short)VMQueuePriority.UserDriven
                 });
             }
         }
@@ -179,21 +179,21 @@ namespace FSO.Debug
             }
             else
             { //semi-global
-                bhav = SelectedEntity.SemiGlobal.Resource.Get<BHAV>(ActionID);
-                CodeOwner = SelectedEntity.SemiGlobal.Resource;
+                bhav = SelectedEntity.SemiGlobal.Get<BHAV>(ActionID);
+                CodeOwner = SelectedEntity.SemiGlobal;
             }
 
             if (bhav != null)
             {
                 ActiveEntity.Thread.EnqueueAction(new VMQueuedAction()
                 {
-                    Routine = vm.Assemble(bhav),
+                    ActionRoutine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
                     StackObject = SelectedEntity,
-                    CodeOwner = SelectedEntity.Object.Resource,
+                    CodeOwner = SelectedEntity.Object,
                     Name = (string)interactionList.SelectedItem,
                     InteractionNumber = (int)interaction.TTAIndex, //interactions are referenced by their tta index
-                    Priority = VMQueuePriority.UserDriven
+                    Priority = (short)VMQueuePriority.UserDriven
                 });
             }
         }

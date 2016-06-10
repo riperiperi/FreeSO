@@ -14,6 +14,8 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Content;
 using FSO.Files;
 using FSO.Files.Formats.tsodata;
+using FSO.Files.Formats.IFF;
+using System.Threading;
 
 namespace FSO.Content
 {
@@ -51,6 +53,8 @@ namespace FSO.Content
         private GraphicsDevice Device;
         public ContentMode Mode;
 
+        public ChangeManager Changes;
+
         /// <summary>
         /// Creates a new instance of Content.
         /// </summary>
@@ -68,7 +72,7 @@ namespace FSO.Content
                 AvatarMeshes = new AvatarMeshProvider(this, Device);
                 AvatarTextures = new AvatarTextureProvider(this);
             }
-
+            Changes = new ChangeManager();
             AvatarBindings = new AvatarBindingProvider(this);
             AvatarSkeletons = new AvatarSkeletonProvider(this);
             AvatarAppearances = new AvatarAppearanceProvider(this);
@@ -83,6 +87,7 @@ namespace FSO.Content
             WorldFloors = new WorldFloorProvider(this);
             WorldWalls = new WorldWallProvider(this);
             WorldObjectGlobals = new WorldGlobalProvider(this);
+            WorldCatalog = new WorldObjectCatalog();
 
             Audio = new Audio(this);
             GlobalTuning = new Tuning(Path.Combine(basePath, "tuning.dat"));
@@ -101,6 +106,7 @@ namespace FSO.Content
             WorldObjectGlobals.Init();
             WorldWalls.Init();
             WorldFloors.Init();
+            WorldCatalog.Init(this);
         }
 
         /// <summary>
@@ -113,6 +119,7 @@ namespace FSO.Content
             _ScanFiles(BasePath, allFiles);
             AllFiles = allFiles.ToArray();
 
+            PIFFRegistry.Init("Content/Patch/");
             Archives = new Dictionary<string, FAR3Archive>();
             if (Mode == ContentMode.CLIENT)
             {
@@ -200,6 +207,8 @@ namespace FSO.Content
                 return new MemoryStream(bytes, false);
             }
 
+            if (path.EndsWith(".bmp") || path.EndsWith(".png") || path.EndsWith(".tga")) path = "uigraphics/" + path;
+
             return File.OpenRead(GetPath(path));
         }
 
@@ -208,6 +217,7 @@ namespace FSO.Content
         public WorldGlobalProvider WorldObjectGlobals;
         public WorldFloorProvider WorldFloors;
         public WorldWallProvider WorldWalls;
+        public WorldObjectCatalog WorldCatalog;
 
         public UIGraphicsProvider UIGraphics;
         

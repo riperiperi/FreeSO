@@ -401,7 +401,7 @@ namespace Paloma
         public TargaImage(string strFileName) : this()
         {
             // make sure we have a .tga file
-            if (System.IO.Path.GetExtension(strFileName).ToLower() == ".tga")
+            if (System.IO.Path.GetExtension(strFileName).ToLowerInvariant() == ".tga")
             {
                 // make sure the file exists
                 if (System.IO.File.Exists(strFileName) == true)
@@ -1205,7 +1205,7 @@ namespace Paloma
                                 break;
 
                             case 4: // premultiplied alpha data
-                                pfTargaPixelFormat = PixelFormat.Format32bppPArgb;
+                                pfTargaPixelFormat = PixelFormat.Format32bppArgb;
                                 break;
 
                         }

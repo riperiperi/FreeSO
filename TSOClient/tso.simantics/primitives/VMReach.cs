@@ -16,6 +16,7 @@ using FSO.SimAntics.Model;
 using FSO.SimAntics.Utils;
 using FSO.SimAntics.Engine;
 using FSO.Files.Formats.IFF.Chunks;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -81,10 +82,10 @@ namespace FSO.SimAntics.Primitives
                     avatar.Animations.Clear();
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 } 
-                else if (avatar.CurrentAnimationState.EventFired)
+                else if (avatar.CurrentAnimationState.EventQueue.Count > 0)
                 {
 
-                    if (avatar.CurrentAnimationState.EventCode == 0)
+                    if (avatar.CurrentAnimationState.EventQueue[0] == 0)
                     {
                         //do the grab/drop
                         if (operand.Mode == 0)
@@ -108,7 +109,7 @@ namespace FSO.SimAntics.Primitives
                                 var item = context.StackObject.GetSlot(slotNum);
                                 if (item != null)
                                 {
-                                    context.Caller.PlaceInSlot(item, 0, true, context.VM.Context);
+                                    if (!context.Caller.PlaceInSlot(item, 0, true, context.VM.Context)) failed = true;
                                 }
                                 else failed = true; //can't grab from an empty space
                             }
@@ -117,14 +118,13 @@ namespace FSO.SimAntics.Primitives
                                 var itemTest = context.StackObject.GetSlot(slotNum);
                                 if (itemTest == null)
                                 {
-                                    context.StackObject.PlaceInSlot(holding, slotNum, true, context.VM.Context);
+                                    if (!context.StackObject.PlaceInSlot(holding, slotNum, true, context.VM.Context)) failed = true;
                                 }
                                 else failed = true; //can't drop in an occupied space
                             }
                         }
                     }
-
-                    avatar.CurrentAnimationState.EventFired = false; //clear fired flag
+                    avatar.CurrentAnimationState.EventQueue.RemoveAt(0);
                     return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                 }
                 else
@@ -149,6 +149,15 @@ namespace FSO.SimAntics.Primitives
                 Mode = io.ReadUInt16();
                 GrabOrDrop = io.ReadUInt16();
                 SlotParam = io.ReadUInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Mode);
+                io.Write(GrabOrDrop);
+                io.Write(SlotParam);
             }
         }
         #endregion

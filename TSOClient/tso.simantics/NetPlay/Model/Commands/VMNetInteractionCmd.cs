@@ -16,15 +16,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public ushort Interaction;
         public short CalleeID;
-        public short CallerID;
+        public short Param0;
 
         public override bool Execute(VM vm)
         {
             VMEntity callee = vm.GetObjectById(CalleeID);
-            VMEntity caller = vm.GetObjectById(CallerID);
-            //TODO: check if net user owns caller!
+            VMEntity caller = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
             if (callee == null || caller == null) return false;
-            callee.PushUserInteraction(Interaction, caller, vm.Context);
+            callee.PushUserInteraction(Interaction, caller, vm.Context, new short[] { Param0, 0, 0, 0 });
 
             return true;
         }
@@ -33,16 +32,18 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void SerializeInto(BinaryWriter writer)
         {
+            base.SerializeInto(writer);
             writer.Write(Interaction);
             writer.Write(CalleeID);
-            writer.Write(CallerID);
+            writer.Write(Param0);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
+            base.Deserialize(reader);
             Interaction = reader.ReadUInt16();
             CalleeID = reader.ReadInt16();
-            CallerID = reader.ReadInt16();
+            Param0 = reader.ReadInt16();
         }
 
         #endregion

@@ -22,6 +22,7 @@ using Microsoft.Xna.Framework;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.Routing;
+using FSO.SimAntics.Marshals;
 
 namespace FSO.SimAntics
 {
@@ -45,6 +46,7 @@ namespace FSO.SimAntics
                 _Arch = value;
             }
         }
+        public bool Ready { get { return (_Arch != null); } }
 
         public World World { get; internal set; }
         public VMPrimitiveRegistration[] Primitives = new VMPrimitiveRegistration[256];
@@ -52,17 +54,26 @@ namespace FSO.SimAntics
         public ulong RandomSeed;
 
         public GameGlobal Globals;
+        public VMSetToNextCache SetToNextCache;
         public VMRoomInfo[] RoomInfo;
-        private List<Dictionary<int, List<short>>> ObjectsAt; //used heavily for routing
         
         public VM VM;
 
-        public VMContext(LotView.World world){
+        public VMContext(LotView.World world) : this(world, null) { }
+
+        public VMContext(LotView.World world, VMContext oldContext){
+            //oldContext is passed in case we need to inherit certain things, like the ambient sound player
             this.World = world;
             this.Clock = new VMClock();
-            this.Ambience = new VMAmbientSound();
+            this.SetToNextCache = new VMSetToNextCache(this);
 
-            ObjectsAt = new List<Dictionary<int, List<short>>>();
+            if (oldContext == null)
+            {
+                this.Ambience = new VMAmbientSound();
+            } else
+            {
+                this.Ambience = oldContext.Ambience;
+            }
 
             RandomSeed = (ulong)((new Random()).NextDouble() * UInt64.MaxValue); //when resuming state, this should be set.
             Clock.TicksPerMinute = 30; //1 minute per irl second
@@ -406,8 +417,6 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMGetTerrainInfoOperand)
             });
 
-            //TODO: Get Terrain Info
-
             //UNUSED: Leave Lot and Goto
 
             AddPrimitive(new VMPrimitiveRegistration(new VMFindBestAction())
@@ -431,8 +440,10 @@ namespace FSO.SimAntics
         public ulong NextRandom(ulong max)
         {
             if (max == 0) return 0;
-            RandomSeed = (RandomSeed * 274876858367) + 1046527;
-            return RandomSeed % max;
+            RandomSeed ^= RandomSeed >> 12;
+            RandomSeed ^= RandomSeed << 25;
+            RandomSeed ^= RandomSeed >> 27;
+            return (RandomSeed * (ulong)(2685821657736338717)) % max;
         }
 
         private void WallsChanged(VMArchitecture caller)
@@ -442,7 +453,7 @@ namespace FSO.SimAntics
             //TODO: this could get very slow! find a way to make this quicker.
             foreach (var obj in VM.Entities)
             {
-                if (obj is VMAvatar)
+                if (obj is VMAvatar && obj.Thread != null)
                 {
                     foreach (var frame in obj.Thread.Stack)
                     {
@@ -463,6 +474,7 @@ namespace FSO.SimAntics
                 RoomInfo[i].Entities = new List<VMEntity>();
                 RoomInfo[i].Portals = new List<VMRoomPortal>();
                 RoomInfo[i].Room = Architecture.RoomData[i];
+                RoomInfo[i].Light = new RoomLighting();
             }
 
             foreach (var obj in VM.Entities)
@@ -473,7 +485,52 @@ namespace FSO.SimAntics
                 { //portal object
                     AddRoomPortal(obj, room);
                 }
+                obj.SetRoom(room);
             }
+
+            for (ushort i=0; i<RoomInfo.Length; i++)
+            {
+                RefreshLighting(i, i==(RoomInfo.Length-1));
+            }
+            if (VM.UseWorld) World.InvalidateZoom();
+        }
+
+        public void RefreshLighting(ushort room, bool commit)
+        {
+            if (RoomInfo == null) return;
+            var info = RoomInfo[room];
+            info.Light.AmbientLight = 0;
+            info.Light.OutsideLight = 0;
+            if (info.Room.IsOutside)
+            {
+                info.Light.OutsideLight = 100;
+            }
+            else
+            {
+                float areaScale = Math.Max(1, info.Room.Area / 100f);
+                foreach (var ent in info.Entities)
+                {
+                    var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
+                    var cont = ent.GetValue(VMStackObjectVariable.LightingContribution);
+                    if (cont > 0)
+                    {
+                        if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
+                            info.Light.OutsideLight += (ushort)Math.Min(100, cont / areaScale);
+                        else
+                            info.Light.AmbientLight += (ushort)Math.Min(100, cont / areaScale);
+                    }
+                }
+                if (info.Light.OutsideLight > 100) info.Light.OutsideLight = 100;
+            }
+
+            if (commit && UseWorld) { 
+                Blueprint.Light = new RoomLighting[RoomInfo.Length];
+                for (int i = 0; i < RoomInfo.Length; i++)
+                {
+                    Blueprint.Light[i] = RoomInfo[i].Light;
+                }
+                Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
+            } 
         }
 
         public void AddRoomPortal(VMEntity obj, ushort room)
@@ -518,10 +575,11 @@ namespace FSO.SimAntics
             { //portal
                 AddRoomPortal(obj, room);
             }
+            obj.SetRoom(room);
+            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0)
+                RefreshLighting(room, true);
 
-            while (pos.Level > ObjectsAt.Count) ObjectsAt.Add(new Dictionary<int, List<short>>());
-            if (!ObjectsAt[pos.Level-1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID] = new List<short>();
-            ObjectsAt[pos.Level - 1][pos.TileID].Add(obj.ObjectID);
+            SetToNextCache.RegisterObjectPos(obj);
         }
 
         public void UnregisterObjectPos(VMEntity obj)
@@ -536,17 +594,18 @@ namespace FSO.SimAntics
             { //portal
                 RemoveRoomPortal(obj, room);
             }
+            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0)
+                RefreshLighting(room, true);
 
-            if (ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID].Remove(obj.ObjectID);
+            SetToNextCache.UnregisterObjectPos(obj);
         }
 
         public bool CheckWallValid(LotTilePos pos, WallTile wall)
         {
-            if (pos.Level < 1 || pos.Level > ObjectsAt.Count || !ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return true;
-            var objs = ObjectsAt[pos.Level - 1][pos.TileID];
-            foreach (var id in objs)
+            var objs = SetToNextCache.GetObjectsAt(pos);
+            if (objs == null) return true;
+            foreach (var obj in objs)
             {
-                var obj = VM.GetObjectById(id);
                 if (obj.WallChangeValid(wall, obj.Direction, false) != VMPlacementError.Success) return false;
             }
             return true;
@@ -554,11 +613,10 @@ namespace FSO.SimAntics
 
         public bool CheckFloorValid(LotTilePos pos, FloorTile floor)
         {
-            if (pos.Level < 1 || pos.Level > ObjectsAt.Count || !ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return true;
-            var objs = ObjectsAt[pos.Level - 1][pos.TileID];
-            foreach (var id in objs)
+            var objs = SetToNextCache.GetObjectsAt(pos);
+            if (objs == null) return true;
+            foreach (var obj in objs)
             {
-                var obj = VM.GetObjectById(id);
                 if (obj.FloorChangeValid(floor, pos.Level) != VMPlacementError.Success) return false;
             }
             return true;
@@ -566,13 +624,12 @@ namespace FSO.SimAntics
 
         public VMSolidResult SolidToAvatars(LotTilePos pos)
         {
-            if (IsOutOfBounds(pos) || (pos.Level < 1 || pos.Level > ObjectsAt.Count) || 
+            if (IsOutOfBounds(pos) || (pos.Level < 1) || 
                 (pos.Level != 1 && Architecture.GetFloor(pos.TileX, pos.TileY, pos.Level).Pattern == 0)) return new VMSolidResult { Solid = true };
-            if (!ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return new VMSolidResult();
-                var objs = ObjectsAt[pos.Level - 1][pos.TileID];
-            foreach (var id in objs)
+            var objs = SetToNextCache.GetObjectsAt(pos);
+            if (objs == null) return new VMSolidResult();
+            foreach (var obj in objs)
             {
-                var obj = VM.GetObjectById(id);
                 if (obj == null) continue;
                 var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
                 if (((flags & VMEntityFlags.DisallowPersonIntersection) > 0) || (flags & (VMEntityFlags.AllowPersonIntersection | VMEntityFlags.HasZeroExtent)) == 0) 
@@ -586,7 +643,7 @@ namespace FSO.SimAntics
 
         public bool IsOutOfBounds(LotTilePos pos)
         {
-            return (pos.x < 0 || pos.y < 0 || pos.TileX >= _Arch.Width || pos.TileY >= _Arch.Height);
+            return (pos.x < 0 || pos.y < 0 || pos.Level < 1 || pos.TileX >= _Arch.Width || pos.TileY >= _Arch.Height || pos.Level > _Arch.Stories);
         }
 
         public VMPlacementResult GetAvatarPlace(VMEntity target, LotTilePos pos, Direction dir)
@@ -610,7 +667,10 @@ namespace FSO.SimAntics
                 if (obj.MultitileGroup == target.MultitileGroup) continue;
                 var oFoot = obj.Footprint;
 
-                if (oFoot != null && oFoot.Intersects(footprint)) //also ignore allow intersection trees?
+                if (oFoot != null && oFoot.Intersects(footprint)
+                        && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, 0, 0, 0 })
+                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, 0, 0, 0 })))
+                    )
                 {
                     var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
                     bool allowAvatars = ((flags & VMEntityFlags.DisallowPersonIntersection) == 0) && ((flags & VMEntityFlags.AllowPersonIntersection) > 0);
@@ -650,7 +710,8 @@ namespace FSO.SimAntics
             var objs = RoomInfo[room].Entities;
             foreach (var obj in objs)
             {
-                if (obj.MultitileGroup == target.MultitileGroup || (obj is VMAvatar && allowAvatars)) continue;
+                if (obj.MultitileGroup == target.MultitileGroup || (obj is VMAvatar && allowAvatars) 
+                    || (target.GhostImage && target.GhostOriginal != null && target.GhostOriginal.Objects.Contains(obj))) continue;
                 var oFoot = obj.Footprint;
 
                 if (oFoot != null && oFoot.Intersects(footprint)
@@ -698,7 +759,7 @@ namespace FSO.SimAntics
         {
             if (obj.Position == LotTilePos.OUT_OF_WORLD) return 0;
             if (obj.Position.Level < 1 || obj.Position.Level > _Arch.Stories) return 0;
-            return Architecture.Rooms[obj.Position.Level - 1].Map[obj.Position.TileX + obj.Position.TileY*_Arch.Width];
+            return (ushort)Architecture.Rooms[obj.Position.Level - 1].Map[obj.Position.TileX + obj.Position.TileY*_Arch.Width];
         }
 
         public ushort GetRoomAt(LotTilePos pos)
@@ -706,12 +767,26 @@ namespace FSO.SimAntics
             if (pos.TileX < 0 || pos.TileX >= _Arch.Width) return 0;
             else if (pos.TileY < 0 || pos.TileY >= _Arch.Height) return 0;
             else if (pos.Level < 1 || pos.Level > _Arch.Stories) return 0;
-            else return Architecture.Rooms[pos.Level-1].Map[pos.TileX + pos.TileY * _Arch.Width];
+            else return (ushort)Architecture.Rooms[pos.Level-1].Map[pos.TileX + pos.TileY * _Arch.Width];
         }
 
         public VMMultitileGroup GhostCopyGroup(VMMultitileGroup group)
         {
             var newGroup = CreateObjectInstance(((group.MultiTile) ? group.BaseObject.MasterDefinition.GUID : group.BaseObject.Object.OBJ.GUID), LotTilePos.OUT_OF_WORLD, group.BaseObject.Direction, true);
+
+            if (newGroup != null)
+            {
+                newGroup.Price = group.Price;
+                for (int i=0; i < Math.Min(newGroup.Objects.Count, group.Objects.Count); i++) {
+                    newGroup.Objects[i].GhostOriginal = group;
+                    newGroup.Objects[i].SetValue(VMStackObjectVariable.Graphic, group.Objects[i].GetValue(VMStackObjectVariable.Graphic));
+                    newGroup.Objects[i].DynamicSpriteFlags = group.Objects[i].DynamicSpriteFlags;
+                    newGroup.Objects[i].DynamicSpriteFlags2 = group.Objects[i].DynamicSpriteFlags2;
+                    newGroup.Objects[i].SetDynamicSpriteFlag(0, group.Objects[i].IsDynamicSpriteFlagSet(0));
+                    newGroup.Objects[i].PlatformState = group.Objects[i].PlatformState;
+                    if (newGroup.Objects[i] is VMGameObject) ((VMGameObject)newGroup.Objects[i]).RefreshGraphic();
+                }
+            }
 
             return newGroup;
         }
@@ -737,7 +812,7 @@ namespace FSO.SimAntics
             }
 
             var master = objDefinition.OBJ.MasterID;
-            if (master != 0)
+            if (master != 0 && objDefinition.OBJ.SubIndex == -1)
             {
                 group.MultiTile = true;
                 var objd = objDefinition.Resource.List<OBJD>();
@@ -752,13 +827,14 @@ namespace FSO.SimAntics
                             var worldObject = new ObjectComponent(subObjDefinition);
                             var vmObject = new VMGameObject(subObjDefinition, worldObject);
                             vmObject.GhostImage = ghostImage;
+                            if (UseWorld) Blueprint.AddObject(worldObject);
 
                             vmObject.MasterDefinition = objDefinition.OBJ;
                             vmObject.UseTreeTableOf(objDefinition);
 
                             vmObject.MainParam = MainParam;
                             vmObject.MainStackOBJ = MainStackOBJ;
-                            group.Objects.Add(vmObject);
+                            group.AddObject(vmObject);
 
                             vmObject.MultitileGroup = group;
                             if (!ghostImage) VM.AddEntity(vmObject);
@@ -777,7 +853,7 @@ namespace FSO.SimAntics
                 {
                     var vmObject = new VMAvatar(objDefinition);
                     vmObject.MultitileGroup = group;
-                    group.Objects.Add(vmObject);
+                    group.AddObject(vmObject);
 
                     vmObject.GhostImage = ghostImage;
                     if (!ghostImage) VM.AddEntity(vmObject);
@@ -799,10 +875,11 @@ namespace FSO.SimAntics
 
                     vmObject.MultitileGroup = group;
 
-                    group.Objects.Add(vmObject);
+                    group.AddObject(vmObject);
 
                     vmObject.GhostImage = ghostImage;
                     if (!ghostImage) VM.AddEntity(vmObject);
+                    if (UseWorld && Blueprint != null) Blueprint.AddObject(worldObject);
 
                     vmObject.MainParam = MainParam;
                     vmObject.MainStackOBJ = MainStackOBJ;
@@ -818,17 +895,62 @@ namespace FSO.SimAntics
         public void RemoveObjectInstance(VMEntity target)
         {
             target.PrePositionChange(this);
-            if (!target.GhostImage) VM.RemoveEntity(target);
+            if (!target.GhostImage)
+            {
+                VM.RemoveEntity(target);
+            }
             if (UseWorld)
             {
                 if (target is VMGameObject) Blueprint.RemoveObject((ObjectComponent)target.WorldUI);
                 else Blueprint.RemoveAvatar((AvatarComponent)target.WorldUI);
+            }
+            if (VM.EODHost != null)
+            {
+                VM.EODHost.ForceDisconnectObj(target);
             }
         }
 
         public void AddPrimitive(VMPrimitiveRegistration primitive){
             Primitives[primitive.Opcode] = primitive;
         }
+
+        #region VM Marshalling Functions
+        public virtual VMContextMarshal Save()
+        {
+            return new VMContextMarshal
+            {
+                Architecture = Architecture.Save(),
+                Clock = Clock.Save(),
+                Ambience = new VMAmbientSoundMarshal { ActiveSounds = Ambience.ActiveSounds.Keys.ToArray() },
+                RandomSeed = RandomSeed
+            };
+        }
+
+        public virtual void Load(VMContextMarshal input)
+        {
+            Blueprint = new Blueprint(input.Architecture.Width, input.Architecture.Height);
+            Architecture = new VMArchitecture(input.Architecture, this, Blueprint);
+            Clock = new VMClock(input.Clock);
+
+            if (VM.UseWorld)
+            {
+                foreach (var active in input.Ambience.ActiveSounds) Ambience.SetAmbience(active, true);
+
+                World.State.WorldSize = input.Architecture.Width;
+                Blueprint.Terrain = new TerrainComponent(new Rectangle(1, 1, input.Architecture.Width - 2, input.Architecture.Height - 2));
+                Blueprint.Terrain.Initialize(this.World.State.Device, this.World.State);
+
+                World.InitBlueprint(Blueprint);
+            }
+           
+            RandomSeed = input.RandomSeed;
+        }
+
+        public VMContext(VMContextMarshal input, VMContext oldContext) : this(oldContext.World, oldContext)
+        {
+            Load(input);
+        }
+        #endregion
     }
 
     public struct VMSolidResult

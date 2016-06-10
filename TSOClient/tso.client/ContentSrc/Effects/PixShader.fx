@@ -1,7 +1,7 @@
 ﻿//Vertex shader output structure
 struct VertexToPixel
 {
-	float4 VertexPosition : POSITION;
+	float4 VertexPosition : SV_Position0;
 	
 	float2 ATextureCoord : TEXCOORD0;
 	float2 BTextureCoord : TEXCOORD1;
@@ -15,7 +15,7 @@ struct VertexToPixel
 
 struct VertexToShad
 {
-	float4 Position : POSITION;
+	float4 Position : SV_Position0;
     float Depth : TEXCOORD0;
 };
 
@@ -151,16 +151,28 @@ technique RenderCity
 {
 	pass Final
 	{
-		PixelShader = compile ps_2_0 CityPS();
+#if SM4
+        PixelShader = compile ps_4_0_level_9_1 CityPS();
+#else
+        PixelShader = compile ps_3_0 CityPS();
+#endif;
 	}
 	
 	pass ShadowMap
 	{
-		PixelShader = compile ps_2_0 ShadowMapPS();
+#if SM4
+        PixelShader = compile ps_4_0_level_9_1 ShadowMapPS();
+#else
+        PixelShader = compile ps_3_0 ShadowMapPS();
+#endif;
 	}
 	
 	pass FinalNoShadow
 	{
-		PixelShader = compile ps_2_0 CityPSNoShad();
+#if SM4
+        PixelShader = compile ps_4_0_level_9_1 CityPSNoShad();
+#else
+        PixelShader = compile ps_3_0 CityPSNoShad();
+#endif;
 	}
 }

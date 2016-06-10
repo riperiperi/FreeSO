@@ -23,7 +23,7 @@ namespace FSO.Files.Formats.IFF.Chunks
     /// </summary>
     public class DGRP : IffChunk
     {
-        public DGRPImage[] Images { get; internal set; }
+        public DGRPImage[] Images { get; set; }
 
         /// <summary>
         /// Gets a DGRPImage instance from this DGRP instance.
@@ -74,6 +74,21 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
             }
         }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteUInt16(20004);
+                io.WriteUInt32((uint)Images.Length);
+
+                foreach (var img in Images)
+                {
+                    img.Write(io);
+                }
+            }
+            return true;
+        }
     }
 
     /// <summary>
@@ -117,6 +132,17 @@ namespace FSO.Files.Formats.IFF.Chunks
                 this.Sprites[i] = sprite;
             }
         }
+
+        public void Write(IoWriter io)
+        {
+            io.WriteUInt32(Direction);
+            io.WriteUInt32(Zoom);
+            io.WriteUInt32((uint)Sprites.Length);
+            foreach (var spr in Sprites)
+            {
+                spr.Write(io);
+            }
+        }
     }
 
     [Flags]
@@ -139,7 +165,13 @@ namespace FSO.Files.Formats.IFF.Chunks
         public Vector2 SpriteOffset;
         public Vector3 ObjectOffset;
 
-        public bool Flip;
+        public bool Flip {
+            get { return (Flags & DGRPSpriteFlags.Flip) > 0; }
+            set {
+                Flags = Flags & (~DGRPSpriteFlags.Flip);
+                if (value) Flags |= DGRPSpriteFlags.Flip;
+            }
+        }
 
         public DGRPSprite(DGRP parent)
         {
@@ -166,7 +198,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 SpriteOffset.X = io.ReadInt16();
                 SpriteOffset.Y = io.ReadInt16();
 
-                if(version == 20001)
+                if (version == 20001)
                 {
                     ObjectOffset.Z = io.ReadFloat();
                 }
@@ -185,8 +217,18 @@ namespace FSO.Files.Formats.IFF.Chunks
                     ObjectOffset.Y = io.ReadFloat();
                 }
             }
+        }
 
-            this.Flip = (Flags & DGRPSpriteFlags.Flip) == DGRPSpriteFlags.Flip;
+        public void Write(IoWriter io)
+        {
+            io.WriteUInt32(SpriteID);
+            io.WriteUInt32(SpriteFrameIndex);
+            io.WriteInt32((int)SpriteOffset.X);
+            io.WriteInt32((int)SpriteOffset.Y);
+            io.WriteFloat(ObjectOffset.Z);
+            io.WriteUInt32((uint)Flags);
+            io.WriteFloat(ObjectOffset.X);
+            io.WriteFloat(ObjectOffset.Y);
         }
 
         /// <summary>

@@ -12,6 +12,7 @@ using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Content;
+using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -34,8 +35,8 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMRemoveObjectInstanceOperand : VMPrimitiveOperand
     {
-        public short Target;
-        public byte Flags;
+        public short Target { get; set; }
+        public byte Flags { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -46,13 +47,39 @@ namespace FSO.SimAntics.Engine.Primitives
                 Flags = io.ReadByte();
             }
         }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Target);
+                io.Write(Flags);
+            }
+        }
         #endregion
+
+        public bool ReturnImmediately
+        {
+            get
+            {
+                return ((Flags & 1) == 1);
+            }
+            set
+            {
+                if (value) Flags |= 1;
+                else Flags &= unchecked((byte)~1);
+            }
+        }
 
         public bool CleanupAll
         {
             get
             {
                 return ((Flags & 2) == 2);
+            }
+            set
+            {
+                if (value) Flags |= 2;
+                else Flags &= unchecked((byte)~2);
             }
         }
     }

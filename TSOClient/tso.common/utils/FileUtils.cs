@@ -17,7 +17,7 @@ namespace FSO.Common.Utils
     {
         public static string ComputeMD5(string filePath){
             var bytes = ComputeMD5Bytes(filePath);
-            return BitConverter.ToString(bytes).Replace("-", "").ToLower();
+            return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
         }
 
         public static byte[] ComputeMD5Bytes(string filePath)

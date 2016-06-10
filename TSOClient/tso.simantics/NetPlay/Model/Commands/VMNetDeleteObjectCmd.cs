@@ -11,6 +11,8 @@ using System.Linq;
 using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Primitives;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -18,12 +20,40 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public short ObjectID;
         public bool CleanupAll;
-
-        public override bool Execute(VM vm)
+        public override bool Execute(VM vm, VMAvatar caller)
         {
+            if (((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate) return false;
             VMEntity obj = vm.GetObjectById(ObjectID);
-            if (obj == null || (obj is VMAvatar)) return false;
+            if (obj == null || caller == null || (obj is VMAvatar)) return false;
             obj.Delete(CleanupAll, vm.Context);
+
+            //TODO: Check if user is owner of object. Maybe sendback to owner inventory if a roommate deletes.
+
+            // If we're the server, tell the global server to give their money back.
+            if (vm.GlobalLink != null)
+            {
+                vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, obj.MultitileGroup.Price,
+                (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
+                {
+                    vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
+                    { //update budgets on clients. id of 0 means there is no target thread.
+                        Responded = true,
+                        Success = success,
+                        TransferAmount = transferAmount,
+                        UID1 = uid1,
+                        Budget1 = budget1,
+                        UID2 = uid2,
+                        Budget2 = budget2
+                    }));
+                });
+            }
+
+            vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
+                caller.Name,
+                vm.GetUserIP(caller.PersistID),
+                "deleted " + obj.ToString()
+            ));
+
             return true;
         }
 
@@ -31,12 +61,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void SerializeInto(BinaryWriter writer)
         {
+            base.SerializeInto(writer);
             writer.Write(ObjectID);
             writer.Write(CleanupAll);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
+            base.Deserialize(reader);
             ObjectID = reader.ReadInt16();
             CleanupAll = reader.ReadBoolean();
         }

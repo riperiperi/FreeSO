@@ -1,0 +1,294 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9BC48D91-5B9F-4613-ACBF-9FAB21839310}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>FSOInstaller</RootNamespace>
+    <AssemblyName>FreeSO Installer</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>patcher.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Components\9SegmentImage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Components\9SegmentImage.Designer.cs">
+      <DependentUpon>9SegmentImage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Components\TSOProgressBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GameDownloader.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GameDownloader.Designer.cs">
+      <DependentUpon>GameDownloader.cs</DependentUpon>
+    </Compile>
+    <Compile Include="InstallerComplete.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InstallerComplete.Designer.cs">
+      <DependentUpon>InstallerComplete.cs</DependentUpon>
+    </Compile>
+    <Compile Include="InstallerMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InstallerMain.Designer.cs">
+      <DependentUpon>InstallerMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="InstallerStart.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InstallerStart.Designer.cs">
+      <DependentUpon>InstallerStart.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SetupFetcher.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SetupFetcher.Designer.cs">
+      <DependentUpon>SetupFetcher.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TSOManifest.cs" />
+    <EmbeddedResource Include="GameDownloader.resx">
+      <DependentUpon>GameDownloader.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InstallerComplete.resx">
+      <DependentUpon>InstallerComplete.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InstallerComplete.zh-Hans-MO.resx">
+      <DependentUpon>InstallerComplete.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InstallerMain.resx">
+      <DependentUpon>InstallerMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InstallerStart.resx">
+      <DependentUpon>InstallerStart.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SetupFetcher.resx">
+      <DependentUpon>SetupFetcher.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="Packed\Setup\EHCWVADP.ini" />
+    <None Include="Packed\Setup\GZGraphic2.ini" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\0000000AGZRadioBtn.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\02b99f6fGZSliderV.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\42b99d48ListBoxLine.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\440a22b2_PreviousDirectoryButton.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\440a22b3_NewDirectoryButton.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\5ab69758GZWinFileBrowser.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\62B19CE9SysBtns.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\62B99D31GZComboDownArrow.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\82b99d9dGZSpinner.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\82D6F678GZBtnQuestion.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\a2defd9aGZBtnDone.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\a2defe93GZBtnBack.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\c2b99d52ListBoxToggle.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\c2b99e09GZSliderH.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\C2D6E93AGZCheckBox.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\E2B14588WinGen.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\e2b66db8GZBtn.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\e2b99df9ListBoxEdge.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\E2B99E01GZScrollbar.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\e2b99e02LayerToggle.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\E2B99F01GZScrollbarOutlined.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\82b9b75b_Graphics\e78ffc90_GZFolderButton.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\8345a779_Graphics_SetupUI\10000000_ProgressBackground.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\8345a779_Graphics_SetupUI\10000001_ProgressGaugeBackground.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\8345a779_Graphics_SetupUI\10000002_ProgressGaugeLeft.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\8345a779_Graphics_SetupUI\10000003_ProgressGaugeRight.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\8345a779_Graphics_SetupUI\10000004_ProgressGaugeSegment.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\8345a779_Graphics_SetupUI\10000005_ProgressMaxisLogo.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\8345a779_Graphics_SetupUI\10000006_ProgressTSOLogo.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\8345a779_Graphics_SetupUI\10000010_MaxisLogo.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\8345a779_Graphics_SetupUI\10000011_TSOLogo.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\8345a779_Graphics_SetupUI\10000012_Background.tga" />
+    <None Include="Packed\Setup\Resources\Plugin\Res\8345a779_Graphics_SetupUI\10000013_EmptyBackground.tga" />
+    <None Include="Packed\Setup\Resources\SetupResources.ini" />
+    <None Include="Packed\Setup\Resources\Sys\Resources.ini" />
+    <None Include="Packed\Setup\Resources\UI\Fonts\FontStyle.ini" />
+    <None Include="Packed\Setup\Resources\UI\Fonts\SimDialogue-uni.ttf" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000001_TextBoxBackground.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000002_optradio.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000003_optcheckbox.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000004_ScrollBar.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000006_DropdownFieldLong.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000007_DropdownFieldMedium.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000008_DropdownFieldTall.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000009_Install_FolderIconBack.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000010_TOS_ScrollBar.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000100_Slides_ButtonsBack.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000101_Slides_NextBtn.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000102_Slides_BackBtn.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000103_Slides_CloseBack.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000104_Slides_CloseBtn.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000200_Slides_Screen01_B.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000201_Slides_Screen01_C.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000202_Slides_Screen02_A.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000203_Slides_Screen01_A.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000204_Slides_Screen02_B.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000205_Slides_Screen02_C.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000206_Slides_Screen03_A.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000207_Slides_Screen03_B.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000208_Slides_Screen03_C.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000209_Slides_Screen04_A.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000210_Slides_Screen04_B.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000211_Slides_Screen04_C.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000212_Slides_Screen05_A.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000213_Slides_Screen05_B.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000214_Slides_Screen05_C.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000215_Slides_Screen06_A.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000216_Slides_Screen06_B.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000217_Slides_Screen06_C.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000218_Slides_Screen06_D.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000219_Slides_Screen07_A.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000220_Slides_Screen07_B.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000221_Slides_Screen07_C.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000222_Slides_Screen08_A.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000223_Slides_Screen08_B.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000224_Slides_Screen08_C.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000225_Slides_Screen08_D.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000226_Slides_Screen08_E.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000227_Slides_Screen09_A.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000228_Slides_Screen09_B.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000229_Slides_Screen09_C.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000230_Slides_Screen10_A.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000231_Slides_Screen10_B.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000232_Slides_Screen10_C.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000233_Slides_Screen02_D.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000234_Slides_Screen12_A.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000235_Slides_Screen12_B.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\00000236_opt_radio.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\E2B14588_Dialog_SolidAlpha.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\e2b66db8_Butto.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\e2b66db8_Button.tga" />
+    <None Include="Packed\Setup\Resources\UI\Graphics\e2b66db9_MediumButton.tga" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000001_OkOnly.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000002_2Button.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000003_License.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000004_CustomOptions.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000005_Registration.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000006_Billing.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000007_Account.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000008_ParentalControl.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000009_RegCode.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\0000000A_FileBrowser.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\0000000B_ParentalPassword.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\0000000C_GameTimeCode.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\0000000D_PayPal.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\0000000E_PaymentType.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000010_Complete.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000011_ExistingAccount.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000012_PaymentOptions.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000013_AlternateNames.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000014_AOLAccount.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000015_ParentalControlsInfo.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000016_ParentalProfanityLock.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000100_InfoScreen01.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000101_InfoScreen02.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000102_InfoScreen03.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000103_InfoScreen04.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000104_InfoScreen05.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000105_InfoScreen06.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000106_InfoScreen07.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000107_InfoScreen08.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000108_InfoScreen09.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000109_InfoScreen10.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\0000010A_InfoScreen11.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\0000010B_InfoScreen12.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\0000010C_InfoScreen13.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000200_FolderName.script" />
+    <None Include="Packed\Setup\Resources\UI\Scripts\00000201_MismatchPassword.script" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Packed\Setup\EHCWVADP.exe" />
+    <Content Include="Packed\Setup\holder.txt" />
+    <Content Include="Packed\Setup\Install.inf" />
+    <Content Include="Packed\Setup\libexpat.dll" />
+    <Content Include="Packed\Setup\License.txt" />
+    <Content Include="Packed\Setup\Resources\Sounds\BUTTON.WAV" />
+    <Content Include="Packed\Setup\Resources\Sounds\LOOP.WAV" />
+    <Content Include="Packed\Setup\Resources\UI\CountryMapping.txt" />
+    <Content Include="Packed\Setup\Resources\UI\USStatesMapping.txt" />
+    <Content Include="patcher.ico" />
+    <None Include="Resources\installbtn.png" />
+    <None Include="Resources\installermain.png" />
+    <None Include="Resources\installerscreen.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
+      <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>
+      <Name>TargaImage</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

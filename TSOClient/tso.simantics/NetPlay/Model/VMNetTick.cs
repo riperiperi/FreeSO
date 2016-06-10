@@ -12,11 +12,11 @@ using System.Text;
 
 namespace FSO.SimAntics.NetPlay.Model
 {
-    public struct VMNetTick : VMSerializable
+    public class VMNetTick : VMSerializable
     {
-
         public uint TickID;
         public ulong RandomSeed;
+        public bool ImmediateMode; //not serialized
 
         public List<VMNetCommand> Commands;
 

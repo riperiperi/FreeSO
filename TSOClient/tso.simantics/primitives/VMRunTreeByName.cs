@@ -14,6 +14,7 @@ using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Primitives;
+using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -22,6 +23,7 @@ namespace FSO.SimAntics.Engine.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMRunTreeByNameOperand)args;
+            if (context.StackObject == null) return VMPrimitiveExitCode.GOTO_FALSE;
 
             string name;
             STR res = null;
@@ -31,8 +33,8 @@ namespace FSO.SimAntics.Engine.Primitives
             }
             else
             {//local
-                if (context.Routine.ID >= 8192 && context.CodeOwner.SemiGlobal != null) res = context.CodeOwner.SemiGlobal.Get<STR>(operand.StringTable);
-                if (res == null) res = context.CodeOwner.Get<STR>(operand.StringTable); 
+                if (context.Routine.ID >= 8192 && context.ScopeResource.SemiGlobal != null) res = context.ScopeResource.SemiGlobal.Get<STR>(operand.StringTable);
+                if (res == null) res = context.ScopeResource.Get<STR>(operand.StringTable); 
             }
             if (res == null) return VMPrimitiveExitCode.GOTO_FALSE;
             name = res.GetString(operand.StringID-1);
@@ -86,6 +88,17 @@ namespace FSO.SimAntics.Engine.Primitives
                 Unused = io.ReadByte();
                 StringID = io.ReadByte();
                 Destination = io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(StringTable);
+                io.Write(StringScope);
+                io.Write(Unused);
+                io.Write(StringID);
+                io.Write(Destination);
             }
         }
     }

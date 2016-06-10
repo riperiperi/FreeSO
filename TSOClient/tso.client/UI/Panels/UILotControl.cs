@@ -30,6 +30,10 @@ using Microsoft.Xna.Framework.Input;
 using FSO.LotView.Model;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.Client.Debug;
+using FSO.SimAntics.NetPlay.Model;
+using FSO.SimAntics.Model.TSOPlatform;
+using FSO.Client.UI.Panels.EODs;
 
 namespace FSO.Client.UI.Panels
 {
@@ -50,26 +54,35 @@ namespace FSO.Client.UI.Panels
         public FSO.SimAntics.VM vm;
         public LotView.World World;
         public VMEntity ActiveEntity;
-        public uint SelectedSimID;
+        public uint SelectedSimID {
+            get
+            {
+                return (vm == null) ? 0 : vm.MyUID;
+            }
+        }
         public short ObjectHover;
         public bool InteractionsAvailable;
-        public UIImage testimg;
         public UIInteractionQueue Queue;
 
         public bool LiveMode = true;
+        public bool PanelActive = false;
         public UIObjectHolder ObjectHolder;
         public UIQueryPanel QueryPanel;
 
         public UICustomLotControl CustomControl;
+        public UIEODController EODs;
 
         public int WallsMode;
 
         private int OldMX;
         private int OldMY;
+        private bool FoundMe; //if false and avatar changes, center. Should center on join lot.
 
         private bool RMBScroll;
         private int RMBScrollX;
         private int RMBScrollY;
+
+        public UICheatHandler Cheats;
 
         // NOTE: Blocking dialog system assumes that nothing goes wrong with data transmission (which it shouldn't, because we're using TCP)
         // and that the code actually blocks further dialogs from appearing while waiting for a response.
@@ -94,10 +107,6 @@ namespace FSO.Client.UI.Panels
             ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar);
             MouseEvt = this.ListenForMouse(new Microsoft.Xna.Framework.Rectangle(0, 0, 
                 GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight), OnMouse);
-            testimg = new UIImage();
-            testimg.X = 20;
-            testimg.Y = 20;
-            this.Add(testimg);
 
             Queue = new UIInteractionQueue(ActiveEntity, vm);
             this.Add(Queue);
@@ -112,7 +121,30 @@ namespace FSO.Client.UI.Panels
             ChatPanel = new UIChatPanel(vm, this);
             this.Add(ChatPanel);
 
+            vm.OnChatEvent += Vm_OnChatEvent;
             vm.OnDialog += vm_OnDialog;
+            vm.OnBreakpoint += Vm_OnBreakpoint;
+
+            Cheats = new UICheatHandler(this);
+            EODs = new UIEODController(this);
+        }
+
+        private void Vm_OnChatEvent(VMChatEvent evt)
+        {
+            evt.Visitors = vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0);
+            if (evt.Type == VMChatEventType.Message && evt.SenderUID == SelectedSimID) evt.Type = VMChatEventType.MessageMe;
+            ChatPanel.SetLotName(vm.LotName);
+            ChatPanel.ReceiveEvent(evt);
+        }
+
+        private void Vm_OnBreakpoint(VMEntity entity)
+        {
+            if (IDEHook.IDE != null) IDEHook.IDE.IDEBreakpointHit(vm, entity);
+        }
+
+        public string GetLotTitle()
+        {
+            return vm.LotName + " - " + vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0);
         }
 
         void vm_OnDialog(FSO.SimAntics.Model.VMDialogInfo info)
@@ -130,7 +162,9 @@ namespace FSO.Client.UI.Panels
             var b1Event = (info.Block) ? new ButtonClickDelegate(DialogButton1) : null;
             var b2Event = (info.Block) ? new ButtonClickDelegate(DialogButton2) : null;
 
-            switch (info.Operand.Type)
+            VMDialogType type = (info.Operand == null) ? VMDialogType.Message : info.Operand.Type;
+
+            switch (type)
             {
                 default:
                 case VMDialogType.Message:
@@ -185,7 +219,7 @@ namespace FSO.Client.UI.Panels
             if (BlockingDialog == null) return;
             UIScreen.RemoveDialog(BlockingDialog);
             vm.SendCommand(new VMNetDialogResponseCmd {
-                CallerID = ActiveEntity.ObjectID,
+                ActorUID = ActiveEntity.PersistID,
                 ResponseCode = code,
                 ResponseText = (BlockingDialog.ResponseText == null) ? "" : BlockingDialog.ResponseText
             });
@@ -214,7 +248,7 @@ namespace FSO.Client.UI.Panels
                     else ObjectHolder.MouseDown(state);
                     return;
                 }
-                if (PieMenu == null)
+                if (PieMenu == null && ActiveEntity != null)
                 {
                     VMEntity obj;
                     //get new pie menu, make new pie menu panel for it
@@ -236,7 +270,9 @@ namespace FSO.Client.UI.Panels
                         {
                             obj = GotoObject;
                         }
-                        var menu = obj.GetPieMenu(vm, ActiveEntity);
+                        obj = obj.MultitileGroup.GetInteractionGroupLeader(obj);
+
+                        var menu = obj.GetPieMenu(vm, ActiveEntity, false);
                         if (menu.Count != 0)
                         {
                             PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
@@ -249,19 +285,20 @@ namespace FSO.Client.UI.Panels
                     else
                     {
                         HITVM.Get().PlaySoundEvent(UISounds.Error);
-                        GameFacade.Screens.TooltipProperties.Show = true;
-                        GameFacade.Screens.TooltipProperties.Opacity = 1;
-                        GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X,
+                        state.UIState.TooltipProperties.Show = true;
+                        state.UIState.TooltipProperties.Color = Color.Black;
+                        state.UIState.TooltipProperties.Opacity = 1;
+                        state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
                             state.MouseState.Y);
-                        GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("159", "0");
-                        GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                        state.UIState.Tooltip = GameFacade.Strings.GetString("159", "0");
+                        state.UIState.TooltipProperties.UpdateDead = false;
                         ShowTooltip = true;
                         TipIsError = true;
                     }
                 }
                 else
                 {
-                    PieMenu.RemoveSimScene();
+                    if (PieMenu != null) PieMenu.RemoveSimScene();
                     this.Remove(PieMenu);
                     PieMenu = null;
                 }
@@ -274,8 +311,8 @@ namespace FSO.Client.UI.Panels
                     else ObjectHolder.MouseUp(state);
                     return;
                 }
-                GameFacade.Screens.TooltipProperties.Show = false;
-                GameFacade.Screens.TooltipProperties.Opacity = 0;
+                state.UIState.TooltipProperties.Show = false;
+                state.UIState.TooltipProperties.Opacity = 0;
                 ShowTooltip = false;
                 TipIsError = false;
             }
@@ -299,11 +336,6 @@ namespace FSO.Client.UI.Panels
 
         public void LiveModeUpdate(UpdateState state, bool scrolled)
         {
-            if (ActiveEntity == null || ActiveEntity.Dead)
-            {
-                ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SelectedSimID); //try and hook onto a sim if we have none selected.
-                Queue.QueueOwner = ActiveEntity;
-            }
 
             if (MouseIsOn && ActiveEntity != null)
             {
@@ -320,7 +352,7 @@ namespace FSO.Client.UI.Panels
                         if (ObjectHover > 0)
                         {
                             var obj = vm.GetObjectById(ObjectHover);
-                            var menu = obj.GetPieMenu(vm, ActiveEntity);
+                            var menu = obj.GetPieMenu(vm, ActiveEntity, false);
                             InteractionsAvailable = (menu.Count > 0);
                         }
                     }
@@ -331,19 +363,20 @@ namespace FSO.Client.UI.Panels
                         var obj = vm.GetObjectById(ObjectHover);
                         if (obj is VMAvatar && !TipIsError)
                         {
-                            GameFacade.Screens.TooltipProperties.Show = true;
-                            GameFacade.Screens.TooltipProperties.Opacity = 1;
-                            GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X,
+                            state.UIState.TooltipProperties.Show = true;
+                            state.UIState.TooltipProperties.Color = Color.Black;
+                            state.UIState.TooltipProperties.Opacity = 1;
+                            state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
                                 state.MouseState.Y);
-                            GameFacade.Screens.Tooltip = obj.ToString();
-                            GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                            state.UIState.Tooltip = GetAvatarString(obj as VMAvatar);
+                            state.UIState.TooltipProperties.UpdateDead = false;
                             ShowTooltip = true;
                         }
                     }
                     if (!ShowTooltip)
                     {
-                        GameFacade.Screens.TooltipProperties.Show = false;
-                        GameFacade.Screens.TooltipProperties.Opacity = 0;
+                        state.UIState.TooltipProperties.Show = false;
+                        state.UIState.TooltipProperties.Opacity = 0;
                     }
                 }
             }
@@ -384,33 +417,56 @@ namespace FSO.Client.UI.Panels
 
         }
 
+        private string GetAvatarString(VMAvatar ava)
+        {
+            int prefixNum = 3;
+            if (ava.IsPet) prefixNum = 5;
+            else if (ava.PersistID < 65536) prefixNum = 4;
+            else
+            {
+                var permissionsLevel = ((VMTSOAvatarState)ava.TSOState).Permissions;
+                switch (permissionsLevel)
+                {
+                    case VMTSOAvatarPermissions.Visitor: prefixNum = 3; break;
+                    case VMTSOAvatarPermissions.Roommate:
+                    case VMTSOAvatarPermissions.BuildBuyRoommate: prefixNum = 2; break;
+                    case VMTSOAvatarPermissions.Admin:
+                    case VMTSOAvatarPermissions.Owner: prefixNum = 1; break;
+                }
+            }
+            return GameFacade.Strings.GetString("217", prefixNum.ToString()) + ava.ToString();
+        }
+
+        public void RefreshCut()
+        {
+            MouseCutRect = new Rectangle(0,0,0,0);
+        }
+
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            Cheats.Update(state);
 
             if (!vm.Ready) return;
 
-            if (GotoObject == null) GotoObject = vm.Context.CreateObjectInstance(GOTO_GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true).Objects[0];
-
-            /*if (state.KeyboardState.IsKeyDown(Keys.Tab))
+            if (ActiveEntity == null || ActiveEntity.Dead || ActiveEntity.PersistID != SelectedSimID)
             {
-                if (!TabLastPressed)
+                ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SelectedSimID); //try and hook onto a sim if we have none selected.
+                if (ActiveEntity == null) ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar);
+
+                if (!FoundMe && ActiveEntity != null)
                 {
-                    //switch active sim
-
-                    ActiveEntity = vm.Entities.FirstOrDefault(x => (x is VMAvatar && x.ObjectID > ActiveEntity.ObjectID && x.Object.OBJ.GUID == 0x7FD96B54));
-                    if (ActiveEntity == null) ActiveEntity = vm.Entities.FirstOrDefault(x => (x is VMAvatar && x.Object.OBJ.GUID == 0x7FD96B54));
-                    HITVM.Get().PlaySoundEvent(UISounds.Speed1To3);
-                    Queue.QueueOwner = ActiveEntity;
-
-                    TabLastPressed = true;
+                    vm.Context.World.State.CenterTile = new Vector2(ActiveEntity.VisualPosition.X, ActiveEntity.VisualPosition.Y);
+                    FoundMe = true;
                 }
-                
-            } else TabLastPressed = false;*/
+                Queue.QueueOwner = ActiveEntity;
+            }
+
+            if (GotoObject == null) GotoObject = vm.Context.CreateObjectInstance(GOTO_GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true).Objects[0];
 
             if (Visible)
             {
-                if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
 
                 bool scrolled = false;
                 if (RMBScroll)

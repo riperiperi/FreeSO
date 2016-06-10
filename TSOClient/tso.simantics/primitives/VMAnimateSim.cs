@@ -14,6 +14,7 @@ using FSO.SimAntics.Engine.Utils;
 using FSO.Vitaboy;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -70,24 +71,32 @@ namespace FSO.SimAntics.Engine.Primitives
                 }
                 else
                 {
-                    if (avatar.CurrentAnimationState.EndReached)
+                    var cAnim = avatar.CurrentAnimationState;
+
+                    //SPECIAL CASE: if we are ending the animation, and the number of events run < expected events
+                    //forcefully run those events, with id as their event number. (required for bath drain)
+                    if (cAnim.EndReached)
+                    {
+                        while (cAnim.EventsRun < operand.ExpectedEventCount)
+                        {
+                            cAnim.EventQueue.Add(cAnim.EventsRun++);
+                        }
+                    }
+
+                    if (cAnim.EventQueue.Count > 0) //favor events over end. do not want to miss any.
+                    {
+                        var code = cAnim.EventQueue[0];
+                        cAnim.EventQueue.RemoveAt(0);
+                        if (operand.StoreFrameInLocal)
+                            VMMemory.SetVariable(context, VMVariableScope.Local, operand.LocalEventNumber, code);
+                        else
+                            VMMemory.SetVariable(context, VMVariableScope.Parameters, 0, code);
+                        return VMPrimitiveExitCode.GOTO_FALSE;
+                    }
+                    else if (cAnim.EndReached)
                     {
                         avatar.Animations.Clear();
                         return VMPrimitiveExitCode.GOTO_TRUE;
-                    }
-                    else if (avatar.CurrentAnimationState.EventFired)
-                    {
-                        avatar.CurrentAnimationState.EventFired = false; //clear fired flag
-                        if (operand.StoreFrameInLocal)
-                        {
-                            VMMemory.SetVariable(context, VMVariableScope.Local, operand.LocalEventNumber, avatar.CurrentAnimationState.EventCode);
-                        }
-                        else
-                        {
-                            VMMemory.SetVariable(context, VMVariableScope.Parameters, 0, avatar.CurrentAnimationState.EventCode);
-                        }
-                        return VMPrimitiveExitCode.GOTO_FALSE;
-
                     }
                     else
                     {
@@ -105,10 +114,10 @@ namespace FSO.SimAntics.Engine.Primitives
     }
 
     public class VMAnimateSimOperand : VMPrimitiveOperand {
-        public ushort AnimationID;
+        public ushort AnimationID {get; set;}
         public byte LocalEventNumber;
         public byte _pad;
-        public VMAnimationScope Source;
+        public VMAnimationScope Source { get; set; }
         public byte Flags;
         public byte ExpectedEventCount;
 
@@ -125,6 +134,18 @@ namespace FSO.SimAntics.Engine.Primitives
             }
         }
 
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(AnimationID);
+                io.Write(LocalEventNumber);
+                io.Write((byte)0);
+                io.Write((byte)Source);
+                io.Write(Flags);
+                io.Write(ExpectedEventCount);
+            }
+        }
+
         #endregion
 
         public bool StoreFrameInLocal
@@ -133,6 +154,11 @@ namespace FSO.SimAntics.Engine.Primitives
             {
                 return (Flags & 32) == 32;
             }
+            set
+            {
+                if (value) Flags |= 32;
+                else Flags &= unchecked((byte)~32);
+            }
         }
 
         public bool PlayBackwards
@@ -140,6 +166,11 @@ namespace FSO.SimAntics.Engine.Primitives
             get
             {
                 return (Flags & 2) == 2;
+            }
+            set
+            {
+                if (value) Flags |= 2;
+                else Flags &= unchecked((byte)~2);
             }
         }
 

@@ -1,7 +1,19 @@
 ﻿//Vertex shader output structure
 struct VertexToPixel
 {
-	float4 VertexPosition : POSITION;
+	float4 VertexPosition : SV_Position0;
+	
+	float2 ATextureCoord : TEXCOORD0;
+	float2 BTextureCoord : TEXCOORD1;
+	float2 CTextureCoord : TEXCOORD2;
+	float2 BlendTextureCoord : TEXCOORD3;
+	float2 RoadTextureCoord : TEXCOORD4;
+	float2 RoadCTextureCoord : TEXCOORD5;
+};
+
+struct VertexToPixelOut
+{
+	float4 VertexPosition : SV_Position0;
 	
 	float2 ATextureCoord : TEXCOORD0;
 	float2 BTextureCoord : TEXCOORD1;
@@ -15,7 +27,7 @@ struct VertexToPixel
 
 struct VertexToShad
 {
-	float4 Position : POSITION;
+	float4 Position : SV_Position0;
     float Depth : TEXCOORD0;
 };
 
@@ -27,9 +39,9 @@ float4 GetPositionFromLight(float4 position)
     return mul(position, LightMatrix);  
 }
 
-VertexToPixel CityNoShadVS(VertexToPixel Input)
+VertexToPixelOut CityNoShadVS(VertexToPixel Input)
 {
- 	VertexToPixel Output = (VertexToPixel)0;
+ 	VertexToPixelOut Output = (VertexToPixelOut)0;
 	Output.VertexPosition = mul(Input.VertexPosition, BaseMatrix);
 	Output.ATextureCoord = Input.ATextureCoord;
 	Output.BTextureCoord = Input.BTextureCoord;
@@ -40,9 +52,9 @@ VertexToPixel CityNoShadVS(VertexToPixel Input)
 	return Output;
 }
 
-VertexToPixel CityVS(VertexToPixel Input)
+VertexToPixelOut CityVS(VertexToPixel Input)
 {
-	VertexToPixel Output = CityNoShadVS(Input);
+	VertexToPixelOut Output = CityNoShadVS(Input);
 	
 	//calculate position of vertice in relation to light, for comparison to Shadow Map
 	float4 LightPos = GetPositionFromLight(Input.VertexPosition);
@@ -66,17 +78,29 @@ technique RenderCity
 {
 	pass Final
 	{
-		VertexShader = compile vs_2_0 CityVS();
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 CityVS();
+#else
+        VertexShader = compile vs_3_0 CityVS();
+#endif;
 	}
 	
 	pass ShadowMap
 	{
-		VertexShader = compile vs_2_0 ShadVS();
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 ShadVS();
+#else
+        VertexShader = compile vs_3_0 ShadVS();
+#endif;
 	}
 	
 	pass FinalNoShad
 	{
-		VertexShader = compile vs_2_0 CityNoShadVS();
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 CityNoShadVS();
+#else
+        VertexShader = compile vs_3_0 CityNoShadVS();
+#endif;
 	}
 	
 }

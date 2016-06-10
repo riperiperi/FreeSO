@@ -6,102 +6,143 @@ http://mozilla.org/MPL/2.0/.
 
 using System;
 using System.IO;
-using Microsoft.Win32;
 using System.Windows.Forms;
-using System.Security.Principal;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
 using System.Threading;
+using FSO.Client.Utils.GameLocator;
+using FSO.Client.Utils;
+using System.Reflection;
+using FSO.Common;
 
 namespace FSO.Client
 {
-    static class Program
+
+    public static class Program
     {
+
+        public static bool UseDX = true;
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
 
-        [STAThread]
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
+            if (InitWithArguments(args))
+                (new GameStartProxy()).Start(UseDX);
+        }
 
+        public static bool InitWithArguments(string[] args)
+        {
+            AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
             Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
-            AppDomain.CurrentDomain.UnhandledException +=new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
 
-            //Controls whether the application is allowed to start.
-            bool Exit = false;
-            string Software = "";
+            OperatingSystem os = Environment.OSVersion;
+            PlatformID pid = os.Platform;
 
-            #if WINDOWS
-            #endif
+            ILocator gameLocator;
+            bool linux = pid == PlatformID.MacOSX || pid == PlatformID.Unix;
+            if (linux) gameLocator = new LinuxLocator();
+            else gameLocator = new WindowsLocator();
 
-            if ((is64BitOperatingSystem == false) && (is64BitProcess == false))
-                Software = "SOFTWARE";
-            else
-                Software = "SOFTWARE\\Wow6432Node";
+            bool useDX = false;
 
-#region User resolution parmeters
-            if (args.Length > 0)
+            #region User resolution parmeters
+
+            foreach (var arg in args)
             {
-                int ScreenWidth = int.Parse(args[0].Split("x".ToCharArray())[0]);
-                int ScreenHeight = int.Parse(args[0].Split("x".ToCharArray())[1]);
-
-                GlobalSettings.Default.GraphicsWidth = ScreenWidth;
-                GlobalSettings.Default.GraphicsHeight = ScreenHeight;
-
-                // Client seems to bitch without one of these set
-                if (args.Length >= 1)
+                if (char.IsDigit(arg[0]))
                 {
-                    if (args[1].Equals("w", StringComparison.InvariantCultureIgnoreCase))
-                        GlobalSettings.Default.Windowed = true;
-                    else if (args[1].Equals("f", StringComparison.InvariantCultureIgnoreCase))
-                        GlobalSettings.Default.Windowed = false;
+                    //attempt parsing resoulution
+                    try
+                    {
+                        var split = arg.Split("x".ToCharArray());
+                        int ScreenWidth = int.Parse(split[0]);
+                        int ScreenHeight = int.Parse(split[1]);
+
+                        GlobalSettings.Default.GraphicsWidth = ScreenWidth;
+                        GlobalSettings.Default.GraphicsHeight = ScreenHeight;
+                    }
+                    catch (Exception) { }
                 }
-            }
-#endregion
-
-            //Find the path to TSO on the user's system.
-            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
-
-            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.Equals("Maxis", StringComparison.InvariantCultureIgnoreCase); }))
-            {
-                RegistryKey maxisKey = softwareKey.OpenSubKey("Maxis");
-                if (Array.Exists(maxisKey.GetSubKeyNames(), delegate(string s) { return s.Equals("The Sims Online", StringComparison.InvariantCultureIgnoreCase); }))
+                else if (arg[0] == '-')
                 {
-                    RegistryKey tsoKey = maxisKey.OpenSubKey("The Sims Online");
-                    string installDir = (string)tsoKey.GetValue("InstallDir");
-                    installDir += "\\TSOClient\\";
-                    GlobalSettings.Default.StartupPath = installDir;
+                    var cmd = arg.Substring(1);
+                    if (cmd.StartsWith("lang"))
+                    {
+                        GlobalSettings.Default.LanguageCode = byte.Parse(cmd.Substring(4));
+                    }
+                    else
+                    {
+                        //normal style param
+                        switch (cmd)
+                        {
+                            case "dx11":
+                            case "dx":
+                                useDX = true;
+                                break;
+                            case "gl":
+                            case "ogl":
+                                useDX = false;
+                                break;
+                        }
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("Error TSO was not found on your system.");
-                    Exit = true;
+                    if (arg.Equals("w", StringComparison.InvariantCultureIgnoreCase))
+                        GlobalSettings.Default.Windowed = true;
+                    else if (arg.Equals("f", StringComparison.InvariantCultureIgnoreCase))
+                        GlobalSettings.Default.Windowed = false;
                 }
+            }
+
+            #endregion
+
+            UseDX = MonogameLinker.Link(useDX);
+
+            /*if (GlobalSettings.Default.Windowed == false && !UseDX)
+            {
+                //temporary while SDL issues are fixed
+                MessageBox.Show("Fullscreen is currently disabled on OpenGL. Please switch to DirectX (-dx flag) if you really need to use fullscreen.");
+            }*/
+
+            var path = gameLocator.FindTheSimsOnline();
+
+            if (UseDX) GlobalSettings.Default.AntiAlias = false;
+
+            if (path != null)
+            {
+                FSOEnvironment.ContentDir = "Content/";
+                FSOEnvironment.GFXContentDir = "Content/" + (UseDX ? "DX/" : "OGL/");
+                FSOEnvironment.Linux = linux;
+                FSOEnvironment.DirectX = UseDX;
+                if (GlobalSettings.Default.LanguageCode == 0) GlobalSettings.Default.LanguageCode = 1;
+                Files.Formats.IFF.Chunks.STR.DefaultLangCode = (Files.Formats.IFF.Chunks.STRLangCode)GlobalSettings.Default.LanguageCode;
+
+                GlobalSettings.Default.StartupPath = path;
+                GlobalSettings.Default.ClientVersion = GetClientVersion();
+                return true;
             }
             else
             {
-                MessageBox.Show("Error: No Maxis products were found on your system.");
-                Exit = true;
+                MessageBox.Show("The Sims Online was not found on your system. FreeSO will not be able to run without access to the original game files.");
+                return false;
             }
+        }
 
-            GlobalSettings.Default.StartupPath = GlobalSettings.Default.StartupPath.Replace('\\', '/');
-
-            if (!Exit)
+        private static System.Reflection.Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            try
             {
-                using (TSOGame game = new TSOGame())
-                {
-                    GlobalSettings.Default.ClientVersion = GetClientVersion();
-                    //This path should be used to store all files generated by the client, to avoid access conflicts.
-                    GlobalSettings.Default.DocumentsPath =
-                        System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Project Dollhouse\\";
-
-                    if (!Directory.Exists(GlobalSettings.Default.DocumentsPath))
-                        Directory.CreateDirectory(GlobalSettings.Default.DocumentsPath);
-
-                    game.Run();
-                }
+                var assemblyPath = Path.Combine(MonogameLinker.AssemblyDir, args.Name.Substring(0, args.Name.IndexOf(',')) + ".dll");
+                var assembly = Assembly.LoadFrom(assemblyPath);
+                return assembly;
             }
+            catch (Exception)
+            {
+                return null;
+            }
+            
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -113,55 +154,6 @@ namespace FSO.Client
         {
             LogThis.Log.LogThis("Exception: " + e.Exception.ToString(), LogThis.eloglevel.error);
             MessageBox.Show("Exception: \r\n" + e.Exception.ToString());
-        }
-
-        /// <summary>
-        /// Determines whether or not the program is being run as an administrator.
-        /// </summary>
-        private static bool IsAdministrator
-        {
-            get
-            {
-                WindowsIdentity wi = WindowsIdentity.GetCurrent();
-                WindowsPrincipal wp = new WindowsPrincipal(wi);
-
-                return wp.IsInRole(WindowsBuiltInRole.Administrator);
-            }
-        }
-
-        private static bool is64BitProcess = (IntPtr.Size == 8);
-        private static bool is64BitOperatingSystem = is64BitProcess || InternalCheckIsWow64();
-
-        [DllImport("kernel32.dll", SetLastError = true, CallingConvention = CallingConvention.Winapi)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool IsWow64Process(
-            [In] IntPtr hProcess,
-            [Out] out bool wow64Process
-        );
-
-        /// <summary>
-        /// Determines if this process is run on a 64bit OS.
-        /// </summary>
-        /// <returns>True if it is, false otherwise.</returns>
-        public static bool InternalCheckIsWow64()
-        {
-            if ((Environment.OSVersion.Version.Major == 5 && Environment.OSVersion.Version.Minor >= 1) ||
-                Environment.OSVersion.Version.Major >= 6)
-            {
-                using (Process p = Process.GetCurrentProcess())
-                {
-                    bool retVal;
-                    if (!IsWow64Process(p.Handle, out retVal))
-                    {
-                        return false;
-                    }
-                    return retVal;
-                }
-            }
-            else
-            {
-                return false;
-            }
         }
 
         /// <summary>

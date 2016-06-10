@@ -13,20 +13,21 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Model;
 using FSO.LotView.Components;
 using FSO.LotView.Model;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
     public class VMFindLocationFor : VMPrimitiveHandler
     {
         private static LotTilePos[] DirectionVectors = {
-            LotTilePos.FromBigTile(16, 0, 0),
-            LotTilePos.FromBigTile(16, 16, 0),
-            LotTilePos.FromBigTile(0, 16, 0),
-            LotTilePos.FromBigTile(-16, 16, 0),
-            LotTilePos.FromBigTile(-16, 0, 0),
-            LotTilePos.FromBigTile(-16, -16, 0),
-            LotTilePos.FromBigTile(0, -16, 0),
-            LotTilePos.FromBigTile(16, -16, 0),
+            new LotTilePos(16, 0, 0),
+            new LotTilePos(16, 16, 0),
+            new LotTilePos(0, 16, 0),
+            new LotTilePos(-16, 16, 0),
+            new LotTilePos(-16, 0, 0),
+            new LotTilePos(-16, -16, 0),
+            new LotTilePos(0, -16, 0),
+            new LotTilePos(16, -16, 0),
         };
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
@@ -47,8 +48,13 @@ namespace FSO.SimAntics.Primitives
                     obj.SetPosition(LotTilePos.OUT_OF_WORLD, Direction.NORTH, context.VM.Context);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case 2:
-                    //"smoke cloud" - not sure what this does.
-                    break;
+                    //"smoke cloud" - halfway between callee and caller (is "caller" actually reference object?)
+                    var smokePos = context.Callee.Position;
+                    smokePos += context.Caller.Position;
+                    smokePos /= 2;
+                    smokePos -= new LotTilePos(8, 8, 0); //smoke is 2x2... offset to center it.
+                    return (obj.SetPosition(smokePos, Direction.NORTH, context.VM.Context).Status == VMPlacementError.Success)?
+                        VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                 case 3:
                 case 4:
                     //along object vector
@@ -66,12 +72,12 @@ namespace FSO.SimAntics.Primitives
             LotTilePos step = DirectionVectors[dir];
             for (int i = 0; i < 32; i++)
             {
-                if (obj.SetPosition(new LotTilePos(refObj.Position) + step * i,
+                if (obj.SetPosition(new LotTilePos(refObj.Position) + step * (i/2),
                     (Direction)(1 << (dir)), context).Status == VMPlacementError.Success)
                     return true;
-                if (i != 0)
+                if (i%2 != 0)
                 {
-                    if (obj.SetPosition(new LotTilePos(refObj.Position) - step * i,
+                    if (obj.SetPosition(new LotTilePos(refObj.Position) - step * (i/2),
                         (Direction)(1 << (dir)), context).Status == VMPlacementError.Success)
                         return true;
                 }
@@ -121,9 +127,9 @@ namespace FSO.SimAntics.Primitives
 
     public class VMFindLocationForOperand : VMPrimitiveOperand
     {
-        public byte Mode;
-        public byte Local;
-        public byte Flags;
+        public byte Mode { get; set; }
+        public byte Local { get; set; }
+        public byte Flags { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -135,6 +141,15 @@ namespace FSO.SimAntics.Primitives
                 Flags = io.ReadByte();
             }
         }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Mode);
+                io.Write(Local);
+                io.Write(Flags);
+            }
+        }
         #endregion
 
         public bool UseLocalAsRef
@@ -142,6 +157,11 @@ namespace FSO.SimAntics.Primitives
             get
             {
                 return (Flags & 1) == 1;
+            }
+            set
+            {
+                if (value) Flags |= 1;
+                else Flags &= unchecked((byte)~1);
             }
         }
 
@@ -151,6 +171,11 @@ namespace FSO.SimAntics.Primitives
             {
                 return (Flags & 2) == 2;
             }
+            set
+            {
+                if (value) Flags |= 2;
+                else Flags &= unchecked((byte)~2);
+            }
         }
 
         public bool UserEditableTilesOnly
@@ -158,6 +183,11 @@ namespace FSO.SimAntics.Primitives
             get
             {
                 return (Flags & 4) == 4;
+            }
+            set
+            {
+                if (value) Flags |= 4;
+                else Flags &= unchecked((byte)~4);
             }
         }
     }

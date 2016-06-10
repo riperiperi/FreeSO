@@ -10,22 +10,52 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
     public class VMNetArchitectureCmd : VMNetCommandBodyAbstract
     {
         public List<VMArchitectureCommand> Commands;
+        public bool Verified;
 
         public override bool Execute(VM vm)
         {
-            vm.Context.Architecture.RunCommands(Commands);
+            for (int i = 0; i < Commands.Count; i++)
+            {
+                var cmd = Commands[i];
+                cmd.CallerUID = ActorUID;
+                Commands[i] = cmd;
+            }
+            vm.Context.Architecture.RunCommands(Commands, false);
             return true;
+        }
+
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            //since architecture commands must be run in order, we need to run all architecture commands synchronously.
+            //it must be queued on the global link.
+
+            if (Verified) return true;
+            if (caller == null || //caller must be on lot, have build permissions
+                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.BuildBuyRoommate) return false; 
+
+            for (int i = 0; i < Commands.Count; i++)
+            {
+                var cmd = Commands[i];
+                cmd.CallerUID = ActorUID;
+                Commands[i] = cmd;
+            }
+
+            vm.GlobalLink.QueueArchitecture(this);
+
+            return false;
         }
 
         #region VMSerializable Members
         public override void SerializeInto(BinaryWriter writer)
         {
+            base.SerializeInto(writer);
             if (Commands == null) writer.Write(0);
             else
             {
@@ -39,6 +69,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void Deserialize(BinaryReader reader)
         {
+            base.Deserialize(reader);
             Commands = new List<VMArchitectureCommand>();
             int length = reader.ReadInt32();
             for (int i=0; i<length; i++)

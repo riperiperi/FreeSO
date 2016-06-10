@@ -17,6 +17,8 @@ using FSO.SimAntics;
 using FSO.SimAntics.Model;
 using FSO.LotView;
 using FSO.Client.Network;
+using Microsoft.Xna.Framework;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -26,8 +28,6 @@ namespace FSO.Client.UI.Panels
     public class UIUCP : UIContainer
     {
         private CoreGameScreen Game; //the main screen
-        public int SelectedSimID;
-
         private UISelectHouseView SelWallsPanel; //select view panel that is created when clicking the current walls mode
 
         /// <summary>
@@ -90,6 +90,9 @@ namespace FSO.Client.UI.Panels
         private UIDestroyablePanel Panel;
         private int CurrentPanel;
 
+        private uint OldMoney;
+        private int MoneyHighlightFrames;
+
         public UIUCP(UIScreen owner)
         {
 
@@ -145,6 +148,8 @@ namespace FSO.Client.UI.Panels
 
             SecondFloorButton.Selected = (Game.Level == Game.Stories);
             FirstFloorButton.Selected = (Game.Level == 1);
+
+            MoneyText.CaptionStyle = MoneyText.CaptionStyle.Clone();
 
             SetInLot(false);
             SetMode(UCPMode.CityMode);
@@ -203,10 +208,42 @@ namespace FSO.Client.UI.Panels
             int min = 0;
             int hour = 0;
 
-            if (Game.InLot) //if ingame, use time from ingame clock (should be very close to server time anyways, if we set the game pacing up right...)
+            if (MoneyHighlightFrames > 0)
             {
+                if (--MoneyHighlightFrames == 0) MoneyText.CaptionStyle.Color = TextStyle.DefaultLabel.Color;
+            }
+            uint budget = 0;
+            if (Game.InLot) 
+            {
+                // if ingame, use time from ingame clock 
+                // (should be very close to server time anyways, if we set the game pacing up right...)
                 min = Game.vm.Context.Clock.Minutes;
                 hour = Game.vm.Context.Clock.Hours;
+
+                // update with ingame budget.
+                var cont = Game.LotController;
+                if (cont.ActiveEntity != null && cont.ActiveEntity is VMAvatar)
+                {
+                    var avatar = (VMAvatar)cont.ActiveEntity;
+                    budget = avatar.TSOState.Budget.Value;
+
+                    //check if we have build/buy permissions
+                    //TODO: global build/buy enable/disable (via the global calls)
+                    BuyModeButton.Disabled = ((VMTSOAvatarState)(avatar.TSOState)).Permissions
+                        < VMTSOAvatarPermissions.Roommate;
+                    BuildModeButton.Disabled = ((VMTSOAvatarState)(avatar.TSOState)).Permissions
+                        < VMTSOAvatarPermissions.BuildBuyRoommate;
+                    HouseModeButton.Disabled = BuyModeButton.Disabled;
+                }
+
+                if (CurrentPanel == 2 && BuyModeButton.Disabled || CurrentPanel == 3 && BuildModeButton.Disabled) SetPanel(-1);
+            }
+
+            if (budget != OldMoney)
+            {
+                OldMoney = budget;
+                MoneyText.CaptionStyle.Color = Color.White;
+                MoneyHighlightFrames = 45;
             }
 
             string suffix = (hour > 11) ? "pm" : "am";
@@ -214,6 +251,8 @@ namespace FSO.Client.UI.Panels
             if (hour == 0) hour = 12;
 
             TimeText.Caption = hour.ToString() + ":" + ZeroPad(min.ToString(), 2) + " " + suffix;
+
+            MoneyText.Caption = "$" + budget.ToString("##,#0");
 
             base.Update(state);
         }
@@ -286,9 +325,12 @@ namespace FSO.Client.UI.Panels
             {
                 this.Remove(Panel);
                 Panel.Destroy();
+
+                if (Game.InLot) Game.LotController.PanelActive = false;
             }
             if (newPanel != CurrentPanel)
             {
+                if (Game.InLot) Game.LotController.PanelActive = true;
                 switch (newPanel)
                 {
                     case 5:
@@ -297,6 +339,7 @@ namespace FSO.Client.UI.Panels
                         Panel.Y = 96;
                         this.Add(Panel);
                         OptionsModeButton.Selected = true;
+
                         break;
                     case 2:
                         if (!Game.InLot) break; //not ingame
@@ -327,11 +370,11 @@ namespace FSO.Client.UI.Panels
                         Panel = new UILiveMode(Game.LotController);
                         Panel.X = 177;
                         Panel.Y = 63;
-                        ((UILiveMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         LiveModeButton.Selected = true;
                         break;
                     default:
+                        if (Game.InLot) Game.LotController.PanelActive = false;
                         break;
                 }
                 CurrentPanel = newPanel;

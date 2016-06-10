@@ -1,9 +1,9 @@
 
 #----------------------------- Global Properties ----------------------------#
 
-/outputDir:../Content
+/outputDir:../Content/OGL
 /intermediateDir:obj
-/platform:WindowsGL
+/platform:Linux
 /config:
 /profile:Reach
 /compress:False
@@ -13,70 +13,29 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin ComicSans.spritefont
+#begin Fonts/FreeSO_12px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:ComicSans.spritefont
-
-#begin ComicSansSmall.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:ComicSansSmall.spritefont
-
-#begin login.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
 /processorParam:TextureFormat=Color
-/build:login.png
+/build:Fonts/FreeSO_12px.spritefont
 
-#begin Fonts/ProjectDollhouse_12px.spritefont
+#begin Fonts/FreeSO_14px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:Fonts/ProjectDollhouse_12px.spritefont
+/processorParam:TextureFormat=Color
+/build:Fonts/FreeSO_14px.spritefont
 
-#begin Fonts/ProjectDollhouse_14px.spritefont
+#begin Fonts/FreeSO_16px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:Fonts/ProjectDollhouse_14px.spritefont
+/processorParam:TextureFormat=Color
+/build:Fonts/FreeSO_16px.spritefont
 
-#begin Fonts/ProjectDollhouse_16px.spritefont
+#begin Fonts/FreeSO_10px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:Fonts/ProjectDollhouse_16px.spritefont
-
-#begin Effects/TerrainSplat.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/TerrainSplat.fx
-
-#begin Effects/TerrainSplat2.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/TerrainSplat2.fx
-
-#begin Fonts/ProjectDollhouse_10px.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:Fonts/ProjectDollhouse_10px.spritefont
-
-#begin Effects/HouseBatch.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/HouseBatch.fx
+/processorParam:TextureFormat=Color
+/build:Fonts/FreeSO_10px.spritefont
 
 #begin Effects/2DWorldBatch.fx
 /importer:EffectImporter
@@ -110,6 +69,7 @@
 /processorParam:GenerateMipmaps=False
 /processorParam:PremultiplyAlpha=True
 /processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/gridTexture.png
 
@@ -118,4 +78,22 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/Vitaboy.fx
+
+#begin Fonts/Trebuchet_12px.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=Color
+/build:Fonts/Trebuchet_12px.spritefont
+
+#begin Fonts/Trebuchet_14px.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=Color
+/build:Fonts/Trebuchet_14px.spritefont
+
+#begin Effects/GrassShader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/GrassShader.fx
 

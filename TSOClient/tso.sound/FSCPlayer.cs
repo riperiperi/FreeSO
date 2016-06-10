@@ -103,6 +103,7 @@ namespace FSO.HIT
                     instance.Volume = volume;
                     instance.Pan = (note.LRPan / 512.0f) - 1;
                     instance.Play();
+
                     SoundEffects.Add(instance);
                 }
                 LoopCount = (short)(note.Loop - 1);

@@ -61,7 +61,7 @@ namespace FSO.Content.Framework
                 }
                 foreach (var file in matchedFiles)
                 {
-                    var name = Path.GetFileName(file).ToLower();
+                    var name = Path.GetFileName(file).ToLowerInvariant();
                     EntriesByName.Add(name, file);
                     Items.Add(new FileContentReference<T>(name, this));
                 }
@@ -75,7 +75,7 @@ namespace FSO.Content.Framework
         /// <returns>The file.</returns>
         public T Get(string name)
         {
-            name = name.ToLower();
+            name = name.ToLowerInvariant();
             lock (Cache)
             {
                 if (Cache.ContainsKey(name))

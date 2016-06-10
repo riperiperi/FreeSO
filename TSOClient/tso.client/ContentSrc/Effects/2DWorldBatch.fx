@@ -3,6 +3,7 @@
  */
 float4x4 viewProjection : ViewProjection;
 float4x4 worldViewProjection : ViewProjection;
+float4x4 rotProjection : ViewProjection;
 float worldUnitsPerTile = 2.5;
 float3 dirToFront;
 float4 offToBack;
@@ -10,6 +11,7 @@ float4 offToBack;
 texture pixelTexture : Diffuse;
 texture depthTexture : Diffuse;
 texture maskTexture : Diffuse;
+texture ambientLight : Diffuse;
 
 sampler pixelSampler = sampler_state {
     texture = <pixelTexture>;
@@ -29,6 +31,20 @@ sampler maskSampler = sampler_state {
     MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
 };
 
+sampler ambientSampler = sampler_state {
+	texture = <ambientLight>;
+	AddressU = CLAMP; AddressV = CLAMP; AddressW = CLAMP;
+	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
+};
+
+
+float dpth(float4 v) {
+    #if SM4
+        return v.a;
+    #else
+        return v.r;
+    #endif
+}
 
 /**
  * SIMPLE EFFECT
@@ -38,7 +54,7 @@ sampler maskSampler = sampler_state {
  */
 
 struct SimpleVertex {
-    float4 position: POSITION;
+    float4 position: SV_Position0;
     float2 texCoords : TEXCOORD0;
     float objectID : TEXCOORD1;
 };
@@ -53,18 +69,23 @@ SimpleVertex vsSimple(SimpleVertex v){
 
 void psSimple(SimpleVertex v, out float4 color: COLOR0){
 	color = tex2D( pixelSampler, v.texCoords);
+	color.rgb *= color.a; //"pre"multiply, just here for experimentation
 	if (color.a == 0) discard;
 }
 
 technique drawSimple {
    pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-		
         ZEnable = false; ZWriteEnable = false;
         CullMode = CCW;
         
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsSimple();
+        PixelShader = compile ps_4_0_level_9_1 psSimple();
+#else
         VertexShader = compile vs_3_0 vsSimple();
-        PixelShader  = compile ps_3_0 psSimple();
+        PixelShader = compile ps_3_0 psSimple();
+#endif;
+
    }
 }
 
@@ -75,13 +96,17 @@ void psIDSimple(SimpleVertex v, out float4 color: COLOR0){
 
 technique drawSimpleID {
    pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-		
         ZEnable = false; ZWriteEnable = false;
         CullMode = CCW;
-        
+
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsSimple();
+        PixelShader = compile ps_4_0_level_9_1 psIDSimple();
+#else
         VertexShader = compile vs_3_0 vsSimple();
-        PixelShader  = compile ps_3_0 psIDSimple();
+        PixelShader = compile ps_3_0 psIDSimple();
+#endif;
+
    }
 }
 
@@ -99,18 +124,20 @@ technique drawSimpleID {
  */
 
 struct ZVertexIn {
-	float4 position: POSITION;
+	float4 position: SV_Position0;
     float2 texCoords : TEXCOORD0;
     float3 worldCoords : TEXCOORD1;
     float objectID : TEXCOORD2;
+	float2 room : TEXCOORD3;
 };
 
 struct ZVertexOut {
-	float4 position: POSITION;
+	float4 position: SV_Position0;
     float2 texCoords : TEXCOORD0;
     float objectID: TEXCOORD2; //need to use unused texcoords - or glsl recompilation fails miserably.
     float backDepth: TEXCOORD3;
     float frontDepth: TEXCOORD4;
+	float2 roomVec : TEXCOORD5;
 };
 
 ZVertexOut vsZSprite(ZVertexIn v){
@@ -118,6 +145,10 @@ ZVertexOut vsZSprite(ZVertexIn v){
     result.position = mul(v.position, viewProjection);
     result.texCoords = v.texCoords;
 	result.objectID = v.objectID;
+	result.roomVec = v.room;
+
+    //HACK: somehow prevents result.roomVec from failing to set?? Condition should never occur.
+    if (v.room.x == 2.0 && v.room.y == 2.0 && v.objectID == -1.0) result.texCoords /= 2.0; 
     
     float4 backPosition = float4(v.worldCoords.x, v.worldCoords.y, v.worldCoords.z, 1)+offToBack;
     float4 frontPosition = float4(backPosition.x, backPosition.y, backPosition.z, backPosition.w);
@@ -134,49 +165,83 @@ ZVertexOut vsZSprite(ZVertexIn v){
     return result;
 }
 
-void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
-    color = tex2D(pixelSampler, v.texCoords);
-    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
-    depth = (v.backDepth + (difference*v.frontDepth));
+ZVertexOut restoreZSprite(ZVertexIn v){
+    ZVertexOut result;
+    result.position = mul(v.position, viewProjection);
+    result.texCoords = v.texCoords;
+    result.objectID = v.objectID;
+    result.roomVec = v.room;
+    
+    float4 backPosition = float4(v.worldCoords.x, v.worldCoords.y, v.worldCoords.z, 1);
+    
+    float4 backProjection = mul(backPosition, rotProjection);
+    float4 nullProjection = mul(float4(0,0,0,1), rotProjection);
 
+    //float4 frontPosition = float4(dirToFront.x, dirToFront.z, 0, 0);
+    //float4 frontProjection = mul(frontPosition, worldViewProjection);
+    
+    result.backDepth = backProjection.z / backProjection.w - (0.00000000001*backProjection.x+0.00000000001*backProjection.y+0.00000000001*nullProjection.x+0.00000000001*nullProjection.y) - nullProjection.z / nullProjection.w;
+    result.frontDepth = result.backDepth;   
+    
+    return result;
+}
+
+void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
+	color = tex2D(pixelSampler, v.texCoords);
 	if (color.a == 0) discard;
+
+	if (floor(v.roomVec.x * 256) == 254 && floor(v.roomVec.y*256)==255) color = float4(float3(1.0, 1.0, 1.0)-color.xyz, color.a);
+    else if (v.roomVec.x == 0.0) color = color;
+	else color *= tex2D(ambientSampler, v.roomVec);
+
+	color.rgb *= color.a; //"pre"multiply, just here for experimentation
+
+    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4;
+    depth = (v.backDepth + (difference*v.frontDepth));
 }
 
 //walls work the same as z sprites, except with an additional mask texture.
 
 void psZWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
-    color = tex2D(pixelSampler, v.texCoords);
+    color = tex2D(pixelSampler, v.texCoords) * tex2D(ambientSampler, v.roomVec);
     color.a = tex2D(maskSampler, v.texCoords).a;
-    
-    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
-    depth = (v.backDepth + (difference*v.frontDepth));
 	if (color.a == 0) discard;
+	color.rgb *= color.a; //"pre"multiply, just here for experimentation
+    
+    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4;
+    depth = (v.backDepth + (difference*v.frontDepth));
 }
 
 
 technique drawZSprite {
-   pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-        
+   pass p0 {   
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsZSprite();
+        PixelShader = compile ps_4_0_level_9_1 psZSprite();
+#else
         VertexShader = compile vs_3_0 vsZSprite();
-        PixelShader  = compile ps_3_0 psZSprite();
-        
+        PixelShader = compile ps_3_0 psZSprite();
+#endif;
+
    }
 }
 
 
 technique drawZWall {
    pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-        
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsZSprite();
+        PixelShader = compile ps_4_0_level_9_1 psZWall();
+#else
         VertexShader = compile vs_3_0 vsZSprite();
-        PixelShader  = compile ps_3_0 psZWall();
+        PixelShader = compile ps_3_0 psZWall();
+#endif;
         
    }
 }
@@ -194,51 +259,59 @@ technique drawZWall {
 
 void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
-    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
+	if (pixel.a <= 0.01) discard;
+    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
     depth = (v.backDepth + (difference*v.frontDepth));
-	//pixel.rgb = v.backDepth;
     
-    color = pixel;
+    color = pixel * tex2D(ambientSampler, v.roomVec);
 
 	color.rgb *= max(1, v.objectID); //hack - otherwise v.objectID always equals 0 on intel and 1 on nvidia (yeah i don't know)
+	color.rgb *= color.a; //"pre"multiply, just here for experimentation
 
     depthB = float4(depth, depth, depth, 1);
-    if (pixel.a <= 0.01) discard;
 }
 
 technique drawZSpriteDepthChannel {
    pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-        
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsZSprite();
+        PixelShader = compile ps_4_0_level_9_1 psZDepthSprite();
+#else
         VertexShader = compile vs_3_0 vsZSprite();
-        PixelShader  = compile ps_3_0 psZDepthSprite();
+        PixelShader = compile ps_3_0 psZDepthSprite();
+#endif;
    }
 }
 
 void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
     pixel.a = tex2D(maskSampler, v.texCoords).a;
-    
-    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
+	if (pixel.a <= 0.01) discard;
+
+    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
     depth = (v.backDepth + (difference*v.frontDepth));
     
-    color = pixel;
+    color = pixel * tex2D(ambientSampler, v.roomVec);
+	color.rgb *= color.a; //"pre"multiply, just here for experimentation
+
     depthB = float4(depth, depth, depth, 1);
-    if (pixel.a <= 0.01) discard;
 }
 
 technique drawZWallDepthChannel {
-   pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-        
+   pass p0 { 
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsZSprite();
+        PixelShader = compile ps_4_0_level_9_1 psZDepthWall();
+#else
         VertexShader = compile vs_3_0 vsZSprite();
-        PixelShader  = compile ps_3_0 psZDepthWall();
+        PixelShader = compile ps_3_0 psZDepthWall();
+#endif;
         
    }
 }
@@ -257,11 +330,11 @@ technique drawZWallDepthChannel {
 
 void psZIDSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
-    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
+	if (pixel.a < 0.1) discard;
+    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
     depth = (v.backDepth + (difference*v.frontDepth));
 
     color = float4(v.objectID, v.objectID, v.objectID, 1);
-    if (pixel.a < 0.1) discard;
 }
 
 technique drawZSpriteOBJID {
@@ -270,8 +343,13 @@ technique drawZSpriteOBJID {
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsZSprite();
+        PixelShader = compile ps_4_0_level_9_1 psZIDSprite();
+#else
         VertexShader = compile vs_3_0 vsZSprite();
-        PixelShader  = compile ps_3_0 psZIDSprite();
+        PixelShader = compile ps_3_0 psZIDSprite();
+#endif
    }
 }
 
@@ -285,7 +363,7 @@ technique drawZSpriteOBJID {
  */
  
 
-void psSimpleRestoreDepth(SimpleVertex v, out float4 color: COLOR0, out float depth:DEPTH0){
+void psSimpleRestoreDepth(ZVertexOut v, out float4 color: COLOR0, out float depth:DEPTH0){
 	color = tex2D( pixelSampler, v.texCoords);
 
 	if (color.a < 0.01) {
@@ -293,20 +371,23 @@ void psSimpleRestoreDepth(SimpleVertex v, out float4 color: COLOR0, out float de
 		discard;
 	}
 	else {
-		float4 dS = tex2D( depthSampler, v.texCoords);
-		depth = dS.r;
+		float4 dS = tex2D(depthSampler, v.texCoords);
+		depth = v.backDepth + dS.r;
 	}
 }
 
 technique drawSimpleRestoreDepth {
    pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-		
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
-        
-        VertexShader = compile vs_3_0 vsSimple();
-        PixelShader  = compile ps_3_0 psSimpleRestoreDepth();
+
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 restoreZSprite();
+        PixelShader = compile ps_4_0_level_9_1 psSimpleRestoreDepth();
+#else
+        VertexShader = compile vs_3_0 restoreZSprite();
+        PixelShader = compile ps_3_0 psSimpleRestoreDepth();
+#endif
    }
 }
 

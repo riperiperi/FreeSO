@@ -87,22 +87,151 @@
     <Compile Include="UI\Panels\UILotPurchaseDialog.cs" />
     <Compile Include="UI\Panels\UIMessageTray.cs" />
     <Compile Include="UI\Panels\UIPersonPage.cs" />
+    <Compile Include="Debug\IDEHook.cs" />
+    <Compile Include="GameStartProxy.cs" />
+    <Compile Include="UI\Controls\UIPersonIcon.cs" />
+    <Compile Include="UI\Framework\UIExternalContainer.cs" />
+    <Compile Include="UI\Model\UIMusic.cs" />
+    <Compile Include="UI\Panels\EODs\EODLiveModeOpt.cs" />
+    <Compile Include="UI\Panels\EODs\UIDanceFloorEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIEODController.cs" />
+    <Compile Include="UI\Panels\EODs\UIPizzaMakerEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UISignsEOD.cs" />
+    <Compile Include="UI\Panels\LotControls\UICheatHandler.cs" />
+    <Compile Include="UI\Panels\UIChatBalloon.cs" />
+    <Compile Include="UI\Panels\UIPersonGrid.cs" />
+    <Compile Include="UI\Panels\UIPropertyLog.cs" />
+    <Compile Include="UI\Panels\UIChatDialog.cs" />
+    <Compile Include="UI\Panels\WorldUI\UIHeadlineRenderer.cs" />
+    <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
     <Compile Include="Utils\Endian.cs" />
+    <Compile Include="Utils\GameLocator\ILocator.cs" />
+    <Compile Include="Utils\GameLocator\LinuxLocator.cs" />
+    <Compile Include="Utils\GameLocator\WindowsLocator.cs" />
     <Compile Include="Utils\MathCache.cs" />
     <Compile Include="Utils\MathUtils.cs" />
+    <Compile Include="Utils\MonogameLinker.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
     <Compile Include="Utils\UIUtils.cs" />
-    <Content Include="ContentSrc\Effects\2DWorldBatch.fx" />
-    <Content Include="ContentSrc\Effects\colorpoly2D.fx" />
-    <Content Include="ContentSrc\Effects\HouseBatch.fx" />
-    <Content Include="ContentSrc\Effects\PixShader.fx" />
-    <Content Include="ContentSrc\Effects\TerrainSplat.fx" />
-    <Content Include="ContentSrc\Effects\TerrainSplat2.fx" />
-    <Content Include="ContentSrc\Effects\VerShader.fx" />
-    <Content Include="ContentSrc\Effects\Vitaboy.fx" />
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll">
+      <Link>Monogame\Linux\MonoGame.Framework.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\WindowsGL\AnyCPU\Release\MonoGame.Framework.dll">
+      <Link>Monogame\WindowsGL\MonoGame.Framework.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Windows\AnyCPU\Release\MonoGame.Framework.dll">
+      <Link>Monogame\Windows\MonoGame.Framework.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.D3DCompiler.dll">
+      <Link>Monogame\Windows\SharpDX.D3DCompiler.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.D3DCompiler.xml">
+      <Link>Monogame\Windows\SharpDX.D3DCompiler.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct2D1.dll">
+      <Link>Monogame\Windows\SharpDX.Direct2D1.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct2D1.xml">
+      <Link>Monogame\Windows\SharpDX.Direct2D1.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D11.dll">
+      <Link>Monogame\Windows\SharpDX.Direct3D11.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D11.Effects.dll">
+      <Link>Monogame\Windows\SharpDX.Direct3D11.Effects.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D11.Effects.xml">
+      <Link>Monogame\Windows\SharpDX.Direct3D11.Effects.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D11.xml">
+      <Link>Monogame\Windows\SharpDX.Direct3D11.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D9.dll">
+      <Link>Monogame\Windows\SharpDX.Direct3D9.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D9.xml">
+      <Link>Monogame\Windows\SharpDX.Direct3D9.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.dll">
+      <Link>Monogame\Windows\SharpDX.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.DXGI.dll">
+      <Link>Monogame\Windows\SharpDX.DXGI.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.DXGI.xml">
+      <Link>Monogame\Windows\SharpDX.DXGI.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.MediaFoundation.dll">
+      <Link>Monogame\Windows\SharpDX.MediaFoundation.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.MediaFoundation.xml">
+      <Link>Monogame\Windows\SharpDX.MediaFoundation.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.RawInput.dll">
+      <Link>Monogame\Windows\SharpDX.RawInput.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.RawInput.xml">
+      <Link>Monogame\Windows\SharpDX.RawInput.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.XAudio2.dll">
+      <Link>Monogame\Windows\SharpDX.XAudio2.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.XAudio2.xml">
+      <Link>Monogame\Windows\SharpDX.XAudio2.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.XInput.dll">
+      <Link>Monogame\Windows\SharpDX.XInput.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.XInput.xml">
+      <Link>Monogame\Windows\SharpDX.XInput.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.xml">
+      <Link>Monogame\Windows\SharpDX.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ContentSrc\Effects\2DWorldBatch.fx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ContentSrc\Effects\colorpoly2D.fx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ContentSrc\Effects\PixShader.fx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ContentSrc\Effects\VerShader.fx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ContentSrc\Effects\Vitaboy.fx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="ContentSrc\Textures\gridTexture.png" />
-    <Content Include="Content\**\*.*">
+    <Content Include="Content\Blueprints\empty_lot.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="Controllers\AbstractController.cs" />
@@ -115,6 +244,13 @@
     <Compile Include="GlobalSettings.Designer.cs">
       <DependentUpon>GlobalSettings.cs</DependentUpon>
     </Compile>
+    <Content Include="Content\Globals\readme.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Objects\readme.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Compile Include="Network\Cache.cs" />
     <Compile Include="Debug\TSOClientFindAssetSearch.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -158,7 +294,6 @@
     <Compile Include="Rendering\City\LotTileEntry.cs" />
     <Compile Include="Rendering\City\MeshVertex.cs" />
     <Compile Include="Rendering\City\Terrain.cs" />
-    <Compile Include="Sound\SoundManager.cs" />
     <Compile Include="UI\Controls\Catalog\UICatalog.cs" />
     <Compile Include="UI\Controls\Catalog\UICatalogResProvider.cs" />
     <Compile Include="UI\Controls\Catalog\UICatalogItem.cs" />
@@ -248,7 +383,6 @@
       <DependentUpon>GlobalSettings.settings</DependentUpon>
     </Compile>
     <Compile Include="TSOGame.cs" />
-    <Compile Include="Sound\MusicTrack.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -256,12 +390,44 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Content Include="Content\Textures\splashSeg.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Game.ico" />
+    <EmbeddedResource Include="Icon.bmp" />
+    <Content Include="Content\OGL\Fonts\FreeSO_10px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Fonts\FreeSO_12px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Fonts\FreeSO_14px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Fonts\FreeSO_16px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Fonts\FreeSO_10px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Fonts\FreeSO_12px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Fonts\FreeSO_14px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Fonts\FreeSO_16px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\pizzamaker_animfix.piff">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\Icon.bmp" />
+    <Content Include="sdl2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Bass.Net, Version=2.4.9.1, Culture=neutral, PublicKeyToken=b7566c273e6ef480, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Dependencies\Bass.Net.dll</HintPath>
-    </Reference>
     <Reference Include="GOLD Engine, Version=5.0.4337.25397, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Dependencies\GOLD Engine.dll</HintPath>
@@ -269,10 +435,6 @@
     <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
-    </Reference>
-    <Reference Include="MonoGame.Framework">
-      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Ninject.3.2.2.0\lib\net40\Ninject.dll</HintPath>
@@ -299,37 +461,161 @@
     <Content Include="Content\Blueprints\empty_lot.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Dependencies\Bass.Net.dll" />
     <Content Include="Dependencies\GOLD Engine.dll" />
     <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />
     <Content Include="Dependencies\nunit.framework.dll" />
     <Content Include="Dependencies\TargaImage.dll" />
     <Content Include="FreeSO.ico" />
+    <Content Include="Monogame\MacOS\Lidgren.Network.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Monogame\MacOS\MonoGame.Framework.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Monogame\MacOS\MonoGame.Framework.Net.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Monogame\MacOS\MonoGame.Framework.Net.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Monogame\MacOS\MonoGame.Framework.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Monogame\MacOS\MonoMac.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Monogame\MacOS\OpenTK.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Monogame\MacOS\OpenTK.dll.mdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Monogame\MacOS\Tao.Sdl.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="NVorbis.dll" />
+    <Content Include="NVorbis.XML" />
+    <Content Include="OpenTK.dll" />
     <Content Include="Resources\arrow-circle.png" />
     <Content Include="Resources\folder-export.png" />
     <Content Include="Resources\folder-horizontal.png" />
     <Content Include="Resources\magnifier-left.png" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
-    <None Include="App.config" />
+    <Folder Include="Content\DX\Textures\" />
+    <Folder Include="Content\OGL\Textures\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\OpenTK.dll.config">
+      <Link>OpenTK.dll.config</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+    <Content Include="Content\Patch\koipond.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\poolslide.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\WORKAROUND_poolladder.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Effects\2DWorldBatch.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Effects\colorpoly2D.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Effects\GrassShader.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Effects\PixShader.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Effects\VerShader.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Effects\Vitaboy.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Fonts\Trebuchet_12px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Fonts\Trebuchet_14px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Effects\2DWorldBatch.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Effects\colorpoly2D.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Effects\GrassShader.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Effects\PixShader.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Effects\VerShader.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Effects\Vitaboy.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Fonts\Trebuchet_12px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Fonts\Trebuchet_14px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Monogame\MacOS\OpenTK.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Monogame\MacOS\Tao.Sdl.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\foodcounter_ea.piff">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\trees3_objf.piff">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\craftingworkbench_nodebug.piff">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\dfcontroller_optimise.piff">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="UI\Framework\Parser\UIScript.egt" />
     <None Include="UI\Framework\Parser\UIScript.grm" />
     <None Include="ContentSrc\ComicSans.spritefont" />
     <None Include="ContentSrc\ComicSansSmall.spritefont" />
-    <None Include="ContentSrc\Effects\2dWorldBatch.mgfx" />
-    <None Include="ContentSrc\Effects\colorpoly2D.mgfx" />
-    <None Include="ContentSrc\Effects\compileForMono.bat" />
-    <None Include="ContentSrc\Effects\PixShader.mgfx" />
-    <None Include="ContentSrc\Effects\VerShader.mgfx" />
+    <None Include="ContentSrc\Effects\2dWorldBatch.mgfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="ContentSrc\Effects\colorpoly2D.mgfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="ContentSrc\Effects\compileForMono.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="ContentSrc\Effects\PixShader.mgfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="ContentSrc\Effects\VerShader.mgfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="ContentSrc\Fonts\ProjectDollhouse.otf" />
     <None Include="ContentSrc\Fonts\ProjectDollhouse_10px.spritefont" />
-    <None Include="ContentSrc\Fonts\ProjectDollhouse_12px.spritefont" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse_12px.spritefont">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="ContentSrc\Fonts\ProjectDollhouse_14px.spritefont" />
-    <None Include="ContentSrc\Fonts\ProjectDollhouse_16px.spritefont" />
-    <None Include="ContentSrc\SimDialogue_12px.spritefont" />
-    <None Include="ContentSrc\SimDialogue_14px.spritefont" />
-    <None Include="ContentSrc\SimDialogue_16px.spritefont" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse_16px.spritefont">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="ContentSrc\Textures\Thumbs.db" />
     <Content Include="ContentSrc\TSOClientContent.mgcb" />
     <None Include="GlobalSettings.settings">
@@ -355,12 +641,27 @@
       <DependentUpon>TSOSceneInspector.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Linux.csproj">
+      <Project>{35253ce1-c864-4cd3-8249-4d1319748e8f}</Project>
+      <Name>MonoGame.Framework.Linux</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
+      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
+      <Name>MonoGame.Framework.Windows</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
+      <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
+      <Name>MonoGame.Framework.WindowsGL</Name>
+      <Private>False</Private>
+    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
       <Project>{25A5DA9E-88E8-4BC2-AE80-45935276790E}</Project>
       <Name>GonzoNet</Name>

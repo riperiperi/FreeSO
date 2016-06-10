@@ -15,15 +15,24 @@ namespace FSO.Common.Utils
 {
     public class TextureGenerator //a fun class for cpu generating textures
     {
+        private static Texture2D PxWhite;
         private static Texture2D PieButtonImg;
 
         private static Texture2D InteractionInactive;
         private static Texture2D InteractionActive;
         private static Texture2D CatalogInactive;
         private static Texture2D CatalogActive;
+        private static Texture2D CatalogDisabled;
         private static Texture2D PieBG;
         private static Texture2D[] WallZBuffer;
         private static Texture2D[] AirTiles;
+        private static Texture2D MotiveArrow; //actually a diamond, clip to get required direction
+
+        public static Texture2D GetPxWhite(GraphicsDevice gd)
+        {
+            if (PxWhite == null) PxWhite = TextureUtils.TextureFromColor(gd, Color.White);
+            return PxWhite;
+        }
 
         public static Texture2D GetPieButtonImg(GraphicsDevice gd)
         {
@@ -47,6 +56,12 @@ namespace FSO.Common.Utils
         {
             if (CatalogInactive == null) CatalogInactive = GenerateCatalogIconBorder(gd, new Color(140, 170, 206), new Color(56, 88, 120));
             return CatalogInactive;
+        }
+
+        public static Texture2D GetCatalogDisabled(GraphicsDevice gd)
+        {
+            if (CatalogDisabled == null) CatalogDisabled = GenerateCatalogIconBorder(gd, new Color(255, 0, 0), new Color(56, 88, 120));
+            return CatalogDisabled;
         }
 
         public static Texture2D GetCatalogActive(GraphicsDevice gd)
@@ -75,6 +90,25 @@ namespace FSO.Common.Utils
             return PieBG;
         }
 
+        public static Texture2D GetMotiveArrow(GraphicsDevice gd, Color highlight, Color bg)
+        {
+            if (MotiveArrow == null)
+            {
+                MotiveArrow = new Texture2D(gd, 5, 5);
+                Color[] data = new Color[5 * 5];
+                var size = new Vector2(5, 5);
+
+                FillRect(data, size, new Rectangle(2, 0, 1, 1), Color.White);
+                FillRect(data, size, new Rectangle(1, 1, 3, 1), Color.White);
+                FillRect(data, size, new Rectangle(0, 2, 5, 1), Color.White);
+                FillRect(data, size, new Rectangle(1, 3, 3, 1), Color.White);
+                FillRect(data, size, new Rectangle(2, 4, 1, 1), Color.White);
+
+                MotiveArrow.SetData<Color>(data);
+            }
+            return MotiveArrow;
+        }
+
         public static float FLAT_Z_INC = 1.525f;
         public static float[][] WallZBufferConfig = new float[][] {
             // format: width, height, startIntensity, Xdiff, Ydiff
@@ -94,19 +128,43 @@ namespace FSO.Common.Utils
             new float[] {32, 60, 89.5f, 0, 2f}, //far horiz diag
             new float[] {4, 58, 45, 0, 2f}, //far vert diag
 
-
+            //12
             new float[] {128, 64, 255, 0, -FLAT_Z_INC}, //near floor
             new float[] {64, 32, 255, 0, -FLAT_Z_INC*2}, //med floor
             new float[] {32, 16, 255, 0, -FLAT_Z_INC*4}, //far floor
 
             //vert flips of the above
+            //15
             new float[] {128, 64, 153, 0, FLAT_Z_INC},
             new float[] {64, 32, 153, 0, FLAT_Z_INC*2},
             new float[] {32, 16, 153, 0, FLAT_Z_INC*4},
 
+            //18
             new float[] {128, 64, 257, 0, -FLAT_Z_INC}, //near junction walls up
             new float[] {64, 32, 257, 0, -FLAT_Z_INC*2}, //med junction walls up
             new float[] {32, 16, 257, 0, -FLAT_Z_INC*4}, //far junction walls up
+
+            
+            //versions for corners (man this is getting complicated)
+            //21
+            //top corner
+            new float[] {43, 22, 254, 0, -FLAT_Z_INC}, //near
+            new float[] {21, 12, 254, 0, -FLAT_Z_INC*2}, //med 
+            new float[] {13, 7, 254, 0, -FLAT_Z_INC*4}, //far
+
+            //24
+            //side corner
+            new float[] {35, 21, 254 - (FLAT_Z_INC* 22), 0, -FLAT_Z_INC}, //near
+            new float[] {16, 13, 254 - (FLAT_Z_INC * 22), 0, -FLAT_Z_INC*2}, //med 
+            new float[] {11, 8, 254 - (FLAT_Z_INC * 22), 0, -FLAT_Z_INC*4}, //far
+
+            //27
+            new float[] {41, 23, 254 - (FLAT_Z_INC * (64 - 23)), 0, -FLAT_Z_INC}, //near
+            new float[] {18, 13, 254 - (FLAT_Z_INC * (64 - 23)), 0, -FLAT_Z_INC*2}, //med 
+            new float[] {9, 8, 254 - (FLAT_Z_INC * (64 - 23)), 0, -FLAT_Z_INC*4}, //far
+
+            //30
+            new float[] {1, 1, 49, 0, 0} //balloon
         };
 
         public static Texture2D[] GetWallZBuffer(GraphicsDevice gd)
@@ -132,7 +190,7 @@ namespace FSO.Common.Utils
                         for (int x = 0; x < width; x++)
                         {
                             byte zCol = (byte)Math.Round(Math.Min(255, xInt));
-                            data[offset++] = new Color(zCol, zCol, zCol, 255);
+                            data[offset++] = new Color(zCol, zCol, zCol, zCol);
                             xInt += config[3];
                         }
                         yInt += config[4];

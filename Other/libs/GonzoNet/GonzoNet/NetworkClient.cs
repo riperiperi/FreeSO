@@ -233,6 +233,8 @@ namespace GonzoNet
             catch (SocketException E)
             {
                 //Hopefully all classes inheriting from NetworkedUIElement will subscribe to this...
+                if (OnDisconnect != null)
+                    OnDisconnect();
                 if (OnNetworkError != null)
                     OnNetworkError(E);
             }
@@ -289,7 +291,11 @@ namespace GonzoNet
                 return;
             }
 
-            if (NumBytesRead == 0) return;
+            if (NumBytesRead == 0)
+            {
+                Disconnect();
+                return;
+            }
 
             byte[] TmpBuf = new byte[NumBytesRead];
             Buffer.BlockCopy(m_RecvBuf, 0, TmpBuf, 0, NumBytesRead);
@@ -593,7 +599,7 @@ namespace GonzoNet
             try
             {
                 m_Sock.Shutdown(SocketShutdown.Both);
-                m_Sock.Disconnect(true);
+                m_Sock.DisconnectAsync(new SocketAsyncEventArgs());
 
                 if(m_Listener != null)
                     m_Listener.RemoveClient(this);

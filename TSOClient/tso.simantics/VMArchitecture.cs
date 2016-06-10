@@ -12,6 +12,9 @@ using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Utils;
+using FSO.SimAntics.Marshals;
+using FSO.SimAntics.NetPlay.Model;
+using FSO.Content;
 
 namespace FSO.SimAntics
 {
@@ -20,6 +23,8 @@ namespace FSO.SimAntics
         public int Width;
         public int Height;
         public int Stories = 5;
+
+        public int LastTestCost;
 
         //public for quick access and iteration. 
         //Make sure that on modifications you signal so that the render updates.
@@ -51,6 +56,22 @@ namespace FSO.SimAntics
         private bool FloorsDirty;
 
         private bool Redraw;
+
+        private Color[] m_TimeColors = new Color[]
+        {
+            new Color(50, 70, 122)*1.5f,
+            new Color(50, 70, 122)*1.5f,
+            new Color(60, 80, 132)*1.5f,
+            new Color(60, 80, 132)*1.5f,
+            new Color(217, 109, 0),
+            new Color(255, 255, 255),
+            new Color(255, 255, 255),
+            new Color(255, 255, 255),
+            new Color(255, 255, 255),
+            new Color(217, 109, 0),
+            new Color(60, 80, 80)*1.5f,
+            new Color(60, 80, 132)*1.5f,     
+        };
 
         public VMArchitecture(int width, int height, Blueprint blueprint, VMContext context)
         {
@@ -100,6 +121,15 @@ namespace FSO.SimAntics
             Redraw = true;
         }
 
+        public void SetTimeOfDay(double time)
+        {
+            Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
+            Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1)) + 1]; //second colour
+            double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
+
+            WorldUI.OutsideColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
+        }
+
         public void SetObjectSupported(short x, short y, sbyte level, bool support)
         {
             ObjectSupport[level - 1][y * Width + x] = support;
@@ -128,7 +158,7 @@ namespace FSO.SimAntics
                 for (int x=0; x<Width; x++)
                 {
                     //if we are an object support or are above a room that is not outside, we're supported.
-                    if (objSup[offset] || !RoomData[rooms.Map[offset]].IsOutside) sup[offset] = true;
+                    if (objSup[offset] || !RoomData[(ushort)(rooms.Map[offset])].IsOutside) sup[offset] = true;
                     else
                     {
                         //if we are a floor tile or are next to the floor tile, do the full 5x5 check.
@@ -157,7 +187,7 @@ namespace FSO.SimAntics
                                     int newY = y + y2;
                                     if (newX < 0 || newX >= Width || newY < 0 || newY >= Height) continue;
                                     int newOff = newY * Width + newX;
-                                    if (!RoomData[rooms.Map[newOff]].IsOutside || (objSup[newOff] && (Math.Abs(x2)<2 && Math.Abs(y2)<2)))
+                                    if (!RoomData[(ushort)rooms.Map[newOff]].IsOutside || (objSup[newOff] && (Math.Abs(x2)<2 && Math.Abs(y2)<2)))
                                     {
                                         step2 = true;
                                         break;
@@ -186,14 +216,14 @@ namespace FSO.SimAntics
             for (int i=0; i<Stories; i++)
             {
                 Rooms[i].GenerateMap(Walls[i], Floors[i], Width, Height, RoomData);
+                if (VM.UseWorld) WorldUI.RoomMap[i] = Rooms[i].Map;
                 RegenerateSupported(i + 1);
             }
         }
 
         public void Tick()
         { 
-
-            if (WallsDirty)
+            if (WallsDirty || FloorsDirty)
             {
                 RegenRoomMap();
                 if (WallsChanged != null) WallsChanged(this);
@@ -206,84 +236,219 @@ namespace FSO.SimAntics
             }
             if (VM.UseWorld && Redraw)
             {
-                //reupload walls to blueprint. 
-                if (Commands.Count == 0) 
+                LastTestCost = SimulateCommands(Commands, true);
+                WorldUI.SignalWallChange();
+                WorldUI.SignalFloorChange();
+            }
+
+            var clock = Context.Clock;
+            SetTimeOfDay(clock.Hours/24.0 + clock.Minutes/(24.0*60) + clock.Seconds/(24.0*60*60));
+
+            FloorsDirty = false;
+            Redraw = false;
+            WallsDirty = false;
+        }
+
+        public int SimulateCommands(List<VMArchitectureCommand> commands, bool visualChange)
+        {
+            int cost;
+            if (commands.Count == 0)
+            {
+                if (visualChange)
                 {
                     //direct copy, no changes to make
                     WorldUI.Walls = Walls;
                     WorldUI.WallsAt = WallsAt;
                     WorldUI.Floors = Floors;
                 }
-                else
+                return 0;
+            }
+            else
+            {
+                RealMode = false;
+                var oldWalls = Walls;
+                var oldWallsAt = WallsAt;
+
+                var oldFloors = Floors;
+
+                WallsAt = new List<int>[Stories];
+                for (int i = 0; i < Stories; i++)
                 {
-                    RealMode = false;
-                    var oldWalls = Walls;
-                    var oldWallsAt = WallsAt;
+                    Array.Copy(Floors[i], VisFloors[i], Floors[i].Length);
+                    Array.Copy(Walls[i], VisWalls[i], Walls[i].Length);
+                    WallsAt[i] = new List<int>(oldWallsAt[i]);
+                }
+                Floors = VisFloors;
+                Walls = VisWalls;
+                cost = RunCommands(commands, visualChange);
 
-                    var oldFloors = Floors;
-
-                    WallsAt = new List<int>[Stories];
-                    for (int i = 0; i < Stories; i++)
-                    {         
-                        Array.Copy(Floors[i], VisFloors[i], Floors[i].Length);
-                        Array.Copy(Walls[i], VisWalls[i], Walls[i].Length);
-                        WallsAt[i] = new List<int>(oldWallsAt[i]);
-                    }
-                    Floors = VisFloors;
-                    Walls = VisWalls;
-                    RunCommands(Commands);
-
+                if (visualChange)
+                {
+                    //upload modified walls to blueprint
                     WorldUI.Walls = Walls;
                     WorldUI.WallsAt = WallsAt;
                     WorldUI.Floors = Floors;
-
-                    Floors = oldFloors;
-                    Walls = oldWalls;
-                    WallsAt = oldWallsAt;
                 }
-                WorldUI.SignalWallChange();
-                WorldUI.SignalFloorChange();
-            }
 
-            FloorsDirty = false;
-            Redraw = false;
-            WallsDirty = false;
-            RealMode = true;
+                Floors = oldFloors;
+                Walls = oldWalls;
+                WallsAt = oldWallsAt;
+                RealMode = true;
+            }
+            return cost;
         }
 
-        public void RunCommands(List<VMArchitectureCommand> commands)
+        public int RunCommands(List<VMArchitectureCommand> commands, bool transient)
         {
+            int cost = 0; //negative for sellback;
+            int pdCount = 0;
+            ushort pdVal = 0;
+            VMAvatar lastAvatar = null;
             for (var i=0; i<commands.Count; i++)
             {
                 var com = commands[i];
+                var avaEnt = Context.VM.Entities.FirstOrDefault(x => x.PersistID == com.CallerUID);
+                if ((avaEnt == null || avaEnt is VMGameObject) && !transient) return 0; //we need an avatar to run a command from net
+                var avatar = (transient)? null : (VMAvatar)avaEnt;
+                lastAvatar = avatar;
+                var styleInd = -1;
+                var walls = Content.Content.Get().WorldWalls;
+                walls.WallStyleToIndex.TryGetValue(com.style, out styleInd);
+                //if patterns are invalid, don't do anything.
                 switch (com.Type)
                 {
                     case VMArchitectureCommandType.WALL_LINE:
-                        VMArchitectureTools.DrawWall(this, new Point(com.x, com.y), com.x2, com.y2, com.pattern, com.style, com.level, false);
+                        if (styleInd == -1) break; //MUST be purchasable style
+                        var lstyle = walls.GetWallStyle(com.style);
+                        var nwCount = VMArchitectureTools.DrawWall(this, new Point(com.x, com.y), com.x2, com.y2, com.pattern, com.style, com.level, false);
+                        if (nwCount > 0)
+                        {
+                            cost += nwCount * lstyle.Price;
+                            if (avatar != null)
+                            Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            avatar.Name,
+                            Context.VM.GetUserIP(avatar.PersistID),
+                            "placed " + nwCount + " walls."
+                            ));
+                        }
                         break;
                     case VMArchitectureCommandType.WALL_DELETE:
-                        VMArchitectureTools.EraseWall(this, new Point(com.x, com.y), com.x2, com.y2, com.pattern, com.style, com.level);
+                        var dwCount = VMArchitectureTools.EraseWall(this, new Point(com.x, com.y), com.x2, com.y2, com.pattern, com.style, com.level);
+                        if (dwCount > 0)
+                        {
+                            cost -= 7 * dwCount;
+                            if (avatar != null)
+                            Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            avatar.Name,
+                            Context.VM.GetUserIP(avatar.PersistID),
+                            "erased " + dwCount + " walls."
+                            ));
+                        }
                         break;
                     case VMArchitectureCommandType.WALL_RECT:
-                        VMArchitectureTools.DrawWallRect(this, new Rectangle(com.x, com.y, com.x2, com.y2), com.pattern, com.style, com.level);
+                        if (styleInd == -1) break; //MUST be purchasable style
+                        var rstyle = walls.GetWallStyle(com.style);
+                        var rwCount = VMArchitectureTools.DrawWallRect(this, new Rectangle(com.x, com.y, com.x2, com.y2), com.pattern, com.style, com.level);
+                        if (rwCount > 0)
+                        {
+                            cost += rwCount * rstyle.Price;
+                            if (avatar != null)
+                            Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            avatar.Name,
+                            Context.VM.GetUserIP(avatar.PersistID),
+                            "placed " + rwCount + " walls (rect)."
+                        ));
+                        }
                         break;
-
                     case VMArchitectureCommandType.PATTERN_FILL:
-                        VMArchitectureTools.WallPatternFill(this, new Point(com.x, com.y), com.pattern, com.level);
+                        var pattern = GetPatternRef(com.pattern);
+                        if (pattern == null && com.pattern != 0) break;
+                        var pfCount = VMArchitectureTools.WallPatternFill(this, new Point(com.x, com.y), com.pattern, com.level);
+                        if (pfCount.Total > 0)
+                        {
+                            cost -= pfCount.Cost - pfCount.Cost / 5;
+                            cost += (pattern == null) ? 0 : pattern.Price * pfCount.Total;
+                            if (avatar != null)
+                                Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            avatar.Name,
+                            Context.VM.GetUserIP(avatar.PersistID),
+                            "pattern filled " + pfCount + " walls with pattern #" + com.pattern
+                        ));
+                        }
                         break;
                     case VMArchitectureCommandType.PATTERN_DOT:
-                        VMArchitectureTools.WallPatternDot(this, new Point(com.x, com.y), com.pattern, com.x2, com.y2, com.level);
-                        break;
+                        var pdpattern = GetPatternRef(com.pattern);
+                        if (pdpattern == null && com.pattern != 0) break;
+                        var dot = VMArchitectureTools.WallPatternDot(this, new Point(com.x, com.y), com.pattern, com.x2, com.y2, com.level);
+                        pdVal = com.pattern;
+                        if (dot.Total > -1)
+                        {
+                            cost -= dot.Cost - dot.Cost / 5;
+                            cost += (pdpattern == null) ? 0 : pdpattern.Price;
+                            pdCount++;
+                        }
 
+                        break;
                     case VMArchitectureCommandType.FLOOR_FILL:
-                        VMArchitectureTools.FloorPatternFill(this, new Point(com.x, com.y), com.pattern, com.level);
-                        break;
+                        var ffpattern = GetFloorRef(com.pattern);
+                        if (ffpattern == null && com.pattern != 0) break;
+                        var ffCount = VMArchitectureTools.FloorPatternFill(this, new Point(com.x, com.y), com.pattern, com.level);
+                        if (ffCount.Total > 0)
+                        {
+                            cost -= (ffCount.Cost - ffCount.Cost / 5)/2;
+                            cost += (ffpattern == null) ? 0 : ffpattern.Price * ffCount.Total / 2;
 
+                            if (avatar != null)
+                            Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            avatar.Name,
+                            Context.VM.GetUserIP(avatar.PersistID),
+                            "floor filled " + ffCount.Total / 2f + " with pattern #" + com.pattern
+                            ));
+                        }
+                        break;
                     case VMArchitectureCommandType.FLOOR_RECT:
-                        VMArchitectureTools.FloorPatternRect(this, new Rectangle(com.x, com.y, com.x2, com.y2), com.style, com.pattern, com.level);
+                        var frpattern = GetFloorRef(com.pattern);
+                        if (frpattern == null && com.pattern != 0) break;
+                        var frCount = VMArchitectureTools.FloorPatternRect(this, new Rectangle(com.x, com.y, com.x2, com.y2), com.style, com.pattern, com.level);
+                        if (frCount.Total > 0)
+                        {
+                            cost -= (frCount.Cost - frCount.Cost / 5) / 2;
+                            cost += (frpattern == null) ? 0 : frpattern.Price * frCount.Total / 2;
+
+                            if (avatar != null)
+                                Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                                avatar.Name,
+                                Context.VM.GetUserIP(avatar.PersistID),
+                                "placed " + frCount.Total / 2f + " tiles with pattern #" + com.pattern
+                            ));
+                        }
                         break;
                 }
             }
+            if (lastAvatar != null && pdCount > 0)
+                Context.VM.SignalChatEvent(new VMChatEvent(lastAvatar.PersistID, VMChatEventType.Arch,
+                lastAvatar.Name,
+                Context.VM.GetUserIP(lastAvatar.PersistID),
+                "pattern dotted " + pdCount + " walls with pattern #" + pdVal
+            ));
+
+            return cost;
+        }
+
+        private WallReference GetPatternRef(ushort id)
+        {
+            WallReference result = null;
+            var wallEntries = Content.Content.Get().WorldWalls.Entries;
+            wallEntries.TryGetValue(id, out result);
+            return result;
+        }
+
+
+        private FloorReference GetFloorRef(ushort id)
+        {
+            FloorReference result = null;
+            Content.Content.Get().WorldFloors.Entries.TryGetValue(id, out result);
+            return result;
         }
 
         /// <summary>
@@ -439,6 +604,7 @@ namespace FSO.SimAntics
             if (!force)
             {
                 //first check if we're supported
+                if (floor.Pattern > 65533 && level > 1 && RoomData[(int)Rooms[level - 2].Map[offset]&0xFFFF].IsOutside) return false;
                 if (level > 1 && !Supported[level - 2][offset]) return false;
                 //check if objects need/don't need floors
                 if (!Context.CheckFloorValid(LotTilePos.FromBigTile((short)tileX, (short)tileY, level), floor)) return false;
@@ -456,5 +622,63 @@ namespace FSO.SimAntics
             return (ushort)((tileY * Width) + tileX);
         }
 
+
+        #region VM Marshalling Functions
+        public virtual VMArchitectureMarshal Save()
+        {
+            return new VMArchitectureMarshal
+            {
+                Width = Width,
+                Height = Height,
+                Stories = Stories,
+        
+                Walls = Walls,
+                Floors = Floors,
+
+                WallsDirty = WallsDirty,
+                FloorsDirty = FloorsDirty
+            };
+        }
+
+        public virtual void Load(VMArchitectureMarshal input)
+        {
+            Width = input.Width;
+            Height = input.Height;
+            Stories = input.Stories;
+
+            Walls = input.Walls;
+            Floors = input.Floors;
+
+            RegenWallsAt();
+        }
+
+        public void WallDirtyState(VMArchitectureMarshal input)
+        {
+            WallsDirty = input.WallsDirty;
+            FloorsDirty = input.FloorsDirty;
+            Redraw = true;
+        }
+
+        public void RegenWallsAt()
+        {
+            WallsAt = new List<int>[Stories];
+            for (int i=0; i<Stories; i++)
+            {
+                var list = new List<int>();
+
+                var wIt = Walls[i];
+                for (int j=0; j<wIt.Length; j++)
+                {
+                    if (wIt[j].Segments > 0) list.Add(j);
+                }
+                WallsAt[i] = list;
+            }
+        }
+
+        public VMArchitecture(VMArchitectureMarshal input, VMContext context, Blueprint blueprint) : this(input.Width, input.Height, blueprint, context)
+        {
+            Load(input);
+        }
+        #endregion
     }
 }

@@ -79,6 +79,27 @@
       <HintPath>..\packages\Ninject.3.2.2.0\lib\net40\Ninject.dll</HintPath>
       <Private>True</Private>
     </Reference>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
@@ -99,15 +120,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Audio\MP3Player.cs" />
     <Compile Include="Content\ContentID.cs" />
     <Compile Include="Content\IContentProvider.cs" />
     <Compile Include="Content\IContentReference.cs" />
+    <Compile Include="FSOEnvironment.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Enum\UserReferenceType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rendering\Framework\3DComponent.cs" />
     <Compile Include="Rendering\Framework\3DLayer.cs" />
     <Compile Include="Rendering\Framework\3DScene.cs" />
+    <Compile Include="Rendering\Framework\3DTargetScene.cs" />
     <Compile Include="Rendering\Framework\Camera\BasicCamera.cs" />
     <Compile Include="Rendering\Framework\Camera\ICamera.cs" />
     <Compile Include="Rendering\Framework\Camera\ManualCamera.cs" />
@@ -121,6 +145,7 @@
     <Compile Include="Rendering\Framework\IO\IFocusableUI.cs" />
     <Compile Include="Rendering\Framework\IO\InputManager.cs" />
     <Compile Include="Rendering\Framework\IO\MouseEvent.cs" />
+    <Compile Include="Rendering\Framework\Model\UIState.cs" />
     <Compile Include="Rendering\Framework\Model\UpdateState.cs" />
     <Compile Include="Rendering\Framework\Shapes\3DCube.cs" />
     <Compile Include="Rendering\Framework\UpdateHookDelegate.cs" />
@@ -169,12 +194,22 @@
     <Compile Include="Utils\XMLList.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
+      <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
+      <Name>MonoGame.Framework.WindowsGL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\mp3sharp\mp3sharp\Mp3Sharp.csproj">
+      <Project>{834cab58-648d-47cc-ac6f-d01c08c809a4}</Project>
+      <Name>Mp3Sharp</Name>
+    </ProjectReference>
     <ProjectReference Include="..\tso.files\FSO.Files.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>FSO.Files</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Content\SDL2.dll" />
+  </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
       <Visible>False</Visible>

@@ -25,5 +25,20 @@ namespace FSO.Client.UI.Controls.Catalog
         {
             return (id > 255);
         }
+
+        public string GetName(ulong id)
+        {
+            return Content.Content.Get().WorldWalls.Entries[(ushort)id].Name;
+        }
+
+        public string GetDescription(ulong id)
+        {
+            return Content.Content.Get().WorldWalls.Entries[(ushort)id].Description;
+        }
+
+        public int GetPrice(ulong id)
+        {
+            return Content.Content.Get().WorldWalls.Entries[(ushort)id].Price;
+        }
     }
 }

@@ -17,6 +17,7 @@ using FSO.LotView.Model;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Model;
 using FSO.Common.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -32,30 +33,29 @@ namespace FSO.SimAntics.Primitives
 
             switch (operand.Mode)
             {
-                case 0:
+                case VMSnapSlotScope.StackVariable:
                     slot = VMMemory.GetSlot(context, VMSlotScope.StackVariable, operand.Index);
                     break;
-                case 1: //be contained on stack object
-                    context.StackObject.PlaceInSlot(context.Caller, 0, true, context.VM.Context);
-                break;
-                case 2:
+                case VMSnapSlotScope.BeContained:
+                    return (context.StackObject.PlaceInSlot(context.Caller, 0, true, context.VM.Context)) ? VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
+                case VMSnapSlotScope.InFront:
                     slot = new SLOTItem { Type = 3, Standing = 1, MinProximity = 16, Rsflags = SLOTFlags.NORTH };
                     break;
-                case 3:
+                case VMSnapSlotScope.Literal:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Literal, operand.Index);
                     break;
-                case 4:
+                case VMSnapSlotScope.Global:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Global, operand.Index);
                     break;
             }
 
-            if (operand.Mode != 1)
+            if (operand.Mode != VMSnapSlotScope.BeContained)
             {
                 var parser = new VMSlotParser(slot);
                 var locations = parser.FindAvaliableLocations(obj, context.VM.Context, avatar);
                 if (slot.SnapTargetSlot > -1)
                 {
-                    context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot, true, context.VM.Context);
+                    if (!context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot, true, context.VM.Context)) return VMPrimitiveExitCode.GOTO_FALSE;
                     if (locations.Count > 0) avatar.RadianDirection = ((slot.Rsflags & SLOTFlags.SnapToDirection) > 0) ? locations[0].RadianDirection: avatar.RadianDirection;
                 }
                 else
@@ -67,10 +67,13 @@ namespace FSO.SimAntics.Primitives
                             context.VM.Context))
                             return VMPrimitiveExitCode.GOTO_FALSE;
                     }
-                    else return VMPrimitiveExitCode.GOTO_FALSE;
+                    else
+                    {
+                        avatar.SetValue(VMStackObjectVariable.PrimitiveResultID, (parser.Blocker == null) ? (short)0 : parser.Blocker.ObjectID);
+                        return VMPrimitiveExitCode.GOTO_FALSE;
+                    }
                 }
             }
-
             return VMPrimitiveExitCode.GOTO_TRUE; 
         }
 
@@ -82,7 +85,11 @@ namespace FSO.SimAntics.Primitives
         private bool SetPosition(VMEntity entity, LotTilePos pos, float radDir, VMContext context)
         {
             var posChange = entity.SetPosition(pos, (Direction)(1 << (int)(Math.Round(DirectionUtils.PosMod(radDir, (float)Math.PI * 2) / (Math.PI/4)) % 8)), context);
-            if (posChange.Status != VMPlacementError.Success) return false;
+            if (posChange.Status != VMPlacementError.Success)
+            {
+                entity.SetValue(VMStackObjectVariable.PrimitiveResultID, (posChange.Object == null) ? (short)0 : posChange.Object.ObjectID);
+                return false;
+            }
             if (entity is VMAvatar) entity.RadianDirection = radDir;
             return true;
         }
@@ -90,9 +97,9 @@ namespace FSO.SimAntics.Primitives
 
     public class VMSnapOperand : VMPrimitiveOperand
     {
-        public ushort Index;
-        public ushort Mode;
-        public byte Flags;
+        public ushort Index { get; set; }
+        public VMSnapSlotScope Mode { get; set; }
+        public byte Flags { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -100,10 +107,28 @@ namespace FSO.SimAntics.Primitives
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
                 Index = io.ReadUInt16();
-                Mode = io.ReadUInt16();
+                Mode = (VMSnapSlotScope)io.ReadUInt16();
                 Flags = io.ReadByte(); 
             }
         }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Index);
+                io.Write((ushort)Mode);
+                io.Write(Flags);
+            }
+        }
         #endregion
+    }
+
+    public enum VMSnapSlotScope
+    {
+        StackVariable = 0,
+        BeContained = 1,
+        InFront = 2,
+        Literal = 3,
+        Global = 4
     }
 }

@@ -19,10 +19,13 @@ using FSO.Client.GameContent;
 
 namespace FSO.Client.UI.Controls
 {
+    [Flags]
     public enum UIDialogStyle
     {
-        Standard,
-        StandardTall
+        Standard = 0,
+        Tall = 1,
+        OK = 2,
+        Close = 4
     }
 
     [Flags]
@@ -43,6 +46,12 @@ namespace FSO.Client.UI.Controls
         public TextStyle CaptionStyle = TextStyle.DefaultTitle;
         public Rectangle CaptionMargin = new Rectangle(0, 3, 0, 0);
 
+        //if dialog type does not specify these, they do not exist
+        private UIImage CloseBg;
+        private UIImage OKBg;
+        public UIButton OKButton;
+        public UIButton CloseButton;
+
         //Tolerance for how far out of the screen controls can be dragged.
         protected static int m_DragTolerance = 20;
 
@@ -57,18 +66,16 @@ namespace FSO.Client.UI.Controls
 
         public UIDialog(UIDialogStyle style, UIDialogExtras extras, bool draggable)
         {
-            switch (style)
+            if ((style & UIDialogStyle.Tall) > 0)
             {
-                case UIDialogStyle.Standard:
+                Background = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplatetall))
+                .With9Slice(41, 41, 66, 40);
+            }
+            else
+            {
                 var tx = GetTexture((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplate);
-                    Background = new UIImage(tx)
-                                    .With9Slice(41, 41, 60, 40);
-                    break;
-
-                case UIDialogStyle.StandardTall:
-                    Background = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplatetall))
-                                    .With9Slice(41, 41, 66, 40);
-                    break;
+                Background = new UIImage(tx)
+                            .With9Slice(41, 41, 60, 40);
             }
 
             Background.ID = "Background";
@@ -81,6 +88,7 @@ namespace FSO.Client.UI.Controls
 
             this.Add(Background);
 
+<<<<<<< HEAD
             if((extras & UIDialogExtras.CloseButton) == UIDialogExtras.CloseButton)
             {
                 CloseButtonBackground = new UIImage();
@@ -100,6 +108,25 @@ namespace FSO.Client.UI.Controls
 
                 AcceptButton = new UIButton(GetTexture(9423158247425));
                 Add(AcceptButton);
+=======
+            if ((style & UIDialogStyle.OK) > 0)
+            {
+                OKBg = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.dialog_dwnrightcorner_wbtn));
+                OKButton = new UIButton(GetTexture((ulong)FileIDs.UIFileIDs.dialog_okcheckbtn));
+                Add(OKBg);
+                Add(OKButton);
+            }
+
+            if ((style & UIDialogStyle.Close) > 0)
+            {
+                CloseBg = new UIImage(GetTexture(((style & UIDialogStyle.Tall) > 0) ?
+                    ((ulong)FileIDs.UIFileIDs.dialog_closebtnbackgroundtall) :
+                    ((ulong)FileIDs.UIFileIDs.dialog_closebtnbackground)
+                    ));
+                CloseButton = new UIButton(GetTexture((ulong)FileIDs.UIFileIDs.dialog_closebtn));
+                Add(CloseBg);
+                Add(CloseButton);
+>>>>>>> refs/remotes/origin/master
             }
         }
 
@@ -168,7 +195,7 @@ namespace FSO.Client.UI.Controls
         {
             base.Draw(batch);
 
-            if (Caption != null && CaptionStyle != null)
+            if (Visible && Caption != null && CaptionStyle != null)
             {
                 DrawLocalString(batch, Caption, Vector2.Zero, CaptionStyle, GetBounds(), TextAlignment.Top | TextAlignment.Center, CaptionMargin);
             }
@@ -182,6 +209,19 @@ namespace FSO.Client.UI.Controls
         public void SetSize(int width, int height)
         {
             Background.SetSize(width, height);
+
+            if (OKBg != null)
+            {
+                OKBg.Position = new Vector2(width - 53, height - 46);
+                OKButton.Position = OKBg.Position + new Vector2(10, 4);
+            }
+
+            if (CloseBg != null)
+            {
+                CloseBg.Position = new Vector2(width - 70, 0);
+                CloseButton.Position = CloseBg.Position + new Vector2(45, 10);
+            }
+
             m_Bounds = new Rectangle(0, 0, width, height);
 
             if(CloseButtonBackground != null)

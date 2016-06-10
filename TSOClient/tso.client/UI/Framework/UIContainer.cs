@@ -160,7 +160,7 @@ namespace FSO.Client.UI.Framework
         /// <param name="uiScript"></param>
         public UIScript RenderScript(string uiScript)
         {
-            var path = Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata\uiscripts\" + uiScript);
+            var path = Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uiscripts/" + uiScript);
             var script = new UIScript(GameFacade.GraphicsDevice, this);
             script.Parse(path);
             return script;
@@ -181,6 +181,11 @@ namespace FSO.Client.UI.Framework
             /** If we have opacity, draw ourself to a texture so we can blend it later **/
             if (_HasOpacity)
             {
+                if (!Visible)
+                {
+                    return;
+                }
+
                 Promise<Texture2D> bufferTexture = null;
                 using (batch.WithBuffer(ref bufferTexture))
                 {

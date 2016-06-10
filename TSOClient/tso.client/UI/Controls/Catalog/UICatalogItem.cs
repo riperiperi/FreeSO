@@ -24,6 +24,8 @@ namespace FSO.Client.UI.Controls.Catalog
         public Texture2D Icon;
         private UITooltipHandler m_TooltipHandler;
         private bool Active;
+        private bool Disabled;
+        private bool Hovered;
         private Texture2D Background;
         private UIMouseEventRef ClickHandler;
         public event ButtonClickDelegate OnMouseEvent;
@@ -34,8 +36,7 @@ namespace FSO.Client.UI.Controls.Catalog
         public void SetActive(bool active)
         {
             this.Active = active;
-            if (active) Background = TextureGenerator.GetCatalogActive(GameFacade.GraphicsDevice);
-            else Background = TextureGenerator.GetCatalogInactive(GameFacade.GraphicsDevice);
+            UpdateHighlight();
         }
 
         public UICatalogItem(bool Active)
@@ -45,9 +46,30 @@ namespace FSO.Client.UI.Controls.Catalog
             ClickHandler = ListenForMouse(new Rectangle(0, 0, 45, 45), new UIMouseEvent(MouseEvt));
         }
 
+        public void SetHover(bool hover)
+        {
+            this.Hovered = hover;
+            UpdateHighlight();
+        }
+
+        public void SetDisabled(bool disable)
+        {
+            this.Disabled = disable;
+            UpdateHighlight();
+        }
+
+        public void UpdateHighlight()
+        {
+            if (Disabled) Background = TextureGenerator.GetCatalogDisabled(GameFacade.GraphicsDevice);
+            else if (Active || Hovered) Background = TextureGenerator.GetCatalogActive(GameFacade.GraphicsDevice);
+            else Background = TextureGenerator.GetCatalogInactive(GameFacade.GraphicsDevice);
+        }
+
         private void MouseEvt(UIMouseEventType type, UpdateState state)
         {
             if (type == UIMouseEventType.MouseDown && OnMouseEvent != null) OnMouseEvent(this); //pass to parents to handle
+            if (type == UIMouseEventType.MouseOver) SetHover(true);
+            if (type == UIMouseEventType.MouseOut) SetHover(false);
         }
 
         public override void Draw(UISpriteBatch batch)
@@ -58,10 +80,10 @@ namespace FSO.Client.UI.Controls.Catalog
                 if (Icon.Height > 48) //poor mans way of saying "special icon" eg floors
                 {
                     float scale = 37.0f / Math.Max(Icon.Height, Icon.Width);
-                    DrawLocalTexture(batch, Icon, new Rectangle(0, 0, Icon.Width, Icon.Height), new Vector2(2+((37-Icon.Width*scale)/2), 2 + ((37 - Icon.Height * scale) / 2)), new Vector2(scale, scale));
+                    DrawLocalTexture(batch, Icon, new Rectangle(0, 0, Icon.Width, Icon.Height), new Vector2(2 + ((37 - Icon.Width * scale) / 2), 2 + ((37 - Icon.Height * scale) / 2)), new Vector2(scale, scale));
                 }
                 else
-                    DrawLocalTexture(batch, Icon, new Rectangle(0, 0, Icon.Width / 2, Icon.Height), new Vector2(2, 2));
+                    DrawLocalTexture(batch, Icon, new Rectangle((!Disabled && (Active || Hovered)) ? Icon.Width / 2 : 0, 0, Icon.Width / 2, Icon.Height), new Vector2(2, 2));
             }
         }
 

@@ -12,7 +12,6 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.Debug;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Model;
-using FSO.Client.Sound;
 using System.IO;
 using System.Threading;
 using FSO.Client.Utils;
@@ -24,6 +23,7 @@ using FSO.Client.GameContent;
 using FSO.Client.UI;
 using Ninject;
 using System.Diagnostics;
+using Microsoft.Xna.Framework;
 
 namespace FSO.Client
 {
@@ -38,20 +38,31 @@ namespace FSO.Client
         public static UILayer Screens;
         public static _3DLayer Scenes;
         public static GraphicsDevice GraphicsDevice;
+        public static GraphicsDeviceManager GraphicsDeviceManager;
         public static TSOGame Game;
         public static TSOClientTools DebugWindow;
         public static Font MainFont;
-        public static SoundManager SoundManager;
+        public static Font EdithFont;
         public static UpdateState LastUpdateState;
         public static Thread GameThread;
         public static bool Focus = true;
+
+        public static bool Linux;
+        public static bool DirectX;
 
         public static CursorManager Cursor;
         public static UIMessageController MessageController = new UIMessageController();
 
         //Entries received from city server, see UIPacketHandlers.OnCityTokenResponse()
         public static CityDataRetriever CDataRetriever = new CityDataRetriever();
-        
+
+//TODO: Merge conflict here, was this removed?
+        /// <summary>
+        /// Place where the game can store cached values, e.g. pre modified textures to improve
+        /// 2nd load speed, etc.
+        /// </summary>
+        public static string CacheDirectory;
+        public static string CacheRoot = @"TSOCache/";
 
         public static void Init()
         {
