@@ -405,12 +405,13 @@ namespace FSO.SimAntics
             }
 
             var soundevt = tp.Properties["sound"];
-            if (UseWorld && soundevt != null)
+            var owner = this;
+            if (UseWorld && soundevt != null && owner.SoundThreads.FirstOrDefault(x => x.Name == soundevt) == null)
             {
                 var thread = FSO.HIT.HITVM.Get().PlaySoundEvent(soundevt);
                 if (thread != null)
                 {
-                    var owner = this;
+
                     if (thread is HITThread) SubmitHITVars((HITThread)thread);
 
                     if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
