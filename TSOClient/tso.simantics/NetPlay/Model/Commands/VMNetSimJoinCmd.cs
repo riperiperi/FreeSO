@@ -33,7 +33,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public string Name;
         public VMTSOAvatarPermissions Permissions;
 
-        public static ushort CurVer = 0xFFEF;
+        public static ushort CurVer = 0xFFEE;
 
         //variables used locally for deferred avatar loading
         public bool Verified;

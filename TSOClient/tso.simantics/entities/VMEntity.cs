@@ -399,6 +399,7 @@ namespace FSO.SimAntics
             if (this.Thread == null) return;
             this.Thread.Stack.Clear();
             this.Thread.Queue.Clear();
+            this.Thread.ActiveQueueBlock = 0;
             this.Thread.BlockingState = null;
             this.Thread.EODConnection = null;
 
