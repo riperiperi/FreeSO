@@ -33,7 +33,7 @@ namespace FSO.Client.UI.Panels
         public string CloseButtonTooltip { get; set; }
         public string AcceptButtonTooltip { get; set; }
 
-        public UILotPurchaseDialog() : base(UIDialogStyle.Standard, UIDialogExtras.CloseButton | UIDialogExtras.AcceptButton, false)
+        public UILotPurchaseDialog() : base(UIDialogStyle.Standard| UIDialogStyle.OK | UIDialogStyle.Close, false)
         {
             var script = RenderScript("lotpurchasedialog.uis");
             SetSize(380, 210);

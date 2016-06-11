@@ -57,7 +57,6 @@ namespace FSO.Client.UI.Controls
 
         private UIImage CloseButtonBackground;
         private UIImage BottomRightButtonBackground;
-        private UIButton CloseButton;
         protected UIButton AcceptButton;
 
         public UIDialog(UIDialogStyle style, bool draggable) : this(style, UIDialogExtras.None, draggable)
@@ -88,31 +87,10 @@ namespace FSO.Client.UI.Controls
 
             this.Add(Background);
 
-<<<<<<< HEAD
-            if((extras & UIDialogExtras.CloseButton) == UIDialogExtras.CloseButton)
-            {
-                CloseButtonBackground = new UIImage();
-                CloseButtonBackground.Texture = GetTexture(style == UIDialogStyle.Standard ? (ulong)1477468749826L : (ulong)1481763717122L);
-                Add(CloseButtonBackground);
-
-                CloseButton = new UIButton();
-                CloseButton.Texture = GetTexture((ulong)8697308774401L);
-                Add(CloseButton);
-            }
-
-            if((extras & UIDialogExtras.AcceptButton) == UIDialogExtras.AcceptButton)
-            {
-                BottomRightButtonBackground = new UIImage();
-                BottomRightButtonBackground.Texture = GetTexture((ulong)1670742278146);
-                Add(BottomRightButtonBackground);
-
-                AcceptButton = new UIButton(GetTexture(9423158247425));
-                Add(AcceptButton);
-=======
             if ((style & UIDialogStyle.OK) > 0)
             {
-                OKBg = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.dialog_dwnrightcorner_wbtn));
-                OKButton = new UIButton(GetTexture((ulong)FileIDs.UIFileIDs.dialog_okcheckbtn));
+                OKBg = new UIImage(GetTexture((ulong)1670742278146));
+                OKButton = new UIButton(GetTexture((ulong)9423158247425));
                 Add(OKBg);
                 Add(OKButton);
             }
@@ -120,13 +98,12 @@ namespace FSO.Client.UI.Controls
             if ((style & UIDialogStyle.Close) > 0)
             {
                 CloseBg = new UIImage(GetTexture(((style & UIDialogStyle.Tall) > 0) ?
-                    ((ulong)FileIDs.UIFileIDs.dialog_closebtnbackgroundtall) :
-                    ((ulong)FileIDs.UIFileIDs.dialog_closebtnbackground)
+                    ((ulong)1481763717122L) :
+                    ((ulong)1477468749826L)
                     ));
-                CloseButton = new UIButton(GetTexture((ulong)FileIDs.UIFileIDs.dialog_closebtn));
+                CloseButton = new UIButton(GetTexture((ulong)8697308774401L));
                 Add(CloseBg);
                 Add(CloseButton);
->>>>>>> refs/remotes/origin/master
             }
         }
 

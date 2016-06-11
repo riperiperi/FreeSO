@@ -14,7 +14,7 @@ namespace FSO.Client.UI.Panels
         private UIImage Background;
         private UIButton ContentBrowserBtn;
 
-        public UIDebugMenu() : base(UIDialogStyle.StandardTall, true)
+        public UIDebugMenu() : base(UIDialogStyle.Tall, true)
         {
             SetSize(500, 300);
             Caption = "Debug Tools";

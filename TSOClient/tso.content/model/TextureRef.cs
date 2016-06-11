@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Drawing;
+using FSO.Common;
 
 namespace FSO.Content.Model
 {
@@ -89,7 +90,7 @@ namespace FSO.Content.Model
 
                 using (var stream = GetStream())
                 {
-                    if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+                    if (Thread.CurrentThread == FSOEnvironment.GameThread)
                     {
                         _Instance = Process(device, stream);
                     }

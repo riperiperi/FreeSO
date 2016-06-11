@@ -104,7 +104,6 @@
     <Compile Include="UI\Panels\UIPropertyLog.cs" />
     <Compile Include="UI\Panels\UIChatDialog.cs" />
     <Compile Include="UI\Panels\WorldUI\UIHeadlineRenderer.cs" />
-    <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
     <Compile Include="Utils\Endian.cs" />
     <Compile Include="Utils\GameLocator\ILocator.cs" />
@@ -240,17 +239,12 @@
     <Compile Include="Controllers\DisconnectController.cs" />
     <Compile Include="Controllers\PersonSelectionController.cs" />
     <Compile Include="Controllers\PersonSelectionEditController.cs" />
-    <Compile Include="GlobalSettings.cs" />
-    <Compile Include="GlobalSettings.Designer.cs">
-      <DependentUpon>GlobalSettings.cs</DependentUpon>
-    </Compile>
     <Content Include="Content\Globals\readme.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Objects\readme.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Compile Include="Network\Cache.cs" />
     <Compile Include="Debug\TSOClientFindAssetSearch.cs">
       <SubType>Form</SubType>
     </Compile>

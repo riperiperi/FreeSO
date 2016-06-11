@@ -48,9 +48,9 @@ namespace FSO.Client.UI.Panels
             var gfx = Content.Content.Get().UIGraphics;
             //TODO: switch entire ui onto real content system
 
-            BPointerBottom = gfx.Get(0x1AF0856DDBAC);
-            BPointerSide = gfx.Get(0x1B00856DDBAC);
-            BTiles = gfx.Get(0x1B10856DDBAC);
+            BPointerBottom = GetTexture(0x1AF0856DDBAC);
+            BPointerSide = GetTexture(0x1B00856DDBAC);
+            BTiles = GetTexture(0x1B10856DDBAC);
 
             if (!ProcessedBGFX)
             {

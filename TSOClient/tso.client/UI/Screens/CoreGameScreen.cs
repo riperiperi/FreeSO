@@ -115,12 +115,9 @@ namespace FSO.Client.UI.Screens
                 }
                 else //cityrenderer! we'll need to recreate this if it doesn't exist...
                 {
-                    Title.SetTitle(city);
                     if (CityRenderer == null) m_ZoomLevel = value; //set to far zoom... again, we should eventually create this.
                     else
                     {
-
-
                         if (m_ZoomLevel < 4)
                         { //coming from lot view... snap zoom % to 0 or 1
                             CityRenderer.m_ZoomProgress = (value == 4) ? 1 : 0;

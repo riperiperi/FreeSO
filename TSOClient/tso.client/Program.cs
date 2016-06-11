@@ -116,6 +116,7 @@ namespace FSO.Client
                 FSOEnvironment.GFXContentDir = "Content/" + (UseDX ? "DX/" : "OGL/");
                 FSOEnvironment.Linux = linux;
                 FSOEnvironment.DirectX = UseDX;
+                FSOEnvironment.GameThread = Thread.CurrentThread;
                 if (GlobalSettings.Default.LanguageCode == 0) GlobalSettings.Default.LanguageCode = 1;
                 Files.Formats.IFF.Chunks.STR.DefaultLangCode = (Files.Formats.IFF.Chunks.STRLangCode)GlobalSettings.Default.LanguageCode;
 
