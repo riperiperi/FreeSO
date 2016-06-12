@@ -39,6 +39,33 @@ namespace FSO.Content
                 ItemsByCategory[Category].Add(item);
                 ItemsByGUID.Add(guid, item);
             }
+            
+            //load and build Content Objects into catalog
+            var dpackingslip = new XmlDocument();
+
+            dpackingslip.Load(Path.Combine(@"Content\Objects\catalog_downloads.xml"));
+            var downloadInfos = dpackingslip.GetElementsByTagName("P");
+
+            foreach (XmlNode objectInfo in downloadInfos)
+                {
+                  
+                  sbyte dCategory = Convert.ToSByte(objectInfo.Attributes["s"].Value);
+                  uint dguid = Convert.ToUInt32(objectInfo.Attributes["g"].Value, 16);
+                  if (Category < 0) continue;
+                     var ditem = new ObjectCatalogItem()
+                    {
+                       GUID = dguid,
+                       Category = dCategory,                            
+                       Price = Convert.ToUInt32(objectInfo.Attributes["p"].Value),
+                       Name = objectInfo.Attributes["n"].Value                       
+                     };
+                     
+                     ItemsByCategory[Category].Add(item);
+                     ItemsByGUID.Add(dguid, ditem);
+                     
+                 }
+            
+            
         }
 
         public ObjectCatalogItem GetItemByGUID(uint guid)
