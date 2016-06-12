@@ -1193,6 +1193,7 @@ namespace FSO.Client.Rendering.City
 
         public override void Update(UpdateState state)
         {
+            if (!(GameFacade.Screens.CurrentUIScreen is CoreGameScreen)) return;
             CoreGameScreen CurrentUIScr = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
 
             if (Visible)
@@ -1244,7 +1245,6 @@ namespace FSO.Client.Rendering.City
                         }
                         else
                         {
-                            /*
                             if (m_SelTile[0] != -1 && m_SelTile[1] != -1)
                             {
                                 m_SelTileTmp[0] = m_SelTile[0];
@@ -1252,7 +1252,6 @@ namespace FSO.Client.Rendering.City
 
                                 FindController<TerrainController>().ClickLot(m_SelTile[0], m_SelTile[1]);
                             }
-                            */
                         }
 
                         CurrentUIScr.ucp.UpdateZoomButton();

@@ -54,7 +54,6 @@ namespace FSO.Server.Servers.Lot.Domain
             {
                 var avatar = da.Avatars.Get(session.AvatarId);
                 LOG.Info("Avatar " + avatar.name + " has joined");
-
                 //Load all the avatars data
             }
         }

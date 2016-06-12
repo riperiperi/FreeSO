@@ -48,9 +48,12 @@ CREATE TABLE `fso_lot_server_tickets` (
 	`ip` VARCHAR(50) NOT NULL,
 	`avatar_id` INT(10) UNSIGNED NOT NULL,
 	`lot_id` INT(10) NOT NULL,
+	`avatar_claim_id` INT(11) NOT NULL,
+	`avatar_claim_owner` VARCHAR(50) NOT NULL,
 	PRIMARY KEY (`ticket_id`),
 	INDEX `FK_fso_lot_server_tickets_fso_lots` (`lot_id`),
-	CONSTRAINT `FK_fso_lot_server_tickets_fso_lots` FOREIGN KEY (`lot_id`) REFERENCES `fso_lots` (`lot_id`)
+	CONSTRAINT `FK_fso_lot_server_tickets_fso_lots` FOREIGN KEY (`lot_id`) REFERENCES `fso_lots` (`lot_id`),
+	CONSTRAINT `FK_fso_lot_server_tickets_fso_avatar_claims` FOREIGN KEY (`avatar_claim_id`) REFERENCES `fso_avatar_claims` (`avatar_claim_id`)
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;

@@ -64,7 +64,7 @@ namespace FSO.Client.UI.Panels
             NameTextEdit.OnChange += NameTextEdit_OnChange;
             RefreshValidation();
 
-            AcceptButton.OnButtonClick += AcceptButton_OnButtonClick;
+            OKButton.OnButtonClick += AcceptButton_OnButtonClick;
         }
 
         private void AcceptButton_OnButtonClick(Framework.UIElement button)
@@ -80,7 +80,7 @@ namespace FSO.Client.UI.Panels
         private void RefreshValidation()
         {
             var valid = NameTextEditValidation.Validate(NameTextEdit.CurrentText);
-            AcceptButton.Disabled = !valid;
+            OKButton.Disabled = !valid;
         }
     }
 }

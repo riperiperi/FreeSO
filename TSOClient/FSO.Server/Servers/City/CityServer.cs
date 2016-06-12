@@ -91,45 +91,54 @@ namespace FSO.Server.Servers.City
                         //TODO: Check if its expired
                         da.Shards.DeleteTicket(packet.Password);
 
+                        //TODO: darren's requirement for an avatar claim currently breaks CAS. Which makes everything else impossible to test...
+                        //Just zero it for now (if no avatar id given)
+                        int? claim = 0;
                         //We need to lock this avatar
-                        var claim = da.AvatarClaims.TryCreate(new DbAvatarClaim {
-                            avatar_id = ticket.avatar_id,
-                            location = 0,
-                            owner = Config.Call_Sign
-                        });
-
-                        if (!claim.HasValue)
+                        if (ticket.avatar_id != 0)
                         {
-                            //Try and disconnect this user, if we still can't get a claim out of luck
-                            var existingSession = Sessions.GetByAvatarId(ticket.avatar_id);
-                            if(existingSession != null){
-                                existingSession.Close();
-                            }
-
-                            //TODO: Broadcast to lot servers to disconnect
-                            
-                            int i = 0;
-                            while(i < 10)
+                            claim = da.AvatarClaims.TryCreate(new DbAvatarClaim
                             {
-                                claim = da.AvatarClaims.TryCreate(new DbAvatarClaim
-                                {
-                                    avatar_id = ticket.avatar_id,
-                                    location = 0,
-                                    owner = Config.Call_Sign
-                                });
-
-                                if (claim.HasValue){
-                                    break;
-                                }
-
-                                Thread.Sleep(1000);
-                            }
+                                avatar_id = ticket.avatar_id,
+                                location = 0,
+                                owner = Config.Call_Sign
+                            });
 
                             if (!claim.HasValue)
                             {
-                                //No luck
-                                session.Close();
-                                return;
+                                //Try and disconnect this user, if we still can't get a claim out of luck
+                                var existingSession = Sessions.GetByAvatarId(ticket.avatar_id);
+                                if (existingSession != null)
+                                {
+                                    existingSession.Close();
+                                }
+
+                                //TODO: Broadcast to lot servers to disconnect
+
+                                int i = 0;
+                                while (i < 10)
+                                {
+                                    claim = da.AvatarClaims.TryCreate(new DbAvatarClaim
+                                    {
+                                        avatar_id = ticket.avatar_id,
+                                        location = 0,
+                                        owner = Config.Call_Sign
+                                    });
+
+                                    if (claim.HasValue)
+                                    {
+                                        break;
+                                    }
+
+                                    Thread.Sleep(1000);
+                                }
+
+                                if (!claim.HasValue)
+                                {
+                                    //No luck
+                                    session.Close();
+                                    return;
+                                }
                             }
                         }
 

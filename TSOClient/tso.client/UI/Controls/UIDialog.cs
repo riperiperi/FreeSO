@@ -201,6 +201,7 @@ namespace FSO.Client.UI.Controls
 
             m_Bounds = new Rectangle(0, 0, width, height);
 
+            /*
             if(CloseButtonBackground != null)
             {
                 CloseButtonBackground.X = width - CloseButtonBackground.Width;
@@ -215,7 +216,7 @@ namespace FSO.Client.UI.Controls
 
                 AcceptButton.X = (width - 44);
                 AcceptButton.Y = (height - 42);
-            }
+            }*/
         }
 
         private Rectangle m_Bounds;
