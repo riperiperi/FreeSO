@@ -21,10 +21,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm, VMAvatar avatar)
         {
-            Message = Message.Substring(0, Math.Min(Message.Length, 200));
+            if (Message.Length == 0) return false;
+            if (Message.Length > 200) Message = Message.Substring(0, 200);
             if (avatar == null) return false;
 
-            if (Message[0] == '/')
+            if (Message[0] == '/' && Message.Length > 1)
             {
                 var spaceIndex = Message.IndexOf(' ');
                 if (spaceIndex == -1) spaceIndex = Message.Length;
