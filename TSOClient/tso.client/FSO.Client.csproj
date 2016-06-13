@@ -204,6 +204,9 @@
     <Content Include="Content\Blueprints\empty_lot.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Objects\catalog_downloads.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Globals\readme.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
