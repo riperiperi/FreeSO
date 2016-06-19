@@ -95,6 +95,9 @@
     <Compile Include="Electron\Model\FindLotResponseStatus.cs" />
     <Compile Include="Electron\Packets\FindLotResponse.cs" />
     <Compile Include="Electron\Packets\CreateASimResponse.cs" />
+    <Compile Include="Electron\Packets\FSOVMDirectToClient.cs" />
+    <Compile Include="Electron\Packets\FSOVMCommand.cs" />
+    <Compile Include="Electron\Packets\FSOVMTickBroadcast.cs" />
     <Compile Include="Electron\Packets\InstantMessage.cs" />
     <Compile Include="Electron\Packets\FindLotRequest.cs" />
     <Compile Include="Electron\Packets\PurchaseLotRequest.cs" />

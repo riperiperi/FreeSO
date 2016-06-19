@@ -62,9 +62,11 @@ namespace FSO.Client.UI.Screens
         public UIMessageTray MessageTray;
         public UIJoinLotProgress JoinLotProgress;
 
-        public UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.
+        public UILotControl LotControl; //world, lotcontrol and vm will be null if we aren't in a lot.
         private LotView.World World;
         public FSO.SimAntics.VM vm;
+        public VMClientDriver Driver;
+
         public bool InLot
         {
             get
@@ -99,13 +101,13 @@ namespace FSO.Client.UI.Screens
                     if (vm == null) ZoomLevel = 4; //call this again but set minimum cityrenderer view
                     else
                     {
-                        Title.SetTitle(LotController.GetLotTitle());
+                        Title.SetTitle(LotControl.GetLotTitle());
                         if (m_ZoomLevel > 3)
                         {
                             HITVM.Get().PlaySoundEvent(UIMusic.None);
                             if (CityRenderer != null) CityRenderer.Visible = false;
                             gizmo.Visible = false;
-                            LotController.Visible = true;
+                            LotControl.Visible = true;
                             World.Visible = true;
                             ucp.SetMode(UIUCP.UCPMode.LotMode);
                         }
@@ -127,7 +129,7 @@ namespace FSO.Client.UI.Screens
                             if (World != null)
                             {
                                 World.Visible = false;
-                                LotController.Visible = false;
+                                LotControl.Visible = false;
                             }
                             ucp.SetMode(UIUCP.UCPMode.CityMode);
                         }
@@ -137,7 +139,7 @@ namespace FSO.Client.UI.Screens
                 }
                 ucp.UpdateZoomButton();
             }
-        } //in future, merge LotDebugScreen and CoreGameScreen so that we can store the City+Lot combo information and controls in there.
+        }
 
         private int _Rotation = 0;
         public int Rotation
@@ -296,51 +298,6 @@ namespace FSO.Client.UI.Screens
             AddAt(0, mouseHitArea);
         }
 
-
-
-
-
-
-
-        #region Network handlers
-
-        private void Controller_OnNewTimeOfDay(DateTime TimeOfDay)
-        {
-            if (TimeOfDay.Hour <= 12)
-                ucp.TimeText.Caption = TimeOfDay.Hour + ":" + TimeOfDay.Minute + "am";
-            else ucp.TimeText.Caption = TimeOfDay.Hour + ":" + TimeOfDay.Minute + "pm";
-
-            double time = TimeOfDay.Hour / 24.0 + TimeOfDay.Minute / (1440.0) + TimeOfDay.Second / (86400.0);
-        }
-
-        private void Controller_OnPlayerJoined(LotTileEntry TileEntry)
-        {
-            LotTileEntry[] TileEntries = new LotTileEntry[GameFacade.CDataRetriever.LotTileData.Length + 1];
-            TileEntries[0] = TileEntry;
-            GameFacade.CDataRetriever.LotTileData.CopyTo(TileEntries, 1);
-            CityRenderer.populateCityLookup(TileEntries);
-        }
-
-        #endregion
-
-        private void MessageController_OnSendMessage(string message, string GUID)
-        {
-            //TODO: Implement special packet for message (as opposed to letter)?
-            //Don't send empty strings!!
-            //Network.UIPacketSenders.SendLetter(Network.NetworkFacade.Client, message, "Empty", GUID);
-        }
-
-        /// <summary>
-        /// Message was sent by player to another player.
-        /// </summary>
-        /// <param name="message">Message to send.</param>
-        /// <param name="subject">Subject of message.</param>
-        /// <param name="destinationUser">GUID of destination user.</param>
-        private void MessageController_OnSendLetter(string message, string subject, string destinationUser)
-        {
-            //Network.UIPacketSenders.SendLetter(Network.NetworkFacade.Client, message, subject, destinationUser);
-        }
-
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
             GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
@@ -380,10 +337,22 @@ namespace FSO.Client.UI.Screens
                 threads.Clear();
             }
             vm.CloseNet(VMCloseNetReason.LeaveLot);
+            Driver.OnClientCommand -= VMSendCommand;
             GameFacade.Scenes.Remove(World);
-            this.Remove(LotController);
+            this.Remove(LotControl);
             ucp.SetPanel(-1);
             ucp.SetInLot(false);
+        }
+
+        private void VMSendCommand(byte[] data)
+        {
+            var controller = FindController<CoreGameScreenController>();
+
+            if (controller != null)
+            {
+                controller.SendVMMessage(data);
+            }
+            //TODO: alternate controller for sandbox/standalone mode?
         }
 
         public void ClientStateChange(int state, float progress)
@@ -393,7 +362,7 @@ namespace FSO.Client.UI.Screens
 
         public void ClientStateChangeProcess(int state, float progress)
         {
-            //TODO: queue these up and try and sift through them in an update loop to avoid UI issues. (on main thread)
+            /*
             if (state == 4) //disconnected
             {
                 var reason = (VMCloseNetReason)progress;
@@ -417,22 +386,22 @@ namespace FSO.Client.UI.Screens
                 {
                     DisconnectedOKClick(null);
                 }
-            }
-
-            if (ConnectingDialog == null) return;
+            }*/
+            
             switch (state)
             {
+                /*
                 case 1:
                     ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "26");
                     ConnectingDialog.Progress = 25f;
                     break;
+                    */
                 case 2:
-                    ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "27");
-                    ConnectingDialog.Progress = 100f*(0.5f+progress*0.5f);
+                    JoinLotProgress.ProgressCaption = GameFacade.Strings.GetString("211", "27");
+                    JoinLotProgress.Progress = 100f*(0.5f+progress*0.5f);
                     break;
                 case 3:
-                    UIScreen.RemoveDialog(ConnectingDialog);
-                    ConnectingDialog = null;
+                    UIScreen.RemoveDialog(JoinLotProgress);
                     Connecting = false;
                     ZoomLevel = 1;
                     ucp.SetInLot(true);
@@ -446,8 +415,41 @@ namespace FSO.Client.UI.Screens
             Connecting = false;
         }
 
+        public void InitializeLot()
+        {
+            if (vm != null) CleanupLastWorld();
+
+            World = new LotView.World(GameFacade.Game.GraphicsDevice);
+            GameFacade.Scenes.Add(World);
+            Driver = new VMClientDriver(ClientStateChange);
+            Driver.OnClientCommand += VMSendCommand;
+
+            vm = new VM(new VMContext(World), Driver, new UIHeadlineRendererProvider());
+            vm.Init();
+            vm.LotName = "unknown"; //quick hack just so we can remember where we are
+
+            LotControl = new UILotControl(vm, World);
+            this.AddAt(1, LotControl);
+
+            vm.Context.Clock.Hours = 10;
+            if (m_ZoomLevel > 3)
+            {
+                World.Visible = false;
+                LotControl.Visible = false;
+            }
+
+            ZoomLevel = Math.Max(ZoomLevel, 4);
+
+            if (IDEHook.IDE != null) IDEHook.IDE.StartIDE(vm);
+
+            vm.OnFullRefresh += VMRefreshed;
+            vm.OnChatEvent += Vm_OnChatEvent;
+            vm.OnEODMessage += LotControl.EODs.OnEODMessage;
+        }
+
         public void InitTestLot(string path, bool host)
         {
+            /*
             if (Connecting) return;
 
             if (vm != null) CleanupLastWorld();
@@ -458,7 +460,7 @@ namespace FSO.Client.UI.Screens
             VMNetDriver driver;
             if (host)
             {
-                driver = new VMServerDriver(37564, null);
+                driver = new VMServerDriver(new VMTSOGlobalLinkStub());
             }
             else
             {
@@ -471,7 +473,7 @@ namespace FSO.Client.UI.Screens
 
                 UIScreen.ShowDialog(ConnectingDialog, true);
 
-                driver = new VMClientDriver(path, 37564, ClientStateChange);
+                driver = new VMClientDriver(ClientStateChange);
             }
 
             vm = new VM(new VMContext(World), driver, new UIHeadlineRendererProvider());
@@ -527,14 +529,14 @@ namespace FSO.Client.UI.Screens
                 Name = GlobalSettings.Default.LastUser
             });
 
-            LotController = new UILotControl(vm, World);
-            this.AddAt(0, LotController);
+            LotControl = new UILotControl(vm, World);
+            this.AddAt(0, LotControl);
 
             vm.Context.Clock.Hours = 10;
             if (m_ZoomLevel > 3)
             {
                 World.Visible = false;
-                LotController.Visible = false;
+                LotControl.Visible = false;
             }
 
             if (host)
@@ -550,23 +552,23 @@ namespace FSO.Client.UI.Screens
 
             vm.OnFullRefresh += VMRefreshed;
             vm.OnChatEvent += Vm_OnChatEvent;
-            vm.OnEODMessage += LotController.EODs.OnEODMessage;
-
+            vm.OnEODMessage += LotControl.EODs.OnEODMessage;
+            */
         }
 
         private void Vm_OnChatEvent(SimAntics.NetPlay.Model.VMChatEvent evt)
         {
             if (ZoomLevel < 4)
             {
-                Title.SetTitle(LotController.GetLotTitle());
+                Title.SetTitle(LotControl.GetLotTitle());
             }
         }
 
         private void VMRefreshed()
         {
             if (vm == null) return;
-            LotController.ActiveEntity = null;
-            LotController.RefreshCut();
+            LotControl.ActiveEntity = null;
+            LotControl.RefreshCut();
         }
 
         private void VMDebug_OnButtonClick(UIElement button)
@@ -619,7 +621,6 @@ namespace FSO.Client.UI.Screens
 
         private void MouseHandler(UIMouseEventType type, UpdateState state)
         {
-
             if (CityRenderer != null) CityRenderer.UIMouseEvent(type.ToString()); //all the city renderer needs are events telling it if the mouse is over it or not.
             //if the mouse is over it, the city renderer will handle the rest.
         }

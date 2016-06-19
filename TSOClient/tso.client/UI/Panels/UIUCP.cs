@@ -197,7 +197,7 @@ namespace FSO.Client.UI.Panels
         {
             Remove(SelWallsPanel);
             SelWallsPanel = null;
-            Game.LotController.WallsMode = mode;
+            Game.LotControl.WallsMode = mode;
             UpdateWallsMode();
         }
 
@@ -221,7 +221,7 @@ namespace FSO.Client.UI.Panels
                 hour = Game.vm.Context.Clock.Hours;
 
                 // update with ingame budget.
-                var cont = Game.LotController;
+                var cont = Game.LotControl;
                 if (cont.ActiveEntity != null && cont.ActiveEntity is VMAvatar)
                 {
                     var avatar = (VMAvatar)cont.ActiveEntity;
@@ -315,9 +315,9 @@ namespace FSO.Client.UI.Panels
             
             if (Game.InLot)
             {
-                Game.LotController.QueryPanel.Active = false;
-                Game.LotController.QueryPanel.Visible = false;
-                Game.LotController.LiveMode = true;
+                Game.LotControl.QueryPanel.Active = false;
+                Game.LotControl.QueryPanel.Visible = false;
+                Game.LotControl.LiveMode = true;
                 Game.vm.Context.World.State.BuildMode = false;
             }
 
@@ -326,11 +326,11 @@ namespace FSO.Client.UI.Panels
                 this.Remove(Panel);
                 Panel.Destroy();
 
-                if (Game.InLot) Game.LotController.PanelActive = false;
+                if (Game.InLot) Game.LotControl.PanelActive = false;
             }
             if (newPanel != CurrentPanel)
             {
-                if (Game.InLot) Game.LotController.PanelActive = true;
+                if (Game.InLot) Game.LotControl.PanelActive = true;
                 switch (newPanel)
                 {
                     case 5:
@@ -343,8 +343,8 @@ namespace FSO.Client.UI.Panels
                         break;
                     case 2:
                         if (!Game.InLot) break; //not ingame
-                        Panel = new UIBuyMode(Game.LotController);
-                        Game.LotController.LiveMode = false;
+                        Panel = new UIBuyMode(Game.LotControl);
+                        Game.LotControl.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
                         ((UIBuyMode)Panel).vm = Game.vm;
@@ -353,12 +353,12 @@ namespace FSO.Client.UI.Panels
                         break;
                     case 3:
                         if (!Game.InLot) break; //not ingame
-                        Panel = new UIBuildMode(Game.LotController);
+                        Panel = new UIBuildMode(Game.LotControl);
 
                         //enable air tile graphics
                         Game.vm.Context.World.State.BuildMode = true;
 
-                        Game.LotController.LiveMode = false;
+                        Game.LotControl.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
                         ((UIBuildMode)Panel).vm = Game.vm;
@@ -367,14 +367,14 @@ namespace FSO.Client.UI.Panels
                         break;
                     case 1:
                         if (!Game.InLot) break; //not ingame
-                        Panel = new UILiveMode(Game.LotController);
+                        Panel = new UILiveMode(Game.LotControl);
                         Panel.X = 177;
                         Panel.Y = 63;
                         this.Add(Panel);
                         LiveModeButton.Selected = true;
                         break;
                     default:
-                        if (Game.InLot) Game.LotController.PanelActive = false;
+                        if (Game.InLot) Game.LotControl.PanelActive = false;
                         break;
                 }
                 CurrentPanel = newPanel;
@@ -390,7 +390,7 @@ namespace FSO.Client.UI.Panels
         {
             if (Background.Visible && Game.InLot)
             {
-                var mode = Game.LotController.WallsMode;
+                var mode = Game.LotControl.WallsMode;
                 WallsDownButton.Visible = (mode == 0);
                 WallsCutawayButton.Visible = (mode == 1);
                 WallsUpButton.Visible = (mode == 2);

@@ -10,7 +10,6 @@ using System.Linq;
 using System.Text;
 using FSO.Client.UI.Screens;
 using FSO.Client.Network;
-using ProtocolAbstractionLibraryD;
 using FSO.Client.UI.Framework;
 using FSO.Client.GameContent;
 using Ninject;

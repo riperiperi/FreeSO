@@ -14,12 +14,12 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using FSO.Client.Rendering;
 using FSO.Client.Utils;
-using ProtocolAbstractionLibraryD;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework;
 using FSO.Vitaboy;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.LotView.Utils;
+using FSO.LotView;
 
 namespace FSO.Client.UI.Controls
 {
@@ -38,13 +38,11 @@ namespace FSO.Client.UI.Controls
         public float RotationStartAngle = 45;
         public float RotationSpeed = new TimeSpan(0, 0, 10).Ticks;
         public bool AutoRotate = true;
-
-        public float SimScale = 0.45f;
-        public float ViewScale = 17.0f;
         
         protected string m_Timestamp;
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
-        
+
+        private WorldZoom Zoom = WorldZoom.Near;
 
         /// <summary>
         /// When was this character last cached by the client?
@@ -58,7 +56,7 @@ namespace FSO.Client.UI.Controls
         private void UISimInit()
         {
             Camera = new WorldCamera(GameFacade.GraphicsDevice);
-            Camera.Zoom = LotView.WorldZoom.Near;
+            Camera.Zoom = Zoom;
             Camera.CenterTile = new Vector2(-1, -1);
             Scene = new _3DTargetScene(GameFacade.Game.GraphicsDevice, Camera, new Point(140, 200), (GlobalSettings.Default.AntiAlias)?8:0);
             Scene.ID = "UISim";
@@ -69,6 +67,12 @@ namespace FSO.Client.UI.Controls
             Avatar.Scene = Scene;
             
             Scene.Add(Avatar);
+        }
+
+        public void SetZoom(WorldZoom zoom)
+        {
+            Zoom = zoom;
+            if (Camera != null) Camera.Zoom = zoom;
         }
 
         public UISim() : this(true)

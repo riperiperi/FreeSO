@@ -168,8 +168,12 @@
     <Compile Include="NetPlay\Model\Commands\VMRequestResyncCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMStateSyncCmd.cs" />
     <Compile Include="NetPlay\Model\VMChatEvent.cs" />
+    <Compile Include="NetPlay\Model\VMNetAvatarPersistState.cs" />
+    <Compile Include="NetPlay\Model\VMNetClient.cs" />
     <Compile Include="NetPlay\Model\VMNetCommand.cs" />
     <Compile Include="NetPlay\Model\VMNetCommandBodyAbstract.cs" />
+    <Compile Include="NetPlay\Model\VMNetMessage.cs" />
+    <Compile Include="NetPlay\Model\VMNetMessageType.cs" />
     <Compile Include="NetPlay\Model\VMNetTick.cs" />
     <Compile Include="NetPlay\Model\VMNetTickList.cs" />
     <Compile Include="NetPlay\Model\VMSerializable.cs" />
@@ -246,14 +250,6 @@
       <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
       <Name>MonoGame.Framework.Windows</Name>
       <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
-      <Project>{25a5da9e-88e8-4bc2-ae80-45935276790e}</Project>
-      <Name>GonzoNet</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
-      <Project>{07f742c5-c66a-4d1e-a761-458e08d4e302}</Project>
-      <Name>ProtocolAbstractionLibraryD</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.world\FSO.LotView.csproj">
       <Project>{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}</Project>

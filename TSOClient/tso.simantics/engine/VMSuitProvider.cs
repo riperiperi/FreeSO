@@ -102,7 +102,7 @@ namespace FSO.SimAntics.Engine
                     bool male = (avatar.GetPersonData(VMPersonDataVariable.Gender) == 0);
                     switch (type)
                     {
-                        //todo: Dynamic Daywear
+                        //todo: Dynamic Daywear, decorations (tail etc), cockroach head
 
                         case VMPersonSuits.DefaultDaywear:
                             return avatar.DefaultSuits.Daywear;

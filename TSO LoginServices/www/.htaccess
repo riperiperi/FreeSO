@@ -1,4 +1,0 @@
-RewriteEngine On
-
-
-RewriteRule ^(.*).service $1.php

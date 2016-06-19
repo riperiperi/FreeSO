@@ -16,7 +16,10 @@ namespace FSO.Server.Protocol.Electron
             typeof(PurchaseLotResponse),
             typeof(InstantMessage),
             typeof(FindLotRequest),
-            typeof(FindLotResponse)
+            typeof(FindLotResponse),
+            typeof(FSOVMTickBroadcast),
+            typeof(FSOVMDirectToClient),
+            typeof(FSOVMCommand)
         };
 
         static ElectronPackets()

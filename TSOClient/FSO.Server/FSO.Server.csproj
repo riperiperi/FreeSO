@@ -238,9 +238,17 @@
       <Project>{18583453-a970-4ac5-83b1-2d6bfdf94c24}</Project>
       <Name>FSO.Files</Name>
     </ProjectReference>
+    <ProjectReference Include="..\tso.simantics\FSO.SimAntics.csproj">
+      <Project>{5eddefd2-c850-49c1-812d-ddeff09125ef}</Project>
+      <Name>FSO.SimAntics</Name>
+    </ProjectReference>
     <ProjectReference Include="..\tso.vitaboy.model\FSO.Vitaboy.csproj">
       <Project>{9d9558a9-755e-43f9-8bb6-b26f365f5042}</Project>
       <Name>FSO.Vitaboy</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.world\FSO.LotView.csproj">
+      <Project>{b1a6e4c2-e080-4c34-a604-d11b5296a9b8}</Project>
+      <Name>FSO.LotView</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

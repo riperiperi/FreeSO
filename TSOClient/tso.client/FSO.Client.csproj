@@ -656,15 +656,6 @@
       <Name>MonoGame.Framework.WindowsGL</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
-      <Project>{25A5DA9E-88E8-4BC2-AE80-45935276790E}</Project>
-      <Name>GonzoNet</Name>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
-      <Project>{07F742C5-C66A-4D1E-A761-458E08D4E302}</Project>
-      <Name>ProtocolAbstractionLibraryD</Name>
-    </ProjectReference>
     <ProjectReference Include="..\FSO.Common.DatabaseService\FSO.Common.DatabaseService.csproj">
       <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>
       <Name>FSO.Common.DatabaseService</Name>

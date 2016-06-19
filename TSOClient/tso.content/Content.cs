@@ -69,8 +69,9 @@ namespace FSO.Content
             if(device != null)
             {
                 UIGraphics = new UIGraphicsProvider(this);
-                AvatarMeshes = new AvatarMeshProvider(this, Device);
                 AvatarTextures = new AvatarTextureProvider(this);
+                AvatarMeshes = new AvatarMeshProvider(this, Device);
+                AvatarHandgroups = new HandgroupProvider(this);
             }
             Changes = new ChangeManager();
             AvatarBindings = new AvatarBindingProvider(this);
@@ -80,7 +81,6 @@ namespace FSO.Content
             AvatarAnimations = new AvatarAnimationProvider(this);
             AvatarPurchasables = new AvatarPurchasables(this);
             AvatarCollections = new AvatarCollectionsProvider(this);
-            AvatarHandgroups = new HandgroupProvider(this);
             AvatarThumbnails = new AvatarThumbnailProvider(this);
 
             WorldObjects = new WorldObjectProvider(this);
@@ -124,8 +124,8 @@ namespace FSO.Content
             if (Mode == ContentMode.CLIENT)
             {
                 UIGraphics.Init();
-                AvatarMeshes.Init();
                 AvatarTextures.Init();
+                AvatarMeshes.Init();
                 AvatarHandgroups.Init();
             }
 
@@ -146,7 +146,6 @@ namespace FSO.Content
                 DataDefinition.Read(stream);
             }
                 
-            AvatarHandgroups.Init();
             AvatarThumbnails.Init();
 
             InitWorld();

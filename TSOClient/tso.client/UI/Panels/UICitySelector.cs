@@ -16,7 +16,6 @@ using FSO.Client.UI.Screens;
 using FSO.Client.Utils;
 using FSO.Client.UI.Framework;
 using FSO.Client.Network;
-using ProtocolAbstractionLibraryD;
 using FSO.Files;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.CitySelector;

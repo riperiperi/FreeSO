@@ -53,7 +53,7 @@ CREATE TABLE `fso_lot_server_tickets` (
 	PRIMARY KEY (`ticket_id`),
 	INDEX `FK_fso_lot_server_tickets_fso_lots` (`lot_id`),
 	CONSTRAINT `FK_fso_lot_server_tickets_fso_lots` FOREIGN KEY (`lot_id`) REFERENCES `fso_lots` (`lot_id`),
-	CONSTRAINT `FK_fso_lot_server_tickets_fso_avatar_claims` FOREIGN KEY (`avatar_claim_id`) REFERENCES `fso_avatar_claims` (`avatar_claim_id`)
+	CONSTRAINT `FK_fso_lot_server_tickets_fso_avatar_claims` FOREIGN KEY (`avatar_claim_id`) REFERENCES `fso_avatar_claims` (`avatar_claim_id`) ON DELETE CASCADE
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;

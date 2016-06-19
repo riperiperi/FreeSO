@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using GonzoNet;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Engine.TSOTransaction;
@@ -17,12 +16,17 @@ namespace FSO.SimAntics.NetPlay
 {
     public abstract class VMNetDriver
     {
-        public bool ExceptionOnDesync;
         public IVMTSOGlobalLink GlobalLink;
         public abstract void SendCommand(VMNetCommandBodyAbstract cmd);
         public abstract bool Tick(VM vm);
         public abstract string GetUserIP(uint uid);
         public VMCloseNetReason CloseReason;
+
+        /// <summary>
+        /// Indicates a VM inspired total connection shutdown. 
+        /// </summary>
+        public event VMNetClosedHandler OnShutdown;
+        public delegate void VMNetClosedHandler(VMCloseNetReason reason);
 
         private int DesyncCooldown = 0;
 
@@ -39,7 +43,6 @@ namespace FSO.SimAntics.NetPlay
                 {
                     System.Console.WriteLine("WARN - DESYNC - Too soon to try again!");
                 }
-                ExceptionOnDesync = true;
             }
             vm.Context.RandomSeed = tick.RandomSeed;
             bool doTick = !tick.ImmediateMode;
@@ -57,8 +60,12 @@ namespace FSO.SimAntics.NetPlay
                 if (DesyncCooldown > 0) DesyncCooldown--;
             }
         }
-        public abstract void CloseNet();
-        public abstract void OnPacket(NetworkClient client, ProcessedPacket packet);
+        public virtual void Shutdown()
+        {
+            if (OnShutdown != null) OnShutdown(CloseReason);
+        }
+
+        public delegate void VMNetMessageHandler(VMNetMessageType type, byte[] data);
     }
 
     public enum VMCloseNetReason

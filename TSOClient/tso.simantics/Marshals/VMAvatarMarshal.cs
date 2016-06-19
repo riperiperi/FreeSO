@@ -21,7 +21,7 @@ namespace FSO.SimAntics.Marshals
         
         public VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];
         public VMAvatarMotiveDecay MotiveDecay;
-        public short[] PersonData = new short[100];
+        public short[] PersonData = new short[101];
         public short[] MotiveData = new short[16];
         public short HandObject;
         public float RadianDirection;
@@ -62,7 +62,7 @@ namespace FSO.SimAntics.Marshals
             MotiveDecay.Deserialize(reader);
 
             var pdats = reader.ReadInt32();
-            PersonData = new short[pdats];
+            PersonData = new short[Math.Max(101,pdats)];
             for (int i = 0; i < pdats; i++) PersonData[i] = reader.ReadInt16();
 
             var mdats = reader.ReadInt32();

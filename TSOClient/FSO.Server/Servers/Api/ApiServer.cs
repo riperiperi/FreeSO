@@ -37,7 +37,6 @@ namespace FSO.Server.Servers.Api
         {
             LOG.Info("Starting API server");
 
-
             var configuration = new HostConfiguration();
             configuration.UrlReservations.CreateAutomatically = true;
             var uris = new List<Uri>();

@@ -16,7 +16,6 @@ using FSO.Vitaboy;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.NetPlay.Model;
-using GonzoNet;
 using System.Collections.Concurrent;
 using FSO.SimAntics.Marshals;
 using FSO.LotView.Components;
@@ -81,7 +80,7 @@ namespace FSO.SimAntics
         public event VMRefreshHandler OnFullRefresh;
         public event VMBreakpointHandler OnBreakpoint;
         public event VMEODMessageHandler OnEODMessage;
-
+        
         public delegate void VMDialogHandler(VMDialogInfo info);
         public delegate void VMChatEventHandler(VMChatEvent evt);
         public delegate void VMRefreshHandler();
@@ -200,15 +199,10 @@ namespace FSO.SimAntics
             return Driver.GetUserIP(uid);
         }
 
-        public void OnPacket(NetworkClient Client, ProcessedPacket Packet)
-        {
-            Driver.OnPacket(Client, Packet);
-        }
-
         public void CloseNet(VMCloseNetReason reason)
         {
             Driver.CloseReason = reason;
-            Driver.CloseNet();
+            Driver.Shutdown();
         }
 
         public void ReplaceNet(VMNetDriver driver)

@@ -152,12 +152,14 @@ namespace FSO.Server.Clients.Framework
 
             var oldState = this.CurrentState;
             var state = this.States[newState];
-
+            
+            //state to own state is valid. see LotConnectionRegulator.
+            /*
             if (oldState == state)
             {
                 InTransition = false;
                 return false;
-            }
+            }*/
 
             try
             {

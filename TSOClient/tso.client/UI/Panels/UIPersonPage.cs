@@ -152,8 +152,8 @@ namespace FSO.Client.UI.Panels
 
 
             SimBox = new UISim();
-            SimBox.Avatar.Scale = new Vector3(0.42f);
-            SimBox.Position = new Vector2(104, 195);
+            SimBox.ScaleX = SimBox.ScaleY = 0.7f;
+            SimBox.Position = new Vector2(62, 54);
             SimBox.AutoRotate = true;
             this.Add(SimBox);
 

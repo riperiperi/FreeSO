@@ -127,6 +127,7 @@ namespace FSO.Server.Servers.Lot
             if(session is IVoltronSession)
             {
                 //Route to a specific lot
+                Lots.RouteMessage(session as IVoltronSession, message);
                 return;
             }
 

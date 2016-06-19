@@ -14,6 +14,9 @@ namespace FSO.Server.Protocol.Electron
         InstantMessage,
         FindLotRequest,
         FindLotResponse,
+        FSOVMTickBroadcast,
+        FSOVMDirectToClient,
+        FSOVMCommand,
         Unknown
     }
 
@@ -35,6 +38,12 @@ namespace FSO.Server.Protocol.Electron
                     return ElectronPacketType.FindLotRequest;
                 case 0x0006:
                     return ElectronPacketType.FindLotResponse;
+                case 0x0007:
+                    return ElectronPacketType.FSOVMTickBroadcast;
+                case 0x0008:
+                    return ElectronPacketType.FSOVMDirectToClient;
+                case 0x0009:
+                    return ElectronPacketType.FSOVMCommand;
                 default:
                     return ElectronPacketType.Unknown;
             }
@@ -56,6 +65,12 @@ namespace FSO.Server.Protocol.Electron
                     return 0x0005;
                 case ElectronPacketType.FindLotResponse:
                     return 0x0006;
+                case ElectronPacketType.FSOVMTickBroadcast:
+                    return 0x0007;
+                case ElectronPacketType.FSOVMDirectToClient:
+                    return 0x0008;
+                case ElectronPacketType.FSOVMCommand:
+                    return 0x0009;
             }
 
             return 0xFFFF;

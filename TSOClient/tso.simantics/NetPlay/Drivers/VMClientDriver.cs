@@ -8,15 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using GonzoNet;
 using FSO.SimAntics.NetPlay.Model;
-using GonzoNet.Encryption;
-using ProtocolAbstractionLibraryD;
-using System.Timers;
 using System.Diagnostics;
-using FSO.SimAntics.Model;
-using FSO.SimAntics.Primitives;
 
 namespace FSO.SimAntics.NetPlay.Drivers
 {
@@ -26,6 +19,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
     {
         private Queue<VMNetTick> TickBuffer;
         private Queue<VMNetCommandBodyAbstract> Commands;
+        private Queue<VMNetMessage> ServerMessages;
         private uint TickID = 0;
         private const int TICKS_PER_PACKET = 2;
         private const int BUFFER_STABLE_TICKS = 3 * 30; //if buffer does not drop below 2 large for this number of ticks, tighten buffer size
@@ -39,19 +33,19 @@ namespace FSO.SimAntics.NetPlay.Drivers
         private VM VMHook; //should probably always backreference the VM anyways, but just used by disconnect
         //todo: clean up everything in all of these classes.
 
+        /// <summary>
+        /// Fired when the VM client wishes to send an event to the server.
+        /// </summary>
+        public event VMClientCommandHandler OnClientCommand;
+        public delegate void VMClientCommandHandler(byte[] data); //type is obviously command.
+
         public event OnStateChangeDelegate OnStateChange;
 
-        private NetworkClient Client;
-
-        public VMClientDriver(string hostName, int port, OnStateChangeDelegate callback)
+        public VMClientDriver(OnStateChangeDelegate callback)
         {
             Commands = new Queue<VMNetCommandBodyAbstract>();
-            Client = new NetworkClient(hostName, port, EncryptionMode.NoEncryption, true);
-
-            Client.OnConnected += Client_OnConnected;
-            Client.OnDisconnect += Client_OnDisconnect;
+            ServerMessages = new Queue<VMNetMessage>();
             OnStateChange += callback;
-            Client.Connect(null);
 
             GlobalLink = null; //transactions only performed by server. transaction results
             //are passed back to the clients as commands (for the primitive, at least)
@@ -59,8 +53,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
             TickBuffer = new Queue<VMNetTick>();
         }
 
-        private void Client_OnDisconnect()
+        public void Disconnected()
         {
+            /*
 #if DEBUG
             //switch to server mode for debug purposes
             VMDialogInfo info = new VMDialogInfo
@@ -77,9 +72,10 @@ namespace FSO.SimAntics.NetPlay.Drivers
 #else
             if (OnStateChange != null) OnStateChange(4, (float)CloseReason);
 #endif
+*/
         }
 
-        private void Client_OnConnected(LoginArgsContainer LoginArgs)
+        public void Connected()
         {
             if (OnStateChange != null) OnStateChange(1, 0f);
         }
@@ -101,21 +97,16 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 }
                 data = stream.ToArray();
             }
-            using (var stream = new PacketStream((byte)PacketType.VM_PACKET, 0))
-            {
-                stream.WriteHeader();
-                stream.WriteInt32(data.Length + (int)PacketHeaders.UNENCRYPTED);
-                stream.WriteBytes(data);
-                Client.Send(stream.ToArray());
-            }
+
+            if (OnClientCommand != null) OnClientCommand(data);
         }
 
         public override bool Tick(VM vm)
         {
             VMHook = vm;
             DriverTickPhase++;
-            HandleNet();
-            if (Client.Connected)
+            HandleNet(); //handle messages queued by external networking
+            if (OnClientCommand != null)
             {
                 while (Commands.Count > 0)
                 {
@@ -123,61 +114,59 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 }
             }
 
-            lock (TickBuffer)
+            var timer = new Stopwatch();
+            timer.Start();
+
+            int tickSpeed;
+
+            // === BUFFER SIZE MANAGEMENT (reduces stutter) ===
+
+            if (TickBuffer.Count > BufferSize * 3)
+                tickSpeed = 2000;
+            else if (TickBuffer.Count > BufferSize * 2)
+                tickSpeed = 2;
+            else tickSpeed = 1;
+
+            if (TickBuffer.Count == 0)
             {
-                var timer = new Stopwatch();
-                timer.Start();
-
-                int tickSpeed;
-
-                // === BUFFER SIZE MANAGEMENT (reduces stutter) ===
-
-                if (TickBuffer.Count > BufferSize * 3)
-                    tickSpeed = 2000;
-                else if (TickBuffer.Count > BufferSize * 2)
-                    tickSpeed = 2;
-                else tickSpeed = 1;
-
-                if (TickBuffer.Count == 0)
+                tickSpeed = 0;
+                if (!ReplenishBuffer && ExecutedAnything)
                 {
-                    tickSpeed = 0;
-                    if (!ReplenishBuffer && ExecutedAnything)
-                    {
-                        BufferSize++;
-                        ReplenishBuffer = true;
-                    }
-                    
-                }
-                else if (TickBuffer.Count <= TICKS_PER_PACKET)
-                    TicksSinceCloseCall = 0;
-
-                if (ReplenishBuffer)
-                {
-                    if (TickBuffer.Count >= BufferSize) ReplenishBuffer = false;
-                    else if (DriverTickPhase % 2 == 0) tickSpeed = 0; //run at half speed til buffer replenished
-                }
-                else if (TicksSinceCloseCall++ > BUFFER_STABLE_TICKS)
-                {
-                    TicksSinceCloseCall = 0;
-                    BufferSize--;
-                    if (BufferSize < 2) BufferSize = 2;
+                    BufferSize++;
+                    ReplenishBuffer = true;
                 }
 
-                // === END BUFFER SIZE MANAGEMENT ===
+            }
+            else if (TickBuffer.Count <= TICKS_PER_PACKET)
+                TicksSinceCloseCall = 0;
 
-                for (int i = 0; i < tickSpeed && TickBuffer.Count > 0; i++)
+            if (ReplenishBuffer)
+            {
+                if (TickBuffer.Count >= BufferSize) ReplenishBuffer = false;
+                else if (DriverTickPhase % 2 == 0) tickSpeed = 0; //run at half speed til buffer replenished
+            }
+            else if (TicksSinceCloseCall++ > BUFFER_STABLE_TICKS)
+            {
+                TicksSinceCloseCall = 0;
+                BufferSize--;
+                if (BufferSize < 2) BufferSize = 2;
+            }
+
+            // === END BUFFER SIZE MANAGEMENT ===
+
+            for (int i = 0; i < tickSpeed && TickBuffer.Count > 0; i++)
+            {
+                ExecutedAnything = true;
+                var tick = TickBuffer.Dequeue();
+                InternalTick(vm, tick);
+                if (timer.ElapsedMilliseconds > 66)
                 {
-                    ExecutedAnything = true;
-                    var tick = TickBuffer.Dequeue();
-                    InternalTick(vm, tick);
-                    if (timer.ElapsedMilliseconds > 66)
-                    {
-                        timer.Stop();
-                        if (!vm.Ready) OnStateChange(2, tick.TickID / (float)(tick.TickID + TickBuffer.Count));
-                        return false;
-                    }
+                    timer.Stop();
+                    if (!vm.Ready) OnStateChange(2, tick.TickID / (float)(tick.TickID + TickBuffer.Count));
+                    return false;
                 }
             }
+
             if (!vm.Ready)
             {
                 if (ExecutedAnything && vm.Context.Ready)
@@ -191,42 +180,47 @@ namespace FSO.SimAntics.NetPlay.Drivers
             
         }
 
+        public void ServerMessage(VMNetMessage message)
+        {
+            lock (ServerMessages)
+            {
+                ServerMessages.Enqueue(message);
+            }
+        }
+
         private void HandleNet()
         {
-            var packets = Client.GetPackets();
-            while (packets.Count > 0)
+            lock (ServerMessages)
             {
-                OnPacket(Client, packets.Dequeue());
-            }
-        }
-
-        public override void OnPacket(NetworkClient client, ProcessedPacket packet)
-        {
-            lock (TickBuffer)
-            {
-                var tick = new VMNetTickList();
-                try {
-                    using (var reader = new BinaryReader(packet))
-                    {
-                        tick.Deserialize(reader);
-                    }
-                } catch (Exception e)
-                { 
-                    client.Disconnect();
-                    return;
-                }
-
-                for (int i = 0; i < tick.Ticks.Count; i++)
+                var packets = ServerMessages;
+                while (packets.Count > 0)
                 {
-                    tick.Ticks[i].ImmediateMode = tick.ImmediateMode;
-                    TickBuffer.Enqueue(tick.Ticks[i]);
+                    HandleServerMessage(packets.Dequeue());
                 }
             }
         }
 
-        public override void CloseNet()
+        private void HandleServerMessage(VMNetMessage message)
         {
-            Client.Disconnect();
+            var tick = new VMNetTickList();
+            try
+            {
+                using (var reader = new BinaryReader(new MemoryStream(message.Data)))
+                {
+                    tick.Deserialize(reader);
+                }
+            }
+            catch (Exception e)
+            {
+                Shutdown();
+                return;
+            }
+
+            for (int i = 0; i < tick.Ticks.Count; i++)
+            {
+                tick.Ticks[i].ImmediateMode = tick.ImmediateMode;
+                TickBuffer.Enqueue(tick.Ticks[i]);
+            }
         }
 
         public override string GetUserIP(uint uid)

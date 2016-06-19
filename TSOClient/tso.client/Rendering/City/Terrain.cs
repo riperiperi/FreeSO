@@ -10,7 +10,6 @@ using System.Collections;
 using System.IO;
 using System.Timers;
 using System.Text;
-using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -1084,7 +1083,7 @@ namespace FSO.Client.Rendering.City
                     {
                         float X = GetHoverSquare()[0];
                         float Y = GetHoverSquare()[1];
-                        bool Online = ProtoHelpers.GetBit(m_CurrentLot.flags, 0);
+                        bool Online = (m_CurrentLot.flags & 1) > 0;
                         string OnlineStr = (Online == true) ? "Online" : "Offline";
                         //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
                         DrawTooltip(spriteBatch, GameFacade.Strings.GetString("215", "3", new string[]{m_CurrentLot.name}) + "\n" 

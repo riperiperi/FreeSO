@@ -168,7 +168,6 @@ namespace FSO.Client.UI.Screens
 
             SimBox = new UISim();
 
-            SimBox.SimScale = 0.5f;
             SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 70, offset.Y + 88);
 
             SimBox.AutoRotate = true;

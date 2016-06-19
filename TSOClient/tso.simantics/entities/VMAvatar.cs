@@ -64,7 +64,7 @@ namespace FSO.SimAntics
 
         private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];
         private VMAvatarMotiveDecay MotiveDecay;
-        private short[] PersonData = new short[100];
+        private short[] PersonData = new short[101];
         private short[] MotiveData = new short[16];
         private VMEntity HandObject;
         private float _RadianDirection;
@@ -85,8 +85,11 @@ namespace FSO.SimAntics
             set
             {
                 _BodyOutfit = value;
-                Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get(value);
-                if (AvatarType == VMAvatarType.Adult || AvatarType == VMAvatarType.Child) Avatar.Handgroup = Avatar.Body;
+                if (UseWorld)
+                {
+                    Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get(value);
+                    if (AvatarType == VMAvatarType.Adult || AvatarType == VMAvatarType.Child) Avatar.Handgroup = Avatar.Body;
+                }
             }
             get
             {
@@ -100,7 +103,10 @@ namespace FSO.SimAntics
             set
             {
                 _HeadOutfit = value;
-                Avatar.Head = (_HeadOutfit == 0)?null:FSO.Content.Content.Get().AvatarOutfits.Get(value);
+                if (UseWorld)
+                {
+                    Avatar.Head = (_HeadOutfit == 0) ? null : FSO.Content.Content.Get().AvatarOutfits.Get(value);
+                }
             }
             get
             {
@@ -114,7 +120,7 @@ namespace FSO.SimAntics
             set
             {
                 _SkinTone = value;
-                Avatar.Appearance = value;
+                if (UseWorld) Avatar.Appearance = value;
             }
             get { return _SkinTone; }
         }
@@ -222,23 +228,26 @@ namespace FSO.SimAntics
                 else if (type == "dog") AvatarType = VMAvatarType.Dog;
             }
 
-            switch (AvatarType)
+            Avatar = new SimAvatar(FSO.Content.Content.Get().AvatarSkeletons.Get("adult.skel"));
+            if (UseWorld)
             {
-                case VMAvatarType.Adult:
-                    Avatar = new SimAvatar(FSO.Content.Content.Get().AvatarSkeletons.Get("adult.skel"));
-                    Avatar.Head = FSO.Content.Content.Get().AvatarOutfits.Get(0x000003a00000000D); //default to bob newbie, why not
-                    Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get("mab002_slob.oft");
-                    Avatar.Handgroup = Avatar.Body;
-                    break;
-                case VMAvatarType.Cat:
-                    var skel = FSO.Content.Content.Get().AvatarSkeletons.Get("cat.skel");
-                    Avatar = new SimAvatar(skel);
-                    Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get("uaa002cat_calico.oft");
-                    break;
-                case VMAvatarType.Dog:
-                    Avatar = new SimAvatar(FSO.Content.Content.Get().AvatarSkeletons.Get("dog.skel"));
-                    Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get("uaa012dog_scottish.oft"); //;)
-                    break;
+                switch (AvatarType)
+                {
+                    case VMAvatarType.Adult:
+                        Avatar.Head = FSO.Content.Content.Get().AvatarOutfits.Get(0x000003a00000000D); //default to bob newbie, why not
+                        Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get("mab002_slob.oft");
+                        Avatar.Handgroup = Avatar.Body;
+                        break;
+                    case VMAvatarType.Cat:
+                        var skel = FSO.Content.Content.Get().AvatarSkeletons.Get("cat.skel");
+                        Avatar = new SimAvatar(skel);
+                        Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get("uaa002cat_calico.oft");
+                        break;
+                    case VMAvatarType.Dog:
+                        Avatar = new SimAvatar(FSO.Content.Content.Get().AvatarSkeletons.Get("dog.skel"));
+                        Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get("uaa012dog_scottish.oft"); //;)
+                        break;
+                }
             }
         }
 
@@ -371,11 +380,14 @@ namespace FSO.SimAntics
                 Headline = null;
                 HeadlineRenderer = null;
             }
-            foreach (var aprName in BoundAppearances)
+            if (VM.UseWorld)
             {
-                //remove all appearances, so we don't have stuff stuck to us.
-                var apr = FSO.Content.Content.Get().AvatarAppearances.Get(aprName);
-                Avatar.RemoveAccessory(apr);
+                foreach (var aprName in BoundAppearances)
+                {
+                    //remove all appearances, so we don't have stuff stuck to us.
+                    var apr = FSO.Content.Content.Get().AvatarAppearances.Get(aprName);
+                    Avatar.RemoveAccessory(apr);
+                }
             }
             BoundAppearances.Clear();
             if (context.VM.EODHost != null) context.VM.EODHost.ForceDisconnect(this);
@@ -842,7 +854,7 @@ namespace FSO.SimAntics
 
             Animations = new List<VMAnimationState>();
             foreach (var anim in input.Animations) Animations.Add(new VMAnimationState(anim));
-            CarryAnimationState = (input.CarryAnimationState == null) ? null : new VMAnimationState(input.CarryAnimationState); 
+            CarryAnimationState = (input.CarryAnimationState == null) ? null : new VMAnimationState(input.CarryAnimationState);
 
             Message = input.Message;
 
@@ -858,10 +870,12 @@ namespace FSO.SimAntics
 
             BoundAppearances = new HashSet<string>(input.BoundAppearances);
 
-            foreach (var aprN in BoundAppearances)
-            {
-                var apr = FSO.Content.Content.Get().AvatarAppearances.Get(aprN);
-                Avatar.AddAccessory(apr);
+            if (VM.UseWorld) { 
+                foreach (var aprN in BoundAppearances)
+                {
+                    var apr = FSO.Content.Content.Get().AvatarAppearances.Get(aprN);
+                    Avatar.AddAccessory(apr);
+                }
             }
 
             SkinTone = input.SkinTone;

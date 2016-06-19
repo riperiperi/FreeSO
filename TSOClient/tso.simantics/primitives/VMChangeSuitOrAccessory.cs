@@ -41,16 +41,16 @@ namespace FSO.SimAntics.Primitives
                 if (suit is string)
                 {
                     var suitFile = (string)suit;
-                    var apr = FSO.Content.Content.Get().AvatarAppearances.Get(suitFile);
+                    var apr = (VM.UseWorld)?FSO.Content.Content.Get().AvatarAppearances.Get(suitFile):null;
                     if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)
                     {
                         avatar.BoundAppearances.Remove(suitFile);
-                        avatar.Avatar.RemoveAccessory(apr); 
+                        if (VM.UseWorld) avatar.Avatar.RemoveAccessory(apr); 
                     }
                     else
                     {
                         avatar.BoundAppearances.Add(suitFile);
-                        avatar.Avatar.AddAccessory(apr);
+                        if (VM.UseWorld) avatar.Avatar.AddAccessory(apr);
                     }
                 } else if (suit is ulong)
                 {

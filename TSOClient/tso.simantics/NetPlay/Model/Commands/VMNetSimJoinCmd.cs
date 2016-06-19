@@ -13,7 +13,6 @@ using FSO.LotView.Model;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
-using GonzoNet;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -21,28 +20,15 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public ushort Version = CurVer;
 
-        //TODO: replace with VMPersistAvatarBlock (obtained from global server)
-        
-        public uint RequesterID; //just here to notify client that this join was meant for them. = old ActorUID (random)
-        //do NOT make this the ticket in future. randomly distributing the auth ticket to everyone on server is a dumb idea
+        public VMNetAvatarPersistState AvatarState;
 
-        public ulong HeadID;
-        public ulong BodyID;
-        public byte SkinTone;
-        public bool Gender;
-        public string Name;
-        public VMTSOAvatarPermissions Permissions;
-
-        public static ushort CurVer = 0xFFEF;
+        public static ushort CurVer = 0xFFEE;
 
         //variables used locally for deferred avatar loading
-        public bool Verified;
-        public string Ticket; //right now this is ip:name. in future will be provided by city
-        public NetworkClient Client; //REPLACE WHEN MOVING OFF GONZONET!!
 
         public override bool Execute(VM vm)
         {
-            Name = Name.Substring(0, Math.Min(Name.Length, 64));
+            var name = AvatarState.Name.Substring(0, Math.Min(AvatarState.Name.Length, 64));
             var sim = vm.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, LotTilePos.OUT_OF_WORLD, Direction.NORTH).Objects[0];
             var mailbox = vm.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
 
@@ -51,14 +37,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             sim.PersistID = ActorUID;
 
             VMAvatar avatar = (VMAvatar)sim;
-            avatar.SkinTone = (Vitaboy.AppearanceType)SkinTone;
-            avatar.SetPersonData(VMPersonDataVariable.Gender, (short)((Gender) ? 1 : 0));
-            avatar.DefaultSuits = new VMAvatarDefaultSuits(Gender);
-            avatar.DefaultSuits.Daywear = BodyID;
-            avatar.BodyOutfit = BodyID;
-            avatar.HeadOutfit = HeadID;
-            avatar.Name = Name;
-            ((VMTSOAvatarState)avatar.TSOState).Permissions = Permissions;
+            AvatarState.Apply(avatar);
 
             if (ActorUID == uint.MaxValue - 1)
             {
@@ -67,8 +46,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 avatar.SetFlag(VMEntityFlags.HasZeroExtent, true);
                 avatar.SetPersonData(VMPersonDataVariable.IsGhost, 1); //oooooOOooooOo
             }
-
-            if (RequesterID == vm.MyUID) vm.MyUID = ActorUID; //we're this sim! try send commands as them.
+            
             vm.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Join, avatar.Name));
 
             return true;
@@ -76,6 +54,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
+            /*
+
+            //OLD NET ticket->data service
+
             Name = Name.Replace("\r\n", "");
             if (Verified == true) return true;
             if (Ticket == null) Ticket = "local" + ":" + Name;
@@ -106,7 +88,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     this.Verified = true;
                     vm.ForwardCommand(this);
                 });
-            return false;
+            */
+            return !FromNet; //can only be sent out by server
         }
 
         #region VMSerializable Members
@@ -114,26 +97,15 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             base.SerializeInto(writer);
             writer.Write(Version);
-            writer.Write(RequesterID);
-            writer.Write(HeadID);
-            writer.Write(BodyID);
-            writer.Write(SkinTone);
-            writer.Write(Gender);
-            writer.Write(Name);
-            writer.Write((byte)Permissions);
+            AvatarState.SerializeInto(writer);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
             Version = reader.ReadUInt16();
-            RequesterID = reader.ReadUInt32();
-            HeadID = reader.ReadUInt64();
-            BodyID = reader.ReadUInt64();
-            SkinTone = reader.ReadByte();
-            Gender = reader.ReadBoolean();
-            Name = reader.ReadString();
-            Permissions = (VMTSOAvatarPermissions)reader.ReadByte();
+            AvatarState = new VMNetAvatarPersistState();
+            AvatarState.Deserialize(reader);
         }
         #endregion
     }

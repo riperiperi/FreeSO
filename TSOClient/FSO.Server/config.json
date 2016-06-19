@@ -9,7 +9,7 @@
   "services": {
     "api": {
       "enabled": true,
-      "bindings": [ "https://auth.east.ea.com:443/", "http://127.0.0.1:80/" ],
+      "bindings": [ "https://auth.east.ea.com:443/", "http://localhost:80/" ],
       "controllers": [ "auth", "citySelector" ]
     },
 

@@ -59,10 +59,17 @@ namespace FSO.Client.Regulators
             AddState("HostOnline").OnlyTransitionFrom("RequestClientSession");
             AddState("PartiallyConnected")
                 .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
+                .OnData(typeof(FSOVMTickBroadcast)).TransitionTo("LotCommandStream")
+                .OnData(typeof(FSOVMDirectToClient)).TransitionTo("LotCommandStream")
                 .OnlyTransitionFrom("HostOnline");
 
-            AddState("UnexpectedDisconnect");
+            AddState("LotCommandStream")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
+                .OnData(typeof(FSOVMTickBroadcast)).TransitionTo("LotCommandStream")
+                .OnData(typeof(FSOVMDirectToClient)).TransitionTo("LotCommandStream");
 
+            AddState("UnexpectedDisconnect");
+            
             AddState("Disconnect")
                 .OnData(typeof(AriesDisconnected))
                 .TransitionTo("Disconnected");
@@ -125,6 +132,7 @@ namespace FSO.Client.Regulators
                         {
                         }
                     );
+                    
                     AsyncTransition("PartiallyConnected");
                     break;
             }
@@ -151,7 +159,9 @@ namespace FSO.Client.Regulators
             else
             {
                 if (message is RequestClientSession ||
-                    message is HostOnlinePDU)
+                    message is HostOnlinePDU ||
+                    message is FSOVMTickBroadcast ||
+                    message is FSOVMDirectToClient)
                 {
                     this.AsyncProcessMessage(message);
                 }

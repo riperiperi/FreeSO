@@ -15,6 +15,7 @@ using FSO.SimAntics.Model;
 using FSO.LotView.Model;
 using FSO.LotView.Components;
 using Microsoft.Xna.Framework;
+using FSO.SimAntics.Engine.TSOTransaction;
 
 namespace FSO.IDE.Common
 {
@@ -76,7 +77,7 @@ namespace FSO.IDE.Common
                 world.Initialize(GameFacade.Scenes);
                 var context = new VMContext(world);
 
-                TempVM = new VM(context, new VMServerDriver(37565, null), new VMNullHeadlineProvider());
+                TempVM = new VM(context, new VMServerDriver(new VMTSOGlobalLinkStub()), new VMNullHeadlineProvider());
                 TempVM.Init();
 
                 var blueprint = new Blueprint(1, 1);

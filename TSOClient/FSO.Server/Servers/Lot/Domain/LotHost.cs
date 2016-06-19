@@ -6,6 +6,7 @@ using FSO.Server.Database.DA.Lots;
 using FSO.Server.DataService;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
+using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Servers.Lot.Lifecycle;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
@@ -43,6 +44,15 @@ namespace FSO.Server.Servers.Lot.Domain
             if(city != null)
             {
                 LotStatusSync.Sync(city, lot);
+            }
+        }
+
+        public void RouteMessage(IVoltronSession session, object message)
+        {
+            var lot = GetLot(session);
+            if (lot != null)
+            {
+                lot.Message(session, message);
             }
         }
 
@@ -153,7 +163,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private LotHost Host;
 
         public LotContainer Container { get; internal set; }
-        private List<IVoltronSession> _Visitors = new List<IVoltronSession>();
+        private Dictionary<uint, IVoltronSession> _Visitors = new Dictionary<uint, IVoltronSession>();
         private IKernel ParentKernel;
         private IKernel Kernel;
 
@@ -178,14 +188,33 @@ namespace FSO.Server.Servers.Lot.Domain
             Model = new FSO.Common.DataService.Model.Lot();
         }
 
-        public void Broadcast(params object[] messages)
+        public void Send(uint avatarID, params object[] messages)
+        {
+            lock (_Visitors)
+            {
+                IVoltronSession visitor = null;
+                if (_Visitors.TryGetValue(avatarID, out visitor))
+                {
+                    visitor.Write(messages);
+                }
+            }
+        }
+
+        public void Broadcast(HashSet<uint> ignoreIDs, params object[] messages)
         {
             //TODO: Make this more efficient
-            foreach(var visitor in _Visitors)
+            lock (_Visitors)
             {
-                try {
-                    visitor.Write(messages);
-                }catch(Exception ex){
+                foreach (var visitor in _Visitors.Values)
+                {
+                    if (ignoreIDs.Contains(visitor.AvatarId)) continue;
+                    try
+                    {
+                        visitor.Write(messages);
+                    }
+                    catch (Exception ex)
+                    {
+                    }
                 }
             }
         }
@@ -248,6 +277,14 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
+        public void Message(IVoltronSession session, object message)
+        {
+            if (message is FSOVMCommand)
+            {
+                Container.Message(session, (FSOVMCommand)message);
+            }
+        }
+
         public void Leave(IVoltronSession session)
         {
             lock (_Visitors)
@@ -267,7 +304,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
 
                 session.SetAttribute("currentLot", Context.DbId);
-                _Visitors.Add(session);
+                _Visitors.Add(session.AvatarId, session);
 
                 SyncNumVisitors();
 
@@ -285,7 +322,7 @@ namespace FSO.Server.Servers.Lot.Domain
         public void ReleaseAvatarClaim(IVoltronSession session)
         {
             //TODO: If avatar is still connected to the city we need to transfer the claim rather than delete it
-            _Visitors.Remove(session);
+            _Visitors.Remove(session.AvatarId);
             session.SetAttribute("currentLot", null);
             SyncNumVisitors();
 
@@ -304,7 +341,8 @@ namespace FSO.Server.Servers.Lot.Domain
 
     public interface ILotHost
     {
-        void Broadcast(params object[] messages);
+        void Send(uint avatarID, params object[] messages);
+        void Broadcast(HashSet<uint> ignoreIDs, params object[] messages);
         void InBackground(Callback cb);
         void ReleaseAvatarClaim(IVoltronSession session);
         void SetOnline(bool online);

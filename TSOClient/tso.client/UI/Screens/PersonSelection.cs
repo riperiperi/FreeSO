@@ -253,7 +253,7 @@ namespace FSO.Client.UI.Screens
 
             Sim = new UISim();
             Sim.Visible = false;
-            Sim.Position = AvatarButton.Position + new Vector2(70, (AvatarButton.Size.Y - 35));
+            Sim.Position = AvatarButton.Position + new Vector2(1, 10);
             Sim.Size = AvatarButton.Size;
 
             Screen.Add(Sim);

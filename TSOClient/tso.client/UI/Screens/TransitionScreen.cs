@@ -11,8 +11,6 @@ using System.Net.Sockets;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels;
-using GonzoNet;
-using ProtocolAbstractionLibraryD;
 using FSO.Client.GameContent;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Client.Controllers;

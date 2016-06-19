@@ -97,12 +97,15 @@ namespace FSO.Client.Controllers
                 case "PartiallyConnected":
                     progress = 3;
                     break;
-                
+
+                case "LotCommandStream":
+                    progress = 4;
+                    break;
             }
 
 
             var progressPercent = (((float)progress) / 6.0f) * 100;
-            View.Progress = progressPercent;
+            if (progress < 4) View.Progress = progressPercent;
             switch (progress)
             {
                 case 0:

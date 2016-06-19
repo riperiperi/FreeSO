@@ -7,6 +7,9 @@ using FSO.Client.UI.Screens;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Enum;
+using FSO.Common.Utils;
+using FSO.Server.Protocol.Electron.Packets;
+using FSO.SimAntics.NetPlay.Model;
 using Ninject;
 using Ninject.Parameters;
 using System;
@@ -35,15 +38,49 @@ namespace FSO.Client.Controllers
             this.Chat = new MessagingController(this, view.MessageTray, network, dataService);
             this.JoinLotRegulator = joinLotRegulator;
 
+            joinLotRegulator.OnTransition += JoinLotRegulator_OnTransition;
+
             var shard = Network.MyShard;
             Terrain = kernel.Get<TerrainController>(new ConstructorArgument("parent", this));
             view.Initialize(shard.Name, int.Parse(shard.Map), Terrain);
         }
 
-
         public void AddWindow(UIContainer window)
         {
             Screen.WindowContainer.Add(window);
+        }
+
+        private void JoinLotRegulator_OnTransition(string transition, object data)
+        {
+            GameThread.NextUpdate((state) =>
+            {
+                switch (transition)
+                {
+                    case "UnexpectedDisconnect":
+                        //todo: what if we disconnect from lot but not city? the reverse?
+                        break;
+                    case "Disconnected":
+                        Screen.CleanupLastWorld();
+                        //destroy the currently active lot (if possible)
+                        break;
+                    case "PartiallyConnected":
+                        Screen.InitializeLot();
+                        Screen.vm.MyUID = Network.MyCharacter;
+                        //initialize a lot
+                        break;
+                    case "LotCommandStream":
+                        //forward the command to the VM
+                        //doesn't really need to be next update... but we don't want to catch the VM in a half-init state.
+                        VMNetMessage msg = null;
+                        if (data is FSOVMTickBroadcast)
+                            msg = new VMNetMessage(VMNetMessageType.BroadcastTick, ((FSOVMTickBroadcast)data).Data);
+                        else
+                            msg = new VMNetMessage(VMNetMessageType.Direct, ((FSOVMDirectToClient)data).Data);
+
+                        Screen.Driver.ServerMessage(msg);
+                        break;
+                }
+            });
         }
 
         public void JoinLot(uint id)
@@ -82,6 +119,14 @@ namespace FSO.Client.Controllers
             ((LotPageController)Screen.LotPage.Controller).Show(lotId);
         }
 
+        public void SendVMMessage(byte[] data)
+        {
+            if (Network.LotClient.IsConnected)
+            {
+                Network.LotClient.Write(new FSOVMCommand() { Data = data });
+            }
+        }
+
         public bool IsMe(uint id)
         {
             return id == Network.MyCharacter;
@@ -89,6 +134,7 @@ namespace FSO.Client.Controllers
 
         public void Dispose()
         {
+            JoinLotRegulator.OnTransition -= JoinLotRegulator_OnTransition;
         }
     }
 }
