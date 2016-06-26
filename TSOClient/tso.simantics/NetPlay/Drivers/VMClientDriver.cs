@@ -173,8 +173,16 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     if (timer.ElapsedMilliseconds > 66)
                     {
                         timer.Stop();
-                        if (!vm.Ready) OnStateChange(2, tick.TickID / (float)(tick.TickID + TickBuffer.Count));
-                        return (TickBuffer.Count < 30)?true:false;
+                        if (TickBuffer.Count > 30 || !vm.Context.Ready)
+                        {
+                            OnStateChange(2, tick.TickID / (float)(tick.TickID + TickBuffer.Count));
+                            return false;
+                        }
+                        else if(!vm.Ready)
+                        {
+                            OnStateChange(3, 0f);
+                        }
+                        return true;
                     }
                 }
             }

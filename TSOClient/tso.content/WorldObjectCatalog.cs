@@ -37,7 +37,7 @@ namespace FSO.Content
                     Name = objectInfo.Attributes["n"].Value
                 };
                 ItemsByCategory[Category].Add(item);
-                ItemsByGUID.Add(guid, item);
+                ItemsByGUID[guid] = item;
             }
 
             //load and build Content Objects into catalog
@@ -62,7 +62,7 @@ namespace FSO.Content
                     };
 
                     ItemsByCategory[dCategory].Add(ditem);
-                    ItemsByGUID.Add(dguid, ditem);
+                    ItemsByGUID[dguid] = ditem;
 
                 }
             }
