@@ -37,6 +37,8 @@ namespace FSO.Server.Servers.Lot.Domain
 
         private VM Lot;
         private VMServerDriver VMDriver;
+        public int ClientCount = 0;
+        public int TimeToShutdown = -1;
         
         public LotContainer(IDAFactory da, LotContext context, ILotHost host)
         {
@@ -53,11 +55,11 @@ namespace FSO.Server.Servers.Lot.Domain
             VMDriver = new VMServerDriver(new VMTSOGlobalLinkStub());
             VMDriver.OnTickBroadcast += TickBroadcast;
             VMDriver.OnDirectMessage += DirectMessage;
+            VMDriver.OnDropClient += DropClient;
 
             var vm = new VM(new VMContext(null), VMDriver, new VMNullHeadlineProvider());
             Lot = vm;
             vm.Init();
-
             
             var path = Content.Content.Get().GetPath("housedata/blueprints/playtest_00.xml");
             string filename = Path.GetFileName(path);
@@ -103,6 +105,13 @@ namespace FSO.Server.Servers.Lot.Domain
             vm.MyUID = uint.MaxValue - 1;
         }
 
+        private void DropClient(VMNetClient target)
+        {
+            //The VM wants us to drop this client.
+            //...uh, tell the host because we don't control the voltron sessions
+            Host.DropClient(target.PersistID);
+        }
+
         public void Message(IVoltronSession session, FSOVMCommand cmd)
         {
             VMDriver.SubmitMessage(session.AvatarId, new VMNetMessage(VMNetMessageType.Command, cmd.Data));
@@ -143,24 +152,23 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
                 catch (Exception e)
                 {
-                    /*state.CloseNet(VMCloseNetReason.Unspecified);
-                    Console.WriteLine(e.ToString());
-                    SaveLot();
-                    Thread.Sleep(500);
-
-                    ResetVM();
-                    //restart on exceptions... but print them to console
-                    //just for people who like 24/7 servers.
-                    */
+                    //something bad happened. not entirely sure how we should deal with this yet
                 }
 
-                /*
-                if (TicksSinceSave > SaveTickFreq)
+                if (ClientCount == 0)
                 {
-                    //quick and dirty periodic save
-                    SaveLot();
-                    TicksSinceSave = 0;
-                }*/
+                    if (TimeToShutdown == -1)
+                        TimeToShutdown = 60 * 20; //lot shuts down 20 seconds after everyone leaves
+                    else {
+                        if (--TimeToShutdown == 0)
+                        {
+                            Shutdown();
+                            break; //kill the lot
+                        }
+                    }
+                }
+                else if (TimeToShutdown != -1)
+                    TimeToShutdown = -1;
 
                 Thread.Sleep((int)Math.Max(0, (lastMs + 16) - timeKeeper.ElapsedMilliseconds));
             }
@@ -171,6 +179,7 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             using (var da = DAFactory.Get())
             {
+                ClientCount++;
                 var avatar = da.Avatars.Get(session.AvatarId);
                 LOG.Info("Avatar " + avatar.name + " has joined");
 
@@ -193,8 +202,22 @@ namespace FSO.Server.Servers.Lot.Domain
                 client.RemoteIP = session.IpAddress;
                 client.PersistID = session.AvatarId;
 
+                if (TimeToShutdown == 0)
+                {
+                    //oops... bad bad bad
+                    DropClient(client);
+                    return;
+                }
                 VMDriver.ConnectClient(client);
+
             }
+        }
+
+        public void Shutdown()
+        {
+            //shut down this lot. Do a final save and close everything down.
+            LOG.Info("Lot with dbid = " + Context.DbId + " shutting down.");
+            Host.Shutdown();
         }
 
         //Run on the background thread
@@ -204,6 +227,7 @@ namespace FSO.Server.Servers.Lot.Domain
             LOG.Info("Avatar left");
             VMDriver.DisconnectClient(session.AvatarId);
             Host.ReleaseAvatarClaim(session);
+            ClientCount--;
         }
 
     }

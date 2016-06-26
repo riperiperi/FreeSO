@@ -150,13 +150,6 @@ namespace FSO.Client.UI.Panels
             OfflineNeutralBackgroundImage = new UIImage();
             Add(OfflineNeutralBackgroundImage);
 
-
-            SimBox = new UISim();
-            SimBox.ScaleX = SimBox.ScaleY = 0.7f;
-            SimBox.Position = new Vector2(62, 54);
-            SimBox.AutoRotate = true;
-            this.Add(SimBox);
-
             /** Description tab **/
             DescriptionTabBackgroundImage = new UIImage();
             Add(DescriptionTabBackgroundImage);
@@ -217,6 +210,10 @@ namespace FSO.Client.UI.Panels
             Add(OptionsBackgroundImage);
 
             var ui = this.RenderScript("personpage.uis");
+
+            SimBox = ui.Create<UISim>("Person3dView");
+            SimBox.AutoRotate = true;
+            this.Add(SimBox);
 
             BackgroundNameImage.With9Slice(20, 20, 0, 0);
 

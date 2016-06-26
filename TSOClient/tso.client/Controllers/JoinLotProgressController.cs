@@ -73,7 +73,7 @@ namespace FSO.Client.Controllers
             switch (state)
             {
                 case "Disconnected":
-                    //UIScreen.RemoveDialog(View);
+                    UIScreen.RemoveDialog(View);
                     break;
 
                 case "SelectLot":

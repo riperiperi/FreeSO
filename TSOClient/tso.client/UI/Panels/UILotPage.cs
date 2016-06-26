@@ -124,9 +124,9 @@ namespace FSO.Client.UI.Panels
             HouseDescriptionSlider.AttachButtons(HouseDescriptionScrollUpButton, HouseDescriptionScrollDownButton, 1);
             HouseDescriptionTextEdit.AttachSlider(HouseDescriptionSlider);
 
-            HouseLinkButton.OnButtonClick += (UIElement e) =>{
-                FindController<CoreGameScreenController>().JoinLot(CurrentLot.Value.Id);
-            };
+            HouseLinkButton.OnButtonClick += JoinLot;
+
+            LotThumbnail.OnLotClick += JoinLot;
 
             CurrentLot = new Binding<Lot>()
                 .WithBinding(HouseNameButton, "Caption", "Lot_Name")
@@ -169,6 +169,11 @@ namespace FSO.Client.UI.Panels
 
             RefreshUI();
             NeighborhoodNameButton.Visible = false;
+        }
+
+        private void JoinLot(UIElement e) {
+            FindController<CoreGameScreenController>().JoinLot(CurrentLot.Value.Id);
+            Close(e);
         }
 
         private uint _Lot_LeaderID;
@@ -233,6 +238,10 @@ namespace FSO.Client.UI.Panels
 
             VisitorsLeftScrollButton.Visible = VisitorsRightScrollButton.Visible = isOpen;
 
+            if (isMyProperty) LotThumbnail.Mode = UILotRelationship.OWNER;
+            else if (isRoommate) LotThumbnail.Mode = UILotRelationship.ROOMMATE;
+            else LotThumbnail.Mode = UILotRelationship.VISITOR;
+
             if(canJoin){
                 HouseLinkButton.Disabled = false;
                 LotThumbnail.Disabled = false;
@@ -248,6 +257,7 @@ namespace FSO.Client.UI.Panels
         private UIButton RoommateButton;
         private UIButton VisitorButton;
         private UIImage Thumbnail;
+        public ButtonClickDelegate OnLotClick;
 
         private UILotRelationship _Mode;
 
@@ -277,6 +287,9 @@ namespace FSO.Client.UI.Panels
             VisitorButton = new UIButton(visitorButtonTexture);
             VisitorButton.Visible = false;
             Add(VisitorButton);
+
+            RoommateButton.OnButtonClick += (UIElement btn) => { if (OnLotClick != null) OnLotClick(btn); };
+            VisitorButton.OnButtonClick += (UIElement btn) => { if (OnLotClick != null) OnLotClick(btn); };
 
             Thumbnail = new UIImage();
             Thumbnail.X = 4;

@@ -20,6 +20,7 @@ using FSO.Vitaboy;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.LotView.Utils;
 using FSO.LotView;
+using FSO.Client.UI.Framework.Parser;
 
 namespace FSO.Client.UI.Controls
 {
@@ -67,6 +68,23 @@ namespace FSO.Client.UI.Controls
             Avatar.Scene = Scene;
             
             Scene.Add(Avatar);
+        }
+
+        private Vector2 _Size;
+        private Vector2 _SimScale;
+        [UIAttribute("size")]
+        public override Vector2 Size
+        {
+            get
+            {
+                return _Size;
+            }
+
+            set
+            {
+                _Size = value;
+                _SimScale = new Vector2(1, 1) * (value.Y / 200f);
+            }
         }
 
         public void SetZoom(WorldZoom zoom)
@@ -122,7 +140,7 @@ namespace FSO.Client.UI.Controls
 
         public override void Draw(UISpriteBatch batch)
         {
-            DrawLocalTexture(batch, Scene.Target, new Vector2());
+            DrawLocalTexture(batch, Scene.Target, null, new Vector2((_Size.X - 140 * _SimScale.X) /2, 0), _SimScale);
         }
     }
 }

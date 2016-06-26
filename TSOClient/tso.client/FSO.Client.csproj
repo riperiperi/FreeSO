@@ -103,6 +103,7 @@
     <Compile Include="UI\Panels\UIPersonGrid.cs" />
     <Compile Include="UI\Panels\UIPropertyLog.cs" />
     <Compile Include="UI\Panels\UIChatDialog.cs" />
+    <Compile Include="UI\Panels\UISetupBackground.cs" />
     <Compile Include="UI\Panels\WorldUI\UIHeadlineRenderer.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
     <Compile Include="Utils\Endian.cs" />

@@ -38,6 +38,10 @@ namespace FSO.Content
         {
             Files[0x00000Cb800000002] = "uigraphics/friendshipweb/friendshipwebalpha.tga";
             Files[0x00000Cbfb00000001] = "uigraphics/hints/hint_mechanicskill.bmp";
+
+            Files[0x1AF0856DDBAC] = "uigraphics/chat/balloonpointersadbottom.bmp";
+            Files[0x1B00856DDBAC] = "uigraphics/chat/balloonpointersadside.bmp";
+            Files[0x1B10856DDBAC] = "uigraphics/chat/balloontilessad.bmp";
         }
 
         protected override ITextureRef ResolveById(ulong id)

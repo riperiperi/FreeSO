@@ -15,12 +15,14 @@ using System.Threading.Tasks;
 using FSO.Common.Utils;
 using FSO.Common.Security;
 using System.Security;
+using System.IO;
 
 namespace FSO.Common.DataService.Providers.Server
 {
     public class ServerLotProvider : EagerDataServiceProvider<uint, Lot>
     {
         private Dictionary<string, Lot> LotsByName = new Dictionary<string, Lot>();
+        public City CityRepresentation;
 
         private IRealestateDomain GlobalRealestate;
         private IShardRealestateDomain Realestate;
@@ -35,6 +37,16 @@ namespace FSO.Common.DataService.Providers.Server
             GlobalRealestate = realestate;
             Realestate = realestate.GetByShard(shardId);
             DAFactory = daFactory;
+            CityRepresentation = new City()
+            {
+                City_NeighborhoodsVec = new List<uint>(),
+                City_OnlineLotVector = new List<bool>(),
+                City_ReservedLotVector = new List<bool>(),
+                City_ReservedLotInfo = new Dictionary<uint, bool>(),
+                City_SpotlightsVector = new List<uint>(),
+                City_Top100ListIDs = new List<uint>(),
+                City_TopTenNeighborhoodsVector = new List<uint>()
+            };
         }
 
         protected override void PreLoad(Callback<uint, Lot> appender)
@@ -54,6 +66,8 @@ namespace FSO.Common.DataService.Providers.Server
         {
             base.Insert(key, value);
             LotsByName[value.Lot_Name] = value;
+            CityRepresentation.City_ReservedLotInfo[value.Lot_Location_Packed] = value.Lot_IsOnline;
+            CityRepresentation.City_SpotlightsVector.Add(value.Lot_Location_Packed);
         }
 
         protected Lot HydrateOne(DbLot lot)
@@ -71,10 +85,11 @@ namespace FSO.Common.DataService.Providers.Server
                 Lot_Price = (uint)Realestate.GetPurchasePrice(location.X, location.Y),
                 Lot_LeaderID = lot.owner_id,
                 Lot_OwnerVec = new List<uint>() { lot.owner_id },
-                Lot_RoommateVec = new List<uint>() { },
+                Lot_RoommateVec = new List<uint>() { 65536, 65537 },
                 Lot_NumOccupants = 0,
                 Lot_LastCatChange = lot.category_change_date,
-                Lot_Description = lot.description
+                Lot_Description = lot.description,
+                Lot_Thumbnail = new Serialization.Primitives.cTSOGenericData(File.ReadAllBytes("test.png"))
             };
 
             return result;
@@ -95,7 +110,10 @@ namespace FSO.Common.DataService.Providers.Server
                 //Lot_Price = 0,
                 Lot_Price = (uint)Realestate.GetPurchasePrice(location.X, location.Y),
                 Lot_OwnerVec = new List<uint>() { },
-                Lot_RoommateVec = new List<uint>() { }
+                Lot_RoommateVec = new List<uint>() { },
+
+                Lot_Thumbnail = new Serialization.Primitives.cTSOGenericData(File.ReadAllBytes("test.png")),
+                Lot_ThumbnailCheckSum = key
             };
         }
 
@@ -105,6 +123,9 @@ namespace FSO.Common.DataService.Providers.Server
 
             switch (path){
                 case "Lot_Category":
+                    break;
+                case "Lot_IsOnline":
+                    CityRepresentation.City_ReservedLotInfo[lot.Lot_Location_Packed] = lot.Lot_IsOnline;
                     break;
             }
         }

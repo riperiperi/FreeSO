@@ -60,8 +60,7 @@ namespace FSO.Server.Servers.City.Domain
                 if (allocation.State == LotAllocationState.FAILED)
                 {
                     //Failed, remove
-                    LotAllocation removedAllocation;
-                    _Locks.TryRemove(lot.location, out removedAllocation);
+                    LotAllocation removedAllocation = Remove(lot.location);
                 }
             }
 
@@ -71,6 +70,32 @@ namespace FSO.Server.Servers.City.Domain
             }
         }
 
+        /// <summary>
+        /// Simply removes the existing allocation and frees the lot claim.
+        /// </summary>
+        /// <param name="lotId"></param>
+        public void TryClose(int lotId, uint claimId)
+        {
+            DbLot lot = null;
+            using (var da = DAFactory.Get())
+            {
+                lot = da.Lots.Get(lotId);
+            }
+
+            if (lot == null)
+            {
+                return;
+            }
+
+            var allocation = Remove(lot.location);
+            lock (allocation)
+            {
+                allocation.State = LotAllocationState.FAILED;
+                //kill this allocation
+                //TODO: is this safe? should correctly interrupt in-progress allocations, but shouldn't get here in that case anyways
+            }
+            allocation.TryUnclaim();
+        }
 
         /// <summary>
         /// Tasks we handle are:
@@ -177,7 +202,7 @@ namespace FSO.Server.Servers.City.Domain
                             LotDbId = allocation.LotDbId
                         });
                         
-                    //Should never get here
+                    //Should never get here..
                     case LotAllocationState.FAILED:
                         return Immediate(new TryFindLotResult {
                             Status = FindLotResponseStatus.UNKNOWN_ERROR
@@ -200,6 +225,13 @@ namespace FSO.Server.Servers.City.Domain
             return _Locks.GetOrAdd(lotId, x => {
                 return new LotAllocation(DAFactory, Context);
             });
+        }
+
+        private LotAllocation Remove(uint lotId)
+        {
+            LotAllocation removed = null;
+            _Locks.TryRemove(lotId, out removed);
+            return removed;
         }
     }
 
@@ -244,6 +276,7 @@ namespace FSO.Server.Servers.City.Domain
 
         public void OnTransferClaimResponse(TransferClaimResponse response)
         {
+            if (State == LotAllocationState.FAILED) return;
             PickingAttempt.Free();
 
             if(response.Status == TransferClaimResponseStatus.ACCEPTED)
@@ -309,7 +342,13 @@ namespace FSO.Server.Servers.City.Domain
             {
                 using (var db = DAFactory.Get())
                 {
-                    db.LotClaims.Delete(ClaimId.Value, Context.Config.Call_Sign);
+                    try {
+                        db.LotClaims.Delete(ClaimId.Value, Context.Config.Call_Sign);
+                    }
+                    catch (Exception)
+                    {
+                        //we weren't allowed to remove this anyways - probably not ours.
+                    }
                 }
                 ClaimId = null;
             }

@@ -55,6 +55,7 @@ namespace FSO.Server.Servers.City
             Kernel.Bind<int>().ToConstant(shard.Id).Named("ShardId");
             Kernel.Bind<CityServerConfiguration>().ToConstant(Config);
             Kernel.Bind<LotServerPicker>().To<LotServerPicker>().InSingletonScope();
+            Kernel.Bind<LotAllocations>().To<LotAllocations>().InSingletonScope();
 
             IDAFactory da = Kernel.Get<IDAFactory>();
             using (var db = da.Get()){
@@ -170,6 +171,7 @@ namespace FSO.Server.Servers.City
                 typeof(PurchaseLotHandler),
                 typeof(LotServerAuthenticationHandler),
                 typeof(LotServerLifecycleHandler),
+                typeof(LotServerClosedownHandler),
                 typeof(MessagingHandler),
                 typeof(JoinLotHandler),
             };

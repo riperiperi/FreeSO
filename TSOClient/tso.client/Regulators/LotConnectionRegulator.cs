@@ -135,6 +135,21 @@ namespace FSO.Client.Regulators
                     
                     AsyncTransition("PartiallyConnected");
                     break;
+                case "UnexpectedDisconnect":
+                    AsyncTransition("Disconnected");
+                    break;
+
+                case "Disconnect":
+                    if (Client.IsConnected)
+                    {
+                        Client.Write(new ClientByePDU());
+                        Client.Disconnect();
+                    }
+                    else
+                    {
+                        AsyncTransition("Disconnected");
+                    }
+                    break;
             }
         }
 

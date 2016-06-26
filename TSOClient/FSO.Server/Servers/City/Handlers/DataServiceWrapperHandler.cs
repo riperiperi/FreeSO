@@ -78,11 +78,17 @@ namespace FSO.Server.Servers.City.Handlers
                 {
                     return;
                 }
-                
-                if(type != MaskedStruct.MyAvatar && type != MaskedStruct.SimPage_Main && type != MaskedStruct.MapView_RollOverInfo_Lot_Price
+
+                Console.WriteLine(type.ToString());
+                //if (type == MaskedStruct.MapView_NearZoom_Lot_Thumbnail || type == MaskedStruct.Thumbnail_Lot || type == MaskedStruct.MapView_NearZoom_Lot) { }
+
+                if (type != MaskedStruct.MyAvatar && type != MaskedStruct.SimPage_Main && type != MaskedStruct.MapView_RollOverInfo_Lot_Price
                     && type != MaskedStruct.MapView_RollOverInfo_Lot && type != MaskedStruct.Unknown &&
                     type != MaskedStruct.SimPage_DescriptionPanel && type != MaskedStruct.PropertyPage_LotInfo &&
-                    type != MaskedStruct.Messaging_Message_Avatar && type != MaskedStruct.Messaging_Icon_Avatar)
+                    type != MaskedStruct.Messaging_Message_Avatar && type != MaskedStruct.Messaging_Icon_Avatar
+                    && type != MaskedStruct.MapView_NearZoom_Lot_Thumbnail && type != MaskedStruct.Thumbnail_Lot
+                    && type != MaskedStruct.CurrentCity && type != MaskedStruct.MapView_NearZoom_Lot
+                    && type != MaskedStruct.Thumbnail_Avatar)
                 {
                     //Currently broken for some reason
                     return;

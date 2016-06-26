@@ -108,10 +108,17 @@ namespace FSO.Server.Servers.Lot
                             x.AvatarClaimId = ticket.avatar_claim_id;
                         });
 
+                        newSession.SetAttribute("cityCallSign", ticket.avatar_claim_owner);
+
                         //Try and join the lot, no reason to keep this connection alive if you can't get in
                         if (!Lots.TryJoin(ticket.lot_id, newSession))
                         {
                             newSession.Close();
+                            using (var db = DAFactory.Get())
+                            {
+                                //return claim to the city we got it from.
+                                db.AvatarClaims.Claim(newSession.AvatarClaimId, Config.Call_Sign, (string)newSession.GetAttribute("cityCallSign"), 0);
+                            }
                         }
                         return;
                     }

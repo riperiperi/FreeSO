@@ -31,7 +31,7 @@ namespace FSO.Server.Servers.Lot.Handlers
                 return;
             }
 
-            var lot = Lots.TryHost(request.EntityId);
+            var lot = Lots.TryHost(request.EntityId, session);
             if(lot == null)
             {
                 session.Write(new TransferClaimResponse

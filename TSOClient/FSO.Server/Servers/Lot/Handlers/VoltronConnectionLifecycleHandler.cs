@@ -22,6 +22,11 @@ namespace FSO.Server.Servers.Lot.Handlers
             this.DAFactory = da;
         }
 
+        public void Handle(IVoltronSession session, ClientByePDU packet)
+        {
+            session.Close();
+        }
+
         public async void SessionClosed(IAriesSession session)
         {
             if (!(session is IVoltronSession))

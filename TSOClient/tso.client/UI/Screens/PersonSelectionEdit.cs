@@ -161,15 +161,10 @@ namespace FSO.Client.UI.Screens
              * Music
              */
             HIT.HITVM.Get().PlaySoundEvent(UIMusic.CAS);
-            /*
-            PlayBackgroundMusic(
-                new string[] { GlobalSettings.Default.StartupPath + "\\music\\modes\\create\\tsocas1_v2.mp3" }
-            );*/
 
             SimBox = new UISim();
-
-            SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 70, offset.Y + 88);
-
+            SimBox.Position = new Vector2(offset.X + 70, offset.Y + 88);
+            SimBox.Size = new Vector2(140,200);
             SimBox.AutoRotate = true;
             this.Add(SimBox);
 

@@ -16,7 +16,11 @@ namespace FSO.Common.DataService
                                 IKernel kernel) : base(serializer, content)
         {
             AddProvider(kernel.Get<ServerAvatarProvider>());
-            AddProvider(kernel.Get<ServerLotProvider>());
+            var lots = kernel.Get<ServerLotProvider>();
+            AddProvider(lots);
+            var city = kernel.Get<ServerCityProvider>();
+            AddProvider(city);
+            city.BindLots(lots);
         }
     }
 }

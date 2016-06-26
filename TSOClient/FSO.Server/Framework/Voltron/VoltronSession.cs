@@ -1,5 +1,6 @@
 ﻿using FSO.Common.Security;
 using FSO.Server.Framework.Aries;
+using FSO.Server.Protocol.Voltron.Packets;
 using Mina.Core.Session;
 using System;
 using System.Collections.Generic;
@@ -35,6 +36,11 @@ namespace FSO.Server.Framework.Voltron
         public VoltronSession(IoSession ioSession) : base(ioSession){
         }
 
+        public override void Close()
+        {
+            Write(new ServerByePDU() { }); //try and close the connection safely
+            base.Close();
+        }
 
 
         public void DemandAvatar(uint id, AvatarPermissions permission)

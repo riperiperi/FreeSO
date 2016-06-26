@@ -9,6 +9,7 @@ using FSO.Common.DataService.Model;
 using FSO.Common.Enum;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.NetPlay.Model;
 using Ninject;
 using Ninject.Parameters;
@@ -125,6 +126,11 @@ namespace FSO.Client.Controllers
             {
                 Network.LotClient.Write(new FSOVMCommand() { Data = data });
             }
+        }
+
+        public void HandleVMShutdown(VMCloseNetReason reason)
+        {
+            JoinLotRegulator.AsyncTransition("Disconnect");
         }
 
         public bool IsMe(uint id)

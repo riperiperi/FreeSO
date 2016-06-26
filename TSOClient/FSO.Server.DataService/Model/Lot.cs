@@ -1,6 +1,7 @@
 ﻿using FSO.Common.DataService.Framework;
 using FSO.Common.DataService.Framework.Attributes;
 using FSO.Common.Domain.Realestate;
+using FSO.Common.Serialization.Primitives;
 using FSO.Server.Common;
 using System;
 using System.Collections.Generic;
@@ -29,6 +30,7 @@ namespace FSO.Common.DataService.Model
         }
 
         private bool _Lot_IsOnline;
+        [Persist] //bit of a hack here... this "persists" through to the city representation. TODO: make not stupid
         public bool Lot_IsOnline
         {
             get { return _Lot_IsOnline; }
@@ -150,5 +152,9 @@ namespace FSO.Common.DataService.Model
                 return MapCoordinates.Pack(Lot_Location.Location_X, Lot_Location.Location_Y);
             }
         }
+
+        public cTSOGenericData Lot_Thumbnail { get; set; }
+
+        public uint Lot_ThumbnailCheckSum { get; set; }
     }
 }

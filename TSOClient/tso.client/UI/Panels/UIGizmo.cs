@@ -412,13 +412,11 @@ namespace FSO.Client.UI.Panels
 
         void ContractButton_OnButtonClick(UIElement button)
         {
-            Position = new Microsoft.Xna.Framework.Vector2(Position.X, Position.Y + 6);
             SetOpen(false);
         }
 
         void ExpandButton_OnButtonClick(UIElement button)
         {
-            Position = new Microsoft.Xna.Framework.Vector2(Position.X, Position.Y - 6);
             SetOpen(true);
         }
 
@@ -437,6 +435,11 @@ namespace FSO.Client.UI.Panels
 
         private void SetOpen(bool open)
         {
+            if (m_Open != open)
+            {
+                if (open) Position = new Microsoft.Xna.Framework.Vector2(Position.X, Position.Y - 6);
+                else Position = new Microsoft.Xna.Framework.Vector2(Position.X, Position.Y + 6);
+            }
             m_Open = open;
             Redraw();
         }

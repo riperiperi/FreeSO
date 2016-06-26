@@ -5,8 +5,11 @@ using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.DataService;
 using FSO.Server.Framework.Aries;
+using FSO.Server.Framework.Gluon;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Protocol.Gluon.Packets;
+using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.Lot.Lifecycle;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
@@ -76,26 +79,37 @@ namespace FSO.Server.Servers.Lot.Domain
             return lot.TryJoin(session);
         }
 
+        public void RemoveLot(int id)
+        {
+            lock (Lots)
+            {
+                Lots.Remove(id);
+            }
+        }
+
         private LotHostEntry GetLot(IVoltronSession session)
         {
-            var lotId = (Int32)session.GetAttribute("currentLot");
+            var lotId = (int?)session.GetAttribute("currentLot");
             if(lotId == null)
             {
                 return null;
             }
-            return GetLot(lotId);
+            return GetLot(lotId.Value);
         }
 
         private LotHostEntry GetLot(int id)
         {
-            if (Lots.ContainsKey(id))
+            lock (Lots)
             {
-                return Lots[id];
+                if (Lots.ContainsKey(id))
+                {
+                    return Lots[id];
+                }
             }
             return null;
         }
 
-        public LotHostEntry TryHost(int id)
+        public LotHostEntry TryHost(int id, IGluonSession cityConnection)
         {
             lock (Lots)
             {
@@ -111,6 +125,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
 
                 var ctnr = Kernel.Get<LotHostEntry>();
+                ctnr.CityConnection = cityConnection;
                 Lots.Add(id, ctnr);
                 return ctnr;
             }
@@ -123,7 +138,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 var didClaim = da.LotClaims.Claim(claimId, previousOwner, Config.Call_Sign);
                 if (!didClaim)
                 {
-                    Lots.Remove(lotId);
+                    lock (Lots) Lots.Remove(lotId);
                     return false;
                 }
                 else
@@ -131,14 +146,14 @@ namespace FSO.Server.Servers.Lot.Domain
                     var claim = da.LotClaims.Get(claimId);
                     if(claim == null)
                     {
-                        Lots.Remove(lotId);
+                        lock (Lots) Lots.Remove(lotId);
                         return false;
                     }
 
                     var lot = da.Lots.Get(claim.lot_id);
                     if(lot == null)
                     {
-                        Lots.Remove(lotId);
+                        lock (Lots) Lots.Remove(lotId);
                         return false;
                     }
 
@@ -164,6 +179,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public LotContainer Container { get; internal set; }
         private Dictionary<uint, IVoltronSession> _Visitors = new Dictionary<uint, IVoltronSession>();
+        public IGluonSession CityConnection;
         private IKernel ParentKernel;
         private IKernel Kernel;
 
@@ -219,6 +235,18 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
+        public void DropClient(uint id)
+        {
+            lock (_Visitors)
+            {
+                IVoltronSession visitor = null;
+                if (_Visitors.TryGetValue(id, out visitor))
+                {
+                    visitor.Close();
+                }
+            }
+        }
+
         public void InBackground(Callback cb)
         {
             lock (BackgroundTasks)
@@ -234,8 +262,7 @@ namespace FSO.Server.Servers.Lot.Domain
             Model.Id = context.Id;
             Model.DbId = context.DbId;
             
-
-            //Each lot gets itsi own set of bindings
+            //Each lot gets its own set of bindings
             Kernel = new ChildKernel(
                 ParentKernel
             );
@@ -321,14 +348,36 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void ReleaseAvatarClaim(IVoltronSession session)
         {
-            //TODO: If avatar is still connected to the city we need to transfer the claim rather than delete it
             _Visitors.Remove(session.AvatarId);
             session.SetAttribute("currentLot", null);
             SyncNumVisitors();
 
             using (var db = DAFactory.Get())
             {
-                db.AvatarClaims.Delete(session.AvatarClaimId, Config.Call_Sign);
+                //return claim to the city we got it from.
+                db.AvatarClaims.Claim(session.AvatarClaimId, Config.Call_Sign, (string)session.GetAttribute("cityCallSign"), 0);
+            }
+        }
+
+        public void Shutdown()
+        {
+            Host.RemoveLot(Context.DbId);
+            SetOnline(false);
+            ReleaseLotClaim();
+        }
+
+        public void ReleaseLotClaim()
+        {
+            //tell our city that we're no longer hosting this lot.
+            if (CityConnection != null)
+            {
+                CityConnection.Write(new TransferClaim()
+                {
+                    Type = Protocol.Gluon.Model.ClaimType.LOT,
+                    ClaimId = Context.ClaimId,
+                    EntityId = Context.DbId,
+                    FromOwner = Config.Call_Sign
+                });
             }
         }
 
@@ -343,8 +392,10 @@ namespace FSO.Server.Servers.Lot.Domain
     {
         void Send(uint avatarID, params object[] messages);
         void Broadcast(HashSet<uint> ignoreIDs, params object[] messages);
+        void DropClient(uint avatarID);
         void InBackground(Callback cb);
         void ReleaseAvatarClaim(IVoltronSession session);
+        void Shutdown();
         void SetOnline(bool online);
     }
 }

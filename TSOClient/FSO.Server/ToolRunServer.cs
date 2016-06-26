@@ -55,6 +55,8 @@ namespace FSO.Server
                 return;
             }
 
+            Directory.CreateDirectory(Config.SimNFS);
+
             //TODO: Some content preloading
             LOG.Info("Scanning content");
             Content.Content.Init(Config.GameLocation, Content.ContentMode.SERVER);

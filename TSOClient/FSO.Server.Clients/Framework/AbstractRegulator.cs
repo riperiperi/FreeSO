@@ -1,4 +1,5 @@
-﻿using FSO.Common.Utils;
+﻿using FSO.Common;
+using FSO.Common.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,8 +43,10 @@ namespace FSO.Server.Clients.Framework
         }
 
         private void Digest(){
-            while (WaitHandle.WaitOne()){
-                while(Actions.Count > 0){
+            //TODO: clean exit instead of making this poll...
+            while (FSOEnvironment.GameThread.IsAlive){
+                WaitHandle.WaitOne(1000);
+                while (Actions.Count > 0){
                     var item = (IRegulatorDigestAction)Actions.Dequeue();
                     try
                     {

@@ -21,8 +21,7 @@ namespace FSO.Client.UI.Screens
 {
     public class LoginScreen : GameScreen
     {
-        private UIContainer BackgroundCtnr;
-        private UIImage Background;
+        private UISetupBackground Background;
         private UILoginDialog LoginDialog;
         private UILoginProgress LoginProgress;
 
@@ -34,25 +33,15 @@ namespace FSO.Client.UI.Screens
 
             HITVM.Get().PlaySoundEvent(UIMusic.None);
 
-
-            /**
-             * Scale the whole screen to 1024
-             */
-            BackgroundCtnr = new UIContainer();
-            BackgroundCtnr.ScaleX = BackgroundCtnr.ScaleY = ScreenWidth / 800.0f;
-
-            /** Background image **/
-            Background = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.setup));
-            Background.ID = "Background";
-            BackgroundCtnr.Add(Background);
+            Background = new UISetupBackground();
 
             /** Client version **/
             var lbl = new UILabel();
             lbl.Caption = "Version " + GlobalSettings.Default.ClientVersion;
             lbl.X = 20;
             lbl.Y = 558;
-            BackgroundCtnr.Add(lbl);
-            this.Add(BackgroundCtnr);
+            Background.BackgroundCtnr.Add(lbl);
+            this.Add(Background);
 
             /** Progress bar **/
             LoginProgress = new UILoginProgress();

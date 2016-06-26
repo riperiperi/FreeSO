@@ -38,8 +38,7 @@ namespace FSO.Client.UI.Panels
             SimBox.Position = new Microsoft.Xna.Framework.Vector2(16, 8); //new Microsoft.Xna.Framework.Vector2((buttonTexture.Width / 4) / 2.0f, buttonTexture.Height - 20.0f);
             SimBox.Avatar.BodyOutfitId = 2611340115981;
             SimBox.Avatar.HeadOutfitId = 5076651343885;
-            SimBox.ScaleX = SimBox.ScaleY = 0.7f;
-            SimBox.Size = new Microsoft.Xna.Framework.Vector2(Button.Texture.Width / 4, Button.Texture.Height);
+            SimBox.Size = new Microsoft.Xna.Framework.Vector2(75,140);
             SimBox.AutoRotate = true;
             this.Add(SimBox);
         }

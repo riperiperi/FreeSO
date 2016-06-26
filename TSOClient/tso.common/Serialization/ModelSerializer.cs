@@ -14,6 +14,8 @@ namespace FSO.Common.Serialization
         public ModelSerializer(){
             //Built-in
             AddTypeSerializer(new cTSOValueBoolean());
+            AddTypeSerializer(new cTSOValueBooleanVector());
+            AddTypeSerializer(new cTSOValueBooleanMap());
             AddTypeSerializer(new cTSOValueString());
             AddTypeSerializer(new cTSOValueStringVector());
             AddTypeSerializer(new cTSOValueByte());
@@ -26,7 +28,9 @@ namespace FSO.Common.Serialization
 
             AddTypeSerializer(new cTSOValueUInt16());
             AddTypeSerializer(new cTSOValueDecorated());
-            AddTypeSerializer(new cTSOValueUint64());
+            AddTypeSerializer(new cTSOValueUInt64());
+
+            AddTypeSerializer(new cTSOValueGenericData());
         }
 
 

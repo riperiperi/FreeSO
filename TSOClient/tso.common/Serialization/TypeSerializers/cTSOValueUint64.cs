@@ -6,7 +6,7 @@ using System.Text;
 
 namespace FSO.Common.Serialization.TypeSerializers
 {
-    public class cTSOValueUint64 : ITypeSerializer
+    public class cTSOValueUInt64 : ITypeSerializer
     {
         //0x69D3E3DB: cTSOValue<unsigned __int64>
         private readonly uint CLSID = 0x69D3E3DB;

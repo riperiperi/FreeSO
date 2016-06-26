@@ -11,6 +11,7 @@ using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Utils;
 using FSO.Server.DataService.Model;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,20 +28,25 @@ namespace FSO.Client.Controllers
         private PurchaseLotRegulator PurchaseRegulator;
 
         private Binding<Lot> CurrentHoverLot;
+        private Binding<City> CurrentCity;
         private GameThreadTimeout HoverTimeout;
+        private Network.Network Network;
 
         public TerrainController(CoreGameScreenController parent, IClientDataService ds, Network.Network network, IRealestateDomain domain, PurchaseLotRegulator purchaseRegulator)
         {
             this.Parent = parent;
             this.DataService = ds;
             this.PurchaseRegulator = purchaseRegulator;
+            Network = network;
 
             PurchaseRegulator.OnError += PurchaseRegulator_OnError;
             PurchaseRegulator.OnTransition += PurchaseRegulator_OnTransition;
             Realestate = domain.GetByShard(network.MyShard.Id);
 
             CurrentHoverLot = new Binding<Lot>()
-                .WithMultiBinding(RefreshTooltip, "Lot_Price", "Lot_IsOnline", "Lot_Name");
+                .WithMultiBinding(RefreshTooltip, "Lot_Price", "Lot_IsOnline", "Lot_Name", "Lot_NumOccupants", "Lot_LeaderID");
+
+            CurrentCity = new Binding<City>().WithMultiBinding(RefreshCity, "City_ReservedLotInfo", "City_SpotlightsVector");
         }
 
         ~TerrainController()
@@ -61,20 +67,61 @@ namespace FSO.Client.Controllers
         private void RefreshTooltip(BindingChange[] changes)
         {
             //Called if price, online or name change
-            if (CurrentHoverLot.Value != null) {
-                Parent.Screen.CityTooltip.Text = "Vacant Lot: $" + CurrentHoverLot.Value.Lot_Price;
-            }else{
-                Parent.Screen.CityTooltip.Text = null;
+            GameThread.NextUpdate((state) =>
+            {
+                if (CurrentHoverLot.Value != null)
+                {
+                    var lot = CurrentHoverLot.Value;
+                    var name = lot.Lot_Name;
+                    var occupied = IsTileOccupied((int)(lot.Id >> 16), (int)(lot.Id & 0xFFFF));
+                    if (!occupied)
+                    {
+                        Parent.Screen.CityTooltip.Text = GameFacade.Strings.GetString("215", "9", new string[] { lot.Lot_Price.ToString() });
+                    }
+                    else
+                    {
+                        var text = GameFacade.Strings.GetString("215", "3", new string[] { name });
+                        if (lot.Lot_LeaderID == Network.MyCharacter) text += "\r\n" + GameFacade.Strings.GetString("215", "5");
+                        else if (!lot.Lot_IsOnline) text += "\r\n" + GameFacade.Strings.GetString("215", "6");
+
+                        if (lot.Lot_IsOnline) text += "\r\n" + GameFacade.Strings.GetString("215", "4", new string[] { lot.Lot_NumOccupants.ToString() });
+                        Parent.Screen.CityTooltip.Text = text;
+                    }
+                }
+                else
+                {
+                    Parent.Screen.CityTooltip.Text = null;
+                }
+            });
+        }
+
+        private void RefreshCity(BindingChange[] changes)
+        {
+            if (CurrentCity.Value != null)
+            {
+                var mapData = LotTileEntry.GenFromCity(CurrentCity.Value);
+                GameThread.NextUpdate((state) => View.populateCityLookup(mapData));        
             }
         }
 
         public void Init(Terrain terrain){
             View = terrain;
+
+            DataService.Get<City>((uint)0).ContinueWith(city =>
+            {
+                CurrentCity.Value = city.Result;
+                DataService.Request(Server.DataService.Model.MaskedStruct.CurrentCity, 0);
+            });
         }
 
         public bool IsPurchasable(int x, int y)
         {
             return Realestate.IsPurchasable((ushort)x, (ushort)y);
+        }
+
+        private bool IsTileOccupied(int x, int y)
+        {
+            return View.LotTileLookup.ContainsKey(new Vector2(x, y));
         }
 
         public void HoverTile(int x, int y)
@@ -88,6 +135,7 @@ namespace FSO.Client.Controllers
                 HoverTimeout = GameThread.SetTimeout(() =>
                 {
                     var id = MapCoordinates.Pack((ushort)x, (ushort)y);
+                    var occupied = IsTileOccupied(x, y);
                     DataService.Get<Lot>(id).ContinueWith(lot =>
                     {
                         CurrentHoverLot.Value = lot.Result;
@@ -95,7 +143,8 @@ namespace FSO.Client.Controllers
                         //Not loaded yet
                         if (lot.Result.Lot_Price == 0)
                         {
-                            DataService.Request(Server.DataService.Model.MaskedStruct.MapView_RollOverInfo_Lot_Price, id);
+                            if (occupied) DataService.Request(MaskedStruct.MapView_RollOverInfo_Lot, id);
+                            else DataService.Request(MaskedStruct.MapView_RollOverInfo_Lot_Price, id);
                         }
                     });
                 }, 500);
@@ -110,9 +159,15 @@ namespace FSO.Client.Controllers
             }
 
             var id = MapCoordinates.Pack((ushort)x, (ushort)y);
+            var occupied = IsTileOccupied(x, y);
             DataService.Get<Lot>(id).ContinueWith(result =>
             {
-                if (result.Result.Lot_Price == 0)
+
+                if (occupied)
+                {
+                    Parent.ShowLotPage(id);
+                }
+                else if (result.Result.Lot_Price == 0)
                 {
                     //We need to request the price
                     DataService.Request(MaskedStruct.MapView_RollOverInfo_Lot_Price, id).ContinueWith(masked =>

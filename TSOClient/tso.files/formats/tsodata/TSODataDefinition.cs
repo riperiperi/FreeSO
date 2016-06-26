@@ -47,6 +47,7 @@ namespace FSO.Files.Formats.tsodata
                 var fields = new List<StructField>();
 
                 foreach(var field in item.Entries){
+                    if (field.TypeStringID == 0xA99AF3AC) Console.WriteLine("unknown value: " + GetString(item.NameStringID) + "::"+ GetString(field.NameStringID));
                     fields.Add(new StructField {
                         ID = field.NameStringID,
                         Name = GetString(field.NameStringID),
@@ -69,6 +70,7 @@ namespace FSO.Files.Formats.tsodata
 
                 foreach (var field in item.Entries)
                 {
+                    if (field.TypeStringID == 0xA99AF3AC) Console.WriteLine("unknown value: " + GetString(item.NameStringID) + "::" + GetString(field.NameStringID));
                     fields.Add(new StructField
                     {
                         ID = field.NameStringID,
@@ -93,6 +95,7 @@ namespace FSO.Files.Formats.tsodata
 
                 foreach (var field in item.Entries)
                 {
+                    if (field.TypeStringID == 0xA99AF3AC) Console.WriteLine("unknown value: " + GetString(item.NameStringID) + "::" + GetString(field.NameStringID));
                     fields.Add(new DerivedStructFieldMask
                     {
                         ID = field.NameStringID,
@@ -257,7 +260,7 @@ namespace FSO.Files.Formats.tsodata
     public enum StructFieldClassification
     {
         SingleField = 0,
-        Unknown = 1,
+        Map = 1,
         List = 2
     }
 

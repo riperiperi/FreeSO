@@ -22,13 +22,13 @@ using FSO.Files;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
+using FSO.Client.UI.Panels;
 
 namespace FSO.Client.UI.Screens
 {
     public class LoadingScreen : GameScreen
     {
-        private UIContainer BackgroundCtnr;
-        private UIImage Background;
+        private UISetupBackground Background;
         private UILabel ProgressLabel1;
         private UILabel ProgressLabel2;
 
@@ -38,37 +38,7 @@ namespace FSO.Client.UI.Screens
         {
             HITVM.Get().PlaySoundEvent(UIMusic.LoadLoop);
 
-            /**
-             * Scale the whole screen to 1024
-             */
-            BackgroundCtnr = new UIContainer();
-            var scale = ScreenHeight / 600.0f;
-            BackgroundCtnr.ScaleX = BackgroundCtnr.ScaleY = scale;
-
-            /** Background image **/
-            Texture2D setupTex;
-            if (File.Exists("Content/setup.png"))
-            {
-                using (var logostrm = File.Open("Content/setup.png", FileMode.Open))
-                    setupTex = ImageLoader.FromStream(GameFacade.GraphicsDevice, logostrm);
-            }
-            else setupTex = GetTexture((ulong)FileIDs.UIFileIDs.setup);
-            Background = new UIImage(setupTex);
-            var bgScale = 600f / setupTex.Height;
-            Background.SetSize(setupTex.Width * bgScale, 600);
-            Background.X = (800 - bgScale * setupTex.Width) / 2;
-            BackgroundCtnr.Add(Background);
-            BackgroundCtnr.X = (ScreenWidth - (800 * scale)) / 2;
-
-            Texture2D splashSeg;
-            using (var logostrm = File.Open("Content/Textures/splashSeg.png", FileMode.Open))
-                splashSeg = ImageLoader.FromStream(GameFacade.GraphicsDevice, logostrm);
-
-            var bgEdge = new UIImage(splashSeg).With9Slice(64, 64, 1, 1);
-            BackgroundCtnr.AddAt(0,bgEdge);
-            bgEdge.Y = -1;
-            bgEdge.X = Background.X-64;
-            bgEdge.SetSize(Background.Width+64*2, ScreenHeight + 2);
+            Background = new UISetupBackground();
 
             //TODO: Letter spacing is a bit wrong on this label
             var lbl = new UILabel();
@@ -80,8 +50,8 @@ namespace FSO.Client.UI.Screens
             var style = lbl.CaptionStyle.Clone();
             style.Size = 17;
             lbl.CaptionStyle = style;
-            BackgroundCtnr.Add(lbl);
-            this.Add(BackgroundCtnr);
+            Background.BackgroundCtnr.Add(lbl);
+            this.Add(Background);
 
             ProgressLabel1 = new UILabel
             {
@@ -99,8 +69,8 @@ namespace FSO.Client.UI.Screens
                 CaptionStyle = style
             };
 
-            BackgroundCtnr.Add(ProgressLabel1);
-            BackgroundCtnr.Add(ProgressLabel2);
+            Background.BackgroundCtnr.Add(ProgressLabel1);
+            Background.BackgroundCtnr.Add(ProgressLabel2);
 
             PreloadLabels = new string[]{
                 GameFacade.Strings.GetString("155", "6"),
@@ -189,7 +159,6 @@ namespace FSO.Client.UI.Screens
 
         public override void Draw(UISpriteBatch batch)
         {
-            batch.Draw(TextureGenerator.GetPxWhite(batch.GraphicsDevice), new Rectangle(0, 0, ScreenWidth, ScreenHeight), new Color(0x09,0x18,0x2F));
             base.Draw(batch);
         }
     }

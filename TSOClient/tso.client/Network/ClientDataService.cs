@@ -34,6 +34,7 @@ namespace FSO.Common.DataService
         {
             AddProvider(kernel.Get<ClientAvatarProvider>());
             AddProvider(kernel.Get<ClientLotProvider>());
+            AddProvider(kernel.Get<ClientCityProvider>());
             CityClient = kernel.Get<AriesClient>("City");
             CityClient.AddSubscriber(this);
 

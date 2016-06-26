@@ -43,9 +43,10 @@ namespace FSO.Client.Rendering.City
         public int ShadowRes = 2048;
         public bool RegenData = false;
 
+        public LotTileEntry[] LotTileData = new LotTileEntry[0];
+        public Dictionary<Vector2, LotTileEntry> LotTileLookup = new Dictionary<Vector2, LotTileEntry>();
+
         private bool m_HandleMouse = false;
-        private CityDataRetriever m_CityData;
-        private Dictionary<Vector2, LotTileEntry> m_CityLookup;
         private Dictionary<int, Texture2D> m_HouseGraphics;
         private Texture2D m_Elevation, m_VertexColor, m_TerrainType, m_ForestType, m_ForestDensity, m_RoadMap;
         private Color m_TintColor;
@@ -127,14 +128,6 @@ namespace FSO.Client.Rendering.City
 
         private int m_Width, m_Height;
 
-        //Network related stuff.
-        private int m_LotCost = 0;
-        private static LotTileEntry m_CurrentLot; //Current lot received by server.
-        private UIAlert m_BuyPropertyAlert;
-        private UIAlert m_LotUnbuildableAlert;
-        private Timer m_PacketTimer = new Timer(1000); //Timer for regulating packet interval.
-        private static bool m_CanSend = false;
-
         private RenderTarget2D ShadowTarget;
         private int OldShadowRes;
 
@@ -183,7 +176,7 @@ namespace FSO.Client.Rendering.City
             m_Forest = LoadTex(gamepath + "gamedata/farzoom/forest00a.tga");
             m_DefaultHouse = LoadTex(gamepath + "userdata/houses/defaulthouse.bmp");//, new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
             //Can crash on some setups on dx11?
-            //TextureUtils.ManualTextureMaskSingleThreaded(ref m_DefaultHouse, new uint[] { new Color(0x00, 0x00, 0x00, 0xFF).PackedValue });
+            TextureUtils.ManualTextureMaskSingleThreaded(ref m_DefaultHouse, new uint[] { new Color(0x00, 0x00, 0x00, 0xFF).PackedValue });
 
             m_LotOnline = UIElement.GetTexture(0x0000032F00000001);
             m_LotOffline = UIElement.GetTexture(0x0000033100000001);
@@ -245,10 +238,8 @@ namespace FSO.Client.Rendering.City
             RegenData = true;
         }
 
-        public void Initialize(int mapId, CityDataRetriever cityData)
+        public void Initialize(int mapId)
         {
-            m_CityData = cityData;
-
             m_ToBlendPrio.Add(new Color(0, 255, 0), 0);     //grass
             m_ToBlendPrio.Add(new Color(12, 0, 255), 4);    //water
             m_ToBlendPrio.Add(new Color(255, 255, 255), 3); //snow
@@ -306,89 +297,15 @@ namespace FSO.Client.Rendering.City
             m_ForestTypes.Add(new Color(0, 0, 0), -1);  //nothing; no forest
 
             m_HouseGraphics = new Dictionary<int,Texture2D>();
-            populateCityLookup();
-
-            m_PacketTimer.Elapsed += new ElapsedEventHandler(m_PacketTimer_Elapsed);
-            m_PacketTimer.AutoReset = true;
-            m_PacketTimer.Start();
-        }
-
-
-        #region Network handlers
-
-        /*private void Controller_OnLotPurchaseSuccessful(int Money)
-        {
-            CoreGameScreen CurrentUIScr = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
-
-            PlayerAccount.Money = Money;
-            CurrentUIScr.ucp.MoneyText.Caption = Money.ToString();
-
-            //TODO: Add popup dialog.
-        }
-
-        private void Controller_OnLotUnbuildable()
-        {
-            UIAlertOptions AlertOptions = new UIAlertOptions();
-            AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
-            //This isn't exported as a string. WTF Maxis??
-            AlertOptions.Message = "This property cannot be purchased!\r\n";
-            m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
-        }*/
-
-        /*private void Controller_OnLotPurchaseFailed(Network.Events.TransactionEvent e)
-        {
-            UIAlertOptions AlertOptions = new UIAlertOptions();
-            AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
-
-            if (EventSink.EventQueue[0].ECode == EventCodes.TRANSACTION_PLAYER_OUT_OF_MONEY)
-            {
-                //For now this says "Error! Transaction refused by server", because I couldn't find the right string.
-                AlertOptions.Message = GameFacade.Strings.GetString("224", "16");
-
-                //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
-                //events that may have been added to the end.
-                EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
-            }
-            else
-            {
-                AlertOptions.Message = "General Error";
-                //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
-                //events that may have been added to the end.
-                EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
-            }
-            m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
-        }*/
-
-        private void Controller_OnLotCost(LotTileEntry Entry)
-        {
-            m_CurrentLot = Entry;
-            m_LotCost = Entry.cost;
-        }
-
-        private void m_PacketTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            m_CanSend = true;
-        }
-
-        #endregion
-
-        private void populateCityLookup()
-        {
-            LotTileEntry[] data = m_CityData.LotTileData; //ideally this should change and we should poll the server for new info every 10 seconds when in city view
-            m_CityLookup = new Dictionary<Vector2, LotTileEntry>();
-            for (int i = 0; i < data.Length; i++)
-            {
-                m_CityLookup[new Vector2 ( data[i].x, data[i].y )] = data[i];
-            }
         }
 
         public void populateCityLookup(LotTileEntry[] TileData)
         {
-            LotTileEntry[] data = TileData;
-            m_CityLookup = new Dictionary<Vector2, LotTileEntry>();
-            for (int i = 0; i < data.Length; i++)
+            LotTileData = TileData;
+            LotTileLookup = new Dictionary<Vector2, LotTileEntry>();
+            for (int i = 0; i < TileData.Length; i++)
             {
-                m_CityLookup[new Vector2(data[i].x, data[i].y)] = data[i];
+                LotTileLookup[new Vector2(TileData[i].x, TileData[i].y)] = TileData[i];
             }
         }
 
@@ -954,11 +871,11 @@ namespace FSO.Client.Rendering.City
             float iScale = (float)m_ScrWidth/(HB*2.0f);
 		
             float spotlightScale = (float)(iScale*(2.0*Math.Sqrt(0.5*0.5*2)/5.10));
-            LotTileEntry[] lots = m_CityData.LotTileData;
+            LotTileEntry[] lots = LotTileData;
 
             for (int i = 0; i < lots.Length; i++)
             {
-                if ((lots[i].flags & 2) > 0)
+                if ((lots[i].flags & LotTileFlags.Spotlight) > 0)
                 {
                     Vector2 pos = new Vector2(lots[i].x, lots[i].y);
                     Vector2 xy = transformSpr(iScale, new Vector3(pos.X + 0.5f, m_ElevationData[((int)pos.Y * 512 + (int)pos.X) * 4] / 12.0f, pos.Y + 0.5f)); //get position to place spotlight
@@ -979,12 +896,12 @@ namespace FSO.Client.Rendering.City
             SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
             spriteBatch.Begin();
             float iScale = (float)m_ScrWidth / (HB * 2);
-            LotTileEntry[] lots = m_CityData.LotTileData;
+            LotTileEntry[] lots = LotTileData;
             for (int i=0; i<lots.Length; i++) {
 				short x = lots[i].x;
 				short y = lots[i].y;
 				Vector2 xy = transformSpr(iScale, new Vector3(x+0.5f, m_ElevationData[(y*512+x)*4]/12.0f, y+0.5f));
-                bool online = ((lots[i].flags & 1) == 1);
+                bool online = ((lots[i].flags & LotTileFlags.Online) > 0);
                 Texture2D img = (online) ? m_LotOnline : m_LotOffline; //if house is online, use red house instead of gray one
 				double alpha = online?(0.5+Math.Sin(4*Math.PI*(m_SpotOsc%1))/2.0):1; //if house is online, flash the opacity using the oscillator variable.
 				spriteBatch.Draw(img, new Rectangle((int)Math.Round(xy.X-1), (int)Math.Round(xy.Y-2), 4, 3), Color.White*(float)alpha);
@@ -1070,26 +987,6 @@ namespace FSO.Client.Rendering.City
             }
             else if (m_Zoomed && m_HandleMouse)
             {
-                if (m_LotCost != 0)
-                {
-                    float X = GetHoverSquare()[0];
-                    float Y = GetHoverSquare()[1];
-                    //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
-                    DrawTooltip(spriteBatch, m_LotCost.ToString() + "§", new Vector2(X, Y), 0.5f);
-                }
-                else
-                {
-                    if (m_CurrentLot != null)
-                    {
-                        float X = GetHoverSquare()[0];
-                        float Y = GetHoverSquare()[1];
-                        bool Online = (m_CurrentLot.flags & 1) > 0;
-                        string OnlineStr = (Online == true) ? "Online" : "Offline";
-                        //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
-                        DrawTooltip(spriteBatch, GameFacade.Strings.GetString("215", "3", new string[]{m_CurrentLot.name}) + "\n" 
-                            + OnlineStr, new Vector2(X, Y), 0.5f);
-                    }
-                }
             }
             
             if (m_ZoomProgress < 0.5)
@@ -1133,9 +1030,9 @@ namespace FSO.Client.Rendering.City
                         Vector2 loc = new Vector2( x, y );
                         LotTileEntry house;
 
-                        if (m_CityLookup.ContainsKey(loc))
+                        if (LotTileLookup.ContainsKey(loc))
                         {
-                            house = m_CityLookup[loc];
+                            house = LotTileLookup[loc];
                         }
                         else
                         {
@@ -1143,7 +1040,7 @@ namespace FSO.Client.Rendering.City
                         }
                         if (house != null) //if there is a house here, draw it
                         {
-                            if ((house.flags & 1) > 0) {
+                            if ((house.flags & LotTileFlags.Online) > 0) {
 							    PathTile(x, y, iScale, (float)(0.3+Math.Sin(4*Math.PI*(m_SpotOsc%1))*0.15));
 						    }
 
@@ -1151,7 +1048,7 @@ namespace FSO.Client.Rendering.City
                             if (!m_HouseGraphics.ContainsKey(house.lotid)) {
 							    //no house graphic found - request one!
                                 m_HouseGraphics[house.lotid] = m_DefaultHouse;
-                                m_CityData.RetrieveHouseGFX(house.lotid, m_HouseGraphics, m_GraphicsDevice);
+                                //m_CityData.RetrieveHouseGFX(house.lotid, m_HouseGraphics, m_GraphicsDevice);
 						    }
                             Texture2D lotImg = m_HouseGraphics[house.lotid];
                             spriteBatch.Draw(lotImg, new Rectangle((int)(xy.X - 64.0 * scale), (int)(xy.Y - 32.0 * scale), (int)(scale * 128), (int)(scale * 64)), m_TintColor);
@@ -1213,13 +1110,6 @@ namespace FSO.Client.Rendering.City
                         }
 
                         m_SelTile = currentTile;
-
-
-                        if (m_CanSend)
-                        {
-                            //Network.UIPacketSenders.SendLotCostRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]);
-                            m_CanSend = false;
-                        }
                     }
 
                     if (m_MouseState.RightButton == ButtonState.Pressed && m_LastMouseState.RightButton == ButtonState.Released)
@@ -1270,14 +1160,6 @@ namespace FSO.Client.Rendering.City
                 m_ViewOffX = (m_TargVOffX) * m_ZoomProgress;
                 m_ViewOffY = (m_TargVOffY) * m_ZoomProgress;
             }
-        }
-
-        /// <summary>
-        /// Player selected "yes" to buy a new lot.
-        /// </summary>
-        private void BuyPropertyAlert_OnButtonClick(UIElement Button)
-        {
-            UIScreen.RemoveDialog(m_BuyPropertyAlert);
         }
 
         public void SetTimeOfDay(double time) 

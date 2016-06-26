@@ -52,8 +52,6 @@ namespace FSO.Client.UI.Screens
         public UIPersonPage PersonPage;
         public UILotPage LotPage;
 
-        private bool Connecting;
-        private UILoginProgress ConnectingDialog;
         private Queue<SimConnectStateChange> StateChanges;
 
         private Terrain CityRenderer; //city view
@@ -278,7 +276,7 @@ namespace FSO.Client.UI.Screens
         {
             CityRenderer = new Terrain(GameFacade.Game.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
             CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
-            CityRenderer.Initialize(cityMap, GameFacade.CDataRetriever);
+            CityRenderer.Initialize(cityMap);
             CityRenderer.LoadContent(GameFacade.GraphicsDevice);
             CityRenderer.RegenData = true;
             CityRenderer.SetTimeOfDay(0.5);
@@ -326,6 +324,7 @@ namespace FSO.Client.UI.Screens
 
         public void CleanupLastWorld()
         {
+            if (vm == null) return;
             if (ZoomLevel < 4) ZoomLevel = 5;
             vm.Context.Ambience.Kill();
             foreach (var ent in vm.Entities) { //stop object sounds
@@ -342,6 +341,9 @@ namespace FSO.Client.UI.Screens
             this.Remove(LotControl);
             ucp.SetPanel(-1);
             ucp.SetInLot(false);
+            vm = null;
+            World = null;
+            Driver = null;
         }
 
         private void VMSendCommand(byte[] data)
@@ -355,74 +357,46 @@ namespace FSO.Client.UI.Screens
             //TODO: alternate controller for sandbox/standalone mode?
         }
 
+        private void VMShutdown(VMCloseNetReason reason)
+        {
+            var controller = FindController<CoreGameScreenController>();
+
+            if (controller != null)
+            {
+                controller.HandleVMShutdown(reason);
+            }
+        }
+
         public void ClientStateChange(int state, float progress)
         {
             lock (StateChanges) StateChanges.Enqueue(new SimConnectStateChange(state, progress));
         }
 
         public void ClientStateChangeProcess(int state, float progress)
-        {
-            /*
-            if (state == 4) //disconnected
-            {
-                var reason = (VMCloseNetReason)progress;
-                if (reason == VMCloseNetReason.Unspecified)
-                {
-                    var alert = UIScreen.GlobalShowAlert(new UIAlertOptions
-                    {
-                        Title = GameFacade.Strings.GetString("222", "3"),
-                        Message = GameFacade.Strings.GetString("222", "2", new string[] { "0" }),
-                    }, true);
-
-                    if (Connecting)
-                    {
-                        UIScreen.RemoveDialog(ConnectingDialog);
-                        ConnectingDialog = null;
-                        Connecting = false;
-                    }
-
-                    alert.ButtonMap[UIAlertButtonType.OK].OnButtonClick += DisconnectedOKClick;
-                } else
-                {
-                    DisconnectedOKClick(null);
-                }
-            }*/
-            
+        {     
             switch (state)
             {
-                /*
-                case 1:
-                    ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "26");
-                    ConnectingDialog.Progress = 25f;
-                    break;
-                    */
                 case 2:
                     JoinLotProgress.ProgressCaption = GameFacade.Strings.GetString("211", "27");
                     JoinLotProgress.Progress = 100f*(0.5f+progress*0.5f);
                     break;
                 case 3:
                     UIScreen.RemoveDialog(JoinLotProgress);
-                    Connecting = false;
                     ZoomLevel = 1;
                     ucp.SetInLot(true);
                     break;
             }
         }
 
-        private void DisconnectedOKClick(UIElement button)
-        {
-            if (vm != null) CleanupLastWorld();
-            Connecting = false;
-        }
-
         public void InitializeLot()
         {
-            if (vm != null) CleanupLastWorld();
+            CleanupLastWorld();
 
             World = new LotView.World(GameFacade.Game.GraphicsDevice);
             GameFacade.Scenes.Add(World);
             Driver = new VMClientDriver(ClientStateChange);
             Driver.OnClientCommand += VMSendCommand;
+            Driver.OnShutdown += VMShutdown;
 
             vm = new VM(new VMContext(World), Driver, new UIHeadlineRendererProvider());
             vm.Init();

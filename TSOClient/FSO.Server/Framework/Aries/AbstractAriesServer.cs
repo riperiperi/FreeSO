@@ -221,7 +221,9 @@ namespace FSO.Server.Framework.Aries
 
         public void ExceptionCaught(IoSession session, Exception cause)
         {
-            LOG.Error("Unknown error", cause);
+            //todo: handle individual error codes
+            if (cause is System.Net.Sockets.SocketException) session.Close(true);
+            else LOG.Error("Unknown error", cause);
         }
 
         public void MessageSent(IoSession session, object message)

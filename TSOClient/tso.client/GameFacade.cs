@@ -54,7 +54,6 @@ namespace FSO.Client
         public static UIMessageController MessageController = new UIMessageController();
 
         //Entries received from city server, see UIPacketHandlers.OnCityTokenResponse()
-        public static CityDataRetriever CDataRetriever = new CityDataRetriever();
 
 //TODO: Merge conflict here, was this removed?
         /// <summary>

@@ -157,6 +157,8 @@ namespace FSO.Client.UI.Panels
             var msg = MessageTextEdit.CurrentText;
             MessageTextEdit.CurrentText = "";
 
+            HIT.HITVM.Get().PlaySoundEvent(UISounds.CallSend);
+
             FindController<MessagingWindowController>().SendIM(msg);
         }
 

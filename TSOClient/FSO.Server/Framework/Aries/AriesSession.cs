@@ -18,9 +18,9 @@ namespace FSO.Server.Framework.Aries
             IsAuthenticated = false;
         }
 
-        public void Close()
+        public virtual void Close()
         {
-            this.IoSession.Close(true);
+            this.IoSession.Close(false);
         }
         
         public void Write(params object[] messages)

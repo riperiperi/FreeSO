@@ -254,7 +254,7 @@ namespace FSO.Client.UI.Screens
             Sim = new UISim();
             Sim.Visible = false;
             Sim.Position = AvatarButton.Position + new Vector2(1, 10);
-            Sim.Size = AvatarButton.Size;
+            Sim.Size = new Vector2(140, 200);
 
             Screen.Add(Sim);
             SetTab(PersonSlotTab.EnterTab);

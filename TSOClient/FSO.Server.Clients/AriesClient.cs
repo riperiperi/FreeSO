@@ -1,6 +1,7 @@
 ﻿using FSO.Server.Common;
 using FSO.Server.Protocol.Aries;
 using FSO.Server.Protocol.Utils;
+using FSO.Server.Protocol.Voltron.Packets;
 using Mina.Core.Future;
 using Mina.Core.Service;
 using Mina.Core.Session;
@@ -160,11 +161,13 @@ namespace FSO.Server.Clients
 
         public void ExceptionCaught(IoSession session, Exception cause)
         {
-            LOG.Error(cause);
+            if (cause is System.Net.Sockets.SocketException) session.Close(true);
+            else LOG.Error(cause);
         }
 
         public void MessageReceived(IoSession session, object message)
         {
+            if (message is ServerByePDU) session.Close(false);
             lock (EventSubscribers)
             {
                 MessageSubscribers.ForEach(x => x.MessageReceived(this, message));
