@@ -1,4 +1,4 @@
-﻿CREATE TABLE `fso_objects` (
+CREATE TABLE `fso_objects` (
   `object_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `shard_id` int(11) NOT NULL,
   `owner_id` int(11) unsigned DEFAULT NULL,
@@ -17,5 +17,6 @@
   CONSTRAINT `FK_obj_shard` FOREIGN KEY (`shard_id`) REFERENCES `fso_shards` (`shard_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `FK_owner` FOREIGN KEY (`owner_id`) REFERENCES `fso_avatars` (`avatar_id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) 
+AUTO_INCREMENT=16777216
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;
