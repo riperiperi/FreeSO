@@ -215,37 +215,12 @@
       <Link>Monogame\Windows\SharpDX.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="ContentSrc\Effects\2DWorldBatch.fx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ContentSrc\Effects\colorpoly2D.fx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ContentSrc\Effects\PixShader.fx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ContentSrc\Effects\VerShader.fx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ContentSrc\Effects\Vitaboy.fx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ContentSrc\Textures\gridTexture.png" />
-    <Content Include="Content\Blueprints\empty_lot.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Compile Include="Controllers\AbstractController.cs" />
     <Compile Include="Controllers\ConnectCASController.cs" />
     <Compile Include="Controllers\ConnectCityController.cs" />
     <Compile Include="Controllers\DisconnectController.cs" />
     <Compile Include="Controllers\PersonSelectionController.cs" />
     <Compile Include="Controllers\PersonSelectionEditController.cs" />
-    <Content Include="Content\Globals\readme.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Objects\readme.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Compile Include="Debug\TSOClientFindAssetSearch.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -385,38 +360,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Content Include="Content\Textures\splashSeg.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Game.ico" />
     <EmbeddedResource Include="Icon.bmp" />
-    <Content Include="Content\OGL\Fonts\FreeSO_10px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Fonts\FreeSO_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Fonts\FreeSO_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Fonts\FreeSO_16px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Fonts\FreeSO_10px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Fonts\FreeSO_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Fonts\FreeSO_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Fonts\FreeSO_16px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Patch\pizzamaker_animfix.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <None Include="Resources\Icon.bmp" />
     <Content Include="sdl2.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -453,9 +398,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Content\Blueprints\empty_lot.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Dependencies\GOLD Engine.dll" />
     <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />
     <Content Include="Dependencies\nunit.framework.dll" />
@@ -496,10 +438,7 @@
     <Content Include="Resources\folder-horizontal.png" />
     <Content Include="Resources\magnifier-left.png" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Content\DX\Textures\" />
-    <Folder Include="Content\OGL\Textures\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\OpenTK.dll.config">
       <Link>OpenTK.dll.config</Link>
@@ -508,111 +447,14 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <Content Include="Content\Patch\koipond.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Patch\poolslide.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Patch\WORKAROUND_poolladder.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Effects\2DWorldBatch.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Effects\colorpoly2D.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Effects\GrassShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Effects\PixShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Effects\VerShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Effects\Vitaboy.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Fonts\Trebuchet_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Fonts\Trebuchet_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\2DWorldBatch.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\colorpoly2D.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\GrassShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\PixShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\VerShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\Vitaboy.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Fonts\Trebuchet_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Fonts\Trebuchet_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Monogame\MacOS\OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Monogame\MacOS\Tao.Sdl.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Patch\foodcounter_ea.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Patch\trees3_objf.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Patch\craftingworkbench_nodebug.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Patch\dfcontroller_optimise.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <None Include="UI\Framework\Parser\UIScript.egt" />
     <None Include="UI\Framework\Parser\UIScript.grm" />
-    <None Include="ContentSrc\ComicSans.spritefont" />
-    <None Include="ContentSrc\ComicSansSmall.spritefont" />
-    <None Include="ContentSrc\Effects\2dWorldBatch.mgfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="ContentSrc\Effects\colorpoly2D.mgfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="ContentSrc\Effects\compileForMono.bat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="ContentSrc\Effects\PixShader.mgfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="ContentSrc\Effects\VerShader.mgfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="ContentSrc\Fonts\ProjectDollhouse.otf" />
-    <None Include="ContentSrc\Fonts\ProjectDollhouse_10px.spritefont" />
-    <None Include="ContentSrc\Fonts\ProjectDollhouse_12px.spritefont">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="ContentSrc\Fonts\ProjectDollhouse_14px.spritefont" />
-    <None Include="ContentSrc\Fonts\ProjectDollhouse_16px.spritefont">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="ContentSrc\Textures\Thumbs.db" />
-    <Content Include="ContentSrc\TSOClientContent.mgcb" />
     <None Include="GlobalSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>GlobalSettings1.Designer.cs</LastGenOutput>

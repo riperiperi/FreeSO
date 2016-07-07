@@ -47,6 +47,7 @@
     <Compile Include="Components\EntityComponent.cs" />
     <Compile Include="Components\FloorComponent.cs" />
     <Compile Include="Components\ObjectComponent.cs" />
+    <Compile Include="Components\SubWorldComponent.cs" />
     <Compile Include="Components\TerrainComponent.cs" />
     <Compile Include="Components\WallComponent.cs" />
     <Compile Include="Model\AvatarDisplayFlags.cs" />

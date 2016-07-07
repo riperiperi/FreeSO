@@ -11,6 +11,8 @@ using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.LotClaims;
 using FSO.Server.Database.DA.AvatarClaims;
+using FSO.Server.Database.DA.Objects;
+using FSO.Server.Database.DA.Relationships;
 
 namespace FSO.Server.Database.DA
 {
@@ -72,6 +74,32 @@ namespace FSO.Server.Database.DA
                     _avatars = new SqlAvatars(Context);
                 }
                 return _avatars;
+            }
+        }
+
+        private IObjects _objects;
+        public IObjects Objects
+        {
+            get
+            {
+                if (_objects == null)
+                {
+                    _objects = new SqlObjects(Context);
+                }
+                return _objects;
+            }
+        }
+
+        private IRelationships _relationships;
+        public IRelationships Relationships
+        {
+            get
+            {
+                if (_relationships == null)
+                {
+                    _relationships = new SqlRelationships(Context);
+                }
+                return _relationships;
             }
         }
 

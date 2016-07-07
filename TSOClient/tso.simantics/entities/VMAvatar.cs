@@ -611,8 +611,25 @@ namespace FSO.SimAntics
         public virtual short GetPersonData(VMPersonDataVariable variable)
         {
             if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
+            VMTSOJobInfo jobInfo = null;
             switch (variable)
             {
+                case VMPersonDataVariable.OnlineJobGrade:
+                    if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
+                        return jobInfo.Level;
+                    return 0;
+                case VMPersonDataVariable.OnlineJobSickDays:
+                    if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
+                        return jobInfo.SickDays;
+                    return 0;
+                case VMPersonDataVariable.OnlineJobStatusFlags:
+                    if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
+                        return jobInfo.StatusFlags;
+                    return 0;
+                case VMPersonDataVariable.OnlineJobXP:
+                    if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
+                        return jobInfo.Experience;
+                    return 0;
                 case VMPersonDataVariable.Priority:
                     return (Thread.Queue.Count == 0) ? (short)0 : Thread.Queue[0].Priority;
                 case VMPersonDataVariable.IsHousemate:
@@ -644,8 +661,29 @@ namespace FSO.SimAntics
         public virtual bool SetPersonData(VMPersonDataVariable variable, short value)
             {
             if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
+            VMTSOJobInfo jobInfo = null;
             switch (variable)
             {
+                case VMPersonDataVariable.OnlineJobID:
+                    if (value > 4) return false;
+                    if (!((VMTSOAvatarState)TSOState).JobInfo.ContainsKey(value)) ((VMTSOAvatarState)TSOState).JobInfo[value] = new VMTSOJobInfo();
+                    return true;
+                case VMPersonDataVariable.OnlineJobGrade:
+                    if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
+                        jobInfo.Level = value;
+                    return true;
+                case VMPersonDataVariable.OnlineJobSickDays:
+                    if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
+                        jobInfo.SickDays = value;
+                    return true;
+                case VMPersonDataVariable.OnlineJobStatusFlags:
+                    if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
+                        jobInfo.StatusFlags = value;
+                    return true;
+                case VMPersonDataVariable.OnlineJobXP:
+                    if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
+                        jobInfo.Experience = value;
+                    return true;
                 case VMPersonDataVariable.Priority:
                     if (Thread.Queue.Count != 0 && Thread.Stack.LastOrDefault().ActionTree) Thread.Queue[0].Priority = value;
                     return true;

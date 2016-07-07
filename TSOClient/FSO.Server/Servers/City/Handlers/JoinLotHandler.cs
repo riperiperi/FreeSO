@@ -32,7 +32,7 @@ namespace FSO.Server.Servers.City.Handlers
 
         public async void Handle(IVoltronSession session, FindLotRequest packet)
         {
-            var find = await Lots.TryFindOrOpen(packet.LotId, session);
+            var find = await Lots.TryFindOrOpen(packet.LotId, session); //null reference exception possible here
             
             if(find.Status == Protocol.Electron.Model.FindLotResponseStatus.FOUND){
 

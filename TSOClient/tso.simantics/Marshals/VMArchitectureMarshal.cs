@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using FSO.LotView.Model;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.Marshals
 {
@@ -13,6 +14,7 @@ namespace FSO.SimAntics.Marshals
         public int Width;
         public int Height;
         public int Stories;
+        public VMArchitectureTerrain Terrain;
 
         //public for quick access and iteration. 
         //Make sure that on modifications you signal so that the render updates.
@@ -21,11 +23,17 @@ namespace FSO.SimAntics.Marshals
 
         public bool WallsDirty;
         public bool FloorsDirty;
+
+        public int Version;
+        public VMArchitectureMarshal() { }
+        public VMArchitectureMarshal(int version) { Version = version; }
         public void Deserialize(BinaryReader reader)
         {
             Width = reader.ReadInt32();
             Height = reader.ReadInt32();
             Stories = reader.ReadInt32();
+            Terrain = new VMArchitectureTerrain(Width, Height);
+            if (Version > 6) Terrain.Deserialize(reader);
 
             var size = Width * Height;
 
@@ -52,6 +60,7 @@ namespace FSO.SimAntics.Marshals
             writer.Write(Width);
             writer.Write(Height);
             writer.Write(Stories);
+            Terrain.SerializeInto(writer);
 
             foreach (var level in Walls)
             {

@@ -13,6 +13,8 @@ namespace FSO.Server.Servers.Lot
 
         public string Internal_Host;
         public string Public_Host;
+        public string SimNFS;
+        public int RingBufferSize = 10;
 
         //Which cities to provide lot hosting for
         public LotServerConfigurationCity[] Cities;

@@ -108,6 +108,15 @@ namespace FSO.LotView
         }
 
         /// <summary>
+        /// Set level without invalidating.
+        /// </summary>
+        public sbyte SilentLevel
+        {
+            get { return _Level; }
+            set { _Level = value; }
+        }
+
+        /// <summary>
         /// What zoom level is being displayed
         /// </summary>
         private WorldZoom _Zoom;

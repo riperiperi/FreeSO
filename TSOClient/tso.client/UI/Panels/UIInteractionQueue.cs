@@ -148,6 +148,7 @@ namespace FSO.Client.UI.Panels
 
         private void InteractionClicked(UIElement ui)
         {
+            if (QueueOwner == null) return;
             UIInteraction item = (UIInteraction)ui;
             var itemui = item.ParentEntry;
             var queue = QueueOwner.Thread.Queue;

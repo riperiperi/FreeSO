@@ -176,7 +176,7 @@ namespace FSO.Client.UI.Controls.Catalog
             251, //banisters
         };
 
-        private int PageSize;
+        public int PageSize { get; set; }
         private List<UICatalogElement> Selected;
         private UICatalogItem[] CatalogItems;
         private Dictionary<uint, Texture2D> IconCache;
@@ -218,6 +218,7 @@ namespace FSO.Client.UI.Controls.Catalog
             }
 
             int index = page*PageSize;
+            if (Selected == null) return;
             CatalogItems = new UICatalogItem[Math.Min(PageSize, Math.Max(Selected.Count-index, 0))];
             int halfPage = PageSize / 2;
             

@@ -49,7 +49,7 @@ namespace FSO.Server.Protocol.Aries
                 return false;
             }
 
-            LOG.Info("[ARIES] " + packetType + " (" + payloadSize + ")");
+            //LOG.Info("[ARIES] " + packetType + " (" + payloadSize + ")");
 
             if(packetType == AriesPacketType.Voltron.GetPacketCode())
             {

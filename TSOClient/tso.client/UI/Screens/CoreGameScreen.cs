@@ -400,7 +400,6 @@ namespace FSO.Client.UI.Screens
 
             vm = new VM(new VMContext(World), Driver, new UIHeadlineRendererProvider());
             vm.Init();
-            vm.LotName = "unknown"; //quick hack just so we can remember where we are
 
             LotControl = new UILotControl(vm, World);
             this.AddAt(1, LotControl);

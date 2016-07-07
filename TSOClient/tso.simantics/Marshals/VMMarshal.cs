@@ -13,7 +13,7 @@ namespace FSO.SimAntics.Marshals
 {
     public class VMMarshal : VMSerializable
     {
-        public static readonly int LATEST_VERSION = 5;
+        public static readonly int LATEST_VERSION = 8;
 
         public int Version = LATEST_VERSION;
         public bool Compressed = true;
@@ -45,7 +45,7 @@ namespace FSO.SimAntics.Marshals
                 reader = new BinaryReader(zipStream);
             }
 
-            Context = new VMContextMarshal();
+            Context = new VMContextMarshal(Version);
             Context.Deserialize(reader);
 
             int ents = reader.ReadInt32();
@@ -82,7 +82,7 @@ namespace FSO.SimAntics.Marshals
             }
 
             //assume TSO for now
-            PlatformState = new VMTSOLotState();
+            PlatformState = new VMTSOLotState(Version);
             PlatformState.Deserialize(reader);
 
             ObjectId = reader.ReadInt16();

@@ -189,7 +189,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private Thread MainThread;
         private LotContext Context;
 
-        private ManualResetEvent BackgroundNotify = new ManualResetEvent(false);
+        private AutoResetEvent BackgroundNotify = new AutoResetEvent(false);
         private Thread BackgroundThread;
         private List<Callback> BackgroundTasks = new List<Callback>();
 
@@ -364,6 +364,8 @@ namespace FSO.Server.Servers.Lot.Domain
             Host.RemoveLot(Context.DbId);
             SetOnline(false);
             ReleaseLotClaim();
+            BackgroundThread.Abort();
+            MainThread.Abort();
         }
 
         public void ReleaseLotClaim()

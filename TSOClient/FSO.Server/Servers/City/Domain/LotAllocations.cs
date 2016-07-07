@@ -88,11 +88,14 @@ namespace FSO.Server.Servers.City.Domain
             }
 
             var allocation = Remove(lot.location);
-            lock (allocation)
+            if (allocation != null)
             {
-                allocation.State = LotAllocationState.FAILED;
-                //kill this allocation
-                //TODO: is this safe? should correctly interrupt in-progress allocations, but shouldn't get here in that case anyways
+                lock (allocation)
+                {
+                    allocation.State = LotAllocationState.FAILED;
+                    //kill this allocation
+                    //TODO: is this safe? should correctly interrupt in-progress allocations, but shouldn't get here in that case anyways
+                }
             }
             allocation.TryUnclaim();
         }
@@ -125,6 +128,7 @@ namespace FSO.Server.Servers.City.Domain
                         //We need to pick a server to run this lot
                         if (!openIfClosed){
                             //Sorry, cant do this
+                            Remove(lotId);
                             return Immediate(new TryFindLotResult
                             {
                                 Status = FindLotResponseStatus.NOT_OPEN
@@ -138,6 +142,7 @@ namespace FSO.Server.Servers.City.Domain
                             lot = db.Lots.GetByLocation(Context.ShardId, lotId);
                             if (lot == null)
                             {
+                                Remove(lotId);
                                 return Immediate(new TryFindLotResult
                                 {
                                     Status = FindLotResponseStatus.NO_SUCH_LOT
@@ -148,6 +153,7 @@ namespace FSO.Server.Servers.City.Domain
                             try {
                                 security.DemandAvatar(lot.owner_id, AvatarPermissions.WRITE);
                             }catch(Exception ex){
+                                Remove(lotId);
                                 return Immediate(new TryFindLotResult {
                                     Status = FindLotResponseStatus.NOT_PERMITTED_TO_OPEN
                                 });
@@ -156,6 +162,7 @@ namespace FSO.Server.Servers.City.Domain
 
                         if (!allocation.TryClaim(lot))
                         {
+                            Remove(lotId);
                             return Immediate(new TryFindLotResult
                             {
                                 Status = FindLotResponseStatus.CLAIM_FAILED
@@ -167,7 +174,7 @@ namespace FSO.Server.Servers.City.Domain
                         {
                             //Release claim
                             allocation.TryUnclaim();
-
+                            Remove(lotId);
                             return Immediate(new TryFindLotResult
                             {
                                 Status = FindLotResponseStatus.NO_CAPACITY
@@ -176,6 +183,7 @@ namespace FSO.Server.Servers.City.Domain
                             return allocation.BeginPick(pick).ContinueWith(x => {
                                 if (x.IsFaulted || x.IsCanceled || x.Result.Accepted == false)
                                 {
+                                    Remove(lotId);
                                     return new TryFindLotResult
                                     {
                                         Status = FindLotResponseStatus.NO_CAPACITY
@@ -204,12 +212,16 @@ namespace FSO.Server.Servers.City.Domain
                         
                     //Should never get here..
                     case LotAllocationState.FAILED:
+                        Remove(lotId);
                         return Immediate(new TryFindLotResult {
                             Status = FindLotResponseStatus.UNKNOWN_ERROR
                         });
                 }
 
-                return null;
+                return Immediate(new TryFindLotResult
+                {
+                    Status = FindLotResponseStatus.UNKNOWN_ERROR
+                });
             }
         }
 

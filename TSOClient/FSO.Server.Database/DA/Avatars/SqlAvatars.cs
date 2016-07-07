@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,6 +38,7 @@ namespace FSO.Server.Database.DA.Avatars
                                             body = avatar.body,
                                             description = avatar.description
                                         }).First();
+            //for now, everything else assumes default values.
         }
 
 
@@ -45,6 +47,14 @@ namespace FSO.Server.Database.DA.Avatars
             return Context.Connection.Query<DbAvatar>(
                 "SELECT * FROM fso_avatars WHERE user_id = @user_id", 
                 new { user_id = user_id }
+            ).ToList();
+        }
+
+        public List<uint> GetRoommateIds(int lot_id)
+        {
+            return Context.Connection.Query<uint>(
+                "SELECT avatar_id FROM fso_avatars WHERE lot_id = @lot_id",
+                new { lot_id = lot_id }
             ).ToList();
         }
 
@@ -67,6 +77,169 @@ namespace FSO.Server.Database.DA.Avatars
         public void UpdateDescription(uint id, string description)
         {
             Context.Connection.Query("UPDATE fso_avatars SET description = @desc WHERE avatar_id = @id", new { id = id, desc = description });
+        }
+
+        public void UpdateAvatarLotSave(uint id, DbAvatar avatar)
+        {
+            avatar.avatar_id = id;
+            Context.Connection.Query("UPDATE fso_avatars SET "
+                + "motive_data = @motive_data, "
+                + "skilllock = @skilllock, "
+                + "lockpoints = @lockpoints, "
+                + "lock_mechanical = @lock_mechanical, "
+                + "lock_cooking = @lock_cooking, "
+                + "lock_charisma = @lock_charisma, "
+                + "lock_logic = @lock_logic, "
+                + "lock_body = @lock_body, "
+                + "lock_creativity = @lock_creativity, "
+                + "skill_mechanical = @skill_mechanical, "
+                + "skill_cooking = @skill_cooking, "
+                + "skill_charisma = @skill_charisma, "
+                + "skill_logic = @skill_logic, "
+                + "skill_body = @skill_body, "
+                + "skill_creativity = @skill_creativity, "
+                + "body_swimwear = @body_swimwear, "
+                + "body_sleepwear = @body_sleepwear, "
+                + "current_job = @current_job, "
+                + "is_ghost = @is_ghost, "
+                + "ticker_death = @ticker_death, "
+                + "ticker_gardener = @ticker_gardener, "
+                + "ticker_maid = @ticker_maid, "
+                + "ticker_repairman = @ticker_repairman WHERE avatar_id = @avatar_id", avatar);
+        }
+
+        //budget and transactions
+        public int GetBudget(uint avatar_id)
+        {
+            return Context.Connection.Query<int>("SELECT budget FROM fso_avatars WHERE avatar_id = @id", new { id = avatar_id }).FirstOrDefault();
+        }
+
+        public DbTransactionResult Transaction(uint source_id, uint dest_id, int amount, short reason)
+        {
+            var t = Context.Connection.BeginTransaction();
+            var srcObj = (source_id >= 16777216);
+            var dstObj = (dest_id >= 16777216);
+            var success = true;
+            try {
+                int srcRes, dstRes;
+                if (srcObj)
+                {
+                    srcRes = Context.Connection.Execute("UPDATE fso_objects SET budget = budget - @amount WHERE object_id = @source_id;",
+                        new { source_id = source_id, amount = amount});
+                }
+                else
+                {
+                    srcRes = Context.Connection.Execute("UPDATE fso_avatars SET budget = budget - @amount WHERE avatar_id = @source_id;",
+                        new { source_id = source_id, amount = amount });
+                }
+                if (source_id != uint.MaxValue && srcRes == 0) throw new Exception("Source avatar/object does not exist!");
+                if (dstObj)
+                {
+                    dstRes = Context.Connection.Execute("UPDATE fso_objects SET budget = budget + @amount WHERE object_id = @dest_id;",
+                        new { dest_id = dest_id, amount = amount });
+                } else
+                {
+                    dstRes = Context.Connection.Execute("UPDATE fso_avatars SET budget = budget + @amount WHERE avatar_id = @dest_id;",
+                        new { dest_id = dest_id, amount = amount });
+                }
+                
+                if (dest_id != uint.MaxValue && dstRes == 0) throw new Exception("Dest avatar/object does not exist!");
+                t.Commit();
+            } catch (Exception)
+            {
+                success = false;
+                t.Rollback();
+            }
+            var result = Context.Connection.Query<DbTransactionResult>("SELECT a1.budget AS source_budget, a2.budget AS dest_budget "
+                + "FROM"
+                + "(SELECT budget, count(budget) FROM " + (srcObj ? "fso_objects" : "fso_avatars") + " WHERE " + (srcObj ? "object_id" : "avatar_id") + " = @source_id) a1,"
+                + "(SELECT budget, count(budget) FROM " + (dstObj ? "fso_objects" : "fso_avatars") + " WHERE " + (dstObj ? "object_id" : "avatar_id") + " = @avatar_id) a2; ",
+                new { avatar_id = dest_id, source_id = source_id }).FirstOrDefault();
+            if (result != null)
+            {
+                result.amount = amount;
+                result.success = success;
+            }
+            return result;
+        }
+
+        public DbTransactionResult TestTransaction(uint source_id, uint dest_id, int amount, short reason)
+        {
+            var success = true;
+            var srcObj = (source_id >= 16777216);
+            var dstObj = (dest_id >= 16777216);
+            try
+            {
+                int? srcVal, dstVal;
+                if (srcObj)
+                {
+                    srcVal = Context.Connection.Query<int?>("SELECT budget FROM fso_objects WHERE object_id = @source_id;",
+                        new { source_id = source_id }).FirstOrDefault();
+                }
+                else
+                {
+                    srcVal = Context.Connection.Query<int?>("SELECT budget FROM fso_avatars WHERE avatar_id = @source_id;",
+                        new { source_id = source_id }).FirstOrDefault();
+                }
+                if (source_id != uint.MaxValue)
+                {
+                    if (srcVal == null) throw new Exception("Source avatar/object does not exist!");
+                    if (srcVal.Value - amount < 0) throw new Exception("Source does not have enough money!");
+                }
+                if (dstObj)
+                {
+                    dstVal = Context.Connection.Query<int?>("SELECT budget FROM fso_objects WHERE object_id = @dest_id;",
+                        new { dest_id = dest_id }).FirstOrDefault();
+                }
+                else
+                {
+                    dstVal = Context.Connection.Query<int?>("SELECT budget FROM fso_avatars WHERE avatar_id = @dest_id;",
+                        new { dest_id = dest_id }).FirstOrDefault();
+                }
+                if (dest_id != uint.MaxValue)
+                {
+                    if (dstVal == null) throw new Exception("Dest avatar/object does not exist!");
+                    if (dstVal.Value + amount < 0) throw new Exception("Destination does not have enough money! (transaction accidentally debits)");
+                }
+            }
+            catch (Exception)
+            {
+                success = false;
+            }
+            var result = Context.Connection.Query<DbTransactionResult>("SELECT a1.budget AS source_budget, a2.budget AS dest_budget "
+                + "FROM"
+                + "(SELECT budget, count(budget) FROM "+(srcObj?"fso_objects":"fso_avatars")+" WHERE "+(srcObj?"object_id":"avatar_id")+" = @source_id) a1,"
+                + "(SELECT budget, count(budget) FROM " + (dstObj ? "fso_objects" : "fso_avatars") + " WHERE " + (dstObj ? "object_id" : "avatar_id") + " = @avatar_id) a2; ", 
+                new { avatar_id = dest_id, source_id = source_id }).FirstOrDefault();
+            if (result != null)
+            {
+                result.amount = amount;
+                result.success = success;
+            }
+            return result;
+        }
+
+        //JOB LEVELS
+
+        public DbJobLevel GetCurrentJobLevel(uint avatar_id)
+        {
+            return Context.Connection.Query<DbJobLevel>("SELECT * FROM fso_avatars a JOIN fso_joblevels b "
+                + "ON a.avatar_id = b.avatar_id AND a.current_job = b.job_type WHERE a.avatar_id = @id", 
+                new { id = avatar_id }).FirstOrDefault();
+        }
+
+        public List<DbJobLevel> GetJobLevels(uint avatar_id)
+        {
+            return Context.Connection.Query<DbJobLevel>("SELECT * FROM fso_avatars a JOIN fso_joblevels b ON a.avatar_id = b.avatar_id WHERE a.avatar_id = @id", new { id = avatar_id }).ToList();
+        }
+
+        public void UpdateAvatarJobLevel(DbJobLevel jobLevel)
+        {
+            Context.Connection.Query<DbJobLevel>("INSERT INTO fso_joblevels (avatar_id, job_type, job_experience, job_level, job_sickdays, job_statusflags) "
+                + "VALUES (@avatar_id, @job_type, @job_experience, @job_level, @job_sickdays, @job_statusflags) "
+                + "ON DUPLICATE KEY UPDATE job_experience=VALUES(`job_experience`), job_level=VALUES(`job_level`), "
+                +" job_sickdays=VALUES(`job_sickdays`), job_statusflags=VALUES(`job_statusflags`); ", jobLevel);
+            return;
         }
     }
 }

@@ -23,12 +23,13 @@ namespace FSO.Content.Model
         public ITextureRef ForestDensity { get; internal set; }
         public ITextureRef ForestType { get; internal set; }
         public ITextureRef RoadMap { get; internal set; }
-        public ITextureRef TerrainType { get; internal set; }
+        public ITextureRef TerrainTypeTex { get; internal set; }
         public ITextureRef VertexColour { get; internal set; }
         public ITextureRef Thumbnail { get; internal set; }
 
         private TextureValueMap<TerrainType> _TerrainType;
         private TextureValueMap<byte> _ElevationMap;
+        private TextureValueMap<byte> _RoadMap;
 
         public CityMap(string directory)
         {
@@ -37,11 +38,11 @@ namespace FSO.Content.Model
             ForestDensity = new FileTextureRef(Path.Combine(directory, "forestdensity.bmp"));
             ForestType = new FileTextureRef(Path.Combine(directory, "foresttype.bmp"));
             RoadMap = new FileTextureRef(Path.Combine(directory, "roadmap.bmp"));
-            TerrainType = new FileTextureRef(Path.Combine(directory, "terraintype.bmp"));
+            TerrainTypeTex = new FileTextureRef(Path.Combine(directory, "terraintype.bmp"));
             VertexColour = new FileTextureRef(Path.Combine(directory, "vertexcolor.bmp"));
             Thumbnail = new FileTextureRef(Path.Combine(directory, "thumbnail.bmp"));
 
-            _TerrainType = new TextureValueMap<Model.TerrainType>(TerrainType, x =>
+            _TerrainType = new TextureValueMap<Model.TerrainType>(TerrainTypeTex, x =>
             {
                 if(x == TERRAIN_GRASS){
                     return Model.TerrainType.GRASS;
@@ -62,6 +63,7 @@ namespace FSO.Content.Model
             });
 
             _ElevationMap = new TextureValueMap<byte>(Elevation, x => x.R);
+            _RoadMap = new TextureValueMap<byte>(RoadMap, x => x.R);
         }
 
         public TerrainType GetTerrain(int x, int y)
@@ -69,19 +71,88 @@ namespace FSO.Content.Model
             return _TerrainType.Get(x, y);
         }
 
+        public byte GetRoad(int x, int y)
+        {
+            return _RoadMap.Get(x, y);  
+        }
+
         public byte GetElevation(int x, int y)
         {
             return _ElevationMap.Get(x, y);
         }
+
+        public TerrainBlend GetBlend(int x, int y)
+        {
+            TerrainType sample;
+            TerrainType t;
+
+            var edges = new TerrainType[] { TerrainType.NULL, TerrainType.NULL, TerrainType.NULL, TerrainType.NULL,
+                TerrainType.NULL, TerrainType.NULL, TerrainType.NULL, TerrainType.NULL};
+            sample = GetTerrain(x, y);
+            
+            t = GetTerrain(x, y-1);
+            if ((y - 1 >= 0) && (t > sample)) edges[0] = t;
+
+            t = GetTerrain(x + 1, y-1);
+            if ((y - 1 >= 0) && (x + 1 < 512) && (t > sample)) edges[1] = t;
+
+            t = GetTerrain(x+1, y);
+            if ((x + 1 < 512) && (t > sample)) edges[2] = t;
+
+            t = GetTerrain(x + 1, y + 1);
+            if ((x + 1 < 512) && (y + 1 < 512) && (t > sample)) edges[3] = t;
+
+            t = GetTerrain(x, y + 1);
+            if ((y + 1 < 512) && (t > sample)) edges[4] = t;
+
+            t = GetTerrain(x-1, y + 1);
+            if ((y + 1 < 512) && (x - 1 >= 0) && (t > sample)) edges[5] = t;
+
+            t = t = GetTerrain(x-1, y);
+            if ((x - 1 >= 0) && (t > sample)) edges[6] = t;
+
+            t = t = GetTerrain(x - 1, y - 1);
+            if ((y - 1 >= 0) && (x - 1 >= 0) && (t > sample)) edges[7] = t;
+
+            int binary = 0;
+            for (int i=0; i<8; i++)
+                binary |= ((edges[i] > TerrainType.NULL) ? (1 << i) : 0);
+
+            int waterbinary = 0;
+            for (int i = 0; i < 8; i++)
+                waterbinary |= ((edges[i] == TerrainType.WATER) ? (1 << i) : 0);
+
+            TerrainType maxEdge = TerrainType.WATER;
+
+            for (int i = 0; i < 8; i++)
+                if (edges[i] < maxEdge && edges[i] != TerrainType.NULL) maxEdge = edges[i];
+
+            TerrainBlend ReturnBlend = new TerrainBlend();
+            ReturnBlend.Base = sample;
+            ReturnBlend.Blend = maxEdge;
+            ReturnBlend.AdjFlags = (byte)binary;
+            ReturnBlend.WaterFlags = (byte)waterbinary;
+
+            return ReturnBlend;
+        }
+    }
+
+    public struct TerrainBlend
+    {
+        public TerrainType Base;
+        public TerrainType Blend;
+        public byte AdjFlags;
+        public byte WaterFlags;
     }
 
     public enum TerrainType
     {
-        WATER,
-        ROCK,
-        GRASS,
-        SNOW,
-        SAND
+        WATER = 4,
+        ROCK = 2,
+        GRASS = 0,
+        SNOW = 3,
+        SAND = 1,
+        NULL = -1
     }
 
     public class TextureValueMap <T>

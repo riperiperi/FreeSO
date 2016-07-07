@@ -17,6 +17,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void QueueArchitecture(VMNetArchitectureCmd cmd);
         void LoadPluginPersist(VM vm, uint objectPID, uint pluginID, VMAsyncPluginLoadCallback callback);
         void SavePluginPersist(VM vm, uint objectPID, uint pluginID, byte[] data);
+        void RegisterNewObject(VM vm, VMEntity obj, VMAsyncPersistIDCallback callback);
 
         void Tick(VM vm);
     }
@@ -24,4 +25,5 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public delegate void VMAsyncTransactionCallback(bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2);
     public delegate void VMAsyncAvatarCallback(uint persistID, VMTSOAvatarPermissions permissions); //TODO: VMPersistAvatarBlock
     public delegate void VMAsyncPluginLoadCallback(byte[] data); //null if none available
+    public delegate void VMAsyncPersistIDCallback(short objectID, uint persistID);
 }

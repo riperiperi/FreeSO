@@ -183,5 +183,10 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         {
             Database.SavePluginPersist(objectPID, pluginID, data);
         }
+
+        public void RegisterNewObject(VM vm, VMEntity obj, VMAsyncPersistIDCallback callback)
+        {
+            //todo: sandbox servers should give things an "id"
+        }
     }
 }

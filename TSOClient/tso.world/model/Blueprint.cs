@@ -41,6 +41,7 @@ namespace FSO.LotView.Model
 
         public List<ObjectComponent> Objects = new List<ObjectComponent>();
         public List<AvatarComponent> Avatars = new List<AvatarComponent>();
+        public List<SubWorldComponent> SubWorlds = new List<SubWorldComponent>();
         public TerrainComponent Terrain;
         
         /// <summary>

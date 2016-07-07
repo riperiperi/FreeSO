@@ -52,6 +52,13 @@ namespace FSO.Server.Database.DA.Lots
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE location = @location AND shard_id = @shard_id", new { location = location, shard_id = shard_id }).FirstOrDefault();
         }
 
+        public List<DbLot> GetAdjToLocation(int shard_id, uint location)
+        {
+            return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE "
+                + "(ABS(CAST((location&65535) AS SIGNED) - CAST((@location&65535) AS SIGNED)) = 1 OR ABS(CAST((location/65536) AS SIGNED) - CAST((@location/65536) AS SIGNED)) = 1) "
+                + "AND shard_id = @shard_id", new { location = location, shard_id = shard_id }).ToList();
+        }
+
         public void RenameLot(int id, string newName)
         {
             Context.Connection.Query("UPDATE fso_lots SET name = @name WHERE lot_id = @id", new { name = newName, id = id });
@@ -72,6 +79,12 @@ namespace FSO.Server.Database.DA.Lots
                 "SELECT lot_id, location, name FROM fso_lots WHERE shard_id = @shard_id AND name LIKE @name LIMIT @limit",
                 new { shard_id = shard_id, name = "%" + name + "%", limit = limit }
             ).ToList();
+        }
+
+        public void UpdateRingBackup(int lot_id, sbyte ring_backup_num)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET ring_backup_num = @ring_backup_num WHERE lot_id = @id", 
+                new { ring_backup_num = ring_backup_num, id = lot_id });
         }
 
 

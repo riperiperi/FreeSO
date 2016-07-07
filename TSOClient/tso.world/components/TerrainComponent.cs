@@ -14,6 +14,7 @@ using Microsoft.Xna.Framework;
 using System.IO;
 using FSO.LotView.Utils;
 using FSO.LotView.Model;
+using FSO.Content.Model;
 
 namespace FSO.LotView.Components
 {
@@ -22,14 +23,16 @@ namespace FSO.LotView.Components
         private Rectangle Size;
 
         private int GeomLength;
-        private float[] GrassState; //0 = green, 1 = brown. to start with, should be randomly distriuted in range 0-0.5.
+        private byte[] GrassState; //0 = green, 255 = brown. to start with, should be randomly distriuted in range 0-128.
         private int NumPrimitives;
         private int BladePrimitives;
         private IndexBuffer IndexBuffer;
         private IndexBuffer BladeIndexBuffer;
         private VertexBuffer VertexBuffer;
 
-        private LotTypes LotType;
+        private TerrainType LightType = TerrainType.GRASS;
+        private TerrainType DarkType = TerrainType.GRASS;
+
         private Color LightGreen = new Color(80, 116, 59);
         private Color LightBrown = new Color(157, 117, 65);
         private Color DarkGreen = new Color(8, 52, 8);
@@ -39,23 +42,42 @@ namespace FSO.LotView.Components
 
         private Effect Effect;
         public bool DrawGrid = false;
+        private bool TerrainDirty = true;
+        private Blueprint Bp;
 
-        public TerrainComponent(Rectangle size){
+        public TerrainComponent(Rectangle size, Blueprint blueprint){
             this.Size = size;
             this.Effect = WorldContent.GrassEffect;
-            LotType = LotTypes.Grass; //(LotTypes)(new Random()).Next(4);
+            this.Bp = blueprint;
 
             UpdateLotType();
-            GenerateGrassStates();
+        }
+
+        public void UpdateTerrain(TerrainType light, TerrainType dark, sbyte[] heights, byte[] grass)
+        {
+            LightType = light;
+            DarkType = dark;
+            GrassState = grass;
+            UpdateLotType();
+            TerrainDirty = true;
         }
 
         public void UpdateLotType()
         {
-            int index = (int)LotType;
+            int index = (int)LightType;
             LightGreen = LotTypeGrassInfo.LightGreen[index];
-            LightBrown = LotTypeGrassInfo.LightBrown[index];
             DarkGreen = LotTypeGrassInfo.DarkGreen[index];
-            DarkBrown = LotTypeGrassInfo.DarkBrown[index];
+            if (LightType != DarkType)
+            {
+                var dindex = (int)DarkType;
+                LightBrown = LotTypeGrassInfo.LightGreen[dindex];
+                DarkBrown = LotTypeGrassInfo.DarkGreen[dindex];
+            }
+            else
+            {
+                LightBrown = LotTypeGrassInfo.LightBrown[index];
+                DarkBrown = LotTypeGrassInfo.DarkBrown[index];
+            }
             GrassHeight = LotTypeGrassInfo.Heights[index];
             GrassDensityScale = LotTypeGrassInfo.GrassDensity[index];
         }
@@ -67,6 +89,12 @@ namespace FSO.LotView.Components
 
         public void RegenTerrain(GraphicsDevice device, WorldState world, Blueprint blueprint)
         {
+            if (GrassState == null)
+            {
+                TerrainDirty = true; //yikes! try again to see if we have it next frame
+                return;
+            }
+            TerrainDirty = false;
             if (VertexBuffer != null)
             {
                 IndexBuffer.Dispose();
@@ -80,6 +108,7 @@ namespace FSO.LotView.Components
             var quadWidth = WorldSpace.GetWorldFromTile((float)Size.Width / (float)quads);
             var quadHeight = WorldSpace.GetWorldFromTile((float)Size.Height / (float)quads);
             var numQuads = quads * quads;
+            var archSize = quads + 2;
 
             TerrainVertex[] Geom = new TerrainVertex[numQuads * 4];
             int[] Indexes = new int[numQuads * 6];
@@ -124,15 +153,15 @@ namespace FSO.LotView.Components
                         BladeIndexes[bindexOffset++] = geomOffset;
                     }
 
-                    Color tlCol = Color.Lerp(LightGreen, LightBrown, GrassState[y * quads + x]);
-                    Color trCol = Color.Lerp(LightGreen, LightBrown, GrassState[y * quads + ((x + 1) % quads)]);
-                    Color blCol = Color.Lerp(LightGreen, LightBrown, GrassState[((y + 1) % quads) * quads + x]);
-                    Color brCol = Color.Lerp(LightGreen, LightBrown, GrassState[((y + 1) % quads) * quads + ((x + 1) % quads)]);
+                    Color tlCol = Color.Lerp(LightGreen, LightBrown, GrassState[y * archSize + x]/255f);
+                    Color trCol = Color.Lerp(LightGreen, LightBrown, GrassState[y * archSize + ((x + 1) % archSize)] / 255f);
+                    Color blCol = Color.Lerp(LightGreen, LightBrown, GrassState[((y + 1) % archSize) * archSize + x] / 255f);
+                    Color brCol = Color.Lerp(LightGreen, LightBrown, GrassState[((y + 1) % archSize) * archSize + ((x + 1) % archSize)] / 255f);
 
-                    Geom[geomOffset++] = new TerrainVertex(tl, tlCol.ToVector4(), new Vector2(x * 64, y * 64), GrassState[y * quads + x]);
-                    Geom[geomOffset++] = new TerrainVertex(tr, trCol.ToVector4(), new Vector2((x + 1) * 64, y * 64), GrassState[y * quads + ((x + 1) % quads)]);
-                    Geom[geomOffset++] = new TerrainVertex(br, brCol.ToVector4(), new Vector2((x + 1) * 64, (y + 1) * 64), GrassState[((y + 1) % quads) * quads + ((x + 1) % quads)]);
-                    Geom[geomOffset++] = new TerrainVertex(bl, blCol.ToVector4(), new Vector2(x * 64, (y + 1) * 64), GrassState[((y + 1) % quads) * quads + x]);
+                    Geom[geomOffset++] = new TerrainVertex(tl, tlCol.ToVector4(), new Vector2(x * 64, y * 64), GrassState[y * archSize + x] / 255f);
+                    Geom[geomOffset++] = new TerrainVertex(tr, trCol.ToVector4(), new Vector2((x + 1) * 64, y * 64), GrassState[y * archSize + ((x + 1) % archSize)] / 255f);
+                    Geom[geomOffset++] = new TerrainVertex(br, brCol.ToVector4(), new Vector2((x + 1) * 64, (y + 1) * 64), GrassState[((y + 1) % archSize) * archSize + ((x + 1) % archSize)] / 255f);
+                    Geom[geomOffset++] = new TerrainVertex(bl, blCol.ToVector4(), new Vector2(x * 64, (y + 1) * 64), GrassState[((y + 1) % archSize) * archSize + x] / 255f);
                 }
             }
 
@@ -161,48 +190,13 @@ namespace FSO.LotView.Components
             base.Initialize(device, world);
         }
 
-        public void GenerateGrassStates() //generates a set of grass states for a lot.
-        {
-            //right now only works for square lots, but that's all tso has!
-            var random = new Random();
-            int width = Size.Width;
-            float[] result = new float[width * width];
-            int initial = width/4; //divide by more for less noisyness!
-            float factor = 0.5f/((int)Math.Log(initial, 2));
-            while (initial > 0)
-            {
-                var squared = initial * initial;
-                var noise = new float[squared];
-                for (int i = 0; i < squared; i++) noise[i] = (float)random.NextDouble()*factor;
-
-                int offset = 0;
-                for (int x = 0; x < width; x++)
-                {
-                    double xInt = (x / (double)(width-1)) * (initial-1);
-                    for (int y = 0; y < width; y++)
-                    {
-                        double yInt = (y / (double)(width - 1)) * (initial - 1);
-                        float tl = noise[(int)(Math.Floor(yInt)*initial+Math.Floor(xInt))];
-                        float tr = noise[(int)(Math.Floor(yInt) * initial + Math.Ceiling(xInt))];
-                        float bl = noise[(int)(Math.Ceiling(yInt) * initial + Math.Floor(xInt))];
-                        float br = noise[(int)(Math.Ceiling(yInt) * initial + Math.Ceiling(xInt))];
-                        float p = (float)(xInt%1.0);
-                        float q = (float)(yInt%1.0);
-                        result[offset++] += (tl * (1 - p) + tr * (p)) * (1 - q) + (bl * (1 - p) + br * (p)) * q; //don't you love 2 dimensional linear interpolation?? ;)
-                    }
-                }
-                initial /= 2;
-            }
-            GrassState = result;
-        }
-
         /// <summary>
         /// Render the terrain
         /// </summary>
         /// <param name="device"></param>
         /// <param name="world"></param>
         public override void Draw(GraphicsDevice device, WorldState world){
-
+            if (TerrainDirty) RegenTerrain(device, world, Bp);
             if (VertexBuffer == null) return;
             Effect.Parameters["LightGreen"].SetValue(LightGreen.ToVector4());
             Effect.Parameters["DarkGreen"].SetValue(DarkGreen.ToVector4());

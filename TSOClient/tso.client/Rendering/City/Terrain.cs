@@ -202,16 +202,19 @@ namespace FSO.Client.Rendering.City
                 TransB[x + 1] = LoadTex(gamepath + "gamedata/terrain/newformat/transb" + Num + "b.tga");
             }
 
+            var terrainpath = "Content/Textures/terrain/"; //gamepath + "gamedata/terrain/";
+            //TODO: optionally load non-freeso textures
+
             for (int x = 0; x < 16; x++)
             {
                 Num = ZeroPad((x).ToString(), 2);
-                m_Roads[x] = LoadTex(gamepath + "gamedata/terrain/road" + Num + ".tga");
+                m_Roads[x] = LoadTex(terrainpath+"road" + Num + ".png");
             }
 
             for (int x = 0; x < 16; x++)
             {
                 Num = ZeroPad((x).ToString(), 2);
-                m_RoadCorners[x] = LoadTex(gamepath + "gamedata/terrain/roadcorner" + Num + ".tga");
+                m_RoadCorners[x] = LoadTex(terrainpath + "roadcorner" + Num + ".png");
             }
 
             m_Width = m_Elevation.Width;

@@ -11,6 +11,11 @@ namespace FSO.SimAntics.Model.TSOPlatform
     {
         public VMTSOAvatarPermissions Permissions = VMTSOAvatarPermissions.Visitor;
         public HashSet<uint> IgnoredAvatars = new HashSet<uint>();
+        public Dictionary<short, VMTSOJobInfo> JobInfo = new Dictionary<short, VMTSOJobInfo>();
+
+        public VMTSOAvatarState() { }
+
+        public VMTSOAvatarState(int version) : base(version) { }
 
         public override void Deserialize(BinaryReader reader)
         {
@@ -18,9 +23,21 @@ namespace FSO.SimAntics.Model.TSOPlatform
             Permissions = (VMTSOAvatarPermissions)reader.ReadByte();
             var ignored = reader.ReadInt32();
             IgnoredAvatars.Clear();
-            for (int i=0; i<ignored; i++)
+            for (int i = 0; i < ignored; i++)
             {
                 IgnoredAvatars.Add(reader.ReadUInt32());
+            }
+            JobInfo.Clear();
+            if (Version > 7)
+            {
+                var jobs = reader.ReadInt32();
+                for (int i = 0; i < jobs; i++)
+                {
+                    var id = reader.ReadInt16();
+                    var job = new VMTSOJobInfo();
+                    job.Deserialize(reader);
+                    JobInfo[id] = job;
+                }
             }
         }
 
@@ -31,6 +48,12 @@ namespace FSO.SimAntics.Model.TSOPlatform
             writer.Write(IgnoredAvatars.Count);
             foreach (var id in IgnoredAvatars)
                 writer.Write(id);
+            writer.Write(JobInfo.Count);
+            foreach (var item in JobInfo)
+            {
+                writer.Write(item.Key);
+                item.Value.SerializeInto(writer);
+            }
         }
 
         public override void Tick(VM vm, object owner)

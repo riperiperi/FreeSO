@@ -16,12 +16,16 @@ namespace FSO.SimAntics.Marshals
         public VMAmbientSoundMarshal Ambience;
         public ulong RandomSeed;
 
+        public int Version;
+        public VMContextMarshal() { }
+        public VMContextMarshal(int version) { Version = version; }
+
         public void Deserialize(BinaryReader reader)
         {
             Clock = new VMClockMarshal();
             Clock.Deserialize(reader);
 
-            Architecture = new VMArchitectureMarshal();
+            Architecture = new VMArchitectureMarshal(Version);
             Architecture.Deserialize(reader);
 
             Ambience = new VMAmbientSoundMarshal();

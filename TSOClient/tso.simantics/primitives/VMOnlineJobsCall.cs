@@ -23,8 +23,14 @@ namespace FSO.SimAntics.Primitives
             switch (operand.Call)
             {
                 case VMOnlineJobsCallMode.SetControllerID:
-                    context.VM.SetGlobalValue(21, (context.StackObject == null)?(short)0:context.StackObject.ObjectID);
+                    context.VM.SetGlobalValue(21, (context.StackObject == null) ? (short)0 : context.StackObject.ObjectID);
                     break;
+                case VMOnlineJobsCallMode.GetRandomJob:
+                    //TODO: for now this disables: nightclub (dj, dancer), cook (not actually a job in tso)
+                    context.Thread.TempRegisters[0] = (short)(context.VM.Context.NextRandom(2) + 1);
+                    break;
+                case VMOnlineJobsCallMode.IsJobAvailable:
+                    return (context.Thread.TempRegisters[0] < 3)?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE; 
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;

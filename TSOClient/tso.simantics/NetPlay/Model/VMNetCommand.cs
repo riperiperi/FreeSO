@@ -34,7 +34,9 @@ namespace FSO.SimAntics.NetPlay.Model
             { VMCommandType.AsyncResponse, typeof(VMNetAsyncResponseCmd) },
             { VMCommandType.ChangePermissions, typeof(VMChangePermissionsCmd) },
             { VMCommandType.EODObjEvent, typeof(VMNetEODEventCmd) },
-            { VMCommandType.EODMessage, typeof(VMNetEODMessageCmd) }
+            { VMCommandType.EODMessage, typeof(VMNetEODMessageCmd) },
+            { VMCommandType.UpdatePersistState, typeof(VMNetUpdatePersistStateCmd) },
+            { VMCommandType.AdjHollowSync, typeof(VMNetAdjHollowSyncCmd) }
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -96,6 +98,8 @@ namespace FSO.SimAntics.NetPlay.Model
         AsyncResponse = 15,
         ChangePermissions = 16,
         EODObjEvent = 17,
-        EODMessage = 18
+        EODMessage = 18,
+        UpdatePersistState = 19,
+        AdjHollowSync = 20,
     }
 }

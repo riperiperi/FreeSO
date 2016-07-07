@@ -43,7 +43,7 @@ namespace FSO.LotView
 
         private World2D _2DWorld = new World2D();
         private World3D _3DWorld = new World3D();
-        private Blueprint Blueprint;
+        protected Blueprint Blueprint;
 
         public sbyte Stories
         {
@@ -78,7 +78,7 @@ namespace FSO.LotView
             HasInit = HasInitGPU & HasInitBlueprint;
         }
 
-        public void InitBlueprint(Blueprint blueprint)
+        public virtual void InitBlueprint(Blueprint blueprint)
         {
             this.Blueprint = blueprint;
             _2DWorld.Init(blueprint);
@@ -95,6 +95,7 @@ namespace FSO.LotView
             foreach (var item in Blueprint.Objects){
                 item.OnZoomChanged(State);
             }
+            foreach (var sub in Blueprint.SubWorlds) sub.State.Zoom = State.Zoom;
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ZOOM));
         }
 
@@ -106,6 +107,7 @@ namespace FSO.LotView
             {
                 item.OnRotationChanged(State);
             }
+            foreach (var sub in Blueprint.SubWorlds) sub.State.Rotation = State.Rotation;
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ROTATE));
         }
 
@@ -122,7 +124,6 @@ namespace FSO.LotView
         public void InvalidateFloor()
         {
             if (Blueprint == null) { return; }
-
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LEVEL_CHANGED));
         }
 
@@ -300,6 +301,9 @@ namespace FSO.LotView
         {
             base.PreDraw(device);
             if (HasInit == false) { return; }
+
+            State.OutsideColor = Blueprint.OutsideColor;
+            foreach (var sub in Blueprint.SubWorlds) sub.PreDraw(device, State);
 
             //For all the tiles in the dirty list, re-render them
             State._2D.Begin(this.State.Camera);

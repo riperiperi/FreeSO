@@ -1,4 +1,5 @@
 ﻿using FSO.SimAntics.Marshals;
+using FSO.SimAntics.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,6 +16,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override bool Execute(VM vm)
         {
             vm.Load(State);
+            if (VM.UseWorld && vm.Context.Blueprint.SubWorlds.Count == 0) VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
             return true;
         }
 

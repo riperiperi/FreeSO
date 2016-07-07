@@ -329,13 +329,12 @@ namespace FSO.LotView
                 }
             }
             damage.Clear();
-
-            var tileOffset = state.WorldSpace.GetTileFromScreen(-pxOffset);
+            
             //scroll buffer loads in increments of SCROLL_BUFFER
             var newOff = GetScrollIncrement(pxOffset);
             var oldCenter = state.CenterTile;
             state.CenterTile += state.WorldSpace.GetTileFromScreen(newOff-pxOffset); //offset the scroll to the position of the scroll buffer.
-            tileOffset = state.CenterTile;
+            var tileOffset = state.CenterTile;
 
             pxOffset = newOff;
 
@@ -357,11 +356,13 @@ namespace FSO.LotView
                 Promise<Texture2D> depthTexture = null;
                 using (var buffer = state._2D.WithBuffer(BUFFER_ARCHETECTURE_PIXEL, ref bufferTexture, BUFFER_ARCHETECTURE_DEPTH, ref depthTexture))
                 {
-                    _2d.SetScroll(pxOffset);
                     while (buffer.NextPass())
                     {
-                        _2d.RenderCache(StaticArchCache);
+                        foreach (var sub in Blueprint.SubWorlds) sub.DrawArch(gd, state);
                         Blueprint.Terrain.Draw(gd, state);
+                        _2d.SetScroll(pxOffset);
+                        _2d.RenderCache(StaticArchCache);
+                        _2d.Pause();
                     }
                 }
                 StaticArch = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
@@ -396,9 +397,11 @@ namespace FSO.LotView
                 Promise<Texture2D> depthTexture = null;
                 using (var buffer = state._2D.WithBuffer(BUFFER_STATIC_OBJECTS_PIXEL, ref bufferTexture, BUFFER_STATIC_OBJECTS_DEPTH, ref depthTexture))
                 {
-                    _2d.SetScroll(pxOffset);
+                    
                     while (buffer.NextPass())
                     {
+                        foreach (var sub in Blueprint.SubWorlds) sub.DrawObjects(gd, state);
+                        _2d.SetScroll(pxOffset);
                         _2d.RenderCache(StaticObjectsCache);
                     }
                 }

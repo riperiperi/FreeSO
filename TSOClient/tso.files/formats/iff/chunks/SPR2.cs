@@ -24,6 +24,7 @@ namespace FSO.Files.Formats.IFF.Chunks
     {
         public SPR2Frame[] Frames = new SPR2Frame[0];
         public uint DefaultPaletteID;
+        public bool SpritePreprocessed;
 
         /// <summary>
         /// Reads a SPR2 chunk from a stream.
@@ -89,6 +90,14 @@ namespace FSO.Files.Formats.IFF.Chunks
                     }
                 }
                 return true;
+            }
+        }
+
+        public void CopyZToAlpha()
+        {
+            foreach (var frame in Frames)
+            {
+                frame.CopyZToAlpha();
             }
         }
 
@@ -379,6 +388,17 @@ namespace FSO.Files.Formats.IFF.Chunks
         public void SetPixel(int x, int y, Color color)
         {
             PixelData[(y * Width) + x] = color;
+        }
+
+        /// <summary>
+        /// Copies the Z buffer into the current sprite's alpha channel. Used by water tile.
+        /// </summary>
+        public void CopyZToAlpha()
+        {
+            for (int i=0; i<PixelData.Length; i++)
+            {
+                PixelData[i].A = (ZBufferData[i] < 32)?(byte)0:ZBufferData[i];
+            }
         }
 
         /// <summary>

@@ -25,9 +25,14 @@
       "script": "fso_avatars.sql",
       "idempotent": true
     },
-	{
+    {
       "id": "52795d47-a25e-418f-a618-fb89300aab01",
       "script": "fso_lots.sql",
+      "idempotent": true
+    },
+	  {
+      "id": "52795d47-a25e-418f-a618-fb89300aab02",
+      "script": "fso_objects.sql",
       "idempotent": true
     }
   ]

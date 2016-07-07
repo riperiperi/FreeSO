@@ -12,6 +12,7 @@ using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.Entities;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -23,6 +24,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public sbyte level;
         public Direction dir;
         public bool Verified;
+
+        private VMMultitileGroup CreatedGroup;
 
         private List<uint> Blacklist = new List<uint>
         {
@@ -36,9 +39,23 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Blacklist.Contains(GUID) || caller == null) return false;
 
             //careful here! if the object can't be placed, we have to give the user their money back.
-            if (TryPlace(vm, caller)) return true;
+            if (TryPlace(vm, caller))
+            {
+                if (vm.GlobalLink != null)
+                {
+                    vm.GlobalLink.RegisterNewObject(vm, CreatedGroup.BaseObject, (short objID, uint pid) =>
+                    {
+                        vm.SendCommand(new VMNetUpdatePersistStateCmd()
+                        {
+                            ObjectID = objID,
+                            PersistID = pid
+                        });
+                    });
+                }
+                return true;
+            }
             else if (vm.GlobalLink != null && item != null)
-            { 
+            {
                 vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, (int)item.Price,
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
@@ -87,6 +104,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             foreach (var obj in group.Objects) {
                 if (obj is VMGameObject) ((VMTSOObjectState)obj.TSOState).OwnerID = caller.PersistID;
             }
+            CreatedGroup = group;
 
             vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
                 caller.Name,

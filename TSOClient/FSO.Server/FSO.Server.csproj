@@ -168,6 +168,7 @@
     <Compile Include="Servers\City\Handlers\RegistrationHandler.cs" />
     <Compile Include="Servers\City\Handlers\SetPreferencesHandler.cs" />
     <Compile Include="Servers\Lot\Domain\LotHost.cs" />
+    <Compile Include="Servers\Lot\Domain\LotServerGlobalLink.cs" />
     <Compile Include="Servers\Lot\Handlers\CityServerAuthenticationHandler.cs" />
     <Compile Include="Servers\Lot\Handlers\LotNegotiationHandler.cs" />
     <Compile Include="Servers\Lot\Domain\LotContainer.cs" />

@@ -27,6 +27,7 @@ using FSO.SimAntics.Model.Sound;
 using FSO.SimAntics.NetPlay.EODs;
 using FSO.SimAntics.NetPlay.Drivers;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.SimAntics.Marshals.Hollow;
 
 namespace FSO.SimAntics
 {
@@ -53,6 +54,7 @@ namespace FSO.SimAntics
         }
 
         private const long TickInterval = 33 * TimeSpan.TicksPerMillisecond;
+        public byte[][] HollowAdj;
 
         public VMContext Context { get; internal set; }
 
@@ -63,7 +65,13 @@ namespace FSO.SimAntics
         {
             get { return (PlatformState != null && PlatformState is VMTSOLotState) ? (VMTSOLotState)PlatformState : null; }
         }
-        public string LotName;
+        public string LotName
+        {
+            get
+            {
+                return TSOState.Name;
+            }
+        }
 
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
         private short ObjectId = 1;
@@ -150,7 +158,7 @@ namespace FSO.SimAntics
 
         public void Reset()
         {
-            var avatars = new List<VMEntity>(Entities.Where(x => x is VMAvatar && x.PersistID > 65535));
+            var avatars = new List<VMEntity>(Entities.Where(x => x is VMAvatar && x.PersistID > 0));
             //TODO: all avatars with persist ID are not npcs in TSO. right now though everything has a persist ID...
             foreach (var avatar in avatars) avatar.Delete(true, Context);
 
@@ -444,6 +452,34 @@ namespace FSO.SimAntics
             };
         }
 
+        public VMHollowMarshal HollowSave()
+        {
+            var ents = new List<VMHollowGameObjectMarshal>();
+            var mult = new List<VMMultitileGroupMarshal>();
+
+            int i = 0;
+            foreach (var ent in Entities)
+            {
+                if (ent is VMGameObject && ent.GetValue(VMStackObjectVariable.Hidden) == 0 && !(ent.Container != null && ent.Container is VMAvatar))
+                {
+                    //todo: recursively check if parent object is vm avatar.
+                    //restoring state ignores objects with invalid containers anyways.
+                    ents.Add(((VMGameObject)ent).HollowSave());
+                }
+                if (ent.MultitileGroup.BaseObject == ent)
+                {
+                    mult.Add(ent.MultitileGroup.Save());
+                }
+            }
+
+            return new VMHollowMarshal
+            {
+                Context = Context.Save(),
+                Entities = ents.ToArray(),
+                MultitileGroups = mult.ToArray()
+            };
+        }
+
         public void Load(VMMarshal input)
         {
             var clientJoin = (Context.Architecture == null);
@@ -549,6 +585,58 @@ namespace FSO.SimAntics
             }
 
             if (OnFullRefresh != null) OnFullRefresh();
+        }
+
+        public void HollowLoad(VMHollowMarshal input)
+        {
+            var clientJoin = (Context.Architecture == null);
+            var oldWorld = Context.World;
+            Context = new VMContext(input.Context, Context);
+            Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
+            Context.VM = this;
+            Context.Architecture.RegenRoomMap();
+            Context.RegeneratePortalInfo();
+
+            Entities = new List<VMEntity>();
+            ObjectsById = new Dictionary<short, VMEntity>();
+            foreach (var ent in input.Entities)
+            {
+                VMEntity realEnt;
+                var objDefinition = FSO.Content.Content.Get().WorldObjects.Get(ent.GUID);
+
+                var worldObject = new ObjectComponent(objDefinition);
+                var obj = new VMGameObject(objDefinition, worldObject);
+                obj.HollowLoad(ent);
+                Context.Blueprint.AddObject((ObjectComponent)obj.WorldUI);
+                Context.Blueprint.ChangeObjectLocation((ObjectComponent)obj.WorldUI, obj.Position);
+                obj.Position = obj.Position;
+                realEnt = obj;
+
+                Entities.Add(realEnt);
+                Context.SetToNextCache.NewObject(realEnt);
+                ObjectsById.Add(ent.ObjectID, realEnt);
+            }
+
+            int i = 0;
+            foreach (var ent in input.Entities)
+            {
+                var realEnt = Entities[i++];
+                ((VMGameObject)realEnt).LoadHollowCrossRef(ent, Context);
+            }
+
+            foreach (var multi in input.MultitileGroups)
+            {
+                new VMMultitileGroup(multi, Context); //should self register
+            }
+
+            foreach (var ent in Entities)
+            {
+                if (ent.Container == null) ent.PositionChange(Context, true); //called recursively for contained objects.
+            }
+
+            Context.Architecture.RegenRoomMap();
+            Context.RegeneratePortalInfo();
+            Context.Architecture.WallDirtyState(input.Context.Architecture);
         }
 
         internal void BreakpointHit(VMEntity entity)

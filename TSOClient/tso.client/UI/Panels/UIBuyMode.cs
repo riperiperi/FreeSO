@@ -65,6 +65,7 @@ namespace FSO.Client.UI.Panels
         public UIButton BathRoomButton { get; set; }
         public UIButton OutsideButton { get; set; }
         public UIButton MiscRoomButton { get; set; }
+        public UIButton InventoryButton { get; set; }
 
         public UIButton MapBuildingModeButton { get; set; }
         public UIButton PetsButton { get; set; }
@@ -136,6 +137,7 @@ namespace FSO.Client.UI.Panels
             MiscButton.OnButtonClick += ChangeCategory;
             PetsButton.OnButtonClick += ChangeCategory;
             MapBuildingModeButton.OnButtonClick += ChangeCategory;
+            InventoryButton.OnButtonClick += OnInventoryButton;
 
             ProductCatalogPreviousPageButton.OnButtonClick += PreviousPage;
             InventoryCatalogRoommatePreviousPageButton.OnButtonClick += PreviousPage;
@@ -159,6 +161,11 @@ namespace FSO.Client.UI.Panels
             Holder.OnPickup += HolderPickup;
             Holder.OnDelete += HolderDelete;
             Holder.OnPutDown += HolderPutDown;
+        }
+
+        private void OnInventoryButton(UIElement button)
+        {
+            SetMode(2);
         }
 
         public override void Destroy()
@@ -357,6 +364,10 @@ namespace FSO.Client.UI.Panels
             InventoryCatalogVisitorSlider.Visible = (mode == 2 && !Roommate);
             InventoryCatalogVisitorNextPageButton.Visible = (mode == 2 && !Roommate);
             InventoryCatalogVisitorPreviousPageButton.Visible = (mode == 2 && !Roommate);
+
+            if (mode == 1) { Catalog.X = 275; Catalog.PageSize = 24; }
+            else if (mode == 2 && Roommate) { Catalog.X = 272; Catalog.PageSize = 24; }
+            else if (mode == 2 && !Roommate) { Catalog.X = 95; Catalog.PageSize = 30; }
 
             Mode = mode;
         }

@@ -95,7 +95,10 @@ namespace FSO.SimAntics
 
         /** Relationship variables **/
         public Dictionary<ushort, List<short>> MeToObject;
-        //todo, special system for server persistent avatars and pets
+        public Dictionary<uint, List<short>> MeToPersist;
+        //signals which relationships have changed since the last time this was reset
+        //used to partial update relationships when doing an avatar save to db
+        public HashSet<uint> ChangedRels = new HashSet<uint>(); 
 
         public ulong DynamicSpriteFlags; /** Used to show/hide dynamic sprites **/
         public ulong DynamicSpriteFlags2;
@@ -155,6 +158,7 @@ namespace FSO.SimAntics
              */
             ObjectData = new short[80];
             MeToObject = new Dictionary<ushort, List<short>>();
+            MeToPersist = new Dictionary<uint, List<short>>();
             SoundThreads = new List<VMSoundEntry>();
 
             RTTI = new VMEntityRTTI();
@@ -823,7 +827,7 @@ namespace FSO.SimAntics
             else
             {
                 if ((placeFlags & VMPlacementFlags.RequirePool) > 0) return VMPlacementError.MustPlaceOnPool;
-                if (floor.Pattern == 63354)
+                if (floor.Pattern == 65534)
                 {
                     if ((placeFlags & (VMPlacementFlags.OnWater | VMPlacementFlags.RequireWater)) == 0) return VMPlacementError.CantPlaceOnWater;
                 } else
@@ -1041,6 +1045,10 @@ namespace FSO.SimAntics
             i = 0;
             foreach (var item in MeToObject) relArry[i++] = new VMEntityRelationshipMarshal { Target = item.Key, Values = item.Value.ToArray() };
 
+            var prelArry = new VMEntityPersistRelationshipMarshal[MeToPersist.Count];
+            i = 0;
+            foreach (var item in MeToPersist) prelArry[i++] = new VMEntityPersistRelationshipMarshal { Target = item.Key, Values = item.Value.ToArray() };
+
             target.ObjectID = ObjectID;
             target.PersistID = PersistID;
             target.PlatformState = PlatformState;
@@ -1061,6 +1069,7 @@ namespace FSO.SimAntics
 
             target.Attributes = Attributes.ToArray();
             target.MeToObject = relArry;
+            target.MeToPersist = prelArry;
 
             target.DynamicSpriteFlags = DynamicSpriteFlags;
             target.DynamicSpriteFlags2 = DynamicSpriteFlags2;
@@ -1091,7 +1100,9 @@ namespace FSO.SimAntics
 
             Attributes = new List<short>(input.Attributes);
             MeToObject = new Dictionary<ushort, List<short>>();
-            foreach (var obj in input.MeToObject)  MeToObject[obj.Target] = new List<short>(obj.Values);
+            MeToPersist = new Dictionary<uint, List<short>>();
+            foreach (var obj in input.MeToObject) MeToObject[obj.Target] = new List<short>(obj.Values);
+            foreach (var obj in input.MeToPersist) MeToPersist[obj.Target] = new List<short>(obj.Values);
 
             DynamicSpriteFlags = input.DynamicSpriteFlags;
             DynamicSpriteFlags2 = input.DynamicSpriteFlags2;

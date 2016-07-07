@@ -94,6 +94,8 @@
     <Compile Include="Engine\VMStackFrame.cs" />
     <Compile Include="Entities\VMAvatarMotiveDecay.cs" />
     <Compile Include="Entities\VMMultitileGroup.cs" />
+    <Compile Include="Marshals\Hollow\VMHollowGameObjectMarshal.cs" />
+    <Compile Include="Marshals\Hollow\VMHollowMarshal.cs" />
     <Compile Include="Marshals\Threads\VMQueuedActionMarshal.cs" />
     <Compile Include="Marshals\Threads\VMRoutingFrameMarshal.cs" />
     <Compile Include="Marshals\VMRuntimeHeadlineMarshal.cs" />
@@ -113,8 +115,11 @@
     <Compile Include="Model\TSOPlatform\VMAsyncState.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOAvatarState.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOEntityState.cs" />
+    <Compile Include="Model\TSOPlatform\VMTSOJobInfo.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOLotState.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOObjectState.cs" />
+    <Compile Include="Model\TSOPlatform\VMTSOSurroundingTerrain.cs" />
+    <Compile Include="Model\VMArchitectureTerrain.cs" />
     <Compile Include="Model\VMBudget.cs" />
     <Compile Include="Model\VMHeadlineRenderer.cs" />
     <Compile Include="Model\VMPlatformState.cs" />
@@ -145,6 +150,7 @@
     <Compile Include="NetPlay\EODs\Handlers\VMEODSignsPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODStubPlugin.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODEvent.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetAdjHollowSyncCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetEODMessageCmd.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODPluginThreadState.cs" />
     <Compile Include="NetPlay\EODs\VMEODHost.cs" />
@@ -165,6 +171,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetSimJoinCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetArchitectureCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSimLeaveCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetUpdatePersistStateCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMRequestResyncCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMStateSyncCmd.cs" />
     <Compile Include="NetPlay\Model\VMChatEvent.cs" />
@@ -231,6 +238,7 @@
     <Compile Include="Primitives\VMTransferFunds.cs" />
     <Compile Include="Utils\TimePropertyListItemSorter.cs" />
     <Compile Include="Utils\VMArchitectureTools.cs" />
+    <Compile Include="Utils\VMLotTerrainRestoreTools.cs" />
     <Compile Include="Utils\VMWorldActivator.cs" />
     <Compile Include="Utils\VMWorldExporter.cs" />
     <Compile Include="VM.cs" />

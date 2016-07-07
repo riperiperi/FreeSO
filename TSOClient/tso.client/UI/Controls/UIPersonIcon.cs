@@ -69,7 +69,7 @@ namespace FSO.Client.UI.Controls
                 case VMTSOAvatarPermissions.Owner: bgID = 0x25200000001; overlayID = 0x7A000000001; break; //..., personbuttonoverlay_houseleaderlarge
             }
 
-            if (Avatar.PersistID < 65536)
+            if (Avatar.PersistID == 0)
             {
                 bgID = 0xCEF00000001; //peoplebuttontemplate_npclarge
             }
@@ -96,7 +96,7 @@ namespace FSO.Client.UI.Controls
         {
             int prefixNum = 3;
             if (ava.IsPet) prefixNum = 5;
-            else if (ava.PersistID < 65536) prefixNum = 4;
+            else if (ava.PersistID == 0) prefixNum = 4;
             else
             {
                 var permissionsLevel = ((VMTSOAvatarState)ava.TSOState).Permissions;

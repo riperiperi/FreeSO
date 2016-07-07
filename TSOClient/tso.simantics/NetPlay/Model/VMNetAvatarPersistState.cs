@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Marshals;
 
 namespace FSO.SimAntics.NetPlay.Model
 {
@@ -31,6 +32,9 @@ namespace FSO.SimAntics.NetPlay.Model
 
         public short[] MotiveData = new short[16]; //lots of this is garbage data. Copy relevant motives from DB.
         private short[] PersonData = new short[27]; //special selection of things which should persist.
+
+        //relationships
+        public VMEntityPersistRelationshipMarshal[] Relationships;
 
         //===== PERSON DATA =====
 
@@ -65,10 +69,12 @@ namespace FSO.SimAntics.NetPlay.Model
 
         //ONLINE JOBS!
         public short OnlineJobID { get { return PersonData[21]; } set { PersonData[21] = value; } } //91 ~~>DB<~~
-        public short OnlineJobGrade { get { return PersonData[22]; } set { PersonData[22] = value; } } //92 ~~>DB<~~
+
+        public Dictionary<short, VMTSOJobInfo> OnlineJobInfo = new Dictionary<short, VMTSOJobInfo>();
+        /*public short OnlineJobGrade { get { return PersonData[22]; } set { PersonData[22] = value; } } //92 ~~>DB<~~
         public short OnlineJobXP { get { return PersonData[23]; } set { PersonData[23] = value; } } //93 ~~>DB<~~
         public short OnlineJobSickDays { get { return PersonData[24]; } set { PersonData[24] = value; } } //94 ~~>DB<~~
-        public short OnlineJobStatusFlags { get { return PersonData[25]; } set { PersonData[25] = value; } } //98 ~~>DB<~~
+        public short OnlineJobStatusFlags { get { return PersonData[25]; } set { PersonData[25] = value; } } //98 ~~>DB<~~*/
 
         public short BadgeLevel { get { return PersonData[26]; } set { PersonData[26] = value; } } //100 (not sure, maybe number of days active?)
 
@@ -105,10 +111,6 @@ namespace FSO.SimAntics.NetPlay.Model
 
             //onlinejobs
             91,
-            92,
-            93,
-            94,
-            98,
 
             100
         };
@@ -128,6 +130,19 @@ namespace FSO.SimAntics.NetPlay.Model
 
             writer.Write(VMSerializableUtils.ToByteArray(MotiveData));
             writer.Write(VMSerializableUtils.ToByteArray(PersonData));
+
+            writer.Write(Relationships.Length);
+            foreach (var rel in Relationships)
+            {
+                rel.SerializeInto(writer);
+            }
+
+            writer.Write(OnlineJobInfo.Count);
+            foreach (var item in OnlineJobInfo)
+            {
+                writer.Write(item.Key);
+                item.Value.SerializeInto(writer);
+            }
         }
 
         public void Deserialize(BinaryReader reader)
@@ -145,6 +160,23 @@ namespace FSO.SimAntics.NetPlay.Model
 
             for (int i = 0; i < MotiveData.Length; i++) MotiveData[i] = reader.ReadInt16();
             for (int i = 0; i < PersonData.Length; i++) PersonData[i] = reader.ReadInt16();
+
+            var count = reader.ReadInt32();
+            Relationships = new VMEntityPersistRelationshipMarshal[count];
+            for (int i = 0; i< Relationships.Length; i++)
+            {
+                Relationships[i] = new VMEntityPersistRelationshipMarshal();
+                Relationships[i].Deserialize(reader);
+            }
+
+            var jobs = reader.ReadInt32();
+            for (int i = 0; i < jobs; i++)
+            {
+                var id = reader.ReadInt16();
+                var job = new VMTSOJobInfo();
+                job.Deserialize(reader);
+                OnlineJobInfo[id] = job;
+            }
         }
 
         public void Apply(VMAvatar avatar)
@@ -163,7 +195,10 @@ namespace FSO.SimAntics.NetPlay.Model
             avatar.PersistID = PersistID;
 
             for (int i = 0; i < MotiveData.Length; i++) avatar.SetMotiveData((VMMotive)i, MotiveData[i]);
+            avatar.MeToPersist = new Dictionary<uint, List<short>>();
+            foreach (var obj in Relationships) avatar.MeToPersist[obj.Target] = new List<short>(obj.Values);
 
+            ((VMTSOAvatarState)avatar.TSOState).JobInfo = OnlineJobInfo;
         }
 
         public void Save(VMAvatar avatar)
@@ -181,6 +216,7 @@ namespace FSO.SimAntics.NetPlay.Model
             {
                 PersonData[i] = avatar.GetPersonData((VMPersonDataVariable)PersonDataMap[i]);
             }
+            OnlineJobInfo = ((VMTSOAvatarState)avatar.TSOState).JobInfo;
         }
     }
 }

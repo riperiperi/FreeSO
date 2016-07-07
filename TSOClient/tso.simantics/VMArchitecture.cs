@@ -35,6 +35,8 @@ namespace FSO.SimAntics
         public FloorTile[][] Floors;
         public FloorTile[][] VisFloors;
 
+        public VMArchitectureTerrain Terrain;
+
         public bool[][] ObjectSupport;
         public bool[][] Supported;
 
@@ -54,6 +56,7 @@ namespace FSO.SimAntics
 
         private bool WallsDirty;
         private bool FloorsDirty;
+        private bool TerrainDirty;
 
         private bool Redraw;
 
@@ -92,6 +95,7 @@ namespace FSO.SimAntics
             if (blueprint != null) blueprint.Supported = Supported;
 
             this.Rooms = new VMRoomMap[Stories];
+            this.Terrain = new VMArchitectureTerrain(width, height);
 
             for (int i = 0; i < Stories; i++)
             {
@@ -107,7 +111,6 @@ namespace FSO.SimAntics
 
                 this.Rooms[i] = new VMRoomMap();
             }
-
             
             this.RoomData = new List<VMRoom>();
             this.WorldUI = blueprint;
@@ -209,6 +212,11 @@ namespace FSO.SimAntics
             Redraw = true;
         }
 
+        public void SignalTerrainRedraw()
+        {
+            TerrainDirty = true;
+        }
+
         public void RegenRoomMap()
         {
             RoomData = new List<VMRoom>();
@@ -239,6 +247,12 @@ namespace FSO.SimAntics
                 LastTestCost = SimulateCommands(Commands, true);
                 WorldUI.SignalWallChange();
                 WorldUI.SignalFloorChange();
+            }
+
+            if (TerrainDirty && VM.UseWorld)
+            {
+                WorldUI.Terrain.UpdateTerrain(Terrain.LightType, Terrain.DarkType, Terrain.Heights, Terrain.GrassState);
+                TerrainDirty = false;
             }
 
             var clock = Context.Clock;
@@ -631,6 +645,7 @@ namespace FSO.SimAntics
                 Width = Width,
                 Height = Height,
                 Stories = Stories,
+                Terrain = Terrain,
         
                 Walls = Walls,
                 Floors = Floors,
@@ -645,11 +660,13 @@ namespace FSO.SimAntics
             Width = input.Width;
             Height = input.Height;
             Stories = input.Stories;
+            Terrain = input.Terrain;
 
             Walls = input.Walls;
             Floors = input.Floors;
 
             RegenWallsAt();
+            SignalTerrainRedraw();
         }
 
         public void WallDirtyState(VMArchitectureMarshal input)

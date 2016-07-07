@@ -18,7 +18,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
     public class VMClientDriver : VMNetDriver
     {
         private Queue<VMNetTick> TickBuffer;
-        private Queue<VMNetCommandBodyAbstract> Commands;
+        private Queue<VMNetCommand> DirectCommands;
+
+        private Queue<VMNetCommandBodyAbstract> OutgoingCommands;
         private Queue<VMNetMessage> ServerMessages;
         private uint TickID = 0;
         private const int TICKS_PER_PACKET = 2;
@@ -43,7 +45,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public VMClientDriver(OnStateChangeDelegate callback)
         {
-            Commands = new Queue<VMNetCommandBodyAbstract>();
+            OutgoingCommands = new Queue<VMNetCommandBodyAbstract>();
             ServerMessages = new Queue<VMNetMessage>();
             OnStateChange += callback;
 
@@ -82,7 +84,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public override void SendCommand(VMNetCommandBodyAbstract cmd)
         {
-            Commands.Enqueue(cmd);
+            OutgoingCommands.Enqueue(cmd);
         }
 
         private void SendToServer(VMNetCommandBodyAbstract cmd)
@@ -108,9 +110,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
             HandleNet(); //handle messages queued by external networking
             if (OnClientCommand != null)
             {
-                while (Commands.Count > 0)
+                while (OutgoingCommands.Count > 0)
                 {
-                    SendToServer(Commands.Dequeue());
+                    SendToServer(OutgoingCommands.Dequeue());
                 }
             }
 
@@ -202,24 +204,44 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         private void HandleServerMessage(VMNetMessage message)
         {
-            var tick = new VMNetTickList();
-            try
+            if (message.Type == VMNetMessageType.Direct)
             {
-                using (var reader = new BinaryReader(new MemoryStream(message.Data)))
+                var cmd = new VMNetCommand();
+                try
                 {
-                    tick.Deserialize(reader);
+                    using (var reader = new BinaryReader(new MemoryStream(message.Data)))
+                    {
+                        cmd.Deserialize(reader);
+                    }
+                    cmd.Command.Execute(VMHook);
+                }
+                catch (Exception e)
+                {
+                    Shutdown();
+                    return;
                 }
             }
-            catch (Exception e)
+            else
             {
-                Shutdown();
-                return;
-            }
+                var tick = new VMNetTickList();
+                try
+                {
+                    using (var reader = new BinaryReader(new MemoryStream(message.Data)))
+                    {
+                        tick.Deserialize(reader);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Shutdown();
+                    return;
+                }
 
-            for (int i = 0; i < tick.Ticks.Count; i++)
-            {
-                tick.Ticks[i].ImmediateMode = tick.ImmediateMode;
-                TickBuffer.Enqueue(tick.Ticks[i]);
+                for (int i = 0; i < tick.Ticks.Count; i++)
+                {
+                    tick.Ticks[i].ImmediateMode = tick.ImmediateMode;
+                    TickBuffer.Enqueue(tick.Ticks[i]);
+                }
             }
         }
 

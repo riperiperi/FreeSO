@@ -99,6 +99,17 @@ namespace FSO.Content
                 Description = waterStrs.GetString(2)
             });
 
+            Entries.Add(65534, new FloorReference(this)
+            {
+                ID = 65534,
+                FileName = "global",
+
+                Price = int.Parse(waterStrs.GetString(3)),
+                Name = waterStrs.GetString(4),
+                Description = waterStrs.GetString(5)
+            });
+
+
             floorID = 256;
 
             var archives = new string[]
@@ -162,13 +173,28 @@ namespace FSO.Content
             {
                 
                 return TextureUtils.Copy(device, FloorGlobals.Get<SPR2>(0x420).Frames[0].GetTexture(device));
+            } else if (id == 65534)
+            {
+                var spr = FloorGlobals.Get<SPR2>(0x800);
+                if (!spr.SpritePreprocessed)
+                {
+                    spr.CopyZToAlpha();
+                    spr.SpritePreprocessed = true;
+                }
+                return TextureUtils.Copy(device, spr.Frames[0].GetTexture(device));
             }
             else return this.Floors.ThrowawayGet(Entries[(ushort)id].FileName).Get<SPR2>(513).Frames[0].GetTexture(device);
         }
 
         public SPR2 GetGlobalSPR(ushort id)
         {
-            return FloorGlobals.Get<SPR2>(id);
+            var spr = FloorGlobals.Get<SPR2>(id);
+            if (id > 0x800 && id < 0x810 && !spr.SpritePreprocessed)
+            {
+                spr.CopyZToAlpha();
+                spr.SpritePreprocessed = true;
+            }
+            return spr;
         }
 
         #region IContentProvider<Floor> Members

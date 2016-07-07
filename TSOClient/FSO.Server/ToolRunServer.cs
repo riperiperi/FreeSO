@@ -56,6 +56,8 @@ namespace FSO.Server
             }
 
             Directory.CreateDirectory(Config.SimNFS);
+            Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Lots/"));
+            Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/"));
 
             //TODO: Some content preloading
             LOG.Info("Scanning content");
@@ -91,6 +93,7 @@ namespace FSO.Server
 
             foreach(var lotServer in Config.Services.Lots)
             {
+                if (lotServer.SimNFS == null) lotServer.SimNFS = Config.SimNFS;
                 var childKernel = new ChildKernel(
                     Kernel,
                     new LotServerModule()

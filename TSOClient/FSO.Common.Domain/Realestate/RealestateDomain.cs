@@ -108,5 +108,10 @@ namespace FSO.Common.Domain.Realestate
             //10 is threshold for now
             return (max - min < 10);
         }
+
+        public CityMap GetMap()
+        {
+            return _Map;
+        }
     }
 }

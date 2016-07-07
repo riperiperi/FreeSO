@@ -207,6 +207,7 @@ namespace FSO.LotView.Utils
         /// </summary>
         public void End(List<_2DDrawGroup> cache, bool outputDepth)
         {
+            if (WorldCamera == null) return;
             var effect = this.Effect;
             if (cache == null)
             {

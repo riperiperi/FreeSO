@@ -79,7 +79,7 @@ namespace FSO.Server.Servers.City.Handlers
                     return;
                 }
 
-                Console.WriteLine(type.ToString());
+                //LOG.Trace(type.ToString());
                 //if (type == MaskedStruct.MapView_NearZoom_Lot_Thumbnail || type == MaskedStruct.Thumbnail_Lot || type == MaskedStruct.MapView_NearZoom_Lot) { }
 
                 if (type != MaskedStruct.MyAvatar && type != MaskedStruct.SimPage_Main && type != MaskedStruct.MapView_RollOverInfo_Lot_Price

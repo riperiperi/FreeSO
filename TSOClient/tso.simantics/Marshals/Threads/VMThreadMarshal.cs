@@ -15,6 +15,7 @@ namespace FSO.SimAntics.Marshals.Threads
     {
         public VMStackFrameMarshal[] Stack;
         public VMQueuedActionMarshal[] Queue;
+        public byte ActiveQueueBlock;
         public short[] TempRegisters = new short[20];
         public int[] TempXL = new int[2];
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
@@ -42,6 +43,7 @@ namespace FSO.SimAntics.Marshals.Threads
 
             writer.Write(Queue.Length);
             foreach (var item in Queue) item.SerializeInto(writer);
+            writer.Write(ActiveQueueBlock);
 
             writer.Write(VMSerializableUtils.ToByteArray(TempRegisters));
             foreach (var item in TempXL) writer.Write(item);
@@ -61,9 +63,10 @@ namespace FSO.SimAntics.Marshals.Threads
         {
             var stackN = reader.ReadInt32();
             Stack = new VMStackFrameMarshal[stackN];
-            for (int i = 0; i < stackN; i++) {
+            for (int i = 0; i < stackN; i++)
+            {
                 var type = reader.ReadByte();
-                Stack[i] = (type==1)?new VMRoutingFrameMarshal(Version):new VMStackFrameMarshal(Version);
+                Stack[i] = (type == 1) ? new VMRoutingFrameMarshal(Version) : new VMStackFrameMarshal(Version);
                 Stack[i].Deserialize(reader);
             }
 
@@ -74,6 +77,7 @@ namespace FSO.SimAntics.Marshals.Threads
                 Queue[i] = new VMQueuedActionMarshal();
                 Queue[i].Deserialize(reader);
             }
+            if (Version > 4) ActiveQueueBlock = reader.ReadByte();
 
             TempRegisters = new short[20];
             for (int i = 0; i < 20; i++) TempRegisters[i] = reader.ReadInt16();

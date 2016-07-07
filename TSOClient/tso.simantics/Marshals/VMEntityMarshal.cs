@@ -34,6 +34,7 @@ namespace FSO.SimAntics.Marshals
 
         public short[] Attributes;
         public VMEntityRelationshipMarshal[] MeToObject;
+        public VMEntityPersistRelationshipMarshal[] MeToPersist;
 
         public ulong DynamicSpriteFlags;
         public ulong DynamicSpriteFlags2;
@@ -50,7 +51,7 @@ namespace FSO.SimAntics.Marshals
             PersistID = reader.ReadUInt32();
 
             if (this is VMGameObjectMarshal) PlatformState = new VMTSOObjectState();
-            else PlatformState = new VMTSOAvatarState();
+            else PlatformState = new VMTSOAvatarState(Version);
 
             PlatformState.Deserialize(reader);
 
@@ -91,6 +92,18 @@ namespace FSO.SimAntics.Marshals
                 MeToObject[i].Deserialize(reader);
             }
 
+            if (Version > 7)
+            {
+                var prelN = reader.ReadInt32();
+                MeToPersist = new VMEntityPersistRelationshipMarshal[prelN];
+                for (int i = 0; i < prelN; i++)
+                {
+                    MeToPersist[i] = new VMEntityPersistRelationshipMarshal();
+                    MeToPersist[i].Deserialize(reader);
+                }
+            }
+            else MeToPersist = new VMEntityPersistRelationshipMarshal[0];
+
             DynamicSpriteFlags = reader.ReadUInt64();
             if (Version > 2) DynamicSpriteFlags2 = reader.ReadUInt64();
             Position = new LotTilePos();
@@ -129,6 +142,8 @@ namespace FSO.SimAntics.Marshals
             //foreach (var item in Attributes) writer.Write(item);
             writer.Write(MeToObject.Length);
             foreach (var item in MeToObject) item.SerializeInto(writer);
+            writer.Write(MeToPersist.Length);
+            foreach (var item in MeToPersist) item.SerializeInto(writer);
 
             writer.Write(DynamicSpriteFlags); /** Used to show/hide dynamic sprites **/
             writer.Write(DynamicSpriteFlags2);
@@ -147,6 +162,30 @@ namespace FSO.SimAntics.Marshals
             var rels = reader.ReadInt32();
             Values = new short[rels];
             for (int i=0; i<rels; i++)
+            {
+                Values[i] = reader.ReadInt16();
+            }
+        }
+
+        public virtual void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write(Target);
+            writer.Write(Values.Length);
+            writer.Write(VMSerializableUtils.ToByteArray(Values));
+        }
+    }
+
+    public class VMEntityPersistRelationshipMarshal : VMSerializable
+    {
+        public uint Target;
+        public short[] Values;
+
+        public virtual void Deserialize(BinaryReader reader)
+        {
+            Target = reader.ReadUInt32();
+            var rels = reader.ReadInt32();
+            Values = new short[rels];
+            for (int i = 0; i < rels; i++)
             {
                 Values[i] = reader.ReadInt16();
             }

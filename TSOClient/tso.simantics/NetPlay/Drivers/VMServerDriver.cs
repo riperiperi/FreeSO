@@ -194,8 +194,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
             TickBuffer.Clear();
         }
 
-        private void SendOneOff(VMNetClient client, VMNetCommand cmd) //uh, this is a little silly.
+        public void SendOneOff(VMNetClient client, VMNetCommandBodyAbstract acmd) 
         {
+            var cmd = new VMNetCommand(acmd);
             byte[] data;
             using (var stream = new MemoryStream())
             {
@@ -259,11 +260,11 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         private void SendGenericMessage(VMNetClient client, string title, string msg)
         {
-            SendOneOff(client, new VMNetCommand(new VMGenericDialogCommand
+            SendOneOff(client, new VMGenericDialogCommand
             {
                 Title = title,
                 Message = msg
-            }));
+            });
         }
 
         public void HandleMessage(VMNetClient client, VMNetMessage message)

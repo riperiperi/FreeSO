@@ -11,7 +11,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
     {
         public string Name = "Lot";
         public uint LotID;
-        public byte TerrainType;
+        public VMTSOSurroundingTerrain Terrain = new VMTSOSurroundingTerrain();
         public byte PropertyCategory;
         public int Size = 8;
 
@@ -19,11 +19,19 @@ namespace FSO.SimAntics.Model.TSOPlatform
         public HashSet<uint> Roommates = new HashSet<uint>();
         public HashSet<uint> BuildRoommates = new HashSet<uint>();
 
+        public VMTSOLotState() { }
+        public VMTSOLotState(int version) : base(version) { }
+
         public override void Deserialize(BinaryReader reader)
         {
             Name = reader.ReadString();
             LotID = reader.ReadUInt32();
-            TerrainType = reader.ReadByte();
+            if (Version > 6) {
+                Terrain = new VMTSOSurroundingTerrain();
+                Terrain.Deserialize(reader);
+            } else {
+                reader.ReadByte(); //old Terrain Type
+            }
             PropertyCategory = reader.ReadByte();
             Size = reader.ReadInt32();
 
@@ -40,7 +48,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
         {
             writer.Write(Name);
             writer.Write(LotID);
-            writer.Write(TerrainType);
+            Terrain.SerializeInto(writer);
             writer.Write(PropertyCategory);
             writer.Write(Size);
 

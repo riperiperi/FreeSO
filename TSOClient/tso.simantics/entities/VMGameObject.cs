@@ -20,6 +20,7 @@ using FSO.Content.Model;
 using FSO.SimAntics.Model.Routing;
 using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.Marshals.Hollow;
 
 namespace FSO.SimAntics
 {
@@ -91,7 +92,6 @@ namespace FSO.SimAntics
 
         public override void Init(FSO.SimAntics.VMContext context){
             if (UseWorld) WorldUI.ObjectID = ObjectID;
-            PersistID = (uint)ObjectID; //temporary til theres a system to manage these
             if (Slots != null && Slots.Slots.ContainsKey(0))
             {
                 Contained = new VMEntity[Slots.Slots[0].Count];
@@ -365,6 +365,88 @@ namespace FSO.SimAntics
                 WorldUI.ObjectID = ObjectID;
                 if (Slots != null && Slots.Slots.ContainsKey(0)) ((ObjectComponent)WorldUI).ContainerSlots = Slots.Slots[0];
                 RefreshGraphic();
+            }
+        }
+
+        public VMHollowGameObjectMarshal HollowSave()
+        {
+            var cont = new short[Contained.Length];
+            for (int i = 0; i < Contained.Length; i++)
+            {
+                cont[i] = (Contained[i] == null) ? (short)0 : Contained[i].ObjectID;
+            }
+
+            var gameObj = new VMHollowGameObjectMarshal
+            {
+                ObjectID = ObjectID,
+                GUID = Object.OBJ.GUID,
+                MasterGUID = (MasterDefinition == null) ? 0 : MasterDefinition.GUID,
+                Position = Position,
+                Direction = Direction,
+                Graphic = GetValue(VMStackObjectVariable.Graphic),
+                DynamicSpriteFlags = DynamicSpriteFlags,
+                DynamicSpriteFlags2 = DynamicSpriteFlags2,
+
+                Contained = cont,
+                Container = (Container == null) ? (short)0 : Container.ObjectID,
+                ContainerSlot = ContainerSlot,
+
+                Flags = GetValue(VMStackObjectVariable.Flags),
+                Flags2 = GetValue(VMStackObjectVariable.FlagField2),
+                PlacementFlags = GetValue(VMStackObjectVariable.PlacementFlags),
+                WallPlacementFlags = GetValue(VMStackObjectVariable.WallPlacementFlags),
+                AllowedHeightFlags = GetValue(VMStackObjectVariable.AllowedHeightFlags)
+            };
+            return gameObj;
+        }
+
+        public void HollowLoad(VMHollowGameObjectMarshal input)
+        {
+            ObjectID = input.ObjectID;
+
+            if (input.MasterGUID != 0)
+            {
+                var masterDef = FSO.Content.Content.Get().WorldObjects.Get(input.MasterGUID);
+                MasterDefinition = masterDef.OBJ;
+                UseTreeTableOf(masterDef);
+            }
+
+            else MasterDefinition = null;
+
+            ContainerSlot = input.ContainerSlot;
+
+            DynamicSpriteFlags = input.DynamicSpriteFlags;
+            DynamicSpriteFlags2 = input.DynamicSpriteFlags2;
+            SetValue(VMStackObjectVariable.Graphic, input.Graphic);
+            SetValue(VMStackObjectVariable.Flags, input.Flags);
+            SetValue(VMStackObjectVariable.FlagField2, input.Flags2);
+            SetValue(VMStackObjectVariable.PlacementFlags, input.PlacementFlags);
+            SetValue(VMStackObjectVariable.WallPlacementFlags, input.WallPlacementFlags);
+            SetValue(VMStackObjectVariable.AllowedHeightFlags, input.AllowedHeightFlags);
+            Position = input.Position;
+            Direction = input.Direction;
+
+            if (UseWorld)
+            {
+                ((ObjectComponent)this.WorldUI).DynamicSpriteFlags = this.DynamicSpriteFlags;
+                ((ObjectComponent)this.WorldUI).DynamicSpriteFlags2 = this.DynamicSpriteFlags2;
+                WorldUI.ObjectID = ObjectID;
+                if (Slots != null && Slots.Slots.ContainsKey(0)) ((ObjectComponent)WorldUI).ContainerSlots = Slots.Slots[0];
+                RefreshGraphic();
+            }
+        }
+
+        public void LoadHollowCrossRef(VMHollowGameObjectMarshal input, VMContext context)
+        {
+            Contained = new VMEntity[input.Contained.Length];
+            int i = 0;
+            foreach (var item in input.Contained) Contained[i++] = context.VM.GetObjectById(item);
+
+            Container = context.VM.GetObjectById(input.Container);
+            if (UseWorld && Container != null)
+            {
+                WorldUI.Container = Container.WorldUI;
+                WorldUI.ContainerSlot = ContainerSlot;
             }
         }
         #endregion

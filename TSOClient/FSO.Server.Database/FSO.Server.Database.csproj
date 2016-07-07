@@ -87,6 +87,7 @@
     <Compile Include="DA\AvatarClaims\IAvatarClaims.cs" />
     <Compile Include="DA\AvatarClaims\SqlAvatarClaims.cs" />
     <Compile Include="DA\Avatars\DbAvatar.cs" />
+    <Compile Include="DA\Avatars\DbJobLevel.cs" />
     <Compile Include="DA\Avatars\IAvatars.cs" />
     <Compile Include="DA\Avatars\SqlAvatars.cs" />
     <Compile Include="DA\DbChanges\DbChange.cs" />
@@ -101,6 +102,12 @@
     <Compile Include="DA\Lots\ILots.cs" />
     <Compile Include="DA\Lots\SqlLots.cs" />
     <Compile Include="DA\MySqlContext.cs" />
+    <Compile Include="DA\Objects\DbObject.cs" />
+    <Compile Include="DA\Objects\IObjects.cs" />
+    <Compile Include="DA\Objects\SqlObjects.cs" />
+    <Compile Include="DA\Relationships\DbRelationship.cs" />
+    <Compile Include="DA\Relationships\IRelationships.cs" />
+    <Compile Include="DA\Relationships\SqlRelationships.cs" />
     <Compile Include="DA\Shards\IShards.cs" />
     <Compile Include="DA\Shards\Shard.cs" />
     <Compile Include="DA\Shards\ShardTicket.cs" />
@@ -142,6 +149,7 @@
     <Content Include="DatabaseScripts\fso_lots.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="DatabaseScripts\fso_objects.sql" />
     <Content Include="DatabaseScripts\fso_shards.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

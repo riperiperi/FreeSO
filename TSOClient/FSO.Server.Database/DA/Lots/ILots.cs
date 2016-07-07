@@ -10,6 +10,7 @@ namespace FSO.Server.Database.DA.Lots
     {
         IEnumerable<DbLot> All(int shard_id);
         DbLot GetByLocation(int shard_id, uint location);
+        List<DbLot> GetAdjToLocation(int shard_id, uint location);
         DbLot GetByOwner(uint owner_id);
         DbLot Get(int id);
         uint Create(DbLot lot);
@@ -18,6 +19,8 @@ namespace FSO.Server.Database.DA.Lots
 
         List<DbLot> SearchExact(int shard_id, string name, int limit);
         List<DbLot> SearchWildcard(int shard_id, string name, int limit);
+
+        void UpdateRingBackup(int lot_id, sbyte ring_backup_num);
         
         void CreateLotServerTicket(DbLotServerTicket ticket);
         void DeleteLotServerTicket(string id);

@@ -421,7 +421,7 @@ namespace FSO.Client.UI.Panels
         {
             int prefixNum = 3;
             if (ava.IsPet) prefixNum = 5;
-            else if (ava.PersistID < 65536) prefixNum = 4;
+            else if (ava.PersistID == 0) prefixNum = 4;
             else
             {
                 var permissionsLevel = ((VMTSOAvatarState)ava.TSOState).Permissions;

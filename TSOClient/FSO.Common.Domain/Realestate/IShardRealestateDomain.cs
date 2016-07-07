@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Content.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,5 +11,6 @@ namespace FSO.Common.Domain.RealestateDomain
     {
         int GetPurchasePrice(ushort x, ushort y);
         bool IsPurchasable(ushort x, ushort y);
+        CityMap GetMap();
     }
 }
