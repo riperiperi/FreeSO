@@ -33,6 +33,12 @@ namespace FSO.LotView.Components
             return Vector3.Transform(new Vector3(handpos.X, handpos.Z, handpos.Y), Matrix.CreateRotationZ((float)(RadianDirection+Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
         }
 
+        public Vector3 GetPelvisPosition()
+        {
+            var pelvis = Avatar.Skeleton.GetBone("PELVIS").AbsolutePosition / 3.0f;
+            return Vector3.Transform(new Vector3(pelvis.X, pelvis.Z, pelvis.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
+        }
+
         public double RadianDirection;
         public override ushort Room { get; set; }
         public AvatarDisplayFlags DisplayFlags;

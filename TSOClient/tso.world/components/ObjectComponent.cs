@@ -269,7 +269,6 @@ namespace FSO.LotView.Components
             { WallSegments.BottomRight, new Point(1,0) }
         };
 
-
         public override void Update(GraphicsDevice device, WorldState world)
         {
             if (HideForCutaway && Level > 0)

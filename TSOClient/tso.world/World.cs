@@ -234,6 +234,7 @@ namespace FSO.LotView
                 if (scrollVector != Vector2.Zero)
                 {
                     State.CenterTile += scrollVector * new Vector2(0.0625f, 0.0625f);
+                    State.ScrollAnchor = null;
                 }
             }
 
@@ -289,7 +290,15 @@ namespace FSO.LotView
                     ent.Update(null, State);
                 }
             }
-            /** Check for mouse scrolling **/
+            
+            if (State.ScrollAnchor != null)
+            {
+                var pelvisCenter = State.ScrollAnchor.GetPelvisPosition();
+                State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
+                if (State.Level != State.ScrollAnchor.Level) State.Level = State.ScrollAnchor.Level;
+
+                State.CenterTile -= (State.ScrollAnchor.Level - 1) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
+            }
         }
 
         /// <summary>

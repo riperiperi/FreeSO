@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Model;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
+using FSO.LotView.Components;
 
 namespace FSO.Client.UI.Controls
 {
@@ -21,6 +23,8 @@ namespace FSO.Client.UI.Controls
 
         private Texture2D Overlay;
         private Texture2D Icon;
+        private Texture2D Target;
+        private bool RMB;
 
         public UIPersonIcon(VMAvatar ava, VM vm, bool small)
         {
@@ -34,11 +38,19 @@ namespace FSO.Client.UI.Controls
 
         private void CenterPerson(UIElement button)
         {
-            var worldState = vm.Context.World.State;
-            worldState.CenterTile = new Vector2(Avatar.VisualPosition.X, Avatar.VisualPosition.Y);
-            worldState.Level = Avatar.Position.Level;
+            if (RMB)
+            {
+                vm.Context.World.State.ScrollAnchor = (AvatarComponent)(Avatar?.WorldUI);
+            }
+            else
+            {
+                var worldState = vm.Context.World.State;
+                worldState.CenterTile = new Vector2(Avatar.VisualPosition.X, Avatar.VisualPosition.Y);
+                worldState.ScrollAnchor = null;
+                worldState.Level = Avatar.Position.Level;
 
-            worldState.CenterTile -= (Avatar.Position.Level-1)* worldState.WorldSpace.GetTileFromScreen(new Vector2(0, 230))/(1<<(3-(int)worldState.Zoom));
+                worldState.CenterTile -= (Avatar.Position.Level - 1) * worldState.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)worldState.Zoom));
+            }
         }
 
         public override void Update(UpdateState state)
@@ -49,6 +61,8 @@ namespace FSO.Client.UI.Controls
             {
                 UpdateAvatarState(perm);
             }
+            RMB = state.MouseState.RightButton == ButtonState.Pressed;
+            if (RMB && Hovered) CenterPerson(this);
         }
 
         public void UpdateAvatarState(VMTSOAvatarPermissions perm)
@@ -79,15 +93,12 @@ namespace FSO.Client.UI.Controls
                 bgID += 0x00100000000;
                 overlayID += 0x00100000000;
             }
-            /*if (Avatar.PersistID == vm.MyUID)
-            {
-                bgID = 0x25000000001; //personbuttontemplate_playerlarge
-            }*/
 
             Texture = GetTexture(bgID);
             Icon = Avatar.GetIcon(GameFacade.GraphicsDevice, 0);
             if (Icon == null) Icon = GetTexture(0x79500000001); //personbuttontemplate_defaultthumbnail
             Overlay = (overlayID == 0)?null:GetTexture(overlayID);
+            Target = GetTexture(0x25700000001);
 
             Tooltip = GetAvatarString(Avatar);
         }
@@ -127,6 +138,11 @@ namespace FSO.Client.UI.Controls
                 else DrawLocalTexture(SBatch, Icon, new Rectangle(0, 0, Icon.Width / 2, Icon.Height), pos, targetSize / new Vector2((Icon.Width/2), Icon.Height));
             }
             if (Overlay != null) DrawLocalTexture(SBatch, Overlay, new Vector2());
+
+            if (Icon != null && vm.Context.World.State.ScrollAnchor == Avatar?.WorldUI)
+            {
+                DrawLocalTexture(SBatch, Target, new Vector2(Icon.Width-Target.Width, Icon.Height-Target.Height));
+            }
             //draw the icon over the button
         }
     }

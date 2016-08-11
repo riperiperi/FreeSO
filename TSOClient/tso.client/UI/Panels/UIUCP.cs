@@ -157,6 +157,7 @@ namespace FSO.Client.UI.Panels
 
         private void SecondFloor(UIElement button)
         {
+            Game.vm.Context.World.State.ScrollAnchor = null; //stop following a sim on a manual adjustment
             Game.Level = Math.Min((sbyte)(Game.Level + 1), Game.Stories);
             SecondFloorButton.Selected = (Game.Level == Game.Stories);
             FirstFloorButton.Selected = (Game.Level == 1);
@@ -164,6 +165,7 @@ namespace FSO.Client.UI.Panels
 
         private void FirstFloor(UIElement button)
         {
+            Game.vm.Context.World.State.ScrollAnchor = null; //stop following a sim on a manual adjustment
             Game.Level = Math.Max((sbyte)(Game.Level - 1), (sbyte)1);
             SecondFloorButton.Selected = (Game.Level == Game.Stories);
             FirstFloorButton.Selected = (Game.Level == 1);

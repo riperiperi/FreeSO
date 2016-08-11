@@ -51,6 +51,7 @@ namespace FSO.Client.UI.Panels
 
         private bool ShowTooltip;
         private bool TipIsError;
+        private Texture2D RMBCursor;
 
         public FSO.SimAntics.VM vm;
         public LotView.World World;
@@ -128,6 +129,8 @@ namespace FSO.Client.UI.Panels
 
             ChatPanel = new UIChatPanel(vm, this);
             this.Add(ChatPanel);
+
+            RMBCursor = GetTexture(0x24B00000001); //exploreanchor.bmp
 
             vm.OnChatEvent += Vm_OnChatEvent;
             vm.OnDialog += vm_OnDialog;
@@ -452,6 +455,15 @@ namespace FSO.Client.UI.Panels
             MouseCutRect = new Rectangle(0,0,0,0);
         }
 
+        public override void Draw(UISpriteBatch batch)
+        {
+            if (RMBScroll)
+            {
+                DrawLocalTexture(batch, RMBCursor, new Vector2(RMBScrollX - RMBCursor.Width/2, RMBScrollY - RMBCursor.Height / 2));
+            }
+            base.Draw(batch);
+        }
+
         public override void Update(UpdateState state)
         {
             base.Update(state);
@@ -467,6 +479,7 @@ namespace FSO.Client.UI.Panels
                 if (!FoundMe && ActiveEntity != null)
                 {
                     vm.Context.World.State.CenterTile = new Vector2(ActiveEntity.VisualPosition.X, ActiveEntity.VisualPosition.Y);
+                    vm.Context.World.State.ScrollAnchor = null;
                     FoundMe = true;
                 }
                 Queue.QueueOwner = ActiveEntity;
@@ -481,6 +494,7 @@ namespace FSO.Client.UI.Panels
                 bool scrolled = false;
                 if (RMBScroll)
                 {
+                    World.State.ScrollAnchor = null;
                     Vector2 scrollBy = new Vector2();
                     if (state.TouchMode)
                     {

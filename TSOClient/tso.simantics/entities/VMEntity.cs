@@ -134,6 +134,7 @@ namespace FSO.SimAntics
             set
             {
                 _Position = value;
+                if (UseWorld) WorldUI.Level = Position.Level;
                 VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level - 1) * 2.95f);
             }
         }

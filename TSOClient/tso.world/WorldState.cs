@@ -12,6 +12,7 @@ using FSO.Common.Rendering.Framework.Camera;
 using Microsoft.Xna.Framework;
 using FSO.LotView.Utils;
 using Microsoft.Xna.Framework.Graphics;
+using FSO.LotView.Components;
 
 namespace FSO.LotView
 {
@@ -66,6 +67,8 @@ namespace FSO.LotView
         public Texture2D AmbientLight;
         public Color OutsideColor; //temporary to give this to terrain component. in future it will use ambient light texture
         public bool DynamicCutaway;
+
+        public AvatarComponent ScrollAnchor;
 
         private int _WorldSize;
 
