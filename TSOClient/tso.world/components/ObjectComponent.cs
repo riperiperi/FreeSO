@@ -34,6 +34,8 @@ namespace FSO.LotView.Components
         public Blueprint blueprint;
         public int DynamicCounter; //how long this sprite has been dynamic without changing sprite
         public List<SLOTItem> ContainerSlots;
+        public bool HideForCutaway;
+
         public new bool Visible {
             get { return _Visible; }
             set {
@@ -61,24 +63,24 @@ namespace FSO.LotView.Components
 
         public override Vector3 GetSLOTPosition(int slot)
         {
-            var item = (ContainerSlots != null && ContainerSlots.Count > slot)?ContainerSlots[slot]:null;
+            var item = (ContainerSlots != null && ContainerSlots.Count > slot) ? ContainerSlots[slot] : null;
             if (item != null)
             {
                 var off = item.Offset;
-                var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((item.Height != 5) ? SLOT.HeightOffsets[item.Height-1] : off.Z) * (1 / 5.0f));
+                var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((item.Height != 5) ? SLOT.HeightOffsets[item.Height - 1] : off.Z) * (1 / 5.0f));
                 centerRelative = Vector3.Transform(centerRelative, Matrix.CreateRotationZ(RadianDirection));
 
                 return this.Position + centerRelative;
             } else return this.Position;
         }
 
-        public ObjectComponent(GameObject obj){
+        public ObjectComponent(GameObject obj) {
             this.Obj = obj;
             renderInfo = new WorldObjectRenderInfo();
             if (obj.OBJ.BaseGraphicID > 0)
             {
                 var gid = obj.OBJ.BaseGraphicID;
-                this.DrawGroup = obj.Resource.Get<DGRP>(gid);  
+                this.DrawGroup = obj.Resource.Get<DGRP>(gid);
             }
             dgrp = new DGRPRenderer(this.DrawGroup);
             dgrp.DynamicSpriteBaseID = obj.OBJ.DynamicSpriteBaseId;
@@ -101,6 +103,26 @@ namespace FSO.LotView.Components
                 }
                 dgrp.DGRP = value;
             }
+        }
+
+        private bool _CutawayHidden;
+
+        public bool CutawayHidden
+        {
+            get
+            {
+                return _CutawayHidden;
+            }
+            set
+            {
+                if (blueprint != null && _CutawayHidden != value && renderInfo.Layer == WorldObjectRenderLayer.STATIC)
+                {
+                    blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                    DynamicCounter = 0;
+                }
+                _CutawayHidden = value;
+            }
+
         }
 
         private bool _ForceDynamic;
@@ -127,11 +149,11 @@ namespace FSO.LotView.Components
         private ulong _DynamicSpriteFlags2 = 0x00000000;
         public ulong DynamicSpriteFlags
         {
-            get{
+            get {
                 return _DynamicSpriteFlags;
-            }set{
-                
-                if (dgrp != null && _DynamicSpriteFlags != value){
+            } set {
+
+                if (dgrp != null && _DynamicSpriteFlags != value) {
                     dgrp.DynamicSpriteFlags = value;
                     if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
                     DynamicCounter = 0;
@@ -175,11 +197,11 @@ namespace FSO.LotView.Components
                     case Direction.NORTH:
                         return 0;
                     case Direction.EAST:
-                        return (float)Math.PI/2;
+                        return (float)Math.PI / 2;
                     case Direction.SOUTH:
                         return (float)Math.PI;
                     case Direction.WEST:
-                        return (float)Math.PI*1.5f;
+                        return (float)Math.PI * 1.5f;
                     default:
                         return 0;
                 }
@@ -196,7 +218,7 @@ namespace FSO.LotView.Components
             set
             {
                 _Direction = value;
-                if (dgrp != null){
+                if (dgrp != null) {
                     dgrp.Direction = value;
                     dgrp.InvalidateRotation();
                 }
@@ -206,7 +228,7 @@ namespace FSO.LotView.Components
         public override void OnRotationChanged(WorldState world)
         {
             base.OnRotationChanged(world);
-            if (dgrp != null){
+            if (dgrp != null) {
                 dgrp.InvalidateRotation();
             }
         }
@@ -214,7 +236,7 @@ namespace FSO.LotView.Components
         public override void OnZoomChanged(WorldState world)
         {
             base.OnZoomChanged(world);
-            if (dgrp != null){
+            if (dgrp != null) {
                 dgrp.InvalidateZoom();
             }
         }
@@ -222,7 +244,7 @@ namespace FSO.LotView.Components
         public override void OnScrollChanged(WorldState world)
         {
             base.OnScrollChanged(world);
-            if (dgrp != null){
+            if (dgrp != null) {
                 dgrp.InvalidateScroll();
             }
         }
@@ -237,21 +259,55 @@ namespace FSO.LotView.Components
             return world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
         }
 
+        public static Dictionary<Direction, Point> CutawayTests = new Dictionary<Direction, Point>
+        {
+            { Direction.NORTH, new Point(0,1) },
+            { Direction.EAST, new Point(-1,0) },
+            { Direction.SOUTH, new Point(0,-1)},
+            { Direction.WEST, new Point(1,0) }
+        };
+
         public override void Update(GraphicsDevice device, WorldState world)
         {
+            if (HideForCutaway)
+            {
+                if (world.DynamicCutaway && Level == world.Level)
+                {
+                    if (blueprint != null && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                    DynamicCounter = 0; //keep windows and doors on the top floor on the dynamic layer.
+                }
+
+                var tilePos = new Point((int)Math.Round(Position.X), (int)Math.Round(Position.Y));
+
+                var positions = new Point[] { tilePos, tilePos + CutawayTests[Direction], tilePos - CutawayTests[Direction] };
+                var canContinue = true;
+
+                foreach (var pos in positions)
+                {
+                    canContinue = canContinue && (pos.X >= 0 && pos.X < blueprint.Width && pos.Y >= 0 && pos.Y < blueprint.Height
+                        && blueprint.Cutaway[pos.Y * blueprint.Width + pos.X]);
+                    if (!canContinue) break;
+                }
+                CutawayHidden = canContinue;
+            }
+
             bool forceDynamic = ForceDynamic;
             if (Container != null && Container is ObjectComponent)
             {
                 forceDynamic = ((ObjectComponent)Container).ForceDynamic;
                 if (forceDynamic && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
             }
-            if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC && !forceDynamic && DynamicCounter++ > 120 && blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
+            if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC && !forceDynamic && DynamicCounter++ > 120 && blueprint != null)
+            {
+                blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
+            }
         }
 
         public override void Draw(GraphicsDevice device, WorldState world){
 #if !DEBUG 
             if (!Visible) return;
 #endif
+            if (CutawayHidden) return;
             if (this.DrawGroup != null) dgrp.Draw(world);
 
             if (Headline != null)

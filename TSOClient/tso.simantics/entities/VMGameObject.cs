@@ -45,6 +45,23 @@ namespace FSO.SimAntics
 
         public override bool SetValue(VMStackObjectVariable var, short value)
         {
+            switch (var)
+            {
+                case VMStackObjectVariable.Flags:
+                    var flags = (VMEntityFlags)value;
+                    if (UseWorld)
+                        ((ObjectComponent)WorldUI).HideForCutaway = (flags & VMEntityFlags.HideForCutaway) > 0;
+                //            || ((VMEntityFlags2)GetValue(VMStackObjectVariable.FlagField2) & VMEntityFlags2.ArchitectualDoor) > 0;
+                    break;
+                case VMStackObjectVariable.FlagField2:
+                    /*
+                    var flags2 = (VMEntityFlags2)value;
+                    if (UseWorld)
+                        ((ObjectComponent)WorldUI).HideForCutaway = (flags2 & VMEntityFlags2.ArchitectualDoor) > 0
+                            || ((VMEntityFlags)GetValue(VMStackObjectVariable.Flags) & VMEntityFlags.HideForCutaway) > 0; */
+                    break;
+
+            }
             return base.SetValue(var, value);
         }
 
@@ -364,6 +381,7 @@ namespace FSO.SimAntics
                 ((ObjectComponent)this.WorldUI).DynamicSpriteFlags = this.DynamicSpriteFlags;
                 WorldUI.ObjectID = ObjectID;
                 if (Slots != null && Slots.Slots.ContainsKey(0)) ((ObjectComponent)WorldUI).ContainerSlots = Slots.Slots[0];
+                SetValue(VMStackObjectVariable.Flags, GetValue(VMStackObjectVariable.Flags));
                 RefreshGraphic();
             }
         }

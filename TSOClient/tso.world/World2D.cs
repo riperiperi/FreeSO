@@ -39,23 +39,30 @@ namespace FSO.LotView
             /** Object ID buffer **/
             SurfaceFormat.Single,
 
-            /** Archetecture buffers **/
+            /** Floor buffers **/
             SurfaceFormat.Color,
             SurfaceFormat.Single,
 
             /** Terrain Depth **/
-            SurfaceFormat.Color
+            SurfaceFormat.Color,
+
+            /** Wall buffers **/
+            SurfaceFormat.Color,
+            SurfaceFormat.Single,
         };
 
-        public static readonly int NUM_2D_BUFFERS = 8;
+        public static readonly int NUM_2D_BUFFERS = 10;
         public static readonly int BUFFER_THUMB = 0; //used for drawing thumbnails
         public static readonly int BUFFER_STATIC_OBJECTS_PIXEL = 1;
         public static readonly int BUFFER_STATIC_OBJECTS_DEPTH = 2;
         public static readonly int BUFFER_STATIC_TERRAIN = 3;
         public static readonly int BUFFER_OBJID = 4;
-        public static readonly int BUFFER_ARCHETECTURE_PIXEL = 5;
-        public static readonly int BUFFER_ARCHETECTURE_DEPTH = 6;
+        public static readonly int BUFFER_FLOOR_PIXEL = 5;
+        public static readonly int BUFFER_FLOOR_DEPTH = 6;
         public static readonly int BUFFER_STATIC_TERRAIN_DEPTH = 7;
+
+        public static readonly int BUFFER_WALL_PIXEL = 8;
+        public static readonly int BUFFER_WALL_DEPTH = 9;
 
 
         public static readonly int SCROLL_BUFFER = 512; //resolution to add to render size for scroll reasons
@@ -67,8 +74,10 @@ namespace FSO.LotView
         private List<_2DDrawGroup> StaticObjectsCache = new List<_2DDrawGroup>();
         private ScrollBuffer StaticObjects;
 
-        private List<_2DDrawGroup> StaticArchCache = new List<_2DDrawGroup>();
-        private ScrollBuffer StaticArch;
+        private List<_2DDrawGroup> StaticFloorCache = new List<_2DDrawGroup>();
+        private List<_2DDrawGroup> StaticWallCache = new List<_2DDrawGroup>();
+        private ScrollBuffer StaticFloor;
+        private ScrollBuffer StaticWall;
 
         private int TicksSinceLight = 0;
 
@@ -255,9 +264,12 @@ namespace FSO.LotView
              */
 
             var redrawStaticObjects = false;
-            var redrawWalls = false;
+            var redrawFloor = false;
+            var redrawWall = false;
 
             var recacheWalls = false;
+            var recacheFloors = false;
+            var recacheTerrain = false;
             var recacheObjects = false;
 
             if (TicksSinceLight++ > 60 * 4) damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
@@ -271,18 +283,20 @@ namespace FSO.LotView
                     case BlueprintDamageType.LEVEL_CHANGED:
                         recacheObjects = true;
                         recacheWalls = true;
-                        redrawWalls = true;
-                        redrawStaticObjects = true;
+                        recacheFloors = true;
+                        recacheTerrain = true;
                         break;
                     case BlueprintDamageType.SCROLL:
                         if (StaticObjects == null || StaticObjects.PxOffset != GetScrollIncrement(pxOffset))
                         {
-                            redrawWalls = true;
+                            redrawFloor = true;
+                            redrawWall = true;
                             redrawStaticObjects = true;
                         }
                         break;
                     case BlueprintDamageType.LIGHTING_CHANGED:
-                        redrawWalls = true;
+                        redrawFloor = true;
+                        redrawWall = true;
                         redrawStaticObjects = true;
 
                         Blueprint.GenerateRoomLights();
@@ -295,7 +309,6 @@ namespace FSO.LotView
                         /** Redraw if its in static layer **/
                         info = GetRenderInfo(item.Component);
                         if (info.Layer == WorldObjectRenderLayer.STATIC){
-                            redrawStaticObjects = true;
                             recacheObjects = true;
                             info.Layer = WorldObjectRenderLayer.DYNAMIC;
                         }
@@ -305,7 +318,6 @@ namespace FSO.LotView
                         /** Redraw if its in static layer **/
                         info = GetRenderInfo(item.Component);
                         if (info.Layer == WorldObjectRenderLayer.STATIC){
-                            redrawStaticObjects = true;
                             recacheObjects = true;
                             info.Layer = WorldObjectRenderLayer.DYNAMIC;
                         }
@@ -315,18 +327,23 @@ namespace FSO.LotView
                         info = GetRenderInfo(item.Component);
                         if (info.Layer == WorldObjectRenderLayer.DYNAMIC)
                         {
-                            redrawStaticObjects = true;
                             recacheObjects = true;
                             info.Layer = WorldObjectRenderLayer.STATIC;
                         }
                         break;
                     case BlueprintDamageType.WALL_CUT_CHANGED:
+                        recacheWalls = true;
+                        break;
                     case BlueprintDamageType.FLOOR_CHANGED:
                     case BlueprintDamageType.WALL_CHANGED:
-                        redrawWalls = true;
+                        recacheTerrain = true;
+                        recacheFloors = true;
                         recacheWalls = true;
                         break;
                 }
+                if (recacheFloors || recacheTerrain) redrawFloor = true;
+                if (recacheWalls) redrawWall = true;
+                if (recacheObjects) redrawStaticObjects = true;
             }
             damage.Clear();
 
@@ -339,32 +356,57 @@ namespace FSO.LotView
 
             pxOffset = newOff;
 
+            if (recacheTerrain)
+                Blueprint.Terrain.RegenTerrain(gd, state, Blueprint);
+
             if (recacheWalls)
             {
                 _2d.Pause();
                 _2d.Resume(); //clear the sprite buffer before we begin drawing what we're going to cache
-                Blueprint.Terrain.RegenTerrain(gd, state, Blueprint);
-                Blueprint.FloorComp.Draw(gd, state);
                 Blueprint.WallComp.Draw(gd, state);
-                StaticArchCache.Clear();
-                _2d.End(StaticArchCache, true);
+                StaticWallCache.Clear();
+                _2d.End(StaticWallCache, true);
             }
 
-            if (redrawWalls)
+            if (recacheFloors)
+            {
+                _2d.Pause();
+                _2d.Resume(); //clear the sprite buffer before we begin drawing what we're going to cache
+                Blueprint.FloorComp.Draw(gd, state);
+                StaticFloorCache.Clear();
+                _2d.End(StaticFloorCache, true);
+            }
+
+            if (redrawFloor)
             {
                 /** Draw archetecture to a texture **/
                 Promise<Texture2D> bufferTexture = null;
                 Promise<Texture2D> depthTexture = null;
-                using (var buffer = state._2D.WithBuffer(BUFFER_ARCHETECTURE_PIXEL, ref bufferTexture, BUFFER_ARCHETECTURE_DEPTH, ref depthTexture))
+                using (var buffer = state._2D.WithBuffer(BUFFER_FLOOR_PIXEL, ref bufferTexture, BUFFER_FLOOR_DEPTH, ref depthTexture))
                 {
                     _2d.SetScroll(pxOffset);
                     while (buffer.NextPass())
                     {
-                        _2d.RenderCache(StaticArchCache);
+                        _2d.RenderCache(StaticFloorCache);
                         Blueprint.Terrain.Draw(gd, state);
                     }
                 }
-                StaticArch = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
+                StaticFloor = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
+            }
+
+            if (redrawWall)
+            {
+                Promise<Texture2D> bufferTexture = null;
+                Promise<Texture2D> depthTexture = null;
+                using (var buffer = state._2D.WithBuffer(BUFFER_WALL_PIXEL, ref bufferTexture, BUFFER_WALL_DEPTH, ref depthTexture))
+                {
+                    _2d.SetScroll(pxOffset);
+                    while (buffer.NextPass())
+                    {
+                        _2d.RenderCache(StaticWallCache);
+                    }
+                }
+                StaticWall = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
             }
 
             if (recacheObjects)
@@ -429,8 +471,10 @@ namespace FSO.LotView
 
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             var tileOffset = state.CenterTile;
-            if (StaticArch != null)
-                _2d.DrawScrollBuffer(StaticArch, pxOffset, new Vector3(tileOffset, 0), state);
+            if (StaticFloor != null)
+                _2d.DrawScrollBuffer(StaticFloor, pxOffset, new Vector3(tileOffset, 0), state);
+            if (StaticWall != null)
+                _2d.DrawScrollBuffer(StaticWall, pxOffset, new Vector3(tileOffset, 0), state);
             if (StaticObjects != null)
                 _2d.DrawScrollBuffer(StaticObjects, pxOffset, new Vector3(tileOffset, 0), state);
 

@@ -270,11 +270,11 @@ namespace FSO.LotView.Utils
         private List<_2DSpriteTextureGroup> GroupByTexture(List<_2DSprite> sprites)
         {
             var result = new List<_2DSpriteTextureGroup>();
-            var map = new Dictionary<Tuple<Texture2D, Texture2D>, _2DSpriteTextureGroup>();
+            var map = new Dictionary<PixelMaskTuple, _2DSpriteTextureGroup>();
 
             foreach (var sprite in sprites)
             {
-                var tuple = new Tuple<Texture2D, Texture2D>(sprite.Pixel, sprite.Mask);
+                var tuple = new PixelMaskTuple(sprite.Pixel, sprite.Mask);
                 _2DSpriteTextureGroup grouping;
                 
                 if (!map.TryGetValue(tuple, out grouping))

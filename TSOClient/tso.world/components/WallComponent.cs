@@ -651,8 +651,9 @@ namespace FSO.LotView.Components
                         if (cuts != 0)
                         {
                             if ((cuts & CutawayEdges.NegativeX) == CutawayEdges.NegativeX) result.TLCut = WallCut.Up; //if we are on the very edge of the cut we're up
-                            else if ((cuts & CutawayEdges.PositiveY) == CutawayEdges.PositiveY) {
-                                if ((cuts & CutawayEdges.NegativeY) == CutawayEdges.NegativeY)
+                            else 
+                            if ((cuts & (CutawayEdges.PositiveY | CutawayEdges.SpecialPositiveY)) > 0) {
+                                if ((cuts & (CutawayEdges.NegativeY | CutawayEdges.SpecialNegativeY)) > 0)
                                 {
                                     result.TLCut = WallCut.Down; //special case, cuts at both sides... just put wall down
                                 }
@@ -661,10 +662,11 @@ namespace FSO.LotView.Components
                                     result.TLCut = WallCut.DownRightUpLeft;
                                 }
                             }
-                            else if ((cuts & CutawayEdges.NegativeY) == CutawayEdges.NegativeY)
+                            else if ((cuts & (CutawayEdges.NegativeY | CutawayEdges.SpecialNegativeY)) > 0)
                             {
                                 result.TLCut = WallCut.DownLeftUpRight;
                             }
+                            //else if ((cuts & CutawayEdges.NegativeX) == CutawayEdges.NegativeX) result.TLCut = WallCut.Up; //if we are on the very edge of the cut we're up
                             else result.TLCut = WallCut.Down;
                         }
                         else
@@ -712,9 +714,10 @@ namespace FSO.LotView.Components
                             if (cuts != 0)
                             {
                                 if ((cuts & CutawayEdges.NegativeY) == CutawayEdges.NegativeY) result.TRCut = WallCut.Up; //if we are on the very edge of the cut we're up
-                                else if ((cuts & CutawayEdges.PositiveX) == CutawayEdges.PositiveX)
+                                else 
+                                if ((cuts & (CutawayEdges.PositiveX | CutawayEdges.SpecialPositiveX)) > 0)
                                 {
-                                    if ((cuts & CutawayEdges.NegativeX) == CutawayEdges.NegativeX)
+                                    if ((cuts & (CutawayEdges.NegativeX | CutawayEdges.SpecialNegativeX)) > 0)
                                     { //special case, cuts at both sides... just put wall down
                                         result.TRCut = WallCut.Down;
                                     }
@@ -723,10 +726,11 @@ namespace FSO.LotView.Components
                                         result.TRCut = WallCut.DownLeftUpRight;
                                     }
                                 }
-                                else if ((cuts & CutawayEdges.NegativeX) == CutawayEdges.NegativeX)
+                                else if ((cuts & (CutawayEdges.NegativeX | CutawayEdges.SpecialNegativeX)) > 0)
                                 {
                                     result.TRCut = WallCut.DownRightUpLeft;
                                 }
+                                //else if ((cuts & CutawayEdges.NegativeY) == CutawayEdges.NegativeY) result.TRCut = WallCut.Up; //if we are on the very edge of the cut we're up
                                 else result.TRCut = WallCut.Down;
                             }
                             else
@@ -805,11 +809,7 @@ namespace FSO.LotView.Components
         private bool WallsDownAt(int x, int y)
         {
             var cuts = blueprint.Cutaway;
-            foreach (var cut in cuts)
-            {
-                if (cut.Contains(x, y)) return true;
-            }
-            return false;
+            return cuts[y * blueprint.Width + x];
         }
 
         private CutawayEdges GetCutEdges(int x, int y) //todo, rotate result for rotations
@@ -819,6 +819,9 @@ namespace FSO.LotView.Components
             if (!WallsDownAt(x - 1, y)) result |= CutawayEdges.NegativeX;
             if (!WallsDownAt(x, y + 1)) result |= CutawayEdges.PositiveY;
             if (!WallsDownAt(x, y - 1)) result |= CutawayEdges.NegativeY;
+            if (!WallsDownAt(x - 1, y - 1)) result |= CutawayEdges.SpecialNegativeX | CutawayEdges.SpecialNegativeY;
+            if (!WallsDownAt(x - 1, y + 1)) result |= CutawayEdges.SpecialPositiveY;
+            if (!WallsDownAt(x + 1, y - 1)) result |= CutawayEdges.SpecialPositiveX;
             return result;
         }
 
@@ -1170,6 +1173,10 @@ namespace FSO.LotView.Components
         PositiveX = 2,
         NegativeY = 4,
         NegativeX = 8,
+        SpecialPositiveY = 16,
+        SpecialPositiveX = 32,
+        SpecialNegativeY = 64,
+        SpecialNegativeX = 128
     }
 
     [Flags]

@@ -34,6 +34,7 @@ using FSO.Client.Debug;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Client.UI.Panels.EODs;
+using FSO.SimAntics.Utils;
 
 namespace FSO.Client.UI.Panels
 {
@@ -72,7 +73,7 @@ namespace FSO.Client.UI.Panels
         public UICustomLotControl CustomControl;
         public UIEODController EODs;
 
-        public int WallsMode;
+        public int WallsMode = 1;
 
         private int OldMX;
         private int OldMY;
@@ -93,6 +94,13 @@ namespace FSO.Client.UI.Panels
         public VMEntity GotoObject;
 
         private Rectangle MouseCutRect = new Rectangle(-4, -4, 4, 4);
+        private List<uint> CutRooms = new List<uint>();
+        private HashSet<uint> LastCutRooms = new HashSet<uint>(); //final rooms, including those outside. used to detect dirty.
+        public sbyte LastFloor = -1;
+        public WorldRotation LastRotation = WorldRotation.TopLeft;
+        private bool[] LastCuts; //cached roomcuts, to apply rect cut to.
+        private int LastWallMode = -1; //invalidates last roomcuts
+        private bool LastRectCutNotable = false; //set if the last rect cut made a noticable change to the cuts array. If true refresh regardless of new cut effect.
 
         /// <summary>
         /// Creates a new UILotControl instance.
@@ -513,29 +521,73 @@ namespace FSO.Client.UI.Panels
 
                 if (vm.Context.Blueprint != null)
                 {
-                    var cuts = vm.Context.Blueprint.Cutaway;
-                    Rectangle newCut;
-                    if (WallsMode == 0)
+                    World.State.DynamicCutaway = (WallsMode == 1);
+                    //first we need to cycle the rooms that are being cutaway. Keep this up even if we're in all-cut mode.
+                    var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+                    var roomHover = vm.Context.GetRoomAt(LotTilePos.FromBigTile((short)(mouseTilePos.X), (short)(mouseTilePos.Y), World.State.Level));
+                    var outside = (vm.Context.RoomInfo[roomHover].Room.IsOutside);
+                    if (!outside && !CutRooms.Contains(roomHover))
+                        CutRooms.Add(roomHover); //outside hover should not persist like with other rooms.
+                    while (CutRooms.Count > 3) CutRooms.Remove(CutRooms.ElementAt(0));
+
+                    if (LastWallMode != WallsMode)
                     {
-                        newCut = new Rectangle(-1, -1, 1024, 1024); //cut all; walls down.
-                    }
-                    else if (WallsMode == 1)
-                    {
-                        var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y + 128));
-                        newCut = new Rectangle((int)(mouseTilePos.X - 5.5), (int)(mouseTilePos.Y - 5.5), 11, 11);
-                    }
-                    else
-                    {
-                        newCut = new Rectangle(0, 0, 0, 0); //walls up or roof
+                        if (WallsMode == 0) //walls down
+                        {
+                            LastCuts = new bool[vm.Context.Architecture.Width * vm.Context.Architecture.Height];
+                            vm.Context.Blueprint.Cutaway = LastCuts;
+                            vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                            for (int i = 0; i < LastCuts.Length; i++) LastCuts[i] = true;
+                        }
+                        else if (WallsMode == 1)
+                        {
+                            MouseCutRect = new Rectangle();
+                            LastCutRooms = new HashSet<uint>() { uint.MaxValue }; //must regenerate cuts
+                        }
+                        else //walls up or roof
+                        {
+                            LastCuts = new bool[vm.Context.Architecture.Width * vm.Context.Architecture.Height];
+                            vm.Context.Blueprint.Cutaway = LastCuts;
+                            vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                        }
+                        LastWallMode = WallsMode;
                     }
 
-
-                    if (!newCut.Equals(MouseCutRect))
+                    if (WallsMode == 1)
                     {
-                        if (cuts.Contains(MouseCutRect)) cuts.Remove(MouseCutRect);
-                        MouseCutRect = newCut;
-                        cuts.Add(MouseCutRect);
-                        vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                        int recut = 0;
+                        var finalRooms = new HashSet<uint>(CutRooms);
+
+                        var newCut = new Rectangle((int)(mouseTilePos.X - 2.5), (int)(mouseTilePos.Y - 2.5), 5, 5);
+                        newCut.X -= VMArchitectureTools.CutCheckDir[(int)World.State.Rotation][0]*2;
+                        newCut.Y -= VMArchitectureTools.CutCheckDir[(int)World.State.Rotation][1]*2;
+                        if (newCut != MouseCutRect)
+                        {
+                            MouseCutRect = newCut;
+                            recut = 1;
+                        }
+
+                        if (LastFloor != World.State.Level || LastRotation != World.State.Rotation || !finalRooms.SetEquals(LastCutRooms))
+                        {
+                            LastCuts = VMArchitectureTools.GenerateRoomCut(vm.Context.Architecture, World.State.Level, World.State.Rotation, finalRooms);
+                            recut = 2;
+                            LastFloor = World.State.Level;
+                            LastRotation = World.State.Rotation;
+                        }
+                        LastCutRooms = finalRooms;
+
+                        if (recut > 0)
+                        {
+                            var finalCut = new bool[LastCuts.Length];
+                            Array.Copy(LastCuts, finalCut, LastCuts.Length);
+                            var notableChange = VMArchitectureTools.ApplyCutRectangle(vm.Context.Architecture, World.State.Level, finalCut, MouseCutRect);
+                            if (recut > 1 || notableChange || LastRectCutNotable)
+                            {
+                                vm.Context.Blueprint.Cutaway = finalCut;
+                                vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                            }
+                            LastRectCutNotable = notableChange;
+                        }
                     }
                 }
             }
