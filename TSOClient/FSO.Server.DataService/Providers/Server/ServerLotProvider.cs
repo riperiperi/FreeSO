@@ -16,6 +16,7 @@ using FSO.Common.Utils;
 using FSO.Common.Security;
 using System.Security;
 using System.IO;
+using FSO.Common.Serialization.Primitives;
 
 namespace FSO.Common.DataService.Providers.Server
 {
@@ -28,8 +29,10 @@ namespace FSO.Common.DataService.Providers.Server
         private IShardRealestateDomain Realestate;
         private int ShardId;
         private IDAFactory DAFactory;
+        private IServerNFSProvider NFS;
         
-        public ServerLotProvider([Named("ShardId")] int shardId, IRealestateDomain realestate, IDAFactory daFactory){
+        public ServerLotProvider([Named("ShardId")] int shardId, IRealestateDomain realestate, IDAFactory daFactory, IServerNFSProvider nfs)
+        {
             OnMissingLazyLoad = true;
             OnLazyLoadCacheValue = false;
 
@@ -37,6 +40,7 @@ namespace FSO.Common.DataService.Providers.Server
             GlobalRealestate = realestate;
             Realestate = realestate.GetByShard(shardId);
             DAFactory = daFactory;
+            NFS = nfs;
             CityRepresentation = new City()
             {
                 City_NeighborhoodsVec = new List<uint>(),
@@ -62,17 +66,43 @@ namespace FSO.Common.DataService.Providers.Server
             }
         }
 
+        protected override Lot LoadOne(uint key)
+        {
+            using (var db = DAFactory.Get())
+            {
+                var lot = db.Lots.GetByLocation(ShardId, key);
+                if (lot == null) return null;
+                else return HydrateOne(lot);
+            }
+        }
+
         protected override void Insert(uint key, Lot value)
         {
             base.Insert(key, value);
             LotsByName[value.Lot_Name] = value;
-            CityRepresentation.City_ReservedLotInfo[value.Lot_Location_Packed] = value.Lot_IsOnline;
-            CityRepresentation.City_SpotlightsVector.Add(value.Lot_Location_Packed);
+            CityRepresentation.City_ReservedLotInfo[value.Lot_Location_Packed] = value.Lot_IsOnline; //TODO: thread-safe all maps
         }
 
         protected Lot HydrateOne(DbLot lot)
         {
             var location = MapCoordinates.Unpack(lot.location);
+
+            //attempt to load the lot's thumbnail.
+            var path = Path.Combine(NFS.GetBaseDirectory(), "Lots/" + lot.lot_id.ToString("x8") + "/thumb.png");
+            cTSOGenericData thumb = null;
+            try
+            {
+                using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    int numBytesToRead = Convert.ToInt32(fs.Length);
+                    var file = new byte[(numBytesToRead)];
+                    fs.Read(file, 0, numBytesToRead);
+                    thumb = new cTSOGenericData(file);
+                }
+            }
+            catch (Exception) {
+                thumb = new cTSOGenericData(new byte[0]);
+            }
 
             var result = new Lot
             {
@@ -89,7 +119,7 @@ namespace FSO.Common.DataService.Providers.Server
                 Lot_NumOccupants = 0,
                 Lot_LastCatChange = lot.category_change_date,
                 Lot_Description = lot.description,
-                Lot_Thumbnail = new Serialization.Primitives.cTSOGenericData(File.ReadAllBytes("test.png"))
+                Lot_Thumbnail = thumb
             };
 
             return result;
@@ -112,7 +142,7 @@ namespace FSO.Common.DataService.Providers.Server
                 Lot_OwnerVec = new List<uint>() { },
                 Lot_RoommateVec = new List<uint>() { },
 
-                Lot_Thumbnail = new Serialization.Primitives.cTSOGenericData(File.ReadAllBytes("test.png")),
+                Lot_Thumbnail = new Serialization.Primitives.cTSOGenericData(new byte[0]),
                 Lot_ThumbnailCheckSum = key
             };
         }
@@ -122,6 +152,21 @@ namespace FSO.Common.DataService.Providers.Server
             var lot = entity as Lot;
 
             switch (path){
+                case "Lot_Description":
+                    using (var db = DAFactory.Get())
+                    {
+                        db.Lots.UpdateDescription(lot.DbId, lot.Lot_Description);
+                    }
+                    break;
+                case "Lot_Thumbnail":
+                    var imgpath = Path.Combine(NFS.GetBaseDirectory(), "Lots/" + lot.DbId.ToString("x8") + "/thumb.png");
+                    var data = (cTSOGenericData)value;
+
+                    using (FileStream fs = File.Open(imgpath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        fs.Write(data.Data, 0, data.Data.Length);
+                    }
+                    break;
                 case "Lot_Category":
                     break;
                 case "Lot_IsOnline":
@@ -140,6 +185,9 @@ namespace FSO.Common.DataService.Providers.Server
                 //Owner only
                 case "Lot_Description":
                     context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                    var desc = value as string;
+                    if (desc != null && desc.Length > 500)
+                        throw new Exception("Description too long!");
                     break;
 
                 case "Lot_Name":
@@ -160,6 +208,11 @@ namespace FSO.Common.DataService.Providers.Server
                     }
                     break;
 
+                //roommate only
+                case "Lot_Thumbnail":
+                    context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                    //TODO: needs to be generic data, png, size 288x288, less than 1MB
+                    break;
                 case "Lot_IsOnline":
                 case "Lot_NumOccupants":
                     context.DemandInternalSystem();

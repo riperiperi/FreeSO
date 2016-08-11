@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ namespace FSO.Common.DataService.Framework
     public abstract class LazyDataServiceProvider <KEY, VALUE> : AbstractDataServiceProvider<KEY, VALUE> where VALUE : IModel
     {
         //protected Dictionary<KEY, VALUE> Items = new Dictionary<KEY, VALUE>();
-        protected Dictionary<KEY, Task<object>> Values = new Dictionary<KEY, Task<object>>();
+        protected ConcurrentDictionary<KEY, Task<object>> Values = new ConcurrentDictionary<KEY, Task<object>>();
         protected TimeSpan LazyLoadTimeout = TimeSpan.FromSeconds(10);
 
         public override Task<object> Get(object key)
@@ -33,8 +34,7 @@ namespace FSO.Common.DataService.Framework
                 }
 
                 var result = ResolveMissingKey(castKey);
-                Values.Add(castKey, result);
-                return result;
+                return Values.GetOrAdd(castKey, result);
             }
         }
 

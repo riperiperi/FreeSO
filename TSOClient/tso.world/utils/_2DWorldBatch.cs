@@ -99,6 +99,10 @@ namespace FSO.LotView.Utils
                         width = 1024;
                         height = 1024;
                         break;
+                    case 8:
+                        width = 2304;
+                        height = 2304;
+                        break;
                 }
                 Buffers.Add(
                     RenderUtils.CreateRenderTarget(device, 1, 0, surfaceFormats[i], width, height)

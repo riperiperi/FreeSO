@@ -535,7 +535,7 @@ namespace FSO.SimAntics
 
         public void AddRoomPortal(VMEntity obj, ushort room)
         {
-
+            if (obj.MultitileGroup == null) return;
             //find other portal part, must be in other room to count...
             foreach (var obj2 in obj.MultitileGroup.Objects)
             {

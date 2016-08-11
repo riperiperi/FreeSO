@@ -80,7 +80,7 @@ namespace FSO.Client.UI.Panels
             guid = bobj.Object.OBJ.GUID;
             if (bobj.MasterDefinition != null) guid = bobj.MasterDefinition.GUID;
             var catalogItem = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
-            if (catalogItem != null) Holding.Price = (int)catalogItem.Price;
+            if (catalogItem != null) Holding.Price = (int)catalogItem.Value.Price;
         }
 
         public void MoveSelected(Vector2 pos, sbyte level)
@@ -168,9 +168,9 @@ namespace FSO.Client.UI.Panels
                     HITVM.Get().PlaySoundEvent((Holding.IsBought) ? UISounds.ObjectMovePlace : UISounds.ObjectPlace);
                     //ExecuteEntryPoint(11); //User Placement
                     var putDown = Holding;
+                    var pos = Holding.Group.BaseObject.Position;
                     if (Holding.IsBought)
                     {
-                        var pos = Holding.Group.BaseObject.Position;
                         vm.SendCommand(new VMNetMoveObjectCmd
                         {
                             ObjectID = Holding.MoveTarget,
@@ -179,9 +179,20 @@ namespace FSO.Client.UI.Panels
                             x = pos.x,
                             y = pos.y
                         });
-                    } else
+                    }
+                    else if (Holding.InventoryPID > 0)
                     {
-                        var pos = Holding.Group.BaseObject.Position;
+                        vm.SendCommand(new VMNetPlaceInventoryCmd
+                        {
+                            ObjectPID = Holding.InventoryPID,
+                            dir = Holding.Dir,
+                            level = pos.Level,
+                            x = pos.x,
+                            y = pos.y
+                        });
+                    }
+                    else
+                    {
                         var GUID = (Holding.Group.MultiTile)? Holding.Group.BaseObject.MasterDefinition.GUID : Holding.Group.BaseObject.Object.OBJ.GUID;
                         vm.SendCommand(new VMNetBuyObjectCmd
                         {
@@ -223,7 +234,25 @@ namespace FSO.Client.UI.Panels
                 });
                 HITVM.Get().PlaySoundEvent(UISounds.MoneyBack);
             }
-            OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate. will do when refactoring for online
+            OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate.
+            ClearSelected();
+        }
+
+        public void MoveToInventory(UIElement button)
+        {
+            if (Holding == null) return;
+            if (Holding.IsBought)
+            {
+                var obj = vm.GetObjectById(Holding.MoveTarget);
+                if (obj != null)
+                {
+                    vm.SendCommand(new VMNetSendToInventoryCmd
+                    {
+                        ObjectPID = obj.PersistID,
+                    });
+                }
+            }
+            OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate.
             ClearSelected();
         }
 
@@ -361,6 +390,7 @@ namespace FSO.Client.UI.Panels
         public VMPlacementError CanPlace;
         public sbyte Level;
         public int Price;
+        public uint InventoryPID = 0;
 
         public bool IsBought
         {

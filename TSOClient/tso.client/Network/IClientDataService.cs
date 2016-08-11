@@ -11,6 +11,7 @@ namespace FSO.Common.DataService
     public interface IClientDataService : IDataService
     {
         Task<object> Request(MaskedStruct mask, uint id);
+        void Sync(object item, string[] fields);
 
         ITopicSubscription CreateTopicSubscription();
     }

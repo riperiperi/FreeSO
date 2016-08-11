@@ -31,12 +31,14 @@ namespace FSO.Client.Controllers.Panels
 
         public void Close()
         {
+            View.TrySaveDescription();
             View.Visible = false;
             ChangeTopic();
         }
 
         public void Show(uint lotId)
         {
+            View.TrySaveDescription();
             LotId = lotId;
             DataService.Get<Lot>(lotId).ContinueWith(x =>
             {
@@ -44,6 +46,11 @@ namespace FSO.Client.Controllers.Panels
             });
             View.Visible = true;
             ChangeTopic();
+        }
+
+        public void SaveDescription(Lot target)
+        {
+            DataService.Sync(target, new string[] { "Lot_Description" });
         }
 
         private void ChangeTopic()

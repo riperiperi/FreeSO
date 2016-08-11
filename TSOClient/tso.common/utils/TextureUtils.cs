@@ -247,6 +247,46 @@ namespace FSO.Common.Utils
             else return;
         }
 
+        public static Texture2D Decimate(Texture2D Texture, GraphicsDevice gd, int factor)
+        {
+            var size = Texture.Width * Texture.Height*4;
+            byte[] buffer = new byte[size];
+
+            Texture.GetData(buffer);
+
+            var newWidth = Texture.Width / factor;
+            var newHeight = Texture.Height / factor;
+            var target = new byte[newWidth * newHeight * 4];
+
+            for (int y=0; y<Texture.Height; y += factor)
+            {
+                for (int x = 0; x < Texture.Width; x += factor)
+                {
+                    for (int c = 0; c < 4; c++)
+                    {
+                        int avg = 0;
+                        int total = 0;
+                        for (int yo = y; yo < y+factor && yo < Texture.Height; yo++)
+                        {
+                            for (int xo = x; xo < x+factor && xo < Texture.Width; xo++)
+                            {
+                                avg += (int)buffer[(yo * Texture.Width + xo)*4 + c];
+                                total++;
+                            }
+                        }
+
+                        avg /= total;
+                        if (avg > 0) { }
+                        target[((y/factor) * newWidth + (x/factor))*4 + c] = (byte)avg;
+                    }
+                }
+            }
+
+            var outTex = new Texture2D(gd, newWidth, newHeight);
+            outTex.SetData(target);
+            return outTex;
+        }
+
         /// <summary>
         /// Combines multiple textures into a single texture
         /// </summary>

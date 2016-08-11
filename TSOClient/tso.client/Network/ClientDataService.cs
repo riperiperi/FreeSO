@@ -17,6 +17,8 @@ using FSO.Client;
 using FSO.Common.Utils;
 using FSO.Common.DataService.Providers.Client;
 using FSO.Client.Network;
+using System.Reflection;
+using FSO.Common.DataService.Framework.Attributes;
 
 namespace FSO.Common.DataService
 {
@@ -60,6 +62,30 @@ namespace FSO.Common.DataService
             var result = new PendingDataRequest(messageId, this, Get(mask, id));
             PendingCallbacks.Add(messageId, result);
             return result.Task;
+        }
+
+        public void Sync(object item, string[] fields)
+        {
+            var tField = GetFieldsByName(item.GetType(), fields);
+            var keyField = item.GetType().GetProperties().First(x => x.GetCustomAttribute<Key>() != null);
+            var updates = SerializeUpdate(tField, item, (uint)keyField.GetValue(item));
+
+            if (updates.Count == 0) { return; }
+            var packets = new DataServiceWrapperPDU[updates.Count];
+            
+            for (int i = 0; i < updates.Count; i++)
+            {
+                var messageId = NextMessageId();
+                var update = updates[i];
+                packets[i] = new DataServiceWrapperPDU()
+                {
+                    Body = update,
+                    RequestTypeID = 0,
+                    SendingAvatarID = messageId
+                };
+            }
+
+            CityClient.Write(packets);
         }
 
         private uint NextMessageId()

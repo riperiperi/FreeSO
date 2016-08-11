@@ -8,6 +8,7 @@ using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.Engine.TSOGlobalLink;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.Entities;
 
 namespace FSO.SimAntics.Engine.TSOTransaction
 {
@@ -187,6 +188,26 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         public void RegisterNewObject(VM vm, VMEntity obj, VMAsyncPersistIDCallback callback)
         {
             //todo: sandbox servers should give things an "id"
+        }
+
+        public void MoveToInventory(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback)
+        {
+            //todo: nice stub for this using database?
+        }
+
+        public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, VMAsyncInventoryRetrieveCallback callback)
+        {
+            //todo: nice stub for this using database?
+        }
+
+        public void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback)
+        {
+            //todo: nice stub for this using database?
+        }
+
+        public void DeleteObject(VM vm, uint objectPID, uint value, VMAsyncDeleteObjectCallback callback)
+        {
+            //todo: delete local data
         }
     }
 }

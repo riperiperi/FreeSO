@@ -41,14 +41,30 @@ namespace FSO.Content
             }
         }
 
-        public ObjectCatalogItem GetItemByGUID(uint guid)
+        public List<ObjectCatalogItem> All()
         {
-            ObjectCatalogItem item = null;
-            ItemsByGUID.TryGetValue(guid, out item);
-            return item;
+            var result = new List<ObjectCatalogItem>();
+            foreach (var cat in ItemsByCategory)
+            {
+                result.AddRange(cat);
+            }
+            return result;
         }
 
-        public class ObjectCatalogItem
+        public List<ObjectCatalogItem> GetItemsByCategory(sbyte category)
+        {
+            return ItemsByCategory[category];
+        }
+
+        public ObjectCatalogItem? GetItemByGUID(uint guid)
+        {
+            ObjectCatalogItem item;
+            if (ItemsByGUID.TryGetValue(guid, out item))
+                return item;
+            else return null;
+        }
+
+        public struct ObjectCatalogItem
         {
             public uint GUID;
             public sbyte Category;

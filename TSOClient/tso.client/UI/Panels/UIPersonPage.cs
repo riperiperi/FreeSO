@@ -122,6 +122,7 @@ namespace FSO.Client.UI.Panels
         private UIPersonPageTab _Tab = UIPersonPageTab.Description;
         private UIAccomplishmentsTab _AccomplishmentsTab = UIAccomplishmentsTab.Skills;
         private UIRelationshipsTab _RelationshipsTab = UIRelationshipsTab.Outgoing;
+        private string OriginalDescription;
 
 
         public UIPersonPage()
@@ -266,16 +267,25 @@ namespace FSO.Client.UI.Panels
             CurrentRelationshipsTab = UIRelationshipsTab.Outgoing;
 
             CurrentAvatar = new Binding<Avatar>()
-                .WithBinding(DescriptionText, "CurrentText", "Avatar_Description")
                 .WithBinding(this, "HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID")
                 .WithBinding(this, "SimBox.Avatar.BodyOutfitId", "Avatar_Appearance.AvatarAppearance_BodyOutfitID")
                 .WithBinding(this, "AvatarName", "Avatar_Name")
                 .WithMultiBinding(x =>
                 {
                     Redraw();
-                }, "Avatar_Name", "Avatar_IsOnline");
+                }, "Avatar_Name", "Avatar_IsOnline", "Avatar_Description");
             
             Redraw();
+        }
+
+        public void TrySaveDescription()
+        {
+            if (CurrentAvatar != null && CurrentAvatar.Value != null && FindController<CoreGameScreenController>().IsMe(CurrentAvatar.Value.Avatar_Id)
+                && DescriptionText.CurrentText != CurrentAvatar.Value.Avatar_Description)
+            {
+                CurrentAvatar.Value.Avatar_Description = DescriptionText.CurrentText;
+                FindController<PersonPageController>().SaveDescription(CurrentAvatar.Value);
+            }
         }
 
         public ulong HeadOutfitId
@@ -432,6 +442,12 @@ namespace FSO.Client.UI.Panels
                 isOnline = CurrentAvatar.Value.Avatar_IsOnline;
                 isMe = FindController<CoreGameScreenController>().IsMe(CurrentAvatar.Value.Avatar_Id);
                 hasProperty = CurrentAvatar.Value.Avatar_LotGridXY != 0;
+
+                if (OriginalDescription != CurrentAvatar.Value.Avatar_Description)
+                {
+                    OriginalDescription = CurrentAvatar.Value.Avatar_Description;
+                    DescriptionText.CurrentText = OriginalDescription;
+                }
             }
 
             var isFriend = false;
@@ -474,6 +490,7 @@ namespace FSO.Client.UI.Panels
             this.DescriptionTabImage.Visible = isOpen && isDesc;
             this.DescriptionBackgroundReadImage.Visible = isOpen && isDesc && !isMe;
             this.DescriptionBackgroundWriteImage.Visible = isOpen && isDesc && isMe;
+            this.DescriptionText.Mode = (isMe) ? UITextEditMode.Editor : UITextEditMode.ReadOnly;
 
             this.AccomplishmentsTabButton.Visible = isOpen;
             this.AccomplishmentsTabBackgroundImage.Visible = isOpen && !isAccomp;

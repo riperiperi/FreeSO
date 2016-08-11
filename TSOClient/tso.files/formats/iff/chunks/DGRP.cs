@@ -149,7 +149,10 @@ namespace FSO.Files.Formats.IFF.Chunks
     public enum DGRPSpriteFlags
     {
         Flip = 0x1,
-        AllowCache = 0x4
+        Unknown = 0x2, //set for end table
+        Luminous = 0x4,
+        Unknown2 = 0x8,
+        Unknown3 = 0x10 //set for end table
     }
 
     /// <summary>
@@ -170,6 +173,16 @@ namespace FSO.Files.Formats.IFF.Chunks
             set {
                 Flags = Flags & (~DGRPSpriteFlags.Flip);
                 if (value) Flags |= DGRPSpriteFlags.Flip;
+            }
+        }
+
+        public bool Luminous
+        {
+            get { return (Flags & DGRPSpriteFlags.Luminous) > 0; }
+            set
+            {
+                Flags = Flags & (~DGRPSpriteFlags.Luminous);
+                if (value) Flags |= DGRPSpriteFlags.Luminous;
             }
         }
 

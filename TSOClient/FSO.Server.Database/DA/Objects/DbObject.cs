@@ -17,5 +17,7 @@ namespace FSO.Server.Database.DA.Objects
         public ushort graphic { get; set; }
         public uint value { get; set; }
         public int budget { get; set; }
+        public ulong dyn_flags_1 { get; set; }
+        public ulong dyn_flags_2 { get; set; }
     }
 }

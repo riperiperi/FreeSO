@@ -17,6 +17,7 @@ using FSO.LotView.Model;
 using FSO.SimAntics.Entities;
 using FSO.Common.Rendering.Framework.Model;
 using Microsoft.Xna.Framework.Input;
+using FSO.SimAntics.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -78,6 +79,8 @@ namespace FSO.Client.UI.Panels
 
         private Dictionary<UIButton, int> CategoryMap;
         private List<UICatalogElement> CurrentCategory;
+        private List<VMInventoryItem> LastInventory;
+        private List<UICatalogElement> CurrentInventory;
 
         private bool RoomCategories = false;
         private bool Roommate = true; //if false, shows visitor inventory only.
@@ -137,7 +140,7 @@ namespace FSO.Client.UI.Panels
             MiscButton.OnButtonClick += ChangeCategory;
             PetsButton.OnButtonClick += ChangeCategory;
             MapBuildingModeButton.OnButtonClick += ChangeCategory;
-            InventoryButton.OnButtonClick += OnInventoryButton;
+            InventoryButton.OnButtonClick += ChangeCategory;
 
             ProductCatalogPreviousPageButton.OnButtonClick += PreviousPage;
             InventoryCatalogRoommatePreviousPageButton.OnButtonClick += PreviousPage;
@@ -161,11 +164,6 @@ namespace FSO.Client.UI.Panels
             Holder.OnPickup += HolderPickup;
             Holder.OnDelete += HolderDelete;
             Holder.OnPutDown += HolderPutDown;
-        }
-
-        private void OnInventoryButton(UIElement button)
-        {
-            SetMode(2);
         }
 
         public override void Destroy()
@@ -196,7 +194,7 @@ namespace FSO.Client.UI.Panels
         {
             if (OldSelection != -1)
             {
-                if (!holding.IsBought && (state.KeyboardState.IsKeyDown(Keys.LeftShift) || state.KeyboardState.IsKeyDown(Keys.RightShift))) {
+                if (!holding.IsBought && holding.InventoryPID == 0 && (state.KeyboardState.IsKeyDown(Keys.LeftShift) || state.KeyboardState.IsKeyDown(Keys.RightShift))) {
                     //place another
                     var prevDir = holding.Dir;
                     Catalog_OnSelectionChange(OldSelection);
@@ -237,7 +235,44 @@ namespace FSO.Client.UI.Panels
                 else Opacity = 1;
             }
 
-            if (LotController.ActiveEntity != null) Catalog.Budget = (int)LotController.ActiveEntity.TSOState.Budget.Value;
+            if (LotController.ActiveEntity != null)
+            {
+                Catalog.Budget = (int)LotController.ActiveEntity.TSOState.Budget.Value;
+                bool refreshInventory = false;
+                var inventory = LotController.vm.MyInventory;
+                if (LastInventory != null)
+                {
+                    if (LastInventory.Count != inventory.Count) refreshInventory = true;
+                    else
+                    {
+                        for (int i = 0; i < inventory.Count; i++)
+                        {
+                            if (LastInventory[i] != inventory[i])
+                            {
+                                refreshInventory = true;
+                                break;
+                            }
+                        }
+                    }
+                } else { refreshInventory = true; }
+                if (refreshInventory)
+                {
+                    LastInventory = new List<VMInventoryItem>(inventory);
+                    if (CurrentInventory == null) CurrentInventory = new List<UICatalogElement>();
+                    CurrentInventory.Clear();
+                    foreach (var item in inventory)
+                    {
+                        var obj = Content.Content.Get().WorldCatalog.GetItemByGUID(item.GUID).Value;
+                        //note that catalog items are structs, so we can modify their properties freely without affecting the permanant store.
+                        //todo: what if this is null? it shouldn't be, but still
+                        obj.Name = (item.Name == "")?obj.Name:item.Name;
+                        obj.Price = 0;
+                        //todo: make icon for correct graphic.
+                        CurrentInventory.Add(new UICatalogElement { Item = obj });
+                    }
+                    if (Mode == 2) ChangeCategory(InventoryButton); //refresh display
+                }
+            }
             base.Update(state);
         }
 
@@ -245,7 +280,7 @@ namespace FSO.Client.UI.Panels
         {
             var item = CurrentCategory[selection];
 
-            if (LotController.ActiveEntity != null && item.Price > LotController.ActiveEntity.TSOState.Budget.Value)
+            if (LotController.ActiveEntity != null && item.Item.Price > LotController.ActiveEntity.TSOState.Budget.Value)
             {
                 HIT.HITVM.Get().PlaySoundEvent(Model.UISounds.Error);
                 return;
@@ -253,13 +288,21 @@ namespace FSO.Client.UI.Panels
 
             if (OldSelection != -1) Catalog.SetActive(OldSelection, false);
             Catalog.SetActive(selection, true);
-            BuyItem = vm.Context.CreateObjectInstance(item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
+            BuyItem = vm.Context.CreateObjectInstance(item.Item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
             if (BuyItem == null) return; //uh
             QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
             QueryPanel.Mode = 1;
             QueryPanel.Tab = 0;
             QueryPanel.Active = true;
             Holder.SetSelected(BuyItem);
+            if (CurrentCategory == CurrentInventory)
+            {
+                if (selection < LastInventory.Count)
+                {
+                    Holder.Holding.InventoryPID = LastInventory[selection].ObjectPID;
+                    Holder.Holding.Price = 0;
+                }
+            }
             OldSelection = selection;
         }
 
@@ -271,7 +314,6 @@ namespace FSO.Client.UI.Panels
 
         public void SetPage(int page)
         {
-
             bool noPrev = (page == 0);
             ProductCatalogPreviousPageButton.Disabled = noPrev;
             InventoryCatalogRoommatePreviousPageButton.Disabled = noPrev;
@@ -316,11 +358,17 @@ namespace FSO.Client.UI.Panels
             LightingButton.Selected = false;
             MiscButton.Selected = false;
             PetsButton.Selected = false;
+            InventoryButton.Selected = false;
 
             UIButton button = (UIButton)elem;
             button.Selected = true;
-            if (!CategoryMap.ContainsKey(button)) return;
-            CurrentCategory = UICatalog.Catalog[CategoryMap[button]];
+            SetMode((elem == InventoryButton) ? 2 : 1);
+            if (elem == InventoryButton) CurrentCategory = CurrentInventory;
+            else
+            {
+                if (!CategoryMap.ContainsKey(button)) return;
+                CurrentCategory = UICatalog.Catalog[CategoryMap[button]];
+            }
             Catalog.SetCategory(CurrentCategory);
 
             int total = Catalog.TotalPages();
@@ -343,7 +391,6 @@ namespace FSO.Client.UI.Panels
             InventoryCatalogRoommatePreviousPageButton.Disabled = true;
             InventoryCatalogVisitorPreviousPageButton.Disabled = true;
 
-            SetMode(1);
             return;
         }
 

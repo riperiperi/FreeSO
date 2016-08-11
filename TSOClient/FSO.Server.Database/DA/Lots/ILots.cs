@@ -21,6 +21,7 @@ namespace FSO.Server.Database.DA.Lots
         List<DbLot> SearchWildcard(int shard_id, string name, int limit);
 
         void UpdateRingBackup(int lot_id, sbyte ring_backup_num);
+        void UpdateDescription(int lot_id, string description);
         
         void CreateLotServerTicket(DbLotServerTicket ticket);
         void DeleteLotServerTicket(string id);

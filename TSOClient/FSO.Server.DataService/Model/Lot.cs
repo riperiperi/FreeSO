@@ -153,6 +153,7 @@ namespace FSO.Common.DataService.Model
             }
         }
 
+        [Persist]
         public cTSOGenericData Lot_Thumbnail { get; set; }
 
         public uint Lot_ThumbnailCheckSum { get; set; }

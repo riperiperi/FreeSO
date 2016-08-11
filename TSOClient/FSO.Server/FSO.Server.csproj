@@ -119,6 +119,7 @@
     <Compile Include="DataService\DataServiceSyncFactory.cs" />
     <Compile Include="DataService\GlobalDataServiceModule.cs" />
     <Compile Include="DataService\IDataServiceSyncFactory.cs" />
+    <Compile Include="DataService\ServerNFSProvider.cs" />
     <Compile Include="DataService\ShardDataServiceModule.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServer.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServerConfig.cs" />

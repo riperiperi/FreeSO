@@ -88,6 +88,7 @@ namespace FSO.Client.UI.Panels
         public UIImage OwnerPriceBack;
 
         public event ButtonClickDelegate OnSellBackClicked;
+        public event ButtonClickDelegate OnInventoryClicked;
 
         //world required for drawing thumbnails
         public LotView.World World;
@@ -262,9 +263,15 @@ namespace FSO.Client.UI.Panels
             GeneralTabButton.OnButtonClick += new ButtonClickDelegate(GeneralTabButton_OnButtonClick);
             SpecificTabButton.OnButtonClick += new ButtonClickDelegate(SpecificTabButton_OnButtonClick);
             SellBackButton.OnButtonClick += new ButtonClickDelegate(SellBackButton_OnButtonClick);
+            InventoryButton.OnButtonClick += InventoryButton_OnButtonClick;
 
             Mode = 1;
             Tab = 0;
+        }
+
+        private void InventoryButton_OnButtonClick(UIElement button)
+        {
+            if (OnInventoryClicked != null) OnInventoryClicked(button);
         }
 
         void SellBackButton_OnButtonClick(UIElement button)
@@ -334,7 +341,7 @@ namespace FSO.Client.UI.Panels
             }
 
             int price = def.Price;
-            if (item != null) price = (int)item.Price;
+            if (item != null) price = (int)item.Value.Price;
 
             StringBuilder motivesString = new StringBuilder();
             motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", price);
@@ -370,6 +377,7 @@ namespace FSO.Client.UI.Panels
             {
                 ForSalePrice.CurrentText = GameFacade.Strings.GetString("206", "25", new string[] { " $" + entity.MultitileGroup.Price });
                 ForSalePrice.SetSize(250, ForSalePrice.Height);
+                SellBackButton.Disabled = (entity.PersistID == 0);
             }
 
             if (entity is VMGameObject) {
@@ -399,6 +407,7 @@ namespace FSO.Client.UI.Panels
             MotivesText.CurrentText = motivesString.ToString();
 
             SpecificTabButton.Disabled = true;
+            SellBackButton.Disabled = true;
 
             if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
             Thumbnail.Texture = thumb;

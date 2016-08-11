@@ -10,10 +10,13 @@ using FSO.Common.DataService.Model;
 using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Utils;
+using FSO.Files;
 using FSO.Server.DataService.Model;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -151,6 +154,18 @@ namespace FSO.Client.Controllers
             }
         }
 
+        public void RequestLotThumb(uint location, Callback<Texture2D> onRetrieved) {
+            DataService.Request(MaskedStruct.MapView_NearZoom_Lot_Thumbnail, location).ContinueWith(x =>
+            {
+                //happens in game thread
+                var lot = (Lot)x.Result;
+                if (lot == null) return;
+                var thumb = lot.Lot_Thumbnail;
+                if (thumb.Data.Length == 0) return;
+                onRetrieved(ImageLoader.FromStream(GameFacade.GraphicsDevice, new MemoryStream(thumb.Data)));
+            });
+        }
+
         public void ClickLot(int x, int y)
         {
             if (!Realestate.IsPurchasable((ushort)x, (ushort)y))
@@ -251,6 +266,7 @@ namespace FSO.Client.Controllers
         {
             if(state == "PurchaseComplete")
             {
+                DataService.Request(MaskedStruct.CurrentCity, 0);
                 ShowCreationProgressBar(false);
             }
         }

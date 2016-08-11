@@ -93,6 +93,16 @@ namespace FSO.Client.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap ico256 {
+            get {
+                object obj = ResourceManager.GetObject("ico256", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap magnifier_left {
             get {
                 object obj = ResourceManager.GetObject("magnifier-left", resourceCulture);

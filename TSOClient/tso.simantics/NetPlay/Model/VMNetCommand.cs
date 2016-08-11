@@ -36,7 +36,10 @@ namespace FSO.SimAntics.NetPlay.Model
             { VMCommandType.EODObjEvent, typeof(VMNetEODEventCmd) },
             { VMCommandType.EODMessage, typeof(VMNetEODMessageCmd) },
             { VMCommandType.UpdatePersistState, typeof(VMNetUpdatePersistStateCmd) },
-            { VMCommandType.AdjHollowSync, typeof(VMNetAdjHollowSyncCmd) }
+            { VMCommandType.AdjHollowSync, typeof(VMNetAdjHollowSyncCmd) },
+            { VMCommandType.SendToInventory, typeof(VMNetSendToInventoryCmd) },
+            { VMCommandType.PlaceInventory, typeof(VMNetPlaceInventoryCmd) },
+            { VMCommandType.UpdateInventory, typeof(VMNetUpdateInventoryCmd) }
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -101,5 +104,9 @@ namespace FSO.SimAntics.NetPlay.Model
         EODMessage = 18,
         UpdatePersistState = 19,
         AdjHollowSync = 20,
+
+        SendToInventory = 21,
+        PlaceInventory = 22,
+        UpdateInventory = 23
     }
 }

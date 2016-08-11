@@ -114,6 +114,7 @@ namespace FSO.Client.UI.Panels
             ObjectHolder = new UIObjectHolder(vm, World, this);
             QueryPanel = new UIQueryPanel(World);
             QueryPanel.OnSellBackClicked += ObjectHolder.SellBack;
+            QueryPanel.OnInventoryClicked += ObjectHolder.MoveToInventory;
             QueryPanel.X = 177;
             QueryPanel.Y = GlobalSettings.Default.GraphicsHeight - 228;
             this.Add(QueryPanel);
@@ -336,7 +337,6 @@ namespace FSO.Client.UI.Panels
 
         public void LiveModeUpdate(UpdateState state, bool scrolled)
         {
-
             if (MouseIsOn && ActiveEntity != null)
             {
 

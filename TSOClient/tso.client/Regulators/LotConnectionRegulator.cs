@@ -162,6 +162,12 @@ namespace FSO.Client.Regulators
             AsyncProcessMessage(new JoinLotRequest { LotId = id });
         }
 
+        public uint GetCurrentLotID()
+        {
+            if (CurrentState.Name == "LotCommandStream") return LotId;
+            else return 0;
+        }
+
         public void MessageReceived(AriesClient client, object message)
         {
             if (client == City)

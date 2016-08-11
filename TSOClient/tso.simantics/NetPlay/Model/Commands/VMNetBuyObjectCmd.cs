@@ -56,7 +56,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             }
             else if (vm.GlobalLink != null && item != null)
             {
-                vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, (int)item.Price,
+                vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, (int)item.Value.Price,
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
                     vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
@@ -90,7 +90,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             }
 
             int salePrice = 0;
-            if (item != null) salePrice = (int)item.Price;
+            if (item != null) salePrice = (int)item.Value.Price;
             var def = group.BaseObject.MasterDefinition;
             if (def == null) def = group.BaseObject.Object.OBJ;
             var limit = def.DepreciationLimit;
@@ -126,7 +126,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
 
-            if (item == null || item.Category == -1)
+            if (item == null || item.Value.Category == -1)
             {
                 if (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Admin) return true;
                 return false; //not purchasable
@@ -135,7 +135,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             //TODO: fine grained purchase control based on user status
 
             //perform the transaction. If it succeeds, requeue the command
-            vm.GlobalLink.PerformTransaction(vm, false, caller.PersistID, uint.MaxValue, (int)item.Price,
+            vm.GlobalLink.PerformTransaction(vm, false, caller.PersistID, uint.MaxValue, (int)item.Value.Price,
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
                     if (success)

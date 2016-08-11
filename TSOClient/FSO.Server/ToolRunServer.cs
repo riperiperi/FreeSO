@@ -82,8 +82,8 @@ namespace FSO.Server
                  * Need to create a kernel for each city server as there is some data they do not share
                  */
                 var childKernel = new ChildKernel(
-                    Kernel, 
-                    new ShardDataServiceModule()
+                    Kernel,
+                    new ShardDataServiceModule(Config.SimNFS)
                 );
 
                 Servers.Add(

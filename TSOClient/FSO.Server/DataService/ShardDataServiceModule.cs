@@ -1,4 +1,5 @@
 ﻿using FSO.Common.DataService;
+using FSO.Common.DataService.Framework;
 using FSO.Server.Servers.City;
 using Ninject.Activation;
 using Ninject.Modules;
@@ -12,13 +13,15 @@ namespace FSO.Server.DataService
 {
     public class ShardDataServiceModule : NinjectModule
     {
-
-        public ShardDataServiceModule()
+        private ServerNFSProvider NFSProvider;
+        public ShardDataServiceModule(string simNFS)
         {
+            NFSProvider = new ServerNFSProvider(simNFS);
         }
 
         public override void Load()
         {
+            this.Bind<IServerNFSProvider>().ToConstant(NFSProvider);
             this.Bind<IDataService>().To<ServerDataService>().InSingletonScope();
         }
     }

@@ -18,7 +18,9 @@ namespace FSO.Common.DataService
         Task<object> Get(Type type, object key);
         Task<object> Get(uint type, object key);
         Task<object> Get(MaskedStruct type, object key);
-        
+
+        void Invalidate<T>(object key);
+
         List<cTSOTopicUpdateMessage> SerializeUpdate(MaskedStruct mask, object value, uint id);
         List<cTSOTopicUpdateMessage> SerializeUpdate(StructField[] fields, object value, uint id);
         Task<cTSOTopicUpdateMessage> SerializePath(params uint[] dotPath);

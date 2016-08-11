@@ -44,10 +44,13 @@ namespace FSO.LotView
             SurfaceFormat.Single,
 
             /** Terrain Depth **/
+            SurfaceFormat.Color,
+
+            /** Lot Thumbnail Buffer **/
             SurfaceFormat.Color
         };
 
-        public static readonly int NUM_2D_BUFFERS = 8;
+        public static readonly int NUM_2D_BUFFERS = 9;
         public static readonly int BUFFER_THUMB = 0; //used for drawing thumbnails
         public static readonly int BUFFER_STATIC_OBJECTS_PIXEL = 1;
         public static readonly int BUFFER_STATIC_OBJECTS_DEPTH = 2;
@@ -56,6 +59,7 @@ namespace FSO.LotView
         public static readonly int BUFFER_ARCHETECTURE_PIXEL = 5;
         public static readonly int BUFFER_ARCHETECTURE_DEPTH = 6;
         public static readonly int BUFFER_STATIC_TERRAIN_DEPTH = 7;
+        public static readonly int BUFFER_LOTTHUMB = 8;
 
 
         public static readonly int SCROLL_BUFFER = 512; //resolution to add to render size for scroll reasons
@@ -231,6 +235,76 @@ namespace FSO.LotView
 
             var tex = bufferTexture.Get();
             return TextureUtils.Clip(gd, tex, bounds);
+        }
+
+        /// <summary>
+        /// Gets the current lot's thumbnail.
+        /// </summary>
+        /// <param name="objects">The object components to draw.</param>
+        /// <param name="gd">GraphicsDevice instance.</param>
+        /// <param name="state">WorldState instance.</param>
+        /// <returns>Object's ID if the object was found at the given position.</returns>
+        public Texture2D GetLotThumb(GraphicsDevice gd, WorldState state)
+        {
+            var oldZoom = state.Zoom;
+            var oldRotation = state.Rotation;
+            var oldLevel = state.Level;
+
+            //full invalidation because we must recalculate all object sprites. slow but necessary!
+            state.Zoom = WorldZoom.Far;
+            state.Rotation = WorldRotation.TopLeft;
+            state.Level = Blueprint.Stories;
+            state.WorldSpace.Invalidate();
+            state.InvalidateCamera();
+
+            var oldCenter = state.CenterTile;
+            state.CenterTile = new Vector2(Blueprint.Width/2, Blueprint.Height/2);
+            var pxOffset = -state.WorldSpace.GetScreenOffset();
+            pxOffset -= new Vector2(2304 - state.WorldSpace.WorldPxWidth, 2304 - state.WorldSpace.WorldPxHeight)/2;
+            state.TempDraw = true;
+
+            var _2d = state._2D;
+            _2d.AmbientLight = TextureGenerator.GetPxWhite(gd);
+            Promise<Texture2D> bufferTexture = null;
+            state._2D.OBJIDMode = false;
+            using (var buffer = state._2D.WithBuffer(BUFFER_LOTTHUMB, ref bufferTexture))
+            {
+                _2d.SetScroll(pxOffset);
+                while (buffer.NextPass())
+                {
+                    _2d.Pause();
+                    _2d.Resume(); 
+                    Blueprint.FloorComp.DrawBound = new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13);
+                    Blueprint.FloorComp.Draw(gd, state);
+                    Blueprint.FloorComp.DrawBound = null;
+                    Blueprint.WallComp.Draw(gd, state);
+                    _2d.Pause();
+
+                    _2d.Resume();
+                    foreach (var obj in Blueprint.Objects)
+                    {
+                        var renderInfo = GetRenderInfo(obj);
+                        var tilePosition = obj.Position;
+                        _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition));
+                        _2d.OffsetTile(tilePosition);
+                        obj.Draw(gd, state);
+                    }
+                }
+            }
+
+            //return things to normal
+            _2d.AmbientLight = state.AmbientLight;
+            state.WorldSpace.Invalidate();
+            state.InvalidateCamera();
+            state.TempDraw = false;
+            state.CenterTile = oldCenter;
+
+            state.Zoom = oldZoom;
+            state.Rotation = oldRotation;
+            state.Level = oldLevel;
+
+            var tex = bufferTexture.Get();
+            return tex; //TextureUtils.Clip(gd, tex, bounds);
         }
 
         /// <summary>

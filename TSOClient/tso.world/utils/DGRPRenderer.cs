@@ -170,7 +170,6 @@ namespace FSO.LotView.Utils
                     _TextureDirty = false;
                 }
 
-
                 int maxX = int.MinValue, maxY = int.MinValue;
                 int minX = int.MaxValue, minY = int.MaxValue;
                 foreach (var item in Items)
@@ -195,7 +194,7 @@ namespace FSO.LotView.Utils
                     if (sprite.DestRect.Y + sprite.Pixel.Height > maxY) maxY = sprite.DestRect.Y + sprite.Pixel.Height;
 
                     sprite.WorldPosition = centerRelative * 3f;
-                    sprite.Room = Room;
+                    sprite.Room = ((dgrpSprite.Flags & DGRPSpriteFlags.Luminous) > 0 && Room != 65534)?(ushort)65535:Room;
                 }
                 Bounding = new Rectangle(minX, minY, maxX - minX, maxY - minY);
 

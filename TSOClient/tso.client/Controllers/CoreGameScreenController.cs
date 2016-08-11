@@ -15,6 +15,7 @@ using Ninject;
 using Ninject.Parameters;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -96,6 +97,26 @@ namespace FSO.Client.Controllers
             DataService.Get<Avatar>(avatarId).ContinueWith(x =>
             {
                 Chat.Call(UserReference.Wrap(x.Result));
+            });
+        }
+
+        public void UploadLotThumbnail()
+        {
+            if (!Screen.InLot) return;
+            var lotID = JoinLotRegulator.GetCurrentLotID();
+            if (lotID == 0) return;
+            var bigThumb = Screen.vm.Context.World.GetLotThumb(GameFacade.GraphicsDevice);
+            byte[] data;
+            using (var stream = new MemoryStream()) {
+                TextureUtils.Decimate(bigThumb, GameFacade.GraphicsDevice, 8).SaveAsPng(stream, bigThumb.Width / 8, bigThumb.Height / 8);
+                data = stream.ToArray();
+            }
+            DataService.Get<Lot>(lotID).ContinueWith(x =>
+            {
+                var lot = x.Result;
+                if (lot == null) return; //uh, oops!
+                lot.Lot_Thumbnail = new Common.Serialization.Primitives.cTSOGenericData(data);
+                DataService.Sync(lot, new string[] { "Lot_Thumbnail" });
             });
         }
 

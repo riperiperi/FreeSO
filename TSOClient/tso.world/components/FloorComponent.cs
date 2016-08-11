@@ -27,6 +27,7 @@ namespace FSO.LotView.Components
         private static Rectangle FLOORDEST_MED = new Rectangle(3, 158, 63, 32);
         private static Rectangle FLOORDEST_FAR = new Rectangle(2, 79, 31, 16);
         public Blueprint blueprint;
+        public Rectangle? DrawBound;
 
         private static Point[] PoolDirections =
         {
@@ -55,11 +56,15 @@ namespace FSO.LotView.Components
             var pxOffset = world.WorldSpace.GetScreenOffset();
             var floorContent = Content.Content.Get().WorldFloors;
 
+            Rectangle db;
+            if (DrawBound == null) db = new Rectangle(0, 0, blueprint.Width, blueprint.Height);
+            else db = DrawBound.Value;
+
             for (sbyte level = 1; level <= world.Level; level++)
             {
-                for (short y = 0; y < blueprint.Height; y++)
+                for (short y = (short)db.Top; y < db.Bottom; y++)
                 { //ill decide on a reasonable system for components when it's finished ok pls :(
-                    for (short x = 0; x < blueprint.Width; x++)
+                    for (short x = (short)db.Left; x < db.Right; x++)
                     {
                         var comp = blueprint.GetFloor(x, y, level);
                         if (comp.Pattern != 0)

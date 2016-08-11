@@ -67,6 +67,12 @@
     <Compile Include="Controllers\Panels\LotPageController.cs" />
     <Compile Include="Controllers\Panels\PersonPageController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
+    <Compile Include="Debug\FSOExceptionDisplay.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Debug\FSOExceptionDisplay.Designer.cs">
+      <DependentUpon>FSOExceptionDisplay.cs</DependentUpon>
+    </Compile>
     <Compile Include="GameContent\UIFileIDs.cs" />
     <Compile Include="Model\UserReference.cs" />
     <Compile Include="Network\ClientDataService.cs" />
@@ -361,8 +367,12 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Content Include="Game.ico" />
+    <EmbeddedResource Include="Debug\FSOExceptionDisplay.resx">
+      <DependentUpon>FSOExceptionDisplay.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Icon.bmp" />
     <None Include="Resources\Icon.bmp" />
+    <None Include="Resources\ico256.fw.png" />
     <Content Include="sdl2.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

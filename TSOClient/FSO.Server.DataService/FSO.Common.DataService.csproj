@@ -66,6 +66,7 @@
     <Compile Include="Framework\Attributes\Demand.cs" />
     <Compile Include="Framework\Attributes\Key.cs" />
     <Compile Include="Framework\Attributes\Persist.cs" />
+    <Compile Include="Framework\IServerNFSProvider.cs" />
     <Compile Include="Framework\ReceiveOnlyServiceProvider.cs" />
     <Compile Include="Framework\DataServiceModel.cs" />
     <Compile Include="Framework\DataServiceModelTypeSerializer.cs" />

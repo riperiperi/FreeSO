@@ -277,15 +277,14 @@ namespace FSO.SimAntics.Entities
             Name = input.Name;
             Price = input.Price;
             Objects = new List<VMEntity>();
-            foreach (var id in input.Objects)
+            for (int i= 0; i<input.Objects.Length; i++)
             {
+                var id = input.Objects[i];
                 var obj = context.VM.GetObjectById(id);
+                if (obj == null) continue;
                 Objects.Add(obj);
+                Offsets.Add(input.Offsets[i]);
                 obj.MultitileGroup = this;
-            }
-            foreach (var pos in input.Offsets)
-            {
-                Offsets.Add(pos);
             }
         }
 

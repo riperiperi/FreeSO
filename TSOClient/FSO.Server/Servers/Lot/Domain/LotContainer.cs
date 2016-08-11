@@ -3,6 +3,7 @@ using FSO.Common.Domain.RealestateDomain;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Lots;
+using FSO.Server.Database.DA.Objects;
 using FSO.Server.Database.DA.Relationships;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
@@ -417,6 +418,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 var avatar = da.Avatars.Get(session.AvatarId);
                 var rels = da.Relationships.GetOutgoing(session.AvatarId);
                 var jobinfo = da.Avatars.GetJobLevels(session.AvatarId);
+                var inventory = da.Objects.GetAvatarInventory(session.AvatarId);
                 LOG.Info("Avatar " + avatar.name + " has joined");
 
                 //Load all the avatars data
@@ -436,7 +438,28 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
                 VMDriver.ConnectClient(client);
                 VMDriver.SendOneOff(client, new VMNetAdjHollowSyncCmd { HollowAdj = HollowLots });
+
+                var vmInventory = new List<VMInventoryItem>();
+                foreach (var item in inventory)
+                {
+                    vmInventory.Add(InventoryItemFromDB(item));
+                }
+                VMDriver.SendOneOff(client, new VMNetUpdateInventoryCmd { Items = vmInventory });
             }
+        }
+
+        public VMInventoryItem InventoryItemFromDB(DbObject obj)
+        {
+            return new VMInventoryItem
+            {
+                ObjectPID = obj.object_id,
+                GUID = obj.type,
+                Name = obj.dyn_obj_name,
+                Value = obj.value,
+                DynFlags1 = obj.dyn_flags_1,
+                DynFlags2 = obj.dyn_flags_2,
+                Graphic = obj.graphic
+            };
         }
         
         public void BatchRelationshipSave()

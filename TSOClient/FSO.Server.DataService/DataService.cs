@@ -144,6 +144,12 @@ namespace FSO.Common.DataService
             return provider.Get(key);
         }
 
+        public void Invalidate<T>(object key)
+        {
+            var provider = ProviderByType[typeof(T)];
+            provider.Invalidate(key);
+        }
+
         public List<cTSOTopicUpdateMessage> SerializeUpdate(MaskedStruct mask, object value, uint id){
             return SerializeUpdateFields(MaskedStructToActualFields[mask], value, id);
         }

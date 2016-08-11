@@ -15,6 +15,7 @@ namespace FSO.Server.Database.DA.Objects
         List<DbObject> GetAvatarInventory(uint avatar_id);
         List<DbObject> GetByAvatarId(uint avatar_id);
 
-        void UpdatePersistState(uint id, DbObject obj);
+        bool UpdatePersistState(uint id, DbObject obj);
+        bool SetInLot(uint id, uint? lot_id);
     }
 }

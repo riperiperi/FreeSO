@@ -99,6 +99,7 @@
     <Compile Include="DA\LotClaims\SqlLotsClaims.cs" />
     <Compile Include="DA\Lots\DbLot.cs" />
     <Compile Include="DA\Lots\DbLotServerTicket.cs" />
+    <Compile Include="DA\Lots\DbRoommate.cs" />
     <Compile Include="DA\Lots\ILots.cs" />
     <Compile Include="DA\Lots\SqlLots.cs" />
     <Compile Include="DA\MySqlContext.cs" />

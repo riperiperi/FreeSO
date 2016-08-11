@@ -363,5 +363,11 @@ namespace FSO.LotView
             State._2D.Begin(this.State.Camera);
             return _2DWorld.GetObjectThumb(objects, positions, gd, State);
         }
+
+        public Texture2D GetLotThumb(GraphicsDevice gd)
+        {
+            State._2D.Begin(this.State.Camera);
+            return _2DWorld.GetLotThumb(gd, State);
+        }
     }
 }

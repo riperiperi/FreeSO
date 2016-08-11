@@ -927,54 +927,6 @@ namespace FSO.Client.Rendering.City
             m_2DVerts.Add(new VertexPositionColor(new Vector3(xy4, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
 	    }
 
-        /// <summary>
-        /// Draws a tooltip at the specified coordinates.
-        /// </summary>
-        /// <param name="batch">A SpriteBatch instance.</param>
-        /// <param name="tooltip">String to be drawn.</param>
-        /// <param name="position">Position of tooltip.</param>
-        /// <param name="opacity">Tooltip's opacity.</param>
-        public void DrawTooltip(SpriteBatch batch, string tooltip, Vector2 position, float opacity)
-        {
-            TextStyle style = TextStyle.DefaultLabel.Clone();
-            style.Color = Color.Black;
-            style.Size = 8;
-
-            var scale = new Vector2(1, 1);
-            if (style.Scale != 1.0f)
-            {
-                scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
-            }
-
-            var wrapped = UIUtils.WordWrap(tooltip, 290, style, scale); //tooltip max width should be 300. There is a 5px margin on each side.
-
-            int width = wrapped.MaxWidth + 10;
-            int height = 13 * wrapped.Lines.Count + 4; //13 per line + 4.
-
-            position.X = Math.Min(position.X, GlobalSettings.Default.GraphicsWidth - width);
-            position.Y = Math.Max(position.Y, height);
-
-            var whiteRectangle = new Texture2D(batch.GraphicsDevice, 1, 1);
-            whiteRectangle.SetData(new[] { Color.White });
-
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, height), Color.White * opacity); //note: in XNA4 colours need to be premultiplied
-
-            //border
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, 1), new Color(0, 0, 0, opacity));
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X + width, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y, width, 1), new Color(0, 0, 0, opacity));
-
-            position.Y -= height;
-
-            for (int i = 0; i < wrapped.Lines.Count; i++)
-            {
-                int thisWidth = (int)(style.SpriteFont.MeasureString(wrapped.Lines[i]).X * scale.X);
-                batch.DrawString(style.SpriteFont, wrapped.Lines[i], position + new Vector2((width - thisWidth) / 2, 0), new Color(0, 0, 0, opacity), 0, Vector2.Zero, scale, SpriteEffects.None, 0);
-                position.Y += 13;
-            }
-        }
-
         private void DrawSprites(float HB, float VB)
         {
             SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
@@ -1047,14 +999,24 @@ namespace FSO.Client.Rendering.City
 							    PathTile(x, y, iScale, (float)(0.3+Math.Sin(4*Math.PI*(m_SpotOsc%1))*0.15));
 						    }
 
-                            double scale = treeWidth * iScale / 128.0;
-                            if (!m_HouseGraphics.ContainsKey(house.lotid)) {
+                            if (!m_HouseGraphics.ContainsKey(house.packed_pos)) {
 							    //no house graphic found - request one!
-                                m_HouseGraphics[house.lotid] = m_DefaultHouse;
-                                //m_CityData.RetrieveHouseGFX(house.lotid, m_HouseGraphics, m_GraphicsDevice);
+                                m_HouseGraphics[house.packed_pos] = m_DefaultHouse;
+                                var controller = FindController<TerrainController>();
+                                if (controller != null) controller.RequestLotThumb((uint)house.packed_pos, loadedThumb =>
+                                {
+                                    m_HouseGraphics[house.packed_pos] = loadedThumb;
+                                });
 						    }
-                            Texture2D lotImg = m_HouseGraphics[house.lotid];
-                            spriteBatch.Draw(lotImg, new Rectangle((int)(xy.X - 64.0 * scale), (int)(xy.Y - 32.0 * scale), (int)(scale * 128), (int)(scale * 64)), m_TintColor);
+                            Texture2D lotImg = m_HouseGraphics[house.packed_pos];
+
+                            var resMultiplier = (lotImg.Width > 144) ? 2 : 1;
+                            var lotImgWidth = lotImg.Width / resMultiplier;
+                            var lotImgHeight = lotImg.Height / resMultiplier;
+
+                            double scale = Math.Round((treeWidth * iScale / 128.0)*1000)/1000;
+
+                            spriteBatch.Draw(lotImg, new Rectangle((int)(xy.X - (lotImgWidth/2) * scale), (int)(xy.Y - (lotImgHeight/2) * scale), (int)(scale * lotImgWidth), (int)(scale * lotImgHeight)), m_TintColor);
                         }
                         else //if there is no house, draw the forest that's meant to be here.
                         {
@@ -1327,7 +1289,7 @@ namespace FSO.Client.Rendering.City
             float ResScale = 768.0f/m_ScrHeight; //scales up the vertical height to match that of the target resolution (for the far view)
 
             float FisoScale = (float)(Math.Sqrt(0.5 * 0.5 * 2) / 5.10f) * ResScale; // is 5.10 on far zoom
-		    float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 144f;  // currently set 144 to near zoom
+		    float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 288f;  // currently set 144 to near zoom
 
             float IsoScale = (1 - m_ZoomProgress) * FisoScale + (m_ZoomProgress) * ZisoScale;
 

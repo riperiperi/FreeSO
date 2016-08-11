@@ -14,6 +14,13 @@ namespace FSO.Client.Rendering.City
     public class LotTileEntry
     {
         public int lotid;
+        public int packed_pos
+        {
+            get
+            {
+                return ((x << 16) | y);
+            }
+        }
         public short x;
         public short y;
         public LotTileFlags flags; //bit 0 = online, bit 1 = spotlight, bit 2 = locked, bit 3 = occupied, other bits free for whatever use

@@ -81,7 +81,10 @@ namespace FSO.SimAntics
 
         public bool Ready;
         public bool BHAVDirty;
+
+        //attributes for the current VM session. TODO: move to platform specific variants
         public uint MyUID; //UID of this client in the VM
+        public List<VMInventoryItem> MyInventory = new List<VMInventoryItem>();
 
         public event VMDialogHandler OnDialog;
         public event VMChatEventHandler OnChatEvent;
@@ -457,18 +460,19 @@ namespace FSO.SimAntics
             var ents = new List<VMHollowGameObjectMarshal>();
             var mult = new List<VMMultitileGroupMarshal>();
 
-            int i = 0;
             foreach (var ent in Entities)
             {
-                if (ent is VMGameObject && ent.GetValue(VMStackObjectVariable.Hidden) == 0 && !(ent.Container != null && ent.Container is VMAvatar))
+
+                if (ent is VMGameObject && !(ent.Container != null && ent.Container is VMAvatar))
                 {
+                    if (ent.MultitileGroup.Objects.All(x => x.GetValue(VMStackObjectVariable.Hidden) > 0)) continue;
                     //todo: recursively check if parent object is vm avatar.
                     //restoring state ignores objects with invalid containers anyways.
                     ents.Add(((VMGameObject)ent).HollowSave());
-                }
-                if (ent.MultitileGroup.BaseObject == ent)
-                {
-                    mult.Add(ent.MultitileGroup.Save());
+                    if (ent.MultitileGroup.BaseObject == ent)
+                    {
+                        mult.Add(ent.MultitileGroup.Save());
+                    }
                 }
             }
 
@@ -599,8 +603,10 @@ namespace FSO.SimAntics
 
             Entities = new List<VMEntity>();
             ObjectsById = new Dictionary<short, VMEntity>();
+            var includedEnts = new List<VMHollowGameObjectMarshal>();
             foreach (var ent in input.Entities)
             {
+                if (!Context.RoomInfo[Context.GetRoomAt(ent.Position)].Room.IsOutside) continue;
                 VMEntity realEnt;
                 var objDefinition = FSO.Content.Content.Get().WorldObjects.Get(ent.GUID);
 
@@ -612,15 +618,16 @@ namespace FSO.SimAntics
                 obj.Position = obj.Position;
                 realEnt = obj;
 
+                includedEnts.Add(ent);
                 Entities.Add(realEnt);
                 Context.SetToNextCache.NewObject(realEnt);
                 ObjectsById.Add(ent.ObjectID, realEnt);
             }
 
             int i = 0;
-            foreach (var ent in input.Entities)
+            foreach (var realEnt in Entities)
             {
-                var realEnt = Entities[i++];
+                var ent = includedEnts[i++];
                 ((VMGameObject)realEnt).LoadHollowCrossRef(ent, Context);
             }
 

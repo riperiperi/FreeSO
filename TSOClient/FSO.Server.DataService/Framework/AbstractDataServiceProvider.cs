@@ -30,6 +30,10 @@ namespace FSO.Common.DataService.Framework
         {
             return typeof(VALUE);
         }
+
+        public virtual void Invalidate(object key)
+        {
+        }
     }
 
 }

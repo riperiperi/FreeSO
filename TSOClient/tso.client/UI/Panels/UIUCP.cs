@@ -19,6 +19,7 @@ using FSO.LotView;
 using FSO.Client.Network;
 using Microsoft.Xna.Framework;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.Client.Controllers;
 
 namespace FSO.Client.UI.Panels
 {
@@ -323,6 +324,13 @@ namespace FSO.Client.UI.Panels
 
             if (CurrentPanel != -1)
             {
+                switch (CurrentPanel)
+                {
+                    case 3:
+                    case 2:
+                        if (Game.InLot) FindController<CoreGameScreenController>().UploadLotThumbnail();
+                        break;
+                }
                 this.Remove(Panel);
                 Panel.Destroy();
 

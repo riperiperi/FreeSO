@@ -109,12 +109,14 @@
     <Compile Include="Marshals\VMGameObjectMarshal.cs" />
     <Compile Include="Marshals\VMMarshal.cs" />
     <Compile Include="Marshals\VMMultitileGroupMarshal.cs" />
+    <Compile Include="Marshals\VMStandaloneObjectMarshal.cs" />
     <Compile Include="Model\Routing\VMRouteFailCode.cs" />
     <Compile Include="Model\Sound\VMSoundEntry.cs" />
     <Compile Include="Model\Sound\VMSoundTransfer.cs" />
     <Compile Include="Model\TSOPlatform\VMAsyncState.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOAvatarState.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOEntityState.cs" />
+    <Compile Include="Model\VMInventoryItem.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOJobInfo.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOLotState.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOObjectState.cs" />
@@ -168,9 +170,12 @@
     <Compile Include="NetPlay\Model\Commands\VMNetInteractionCancelCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetInteractionCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetMoveObjectCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetPlaceInventoryCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetSendToInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSimJoinCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetArchitectureCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSimLeaveCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetUpdateInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetUpdatePersistStateCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMRequestResyncCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMStateSyncCmd.cs" />

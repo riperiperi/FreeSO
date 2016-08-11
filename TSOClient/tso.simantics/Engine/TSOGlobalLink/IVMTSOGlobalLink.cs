@@ -1,4 +1,5 @@
-﻿using FSO.SimAntics.Model.TSOPlatform;
+﻿using FSO.SimAntics.Entities;
+using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,10 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void LoadPluginPersist(VM vm, uint objectPID, uint pluginID, VMAsyncPluginLoadCallback callback);
         void SavePluginPersist(VM vm, uint objectPID, uint pluginID, byte[] data);
         void RegisterNewObject(VM vm, VMEntity obj, VMAsyncPersistIDCallback callback);
+        void MoveToInventory(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback);
+        void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback);
+        void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, VMAsyncInventoryRetrieveCallback callback);
+        void DeleteObject(VM vm, uint objectPID, uint value, VMAsyncDeleteObjectCallback callback);
 
         void Tick(VM vm);
     }
@@ -26,4 +31,8 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public delegate void VMAsyncAvatarCallback(uint persistID, VMTSOAvatarPermissions permissions); //TODO: VMPersistAvatarBlock
     public delegate void VMAsyncPluginLoadCallback(byte[] data); //null if none available
     public delegate void VMAsyncPersistIDCallback(short objectID, uint persistID);
+
+    public delegate void VMAsyncInventorySaveCallback(bool success); //todo: failure reasons
+    public delegate void VMAsyncInventoryRetrieveCallback(uint guid, byte[] data);
+    public delegate void VMAsyncDeleteObjectCallback(bool success); //todo: failure reasons
 }

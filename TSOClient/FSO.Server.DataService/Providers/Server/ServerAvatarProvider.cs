@@ -52,6 +52,9 @@ namespace FSO.Common.DataService.Providers.Server
                 case "Avatar_BookmarksVec":
                 case "Avatar_Description":
                     context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
+                    var desc = value as string;
+                    if (desc != null && desc.Length > 500)
+                        throw new Exception("Description too long!");
                     break;
 
                 default:

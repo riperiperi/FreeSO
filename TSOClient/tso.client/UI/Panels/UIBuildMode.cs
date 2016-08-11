@@ -214,7 +214,7 @@ namespace FSO.Client.UI.Panels
             Holder.ClearSelected();
             var item = CurrentCategory[selection];
 
-            if (LotController.ActiveEntity != null && item.Price > LotController.ActiveEntity.TSOState.Budget.Value) {
+            if (LotController.ActiveEntity != null && item.Item.Price > LotController.ActiveEntity.TSOState.Budget.Value) {
                 HIT.HITVM.Get().PlaySoundEvent(UISounds.Error);
                 return;
             }
@@ -240,7 +240,7 @@ namespace FSO.Client.UI.Panels
             }
             else
             {
-                BuyItem = vm.Context.CreateObjectInstance(item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
+                BuyItem = vm.Context.CreateObjectInstance(item.Item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
                 QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
                 QueryPanel.Mode = 1;
                 QueryPanel.Tab = 0;

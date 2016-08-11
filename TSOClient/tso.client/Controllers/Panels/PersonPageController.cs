@@ -35,11 +35,13 @@ namespace FSO.Client.Controllers
 
         public void Close()
         {
+            View.TrySaveDescription();
             View.Visible = false;
             ChangeTopic();
         }
 
         public void Show(uint avatarId){
+            View.TrySaveDescription();
             AvatarId = avatarId;
             DataService.Get<Avatar>(avatarId).ContinueWith(x =>
             {
@@ -50,6 +52,11 @@ namespace FSO.Client.Controllers
             View.SetOpen(false);
             View.Visible = true;
             ChangeTopic();
+        }
+
+        public void SaveDescription(Avatar target)
+        {
+            DataService.Sync(target, new string[] { "Avatar_Description" });
         }
 
         public void ForceRefreshData(UIPersonPageTab tab){

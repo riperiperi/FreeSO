@@ -14,6 +14,8 @@ using NLog;
 using FSO.Server.Database.DA.Objects;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Entities;
+using FSO.SimAntics.Marshals;
 
 namespace FSO.Server.Servers.Lot.Domain
 {
@@ -123,10 +125,8 @@ namespace FSO.Server.Servers.Lot.Domain
                     Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/"));
                     Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/Plugin"));
 
-                    using (var file = File.Open(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/Plugin/" + pluginID.ToString("x8") + ".dat"), FileMode.Create))
-                    {
-                        file.WriteAsync(data, 0, data.Length);
-                    }
+                    var file = File.Open(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/Plugin/" + pluginID.ToString("x8") + ".dat"), FileMode.Create);
+                    file.WriteAsync(data, 0, data.Length).ContinueWith(x => file.Close());
                 } catch (Exception e)
                 {
                     //todo: specific types of exception that can be thrown here? instead of just catching em all
@@ -211,6 +211,128 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
                 catch (Exception e) { callback(objid, 0); }
             });
+        }
+
+        private DbObject GenerateObjectPersist(VMMultitileGroup obj)
+        {
+            var bobj = obj.BaseObject;
+            return new DbObject()
+            {
+                object_id = obj.BaseObject.PersistID,
+                owner_id = ((VMTSOObjectState)obj.BaseObject.TSOState).OwnerID,
+                lot_id = Context.DbId,
+                dyn_obj_name = obj.Name,
+                graphic = (ushort)bobj.GetValue(VMStackObjectVariable.Graphic),
+                value = (uint)obj.Price,
+                dyn_flags_1 = bobj.DynamicSpriteFlags,
+                dyn_flags_2 = bobj.DynamicSpriteFlags2,
+                //type and shard id never need to be updated.
+            };
+        }
+
+        public void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback)
+        {
+            if (objectPID == 0)
+            {
+                callback(false);
+                return; //non-persist objects cannot be moved to inventory!
+            }
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    callback(db.Objects.SetInLot(objectPID, null));
+                }
+            });
+        }
+
+        public void MoveToInventory(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback)
+        {
+            var objectPID = obj.BaseObject.PersistID;
+            if (objectPID == 0)
+            {
+                callback(false);
+                return; //non-persist objects cannot be moved to inventory!
+            }
+            var state = new VMStandaloneObjectMarshal(obj);
+            var dbState = GenerateObjectPersist(obj);
+            dbState.lot_id = null; //we're removing this object from the lot
+            Host.InBackground(() =>
+            {
+                try
+                {
+                    var objStr = objectPID.ToString("x8");
+                    //make sure this exists
+                    Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/"));
+                    byte[] data;
+                    using (var stream = new MemoryStream())
+                    {
+                        var writer = new BinaryWriter(stream);
+                        state.SerializeInto(writer);
+                        data = stream.ToArray();
+                    }
+                    var file = File.Open(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo"), FileMode.Create);
+                    file.WriteAsync(data, 0, data.Length).ContinueWith((x) =>
+                    {
+                        using (var db = DAFactory.Get())
+                        {
+                            callback(db.Objects.UpdatePersistState(objectPID, dbState)); //if object is on another lot or does not exist, this will fail.
+                        }
+                        file.Close();
+                    });
+                }
+                catch (Exception e)
+                {
+                    //todo: specific types of exception that can be thrown here? instead of just catching em all
+                    LOG.Error(e, "Failed to save inventory state for object " + objectPID.ToString("x8") + "!");
+                    callback(false);
+                }
+            });
+        }
+
+        public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, VMAsyncInventoryRetrieveCallback callback)
+        {
+            //TODO: maybe a ring backup system for this too? may be more difficult
+            Host.InBackground(() =>
+            {
+                if (objectPID == 0) callback(0, null);
+                byte[] dat = null;
+                try
+                {
+                    var objStr = objectPID.ToString("x8");
+                    var path = Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo");
+
+                    //if path does not exist, will throw FileNotFoundException
+                    using (var file = File.Open(path, FileMode.Open))
+                    {
+                        dat = new byte[file.Length];
+                        file.Read(dat, 0, dat.Length);
+                    }
+                }
+                catch (Exception e)
+                {
+                    //todo: specific types of exception that can be thrown here? instead of just catching em all
+                    if (!(e is FileNotFoundException))
+                        LOG.Error(e, "Failed to load inventory state for object " + objectPID.ToString("x8") + "!");
+                }
+
+                if (dat != null && dat.Length == 0) dat = null; //treat empty files as if no state were available.
+                //put object on this lot
+                using (var db = DAFactory.Get())
+                {
+                    var obj = db.Objects.Get(objectPID);
+                    if (obj == null || obj.owner_id != ownerPID) callback(0, null); //object does not exist or request is for wrong owner.
+                    if (db.Objects.SetInLot(objectPID, (uint)Context.DbId))
+                        callback(obj.type, dat); //load the object with its data, if available.
+                    else
+                        callback(0, null); //object is already on a lot. we cannot load it!
+                }
+            });
+        }
+
+        public void DeleteObject(VM vm, uint objectPID, uint value, VMAsyncDeleteObjectCallback callback)
+        {
+            throw new NotImplementedException();
         }
     }
 }

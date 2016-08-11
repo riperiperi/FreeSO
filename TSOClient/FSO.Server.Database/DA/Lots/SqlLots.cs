@@ -103,6 +103,9 @@ namespace FSO.Server.Database.DA.Lots
             return Context.Connection.Query<DbLotServerTicket>("SELECT * FROM fso_lot_server_tickets WHERE ticket_id = @ticket_id", new { ticket_id = id }).FirstOrDefault();
         }
 
-
+        public void UpdateDescription(int lot_id, string description)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET description = @desc WHERE lot_id = @id", new { id = lot_id, desc = description });
+        }
     }
 }

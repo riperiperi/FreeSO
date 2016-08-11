@@ -94,6 +94,8 @@ namespace FSO.Server.Servers.City.Handlers
                         buildable_area = 1,
                         description = ""
                     });
+
+                    DataService.Invalidate<FSO.Common.DataService.Model.Lot>(packedLocation);
                 }catch(Exception ex){
                     //Name taken
                     session.Write(new PurchaseLotResponse()

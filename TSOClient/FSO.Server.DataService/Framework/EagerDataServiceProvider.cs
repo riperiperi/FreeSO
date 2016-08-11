@@ -1,5 +1,6 @@
 ﻿using FSO.Common.Utils;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ namespace FSO.Common.DataService.Framework
 {
     public abstract class EagerDataServiceProvider <KEY, VALUE> : AbstractDataServiceProvider<KEY, VALUE> where VALUE : IModel
     {
-        protected Dictionary<KEY, object> Values = new Dictionary<KEY, object>();
+        protected ConcurrentDictionary<KEY, object> Values = new ConcurrentDictionary<KEY, object>();
 
         protected TimeSpan LazyLoadTimeout = TimeSpan.FromSeconds(10);
         protected bool OnMissingLazyLoad = true;
@@ -24,9 +25,14 @@ namespace FSO.Common.DataService.Framework
             PreLoad(Insert);
         }
 
+        protected virtual VALUE LoadOne(KEY key)
+        {
+            return default(VALUE);
+        }
+
         protected virtual void Insert(KEY key, VALUE value)
         {
-            Values.Add(key, value);
+            Values.AddOrUpdate(key, value, (oKey, oValue) => value);
         }
 
         public override Task<object> Get(object key)
@@ -38,7 +44,7 @@ namespace FSO.Common.DataService.Framework
                     var value = ResolveMissingKey(key);
                     if (OnLazyLoadCacheValue)
                     {
-                        Values.Add((KEY)key, value);
+                        value = Immediate(Values.GetOrAdd((KEY)key, value));
                     }
                     return value;
                 }else{
@@ -46,6 +52,15 @@ namespace FSO.Common.DataService.Framework
                     tcs.SetException(new Exception("Key not found"));
                     return tcs.Task;
                 }
+            }
+        }
+
+        public override void Invalidate(object key)
+        {
+            var newVal = LoadOne((KEY)key);
+            if (newVal != null)
+            {
+                Insert((KEY)key, newVal);
             }
         }
 

@@ -42,9 +42,22 @@ namespace FSO.Server.Database.DA.Objects
             return Context.Connection.Query<DbObject>("SELECT * FROM fso_objects WHERE owner_id = @avatar_id", new { avatar_id = avatar_id }).ToList();
         }
 
-        public void UpdatePersistState(uint id, DbObject obj)
+        public bool SetInLot(uint id, uint? lot_id)
         {
-            throw new NotImplementedException();
+            return Context.Connection.Execute("UPDATE fso_objects SET lot_id = @lot_id WHERE object_id = @object_id AND ((@lot_id IS NULL) OR (lot_id IS NULL))", new { lot_id = lot_id, object_id = id }) > 0;
+        }
+
+        public bool UpdatePersistState(uint id, DbObject obj)
+        {
+            return Context.Connection.Execute("UPDATE fso_objects " 
+                +"SET lot_id = @lot_id, "
+                + "owner_id = @owner_id, "
+                + "dyn_obj_name = @dyn_obj_name, "
+                + "graphic = @graphic, "
+                + "value = @value, "
+                + "dyn_flags_1 = @dyn_flags_1, "
+                + "dyn_flags_2 = @dyn_flags_2 "
+                + "WHERE object_id = @object_id AND (@lot_id IS NULL OR lot_id = @lot_id);", obj) > 0;
         }
     }
 }

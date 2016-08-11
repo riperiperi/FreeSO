@@ -12,6 +12,7 @@ using FSO.Client.Utils.GameLocator;
 using FSO.Client.Utils;
 using System.Reflection;
 using FSO.Common;
+using FSO.Client.Debug;
 
 namespace FSO.Client
 {
@@ -110,6 +111,8 @@ namespace FSO.Client
 
             if (UseDX) GlobalSettings.Default.AntiAlias = false;
 
+            throw new Exception("Test");
+
             if (path != null)
             {
                 FSOEnvironment.ContentDir = "Content/";
@@ -148,13 +151,15 @@ namespace FSO.Client
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            MessageBox.Show("Exception: \r\n" + e.ExceptionObject.ToString());
+            var exceptionDisplay = new FSOExceptionDisplay(e.ExceptionObject.ToString());
+            exceptionDisplay.ShowDialog();
         }
 
         private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
             LogThis.Log.LogThis("Exception: " + e.Exception.ToString(), LogThis.eloglevel.error);
-            MessageBox.Show("Exception: \r\n" + e.Exception.ToString());
+            var exceptionDisplay = new FSOExceptionDisplay(e.Exception.ToString());
+            exceptionDisplay.ShowDialog();
         }
 
         /// <summary>

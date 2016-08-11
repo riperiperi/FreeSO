@@ -16,6 +16,7 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels.LotControls;
+using static FSO.Content.WorldObjectCatalog;
 
 namespace FSO.Client.UI.Controls.Catalog
 {
@@ -33,7 +34,7 @@ namespace FSO.Client.UI.Controls.Catalog
                     {
                         for (int i = 0; i < CatalogItems.Length; i++)
                         {
-                            CatalogItems[i].SetDisabled(CatalogItems[i].Info.Price > value);
+                            CatalogItems[i].SetDisabled(CatalogItems[i].Info.Item.Price > value);
                         }
                     }
                     _Budget = value;
@@ -53,21 +54,12 @@ namespace FSO.Client.UI.Controls.Catalog
                     _Catalog = new List<UICatalogElement>[30];
                     for (int i = 0; i < 30; i++) _Catalog[i] = new List<UICatalogElement>();
 
-                    var packingslip = new XmlDocument();
-                    
-                    packingslip.Load(Path.Combine(GlobalSettings.Default.StartupPath, "packingslips/catalog.xml"));
-                    var objectInfos = packingslip.GetElementsByTagName("P");
 
-                    foreach (XmlNode objectInfo in objectInfos)
+                    foreach (var obj in Content.Content.Get().WorldCatalog.All())
                     {
-                        sbyte Category = Convert.ToSByte(objectInfo.Attributes["s"].Value);
-                        if (Category < 0) continue;
-                        _Catalog[Category].Add(new UICatalogElement()
+                        _Catalog[obj.Category].Add(new UICatalogElement()
                         {
-                            GUID = Convert.ToUInt32(objectInfo.Attributes["g"].Value, 16),
-                            Category = Category,
-                            Price = Convert.ToUInt32(objectInfo.Attributes["p"].Value),
-                            Name = objectInfo.Attributes["n"].Value
+                            Item = obj
                         });
                     }
 
@@ -94,9 +86,12 @@ namespace FSO.Client.UI.Controls.Catalog
                 var wall = (WallReference)walls[i];
                 _Catalog[8].Insert(0, new UICatalogElement
                 {
-                    Name = wall.Name,
-                    Category = 8,
-                    Price = (uint)wall.Price,
+                    Item = new ObjectCatalogItem()
+                    {
+                        Name = wall.Name,
+                        Category = 8,
+                        Price = (uint)wall.Price,
+                    },
                     Special = new UISpecialCatalogElement
                     {
                         Control = typeof(UIWallPainter),
@@ -120,9 +115,12 @@ namespace FSO.Client.UI.Controls.Catalog
                 sbyte category = (sbyte)((floor.ID >= 65534)?5:9);
                 _Catalog[category].Insert(0, new UICatalogElement
                 {
-                    Name = floor.Name,
-                    Category = category,
-                    Price = (uint)floor.Price,
+                    Item = new ObjectCatalogItem()
+                    {
+                        Name = floor.Name,
+                        Category = category,
+                        Price = (uint)floor.Price,
+                    },
                     Special = new UISpecialCatalogElement
                     {
                         Control = typeof(UIFloorPainter),
@@ -144,9 +142,12 @@ namespace FSO.Client.UI.Controls.Catalog
                 var style = walls.GetWallStyle((ulong)WallStyleIDs[i]);
                 _Catalog[7].Insert(0, new UICatalogElement
                 {
-                    Name = style.Name,
-                    Category = 7,
-                    Price = (uint)style.Price,
+                    Item = new ObjectCatalogItem()
+                    {
+                        Name = style.Name,
+                        Category = 7,
+                        Price = (uint)style.Price,
+                    },
                     Special = new UISpecialCatalogElement
                     {
                         Control = typeof(UIWallPlacer),
@@ -226,12 +227,12 @@ namespace FSO.Client.UI.Controls.Catalog
                 var elem = new UICatalogItem(false);
                 elem.Index = index;
                 elem.Info = Selected[index++];
-                elem.Icon = (elem.Info.Special != null)?elem.Info.Special.Res.GetIcon(elem.Info.Special.ResID):GetObjIcon(elem.Info.GUID);
-                elem.Tooltip = "$"+elem.Info.Price.ToString();
+                elem.Icon = (elem.Info.Special?.Res != null)?elem.Info.Special.Res.GetIcon(elem.Info.Special.ResID):GetObjIcon(elem.Info.Item.GUID);
+                elem.Tooltip = (elem.Info.Item.Price > 0)?("$"+elem.Info.Item.Price.ToString()):null;
                 elem.X = (i % halfPage) * 45 + 2;
                 elem.Y = (i / halfPage) * 45 + 2;
                 elem.OnMouseEvent += new ButtonClickDelegate(InnerSelect);
-                elem.SetDisabled(elem.Info.Price > Budget);
+                elem.SetDisabled(elem.Info.Item.Price > Budget);
                 CatalogItems[i] = elem;
                 this.Add(elem);
             }
@@ -265,8 +266,8 @@ namespace FSO.Client.UI.Controls.Catalog
 
             public int Compare(UICatalogElement x, UICatalogElement y)
             {
-                if (x.Price > y.Price) return 1;
-                else if (x.Price < y.Price) return -1;
+                if (x.Item.Price > y.Item.Price) return 1;
+                else if (x.Item.Price < y.Item.Price) return -1;
                 else return 0;
             }
 
@@ -277,11 +278,7 @@ namespace FSO.Client.UI.Controls.Catalog
     public delegate void CatalogSelectionChangeDelegate(int selection);
 
     public struct UICatalogElement {
-        public uint GUID;
-        public sbyte Category;
-        public uint Price;
-        public string Name;
-        public byte DisableLevel; //1 = only shopping, 2 = rare (unsellable?)
+        public ObjectCatalogItem Item;
         public UISpecialCatalogElement Special;
     }
 

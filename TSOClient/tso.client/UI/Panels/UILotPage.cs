@@ -6,10 +6,12 @@ using FSO.Client.UI.Framework;
 using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
+using FSO.Files;
 using FSO.Server.Database.DA.Lots;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -68,6 +70,8 @@ namespace FSO.Client.UI.Panels
 
         private UILotThumbButton LotThumbnail { get; set; }
         private UIPersonButton OwnerButton { get; set; }
+        private Texture2D DefaultThumb;
+        private string OriginalDescription;
 
         public Binding<Lot> CurrentLot;
 
@@ -107,9 +111,9 @@ namespace FSO.Client.UI.Panels
 
             LotThumbnail = script.Create<UILotThumbButton>("HouseThumbSetup");
             LotThumbnail.Init(RoommateThumbButtonImage, VisitorThumbButtonImage);
-            LotThumbnail.SetThumbnail(
-                TextureUtils.TextureFromFile(GameFacade.GraphicsDevice, GameFacade.GameFilePath("userdata/houses/defaulthouse.bmp"))
-            );
+            DefaultThumb = TextureUtils.TextureFromFile(GameFacade.GraphicsDevice, GameFacade.GameFilePath("userdata/houses/defaulthouse.bmp"));
+            TextureUtils.ManualTextureMask(ref DefaultThumb, new uint[] { 0xFF000000 });
+            LotThumbnail.SetThumbnail(DefaultThumb, 0);
             Add(LotThumbnail);
 
             OwnerButton = script.Create<UIPersonButton>("HouseLeaderThumbSetup");
@@ -130,7 +134,6 @@ namespace FSO.Client.UI.Panels
 
             CurrentLot = new Binding<Lot>()
                 .WithBinding(HouseNameButton, "Caption", "Lot_Name")
-                .WithBinding(HouseDescriptionTextEdit, "CurrentText", "Lot_Description")
                 .WithBinding(HouseValueLabel, "Caption", "Lot_Price", x => MoneyFormatter.Format((uint)x))
                 .WithBinding(OccupantsNumberLabel, "Caption", "Lot_NumOccupants", x => x.ToString())
                 .WithBinding(OwnerButton, "AvatarId", "Lot_LeaderID")
@@ -165,10 +168,20 @@ namespace FSO.Client.UI.Panels
                             return null;
                     }
                 })
-                .WithMultiBinding(x => RefreshUI(), "Lot_LeaderID", "Lot_IsOnline");
+                .WithMultiBinding(x => RefreshUI(), "Lot_LeaderID", "Lot_IsOnline", "Lot_Thumbnail", "Lot_Description");
 
             RefreshUI();
             NeighborhoodNameButton.Visible = false;
+        }
+
+        public void TrySaveDescription()
+        {
+            if (CurrentLot != null && CurrentLot.Value != null && FindController<CoreGameScreenController>().IsMe(CurrentLot.Value.Lot_LeaderID)
+                && HouseDescriptionTextEdit.CurrentText != CurrentLot.Value.Lot_Description)
+            {
+                CurrentLot.Value.Lot_Description = HouseDescriptionTextEdit.CurrentText;
+                FindController<LotPageController>().SaveDescription(CurrentLot.Value);
+            }
         }
 
         private void JoinLot(UIElement e) {
@@ -201,8 +214,6 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-
-
         private void RefreshUI()
         {
             var isOpen = _Open == true;
@@ -215,6 +226,17 @@ namespace FSO.Client.UI.Panels
             {
                 isOnline = CurrentLot.Value.Lot_IsOnline;
                 isMyProperty = FindController<CoreGameScreenController>().IsMe(CurrentLot.Value.Lot_LeaderID);
+                var thumb = CurrentLot.Value.Lot_Thumbnail.Data;
+                if (thumb.Length == 0)
+                    LotThumbnail.SetThumbnail(DefaultThumb, 0);
+                else
+                    LotThumbnail.SetThumbnail(ImageLoader.FromStream(GameFacade.GraphicsDevice, new MemoryStream(thumb)), CurrentLot.Value.Id);
+
+                if (OriginalDescription != CurrentLot.Value.Lot_Description)
+                {
+                    OriginalDescription = CurrentLot.Value.Lot_Description;
+                    HouseDescriptionTextEdit.CurrentText = OriginalDescription;
+                }
             }
 
             var canJoin = isMyProperty || isRoommate || isOnline;
@@ -230,6 +252,7 @@ namespace FSO.Client.UI.Panels
 
             BackgroundDescriptionImage.Visible = isOpen && !isMyProperty;
             BackgroundDescriptionEditImage.Visible = isOpen && isMyProperty;
+            HouseDescriptionTextEdit.Mode = (isMyProperty) ? UITextEditMode.Editor : UITextEditMode.ReadOnly;
 
             HouseDescriptionSlider.Visible =
                 HouseDescriptionTextEdit.Visible =
@@ -258,6 +281,7 @@ namespace FSO.Client.UI.Panels
         private UIButton VisitorButton;
         private UIImage Thumbnail;
         public ButtonClickDelegate OnLotClick;
+        public uint CurrentLotThumb;
 
         private UILotRelationship _Mode;
 
@@ -298,11 +322,14 @@ namespace FSO.Client.UI.Panels
             Mode = UILotRelationship.VISITOR;
         }
 
-        public void SetThumbnail(Texture2D thumbnail)
+        public void SetThumbnail(Texture2D thumbnail, uint lot)
         {
-            TextureUtils.ManualTextureMask(ref thumbnail, new uint[] { 0xFF000000 });
+            if (Thumbnail.Texture != thumbnail && CurrentLotThumb != 0) Thumbnail.Texture.Dispose(); 
             Thumbnail.Texture = thumbnail;
-            Thumbnail.Y = (VisitorButton.Size.Y - thumbnail.Height) / 2.0f;
+            Thumbnail.SetSize((thumbnail.Width > 144) ? thumbnail.Width / 2 : thumbnail.Width, (thumbnail.Height > 144) ? thumbnail.Height / 2 : thumbnail.Height);
+            Thumbnail.Y = (95 - Thumbnail.Height) / 2.0f;
+            Thumbnail.X = (4+128 - Thumbnail.Width) / 2.0f;
+            CurrentLotThumb = lot;
         }
 
         public UILotRelationship Mode
