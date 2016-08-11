@@ -891,6 +891,8 @@ namespace FSO.SimAntics
 
             if (rotPart == 0) return;
 
+            if (UseWorld) ((ObjectComponent)WorldUI).AdjacentWall = (WallSegments)rotPart;
+
             if (set) wall.OccupiedWalls |= (WallSegments)rotPart;
             else wall.OccupiedWalls &= (WallSegments)~rotPart;
 

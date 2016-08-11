@@ -447,6 +447,8 @@ namespace FSO.Client.UI.Panels
 
         public void RefreshCut()
         {
+            LastFloor = -1;
+            LastWallMode = -1;
             MouseCutRect = new Rectangle(0,0,0,0);
         }
 

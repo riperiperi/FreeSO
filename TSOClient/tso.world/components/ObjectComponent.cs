@@ -34,7 +34,9 @@ namespace FSO.LotView.Components
         public Blueprint blueprint;
         public int DynamicCounter; //how long this sprite has been dynamic without changing sprite
         public List<SLOTItem> ContainerSlots;
+
         public bool HideForCutaway;
+        public WallSegments AdjacentWall;
 
         public new bool Visible {
             get { return _Visible; }
@@ -259,36 +261,48 @@ namespace FSO.LotView.Components
             return world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
         }
 
-        public static Dictionary<Direction, Point> CutawayTests = new Dictionary<Direction, Point>
+        public static Dictionary<WallSegments, Point> CutawayTests = new Dictionary<WallSegments, Point>
         {
-            { Direction.NORTH, new Point(0,1) },
-            { Direction.EAST, new Point(-1,0) },
-            { Direction.SOUTH, new Point(0,-1)},
-            { Direction.WEST, new Point(1,0) }
+            { WallSegments.BottomLeft, new Point(0,1) },
+            { WallSegments.TopLeft, new Point(-1,0) },
+            { WallSegments.TopRight, new Point(0,-1)},
+            { WallSegments.BottomRight, new Point(1,0) }
         };
+
 
         public override void Update(GraphicsDevice device, WorldState world)
         {
-            if (HideForCutaway)
+            if (HideForCutaway && Level > 0)
             {
-                if (world.DynamicCutaway && Level == world.Level)
+                if (!world.BuildMode && world.DynamicCutaway && Level == world.Level)
                 {
                     if (blueprint != null && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
                     DynamicCounter = 0; //keep windows and doors on the top floor on the dynamic layer.
                 }
 
-                var tilePos = new Point((int)Math.Round(Position.X), (int)Math.Round(Position.Y));
-
-                var positions = new Point[] { tilePos, tilePos + CutawayTests[Direction], tilePos - CutawayTests[Direction] };
-                var canContinue = true;
-
-                foreach (var pos in positions)
+                if (Level != world.Level || world.BuildMode) CutawayHidden = false;
+                else
                 {
-                    canContinue = canContinue && (pos.X >= 0 && pos.X < blueprint.Width && pos.Y >= 0 && pos.Y < blueprint.Height
-                        && blueprint.Cutaway[pos.Y * blueprint.Width + pos.X]);
-                    if (!canContinue) break;
+                    var tilePos = new Point((int)Math.Round(Position.X), (int)Math.Round(Position.Y));
+
+                    var wall = blueprint.Walls[Level - 1][tilePos.Y * blueprint.Width + tilePos.X];
+                    var cutTest = new Point();
+                    if (!CutawayTests.TryGetValue(AdjacentWall & wall.Segments, out cutTest))
+                    {
+                        CutawayTests.TryGetValue(wall.OccupiedWalls & wall.Segments, out cutTest);
+                    }
+                    var positions = new Point[] { tilePos, tilePos+cutTest };
+
+                    var canContinue = true;
+
+                    foreach (var pos in positions)
+                    {
+                        canContinue = canContinue && (pos.X >= 0 && pos.X < blueprint.Width && pos.Y >= 0 && pos.Y < blueprint.Height
+                            && blueprint.Cutaway[pos.Y * blueprint.Width + pos.X]);
+                        if (!canContinue) break;
+                    }
+                    CutawayHidden = canContinue;
                 }
-                CutawayHidden = canContinue;
             }
 
             bool forceDynamic = ForceDynamic;
