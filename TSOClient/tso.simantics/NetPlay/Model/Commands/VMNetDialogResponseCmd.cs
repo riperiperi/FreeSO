@@ -15,6 +15,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm)
         {
+            if (ResponseText.Length > 32) ResponseText = ResponseText.Substring(0, 32);
+
             VMEntity caller = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
             //TODO: check if net user owns caller!
             if (caller == null || caller is VMGameObject || 
@@ -29,6 +31,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         #region VMSerializable Members
         public override void SerializeInto(BinaryWriter writer)
         {
+            if (ResponseText.Length > 32) ResponseText = ResponseText.Substring(0, 32);
             base.SerializeInto(writer);
             writer.Write(ResponseCode);
             writer.Write(ResponseText);

@@ -38,7 +38,8 @@ namespace FSO.SimAntics.Primitives
                 {
                     context.Thread.BlockingState = new VMDialogResult
                     {
-                        Type = operand.Type
+                        Type = operand.Type,
+                        HasDisplayed = true
                     };
                     return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                 }
@@ -49,6 +50,7 @@ namespace FSO.SimAntics.Primitives
                 if (curDialog.Responded || curDialog.WaitTime > DIALOG_MAX_WAITTIME)
                 {
                     context.Thread.BlockingState = null;
+                    context.VM.SignalDialog(null);
                     switch (curDialog.Type)
                     {
                         default:
@@ -66,7 +68,8 @@ namespace FSO.SimAntics.Primitives
                         case VMDialogType.TextEntry:
                             //todo: filter profanity, limit name length
                             //also verify behaviour.
-                            ((VMAvatar)context.StackObject).Name = curDialog.ResponseText;
+                            if ((curDialog.ResponseText ?? "") != "")
+                                ((VMAvatar)context.StackObject).Name = curDialog.ResponseText;
                             return VMPrimitiveExitCode.GOTO_TRUE;
                         case VMDialogType.NumericEntry:
                             int number;
@@ -79,7 +82,15 @@ namespace FSO.SimAntics.Primitives
                             return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                 }
-                else return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                else
+                {
+                    if (!curDialog.HasDisplayed)
+                    {
+                        VMDialogHandler.ShowDialog(context, operand, table);
+                        curDialog.HasDisplayed = true;
+                    }
+                    return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                }
             }
         }
     }
@@ -167,7 +178,10 @@ namespace FSO.SimAntics.Primitives
     {
         public int Timeout = 30 * 60;
         public byte ResponseCode; //0,1,2 = yes/ok,no,cancel.
-        public string ResponseText;
+        public string ResponseText = "";
+
+        //local variables
+        public bool HasDisplayed; //re-display dialog if we restore into it being up, in case UI missed it
 
         public VMDialogType Type; //used for input sanitization
 

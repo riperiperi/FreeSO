@@ -90,6 +90,7 @@ namespace FSO.Client.UI.Panels
         // and that the code actually blocks further dialogs from appearing while waiting for a response.
         // If we are to implement controlling multiple sims, this must be changed.
         private UIAlert BlockingDialog;
+        private ulong LastDialogID;
 
         private static uint GOTO_GUID = 0x000007C4;
         public VMEntity GotoObject;
@@ -160,7 +161,17 @@ namespace FSO.Client.UI.Panels
 
         void vm_OnDialog(FSO.SimAntics.Model.VMDialogInfo info)
         {
-            if (info.Caller != null && info.Caller != ActiveEntity) return;
+            if (info != null && ((info.DialogID == LastDialogID && info.DialogID != 0 && info.Block)
+                || info.Caller != null && info.Caller != ActiveEntity)) return;
+            //return if same dialog as before, or not ours
+            if ((info == null || info.Block) && BlockingDialog != null)
+            {
+                //cancel current dialog because it's no longer valid
+                UIScreen.RemoveDialog(BlockingDialog);
+                LastDialogID = 0;
+                BlockingDialog = null;
+            }
+            if (info == null) return; //return if we're just clearing a dialog.
 
             var options = new UIAlertOptions {
                 Title = info.Title,
@@ -205,7 +216,11 @@ namespace FSO.Client.UI.Panels
 
             var alert = UIScreen.ShowAlert(options, true);
 
-            if (info.Block) BlockingDialog = alert;
+            if (info.Block)
+            {
+                BlockingDialog = alert;
+                LastDialogID = info.DialogID;
+            }
 
             var entity = info.Icon;
             if (entity is VMGameObject)
@@ -229,6 +244,7 @@ namespace FSO.Client.UI.Panels
         {
             if (BlockingDialog == null) return;
             UIScreen.RemoveDialog(BlockingDialog);
+            LastDialogID = 0;
             vm.SendCommand(new VMNetDialogResponseCmd {
                 ActorUID = ActiveEntity.PersistID,
                 ResponseCode = code,
@@ -486,6 +502,17 @@ namespace FSO.Client.UI.Panels
             }
 
             if (GotoObject == null) GotoObject = vm.Context.CreateObjectInstance(GOTO_GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true).Objects[0];
+
+            if (ActiveEntity != null && BlockingDialog != null)
+            {
+                //are we still waiting on a blocking dialog? if not, cancel.
+                if (ActiveEntity.Thread != null && (ActiveEntity.Thread.BlockingState == null || !(ActiveEntity.Thread.BlockingState is VMDialogResult)))
+                {
+                    UIScreen.RemoveDialog(BlockingDialog);
+                    LastDialogID = 0;
+                    BlockingDialog = null;
+                }
+            }
 
             if (Visible)
             {
