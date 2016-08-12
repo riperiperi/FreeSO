@@ -11,6 +11,7 @@ using System.Text;
 using Microsoft.Xna.Framework.Input;
 using System.Runtime.InteropServices;
 using FSO.Common.Rendering.Framework.Model;
+using System.Threading;
 
 namespace FSO.Common.Rendering.Framework.IO
 {
@@ -196,7 +197,7 @@ namespace FSO.Common.Rendering.Framework.IO
                             case Keys.C:
                             case Keys.X:
                                 /** Copy text to clipboard **/
-                                if (cursorEndIndex != -1)
+                                if (cursorEndIndex > 0)
                                 {
                                     var selectionStart = Math.Max(0, cursorIndex);
                                     var selectionEnd = cursorEndIndex;
@@ -204,7 +205,12 @@ namespace FSO.Common.Rendering.Framework.IO
 
                                     var str = m_SBuilder.ToString().Substring(selectionStart, selectionEnd - selectionStart);
 
-                                    System.Windows.Forms.Clipboard.SetText((String.IsNullOrEmpty(str)) ? " " : str);
+                                    var copyThread = new Thread(x =>
+                                    {
+                                        System.Windows.Forms.Clipboard.SetText((String.IsNullOrEmpty(str)) ? " " : str);
+                                    });
+                                    copyThread.SetApartmentState(ApartmentState.STA);
+                                    copyThread.Start();
 
                                     if (key == Keys.X)
                                     {
@@ -215,7 +221,17 @@ namespace FSO.Common.Rendering.Framework.IO
 
                             case Keys.V:
                                 /** Paste text in **/
-                                var clipboardText = System.Windows.Forms.Clipboard.GetText(System.Windows.Forms.TextDataFormat.Text);
+                                var wait = new AutoResetEvent(false);
+                                string clipboardText = "";
+                                var clipThread = new Thread(x =>
+                                {
+                                    clipboardText = System.Windows.Forms.Clipboard.GetText(System.Windows.Forms.TextDataFormat.Text);
+                                    wait.Set();
+                                });
+                                clipThread.SetApartmentState(ApartmentState.STA);
+                                clipThread.Start();
+                                wait.WaitOne();
+                                
                                 if (clipboardText != null)
                                 {
                                     /** TODO: Cleanup the clipboard text to make sure its valid **/

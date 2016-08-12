@@ -377,6 +377,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Game.ico" />
+    <Content Include="soft_oal.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="Icon.bmp" />
     <Content Include="Content\OGL\Fonts\FreeSO_10px.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
