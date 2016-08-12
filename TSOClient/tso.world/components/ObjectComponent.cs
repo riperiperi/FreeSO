@@ -284,23 +284,26 @@ namespace FSO.LotView.Components
                 {
                     var tilePos = new Point((int)Math.Round(Position.X), (int)Math.Round(Position.Y));
 
-                    var wall = blueprint.Walls[Level - 1][tilePos.Y * blueprint.Width + tilePos.X];
-                    var cutTest = new Point();
-                    if (!CutawayTests.TryGetValue(AdjacentWall & wall.Segments, out cutTest))
+                    if (tilePos.X >= 0 && tilePos.X < blueprint.Width && tilePos.Y >= 0 && tilePos.Y < blueprint.Height)
                     {
-                        CutawayTests.TryGetValue(wall.OccupiedWalls & wall.Segments, out cutTest);
-                    }
-                    var positions = new Point[] { tilePos, tilePos+cutTest };
+                        var wall = blueprint.Walls[Level - 1][tilePos.Y * blueprint.Width + tilePos.X];
+                        var cutTest = new Point();
+                        if (!CutawayTests.TryGetValue(AdjacentWall & wall.Segments, out cutTest))
+                        {
+                            CutawayTests.TryGetValue(wall.OccupiedWalls & wall.Segments, out cutTest);
+                        }
+                        var positions = new Point[] { tilePos, tilePos + cutTest };
 
-                    var canContinue = true;
+                        var canContinue = true;
 
-                    foreach (var pos in positions)
-                    {
-                        canContinue = canContinue && (pos.X >= 0 && pos.X < blueprint.Width && pos.Y >= 0 && pos.Y < blueprint.Height
-                            && blueprint.Cutaway[pos.Y * blueprint.Width + pos.X]);
-                        if (!canContinue) break;
+                        foreach (var pos in positions)
+                        {
+                            canContinue = canContinue && (pos.X >= 0 && pos.X < blueprint.Width && pos.Y >= 0 && pos.Y < blueprint.Height
+                                && blueprint.Cutaway[pos.Y * blueprint.Width + pos.X]);
+                            if (!canContinue) break;
+                        }
+                        CutawayHidden = canContinue;
                     }
-                    CutawayHidden = canContinue;
                 }
             }
 
