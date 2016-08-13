@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>FSO.iOS</string>
+	<key>CFBundleIconFiles</key>
+	<array>
+		<string>GameThumbnail.png</string>
+	</array>
+	<key>CFBundleIdentifier</key>
+	<string>project.MonoGame.FSO.iOS</string>
+	<key>MinimumOSVersion</key>
+	<string>9.0</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>CFBundleName</key>
+	<string>FSO.iOS</string>
+	<key>UIStatusBarHidden</key>
+	<true/>
+	<key>UIRequiresFullScreen</key>
+	<true/>
+</dict>
+</plist>

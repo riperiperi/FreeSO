@@ -28,7 +28,7 @@ namespace GonzoNet.Encryption
         public byte[] IV;
         public byte[] NOnce;
 		public byte[] Challenge;
-        public ECDiffieHellmanCng PrivateKey;
+        //public ECDiffieHellmanCng PrivateKey;
     }
 
     public class DecryptionArgsContainer
