@@ -14,6 +14,7 @@ using FSO.Common.Utils;
 using FSO.Files.Utils;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.LotView.Model;
+using FSO.Common;
 
 namespace FSO.LotView.Utils
 {
@@ -219,6 +220,7 @@ namespace FSO.LotView.Utils
                 effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
                 effect.Parameters["rotProjection"].SetValue(((WorldCamera)this.WorldCamera).GetRotationMatrix() * this.WorldCamera.Projection);
                 effect.Parameters["ambientLight"].SetValue(AmbientLight);
+                effect.Parameters["depthOutMode"].SetValue(outputDepth && (!FSOEnvironment.UseMRT));
             }
 
             if (outputDepth)
@@ -263,6 +265,7 @@ namespace FSO.LotView.Utils
             var mat = this.WorldCamera.View * this.WorldCamera.Projection;
             effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
             effect.Parameters["ambientLight"].SetValue(AmbientLight);
+            effect.Parameters["depthOutMode"].SetValue(OutputDepth && (!FSOEnvironment.UseMRT));
 
             foreach (var group in cache) RenderDrawGroup(group);
         }
@@ -519,19 +522,35 @@ namespace FSO.LotView.Utils
         {
             if (Pass == 0){
                 Batch.Pause();
-                GD.SetRenderTargets(Target); //render to multiple targets, 0 is color, 1 is depth!
+                GD.SetRenderTarget(Target); 
                 GD.Clear(Color.Transparent);
-                GD.SetRenderTargets(DepthTarget); //render to multiple targets, 0 is color, 1 is depth!
+                GD.SetRenderTarget(DepthTarget); 
                 GD.Clear(Color.Transparent);
 
-                GD.SetRenderTargets(Target, DepthTarget);
-                Batch.OutputDepth = true;
+                if (FSOEnvironment.UseMRT)
+                {
+                    Batch.OutputDepth = true;
+                    GD.SetRenderTargets(Target, DepthTarget); //render to multiple targets, 0 is color, 1 is depth!
+                }
+                else GD.SetRenderTarget(Target); //fall back to two pass render
                 Batch.Resume();
 
                 Pass++;
                 return true;
+            } else if (Pass == 1)
+            {
+                if (FSOEnvironment.UseMRT) return false;
+                else
+                {
+                    Batch.Pause();
+                    GD.SetRenderTarget(DepthTarget);
+                    Batch.OutputDepth = true;
+                    Batch.Resume();
+                    Pass++;
+                    return true;
+                }
             }
-            return false ;
+            return false;
         }
 
         protected void ExtractDepthTexture()

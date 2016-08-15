@@ -14,6 +14,7 @@ using Microsoft.Xna.Framework;
 using System.IO;
 using FSO.LotView.Utils;
 using FSO.LotView.Model;
+using FSO.Common;
 
 namespace FSO.LotView.Components
 {
@@ -36,6 +37,7 @@ namespace FSO.LotView.Components
         private Color DarkBrown = new Color(81, 60, 18);
         private int GrassHeight;
         private float GrassDensityScale = 1f;
+        public bool DepthMode;
 
         private Effect Effect;
         public bool DrawGrid = false;
@@ -57,6 +59,7 @@ namespace FSO.LotView.Components
             DarkGreen = LotTypeGrassInfo.DarkGreen[index];
             DarkBrown = LotTypeGrassInfo.DarkBrown[index];
             GrassHeight = LotTypeGrassInfo.Heights[index];
+            if (!FSOEnvironment.UseMRT) GrassHeight /= 2;
             GrassDensityScale = LotTypeGrassInfo.GrassDensity[index];
         }
 
@@ -209,6 +212,7 @@ namespace FSO.LotView.Components
             Effect.Parameters["DarkBrown"].SetValue(DarkBrown.ToVector4());
             Effect.Parameters["LightBrown"].SetValue(LightBrown.ToVector4());
             Effect.Parameters["ScreenSize"].SetValue(new Vector2(device.Viewport.Width, device.Viewport.Height)/2f);
+            Effect.Parameters["DepthOutMode"].SetValue(DepthMode && (!FSOEnvironment.UseMRT));
 
             var offset = -world.WorldSpace.GetScreenOffset();
 
@@ -253,10 +257,15 @@ namespace FSO.LotView.Components
                 Effect.CurrentTechnique = Effect.Techniques["DrawBlades"];
                 int grassNum = (int)Math.Ceiling(GrassHeight / (float)grassScale);
 
-                var rts = device.GetRenderTargets();
-                if (rts.Length > 1)
+                if (DepthMode && (!FSOEnvironment.UseMRT)) return;
+                RenderTargetBinding[] rts = null;
+                if (FSOEnvironment.UseMRT)
                 {
-                    device.SetRenderTarget((RenderTarget2D)rts[0].RenderTarget);
+                    rts = device.GetRenderTargets();
+                    if (rts.Length > 1)
+                    {
+                        device.SetRenderTarget((RenderTarget2D)rts[0].RenderTarget);
+                    }
                 }
                 device.Indices = BladeIndexBuffer;
                 for (int i = 0; i < grassNum; i++)
@@ -271,7 +280,10 @@ namespace FSO.LotView.Components
                         device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, BladePrimitives);
                     }
                 }
-                device.SetRenderTargets(rts);
+                if (FSOEnvironment.UseMRT)
+                {
+                    device.SetRenderTargets(rts);
+                }
             }
         }
     }

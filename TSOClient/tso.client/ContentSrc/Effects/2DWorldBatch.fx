@@ -7,6 +7,7 @@ float4x4 rotProjection : ViewProjection;
 float worldUnitsPerTile = 2.5;
 float3 dirToFront;
 float4 offToBack;
+bool depthOutMode;
 
 texture pixelTexture : Diffuse;
 texture depthTexture : Diffuse;
@@ -46,6 +47,22 @@ float dpth(float4 v) {
     #endif
 }
 
+float4 packDepth(float d) {
+    float4 enc = float4(1.0, 255.0, 65025.0, 0.0) * d;
+    enc = frac(enc);
+    enc -= enc.yzww * float4(1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0, 0.0);
+    enc.a = 1;
+
+    return enc; //float4(byteFloor(d%1.0), byteFloor((d*256.0) % 1.0), byteFloor((d*65536.0) % 1.0), 1); //most sig in r, least in b
+}
+
+float unpackDepth(float4 d) {
+    return dot(d, float4(1.0, 1 / 255.0, 1 / 65025.0, 0)); //d.r + (d.g / 256.0) + (d.b / 65536.0);
+}
+
+float4 packObjID(float id) {
+    return (packDepth(id));
+}
 /**
  * SIMPLE EFFECT
  *   This effect simply draws the pixel texture onto the screen.
@@ -90,7 +107,8 @@ technique drawSimple {
 }
 
 void psIDSimple(SimpleVertex v, out float4 color: COLOR0){
-	color = float4(v.objectID, 0.0, 0.0, min(tex2D( pixelSampler, v.texCoords).a*255.0, 1.0));
+	color = packObjID(v.objectID);
+    color.a = min(tex2D(pixelSampler, v.texCoords).a*255.0, 1.0);
 	if (color.a == 0) discard;
 }
 
@@ -262,13 +280,16 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COL
 	if (pixel.a <= 0.01) discard;
     float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
     depth = (v.backDepth + (difference*v.frontDepth));
-    
-    color = pixel * tex2D(ambientSampler, v.roomVec);
+   
+    depthB = packDepth(depth);
+    if (depthOutMode == true) {
+        color = depthB;
+    } else {
+        color = pixel * tex2D(ambientSampler, v.roomVec);
 
-	color.rgb *= max(1, v.objectID); //hack - otherwise v.objectID always equals 0 on intel and 1 on nvidia (yeah i don't know)
-	color.rgb *= color.a; //"pre"multiply, just here for experimentation
-
-    depthB = float4(depth, depth, depth, 1);
+        color.rgb *= max(1, v.objectID); //hack - otherwise v.objectID always equals 0 on intel and 1 on nvidia (yeah i don't know)
+        color.rgb *= color.a; //"pre"multiply, just here for experimentation
+    }
 }
 
 technique drawZSpriteDepthChannel {
@@ -294,10 +315,14 @@ void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR
     float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
     depth = (v.backDepth + (difference*v.frontDepth));
     
-    color = pixel * tex2D(ambientSampler, v.roomVec);
-	color.rgb *= color.a; //"pre"multiply, just here for experimentation
-
-    depthB = float4(depth, depth, depth, 1);
+    depthB = packDepth(depth);
+    if (depthOutMode == true) {
+        color = depthB;
+    }
+    else {
+        color = pixel * tex2D(ambientSampler, v.roomVec);
+        color.rgb *= color.a; //"pre"multiply, just here for experimentation
+    }
 }
 
 technique drawZWallDepthChannel {
@@ -334,7 +359,7 @@ void psZIDSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
     float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
     depth = (v.backDepth + (difference*v.frontDepth));
 
-    color = float4(v.objectID, v.objectID, v.objectID, 1);
+    color = packObjID(v.objectID);
 }
 
 technique drawZSpriteOBJID {
@@ -372,7 +397,7 @@ void psSimpleRestoreDepth(ZVertexOut v, out float4 color: COLOR0, out float dept
 	}
 	else {
 		float4 dS = tex2D(depthSampler, v.texCoords);
-		depth = v.backDepth + dS.r;
+		depth = v.backDepth + unpackDepth(dS);
 	}
 }
 

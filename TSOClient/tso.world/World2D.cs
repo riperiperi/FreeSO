@@ -30,25 +30,24 @@ namespace FSO.LotView
 
             /** Static Object Buffers **/
             SurfaceFormat.Color,
-            /** Depth buffer must be single surface format for precision reasons **/
-            SurfaceFormat.Single,
+            SurfaceFormat.Color, //depth, using a 24-bit packed format
 
             /** Terrain Color **/
             SurfaceFormat.Color,
 
             /** Object ID buffer **/
-            SurfaceFormat.Single,
+            SurfaceFormat.Color,
 
             /** Floor buffers **/
             SurfaceFormat.Color,
-            SurfaceFormat.Single,
+            SurfaceFormat.Color, //depth
 
             /** Terrain Depth **/
             SurfaceFormat.Color,
 
             /** Wall buffers **/
             SurfaceFormat.Color,
-            SurfaceFormat.Single,
+            SurfaceFormat.Color, //depth
         };
 
         public static readonly int NUM_2D_BUFFERS = 10;
@@ -156,9 +155,10 @@ namespace FSO.LotView
             state.CenterTile = oldCenter;
 
             var tex = bufferTexture.Get();
-            Single[] data = new float[1];
-            tex.GetData<Single>(data);
-            return (short)Math.Round(data[0]*65535f);
+            Color[] data = new Color[1];
+            tex.GetData<Color>(data);
+            var f = Vector3.Dot(new Vector3(data[0].R / 255.0f, data[0].G / 255.0f, data[0].B / 255.0f), new Vector3(1.0f, 1/255.0f, 1/65025.0f));
+            return (short)Math.Round(f*65535f);
         }
 
         /// <summary>
@@ -388,6 +388,7 @@ namespace FSO.LotView
                     while (buffer.NextPass())
                     {
                         _2d.RenderCache(StaticFloorCache);
+                        Blueprint.Terrain.DepthMode = _2d.OutputDepth;
                         Blueprint.Terrain.Draw(gd, state);
                     }
                 }

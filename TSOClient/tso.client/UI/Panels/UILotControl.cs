@@ -379,8 +379,11 @@ namespace FSO.Client.UI.Panels
                         if (ObjectHover > 0)
                         {
                             var obj = vm.GetObjectById(ObjectHover);
-                            var menu = obj.GetPieMenu(vm, ActiveEntity, false);
-                            InteractionsAvailable = (menu.Count > 0);
+                            if (obj != null)
+                            {
+                                var menu = obj.GetPieMenu(vm, ActiveEntity, false);
+                                InteractionsAvailable = (menu.Count > 0);
+                            }
                         }
                     }
 

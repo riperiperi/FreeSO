@@ -12,5 +12,6 @@ namespace FSO.Common
         public static string GFXContentDir = "Content/OGL";
         public static bool DirectX = false;
         public static bool Linux = false;
+        public static bool UseMRT = true;
     }
 }

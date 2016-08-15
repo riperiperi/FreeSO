@@ -54,7 +54,7 @@ namespace FSO.Common.Rendering.Framework
 
         public void Update(GameTime time, bool hasFocus)
         {
-
+            TouchPanel.EnableMouseTouchPoint = true;
             State.Time = time;
             State.PreviousKeyboardState = State.KeyboardState;
             State.FrameTextInput = TextCharacters;
@@ -62,7 +62,7 @@ namespace FSO.Common.Rendering.Framework
             if (hasFocus)
             {
                 State.MouseState = Mouse.GetState();
-                TouchStub(State);
+                //TouchStub(State);
                 State.KeyboardState = Keyboard.GetState();
             }
             else

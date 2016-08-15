@@ -350,6 +350,7 @@ namespace FSO.Client.GameContent
             //TODO: This should only be set to speed up debug
             T.Priority = ThreadPriority.AboveNormal;
             T.Start();
+            
         }
 
 
