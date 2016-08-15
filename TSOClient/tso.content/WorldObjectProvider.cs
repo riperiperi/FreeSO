@@ -18,6 +18,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Formats.OTF;
 using System.Collections.Concurrent;
 using System.IO;
+using FSO.Common;
 
 namespace FSO.Content
 {
@@ -84,8 +85,8 @@ namespace FSO.Content
 
             //init local objects, piff clones
 
-            Directory.CreateDirectory("Content/Objects");
-            string[] paths = Directory.GetFiles("Content/Objects", "*.iff", SearchOption.AllDirectories);
+            //Directory.CreateDirectory(Path.Combine(FSOEnvironment.ContentDir, "Objects"));
+            string[] paths = Directory.GetFiles(Path.Combine(FSOEnvironment.ContentDir, "Objects"), "*.iff", SearchOption.AllDirectories);
             for (int i = 0; i < paths.Length; i++)
             {
                 string entry = paths[i];

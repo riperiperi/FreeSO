@@ -15,6 +15,7 @@ using FSO.Common.Content;
 using FSO.Files;
 using FSO.Files.Formats.IFF;
 using System.Threading;
+using FSO.Common;
 
 namespace FSO.Content
 {
@@ -99,7 +100,7 @@ namespace FSO.Content
             _ScanFiles(BasePath, allFiles);
             AllFiles = allFiles.ToArray();
 
-            PIFFRegistry.Init("Content/Patch/");
+            PIFFRegistry.Init(Path.Combine(FSOEnvironment.ContentDir, "/Patch/"));
             Archives = new Dictionary<string, FAR3Archive>();
             UIGraphics.Init();
             AvatarMeshes.Init();

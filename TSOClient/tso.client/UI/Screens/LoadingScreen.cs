@@ -20,6 +20,7 @@ using FSO.Files;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
+using FSO.Common;
 
 namespace FSO.Client.UI.Screens
 {
@@ -45,9 +46,9 @@ namespace FSO.Client.UI.Screens
 
             /** Background image **/
             Texture2D setupTex;
-            if (File.Exists("Content/setup.png"))
+            if (File.Exists(Path.Combine(FSOEnvironment.ContentDir, "setup.png")))
             {
-                using (var logostrm = File.Open("Content/setup.png", FileMode.Open))
+                using (var logostrm = File.Open(Path.Combine(FSOEnvironment.ContentDir, "setup.png"), FileMode.Open))
                     setupTex = ImageLoader.FromStream(GameFacade.GraphicsDevice, logostrm);
             }
             else setupTex = GetTexture((ulong)FileIDs.UIFileIDs.setup);
@@ -59,7 +60,7 @@ namespace FSO.Client.UI.Screens
             BackgroundCtnr.X = (ScreenWidth - (800 * scale)) / 2;
 
             Texture2D splashSeg;
-            using (var logostrm = File.Open("Content/Textures/splashSeg.png", FileMode.Open))
+            using (var logostrm = File.Open(Path.Combine(FSOEnvironment.ContentDir, "Textures/splashSeg.png"), FileMode.Open))
                 splashSeg = ImageLoader.FromStream(GameFacade.GraphicsDevice, logostrm);
 
             var bgEdge = new UIImage(splashSeg).With9Slice(64, 64, 1, 1);
