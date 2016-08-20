@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using FSO.Common.Model;
 
 namespace FSO.LotView.Utils
 {
@@ -38,6 +39,21 @@ namespace FSO.LotView.Utils
         public Rectangle AbsoluteDestRect;
         public Vector3 AbsoluteWorldPosition;
         public Vector3 AbsoluteTilePosition;
+    }
 
+    public class _2DSpriteGroup
+    {
+        public IntersectRectTree SprRectangles;
+        public Dictionary<_2DBatchRenderMode, List<_2DSprite>> Sprites;
+
+        public _2DSpriteGroup(bool nonIntersect)
+        {
+            if (nonIntersect) SprRectangles = new IntersectRectTree();
+            Sprites = new Dictionary<_2DBatchRenderMode, List<_2DSprite>>();
+            Sprites.Add(_2DBatchRenderMode.NO_DEPTH, new List<_2DSprite>());
+            Sprites.Add(_2DBatchRenderMode.RESTORE_DEPTH, new List<_2DSprite>());
+            Sprites.Add(_2DBatchRenderMode.WALL, new List<_2DSprite>());
+            Sprites.Add(_2DBatchRenderMode.Z_BUFFER, new List<_2DSprite>());
+        }
     }
 }

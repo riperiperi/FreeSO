@@ -11,6 +11,8 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Vitaboy;
 using Microsoft.Xna.Framework;
+using FSO.Common.Utils;
+using FSO.Common;
 
 namespace FSO.LotView.Utils
 {
@@ -61,10 +63,15 @@ namespace FSO.LotView.Utils
         /// </summary>
         public void End()
         {
+            if (Sprites.Count == 0) return;
             //Device.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;
 
             var character = Sprites.Where(x => x.Effect == _3DSpriteEffect.CHARACTER).ToList();
-            RenderSpriteList(character, Avatar.Effect, Avatar.Effect.Techniques[OBJIDMode ? 1:0]);
+
+            PPXDepthEngine.RenderPPXDepth(Avatar.Effect, true, (depth) =>
+            {
+                RenderSpriteList(character, Avatar.Effect, Avatar.Effect.Techniques[OBJIDMode ? 1 : 0]);
+            });
 
             /*
             ApplyCamera(Effect);
@@ -100,6 +107,7 @@ namespace FSO.LotView.Utils
                 foreach (var geom in sprites)
                 {
                     if (OBJIDMode) effect.Parameters["ObjectID"].SetValue(geom.ObjectID / 65535f);
+                    effect.Parameters["SoftwareDepth"].SetValue(FSOEnvironment.SoftwareDepth);
                     if (RoomLights != null)
                     {
                         var col = RoomLights[geom.Room].ToVector4() * geom.Color.ToVector4();

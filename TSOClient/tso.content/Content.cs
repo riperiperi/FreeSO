@@ -100,7 +100,7 @@ namespace FSO.Content
             _ScanFiles(BasePath, allFiles);
             AllFiles = allFiles.ToArray();
 
-            PIFFRegistry.Init(Path.Combine(FSOEnvironment.ContentDir, "/Patch/"));
+            PIFFRegistry.Init(Path.Combine(FSOEnvironment.ContentDir, "Patch/"));
             Archives = new Dictionary<string, FAR3Archive>();
             UIGraphics.Init();
             AvatarMeshes.Init();

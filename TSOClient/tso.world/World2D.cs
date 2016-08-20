@@ -70,11 +70,11 @@ namespace FSO.LotView
         private Blueprint Blueprint;
         private Dictionary<WorldComponent, WorldObjectRenderInfo> RenderInfo = new Dictionary<WorldComponent, WorldObjectRenderInfo>();
 
-        private List<_2DDrawGroup> StaticObjectsCache = new List<_2DDrawGroup>();
+        private List<_2DDrawBuffer> StaticObjectsCache = new List<_2DDrawBuffer>();
         private ScrollBuffer StaticObjects;
 
-        private List<_2DDrawGroup> StaticFloorCache = new List<_2DDrawGroup>();
-        private List<_2DDrawGroup> StaticWallCache = new List<_2DDrawGroup>();
+        private List<_2DDrawBuffer> StaticFloorCache = new List<_2DDrawBuffer>();
+        private List<_2DDrawBuffer> StaticWallCache = new List<_2DDrawBuffer>();
         private ScrollBuffer StaticFloor;
         private ScrollBuffer StaticWall;
 
@@ -427,7 +427,6 @@ namespace FSO.LotView
                         _2d.SetObjID(obj.ObjectID);
                         obj.Draw(gd, state);
                     }
-
                 }
                 StaticObjectsCache.Clear();
                 _2d.End(StaticObjectsCache, true);
@@ -445,7 +444,6 @@ namespace FSO.LotView
                         _2d.RenderCache(StaticObjectsCache);
                     }
                 }
-
                 StaticObjects = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
             }
             state.CenterTile = oldCenter; //revert to our real scroll position
@@ -472,12 +470,25 @@ namespace FSO.LotView
 
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             var tileOffset = state.CenterTile;
+            _2d.Begin(state.Camera);
             if (StaticFloor != null)
+            {
                 _2d.DrawScrollBuffer(StaticFloor, pxOffset, new Vector3(tileOffset, 0), state);
+                _2d.Pause();
+                _2d.Resume();
+            }
             if (StaticWall != null)
+            {
                 _2d.DrawScrollBuffer(StaticWall, pxOffset, new Vector3(tileOffset, 0), state);
+                _2d.Pause();
+                _2d.Resume();
+            }
             if (StaticObjects != null)
+            {
                 _2d.DrawScrollBuffer(StaticObjects, pxOffset, new Vector3(tileOffset, 0), state);
+                _2d.Pause();
+                _2d.Resume();
+            }
 
             _2d.End();
             _2d.Begin(state.Camera);

@@ -36,7 +36,7 @@ namespace FSO.Client.UI.Framework
             for (var i = 0; i < numBuffers; i++)
             {
                 Buffers.Add(
-                    RenderUtils.CreateRenderTarget(gd, 1, multisample, SurfaceFormat.Color, width, height)
+                    PPXDepthEngine.CreateRenderTarget(gd, 1, multisample, SurfaceFormat.Color, width, height)
                 );
             }
 
@@ -74,7 +74,7 @@ namespace FSO.Client.UI.Framework
             for (var i = 0; i < 3; i++)
             {
                 Buffers.Add(
-                    RenderUtils.CreateRenderTarget(base.GraphicsDevice, 1, 0, SurfaceFormat.Color,
+                    PPXDepthEngine.CreateRenderTarget(base.GraphicsDevice, 1, 0, SurfaceFormat.Color,
                     Width, Height)
                 );
             }

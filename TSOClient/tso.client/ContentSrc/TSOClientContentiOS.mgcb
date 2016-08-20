@@ -97,3 +97,15 @@
 /processorParam:DebugMode=Auto
 /build:Effects/GrassShader.fx
 
+#begin Effects/2DWorldBatchiOS.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/2DWorldBatchiOS.fx
+
+#begin Effects/GrassShaderiOS.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/GrassShaderiOS.fx
+

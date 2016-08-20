@@ -97,6 +97,7 @@
     <Compile Include="Content\IContentReference.cs" />
     <Compile Include="FSOEnvironment.cs" />
     <Compile Include="Log.cs" />
+    <Compile Include="Model\IntersectRectSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rendering\Framework\3DComponent.cs" />
     <Compile Include="Rendering\Framework\3DLayer.cs" />
@@ -125,7 +126,7 @@
     <Compile Include="Utils\HTMLPrinter.cs" />
     <Compile Include="Utils\IffPrinter.cs" />
     <Compile Include="Utils\Promise.cs" />
-    <Compile Include="Utils\RenderUtils.cs" />
+    <Compile Include="Utils\PPXDepthEngine.cs" />
     <Compile Include="Utils\TextureGenerator.cs" />
     <Compile Include="Utils\TextureUtils.cs" />
   </ItemGroup>

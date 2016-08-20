@@ -11,7 +11,15 @@ float4 DiffuseColor;
 float2 ScreenOffset;
 float GrassProb;
 
-bool DepthOutMode;
+bool depthOutMode;
+
+texture depthMap : Diffuse;
+
+sampler depthMapSampler = sampler_state {
+    texture = <depthMap>;
+    AddressU = CLAMP; AddressV = CLAMP; AddressW = CLAMP;
+    MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
+};
 
 struct GrassVTX
 {
@@ -69,25 +77,27 @@ GrassPSVTX GrassVS(GrassVTX input)
     output.Color = input.Color;
     output.GrassInfo = input.GrassInfo;
     output.GrassInfo.w = position.z / position.w;
-    output.ScreenPos = ((position.xy*0.5)+float2(0.5,0.5)) * ScreenSize;
+    output.ScreenPos = ((position.xy*float2(0.5, -0.5)) + float2(0.5, 0.5)) * ScreenSize;
 
     if (output.GrassInfo.x == -1.2 && output.GrassInfo.y == -1.2 && output.GrassInfo.z == -1.2 && output.GrassInfo.w < -1.0 && output.ScreenPos.x < -200 && output.ScreenPos.y < -300) output.Color *= 0.5; 
 
     return output;
 }
 
-void BladesPS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB:COLOR1)
+void BladesPS(GrassPSVTX input, out float4 color:COLOR0)
 {
     float2 rand = iterhash22(floor(input.ScreenPos.xy+ScreenOffset)); //nearest neighbour effect
     if (rand.y > GrassProb*((2.0-input.GrassInfo.x)/2)) discard;
     //grass blade here
 
     float d = input.GrassInfo.w;
-    depthB = packDepth(d);
-    if (DepthOutMode == true) {
+    float4 depthB = packDepth(d);
+    if (depthOutMode == true) {
         color = depthB;
     }
     else {
+        //software depth
+        if (depthOutMode == false && unpackDepth(tex2D(depthMapSampler, input.ScreenPos.xy / ScreenSize)) < d) discard;
         float bladeCol = rand.x*0.6;
         float4 green = lerp(LightGreen, DarkGreen, bladeCol);
         float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
@@ -96,15 +106,15 @@ void BladesPS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB:COLOR
 
 }
 
-void BasePS(GrassVTX input, out float4 color:COLOR0, out float4 depthB:COLOR1)
+void BasePS(GrassPSVTX input, out float4 color:COLOR0)
 {
-    
     float d = input.GrassInfo.w;
-    depthB = packDepth(d);
-    if (DepthOutMode == true) {
+    float4 depthB = packDepth(d);
+    if (depthOutMode == true) {
         color = depthB;
     }
     else {
+        if (depthOutMode == false && unpackDepth(tex2D(depthMapSampler, input.ScreenPos.xy / ScreenSize)) < d) discard;
         color = input.Color*DiffuseColor;
     }
 }
