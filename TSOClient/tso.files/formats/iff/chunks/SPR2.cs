@@ -124,6 +124,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public Vector2 Position { get; internal set; }
         
         private SPR2 Parent;
+        private byte[] ToDecode;
 
         public SPR2Frame(SPR2 parent)
         {
@@ -131,7 +132,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         }
 
         /// <summary>
-        /// Reads a BMP chunk from a stream.
+        /// Reads a SPR2 chunk from a stream.
         /// </summary>
         /// <param name="version">Version of the SPR2 that this frame belongs to.</param>
         /// <param name="stream">A IOBuffer object used to read a SPR2 chunk.</param>
@@ -141,8 +142,16 @@ namespace FSO.Files.Formats.IFF.Chunks
             {
                 var spriteVersion = io.ReadUInt32();
                 var spriteSize = io.ReadUInt32();
+                if (IffFile.RETAIN_CHUNK_DATA) ReadDeferred(1001, io);
+                else ToDecode = io.ReadBytes(spriteSize);
+            } else
+            {
+                ReadDeferred(1000, io);
             }
+        }
 
+        public void ReadDeferred(int version, IoBuffer io)
+        {
             this.Width = io.ReadUInt16();
             this.Height = io.ReadUInt16();
             this.Flags = io.ReadUInt32();
@@ -160,6 +169,19 @@ namespace FSO.Files.Formats.IFF.Chunks
             this.Position = new Vector2(x, y);
 
             this.Decode(io);
+        }
+
+        public void DecodeIfRequired()
+        {
+            if (ToDecode != null)
+            {
+                using (IoBuffer buf = IoBuffer.FromStream(new MemoryStream(ToDecode), ByteOrder.LITTLE_ENDIAN))
+                {
+                    ReadDeferred(1001, buf);
+                }
+
+                ToDecode = null;
+            }
         }
 
         public void Write(IoWriter io)
@@ -388,6 +410,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         /// <returns>A Texture2D instance holding the texture data.</returns>
         public Texture2D GetTexture(GraphicsDevice device)
         {
+            DecodeIfRequired();
             if (PixelCache == null)
             {
                 if (this.Width == 0 || this.Height == 0)
@@ -479,6 +502,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         /// <returns>A Texture2D instance holding the texture data.</returns>
         public Texture2D GetZTexture(GraphicsDevice device)
         {
+            DecodeIfRequired();
             if (ZCache == null)
             {
                 if (ZBufferData == null || this.Width == 0 || this.Height == 0)

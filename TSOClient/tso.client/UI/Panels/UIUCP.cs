@@ -19,6 +19,8 @@ using FSO.LotView;
 using FSO.Client.Network;
 using Microsoft.Xna.Framework;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.Common;
+using FSO.Common.Rendering.Framework.IO;
 
 namespace FSO.Client.UI.Panels
 {
@@ -93,9 +95,13 @@ namespace FSO.Client.UI.Panels
         private uint OldMoney;
         private int MoneyHighlightFrames;
 
+        private UCPFocusMode Focus;
+        private UIBlocker SelfBlocker;
+        private UIBlocker PanelBlocker;
+        private UIBlocker GameBlocker;
+
         public UIUCP(UIScreen owner)
         {
-
             this.RenderScript("ucp.uis");
 
             Game = (CoreGameScreen)owner;
@@ -153,6 +159,8 @@ namespace FSO.Client.UI.Panels
 
             SetInLot(false);
             SetMode(UCPMode.CityMode);
+            Focus = UCPFocusMode.UCP;
+            SetFocus(UCPFocusMode.Game);
         }
 
         private void SecondFloor(UIElement button)
@@ -161,6 +169,78 @@ namespace FSO.Client.UI.Panels
             Game.Level = Math.Min((sbyte)(Game.Level + 1), Game.Stories);
             SecondFloorButton.Selected = (Game.Level == Game.Stories);
             FirstFloorButton.Selected = (Game.Level == 1);
+        }
+
+        /// <summary>
+        /// Sets the "focus mode" of the UCP, used to make the UI accessible on phones.
+        /// </summary>
+        /// <param name="focus"></param>
+        public void SetFocus(UCPFocusMode focus)
+        {
+            if (Focus == focus) return;
+            if (FSOEnvironment.SmallScreen)
+            {
+                if (focus != UCPFocusMode.Game)
+                {
+                    var tween = GameFacade.Screens.Tween.To(this, 0.33f, new Dictionary<string, float>()
+                    {
+                        {"ScaleX", 2f},
+                        {"ScaleY", 2f},
+                        {"Y", Game.ScreenHeight-420 },
+                        {"X", (focus == UCPFocusMode.ActiveTab)?-450:0 }
+                    }, TweenQuad.EaseInOut);
+
+                    Remove(SelfBlocker); SelfBlocker = null;
+                    if (focus == UCPFocusMode.ActiveTab)
+                    {
+                        Remove(PanelBlocker); PanelBlocker = null;
+                    }
+
+                    if (GameBlocker == null)
+                    {
+                        GameBlocker = new UIBlocker();
+                        GameBlocker.Position = new Vector2(0, 220 - Game.ScreenHeight);
+                        GameBlocker.OnMouseEvt += (evt, state) =>
+                        {
+                            if (evt == UIMouseEventType.MouseDown) SetFocus(UCPFocusMode.Game);
+                        };
+                        AddAt(0, GameBlocker);
+                    }
+                } else
+                {
+                    var tween = GameFacade.Screens.Tween.To(this, 0.33f, new Dictionary<string, float>()
+                    {
+                        {"ScaleX", 1f},
+                        {"ScaleY", 1f},
+                        {"Y", Game.ScreenHeight-210 },
+                        {"X", 0 }
+                    }, TweenQuad.EaseInOut);
+
+                    if (SelfBlocker == null)
+                    {
+                        SelfBlocker = new UIBlocker(220, 210);
+                        SelfBlocker.OnMouseEvt += (evt, state) =>
+                        {
+                            if (evt == UIMouseEventType.MouseDown) SetFocus(UCPFocusMode.UCP);
+                        };
+                        Add(SelfBlocker);
+                    }
+
+                    if (CurrentPanel > -1 && PanelBlocker == null)
+                    {
+                        PanelBlocker = new UIBlocker(580, 104);
+                        PanelBlocker.Position = new Vector2(220, 106);
+                        PanelBlocker.OnMouseEvt += (evt, state) =>
+                        {
+                            if (evt == UIMouseEventType.MouseDown) SetFocus(UCPFocusMode.ActiveTab);
+                        };
+                        Add(PanelBlocker);
+                    }
+
+                    Remove(GameBlocker); GameBlocker = null;
+                }
+            }
+            Focus = focus;
         }
 
         private void FirstFloor(UIElement button)
@@ -205,6 +285,7 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
+            //ScaleX = ScaleY = 1;
             if (MoneyHighlightFrames > 0)
             {
                 if (--MoneyHighlightFrames == 0) MoneyText.CaptionStyle.Color = TextStyle.DefaultLabel.Color;
@@ -339,7 +420,7 @@ namespace FSO.Client.UI.Panels
                         Panel.Y = 96;
                         this.Add(Panel);
                         OptionsModeButton.Selected = true;
-
+                        SetFocus(UCPFocusMode.ActiveTab);
                         break;
                     case 2:
                         if (!Game.InLot) break; //not ingame
@@ -350,6 +431,7 @@ namespace FSO.Client.UI.Panels
                         ((UIBuyMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuyModeButton.Selected = true;
+                        SetFocus(UCPFocusMode.ActiveTab);
                         break;
                     case 3:
                         if (!Game.InLot) break; //not ingame
@@ -364,6 +446,7 @@ namespace FSO.Client.UI.Panels
                         ((UIBuildMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuildModeButton.Selected = true;
+                        SetFocus(UCPFocusMode.ActiveTab);
                         break;
                     case 1:
                         if (!Game.InLot) break; //not ingame
@@ -372,6 +455,7 @@ namespace FSO.Client.UI.Panels
                         Panel.Y = 63;
                         this.Add(Panel);
                         LiveModeButton.Selected = true;
+                        SetFocus(UCPFocusMode.ActiveTab);
                         break;
                     default:
                         if (Game.InLot) Game.LotController.PanelActive = false;
@@ -381,6 +465,8 @@ namespace FSO.Client.UI.Panels
             }
             else
             {
+                Remove(PanelBlocker);
+                PanelBlocker = null;
                 CurrentPanel = -1;
             }
             
@@ -456,6 +542,13 @@ namespace FSO.Client.UI.Panels
         {
             LotMode,
             CityMode
+        }
+
+        public enum UCPFocusMode
+        {
+            Game,
+            UCP,
+            ActiveTab
         }
 
     }

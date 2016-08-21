@@ -214,14 +214,14 @@ void psZSprite(ZVertexOut v, out float4 color:COLOR) {
 	color = tex2D(pixelSampler, v.texCoords);
 	if (color.a == 0) discard;
 
+    if (floor(v.roomVec.x * 256) == 254 && floor(v.roomVec.y*256)==255) color = float4(float3(1.0, 1.0, 1.0)-color.xyz, color.a);
+    else if (v.roomVec.x == 0.0) color = color;
+    else color *= tex2D(ambientSampler, v.roomVec);
+
     //SOFTWARE DEPTH TEST
     float difference = (1 - dpth(tex2D(depthSampler, v.texCoords))) / 0.4;
     float depth = (v.backDepth + (difference*v.frontDepth));
     if (depthOutMode == false && unpackDepth(tex2D(depthMapSampler, v.screenPos)) < depth) discard;
-
-	if (floor(v.roomVec.x * 256) == 254 && floor(v.roomVec.y*256)==255) color = float4(float3(1.0, 1.0, 1.0)-color.xyz, color.a);
-    else if (v.roomVec.x == 0.0) color = color;
-	else color *= tex2D(ambientSampler, v.roomVec);
 
 	color.rgb *= color.a; //"pre"multiply, just here for experimentation
 
@@ -286,6 +286,7 @@ technique drawZWall {
 void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0) {
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
 	if (pixel.a <= 0.01) discard;
+
     float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
     float depthT = (v.backDepth + (difference*v.frontDepth));
 
@@ -297,7 +298,9 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0) {
     if (depthOutMode == true) {
         color = depthB;
     } else {
-        color = pixel * tex2D(ambientSampler, v.roomVec);
+        if (floor(v.roomVec.x * 256) == 254 && floor(v.roomVec.y * 256) == 255) pixel = float4(float3(1.0, 1.0, 1.0) - pixel.xyz, pixel.a);
+        else if (v.roomVec.x != 0.0) pixel *= tex2D(ambientSampler, v.roomVec);
+        color = pixel;
 
         color.rgb *= max(1, v.objectID); //hack - otherwise v.objectID always equals 0 on intel and 1 on nvidia (yeah i don't know)
         color.rgb *= color.a; //"pre"multiply, just here for experimentation

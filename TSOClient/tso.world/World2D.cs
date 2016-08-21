@@ -48,9 +48,12 @@ namespace FSO.LotView
             /** Wall buffers **/
             SurfaceFormat.Color,
             SurfaceFormat.Color, //depth
+
+            //Thumbnail depth
+            SurfaceFormat.Color,
         };
 
-        public static readonly int NUM_2D_BUFFERS = 10;
+        public static readonly int NUM_2D_BUFFERS = 11;
         public static readonly int BUFFER_THUMB = 0; //used for drawing thumbnails
         public static readonly int BUFFER_STATIC_OBJECTS_PIXEL = 1;
         public static readonly int BUFFER_STATIC_OBJECTS_DEPTH = 2;
@@ -62,6 +65,7 @@ namespace FSO.LotView
 
         public static readonly int BUFFER_WALL_PIXEL = 8;
         public static readonly int BUFFER_WALL_DEPTH = 9;
+        public static readonly int BUFFER_THUMB_DEPTH = 10;
 
 
         public static readonly int SCROLL_BUFFER = 512; //resolution to add to render size for scroll reasons
@@ -189,9 +193,10 @@ namespace FSO.LotView
 
             var _2d = state._2D;
             Promise<Texture2D> bufferTexture = null;
+            Promise<Texture2D> depthTexture = null;
             state._2D.OBJIDMode = false;
             Rectangle bounds = new Rectangle();
-            using (var buffer = state._2D.WithBuffer(BUFFER_THUMB, ref bufferTexture))
+            using (var buffer = state._2D.WithBuffer(BUFFER_THUMB, ref bufferTexture, BUFFER_THUMB_DEPTH, ref depthTexture))
             {
                 _2d.SetScroll(new Vector2());
                 while (buffer.NextPass())

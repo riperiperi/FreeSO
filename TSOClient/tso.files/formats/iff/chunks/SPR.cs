@@ -89,6 +89,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public uint Version;
         private SPR Parent;
         private Texture2D PixelCache;
+        private byte[] ToDecode;
 
         /// <summary>
         /// Constructs a new SPRFrame instance.
@@ -111,17 +112,37 @@ namespace FSO.Files.Formats.IFF.Chunks
                 var spriteFersion = io.ReadUInt32();
                 var size = io.ReadUInt32();
                 this.Version = spriteFersion;
+
+                if (IffFile.RETAIN_CHUNK_DATA) ReadDeferred(1001, io);
+                else ToDecode = io.ReadBytes(size);
             }
             else
             {
                 this.Version = version;
+                ReadDeferred(1000, io);
             }
+        }
 
+        public void ReadDeferred(uint version, IoBuffer io)
+        {
             var reserved = io.ReadUInt32();
             var height = io.ReadUInt16();
             var width = io.ReadUInt16();
             this.Init(width, height);
             this.Decode(io);
+        }
+
+        public void DecodeIfRequired()
+        {
+            if (ToDecode != null)
+            {
+                using (IoBuffer buf = IoBuffer.FromStream(new MemoryStream(ToDecode), ByteOrder.LITTLE_ENDIAN))
+                {
+                    ReadDeferred(1001, buf);
+                }
+
+                ToDecode = null;
+            }
         }
 
         /// <summary>
@@ -231,6 +252,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         public Texture2D GetTexture(GraphicsDevice device)
         {
+            DecodeIfRequired();
             if (PixelCache == null)
             {
                 PixelCache = new Texture2D(device, Math.Max(1,Width), Math.Max(1,Height));

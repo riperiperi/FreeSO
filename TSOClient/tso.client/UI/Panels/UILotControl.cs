@@ -124,9 +124,9 @@ namespace FSO.Client.UI.Panels
             ObjectHolder = new UIObjectHolder(vm, World, this);
             QueryPanel = new UIQueryPanel(World);
             QueryPanel.OnSellBackClicked += ObjectHolder.SellBack;
-            QueryPanel.X = 177;
-            QueryPanel.Y = GlobalSettings.Default.GraphicsHeight - 228;
-            this.Add(QueryPanel);
+            QueryPanel.X = 0;
+            QueryPanel.Y = -114;
+            //this.Add(QueryPanel);
 
             ChatPanel = new UIChatPanel(vm, this);
             this.Add(ChatPanel);

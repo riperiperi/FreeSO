@@ -39,6 +39,21 @@ namespace FSO.LotView.Utils
         public Rectangle AbsoluteDestRect;
         public Vector3 AbsoluteWorldPosition;
         public Vector3 AbsoluteTilePosition;
+
+        public void Repurpose()
+        {
+            Pixel = null;
+            Depth = null;
+            Mask = null;
+            WorldPosition = new Vector3();
+            TilePosition = new Vector3();
+            ObjectID = 0;
+            Room = 0xFFFF;
+
+            //rects are written always by sprite drawer
+            FlipHorizontally = false;
+            FlipVertically = false;
+        }
     }
 
     public class _2DSpriteGroup

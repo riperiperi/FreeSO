@@ -124,6 +124,7 @@ namespace FSO.LotView.Utils
                     geom.Geometry.DrawGeometry(this.Device, effect);
                 }
             }
+            effect.Parameters["SoftwareDepth"].SetValue(false); //reset this for non-world purposes
         }
 
         public void ApplyCamera(Effect effect){

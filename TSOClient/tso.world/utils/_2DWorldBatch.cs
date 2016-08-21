@@ -32,6 +32,8 @@ namespace FSO.LotView.Utils
         protected Effect Effect;
 
         protected List<_2DSpriteGroup> Sprites = new List<_2DSpriteGroup>();
+        private List<_2DSprite> SpritePool = new List<_2DSprite>();
+        private int SpriteIndex = 0;
 
         protected int DrawOrder;
 
@@ -94,6 +96,7 @@ namespace FSO.LotView.Utils
                         height = 1;
                         break;
                     case 0: //World2D.BUFFER_THUMB
+                    case 10:
                         width = 1024;
                         height = 1024;
                         break;
@@ -101,6 +104,23 @@ namespace FSO.LotView.Utils
                 Buffers.Add(
                     PPXDepthEngine.CreateRenderTarget(device, 1, 0, surfaceFormats[i], width, height)
                 );
+            }
+        }
+        
+        public _2DSprite NewSprite(_2DBatchRenderMode mode)
+        {
+            if (SpriteIndex >= SpritePool.Count)
+            {
+                var spr = new _2DSprite() { RenderMode = mode };
+                SpritePool.Add(spr);
+                SpriteIndex++;
+                return spr;
+            } else
+            {
+                var spr = SpritePool[SpriteIndex++];
+                spr.Repurpose();
+                spr.RenderMode = mode;
+                return spr;
             }
         }
 
@@ -162,6 +182,7 @@ namespace FSO.LotView.Utils
             ((WorldCamera)worldCamera).ProjectionDirty();
 
             this.Sprites.Clear();
+            SpriteIndex = 0;
 
             this.DrawOrder = 0;
         }
@@ -236,7 +257,6 @@ namespace FSO.LotView.Utils
             int i = 0;
             foreach (var sprites in Sprites)
             {
-                
                 if (cache != null) {
                     if (i >= cache.Count) cache.Add(new _2DDrawBuffer());
                     EndDrawSprites(sprites, cache[i].Groups, outputDepth);

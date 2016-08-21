@@ -98,12 +98,29 @@ namespace FSO.Common.Utils
         public static Texture2D Clip(GraphicsDevice gd, Texture2D texture, Rectangle source)
         {
             var newTexture = new Texture2D(gd, source.Width, source.Height);
-
             var size = source.Width * source.Height;
             uint[] buffer = GetBuffer(size);
-            texture.GetData(0, source, buffer, 0, size);
+            if (FSOEnvironment.SoftwareDepth)
+            {
+                //opengl es does not like this
+                var texBuf = GetBuffer(texture.Width * texture.Height);
+                texture.GetData(texBuf);
+                var destOff = 0;
+                for (int y=source.Y; y<source.Bottom; y++)
+                {
+                    int offset = y * texture.Width + source.X;
+                    for (int x = 0; x < source.Width; x++)
+                    {
+                        buffer[destOff++] = texBuf[offset++];
+                    }
+                }
+            }
+            else
+            {
+                texture.GetData(0, source, buffer, 0, size);
+            }
 
-            newTexture.SetData(buffer, 0, size);
+            newTexture.SetData(buffer);
             return newTexture;
         }
 
