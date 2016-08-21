@@ -116,12 +116,6 @@
     <Compile Include="..\..\Exceptions\PeekNotSupportedException.cs">
       <Link>Exceptions\PeekNotSupportedException.cs</Link>
     </Compile>
-    <Compile Include="..\..\GlobalSettings2.Designer.cs">
-      <Link>GlobalSettings2.Designer.cs</Link>
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>GlobalSettings.settings</DependentUpon>
-    </Compile>
     <Compile Include="..\..\Listener.cs" />
     <Compile Include="..\..\Logger.cs" />
     <Compile Include="..\..\LoginArgsContainer.cs" />
@@ -131,12 +125,6 @@
     <Compile Include="..\..\PacketHeaders.cs" />
     <Compile Include="..\..\PacketStream.cs" />
     <Compile Include="..\..\ProcessedPacket.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\GlobalSettings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>GlobalSettings2.Designer.cs</LastGenOutput>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

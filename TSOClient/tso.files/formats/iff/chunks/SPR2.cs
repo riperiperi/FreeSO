@@ -548,8 +548,9 @@ namespace FSO.Files.Formats.IFF.Chunks
             Flags = 7;
             TransparentColorIndex = 255;
 
-            var colors = SPR2FrameEncoder.QuantizeFrame(this, out PalData);
+			//var colors = SPR2FrameEncoder.QuantizeFrame(this, out PalData);
 
+			var colors = new Color[256];
             var palt = new Color[256];
             int i = 0;
             foreach (var c in colors)

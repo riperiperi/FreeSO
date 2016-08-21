@@ -1,12 +1,16 @@
 ﻿#region Using Statements
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 #if MONOMAC
 using MonoMac.AppKit;
 using MonoMac.Foundation;
 #elif __IOS__ || __TVOS__
 using Foundation;
+using FSO.Client;
+using FSO.Common;
 using UIKit;
 #endif
 #endregion
@@ -20,12 +24,25 @@ namespace FSO.iOS
 	static class Program
 #endif
 	{
-		private static Game1 game;
 
 		internal static void RunGame()
 		{
-			game = new Game1();
-			game.Run();
+			var test2 = new Point();
+			var test3 = new Rectangle();
+
+			FSOEnvironment.ContentDir = (test2.X + test3.Height).ToString();
+			FSOEnvironment.ContentDir = "Content/";
+			FSOEnvironment.GFXContentDir = "Content/iOS/";
+			FSOEnvironment.UserDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			FSOEnvironment.Linux = true;
+			FSOEnvironment.DirectX = false;
+			FSOEnvironment.SoftwareKeyboard = true;
+			FSOEnvironment.SoftwareDepth = true;
+			FSOEnvironment.SmallScreen = true;
+
+			var start = new GameStartProxy();
+			start.SetPath("/private/var/mobile/Documents/The Sims Online/TSOClient/");
+			start.Start(false);
 #if !__IOS__ && !__TVOS__
 			game.Dispose();
 #endif

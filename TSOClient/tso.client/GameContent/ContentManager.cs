@@ -236,12 +236,12 @@ namespace FSO.Client.GameContent
                     m_Resources.Add(FileID, FileName);
             }
 
-            var cacheFiles = Directory.GetFiles(GameFacade.CacheDirectory);
+            /*var cacheFiles = Directory.GetFiles(GameFacade.CacheDirectory);
             foreach (var file in cacheFiles)
             {
                 var fileName = Path.GetFileNameWithoutExtension(file);
                 m_CachedResources.Add(ulong.Parse(fileName), file);
-            }
+            }*/
 
             m_Resources.Add(0x100000005, GlobalSettings.Default.StartupPath + "avatardata/skeletons/skeletons.dat");
 
@@ -345,7 +345,6 @@ namespace FSO.Client.GameContent
         /// <param name="ScreenMgr">A ScreenManager instance, used to access a GraphicsDevice.</param>
         public static void InitLoading()
         {
-            myLoadingScreenEWH = new EventWaitHandle(false, EventResetMode.ManualReset, "Go_Away_Stupid_Loading_Screen_GO_U_HEARD_ME_DONT_MAKE_ME_GET_MY_STICK_OUT");
             Thread T = new Thread(new ParameterizedThreadStart(LoadContent));
             //TODO: This should only be set to speed up debug
             T.Priority = ThreadPriority.AboveNormal;

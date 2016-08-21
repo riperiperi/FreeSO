@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 
 namespace FSO.Client.Utils
 {
@@ -25,7 +24,7 @@ namespace FSO.Client.Utils
 
             if (linux && preferDX11)
             {
-                MessageBox.Show("DirectX is only available on Windows, dummy!");
+                //MessageBox.Show("DirectX is only available on Windows, dummy!");
                 preferDX11 = false;
             }
 
@@ -55,7 +54,7 @@ namespace FSO.Client.Utils
                 AssemblyDir = monogameDir;
             } catch (Exception e)
             {
-                MessageBox.Show("Unable to link Monogame. Continuing... ("+e.ToString()+")");
+                //MessageBox.Show("Unable to link Monogame. Continuing... ("+e.ToString()+")");
             }
 
             return preferDX11;

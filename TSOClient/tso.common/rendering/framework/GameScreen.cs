@@ -26,7 +26,8 @@ namespace FSO.Common.Rendering.Framework
         public UpdateState State;
 
         private int touchedFrames;
-
+		private int lastTouchCount;
+		private MouseState lastMouseState;
         private const int TOUCH_ACCEPT_TIME = 5;
 
         public GameScreen(GraphicsDevice device)
@@ -37,10 +38,10 @@ namespace FSO.Common.Rendering.Framework
         }
 
         private static List<char> TextCharacters = new List<char>();
-        public static void TextInput(object sender, TextInputEventArgs e)
+        /*public static void TextInput(object sender, TextInputEventArgs e)
         {
             TextCharacters.Add(e.Character);
-        }
+        }*/
 
         /// <summary>
         /// Adds a graphical element to this scene.
@@ -54,7 +55,6 @@ namespace FSO.Common.Rendering.Framework
 
         public void Update(GameTime time, bool hasFocus)
         {
-            TouchPanel.EnableMouseTouchPoint = true;
             State.Time = time;
             State.PreviousKeyboardState = State.KeyboardState;
             State.FrameTextInput = TextCharacters;
@@ -62,7 +62,7 @@ namespace FSO.Common.Rendering.Framework
             if (hasFocus)
             {
                 State.MouseState = Mouse.GetState();
-                //TouchStub(State);
+                TouchStub(State);
                 State.KeyboardState = Keyboard.GetState();
             }
             else
@@ -85,27 +85,36 @@ namespace FSO.Common.Rendering.Framework
         {
             var test = TouchPanel.EnableMouseTouchPoint;
             TouchCollection touches = TouchPanel.GetState();
+			if (touches.Count != lastTouchCount) touchedFrames = 0;
+			lastTouchCount = touches.Count;
             if (touches.Count > 0)
             {
+				Vector2 avg = new Vector2();
+				for (int i = 0; i < touches.Count; i++)
+				{
+					avg += touches[i].Position;
+				}
+				avg /= touches.Count;
+
                 if (touchedFrames < TOUCH_ACCEPT_TIME)
                 {
+					state.MouseState = new MouseState(
+						(int)avg.X, (int)avg.Y, state.MouseState.ScrollWheelValue,
+						ButtonState.Released,
+						ButtonState.Released,
+						ButtonState.Released,
+						ButtonState.Released,
+						ButtonState.Released
+					);
                     touchedFrames++;
                 }
                 else
                 {
-                    //right click, take center
-                    Vector2 avg = new Vector2();
-                    for (int i = 0; i < touches.Count; i++)
-                    {
-                        avg += touches[i].Position;
-                    }
-                    avg /= touches.Count;
-
                     state.MouseState = new MouseState(
                         (int)avg.X, (int)avg.Y, state.MouseState.ScrollWheelValue,
-                        (touches.Count > 1) ? ButtonState.Released : ButtonState.Pressed,
+						(touches.Count > 1) ? ButtonState.Released : ButtonState.Pressed,
                         (touches.Count > 1) ? ButtonState.Pressed : ButtonState.Released,
-                        ButtonState.Released,
+                        (touches.Count > 1) ? ButtonState.Pressed : ButtonState.Released,
                         ButtonState.Released,
                         ButtonState.Released
                         );
@@ -116,8 +125,17 @@ namespace FSO.Common.Rendering.Framework
             else
             {
                 touchedFrames = 0;
-                state.TouchMode = false;
+				if (state.TouchMode) state.MouseState = new MouseState(
+						lastMouseState.X, lastMouseState.Y, state.MouseState.ScrollWheelValue,
+						ButtonState.Released,
+						ButtonState.Released,
+						ButtonState.Released,
+						ButtonState.Released,
+						ButtonState.Released
+					);
+                //state.TouchMode = false;
             }
+			lastMouseState = state.MouseState;
         }
 
         public void Draw(GameTime time)

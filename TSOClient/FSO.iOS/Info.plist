@@ -8,8 +8,6 @@
 	<array>
 		<string>GameThumbnail.png</string>
 	</array>
-	<key>CFBundleIdentifier</key>
-	<string>project.MonoGame.FSO.iOS</string>
 	<key>MinimumOSVersion</key>
 	<string>9.0</string>
 	<key>UISupportedInterfaceOrientations</key>
@@ -22,5 +20,7 @@
 	<true/>
 	<key>UIRequiresFullScreen</key>
 	<true/>
+	<key>CFBundleIdentifier</key>
+	<string>org.freeso.mobilefso</string>
 </dict>
 </plist>

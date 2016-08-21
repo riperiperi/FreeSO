@@ -55,15 +55,7 @@ namespace GonzoNet
         /// <param name="Msg"></param>
         public static void Log(string Message, LogLevel Lvl)
         {
-            if (GlobalSettings.Default.DEBUG_BUILD)
-            {
-                LogMessage Msg = new LogMessage(Message, Lvl);
-
-                if (OnMessageLogged != null)
-                    OnMessageLogged(Msg);
-                else
-                    Debug.WriteLine(Msg.Message);
-            }
+			
         }
     }
 }

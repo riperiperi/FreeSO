@@ -8,12 +8,91 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+
 namespace FSO.Client {
-    
-    
+
+	public class GlobalSettings  {
+		private static GlobalSettings defaultInstance = new GlobalSettings();
+
+		public static GlobalSettings Default
+		{
+			get
+			{
+				return defaultInstance;
+			}
+		}
+
+		public bool ShowHints = true;
+
+		public string CurrentLang = "0";
+
+
+		public int LoginServerPort = 2106;
+
+		public string ClientVersion = "0";
+
+		public bool DebugEnabled = false;
+
+		public bool ScaleUI = false;
+
+		public bool CityShadows = false;
+
+		public int ShadowQuality = 2048;
+
+		public bool SimulationShadows = true;
+
+		public bool AntiAlias = false;
+
+		public bool EdgeScroll = true;
+
+		public bool Lighting = true;
+
+		public byte FXVolume = 10;
+
+		public byte MusicVolume = 10;
+
+		public byte VoxVolume = 10;
+
+		public byte AmbienceVolume = 10;
+
+
+		public string StartupPath = "";
+
+
+		public string DocumentsPath = "";
+
+		public string LoginServerIP = "173.248.136.133";
+
+		public bool Windowed = true;
+
+		public int GraphicsWidth = 1136;
+
+		public int GraphicsHeight = 640;
+
+		public string LastUser = "iPhone";
+
+		public bool SkipIntro = true;
+
+		public ulong DebugHead = 0;
+
+		public ulong DebugBody = 0;
+
+		public bool DebugGender = true;
+
+		public int DebugSkin = 0;
+
+		public byte LanguageCode = 1;
+
+		public void Save()
+		{
+
+		}
+	}
+
+    /*
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "14.0.0.0")]
-    internal sealed partial class GlobalSettings : global::System.Configuration.ApplicationSettingsBase {
+    public class GlobalSettings : global::System.Configuration.ApplicationSettingsBase {
         
         private static GlobalSettings defaultInstance = ((GlobalSettings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new GlobalSettings())));
         
@@ -370,5 +449,6 @@ namespace FSO.Client {
                 this["LanguageCode"] = value;
             }
         }
-    }
+    } */
+	
 }

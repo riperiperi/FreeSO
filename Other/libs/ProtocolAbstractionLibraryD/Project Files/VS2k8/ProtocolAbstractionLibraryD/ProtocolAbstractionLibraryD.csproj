@@ -67,22 +67,10 @@
     <Compile Include="..\..\..\CharacterCreationStatus.cs" />
     <Compile Include="..\..\..\CityInfo.cs" />
     <Compile Include="..\..\..\CityTransferStatus.cs" />
-    <Compile Include="..\..\..\GlobalSettings1.Designer.cs">
-      <Link>GlobalSettings1.Designer.cs</Link>
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>GlobalSettings.settings</DependentUpon>
-    </Compile>
     <Compile Include="..\..\..\Logger.cs" />
     <Compile Include="..\..\..\PacketType.cs" />
     <Compile Include="..\..\..\Properties\AssemblyInfo.cs" />
     <Compile Include="..\..\..\ProtoHelpers.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\GlobalSettings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>GlobalSettings1.Designer.cs</LastGenOutput>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

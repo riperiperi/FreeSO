@@ -17,7 +17,7 @@ using FSO.Client.UI;
 using FSO.Client.GameContent;
 using FSO.Common;
 using Microsoft.Xna.Framework.Audio;
-using System.Windows.Forms;
+//using System.Windows.Forms;
 
 namespace FSO.Client
 {
@@ -29,7 +29,7 @@ namespace FSO.Client
         public UILayer uiLayer;
         public _3DLayer SceneMgr;
 
-        public TSOGame()
+		public TSOGame() : base()
         {
             GameFacade.Game = this;
             Content.RootDirectory = FSOEnvironment.GFXContentDir;
@@ -40,6 +40,8 @@ namespace FSO.Client
 
             Graphics.HardwareModeSwitch = false;
             Graphics.ApplyChanges();
+
+			Console.WriteLine(IsActive);
 
             //disabled for now. It's a hilarious mess and is causing linux to freak out.
             //Log.UseSensibleDefaults();
@@ -89,7 +91,7 @@ namespace FSO.Client
                 audioTest.CreateInstance().Play();
             } catch (Exception e)
             {
-                MessageBox.Show("Failed to initialize audio: \r\n\r\n" + e.StackTrace);
+                //MessageBox.Show("Failed to initialize audio: \r\n\r\n" + e.StackTrace);
             }
 
             this.IsMouseVisible = true;
@@ -100,7 +102,7 @@ namespace FSO.Client
             base.Screen.Layers.Add(SceneMgr);
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
-            this.Window.TextInput += GameScreen.TextInput;
+            //this.Window.TextInput += GameScreen.TextInput;
             this.Window.Title = "FreeSO";
 
             if (!GlobalSettings.Default.Windowed)
@@ -144,7 +146,7 @@ namespace FSO.Client
             }
             catch (Exception e)
             {
-                System.Windows.Forms.MessageBox.Show("Content could not be loaded. Make sure that the FreeSO content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
+                //MessageBox.Windows.Forms.MessageBox.Show("Content could not be loaded. Make sure that the FreeSO content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
                 Exit();
             }
 

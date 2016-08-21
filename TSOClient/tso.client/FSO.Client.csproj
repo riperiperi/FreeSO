@@ -214,36 +214,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Compile Include="Network\Cache.cs" />
-    <Compile Include="Debug\TSOClientFindAssetSearch.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOClientFindAssetSearch.Designer.cs">
-      <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Debug\TSOClientTools.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOClientTools.Designer.cs">
-      <DependentUpon>TSOClientTools.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Debug\TSOClientUIInspector.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOClientUIInspector.Designer.cs">
-      <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Debug\TSOEdith.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOEdith.Designer.cs">
-      <DependentUpon>TSOEdith.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Debug\TSOSceneInspector.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOSceneInspector.Designer.cs">
-      <DependentUpon>TSOSceneInspector.cs</DependentUpon>
-    </Compile>
     <Compile Include="GameController.cs" />
     <Compile Include="GameFacade.cs" />
     <Compile Include="Rendering\City\Blend.cs" />
@@ -465,26 +435,24 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="GOLD Engine, Version=5.0.4337.25397, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Dependencies\GOLD Engine.dll</HintPath>
-    </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System" />
     <Reference Include="System.Xml" />
+    <Reference Include="GOLDEngine">
+      <HintPath>Dependencies\GOLDEngine.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="GameContent\readme.txt" />
     <Content Include="Content\Blueprints\empty_lot.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Dependencies\GOLD Engine.dll" />
+    <Content Include="Dependencies\GOLDEngine.dll" />
     <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />
     <Content Include="Dependencies\nunit.framework.dll" />
     <Content Include="Dependencies\TargaImage.dll" />
@@ -648,21 +616,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Debug\TSOClientFindAssetSearch.resx">
-      <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Debug\TSOClientTools.resx">
-      <DependentUpon>TSOClientTools.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Debug\TSOClientUIInspector.resx">
-      <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Debug\TSOEdith.resx">
-      <DependentUpon>TSOEdith.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Debug\TSOSceneInspector.resx">
-      <DependentUpon>TSOSceneInspector.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

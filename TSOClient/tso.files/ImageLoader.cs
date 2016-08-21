@@ -10,8 +10,9 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
-using System.Drawing;
-using System.Runtime.InteropServices;
+using Microsoft.Xna.Framework;
+//using System.Drawing;
+//using System.Runtime.InteropServices;
 
 namespace FSO.Files
 {
@@ -26,9 +27,11 @@ namespace FSO.Files
         public static Texture2D FromStream(GraphicsDevice gd, Stream str)
         {
             //test for bmp
-            Bitmap bmp = null;
+            //Bitmap bmp = null;
             var magic = (str.ReadByte() | (str.ReadByte() << 8));
             str.Seek(0, SeekOrigin.Begin);
+			magic += 0;
+			/*
             if (magic == 0x4D42)
             {
                 try
@@ -59,8 +62,10 @@ namespace FSO.Files
                     }
                 }
             }
+            */
             
-            if (bmp != null) {
+            //if (bmp != null) {
+				/*
                 //image loaded into bitmap
                 bool premultiplied = false;
 
@@ -84,18 +89,51 @@ namespace FSO.Files
                 var tex = new Texture2D(gd, data.Width, data.Height);
                 tex.SetData<byte>(bytes);
                 return tex;
-            }
-            else
+				*/
+            //}
+            //else
             {
                 //attempt monogame load of image
                 try {
-                    return Texture2D.FromStream(gd, str);
+					var tex = Texture2D.FromStream(gd, str);
+					ManualTextureMaskSingleThreaded(ref tex, MASK_COLORS.ToArray());
+					return tex;
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    return null;
+					Console.WriteLine("error: " + e.ToString());
+					return new Texture2D(gd, 1, 1);
                 }
             }
         }
-    }
+
+		public static void ManualTextureMaskSingleThreaded(ref Texture2D Texture, uint[] ColorsFrom)
+		{
+			var ColorTo = Color.Transparent.PackedValue;
+
+			var size = Texture.Width * Texture.Height;
+			uint[] buffer = new uint[size];
+
+			Texture.GetData<uint>(buffer);
+
+			var didChange = false;
+
+			for (int i = 0; i < size; i++)
+			{
+
+				if (ColorsFrom.Contains(buffer[i]))
+				{
+					didChange = true;
+					buffer[i] = ColorTo;
+				}
+			}
+
+			if (didChange)
+			{
+				Texture.SetData(buffer, 0, size);
+			}
+			else return;
+		}
+
+	}
 }

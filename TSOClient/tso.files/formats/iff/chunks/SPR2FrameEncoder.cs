@@ -1,6 +1,4 @@
-﻿using SimplePaletteQuantizer.Ditherers.ErrorDiffusion;
-using SimplePaletteQuantizer.Helpers;
-using SimplePaletteQuantizer.Quantizers.DistinctSelection;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -11,31 +9,15 @@ using System.IO;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using FSO.Files.Utils;
-using SimplePaletteQuantizer.Quantizers.Octree;
-using SimplePaletteQuantizer.Ditherers.Ordered;
-using SimplePaletteQuantizer.Ditherers;
-using SimplePaletteQuantizer.Quantizers.XiaolinWu;
 
 namespace FSO.Files.Formats.IFF.Chunks
 {
-    public static class SPR2FrameEncoder
+	public static class SPR2FrameEncoder
     {
-
+		/*
         public static System.Drawing.Color[] QuantizeFrame(SPR2Frame frame, out byte[] bytes)
         {
             var bmps = frame.GetPixelAlpha(frame.Width, frame.Height, new Vector2());
-
-            /*
-            SimplePaletteQuantizer.Quantizers.IColorQuantizer quantizer = new DistinctSelectionQuantizer();
-
-            using (ImageBuffer buffer = new ImageBuffer(bmps[0], ImageLockMode.ReadOnly))
-            {
-                quantizer.Prepare(buffer);
-                buffer.ScanColors(quantizer, 4); // 4 = parallel task count
-            }
-
-            Bitmap quantpx = new Bitmap(bmps[0].Width, bmps[0].Height, PixelFormat.Format8bppIndexed);
-            ImageBuffer.DitherImage(bmps[0], quantpx, new JarvisJudiceNinkeDitherer(), quantizer, 255, 4);*/
 
             var quantpx = (Bitmap)ImageBuffer.QuantizeImage(bmps[0], new DistinctSelectionQuantizer(), null, 255, 4);
             var palt = quantpx.Palette.Entries;
@@ -51,6 +33,8 @@ namespace FSO.Files.Formats.IFF.Chunks
 
             return palt;
         }
+	*/
+
         public static void WriteFrame(SPR2Frame frame, IoWriter output)
         {
             var bytes = frame.PalData;

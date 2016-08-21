@@ -10,12 +10,15 @@ namespace FSO.Client
     {
         public void Start(bool useDX)
         {
-            using (TSOGame game = new TSOGame())
-            {
-                GameFacade.DirectX = useDX;
-                World.DirectX = useDX;
-                game.Run(Microsoft.Xna.Framework.GameRunBehavior.Synchronous);
-            }
+			TSOGame game = new TSOGame();
+            GameFacade.DirectX = useDX;
+			World.DirectX = useDX;
+            game.Run();
         }
-    }
+
+		public void SetPath(string path)
+		{
+			GlobalSettings.Default.StartupPath = path;
+		}
+	}
 }
