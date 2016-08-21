@@ -352,7 +352,7 @@ namespace FSO.Client.UI.Controls
                     CurrentText = QueuedChange;
                     QueuedChange = null;
                     state.InputManager.SetFocus(null);
-                    OnChange(this);
+                    if (OnChange != null) OnChange(this);
                 }
             }
             if (m_IsReadOnly) { return; }

@@ -406,7 +406,7 @@ namespace FSO.Client.UI.Screens
 
                 dataProvider.Add(new UIGridViewerItem {
                     Data = outfit,
-                    Thumb = new Promise<Texture2D>(x => GetTexture(thumbID))
+                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID.TypeID, thumbID.FileID).Get(GameFacade.GraphicsDevice))
                 });
             }
             return dataProvider;
