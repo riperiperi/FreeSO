@@ -187,17 +187,8 @@ namespace FSO.Client.Rendering.City
             //Can crash on some setups on dx11?
             //TextureUtils.ManualTextureMaskSingleThreaded(ref m_DefaultHouse, new uint[] { new Color(0x00, 0x00, 0x00, 0xFF).PackedValue });
 
-            byte[] bytes = GameContent.ContentManager.GetResourceFromLongID(0x0000032F00000001);
-            using (var stream = new MemoryStream(bytes))
-            {
-                m_LotOnline = LoadTex(stream);
-            }
-
-            bytes = GameContent.ContentManager.GetResourceFromLongID(0x0000033100000001);
-            using (var stream = new MemoryStream(bytes))
-            {
-                m_LotOffline = LoadTex(stream);
-            }
+            m_LotOnline = UIElement.GetTexture(0x0000032F00000001);
+            m_LotOffline = UIElement.GetTexture(0x0000033100000001);
 
             //fills used for line drawing
 

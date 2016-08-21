@@ -361,6 +361,9 @@ namespace FSO.Client.GameContent
         /// </summary>
         private static void LoadContent(object ThreadObject)
         {
+            PreloadProgress = 1.0f;
+            return;
+
             var loadingList = new List<ContentPreload>();
 
             /** UI Textures **/

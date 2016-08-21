@@ -380,17 +380,18 @@ namespace FSO.Content
 
         //use this tho
         public string Name;
+        public Dictionary<string, VMTreeByNameTableEntry> TreeByName;
         public override IffFile MainIff
         {
             get { return Iff; }
         }
 
-        public GameObjectResource(IffFile iff, IffFile sprites, OTFFile tuning, string name)
+        public GameObjectResource(IffFile iff, IffFile sprites, OTFFile tuning, string iname)
         {
             this.Iff = iff;
             this.Sprites = sprites;
             this.Tuning = tuning;
-            this.Name = name;
+            this.Name = iname;
 
             if (iff == null) return;
             var GLOBChunks = iff.List<GLOB>();
@@ -398,6 +399,47 @@ namespace FSO.Content
             {
                 var sg = FSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
                 if (sg != null) SemiGlobal = sg.Resource; //used for tuning constant fetching.
+            }
+
+            TreeByName = new Dictionary<string, VMTreeByNameTableEntry>();
+            var bhavs = List<BHAV>();
+            if (bhavs != null)
+            {
+                foreach (var bhav in bhavs)
+                {
+                    string name = bhav.ChunkLabel;
+                    for (var i = 0; i < name.Length; i++)
+                    {
+                        if (name[i] == 0)
+                        {
+                            name = name.Substring(0, i);
+                            break;
+                        }
+                    }
+                    if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(bhav));
+                }
+            }
+            //also add semiglobals
+
+            if (SemiGlobal != null)
+            {
+                bhavs = SemiGlobal.List<BHAV>();
+                if (bhavs != null)
+                {
+                    foreach (var bhav in bhavs)
+                    {
+                        string name = bhav.ChunkLabel;
+                        for (var i = 0; i < name.Length; i++)
+                        {
+                            if (name[i] == 0)
+                            {
+                                name = name.Substring(0, i);
+                                break;
+                            }
+                        }
+                        if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(bhav));
+                    }
+                }
             }
         }
 
@@ -449,4 +491,15 @@ namespace FSO.Content
             return this.Iff.List<T>();
         }
     }
+
+    public class VMTreeByNameTableEntry
+    {
+        public BHAV bhav;
+
+        public VMTreeByNameTableEntry(BHAV bhav)
+        {
+            this.bhav = bhav;
+        }
+    }
+
 }

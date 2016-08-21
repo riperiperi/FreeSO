@@ -53,7 +53,9 @@ namespace FSO.Files.Formats.IFF.Chunks
                         var frame = new SPR2Frame(this);
                         io.Seek(SeekOrigin.Begin, offsetTable[i]);
 
-                        frame.Read(version, io);
+                        var guessedSize = ((i + 1 < offsetTable.Length) ? offsetTable[i + 1] : (uint)stream.Length) - offsetTable[i];
+
+                        frame.Read(version, io, guessedSize);
                         Frames[i] = frame;
                     }
                 }
@@ -66,7 +68,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     for (var i = 0; i < spriteCount; i++)
                     {
                         var frame = new SPR2Frame(this);
-                        frame.Read(version, io);
+                        frame.Read(version, io, 0);
                         Frames[i] = frame;
                     }
                 }
@@ -124,6 +126,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public Vector2 Position { get; internal set; }
         
         private SPR2 Parent;
+        private uint Version;
         private byte[] ToDecode;
 
         public SPR2Frame(SPR2 parent)
@@ -136,8 +139,9 @@ namespace FSO.Files.Formats.IFF.Chunks
         /// </summary>
         /// <param name="version">Version of the SPR2 that this frame belongs to.</param>
         /// <param name="stream">A IOBuffer object used to read a SPR2 chunk.</param>
-        public void Read(uint version, IoBuffer io)
+        public void Read(uint version, IoBuffer io, uint guessedSize)
         {
+            Version = version;
             if (version == 1001)
             {
                 var spriteVersion = io.ReadUInt32();
@@ -146,11 +150,12 @@ namespace FSO.Files.Formats.IFF.Chunks
                 else ToDecode = io.ReadBytes(spriteSize);
             } else
             {
-                ReadDeferred(1000, io);
+                if (IffFile.RETAIN_CHUNK_DATA) ReadDeferred(1000, io);
+                else ToDecode = io.ReadBytes(guessedSize);
             }
         }
 
-        public void ReadDeferred(int version, IoBuffer io)
+        public void ReadDeferred(uint version, IoBuffer io)
         {
             this.Width = io.ReadUInt16();
             this.Height = io.ReadUInt16();
@@ -177,7 +182,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             {
                 using (IoBuffer buf = IoBuffer.FromStream(new MemoryStream(ToDecode), ByteOrder.LITTLE_ENDIAN))
                 {
-                    ReadDeferred(1001, buf);
+                    ReadDeferred(Version, buf);
                 }
 
                 ToDecode = null;

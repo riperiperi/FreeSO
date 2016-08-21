@@ -12,6 +12,7 @@ using FSO.Common.Rendering.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Content;
 using Microsoft.Xna.Framework;
+using FSO.Content.Model;
 
 namespace FSO.Vitaboy
 {
@@ -98,6 +99,7 @@ namespace FSO.Vitaboy
             foreach (var binding in Bindings)
             {
                 binding.Mesh.StoreOnGPU(device);
+                binding.Texture.Get(device);
             }
         }
 
@@ -233,7 +235,7 @@ namespace FSO.Vitaboy
             {
                 foreach (var binding in Bindings)
                 {
-                    effect.Parameters["MeshTex"].SetValue(binding.Texture);
+                    effect.Parameters["MeshTex"].SetValue(binding.Texture.Get(device));
                     pass.Apply();
                     binding.Mesh.Draw(device);
                 }
@@ -259,6 +261,6 @@ namespace FSO.Vitaboy
     public class AvatarBindingInstance 
     {
         public Mesh Mesh;
-        public Texture2D Texture;
+        public ITextureRef Texture;
     }
 }

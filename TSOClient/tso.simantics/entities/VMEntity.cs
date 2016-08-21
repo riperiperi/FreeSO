@@ -410,47 +410,8 @@ namespace FSO.SimAntics
 
         public void GenerateTreeByName(VMContext context)
         {
-            TreeByName = new Dictionary<string, VMTreeByNameTableEntry>();
-
-            var bhavs = Object.Resource.List<BHAV>();
-            if (bhavs != null)
-            {
-                foreach (var bhav in bhavs)
-                {
-                    string name = bhav.ChunkLabel;
-                    for (var i = 0; i < name.Length; i++)
-                    {
-                        if (name[i] == 0)
-                        {
-                            name = name.Substring(0, i);
-                            break;
-                        }
-                    }
-                    if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(bhav, Object));
-                }
-            }
-            //also add semiglobals
-
-            if (SemiGlobal != null)
-            {
-                bhavs = SemiGlobal.List<BHAV>();
-                if (bhavs != null)
-                {
-                    foreach (var bhav in bhavs)
-                    {
-                        string name = bhav.ChunkLabel;
-                        for (var i = 0; i < name.Length; i++)
-                        {
-                            if (name[i] == 0)
-                            {
-                                name = name.Substring(0, i);
-                                break;
-                            }
-                        }
-                        if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(bhav, Object));
-                    }
-                }
-            }
+            TreeByName = Object.Resource.TreeByName;
+                new Dictionary<string, VMTreeByNameTableEntry>();
         }
 
         public bool ExecuteEntryPoint(int entry, VMContext context, bool runImmediately)
@@ -1203,19 +1164,6 @@ namespace FSO.SimAntics
         ArchitectualWindow = 1 << 14,
         ArchitectualDoor = 1 << 15
     }
-
-    public class VMTreeByNameTableEntry
-    {
-        public BHAV bhav;
-        public GameObject Owner;
-
-        public VMTreeByNameTableEntry(BHAV bhav, GameObject owner)
-        {
-            this.bhav = bhav;
-            this.Owner = owner;
-        }
-    }
-
     public class VMPieMenuInteraction
     {
         public string Name;

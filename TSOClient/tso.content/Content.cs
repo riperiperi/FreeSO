@@ -54,7 +54,7 @@ namespace FSO.Content
 
             Changes = new ChangeManager();
 
-            UIGraphics = new UIGraphicsProvider(this, Device);
+            UIGraphics = new UIGraphicsProvider(this);
             AvatarMeshes = new AvatarMeshProvider(this, Device);
             AvatarBindings = new AvatarBindingProvider(this);
             AvatarTextures = new AvatarTextureProvider(this, Device);
@@ -64,7 +64,9 @@ namespace FSO.Content
             AvatarAnimations = new AvatarAnimationProvider(this);
             AvatarPurchasables = new AvatarPurchasables(this);
             AvatarHandgroups = new HandgroupProvider(this, Device);
+            AvatarCollections = new AvatarCollectionsProvider(this);
             AvatarThumbnails = new AvatarThumbnailProvider(this, Device);
+
 
             WorldObjects = new WorldObjectProvider(this);
             WorldFloors = new WorldFloorProvider(this);
@@ -112,6 +114,7 @@ namespace FSO.Content
             AvatarAnimations.Init();
             Audio.Init();
             AvatarPurchasables.Init();
+            AvatarCollections.Init();
             AvatarHandgroups.Init();
             AvatarThumbnails.Init();
 
@@ -197,6 +200,7 @@ namespace FSO.Content
         public AvatarAnimationProvider AvatarAnimations;
         public AvatarPurchasables AvatarPurchasables;
         public HandgroupProvider AvatarHandgroups;
+        public AvatarCollectionsProvider AvatarCollections;
         public AvatarThumbnailProvider AvatarThumbnails;
 
         /** Audio **/

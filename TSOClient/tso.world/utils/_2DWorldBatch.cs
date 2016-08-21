@@ -74,7 +74,7 @@ namespace FSO.LotView.Utils
             this.ObjectID = obj;
         }
 
-        public _2DWorldBatch(GraphicsDevice device, int numBuffers, SurfaceFormat[] surfaceFormats, int scrollBuffer)
+        public _2DWorldBatch(GraphicsDevice device, int numBuffers, SurfaceFormat[] surfaceFormats, bool[] alwaysDS, int scrollBuffer)
         {
             this.Device = device;
             this.Effect = WorldContent._2DWorldBatchEffect;
@@ -87,8 +87,8 @@ namespace FSO.LotView.Utils
 
             for (var i = 0; i < numBuffers; i++)
             {
-                int width = device.Viewport.Width+scrollBuffer;
-                int height = device.Viewport.Height+scrollBuffer;
+                int width = device.Viewport.Width + scrollBuffer;
+                int height = device.Viewport.Height + scrollBuffer;
 
                 switch (i) {
                     case 4: //World2D.BUFFER_OBJID
@@ -102,7 +102,8 @@ namespace FSO.LotView.Utils
                         break;
                 }
                 Buffers.Add(
-                    PPXDepthEngine.CreateRenderTarget(device, 1, 0, surfaceFormats[i], width, height)
+                    PPXDepthEngine.CreateRenderTarget(device, 1, 0, surfaceFormats[i], width, height,
+                    (alwaysDS[i] || (!FSOEnvironment.UseMRT && !FSOEnvironment.SoftwareDepth))?DepthFormat.Depth24Stencil8:DepthFormat.None)
                 );
             }
         }

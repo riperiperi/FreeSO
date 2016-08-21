@@ -68,11 +68,12 @@ namespace FSO.Client.UI.Screens
             /**
             * Data
             */
-            MaleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
-            MaleOutfits = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male));
+            var content = Content.Content.Get();
+            MaleHeads = content.AvatarCollections.Get("ea_male_heads.col");
+            MaleOutfits = content.AvatarCollections.Get("ea_male.col");
 
-            FemaleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_female_heads));
-            FemaleOutfits = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_female));
+            FemaleHeads = content.AvatarCollections.Get("ea_female_heads.col");
+            FemaleOutfits = content.AvatarCollections.Get("ea_female.col");
 
             /**
              * UI

@@ -24,6 +24,8 @@ namespace FSO.Files.Formats.IFF.Chunks
     {
         public List<SPRFrame> Frames { get; internal set; }
         public ushort PaletteID;
+        private List<uint> Offsets;
+        public ByteOrder ByteOrd;
 
         /// <summary>
         /// Reads a SPR chunk from a stream.
@@ -41,12 +43,13 @@ namespace FSO.Files.Formats.IFF.Chunks
                 if (version1 == 0)
                 {
                     io.ByteOrder = ByteOrder.BIG_ENDIAN;
-                    version = version2;
+                    version = (uint)(((version2|0xFF00)>>8) | ((version2&0xFF)<<8));
                 }
                 else
                 {
                     version = version1;
                 }
+                ByteOrd = io.ByteOrder;
 
                 var spriteCount = io.ReadUInt32();
                 PaletteID = (ushort)io.ReadUInt32();
@@ -59,10 +62,13 @@ namespace FSO.Files.Formats.IFF.Chunks
                     {
                         offsetTable.Add(io.ReadUInt32());
                     }
+                    Offsets = offsetTable;
                     for (var i = 0; i < spriteCount; i++)
                     {
                         var frame = new SPRFrame(this);
-                        frame.Read(version, io);
+                        io.Seek(SeekOrigin.Begin, offsetTable[i]);
+                        var guessedSize = ((i + 1 < offsetTable.Count) ? offsetTable[i + 1] : (uint)stream.Length) - offsetTable[i];
+                        frame.Read(version, io, guessedSize);
                         Frames.Add(frame);
                     }
                 }
@@ -71,7 +77,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     while (io.HasMore)
                     {
                         var frame = new SPRFrame(this);
-                        frame.Read(version, io);
+                        frame.Read(version, io, 0);
                         Frames.Add(frame);
                     }
                 }
@@ -105,11 +111,12 @@ namespace FSO.Files.Formats.IFF.Chunks
         /// </summary>
         /// <param name="iff">An Iff instance.</param>
         /// <param name="stream">A Stream object holding a SPRFrame.</param>
-        public void Read(uint version, IoBuffer io)
+        public void Read(uint version, IoBuffer io, uint guessedSize)
         {
             if (version == 1001)
             {
                 var spriteFersion = io.ReadUInt32();
+
                 var size = io.ReadUInt32();
                 this.Version = spriteFersion;
 
@@ -119,7 +126,8 @@ namespace FSO.Files.Formats.IFF.Chunks
             else
             {
                 this.Version = version;
-                ReadDeferred(1000, io);
+                if (IffFile.RETAIN_CHUNK_DATA) ReadDeferred(1000, io);
+                else ToDecode = io.ReadBytes(guessedSize);
             }
         }
 
@@ -136,9 +144,9 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             if (ToDecode != null)
             {
-                using (IoBuffer buf = IoBuffer.FromStream(new MemoryStream(ToDecode), ByteOrder.LITTLE_ENDIAN))
+                using (IoBuffer buf = IoBuffer.FromStream(new MemoryStream(ToDecode), Parent.ByteOrd))
                 {
-                    ReadDeferred(1001, buf);
+                    ReadDeferred(Version, buf);
                 }
 
                 ToDecode = null;

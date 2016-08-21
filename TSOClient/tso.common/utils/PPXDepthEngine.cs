@@ -29,8 +29,8 @@ namespace FSO.Common.Utils
         {
             if (BackbufferDepth != null) BackbufferDepth.Dispose();
             if (Backbuffer != null) Backbuffer.Dispose();
-            BackbufferDepth = CreateRenderTarget(gd, 1, 0, SurfaceFormat.Color, gd.Viewport.Width, gd.Viewport.Height);
-            Backbuffer = CreateRenderTarget(gd, 1, 0, SurfaceFormat.Color, gd.Viewport.Width, gd.Viewport.Height);
+            BackbufferDepth = CreateRenderTarget(gd, 1, 0, SurfaceFormat.Color, gd.Viewport.Width, gd.Viewport.Height, DepthFormat.None);
+            Backbuffer = CreateRenderTarget(gd, 1, 0, SurfaceFormat.Color, gd.Viewport.Width, gd.Viewport.Height, DepthFormat.Depth24Stencil8);
         }
 
         private static RenderTarget2D ActiveColor;
@@ -137,7 +137,7 @@ namespace FSO.Common.Utils
             SB.End();
         }
 
-        public static RenderTarget2D CreateRenderTarget(GraphicsDevice device, int numberLevels, int multisample, SurfaceFormat surface, int width, int height)
+        public static RenderTarget2D CreateRenderTarget(GraphicsDevice device, int numberLevels, int multisample, SurfaceFormat surface, int width, int height, DepthFormat dformat)
         {
             //apparently in xna4, there is no way to check device format... (it looks for the closest format if desired is not supported) need to look into if this affects anything.
 

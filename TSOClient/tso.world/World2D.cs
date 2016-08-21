@@ -53,6 +53,35 @@ namespace FSO.LotView
             SurfaceFormat.Color,
         };
 
+        public static bool[] FORMAT_ALWAYS_DEPTHSTENCIL = new bool[] {
+            /** Thumbnail buffer **/
+            true,
+
+            /** Static Object Buffers **/
+            true,
+            false, //depth, using a 24-bit packed format
+
+            /** Terrain Color **/
+            true,
+
+            /** Object ID buffer **/
+            true,
+
+            /** Floor buffers **/
+            true,
+            false, //depth
+
+            /** Terrain Depth **/
+            false,
+
+            /** Wall buffers **/
+            true,
+            false, //depth
+
+            //Thumbnail depth
+            false,
+        };
+
         public static readonly int NUM_2D_BUFFERS = 11;
         public static readonly int BUFFER_THUMB = 0; //used for drawing thumbnails
         public static readonly int BUFFER_STATIC_OBJECTS_PIXEL = 1;

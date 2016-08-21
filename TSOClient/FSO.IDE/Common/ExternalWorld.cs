@@ -26,7 +26,7 @@ namespace FSO.IDE.Common
             State = new WorldState(layer.Device, layer.Device.Viewport.Width, layer.Device.Viewport.Height, this);
             State.AmbientLight = new Texture2D(layer.Device, 256, 256);
             State._3D = new FSO.LotView.Utils._3DWorldBatch(State);
-            State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, 1, new SurfaceFormat[] { World2D.BUFFER_SURFACE_FORMATS[0] }, World2D.SCROLL_BUFFER);
+            State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, 1, new SurfaceFormat[] { World2D.BUFFER_SURFACE_FORMATS[0] }, new bool[] { true }, World2D.SCROLL_BUFFER);
             State._2D.AmbientLight = State.AmbientLight;
 
             base.Camera = State.Camera;

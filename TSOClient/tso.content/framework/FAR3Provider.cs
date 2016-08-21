@@ -87,15 +87,17 @@ namespace FSO.Content.Framework
         /// <returns>A file.</returns>
         public T Get(ulong ID)
         {
-            lock (Cache)
+            return ResolveById(ID);
+        }
+
+        protected virtual T ResolveById(ulong id)
+        {
+            var entry = EntriesById[id];
+            if (entry != null)
             {
-                Far3ProviderEntry<T> entry;
-                if (EntriesById.TryGetValue(ID, out entry))
-                {
-                    return Get(entry);
-                }
-                return default(T);
+                return Get(entry);
             }
+            return default(T);
         }
 
         /// <summary>
