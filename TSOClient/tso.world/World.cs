@@ -289,14 +289,7 @@ namespace FSO.LotView
         public override void Update(UpdateState state)
         {
             base.Update(state);
-            if (Blueprint != null)
-            {
-                foreach (var ent in Blueprint.Objects)
-                {
-                    ent.Update(null, State);
-                }
-            }
-            
+
             if (State.ScrollAnchor != null)
             {
                 var pelvisCenter = State.ScrollAnchor.GetPelvisPosition();
@@ -315,6 +308,14 @@ namespace FSO.LotView
         {
             base.PreDraw(device);
             if (HasInit == false) { return; }
+
+            if (Blueprint != null)
+            {
+                foreach (var ent in Blueprint.Objects)
+                {
+                    ent.Update(null, State);
+                }
+            }
 
             //For all the tiles in the dirty list, re-render them
             //PPXDepthEngine.SetPPXTarget(null, null, true);

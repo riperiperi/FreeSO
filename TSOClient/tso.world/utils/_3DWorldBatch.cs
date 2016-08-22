@@ -98,16 +98,12 @@ namespace FSO.LotView.Utils
 
             effect.CurrentTechnique = technique;
             ApplyCamera(effect);
-            //Device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
-            //Device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
-            
-            //var byTexture = sprites.GroupBy(x => x.Texture);
+            effect.Parameters["SoftwareDepth"].SetValue(FSOEnvironment.SoftwareDepth);
             foreach (var pass in technique.Passes)
             {
                 foreach (var geom in sprites)
                 {
                     if (OBJIDMode) effect.Parameters["ObjectID"].SetValue(geom.ObjectID / 65535f);
-                    effect.Parameters["SoftwareDepth"].SetValue(FSOEnvironment.SoftwareDepth);
                     if (RoomLights != null)
                     {
                         var col = RoomLights[geom.Room].ToVector4() * geom.Color.ToVector4();
