@@ -14,26 +14,10 @@ namespace FSO.Files.Formats.IFF.Chunks
 {
 	public static class SPR2FrameEncoder
     {
-		/*
-        public static System.Drawing.Color[] QuantizeFrame(SPR2Frame frame, out byte[] bytes)
-        {
-            var bmps = frame.GetPixelAlpha(frame.Width, frame.Height, new Vector2());
 
-            var quantpx = (Bitmap)ImageBuffer.QuantizeImage(bmps[0], new DistinctSelectionQuantizer(), null, 255, 4);
-            var palt = quantpx.Palette.Entries;
+        public delegate System.Drawing.Color[] QuantizerFunction(SPR2Frame frame, out byte[] bytes);
 
-            var data = quantpx.LockBits(new System.Drawing.Rectangle(0, 0, quantpx.Width, quantpx.Height), ImageLockMode.ReadOnly, PixelFormat.Format8bppIndexed);
-            bytes = new byte[data.Height * data.Width];
-
-            // copy the bytes from bitmap to array
-            for (int i=0; i<data.Height; i++)
-            {
-                Marshal.Copy(data.Scan0 + i*data.Stride, bytes, i*data.Width, data.Width);
-            }
-
-            return palt;
-        }
-	*/
+        public static QuantizerFunction QuantizeFrame;
 
         public static void WriteFrame(SPR2Frame frame, IoWriter output)
         {

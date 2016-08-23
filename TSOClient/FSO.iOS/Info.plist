@@ -3,10 +3,12 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>FSO.iOS</string>
+	<string>FreeSO</string>
 	<key>CFBundleIconFiles</key>
 	<array>
 		<string>GameThumbnail.png</string>
+		<string>Default.png</string>
+		<string>Default-568h@2x.png</string>
 	</array>
 	<key>MinimumOSVersion</key>
 	<string>9.0</string>
@@ -22,5 +24,18 @@
 	<true/>
 	<key>CFBundleIdentifier</key>
 	<string>org.freeso.mobilefso</string>
+	<key>UIDeviceFamily</key>
+	<array>
+		<integer>1</integer>
+		<integer>2</integer>
+	</array>
+	<key>CFBundleShortVersionString</key>
+	<string></string>
+	<key>CFBundleVersion</key>
+	<string></string>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
 </dict>
 </plist>

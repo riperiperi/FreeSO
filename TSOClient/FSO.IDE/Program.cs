@@ -1,4 +1,5 @@
 ﻿using FSO.Client;
+using FSO.IDE.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,7 @@ namespace FSO.IDE
         static void Main(string[] args)
         {
             if (!FSO.Client.Program.InitWithArguments(args)) return;
+            Files.Formats.IFF.Chunks.SPR2FrameEncoder.QuantizeFrame = SpriteEncoderUtils.QuantizeFrame;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             (new VolcanicStartProxy()).Start();

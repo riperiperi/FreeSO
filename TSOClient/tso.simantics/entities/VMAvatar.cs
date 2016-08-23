@@ -85,8 +85,11 @@ namespace FSO.SimAntics
             set
             {
                 _BodyOutfit = value;
-                Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get(value);
-                if (AvatarType == VMAvatarType.Adult || AvatarType == VMAvatarType.Child) Avatar.Handgroup = Avatar.Body;
+                if (value != 0)
+                {
+                    Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get(value);
+                    if (AvatarType == VMAvatarType.Adult || AvatarType == VMAvatarType.Child) Avatar.Handgroup = Avatar.Body;
+                }
             }
             get
             {

@@ -27,10 +27,6 @@ namespace FSO.iOS
 
 		internal static void RunGame()
 		{
-			var test2 = new Point();
-			var test3 = new Rectangle();
-
-			FSOEnvironment.ContentDir = (test2.X + test3.Height).ToString();
 			FSOEnvironment.ContentDir = "Content/";
 			FSOEnvironment.GFXContentDir = "Content/iOS/";
 			FSOEnvironment.UserDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -39,6 +35,7 @@ namespace FSO.iOS
 			FSOEnvironment.SoftwareKeyboard = true;
 			FSOEnvironment.SoftwareDepth = true;
 			FSOEnvironment.SmallScreen = true;
+            Files.ImageLoader.UseSoftLoad = false;
 
 			var start = new GameStartProxy();
 			start.SetPath("/private/var/mobile/Documents/The Sims Online/TSOClient/");

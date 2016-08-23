@@ -11,27 +11,28 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
 using Microsoft.Xna.Framework;
-//using System.Drawing;
-//using System.Runtime.InteropServices;
+using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace FSO.Files
 {
     public class ImageLoader
     {
+        public static bool UseSoftLoad = true;
+
         public static HashSet<uint> MASK_COLORS = new HashSet<uint>{
             new Microsoft.Xna.Framework.Color(0xFF, 0x00, 0xFF, 0xFF).PackedValue,
             new Microsoft.Xna.Framework.Color(0xFE, 0x02, 0xFE, 0xFF).PackedValue,
             new Microsoft.Xna.Framework.Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
-        public static Texture2D FromStream(GraphicsDevice gd, Stream str)
+        public static Texture2D FromStreamSoft(GraphicsDevice gd, Stream str)
         {
-            //test for bmp
-            //Bitmap bmp = null;
+            //TODO: does not compile on xamarin platforms, so we use the slower method since it seems to load TGAs fine.
+            Bitmap bmp = null;
             var magic = (str.ReadByte() | (str.ReadByte() << 8));
             str.Seek(0, SeekOrigin.Begin);
-			magic += 0;
-			/*
+            magic += 0;
             if (magic == 0x4D42)
             {
                 try
@@ -62,14 +63,13 @@ namespace FSO.Files
                     }
                 }
             }
-            */
-            
-            //if (bmp != null) {
-				/*
+
+            if (bmp != null)
+            {
                 //image loaded into bitmap
                 bool premultiplied = false;
 
-                var data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                var data = bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                 var bytes = new byte[data.Height * data.Stride];
 
                 // copy the bytes from bitmap to array
@@ -89,27 +89,45 @@ namespace FSO.Files
                 var tex = new Texture2D(gd, data.Width, data.Height);
                 tex.SetData<byte>(bytes);
                 return tex;
-				*/
-            //}
-            //else
+            } else
             {
-                //attempt monogame load of image
-                try {
-					var tex = Texture2D.FromStream(gd, str);
-					ManualTextureMaskSingleThreaded(ref tex, MASK_COLORS.ToArray());
-					return tex;
+                try
+                {
+                    var tex = Texture2D.FromStream(gd, str);
+                    //ManualTextureMaskSingleThreaded(ref tex, MASK_COLORS.ToArray());
+                    return tex;
                 }
                 catch (Exception e)
                 {
-					Console.WriteLine("error: " + e.ToString());
-					return new Texture2D(gd, 1, 1);
+                    Console.WriteLine("image load error: " + e.ToString());
+                    return new Texture2D(gd, 1, 1);
                 }
             }
         }
 
+        public static Texture2D FromStream(GraphicsDevice gd, Stream str)
+        {
+            if (!UseSoftLoad)
+            {
+                //attempt monogame load of image
+                try
+                {
+                    var tex = Texture2D.FromStream(gd, str);
+                    ManualTextureMaskSingleThreaded(ref tex, MASK_COLORS.ToArray());
+                    return tex;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("error: " + e.ToString());
+                    return new Texture2D(gd, 1, 1);
+                }
+            }
+            else return FromStreamSoft(gd, str);
+        }
+
 		public static void ManualTextureMaskSingleThreaded(ref Texture2D Texture, uint[] ColorsFrom)
 		{
-			var ColorTo = Color.Transparent.PackedValue;
+			var ColorTo = Microsoft.Xna.Framework.Color.Transparent.PackedValue;
 
 			var size = Texture.Width * Texture.Height;
 			uint[] buffer = new uint[size];

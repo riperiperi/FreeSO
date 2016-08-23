@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props')" />
   <PropertyGroup>
@@ -8,7 +8,7 @@
     <ProjectTypeGuids>{FEACFBD2-3405-455C-9665-78FE426C6842};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Exe</OutputType>
     <RootNamespace>FSO.iOS</RootNamespace>
-    <AssemblyName>FSOiOS</AssemblyName>
+    <AssemblyName>FSO.iOS</AssemblyName>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
     <MonoGamePlatform>iOS</MonoGamePlatform>
     <VBRuntime>Embed</VBRuntime>
@@ -48,11 +48,8 @@
     <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
     <MtouchTlsProvider>Default</MtouchTlsProvider>
     <MtouchDebug>true</MtouchDebug>
-    <MtouchExtraArgs>
-    </MtouchExtraArgs>
+    <MtouchExtraArgs></MtouchExtraArgs>
     <MtouchUseLlvm>true</MtouchUseLlvm>
-    <BuildIpa>True</BuildIpa>
-    <IpaIncludeArtwork>True</IpaIncludeArtwork>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
     <Optimize>true</Optimize>
@@ -91,15 +88,7 @@
     <MtouchTlsProvider>Default</MtouchTlsProvider>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GonzoNet, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\bin\Release\GonzoNet.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\System.Drawing.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="Xamarin.iOS" />
@@ -130,6 +119,9 @@
     <Reference Include="FSO.Vitaboy.Engine">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Vitaboy.Engine.dll</HintPath>
     </Reference>
+    <Reference Include="GonzoNet">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\GonzoNet.dll</HintPath>
+    </Reference>
     <Reference Include="ProtocolAbstractionLibraryD">
       <HintPath>..\tso.client\bin\WindowsGL\Release\ProtocolAbstractionLibraryD.dll</HintPath>
     </Reference>
@@ -148,6 +140,9 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Drawing">
+      <HintPath>..\..\..\sysdrawing-coregraphics\bin\ios\System.Drawing.dll</HintPath>
+    </Reference>
     <Reference Include="GOLDEngine">
       <HintPath>..\tso.client\Dependencies\GOLDEngine.dll</HintPath>
     </Reference>
@@ -159,7 +154,6 @@
     <Compile Include="Point.cs" />
   </ItemGroup>
   <ItemGroup>
-    <InterfaceDefinition Include="EmptyStoryboard1.storyboard" />
     <None Include="Entitlements.plist" />
     <None Include="Info.plist" />
     <None Include="..\tso.client\Content\DX\Effects\2DWorldBatch.xnb">
@@ -379,7 +373,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <BundleResource Include="FreeSO.png" />
+    <InterfaceDefinition Include="Empty.xib" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Content.Builder.targets" />

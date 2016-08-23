@@ -128,6 +128,7 @@
     <Compile Include="Common\ObjThumbnailControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Common\SpriteEncoderUtils.cs" />
     <Compile Include="Common\UIAvatarAnimator.cs" />
     <Compile Include="Common\UIInteractiveDGRP.cs" />
     <Compile Include="Common\UIThumbnailRenderer.cs" />
@@ -521,6 +522,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\ColorQuantizer\SimplePaletteQuantizer\SimplePaletteQuantizer.csproj">
+      <Project>{37812a22-91f3-4220-891e-5c26da64a975}</Project>
+      <Name>SimplePaletteQuantizer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
       <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
       <Name>MonoGame.Framework.Windows</Name>
