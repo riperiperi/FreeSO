@@ -68,7 +68,7 @@ namespace FSO.LotView
              * to world objects as well as providing various
              * state settings for the world and helper functions
              */
-            State = new WorldState(layer.Device, layer.Device.Viewport.Width, layer.Device.Viewport.Height, this);
+            State = new WorldState(layer.Device, layer.Device.Viewport.Width/FSOEnvironment.DPIScaleFactor, layer.Device.Viewport.Height/FSOEnvironment.DPIScaleFactor, this);
             State.AmbientLight = new Texture2D(layer.Device, 256, 256);
             State._3D = new FSO.LotView.Utils._3DWorldBatch(State);
             State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, World2D.NUM_2D_BUFFERS, 

@@ -1,0 +1,81 @@
+﻿<!-- Document Type Definition for a house "blueprint" file. -->
+
+<!ELEMENT house (revision,size,category,world,sounds,objects)>
+<!ATTLIST house      version     CDATA    #REQUIRED>
+
+<!ELEMENT revision EMPTY>
+<!ATTLIST revision   author      CDATA    #REQUIRED
+                     date        CDATA    #REQUIRED
+                     change      CDATA    #REQUIRED>
+
+<!-- Lot Properties -->
+<!ELEMENT size (#PCDATA)>
+
+<!ELEMENT category (#PCDATA)>
+
+<!-- Flag Layers -->
+<!ELEMENT flags (layer+)>
+
+<!ELEMENT layer (#PCDATA)>
+<!ATTLIST layer      level       (0|1)    #REQUIRED>
+
+<!-- World -->
+<!ELEMENT world (flags,floors,walls,pools,water)>
+
+<!ELEMENT floors (floor*)>
+
+<!ELEMENT floor EMPTY>
+<!ATTLIST floor      level       (0|1)    #REQUIRED
+                     x           CDATA    #REQUIRED
+                     y           CDATA    #REQUIRED
+                     value       CDATA    #REQUIRED>
+
+
+<!ELEMENT walls (wall*)>
+
+<!ELEMENT wall EMPTY>
+<!ATTLIST wall       level       (0|1)    #REQUIRED
+                     x           CDATA    #REQUIRED
+                     y           CDATA    #REQUIRED
+                     segments    CDATA    #REQUIRED
+                     placement   CDATA    #REQUIRED
+                     tls         CDATA    #REQUIRED
+                     trs         CDATA    #REQUIRED
+                     tlp         CDATA    #REQUIRED
+                     trp         CDATA    #REQUIRED
+                     blp         CDATA    #REQUIRED
+                     brp         CDATA    #REQUIRED>
+
+<!ELEMENT pools (pool*)>
+
+<!ELEMENT pool EMPTY>
+<!ATTLIST pool       x           CDATA    #REQUIRED
+                     y           CDATA    #REQUIRED
+                     value       CDATA    #REQUIRED>
+
+<!ELEMENT water (puddle*)>
+
+<!ELEMENT puddle EMPTY>
+<!ATTLIST puddle     x           CDATA    #REQUIRED
+                     y           CDATA    #REQUIRED
+                     value       CDATA    #REQUIRED>
+
+<!-- Sounds -->
+<!ELEMENT sounds (sound*)>
+
+<!ELEMENT sound EMPTY>
+<!ATTLIST sound      id          CDATA    #REQUIRED
+                     on          (0|1)    "0">
+<!-- Objects -->
+<!ELEMENT objects (object*)>
+
+<!ELEMENT object EMPTY>
+<!ATTLIST object     guid        CDATA    #REQUIRED
+                     name        CDATA    #IMPLIED
+                     group       CDATA    "0"
+                     x           CDATA    "-1"
+                     y           CDATA    "-1"
+                     level       (0|1)    "0"
+                     dir         CDATA    "0"
+                     hidden      (0|1)    "0">
+

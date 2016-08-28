@@ -55,6 +55,9 @@ namespace FSO.Client
         /// </summary>
         protected override void Initialize()
         {
+            GlobalSettings.Default.GraphicsWidth = GraphicsDevice.Viewport.Width / FSOEnvironment.DPIScaleFactor;
+            GlobalSettings.Default.GraphicsHeight = GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor;
+
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
             GameFacade.Linux = (pid == PlatformID.MacOSX || pid == PlatformID.Unix);
@@ -98,17 +101,26 @@ namespace FSO.Client
             this.IsFixedTimeStep = true;
 
             WorldContent.Init(this.Services, Content.RootDirectory);
-
+            if (!FSOEnvironment.SoftwareKeyboard) AddTextInput();
             base.Screen.Layers.Add(SceneMgr);
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
-            //this.Window.TextInput += GameScreen.TextInput;
+
             this.Window.Title = "FreeSO";
 
             if (!GlobalSettings.Default.Windowed)
             {
-                GameFacade.GraphicsDeviceManager.ToggleFullScreen();
+                GameFacade.GraphicsDeviceManager.IsFullScreen = true;
+                //GameFacade.GraphicsDeviceManager.ToggleFullScreen();
             }
+        }
+
+        /// <summary>
+        /// Only used on desktop targets. Use extensive reflection to AVOID linking on iOS!
+        /// </summary>
+        void AddTextInput()
+        {
+            this.Window.GetType().GetEvent("TextInput").AddEventHandler(this.Window, (EventHandler<TextInputEventArgs>)GameScreen.TextInput);
         }
 
         void RegainFocus(object sender, EventArgs e)

@@ -1,9 +1,8 @@
 ﻿#region Using Statements
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Linq;
+using System.IO;
 #if MONOMAC
 using MonoMac.AppKit;
 using MonoMac.Foundation;
@@ -15,7 +14,7 @@ using UIKit;
 #endif
 #endregion
 
-namespace FSO.iOS
+namespace FSOiOS
 {
 #if __IOS__ || __TVOS__
     [Register("AppDelegate")]
@@ -27,23 +26,34 @@ namespace FSO.iOS
 
 		internal static void RunGame()
 		{
-			FSOEnvironment.ContentDir = "Content/";
+            var iPad = UIDevice.CurrentDevice.Model.Contains("iPad");
+            //TODO: disable iPad retina somehow
+            FSOEnvironment.ContentDir = "Content/";
 			FSOEnvironment.GFXContentDir = "Content/iOS/";
 			FSOEnvironment.UserDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 			FSOEnvironment.Linux = true;
 			FSOEnvironment.DirectX = false;
 			FSOEnvironment.SoftwareKeyboard = true;
 			FSOEnvironment.SoftwareDepth = true;
-			FSOEnvironment.SmallScreen = true;
-            Files.ImageLoader.UseSoftLoad = false;
+			FSOEnvironment.UIZoomFactor = iPad?1:2;
+            FSOEnvironment.DPIScaleFactor = iPad ? 2 : 1;
+            FSO.Files.ImageLoader.UseSoftLoad = false;
+
+            if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "The Sims Online.zip")))
+                File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "The Sims Online.zip"));
 
 			var start = new GameStartProxy();
-			start.SetPath("/private/var/mobile/Documents/The Sims Online/TSOClient/");
-			start.Start(false);
+            start.SetPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "The Sims Online/TSOClient/"));//"/private/var/mobile/Documents/The Sims Online/TSOClient/");
+
+            TSOGame game = new TSOGame();
+            GameFacade.DirectX = false;
+            FSO.LotView.World.DirectX = false;
+            game.Run();
+
 #if !__IOS__ && !__TVOS__
 			game.Dispose();
 #endif
-		}
+        }
 
 		/// <summary>
 		/// The main entry point for the application.
@@ -70,10 +80,27 @@ namespace FSO.iOS
 #if __IOS__ || __TVOS__
         public override void FinishedLaunching(UIApplication app)
         {
+            if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "The Sims Online/TSOClient/tuning.dat")))
+            {
+                RunGame();
+            }
+            else
+            {
+                UIStoryboard storyboard = UIStoryboard.FromName("Installer", null);
+                var window = new UIWindow(UIScreen.MainScreen.Bounds);
+                var viewController = storyboard.InstantiateViewController("Main") as FSOInstallViewController;
+                viewController.OnInstalled += FSOInstalled;
+                window.MakeKeyAndVisible();
+                window.RootViewController = viewController;
+            }
+        }
+
+        private void FSOInstalled()
+        {
             RunGame();
         }
 #endif
-	}
+    }
 
 #if MONOMAC
     class AppDelegate : NSApplicationDelegate

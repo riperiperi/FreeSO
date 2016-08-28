@@ -205,7 +205,7 @@ namespace FSO.Client.UI.Panels
                 AdStrings[i] = ((i<7)?str.Substring(0,str.Length-2)+"{0}":str) + "\r\n";
             }
 
-            var useSmall = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.SmallScreen;
+            var useSmall = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
             var script = this.RenderScript("querypanel"+(useSmall?"":"1024")+".uis");
 
             //NOTE: the background and position of this element changes with the context it is used in.

@@ -40,7 +40,7 @@ namespace FSO.Client.UI.Panels
         {
             var script = this.RenderScript("optionspanel.uis");
 
-            Background = new UIImage(GetTexture((FSOEnvironment.SmallScreen || GlobalSettings.Default.GraphicsWidth < 1024) ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
+            Background = new UIImage(GetTexture((FSOEnvironment.UIZoomFactor>1f || GlobalSettings.Default.GraphicsWidth < 1024) ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
             this.AddAt(0, Background);
             Background.BlockInput();
 

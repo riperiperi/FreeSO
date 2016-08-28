@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using System.Drawing.Imaging;
 using System.Security.Cryptography;
 using FSO.Files.Formats.IFF.Chunks;
 using Microsoft.Xna.Framework.Graphics;

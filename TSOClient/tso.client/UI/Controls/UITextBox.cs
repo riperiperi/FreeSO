@@ -20,6 +20,7 @@ using FSO.Common.Utils;
 using FSO.Client.GameContent;
 using Microsoft.Xna.Framework.GamerServices;
 using FSO.Common;
+using System.Threading;
 
 namespace FSO.Client.UI.Controls
 {
@@ -239,9 +240,9 @@ namespace FSO.Client.UI.Controls
                 if (QueuedChange != null) {
                     CurrentText = QueuedChange;
                     QueuedChange = null;
-                    state.InputManager.SetFocus(null);
                 }
             }
+            if (FSOEnvironment.SoftwareKeyboard && state.InputManager.GetFocus() == this) state.InputManager.SetFocus(null);
             if (IsFocused)
             {
                 /**

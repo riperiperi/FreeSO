@@ -33,7 +33,7 @@ namespace FSO.Client.UI.Screens
 
         private Timer CheckProgressTimer;
 
-        public LoadingScreen()
+        public LoadingScreen() : base()
         {
             HITVM.Get().PlaySoundEvent(UIMusic.LoadLoop);
 
@@ -67,7 +67,7 @@ namespace FSO.Client.UI.Screens
             BackgroundCtnr.AddAt(0,bgEdge);
             bgEdge.Y = -1;
             bgEdge.X = Background.X-64;
-            bgEdge.SetSize(Background.Width+64*2, ScreenHeight + 2);
+            bgEdge.SetSize(Background.Width+64*2, Background.Height + 2);
 
             //TODO: Letter spacing is a bit wrong on this label
             var lbl = new UILabel();
@@ -187,7 +187,8 @@ namespace FSO.Client.UI.Screens
 
         public override void Draw(UISpriteBatch batch)
         {
-            batch.Draw(TextureGenerator.GetPxWhite(batch.GraphicsDevice), new Rectangle(0, 0, ScreenWidth, ScreenHeight), new Color(0x09,0x18,0x2F));
+            batch.Draw(TextureGenerator.GetPxWhite(batch.GraphicsDevice), 
+                new Rectangle(0, 0, batch.GraphicsDevice.Viewport.Width, batch.GraphicsDevice.Viewport.Height), new Color(0x09,0x18,0x2F));
             base.Draw(batch);
         }
     }

@@ -17,6 +17,7 @@ using System.Diagnostics;
 using FSO.Client.Utils;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Utils;
+using FSO.Common;
 
 namespace FSO.Client.UI
 {
@@ -364,8 +365,9 @@ namespace FSO.Client.UI
         public void DrawTooltip(SpriteBatch batch, Vector2 position, float opacity, Color color)
         {
             TextStyle style = TextStyle.DefaultLabel.Clone();
+            var toolScale = FSOEnvironment.DPIScaleFactor; //*zoom scale?
             style.Color = color;
-            style.Size = 8;
+            style.Size = 8 * toolScale;
 
             var scale = new Vector2(1, 1);
             if (style.Scale != 1.0f)
@@ -373,12 +375,12 @@ namespace FSO.Client.UI
                 scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
             }
 
-            var wrapped = UIUtils.WordWrap(Tooltip, 290, style, scale); //tooltip max width should be 300. There is a 5px margin on each side.
+            var wrapped = UIUtils.WordWrap(Tooltip, 290*toolScale, style, scale); //tooltip max width should be 300. There is a 5px margin on each side.
 
-            int width = wrapped.MaxWidth + 10;
-            int height = 13 * wrapped.Lines.Count + 4; //13 per line + 4.
+            int width = wrapped.MaxWidth + 10*toolScale;
+            int height = toolScale * 13 * wrapped.Lines.Count + 4; //13 per line + 4.
 
-            position.X = Math.Min(position.X, GlobalSettings.Default.GraphicsWidth - width);
+            position.X = Math.Min(position.X, GlobalSettings.Default.GraphicsWidth*FSOEnvironment.DPIScaleFactor - width);
             position.Y = Math.Max(position.Y, height);
 
             var whiteRectangle = TextureGenerator.GetPxWhite(batch.GraphicsDevice);
@@ -397,7 +399,7 @@ namespace FSO.Client.UI
             {
                 int thisWidth = (int)(style.SpriteFont.MeasureString(wrapped.Lines[i]).X * scale.X);
                 batch.DrawString(style.SpriteFont, wrapped.Lines[i], position + new Vector2((width - thisWidth) / 2, 0), color*opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
-                position.Y += 13;
+                position.Y += 13 * FSOEnvironment.DPIScaleFactor;
             }
         }
 

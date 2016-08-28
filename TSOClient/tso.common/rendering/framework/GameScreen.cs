@@ -28,6 +28,7 @@ namespace FSO.Common.Rendering.Framework
         private int touchedFrames;
 		private int lastTouchCount;
 		private MouseState lastMouseState;
+        private Vector2? prevTouchAvg;
         private const int TOUCH_ACCEPT_TIME = 5;
 
         public GameScreen(GraphicsDevice device)
@@ -38,10 +39,10 @@ namespace FSO.Common.Rendering.Framework
         }
 
         private static List<char> TextCharacters = new List<char>();
-        /*public static void TextInput(object sender, TextInputEventArgs e)
+        public static void TextInput(object sender, TextInputEventArgs e)
         {
             TextCharacters.Add(e.Character);
-        }*/
+        }
 
         /// <summary>
         /// Adds a graphical element to this scene.
@@ -98,6 +99,7 @@ namespace FSO.Common.Rendering.Framework
 
                 if (touchedFrames < TOUCH_ACCEPT_TIME)
                 {
+                    avg = prevTouchAvg ?? avg;
 					state.MouseState = new MouseState(
 						(int)avg.X, (int)avg.Y, state.MouseState.ScrollWheelValue,
 						ButtonState.Released,
@@ -118,12 +120,14 @@ namespace FSO.Common.Rendering.Framework
                         ButtonState.Released,
                         ButtonState.Released
                         );
+                    prevTouchAvg = avg;
 
                     state.TouchMode = true;
                 }
             }
             else
             {
+                prevTouchAvg = null;
                 touchedFrames = 0;
 				if (state.TouchMode) state.MouseState = new MouseState(
 						lastMouseState.X, lastMouseState.Y, state.MouseState.ScrollWheelValue,

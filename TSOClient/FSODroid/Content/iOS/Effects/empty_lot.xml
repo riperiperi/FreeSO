@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE house SYSTEM "blueprint.dtd">
+<house version="1.0">
+	<revision author="$Author: RHY3756547 $" date="$Date: 2015/07/27 $" change="$Change: 0 $" />
+	<size>64</size>
+	<category>103</category>
+	<world>
+		<flags>
+			<layer level="0"></layer>
+			<layer level="1"></layer>
+		</flags>
+		<floors>
+			<!-- Level 0 Floors -->
+			<floor level="0" x="1" y="58" value="9" />
+			<floor level="0" x="1" y="59" value="9" />
+			<floor level="0" x="1" y="60" value="9" />
+			<floor level="0" x="1" y="61" value="9" />
+			<floor level="0" x="1" y="62" value="10" />
+			<floor level="0" x="2" y="58" value="9" />
+			<floor level="0" x="2" y="59" value="9" />
+			<floor level="0" x="2" y="60" value="9" />
+			<floor level="0" x="2" y="61" value="9" />
+			<floor level="0" x="2" y="62" value="10" />
+			<floor level="0" x="3" y="58" value="9" />
+			<floor level="0" x="3" y="59" value="9" />
+			<floor level="0" x="3" y="60" value="9" />
+			<floor level="0" x="3" y="61" value="9" />
+			<floor level="0" x="3" y="62" value="10" />
+			<floor level="0" x="4" y="58" value="9" />
+			<floor level="0" x="4" y="59" value="9" />
+			<floor level="0" x="4" y="60" value="9" />
+			<floor level="0" x="4" y="61" value="9" />
+			<floor level="0" x="4" y="62" value="9" />
+			<floor level="0" x="5" y="58" value="9" />
+			<floor level="0" x="5" y="59" value="9" />
+			<floor level="0" x="5" y="60" value="9" />
+			<floor level="0" x="5" y="61" value="9" />
+			<floor level="0" x="5" y="62" value="10" />
+			<floor level="0" x="6" y="58" value="9" />
+			<floor level="0" x="6" y="59" value="9" />
+			<floor level="0" x="6" y="60" value="9" />
+			<floor level="0" x="6" y="61" value="9" />
+			<floor level="0" x="6" y="62" value="10" />
+			<floor level="0" x="7" y="7" value="12" />
+			<floor level="0" x="7" y="8" value="12" />
+			<floor level="0" x="7" y="9" value="12" />
+			<floor level="0" x="7" y="10" value="12" />
+			<floor level="0" x="7" y="11" value="12" />
+			<floor level="0" x="7" y="12" value="12" />
+			<floor level="0" x="7" y="13" value="12" />
+			<floor level="0" x="7" y="14" value="12" />
+			<floor level="0" x="7" y="15" value="12" />
+			<floor level="0" x="7" y="16" value="12" />
+			<floor level="0" x="7" y="17" value="12" />
+			<floor level="0" x="7" y="18" value="12" />
+			<floor level="0" x="7" y="19" value="12" />
+			<floor level="0" x="7" y="20" value="12" />
+			<floor level="0" x="7" y="21" value="12" />
+			<floor level="0" x="7" y="22" value="12" />
+			<floor level="0" x="7" y="23" value="12" />
+			<floor level="0" x="7" y="24" value="12" />
+			<floor level="0" x="7" y="25" value="12" />
+			<floor level="0" x="7" y="26" value="12" />
+			<floor level="0" x="7" y="27" value="12" />
+			<floor level="0" x="7" y="28" value="12" />
+			<floor level="0" x="7" y="29" value="12" />
+			<floor level="0" x="7" y="30" value="12" />
+			<floor level="0" x="7" y="31" value="12" />
+			<floor level="0" x="7" y="32" value="12" />
+			<floor level="0" x="7" y="33" value="12" />
+			<floor level="0" x="7" y="34" value="12" />
+			<floor level="0" x="7" y="35" value="12" />
+			<floor level="0" x="7" y="36" value="12" />
+			<floor level="0" x="7" y="37" value="12" />
+			<floor level="0" x="7" y="38" value="12" />
+			<floor level="0" x="7" y="39" value="12" />
+			<floor level="0" x="7" y="40" value="12" />
+			<floor level="0" x="7" y="41" value="12" />
+			<floor level="0" x="7" y="42" value="12" />
+			<floor level="0" x="7" y="43" value="12" />
+			<floor level="0" x="7" y="44" value="12" />
+			<floor level="0" x="7" y="45" value="12" />
+			<floor level="0" x="7" y="46" value="12" />
+			<floor level="0" x="7" y="47" value="12" />
+			<floor level="0" x="7" y="48" value="12" />
+			<floor level="0" x="7" y="49" value="12" />
+			<floor level="0" x="7" y="50" value="12" />
+			<floor level="0" x="7" y="51" value="12" />
+			<floor level="0" x="7" y="52" value="12" />
+			<floor level="0" x="7" y="53" value="12" />
+			<floor level="0" x="7" y="54" value="12" />
+			<floor level="0" x="7" y="55" value="12" />
+			<floor level="0" x="7" y="56" value="12" />
+			<floor level="0" x="7" y="58" value="9" />
+			<floor level="0" x="7" y="59" value="9" />
+			<floor level="0" x="7" y="60" value="9" />
+			<floor level="0" x="7" y="61" value="9" />
+			<floor level="0" x="7" y="62" value="10" />
+			<floor level="0" x="8" y="7" value="12" />
+			<floor level="0" x="8" y="56" value="12" />
+			<floor level="0" x="8" y="58" value="9" />
+			<floor level="0" x="8" y="59" value="9" />
+			<floor level="0" x="8" y="60" value="9" />
+			<floor level="0" x="8" y="61" value="9" />
+			<floor level="0" x="8" y="62" value="9" />
+			<floor level="0" x="9" y="7" value="12" />
+			<floor level="0" x="9" y="56" value="12" />
+			<floor level="0" x="9" y="58" value="9" />
+			<floor level="0" x="9" y="59" value="9" />
+			<floor level="0" x="9" y="60" value="9" />
+			<floor level="0" x="9" y="61" value="9" />
+			<floor level="0" x="9" y="62" value="10" />
+			<floor level="0" x="10" y="7" value="12" />
+			<floor level="0" x="10" y="56" value="12" />
+			<floor level="0" x="10" y="58" value="9" />
+			<floor level="0" x="10" y="59" value="9" />
+			<floor level="0" x="10" y="60" value="9" />
+			<floor level="0" x="10" y="61" value="9" />
+			<floor level="0" x="10" y="62" value="10" />
+			<floor level="0" x="11" y="7" value="12" />
+			<floor level="0" x="11" y="56" value="12" />
+			<floor level="0" x="11" y="58" value="9" />
+			<floor level="0" x="11" y="59" value="9" />
+			<floor level="0" x="11" y="60" value="9" />
+			<floor level="0" x="11" y="61" value="9" />
+			<floor level="0" x="11" y="62" value="10" />
+			<floor level="0" x="12" y="7" value="12" />
+			<floor level="0" x="12" y="56" value="12" />
+			<floor level="0" x="12" y="58" value="9" />
+			<floor level="0" x="12" y="59" value="9" />
+			<floor level="0" x="12" y="60" value="9" />
+			<floor level="0" x="12" y="61" value="9" />
+			<floor level="0" x="12" y="62" value="9" />
+			<floor level="0" x="13" y="7" value="12" />
+			<floor level="0" x="13" y="56" value="12" />
+			<floor level="0" x="13" y="58" value="9" />
+			<floor level="0" x="13" y="59" value="9" />
+			<floor level="0" x="13" y="60" value="9" />
+			<floor level="0" x="13" y="61" value="9" />
+			<floor level="0" x="13" y="62" value="10" />
+			<floor level="0" x="14" y="7" value="12" />
+			<floor level="0" x="14" y="56" value="12" />
+			<floor level="0" x="14" y="58" value="9" />
+			<floor level="0" x="14" y="59" value="9" />
+			<floor level="0" x="14" y="60" value="9" />
+			<floor level="0" x="14" y="61" value="9" />
+			<floor level="0" x="14" y="62" value="10" />
+			<floor level="0" x="15" y="7" value="12" />
+			<floor level="0" x="15" y="56" value="12" />
+			<floor level="0" x="15" y="58" value="9" />
+			<floor level="0" x="15" y="59" value="9" />
+			<floor level="0" x="15" y="60" value="9" />
+			<floor level="0" x="15" y="61" value="9" />
+			<floor level="0" x="15" y="62" value="10" />
+			<floor level="0" x="16" y="7" value="12" />
+			<floor level="0" x="16" y="56" value="12" />
+			<floor level="0" x="16" y="58" value="9" />
+			<floor level="0" x="16" y="59" value="9" />
+			<floor level="0" x="16" y="60" value="9" />
+			<floor level="0" x="16" y="61" value="9" />
+			<floor level="0" x="16" y="62" value="9" />
+			<floor level="0" x="17" y="7" value="12" />
+			<floor level="0" x="17" y="56" value="12" />
+			<floor level="0" x="17" y="58" value="9" />
+			<floor level="0" x="17" y="59" value="9" />
+			<floor level="0" x="17" y="60" value="9" />
+			<floor level="0" x="17" y="61" value="9" />
+			<floor level="0" x="17" y="62" value="10" />
+			<floor level="0" x="18" y="7" value="12" />
+			<floor level="0" x="18" y="56" value="12" />
+			<floor level="0" x="18" y="58" value="9" />
+			<floor level="0" x="18" y="59" value="9" />
+			<floor level="0" x="18" y="60" value="9" />
+			<floor level="0" x="18" y="61" value="9" />
+			<floor level="0" x="18" y="62" value="10" />
+			<floor level="0" x="19" y="7" value="12" />
+			<floor level="0" x="19" y="56" value="12" />
+			<floor level="0" x="19" y="58" value="9" />
+			<floor level="0" x="19" y="59" value="9" />
+			<floor level="0" x="19" y="60" value="9" />
+			<floor level="0" x="19" y="61" value="9" />
+			<floor level="0" x="19" y="62" value="10" />
+			<floor level="0" x="20" y="7" value="12" />
+			<floor level="0" x="20" y="56" value="12" />
+			<floor level="0" x="20" y="58" value="9" />
+			<floor level="0" x="20" y="59" value="9" />
+			<floor level="0" x="20" y="60" value="9" />
+			<floor level="0" x="20" y="61" value="9" />
+			<floor level="0" x="20" y="62" value="9" />
+			<floor level="0" x="21" y="7" value="12" />
+			<floor level="0" x="21" y="56" value="12" />
+			<floor level="0" x="21" y="58" value="9" />
+			<floor level="0" x="21" y="59" value="9" />
+			<floor level="0" x="21" y="60" value="9" />
+			<floor level="0" x="21" y="61" value="9" />
+			<floor level="0" x="21" y="62" value="10" />
+			<floor level="0" x="22" y="7" value="12" />
+			<floor level="0" x="22" y="56" value="12" />
+			<floor level="0" x="22" y="58" value="9" />
+			<floor level="0" x="22" y="59" value="9" />
+			<floor level="0" x="22" y="60" value="9" />
+			<floor level="0" x="22" y="61" value="9" />
+			<floor level="0" x="22" y="62" value="10" />
+			<floor level="0" x="23" y="7" value="12" />
+			<floor level="0" x="23" y="56" value="12" />
+			<floor level="0" x="23" y="58" value="9" />
+			<floor level="0" x="23" y="59" value="9" />
+			<floor level="0" x="23" y="60" value="9" />
+			<floor level="0" x="23" y="61" value="9" />
+			<floor level="0" x="23" y="62" value="10" />
+			<floor level="0" x="24" y="7" value="12" />
+			<floor level="0" x="24" y="56" value="12" />
+			<floor level="0" x="24" y="58" value="9" />
+			<floor level="0" x="24" y="59" value="9" />
+			<floor level="0" x="24" y="60" value="9" />
+			<floor level="0" x="24" y="61" value="9" />
+			<floor level="0" x="24" y="62" value="9" />
+			<floor level="0" x="25" y="7" value="12" />
+			<floor level="0" x="25" y="56" value="12" />
+			<floor level="0" x="25" y="58" value="9" />
+			<floor level="0" x="25" y="59" value="9" />
+			<floor level="0" x="25" y="60" value="9" />
+			<floor level="0" x="25" y="61" value="9" />
+			<floor level="0" x="25" y="62" value="10" />
+			<floor level="0" x="26" y="7" value="12" />
+			<floor level="0" x="26" y="56" value="12" />
+			<floor level="0" x="26" y="58" value="9" />
+			<floor level="0" x="26" y="59" value="9" />
+			<floor level="0" x="26" y="60" value="9" />
+			<floor level="0" x="26" y="61" value="9" />
+			<floor level="0" x="26" y="62" value="10" />
+			<floor level="0" x="27" y="7" value="12" />
+			<floor level="0" x="27" y="56" value="12" />
+			<floor level="0" x="27" y="58" value="9" />
+			<floor level="0" x="27" y="59" value="9" />
+			<floor level="0" x="27" y="60" value="9" />
+			<floor level="0" x="27" y="61" value="9" />
+			<floor level="0" x="27" y="62" value="10" />
+			<floor level="0" x="28" y="7" value="12" />
+			<floor level="0" x="28" y="56" value="12" />
+			<floor level="0" x="28" y="58" value="9" />
+			<floor level="0" x="28" y="59" value="9" />
+			<floor level="0" x="28" y="60" value="9" />
+			<floor level="0" x="28" y="61" value="9" />
+			<floor level="0" x="28" y="62" value="9" />
+			<floor level="0" x="29" y="7" value="12" />
+			<floor level="0" x="29" y="56" value="12" />
+			<floor level="0" x="29" y="58" value="9" />
+			<floor level="0" x="29" y="59" value="9" />
+			<floor level="0" x="29" y="60" value="9" />
+			<floor level="0" x="29" y="61" value="9" />
+			<floor level="0" x="29" y="62" value="10" />
+			<floor level="0" x="30" y="7" value="12" />
+			<floor level="0" x="30" y="56" value="12" />
+			<floor level="0" x="30" y="58" value="9" />
+			<floor level="0" x="30" y="59" value="9" />
+			<floor level="0" x="30" y="60" value="9" />
+			<floor level="0" x="30" y="61" value="9" />
+			<floor level="0" x="30" y="62" value="10" />
+			<floor level="0" x="31" y="7" value="12" />
+			<floor level="0" x="31" y="56" value="12" />
+			<floor level="0" x="31" y="58" value="9" />
+			<floor level="0" x="31" y="59" value="9" />
+			<floor level="0" x="31" y="60" value="9" />
+			<floor level="0" x="31" y="61" value="9" />
+			<floor level="0" x="31" y="62" value="10" />
+			<floor level="0" x="32" y="7" value="12" />
+			<floor level="0" x="32" y="56" value="12" />
+			<floor level="0" x="32" y="58" value="9" />
+			<floor level="0" x="32" y="59" value="9" />
+			<floor level="0" x="32" y="60" value="9" />
+			<floor level="0" x="32" y="61" value="9" />
+			<floor level="0" x="32" y="62" value="9" />
+			<floor level="0" x="33" y="7" value="12" />
+			<floor level="0" x="33" y="56" value="12" />
+			<floor level="0" x="33" y="58" value="9" />
+			<floor level="0" x="33" y="59" value="9" />
+			<floor level="0" x="33" y="60" value="9" />
+			<floor level="0" x="33" y="61" value="9" />
+			<floor level="0" x="33" y="62" value="10" />
+			<floor level="0" x="34" y="7" value="12" />
+			<floor level="0" x="34" y="56" value="12" />
+			<floor level="0" x="34" y="58" value="9" />
+			<floor level="0" x="34" y="59" value="9" />
+			<floor level="0" x="34" y="60" value="9" />
+			<floor level="0" x="34" y="61" value="9" />
+			<floor level="0" x="34" y="62" value="10" />
+			<floor level="0" x="35" y="7" value="12" />
+			<floor level="0" x="35" y="56" value="12" />
+			<floor level="0" x="35" y="58" value="9" />
+			<floor level="0" x="35" y="59" value="9" />
+			<floor level="0" x="35" y="60" value="9" />
+			<floor level="0" x="35" y="61" value="9" />
+			<floor level="0" x="35" y="62" value="10" />
+			<floor level="0" x="36" y="7" value="12" />
+			<floor level="0" x="36" y="56" value="12" />
+			<floor level="0" x="36" y="58" value="9" />
+			<floor level="0" x="36" y="59" value="9" />
+			<floor level="0" x="36" y="60" value="9" />
+			<floor level="0" x="36" y="61" value="9" />
+			<floor level="0" x="36" y="62" value="9" />
+			<floor level="0" x="37" y="7" value="12" />
+			<floor level="0" x="37" y="56" value="12" />
+			<floor level="0" x="37" y="58" value="9" />
+			<floor level="0" x="37" y="59" value="9" />
+			<floor level="0" x="37" y="60" value="9" />
+			<floor level="0" x="37" y="61" value="9" />
+			<floor level="0" x="37" y="62" value="10" />
+			<floor level="0" x="38" y="7" value="12" />
+			<floor level="0" x="38" y="56" value="12" />
+			<floor level="0" x="38" y="58" value="9" />
+			<floor level="0" x="38" y="59" value="9" />
+			<floor level="0" x="38" y="60" value="9" />
+			<floor level="0" x="38" y="61" value="9" />
+			<floor level="0" x="38" y="62" value="10" />
+			<floor level="0" x="39" y="7" value="12" />
+			<floor level="0" x="39" y="56" value="12" />
+			<floor level="0" x="39" y="58" value="9" />
+			<floor level="0" x="39" y="59" value="9" />
+			<floor level="0" x="39" y="60" value="9" />
+			<floor level="0" x="39" y="61" value="9" />
+			<floor level="0" x="39" y="62" value="10" />
+			<floor level="0" x="40" y="7" value="12" />
+			<floor level="0" x="40" y="56" value="12" />
+			<floor level="0" x="40" y="58" value="9" />
+			<floor level="0" x="40" y="59" value="9" />
+			<floor level="0" x="40" y="60" value="9" />
+			<floor level="0" x="40" y="61" value="9" />
+			<floor level="0" x="40" y="62" value="9" />
+			<floor level="0" x="41" y="7" value="12" />
+			<floor level="0" x="41" y="56" value="12" />
+			<floor level="0" x="41" y="58" value="9" />
+			<floor level="0" x="41" y="59" value="9" />
+			<floor level="0" x="41" y="60" value="9" />
+			<floor level="0" x="41" y="61" value="9" />
+			<floor level="0" x="41" y="62" value="10" />
+			<floor level="0" x="42" y="7" value="12" />
+			<floor level="0" x="42" y="56" value="12" />
+			<floor level="0" x="42" y="58" value="9" />
+			<floor level="0" x="42" y="59" value="9" />
+			<floor level="0" x="42" y="60" value="9" />
+			<floor level="0" x="42" y="61" value="9" />
+			<floor level="0" x="42" y="62" value="10" />
+			<floor level="0" x="43" y="7" value="12" />
+			<floor level="0" x="43" y="56" value="12" />
+			<floor level="0" x="43" y="58" value="9" />
+			<floor level="0" x="43" y="59" value="9" />
+			<floor level="0" x="43" y="60" value="9" />
+			<floor level="0" x="43" y="61" value="9" />
+			<floor level="0" x="43" y="62" value="10" />
+			<floor level="0" x="44" y="7" value="12" />
+			<floor level="0" x="44" y="56" value="12" />
+			<floor level="0" x="44" y="58" value="9" />
+			<floor level="0" x="44" y="59" value="9" />
+			<floor level="0" x="44" y="60" value="9" />
+			<floor level="0" x="44" y="61" value="9" />
+			<floor level="0" x="44" y="62" value="9" />
+			<floor level="0" x="45" y="7" value="12" />
+			<floor level="0" x="45" y="56" value="12" />
+			<floor level="0" x="45" y="58" value="9" />
+			<floor level="0" x="45" y="59" value="9" />
+			<floor level="0" x="45" y="60" value="9" />
+			<floor level="0" x="45" y="61" value="9" />
+			<floor level="0" x="45" y="62" value="10" />
+			<floor level="0" x="46" y="7" value="12" />
+			<floor level="0" x="46" y="56" value="12" />
+			<floor level="0" x="46" y="58" value="9" />
+			<floor level="0" x="46" y="59" value="9" />
+			<floor level="0" x="46" y="60" value="9" />
+			<floor level="0" x="46" y="61" value="9" />
+			<floor level="0" x="46" y="62" value="10" />
+			<floor level="0" x="47" y="7" value="12" />
+			<floor level="0" x="47" y="56" value="12" />
+			<floor level="0" x="47" y="58" value="9" />
+			<floor level="0" x="47" y="59" value="9" />
+			<floor level="0" x="47" y="60" value="9" />
+			<floor level="0" x="47" y="61" value="9" />
+			<floor level="0" x="47" y="62" value="10" />
+			<floor level="0" x="48" y="7" value="12" />
+			<floor level="0" x="48" y="56" value="12" />
+			<floor level="0" x="48" y="58" value="9" />
+			<floor level="0" x="48" y="59" value="9" />
+			<floor level="0" x="48" y="60" value="9" />
+			<floor level="0" x="48" y="61" value="9" />
+			<floor level="0" x="48" y="62" value="9" />
+			<floor level="0" x="49" y="7" value="12" />
+			<floor level="0" x="49" y="56" value="12" />
+			<floor level="0" x="49" y="58" value="9" />
+			<floor level="0" x="49" y="59" value="9" />
+			<floor level="0" x="49" y="60" value="9" />
+			<floor level="0" x="49" y="61" value="9" />
+			<floor level="0" x="49" y="62" value="10" />
+			<floor level="0" x="50" y="7" value="12" />
+			<floor level="0" x="50" y="56" value="12" />
+			<floor level="0" x="50" y="58" value="9" />
+			<floor level="0" x="50" y="59" value="9" />
+			<floor level="0" x="50" y="60" value="9" />
+			<floor level="0" x="50" y="61" value="9" />
+			<floor level="0" x="50" y="62" value="10" />
+			<floor level="0" x="51" y="7" value="12" />
+			<floor level="0" x="51" y="56" value="12" />
+			<floor level="0" x="51" y="58" value="9" />
+			<floor level="0" x="51" y="59" value="9" />
+			<floor level="0" x="51" y="60" value="9" />
+			<floor level="0" x="51" y="61" value="9" />
+			<floor level="0" x="51" y="62" value="10" />
+			<floor level="0" x="52" y="7" value="12" />
+			<floor level="0" x="52" y="56" value="12" />
+			<floor level="0" x="52" y="58" value="9" />
+			<floor level="0" x="52" y="59" value="9" />
+			<floor level="0" x="52" y="60" value="9" />
+			<floor level="0" x="52" y="61" value="9" />
+			<floor level="0" x="52" y="62" value="9" />
+			<floor level="0" x="53" y="7" value="12" />
+			<floor level="0" x="53" y="56" value="12" />
+			<floor level="0" x="53" y="58" value="9" />
+			<floor level="0" x="53" y="59" value="9" />
+			<floor level="0" x="53" y="60" value="9" />
+			<floor level="0" x="53" y="61" value="9" />
+			<floor level="0" x="53" y="62" value="10" />
+			<floor level="0" x="54" y="7" value="12" />
+			<floor level="0" x="54" y="56" value="12" />
+			<floor level="0" x="54" y="58" value="9" />
+			<floor level="0" x="54" y="59" value="9" />
+			<floor level="0" x="54" y="60" value="9" />
+			<floor level="0" x="54" y="61" value="9" />
+			<floor level="0" x="54" y="62" value="10" />
+			<floor level="0" x="55" y="7" value="12" />
+			<floor level="0" x="55" y="56" value="12" />
+			<floor level="0" x="55" y="58" value="9" />
+			<floor level="0" x="55" y="59" value="9" />
+			<floor level="0" x="55" y="60" value="9" />
+			<floor level="0" x="55" y="61" value="9" />
+			<floor level="0" x="55" y="62" value="10" />
+			<floor level="0" x="56" y="7" value="12" />
+			<floor level="0" x="56" y="8" value="12" />
+			<floor level="0" x="56" y="9" value="12" />
+			<floor level="0" x="56" y="10" value="12" />
+			<floor level="0" x="56" y="11" value="12" />
+			<floor level="0" x="56" y="12" value="12" />
+			<floor level="0" x="56" y="13" value="12" />
+			<floor level="0" x="56" y="14" value="12" />
+			<floor level="0" x="56" y="15" value="12" />
+			<floor level="0" x="56" y="16" value="12" />
+			<floor level="0" x="56" y="17" value="12" />
+			<floor level="0" x="56" y="18" value="12" />
+			<floor level="0" x="56" y="19" value="12" />
+			<floor level="0" x="56" y="20" value="12" />
+			<floor level="0" x="56" y="21" value="12" />
+			<floor level="0" x="56" y="22" value="12" />
+			<floor level="0" x="56" y="23" value="12" />
+			<floor level="0" x="56" y="24" value="12" />
+			<floor level="0" x="56" y="25" value="12" />
+			<floor level="0" x="56" y="26" value="12" />
+			<floor level="0" x="56" y="27" value="12" />
+			<floor level="0" x="56" y="28" value="12" />
+			<floor level="0" x="56" y="29" value="12" />
+			<floor level="0" x="56" y="30" value="12" />
+			<floor level="0" x="56" y="31" value="12" />
+			<floor level="0" x="56" y="32" value="12" />
+			<floor level="0" x="56" y="33" value="12" />
+			<floor level="0" x="56" y="34" value="12" />
+			<floor level="0" x="56" y="35" value="12" />
+			<floor level="0" x="56" y="36" value="12" />
+			<floor level="0" x="56" y="37" value="12" />
+			<floor level="0" x="56" y="38" value="12" />
+			<floor level="0" x="56" y="39" value="12" />
+			<floor level="0" x="56" y="40" value="12" />
+			<floor level="0" x="56" y="41" value="12" />
+			<floor level="0" x="56" y="42" value="12" />
+			<floor level="0" x="56" y="43" value="12" />
+			<floor level="0" x="56" y="44" value="12" />
+			<floor level="0" x="56" y="45" value="12" />
+			<floor level="0" x="56" y="46" value="12" />
+			<floor level="0" x="56" y="47" value="12" />
+			<floor level="0" x="56" y="48" value="12" />
+			<floor level="0" x="56" y="49" value="12" />
+			<floor level="0" x="56" y="50" value="12" />
+			<floor level="0" x="56" y="51" value="12" />
+			<floor level="0" x="56" y="52" value="12" />
+			<floor level="0" x="56" y="53" value="12" />
+			<floor level="0" x="56" y="54" value="12" />
+			<floor level="0" x="56" y="55" value="12" />
+			<floor level="0" x="56" y="56" value="12" />
+			<floor level="0" x="56" y="58" value="9" />
+			<floor level="0" x="56" y="59" value="9" />
+			<floor level="0" x="56" y="60" value="9" />
+			<floor level="0" x="56" y="61" value="9" />
+			<floor level="0" x="56" y="62" value="9" />
+			<floor level="0" x="57" y="58" value="9" />
+			<floor level="0" x="57" y="59" value="9" />
+			<floor level="0" x="57" y="60" value="9" />
+			<floor level="0" x="57" y="61" value="9" />
+			<floor level="0" x="57" y="62" value="10" />
+			<floor level="0" x="58" y="58" value="9" />
+			<floor level="0" x="58" y="59" value="9" />
+			<floor level="0" x="58" y="60" value="9" />
+			<floor level="0" x="58" y="61" value="9" />
+			<floor level="0" x="58" y="62" value="10" />
+			<floor level="0" x="59" y="58" value="9" />
+			<floor level="0" x="59" y="59" value="9" />
+			<floor level="0" x="59" y="60" value="9" />
+			<floor level="0" x="59" y="61" value="9" />
+			<floor level="0" x="59" y="62" value="10" />
+			<floor level="0" x="60" y="58" value="9" />
+			<floor level="0" x="60" y="59" value="9" />
+			<floor level="0" x="60" y="60" value="9" />
+			<floor level="0" x="60" y="61" value="9" />
+			<floor level="0" x="60" y="62" value="9" />
+			<floor level="0" x="61" y="58" value="9" />
+			<floor level="0" x="61" y="59" value="9" />
+			<floor level="0" x="61" y="60" value="9" />
+			<floor level="0" x="61" y="61" value="9" />
+			<floor level="0" x="61" y="62" value="10" />
+			<floor level="0" x="62" y="58" value="9" />
+			<floor level="0" x="62" y="59" value="9" />
+			<floor level="0" x="62" y="60" value="9" />
+			<floor level="0" x="62" y="61" value="9" />
+			<floor level="0" x="62" y="62" value="10" />
+			<!-- Level 1 Floors -->
+		</floors>
+		<walls>
+		</walls>
+		<pools>
+		</pools>
+		<water>
+		</water>
+	</world>
+	<sounds>
+		<sound id="504086947" on="0" />
+		<sound id="504086955" on="1" />
+		<sound id="504087218" on="0" />
+		<sound id="504087221" on="0" />
+		<sound id="504529287" on="0" />
+		<sound id="504529296" on="0" />
+		<sound id="504529324" on="0" />
+		<sound id="504529325" on="0" />
+		<sound id="1037600678" on="1" />
+		<sound id="1037600682" on="0" />
+		<sound id="1040958127" on="0" />
+		<sound id="1040958132" on="0" />
+		<sound id="1041400210" on="0" />
+		<sound id="1041400218" on="0" />
+		<sound id="1577828772" on="0" />
+		<sound id="1577828774" on="0" />
+		<sound id="1578271116" on="1" />
+		<sound id="2111342509" on="0" />
+		<sound id="2648213423" on="0" />
+		<sound id="2651570586" on="0" />
+		<sound id="2847499562" on="0" />
+		<sound id="2847499574" on="0" />
+		<sound id="2847499577" on="0" />
+		<sound id="2847499580" on="0" />
+		<sound id="2847499582" on="0" />
+		<sound id="3188441513" on="0" />
+		<sound id="3188883853" on="1" />
+		<sound id="3188883862" on="0" />
+		<sound id="3188883868" on="0" />
+		<sound id="3189357357" on="0" />
+		<sound id="3189375806" on="0" />
+		<sound id="3721955251" on="0" />
+		<sound id="3725312429" on="0" />
+		<sound id="3725754767" on="0" />
+		<sound id="3725754776" on="0" />
+		<sound id="3726228273" on="0" />
+		<sound id="4258826165" on="0" />
+		<sound id="4262183329" on="0" />
+		<sound id="4262625673" on="0" />
+	</sounds>
+	<objects>
+
+            <object guid="0x534564D5" />    <!-- Skill Degrade -->
+            <object guid="0x6271EFF3" />    <!-- Dance Floor - Controller --> <!-- Delete when the dance floor creates on demand -->
+            <object guid="0x3184835C" />    <!-- Stereo Speakers - Music Controller --> <!-- Delete this when the stereos create on demand -->
+            <object guid="0x4A0C562F" />    <!-- Skill Tracker - Type --> <!-- Delete this when skill objects create on demand -->
+            <object guid="0x38E2E75B" />    <!-- Death - Controller -->
+            <object guid="0x70F69082" />    <!-- NPC Controller -->
+            <object guid="0x3161BB5B" />    <!-- Job Controller -->
+            <object guid="0x32649B09" />    <!-- Pest - Controller -->
+            
+        <object guid="0x313D2F9A" name="Leave Lot - Pay Phone" group="0" x="37" y="55" level="1" dir="0" />
+        <object guid="0x39CCF441" name="Mailbox" level="1" x="32" y="56" dir="4" />
+        <object guid="0x81E6BEF9" name="Portal - Pedestrian" group="0" x="32" y="55" level="1" dir="4" hidden="1" />
+        <object guid="0xA4258067" name="Trash Outside" group="0" x="34" y="55" level="1" dir="0" />
+		<object guid="0x23BC2034" name="Portal - NPC" group="0" x="55" y="55" level="1" dir="4" hidden="1" />
+		<object guid="0x4E57C380" name="Portal - NPC 2" group="0" x="7" y="55" level="1" dir="4" hidden="1" />
+		<object guid="0x865A6812" name="Portal - Car" group="0" x="33" y="58" level="1" dir="2" hidden="1" />
+		<object guid="0xD564C66B" name="Portal - Car 2" group="0" x="28" y="58" level="1" dir="2" hidden="1" />
+	</objects>
+</house>

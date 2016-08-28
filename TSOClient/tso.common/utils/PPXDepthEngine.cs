@@ -29,8 +29,9 @@ namespace FSO.Common.Utils
         {
             if (BackbufferDepth != null) BackbufferDepth.Dispose();
             if (Backbuffer != null) Backbuffer.Dispose();
-            BackbufferDepth = CreateRenderTarget(gd, 1, 0, SurfaceFormat.Color, gd.Viewport.Width, gd.Viewport.Height, DepthFormat.None);
-            Backbuffer = CreateRenderTarget(gd, 1, 0, SurfaceFormat.Color, gd.Viewport.Width, gd.Viewport.Height, DepthFormat.Depth24Stencil8);
+            var scale = FSOEnvironment.DPIScaleFactor;
+            BackbufferDepth = CreateRenderTarget(gd, 1, 0, SurfaceFormat.Color, gd.Viewport.Width/scale, gd.Viewport.Height / scale, DepthFormat.None);
+            Backbuffer = CreateRenderTarget(gd, 1, 0, SurfaceFormat.Color, gd.Viewport.Width / scale, gd.Viewport.Height / scale, DepthFormat.Depth24Stencil8);
         }
 
         private static RenderTarget2D ActiveColor;
@@ -133,7 +134,8 @@ namespace FSO.Common.Utils
         {
             if (Backbuffer == null) return; //this gfx mode does not use a rendertarget backbuffer
             SB.Begin();
-            SB.Draw(Backbuffer, new Vector2());
+            SB.Draw(Backbuffer, new Vector2(), null, Color.White, 0f, new Vector2(), new Vector2(FSOEnvironment.DPIScaleFactor, FSOEnvironment.DPIScaleFactor),
+                SpriteEffects.None, 0);
             SB.End();
         }
 

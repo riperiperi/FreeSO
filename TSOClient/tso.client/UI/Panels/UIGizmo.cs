@@ -60,7 +60,7 @@ namespace FSO.Client.UI.Panels
 
             script.LinkMembers(this, true);
 
-            SearchText.CurrentText = "127.0.0.1";
+            SearchText.CurrentText = "freeso.ml";
             NarrowSearchButton.OnButtonClick += JoinServerLot;
         }
 

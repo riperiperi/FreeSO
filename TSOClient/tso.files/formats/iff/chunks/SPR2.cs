@@ -12,7 +12,6 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Files.Utils;
 using System.IO;
 using Microsoft.Xna.Framework;
-using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
 namespace FSO.Files.Formats.IFF.Chunks
@@ -430,77 +429,6 @@ namespace FSO.Files.Formats.IFF.Chunks
         }
 
         /// <summary>
-        /// Generates windows bitmaps for the appearance of this sprite.
-        /// </summary>
-        /// <param name="tWidth"></param>
-        /// <param name="tHeight"></param>
-        /// <returns>Array of three images, [Color, Alpha, Depth].</returns>
-        public System.Drawing.Image[] GetPixelAlpha(int tWidth, int tHeight) {
-            return GetPixelAlpha(tWidth, tHeight, Position);
-        }
-
-        public System.Drawing.Image[] GetPixelAlpha(int tWidth, int tHeight, Vector2 pos)
-        {
-            var result = new System.Drawing.Bitmap[3];
-            var locks = new BitmapData[3];
-            var data = new byte[3][];
-            for (int i = 0; i < 3; i++)
-            {
-                result[i] = new System.Drawing.Bitmap(tWidth, tHeight, PixelFormat.Format24bppRgb);
-                locks[i] = result[i].LockBits(new System.Drawing.Rectangle(0, 0, tWidth, tHeight), ImageLockMode.ReadWrite, PixelFormat.Format32bppRgb);
-                data[i] = new byte[locks[i].Stride * locks[i].Height];
-            }
-
-            int index = 0;
-            for (int y=0; y<tHeight; y++)
-            {
-                for (int x=0; x<tWidth; x++) {
-                    Color col;
-                    byte depth = 255;
-
-                    if (x >= pos.X && x < pos.X+Width && y >= pos.Y && y < pos.Y+Height)
-                    {
-                        col = PixelData[(int)(x - pos.X) + (int)(y-pos.Y)*Width];
-                        if (col.A == 0) col = new Color(0xFF, 0xFF, 0x00, 0x00);
-                        if (ZBufferData != null)
-                        {
-                            depth = ZBufferData[(int)(x - pos.X) + (int)(y - pos.Y) * Width];
-                        }
-                    }
-                    else
-                    {
-                        col = new Color(0xFF, 0xFF, 0x00, 0x00);
-                    }
-
-                    data[0][index] = col.B;
-                    data[0][index+1] = col.G;
-                    data[0][index+2] = col.R;
-                    data[0][index + 3] = 255;
-
-                    data[1][index] = col.A;
-                    data[1][index+1] = col.A;
-                    data[1][index+2] = col.A;
-                    data[1][index + 3] = 255;
-
-                    data[2][index] = depth;
-                    data[2][index + 1] = depth;
-                    data[2][index + 2] = depth;
-                    data[2][index + 3] = 255;
-
-                    index += 4;
-                }
-            }
-
-            for (int i = 0; i < 3; i++)
-            {
-                Marshal.Copy(data[i], 0, locks[i].Scan0, data[i].Length);
-                result[i].UnlockBits(locks[i]);
-            }
-
-            return result;
-        }
-
-        /// <summary>
         /// Gets a z-texture representing this SPR2Frame.
         /// </summary>
         /// <param name="device">GraphicsDevice instance used for drawing.</param>
@@ -535,7 +463,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         #endregion
 
-        public Color[] SetData(Color[] px, byte[] zpx, System.Drawing.Rectangle rect)
+        public Color[] SetData(Color[] px, byte[] zpx, Rectangle rect)
         {
             PixelCache = null; //can't exactly dispose this.. it's likely still in use!
             ZCache = null;

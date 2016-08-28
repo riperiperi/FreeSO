@@ -6,8 +6,6 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using System.IO;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using FSO.Files.Utils;
 
 namespace FSO.Files.Formats.IFF.Chunks
@@ -15,7 +13,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 	public static class SPR2FrameEncoder
     {
 
-        public delegate System.Drawing.Color[] QuantizerFunction(SPR2Frame frame, out byte[] bytes);
+        public delegate Color[] QuantizerFunction(SPR2Frame frame, out byte[] bytes);
 
         public static QuantizerFunction QuantizeFrame;
 

@@ -83,8 +83,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core">
     </Reference>
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -181,9 +179,9 @@
       <Name>MonoGame.Framework.Windows</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
-      <Project>{56F4BD87-2404-4263-80D5-6FA2161EB0A4}</Project>
-      <Name>TargaImage</Name>
+    <ProjectReference Include="..\..\Other\libs\TargaImagePCL\TargaImagePCL.csproj">
+      <Project>{d8232422-9d79-4200-a981-eb70ed82ccf3}</Project>
+      <Name>TargaImagePCL</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

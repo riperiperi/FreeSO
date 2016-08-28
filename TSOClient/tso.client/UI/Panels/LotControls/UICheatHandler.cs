@@ -1,4 +1,5 @@
-﻿using FSO.Common.Rendering.Framework.Model;
+﻿using FSO.Common;
+using FSO.Common.Rendering.Framework.Model;
 using FSO.LotView.Model;
 using FSO.SimAntics;
 using FSO.SimAntics.NetPlay.Model;
@@ -45,7 +46,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 {
                     case "objat":
                         //!objat (objects at mouse position)
-                        var tilePos = vm.Context.World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+                        var tilePos = vm.Context.World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
                         LotTilePos targetPos = LotTilePos.FromBigTile((short)tilePos.X, (short)tilePos.Y, vm.Context.World.State.Level);
                         var objs = vm.Context.SetToNextCache.GetObjectsAt(targetPos);
                         response += "Objects at (" + targetPos.TileX + ", " + targetPos.TileY + ", " + targetPos.Level + ")\r\n"; 

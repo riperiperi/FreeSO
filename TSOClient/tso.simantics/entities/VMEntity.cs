@@ -239,7 +239,7 @@ namespace FSO.SimAntics
             {
                 Thread.TicksThisFrame = 0;
                 Thread.Tick();
-                TickSounds();
+                if (SoundThreads.Count > 0) TickSounds();
             }
             if (Headline != null)
             {
@@ -265,7 +265,7 @@ namespace FSO.SimAntics
         public void TickSounds()
         {
             if (!UseWorld) return;
-            if (SoundThreads.Count > 0 && Thread != null)
+            if (Thread != null)
             {
                 var worldState = Thread.Context.World.State;
                 var worldSpace = worldState.WorldSpace;
@@ -400,6 +400,7 @@ namespace FSO.SimAntics
             if (this.Thread == null) return;
             this.Thread.Stack.Clear();
             this.Thread.Queue.Clear();
+            Thread.QueueDirty = true;
             this.Thread.ActiveQueueBlock = 0;
             this.Thread.BlockingState = null;
             this.Thread.EODConnection = null;

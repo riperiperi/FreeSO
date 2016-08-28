@@ -90,7 +90,7 @@ namespace FSO.Client.UI.Panels
             Holder = LotController.ObjectHolder;
             QueryPanel = LotController.QueryPanel;
 
-            var useSmall = (FSOEnvironment.SmallScreen || GlobalSettings.Default.GraphicsWidth < 1024);
+            var useSmall = (FSOEnvironment.UIZoomFactor > 1f || GlobalSettings.Default.GraphicsWidth < 1024);
             var script = this.RenderScript("buypanel"+(useSmall?"":"1024")+".uis");
 
             Background = new UIImage(GetTexture(useSmall ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));

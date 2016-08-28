@@ -178,16 +178,16 @@ namespace FSO.Client.UI.Panels
         public void SetFocus(UCPFocusMode focus)
         {
             if (Focus == focus) return;
-            if (FSOEnvironment.SmallScreen)
+            if (FSOEnvironment.UIZoomFactor>1f)
             {
                 if (focus != UCPFocusMode.Game)
                 {
                     var tween = GameFacade.Screens.Tween.To(this, 0.33f, new Dictionary<string, float>()
                     {
-                        {"ScaleX", 2f},
-                        {"ScaleY", 2f},
-                        {"Y", Game.ScreenHeight-420 },
-                        {"X", (focus == UCPFocusMode.ActiveTab)?-450:0 }
+                        {"ScaleX", FSOEnvironment.UIZoomFactor},
+                        {"ScaleY", FSOEnvironment.UIZoomFactor},
+                        {"Y", Game.ScreenHeight-(int)(210*FSOEnvironment.UIZoomFactor) },
+                        {"X", (focus == UCPFocusMode.ActiveTab)?-(int)(225*FSOEnvironment.UIZoomFactor):0 }
                     }, TweenQuad.EaseInOut);
 
                     Remove(SelfBlocker); SelfBlocker = null;

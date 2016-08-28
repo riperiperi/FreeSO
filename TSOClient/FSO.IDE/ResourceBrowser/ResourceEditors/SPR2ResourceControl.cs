@@ -14,6 +14,7 @@ using System.IO;
 using System.Drawing.Imaging;
 using System.Threading;
 using System.Runtime.InteropServices;
+using FSO.IDE.Common;
 
 namespace FSO.IDE.ResourceBrowser.ResourceEditors
 {
@@ -73,9 +74,10 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
-                Graphics[0] = GraphicChunk.Frames[index].GetPixelAlpha(136, 384);
-                Graphics[1] = GraphicChunk.Frames[index+GraphicChunk.Frames.Length/3].GetPixelAlpha(68, 192);
-                Graphics[2] = GraphicChunk.Frames[index+(GraphicChunk.Frames.Length / 3) * 2].GetPixelAlpha(34, 96);
+                
+                Graphics[0] = SpriteEncoderUtils.GetPixelAlpha(GraphicChunk.Frames[index], 136, 384);
+                Graphics[1] = SpriteEncoderUtils.GetPixelAlpha(GraphicChunk.Frames[index+GraphicChunk.Frames.Length/3], 68, 192);
+                Graphics[2] = SpriteEncoderUtils.GetPixelAlpha(GraphicChunk.Frames[index+(GraphicChunk.Frames.Length / 3) * 2], 34, 96);
             }, GraphicChunk, false));
 
             SetDisplay();
@@ -96,9 +98,9 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
-                gfx[0] = GraphicChunk.Frames[index].GetPixelAlpha(136, 384);
-                gfx[1] = GraphicChunk.Frames[index + GraphicChunk.Frames.Length / 3].GetPixelAlpha(68, 192);
-                gfx[2] = GraphicChunk.Frames[index + (GraphicChunk.Frames.Length / 3) * 2].GetPixelAlpha(34, 96);
+                gfx[0] = SpriteEncoderUtils.GetPixelAlpha(GraphicChunk.Frames[index], 136, 384);
+                gfx[1] = SpriteEncoderUtils.GetPixelAlpha(GraphicChunk.Frames[index + GraphicChunk.Frames.Length / 3], 68, 192);
+                gfx[2] = SpriteEncoderUtils.GetPixelAlpha(GraphicChunk.Frames[index + (GraphicChunk.Frames.Length / 3) * 2], 34, 96);
             }, GraphicChunk, false));
 
             var iffname = ActiveIff.MainIff.Filename;
@@ -339,7 +341,8 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             Microsoft.Xna.Framework.Color[] used;
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
-                used = GraphicChunk.Frames[frame].SetData(pxOut, depthOut, rect);
+                var xnaRect = new Microsoft.Xna.Framework.Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+                used = GraphicChunk.Frames[frame].SetData(pxOut, depthOut, xnaRect);
 
                 var ownPalt = GraphicChunk.ChunkParent.Get<PALT>(GraphicChunk.Frames[frame].PaletteID);
                 ushort freePalt = GraphicChunk.ChunkID;

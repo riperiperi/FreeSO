@@ -11,11 +11,17 @@ using System.Text;
 using FSO.Client.UI.Controls;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using FSO.Common;
 
 namespace FSO.Client.UI.Framework
 {
     public class UIScreen : UIContainer
     {
+        public UIScreen() : base()
+        {
+            ScaleX = ScaleY = FSOEnvironment.DPIScaleFactor;
+        }
+
         public virtual void OnShow()
         {
         }

@@ -21,6 +21,7 @@ using FSO.SimAntics.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Utils;
 using FSO.Client.UI.Model;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels.LotControls
 {
@@ -82,7 +83,7 @@ namespace FSO.Client.UI.Panels.LotControls
         {
             ushort pattern = (state.KeyboardState.IsKeyDown(Keys.LeftControl)) ? (ushort)0 : Pattern;
 
-            var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+            var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
             Point cursor = new Point((int)tilePos.X, (int)tilePos.Y);
 
             if (!Drawing && Commands.Count > 0)

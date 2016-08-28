@@ -175,7 +175,7 @@ namespace FSO.Client.UI.Screens
             }
         }
 
-        public CoreGameScreen()
+        public CoreGameScreen() : base()
         {
             /** City Scene **/
             ListenForMouse(new Rectangle(0, 0, ScreenWidth, ScreenHeight), new UIMouseEvent(MouseHandler));

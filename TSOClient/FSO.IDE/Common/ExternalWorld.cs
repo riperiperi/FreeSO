@@ -1,4 +1,5 @@
-﻿using FSO.Common.Rendering.Framework;
+﻿using FSO.Common;
+using FSO.Common.Rendering.Framework;
 using FSO.LotView;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -23,7 +24,7 @@ namespace FSO.IDE.Common
              * to world objects as well as providing various
              * state settings for the world and helper functions
              */
-            State = new WorldState(layer.Device, layer.Device.Viewport.Width, layer.Device.Viewport.Height, this);
+            State = new WorldState(layer.Device, layer.Device.Viewport.Width / FSOEnvironment.DPIScaleFactor, layer.Device.Viewport.Height / FSOEnvironment.DPIScaleFactor, this);
             State.AmbientLight = new Texture2D(layer.Device, 256, 256);
             State._3D = new FSO.LotView.Utils._3DWorldBatch(State);
             State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, 1, new SurfaceFormat[] { World2D.BUFFER_SURFACE_FORMATS[0] }, new bool[] { true }, World2D.SCROLL_BUFFER);

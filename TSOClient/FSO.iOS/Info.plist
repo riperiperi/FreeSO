@@ -7,17 +7,22 @@
 	<key>CFBundleIconFiles</key>
 	<array>
 		<string>GameThumbnail.png</string>
-		<string>Default.png</string>
 		<string>Default-568h@2x.png</string>
+		<string>Default-667h@2x.png</string>
+		<string>Default-Landscape-736h@3x.png</string>
+		<string>Default.png</string>
+		<string>Default@2x.png</string>
+		<string>Default-Landscape.png</string>
+		<string>Default-Portrait.png</string>
 	</array>
 	<key>MinimumOSVersion</key>
-	<string>9.0</string>
+	<string>8.0</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>CFBundleName</key>
-	<string>FSO.iOS</string>
+	<string>FSOiOS</string>
 	<key>UIStatusBarHidden</key>
 	<true/>
 	<key>UIRequiresFullScreen</key>
@@ -37,5 +42,7 @@
 	<array>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIPrerenderedIcon</key>
+	<false/>
 </dict>
 </plist>
