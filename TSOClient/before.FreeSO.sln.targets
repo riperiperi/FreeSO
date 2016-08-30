@@ -2,10 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="FSO_IDE:Build">
     <MSBuild
-        Condition="'%(ProjectReference.Identity)' == '$(SolutionDir)FSO.IDE\FSO.IDE.csproj'"
+        Condition="'%(ProjectReference.Identity)' == 'FSO.IDE\FSO.IDE.csproj'"
         Projects="@(ProjectReference)"
         Targets="Build"
-        BuildInParallel="True"
         ToolsVersion="4.0"
         Properties="BuildingSolutionFile=true; CurrentSolutionConfigurationContents=$(CurrentSolutionConfigurationContents); SolutionDir=$(SolutionDir); SolutionExt=$(SolutionExt); SolutionFileName=$(SolutionFileName); SolutionName=$(SolutionName); SolutionPath=$(SolutionPath)"
         SkipNonexistentProjects="%(ProjectReference.SkipNonexistentProjects)" />
