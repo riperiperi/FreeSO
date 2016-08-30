@@ -33,7 +33,7 @@ namespace FSO.Client
         {
             GameFacade.Game = this;
             Content.RootDirectory = FSOEnvironment.GFXContentDir;
-            Graphics.SynchronizeWithVerticalRetrace = true; //GameFacade.DirectX || GlobalSettings.Default.Windowed; //why was this disabled
+            Graphics.SynchronizeWithVerticalRetrace = true;
             
             Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
@@ -55,6 +55,7 @@ namespace FSO.Client
         /// </summary>
         protected override void Initialize()
         {
+            Graphics.GraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.Two;
             GlobalSettings.Default.GraphicsWidth = GraphicsDevice.Viewport.Width / FSOEnvironment.DPIScaleFactor;
             GlobalSettings.Default.GraphicsHeight = GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor;
 
@@ -108,10 +109,9 @@ namespace FSO.Client
 
             this.Window.Title = "FreeSO";
 
-            if (!GlobalSettings.Default.Windowed)
+            if (!GlobalSettings.Default.Windowed && !GameFacade.GraphicsDeviceManager.IsFullScreen)
             {
-                GameFacade.GraphicsDeviceManager.IsFullScreen = true;
-                //GameFacade.GraphicsDeviceManager.ToggleFullScreen();
+                GameFacade.GraphicsDeviceManager.ToggleFullScreen();
             }
         }
 

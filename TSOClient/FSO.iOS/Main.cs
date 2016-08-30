@@ -35,6 +35,7 @@ namespace FSOiOS
 			FSOEnvironment.DirectX = false;
 			FSOEnvironment.SoftwareKeyboard = true;
 			FSOEnvironment.SoftwareDepth = true;
+            FSOEnvironment.UseMRT = false;
 			FSOEnvironment.UIZoomFactor = iPad?1:2;
             FSOEnvironment.DPIScaleFactor = iPad ? 2 : 1;
             FSO.Files.ImageLoader.UseSoftLoad = false;

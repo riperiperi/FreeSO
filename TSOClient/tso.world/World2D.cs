@@ -398,7 +398,7 @@ namespace FSO.LotView
                 _2d.Pause();
                 _2d.Resume(); //clear the sprite buffer before we begin drawing what we're going to cache
                 Blueprint.WallComp.Draw(gd, state);
-                StaticWallCache.Clear();
+                ClearDrawBuffer(StaticWallCache);
                 _2d.End(StaticWallCache, true);
             }
 
@@ -407,7 +407,7 @@ namespace FSO.LotView
                 _2d.Pause();
                 _2d.Resume(); //clear the sprite buffer before we begin drawing what we're going to cache
                 Blueprint.FloorComp.Draw(gd, state);
-                StaticFloorCache.Clear();
+                ClearDrawBuffer(StaticFloorCache);
                 _2d.End(StaticFloorCache, true);
             }
 
@@ -462,7 +462,7 @@ namespace FSO.LotView
                         obj.Draw(gd, state);
                     }
                 }
-                StaticObjectsCache.Clear();
+                ClearDrawBuffer(StaticObjectsCache);
                 _2d.End(StaticObjectsCache, true);
             }
 
@@ -555,6 +555,12 @@ namespace FSO.LotView
                     obj.Draw(gd, state);
                 }
             }
+        }
+
+        public void ClearDrawBuffer(List<_2DDrawBuffer> buf)
+        {
+            foreach (var b in buf) b.Dispose();
+            buf.Clear();
         }
     }
 

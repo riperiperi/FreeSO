@@ -12,11 +12,11 @@ namespace FSO.Common
         public static string GFXContentDir = "Content/OGL";
         public static bool DirectX = false;
         public static bool Linux = false;
-        public static bool UseMRT = false;
+        public static bool UseMRT = true;
         /// <summary>
         /// True if system does not support gl_FragDepth (eg. iOS). Uses alternate pipeline that abuses stencil buffer.
         /// </summary>
-        public static bool SoftwareDepth = true;
+        public static bool SoftwareDepth = false;
         public static float UIZoomFactor = 1f;
         public static int DPIScaleFactor = 1;
         public static bool SoftwareKeyboard = false;

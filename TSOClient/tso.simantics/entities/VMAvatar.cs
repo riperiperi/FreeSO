@@ -85,11 +85,8 @@ namespace FSO.SimAntics
             set
             {
                 _BodyOutfit = value;
-                if (value != 0)
-                {
-                    Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get(value);
-                    if (AvatarType == VMAvatarType.Adult || AvatarType == VMAvatarType.Child) Avatar.Handgroup = Avatar.Body;
-                }
+                Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get(value);
+                if (AvatarType == VMAvatarType.Adult || AvatarType == VMAvatarType.Child) Avatar.Handgroup = Avatar.Body;
             }
             get
             {
@@ -808,7 +805,7 @@ namespace FSO.SimAntics
             var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
             var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
 
-            return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID).Get(gd);
+            return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
         }
 
         #region VM Marshalling Functions

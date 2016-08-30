@@ -92,8 +92,8 @@ namespace FSO.Content.Framework
 
         protected virtual T ResolveById(ulong id)
         {
-            var entry = EntriesById[id];
-            if (entry != null)
+            Far3ProviderEntry<T> entry = null;
+            if (EntriesById.TryGetValue(id, out entry))
             {
                 return Get(entry);
             }

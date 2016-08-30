@@ -88,6 +88,7 @@ namespace FSODroid
             FSOEnvironment.DirectX = false;
             FSOEnvironment.SoftwareKeyboard = true;
             FSOEnvironment.SoftwareDepth = true;
+            FSOEnvironment.UseMRT = false;
             FSOEnvironment.UIZoomFactor = uiZoomFactor;
             FSOEnvironment.DPIScaleFactor = dpiScaleFactor;
             FSO.Files.ImageLoader.UseSoftLoad = false;

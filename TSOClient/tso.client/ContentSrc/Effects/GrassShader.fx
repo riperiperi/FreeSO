@@ -69,7 +69,7 @@ GrassPSVTX GrassVS(GrassVTX input)
     output.Color = input.Color;
     output.GrassInfo = input.GrassInfo;
     output.GrassInfo.w = position.z / position.w;
-    output.ScreenPos = ((position.xy*0.5)+float2(0.5,0.5)) * ScreenSize;
+	output.ScreenPos = ((position.xy*float2(0.5, -0.5)) + float2(0.5, 0.5)) * ScreenSize;
 
     if (output.GrassInfo.x == -1.2 && output.GrassInfo.y == -1.2 && output.GrassInfo.z == -1.2 && output.GrassInfo.w < -1.0 && output.ScreenPos.x < -200 && output.ScreenPos.y < -300) output.Color *= 0.5; 
 

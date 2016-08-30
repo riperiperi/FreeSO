@@ -94,6 +94,7 @@
     <Compile Include="Content\IContentProvider.cs" />
     <Compile Include="Content\IContentReference.cs" />
     <Compile Include="FSOEnvironment.cs" />
+    <Compile Include="IniConfig.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Model\IntersectRectSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

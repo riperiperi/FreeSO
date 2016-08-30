@@ -101,6 +101,7 @@ namespace FSO.LotView.Utils
                         height = 1024;
                         break;
                 }
+                if (numBuffers == 2 && i == 1) width = height = 1024; //special case, thumb only. 
                 Buffers.Add(
                     PPXDepthEngine.CreateRenderTarget(device, 1, 0, surfaceFormats[i], width, height,
                     (alwaysDS[i] || (!FSOEnvironment.UseMRT && !FSOEnvironment.SoftwareDepth))?DepthFormat.Depth24Stencil8:DepthFormat.None)
@@ -205,6 +206,8 @@ namespace FSO.LotView.Utils
 
             depthOutput = new Promise<Texture2D>(x => null);
 
+            if (depthBufferIndex > Buffers.Count) depthBufferIndex = Buffers.Count - 1;
+
             ResetMatrices(Buffers[bufferIndex].Width, Buffers[bufferIndex].Height);
 
             return new _2DWorldRenderPlaneWithDepth(
@@ -264,10 +267,14 @@ namespace FSO.LotView.Utils
                 }
                 else
                 {
+                    var temp = new _2DDrawBuffer();
+                    EndDrawSprites(sprites, temp.Groups, OutputDepth);
                     PPXDepthEngine.RenderPPXDepth(effect, false, (depth) =>
                     {
-                        EndDrawSprites(sprites, null, OutputDepth);
+                        RenderCache(new List<_2DDrawBuffer> { temp });
+                        //EndDrawSprites(sprites, null, OutputDepth);
                     });
+                    temp.Dispose();
                 }
                 i++;
             }
@@ -436,9 +443,18 @@ namespace FSO.LotView.Utils
             {
                 EffectPass pass = passes[i];
                 pass.Apply();
-                Device.DrawUserIndexedPrimitives<_2DSpriteVertex>(
-                    PrimitiveType.TriangleList, group.Vertices, 0, group.Vertices.Length,
-                    group.Indices, 0, group.Indices.Length / 3);
+                if (group.VertBuf != null)
+                {
+                    Device.SetVertexBuffer(group.VertBuf);
+                    Device.Indices = group.IndexBuf;
+                    Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, group.Primitives);
+                }
+                else
+                {
+                    Device.DrawUserIndexedPrimitives<_2DSpriteVertex>(
+                        PrimitiveType.TriangleList, group.Vertices, 0, group.Vertices.Length,
+                        group.Indices, 0, group.Indices.Length / 3);
+                }
             }
         }
 
@@ -494,20 +510,40 @@ namespace FSO.LotView.Utils
                         , GetUV(texture, left, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room);
                 }
 
+                VertexBuffer vb = null;
+                IndexBuffer ib = null;
+
+                var count = indices.Length / 3;
+                if (count > 50) //completely arbitrary number, but seems to keep things fast. dont gen if it isn't "worth it".
+                {
+                    vb = new VertexBuffer(Device, typeof(_2DSpriteVertex), vertices.Length, BufferUsage.WriteOnly);
+                    vb.SetData(vertices);
+                    ib = new IndexBuffer(Device, IndexElementSize.SixteenBits, indices.Length, BufferUsage.WriteOnly);
+                    ib.SetData(indices);
+                    vertices = null;
+                    indices = null;
+                }
+
                 var dg = new _2DDrawGroup()
                 {
                     Pixel = group.Pixel,
                     Depth = group.Depth,
                     Mask = group.Mask,
 
+                    VertBuf = vb,
+                    IndexBuf = ib,
                     Vertices = vertices,
                     Indices = indices,
+                    Primitives = count,
                     Technique = technique
                 };
 
                 if (cache != null) cache.Add(dg);
-                else RenderDrawGroup(dg);
-                
+                else
+                {
+                    RenderDrawGroup(dg);
+                    dg.Dispose();
+                }
             }
         }
 
