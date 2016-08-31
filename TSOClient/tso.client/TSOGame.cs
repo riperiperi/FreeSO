@@ -55,9 +55,11 @@ namespace FSO.Client
         /// </summary>
         protected override void Initialize()
         {
-            Graphics.GraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.Two;
-            GlobalSettings.Default.GraphicsWidth = GraphicsDevice.Viewport.Width / FSOEnvironment.DPIScaleFactor;
-            GlobalSettings.Default.GraphicsHeight = GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor;
+            if (FSOEnvironment.DPIScaleFactor != 1 || FSOEnvironment.SoftwareDepth)
+            {
+                GlobalSettings.Default.GraphicsWidth = GraphicsDevice.Viewport.Width / FSOEnvironment.DPIScaleFactor;
+                GlobalSettings.Default.GraphicsHeight = GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor;
+            }
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;

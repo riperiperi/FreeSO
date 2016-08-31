@@ -204,7 +204,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                 var data = sprStream.ToArray();
                 io.WriteUInt32(1001);
-                io.WriteUInt32((uint)data.Length+8);
+                io.WriteUInt32((uint)data.Length);
                 io.WriteBytes(data);
             }
         }

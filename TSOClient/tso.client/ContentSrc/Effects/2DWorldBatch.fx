@@ -285,7 +285,9 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COL
     if (depthOutMode == true) {
         color = depthB;
     } else {
-        color = pixel * tex2D(ambientSampler, v.roomVec);
+		if (floor(v.roomVec.x * 256) == 254 && floor(v.roomVec.y * 256) == 255) pixel = float4(float3(1.0, 1.0, 1.0) - pixel.xyz, pixel.a);
+		else if (v.roomVec.x != 0.0) pixel *= tex2D(ambientSampler, v.roomVec);
+		color = pixel;
 
         color.rgb *= max(1, v.objectID); //hack - otherwise v.objectID always equals 0 on intel and 1 on nvidia (yeah i don't know)
         color.rgb *= color.a; //"pre"multiply, just here for experimentation
