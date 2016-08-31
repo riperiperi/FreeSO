@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="FSO_IDE:Build">
     <MSBuild
-        Condition="'%(ProjectReference.Identity)' == 'FSO.IDE\FSO.IDE.csproj'"
+        Condition="'%(Name)'=='FSO.IDE'"
         Projects="@(ProjectReference)"
         Targets="Build"
         ToolsVersion="4.0"
