@@ -1,4 +1,5 @@
-﻿using FSO.Files.Formats.IFF;
+﻿using FSO.Common;
+using FSO.Files.Formats.IFF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -22,7 +23,7 @@ namespace FSO.IDE.Common
 
         private void OKButton_Click(object sender, EventArgs e)
         {
-            var name = "Content/Objects/"+NameEntry.Text+".iff";
+            var name = Path.Combine(FSOEnvironment.ContentDir, "Objects/" +NameEntry.Text+".iff");
             var objProvider = Content.Content.Get().WorldObjects;
             if (NameEntry.Text == "")
             {

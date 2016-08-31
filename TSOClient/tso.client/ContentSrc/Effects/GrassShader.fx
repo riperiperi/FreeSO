@@ -11,6 +11,8 @@ float4 DiffuseColor;
 float2 ScreenOffset;
 float GrassProb;
 
+bool DepthOutMode;
+
 struct GrassVTX
 {
     float4 Position : SV_Position0;
@@ -45,6 +47,19 @@ float2 iterhash22(in float2 uv) {
     return a / 2.0;
 }
 
+float4 packDepth(float d) {
+    float4 enc = float4(1.0, 255.0, 65025.0, 0.0) * d;
+    enc = frac(enc);
+    enc -= enc.yzww * float4(1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0, 0.0);
+    enc.a = 1;
+
+    return enc; //float4(byteFloor(d%1.0), byteFloor((d*256.0) % 1.0), byteFloor((d*65536.0) % 1.0), 1); //most sig in r, least in b
+}
+
+float unpackDepth(float4 d) {
+    return dot(d, float4(1.0, 1 / 255.0, 1 / 65025.0, 0)); //d.r + (d.g / 256.0) + (d.b / 65536.0);
+}
+
 GrassPSVTX GrassVS(GrassVTX input)
 {
     GrassPSVTX output = (GrassPSVTX)0;
@@ -54,7 +69,7 @@ GrassPSVTX GrassVS(GrassVTX input)
     output.Color = input.Color;
     output.GrassInfo = input.GrassInfo;
     output.GrassInfo.w = position.z / position.w;
-    output.ScreenPos = position.xy * ScreenSize;
+	output.ScreenPos = ((position.xy*float2(0.5, -0.5)) + float2(0.5, 0.5)) * ScreenSize;
 
     if (output.GrassInfo.x == -1.2 && output.GrassInfo.y == -1.2 && output.GrassInfo.z == -1.2 && output.GrassInfo.w < -1.0 && output.ScreenPos.x < -200 && output.ScreenPos.y < -300) output.Color *= 0.5; 
 
@@ -66,20 +81,32 @@ void BladesPS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB:COLOR
     float2 rand = iterhash22(floor(input.ScreenPos.xy+ScreenOffset)); //nearest neighbour effect
     if (rand.y > GrassProb*((2.0-input.GrassInfo.x)/2)) discard;
     //grass blade here
-    float bladeCol = rand.x*0.6;
-    float4 green = lerp(LightGreen, DarkGreen, bladeCol);
-    float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
 
-    color = lerp(green, brown, input.GrassInfo.x) * DiffuseColor;
     float d = input.GrassInfo.w;
-    depthB = float4(d,d,d,1);
+    depthB = packDepth(d);
+    if (DepthOutMode == true) {
+        color = depthB;
+    }
+    else {
+        float bladeCol = rand.x*0.6;
+        float4 green = lerp(LightGreen, DarkGreen, bladeCol);
+        float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
+        color = lerp(green, brown, input.GrassInfo.x) * DiffuseColor;
+    }
+
 }
 
 void BasePS(GrassVTX input, out float4 color:COLOR0, out float4 depthB:COLOR1)
 {
-    color = input.Color*DiffuseColor;
+    
     float d = input.GrassInfo.w;
-    depthB = float4(d,d,d,1);
+    depthB = packDepth(d);
+    if (DepthOutMode == true) {
+        color = depthB;
+    }
+    else {
+        color = input.Color*DiffuseColor;
+    }
 }
 
 technique DrawBase

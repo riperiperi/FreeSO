@@ -8,13 +8,15 @@ http://mozilla.org/MPL/2.0/.
 
 namespace FSO.Client.UI.Framework.Parser
 {
-    using System.IO;
-    using System.Windows.Forms;
-    using System.Collections.Generic;
+	using System.IO;
+	using System.Collections.Generic;
+	using GOLDEngine;
+	using System;
 
-    class UIScriptParser
+	class UIScriptParser
     {
-        private GOLD.Parser parser = new GOLD.Parser();
+        private Parser parser = new Parser();
+		private Dictionary<Token, object> DataMap = new Dictionary<Token, object>();
 
         private enum SymbolIndex
         {
@@ -95,7 +97,7 @@ namespace FSO.Client.UI.Framework.Parser
             //The resulting tree will be a pure representation of the language 
             //and will be ready to implement.
 
-            GOLD.ParseMessage response;
+            GOLDEngine.ParseMessage response;
             bool done;                      //Controls when we leave the loop
             bool accepted = false;          //Was the parse successful?
 
@@ -109,44 +111,44 @@ namespace FSO.Client.UI.Framework.Parser
 
                 switch (response)
                 {
-                    case GOLD.ParseMessage.LexicalError:
+                    case GOLDEngine.ParseMessage.LexicalError:
                         //Cannot recognize token
                         done = true;
                         break;
 
-                    case GOLD.ParseMessage.SyntaxError:
+                    case GOLDEngine.ParseMessage.SyntaxError:
                         //Expecting a different token
                         done = true;
                         break;
 
-                    case GOLD.ParseMessage.Reduction:
+                    case GOLDEngine.ParseMessage.Reduction:
                         //Create a customized object to store the reduction
 
-                        parser.CurrentReduction = CreateNewObject(parser.CurrentReduction as GOLD.Reduction);
+                        CreateNewObject(parser.CurrentReduction as GOLDEngine.Reduction);
                         break;
 
-                    case GOLD.ParseMessage.Accept:
+                    case GOLDEngine.ParseMessage.Accept:
                         //Accepted!
                         //program = parser.CurrentReduction   //The root node!                 
                         done = true;
                         accepted = true;
                         break;
 
-                    case GOLD.ParseMessage.TokenRead:
+                    case GOLDEngine.ParseMessage.TokenRead:
                         //You don't have to do anything here.
                         break;
 
-                    case GOLD.ParseMessage.InternalError:
+                    case GOLDEngine.ParseMessage.InternalError:
                         //INTERNAL ERROR! Something is horribly wrong.
                         done = true;
                         break;
 
-                    case GOLD.ParseMessage.NotLoadedError:
+                    case GOLDEngine.ParseMessage.NotLoadedError:
                         //This error occurs if the CGT was not loaded.                   
                         done = true;
                         break;
 
-                    case GOLD.ParseMessage.GroupError:
+                    case GOLDEngine.ParseMessage.GroupError:
                         //GROUP ERROR! Unexpected end of file
                         done = true;
                         break;
@@ -156,16 +158,24 @@ namespace FSO.Client.UI.Framework.Parser
             return accepted;
         }
 
-        private object CreateNewObject(GOLD.Reduction r)
+        private object CreateNewObject(GOLDEngine.Reduction r)
         {
-            object result = r;
+			object result = r.ToText();
 
-            switch ((ProductionIndex)r.Parent.TableIndex())
+			for (int i = 0; i < r.Count; i++)
+			{
+				if (!DataMap.ContainsKey(r[i]))
+				{
+					DataMap[r[i]] = r[i].ToText();
+				}
+			}
+
+			switch ((ProductionIndex)r.Production.TableIndex())
             {
                 case ProductionIndex.Objects:
                     var newResult = new List<UINode>();
-                    newResult.Add((UINode)r.get_Data(0));
-                    newResult.AddRange((List<UINode>)r.get_Data(1));
+                    newResult.Add((UINode)DataMap[r[0]]);
+                    newResult.AddRange((List<UINode>)DataMap[r[1]]);
                     result = newResult;
                     program = result;
                     // <Objects> ::= <Object> <Objects> 
@@ -174,19 +184,19 @@ namespace FSO.Client.UI.Framework.Parser
                 case ProductionIndex.Objects2:
                     // <Objects> ::= <Object>
                     var newResult2 = new List<UINode>();
-                    newResult2.Add((UINode)r.get_Data(0));
+                    newResult2.Add((UINode)DataMap[r[0]]);
                     result = newResult2;
                     program = result;
                     break;
 
                 case ProductionIndex.Object_Beginliteral_Endliteral:
                     // <Object> ::= BeginLiteral <Content> EndLiteral
-                    result = UIGroup.FromReduction(r);
+					result = UIGroup.FromReduction(r, DataMap);
                     break;
 
                 case ProductionIndex.Object:
-                    // <Object> ::= <Start Tag>
-                    result = r.get_Data(0);
+					// <Object> ::= <Start Tag>
+					result = DataMap[r[0]];
                     break;
 
                 case ProductionIndex.Object2:
@@ -196,9 +206,9 @@ namespace FSO.Client.UI.Framework.Parser
                 case ProductionIndex.Starttag_Lt_Id_Gt:
                     // <Start Tag> ::= '<' ID <OptionalID> <Attributes> '>'
                     var node = new UINode();
-                    node.Name = (string)r.get_Data(1);
-                    node.ID = (string)r.get_Data(2);
-                    var atts = (List<KeyValuePair<string, string>>)r.get_Data(3);
+					node.Name = (string)DataMap[r[1]];
+					node.ID = (string)DataMap[r[2]];
+					var atts = (List<KeyValuePair<string, string>>)DataMap[r[3]];
                     foreach (var att in atts)
                     {
                         node[att.Key] = att.Value;
@@ -216,7 +226,7 @@ namespace FSO.Client.UI.Framework.Parser
 
                 case ProductionIndex.Optionalid_Stringliteral:
                     // <OptionalID> ::= StringLiteral
-                    result = GetStringLiteral((string)r.get_Data(0));
+					result = GetStringLiteral((string)DataMap[r[0]]);
                     break;
 
                 case ProductionIndex.Optionalid:
@@ -227,24 +237,24 @@ namespace FSO.Client.UI.Framework.Parser
                 case ProductionIndex.Content:
                     // <Content> ::= <Objects>
                     var newResult3 = new List<UINode>();
-                    newResult3.AddRange((List<UINode>)r.get_Data(0));
+					newResult3.AddRange((List<UINode>)DataMap[r[0]]);
                     result = newResult3;
                     break;
 
                 case ProductionIndex.Content2:
                     // <Content> ::= <Text>
                     var newResult4 = new List<UINode>();
-                    newResult4.Add((UINode)r.get_Data(0));
+					newResult4.Add((UINode)DataMap[r[0]]);
                     result = newResult4;
                     break;
 
                 case ProductionIndex.Attributes:
                     // <Attributes> ::= <Attribute> <Attributes>
                     var attributeList = new List<KeyValuePair<string, string>>();
-                    attributeList.Add((KeyValuePair<string, string>)r.get_Data(0));
-                    if (r.Count() > 1)
+					attributeList.Add((KeyValuePair<string, string>)DataMap[r[0]]);
+					if (r.Count > 1)
                     {
-                        attributeList.AddRange((List<KeyValuePair<string, string>>)r.get_Data(1));
+                        attributeList.AddRange((List<KeyValuePair<string, string>>)DataMap[r[1]]);
                     }
                     result = attributeList;
                     break;
@@ -256,12 +266,12 @@ namespace FSO.Client.UI.Framework.Parser
 
                 case ProductionIndex.Attribute_Id_Eq_Stringliteral:
                     // <Attribute> ::= ID '=' StringLiteral
-                    result = new KeyValuePair<string, string>((string)r.get_Data(0), GetStringLiteral((string)r.get_Data(2)));
+					result = new KeyValuePair<string, string>((string)DataMap[r[0]], GetStringLiteral((string)DataMap[r[2]]));
                     break;
 
                 case ProductionIndex.Attribute_Id_Eq_Id:
                     // <Attribute> ::= ID '=' ID
-                    result = new KeyValuePair<string, string>((string)r.get_Data(0), (string)r.get_Data(2));
+					result = new KeyValuePair<string, string>((string)DataMap[r[0]], (string)DataMap[r[2]]);
                     break;
 
                 case ProductionIndex.Text:
@@ -290,6 +300,7 @@ namespace FSO.Client.UI.Framework.Parser
 
             }  //switch
 
+			DataMap[r] = result;
             return result;
         }
 

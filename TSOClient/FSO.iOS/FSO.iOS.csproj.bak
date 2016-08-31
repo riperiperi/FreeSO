@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">iPhoneSimulator</Platform>
+    <ProjectGuid>{0A47E415-19C0-4007-A6DA-EE330BFA4430}</ProjectGuid>
+    <ProjectTypeGuids>{FEACFBD2-3405-455C-9665-78FE426C6842};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>FSO.iOS</RootNamespace>
+    <AssemblyName>FSO.iOS</AssemblyName>
+    <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
+    <MonoGamePlatform>iOS</MonoGamePlatform>
+    <VBRuntime>Embed</VBRuntime>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhoneSimulator' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\iPhoneSimulator\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <CodesignKey>iPhone Developer</CodesignKey>
+    <MtouchDebug>true</MtouchDebug>
+    <MtouchFastDev>true</MtouchFastDev>
+    <MtouchUseSGen>true</MtouchUseSGen>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchLink>None</MtouchLink>
+    <MtouchArch>i386</MtouchArch>
+    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
+    <MtouchTlsProvider>Default</MtouchTlsProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\iPhone\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <CodesignKey>iPhone Developer</CodesignKey>
+    <MtouchUseSGen>true</MtouchUseSGen>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchFloat32>true</MtouchFloat32>
+    <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
+    <MtouchLink>None</MtouchLink>
+    <MtouchArch>ARMv7, ARM64</MtouchArch>
+    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
+    <MtouchTlsProvider>Default</MtouchTlsProvider>
+    <MtouchDebug>true</MtouchDebug>
+    <MtouchExtraArgs></MtouchExtraArgs>
+    <MtouchUseLlvm>true</MtouchUseLlvm>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\iPhoneSimulator\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <CodesignKey>iPhone Developer</CodesignKey>
+    <MtouchUseSGen>true</MtouchUseSGen>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchLink>None</MtouchLink>
+    <MtouchArch>i386</MtouchArch>
+    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
+    <MtouchTlsProvider>Default</MtouchTlsProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhone' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\iPhone\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <CodesignKey>iPhone Developer</CodesignKey>
+    <DeviceSpecificBuild>true</DeviceSpecificBuild>
+    <MtouchDebug>true</MtouchDebug>
+    <MtouchFastDev>true</MtouchFastDev>
+    <MtouchUseSGen>true</MtouchUseSGen>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchFloat32>true</MtouchFloat32>
+    <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
+    <MtouchLink>SdkOnly</MtouchLink>
+    <MtouchArch>ARMv7, ARM64</MtouchArch>
+    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
+    <MtouchTlsProvider>Default</MtouchTlsProvider>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Xamarin.iOS" />
+    <Reference Include="FreeSO">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FreeSO.exe</HintPath>
+    </Reference>
+    <Reference Include="FSO.Common">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.Content">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Content.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.Files">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Files.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.HIT">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.HIT.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.LotView">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.LotView.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.SimAntics">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.SimAntics.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.Vitaboy">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Vitaboy.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.Vitaboy.Engine">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Vitaboy.Engine.dll</HintPath>
+    </Reference>
+    <Reference Include="GonzoNet">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\GonzoNet.dll</HintPath>
+    </Reference>
+    <Reference Include="ProtocolAbstractionLibraryD">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\ProtocolAbstractionLibraryD.dll</HintPath>
+    </Reference>
+    <Reference Include="Mp3Sharp">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\Mp3Sharp.dll</HintPath>
+    </Reference>
+    <Reference Include="TargaImage">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\TargaImage.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Serialization" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Xml.XPath.XmlDocument" />
+    <Reference Include="System.Windows" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Net.Http.WinHttpHandler" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Drawing">
+      <HintPath>..\..\..\sysdrawing-coregraphics\bin\ios\System.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="GOLDEngine">
+      <HintPath>..\tso.client\Dependencies\GOLDEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK-1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Main.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Point.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Entitlements.plist" />
+    <None Include="Info.plist" />
+    <None Include="..\tso.client\Content\DX\Effects\2DWorldBatch.xnb">
+      <Link>Content\DX\Effects\2DWorldBatch.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\DX\Effects\GrassShader.xnb">
+      <Link>Content\DX\Effects\GrassShader.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\DX\Effects\PixShader.xnb">
+      <Link>Content\DX\Effects\PixShader.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\DX\Effects\VerShader.xnb">
+      <Link>Content\DX\Effects\VerShader.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\DX\Effects\Vitaboy.xnb">
+      <Link>Content\DX\Effects\Vitaboy.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\DX\Effects\colorpoly2D.xnb">
+      <Link>Content\DX\Effects\colorpoly2D.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\DX\Fonts\FreeSO_10px.xnb">
+      <Link>Content\DX\Fonts\FreeSO_10px.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\DX\Fonts\FreeSO_12px.xnb">
+      <Link>Content\DX\Fonts\FreeSO_12px.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\DX\Fonts\FreeSO_14px.xnb">
+      <Link>Content\DX\Fonts\FreeSO_14px.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\DX\Fonts\FreeSO_16px.xnb">
+      <Link>Content\DX\Fonts\FreeSO_16px.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\DX\Fonts\Trebuchet_12px.xnb">
+      <Link>Content\DX\Fonts\Trebuchet_12px.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\DX\Fonts\Trebuchet_14px.xnb">
+      <Link>Content\DX\Fonts\Trebuchet_14px.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\DX\Textures\gridTexture.xnb">
+      <Link>Content\DX\Textures\gridTexture.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Effects\2DWorldBatch.xnb">
+      <Link>Content\OGL\Effects\2DWorldBatch.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Effects\GrassShader.xnb">
+      <Link>Content\OGL\Effects\GrassShader.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Effects\PixShader.xnb">
+      <Link>Content\OGL\Effects\PixShader.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Effects\VerShader.xnb">
+      <Link>Content\OGL\Effects\VerShader.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Effects\Vitaboy.xnb">
+      <Link>Content\OGL\Effects\Vitaboy.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Effects\colorpoly2D.xnb">
+      <Link>Content\OGL\Effects\colorpoly2D.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Fonts\FreeSO_10px.xnb">
+      <Link>Content\OGL\Fonts\FreeSO_10px.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Fonts\FreeSO_12px.xnb">
+      <Link>Content\OGL\Fonts\FreeSO_12px.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Fonts\FreeSO_14px.xnb">
+      <Link>Content\OGL\Fonts\FreeSO_14px.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Fonts\FreeSO_16px.xnb">
+      <Link>Content\OGL\Fonts\FreeSO_16px.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Fonts\Trebuchet_12px.xnb">
+      <Link>Content\OGL\Fonts\Trebuchet_12px.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Fonts\Trebuchet_14px.xnb">
+      <Link>Content\OGL\Fonts\Trebuchet_14px.xnb</Link>
+    </None>
+    <None Include="..\tso.client\Content\OGL\Textures\gridTexture.xnb">
+      <Link>Content\OGL\Textures\gridTexture.xnb</Link>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="Default.png" />
+    <BundleResource Include="GameThumbnail.png" />
+    <BundleResource Include="..\tso.client\Content\Textures\splashSeg.png">
+      <Link>Content\Textures\splashSeg.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\Blueprints\empty_lot.xml">
+      <Link>Content\Blueprints\empty_lot.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\Globals\readme.txt">
+      <Link>Content\Globals\readme.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Effects\2DWorldBatch.xnb">
+      <Link>Content\iOS\Effects\2DWorldBatch.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Effects\colorpoly2D.xnb">
+      <Link>Content\iOS\Effects\colorpoly2D.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Effects\GrassShader.xnb">
+      <Link>Content\iOS\Effects\GrassShader.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Effects\PixShader.xnb">
+      <Link>Content\iOS\Effects\PixShader.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Effects\VerShader.xnb">
+      <Link>Content\iOS\Effects\VerShader.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Effects\Vitaboy.xnb">
+      <Link>Content\iOS\Effects\Vitaboy.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Fonts\FreeSO_10px.xnb">
+      <Link>Content\iOS\Fonts\FreeSO_10px.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Fonts\FreeSO_12px.xnb">
+      <Link>Content\iOS\Fonts\FreeSO_12px.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Fonts\FreeSO_14px.xnb">
+      <Link>Content\iOS\Fonts\FreeSO_14px.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Fonts\FreeSO_16px.xnb">
+      <Link>Content\iOS\Fonts\FreeSO_16px.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Fonts\Trebuchet_12px.xnb">
+      <Link>Content\iOS\Fonts\Trebuchet_12px.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Fonts\Trebuchet_14px.xnb">
+      <Link>Content\iOS\Fonts\Trebuchet_14px.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Textures\gridTexture.xnb">
+      <Link>Content\iOS\Textures\gridTexture.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\Objects\catalog_downloads.xml">
+      <Link>Content\Objects\catalog_downloads.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\Objects\readme.txt">
+      <Link>Content\Objects\readme.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\Patch\craftingworkbench_nodebug.piff">
+      <Link>Content\Patch\craftingworkbench_nodebug.piff</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\Patch\dfcontroller_optimise.piff">
+      <Link>Content\Patch\dfcontroller_optimise.piff</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\Patch\foodcounter_ea.piff">
+      <Link>Content\Patch\foodcounter_ea.piff</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\Patch\koipond.piff">
+      <Link>Content\Patch\koipond.piff</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\Patch\pizzamaker_animfix.piff">
+      <Link>Content\Patch\pizzamaker_animfix.piff</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\Patch\poolslide.piff">
+      <Link>Content\Patch\poolslide.piff</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\Patch\trees3_objf.piff">
+      <Link>Content\Patch\trees3_objf.piff</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\Patch\WORKAROUND_poolladder.piff">
+      <Link>Content\Patch\WORKAROUND_poolladder.piff</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="Default-568h%402x.png" />
+    <BundleResource Include="..\tso.client\Content\iOS\Effects\2DWorldBatchiOS.xnb">
+      <Link>Content\iOS\Effects\2DWorldBatchiOS.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\tso.client\Content\iOS\Effects\GrassShaderiOS.xnb">
+      <Link>Content\iOS\Effects\GrassShaderiOS.xnb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="blueprint.dtd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+  </ItemGroup>
+  <ItemGroup>
+    <MonoGameContentReference Include="Content\Content.mgcb" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.iOS.csproj">
+      <Project>{DB8508BB-9849-4CC2-BC0F-8EB5DACB3C47}</Project>
+      <Name>MonoGame.Framework.iOS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Lidgren.Network\Lidgren.Network.iOS.csproj">
+      <Project>{734EAA48-F1CA-481A-B391-0285BC0E8B40}</Project>
+      <Name>Lidgren.Network.iOS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Net.iOS.csproj">
+      <Project>{D4838656-8545-4DC5-8822-D4AD313E17AC}</Project>
+      <Name>MonoGame.Framework.Net.iOS</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <InterfaceDefinition Include="Empty.xib" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Content.Builder.targets" />
+</Project>

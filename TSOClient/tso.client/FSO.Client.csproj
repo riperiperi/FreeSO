@@ -11,6 +11,9 @@
     <RootNamespace>FSO.Client</RootNamespace>
     <AssemblyName>FreeSO</AssemblyName>
     <FileAlignment>512</FileAlignment>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -23,11 +26,8 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -56,9 +56,13 @@
   <PropertyGroup>
     <ApplicationIcon>FreeSO.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Debug\IDEHook.cs" />
     <Compile Include="GameStartProxy.cs" />
+    <Compile Include="GlobalSettings.cs" />
     <Compile Include="UI\Controls\UIPersonIcon.cs" />
     <Compile Include="UI\Framework\UIExternalContainer.cs" />
     <Compile Include="UI\Model\UIMusic.cs" />
@@ -214,36 +218,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Compile Include="Network\Cache.cs" />
-    <Compile Include="Debug\TSOClientFindAssetSearch.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOClientFindAssetSearch.Designer.cs">
-      <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Debug\TSOClientTools.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOClientTools.Designer.cs">
-      <DependentUpon>TSOClientTools.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Debug\TSOClientUIInspector.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOClientUIInspector.Designer.cs">
-      <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Debug\TSOEdith.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOEdith.Designer.cs">
-      <DependentUpon>TSOEdith.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Debug\TSOSceneInspector.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOSceneInspector.Designer.cs">
-      <DependentUpon>TSOSceneInspector.cs</DependentUpon>
-    </Compile>
     <Compile Include="GameController.cs" />
     <Compile Include="GameFacade.cs" />
     <Compile Include="Rendering\City\Blend.cs" />
@@ -350,11 +324,6 @@
     <Compile Include="Network\Events\EventObject.cs" />
     <Compile Include="Network\Events\EventSink.cs" />
     <Compile Include="Network\Events\NetworkEvent.cs" />
-    <Compile Include="GlobalSettings1.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>GlobalSettings.settings</DependentUpon>
-    </Compile>
     <Compile Include="Network\Events\CityViewEvent.cs" />
     <Compile Include="TSOGame.cs" />
     <Compile Include="Network\Events\CityTransitionEvent.cs" />
@@ -411,12 +380,18 @@
     <None Include="Content\iOS\Effects\2DWorldBatch.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Content\iOS\Effects\2DWorldBatchiOS.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Content\iOS\Effects\colorpoly2D.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\iOS\Effects\GrassShader.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Content\iOS\Effects\GrassShaderiOS.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Content\iOS\Effects\PixShader.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -447,39 +422,35 @@
     <None Include="Content\iOS\Textures\gridTexture.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Content\OGL\Effects\2DWorldBatchiOS.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Effects\GrassShaderiOS.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\Icon.bmp" />
     <Content Include="sdl2.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="GOLD Engine, Version=5.0.4337.25397, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Dependencies\GOLD Engine.dll</HintPath>
-    </Reference>
-    <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
-    </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="Tao.Sdl">
-      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\MSBuild\..\MonoGame\v3.0\Assemblies\WindowsGL\Tao.Sdl.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
+    <Reference Include="GOLDEngine">
+      <HintPath>Dependencies\GOLDEngine.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="GameContent\readme.txt" />
     <Content Include="Content\Blueprints\empty_lot.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Dependencies\GOLD Engine.dll" />
+    <Content Include="Dependencies\GOLDEngine.dll" />
     <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />
     <Content Include="Dependencies\nunit.framework.dll" />
     <Content Include="Dependencies\TargaImage.dll" />
@@ -636,28 +607,9 @@
     </None>
     <None Include="ContentSrc\Textures\Thumbs.db" />
     <Content Include="ContentSrc\TSOClientContent.mgcb" />
-    <None Include="GlobalSettings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>GlobalSettings1.Designer.cs</LastGenOutput>
-    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Debug\TSOClientFindAssetSearch.resx">
-      <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Debug\TSOClientTools.resx">
-      <DependentUpon>TSOClientTools.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Debug\TSOClientUIInspector.resx">
-      <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Debug\TSOEdith.resx">
-      <DependentUpon>TSOEdith.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Debug\TSOSceneInspector.resx">
-      <DependentUpon>TSOSceneInspector.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -669,6 +621,10 @@
       <Project>{35253ce1-c864-4cd3-8249-4d1319748e8f}</Project>
       <Name>MonoGame.Framework.Linux</Name>
       <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Net.WindowsGL.csproj">
+      <Project>{6d6009f4-0afb-4806-89d7-7945f20270f5}</Project>
+      <Name>MonoGame.Framework.Net.WindowsGL</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
       <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>

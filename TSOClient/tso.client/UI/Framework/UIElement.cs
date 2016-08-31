@@ -858,6 +858,12 @@ namespace FSO.Client.UI.Framework
             return newRegion;
         }
 
+        public void RemoveMouseListener(UIMouseEventRef item)
+        {
+            if (m_MouseRefs == null) return;
+            m_MouseRefs.Remove(item);
+        }
+
         private float[] _InvertedMtx;
 
         /// <summary>
@@ -881,6 +887,7 @@ namespace FSO.Client.UI.Framework
             new Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
+        
         public static Texture2D StoreTexture(ulong id, ContentResource assetData)
         {
             return StoreTexture(id, assetData, true, false);
@@ -921,8 +928,22 @@ namespace FSO.Client.UI.Framework
             return GetTexture(id.Shift());
         }
 
+        public static Texture2D GetTexture(ulong id)
+        {
+            try
+            {
+                return Content.Content.Get().UIGraphics.Get(id).Get(GameFacade.GraphicsDevice);
+            }
+            catch (Exception e)
+            {
+            }
+            //TODO: darren wants to return null here. that might break some existing code
+            return new Texture2D(GameFacade.GraphicsDevice, 1, 1);
+        }
+
         private static Dictionary<ulong, Texture2D> UI_TEXTURE_CACHE = new Dictionary<ulong, Texture2D>();
         private static List<ulong> UI_TEMP_CACHE = new List<ulong>();
+        /*
         public static Texture2D GetTexture(ulong id)
         {
             try
@@ -942,7 +963,7 @@ namespace FSO.Client.UI.Framework
             }
             return new Texture2D(GameFacade.GraphicsDevice, 1, 1); //TODO: use cache for empty textures, so we don't accidentally create a ton
         }
-
+        */
         //These do not seem to be neccessary when maximizing and minimizing.
         //Commenting out until further testing has been done.
         /*public static void InvalidateEverything()

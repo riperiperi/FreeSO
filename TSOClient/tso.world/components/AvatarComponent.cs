@@ -121,10 +121,9 @@ namespace FSO.LotView.Components
                 var headOff = (transhead-Position) + new Vector3(0,0,0.66f);
                 var headPx = world.WorldSpace.GetScreenFromTile(headOff);
 
-                var item = new _2DSprite();
+                var item = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
                 item.Pixel = Headline;
                 item.Depth = TextureGenerator.GetWallZBuffer(device)[30];
-                item.RenderMode = _2DBatchRenderMode.Z_BUFFER;
 
                 item.SrcRect = new Rectangle(0, 0, Headline.Width, Headline.Height);
                 item.WorldPosition = headOff;

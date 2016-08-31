@@ -47,7 +47,7 @@ namespace FSO.Client.UI.Screens
 
         private List<UISim> m_UISims = new List<UISim>();
 
-        public PersonSelection()
+        public PersonSelection() : base()
         {
             UIScript ui = null;
             if (GlobalSettings.Default.ScaleUI)

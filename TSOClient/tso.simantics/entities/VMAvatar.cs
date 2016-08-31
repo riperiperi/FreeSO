@@ -636,7 +636,11 @@ namespace FSO.SimAntics
             switch (variable)
             {
                 case VMPersonDataVariable.Priority:
-                    if (Thread.Queue.Count != 0 && Thread.Stack.LastOrDefault().ActionTree) Thread.Queue[0].Priority = value;
+                    if (Thread.Queue.Count != 0 && Thread.Stack.LastOrDefault().ActionTree)
+                    {
+                        Thread.Queue[0].Priority = value;
+                        Thread.QueueDirty = true;
+                    }
                     return true;
                 case VMPersonDataVariable.RenderDisplayFlags:
                     if (WorldUI != null) ((AvatarComponent)WorldUI).DisplayFlags = (AvatarDisplayFlags)value;
@@ -801,7 +805,7 @@ namespace FSO.SimAntics
             var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
             var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
 
-            return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID);
+            return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
         }
 
         #region VM Marshalling Functions

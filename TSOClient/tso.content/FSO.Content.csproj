@@ -78,13 +78,10 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -94,6 +91,7 @@
     <Compile Include="AvatarAnimationProvider.cs" />
     <Compile Include="AvatarAppearanceProvider.cs" />
     <Compile Include="AvatarBindingProvider.cs" />
+    <Compile Include="AvatarCollectionsProvider.cs" />
     <Compile Include="AvatarOutfitProvider.cs" />
     <Compile Include="AvatarPurchasables.cs" />
     <Compile Include="AvatarSkeletonProvider.cs" />
@@ -103,6 +101,7 @@
     <Compile Include="Codecs\AnimationCodec.cs" />
     <Compile Include="Codecs\AppearanceCodec.cs" />
     <Compile Include="Codecs\BindingCodec.cs" />
+    <Compile Include="Codecs\CollectionCodec.cs" />
     <Compile Include="Codecs\HandgroupCodec.cs" />
     <Compile Include="Codecs\IffCodec.cs" />
     <Compile Include="Codecs\MeshCodec.cs" />
@@ -121,6 +120,7 @@
     <Compile Include="HandgroupProvider.cs" />
     <Compile Include="Model\AudioReference.cs" />
     <Compile Include="Model\AudioType.cs" />
+    <Compile Include="Model\TextureRef.cs" />
     <Compile Include="Model\WallStyle.cs" />
     <Compile Include="Model\Floor.cs" />
     <Compile Include="Model\Wall.cs" />

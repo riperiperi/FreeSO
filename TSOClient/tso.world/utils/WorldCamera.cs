@@ -155,13 +155,16 @@ namespace FSO.LotView.Utils
         protected override void CalculateProjection()
         {
             var diagnal = 64.0f;
+            var depthRange = 256.0f;
             if (_Zoom == WorldZoom.Medium)
             {
                 diagnal = 128.0f;
+                depthRange = 128.0f;
             }
             else if (_Zoom == WorldZoom.Near)
             {
                 diagnal = 256.0f;
+                depthRange = 64.0f;
             }
             var isoScale = Math.Sqrt(WorldSpace.WorldUnitsPerTile * WorldSpace.WorldUnitsPerTile * 2.0f) / diagnal;
             var hb = (float)(m_Device.Viewport.Width * isoScale);
@@ -172,7 +175,7 @@ namespace FSO.LotView.Utils
             var hb2 = (float)(viewDim.X * isoScale);
             var vb2 = (float)(viewDim.Y * isoScale);
 
-            m_Projection = Matrix.CreateOrthographicOffCenter(-hb2, -hb2+(hb*2), vb2 - (vb * 2), vb2, -300.0f, 300.0f);
+            m_Projection = Matrix.CreateOrthographicOffCenter(-hb2, -hb2+(hb*2), vb2 - (vb * 2), vb2, -(150.0f+depthRange-64), depthRange);
         }
 
         public Matrix GetRotationMatrix()

@@ -20,6 +20,7 @@ using FSO.Client.UI.Model;
 using FSO.LotView;
 using FSO.LotView.Components;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -183,7 +184,7 @@ namespace FSO.Client.UI.Panels
             }
             set
             {
-                this.Y = GlobalSettings.Default.GraphicsHeight - ((value == 0) ? 114 : 228);
+                this.Y = ((value == 0) ? 0 : -114);
                 QuerybackPanel.Visible = (value == 0);
                 QuerybackCatalog.Visible = (value == 1);
                 QuerybackTrade.Visible = (value == 2);
@@ -204,7 +205,8 @@ namespace FSO.Client.UI.Panels
                 AdStrings[i] = ((i<7)?str.Substring(0,str.Length-2)+"{0}":str) + "\r\n";
             }
 
-            var script = this.RenderScript("querypanel"+((GlobalSettings.Default.GraphicsWidth < 1024)?"":"1024")+".uis");
+            var useSmall = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
+            var script = this.RenderScript("querypanel"+(useSmall?"":"1024")+".uis");
 
             //NOTE: the background and position of this element changes with the context it is used in.
             //other elements that are only used for certain modes will be flagged as such with comments.
@@ -231,19 +233,19 @@ namespace FSO.Client.UI.Panels
             this.AddAt(3, DescriptionBackgroundImage);
 
             MotivesBackgroundImage = new UIImage(ImageMotivesBackground);
-            MotivesBackgroundImage.Position = new Microsoft.Xna.Framework.Vector2((GlobalSettings.Default.GraphicsWidth < 1024)?395:619, 7);
+            MotivesBackgroundImage.Position = new Microsoft.Xna.Framework.Vector2(useSmall ? 395:619, 7);
             this.AddAt(3, MotivesBackgroundImage);
 
             GeneralTabImage = new UIImage(ImageGeneralTab);
-            GeneralTabImage.Position = new Microsoft.Xna.Framework.Vector2((GlobalSettings.Default.GraphicsWidth < 1024) ? 563 : 787, 0);
+            GeneralTabImage.Position = new Microsoft.Xna.Framework.Vector2(useSmall ? 563 : 787, 0);
             this.AddAt(3, GeneralTabImage);
 
             SpecificTabImage = new UIImage(ImageSpecificTab);
-            SpecificTabImage.Position = new Microsoft.Xna.Framework.Vector2((GlobalSettings.Default.GraphicsWidth < 1024) ? 563 : 787, 0);
+            SpecificTabImage.Position = new Microsoft.Xna.Framework.Vector2(useSmall ? 563 : 787, 0);
             this.AddAt(3, SpecificTabImage);
 
             OwnerPriceBack = new UIImage(GeneralOwnerPriceBack);
-            OwnerPriceBack.Position = new Microsoft.Xna.Framework.Vector2((GlobalSettings.Default.GraphicsWidth < 1024) ? 501 : 725, 80);
+            OwnerPriceBack.Position = new Microsoft.Xna.Framework.Vector2(useSmall ? 501 : 725, 80);
             this.AddAt(3, OwnerPriceBack);
 
             Thumbnail = new UIImage();
@@ -284,7 +286,7 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
-            if (Mode == 1)
+            if (true)
             {
                 if (Active)
                 {

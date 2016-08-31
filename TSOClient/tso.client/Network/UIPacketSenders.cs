@@ -27,15 +27,15 @@ namespace FSO.Client.Network
             PacketStream InitialPacket = new PacketStream((byte)PacketType.LOGIN_REQUEST, 0);
             InitialPacket.WriteHeader();
 
-            ECDiffieHellmanCng PrivateKey = Args.Client.ClientEncryptor.GetDecryptionArgsContainer()
-                .AESDecryptArgs.PrivateKey;
+            //ECDiffieHellmanCng PrivateKey = Args.Client.ClientEncryptor.GetDecryptionArgsContainer()
+            //    .AESDecryptArgs.PrivateKey;
             //IMPORTANT: Public key must derive from the private key!
-            byte[] ClientPublicKey = PrivateKey.PublicKey.ToByteArray();
+            //byte[] ClientPublicKey = PrivateKey.PublicKey.ToByteArray();
 
             byte[] NOnce = Args.Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
 
-            InitialPacket.WriteInt32(((byte)PacketHeaders.UNENCRYPTED +
-                /*4 is for version*/ 4 + (ClientPublicKey.Length + 1) + (NOnce.Length + 1)));
+            //InitialPacket.WriteInt32(((byte)PacketHeaders.UNENCRYPTED +
+            //    /*4 is for version*/ 4 + (ClientPublicKey.Length + 1) + (NOnce.Length + 1)));
 
             SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
             byte[] HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
@@ -48,8 +48,8 @@ namespace FSO.Client.Network
             InitialPacket.WriteByte((byte)int.Parse(Version[2])); //Version 3
             InitialPacket.WriteByte((byte)int.Parse(Version[3])); //Version 4
 
-            InitialPacket.WriteByte((byte)ClientPublicKey.Length);
-            InitialPacket.WriteBytes(ClientPublicKey);
+            //InitialPacket.WriteByte((byte)ClientPublicKey.Length);
+            //InitialPacket.WriteBytes(ClientPublicKey);
 
             InitialPacket.WriteByte((byte)NOnce.Length);
             InitialPacket.WriteBytes(NOnce);
@@ -105,18 +105,18 @@ namespace FSO.Client.Network
             PacketStream Packet = new PacketStream((byte)PacketType.LOGIN_REQUEST_CITY, 0);
             Packet.WriteHeader();
 
-            ECDiffieHellmanCng PrivateKey = Args.Client.ClientEncryptor.GetDecryptionArgsContainer()
-                .AESDecryptArgs.PrivateKey;
+            //ECDiffieHellmanCng PrivateKey = Args.Client.ClientEncryptor.GetDecryptionArgsContainer()
+            //    .AESDecryptArgs.PrivateKey;
             //IMPORTANT: Public key must derive from the private key!
-            byte[] ClientPublicKey = PrivateKey.PublicKey.ToByteArray();
+            //byte[] ClientPublicKey = PrivateKey.PublicKey.ToByteArray();
 
             byte[] NOnce = Args.Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
 
-            Packet.WriteInt32(((byte)PacketHeaders.UNENCRYPTED +
-                (ClientPublicKey.Length + 1) + (NOnce.Length + 1)));
+            //Packet.WriteInt32(((byte)PacketHeaders.UNENCRYPTED +
+            //    (ClientPublicKey.Length + 1) + (NOnce.Length + 1)));
 
-            Packet.WriteByte((byte)ClientPublicKey.Length);
-            Packet.WriteBytes(ClientPublicKey);
+            //Packet.WriteByte((byte)ClientPublicKey.Length);
+            //Packet.WriteBytes(ClientPublicKey);
 
             Packet.WriteByte((byte)NOnce.Length);
             Packet.WriteBytes(NOnce);

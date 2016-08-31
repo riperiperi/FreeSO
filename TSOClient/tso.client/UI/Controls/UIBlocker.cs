@@ -21,6 +21,7 @@ namespace FSO.Client.UI.Controls
     public class UIBlocker : UIElement
     {
         private UIMouseEventRef MouseEvt;
+        public UIMouseEvent OnMouseEvt;
 
         public UIBlocker()
         {
@@ -28,10 +29,16 @@ namespace FSO.Client.UI.Controls
             SetSize(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
         }
 
-        private void OnMouse(UIMouseEventType type, UpdateState state)
+        public UIBlocker(int width, int height)
         {
+            MouseEvt = this.ListenForMouse(new Microsoft.Xna.Framework.Rectangle(0, 0, 10, 10), OnMouse);
+            SetSize(width, height);
         }
 
+        private void OnMouse(UIMouseEventType type, UpdateState state)
+        {
+            if (OnMouseEvt != null) OnMouseEvt(type, state);
+        }
 
         public void SetSize(int width, int height)
         {

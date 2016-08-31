@@ -30,28 +30,59 @@ namespace FSO.LotView
 
             /** Static Object Buffers **/
             SurfaceFormat.Color,
-            /** Depth buffer must be single surface format for precision reasons **/
-            SurfaceFormat.Single,
+            SurfaceFormat.Color, //depth, using a 24-bit packed format
 
             /** Terrain Color **/
             SurfaceFormat.Color,
 
             /** Object ID buffer **/
-            SurfaceFormat.Single,
+            SurfaceFormat.Color,
 
             /** Floor buffers **/
             SurfaceFormat.Color,
-            SurfaceFormat.Single,
+            SurfaceFormat.Color, //depth
 
             /** Terrain Depth **/
             SurfaceFormat.Color,
 
             /** Wall buffers **/
             SurfaceFormat.Color,
-            SurfaceFormat.Single,
+            SurfaceFormat.Color, //depth
+
+            //Thumbnail depth
+            SurfaceFormat.Color,
         };
 
-        public static readonly int NUM_2D_BUFFERS = 10;
+        public static bool[] FORMAT_ALWAYS_DEPTHSTENCIL = new bool[] {
+            /** Thumbnail buffer **/
+            true,
+
+            /** Static Object Buffers **/
+            true,
+            false, //depth, using a 24-bit packed format
+
+            /** Terrain Color **/
+            true,
+
+            /** Object ID buffer **/
+            true,
+
+            /** Floor buffers **/
+            true,
+            false, //depth
+
+            /** Terrain Depth **/
+            false,
+
+            /** Wall buffers **/
+            true,
+            false, //depth
+
+            //Thumbnail depth
+            false,
+        };
+
+        public static readonly int NUM_2D_BUFFERS = 11;
         public static readonly int BUFFER_THUMB = 0; //used for drawing thumbnails
         public static readonly int BUFFER_STATIC_OBJECTS_PIXEL = 1;
         public static readonly int BUFFER_STATIC_OBJECTS_DEPTH = 2;
@@ -63,6 +94,7 @@ namespace FSO.LotView
 
         public static readonly int BUFFER_WALL_PIXEL = 8;
         public static readonly int BUFFER_WALL_DEPTH = 9;
+        public static readonly int BUFFER_THUMB_DEPTH = 10;
 
 
         public static readonly int SCROLL_BUFFER = 512; //resolution to add to render size for scroll reasons
@@ -71,11 +103,11 @@ namespace FSO.LotView
         private Blueprint Blueprint;
         private Dictionary<WorldComponent, WorldObjectRenderInfo> RenderInfo = new Dictionary<WorldComponent, WorldObjectRenderInfo>();
 
-        private List<_2DDrawGroup> StaticObjectsCache = new List<_2DDrawGroup>();
+        private List<_2DDrawBuffer> StaticObjectsCache = new List<_2DDrawBuffer>();
         private ScrollBuffer StaticObjects;
 
-        private List<_2DDrawGroup> StaticFloorCache = new List<_2DDrawGroup>();
-        private List<_2DDrawGroup> StaticWallCache = new List<_2DDrawGroup>();
+        private List<_2DDrawBuffer> StaticFloorCache = new List<_2DDrawBuffer>();
+        private List<_2DDrawBuffer> StaticWallCache = new List<_2DDrawBuffer>();
         private ScrollBuffer StaticFloor;
         private ScrollBuffer StaticWall;
 
@@ -156,9 +188,10 @@ namespace FSO.LotView
             state.CenterTile = oldCenter;
 
             var tex = bufferTexture.Get();
-            Single[] data = new float[1];
-            tex.GetData<Single>(data);
-            return (short)Math.Round(data[0]*65535f);
+            Color[] data = new Color[1];
+            tex.GetData<Color>(data);
+            var f = Vector3.Dot(new Vector3(data[0].R / 255.0f, data[0].G / 255.0f, data[0].B / 255.0f), new Vector3(1.0f, 1/255.0f, 1/65025.0f));
+            return (short)Math.Round(f*65535f);
         }
 
         /// <summary>
@@ -189,9 +222,10 @@ namespace FSO.LotView
 
             var _2d = state._2D;
             Promise<Texture2D> bufferTexture = null;
+            Promise<Texture2D> depthTexture = null;
             state._2D.OBJIDMode = false;
             Rectangle bounds = new Rectangle();
-            using (var buffer = state._2D.WithBuffer(BUFFER_THUMB, ref bufferTexture))
+            using (var buffer = state._2D.WithBuffer(BUFFER_THUMB, ref bufferTexture, BUFFER_THUMB_DEPTH, ref depthTexture))
             {
                 _2d.SetScroll(new Vector2());
                 while (buffer.NextPass())
@@ -364,7 +398,7 @@ namespace FSO.LotView
                 _2d.Pause();
                 _2d.Resume(); //clear the sprite buffer before we begin drawing what we're going to cache
                 Blueprint.WallComp.Draw(gd, state);
-                StaticWallCache.Clear();
+                ClearDrawBuffer(StaticWallCache);
                 _2d.End(StaticWallCache, true);
             }
 
@@ -373,7 +407,7 @@ namespace FSO.LotView
                 _2d.Pause();
                 _2d.Resume(); //clear the sprite buffer before we begin drawing what we're going to cache
                 Blueprint.FloorComp.Draw(gd, state);
-                StaticFloorCache.Clear();
+                ClearDrawBuffer(StaticFloorCache);
                 _2d.End(StaticFloorCache, true);
             }
 
@@ -388,6 +422,7 @@ namespace FSO.LotView
                     while (buffer.NextPass())
                     {
                         _2d.RenderCache(StaticFloorCache);
+                        Blueprint.Terrain.DepthMode = _2d.OutputDepth;
                         Blueprint.Terrain.Draw(gd, state);
                     }
                 }
@@ -426,9 +461,8 @@ namespace FSO.LotView
                         _2d.SetObjID(obj.ObjectID);
                         obj.Draw(gd, state);
                     }
-
                 }
-                StaticObjectsCache.Clear();
+                ClearDrawBuffer(StaticObjectsCache);
                 _2d.End(StaticObjectsCache, true);
             }
 
@@ -444,7 +478,6 @@ namespace FSO.LotView
                         _2d.RenderCache(StaticObjectsCache);
                     }
                 }
-
                 StaticObjects = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
             }
             state.CenterTile = oldCenter; //revert to our real scroll position
@@ -471,12 +504,25 @@ namespace FSO.LotView
 
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             var tileOffset = state.CenterTile;
+            _2d.Begin(state.Camera);
             if (StaticFloor != null)
+            {
                 _2d.DrawScrollBuffer(StaticFloor, pxOffset, new Vector3(tileOffset, 0), state);
+                _2d.Pause();
+                _2d.Resume();
+            }
             if (StaticWall != null)
+            {
                 _2d.DrawScrollBuffer(StaticWall, pxOffset, new Vector3(tileOffset, 0), state);
+                _2d.Pause();
+                _2d.Resume();
+            }
             if (StaticObjects != null)
+            {
                 _2d.DrawScrollBuffer(StaticObjects, pxOffset, new Vector3(tileOffset, 0), state);
+                _2d.Pause();
+                _2d.Resume();
+            }
 
             _2d.End();
             _2d.Begin(state.Camera);
@@ -509,6 +555,12 @@ namespace FSO.LotView
                     obj.Draw(gd, state);
                 }
             }
+        }
+
+        public void ClearDrawBuffer(List<_2DDrawBuffer> buf)
+        {
+            foreach (var b in buf) b.Dispose();
+            buf.Clear();
         }
     }
 

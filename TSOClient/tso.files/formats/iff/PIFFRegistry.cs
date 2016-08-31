@@ -17,7 +17,7 @@ namespace FSO.Files.Formats.IFF
             PIFFsByName = new Dictionary<string, List<IffFile>>();
             IsPIFFUser = new Dictionary<string, bool>();
 
-            Directory.CreateDirectory(basePath);
+            //Directory.CreateDirectory(basePath);
             string[] paths = Directory.GetFiles(basePath, "*.piff", SearchOption.AllDirectories);
             for (int i = 0; i < paths.Length; i++)
             {

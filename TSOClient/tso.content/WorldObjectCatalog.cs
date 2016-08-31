@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Common;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -41,11 +42,11 @@ namespace FSO.Content
             }
 
             //load and build Content Objects into catalog
-            if (File.Exists("Content/Objects/catalog_downloads.xml"))
+            if (File.Exists(Path.Combine(FSOEnvironment.ContentDir, "Objects/catalog_downloads.xml")))
             {
                 var dpackingslip = new XmlDocument();
 
-                dpackingslip.Load("Content/Objects/catalog_downloads.xml");
+                dpackingslip.Load(Path.Combine(FSOEnvironment.ContentDir, "Objects/catalog_downloads.xml"));
                 var downloadInfos = dpackingslip.GetElementsByTagName("P");
 
                 foreach (XmlNode objectInfo in downloadInfos)

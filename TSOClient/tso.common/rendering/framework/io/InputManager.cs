@@ -70,9 +70,10 @@ namespace FSO.Common.Rendering.Framework.IO
             var m_CurrentKeyState = state.KeyboardState;
             var m_OldKeyState = state.PreviousKeyboardState;
 
+
             result.ShiftDown = PressedKeys.Contains(Keys.LeftShift) || PressedKeys.Contains(Keys.RightShift);
-            result.CapsDown = System.Windows.Forms.Control.IsKeyLocked(System.Windows.Forms.Keys.CapsLock);
-            result.NumLockDown = System.Windows.Forms.Control.IsKeyLocked(System.Windows.Forms.Keys.NumLock);
+			result.CapsDown = state.KeyboardState.CapsLock;
+			result.NumLockDown = state.KeyboardState.NumLock;
             result.CtrlDown = PressedKeys.Contains(Keys.LeftControl) || PressedKeys.Contains(Keys.RightControl);
 
             for (int j = 0; j < state.NewKeys.Count + charCount; j++)
@@ -207,7 +208,7 @@ namespace FSO.Common.Rendering.Framework.IO
 
                                     var copyThread = new Thread(x =>
                                     {
-                                        System.Windows.Forms.Clipboard.SetText((String.IsNullOrEmpty(str)) ? " " : str);
+                                        //System.Windows.Forms.Clipboard.SetText((String.IsNullOrEmpty(str)) ? " " : str);
                                     });
                                     copyThread.SetApartmentState(ApartmentState.STA);
                                     copyThread.Start();
@@ -225,7 +226,7 @@ namespace FSO.Common.Rendering.Framework.IO
                                 string clipboardText = "";
                                 var clipThread = new Thread(x =>
                                 {
-                                    clipboardText = System.Windows.Forms.Clipboard.GetText(System.Windows.Forms.TextDataFormat.Text);
+                                    //clipboardText = System.Windows.Forms.Clipboard.GetText(System.Windows.Forms.TextDataFormat.Text);
                                     wait.Set();
                                 });
                                 clipThread.SetApartmentState(ApartmentState.STA);

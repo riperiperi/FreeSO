@@ -21,6 +21,7 @@ using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Client.UI.Model;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels.LotControls
 {
@@ -95,7 +96,7 @@ namespace FSO.Client.UI.Panels.LotControls
             {
                 HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolDown);
                 Drawing = true;
-                var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+                var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
                 StartPosition = new Point((int)Math.Round(tilePos.X), (int)Math.Round(tilePos.Y));
             }
         }
@@ -151,7 +152,7 @@ namespace FSO.Client.UI.Panels.LotControls
 
         public void Update(UpdateState state, bool scrolled)
         {
-            var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+            var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
             Point cursor = new Point((int)Math.Round(tilePos.X), (int)Math.Round(tilePos.Y));
 
             var cmds = vm.Context.Architecture.Commands;

@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6211" systemVersion="14A298i" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="5" launchScreen="NO">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6204"/>
+    </dependencies>
+    <scenes>
+        <scene sceneID="4">
+            <objects>
+                <viewController id="5" sceneMemberID="viewController" customClass="FSOInstallViewController" title="Main" storyboardIdentifier="Main" restorationIdentifier="Main">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="2"/>
+                        <viewControllerLayoutGuide type="bottom" id="3"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="6">
+                        <rect key="frame" x="0.0" y="0.0" width="568" height="320"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <subviews>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Enter a location to download TSO files from." lineBreakMode="tailTruncation" minimumFontSize="10" id="28" translatesAutoresizingMaskIntoConstraints="NO" textAlignment="center">
+                                <rect key="frame" x="285" y="272" width="42" height="21"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                                <variation key="heightClass=compact-widthClass=compact">
+                                    <rect key="frame" x="50" y="265.5" width="468" height="20.5"/>
+                                </variation>
+                            </label>
+                            <progressView opaque="NO" contentMode="scaleToFill" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="38">
+                                <rect key="frame" x="209" y="269" width="150" height="9"/>
+                                <variation key="heightClass=compact-widthClass=compact">
+                                    <rect key="frame" x="120" y="295" width="328" height="5"/>
+                                    <mask key="constraints">
+                                        <include reference="42"/>
+                                        <include reference="43"/>
+                                    </mask>
+                                </variation>
+                                <constraints>
+                                    <constraint id="42" firstAttribute="width" constant="328"/>
+                                    <constraint id="43" firstAttribute="height" constant="9">
+                                        <variation key="heightClass=compact-widthClass=compact" constant="5"/>
+                                    </constraint>
+                                </constraints>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="42"/>
+                                        <exclude reference="43"/>
+                                    </mask>
+                                </variation>
+                            </progressView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" id="46" translatesAutoresizingMaskIntoConstraints="NO" image="FreeSO.png">
+                                <rect key="frame" x="163" y="20" width="160" height="240"/>
+                                <variation key="heightClass=compact-widthClass=compact">
+                                    <rect key="frame" x="28" y="44" width="512" height="128"/>
+                                    <mask key="constraints">
+                                        <include reference="52"/>
+                                        <include reference="53"/>
+                                    </mask>
+                                </variation>
+                                <constraints>
+                                    <constraint id="52" firstAttribute="width" constant="512"/>
+                                    <constraint id="53" firstAttribute="height" constant="128"/>
+                                </constraints>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="52"/>
+                                        <exclude reference="53"/>
+                                    </mask>
+                                </variation>
+                            </imageView>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" minimumFontSize="17" id="54" translatesAutoresizingMaskIntoConstraints="NO" text="192.168.1.1">
+                                <rect key="frame" x="236" y="180" width="97" height="30"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                                <variation key="heightClass=compact-widthClass=compact">
+                                    <rect key="frame" x="165.5" y="208" width="181" height="30"/>
+                                    <mask key="constraints">
+                                        <include reference="59"/>
+                                    </mask>
+                                </variation>
+                                <constraints>
+                                    <constraint id="59" firstAttribute="width" constant="181"/>
+                                </constraints>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="59"/>
+                                    </mask>
+                                </variation>
+                            </textField>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="55" translatesAutoresizingMaskIntoConstraints="NO">
+                                <rect key="frame" x="238" y="230" width="46" height="30"/>
+                                <state key="normal" title="Go">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <variation key="heightClass=compact-widthClass=compact">
+                                    <rect key="frame" x="355" y="208" width="46" height="30"/>
+                                    <mask key="constraints">
+                                        <include reference="67"/>
+                                    </mask>
+                                </variation>
+                                <constraints>
+                                    <constraint id="67" firstAttribute="width" constant="46"/>
+                                </constraints>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="67"/>
+                                    </mask>
+                                </variation>
+                                <connections>
+                                    <action selector="IpConfirm_TouchUpInside:" destination="5" id="71" eventType="touchUpInside"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <variation key="default">
+                            <mask key="subviews">
+                                <exclude reference="28"/>
+                                <exclude reference="38"/>
+                                <exclude reference="46"/>
+                                <exclude reference="54"/>
+                                <exclude reference="55"/>
+                            </mask>
+                            <mask key="constraints">
+                                <exclude reference="30"/>
+                                <exclude reference="31"/>
+                                <exclude reference="33"/>
+                                <exclude reference="40"/>
+                                <exclude reference="41"/>
+                                <exclude reference="49"/>
+                                <exclude reference="51"/>
+                                <exclude reference="57"/>
+                                <exclude reference="58"/>
+                                <exclude reference="65"/>
+                                <exclude reference="66"/>
+                            </mask>
+                        </variation>
+                        <variation key="heightClass=compact-widthClass=compact">
+                            <mask key="subviews">
+                                <include reference="28"/>
+                                <include reference="38"/>
+                                <include reference="46"/>
+                                <include reference="54"/>
+                                <include reference="55"/>
+                            </mask>
+                            <mask key="constraints">
+                                <include reference="30"/>
+                                <include reference="31"/>
+                                <include reference="33"/>
+                                <include reference="40"/>
+                                <include reference="41"/>
+                                <include reference="49"/>
+                                <include reference="51"/>
+                                <include reference="57"/>
+                                <include reference="58"/>
+                                <include reference="65"/>
+                                <include reference="66"/>
+                            </mask>
+                        </variation>
+                        <constraints>
+                            <constraint id="30" firstItem="6" firstAttribute="trailing" secondItem="28" secondAttribute="trailing" constant="133">
+                                <variation key="heightClass=compact-widthClass=compact" constant="50"/>
+                            </constraint>
+                            <constraint id="31" firstItem="6" firstAttribute="bottom" secondItem="28" secondAttribute="bottom" constant="34">
+                                <variation key="heightClass=compact-widthClass=compact" constant="34"/>
+                            </constraint>
+                            <constraint id="33" firstItem="28" firstAttribute="leading" secondItem="6" secondAttribute="leading" constant="134">
+                                <variation key="heightClass=compact-widthClass=compact" constant="50"/>
+                            </constraint>
+                            <constraint id="40" firstItem="6" firstAttribute="bottom" secondItem="38" secondAttribute="bottom" constant="20"/>
+                            <constraint id="41" firstItem="38" firstAttribute="centerX" secondItem="6" secondAttribute="centerX"/>
+                            <constraint id="49" firstItem="46" firstAttribute="centerX" secondItem="28" secondAttribute="centerX"/>
+                            <constraint id="51" firstItem="46" firstAttribute="top" secondItem="6" secondAttribute="top" constant="44"/>
+                            <constraint id="57" firstItem="54" firstAttribute="centerX" secondItem="38" secondAttribute="centerX">
+                                <variation key="heightClass=compact-widthClass=compact" constant="-28"/>
+                            </constraint>
+                            <constraint id="58" firstItem="6" firstAttribute="bottom" secondItem="54" secondAttribute="bottom" constant="82"/>
+                            <constraint id="65" firstItem="55" firstAttribute="centerX" secondItem="38" secondAttribute="centerX">
+                                <variation key="heightClass=compact-widthClass=compact" constant="94"/>
+                            </constraint>
+                            <constraint id="66" firstItem="6" firstAttribute="bottom" secondItem="55" secondAttribute="bottom" constant="82"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="IPEntry" destination="54" id="name-outlet-54"/>
+                        <outlet property="IpConfirm" destination="55" id="name-outlet-55"/>
+                        <outlet property="StatusText" destination="28" id="name-outlet-28"/>
+                        <outlet property="StatusProgress" destination="38" id="name-outlet-38"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="7" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-342" y="-18"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="Content/Textures/splashSeg.png" width="192" height="3"/>
+        <image name="Default-568h.png" width="320" height="568"/>
+        <image name="Default.png" width="320" height="480"/>
+        <image name="GameThumbnail.png" width="256" height="256"/>
+        <image name="FreeSO.png" width="1024" height="256"/>
+    </resources>
+    <simulatedMetricsContainer key="defaultSimulatedMetrics">
+        <simulatedScreenMetrics key="destination" type="retina4"/>
+        <simulatedOrientationMetrics key="orientation" orientation="landscapeRight"/>
+    </simulatedMetricsContainer>
+</document>

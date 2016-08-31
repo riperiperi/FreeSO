@@ -1,4 +1,5 @@
-﻿using FSO.Files.Formats.IFF;
+﻿using FSO.Common;
+using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
 using System;
 using System.Collections.Generic;
@@ -127,7 +128,7 @@ namespace FSO.Content
                 }
                 else
                 {
-                    string dest = (file.RuntimeInfo.State == IffRuntimeState.PIFFClone) ? "Content/Objects/" : "Content/Patch/User/";
+                    string dest = Path.Combine(FSOEnvironment.ContentDir, ((file.RuntimeInfo.State == IffRuntimeState.PIFFClone) ? "Objects/" : "Patch/User/"));
                     Directory.CreateDirectory(dest);
                     if (file.RuntimeInfo.State == IffRuntimeState.ReadOnly)
                     {

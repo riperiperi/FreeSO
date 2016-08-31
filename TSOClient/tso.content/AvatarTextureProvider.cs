@@ -12,15 +12,16 @@ using FSO.Content.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Content.Codecs;
 using System.Text.RegularExpressions;
+using FSO.Content.Model;
 
 namespace FSO.Content
 {
     /// <summary>
     /// Provides access to texture (*.jpg) data in FAR3 archives.
     /// </summary>
-    public class AvatarTextureProvider : PackingslipProvider<Texture2D> {
+    public class AvatarTextureProvider : PackingslipProvider<ITextureRef> {
         public AvatarTextureProvider(Content contentManager, GraphicsDevice device)
-            : base(contentManager, "packingslips/textures.xml", new TextureCodec(device))
+            : base(contentManager, "packingslips/textures.xml", new TextureCodec())
         {
         }
     }

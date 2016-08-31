@@ -187,17 +187,8 @@ namespace FSO.Client.Rendering.City
             //Can crash on some setups on dx11?
             //TextureUtils.ManualTextureMaskSingleThreaded(ref m_DefaultHouse, new uint[] { new Color(0x00, 0x00, 0x00, 0xFF).PackedValue });
 
-            byte[] bytes = GameContent.ContentManager.GetResourceFromLongID(0x0000032F00000001);
-            using (var stream = new MemoryStream(bytes))
-            {
-                m_LotOnline = LoadTex(stream);
-            }
-
-            bytes = GameContent.ContentManager.GetResourceFromLongID(0x0000033100000001);
-            using (var stream = new MemoryStream(bytes))
-            {
-                m_LotOffline = LoadTex(stream);
-            }
+            m_LotOnline = UIElement.GetTexture(0x0000032F00000001);
+            m_LotOffline = UIElement.GetTexture(0x0000033100000001);
 
             //fills used for line drawing
 
@@ -1464,8 +1455,8 @@ namespace FSO.Client.Rendering.City
             m_GraphicsDevice.RasterizerState = RasterizerState.CullNone; //don't cull
             m_GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-            m_ScrHeight = GlobalSettings.Default.GraphicsHeight;
-            m_ScrWidth = GlobalSettings.Default.GraphicsWidth;
+            m_ScrHeight = m_GraphicsDevice.Viewport.Height;
+            m_ScrWidth = m_GraphicsDevice.Viewport.Width;
 
             if (RegenData) GenerateAssets(); //if assets are flagged as requiring regeneration, regenerate them!
 

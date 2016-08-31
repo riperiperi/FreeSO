@@ -1,4 +1,5 @@
 ﻿//#define THROW_SIMANTICS
+#define IDE_COMPAT
 
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
@@ -38,7 +39,14 @@ namespace FSO.SimAntics.Engine
 
         public List<VMStackFrame> Stack;
         private bool ContinueExecution;
+
         public List<VMQueuedAction> Queue;
+        /// <summary>
+        /// Set when a change to the queue or an item's priority is changed. Internal functions set this, but since you can modify the queue 
+        /// from other classes MAKE SURE you set this when such a change is made. (eg. priority set from VMAvatar)
+        /// </summary>
+        public bool QueueDirty;
+
         public byte ActiveQueueBlock = 0; //cannot reorder items in the queue with index <= this.
         public short[] TempRegisters = new short[20];
         public int[] TempXL = new int[2];
@@ -156,6 +164,7 @@ namespace FSO.SimAntics.Engine
         /// </summary>
         public bool AttemptPush()
         {
+            QueueDirty = true;
             while (Queue.Count > 0)
             {
                 var item = Queue[0];
@@ -192,6 +201,7 @@ namespace FSO.SimAntics.Engine
         }
 
         public void Tick(){
+#if IDE_COMPAT
             if (ThreadBreak == VMThreadBreakMode.Pause) return;
             else if (ThreadBreak == VMThreadBreakMode.Immediate)
             {
@@ -203,6 +213,7 @@ namespace FSO.SimAntics.Engine
                     if (frame.Routine.Chunk.RuntimeVer != frame.Routine.RuntimeVer) frame.Routine = Context.VM.Assemble(frame.Routine.Chunk); 
                 RoutineDirty = false;
             }
+#endif
 
             if (BlockingState != null) BlockingState.WaitTime++;
             if (DialogCooldown > 0) DialogCooldown--;
@@ -211,8 +222,12 @@ namespace FSO.SimAntics.Engine
 #endif
                 if (!Entity.Dead)
                 {
-                    EvaluateQueuePriorities();
-                    TryRunImmediately();
+                    if (QueueDirty)
+                    {
+                        EvaluateQueuePriorities();
+                        TryRunImmediately();
+                        QueueDirty = false;
+                    }
                     if (Stack.Count == 0)
                     {
                         if (IsCheck) return; //running out of execution means check trees have ended.
@@ -221,6 +236,7 @@ namespace FSO.SimAntics.Engine
                     }
                     if ((!Stack.LastOrDefault().ActionTree) || (!Queue[0].Callee.Dead)) //main or our target is not dead
                     {
+#if IDE_COMPAT
                         if (ThreadBreak == VMThreadBreakMode.ReturnTrue)
                         {
                             var bf = Stack[BreakFrame];
@@ -235,6 +251,7 @@ namespace FSO.SimAntics.Engine
                             Breakpoint(Stack.LastOrDefault());
                             return;
                         }
+#endif
                         ContinueExecution = true;
                         while (ContinueExecution)
                         {
@@ -277,8 +294,6 @@ namespace FSO.SimAntics.Engine
                 if (Delete) Entity.Delete(true, context.VM.Context);
             }
 #endif
-
-            //Interrupt = true;
         }
 
         private void EvaluateQueuePriorities() {
@@ -301,12 +316,9 @@ namespace FSO.SimAntics.Engine
 
         private void NextInstruction()
         {
-            if (Stack.Count == 0){
-                return;
-            }
-
             /** Next instruction **/
-            var currentFrame = Stack.Last();
+            var currentFrame = Stack.LastOrDefault();
+            if (currentFrame == null) return;
 
             if (currentFrame is VMRoutingFrame) HandleResult(currentFrame, null, ((VMRoutingFrame)currentFrame).Tick());
             else ExecuteInstruction(currentFrame);
@@ -389,14 +401,17 @@ namespace FSO.SimAntics.Engine
 
                 var operand = (VMSubRoutineOperand)instruction.Operand;
                 ExecuteSubRoutine(frame, bhav, CodeOwner, operand);
+#if IDE_COMPAT
                 if (Stack.LastOrDefault().GetCurrentInstruction().Breakpoint || ThreadBreak == VMThreadBreakMode.StepIn)
                 {
                     Breakpoint(frame);
                     ContinueExecution = false;
                 } else
+#endif
                 {
                     ContinueExecution = true;
                 }
+
                 return;
             }
             
@@ -404,11 +419,8 @@ namespace FSO.SimAntics.Engine
             var primitive = Context.Primitives[opcode];
             if (primitive == null)
             {
-                //throw new Exception("Unknown primitive!");
                 HandleResult(frame, instruction, VMPrimitiveExitCode.GOTO_TRUE);
                 return;
-                //Pop(VMPrimitiveExitCode.ERROR);
-                
             }
 
             VMPrimitiveHandler handler = primitive.GetHandler();
@@ -449,6 +461,7 @@ namespace FSO.SimAntics.Engine
                     break;
                 case VMPrimitiveExitCode.INTERRUPT:
                     Stack.Clear();
+                    QueueDirty = true;
                     if (Queue.Count > 0) Queue.RemoveAt(0);
                     LastStackExitCode = result;
                     break;
@@ -504,6 +517,7 @@ namespace FSO.SimAntics.Engine
 
             if (contextSwitch) //interaction switching back to main (it cannot be the other way...)
             {
+                QueueDirty = true;
                 var interaction = Queue[0];
                 //clear "interaction cancelled" since we are leaving the interaction
                 if (interaction.Mode != VMQueueMode.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
@@ -517,6 +531,7 @@ namespace FSO.SimAntics.Engine
                 {
                     //TODO: merge this functionality with contextSwitch. Will have to change how Allow Push works.
                     //only used by Run Immediately currently.
+                    QueueDirty = true;
                     if (Queue.Count > 0) Queue.RemoveAt(0);
                     ActiveQueueBlock--;
                     result = VMPrimitiveExitCode.CONTINUE;
@@ -554,6 +569,7 @@ namespace FSO.SimAntics.Engine
         public void EnqueueAction(VMQueuedAction invocation)
         {
             invocation.UID = ActionUID++;
+            QueueDirty = true;
             if (!IsCheck && (invocation.Flags & TTABFlags.RunImmediately) > 0)
             {
                 // shove this action in the queue to try run it next tick.
@@ -597,6 +613,7 @@ namespace FSO.SimAntics.Engine
             var interaction = Queue.FirstOrDefault(x => x.UID == actionUID);
             if (interaction != null)
             {
+                QueueDirty = true;
                 interaction.Cancelled = true;
                 //cancel any idle parents after this interaction
                 var index = Queue.IndexOf(interaction);
@@ -763,6 +780,7 @@ namespace FSO.SimAntics.Engine
                 Stack.Add((item is VMRoutingFrameMarshal)? new VMRoutingFrame(item, context, this) : new VMStackFrame(item, context, this));
             }
             Queue = new List<VMQueuedAction>();
+            QueueDirty = true;
             foreach (var item in input.Queue) Queue.Add(new VMQueuedAction(item, context));
             ActiveQueueBlock = input.ActiveQueueBlock;
             TempRegisters = input.TempRegisters;

@@ -151,7 +151,10 @@ namespace FSO.Vitaboy
         /// </summary>
         /// <param name="gd">A GraphicsDevice instance used for drawing.</param>
         public void Draw(GraphicsDevice gd){
-            gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, VertexBuffer, 0, VertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
+            if (!GPUMode) StoreOnGPU(gd);
+            gd.Indices = GPUIndexBuffer;
+            gd.SetVertexBuffer(GPUVertexBuffer);
+            gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, NumPrimitives);
         }
 
         /// <summary>

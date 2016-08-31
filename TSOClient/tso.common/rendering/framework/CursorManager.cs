@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
+//using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Reflection;
 using System.ComponentModel;
@@ -41,14 +41,14 @@ namespace FSO.Common.Rendering.Framework
     {
         public static CursorManager INSTANCE;
 
-        private Dictionary<CursorType, Cursor> m_CursorMap;
+        //private Dictionary<CursorType, Cursor> m_CursorMap;
         private GameWindow Window;
         public CursorType CurrentCursor = CursorType.Normal;
 
         public CursorManager(GameWindow window)
         {
             INSTANCE = this;
-            m_CursorMap = new Dictionary<CursorType, Cursor>();
+            //m_CursorMap = new Dictionary<CursorType, Cursor>();
             this.Window = window;
         }
 
@@ -82,16 +82,18 @@ namespace FSO.Common.Rendering.Framework
             };
 
             foreach(var item in map){
+				/*
                 m_CursorMap.Add(item.Key,
                     LoadCustomCursor(
                         Path.Combine(basepath, @"uigraphics\shared\cursors\" + item.Value)
                     ));
+                    */
             }
         }
 
 
 
-        private static Cursor LoadCustomCursor(string path)
+        /*private static Cursor LoadCustomCursor(string path)
         {
             IntPtr hCurs = LoadCursorFromFile(path);
             if (hCurs == IntPtr.Zero) throw new Win32Exception();
@@ -103,5 +105,6 @@ namespace FSO.Common.Rendering.Framework
         }
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         private static extern IntPtr LoadCursorFromFile(string path);
+        */
     }
 }

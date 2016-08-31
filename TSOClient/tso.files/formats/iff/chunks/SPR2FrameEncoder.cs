@@ -1,6 +1,4 @@
-﻿using SimplePaletteQuantizer.Ditherers.ErrorDiffusion;
-using SimplePaletteQuantizer.Helpers;
-using SimplePaletteQuantizer.Quantizers.DistinctSelection;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -8,49 +6,17 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using System.IO;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using FSO.Files.Utils;
-using SimplePaletteQuantizer.Quantizers.Octree;
-using SimplePaletteQuantizer.Ditherers.Ordered;
-using SimplePaletteQuantizer.Ditherers;
-using SimplePaletteQuantizer.Quantizers.XiaolinWu;
 
 namespace FSO.Files.Formats.IFF.Chunks
 {
-    public static class SPR2FrameEncoder
+	public static class SPR2FrameEncoder
     {
 
-        public static System.Drawing.Color[] QuantizeFrame(SPR2Frame frame, out byte[] bytes)
-        {
-            var bmps = frame.GetPixelAlpha(frame.Width, frame.Height, new Vector2());
+        public delegate Color[] QuantizerFunction(SPR2Frame frame, out byte[] bytes);
 
-            /*
-            SimplePaletteQuantizer.Quantizers.IColorQuantizer quantizer = new DistinctSelectionQuantizer();
+        public static QuantizerFunction QuantizeFrame;
 
-            using (ImageBuffer buffer = new ImageBuffer(bmps[0], ImageLockMode.ReadOnly))
-            {
-                quantizer.Prepare(buffer);
-                buffer.ScanColors(quantizer, 4); // 4 = parallel task count
-            }
-
-            Bitmap quantpx = new Bitmap(bmps[0].Width, bmps[0].Height, PixelFormat.Format8bppIndexed);
-            ImageBuffer.DitherImage(bmps[0], quantpx, new JarvisJudiceNinkeDitherer(), quantizer, 255, 4);*/
-
-            var quantpx = (Bitmap)ImageBuffer.QuantizeImage(bmps[0], new DistinctSelectionQuantizer(), null, 255, 4);
-            var palt = quantpx.Palette.Entries;
-
-            var data = quantpx.LockBits(new System.Drawing.Rectangle(0, 0, quantpx.Width, quantpx.Height), ImageLockMode.ReadOnly, PixelFormat.Format8bppIndexed);
-            bytes = new byte[data.Height * data.Width];
-
-            // copy the bytes from bitmap to array
-            for (int i=0; i<data.Height; i++)
-            {
-                Marshal.Copy(data.Scan0 + i*data.Stride, bytes, i*data.Width, data.Width);
-            }
-
-            return palt;
-        }
         public static void WriteFrame(SPR2Frame frame, IoWriter output)
         {
             var bytes = frame.PalData;

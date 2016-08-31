@@ -90,7 +90,8 @@ namespace FSO.LotView.Components
                                 if ((adj & PoolSegments.BottomLeft) > 0) spriteNum |= 4;
                                 if ((adj & PoolSegments.BottomRight) > 0) spriteNum |= 8;
 
-                                var _Sprite = new _2DSprite() { RenderMode = _2DBatchRenderMode.Z_BUFFER };
+                                var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
+
                                 SPR2 sprite = null;
                                 switch (world.Zoom)
                                 {
@@ -129,7 +130,7 @@ namespace FSO.LotView.Components
                                 if ((adj & CornerChecks[0]) == CornerChecks[0] && (adj & PoolSegments.Top) == 0)
                                 {
                                     //top corner
-                                    var tcS = new _2DSprite() { RenderMode = _2DBatchRenderMode.Z_BUFFER };
+                                    var tcS = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
                                     //base sprite position on base tile
                                     sprite = floorContent.GetGlobalSPR((ushort)(0x430 + ((int)world.Zoom-1)*4));
                                     tcS.Pixel = world._2D.GetTexture(sprite.Frames[0]);
@@ -143,7 +144,7 @@ namespace FSO.LotView.Components
                                 if ((adj & CornerChecks[1]) == CornerChecks[1] && (adj & PoolSegments.Left) == 0)
                                 {
                                     //left corner
-                                    var tcS = new _2DSprite() { RenderMode = _2DBatchRenderMode.Z_BUFFER };
+                                    var tcS = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
                                     //base sprite position on base tile
                                     sprite = floorContent.GetGlobalSPR((ushort)(0x431 + ((int)world.Zoom - 1) * 4));
                                     tcS.Pixel = world._2D.GetTexture(sprite.Frames[0]);
@@ -157,7 +158,7 @@ namespace FSO.LotView.Components
                                 if ((adj & CornerChecks[2]) == CornerChecks[2] && (adj & PoolSegments.Bottom) == 0)
                                 {
                                     //bottom corner
-                                    var tcS = new _2DSprite() { RenderMode = _2DBatchRenderMode.Z_BUFFER };
+                                    var tcS = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
                                     //base sprite position on base tile
                                     sprite = floorContent.GetGlobalSPR((ushort)(0x432 + ((int)world.Zoom - 1) * 4));
                                     tcS.Pixel = world._2D.GetTexture(sprite.Frames[0]);
@@ -171,7 +172,7 @@ namespace FSO.LotView.Components
                                 if ((adj & CornerChecks[3]) == CornerChecks[3] && (adj & PoolSegments.Right) == 0)
                                 {
                                     //right corner
-                                    var tcS = new _2DSprite() { RenderMode = _2DBatchRenderMode.Z_BUFFER };
+                                    var tcS = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
                                     //base sprite position on base tile
                                     sprite = floorContent.GetGlobalSPR((ushort)(0x433 + ((int)world.Zoom - 1) * 4));
                                     tcS.Pixel = world._2D.GetTexture(sprite.Frames[0]);
@@ -208,10 +209,7 @@ namespace FSO.LotView.Components
 
         private _2DSprite GetAirSprite(WorldState world)
         {
-            var _Sprite = new _2DSprite()
-            {
-                RenderMode = _2DBatchRenderMode.Z_BUFFER
-            };
+            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
             var airTiles = TextureGenerator.GetAirTiles(world.Device);
             Texture2D sprite = null;
             switch (world.Zoom)
@@ -249,10 +247,7 @@ namespace FSO.LotView.Components
 
         private _2DSprite GetFloorSprite(Floor pattern, int rotation, WorldState world)
         {
-            var _Sprite = new _2DSprite()
-            {
-                RenderMode = _2DBatchRenderMode.Z_BUFFER
-            };
+            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
             if (pattern == null) return _Sprite;
             SPR2 sprite = null;
             bool vertFlip = world.Rotation == WorldRotation.TopRight || world.Rotation == WorldRotation.BottomRight;

@@ -56,14 +56,11 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -119,12 +116,6 @@
     <Compile Include="..\..\Exceptions\PeekNotSupportedException.cs">
       <Link>Exceptions\PeekNotSupportedException.cs</Link>
     </Compile>
-    <Compile Include="..\..\GlobalSettings2.Designer.cs">
-      <Link>GlobalSettings2.Designer.cs</Link>
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>GlobalSettings.settings</DependentUpon>
-    </Compile>
     <Compile Include="..\..\Listener.cs" />
     <Compile Include="..\..\Logger.cs" />
     <Compile Include="..\..\LoginArgsContainer.cs" />
@@ -134,12 +125,6 @@
     <Compile Include="..\..\PacketHeaders.cs" />
     <Compile Include="..\..\PacketStream.cs" />
     <Compile Include="..\..\ProcessedPacket.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\GlobalSettings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>GlobalSettings2.Designer.cs</LastGenOutput>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

@@ -17,7 +17,7 @@ namespace FSO.Common.Rendering.Framework
         protected GraphicsDeviceManager Graphics;
         protected GameScreen Screen;
 
-        public Game()
+		public Game() : base()
         {
             Graphics = new GraphicsDeviceManager(this);
         }

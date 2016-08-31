@@ -471,7 +471,7 @@ namespace FSO.Client.Network
                 SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
                 byte[] HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
 
-                Args.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(HashBuf));
+                //Args.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(HashBuf));
                 Args.Client = client;
 
                 client.Connect(Args);
@@ -488,7 +488,7 @@ namespace FSO.Client.Network
             if (LoginArgs.Enc == null)
             {
                 System.Diagnostics.Debug.WriteLine("LoginArgs.Enc was null!");
-                LoginArgs.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(PlayerAccount.Hash));
+                //LoginArgs.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(PlayerAccount.Hash));
             }
             else if (LoginArgs.Username == null || LoginArgs.Password == null)
             {

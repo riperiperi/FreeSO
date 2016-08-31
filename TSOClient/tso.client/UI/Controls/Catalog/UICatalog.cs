@@ -16,6 +16,7 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels.LotControls;
+using FSO.Common;
 
 namespace FSO.Client.UI.Controls.Catalog
 {
@@ -72,11 +73,12 @@ namespace FSO.Client.UI.Controls.Catalog
                     }
 
                     //load and build Content Objects into catalog
-                    if (File.Exists("Content/Objects/catalog_downloads.xml"))
+                    var path = Path.Combine(FSOEnvironment.ContentDir, "catalog_downloads.xml");
+                    if (File.Exists(path))
                     {
                         var dpackingslip = new XmlDocument();
 
-                        dpackingslip.Load(Path.Combine("Content/Objects/catalog_downloads.xml"));
+                        dpackingslip.Load(path);
                         var downloadInfos = dpackingslip.GetElementsByTagName("P");
 
                         foreach (XmlNode objectInfo in downloadInfos)

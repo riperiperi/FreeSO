@@ -17,6 +17,7 @@ using System.IO;
 using FSO.Client.UI.Screens;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Client.Network;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -59,7 +60,7 @@ namespace FSO.Client.UI.Panels
 
             script.LinkMembers(this, true);
 
-            SearchText.CurrentText = "127.0.0.1";
+            SearchText.CurrentText = "freeso.ml";
             NarrowSearchButton.OnButtonClick += JoinServerLot;
         }
 
@@ -114,7 +115,7 @@ namespace FSO.Client.UI.Panels
         {
             var xmlHouses = new List<UIXMLLotEntry>();
 
-            string[] paths = Directory.GetFiles(@"Content/Blueprints/", "*.xml", SearchOption.AllDirectories);
+            string[] paths = Directory.GetFiles(Path.Combine(FSOEnvironment.ContentDir,"Blueprints/"), "*.xml", SearchOption.AllDirectories);
             for (int i = 0; i < paths.Length; i++)
             {
                 string entry = paths[i];

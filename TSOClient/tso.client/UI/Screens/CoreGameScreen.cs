@@ -34,6 +34,7 @@ using FSO.Client.UI.Controls;
 using FSO.Client.Debug;
 using FSO.Client.UI.Panels.WorldUI;
 using FSO.SimAntics.Engine.TSOTransaction;
+using FSO.Common;
 
 namespace FSO.Client.UI.Screens
 {
@@ -174,7 +175,7 @@ namespace FSO.Client.UI.Screens
             }
         }
 
-        public CoreGameScreen()
+        public CoreGameScreen() : base()
         {
             /** City Scene **/
             ListenForMouse(new Rectangle(0, 0, ScreenWidth, ScreenHeight), new UIMouseEvent(MouseHandler));
@@ -461,7 +462,7 @@ namespace FSO.Client.UI.Screens
                 string filename = Path.GetFileName(path);
                 try
                 {
-                    using (var file = new BinaryReader(File.OpenRead("Content/LocalHouse/"+filename.Substring(0, filename.Length-4)+".fsov")))
+                    using (var file = new BinaryReader(File.OpenRead(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/")+filename.Substring(0, filename.Length-4)+".fsov")))
                     {
                         var marshal = new SimAntics.Marshals.VMMarshal();
                         marshal.Deserialize(file);
@@ -567,8 +568,8 @@ namespace FSO.Client.UI.Screens
             var exporter = new VMWorldExporter();
             exporter.SaveHouse(vm, GameFacade.GameFilePath("housedata/blueprints/house_00.xml"));
             var marshal = vm.Save();
-            Directory.CreateDirectory("Content/LocalHouse/");
-            using (var output = new FileStream("Content/LocalHouse/house_00.fsov", FileMode.Create))
+            Directory.CreateDirectory(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/"));
+            using (var output = new FileStream(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/house_00.fsov"), FileMode.Create))
             {
                 marshal.SerializeInto(new BinaryWriter(output));
             }

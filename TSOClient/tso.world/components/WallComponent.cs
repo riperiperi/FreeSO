@@ -214,7 +214,7 @@ namespace FSO.LotView.Components
                                             var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
                                             if (!comp2.TopLeftThick)
                                             {
-                                                _Sprite = CopySprite(_Sprite);
+                                                _Sprite = CopySprite(world, _Sprite);
                                                 tlStyle = GetStyle(comp.TopLeftStyle); //return to normal if cutaway
                                                 var tilePosition2 = contOff;
 
@@ -346,7 +346,7 @@ namespace FSO.LotView.Components
                                             var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
                                             if (!comp2.TopRightThick)
                                             {
-                                                _Sprite = CopySprite(_Sprite);
+                                                _Sprite = CopySprite(world, _Sprite);
                                                 trStyle = GetStyle(comp.TopRightStyle); //return to normal if cutaway
 
                                                 var tilePosition2 = contOff;
@@ -568,10 +568,7 @@ namespace FSO.LotView.Components
                             world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                             world._2D.OffsetTile(tilePosition);
 
-                            var _Sprite = new _2DSprite()
-                            {
-                                RenderMode = _2DBatchRenderMode.Z_BUFFER
-                            };
+                            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
 
                             var Junctions = wallContent.Junctions;
 
@@ -839,10 +836,7 @@ namespace FSO.LotView.Components
 
         private _2DSprite GetWallSprite(Wall pattern, WallStyle style, int rotation, bool down, WorldState world)
         {
-            var _Sprite = new _2DSprite()
-            {
-                RenderMode = _2DBatchRenderMode.WALL
-            };
+            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.WALL);
             SPR sprite = null;
             SPR mask = null;
             switch (world.Zoom)
@@ -883,10 +877,7 @@ namespace FSO.LotView.Components
 
         private _2DSprite GetFloorSprite(Floor pattern, int rotation, WorldState world, byte cut)
         {
-            var _Sprite = new _2DSprite()
-            {
-                RenderMode = _2DBatchRenderMode.Z_BUFFER
-            };
+            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
             if (pattern == null) return _Sprite;
             SPR2 sprite = null;
             switch (world.Zoom)
@@ -1138,17 +1129,15 @@ namespace FSO.LotView.Components
             return output;
         }
 
-        private _2DSprite CopySprite(_2DSprite _Sprite)
+        private _2DSprite CopySprite(WorldState world, _2DSprite _Sprite)
         {
-            return new _2DSprite()
-            {
-                DestRect = _Sprite.DestRect,
-                SrcRect = _Sprite.SrcRect,
-                RenderMode = _2DBatchRenderMode.WALL,
-                Pixel = _Sprite.Pixel,
-                Depth = _Sprite.Depth,
-                Room = _Sprite.Room
-            };
+            var spr = world._2D.NewSprite(_2DBatchRenderMode.WALL);
+            spr.DestRect = _Sprite.DestRect;
+            spr.SrcRect = _Sprite.SrcRect;
+            spr.Pixel = _Sprite.Pixel;
+            spr.Depth = _Sprite.Depth;
+            spr.Room = _Sprite.Room;
+            return spr;
         }
     }
 

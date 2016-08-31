@@ -35,6 +35,7 @@ using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Client.UI.Panels.EODs;
 using FSO.SimAntics.Utils;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -124,9 +125,9 @@ namespace FSO.Client.UI.Panels
             ObjectHolder = new UIObjectHolder(vm, World, this);
             QueryPanel = new UIQueryPanel(World);
             QueryPanel.OnSellBackClicked += ObjectHolder.SellBack;
-            QueryPanel.X = 177;
-            QueryPanel.Y = GlobalSettings.Default.GraphicsHeight - 228;
-            this.Add(QueryPanel);
+            QueryPanel.X = 0;
+            QueryPanel.Y = -114;
+            //this.Add(QueryPanel);
 
             ChatPanel = new UIChatPanel(vm, this);
             this.Add(ChatPanel);
@@ -279,7 +280,7 @@ namespace FSO.Client.UI.Panels
                 {
                     VMEntity obj;
                     //get new pie menu, make new pie menu panel for it
-                    var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+                    var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
 
                     LotTilePos targetPos = LotTilePos.FromBigTile((short)tilePos.X, (short)tilePos.Y, World.State.Level);
                     if (vm.Context.SolidToAvatars(targetPos).Solid) targetPos = LotTilePos.OUT_OF_WORLD;
@@ -304,8 +305,8 @@ namespace FSO.Client.UI.Panels
                         {
                             PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
                             this.Add(PieMenu);
-                            PieMenu.X = state.MouseState.X;
-                            PieMenu.Y = state.MouseState.Y;
+                            PieMenu.X = state.MouseState.X / FSOEnvironment.DPIScaleFactor;
+                            PieMenu.Y = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
                             PieMenu.UpdateHeadPosition(state.MouseState.X, state.MouseState.Y);
                         }
                     }
@@ -371,16 +372,21 @@ namespace FSO.Client.UI.Panels
                 {
                     OldMX = state.MouseState.X;
                     OldMY = state.MouseState.Y;
-                    var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
-                    //if (newHover == 0) newHover = ActiveEntity.ObjectID;
+                    var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X/FSOEnvironment.DPIScaleFactor, 
+                        state.MouseState.Y / FSOEnvironment.DPIScaleFactor, 
+                        GameFacade.GraphicsDevice);
+
                     if (ObjectHover != newHover)
                     {
                         ObjectHover = newHover;
                         if (ObjectHover > 0)
                         {
                             var obj = vm.GetObjectById(ObjectHover);
-                            var menu = obj.GetPieMenu(vm, ActiveEntity, false);
-                            InteractionsAvailable = (menu.Count > 0);
+                            if (obj != null)
+                            {
+                                var menu = obj.GetPieMenu(vm, ActiveEntity, false);
+                                InteractionsAvailable = (menu.Count > 0);
+                            }
                         }
                     }
 
@@ -529,6 +535,7 @@ namespace FSO.Client.UI.Panels
                         RMBScrollX = state.MouseState.X;
                         RMBScrollY = state.MouseState.Y;
                         scrollBy /= 128f;
+                        scrollBy /= FSOEnvironment.DPIScaleFactor;
                     } else
                     {
                         scrollBy = new Vector2(state.MouseState.X - RMBScrollX, state.MouseState.Y - RMBScrollY);
@@ -566,7 +573,7 @@ namespace FSO.Client.UI.Panels
                 {
                     World.State.DynamicCutaway = (WallsMode == 1);
                     //first we need to cycle the rooms that are being cutaway. Keep this up even if we're in all-cut mode.
-                    var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+                    var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
                     var roomHover = vm.Context.GetRoomAt(LotTilePos.FromBigTile((short)(mouseTilePos.X), (short)(mouseTilePos.Y), World.State.Level));
                     var outside = (vm.Context.RoomInfo[roomHover].Room.IsOutside);
                     if (!outside && !CutRooms.Contains(roomHover))

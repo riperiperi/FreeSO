@@ -23,6 +23,7 @@ using FSO.Vitaboy;
 using FSO.Content;
 using FSO.Client.GameContent;
 using FSO.Client.UI.Model;
+using FSO.Common;
 
 namespace FSO.Client.UI.Screens
 {
@@ -63,16 +64,17 @@ namespace FSO.Client.UI.Screens
         public CityInfo SelectedCity;
         public UISim SimBox;
 
-        public PersonSelectionEdit()
+        public PersonSelectionEdit() : base()
         {
             /**
             * Data
             */
-            MaleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
-            MaleOutfits = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male));
+            var content = Content.Content.Get();
+            MaleHeads = content.AvatarCollections.Get("ea_male_heads.col");
+            MaleOutfits = content.AvatarCollections.Get("ea_male.col");
 
-            FemaleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_female_heads));
-            FemaleOutfits = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_female));
+            FemaleHeads = content.AvatarCollections.Get("ea_female_heads.col");
+            FemaleOutfits = content.AvatarCollections.Get("ea_female.col");
 
             /**
              * UI
@@ -80,7 +82,8 @@ namespace FSO.Client.UI.Screens
 
             UIScript ui = this.RenderScript("personselectionedit1024.uis");
 
-            Position = new Vector2((GlobalSettings.Default.GraphicsWidth-1024)/2, (GlobalSettings.Default.GraphicsHeight-768)/2);
+            Position = new Vector2((GlobalSettings.Default.GraphicsWidth-1024)/2, (GlobalSettings.Default.GraphicsHeight-768)/2) * FSOEnvironment.DPIScaleFactor;
+            Console.WriteLine(Position.ToString());
 
             m_ExitButton = (UIButton)ui["ExitButton"];
             m_ExitButton.OnButtonClick += new ButtonClickDelegate(m_ExitButton_OnButtonClick);
@@ -405,7 +408,7 @@ namespace FSO.Client.UI.Screens
 
                 dataProvider.Add(new UIGridViewerItem {
                     Data = outfit,
-                    Thumb = new Promise<Texture2D>(x => GetTexture(thumbID))
+                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID.TypeID, thumbID.FileID).Get(GameFacade.GraphicsDevice))
                 });
             }
             return dataProvider;

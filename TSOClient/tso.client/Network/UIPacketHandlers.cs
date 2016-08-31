@@ -41,24 +41,24 @@ namespace FSO.Client.Network
             byte[] ServerPublicKey = Packet.ReadBytes(Packet.ReadByte());
             byte[] EncryptedData = Packet.ReadBytes(Packet.ReadByte());
 
-            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
-            Enc.PublicKey = ServerPublicKey;
-            Client.ClientEncryptor = Enc;
-            lock(NetworkFacade.Client)
-                NetworkFacade.Client.ClientEncryptor = Enc;
+//            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+//            Enc.PublicKey = ServerPublicKey;
+//            Client.ClientEncryptor = Enc;
+//            lock(NetworkFacade.Client)
+//                NetworkFacade.Client.ClientEncryptor = Enc;
 
-            ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
+//            ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
             byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
 
-            byte[] ChallengeResponse = StaticStaticDiffieHellman.Decrypt(PrivateKey,
-                ECDiffieHellmanCngPublicKey.FromByteArray(ServerPublicKey, CngKeyBlobFormat.EccPublicBlob),
-                NOnce, EncryptedData);
+//            byte[] ChallengeResponse = StaticStaticDiffieHellman.Decrypt(PrivateKey,
+//                ECDiffieHellmanCngPublicKey.FromByteArray(ServerPublicKey, CngKeyBlobFormat.EccPublicBlob),
+//                NOnce, EncryptedData);
 
             MemoryStream StreamToEncrypt = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
 
-            Writer.Write((byte)ChallengeResponse.Length);
-            Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
+//            Writer.Write((byte)ChallengeResponse.Length);
+//            Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
 
             Writer.Write(Client.ClientEncryptor.Username);
             Writer.Write((byte)PlayerAccount.Hash.Length);
@@ -274,27 +274,27 @@ namespace FSO.Client.Network
             byte[] ServerPublicKey = Packet.ReadBytes(Packet.ReadByte());
             byte[] EncryptedData = Packet.ReadBytes(Packet.ReadByte());
 
-            lock (Client.ClientEncryptor)
-            {
-                AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
-                Enc.PublicKey = ServerPublicKey;
-                Client.ClientEncryptor = Enc;
-                lock (NetworkFacade.Client)
-                    NetworkFacade.Client.ClientEncryptor = Enc;
-            }
+//            lock (Client.ClientEncryptor)
+//            {
+//                AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+//                Enc.PublicKey = ServerPublicKey;
+//                Client.ClientEncryptor = Enc;
+//                lock (NetworkFacade.Client)
+//                    NetworkFacade.Client.ClientEncryptor = Enc;
+//            }
 
-            ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
-            byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
+//            ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
+//            byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
 
-            byte[] ChallengeResponse = StaticStaticDiffieHellman.Decrypt(PrivateKey,
-                ECDiffieHellmanCngPublicKey.FromByteArray(ServerPublicKey, CngKeyBlobFormat.EccPublicBlob),
-                NOnce, EncryptedData);
+//            byte[] ChallengeResponse = StaticStaticDiffieHellman.Decrypt(PrivateKey,
+//                ECDiffieHellmanCngPublicKey.FromByteArray(ServerPublicKey, CngKeyBlobFormat.EccPublicBlob),
+//                NOnce, EncryptedData);
 
             MemoryStream StreamToEncrypt = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
 
-            Writer.Write((byte)ChallengeResponse.Length);
-            Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
+//            Writer.Write((byte)ChallengeResponse.Length);
+//            Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
             Writer.Flush();
 
             //Encrypt data using key and IV from server, hoping that it'll be decrypted correctly at the other end...
