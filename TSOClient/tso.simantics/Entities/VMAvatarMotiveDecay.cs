@@ -51,6 +51,7 @@ namespace FSO.SimAntics.Entities
             int moodSum = 0;
 
             for (int i = 0; i < 7; i++) {
+                if (avatar.IsPet && i == 5) return;
                 float lotMul = LotMotives.GetNum(category + "_" + LotMotiveNames[i] + "Weight");
                 float frac = 0;
                 var motive = avatar.GetMotiveData(DecrementMotives[i]);

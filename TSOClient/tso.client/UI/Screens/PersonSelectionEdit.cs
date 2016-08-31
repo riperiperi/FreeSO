@@ -22,6 +22,7 @@ using FSO.Client.Controllers;
 using System.Text.RegularExpressions;
 using FSO.Client.GameContent;
 using FSO.Client.UI.Model;
+using FSO.Common;
 
 namespace FSO.Client.UI.Screens
 {
@@ -81,7 +82,7 @@ namespace FSO.Client.UI.Screens
         public string ProgressDialogMessage { get; set; }
         public string DefaultAvatarDescription { get; set; }
 
-        public PersonSelectionEdit()
+        public PersonSelectionEdit() : base()
         {
             /**
             * Data
@@ -99,7 +100,8 @@ namespace FSO.Client.UI.Screens
 
             UIScript ui = this.RenderScript("personselectionedit1024.uis");
 
-            Position = new Vector2((GlobalSettings.Default.GraphicsWidth-1024)/2, (GlobalSettings.Default.GraphicsHeight-768)/2);
+            Position = new Vector2((GlobalSettings.Default.GraphicsWidth-1024)/2, (GlobalSettings.Default.GraphicsHeight-768)/2) * FSOEnvironment.DPIScaleFactor;
+            Console.WriteLine(Position.ToString());
 
             m_ExitButton = (UIButton)ui["ExitButton"];
             m_ExitButton.OnButtonClick += new ButtonClickDelegate(m_ExitButton_OnButtonClick);
@@ -412,7 +414,11 @@ namespace FSO.Client.UI.Screens
 
                 dataProvider.Add(new UIGridViewerItem {
                     Data = outfit,
+<<<<<<< HEAD
                     Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID).Get(GameFacade.GraphicsDevice))
+=======
+                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID.TypeID, thumbID.FileID).Get(GameFacade.GraphicsDevice))
+>>>>>>> refs/remotes/origin/master
                 });
             }
             return dataProvider;

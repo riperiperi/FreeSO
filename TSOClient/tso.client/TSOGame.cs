@@ -24,7 +24,7 @@ using FSO.Common.Domain;
 using FSO.Common.Utils;
 using FSO.Common;
 using Microsoft.Xna.Framework.Audio;
-using System.Windows.Forms;
+//using System.Windows.Forms;
 
 namespace FSO.Client
 {
@@ -36,11 +36,11 @@ namespace FSO.Client
         public UILayer uiLayer;
         public _3DLayer SceneMgr;
 
-        public TSOGame()
+		public TSOGame() : base()
         {
             GameFacade.Game = this;
             Content.RootDirectory = FSOEnvironment.GFXContentDir;
-            Graphics.SynchronizeWithVerticalRetrace = true; //GameFacade.DirectX || GlobalSettings.Default.Windowed; //why was this disabled
+            Graphics.SynchronizeWithVerticalRetrace = true;
             
             Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
@@ -67,6 +67,11 @@ namespace FSO.Client
                 new NetworkModule()
             );
             GameFacade.Kernel = kernel;
+            if (FSOEnvironment.DPIScaleFactor != 1 || FSOEnvironment.SoftwareDepth)
+            {
+                GlobalSettings.Default.GraphicsWidth = GraphicsDevice.Viewport.Width / FSOEnvironment.DPIScaleFactor;
+                GlobalSettings.Default.GraphicsHeight = GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor;
+            }
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
@@ -104,18 +109,17 @@ namespace FSO.Client
                 audioTest.CreateInstance().Play();
             } catch (Exception e)
             {
-                MessageBox.Show("Failed to initialize audio: \r\n\r\n" + e.StackTrace);
+                //MessageBox.Show("Failed to initialize audio: \r\n\r\n" + e.StackTrace);
             }
 
             this.IsMouseVisible = true;
             this.IsFixedTimeStep = true;
 
             WorldContent.Init(this.Services, Content.RootDirectory);
-
+            if (!FSOEnvironment.SoftwareKeyboard) AddTextInput();
             base.Screen.Layers.Add(SceneMgr);
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
-
             //Bind ninject objects
             kernel.Bind<FSO.Content.Content>().ToConstant(FSO.Content.Content.Get());
             kernel.Load(new ClientDomainModule());
@@ -126,13 +130,20 @@ namespace FSO.Client
             var ds = kernel.Get<DataService>();
             ds.AddProvider(new ClientAvatarProvider());
 
-            this.Window.TextInput += GameScreen.TextInput;
             this.Window.Title = "FreeSO";
 
-            if (!GlobalSettings.Default.Windowed)
+            if (!GlobalSettings.Default.Windowed && !GameFacade.GraphicsDeviceManager.IsFullScreen)
             {
                 GameFacade.GraphicsDeviceManager.ToggleFullScreen();
             }
+        }
+
+        /// <summary>
+        /// Only used on desktop targets. Use extensive reflection to AVOID linking on iOS!
+        /// </summary>
+        void AddTextInput()
+        {
+            this.Window.GetType().GetEvent("TextInput").AddEventHandler(this.Window, (EventHandler<TextInputEventArgs>)GameScreen.TextInput);
         }
 
         void RegainFocus(object sender, EventArgs e)
@@ -170,7 +181,7 @@ namespace FSO.Client
             }
             catch (Exception e)
             {
-                System.Windows.Forms.MessageBox.Show("Content could not be loaded. Make sure that the FreeSO content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
+                //MessageBox.Windows.Forms.MessageBox.Show("Content could not be loaded. Make sure that the FreeSO content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
                 Exit();
             }
 

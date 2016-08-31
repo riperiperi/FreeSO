@@ -21,6 +21,7 @@ using FSO.SimAntics.Model;
 using Microsoft.Xna.Framework.Input;
 using FSO.Client.UI.Framework;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -332,14 +333,14 @@ namespace FSO.Client.UI.Panels
                 }
                 else
                 {
-                    var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y))+ Holding.TilePosOffset;
+                    var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor) + Holding.TilePosOffset;
                     MoveSelected(tilePos, 1);
                 }
             }
             else if (MouseClicked)
             {
                 //not holding an object, but one can be selected
-                var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
+                var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X / FSOEnvironment.DPIScaleFactor, state.MouseState.Y / FSOEnvironment.DPIScaleFactor, GameFacade.GraphicsDevice);
                 if (MouseClicked && (newHover != 0) && (vm.GetObjectById(newHover) is VMGameObject))
                 {
                     var objGroup = vm.GetObjectById(newHover).MultitileGroup;
@@ -351,7 +352,7 @@ namespace FSO.Client.UI.Panels
                         SetSelected(ghostGroup);
 
                         Holding.MoveTarget = newHover;
-                        Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+                        Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
                         if (OnPickup != null) OnPickup(Holding, state);
                         //ExecuteEntryPoint(12); //User Pickup
                     }

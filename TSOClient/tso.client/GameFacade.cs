@@ -40,7 +40,7 @@ namespace FSO.Client
         public static GraphicsDevice GraphicsDevice;
         public static GraphicsDeviceManager GraphicsDeviceManager;
         public static TSOGame Game;
-        public static TSOClientTools DebugWindow;
+        //public static TSOClientTools DebugWindow;
         public static Font MainFont;
         public static Font EdithFont;
         public static UpdateState LastUpdateState;

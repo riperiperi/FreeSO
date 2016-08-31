@@ -20,6 +20,7 @@ using FSO.Client.UI.Framework;
 using FSO.Client.Utils;
 using FSO.Common.Utils;
 using FSO.SimAntics.NetPlay.Model;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -64,6 +65,19 @@ namespace FSO.Client.UI.Panels
         {
             this.vm = vm;
             this.Owner = owner;
+
+            if (FSOEnvironment.SoftwareKeyboard)
+            {
+                //need a button to initiate chat history
+                var btn = new UIButton();
+                btn.Caption = "Chat";
+                btn.Position = new Vector2(10, 10);
+                btn.OnButtonClick += (state) =>
+                {
+                    HistoryDialog.Visible = !HistoryDialog.Visible;
+                };
+                Add(btn);
+            }
 
             Style = TextStyle.DefaultTitle.Clone();
             Style.Size = 16;

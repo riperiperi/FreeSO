@@ -34,6 +34,8 @@ using FSO.Client.Debug;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Client.UI.Panels.EODs;
+using FSO.SimAntics.Utils;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -50,6 +52,7 @@ namespace FSO.Client.UI.Panels
 
         private bool ShowTooltip;
         private bool TipIsError;
+        private Texture2D RMBCursor;
 
         public FSO.SimAntics.VM vm;
         public LotView.World World;
@@ -72,7 +75,7 @@ namespace FSO.Client.UI.Panels
         public UICustomLotControl CustomControl;
         public UIEODController EODs;
 
-        public int WallsMode;
+        public int WallsMode = 1;
 
         private int OldMX;
         private int OldMY;
@@ -88,11 +91,19 @@ namespace FSO.Client.UI.Panels
         // and that the code actually blocks further dialogs from appearing while waiting for a response.
         // If we are to implement controlling multiple sims, this must be changed.
         private UIAlert BlockingDialog;
+        private ulong LastDialogID;
 
         private static uint GOTO_GUID = 0x000007C4;
         public VMEntity GotoObject;
 
         private Rectangle MouseCutRect = new Rectangle(-4, -4, 4, 4);
+        private List<uint> CutRooms = new List<uint>();
+        private HashSet<uint> LastCutRooms = new HashSet<uint>(); //final rooms, including those outside. used to detect dirty.
+        public sbyte LastFloor = -1;
+        public WorldRotation LastRotation = WorldRotation.TopLeft;
+        private bool[] LastCuts; //cached roomcuts, to apply rect cut to.
+        private int LastWallMode = -1; //invalidates last roomcuts
+        private bool LastRectCutNotable = false; //set if the last rect cut made a noticable change to the cuts array. If true refresh regardless of new cut effect.
 
         /// <summary>
         /// Creates a new UILotControl instance.
@@ -115,12 +126,13 @@ namespace FSO.Client.UI.Panels
             QueryPanel = new UIQueryPanel(World);
             QueryPanel.OnSellBackClicked += ObjectHolder.SellBack;
             QueryPanel.OnInventoryClicked += ObjectHolder.MoveToInventory;
-            QueryPanel.X = 177;
-            QueryPanel.Y = GlobalSettings.Default.GraphicsHeight - 228;
-            this.Add(QueryPanel);
+            QueryPanel.X = 0;
+            QueryPanel.Y = -114;
 
             ChatPanel = new UIChatPanel(vm, this);
             this.Add(ChatPanel);
+
+            RMBCursor = GetTexture(0x24B00000001); //exploreanchor.bmp
 
             vm.OnChatEvent += Vm_OnChatEvent;
             vm.OnDialog += vm_OnDialog;
@@ -150,7 +162,17 @@ namespace FSO.Client.UI.Panels
 
         void vm_OnDialog(FSO.SimAntics.Model.VMDialogInfo info)
         {
-            if (info.Caller != null && info.Caller != ActiveEntity) return;
+            if (info != null && ((info.DialogID == LastDialogID && info.DialogID != 0 && info.Block)
+                || info.Caller != null && info.Caller != ActiveEntity)) return;
+            //return if same dialog as before, or not ours
+            if ((info == null || info.Block) && BlockingDialog != null)
+            {
+                //cancel current dialog because it's no longer valid
+                UIScreen.RemoveDialog(BlockingDialog);
+                LastDialogID = 0;
+                BlockingDialog = null;
+            }
+            if (info == null) return; //return if we're just clearing a dialog.
 
             var options = new UIAlertOptions {
                 Title = info.Title,
@@ -195,7 +217,11 @@ namespace FSO.Client.UI.Panels
 
             var alert = UIScreen.GlobalShowAlert(options, true);
 
-            if (info.Block) BlockingDialog = alert;
+            if (info.Block)
+            {
+                BlockingDialog = alert;
+                LastDialogID = info.DialogID;
+            }
 
             var entity = info.Icon;
             if (entity is VMGameObject)
@@ -219,6 +245,7 @@ namespace FSO.Client.UI.Panels
         {
             if (BlockingDialog == null) return;
             UIScreen.RemoveDialog(BlockingDialog);
+            LastDialogID = 0;
             vm.SendCommand(new VMNetDialogResponseCmd {
                 ActorUID = ActiveEntity.PersistID,
                 ResponseCode = code,
@@ -253,7 +280,7 @@ namespace FSO.Client.UI.Panels
                 {
                     VMEntity obj;
                     //get new pie menu, make new pie menu panel for it
-                    var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+                    var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
 
                     LotTilePos targetPos = LotTilePos.FromBigTile((short)tilePos.X, (short)tilePos.Y, World.State.Level);
                     if (vm.Context.SolidToAvatars(targetPos).Solid) targetPos = LotTilePos.OUT_OF_WORLD;
@@ -278,8 +305,8 @@ namespace FSO.Client.UI.Panels
                         {
                             PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
                             this.Add(PieMenu);
-                            PieMenu.X = state.MouseState.X;
-                            PieMenu.Y = state.MouseState.Y;
+                            PieMenu.X = state.MouseState.X / FSOEnvironment.DPIScaleFactor;
+                            PieMenu.Y = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
                             PieMenu.UpdateHeadPosition(state.MouseState.X, state.MouseState.Y);
                         }
                     }
@@ -344,16 +371,21 @@ namespace FSO.Client.UI.Panels
                 {
                     OldMX = state.MouseState.X;
                     OldMY = state.MouseState.Y;
-                    var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
-                    //if (newHover == 0) newHover = ActiveEntity.ObjectID;
+                    var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X/FSOEnvironment.DPIScaleFactor, 
+                        state.MouseState.Y / FSOEnvironment.DPIScaleFactor, 
+                        GameFacade.GraphicsDevice);
+
                     if (ObjectHover != newHover)
                     {
                         ObjectHover = newHover;
                         if (ObjectHover > 0)
                         {
                             var obj = vm.GetObjectById(ObjectHover);
-                            var menu = obj.GetPieMenu(vm, ActiveEntity, false);
-                            InteractionsAvailable = (menu.Count > 0);
+                            if (obj != null)
+                            {
+                                var menu = obj.GetPieMenu(vm, ActiveEntity, false);
+                                InteractionsAvailable = (menu.Count > 0);
+                            }
                         }
                     }
 
@@ -439,7 +471,18 @@ namespace FSO.Client.UI.Panels
 
         public void RefreshCut()
         {
+            LastFloor = -1;
+            LastWallMode = -1;
             MouseCutRect = new Rectangle(0,0,0,0);
+        }
+
+        public override void Draw(UISpriteBatch batch)
+        {
+            if (RMBScroll)
+            {
+                DrawLocalTexture(batch, RMBCursor, new Vector2(RMBScrollX - RMBCursor.Width/2, RMBScrollY - RMBCursor.Height / 2));
+            }
+            base.Draw(batch);
         }
 
         public override void Update(UpdateState state)
@@ -457,12 +500,24 @@ namespace FSO.Client.UI.Panels
                 if (!FoundMe && ActiveEntity != null)
                 {
                     vm.Context.World.State.CenterTile = new Vector2(ActiveEntity.VisualPosition.X, ActiveEntity.VisualPosition.Y);
+                    vm.Context.World.State.ScrollAnchor = null;
                     FoundMe = true;
                 }
                 Queue.QueueOwner = ActiveEntity;
             }
 
             if (GotoObject == null) GotoObject = vm.Context.CreateObjectInstance(GOTO_GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true).Objects[0];
+
+            if (ActiveEntity != null && BlockingDialog != null)
+            {
+                //are we still waiting on a blocking dialog? if not, cancel.
+                if (ActiveEntity.Thread != null && (ActiveEntity.Thread.BlockingState == null || !(ActiveEntity.Thread.BlockingState is VMDialogResult)))
+                {
+                    UIScreen.RemoveDialog(BlockingDialog);
+                    LastDialogID = 0;
+                    BlockingDialog = null;
+                }
+            }
 
             if (Visible)
             {
@@ -471,6 +526,7 @@ namespace FSO.Client.UI.Panels
                 bool scrolled = false;
                 if (RMBScroll)
                 {
+                    World.State.ScrollAnchor = null;
                     Vector2 scrollBy = new Vector2();
                     if (state.TouchMode)
                     {
@@ -478,6 +534,7 @@ namespace FSO.Client.UI.Panels
                         RMBScrollX = state.MouseState.X;
                         RMBScrollY = state.MouseState.Y;
                         scrollBy /= 128f;
+                        scrollBy /= FSOEnvironment.DPIScaleFactor;
                     } else
                     {
                         scrollBy = new Vector2(state.MouseState.X - RMBScrollX, state.MouseState.Y - RMBScrollY);
@@ -513,29 +570,73 @@ namespace FSO.Client.UI.Panels
 
                 if (vm.Context.Blueprint != null)
                 {
-                    var cuts = vm.Context.Blueprint.Cutaway;
-                    Rectangle newCut;
-                    if (WallsMode == 0)
+                    World.State.DynamicCutaway = (WallsMode == 1);
+                    //first we need to cycle the rooms that are being cutaway. Keep this up even if we're in all-cut mode.
+                    var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+                    var roomHover = vm.Context.GetRoomAt(LotTilePos.FromBigTile((short)(mouseTilePos.X), (short)(mouseTilePos.Y), World.State.Level));
+                    var outside = (vm.Context.RoomInfo[roomHover].Room.IsOutside);
+                    if (!outside && !CutRooms.Contains(roomHover))
+                        CutRooms.Add(roomHover); //outside hover should not persist like with other rooms.
+                    while (CutRooms.Count > 3) CutRooms.Remove(CutRooms.ElementAt(0));
+
+                    if (LastWallMode != WallsMode)
                     {
-                        newCut = new Rectangle(-1, -1, 1024, 1024); //cut all; walls down.
-                    }
-                    else if (WallsMode == 1)
-                    {
-                        var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y + 128));
-                        newCut = new Rectangle((int)(mouseTilePos.X - 5.5), (int)(mouseTilePos.Y - 5.5), 11, 11);
-                    }
-                    else
-                    {
-                        newCut = new Rectangle(0, 0, 0, 0); //walls up or roof
+                        if (WallsMode == 0) //walls down
+                        {
+                            LastCuts = new bool[vm.Context.Architecture.Width * vm.Context.Architecture.Height];
+                            vm.Context.Blueprint.Cutaway = LastCuts;
+                            vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                            for (int i = 0; i < LastCuts.Length; i++) LastCuts[i] = true;
+                        }
+                        else if (WallsMode == 1)
+                        {
+                            MouseCutRect = new Rectangle();
+                            LastCutRooms = new HashSet<uint>() { uint.MaxValue }; //must regenerate cuts
+                        }
+                        else //walls up or roof
+                        {
+                            LastCuts = new bool[vm.Context.Architecture.Width * vm.Context.Architecture.Height];
+                            vm.Context.Blueprint.Cutaway = LastCuts;
+                            vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                        }
+                        LastWallMode = WallsMode;
                     }
 
-
-                    if (!newCut.Equals(MouseCutRect))
+                    if (WallsMode == 1)
                     {
-                        if (cuts.Contains(MouseCutRect)) cuts.Remove(MouseCutRect);
-                        MouseCutRect = newCut;
-                        cuts.Add(MouseCutRect);
-                        vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                        int recut = 0;
+                        var finalRooms = new HashSet<uint>(CutRooms);
+
+                        var newCut = new Rectangle((int)(mouseTilePos.X - 2.5), (int)(mouseTilePos.Y - 2.5), 5, 5);
+                        newCut.X -= VMArchitectureTools.CutCheckDir[(int)World.State.Rotation][0]*2;
+                        newCut.Y -= VMArchitectureTools.CutCheckDir[(int)World.State.Rotation][1]*2;
+                        if (newCut != MouseCutRect)
+                        {
+                            MouseCutRect = newCut;
+                            recut = 1;
+                        }
+
+                        if (LastFloor != World.State.Level || LastRotation != World.State.Rotation || !finalRooms.SetEquals(LastCutRooms))
+                        {
+                            LastCuts = VMArchitectureTools.GenerateRoomCut(vm.Context.Architecture, World.State.Level, World.State.Rotation, finalRooms);
+                            recut = 2;
+                            LastFloor = World.State.Level;
+                            LastRotation = World.State.Rotation;
+                        }
+                        LastCutRooms = finalRooms;
+
+                        if (recut > 0)
+                        {
+                            var finalCut = new bool[LastCuts.Length];
+                            Array.Copy(LastCuts, finalCut, LastCuts.Length);
+                            var notableChange = VMArchitectureTools.ApplyCutRectangle(vm.Context.Architecture, World.State.Level, finalCut, MouseCutRect);
+                            if (recut > 1 || notableChange || LastRectCutNotable)
+                            {
+                                vm.Context.Blueprint.Cutaway = finalCut;
+                                vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                            }
+                            LastRectCutNotable = notableChange;
+                        }
                     }
                 }
             }

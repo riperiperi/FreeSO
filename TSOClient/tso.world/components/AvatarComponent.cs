@@ -33,6 +33,12 @@ namespace FSO.LotView.Components
             return Vector3.Transform(new Vector3(handpos.X, handpos.Z, handpos.Y), Matrix.CreateRotationZ((float)(RadianDirection+Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
         }
 
+        public Vector3 GetPelvisPosition()
+        {
+            var pelvis = Avatar.Skeleton.GetBone("PELVIS").AbsolutePosition / 3.0f;
+            return Vector3.Transform(new Vector3(pelvis.X, pelvis.Z, pelvis.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
+        }
+
         public double RadianDirection;
         public override ushort Room { get; set; }
         public AvatarDisplayFlags DisplayFlags;
@@ -115,10 +121,9 @@ namespace FSO.LotView.Components
                 var headOff = (transhead-Position) + new Vector3(0,0,0.66f);
                 var headPx = world.WorldSpace.GetScreenFromTile(headOff);
 
-                var item = new _2DSprite();
+                var item = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
                 item.Pixel = Headline;
                 item.Depth = TextureGenerator.GetWallZBuffer(device)[30];
-                item.RenderMode = _2DBatchRenderMode.Z_BUFFER;
 
                 item.SrcRect = new Rectangle(0, 0, Headline.Width, Headline.Height);
                 item.WorldPosition = headOff;

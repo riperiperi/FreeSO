@@ -21,6 +21,7 @@ using FSO.Common.Rendering.Framework.Camera;
 using FSO.LotView.Utils;
 using FSO.LotView;
 using FSO.Client.UI.Framework.Parser;
+using FSO.Common;
 
 namespace FSO.Client.UI.Controls
 {
@@ -58,14 +59,18 @@ namespace FSO.Client.UI.Controls
         {
             Camera = new WorldCamera(GameFacade.GraphicsDevice);
             Camera.Zoom = Zoom;
-            Camera.CenterTile = new Vector2(-1, -1);
-            Scene = new _3DTargetScene(GameFacade.Game.GraphicsDevice, Camera, new Point(140, 200), (GlobalSettings.Default.AntiAlias)?8:0);
+            Camera.CenterTile = new Vector2(-1, -1)*FSOEnvironment.DPIScaleFactor;
+            Scene = new _3DTargetScene(GameFacade.Game.GraphicsDevice, Camera, 
+                new Point(140 * FSOEnvironment.DPIScaleFactor, 200 * FSOEnvironment.DPIScaleFactor), 
+                (GlobalSettings.Default.AntiAlias)?8:0);
             Scene.ID = "UISim";
 
             GameFacade.Game.GraphicsDevice.DeviceReset += new EventHandler<EventArgs>(GraphicsDevice_DeviceReset);
 
             Avatar = new AdultVitaboyModel();
             Avatar.Scene = Scene;
+            var scale = FSOEnvironment.DPIScaleFactor;
+            Avatar.Scale = new Vector3(scale, scale, scale);
             
             Scene.Add(Avatar);
         }
@@ -140,7 +145,7 @@ namespace FSO.Client.UI.Controls
 
         public override void Draw(UISpriteBatch batch)
         {
-            DrawLocalTexture(batch, Scene.Target, null, new Vector2((_Size.X - 140 * _SimScale.X) /2, 0), _SimScale);
+            DrawLocalTexture(batch, Scene.Target, null, new Vector2((_Size.X - 140 * _SimScale.X) /2, 0), new Vector2(1f/FSOEnvironment.DPIScaleFactor, 1f/FSOEnvironment.DPIScaleFactor)*_SimScale);
         }
     }
 }

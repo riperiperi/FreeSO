@@ -79,9 +79,6 @@
     <Reference Include="System.Design">
       <Name>System.Design</Name>
     </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-    </Reference>
     <Reference Include="System.Management">
       <Name>System.Management</Name>
     </Reference>

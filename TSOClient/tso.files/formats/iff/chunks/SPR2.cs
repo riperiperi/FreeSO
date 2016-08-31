@@ -12,7 +12,6 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Files.Utils;
 using System.IO;
 using Microsoft.Xna.Framework;
-using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
 namespace FSO.Files.Formats.IFF.Chunks
@@ -54,7 +53,9 @@ namespace FSO.Files.Formats.IFF.Chunks
                         var frame = new SPR2Frame(this);
                         io.Seek(SeekOrigin.Begin, offsetTable[i]);
 
-                        frame.Read(version, io);
+                        var guessedSize = ((i + 1 < offsetTable.Length) ? offsetTable[i + 1] : (uint)stream.Length) - offsetTable[i];
+
+                        frame.Read(version, io, guessedSize);
                         Frames[i] = frame;
                     }
                 }
@@ -67,7 +68,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     for (var i = 0; i < spriteCount; i++)
                     {
                         var frame = new SPR2Frame(this);
-                        frame.Read(version, io);
+                        frame.Read(version, io, 0);
                         Frames[i] = frame;
                     }
                 }
@@ -133,6 +134,8 @@ namespace FSO.Files.Formats.IFF.Chunks
         public Vector2 Position { get; internal set; }
         
         private SPR2 Parent;
+        private uint Version;
+        private byte[] ToDecode;
 
         public SPR2Frame(SPR2 parent)
         {
@@ -140,18 +143,28 @@ namespace FSO.Files.Formats.IFF.Chunks
         }
 
         /// <summary>
-        /// Reads a BMP chunk from a stream.
+        /// Reads a SPR2 chunk from a stream.
         /// </summary>
         /// <param name="version">Version of the SPR2 that this frame belongs to.</param>
         /// <param name="stream">A IOBuffer object used to read a SPR2 chunk.</param>
-        public void Read(uint version, IoBuffer io)
+        public void Read(uint version, IoBuffer io, uint guessedSize)
         {
+            Version = version;
             if (version == 1001)
             {
                 var spriteVersion = io.ReadUInt32();
                 var spriteSize = io.ReadUInt32();
+                if (IffFile.RETAIN_CHUNK_DATA) ReadDeferred(1001, io);
+                else ToDecode = io.ReadBytes(spriteSize);
+            } else
+            {
+                if (IffFile.RETAIN_CHUNK_DATA) ReadDeferred(1000, io);
+                else ToDecode = io.ReadBytes(guessedSize);
             }
+        }
 
+        public void ReadDeferred(uint version, IoBuffer io)
+        {
             this.Width = io.ReadUInt16();
             this.Height = io.ReadUInt16();
             this.Flags = io.ReadUInt32();
@@ -171,6 +184,19 @@ namespace FSO.Files.Formats.IFF.Chunks
             this.Decode(io);
         }
 
+        public void DecodeIfRequired()
+        {
+            if (ToDecode != null)
+            {
+                using (IoBuffer buf = IoBuffer.FromStream(new MemoryStream(ToDecode), ByteOrder.LITTLE_ENDIAN))
+                {
+                    ReadDeferred(Version, buf);
+                }
+
+                ToDecode = null;
+            }
+        }
+
         public void Write(IoWriter io)
         {
             using (var sprStream = new MemoryStream())
@@ -187,7 +213,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                 var data = sprStream.ToArray();
                 io.WriteUInt32(1001);
-                io.WriteUInt32((uint)data.Length+8);
+                io.WriteUInt32((uint)data.Length);
                 io.WriteBytes(data);
             }
         }
@@ -408,6 +434,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         /// <returns>A Texture2D instance holding the texture data.</returns>
         public Texture2D GetTexture(GraphicsDevice device)
         {
+            DecodeIfRequired();
             if (PixelCache == null)
             {
                 if (this.Width == 0 || this.Height == 0)
@@ -422,83 +449,13 @@ namespace FSO.Files.Formats.IFF.Chunks
         }
 
         /// <summary>
-        /// Generates windows bitmaps for the appearance of this sprite.
-        /// </summary>
-        /// <param name="tWidth"></param>
-        /// <param name="tHeight"></param>
-        /// <returns>Array of three images, [Color, Alpha, Depth].</returns>
-        public System.Drawing.Image[] GetPixelAlpha(int tWidth, int tHeight) {
-            return GetPixelAlpha(tWidth, tHeight, Position);
-        }
-
-        public System.Drawing.Image[] GetPixelAlpha(int tWidth, int tHeight, Vector2 pos)
-        {
-            var result = new System.Drawing.Bitmap[3];
-            var locks = new BitmapData[3];
-            var data = new byte[3][];
-            for (int i = 0; i < 3; i++)
-            {
-                result[i] = new System.Drawing.Bitmap(tWidth, tHeight, PixelFormat.Format24bppRgb);
-                locks[i] = result[i].LockBits(new System.Drawing.Rectangle(0, 0, tWidth, tHeight), ImageLockMode.ReadWrite, PixelFormat.Format32bppRgb);
-                data[i] = new byte[locks[i].Stride * locks[i].Height];
-            }
-
-            int index = 0;
-            for (int y=0; y<tHeight; y++)
-            {
-                for (int x=0; x<tWidth; x++) {
-                    Color col;
-                    byte depth = 255;
-
-                    if (x >= pos.X && x < pos.X+Width && y >= pos.Y && y < pos.Y+Height)
-                    {
-                        col = PixelData[(int)(x - pos.X) + (int)(y-pos.Y)*Width];
-                        if (col.A == 0) col = new Color(0xFF, 0xFF, 0x00, 0x00);
-                        if (ZBufferData != null)
-                        {
-                            depth = ZBufferData[(int)(x - pos.X) + (int)(y - pos.Y) * Width];
-                        }
-                    }
-                    else
-                    {
-                        col = new Color(0xFF, 0xFF, 0x00, 0x00);
-                    }
-
-                    data[0][index] = col.B;
-                    data[0][index+1] = col.G;
-                    data[0][index+2] = col.R;
-                    data[0][index + 3] = 255;
-
-                    data[1][index] = col.A;
-                    data[1][index+1] = col.A;
-                    data[1][index+2] = col.A;
-                    data[1][index + 3] = 255;
-
-                    data[2][index] = depth;
-                    data[2][index + 1] = depth;
-                    data[2][index + 2] = depth;
-                    data[2][index + 3] = 255;
-
-                    index += 4;
-                }
-            }
-
-            for (int i = 0; i < 3; i++)
-            {
-                Marshal.Copy(data[i], 0, locks[i].Scan0, data[i].Length);
-                result[i].UnlockBits(locks[i]);
-            }
-
-            return result;
-        }
-
-        /// <summary>
         /// Gets a z-texture representing this SPR2Frame.
         /// </summary>
         /// <param name="device">GraphicsDevice instance used for drawing.</param>
         /// <returns>A Texture2D instance holding the texture data.</returns>
         public Texture2D GetZTexture(GraphicsDevice device)
         {
+            DecodeIfRequired();
             if (ZCache == null)
             {
                 if (ZBufferData == null || this.Width == 0 || this.Height == 0)
@@ -526,7 +483,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         #endregion
 
-        public Color[] SetData(Color[] px, byte[] zpx, System.Drawing.Rectangle rect)
+        public Color[] SetData(Color[] px, byte[] zpx, Rectangle rect)
         {
             PixelCache = null; //can't exactly dispose this.. it's likely still in use!
             ZCache = null;
@@ -539,7 +496,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             Flags = 7;
             TransparentColorIndex = 255;
 
-            var colors = SPR2FrameEncoder.QuantizeFrame(this, out PalData);
+			var colors = SPR2FrameEncoder.QuantizeFrame(this, out PalData);
 
             var palt = new Color[256];
             int i = 0;

@@ -1281,8 +1281,8 @@ namespace FSO.Client.Rendering.City
             m_GraphicsDevice.RasterizerState = RasterizerState.CullNone; //don't cull
             m_GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-            m_ScrHeight = GlobalSettings.Default.GraphicsHeight;
-            m_ScrWidth = GlobalSettings.Default.GraphicsWidth;
+            m_ScrHeight = m_GraphicsDevice.Viewport.Height;
+            m_ScrWidth = m_GraphicsDevice.Viewport.Width;
 
             if (RegenData) GenerateAssets(); //if assets are flagged as requiring regeneration, regenerate them!
 

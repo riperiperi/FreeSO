@@ -43,12 +43,12 @@ namespace FSO.LotView.Model
         public List<AvatarComponent> Avatars = new List<AvatarComponent>();
         public List<SubWorldComponent> SubWorlds = new List<SubWorldComponent>();
         public TerrainComponent Terrain;
-        
+
         /// <summary>
         /// Walls Cutaway sections. Remember to manage these correctly - i.e remove when you're finished with them!
         /// </summary>
         /// 
-        public List<Rectangle> Cutaway = new List<Rectangle>();
+        public bool[] Cutaway;
 
         public Color OutsideColor = Color.White;
         public RoomLighting[] Light = new RoomLighting[0];
@@ -65,7 +65,7 @@ namespace FSO.LotView.Model
             WallComp.blueprint = this;
             this.FloorComp = new FloorComponent();
             FloorComp.blueprint = this;
-
+        
             RoomColors = new Color[65536];
             this.WallsAt = new List<int>[Stories];
             this.Walls = new WallTile[Stories][];
@@ -80,6 +80,7 @@ namespace FSO.LotView.Model
 
                 this.Floors[i] = new FloorTile[numTiles];
             }
+            this.Cutaway = new bool[numTiles];
         }
 
         public void GenerateRoomLights()

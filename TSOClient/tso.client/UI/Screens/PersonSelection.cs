@@ -47,7 +47,7 @@ namespace FSO.Client.UI.Screens
 
         public LoginRegulator LoginRegulator;
 
-        public PersonSelection(LoginRegulator loginRegulator)
+        public PersonSelection(LoginRegulator loginRegulator) : base()
         {
             //Arrange UI
             this.LoginRegulator = loginRegulator;

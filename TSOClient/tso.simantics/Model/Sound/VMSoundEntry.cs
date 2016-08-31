@@ -2,7 +2,7 @@
 
 namespace FSO.SimAntics.Model.Sound
 {
-    public struct VMSoundEntry
+    public class VMSoundEntry
     {
         public HITSound Sound;
         public bool Pan;

@@ -1,4 +1,7 @@
-﻿using FSO.Client;
+﻿#define IDE_COMPAT
+
+using FSO.Client;
+using FSO.IDE.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +28,7 @@ namespace FSO.IDE
     {
         public void Start()
         {
+            Files.Formats.IFF.Chunks.SPR2FrameEncoder.QuantizeFrame = SpriteEncoderUtils.QuantizeFrame;
             FSO.Files.Formats.IFF.IffFile.RETAIN_CHUNK_DATA = true;
             FSO.Client.Debug.IDEHook.SetIDE(new IDETester());
             (new GameStartProxy()).Start(FSO.Client.Program.UseDX);

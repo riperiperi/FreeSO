@@ -11,6 +11,8 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Vitaboy;
 using Microsoft.Xna.Framework;
+using FSO.Common.Utils;
+using FSO.Common;
 
 namespace FSO.LotView.Utils
 {
@@ -61,10 +63,15 @@ namespace FSO.LotView.Utils
         /// </summary>
         public void End()
         {
+            if (Sprites.Count == 0) return;
             //Device.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;
 
             var character = Sprites.Where(x => x.Effect == _3DSpriteEffect.CHARACTER).ToList();
-            RenderSpriteList(character, Avatar.Effect, Avatar.Effect.Techniques[OBJIDMode ? 1:0]);
+
+            PPXDepthEngine.RenderPPXDepth(Avatar.Effect, true, (depth) =>
+            {
+                RenderSpriteList(character, Avatar.Effect, Avatar.Effect.Techniques[OBJIDMode ? 1 : 0]);
+            });
 
             /*
             ApplyCamera(Effect);
@@ -91,10 +98,7 @@ namespace FSO.LotView.Utils
 
             effect.CurrentTechnique = technique;
             ApplyCamera(effect);
-            //Device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
-            //Device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
-            
-            //var byTexture = sprites.GroupBy(x => x.Texture);
+            effect.Parameters["SoftwareDepth"].SetValue(FSOEnvironment.SoftwareDepth);
             foreach (var pass in technique.Passes)
             {
                 foreach (var geom in sprites)
@@ -116,6 +120,7 @@ namespace FSO.LotView.Utils
                     geom.Geometry.DrawGeometry(this.Device, effect);
                 }
             }
+            effect.Parameters["SoftwareDepth"].SetValue(false); //reset this for non-world purposes
         }
 
         public void ApplyCamera(Effect effect){

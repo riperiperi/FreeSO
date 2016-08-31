@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using FSO.LotView.Model;
 using FSO.Content;
+using FSO.LotView;
 
 namespace FSO.SimAntics.Utils
 {
@@ -639,6 +640,97 @@ namespace FSO.SimAntics.Utils
             return floorsCovered;
         }
 
+        public static int[][] CutCheckDir =
+        {
+            new int[] {-1,-1},
+            new int[] {-1,1},
+            new int[] {1,1},
+            new int[] {1,-1}
+        };
+
+        public static bool[] GenerateRoomCut(VMArchitecture target, sbyte floor, WorldRotation dir, HashSet<uint> cutRooms)
+        {
+            var result = new bool[target.Width*target.Height];
+            var offset = 0;
+            var roommap = target.Rooms[floor-1].Map;
+            var cutDir = CutCheckDir[(int)dir];
+            var walls = target.Walls[floor - 1];
+
+            var width = target.Width;
+
+            for (int y1=0;y1<target.Height; y1++)
+            {
+                for (int x1=0; x1<target.Width; x1++)
+                {
+                    if (walls[offset].Segments == 0
+                        && (offset + width < walls.Length && walls[offset + width].Segments == 0)
+                        && (offset + 1 < walls.Length && walls[offset + 1].Segments == 0)
+                        && (offset - width > 0 && walls[offset - width].Segments == 0)
+                        && (offset - 1 > 0 && walls[offset - 1].Segments == 0)
+                        )
+                    {
+                        offset++;
+                        continue; //ignore empty tiles as an optimisation
+                    }
+                    bool cut = false;
+
+                    for (int i=0; i<3; i++)
+                    {
+                        var x = x1 + ((i == 1) ? cutDir[0] : 0);
+                        var y = y1 + ((i == 2) ? cutDir[1] : 0);
+                        for (int j=0; j<((i>0)?4:5); j++)
+                        {
+                            if (x < 0 || x >= target.Width || y < 0 || y >= target.Height) break;
+                            if (cutRooms.Contains(roommap[y * target.Width + x] & 65535))
+                            {
+                                cut = true;
+                                break;
+                            }
+                            x += cutDir[0];
+                            y += cutDir[1];
+                        }
+                        if (cut) break;
+                    }
+                    result[offset++] = cut;
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Cuts the specified rectangle. Returns true if a *potentially noticable change* occurred as a result. (changed a cut to true on a tile where there is a wall)
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="cuts"></param>
+        /// <param name="rect"></param>
+        /// <returns></returns>
+        public static bool ApplyCutRectangle(VMArchitecture target, sbyte floor, bool[] cuts, Rectangle rect)
+        {
+            var walls = target.Walls[floor - 1];
+            var width = target.Width;
+            bool change = false;
+            for (int x = rect.Left; x < rect.Right; x++)
+            {
+                for (int y=rect.Top; y < rect.Bottom; y++)
+                {
+                    if (x < 0 || x >= target.Width || y < 0 || y >= target.Height) continue;
+                    var offset = (y * target.Width + x);
+                    if (walls[offset].Segments == 0
+                        && (offset + width < walls.Length && walls[offset + width].Segments == 0)
+                        && (offset + 1 < walls.Length && walls[offset + 1].Segments == 0)
+                        && (offset - width > 0 && walls[offset - width].Segments == 0)
+                        && (offset - 1 > 0 && walls[offset - 1].Segments == 0)
+                        ) continue;
+
+                    if (!cuts[offset])
+                    {
+                        cuts[offset] = true;
+                        change = true;
+                    }
+                }
+            }
+            return change;
+        }
     }
     
     public struct PatternReplaceCount

@@ -57,6 +57,11 @@ namespace FSO.Client.UI.Controls
 
         private UIElementState m_State = UIElementState.Normal;
 
+        public bool Hovered
+        {
+            get { return m_isOver; }
+        }
+
         /// <summary>
         /// Sets the margins to be used for automatic button widths. -1 (default) uses the width of the button ends.
         /// </summary>

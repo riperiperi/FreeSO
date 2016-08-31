@@ -21,6 +21,7 @@ using FSO.Client.UI.Controls.Catalog;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels.LotControls;
 using FSO.Client.UI.Model;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -73,9 +74,10 @@ namespace FSO.Client.UI.Panels
             Holder = LotController.ObjectHolder;
             QueryPanel = LotController.QueryPanel;
 
-            var script = this.RenderScript("buildpanel" + ((GlobalSettings.Default.GraphicsWidth < 1024) ? "" : "1024") + ".uis");
+            var useSmall = (FSOEnvironment.UIZoomFactor>1f || GlobalSettings.Default.GraphicsWidth < 1024);
+            var script = this.RenderScript("buildpanel" + (useSmall ? "" : "1024") + ".uis");
 
-            Background = new UIImage(GetTexture((GlobalSettings.Default.GraphicsWidth < 1024) ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
+            Background = new UIImage(GetTexture(useSmall ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
             Background.Y = 0;
             Background.BlockInput();
             this.AddAt(0, Background);
@@ -88,7 +90,7 @@ namespace FSO.Client.UI.Panels
             SubToolBg.Position = new Vector2(336, 5);
             this.AddAt(2, SubToolBg);
 
-            Catalog = new UICatalog((GlobalSettings.Default.GraphicsWidth < 1024) ? 10 : 20);
+            Catalog = new UICatalog(useSmall ? 10 : 20);
             Catalog.OnSelectionChange += new CatalogSelectionChangeDelegate(Catalog_OnSelectionChange);
             Catalog.Position = new Vector2(364, 7);
             this.Add(Catalog);
@@ -132,6 +134,7 @@ namespace FSO.Client.UI.Panels
             Holder.OnPickup += HolderPickup;
             Holder.OnDelete += HolderDelete;
             Holder.OnPutDown += HolderPutDown;
+            Add(QueryPanel);
         }
 
         public void PageSlider(UIElement element)
@@ -313,22 +316,6 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
-            if (QueryPanel.Mode == 0 && QueryPanel.Active)
-            {
-                if (Opacity > 0) Opacity -= 1f / 20f;
-                else
-                {
-                    Opacity = 0;
-                    Visible = false;
-                }
-            }
-            else
-            {
-                Visible = true;
-                if (Opacity < 1) Opacity += 1f / 20f;
-                else Opacity = 1;
-            }
-
             if (LotController.ActiveEntity != null) Catalog.Budget = (int)LotController.ActiveEntity.TSOState.Budget.Value;
             base.Update(state);
         }

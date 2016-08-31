@@ -35,9 +35,10 @@ namespace FSO.SimAntics.Engine
                 Title = (operand.TitleStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.TitleStringID - 1), source),
                 IconName = (operand.IconNameStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.IconNameStringID - 1), source),
 
-                Yes = (operand.YesStringID == 0) ? null : ParseDialogString(context, source.GetString(operand.YesStringID - 1), source), 
+                Yes = (operand.YesStringID == 0) ? null : ParseDialogString(context, source.GetString(operand.YesStringID - 1), source),
                 No = (operand.NoStringID == 0) ? null : ParseDialogString(context, source.GetString(operand.NoStringID - 1), source),
                 Cancel = (operand.CancelStringID == 0) ? null : ParseDialogString(context, source.GetString(operand.CancelStringID - 1), source),
+                DialogID = (context.CodeOwner.GUID << 32) | ((ulong)context.Routine.ID << 16) | context.InstructionPointer
             };
             context.VM.SignalDialog(info);
         }

@@ -22,6 +22,7 @@ using FSO.Common.Rendering.Framework.Camera;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Utils;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -38,6 +39,7 @@ namespace FSO.Client.UI.Panels
         private _3DTargetScene HeadScene;
         private BasicCamera HeadCamera;
         private double m_BgGrow;
+        private float TrueScale;
 
         private bool ShiftDown; //shift activates IDE
 
@@ -49,6 +51,8 @@ namespace FSO.Client.UI.Panels
 
         public UIPieMenu(List<VMPieMenuInteraction> pie, VMEntity obj, VMEntity caller, UILotControl parent)
         {
+            if (FSOEnvironment.UIZoomFactor>1.33f) ScaleX = ScaleY = FSOEnvironment.UIZoomFactor*0.75f;
+            TrueScale = ScaleX *FSOEnvironment.DPIScaleFactor;
             m_PieButtons = new List<UIButton>();
             this.m_Obj = obj;
             this.m_Caller = caller;
@@ -124,7 +128,7 @@ namespace FSO.Client.UI.Panels
             HeadCamera.Position = new Vector3(0, 5.2f, 12.5f);
             HeadCamera.Target = new Vector3(0, 5.2f, 0.0f);
 
-            HeadScene = new _3DTargetScene(GameFacade.Game.GraphicsDevice, HeadCamera, new Point(200,200), (GlobalSettings.Default.AntiAlias) ? 8 : 0);
+            HeadScene = new _3DTargetScene(GameFacade.Game.GraphicsDevice, HeadCamera, new Point((int)(200*TrueScale),(int)(200*TrueScale)), (GlobalSettings.Default.AntiAlias) ? 8 : 0);
             HeadScene.ID = "UIPieMenuHead";
 
             m_Head.Scene = HeadScene;
@@ -357,7 +361,8 @@ namespace FSO.Client.UI.Panels
             base.Draw(batch);
             if (m_CurrentItem == m_PieTree)
             {
-                DrawLocalTexture(batch, HeadScene.Target, new Vector2(-100, -100));
+                var invScale = new Vector2(1 / TrueScale, 1 / TrueScale);
+                DrawLocalTexture(batch, HeadScene.Target, null, new Vector2(-100, -100)*invScale, invScale);
             } //if we're top level, draw head!
         }
     }

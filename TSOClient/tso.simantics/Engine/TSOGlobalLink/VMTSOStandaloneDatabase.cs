@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using FSO.Common;
 
 namespace FSO.SimAntics.Engine.TSOGlobalLink
 {
@@ -25,7 +26,7 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink
             //attempt to load first
             try
             {
-                using (var db = File.OpenRead("stubdb.fsodb"))
+                using (var db = File.OpenRead(Path.Combine(FSOEnvironment.UserDir, "stubdb.fsodb")))
                 {
                     Deserialize(new BinaryReader(db));
                     return;
@@ -33,7 +34,7 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink
             } catch (Exception) {
                 try
                 {
-                    using (var db = File.OpenRead("stubdb_backup.fsodb"))
+                    using (var db = File.OpenRead(Path.Combine(FSOEnvironment.UserDir, "stubdb_backup.fsodb")))
                     {
                         Deserialize(new BinaryReader(db));
                         return;
@@ -52,10 +53,10 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink
         {
             try
             {
-                File.Copy("stubdb.fsodb", "stubdb_backup.fsodb", true);
+                File.Copy(Path.Combine(FSOEnvironment.UserDir, "stubdb.fsodb"), Path.Combine(FSOEnvironment.UserDir, "stubdb_backup.fsodb"), true);
             }
             catch (Exception e) { }
-            using (var writer = new BinaryWriter(File.Open("stubdb.fsodb", FileMode.Create))) SerializeInto(writer);
+            using (var writer = new BinaryWriter(File.Open(Path.Combine(FSOEnvironment.UserDir, "stubdb.fsodb"), FileMode.Create))) SerializeInto(writer);
         }
 
         public uint FindOrAddAvatar(string idString)

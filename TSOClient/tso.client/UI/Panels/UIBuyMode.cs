@@ -18,6 +18,7 @@ using FSO.SimAntics.Entities;
 using FSO.Common.Rendering.Framework.Model;
 using Microsoft.Xna.Framework.Input;
 using FSO.SimAntics.Model;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -93,9 +94,10 @@ namespace FSO.Client.UI.Panels
             Holder = LotController.ObjectHolder;
             QueryPanel = LotController.QueryPanel;
 
-            var script = this.RenderScript("buypanel"+((GlobalSettings.Default.GraphicsWidth < 1024)?"":"1024")+".uis");
+            var useSmall = (FSOEnvironment.UIZoomFactor > 1f || GlobalSettings.Default.GraphicsWidth < 1024);
+            var script = this.RenderScript("buypanel"+(useSmall?"":"1024")+".uis");
 
-            Background = new UIImage(GetTexture((GlobalSettings.Default.GraphicsWidth < 1024) ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
+            Background = new UIImage(GetTexture(useSmall ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
             Background.Y = 0;
             Background.BlockInput();
             this.AddAt(0, Background);
@@ -112,7 +114,7 @@ namespace FSO.Client.UI.Panels
             NonRMInventoryCatBg.Position = new Microsoft.Xna.Framework.Vector2(68, 5);
             this.AddAt(3, InventoryCatBg);
 
-            Catalog = new UICatalog((GlobalSettings.Default.GraphicsWidth < 1024) ? 14 : 24);
+            Catalog = new UICatalog(useSmall ? 14 : 24);
             Catalog.OnSelectionChange += new CatalogSelectionChangeDelegate(Catalog_OnSelectionChange);
             Catalog.Position = new Microsoft.Xna.Framework.Vector2(275, 7);
             this.Add(Catalog);
@@ -164,6 +166,7 @@ namespace FSO.Client.UI.Panels
             Holder.OnPickup += HolderPickup;
             Holder.OnDelete += HolderDelete;
             Holder.OnPutDown += HolderPutDown;
+            Add(QueryPanel);
         }
 
         public override void Destroy()
@@ -219,21 +222,6 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
-            if (QueryPanel.Mode == 0 && QueryPanel.Active)
-            {
-                if (Opacity > 0) Opacity -= 1f / 20f;
-                else
-                {
-                    Opacity = 0;
-                    Visible = false;
-                }
-            }
-            else
-            {
-                Visible = true;
-                if (Opacity < 1) Opacity += 1f / 20f;
-                else Opacity = 1;
-            }
 
             if (LotController.ActiveEntity != null)
             {

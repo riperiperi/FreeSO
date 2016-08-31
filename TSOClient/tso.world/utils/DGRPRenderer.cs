@@ -146,7 +146,7 @@ namespace FSO.LotView.Utils
                                     continue;
                                 }
                             }
-                            var item = new _2DSprite();
+                            var item = new _2DSprite(); //do not use sprite pool for DGRP, since we can reliably remember our own sprites.
                             item.Pixel = texture.Pixel;
                             item.Depth = texture.ZBuffer;
                             if (texture.ZBuffer != null)

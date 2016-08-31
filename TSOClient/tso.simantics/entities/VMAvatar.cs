@@ -417,12 +417,13 @@ namespace FSO.SimAntics
             }
 
             var soundevt = tp.Properties["sound"];
-            if (UseWorld && soundevt != null)
+            var owner = this;
+            if (UseWorld && soundevt != null && owner.SoundThreads.FirstOrDefault(x => x.Name == soundevt) == null)
             {
                 var thread = FSO.HIT.HITVM.Get().PlaySoundEvent(soundevt);
                 if (thread != null)
                 {
-                    var owner = this;
+
                     if (thread is HITThread) SubmitHITVars((HITThread)thread);
 
                     if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
@@ -558,7 +559,7 @@ namespace FSO.SimAntics
         public void UserLeaveLot()
         {
             if (Thread.Context.VM.EODHost != null) Thread.Context.VM.EODHost.ForceDisconnect(this); //try this a lot.
-            if (Thread.Queue.Exists(x => x.ActionRoutine.ID == LEAVE_LOT_TREE && Thread.Queue.IndexOf(x) < 2)) return; //we're already leaving
+            if (Thread.Queue.Exists(x => x.ActionRoutine.ID == LEAVE_LOT_TREE && Thread.Queue.IndexOf(x) <= Thread.ActiveQueueBlock+1)) return; //we're already leaving
             var actions = new List<VMQueuedAction>(Thread.Queue);
             foreach (var action in actions)
             {
@@ -685,7 +686,11 @@ namespace FSO.SimAntics
                         jobInfo.Experience = value;
                     return true;
                 case VMPersonDataVariable.Priority:
-                    if (Thread.Queue.Count != 0 && Thread.Stack.LastOrDefault().ActionTree) Thread.Queue[0].Priority = value;
+                    if (Thread.Queue.Count != 0 && Thread.Stack.LastOrDefault().ActionTree)
+                    {
+                        Thread.Queue[0].Priority = value;
+                        Thread.QueueDirty = true;
+                    }
                     return true;
                 case VMPersonDataVariable.RenderDisplayFlags:
                     if (WorldUI != null) ((AvatarComponent)WorldUI).DisplayFlags = (AvatarDisplayFlags)value;
@@ -850,7 +855,7 @@ namespace FSO.SimAntics
             var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
             var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
 
-            return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID).Get(gd);
+            return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
         }
 
         #region VM Marshalling Functions

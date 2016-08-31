@@ -14,6 +14,7 @@ using FSO.Common.Utils;
 using FSO.Files.Utils;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.LotView.Model;
+using FSO.Common;
 
 namespace FSO.LotView.Utils
 {
@@ -30,7 +31,9 @@ namespace FSO.LotView.Utils
         public GraphicsDevice Device;
         protected Effect Effect;
 
-        protected Dictionary<_2DBatchRenderMode, List<_2DSprite>> Sprites = new Dictionary<_2DBatchRenderMode, List<_2DSprite>>();
+        protected List<_2DSpriteGroup> Sprites = new List<_2DSpriteGroup>();
+        private List<_2DSprite> SpritePool = new List<_2DSprite>();
+        private int SpriteIndex = 0;
 
         protected int DrawOrder;
 
@@ -71,15 +74,12 @@ namespace FSO.LotView.Utils
             this.ObjectID = obj;
         }
 
-        public _2DWorldBatch(GraphicsDevice device, int numBuffers, SurfaceFormat[] surfaceFormats, int scrollBuffer)
+        public _2DWorldBatch(GraphicsDevice device, int numBuffers, SurfaceFormat[] surfaceFormats, bool[] alwaysDS, int scrollBuffer)
         {
             this.Device = device;
             this.Effect = WorldContent._2DWorldBatchEffect;
             //TODO: World size
-            Sprites.Add(_2DBatchRenderMode.NO_DEPTH, new List<_2DSprite>());
-            Sprites.Add(_2DBatchRenderMode.RESTORE_DEPTH, new List<_2DSprite>());
-            Sprites.Add(_2DBatchRenderMode.WALL, new List<_2DSprite>());
-            Sprites.Add(_2DBatchRenderMode.Z_BUFFER, new List<_2DSprite>());
+            Sprites = new List<_2DSpriteGroup>();
 
             ScrollBuffer = scrollBuffer;
 
@@ -87,8 +87,8 @@ namespace FSO.LotView.Utils
 
             for (var i = 0; i < numBuffers; i++)
             {
-                int width = device.Viewport.Width+scrollBuffer;
-                int height = device.Viewport.Height+scrollBuffer;
+                int width = device.Viewport.Width + scrollBuffer;
+                int height = device.Viewport.Height + scrollBuffer;
 
                 switch (i) {
                     case 4: //World2D.BUFFER_OBJID
@@ -96,6 +96,7 @@ namespace FSO.LotView.Utils
                         height = 1;
                         break;
                     case 0: //World2D.BUFFER_THUMB
+                    case 10:
                         width = 1024;
                         height = 1024;
                         break;
@@ -104,9 +105,28 @@ namespace FSO.LotView.Utils
                         height = 2304;
                         break;
                 }
+                if (numBuffers == 2 && i == 1) width = height = 1024; //special case, thumb only. 
                 Buffers.Add(
-                    RenderUtils.CreateRenderTarget(device, 1, 0, surfaceFormats[i], width, height)
+                    PPXDepthEngine.CreateRenderTarget(device, 1, 0, surfaceFormats[i], width, height,
+                    (alwaysDS[i] || (!FSOEnvironment.UseMRT && !FSOEnvironment.SoftwareDepth))?DepthFormat.Depth24Stencil8:DepthFormat.None)
                 );
+            }
+        }
+        
+        public _2DSprite NewSprite(_2DBatchRenderMode mode)
+        {
+            if (SpriteIndex >= SpritePool.Count)
+            {
+                var spr = new _2DSprite() { RenderMode = mode };
+                SpritePool.Add(spr);
+                SpriteIndex++;
+                return spr;
+            } else
+            {
+                var spr = SpritePool[SpriteIndex++];
+                spr.Repurpose();
+                spr.RenderMode = mode;
+                return spr;
             }
         }
 
@@ -117,7 +137,22 @@ namespace FSO.LotView.Utils
             sprite.AbsoluteTilePosition = sprite.TilePosition + TileOffset; 
             sprite.ObjectID = ObjectID;
             sprite.DrawOrder = DrawOrder;
-            Sprites[sprite.RenderMode].Add(sprite);
+
+            bool added = false;
+            int i = 0;
+            while (!added)
+            {
+                if (i >= Sprites.Count) { Sprites.Add(new _2DSpriteGroup(FSOEnvironment.SoftwareDepth)); }
+                if (FSOEnvironment.SoftwareDepth && Sprites[i].SprRectangles.SearchForIntersect(sprite.AbsoluteDestRect))
+                    i++; //intersects with a sprite in this list. advance to next.
+                else
+                {
+                    if (FSOEnvironment.SoftwareDepth) Sprites[i].SprRectangles.Add(sprite.AbsoluteDestRect);
+                    Sprites[i].Sprites[sprite.RenderMode].Add(sprite);
+                    added = true;
+                }
+            }
+
             DrawOrder++;
         }
 
@@ -152,10 +187,8 @@ namespace FSO.LotView.Utils
             this.WorldCamera = worldCamera;
             ((WorldCamera)worldCamera).ProjectionDirty();
 
-            this.Sprites[_2DBatchRenderMode.NO_DEPTH].Clear();
-            this.Sprites[_2DBatchRenderMode.Z_BUFFER].Clear();
-            this.Sprites[_2DBatchRenderMode.RESTORE_DEPTH].Clear();
-            this.Sprites[_2DBatchRenderMode.WALL].Clear();
+            this.Sprites.Clear();
+            SpriteIndex = 0;
 
             this.DrawOrder = 0;
         }
@@ -176,6 +209,8 @@ namespace FSO.LotView.Utils
             output = promise;
 
             depthOutput = new Promise<Texture2D>(x => null);
+
+            if (depthBufferIndex > Buffers.Count) depthBufferIndex = Buffers.Count - 1;
 
             ResetMatrices(Buffers[bufferIndex].Width, Buffers[bufferIndex].Height);
 
@@ -205,11 +240,11 @@ namespace FSO.LotView.Utils
         private List<RenderTarget2D> Buffers = new List<RenderTarget2D>();
 
 
-        public void End() { End(null, OutputDepth); }
+        public void End() { End(null, true); }
         /// <summary>
         /// Processes the accumulated draw commands and paints the screen. Optionally outputs to a vertex cache.
         /// </summary>
-        public void End(List<_2DDrawGroup> cache, bool outputDepth)
+        public void End(List<_2DDrawBuffer> cache, bool outputDepth)
         {
             if (WorldCamera == null) return;
             var effect = this.Effect;
@@ -224,40 +259,72 @@ namespace FSO.LotView.Utils
                 effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
                 effect.Parameters["rotProjection"].SetValue(((WorldCamera)this.WorldCamera).GetRotationMatrix() * this.WorldCamera.Projection);
                 effect.Parameters["ambientLight"].SetValue(AmbientLight);
+                //effect.Parameters["depthOutMode"].SetValue(outputDepth && (!FSOEnvironment.UseMRT));
             }
 
+            if (Sprites.Count == 0) return;
+            int i = 0;
+            foreach (var sprites in Sprites)
+            {
+                if (cache != null) {
+                    if (i >= cache.Count) cache.Add(new _2DDrawBuffer());
+                    EndDrawSprites(sprites, cache[i].Groups, outputDepth);
+                }
+                else
+                {
+                    var temp = new _2DDrawBuffer();
+                    EndDrawSprites(sprites, temp.Groups, OutputDepth);
+                    PPXDepthEngine.RenderPPXDepth(effect, false, (depth) =>
+                    {
+                        RenderCache(new List<_2DDrawBuffer> { temp });
+                        //EndDrawSprites(sprites, null, OutputDepth);
+                    });
+                    temp.Dispose();
+                }
+                i++;
+            }
+
+        }
+
+        public void EndDrawSprites(_2DSpriteGroup sprites, List<_2DDrawGroup> cache, bool outputDepth)
+        {
+            var effect = Effect;
+            // draw all spritelists one by one. 
             if (outputDepth)
             {
-                var spritesWithNoDepth = Sprites[_2DBatchRenderMode.NO_DEPTH];
+                var spritesWithNoDepth = sprites.Sprites[_2DBatchRenderMode.NO_DEPTH];
                 RenderSpriteList(spritesWithNoDepth, effect, effect.Techniques["drawSimple"], cache);
 
-                var spritesWithDepth = Sprites[_2DBatchRenderMode.Z_BUFFER];
+                var spritesWithDepth = sprites.Sprites[_2DBatchRenderMode.Z_BUFFER];
                 RenderSpriteList(spritesWithDepth, effect, effect.Techniques["drawZSpriteDepthChannel"], cache);
 
-                var walls = Sprites[_2DBatchRenderMode.WALL];
+                var walls = sprites.Sprites[_2DBatchRenderMode.WALL];
                 RenderSpriteList(walls, effect, effect.Techniques["drawZWallDepthChannel"], cache);
+
+                var spritesWithRestoreDepth = sprites.Sprites[_2DBatchRenderMode.RESTORE_DEPTH];
+                RenderSpriteList(spritesWithRestoreDepth, effect, effect.Techniques["drawSimpleRestoreDepth"], cache);
             }
             else
             {
                 /**
                  * Render the no depth items first
                  */
-                var spritesWithNoDepth = Sprites[_2DBatchRenderMode.NO_DEPTH];
-                RenderSpriteList(spritesWithNoDepth, effect, effect.Techniques[(OBJIDMode)?"drawSimpleID":"drawSimple"], cache); //todo: no depth sprites have fixed depth relative to their position
+                var spritesWithNoDepth = sprites.Sprites[_2DBatchRenderMode.NO_DEPTH];
+                RenderSpriteList(spritesWithNoDepth, effect, effect.Techniques[(OBJIDMode) ? "drawSimpleID" : "drawSimple"], cache); //todo: no depth sprites have fixed depth relative to their position
                 //the flies object and sim balloons/skill gauges/relationship plusses use this mode
 
-                var spritesWithDepth = Sprites[_2DBatchRenderMode.Z_BUFFER];
+                var spritesWithDepth = sprites.Sprites[_2DBatchRenderMode.Z_BUFFER];
                 RenderSpriteList(spritesWithDepth, effect, effect.Techniques[(OBJIDMode) ? "drawZSpriteOBJID" : "drawZSprite"], cache);
 
-                var walls = Sprites[_2DBatchRenderMode.WALL];
+                var walls = sprites.Sprites[_2DBatchRenderMode.WALL];
                 RenderSpriteList(walls, effect, effect.Techniques[(OBJIDMode) ? "drawZSpriteOBJID" : "drawZWall"], cache);
 
-                var spritesWithRestoreDepth = Sprites[_2DBatchRenderMode.RESTORE_DEPTH];
+                var spritesWithRestoreDepth = sprites.Sprites[_2DBatchRenderMode.RESTORE_DEPTH];
                 RenderSpriteList(spritesWithRestoreDepth, effect, effect.Techniques["drawSimpleRestoreDepth"], cache);
             }
         }
 
-        public void RenderCache(List<_2DDrawGroup> cache)
+        public void RenderCache(List<_2DDrawBuffer> cache)
         {
             var effect = this.Effect;
             Device.BlendState = BlendState.AlphaBlend;
@@ -268,18 +335,27 @@ namespace FSO.LotView.Utils
             var mat = this.WorldCamera.View * this.WorldCamera.Projection;
             effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
             effect.Parameters["ambientLight"].SetValue(AmbientLight);
+            //effect.Parameters["depthOutMode"].SetValue(OutputDepth && (!FSOEnvironment.UseMRT));
 
-            foreach (var group in cache) RenderDrawGroup(group);
+            foreach (var buffer in cache)
+            {
+                PPXDepthEngine.RenderPPXDepth(effect, false, (depth) =>
+                {
+                    foreach (var group in buffer.Groups)
+                        RenderDrawGroup(group);
+                });
+                
+            }
         }
 
         private List<_2DSpriteTextureGroup> GroupByTexture(List<_2DSprite> sprites)
         {
             var result = new List<_2DSpriteTextureGroup>();
-            var map = new Dictionary<Tuple<Texture2D, Texture2D>, _2DSpriteTextureGroup>();
+            var map = new Dictionary<PixelMaskTuple, _2DSpriteTextureGroup>();
 
             foreach (var sprite in sprites)
             {
-                var tuple = new Tuple<Texture2D, Texture2D>(sprite.Pixel, sprite.Mask);
+                var tuple = new PixelMaskTuple(sprite.Pixel, sprite.Mask);
                 _2DSpriteTextureGroup grouping;
                 
                 if (!map.TryGetValue(tuple, out grouping))
@@ -334,8 +410,11 @@ namespace FSO.LotView.Utils
         {
             List<_2DSprite> all = new List<_2DSprite>();
             for (var i=0; i<Sprites.Count; i++) {
-                List<_2DSprite> list = Sprites.Values.ElementAt(i);
-                all.AddRange(list);
+                for (int j = 0; j < Sprites[i].Sprites.Count; j++)
+                {
+                    List<_2DSprite> list = Sprites[i].Sprites.Values.ElementAt(j);
+                    all.AddRange(list);
+                }
             }
             return GetSpriteListBounds(all);
         }
@@ -369,9 +448,18 @@ namespace FSO.LotView.Utils
             {
                 EffectPass pass = passes[i];
                 pass.Apply();
-                Device.DrawUserIndexedPrimitives<_2DSpriteVertex>(
-                    PrimitiveType.TriangleList, group.Vertices, 0, group.Vertices.Length,
-                    group.Indices, 0, group.Indices.Length / 3);
+                if (group.VertBuf != null)
+                {
+                    Device.SetVertexBuffer(group.VertBuf);
+                    Device.Indices = group.IndexBuf;
+                    Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, group.Primitives);
+                }
+                else
+                {
+                    Device.DrawUserIndexedPrimitives<_2DSpriteVertex>(
+                        PrimitiveType.TriangleList, group.Vertices, 0, group.Vertices.Length,
+                        group.Indices, 0, group.Indices.Length / 3);
+                }
             }
         }
 
@@ -427,20 +515,40 @@ namespace FSO.LotView.Utils
                         , GetUV(texture, left, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room);
                 }
 
+                VertexBuffer vb = null;
+                IndexBuffer ib = null;
+
+                var count = indices.Length / 3;
+                if (count > 50) //completely arbitrary number, but seems to keep things fast. dont gen if it isn't "worth it".
+                {
+                    vb = new VertexBuffer(Device, typeof(_2DSpriteVertex), vertices.Length, BufferUsage.WriteOnly);
+                    vb.SetData(vertices);
+                    ib = new IndexBuffer(Device, IndexElementSize.SixteenBits, indices.Length, BufferUsage.WriteOnly);
+                    ib.SetData(indices);
+                    vertices = null;
+                    indices = null;
+                }
+
                 var dg = new _2DDrawGroup()
                 {
                     Pixel = group.Pixel,
                     Depth = group.Depth,
                     Mask = group.Mask,
 
+                    VertBuf = vb,
+                    IndexBuf = ib,
                     Vertices = vertices,
                     Indices = indices,
+                    Primitives = count,
                     Technique = technique
                 };
 
                 if (cache != null) cache.Add(dg);
-                else RenderDrawGroup(dg);
-                
+                else
+                {
+                    RenderDrawGroup(dg);
+                    dg.Dispose();
+                }
             }
         }
 
@@ -524,19 +632,29 @@ namespace FSO.LotView.Utils
         {
             if (Pass == 0){
                 Batch.Pause();
-                GD.SetRenderTargets(Target); //render to multiple targets, 0 is color, 1 is depth!
-                GD.Clear(Color.Transparent);
-                GD.SetRenderTargets(DepthTarget); //render to multiple targets, 0 is color, 1 is depth!
-                GD.Clear(Color.Transparent);
+                PPXDepthEngine.SetPPXTarget(Target, DepthTarget, true);
 
-                GD.SetRenderTargets(Target, DepthTarget);
-                Batch.OutputDepth = true;
+                Batch.OutputDepth = true; //depth surface always uses depth techniques
                 Batch.Resume();
 
                 Pass++;
                 return true;
             }
-            return false ;
+            return false;
+            /*else if (Pass == 1)
+            {
+                if (FSOEnvironment.UseMRT) return false;
+                else
+                {
+                    Batch.Pause();
+                    GD.SetRenderTarget(DepthTarget);
+                    Batch.OutputDepth = true;
+                    Batch.Resume();
+                    Pass++;
+                    return true;
+                }
+            }
+            return false;*/
         }
 
         protected void ExtractDepthTexture()
@@ -549,7 +667,7 @@ namespace FSO.LotView.Utils
         {
             Batch.Pause();
             Batch.OutputDepth = false;
-            GD.SetRenderTarget(null); //need to unbind both before we can extract their textures.
+            PPXDepthEngine.SetPPXTarget(null, null, false); //need to unbind both before we can extract their textures.
             ExtractPixelTexture();
             ExtractDepthTexture();
             Batch.Resume();
@@ -584,8 +702,7 @@ namespace FSO.LotView.Utils
             if (Pass == 0)
             {
                 Batch.Pause();
-                GD.SetRenderTarget(Target);
-                GD.Clear(Color.Transparent);
+                PPXDepthEngine.SetPPXTarget(Target, null, true);
                 Batch.Resume();
 
                 Pass++;
@@ -604,7 +721,7 @@ namespace FSO.LotView.Utils
 
         public virtual void Dispose(){
             Batch.Pause();
-            GD.SetRenderTarget(null);
+            PPXDepthEngine.SetPPXTarget(null, null, false);
             ExtractPixelTexture();
             Batch.Resume();
         }

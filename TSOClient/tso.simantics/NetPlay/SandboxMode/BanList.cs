@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Common;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,11 +14,11 @@ namespace FSO.SimAntics.NetPlay.SandboxMode
 
         public BanList()
         {
-            Dir = "";
-            //Directory.CreateDirectory(Dir);
-            if (!File.Exists(Dir + "banlist.txt")) File.Create(Dir + "banlist.txt").Close();
+            Dir = FSOEnvironment.UserDir;
+            var path = Path.Combine(Dir, "banlist.txt");
+            if (!File.Exists(path)) File.Create(path).Close();
 
-            using (var list = File.OpenText(Dir+"banlist.txt"))
+            using (var list = File.OpenText(path))
             {
                 BannedHosts = new HashSet<string>();
                 string line;

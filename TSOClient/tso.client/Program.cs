@@ -6,7 +6,6 @@ http://mozilla.org/MPL/2.0/.
 
 using System;
 using System.IO;
-using System.Windows.Forms;
 using System.Threading;
 using FSO.Client.Utils.GameLocator;
 using FSO.Client.Utils;
@@ -34,7 +33,7 @@ namespace FSO.Client
         public static bool InitWithArguments(string[] args)
         {
             AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
-            Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
+            //Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
 
             OperatingSystem os = Environment.OSVersion;
@@ -129,7 +128,7 @@ namespace FSO.Client
             }
             else
             {
-                MessageBox.Show("The Sims Online was not found on your system. FreeSO will not be able to run without access to the original game files.");
+                //MessageBox.Show("The Sims Online was not found on your system. FreeSO will not be able to run without access to the original game files.");
                 return false;
             }
         }
@@ -151,15 +150,13 @@ namespace FSO.Client
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            var exceptionDisplay = new FSOExceptionDisplay(e.ExceptionObject.ToString());
-            exceptionDisplay.ShowDialog();
+            //MessageBox.Show("Exception: \r\n" + e.ExceptionObject.ToString());
         }
 
         private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
             LogThis.Log.LogThis("Exception: " + e.Exception.ToString(), LogThis.eloglevel.error);
-            var exceptionDisplay = new FSOExceptionDisplay(e.Exception.ToString());
-            exceptionDisplay.ShowDialog();
+            //MessageBox.Show("Exception: \r\n" + e.Exception.ToString());
         }
 
         /// <summary>

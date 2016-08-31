@@ -251,7 +251,7 @@ namespace FSO.SimAntics
 
             Context.Architecture.Tick();
 
-            var entCpy = new List<VMEntity>(Entities);
+            var entCpy = Entities.ToArray();
             foreach (var obj in entCpy)
             {
                 Context.NextRandom(1);

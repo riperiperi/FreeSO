@@ -19,6 +19,9 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using FSO.Client.GameContent;
 using FSO.Client.UI.Framework.Parser;
+using Microsoft.Xna.Framework.GamerServices;
+using FSO.Common;
+using System.Threading;
 
 namespace FSO.Client.UI.Controls
 {
@@ -208,6 +211,7 @@ namespace FSO.Client.UI.Controls
         #region IFocusableUI Members
 
         private bool IsFocused;
+        private string QueuedChange;
         public void OnFocusChanged(FocusEvent newFocus)
         {
             IsFocused = newFocus == FocusEvent.FocusIn;
@@ -215,6 +219,21 @@ namespace FSO.Client.UI.Controls
             {
                 m_cursorBlink = true;
                 m_cursorBlinkLastTime = GameFacade.LastUpdateState.Time.TotalGameTime.Ticks;
+                if (FSOEnvironment.SoftwareKeyboard)
+                {
+                    try
+                    {
+                        Guide.BeginShowKeyboardInput(PlayerIndex.One, "", "", CurrentText, (ar) =>
+                        {
+                            var str = Guide.EndShowKeyboardInput(ar);
+                            lock (this)
+                            {
+                                QueuedChange = str;
+                            }
+                        }, null);
+                    }
+                    catch (Exception e) { }
+                }
             }
             else
             {
@@ -230,6 +249,13 @@ namespace FSO.Client.UI.Controls
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            lock (this) {
+                if (QueuedChange != null) {
+                    CurrentText = QueuedChange;
+                    QueuedChange = null;
+                }
+            }
+            if (FSOEnvironment.SoftwareKeyboard && state.InputManager.GetFocus() == this) state.InputManager.SetFocus(null);
             if (IsFocused)
             {
                 /**

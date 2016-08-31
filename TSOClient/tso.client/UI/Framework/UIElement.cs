@@ -873,6 +873,12 @@ namespace FSO.Client.UI.Framework
             return newRegion;
         }
 
+        public void RemoveMouseListener(UIMouseEventRef item)
+        {
+            if (m_MouseRefs == null) return;
+            m_MouseRefs.Remove(item);
+        }
+
         private float[] _InvertedMtx;
 
         /// <summary>

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using FSO.Common.Model;
 
 namespace FSO.LotView.Utils
 {
@@ -39,5 +40,35 @@ namespace FSO.LotView.Utils
         public Vector3 AbsoluteWorldPosition;
         public Vector3 AbsoluteTilePosition;
 
+        public void Repurpose()
+        {
+            Pixel = null;
+            Depth = null;
+            Mask = null;
+            WorldPosition = new Vector3();
+            TilePosition = new Vector3();
+            ObjectID = 0;
+            Room = 0xFFFF;
+
+            //rects are written always by sprite drawer
+            FlipHorizontally = false;
+            FlipVertically = false;
+        }
+    }
+
+    public class _2DSpriteGroup
+    {
+        public IntersectRectTree SprRectangles;
+        public Dictionary<_2DBatchRenderMode, List<_2DSprite>> Sprites;
+
+        public _2DSpriteGroup(bool nonIntersect)
+        {
+            if (nonIntersect) SprRectangles = new IntersectRectTree();
+            Sprites = new Dictionary<_2DBatchRenderMode, List<_2DSprite>>();
+            Sprites.Add(_2DBatchRenderMode.NO_DEPTH, new List<_2DSprite>());
+            Sprites.Add(_2DBatchRenderMode.RESTORE_DEPTH, new List<_2DSprite>());
+            Sprites.Add(_2DBatchRenderMode.WALL, new List<_2DSprite>());
+            Sprites.Add(_2DBatchRenderMode.Z_BUFFER, new List<_2DSprite>());
+        }
     }
 }

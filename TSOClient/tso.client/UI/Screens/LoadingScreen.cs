@@ -23,6 +23,7 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
 using FSO.Client.UI.Panels;
+using FSO.Common;
 
 namespace FSO.Client.UI.Screens
 {
@@ -34,7 +35,7 @@ namespace FSO.Client.UI.Screens
 
         private Timer CheckProgressTimer;
 
-        public LoadingScreen()
+        public LoadingScreen() : base()
         {
             HITVM.Get().PlaySoundEvent(UIMusic.LoadLoop);
 

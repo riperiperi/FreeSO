@@ -55,7 +55,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 if (Mode == VMEODSignsMode.Read) return; //cannot change anything
                 else if (Mode == VMEODSignsMode.Write) newData.Flags = Data.Flags; //cannot change permissions
 
-                newData.Text = newData.Text.Substring(0, Math.Min(MaxLength, newData.Text.Length));
+                if (newData.Text.Length > 0) newData.Text = newData.Text.Substring(0, Math.Min(MaxLength, newData.Text.Length));
                 Data = newData;
 
                 Server.vm.GlobalLink.SavePluginPersist(Server.vm, Server.Object.PersistID, Server.PluginID, newData.Save());

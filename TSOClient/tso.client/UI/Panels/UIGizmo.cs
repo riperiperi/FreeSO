@@ -21,6 +21,7 @@ using FSO.Common.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Client.Controllers;
 using FSO.Common.DatabaseService.Model;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -227,7 +228,7 @@ namespace FSO.Client.UI.Panels
         {
             var xmlHouses = new List<UIXMLLotEntry>();
 
-            string[] paths = Directory.GetFiles(@"Content/Blueprints/", "*.xml", SearchOption.AllDirectories);
+            string[] paths = Directory.GetFiles(Path.Combine(FSOEnvironment.ContentDir,"Blueprints/"), "*.xml", SearchOption.AllDirectories);
             for (int i = 0; i < paths.Length; i++)
             {
                 string entry = paths[i];

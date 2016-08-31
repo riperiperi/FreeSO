@@ -11,6 +11,9 @@
     <RootNamespace>FSO.Client</RootNamespace>
     <AssemblyName>FreeSO</AssemblyName>
     <FileAlignment>512</FileAlignment>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -23,11 +26,8 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -55,6 +55,9 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>FreeSO.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Controllers\JoinLotProgressController.cs" />
@@ -95,6 +98,7 @@
     <Compile Include="UI\Panels\UIPersonPage.cs" />
     <Compile Include="Debug\IDEHook.cs" />
     <Compile Include="GameStartProxy.cs" />
+    <Compile Include="GlobalSettings.cs" />
     <Compile Include="UI\Controls\UIPersonIcon.cs" />
     <Compile Include="UI\Framework\UIExternalContainer.cs" />
     <Compile Include="UI\Model\UIMusic.cs" />
@@ -353,11 +357,6 @@
     <Compile Include="UI\UILayer.cs" />
     <Compile Include="Utils\ErrorMessage.cs" />
     <Compile Include="GameContent\ContentStrings.cs" />
-    <Compile Include="GlobalSettings1.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>GlobalSettings.settings</DependentUpon>
-    </Compile>
     <Compile Include="TSOGame.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -367,10 +366,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Content Include="Game.ico" />
-    <EmbeddedResource Include="Debug\FSOExceptionDisplay.resx">
-      <DependentUpon>FSOExceptionDisplay.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Icon.bmp" />
     <None Include="Resources\Icon.bmp" />
     <None Include="Resources\ico256.fw.png" />
     <Content Include="sdl2.dll">
@@ -378,10 +373,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="GOLD Engine, Version=5.0.4337.25397, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Dependencies\GOLD Engine.dll</HintPath>
-    </Reference>
     <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
@@ -399,16 +390,14 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="Tao.Sdl">
-      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\MSBuild\..\MonoGame\v3.0\Assemblies\WindowsGL\Tao.Sdl.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
+    <Reference Include="GOLDEngine">
+      <HintPath>Dependencies\GOLDEngine.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Dependencies\GOLD Engine.dll" />
+    <Content Include="Dependencies\GOLDEngine.dll" />
     <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />
     <Content Include="Dependencies\nunit.framework.dll" />
     <Content Include="Dependencies\TargaImage.dll" />
@@ -465,28 +454,14 @@
     </Content>
     <None Include="UI\Framework\Parser\UIScript.egt" />
     <None Include="UI\Framework\Parser\UIScript.grm" />
-    <None Include="GlobalSettings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>GlobalSettings1.Designer.cs</LastGenOutput>
+    <None Include="ContentSrc\ComicSans.spritefont" />
+    <None Include="ContentSrc\ComicSansSmall.spritefont" />
+    <None Include="ContentSrc\Effects\2dWorldBatch.mgfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Debug\TSOClientFindAssetSearch.resx">
-      <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Debug\TSOClientTools.resx">
-      <DependentUpon>TSOClientTools.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Debug\TSOClientUIInspector.resx">
-      <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Debug\TSOEdith.resx">
-      <DependentUpon>TSOEdith.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Debug\TSOSceneInspector.resx">
-      <DependentUpon>TSOSceneInspector.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -498,6 +473,10 @@
       <Project>{35253ce1-c864-4cd3-8249-4d1319748e8f}</Project>
       <Name>MonoGame.Framework.Linux</Name>
       <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Net.WindowsGL.csproj">
+      <Project>{6d6009f4-0afb-4806-89d7-7945f20270f5}</Project>
+      <Name>MonoGame.Framework.Net.WindowsGL</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
       <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>

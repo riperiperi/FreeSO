@@ -227,6 +227,7 @@ namespace FSO.Client
 
         public void StartDebugTools()
         {
+			/*
             if (GameFacade.DebugWindow != null)
             {
                 if (GameFacade.DebugWindow.Visible)
@@ -243,10 +244,8 @@ namespace FSO.Client
             var debugWindow = new FSO.Client.Debug.TSOClientTools();
             GameFacade.DebugWindow = debugWindow;
 
-            /** Position the debug window **/
-
             debugWindow.Show();
-
+			*/
             //debugWindow.PositionAroundGame(GameFacade.Game.Window);
         }
     }

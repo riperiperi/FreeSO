@@ -19,6 +19,7 @@ using FSO.Client.UI.Framework.Parser;
 using FSO.SimAntics.NetPlay.EODs.Model;
 using FSO.LotView.Components;
 using FSO.LotView;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -110,7 +111,7 @@ namespace FSO.Client.UI.Panels
         public Texture2D DefaultBGImage;
 
         public UILiveMode (UILotControl lotController) {
-            var small800 = (GlobalSettings.Default.GraphicsWidth < 1024);
+            var small800 = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
             var script = this.RenderScript("livepanel"+(small800?"":"1024")+".uis");
             Script = script;
             LotController = lotController;
@@ -347,7 +348,8 @@ namespace FSO.Client.UI.Panels
             PeopleListBg.Texture = (eodPresent && PeopleListEODBackgroundImg != null) ? PeopleListEODBackgroundImg : PeopleListBackgroundImg;
             PeopleListBg.SetSize(PeopleListBg.Texture.Width, PeopleListBg.Texture.Height);
 
-            NextPageButton.Position = (eodPresent && !(GlobalSettings.Default.GraphicsWidth < 1024)) ? (Vector2)Script.GetControlProperty("NextPageEODButton") : DefaultNextPagePos;
+            var small800 = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
+            NextPageButton.Position = (eodPresent && !small800) ? (Vector2)Script.GetControlProperty("NextPageEODButton") : DefaultNextPagePos;
             Background.Texture = (eodPresent) ? BackgroundEODImg : DefaultBGImage;
             Background.SetSize(Background.Texture.Width, Background.Texture.Height);
 

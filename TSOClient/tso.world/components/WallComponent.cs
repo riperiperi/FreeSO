@@ -214,7 +214,7 @@ namespace FSO.LotView.Components
                                             var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
                                             if (!comp2.TopLeftThick)
                                             {
-                                                _Sprite = CopySprite(_Sprite);
+                                                _Sprite = CopySprite(world, _Sprite);
                                                 tlStyle = GetStyle(comp.TopLeftStyle); //return to normal if cutaway
                                                 var tilePosition2 = contOff;
 
@@ -346,7 +346,7 @@ namespace FSO.LotView.Components
                                             var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
                                             if (!comp2.TopRightThick)
                                             {
-                                                _Sprite = CopySprite(_Sprite);
+                                                _Sprite = CopySprite(world, _Sprite);
                                                 trStyle = GetStyle(comp.TopRightStyle); //return to normal if cutaway
 
                                                 var tilePosition2 = contOff;
@@ -568,10 +568,7 @@ namespace FSO.LotView.Components
                             world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                             world._2D.OffsetTile(tilePosition);
 
-                            var _Sprite = new _2DSprite()
-                            {
-                                RenderMode = _2DBatchRenderMode.Z_BUFFER
-                            };
+                            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
 
                             var Junctions = wallContent.Junctions;
 
@@ -651,8 +648,9 @@ namespace FSO.LotView.Components
                         if (cuts != 0)
                         {
                             if ((cuts & CutawayEdges.NegativeX) == CutawayEdges.NegativeX) result.TLCut = WallCut.Up; //if we are on the very edge of the cut we're up
-                            else if ((cuts & CutawayEdges.PositiveY) == CutawayEdges.PositiveY) {
-                                if ((cuts & CutawayEdges.NegativeY) == CutawayEdges.NegativeY)
+                            else 
+                            if ((cuts & (CutawayEdges.PositiveY | CutawayEdges.SpecialPositiveY)) > 0) {
+                                if ((cuts & (CutawayEdges.NegativeY | CutawayEdges.SpecialNegativeY)) > 0)
                                 {
                                     result.TLCut = WallCut.Down; //special case, cuts at both sides... just put wall down
                                 }
@@ -661,10 +659,11 @@ namespace FSO.LotView.Components
                                     result.TLCut = WallCut.DownRightUpLeft;
                                 }
                             }
-                            else if ((cuts & CutawayEdges.NegativeY) == CutawayEdges.NegativeY)
+                            else if ((cuts & (CutawayEdges.NegativeY | CutawayEdges.SpecialNegativeY)) > 0)
                             {
                                 result.TLCut = WallCut.DownLeftUpRight;
                             }
+                            //else if ((cuts & CutawayEdges.NegativeX) == CutawayEdges.NegativeX) result.TLCut = WallCut.Up; //if we are on the very edge of the cut we're up
                             else result.TLCut = WallCut.Down;
                         }
                         else
@@ -712,9 +711,10 @@ namespace FSO.LotView.Components
                             if (cuts != 0)
                             {
                                 if ((cuts & CutawayEdges.NegativeY) == CutawayEdges.NegativeY) result.TRCut = WallCut.Up; //if we are on the very edge of the cut we're up
-                                else if ((cuts & CutawayEdges.PositiveX) == CutawayEdges.PositiveX)
+                                else 
+                                if ((cuts & (CutawayEdges.PositiveX | CutawayEdges.SpecialPositiveX)) > 0)
                                 {
-                                    if ((cuts & CutawayEdges.NegativeX) == CutawayEdges.NegativeX)
+                                    if ((cuts & (CutawayEdges.NegativeX | CutawayEdges.SpecialNegativeX)) > 0)
                                     { //special case, cuts at both sides... just put wall down
                                         result.TRCut = WallCut.Down;
                                     }
@@ -723,10 +723,11 @@ namespace FSO.LotView.Components
                                         result.TRCut = WallCut.DownLeftUpRight;
                                     }
                                 }
-                                else if ((cuts & CutawayEdges.NegativeX) == CutawayEdges.NegativeX)
+                                else if ((cuts & (CutawayEdges.NegativeX | CutawayEdges.SpecialNegativeX)) > 0)
                                 {
                                     result.TRCut = WallCut.DownRightUpLeft;
                                 }
+                                //else if ((cuts & CutawayEdges.NegativeY) == CutawayEdges.NegativeY) result.TRCut = WallCut.Up; //if we are on the very edge of the cut we're up
                                 else result.TRCut = WallCut.Down;
                             }
                             else
@@ -805,11 +806,7 @@ namespace FSO.LotView.Components
         private bool WallsDownAt(int x, int y)
         {
             var cuts = blueprint.Cutaway;
-            foreach (var cut in cuts)
-            {
-                if (cut.Contains(x, y)) return true;
-            }
-            return false;
+            return cuts[y * blueprint.Width + x];
         }
 
         private CutawayEdges GetCutEdges(int x, int y) //todo, rotate result for rotations
@@ -819,6 +816,9 @@ namespace FSO.LotView.Components
             if (!WallsDownAt(x - 1, y)) result |= CutawayEdges.NegativeX;
             if (!WallsDownAt(x, y + 1)) result |= CutawayEdges.PositiveY;
             if (!WallsDownAt(x, y - 1)) result |= CutawayEdges.NegativeY;
+            if (!WallsDownAt(x - 1, y - 1)) result |= CutawayEdges.SpecialNegativeX | CutawayEdges.SpecialNegativeY;
+            if (!WallsDownAt(x - 1, y + 1)) result |= CutawayEdges.SpecialPositiveY;
+            if (!WallsDownAt(x + 1, y - 1)) result |= CutawayEdges.SpecialPositiveX;
             return result;
         }
 
@@ -836,10 +836,7 @@ namespace FSO.LotView.Components
 
         private _2DSprite GetWallSprite(Wall pattern, WallStyle style, int rotation, bool down, WorldState world)
         {
-            var _Sprite = new _2DSprite()
-            {
-                RenderMode = _2DBatchRenderMode.WALL
-            };
+            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.WALL);
             SPR sprite = null;
             SPR mask = null;
             switch (world.Zoom)
@@ -880,10 +877,7 @@ namespace FSO.LotView.Components
 
         private _2DSprite GetFloorSprite(Floor pattern, int rotation, WorldState world, byte cut)
         {
-            var _Sprite = new _2DSprite()
-            {
-                RenderMode = _2DBatchRenderMode.Z_BUFFER
-            };
+            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
             if (pattern == null) return _Sprite;
             SPR2 sprite = null;
             switch (world.Zoom)
@@ -1135,17 +1129,15 @@ namespace FSO.LotView.Components
             return output;
         }
 
-        private _2DSprite CopySprite(_2DSprite _Sprite)
+        private _2DSprite CopySprite(WorldState world, _2DSprite _Sprite)
         {
-            return new _2DSprite()
-            {
-                DestRect = _Sprite.DestRect,
-                SrcRect = _Sprite.SrcRect,
-                RenderMode = _2DBatchRenderMode.WALL,
-                Pixel = _Sprite.Pixel,
-                Depth = _Sprite.Depth,
-                Room = _Sprite.Room
-            };
+            var spr = world._2D.NewSprite(_2DBatchRenderMode.WALL);
+            spr.DestRect = _Sprite.DestRect;
+            spr.SrcRect = _Sprite.SrcRect;
+            spr.Pixel = _Sprite.Pixel;
+            spr.Depth = _Sprite.Depth;
+            spr.Room = _Sprite.Room;
+            return spr;
         }
     }
 
@@ -1170,6 +1162,10 @@ namespace FSO.LotView.Components
         PositiveX = 2,
         NegativeY = 4,
         NegativeX = 8,
+        SpecialPositiveY = 16,
+        SpecialPositiveX = 32,
+        SpecialNegativeY = 64,
+        SpecialNegativeX = 128
     }
 
     [Flags]

@@ -94,7 +94,7 @@ namespace FSO.HIT.Events
 
             if (Instance != null)
             {
-                Instance.Pan = Pan;
+                if (!IsMusic && Pan != Instance.Pan) Instance.Pan = Pan;
                 Instance.Volume = Volume;
             }
 
@@ -213,7 +213,7 @@ namespace FSO.HIT.Events
                 Instance = sfx.CreateInstance();
             }
             Instance.Volume = Volume;
-            Instance.Pan = Pan;
+            if (!IsMusic && Pan != 0) Instance.Pan = Pan;
             Instance.Play();
             return true;
         }
