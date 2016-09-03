@@ -17,6 +17,7 @@ using FSO.Files.Formats.tsodata;
 using FSO.Files.Formats.IFF;
 using System.Threading;
 using FSO.Common;
+using FSO.Content.Model;
 
 namespace FSO.Content
 {
@@ -73,6 +74,8 @@ namespace FSO.Content
                 AvatarTextures = new AvatarTextureProvider(this);
                 AvatarMeshes = new AvatarMeshProvider(this, Device);
                 AvatarHandgroups = new HandgroupProvider(this);
+                AbstractTextureRef.FetchDevice = device;
+                AbstractTextureRef.ImageFetchFunction = AbstractTextureRef.ImageFetchWithDevice;
             }
             Changes = new ChangeManager();
             AvatarBindings = new AvatarBindingProvider(this);

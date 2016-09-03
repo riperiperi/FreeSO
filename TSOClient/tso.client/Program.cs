@@ -110,8 +110,6 @@ namespace FSO.Client
 
             if (UseDX) GlobalSettings.Default.AntiAlias = false;
 
-            throw new Exception("Test");
-
             if (path != null)
             {
                 FSOEnvironment.ContentDir = "Content/";

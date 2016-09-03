@@ -24,8 +24,8 @@ namespace FSO.LotView.Components
 
         public Vector2 GlobalPosition;
 
-        private List<_2DDrawGroup> StaticObjectsCache = new List<_2DDrawGroup>();
-        private List<_2DDrawGroup> StaticArchCache = new List<_2DDrawGroup>();
+        private List<_2DDrawBuffer> StaticObjectsCache = new List<_2DDrawBuffer>();
+        private List<_2DDrawBuffer> StaticArchCache = new List<_2DDrawBuffer>();
         private int TicksSinceLight = 0;
 
         /// <summary>

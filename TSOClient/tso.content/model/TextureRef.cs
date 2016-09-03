@@ -15,6 +15,7 @@ namespace FSO.Content.Model
     public interface ITextureRef
     {
         Texture2D Get(GraphicsDevice device);
+        TexBitmap GetImage();
     }
 
     public class FileTextureRef : AbstractTextureRef
@@ -68,6 +69,8 @@ namespace FSO.Content.Model
 
     public abstract class AbstractTextureRef : ITextureRef
     {
+        public delegate TexBitmap SimpleBitmapProvider(Stream stream, AbstractTextureRef texRef);
+        public static SimpleBitmapProvider ImageFetchFunction;
         private Texture2D _Instance;
 
         public AbstractTextureRef()
@@ -105,9 +108,46 @@ namespace FSO.Content.Model
             }
         }
 
+        public static GraphicsDevice FetchDevice;
+        public static TexBitmap ImageFetchWithDevice(Stream stream, AbstractTextureRef texRef)
+        {
+            var tex = texRef.Get(FetchDevice);
+            var data = new byte[tex.Width * tex.Height * 4];
+            tex.GetData(data);
+            for (int i = 0; i < data.Length; i += 4)
+            {
+                //output expects bgra.
+                var temp = data[i + 2];
+                data[i + 2] = data[i];
+                data[i] = temp;
+            }
+
+            return new TexBitmap
+            {
+                Data = data,
+                Width = tex.Width,
+                Height = tex.Height,
+                PixelSize = 4
+            };
+        }
+
+        public TexBitmap GetImage()
+        {
+            if (ImageFetchFunction == null) return null;
+            return ImageFetchFunction(GetStream(), this);
+        }
+
         protected virtual Texture2D Process(GraphicsDevice device, Stream stream)
         {
             return ImageLoader.FromStream(device, stream);
         }
+    }
+
+    public class TexBitmap
+    {
+        public int Width;
+        public int Height;
+        public byte[] Data;
+        public int PixelSize;
     }
 }

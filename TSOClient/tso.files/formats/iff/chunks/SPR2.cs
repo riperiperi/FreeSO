@@ -421,6 +421,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         /// </summary>
         public void CopyZToAlpha()
         {
+            DecodeIfRequired();
             for (int i=0; i<PixelData.Length; i++)
             {
                 PixelData[i].A = (ZBufferData[i] < 32)?(byte)0:ZBufferData[i];

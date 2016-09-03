@@ -59,6 +59,8 @@ namespace FSO.Server
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Lots/"));
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/"));
 
+            Content.Model.AbstractTextureRef.ImageFetchFunction = Utils.SoftwareImageLoader.SoftImageFetch;
+
             //TODO: Some content preloading
             LOG.Info("Scanning content");
             Content.Content.Init(Config.GameLocation, Content.ContentMode.SERVER);

@@ -26,7 +26,7 @@ namespace FSO.Debug.Content.Preview
         public void Preview(object value)
         {
             ITextureRef texture = (ITextureRef)value;
-            this.pictureBox1.Image = texture.GetImage();
+            //this.pictureBox1.Image = texture.GetImage();
         }
     }
 }

@@ -100,7 +100,7 @@ namespace FSO.LotView.Utils
                         width = 1024;
                         height = 1024;
                         break;
-                    case 8:
+                    case 11:
                         width = 2304;
                         height = 2304;
                         break;

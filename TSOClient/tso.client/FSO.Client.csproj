@@ -70,12 +70,6 @@
     <Compile Include="Controllers\Panels\LotPageController.cs" />
     <Compile Include="Controllers\Panels\PersonPageController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
-    <Compile Include="Debug\FSOExceptionDisplay.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\FSOExceptionDisplay.Designer.cs">
-      <DependentUpon>FSOExceptionDisplay.cs</DependentUpon>
-    </Compile>
     <Compile Include="GameContent\UIFileIDs.cs" />
     <Compile Include="Model\UserReference.cs" />
     <Compile Include="Network\ClientDataService.cs" />
@@ -231,36 +225,6 @@
     <Compile Include="Controllers\DisconnectController.cs" />
     <Compile Include="Controllers\PersonSelectionController.cs" />
     <Compile Include="Controllers\PersonSelectionEditController.cs" />
-    <Compile Include="Debug\TSOClientFindAssetSearch.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOClientFindAssetSearch.Designer.cs">
-      <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Debug\TSOClientTools.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOClientTools.Designer.cs">
-      <DependentUpon>TSOClientTools.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Debug\TSOClientUIInspector.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOClientUIInspector.Designer.cs">
-      <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Debug\TSOEdith.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOEdith.Designer.cs">
-      <DependentUpon>TSOEdith.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Debug\TSOSceneInspector.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Debug\TSOSceneInspector.Designer.cs">
-      <DependentUpon>TSOSceneInspector.cs</DependentUpon>
-    </Compile>
     <Compile Include="GameController.cs" />
     <Compile Include="GameFacade.cs" />
     <Compile Include="Network\Network.cs" />
@@ -366,6 +330,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Content Include="Game.ico" />
+    <Content Include="soft_oal.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\Icon.bmp" />
     <None Include="Resources\ico256.fw.png" />
     <Content Include="sdl2.dll">
@@ -454,11 +421,6 @@
     </Content>
     <None Include="UI\Framework\Parser\UIScript.egt" />
     <None Include="UI\Framework\Parser\UIScript.grm" />
-    <None Include="ContentSrc\ComicSans.spritefont" />
-    <None Include="ContentSrc\ComicSansSmall.spritefont" />
-    <None Include="ContentSrc\Effects\2dWorldBatch.mgfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

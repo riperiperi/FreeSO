@@ -36,16 +36,9 @@ namespace FSO.Client.UI.Panels
             ContentBrowserBtn.Width = 300;
             ContentBrowserBtn.OnButtonClick += x =>
             {
-                ShowTool(new ContentBrowser());
+                //ShowTool(new ContentBrowser());
             };
             Add(ContentBrowserBtn);
-        }
-
-
-        
-        private void ShowTool(System.Windows.Forms.Form window)
-        {
-            window.Show();
         }
     }
 }

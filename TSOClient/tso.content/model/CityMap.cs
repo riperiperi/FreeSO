@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -11,11 +11,11 @@ namespace FSO.Content.Model
 {
     public class CityMap
     {
-        private static Color TERRAIN_GRASS = Color.FromArgb(255, 0, 255, 0);
-        private static Color TERRAIN_WATER = Color.FromArgb(255, 12, 0, 255);
-        private static Color TERRAIN_SNOW = Color.FromArgb(255, 255, 255, 255);
-        private static Color TERRAIN_ROCK = Color.FromArgb(255, 255, 0, 0);
-        private static Color TERRAIN_SAND = Color.FromArgb(255, 255, 255, 0);
+        private static Color TERRAIN_GRASS = new Color(0, 255, 0);
+        private static Color TERRAIN_WATER = new Color(12, 0, 255);
+        private static Color TERRAIN_SNOW = new Color(255, 255, 255);
+        private static Color TERRAIN_ROCK = new Color(255, 0, 0);
+        private static Color TERRAIN_SAND = new Color(255, 255, 0);
         
         private string _Directory;
 
@@ -162,15 +162,12 @@ namespace FSO.Content.Model
         public TextureValueMap(ITextureRef texture, Func<Color, T> converter)
         {
             Values = new T[512, 512];
-            
-            var image = new Bitmap(texture.GetImage());
-            var data = image.LockBits(new Rectangle(0, 0, image.Width, image.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, image.PixelFormat);
-            var pixelSize = image.PixelFormat == System.Drawing.Imaging.PixelFormat.Format32bppArgb ? 4 : 3;
-            var padding = data.Stride - (data.Width * pixelSize);
-            var bytes = new byte[data.Height * data.Stride];
+
+            var image = texture.GetImage();
+            var bytes = image.Data;
+            var pixelSize = image.PixelSize;
 
             // copy the bytes from bitmap to array
-            Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
 
             var index = 0;
 
@@ -184,13 +181,13 @@ namespace FSO.Content.Model
                     index += pixelSize;
 
                     //The game actually uses the pixel coordinates as the lot coordinates
-                    var color = Color.FromArgb(a, r, g, b);
+                    var color = new Color(r, g, b, a);
                     var value = converter(color);
                     Values[y, x] = value;
                 }
             }
             
-            image.UnlockBits(data);
+            //image.UnlockBits(data);
         }
 
         public T Get(int x, int y)

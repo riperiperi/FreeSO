@@ -91,7 +91,7 @@ namespace FSO.Common.Rendering.Framework
                     */
             }
 
-            m_CursorMap.Add(CursorType.IBeam, Cursors.IBeam);
+            //m_CursorMap.Add(CursorType.IBeam, Cursors.IBeam);
         }
 
 

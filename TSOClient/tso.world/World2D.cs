@@ -83,9 +83,12 @@ namespace FSO.LotView
 
             //Thumbnail depth
             false,
+
+            //lot thumb
+            true,
         };
 
-        public static readonly int NUM_2D_BUFFERS = 11;
+        public static readonly int NUM_2D_BUFFERS = 12;
         public static readonly int BUFFER_THUMB = 0; //used for drawing thumbnails
         public static readonly int BUFFER_STATIC_OBJECTS_PIXEL = 1;
         public static readonly int BUFFER_STATIC_OBJECTS_DEPTH = 2;
@@ -493,8 +496,8 @@ namespace FSO.LotView
                     _2d.SetScroll(pxOffset);
                     while (buffer.NextPass())
                     {
-                        foreach (var sub in Blueprint.SubWorlds) sub.DrawArch(gd, state);
                         _2d.RenderCache(StaticFloorCache);
+                        foreach (var sub in Blueprint.SubWorlds) sub.DrawArch(gd, state);
                         Blueprint.Terrain.DepthMode = _2d.OutputDepth;
                         Blueprint.Terrain.Draw(gd, state);
                     }
