@@ -23,6 +23,7 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Common.Utils;
 using FSO.Client.Controllers;
+using FSO.LotView;
 
 namespace FSO.Client.Rendering.City
 {
@@ -81,9 +82,13 @@ namespace FSO.Client.Rendering.City
             new Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
+        public static float NEAR_ZOOM_SIZE = 288;
+        public float m_LotZoomSize = 72*128; //near zoom, set by world
+        public TerrainZoomMode m_Zoomed = TerrainZoomMode.Far;
+        public float m_LotZoomProgress = 0;
+
         private MouseState m_MouseState, m_LastMouseState;
         private bool m_MouseMove = false;
-        public bool m_Zoomed = false;
         private Vector2 m_MouseStart;
         private int m_ScrHeight, m_ScrWidth;
         private float m_ScrollSpeed;
@@ -703,10 +708,7 @@ namespace FSO.Client.Rendering.City
 
         private int[] GetHoverSquare()
         {
-            double ResScale = 768.0/m_ScrHeight;
-            double fisoScale = (Math.Sqrt(0.5*0.5*2)/5.10)*ResScale; // is 5.10 on far zoom
-            double zisoScale = Math.Sqrt(0.5*0.5*2)/144.0; // currently set 144 to near zoom
-            double isoScale = (1-m_ZoomProgress)*fisoScale + (m_ZoomProgress)*zisoScale;
+            var isoScale = GetIsoScale();
             double width = m_ScrWidth;
             float iScale = (float)(width/(width*isoScale*2));
             
@@ -932,16 +934,13 @@ namespace FSO.Client.Rendering.City
             SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
             spriteBatch.Begin();
 
-            if (!m_Zoomed && m_HandleMouse)
+            if (m_Zoomed == TerrainZoomMode.Far && m_HandleMouse)
             {
                 //draw rectangle to indicate zoom position
                 DrawLine(m_WhiteLine, new Vector2(m_MouseState.X - 15, m_MouseState.Y - 11), new Vector2(m_MouseState.X - 15, m_MouseState.Y + 11), spriteBatch, 2, 1);
                 DrawLine(m_WhiteLine, new Vector2(m_MouseState.X - 16, m_MouseState.Y + 10), new Vector2(m_MouseState.X + 16, m_MouseState.Y + 10), spriteBatch, 2, 1);
                 DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 15, m_MouseState.Y + 11), new Vector2(m_MouseState.X + 15, m_MouseState.Y - 11), spriteBatch, 2, 1);
                 DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 16, m_MouseState.Y - 10), new Vector2(m_MouseState.X - 16, m_MouseState.Y - 10), spriteBatch, 2, 1);
-            }
-            else if (m_Zoomed && m_HandleMouse)
-            {
             }
             
             if (m_ZoomProgress < 0.5)
@@ -973,9 +972,7 @@ namespace FSO.Client.Rendering.City
                 {
                     if (x < 0 || x > 511) continue;
 
-                    float elev = (m_ElevationData[(y * 512 + x) * 4] + m_ElevationData[(y * 512 + Math.Min(x + 1, 511)) * 4] + 
-                        m_ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511)) * 4] + 
-                        m_ElevationData[(Math.Min(y + 1, 511) * 512 + x) * 4]) / 4; //elevation of sprite is the average elevation of the 4 vertices of the tile
+                    float elev = GetElevationAt(x, y);
 
                     var xy = transformSpr(iScale, new Vector3((float)(x + 0.5), elev / 12.0f, (float)(y + 0.5)));
 
@@ -1066,7 +1063,7 @@ namespace FSO.Client.Rendering.City
 
                 if (m_HandleMouse && state.ProcessMouseEvents)
                 {
-                    if (m_Zoomed)
+                    if (m_Zoomed == TerrainZoomMode.Near)
                     {
                         var currentTile = GetHoverSquare();
                         
@@ -1084,11 +1081,11 @@ namespace FSO.Client.Rendering.City
 
                     else if (m_MouseState.LeftButton == ButtonState.Released && m_LastMouseState.LeftButton == ButtonState.Pressed) //if clicked...
                     {
-                        if (!m_Zoomed)
+                        if (m_Zoomed == TerrainZoomMode.Far)
                         {
                             FindController<TerrainController>().ZoomIn();
 
-                            m_Zoomed = true;
+                            m_Zoomed = TerrainZoomMode.Near;
                             double ResScale = 768.0 / m_ScrHeight;
                             double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10) * ResScale;
                             double hb = m_ScrWidth * isoScale;
@@ -1154,13 +1151,55 @@ namespace FSO.Client.Rendering.City
                 m_ShadowMult = 0.65f; //Shadow strength. Remember to change the above if you alter this.
             }
         }
+        
+        public void InheritPosition(World lotWorld, CoreGameScreenController controller)
+        {
+            if (controller != null)
+            {
+                var id = controller.GetCurrentLotID();
+                if (id != 0)
+                {
+                    //center on this lot, with the given camera offset
+                    var x = id >> 16;
+                    var y = id & 0xFFFF;
+
+                    float elev = GetElevationAt((int)x, (int)y);
+
+                    var tile = lotWorld.State.CenterTile / 72; //72 is the base lot size
+
+                    switch (lotWorld.State.Zoom)
+                    {
+                        case WorldZoom.Near:
+                            m_LotZoomSize = 72 * 128;
+                            break;
+                        case WorldZoom.Medium:
+                            m_LotZoomSize = 72 * 64;
+                            break;
+                        case WorldZoom.Far:
+                            m_LotZoomSize = 72 * 32;
+                            break;
+                    }
+
+                    Vector3 scrollPos = Vector3.Transform(new Vector3((float)(x + 1)-tile.Y, elev / 12.0f, (float)(y + 0)+tile.X), m_MovMatrix);
+                    m_TargVOffX += (scrollPos.X - m_TargVOffX)/3;
+                    m_TargVOffY += (scrollPos.Y - m_TargVOffY)/3;
+                }
+            }
+        }
+
+        private float GetElevationAt(int x, int y)
+        {
+            return(m_ElevationData[(y * 512 + x) * 4] + m_ElevationData[(y * 512 + Math.Min(x + 1, 511)) * 4] +
+                        m_ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511)) * 4] +
+                        m_ElevationData[(Math.Min(y + 1, 511) * 512 + x) * 4]) / 4; //elevation of sprite is the average elevation of the 4 vertices of the tile
+        }
 
         private void FixedTimeUpdate()
         {
             m_SpotOsc = (m_SpotOsc + 0.01f) % 1; //spotlight oscillation. Cycles fully every 100 frames.
-            if (m_Zoomed)
+            if (m_Zoomed != TerrainZoomMode.Far) m_ZoomProgress += (1.0f - m_ZoomProgress) / 5.0f;
+            if (m_Zoomed == TerrainZoomMode.Near)
             {
-                m_ZoomProgress += (1.0f - m_ZoomProgress) / 5.0f;
                 bool Triggered = false;
 
                 if (m_MouseMove)
@@ -1217,8 +1256,15 @@ namespace FSO.Client.Rendering.City
                 m_TargVOffX = Math.Max(-135, Math.Min(m_TargVOffX, 138)); //maximum offsets for zoomed camera. Need adjusting for other screen sizes...
                 m_TargVOffY = Math.Max(-100, Math.Min(m_TargVOffY, 103));
             }
-            else
+            else if (m_Zoomed == TerrainZoomMode.Far)
                 m_ZoomProgress += (0 - m_ZoomProgress) / 5.0f; //zoom progress interpolation. Isn't very fixed but it's a nice gradiation.
+
+            //lot zoom.
+            if (m_Zoomed == TerrainZoomMode.Lot)
+            {
+                m_LotZoomProgress += (1.0f - m_LotZoomProgress) / 5.0f;
+            }
+            else m_LotZoomProgress += (0 - m_LotZoomProgress) / 5.0f; 
         }
 
         private Texture2D DrawDepth(Effect VertexShader, Effect PixelShader)
@@ -1269,6 +1315,17 @@ namespace FSO.Client.Rendering.City
             m_GraphicsDevice.DepthStencilState = DepthStencilState.Default;
         }
 
+        private float GetIsoScale()
+        {
+            float ResScale = 768.0f / m_ScrHeight; //scales up the vertical height to match that of the target resolution (for the far view)
+            float FisoScale = (float)(Math.Sqrt(0.5 * 0.5 * 2) / 5.10f) * ResScale; // is 5.10 on far zoom
+            float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / NEAR_ZOOM_SIZE;  // currently set 144 to near zoom
+            float LisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / m_LotZoomSize;  // currently set 144 to near zoom
+
+            float IsoScale = (1 - m_ZoomProgress) * FisoScale + (m_ZoomProgress) * ZisoScale;
+            return (1-m_LotZoomProgress) * IsoScale + m_LotZoomProgress * LisoScale;
+        }
+
         public override void Draw(GraphicsDevice gfx)
         {
             m_GraphicsDevice = gfx;
@@ -1286,12 +1343,7 @@ namespace FSO.Client.Rendering.City
 
             if (RegenData) GenerateAssets(); //if assets are flagged as requiring regeneration, regenerate them!
 
-            float ResScale = 768.0f/m_ScrHeight; //scales up the vertical height to match that of the target resolution (for the far view)
-
-            float FisoScale = (float)(Math.Sqrt(0.5 * 0.5 * 2) / 5.10f) * ResScale; // is 5.10 on far zoom
-		    float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 288f;  // currently set 144 to near zoom
-
-            float IsoScale = (1 - m_ZoomProgress) * FisoScale + (m_ZoomProgress) * ZisoScale;
+            float IsoScale = GetIsoScale();
 
             float HB = m_ScrWidth * IsoScale;
             float VB = m_ScrHeight * IsoScale;
@@ -1355,7 +1407,7 @@ namespace FSO.Client.Rendering.City
 
             m_MovMatrix = ViewMatrix;
 
-            if (!m_Zoomed) DrawHouses(HB); //draw far view house icons
+            if (m_Zoomed == TerrainZoomMode.Far) DrawHouses(HB); //draw far view house icons
 
             m_2DVerts = new ArrayList(); //refresh list for tris under houses
             DrawSprites(HB, VB); //draw near view trees and houses
@@ -1364,5 +1416,12 @@ namespace FSO.Client.Rendering.City
             DrawSpotlights(HB); //draw far view spotlights
             Draw2DPoly(); //draw spotlights using 2DVert shader
         }
+    }
+
+    public enum TerrainZoomMode
+    {
+        Far,
+        Near,
+        Lot
     }
 }

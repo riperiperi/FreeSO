@@ -52,6 +52,15 @@ namespace FSO.LotView.Utils
         private int LastWidth;
         private int LastHeight;
         private int ScrollBuffer;
+
+        public float PreciseZoom;
+        private float CageWidth;
+        private float CageHeight;
+
+        public void UpdateCageSize(float width, float height)
+        {
+            CageWidth = width; CageHeight = height;
+        }
         public void SetScroll(Vector2 scroll)
         {
             Scroll = scroll;
@@ -132,7 +141,18 @@ namespace FSO.LotView.Utils
 
         public void Draw(_2DSprite sprite)
         {
-            sprite.AbsoluteDestRect = new Rectangle((int)(sprite.DestRect.X + PxOffset.X), (int)(sprite.DestRect.Y + PxOffset.Y), sprite.DestRect.Width, sprite.DestRect.Height);
+            var x = sprite.DestRect.X;
+            var y = sprite.DestRect.Y;
+            var width = sprite.DestRect.Width;
+            var height = sprite.DestRect.Height;
+            if (PreciseZoom != 1f)
+            {
+                x = (int)(x * PreciseZoom);
+                y = (int)(y * PreciseZoom);
+                width = (int)Math.Ceiling(width * PreciseZoom);
+                height = (int)Math.Ceiling(height * PreciseZoom);
+            }
+            sprite.AbsoluteDestRect = new Rectangle((int)(x + PxOffset.X), (int)(y + PxOffset.Y), width, height);
             sprite.AbsoluteWorldPosition = sprite.WorldPosition + WorldOffset;
             sprite.AbsoluteTilePosition = sprite.TilePosition + TileOffset; 
             sprite.ObjectID = ObjectID;
@@ -565,6 +585,8 @@ namespace FSO.LotView.Utils
         {
             LastHeight = height;
             LastWidth = width;
+            //height = (int)(height/PreciseZoom);
+            //width = (int)(width/PreciseZoom);
             this.World = Matrix.Identity;
             this.View = new Matrix(
                 1.0f, 0.0f, 0.0f, 0.0f,

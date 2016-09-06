@@ -119,7 +119,7 @@ namespace FSO.LotView.Components
             if (Headline != null)
             {
                 var headOff = (transhead-Position) + new Vector3(0,0,0.66f);
-                var headPx = world.WorldSpace.GetScreenFromTile(headOff);
+                var headPx = world.WorldSpace.GetScreenFromTile(headOff) / world.PreciseZoom;
 
                 var item = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
                 item.Pixel = Headline;

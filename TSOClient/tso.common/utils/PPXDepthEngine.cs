@@ -130,11 +130,11 @@ namespace FSO.Common.Utils
             }
         }
 
-        public static void DrawBackbuffer()
+        public static void DrawBackbuffer(float opacity)
         {
             if (Backbuffer == null) return; //this gfx mode does not use a rendertarget backbuffer
             SB.Begin();
-            SB.Draw(Backbuffer, new Vector2(), null, Color.White, 0f, new Vector2(), new Vector2(FSOEnvironment.DPIScaleFactor, FSOEnvironment.DPIScaleFactor),
+            SB.Draw(Backbuffer, new Vector2(), null, Color.White*opacity, 0f, new Vector2(), new Vector2(FSOEnvironment.DPIScaleFactor, FSOEnvironment.DPIScaleFactor),
                 SpriteEffects.None, 0);
             SB.End();
         }

@@ -25,6 +25,7 @@ namespace FSO.Common.Serialization.TypeSerializers
         public object Deserialize(uint clsid, IoBuffer input, ISerializationContext serializer)
         {
             var result = new List<byte>();
+            var iclsid = input.GetUInt32();
             var count = input.GetUInt32();
             for (int i = 0; i < count; i++)
             {
@@ -36,6 +37,7 @@ namespace FSO.Common.Serialization.TypeSerializers
         public void Serialize(IoBuffer output, object value, ISerializationContext serializer)
         {
             var dat = (cTSOGenericData)value;
+            output.PutUInt32(0x0A2C6585);
             output.PutUInt32((uint)dat.Data.Length);
             for (int i = 0; i < dat.Data.Length; i++)
             {

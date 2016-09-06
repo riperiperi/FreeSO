@@ -46,8 +46,6 @@ namespace FSO.Client.UI.Screens
         public UIGizmo gizmo;
         public UIInbox Inbox;
         public UIGameTitle Title;
-        private UIButton SaveHouseButton;
-        private string[] CityMusic;
 
         public UIContainer WindowContainer;
         public UIPersonPage PersonPage;
@@ -104,7 +102,7 @@ namespace FSO.Client.UI.Screens
                         if (m_ZoomLevel > 3)
                         {
                             HITVM.Get().PlaySoundEvent(UIMusic.None);
-                            if (CityRenderer != null) CityRenderer.Visible = false;
+                            if (CityRenderer != null) CityRenderer.m_Zoomed = TerrainZoomMode.Lot;
                             gizmo.Visible = false;
                             LotControl.Visible = true;
                             World.Visible = true;
@@ -133,7 +131,7 @@ namespace FSO.Client.UI.Screens
                             ucp.SetMode(UIUCP.UCPMode.CityMode);
                         }
                         m_ZoomLevel = value;
-                        CityRenderer.m_Zoomed = (value == 4);
+                        CityRenderer.m_Zoomed = (value == 4)?TerrainZoomMode.Near:TerrainZoomMode.Far;
                     }
                 }
                 ucp.UpdateZoomButton();
@@ -305,7 +303,32 @@ namespace FSO.Client.UI.Screens
 
             if (CityRenderer != null)
             {
-                if (ZoomLevel > 3 && CityRenderer.m_Zoomed != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed) ? 4 : 5;
+                if (ZoomLevel > 3 && (CityRenderer.m_Zoomed == TerrainZoomMode.Near) != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed == TerrainZoomMode.Near) ? 4 : 5;
+
+                if (World != null) {
+                    if (CityRenderer.m_Zoomed == TerrainZoomMode.Lot) CityRenderer.InheritPosition(World, FindController<CoreGameScreenController>());
+                    if (CityRenderer.m_LotZoomProgress > 0f && CityRenderer.m_LotZoomProgress < 1f)
+                    {
+                        if (CityRenderer.m_Zoomed == TerrainZoomMode.Lot)
+                        {
+                            if (CityRenderer.m_LotZoomProgress > 0.995f)
+                            {
+                                CityRenderer.m_LotZoomProgress = 1f;
+                                CityRenderer.Visible = false;
+                            }
+                        } else
+                        {
+                            if (CityRenderer.m_LotZoomProgress < 0.005f)
+                            {
+                                CityRenderer.m_LotZoomProgress = 0f;
+                                World.Visible = false;
+                            }
+                        }
+                        World.Opacity = (CityRenderer.m_LotZoomProgress - 0.5f) * 2;
+                        var farScale = Terrain.NEAR_ZOOM_SIZE/CityRenderer.m_LotZoomSize;
+                        World.State.PreciseZoom = (CityRenderer.m_LotZoomProgress) + (1 - CityRenderer.m_LotZoomProgress) * farScale;
+                    }
+                }
 
                 if (InLot) //if we're in a lot, use the VM's more accurate time!
                     CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));

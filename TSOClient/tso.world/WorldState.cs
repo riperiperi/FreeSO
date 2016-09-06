@@ -120,6 +120,19 @@ namespace FSO.LotView
             set { _Level = value; }
         }
 
+        private float _PreciseZoom = 1f;
+        public float PreciseZoom
+        {
+            get { return _PreciseZoom; }
+            set { _PreciseZoom = value; InvalidateZoom(); }
+        }
+
+        public float SilentPreciseZoom
+        {
+            get { return _PreciseZoom; }
+            set { _PreciseZoom = value; InvalidateCamera(); }
+        }
+
         /// <summary>
         /// What zoom level is being displayed
         /// </summary>
@@ -203,6 +216,8 @@ namespace FSO.LotView
             WorldCamera.CenterTile = CenterTile;
             WorldCamera.Zoom = Zoom;
             WorldCamera.Rotation = Rotation;
+            WorldCamera.PreciseZoom = PreciseZoom;
+            _2D?.UpdateCageSize(WorldSpace.CadgeWidth/PreciseZoom, WorldSpace.CadgeHeight / PreciseZoom);
         }
     }
 
@@ -471,6 +486,19 @@ namespace FSO.LotView
                     CadgeHeight = 384;
                     CadgeBaseLine = 348;
                     break;
+            }
+
+            if (State.PreciseZoom != 1f)
+            {
+                TilePxWidth *= State.PreciseZoom;
+                TilePxHeight *= State.PreciseZoom;
+
+                TilePxWidthHalf *= State.PreciseZoom;
+                TilePxHeightHalf *= State.PreciseZoom;
+
+                CadgeWidth *= State.PreciseZoom;
+                CadgeHeight *= State.PreciseZoom;
+                CadgeBaseLine *= State.PreciseZoom;
             }
 
             OneUnitDistance = (float)Math.Sqrt(Math.Pow(TilePxWidth, 2) / 2.0);

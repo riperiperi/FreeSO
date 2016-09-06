@@ -93,6 +93,11 @@ namespace FSO.Client.Controllers
             //UIJoinLotProgress
         }
 
+        public uint GetCurrentLotID()
+        {
+            return JoinLotRegulator.GetCurrentLotID();
+        }
+
         public void CallAvatar(uint avatarId){
             DataService.Get<Avatar>(avatarId).ContinueWith(x =>
             {

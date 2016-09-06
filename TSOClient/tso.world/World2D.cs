@@ -486,6 +486,28 @@ namespace FSO.LotView
                 _2d.End(StaticFloorCache, true);
             }
 
+            if (recacheObjects)
+            {
+                _2d.Pause();
+                _2d.Resume();
+
+                foreach (var obj in Blueprint.Objects)
+                {
+                    if (obj.Level > state.Level) continue;
+                    var renderInfo = GetRenderInfo(obj);
+                    if (renderInfo.Layer == WorldObjectRenderLayer.STATIC)
+                    {
+                        var tilePosition = obj.Position;
+                        _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition));
+                        _2d.OffsetTile(tilePosition);
+                        _2d.SetObjID(obj.ObjectID);
+                        obj.Draw(gd, state);
+                    }
+                }
+                ClearDrawBuffer(StaticObjectsCache);
+                _2d.End(StaticObjectsCache, true);
+            }
+
             if (redrawFloor)
             {
                 /** Draw archetecture to a texture **/
@@ -520,28 +542,6 @@ namespace FSO.LotView
                 StaticWall = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
             }
 
-            if (recacheObjects)
-            {
-                _2d.Pause();
-                _2d.Resume();
-
-                foreach (var obj in Blueprint.Objects)
-                {
-                    if (obj.Level > state.Level) continue;
-                    var renderInfo = GetRenderInfo(obj);
-                    if (renderInfo.Layer == WorldObjectRenderLayer.STATIC)
-                    {
-                        var tilePosition = obj.Position;
-                        _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition));
-                        _2d.OffsetTile(tilePosition);
-                        _2d.SetObjID(obj.ObjectID);
-                        obj.Draw(gd, state);
-                    }
-                }
-                ClearDrawBuffer(StaticObjectsCache);
-                _2d.End(StaticObjectsCache, true);
-            }
-
             if (redrawStaticObjects){
                 /** Draw static objects to a texture **/
                 Promise<Texture2D> bufferTexture = null;
@@ -558,6 +558,7 @@ namespace FSO.LotView
                 }
                 StaticObjects = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
             }
+            //state._2D.PreciseZoom = state.PreciseZoom;
             state.CenterTile = oldCenter; //revert to our real scroll position
         }
 
@@ -582,6 +583,10 @@ namespace FSO.LotView
 
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             var tileOffset = state.CenterTile;
+
+            state._2D.PreciseZoom = 1f;
+            //_2d.SetScroll(pxOffset*state.PreciseZoom);
+
             _2d.Begin(state.Camera);
             if (StaticFloor != null)
             {
@@ -601,6 +606,9 @@ namespace FSO.LotView
                 _2d.Pause();
                 _2d.Resume();
             }
+
+            state._2D.PreciseZoom = state.PreciseZoom;
+            _2d.SetScroll(pxOffset);
 
             _2d.End();
             _2d.Begin(state.Camera);

@@ -37,6 +37,7 @@ namespace FSO.LotView
         /** How many pixels from each edge of the screen before we start scrolling the view **/
         public int ScrollBounds = 20;
         public static bool DirectX = false;
+        public float Opacity = 1f;
 
         public WorldState State;
         protected bool HasInitGPU;
@@ -76,7 +77,8 @@ namespace FSO.LotView
             State._2D.AmbientLight = State.AmbientLight;
 
             PPXDepthEngine.InitGD(layer.Device);
-            if (FSOEnvironment.SoftwareDepth) PPXDepthEngine.InitScreenTargets(layer.Device);
+            //if (FSOEnvironment.SoftwareDepth)
+                PPXDepthEngine.InitScreenTargets(layer.Device);
 
             base.Camera = State.Camera;
 
@@ -307,6 +309,7 @@ namespace FSO.LotView
         /// <param name="device"></param>
         public override void PreDraw(GraphicsDevice device)
         {
+            State._2D.PreciseZoom = State.PreciseZoom;
             base.PreDraw(device);
             if (HasInit == false) { return; }
 
@@ -331,13 +334,13 @@ namespace FSO.LotView
             _3DWorld.PreDraw(device, State);
             State._3D.End();
 
-            if (FSOEnvironment.SoftwareDepth)
-            {
+            //if (FSOEnvironment.SoftwareDepth)
+            //{
 
                 PPXDepthEngine.SetPPXTarget(null, null, true);
                 InternalDraw(device);
                 device.SetRenderTarget(null);
-            }
+            //}
 
             return;
         }
@@ -349,13 +352,13 @@ namespace FSO.LotView
         public override void Draw(GraphicsDevice device){
             if (HasInit == false) { return; }
 
-            if (FSOEnvironment.SoftwareDepth)
-            {
-                PPXDepthEngine.DrawBackbuffer();
+            //if (FSOEnvironment.SoftwareDepth)
+            //{
+                PPXDepthEngine.DrawBackbuffer(Opacity);
                 return;
-            }
+            //}
 
-            InternalDraw(device);
+            //InternalDraw(device);
         }
 
         private void InternalDraw(GraphicsDevice device)
@@ -366,6 +369,7 @@ namespace FSO.LotView
             State._2D.Begin(this.State.Camera);
 
             var pxOffset = -State.WorldSpace.GetScreenOffset();
+            //State._2D.PreciseZoom = State.PreciseZoom;
             State._2D.ResetMatrices(device.Viewport.Width, device.Viewport.Height);
             _3DWorld.DrawBefore2D(device, State);
 
