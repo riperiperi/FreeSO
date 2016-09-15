@@ -16,11 +16,12 @@ You can contribute to FreeSO by testing cutting edge features in the latest rele
 * [Development Forums](http://forum.freeso.org)
 * [Development Blog](http://freeso.org)
 
-Looking for something to do? Check out the issues tagged as [good for new contributors](https://github.com/RHY3756547/FreeSO/labels/good%20for%20new%20contributors) to get started.
+Looking for something to do? Check out the issues tagged as [help needed](https://github.com/RHY3756547/FreeSO/labels/help%20needed) to get started.
 
 ## Prerequisites
 * [Visual Studio 2015](https://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs.aspx)
-* [MonoGame](http://www.monogame.net): Stable or Development Builds
+* [MonoGame](http://www.monogame.net): 3.5 for the iOS and Android VS2015 project types. (optional)
+* [Xamarin for Visual Studio](https://www.xamarin.com/visual-studio): For iOS and Android builds. (optional)
 
 # License
 > This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
