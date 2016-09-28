@@ -34,6 +34,11 @@ namespace FSO.Common.DataService.Framework
         public virtual void Invalidate(object key)
         {
         }
+
+        public virtual void Invalidate(object key, object replacement)
+        {
+
+        }
     }
 
 }

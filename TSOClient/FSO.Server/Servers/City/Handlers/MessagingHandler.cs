@@ -20,6 +20,9 @@ namespace FSO.Server.Servers.City.Handlers
 
         public void Handle(IVoltronSession session, InstantMessage message)
         {
+            if (session.IsAnonymous) //CAS users can't do this.
+                return;
+
             var targetSession = Sessions.GetByAvatarId(message.To);
             if(targetSession == null)
             {

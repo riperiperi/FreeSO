@@ -29,9 +29,6 @@ namespace FSO.Client.UI.Panels
 
     public class UIBuildMode : UIDestroyablePanel
     {
-        public VM vm;
-        public VMAvatar SelectedAvatar;
-
         public UIButton TerrainButton { get; set; }
         public UIButton WaterButton { get; set; }
         public UIButton WallButton { get; set; }
@@ -239,11 +236,11 @@ namespace FSO.Client.UI.Panels
                 QueryPanel.Mode = 1;
                 QueryPanel.Tab = 0;
                 QueryPanel.Active = true;
-                LotController.CustomControl = (UICustomLotControl)Activator.CreateInstance(item.Special.Control, vm, LotController.World, LotController, item.Special.Parameters);
+                LotController.CustomControl = (UICustomLotControl)Activator.CreateInstance(item.Special.Control, LotController.vm, LotController.World, LotController, item.Special.Parameters);
             }
             else
             {
-                BuyItem = vm.Context.CreateObjectInstance(item.Item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
+                BuyItem = LotController.vm.Context.CreateObjectInstance(item.Item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
                 QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
                 QueryPanel.Mode = 1;
                 QueryPanel.Tab = 0;

@@ -1,6 +1,7 @@
 ﻿using FSO.Client.Controllers.Panels;
 using FSO.Client.Model;
 using FSO.Client.Regulators;
+using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels;
 using FSO.Client.UI.Screens;
@@ -29,6 +30,10 @@ namespace FSO.Client.Controllers
         private Network.Network Network;
         private IClientDataService DataService;
         private LotConnectionRegulator JoinLotRegulator;
+        /// <summary>
+        /// Lot to connect to immediately after disconnecting. Used for job lots and switching lots.
+        /// </summary>
+        public uint ReconnectLotID = 0;
 
         public TerrainController Terrain;
 
@@ -63,6 +68,12 @@ namespace FSO.Client.Controllers
                         break;
                     case "Disconnected":
                         Screen.CleanupLastWorld();
+                        if (ReconnectLotID != 0)
+                        {
+                            GameThread.SetTimeout(() => {
+                                JoinLot(ReconnectLotID);
+                            }, 100);
+                        }
                         //destroy the currently active lot (if possible)
                         break;
                     case "PartiallyConnected":
@@ -87,10 +98,31 @@ namespace FSO.Client.Controllers
 
         public void JoinLot(uint id)
         {
-            JoinLotRegulator.JoinLot(id);
-            //var progress = new UIJoinLotProgress();
-            //UIScreen.GlobalShowDialog(progress, true);
-            //UIJoinLotProgress
+            if (JoinLotRegulator.GetCurrentLotID() == 0)
+            {
+                JoinLotRegulator.JoinLot(id);
+                ReconnectLotID = 0;
+            }
+            else
+            {
+                //we're in a lot. Ask the user if we can leave the current one.
+                Screen.ShowReconnectDialog(id);
+            }
+        }
+
+        public void SwitchLot(uint id)
+        {
+            if (JoinLotRegulator.GetCurrentLotID() == 0)
+            {
+                JoinLotRegulator.JoinLot(id);
+                ReconnectLotID = 0;
+            }
+            else
+            {
+                //force a switch to the target lot
+                ReconnectLotID = id;
+                Screen.InitiateLotSwitch();
+            }
         }
 
         public uint GetCurrentLotID()

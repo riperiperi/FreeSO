@@ -47,17 +47,17 @@ namespace FSO.SimAntics.Engine.Primitives
             VMStackObjectVariable.CookValue,
             VMStackObjectVariable.SurfaceValue,
             VMStackObjectVariable.DisposeValue,
-            VMStackObjectVariable.Invalid,
+            VMStackObjectVariable.Invalid, //hunger  value?
             VMStackObjectVariable.Invalid,
             VMStackObjectVariable.WashDishValue,
             VMStackObjectVariable.EatingSurfaceValue,
             VMStackObjectVariable.Invalid, //sit, may score using comfort value?
             VMStackObjectVariable.Invalid,
             VMStackObjectVariable.ServingSurfaceValue,
-            VMStackObjectVariable.Invalid,
+            VMStackObjectVariable.DirtyLevel,
             VMStackObjectVariable.GardeningValue,
             VMStackObjectVariable.WashHandsValue,
-            VMStackObjectVariable.Invalid
+            VMStackObjectVariable.RepairState
         };
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
@@ -99,11 +99,14 @@ namespace FSO.SimAntics.Engine.Primitives
 
                     if (Execute)
                     {
+                        if (ent.IsInUse(context.VM.Context, false)) continue; //this object is in use. this check is more expensive than check trees, so do it last.
                         //calculate the score for this object.
                         int score = 0;
                         if (ScoreVar[operand.Function] != VMStackObjectVariable.Invalid) {
-                            score = ent.GetValue(ScoreVar[operand.Function]);
-                            if (ScoreVar[operand.Function] == VMStackObjectVariable.DirtyLevel && score < 800) continue; //only clean "dirty" things.
+                            var funcVar = ScoreVar[operand.Function];
+                            score = ent.GetValue(funcVar);
+                            if (funcVar == VMStackObjectVariable.DirtyLevel && score < 800) continue; //only clean "dirty" things.
+                            else if (funcVar == VMStackObjectVariable.RepairState && score < 600) continue; //only fix "broken" things.
                         }
 
                         LotTilePos posDiff = ent.Position - context.Caller.Position;

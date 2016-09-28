@@ -33,6 +33,7 @@ namespace FSO.SimAntics.Model
         public bool IsPool;
         public bool Unroutable;
 
+        public HashSet<ushort> AdjRooms; //all adjacent rooms, for DFS traversal of light
         public List<VMObstacle> WallObs;
         public List<VMObstacle> RoomObs;
         public Rectangle Bounds;

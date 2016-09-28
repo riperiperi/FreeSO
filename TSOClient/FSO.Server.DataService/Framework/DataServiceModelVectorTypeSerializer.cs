@@ -40,7 +40,31 @@ namespace FSO.Common.DataService.Framework
 
         public override object Deserialize(uint clsid, IoBuffer input, ISerializationContext serializer)
         {
-            return null;
+            //note: currently an array full with null values will just return null.
+            object result = null;
+            var count = input.GetUInt32();
+            int leadingNulls = 0;
+            for (int i=0; i<count; i++)
+            {
+                var property = new cTSOProperty();
+                property.Deserialize(input, serializer);
+                //Convert to instance
+                var item = ConvertFromProperty(property, serializer);
+                if (item == null) leadingNulls++;
+                else if (result == null)
+                {
+                    //still need to make the list!
+                    var listType = typeof(List<>);
+                    var constructedListType = listType.MakeGenericType(item.GetType());
+
+                    result = Activator.CreateInstance(constructedListType);
+                    for (int j=0; j<leadingNulls; j++)
+                        result.GetType().GetMethod("Add").Invoke(result, new object[] { null });
+                }
+                if (result != null) result.GetType().GetMethod("Add").Invoke(result, new object[] { item });
+            }
+
+            return result;
         }
 
         public override void Serialize(IoBuffer output, object value, ISerializationContext context)

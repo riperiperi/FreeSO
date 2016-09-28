@@ -42,6 +42,27 @@ namespace FSO.Common.DataService.Model
             set { _Avatar_IsParentalControlLocked = value;  NotifyPropertyChanged("Avatar_IsParentalControlLocked"); }
         }
 
+        private ushort _Avatar_CurrentJob { get; set; }
+        public ushort Avatar_CurrentJob
+        {
+            get { return _Avatar_CurrentJob; }
+            set { _Avatar_CurrentJob = value; NotifyPropertyChanged("Avatar_CurrentJob"); }
+        }
+
+        private List<JobLevel> _Avatar_JobLevelVec { get; set; }
+        public List<JobLevel> Avatar_JobLevelVec
+        {
+            get { return _Avatar_JobLevelVec; }
+            set { _Avatar_JobLevelVec = value; NotifyPropertyChanged("Avatar_JobLevelVec"); }
+        }
+
+        private List<Relationship> _Avatar_FriendshipVec { get; set; }
+        public List<Relationship> Avatar_FriendshipVec
+        {
+            get { return _Avatar_FriendshipVec; }
+            set { _Avatar_FriendshipVec = value; NotifyPropertyChanged("Avatar_FriendshipVec"); }
+        }
+
         private bool _Avatar_IsOnline { get; set; }
         public bool Avatar_IsOnline
         {

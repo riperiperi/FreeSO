@@ -24,10 +24,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             if (((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate) return false;
             VMEntity obj = vm.GetObjectById(ObjectID);
-            if (obj == null || caller == null || (obj is VMAvatar)) return false;
+            if (obj == null || caller == null || (obj is VMAvatar) || obj.IsUserMovable(vm.Context, true) != VMPlacementError.Success) return false;
             obj.Delete(CleanupAll, vm.Context);
 
-            //TODO: Check if user is owner of object. Maybe sendback to owner inventory if a roommate deletes.
+            //TODO: Check if user is owner of object. Sendback to owner inventory if a roommate deletes.
 
             // If we're the server, tell the global server to give their money back.
             if (vm.GlobalLink != null)

@@ -11,6 +11,7 @@ using System.Text;
 using FSO.Files.Utils;
 using FSO.SimAntics.Engine;
 using System.IO;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -22,6 +23,9 @@ namespace FSO.SimAntics.Primitives
 
             switch (operand.Call)
             {
+                case VMOnlineJobsCallMode.GotoJobLot:
+                    context.VM.SignalLotSwitch(0x200);
+                    break;
                 case VMOnlineJobsCallMode.SetControllerID:
                     context.VM.SetGlobalValue(21, (context.StackObject == null) ? (short)0 : context.StackObject.ObjectID);
                     break;
@@ -30,7 +34,25 @@ namespace FSO.SimAntics.Primitives
                     context.Thread.TempRegisters[0] = (short)(context.VM.Context.NextRandom(2) + 1);
                     break;
                 case VMOnlineJobsCallMode.IsJobAvailable:
-                    return (context.Thread.TempRegisters[0] < 3)?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE; 
+                    return (context.Thread.TempRegisters[0] < 3)?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
+                case VMOnlineJobsCallMode.AttemptToValidateWorker:
+                    var avatar = ((VMAvatar)context.Caller);
+                    if (avatar.GetPersonData(VMPersonDataVariable.OnlineJobStatusFlags) == 0) avatar.SetPersonData(VMPersonDataVariable.OnlineJobStatusFlags, 1);
+                    break;
+                case VMOnlineJobsCallMode.AddStatusMessage:
+                    //from STR# 506, adds to the end of the job status text.
+                    //temp 0: is semiglobals (1 for yes)
+                    //temp 1: string id to add
+                case VMOnlineJobsCallMode.RemoveStatusMessage:
+                    //remove status message at index temp 0.
+                case VMOnlineJobsCallMode.SetTimeRemaining:
+                    //temp 0: minutes
+                    //temp 1: seconds
+                case VMOnlineJobsCallMode.SetWorkMode:
+                    //temp 0: work mode
+                    //0: prework, 1:afterwork, 2:intermission, 3:round
+                default:
+                    break; 
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;

@@ -77,7 +77,11 @@ namespace FSO.Client.UI.Panels.WorldUI
         {
             ZoomFrame = 3 - (int)LastZoom;
 
-            if (Texture != null) Texture.Dispose();
+            if (Texture != null)
+            {
+                Texture.Dispose();
+                Texture = null;
+            }
 
             if (DrawSkill)
             {
@@ -88,12 +92,14 @@ namespace FSO.Client.UI.Panels.WorldUI
             if (Sprite != null)
             {
                 SPRFrame bigFrame = (BGSprite != null) ? BGSprite.Frames[ZoomFrame] : Sprite.Frames[ZoomFrame];
+                if (bigFrame.Width == 0) return;
                 Texture = new RenderTarget2D(GameFacade.GraphicsDevice, Math.Max(1,bigFrame.Width), Math.Max(1,bigFrame.Height));
             }
             else if (Headline.Operand.Group == VMSetBalloonHeadlineOperandGroup.Algorithmic && LastZoom != WorldZoom.Far)
             {
                 AlgTex = (Headline.IconTarget == null)?WhitePx:Headline.IconTarget.GetIcon(GameFacade.GraphicsDevice, (int)LastZoom - 1);
                 Point bigFrame = (BGSprite != null) ? new Point(BGSprite.Frames[ZoomFrame].Width, BGSprite.Frames[ZoomFrame].Height) : new Point(AlgTex.Width, AlgTex.Height);
+                if (bigFrame.X == 0) return;
                 Texture = new RenderTarget2D(GameFacade.GraphicsDevice, bigFrame.X, bigFrame.Y);
             }
             else AlgTex = null;

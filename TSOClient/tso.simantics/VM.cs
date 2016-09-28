@@ -91,12 +91,14 @@ namespace FSO.SimAntics
         public event VMRefreshHandler OnFullRefresh;
         public event VMBreakpointHandler OnBreakpoint;
         public event VMEODMessageHandler OnEODMessage;
+        public event VMLotSwitchHandler OnRequestLotSwitch;
         
         public delegate void VMDialogHandler(VMDialogInfo info);
         public delegate void VMChatEventHandler(VMChatEvent evt);
         public delegate void VMRefreshHandler();
         public delegate void VMBreakpointHandler(VMEntity entity);
         public delegate void VMEODMessageHandler(VMNetEODMessageCmd msg);
+        public delegate void VMLotSwitchHandler(uint lotId);
 
         public IVMTSOGlobalLink GlobalLink
         {
@@ -143,6 +145,13 @@ namespace FSO.SimAntics
         public VMEntity GetObjectByPersist(uint id)
         {
             return Entities.FirstOrDefault(x => x.PersistID == id);
+        }
+
+        public VMAvatar GetAvatarByPersist(uint id)
+        {
+            VMAvatar result = null;
+            Context.SetToNextCache.AvatarsByPersist.TryGetValue(id, out result);
+            return result;
         }
 
         /// <summary>
@@ -199,6 +208,12 @@ namespace FSO.SimAntics
             Driver.SendCommand(cmd);
         }
 
+        public void SendDirectCommand(uint targetID, VMNetCommandBodyAbstract cmd)
+        {
+            //clients can't directly message each other - it must go through the server (no p2p). Only server drivers can use this.
+            Driver.SendDirectCommand(targetID, cmd);
+        }
+
         public void ForwardCommand(VMNetCommandBodyAbstract cmd)
         {
             Driver.SendCommand(cmd);
@@ -224,7 +239,7 @@ namespace FSO.SimAntics
             }
         }
 
-        private void Tick()
+        public void Tick()
         {
             if (BHAVDirty)
             {
@@ -371,7 +386,7 @@ namespace FSO.SimAntics
                 bhav.RuntimeVer++;
                 if (_Assembled.ContainsKey(bhav)) _Assembled.Remove(bhav);
             }
-            if (OnBHAVChange != null) OnBHAVChange();
+            OnBHAVChange?.Invoke();
         }
 
         /// <summary>
@@ -380,7 +395,7 @@ namespace FSO.SimAntics
         /// <param name="info">The dialog info to pass along.</param>
         public void SignalDialog(VMDialogInfo info)
         {
-            if (OnDialog != null) OnDialog(info);
+            OnDialog?.Invoke(info);
         }
 
         /// <summary>
@@ -389,18 +404,23 @@ namespace FSO.SimAntics
         /// <param name="info">The chat event to pass along.</param>
         public void SignalChatEvent(VMChatEvent evt)
         {
-            if (OnChatEvent != null) OnChatEvent(evt);
+            OnChatEvent?.Invoke(evt);
         }
 
         public void SignalEODMessage(VMNetEODMessageCmd msg)
         {
-            if (OnEODMessage != null) OnEODMessage(msg);
+            OnEODMessage?.Invoke(msg);
+        }
+
+        public void SignalLotSwitch(uint lotId)
+        {
+            OnRequestLotSwitch?.Invoke(lotId);
         }
 
         public VMSandboxRestoreState Sandbox()
         {
             var state = new VMSandboxRestoreState { Entities = Entities, ObjectId = ObjectId,
-                ObjectsById = ObjectsById, SetToNext = Context.SetToNextCache };
+                ObjectsById = ObjectsById, SetToNext = Context.SetToNextCache, RandomSeed = Context.RandomSeed };
 
             Context.SetToNextCache = new VMSetToNextCache(Context);
             Entities = new List<VMEntity>();
@@ -416,6 +436,7 @@ namespace FSO.SimAntics
             ObjectsById = state.ObjectsById;
             ObjectId = state.ObjectId;
             Context.SetToNextCache = state.SetToNext;
+            Context.RandomSeed = state.RandomSeed;
         }
 
         #region VM Marshalling Functions
@@ -587,6 +608,7 @@ namespace FSO.SimAntics
                     obj.ExecuteEntryPoint(30, Context, true);
                 }
             }
+            Context.UpdateTSOBuildableArea();
 
             if (OnFullRefresh != null) OnFullRefresh();
         }
@@ -662,5 +684,6 @@ namespace FSO.SimAntics
         public Dictionary<short, VMEntity> ObjectsById;
         public short ObjectId = 1;
         public VMSetToNextCache SetToNext;
+        public ulong RandomSeed;
     }
 }

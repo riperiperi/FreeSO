@@ -81,11 +81,15 @@
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />
     <Compile Include="UI\Controls\UICustomTooltip.cs" />
+    <Compile Include="UI\Controls\UISkillBar.cs" />
     <Compile Include="UI\Controls\UIValidationMessages.cs" />
     <Compile Include="UI\Framework\DoubleClick.cs" />
     <Compile Include="UI\Panels\UIDebugMenu.cs" />
+    <Compile Include="UI\Panels\UIEnvPanel.cs" />
     <Compile Include="UI\Panels\UIGizmoPIP.cs" />
+    <Compile Include="UI\Panels\UIHouseMode.cs" />
     <Compile Include="UI\Panels\UIJoinLotProgress.cs" />
+    <Compile Include="UI\Panels\UILotCategoryDialog.cs" />
     <Compile Include="UI\Panels\UILotPage.cs" />
     <Compile Include="UI\Panels\UILotPurchaseDialog.cs" />
     <Compile Include="UI\Panels\UIMessageTray.cs" />
@@ -330,6 +334,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Content Include="Game.ico" />
+    <EmbeddedResource Include="Icon.bmp" />
     <Content Include="soft_oal.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

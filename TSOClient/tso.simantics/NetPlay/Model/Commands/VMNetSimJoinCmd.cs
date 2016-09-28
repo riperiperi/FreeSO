@@ -33,12 +33,27 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             var mailbox = vm.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
 
             if (VM.UseWorld) FSO.HIT.HITVM.Get().PlaySoundEvent("lot_enter");
-            if (mailbox != null) VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context);
+            if (mailbox != null) VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context, VMPlaceRequestFlags.Default);
             sim.PersistID = ActorUID;
 
             VMAvatar avatar = (VMAvatar)sim;
             AvatarState.Apply(avatar);
 
+            //some off lot changes may have occurred. Keep things up to date if we're caught between database sync points (TODO: right now never, but should happen on every roomie change).
+            if (AvatarState.Permissions > VMTSOAvatarPermissions.Visitor && AvatarState.Permissions < VMTSOAvatarPermissions.Admin)
+            {
+                vm.TSOState.Roommates.Add(AvatarState.PersistID);
+                if (AvatarState.Permissions > VMTSOAvatarPermissions.Roommate)
+                    vm.TSOState.BuildRoommates.Add(AvatarState.PersistID);
+                else
+                    vm.TSOState.BuildRoommates.Remove(AvatarState.PersistID);
+            } else
+            {
+                vm.TSOState.Roommates.Remove(AvatarState.PersistID);
+                vm.TSOState.BuildRoommates.Remove(AvatarState.PersistID);
+            }
+
+            vm.Context.SetToNextCache.RegisterAvatarPersist(avatar, avatar.PersistID);
             if (ActorUID == uint.MaxValue - 1)
             {
                 avatar.SetValue(VMStackObjectVariable.Hidden, 1);

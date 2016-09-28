@@ -150,6 +150,12 @@ namespace FSO.Common.DataService
             provider.Invalidate(key);
         }
 
+        public void Invalidate<T>(object key, T replacement)
+        {
+            var provider = ProviderByType[typeof(T)];
+            provider.Invalidate(key, replacement);
+        }
+
         public List<cTSOTopicUpdateMessage> SerializeUpdate(MaskedStruct mask, object value, uint id){
             return SerializeUpdateFields(MaskedStructToActualFields[mask], value, id);
         }
@@ -157,6 +163,21 @@ namespace FSO.Common.DataService
         public List<cTSOTopicUpdateMessage> SerializeUpdate(StructField[] fields, object value, uint id)
         {
             return SerializeUpdateFields(fields, value, id);
+        }
+
+        public cTSOTopicUpdateMessage SerializeUpdate(object value, params uint[] dotPath)
+        {
+            return SerializeUpdateField(value, dotPath);
+        }
+
+        public StructField GetFieldByName(Type type, string field)
+        {
+            if (ModelIdByType.ContainsKey(type))
+            {
+                var modelId = ModelIdByType[type];
+                return StructToActualFields[modelId].Where(x => field == x.Name).FirstOrDefault();
+            }
+            return null;
         }
 
         public StructField[] GetFieldsByName(Type type, params string[] fields)
@@ -179,6 +200,7 @@ namespace FSO.Common.DataService
 
         public async void ApplyUpdate(cTSOTopicUpdateMessage update, ISecurityContext context)
         {
+            //TODO: exceptions here cause the server to self nuke.
             var partialDotPath = new uint[update.DotPath.Length - 1];
             Array.Copy(update.DotPath, partialDotPath, partialDotPath.Length);
             var path = await ResolveDotPath(partialDotPath);
@@ -437,7 +459,7 @@ namespace FSO.Common.DataService
             {
                 object value = GetFieldValue(instance, field.Name);
                 if (value == null) { continue; }
-
+                
                 //Might be a struct
                 try
                 {

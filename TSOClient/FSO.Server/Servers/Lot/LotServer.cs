@@ -88,10 +88,12 @@ namespace FSO.Server.Servers.Lot
 
                     if (ticket != null)
                     {
-                        var lot = da.Lots.Get(ticket.lot_id);
+                        uint location = 0;
+                        if ((ticket.lot_id & 0x40000000) > 0) location = (uint)ticket.lot_id;
+                        else location = da.Lots.Get(ticket.lot_id).location;
 
                         //We need to claim a lock for the avatar, if we can't do that we cant let them join
-                        var didClaim = da.AvatarClaims.Claim(ticket.avatar_claim_id, ticket.avatar_claim_owner, Config.Call_Sign, lot.location);
+                        var didClaim = da.AvatarClaims.Claim(ticket.avatar_claim_id, ticket.avatar_claim_owner, Config.Call_Sign, location);
                         if (!didClaim)
                         {
                             rawSession.Close();

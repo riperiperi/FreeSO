@@ -1,9 +1,11 @@
 ﻿using FSO.Common.DataService.Framework;
 using FSO.Common.DataService.Model;
 using FSO.Common.Security;
+using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Lots;
+using FSO.Server.Database.DA.Relationships;
 using FSO.Server.Database.DA.Shards;
 using Ninject;
 using NLog;
@@ -56,7 +58,14 @@ namespace FSO.Common.DataService.Providers.Server
                     if (desc != null && desc.Length > 500)
                         throw new Exception("Description too long!");
                     break;
-
+                case "Avatar_Skills.AvatarSkills_LockLv_Body":
+                case "Avatar_Skills.AvatarSkills_LockLv_Charisma":
+                case "Avatar_Skills.AvatarSkills_LockLv_Cooking":
+                case "Avatar_Skills.AvatarSkills_LockLv_Creativity":
+                case "Avatar_Skills.AvatarSkills_LockLv_Logic":
+                case "Avatar_Skills.AvatarSkills_LockLv_Mechanical":
+                    context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
+                    break;
                 default:
                     throw new SecurityException("Field: " + path + " may not be mutated by users");
             }
@@ -70,13 +79,19 @@ namespace FSO.Common.DataService.Providers.Server
                 if (avatar == null) { return null; }
                 if (avatar.shard_id != ShardId) { return null; }
 
-                var lot = db.Lots.GetByOwner(avatar.avatar_id);
+                var myLots = db.Roommates.GetAvatarsLots(avatar.avatar_id);
+                DbLot lot = null;
+                if (myLots.Count > 0) {
+                    lot = db.Lots.Get(myLots.FirstOrDefault().lot_id);
+                }
+                List<DbJobLevel> levels = db.Avatars.GetJobLevels(key);
+                List<DbRelationship> rels = db.Relationships.GetBidirectional(key);
 
-                return HydrateOne(avatar, lot);
+                return HydrateOne(avatar, lot, levels, rels);
             }
         }
 
-        private Avatar HydrateOne(DbAvatar dbAvatar, DbLot dbLot)
+        private Avatar HydrateOne(DbAvatar dbAvatar, DbLot dbLot, List<DbJobLevel> levels, List<DbRelationship> rels)
         {
             var result = new Avatar();
             result.Avatar_Id = dbAvatar.avatar_id;
@@ -89,13 +104,64 @@ namespace FSO.Common.DataService.Providers.Server
                 AvatarAppearance_HeadOutfitID = dbAvatar.head,
                 AvatarAppearance_SkinTone = dbAvatar.skin_tone
             };
-            result.Avatar_Age = 100;
+            result.Avatar_Age = (uint)((Epoch.Now-dbAvatar.date)/((long)60*60*24));
             result.Avatar_Skills = new AvatarSkills
             {
-                AvatarSkills_Body = 400,
-                AvatarSkills_LockLv_Body = 2
+                AvatarSkills_Body = dbAvatar.skill_body,
+                AvatarSkills_LockLv_Body = dbAvatar.lock_body,
+                AvatarSkills_Charisma = dbAvatar.skill_charisma,
+                AvatarSkills_LockLv_Charisma = dbAvatar.lock_charisma,
+                AvatarSkills_Cooking = dbAvatar.skill_cooking,
+                AvatarSkills_LockLv_Cooking = dbAvatar.lock_cooking,
+                AvatarSkills_Creativity = dbAvatar.skill_creativity,
+                AvatarSkills_LockLv_Creativity = dbAvatar.lock_creativity,
+                AvatarSkills_Logic = dbAvatar.skill_logic,
+                AvatarSkills_LockLv_Logic = dbAvatar.lock_logic,
+                AvatarSkills_Mechanical = dbAvatar.skill_mechanical,
+                AvatarSkills_LockLv_Mechanical = dbAvatar.lock_mechanical
             };
-            result.Avatar_SkillsLockPoints = 10;
+            result.Avatar_SkillsLockPoints = (ushort)(20 + result.Avatar_Age/7);
+
+            result.Avatar_JobLevelVec = new List<JobLevel>();
+            foreach (var level in levels)
+            {
+                result.Avatar_JobLevelVec.Add(new JobLevel
+                {
+                    JobLevel_JobType = level.job_type,
+                    JobLevel_JobExperience = level.job_experience,
+                    JobLevel_JobGrade = level.job_level
+                });
+            }
+            result.Avatar_CurrentJob = dbAvatar.current_job;
+
+            var fvec = new Dictionary<Tuple<uint, bool>, Relationship>();
+            foreach (var rel in rels)
+            {
+                bool outgoing = false;
+                uint target = 0;
+                if (rel.from_id == dbAvatar.avatar_id)
+                {
+                    outgoing = true;
+                    target = rel.to_id;
+                } else target = rel.from_id;
+
+                var tuple = new Tuple<uint, bool>(target, outgoing);
+                Relationship relObj = null;
+                if (!fvec.TryGetValue(tuple, out relObj))
+                {
+                    relObj = new Relationship
+                    {
+                        Relationship_IsOutgoing = outgoing,
+                        Relationship_TargetID = target,
+                        Relationship_CommentID = rel.comment_id ?? 0
+                    };
+                    fvec.Add(tuple, relObj);
+                }
+                
+                if (rel.index == 0) relObj.Relationship_STR = (sbyte)rel.value;
+                else relObj.Relationship_LTR = (sbyte)rel.value;
+            }
+            result.Avatar_FriendshipVec = new List<Relationship>(fvec.Values);
 
             if (dbLot != null){
                 result.Avatar_LotGridXY = dbLot.location;

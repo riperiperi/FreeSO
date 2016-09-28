@@ -90,26 +90,25 @@ namespace FSO.Files
 		{
 			var ColorTo = Microsoft.Xna.Framework.Color.Transparent.PackedValue;
 
-			var size = Texture.Width * Texture.Height;
-			uint[] buffer = new uint[size];
+			var size = Texture.Width * Texture.Height*4;
+			byte[] buffer = new byte[size];
 
-			Texture.GetData<uint>(buffer);
+			Texture.GetData<byte>(buffer);
 
 			var didChange = false;
 
-			for (int i = 0; i < size; i++)
+			for (int i = 0; i < size; i+=4)
 			{
-
-				if (ColorsFrom.Contains(buffer[i]))
-				{
-					didChange = true;
-					buffer[i] = ColorTo;
-				}
+                if (buffer[i] >= 249 && buffer[i+2] >= 249 && buffer[i+1] <= 4)
+                {
+                    buffer[i] = buffer[i + 1] = buffer[i + 2] = buffer[i + 3] = 0;
+                    didChange = true;
+                }
 			}
 
 			if (didChange)
 			{
-				Texture.SetData(buffer, 0, size);
+				Texture.SetData(buffer);
 			}
 			else return;
 		}

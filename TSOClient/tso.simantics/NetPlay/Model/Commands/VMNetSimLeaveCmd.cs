@@ -14,10 +14,11 @@ using System.Text;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
+    /// <summary>
+    /// Causes a sim to begin being deleted. Can be user initiated, but they will be disconnected when their sim is fully gone.
+    /// </summary>
     public class VMNetSimLeaveCmd : VMNetCommandBodyAbstract
     {
-        private readonly ushort LEAVE_LOT_TREE = 8373;
-
         public override bool Execute(VM vm, VMAvatar sim)
         {
             if (sim != null && !sim.Dead)

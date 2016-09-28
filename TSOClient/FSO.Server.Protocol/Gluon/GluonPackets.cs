@@ -14,7 +14,8 @@ namespace FSO.Server.Protocol.Gluon
         public static Type[] ELECTRON_PACKETS = new Type[] {
             typeof(AdvertiseCapacity),
             typeof(TransferClaim),
-            typeof(TransferClaimResponse)
+            typeof(TransferClaimResponse),
+            typeof(RequestLotClientTermination)
         };
 
         static GluonPackets()

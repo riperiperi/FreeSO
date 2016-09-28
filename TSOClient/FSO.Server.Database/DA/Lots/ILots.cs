@@ -26,5 +26,6 @@ namespace FSO.Server.Database.DA.Lots
         void CreateLotServerTicket(DbLotServerTicket ticket);
         void DeleteLotServerTicket(string id);
         DbLotServerTicket GetLotServerTicket(string id);
+        List<DbLotServerTicket> GetLotServerTicketsForClaimedAvatar(int claim_id);
     }
 }

@@ -13,6 +13,7 @@ namespace FSO.SimAntics.Model
 
         private Dictionary<uint, List<VMEntity>> ObjectsByGUID = new Dictionary<uint, List<VMEntity>>();
         public List<VMEntity> Avatars = new List<VMEntity>();
+        public Dictionary<uint, VMAvatar> AvatarsByPersist = new Dictionary<uint, VMAvatar>();
 
         public VMSetToNextCache(VMContext context)
         {
@@ -74,6 +75,11 @@ namespace FSO.SimAntics.Model
             }
         }
 
+        public void RegisterAvatarPersist(VMAvatar ava, uint persistID)
+        {
+            if (persistID != 0) AvatarsByPersist[persistID] = ava;
+        }
+
         public void NewObject(VMEntity obj)
         {
             var guid = obj.Object.OBJ.GUID;
@@ -86,7 +92,11 @@ namespace FSO.SimAntics.Model
             }
             VM.AddToObjList(list, obj);
 
-            if (obj is VMAvatar) VM.AddToObjList(Avatars, obj);
+            if (obj is VMAvatar)
+            {
+                VM.AddToObjList(Avatars, obj);
+                if (obj.PersistID != 0) AvatarsByPersist[obj.PersistID] = (VMAvatar)obj;
+            }
         }
 
         public void RemoveObject(VMEntity obj)
@@ -100,7 +110,11 @@ namespace FSO.SimAntics.Model
                 if (list.Count == 0) ObjectsByGUID.Remove(guid);
             }
 
-            if (obj is VMAvatar) Avatars.Remove(obj);
+            if (obj is VMAvatar)
+            {
+                Avatars.Remove(obj);
+                AvatarsByPersist.Remove(obj.PersistID);
+            }
         }
 
         public List<VMEntity> GetObjectsAt(LotTilePos pos)

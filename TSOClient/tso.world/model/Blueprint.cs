@@ -55,6 +55,8 @@ namespace FSO.LotView.Model
         public uint[][] RoomMap;
 
         public Color[] RoomColors;
+        public Rectangle BuildableArea;
+        public Rectangle TargetBuildableArea;
 
         public Blueprint(int width, int height){
             this.Width = width;
@@ -217,6 +219,7 @@ namespace FSO.LotView.Model
         SCROLL,
         ROTATE,
         ZOOM,
+        PRECISE_ZOOM,
         WALL_CUT_CHANGED,
         LEVEL_CHANGED,
         LIGHTING_CHANGED

@@ -127,7 +127,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             vm.Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Leave, avatar.Name));
         }
 
-        public void RequestRoommate(VM vm, VMAvatar avatar)
+        public void RequestRoommate(VM vm, VMAvatar avatar, int mode, byte permissions)
         {
             //in final game: signal to city server persistant roommate request state.
             //right now: immedaiately add as roommate
@@ -205,9 +205,14 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             //todo: nice stub for this using database?
         }
 
-        public void DeleteObject(VM vm, uint objectPID, uint value, VMAsyncDeleteObjectCallback callback)
+        public void DeleteObject(VM vm, uint objectPID, VMAsyncDeleteObjectCallback callback)
         {
             //todo: delete local data
+        }
+
+        public void ConsumeInventory(VM vm, uint ownerPID, uint guid, int mode, short num, VMAsyncInventoryConsumeCallback callback)
+        {
+            //todo: nice stub for this using database?
         }
     }
 }

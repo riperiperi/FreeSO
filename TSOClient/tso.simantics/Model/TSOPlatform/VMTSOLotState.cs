@@ -13,7 +13,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
         public uint LotID;
         public VMTSOSurroundingTerrain Terrain = new VMTSOSurroundingTerrain();
         public byte PropertyCategory;
-        public int Size = 8;
+        public int Size = 0; // (size | (floors << 8) | (dir << 16)
 
         public uint OwnerID;
         public HashSet<uint> Roommates = new HashSet<uint>();

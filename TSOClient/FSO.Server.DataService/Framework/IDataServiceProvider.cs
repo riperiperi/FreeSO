@@ -13,6 +13,7 @@ namespace FSO.Common.DataService.Framework
 
         Task<object> Get(object key);
         void Invalidate(object key);
+        void Invalidate(object key, object replacement);
         void DemandMutation(object entity, MutationType type, string path, object value, ISecurityContext context);
         void PersistMutation(object entity, MutationType type, string path, object value);
 

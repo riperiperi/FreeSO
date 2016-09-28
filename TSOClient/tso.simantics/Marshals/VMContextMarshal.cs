@@ -28,7 +28,7 @@ namespace FSO.SimAntics.Marshals
             Architecture = new VMArchitectureMarshal(Version);
             Architecture.Deserialize(reader);
 
-            Ambience = new VMAmbientSoundMarshal();
+            Ambience = new VMAmbientSoundMarshal(Version);
             Ambience.Deserialize(reader);
 
             RandomSeed = reader.ReadUInt64();
@@ -72,16 +72,24 @@ namespace FSO.SimAntics.Marshals
 
     public class VMAmbientSoundMarshal : VMSerializable
     {
-        public byte[] ActiveSounds;
+        public ulong ActiveBits;
+        int Version;
+        public VMAmbientSoundMarshal() { }
+        public VMAmbientSoundMarshal(int version) { Version = version; }
+
         public void Deserialize(BinaryReader reader)
         {
-            ActiveSounds = reader.ReadBytes(reader.ReadByte());
+            if (Version > 8)
+            {
+                ActiveBits = reader.ReadUInt64();
+            }
+            else
+                reader.ReadBytes(reader.ReadByte()); //super-legacy
         }
 
         public void SerializeInto(BinaryWriter writer)
         {
-            writer.Write((byte)ActiveSounds.Length);
-            writer.Write(ActiveSounds);
+            writer.Write(ActiveBits);
         }
     }
 }

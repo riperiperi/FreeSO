@@ -42,6 +42,7 @@ namespace FSO.HIT
             SoundEffects = new List<SoundEffectInstance>();
 
             BeatLength = 60.0f / fsc.Tempo;
+            RestartFSC();
         }
 
         public void SetManualTempo(int tempo)
@@ -75,13 +76,27 @@ namespace FSO.HIT
         private SoundEffect LoadSound(string filename)
         {
             if (SoundCache.ContainsKey(filename)) return SoundCache[filename];
-            byte[] data = new XAFile(BaseDir+filename).DecompressedData;
+            try
+            {
+                byte[] data = new XAFile(BaseDir + filename).DecompressedData;
+                var stream = new MemoryStream(data);
+                var sfx = SoundEffect.FromStream(stream);
+                stream.Close();
+                SoundCache.Add(filename, sfx);
+                return sfx;
+            } catch (Exception)
+            {
+                return null;
+            }
+        }
 
-            var stream = new MemoryStream(data);
-            var sfx = SoundEffect.FromStream(stream);
-            stream.Close();
-            SoundCache.Add(filename, sfx);
-            return sfx;
+        private void RestartFSC()
+        {
+            if (fsc.RandomJumpPoints.Count == 0) CurrentPosition = 0;
+            else
+            {
+                CurrentPosition = fsc.RandomJumpPoints[new Random().Next(fsc.RandomJumpPoints.Count)];
+            }
         }
 
         private void NextNote()
@@ -89,24 +104,35 @@ namespace FSO.HIT
             if (LoopCount == -1)
             {
                 var note = fsc.Notes[CurrentPosition++];
-                if (CurrentPosition >= fsc.Notes.Count) CurrentPosition = 0;
+                if (note.Rand || CurrentPosition >= fsc.Notes.Count)
+                {
+                    RestartFSC(); //current random segment ended. jump to another.
+                    note = fsc.Notes[CurrentPosition];
+                }
                 if (note.Filename != "NONE")
                 {
                     bool play;
-                    if (note.Rand) play = (new Random().Next(16) < note.Prob);
+                    if (note.Prob > 0) play = (new Random().Next(16) < note.Prob);
                     else play = true;
 
-                    float volume = (note.Volume / 1024.0f) * (fsc.MasterVolume / 1024.0f) * Volume;
-                    var sound = LoadSound(note.Filename);
+                    if (play)
+                    {
+                        float volume = (note.Volume / 1024.0f) * (fsc.MasterVolume / 1024.0f) * Volume;
+                        var sound = LoadSound(note.Filename);
 
-                    var instance = sound.CreateInstance();
-                    instance.Volume = volume;
-                    instance.Pan = (note.LRPan / 512.0f) - 1;
-                    instance.Play();
+                        if (sound != null)
+                        {
+                            var instance = sound.CreateInstance();
+                            instance.Volume = volume;
+                            instance.Pan = (note.LRPan / 512.0f) - 1;
+                            instance.Play();
 
-                    SoundEffects.Add(instance);
+                            SoundEffects.Add(instance);
+                        }
+                    }
+                    LoopCount = (short)(note.Loop - 1);
                 }
-                LoopCount = (short)(note.Loop - 1);
+
             }
             else LoopCount--;
         }

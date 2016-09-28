@@ -1,13 +1,16 @@
 ﻿using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
+using FSO.Common.Utils;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Objects;
 using FSO.Server.Database.DA.Relationships;
+using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Servers.City.Domain;
 using FSO.SimAntics;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.Marshals;
@@ -19,6 +22,7 @@ using FSO.SimAntics.NetPlay.Drivers;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Utils;
+using Microsoft.Xna.Framework;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
 using NLog;
@@ -47,6 +51,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private LotServerConfiguration Config;
         private DbLot LotPersist;
         private List<DbLot> LotAdj;
+        private List<DbRoommate> LotRoommates;
 
         private VM Lot;
         private VMServerDriver VMDriver;
@@ -56,14 +61,18 @@ namespace FSO.Server.Servers.Lot.Domain
         public int TimeToShutdown = -1;
         public int LotSaveTicker = 0;
         public int AvatarSaveTicker = 0;
+
         private HashSet<uint> AvatarsToSave = new HashSet<uint>();
+        private HashSet<IVoltronSession> SessionsToRelease = new HashSet<IVoltronSession>();
         private List<DbRelationship> RelationshipsToSave = new List<DbRelationship>();
 
-        public static readonly int LOT_SAVE_PERIOD = 60 * 60 * 10;
-        public static readonly int AVATAR_SAVE_PERIOD = 60 * 60 * 1;
+        public static readonly int TICKRATE = 30;
+        public static readonly int LOT_SAVE_PERIOD = TICKRATE * 60 * 10;
+        public static readonly int AVATAR_SAVE_PERIOD = TICKRATE * 60 * 1;
 
         private IShardRealestateDomain Realestate;
         private VMTSOSurroundingTerrain Terrain;
+        private bool JobLot;
         
         public LotContainer(IDAFactory da, LotContext context, ILotHost host, IKernel kernel, LotServerConfiguration config, IRealestateDomain realestate)
         {
@@ -74,14 +83,35 @@ namespace FSO.Server.Servers.Lot.Domain
             Kernel = kernel;
             Config = config;
 
-            using (var db = DAFactory.Get())
-            {
-                LotPersist = db.Lots.Get(context.DbId);
-                LotAdj = db.Lots.GetAdjToLocation(context.ShardId, LotPersist.location);
-            }
-            Realestate = realestate.GetByShard(LotPersist.shard_id);
+            JobLot = (context.Id & 0x40000000) > 0;
+            if (JobLot) {
+                LotPersist = new DbLot
+                {
+                    lot_id = Context.DbId,
+                    location = Context.Id,
+                    name = "Job Lot",
+                };
+                LotAdj = new List<DbLot>();
+                LotRoommates = new List<DbRoommate>();
+                Terrain = new VMTSOSurroundingTerrain();
 
-            GenerateTerrain();
+                for (int y = 0; y < 3; y++)
+                {
+                    for (int x = 0; x < 3; x++)
+                    {
+                        Terrain.Roads[x, y] = 0xF; //crossroads everywhere
+                    }
+                }
+            } else {
+                using (var db = DAFactory.Get())
+                {
+                    LotPersist = db.Lots.Get(context.DbId);
+                    LotAdj = db.Lots.GetAdjToLocation(context.ShardId, LotPersist.location);
+                    LotRoommates = db.Roommates.GetLotRoommates(context.DbId);
+                }
+                Realestate = realestate.GetByShard(LotPersist.shard_id);
+                GenerateTerrain();
+            }
             ResetVM();
         }
 
@@ -186,6 +216,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public bool SaveRing()
         {
+            if (JobLot) return true; //job lots never get saved.
             var newBackup = (sbyte)((LotPersist.ring_backup_num + 1) % Config.RingBufferSize);
             var lotStr = LotPersist.lot_id.ToString("x8");
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/"));
@@ -231,10 +262,10 @@ namespace FSO.Server.Servers.Lot.Domain
             //simulate for a bit to try get rid of the avatars on the lot
             try
             {
-                for (int i = 0; i < 30 * 60 && Lot.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID > 0) != null; i++)
+                for (int i = 0; i < 30 * TICKRATE && Lot.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID > 0) != null; i++)
                 {
-                    if (i == 30 * 60 - 1) LOG.Warn("Failed to clean lot with dbid = " + Context.DbId);
-                    Lot.Update();
+                    if (i == 30 * TICKRATE - 1) LOG.Warn("Failed to clean lot with dbid = " + Context.DbId);
+                    Lot.Tick();
                 }
             }
             catch (Exception) { } //if something bad happens just immediately try to delete everyone
@@ -257,30 +288,49 @@ namespace FSO.Server.Servers.Lot.Domain
             vm.Init();
 
             bool isNew = false;
-            if (LotPersist.ring_backup_num > -1 && AttemptLoadRing())
+            if (!JobLot && LotPersist.ring_backup_num > -1 && AttemptLoadRing())
             {
                 
             }
             else
             {
                 var path = "Content/Blueprints/empty_lot_fso.xml";
-                string filename = Path.GetFileName(path);
+
+                var floorClip = Rectangle.Empty;
+                var offset = new Point();
+                var targetSize = 0;
 
                 short jobLevel = -1;
-
-                //quick hack to find the job level from the chosen blueprint
-                //the final server will know this from the fact that it wants to create a job lot in the first place...
-
-                try
+                if (JobLot)
                 {
-                    if (filename.StartsWith("nightclub") || filename.StartsWith("restaurant") || filename.StartsWith("robotfactory"))
-                        jobLevel = Convert.ToInt16(filename.Substring(filename.Length - 9, 2));
+                    //non-road tiles start at (8,8), end at (56,56)
+                    //offset (7,14)
+
+                    floorClip = new Rectangle(8, 8, 56 - 8, 56 - 8);
+                    offset = new Point(7, 14);
+                    targetSize = 77;
+
+                    var jobPacked = Context.DbId - 0x200;
+                    jobLevel = (short)((jobPacked - 1)&0xF);
+                    var jobType = (short)((jobPacked - 1)/0xF);
+                    var randomChance = (jobType > 2 && jobLevel > 6) ? 2:1;
+                    path = Content.Content.Get().GetPath("housedata/blueprints/" + JobMatchmaker.JobXMLName[jobType]
+                        + JobMatchmaker.JobGradeToLotGroup[jobType][jobLevel].ToString().PadLeft(2, '0') + "_"
+                        + (new Random()).Next(randomChance).ToString().PadLeft(2, '0')
+                        + ".xml");
                 }
-                catch (Exception) { }
                 vm.SendCommand(new VMBlueprintRestoreCmd
                 {
                     JobLevel = jobLevel,
-                    XMLData = File.ReadAllBytes(path)
+                    XMLData = File.ReadAllBytes(path),
+
+                    FloorClipX = floorClip.X,
+                    FloorClipY = floorClip.Y,
+                    FloorClipWidth = floorClip.Width,
+                    FloorClipHeight = floorClip.Height,
+                    OffsetX=offset.X,
+                    OffsetY=offset.Y,
+                    TargetSize=targetSize
                 });
                 vm.Update();
                 vm.Update();
@@ -292,13 +342,23 @@ namespace FSO.Server.Servers.Lot.Domain
             vm.TSOState.Terrain = Terrain;
             vm.TSOState.Name = LotPersist.name;
             vm.TSOState.OwnerID = LotPersist.owner_id;
+            vm.TSOState.Roommates = new HashSet<uint>();
+            vm.TSOState.BuildRoommates = new HashSet<uint>();
+            foreach (var roomie in LotRoommates)
+            {
+                if (roomie.is_pending > 0) continue;
+                vm.TSOState.Roommates.Add(roomie.avatar_id);
+                if (roomie.permissions_level > 0)
+                    vm.TSOState.BuildRoommates.Add(roomie.avatar_id);
+                if (roomie.permissions_level > 1)
+                    vm.TSOState.OwnerID = roomie.avatar_id;
+            }
 
             var time = DateTime.UtcNow;
-            var cycle = (time.Hour % 2 == 1) ? 3600 : 0;
-            cycle += time.Minute * 60 + time.Second;
+            var tsoTime = TSOTime.FromUTC(time);
 
-            vm.Context.Clock.Hours = cycle / 300;
-            vm.Context.Clock.Minutes = (cycle % 300) / 5;
+            vm.Context.Clock.Hours = tsoTime.Item1;
+            vm.Context.Clock.Minutes = tsoTime.Item2;
 
             VMLotTerrainRestoreTools.RestoreTerrain(vm);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(vm);
@@ -342,26 +402,30 @@ namespace FSO.Server.Servers.Lot.Domain
 
             var timeKeeper = new Stopwatch(); //todo: smarter timing
             timeKeeper.Start();
-            long lastMs = 0;
+            long lastTick = 0;
 
             LotSaveTicker = LOT_SAVE_PERIOD;
             AvatarSaveTicker = AVATAR_SAVE_PERIOD;
             while (true)
             {
-                lastMs += 16;
+                lastTick++;
+                //sometimes avatars can be killed immediately after their kill timer starts (this frame will run the leave lot interaction)
+                //this works around that possibility. 
+                var preTickAvatars = Lot.Context.SetToNextCache.Avatars.Select(x => (VMAvatar)x).ToList();
                 try
                 {
-                    Lot.Update();
+                    Lot.Tick();
                 }
                 catch (Exception e)
                 {
                     //something bad happened. not entirely sure how we should deal with this yet
+                    LOG.Error("VM ERROR: "+e.StackTrace);
                 }
 
                 if (ClientCount == 0)
                 {
                     if (TimeToShutdown == -1)
-                        TimeToShutdown = 60 * 20; //lot shuts down 20 seconds after everyone leaves
+                        TimeToShutdown = TICKRATE * 20; //lot shuts down 20 seconds after everyone leaves
                     else {
                         if (--TimeToShutdown == 0)
                         {
@@ -379,34 +443,60 @@ namespace FSO.Server.Servers.Lot.Domain
                     LotSaveTicker = LOT_SAVE_PERIOD;
                 }
 
+                var beingKilled = preTickAvatars.Where(x => x.KillTimeout == 1);
+                if (beingKilled.Count() > 0)
+                {
+                    //avatars that are being killed could die before their user disconnects. It's important to save them immediately.
+                    LOG.Info("Avatar Kill Save");
+                    SaveAvatars(beingKilled, true);
+                }
+
+                foreach (var avatar in Lot.Context.SetToNextCache.AvatarsByPersist)
+                {
+                    if (avatar.Value.KillTimeout == 1)
+                    {
+                        //this avatar has begun being killed. Save them immediately.
+                        SaveAvatar(avatar.Value);
+                    }
+                }
+
                 if (--AvatarSaveTicker <= 0)
                 {
                     //save all avatars
-                    RelationshipsToSave.Clear();
-                    foreach (var avatar in Lot.Context.SetToNextCache.Avatars)
-                    {
-                        if (avatar.PersistID != 0) SaveAvatar((VMAvatar)avatar);
-                    }
-                    if (RelationshipsToSave.Count > 0) BatchRelationshipSave();
+                    SaveAvatars(Lot.Context.SetToNextCache.Avatars.Cast<VMAvatar>(), false);
                     AvatarSaveTicker = AVATAR_SAVE_PERIOD;
                 }
 
-                lock (AvatarsToSave)
+                /*lock (AvatarsToSave)
                 {
-                    RelationshipsToSave.Clear();
-
-                    foreach (var pid in AvatarsToSave)
-                    {
-                        var avatar = Lot.GetObjectByPersist(pid);
-                        if (avatar == null || avatar is VMGameObject) continue;
-                        SaveAvatar((VMAvatar)avatar);
-                    }
-                    if (RelationshipsToSave.Count > 0) BatchRelationshipSave();
+                    SaveAvatars(AvatarsToSave.Select(x => Lot.GetAvatarByPersist(x)), false);
                     AvatarsToSave.Clear();
+                }*/
+
+                lock (SessionsToRelease)
+                {
+                    //save avatar state, then release their avatar claims afterwards.
+                    //SaveAvatars(SessionsToRelease.Select(x => Lot.GetAvatarByPersist(x.AvatarId)), true); //todo: is this performed by the fact that we started the persist save above?
+                    foreach (var session in SessionsToRelease)
+                    {
+                        LOG.Info("Avatar Session Release");
+                        Host.ReleaseAvatarClaim(session);
+                    }
+                    SessionsToRelease.Clear();
                 }
 
-                Thread.Sleep((int)Math.Max(0, (lastMs + 16) - timeKeeper.ElapsedMilliseconds));
+                Thread.Sleep((int)Math.Max(0, (((lastTick + 1)*1000)/TICKRATE) - timeKeeper.ElapsedMilliseconds));
             }
+        }
+
+        public void SaveAvatars(IEnumerable<VMAvatar> avatars, bool ignoreKill)
+        {
+            RelationshipsToSave.Clear();
+            foreach (var avatar in avatars)
+            {
+                if (avatar != null && avatar.PersistID != 0 && (ignoreKill || avatar.KillTimeout == -1)) SaveAvatar(avatar);
+            }
+            if (RelationshipsToSave.Count > 0) BatchRelationshipSave();
         }
 
         //Run on the background thread
@@ -419,11 +509,11 @@ namespace FSO.Server.Servers.Lot.Domain
                 var rels = da.Relationships.GetOutgoing(session.AvatarId);
                 var jobinfo = da.Avatars.GetJobLevels(session.AvatarId);
                 var inventory = da.Objects.GetAvatarInventory(session.AvatarId);
+                var myRoomieLots = da.Roommates.GetAvatarsLots(session.AvatarId); //might want to use other entries to update the roomies table entirely.
                 LOG.Info("Avatar " + avatar.name + " has joined");
 
                 //Load all the avatars data
-                var state = StateFromDB(avatar, rels, jobinfo);
-                state.Permissions = SimAntics.Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
+                var state = StateFromDB(avatar, rels, jobinfo, myRoomieLots);
 
                 var client = new VMNetClient();
                 client.AvatarState = state;
@@ -437,18 +527,18 @@ namespace FSO.Server.Servers.Lot.Domain
                     return;
                 }
                 VMDriver.ConnectClient(client);
-                VMDriver.SendOneOff(client, new VMNetAdjHollowSyncCmd { HollowAdj = HollowLots });
+                VMDriver.SendDirectCommand(client, new VMNetAdjHollowSyncCmd { HollowAdj = HollowLots });
 
                 var vmInventory = new List<VMInventoryItem>();
                 foreach (var item in inventory)
                 {
                     vmInventory.Add(InventoryItemFromDB(item));
                 }
-                VMDriver.SendOneOff(client, new VMNetUpdateInventoryCmd { Items = vmInventory });
+                VMDriver.SendDirectCommand(client, new VMNetUpdateInventoryCmd { Items = vmInventory });
             }
         }
 
-        public VMInventoryItem InventoryItemFromDB(DbObject obj)
+        public static VMInventoryItem InventoryItemFromDB(DbObject obj)
         {
             return new VMInventoryItem
             {
@@ -491,7 +581,7 @@ namespace FSO.Server.Servers.Lot.Domain
                         from_id = avatar.PersistID,
                         to_id = relsID,
                         index = (uint)(i++),
-                        value = (uint)value
+                        value = (int)value
                     });
                 }
             }
@@ -529,7 +619,7 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
-        private VMNetAvatarPersistState StateFromDB(DbAvatar avatar, List<DbRelationship> rels, List<DbJobLevel> jobs)
+        private VMNetAvatarPersistState StateFromDB(DbAvatar avatar, List<DbRelationship> rels, List<DbJobLevel> jobs, List<DbRoommate> myRoomieLots)
         {
             var state = new VMNetAvatarPersistState();
             state.Name = avatar.name;
@@ -579,10 +669,21 @@ namespace FSO.Server.Servers.Lot.Domain
             }
             
             if (avatar.moderation_level > 0) state.Permissions = VMTSOAvatarPermissions.Admin;
-            if (avatar.lot_id == Context.DbId)
+
+            if (myRoomieLots.Count == 0)
+                state.AvatarFlags |= VMTSOAvatarFlags.CanBeRoommate; //we're not roommate anywhere, so we can be here.
+            var roomieStatus = myRoomieLots.FindAll(x => x.lot_id == Context.DbId).FirstOrDefault();
+            if (roomieStatus != null && roomieStatus.is_pending == 0)
             {
-                //todo: check roomie status
-                state.Permissions = VMTSOAvatarPermissions.Owner;
+                switch (roomieStatus.permissions_level)
+                {
+                    case 0:
+                        state.Permissions = VMTSOAvatarPermissions.Roommate; break;
+                    case 1:
+                        state.Permissions = VMTSOAvatarPermissions.BuildBuyRoommate; break;
+                    case 2:
+                        state.Permissions = VMTSOAvatarPermissions.Owner; break;
+                }
             }
             else state.Permissions = VMTSOAvatarPermissions.Visitor;
 
@@ -594,10 +695,10 @@ namespace FSO.Server.Servers.Lot.Domain
             }
             state.MotiveData = motives;
 
-            var relDict = new Dictionary<uint, List<uint>>();
+            var relDict = new Dictionary<uint, List<int>>();
             foreach (var rel in rels)
             {
-                if (!relDict.ContainsKey(rel.to_id)) relDict[rel.to_id] = new List<uint>();
+                if (!relDict.ContainsKey(rel.to_id)) relDict[rel.to_id] = new List<int>();
                 var list = relDict[rel.to_id];
                 while (list.Count <= rel.index) list.Add(0);
                 list[(int)rel.index] = rel.value;
@@ -672,9 +773,11 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             //Exit lot, Persist the avatars data, remove avatar lock
             LOG.Info("Avatar left");
-            lock (AvatarsToSave) AvatarsToSave.Add(session.AvatarId);
+
+            // defer the following so that the avatar save is queued, then their session's claim is released.
+            lock (SessionsToRelease) SessionsToRelease.Add(session);
+
             VMDriver.DisconnectClient(session.AvatarId);
-            Host.ReleaseAvatarClaim(session);
             ClientCount--;
         }
 

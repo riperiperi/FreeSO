@@ -1163,9 +1163,15 @@ namespace FSO.Client.Rendering.City
                     var x = id >> 16;
                     var y = id & 0xFFFF;
 
+                    if (x >= 512 || y >= 512)
+                    {
+                        x = 255;
+                        y = 255;
+                    }
+
                     float elev = GetElevationAt((int)x, (int)y);
 
-                    var tile = lotWorld.State.CenterTile / 72; //72 is the base lot size
+                    var tile = (lotWorld.State.CenterTile - new Vector2(2,2)) / 72; //72 is the base lot size
 
                     switch (lotWorld.State.Zoom)
                     {
@@ -1256,15 +1262,15 @@ namespace FSO.Client.Rendering.City
                 m_TargVOffX = Math.Max(-135, Math.Min(m_TargVOffX, 138)); //maximum offsets for zoomed camera. Need adjusting for other screen sizes...
                 m_TargVOffY = Math.Max(-100, Math.Min(m_TargVOffY, 103));
             }
-            else if (m_Zoomed == TerrainZoomMode.Far)
+            else if (m_Zoomed == TerrainZoomMode.Far && m_LotZoomProgress < 0.3)
                 m_ZoomProgress += (0 - m_ZoomProgress) / 5.0f; //zoom progress interpolation. Isn't very fixed but it's a nice gradiation.
 
             //lot zoom.
-            if (m_Zoomed == TerrainZoomMode.Lot)
+            if (m_Zoomed == TerrainZoomMode.Lot && m_ZoomProgress > 0.995)
             {
-                m_LotZoomProgress += (1.0f - m_LotZoomProgress) / 5.0f;
+                m_LotZoomProgress += (1.0f - m_LotZoomProgress) / 10.0f;
             }
-            else m_LotZoomProgress += (0 - m_LotZoomProgress) / 5.0f; 
+            else m_LotZoomProgress += (0 - m_LotZoomProgress) / 10.0f; 
         }
 
         private Texture2D DrawDepth(Effect VertexShader, Effect PixelShader)

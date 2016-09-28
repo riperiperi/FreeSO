@@ -213,6 +213,16 @@ namespace FSO.SimAntics.Utils
             9,  9,  9,  0,  12,
         };
 
+        //terrain pattern to apply beneath car portals (when present)
+        public static byte[] CarDirtRoad =
+        {
+            21, 3,
+
+            2,   4,   6,   8,   12,  16,  32,  64,  128, 196, 225, 196, 128, 64,  32,  16,  12,  8,   6,   4,   2,
+            0,   2,   4,   6,   8,   12,  16,  32,  64,  96,  64,  96,  64,  32,  16,  12,  8,   6,   4,   2,   0,
+            2,   4,   6,   8,   12,  16,  32,  64,  128, 196, 225, 196, 128, 64,  32,  16,  12,  8,   6,   4,   2,
+        };
+
         public static uint[][] BlankTerrainObjects =
         new uint[][]{
             //grass:
@@ -311,6 +321,27 @@ namespace FSO.SimAntics.Utils
             }
         }
 
+        public static void StampTerrainmap(VMArchitecture arch, byte[] tilemap, short x, short y, Vector2 xInc, Vector2 yInc)
+        {
+            var width = tilemap[0];
+            var height = tilemap[1];
+
+            for (int i = 2; i < tilemap.Length; i++)
+            {
+                if (tilemap[i] == 0) continue;
+                var src = new Vector2((i - 2) % width, (i - 2) / width);
+                var dst = src.X * xInc + src.Y * yInc;
+                var xo = (int)(dst.X);
+                var yo = (int)(dst.Y);
+                if (x + xo >= arch.Width - 1 || y + yo >= arch.Height - 1) continue;
+
+                var mult = tilemap[i] / 255f;
+
+                var archOff = (y + yo) * arch.Width + (x + xo);
+                arch.Terrain.GrassState[archOff] = (byte)(((1-mult) * arch.Terrain.GrassState[archOff] + mult * 255));
+            }
+        }
+
         public static void RestoreTerrain(VM vm)
         {
             //take center of lotstate
@@ -320,6 +351,7 @@ namespace FSO.SimAntics.Utils
         public static void RestoreTerrain(VM vm, TerrainBlend blend, byte roads)
         {
             var arch = vm.Context.Architecture;
+            arch.DisableClip = true;
 
             if (blend.Base == TerrainType.WATER)
             {
@@ -333,10 +365,10 @@ namespace FSO.SimAntics.Utils
             arch.Terrain.GenerateGrassStates();
 
             //clear all previous roads/sea
-            VMArchitectureTools.FloorPatternRect(arch, new Rectangle(0, 0, arch.Width, 6), 0, 0, 1);
+            VMArchitectureTools.FloorPatternRect(arch, new Rectangle(0, 0, arch.Width, 5), 0, 0, 1);
             VMArchitectureTools.FloorPatternRect(arch, new Rectangle(arch.Width - 7, 0, 7, arch.Height), 0, 0, 1);
             VMArchitectureTools.FloorPatternRect(arch, new Rectangle(0, arch.Height - 7, arch.Width, 7), 0, 0, 1);
-            VMArchitectureTools.FloorPatternRect(arch, new Rectangle(0, 0, 6, arch.Height), 0, 0, 1);
+            VMArchitectureTools.FloorPatternRect(arch, new Rectangle(0, 0, 5, arch.Height), 0, 0, 1);
 
             //blend flags start at top left, then go clockwise. (top right, bottom right..)
             if ((blend.WaterFlags & 1) > 0) VMArchitectureTools.FloorPatternRect(arch, new Rectangle(1, 1, 4, arch.Height - 2), 0, 65534, 1);
@@ -365,7 +397,7 @@ namespace FSO.SimAntics.Utils
                 new float[] { (15f / 180f) * (float)Math.PI, (-15f / 180f) * (float)Math.PI });
 
             //and finally, hard blends into the next terrain type 
-            /*
+            
             FillTerrainRect(arch, new Rectangle(0, 0, 1, arch.Height - 1), (byte)(((blend.AdjFlags & 1) > 0)?255:0));
             FillTerrainRect(arch, new Rectangle(0, 0, arch.Width-1, 1), (byte)(((blend.AdjFlags & 4) > 0) ? 255 : 0));
             FillTerrainRect(arch, new Rectangle(arch.Width - 2, 0, 1, arch.Height - 1), (byte)(((blend.AdjFlags & 16) > 0) ? 255 : 0));
@@ -375,10 +407,139 @@ namespace FSO.SimAntics.Utils
             FillTerrainRect(arch, new Rectangle(arch.Width - 2, 0, 1, 1), (byte)(((blend.AdjFlags & 8) > 0) ? 255 : 0));
             FillTerrainRect(arch, new Rectangle(arch.Width - 2, arch.Height - 2, 1, 1), (byte)(((blend.AdjFlags & 32) > 0) ? 255 : 0));
             FillTerrainRect(arch, new Rectangle(0, arch.Height - 2, 1, 1), (byte)(((blend.AdjFlags & 128) > 0) ? 255 : 0));
-            */
 
             RestoreRoad(vm, roads);
+
+            //set road dir. should only really do this FIRST EVER time, then road dir changes after are manual and rotate the contents of the lot.
+            vm.TSOState.Size &= 0xFFFF;
+            vm.TSOState.Size |= PickRoadDir(roads) << 16;
+
+            PositionLandmarkObjects(vm);
+
             arch.SignalTerrainRedraw();
+            arch.DisableClip = false;
+        }
+        
+        public static byte PickRoadDir(byte roads)
+        {
+            for (int i=0; i<4; i++)
+            {
+                if ((roads&(1<<i))>0)
+                {
+                    return (byte)((4 - i) % 4);
+                }
+            }
+            return 0;
+        }
+
+        private class GUIDToPosition
+        {
+            public uint GUID;
+            public short X;
+            public short Y;
+            public int DirOff; //in 8th directions, like blueprint
+            public GUIDToPosition(uint guid, short x, short y, int dirOff)
+            {
+                GUID = guid; X = x; Y = y; DirOff = dirOff;
+            }
+        }
+
+        // looking towards the lot
+        // (M=mailbox, B=bin, P=phone, 1/2=carportal)
+        // (0x39CCF441, 0xA4258067, 0x313D2F9A, (0x865A6812, 0xD564C66B))
+        // |====|====
+        // |   M B  P
+        // |^^^M^^^^^
+        // 2    1
+
+        private static GUIDToPosition[] MovePositions = {
+            //center relative (vertical line above)
+            new GUIDToPosition(0x39CCF441, -1, 2, 4), //mailbox (2tile)
+            new GUIDToPosition(0xA4258067, 1, 1, 0), //bin
+            new GUIDToPosition(0x313D2F9A, 4, 1, 0), //phone
+            new GUIDToPosition(0x865A6812, 0, 3, 6), //car portal 1
+            new GUIDToPosition(0xD564C66B, -5, 3, 6), //car portal 2
+        };
+
+        /// <summary>
+        /// Positions the Landmark objects depending on the lot direction. (npc/car portals, bin, mailbox, phone)
+        /// </summary>
+        /// <param name="vm">The VM.</param>
+        public static void PositionLandmarkObjects(VM vm)
+        {
+            var arch = vm.Context.Architecture;
+            var lotSInfo = vm.TSOState.Size;
+            var lotSize = lotSInfo & 255;
+            var lotFloors = ((lotSInfo >> 8) & 255) + 2;
+            var lotDir = (lotSInfo >> 16);
+
+            var dim = VMBuildableAreaInfo.BuildableSizes[lotSize];
+
+            //need to rotate the lot dir towards the road. bit weird cos we're rotating a rectangle
+
+            var w = arch.Width;
+            var h = arch.Height;
+            //little bit different from the array in VMContext. Want the tile positions outside buildable area
+            //so min x and y are 5 instead of 6.
+            var corners = new Vector2[]
+            {
+                new Vector2(5, 5), // top, default orientation
+                new Vector2(w-7, 5), // right
+                new Vector2(w-7, h-7), // bottom
+                new Vector2(5, h-7) // left
+            };
+            var perpIncrease = new Vector2[]
+            {
+                new Vector2(0, -1), //bottom left road side
+                new Vector2(1, 0),
+                new Vector2(0, 1),
+                new Vector2(-1, 0)
+            };
+
+            //rotation 0: move perp from closer point to top bottom -> left (90 degree ccw of perp)
+            //rotation 1: choose closer pt to top left->top (90 degree ccw of perp)
+            //rotation 2: choose closer pt to top top->right (90 degree cw of perp)
+
+            var pt1 = corners[(lotDir + 2) % 4];
+            var pt2 = corners[(lotDir + 3) % 4];
+
+            var ctr = (pt1 + pt2) / 2; //ok.
+
+            var xperp = perpIncrease[(lotDir + 1) % 4];
+            var yperp = perpIncrease[(lotDir + 2) % 4];
+            //move relative position objs
+            foreach (var pos in MovePositions)
+            {
+                var rpos = ctr + (pos.X * xperp) + (pos.Y * yperp);
+                var ent = EntityByGUID(vm, pos.GUID);
+                if (ent != null)
+                {
+                    ent.MultitileGroup.BaseObject.SetPosition(LotTilePos.FromBigTile((short)rpos.X, (short)rpos.Y, 1), (Direction)(1 << ((lotDir*2 + pos.DirOff) % 8)), vm.Context);
+                }
+            }
+
+            // finally, must position npc portals. These are on the sidewalk, but at the far edge of the lot. 
+            // ped, npc1, npc2 (0x81E6BEF9, 0x23BC2034, 0x4E57C380)
+            // if there is water on the space we can't intersect it :(
+
+            // for now just choose pavement corners. These are safe from being in water.
+            var npc1 = EntityByGUID(vm, 0x23BC2034);
+            if (npc1 != null) npc1.SetPosition(LotTilePos.FromBigTile((short)pt1.X, (short)pt1.Y, 1), (Direction)(1 << ((lotDir * 2 + 0) % 8)), vm.Context);
+            var npc2 = EntityByGUID(vm, 0x4E57C380);
+            if (npc2 != null) npc2.SetPosition(LotTilePos.FromBigTile((short)pt2.X, (short)pt2.Y, 1), (Direction)(1 << ((lotDir * 2 + 0) % 8)), vm.Context);
+            var ped = EntityByGUID(vm, 0x4E57C380);
+            if (ped != null) ped.SetPosition(LotTilePos.FromBigTile((short)ctr.X, (short)ctr.Y, 1), (Direction)(1 << ((lotDir * 2 + 0) % 8)), vm.Context);
+
+            var rPos = ctr + (-13 * xperp) + (2 * yperp);
+            if (ped != null)
+            {
+                StampTerrainmap(arch, CarDirtRoad, (short)rPos.X, (short)rPos.Y, xperp, yperp);
+            }
+        }
+
+        private static VMEntity EntityByGUID(VM vm, uint GUID)
+        {
+            return vm.Entities.FindAll(x => (x.MasterDefinition?.GUID ?? 0) == GUID || x.Object.GUID == GUID).FirstOrDefault();
         }
 
         private static byte RotateByte(byte flags, int amount)
@@ -513,9 +674,9 @@ namespace FSO.SimAntics.Utils
 
             var corners = (roads >> 4);
             if ((corners & 1) > 0) StampTilemap(arch, LeftRoadCorner, 1, (short)(arch.Height - 7), 1);
-            if ((corners & 2) > 0) StampTilemap(arch, TopRoadCorner, 1, 1, 1);
+            if ((corners & 2) > 0) StampTilemap(arch, BottomRoadCorner, (short)(arch.Width - 7), (short)(arch.Height - 7), 1);
             if ((corners & 4) > 0) StampTilemap(arch, RightRoadCorner, (short)(arch.Width-7), 1, 1);
-            if ((corners & 8) > 0) StampTilemap(arch, BottomRoadCorner, (short)(arch.Width-7), (short)(arch.Height - 7), 1);
+            if ((corners & 8) > 0) StampTilemap(arch, TopRoadCorner, 1, 1, 1);
         }
 
         public static void PopulateBlankTerrain(VM vm)

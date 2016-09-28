@@ -107,6 +107,7 @@
     <Compile Include="Gluon\IGluonPacket.cs" />
     <Compile Include="Gluon\Model\ClaimType.cs" />
     <Compile Include="Gluon\Packets\AdvertiseCapacity.cs" />
+    <Compile Include="Gluon\Packets\RequestLotClientTermination.cs" />
     <Compile Include="Gluon\Packets\TransferClaim.cs" />
     <Compile Include="Gluon\Packets\TransferClaimResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

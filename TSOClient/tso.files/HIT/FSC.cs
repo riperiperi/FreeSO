@@ -16,6 +16,7 @@ namespace FSO.Files.HIT
     {
         /// <summary>
         /// FSC is a tabulated plaintext format that describes a sequence of notes to be played. In this game it is used to sequence the ambient sounds.
+        /// The conditions in which the sequence is randomized are not entirely apparent, and have been mostly guessed.
         /// </summary>
         /// 
 
@@ -37,6 +38,8 @@ namespace FSO.Files.HIT
         public ushort QuanY;
         public ushort DiffX;
         public ushort DiffY;
+
+        public List<int> RandomJumpPoints;
         
         /// <summary>
         /// Creates a new hsm file.
@@ -61,6 +64,7 @@ namespace FSO.Files.HIT
             var io = new StreamReader(stream);
 
             Notes = new List<FSCNote>();
+            RandomJumpPoints = new List<int>();
             VersionCode = io.ReadLine();
             var line = io.ReadLine();
 
@@ -79,8 +83,8 @@ namespace FSO.Files.HIT
             BPB = Convert.ToUInt16(Head[8]);
             SelX = Convert.ToUInt16(Head[9]);
             SelY = Convert.ToUInt16(Head[10]);
-            QuanX = Convert.ToUInt16(Head[11]);
-            QuanY = Convert.ToUInt16(Head[12]);
+            if(Head[11][0] != '-') QuanX = Convert.ToUInt16(Head[11]);
+            if (Head[12][0] != '-') QuanY = Convert.ToUInt16(Head[12]);
             DiffX = Convert.ToUInt16(Head[13]);
             DiffY = Convert.ToUInt16(Head[14]);
 
@@ -95,9 +99,9 @@ namespace FSO.Files.HIT
                 string[] Values = line2.Split('\t');
                 if (!line.StartsWith("#") && Values.Length == 20)
                 {
-                    Notes.Add(new FSCNote()
+                    var note = new FSCNote()
                     {
-                        Volume = Convert.ToUInt16(Values[1]), 
+                        Volume = Convert.ToUInt16(Values[1]),
                         Rand = Values[2] != "0",
                         LRPan = Convert.ToUInt16(Values[3]),
                         FBPan = Convert.ToUInt16(Values[4]),
@@ -119,7 +123,9 @@ namespace FSO.Files.HIT
                         GroupID = Convert.ToUInt16(Values[17]),
                         Stereo = Values[18] != "0",
                         Filename = Values[19]
-                    });
+                    };
+                    if (note.Rand) RandomJumpPoints.Add(Notes.Count);
+                    Notes.Add(note);
                 }
             }
 

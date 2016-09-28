@@ -39,7 +39,9 @@ namespace FSO.SimAntics.NetPlay.Model
             { VMCommandType.AdjHollowSync, typeof(VMNetAdjHollowSyncCmd) },
             { VMCommandType.SendToInventory, typeof(VMNetSendToInventoryCmd) },
             { VMCommandType.PlaceInventory, typeof(VMNetPlaceInventoryCmd) },
-            { VMCommandType.UpdateInventory, typeof(VMNetUpdateInventoryCmd) }
+            { VMCommandType.UpdateInventory, typeof(VMNetUpdateInventoryCmd) },
+            { VMCommandType.ChangeEnvironment, typeof(VMNetChangeEnvironmentCmd) },
+            { VMCommandType.ChangeLotSize, typeof(VMNetChangeLotSizeCmd) }
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -105,8 +107,13 @@ namespace FSO.SimAntics.NetPlay.Model
         UpdatePersistState = 19,
         AdjHollowSync = 20,
 
+        //inventory
         SendToInventory = 21,
         PlaceInventory = 22,
-        UpdateInventory = 23
+        UpdateInventory = 23,
+
+        //housemode
+        ChangeEnvironment = 24,
+        ChangeLotSize = 25,
     }
 }

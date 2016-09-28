@@ -37,6 +37,11 @@ namespace FSO.Server.Database.DA.LotClaims
             return Context.Connection.Query<DbLotClaim>("SELECT * FROM fso_lot_claims WHERE claim_id = @claim_id", new { claim_id = (int)id }).FirstOrDefault();
         }
 
+        public DbLotClaim GetByLotID(int id)
+        {
+            return Context.Connection.Query<DbLotClaim>("SELECT * FROM fso_lot_claims WHERE lot_id = @lot_id", new { lot_id = id }).FirstOrDefault();
+        }
+
         public IEnumerable<DbLotClaim> GetAllByOwner(string owner)
         {
             return Context.Connection.Query<DbLotClaim>("SELECT * FROM fso_lot_claims WHERE owner = @owner", new { owner = owner });

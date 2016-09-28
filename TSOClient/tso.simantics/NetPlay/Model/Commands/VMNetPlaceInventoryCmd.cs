@@ -1,6 +1,7 @@
 ﻿using FSO.LotView.Model;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Marshals;
+using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using System;
 using System.Collections.Generic;
@@ -56,7 +57,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     //and move it back to inventory without a state save.
                     //
                     //owned objects that are "out of world" should be moved to inventory on load. (FULL move, for safety)
-                    vm.GlobalLink.ForceInInventory(vm, ObjectPID, (bool success) => {}); 
+                    vm.GlobalLink.ForceInInventory(vm, ObjectPID, (bool success, uint pid) => {}); 
                 }
             }
             return false;
@@ -88,7 +89,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (state != null)
             {
                 CreatedGroup = state.CreateInstance(vm);
-                CreatedGroup.ChangePosition(new LotTilePos(x, y, level), dir, vm.Context);
+                CreatedGroup.ChangePosition(new LotTilePos(x, y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
                 if (CreatedGroup.Objects.Count == 0) return false;
                 if (CreatedGroup.BaseObject.Position == LotTilePos.OUT_OF_WORLD)
                 {
@@ -100,8 +101,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 var catalog = Content.Content.Get().WorldCatalog;
                 var item = catalog.GetItemByGUID(GUID);
 
-                CreatedGroup = vm.Context.CreateObjectInstance(GUID, new LotTilePos(x, y, level), dir);
+                CreatedGroup = vm.Context.CreateObjectInstance(GUID, LotTilePos.OUT_OF_WORLD, dir);
                 if (CreatedGroup == null) return false;
+                CreatedGroup.ChangePosition(new LotTilePos(x, y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
+
                 CreatedGroup.ExecuteEntryPoint(11, vm.Context); //User Placement
                 if (CreatedGroup.Objects.Count == 0) return false;
 

@@ -82,13 +82,14 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTSOCallMode.MakeMeStackObjectsOwner: //21
                     if (context.StackObject is VMAvatar) return VMPrimitiveExitCode.GOTO_TRUE;
                     ((VMTSOObjectState)context.StackObject.TSOState).OwnerID = context.Caller.PersistID;
+                    //TODO: immediately persist? what to do when new owner has hit their object limit?
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 //TODO: may need to update in global server
                 // 22. Get Permissions (TODO)
                 // 23. Set Permissions (TODO)
                 case VMGenericTSOCallMode.AskStackObjectToBeRoommate: //24
                     //0 = initiate. 1 = accept. 2 = reject.
-                    if (context.Thread.TempRegisters[0] == 1 && context.VM.GlobalLink != null) context.VM.GlobalLink.RequestRoommate(context.VM, (VMAvatar)context.StackObject);
+                    if (context.VM.GlobalLink != null) context.VM.GlobalLink.RequestRoommate(context.VM, (VMAvatar)context.StackObject, context.Thread.TempRegisters[0], 0);
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
                 case VMGenericTSOCallMode.LeaveLot: //25
@@ -142,10 +143,22 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_FALSE; //TODO
                 // 37. UNUSED
                 case VMGenericTSOCallMode.MayAddRoommate: //38
-                    // TODO: Make only lot owner able to do this
-                    // for testing purposes, build roommates are kind of "global moderators"
-                    // also, can't add roommate if we have 8 roommates.
-                    context.Thread.TempRegisters[0] = 2;
+                    // CONDITIONS, where stack object is desired roommate: (TODO: support extensions)
+                    // - Avatar we're asking must be resident of less lots than the maximum (currently 1)
+                    // - This lot must have less than (MAX_ROOMIES) roommates. (currently 8)
+                    // - Caller must be lot owner.
+                    short result = 0;
+                    if (context.Caller is VMAvatar && context.Callee is VMAvatar)
+                    {
+                        var caller = (VMAvatar)context.Caller;
+                        var callee = (VMAvatar)context.Callee;
+                        if (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Owner && context.VM.TSOState.Roommates.Count < 8
+                            && (((VMTSOAvatarState)callee.TSOState).Flags & VMTSOAvatarFlags.CanBeRoommate) > 0)
+                        {
+                            result = 2;
+                        }
+                    }
+                    context.Thread.TempRegisters[0] = result;
                     // 2 is "true". not sure what 1 is. (interaction shows up, but fails on trying to run it. likely "guessed" state for client)
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.ReturnLotCategory: //39
@@ -186,6 +199,7 @@ namespace FSO.SimAntics.Primitives
                     if (context.StackObject is VMAvatar || obj == null) return VMPrimitiveExitCode.GOTO_TRUE;
 
                     ((VMTSOObjectState)context.StackObject.TSOState).OwnerID = obj.PersistID;
+                    //TODO: immediately persist? what to do when new owner has hit their object limit?
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 //53. Is On Editable Tile
                 //54. Set Stack Object's Crafter Name To Avatar in Temp 0

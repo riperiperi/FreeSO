@@ -18,11 +18,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
     public class VMClientDriver : VMNetDriver
     {
         private Queue<VMNetTick> TickBuffer;
-        private Queue<VMNetCommand> DirectCommands;
 
         private Queue<VMNetCommandBodyAbstract> OutgoingCommands;
         private Queue<VMNetMessage> ServerMessages;
-        private uint TickID = 0;
         private const int TICKS_PER_PACKET = 2;
         private const int BUFFER_STABLE_TICKS = 3 * 30; //if buffer does not drop below 2 large for this number of ticks, tighten buffer size
 
@@ -256,6 +254,12 @@ namespace FSO.SimAntics.NetPlay.Drivers
         public override string GetUserIP(uint uid)
         {
             return "remote";
+        }
+
+        public override void SendDirectCommand(uint pid, VMNetCommandBodyAbstract cmd)
+        {
+            //should not be used by client.
+            throw new NotImplementedException();
         }
     }
 }

@@ -5,6 +5,7 @@ using FSO.Server.Database.DA.LotClaims;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Objects;
 using FSO.Server.Database.DA.Relationships;
+using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.Shards;
 using FSO.Server.Database.DA.Users;
 using System;
@@ -23,6 +24,7 @@ namespace FSO.Server.Database.DA
         IAvatars Avatars { get; }
         IObjects Objects { get; }
         IRelationships Relationships { get; }
+        IRoommates Roommates { get; }
         ILots Lots { get; }
         ILotClaims LotClaims { get; }
         IAvatarClaims AvatarClaims { get; }

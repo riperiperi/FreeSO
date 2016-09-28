@@ -13,6 +13,7 @@ using FSO.Server.Database.DA.LotClaims;
 using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Database.DA.Objects;
 using FSO.Server.Database.DA.Relationships;
+using FSO.Server.Database.DA.Roommates;
 
 namespace FSO.Server.Database.DA
 {
@@ -100,6 +101,19 @@ namespace FSO.Server.Database.DA
                     _relationships = new SqlRelationships(Context);
                 }
                 return _relationships;
+            }
+        }
+
+        private IRoommates _roommates;
+        public IRoommates Roommates
+        {
+            get
+            {
+                if (_roommates == null)
+                {
+                    _roommates = new SqlRoommates(Context);
+                }
+                return _roommates;
             }
         }
 

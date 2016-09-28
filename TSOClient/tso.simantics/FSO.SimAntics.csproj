@@ -113,6 +113,7 @@
     <Compile Include="Model\TSOPlatform\VMAsyncState.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOAvatarState.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOEntityState.cs" />
+    <Compile Include="Model\VMBuildableAreaInfo.cs" />
     <Compile Include="Model\VMInventoryItem.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOJobInfo.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOLotState.cs" />
@@ -121,6 +122,7 @@
     <Compile Include="Model\VMArchitectureTerrain.cs" />
     <Compile Include="Model\VMBudget.cs" />
     <Compile Include="Model\VMHeadlineRenderer.cs" />
+    <Compile Include="Model\VMPlaceRequestFlags.cs" />
     <Compile Include="Model\VMPlatformState.cs" />
     <Compile Include="Model\VMRoomMap.cs" />
     <Compile Include="Model\Routing\VMFreeList.cs" />
@@ -150,6 +152,8 @@
     <Compile Include="NetPlay\EODs\Handlers\VMEODStubPlugin.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODEvent.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAdjHollowSyncCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetChangeEnvironmentCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetChangeLotSizeCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetEODMessageCmd.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODPluginThreadState.cs" />
     <Compile Include="NetPlay\EODs\VMEODHost.cs" />
@@ -203,6 +207,7 @@
     <Compile Include="Primitives\VMGetTerrainInfo.cs" />
     <Compile Include="Primitives\VMGrab.cs" />
     <Compile Include="Primitives\VMIdleForInput.cs" />
+    <Compile Include="Primitives\VMInventoryOperations.cs" />
     <Compile Include="Primitives\VMInvokePlugin.cs" />
     <Compile Include="Primitives\VMLookTowards.cs" />
     <Compile Include="Primitives\VMOnlineJobsCall.cs" />

@@ -61,6 +61,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             return true;
         }
 
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            return !FromNet;
+        }
+
         #region VMSerializable Members
         public override void SerializeInto(BinaryWriter writer)
         {

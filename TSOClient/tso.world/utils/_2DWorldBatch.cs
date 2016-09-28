@@ -54,13 +54,9 @@ namespace FSO.LotView.Utils
         private int ScrollBuffer;
 
         public float PreciseZoom;
-        private float CageWidth;
-        private float CageHeight;
+        private float ScreenWidth;
+        private float ScreenHeight;
 
-        public void UpdateCageSize(float width, float height)
-        {
-            CageWidth = width; CageHeight = height;
-        }
         public void SetScroll(Vector2 scroll)
         {
             Scroll = scroll;
@@ -93,6 +89,9 @@ namespace FSO.LotView.Utils
             ScrollBuffer = scrollBuffer;
 
             ResetMatrices(device.Viewport.Width, device.Viewport.Height);
+
+            ScreenWidth = device.Viewport.Width;
+            ScreenHeight = device.Viewport.Height;
 
             for (var i = 0; i < numBuffers; i++)
             {
@@ -145,13 +144,7 @@ namespace FSO.LotView.Utils
             var y = sprite.DestRect.Y;
             var width = sprite.DestRect.Width;
             var height = sprite.DestRect.Height;
-            if (PreciseZoom != 1f)
-            {
-                x = (int)(x * PreciseZoom);
-                y = (int)(y * PreciseZoom);
-                width = (int)Math.Ceiling(width * PreciseZoom);
-                height = (int)Math.Ceiling(height * PreciseZoom);
-            }
+
             sprite.AbsoluteDestRect = new Rectangle((int)(x + PxOffset.X), (int)(y + PxOffset.Y), width, height);
             sprite.AbsoluteWorldPosition = sprite.WorldPosition + WorldOffset;
             sprite.AbsoluteTilePosition = sprite.TilePosition + TileOffset; 
@@ -178,7 +171,7 @@ namespace FSO.LotView.Utils
 
         public void DrawScrollBuffer(ScrollBuffer buffer, Vector2 offset, Vector3 tileOffset, WorldState state)
         {
-            var offsetDiff = buffer.PxOffset - offset;
+            var offsetDiff = (buffer.PxOffset - offset) * state.PreciseZoom;
             var tOff = buffer.WorldPosition - tileOffset;
             var spr = new _2DSprite
             {
@@ -585,8 +578,11 @@ namespace FSO.LotView.Utils
         {
             LastHeight = height;
             LastWidth = width;
-            //height = (int)(height/PreciseZoom);
-            //width = (int)(width/PreciseZoom);
+            height = (int)(height/PreciseZoom);
+            width = (int)(width/PreciseZoom);
+
+            transX += (int)(ScreenWidth - (ScreenWidth / PreciseZoom)) / 2;
+            transY -= (int)(ScreenHeight - (ScreenHeight / PreciseZoom)) / 2;
             this.World = Matrix.Identity;
             this.View = new Matrix(
                 1.0f, 0.0f, 0.0f, 0.0f,

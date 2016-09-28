@@ -11,6 +11,7 @@ namespace FSO.Server.Protocol.Gluon
         AdvertiseCapacity,
         TransferClaim,
         TransferClaimResponse,
+        RequestLotClientTermination,
         Unknown
     }
 

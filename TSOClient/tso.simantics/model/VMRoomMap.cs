@@ -51,8 +51,6 @@ namespace FSO.SimAntics.Model
                     if (Map[i] == 0)
                     {
                         ExpectedTile = Floors[i].Pattern;
-                        //if (ExpectedTile == 0 && noFloorBad) continue;
-                        if (ExpectedTile < 65534) ExpectedTile = 0;
                         remaining = true;
                         Map[i] = (ushort)rooms.Count;
                         spread.Push(new Point(i % width, i / width));
@@ -67,6 +65,7 @@ namespace FSO.SimAntics.Model
                     int rminY = spread.Peek().Y;
                     int rmaxY = rminY;
                     var wallObs = new List<VMObstacle>();
+                    var adjRooms = new HashSet<ushort>();
                     ushort area = 0;
                     while (spread.Count > 0)
                     {
@@ -115,29 +114,39 @@ namespace FSO.SimAntics.Model
                         //
 
                         if (((PXWalls.Segments & WallSegments.TopLeft) == 0 || PXWalls.TopLeftStyle != 1))
-                            SpreadOnto(Walls, Floors, plusX, item.Y, 0, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad);
+                            SpreadOnto(Walls, Floors, plusX, item.Y, 0, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad, adjRooms);
 
                         if (((mainWalls.Segments & WallSegments.TopLeft) == 0 || mainWalls.TopLeftStyle != 1))
-                            SpreadOnto(Walls, Floors, minX, item.Y, 2, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad);
+                            SpreadOnto(Walls, Floors, minX, item.Y, 2, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad, adjRooms);
 
                         if (((PYWalls.Segments & WallSegments.TopRight) == 0 || PYWalls.TopRightStyle != 1))
-                            SpreadOnto(Walls, Floors, item.X, plusY, 1, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad);
+                            SpreadOnto(Walls, Floors, item.X, plusY, 1, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad, adjRooms);
 
                         if (((mainWalls.Segments & WallSegments.TopRight) == 0 || mainWalls.TopRightStyle != 1))
-                            SpreadOnto(Walls, Floors, item.X, minY, 3, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad);
+                            SpreadOnto(Walls, Floors, item.X, minY, 3, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad, adjRooms);
                     }
 
                     var bounds = new Rectangle(rminX, rminY, (rmaxX - rminX) + 1, (rmaxY - rminY) + 1);
                     var roomObs = GenerateRoomObs((ushort)rooms.Count, bounds);
                     OptimizeObstacles(wallObs);
                     OptimizeObstacles(roomObs);
+
+                    foreach (var roomN in adjRooms)
+                    {
+                        var room = rooms[roomN];
+                        room.AdjRooms.Add((ushort)rooms.Count);
+                        if (outside) room.IsOutside = true;
+                        else if (room.IsOutside) outside = true;
+                    }
+
                     rooms.Add(new VMRoom
                     {
-                        IsOutside = outside || ExpectedTile > 65533,
+                        IsOutside = outside,
                         IsPool = ExpectedTile > 65533,
                         Bounds = bounds,
                         WallObs = wallObs,
                         RoomObs = roomObs,
+                        AdjRooms = adjRooms,
                         Area = area
                     });
                     outside = false;
@@ -145,53 +154,68 @@ namespace FSO.SimAntics.Model
             }
         }
 
-        private static void SpreadOnto(WallTile[] walls, FloorTile[] floors, int x, int y, int inDir, uint[] map, int width, int height, Stack<Point> spread, ushort room, ushort expectedTile, bool noAir)
+        private static void SpreadOnto(WallTile[] walls, FloorTile[] floors, int x, int y, int inDir, uint[] map, int width, int height, 
+            Stack<Point> spread, ushort room, ushort expectedTile, bool noAir, HashSet<ushort> adjRoom)
         {
             var wall = walls[x + y * width];
             var floor = floors[x + y * width].Pattern;
 
-            if ((expectedTile > 0 && expectedTile != floor) || (expectedTile == 0 && floor > 65533))
-            {
-                return;
-            }
+            bool hasExpectation = (expectedTile == 0 && noAir) || (expectedTile > 65533);
+            bool cantSpread = (hasExpectation && expectedTile != floor) || (!hasExpectation && ((floor == 0 && noAir) || floor > 65533));
 
+            ushort targRoom;
+            uint roomApply;
             if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
             {
                 if (inDir < 2)
                 {
                     //bottom (bottom right pattern)
-                    if ((map[x + y * width] & (uint)0x0000FFFF)>0) return; //don't spread onto
-                    map[x + y * width] |= room;
-                    
+                    targRoom = (ushort)map[x + y * width];
+                    roomApply = room;
                 }
                 else
                 {
                     //top (bottom left pattern)
-                    if ((map[x + y * width] & (uint)0xFFFF0000) > 0) return; //don't spread onto
-                    map[x + y * width] |= (uint)room<<16;
+                    targRoom = (ushort)(map[x + y * width] >> 16);
+                    roomApply = (uint)room<<16;
                 }
-                //if (!floorMode) walls[x + y * width] = wall;
             }
             else if ((wall.Segments & WallSegments.VerticalDiag) > 0)
             {
                 if (inDir > 0 && inDir < 3)
                 {
                     //left
-                    if ((map[x + y * width] & (uint)0x0000FFFF) > 0) return; //don't spread onto
-                    map[x + y * width] |= room;
+                    targRoom = (ushort)map[x + y * width];
+                    roomApply = room;
                 }
                 else
                 {
                     //right
-                    if ((map[x + y * width] & (uint)0xFFFF0000) > 0) return; //don't spread onto
-                    map[x + y * width] |= (uint)room << 16;
+                    targRoom = (ushort)(map[x + y * width] >> 16);
+                    roomApply = (uint)room << 16;
                 }
-                //if (!floorMode) walls[x + y * width] = wall;
             }
             else
             {
-                if (map[x + y * width] > 0) return;
-                map[x + y * width] = (uint)(room | (room<<16));
+                targRoom = (ushort)map[x + y * width];
+                roomApply = (uint)(room | (room << 16));
+            }
+
+            if (targRoom > 0 || cantSpread)
+            {
+                //cannot spread onto this room - we've either been here before or a non-wall is segmenting the space
+                //eg. a pool, air, fences.
+                if (targRoom != room && targRoom > 0)
+                {
+                    //a non-wall is segmenting the space. targRoom contains the room we are adjacent to.
+                    //this needs to be added to the other room too, as it will have failed to spread onto room 0, not ours.
+                    adjRoom.Add(targRoom);
+                }
+                return;
+            }
+            else
+            {
+                map[x + y * width] |= roomApply;
             }
 
             spread.Push(new Point(x, y));

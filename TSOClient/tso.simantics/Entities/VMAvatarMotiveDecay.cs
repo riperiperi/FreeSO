@@ -42,6 +42,8 @@ namespace FSO.SimAntics.Entities
 
         public void Tick(VMAvatar avatar, VMContext context)
         {
+            var roomScore = context.GetRoomScore(context.GetRoomAt(avatar.Position));
+            avatar.SetMotiveData(VMMotive.Room, roomScore);
             if (context.Clock.Minutes == LastMinute) return;
             LastMinute = context.Clock.Minutes;
 
@@ -89,7 +91,9 @@ namespace FSO.SimAntics.Entities
                 }
                 moodSum += motive;
             }
-            avatar.SetMotiveData(VMMotive.Mood, (short)(moodSum / 7));
+            moodSum += roomScore;
+
+            avatar.SetMotiveData(VMMotive.Mood, (short)(moodSum / 8));
         }
 
         public void SerializeInto(BinaryWriter writer)

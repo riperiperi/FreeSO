@@ -29,6 +29,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private IDAFactory DAFactory;
         private IKernel Kernel;
         private IDataServiceSync<FSO.Common.DataService.Model.Lot> LotStatusSync;
+        private IDataServiceSync<FSO.Common.DataService.Model.Lot> LotRoomiesSync;
         private CityConnections CityConnections;
 
         public LotHost(LotServerConfiguration config, IDAFactory da, IKernel kernel, IDataServiceSyncFactory ds, CityConnections connections)
@@ -39,6 +40,7 @@ namespace FSO.Server.Servers.Lot.Domain
             this.CityConnections = connections;
 
             LotStatusSync = ds.Get<FSO.Common.DataService.Model.Lot>("Lot_NumOccupants", "Lot_IsOnline");
+            LotRoomiesSync = ds.Get<FSO.Common.DataService.Model.Lot>("Lot_RoommateVec");
         }
 
         public void Sync(LotContext context, FSO.Common.DataService.Model.Lot lot)
@@ -47,6 +49,15 @@ namespace FSO.Server.Servers.Lot.Domain
             if(city != null)
             {
                 LotStatusSync.Sync(city, lot);
+            }
+        }
+
+        public void SyncRoommates(LotContext context, FSO.Common.DataService.Model.Lot lot)
+        {
+            var city = CityConnections.GetByShardId(context.ShardId);
+            if (city != null)
+            {
+                LotRoomiesSync.Sync(city, lot);
             }
         }
 
@@ -85,6 +96,14 @@ namespace FSO.Server.Servers.Lot.Domain
             {
                 Lots.Remove(id);
             }
+        }
+
+        public bool TryDisconnectClient(int lot_id, uint avatar_id)
+        {
+            var lot = GetLot(lot_id);
+            if (lot == null) return false;
+            lot.DropClient(avatar_id);
+            return true;
         }
 
         private LotHostEntry GetLot(IVoltronSession session)
@@ -131,8 +150,20 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
-        public bool TryAcceptClaim(int lotId, uint claimId, string previousOwner)
+        public bool TryAcceptClaim(int lotId, uint claimId, uint specialId, string previousOwner)
         {
+            if (claimId == 0)
+            { //job lot
+                GetLot(lotId).Bootstrap(new LotContext
+                {
+                    DbId = (int)specialId, //contains job type/grade
+                    Id = (uint)lotId, //lotId contains a "job lot location", not a DbId.
+                    ClaimId = claimId,
+                    ShardId = 0
+                });
+                return true;
+            }
+
             using (var da = DAFactory.Get())
             {
                 var didClaim = da.LotClaims.Claim(claimId, previousOwner, Config.Call_Sign);
@@ -237,11 +268,17 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void DropClient(uint id)
         {
+            DropClient(id, true);
+        }
+
+        public void DropClient(uint id, bool returnClaim)
+        {
             lock (_Visitors)
             {
                 IVoltronSession visitor = null;
                 if (_Visitors.TryGetValue(id, out visitor))
                 {
+                    visitor.SetAttribute("returnClaim", returnClaim);
                     visitor.Close();
                 }
             }
@@ -330,7 +367,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     return false;
                 }
 
-                session.SetAttribute("currentLot", Context.DbId);
+                session.SetAttribute("currentLot", ((Context.Id & 0x40000000) > 0)?(int)Context.Id:Context.DbId);
                 _Visitors.Add(session.AvatarId, session);
 
                 SyncNumVisitors();
@@ -346,22 +383,37 @@ namespace FSO.Server.Servers.Lot.Domain
             Host.Sync(Context, Model);
         }
 
+        public void ReleaseAvatarClaim(uint id)
+        {
+            IVoltronSession session = null;
+            lock (_Visitors)
+            {
+                _Visitors.TryGetValue(id, out session);
+            }
+            ReleaseAvatarClaim(session);
+        }
+
         public void ReleaseAvatarClaim(IVoltronSession session)
         {
-            _Visitors.Remove(session.AvatarId);
+            if (session.GetAttribute("currentLot") == null) return;
+            lock (_Visitors) _Visitors.Remove(session.AvatarId);
             session.SetAttribute("currentLot", null);
             SyncNumVisitors();
 
             using (var db = DAFactory.Get())
             {
                 //return claim to the city we got it from.
-                db.AvatarClaims.Claim(session.AvatarClaimId, Config.Call_Sign, (string)session.GetAttribute("cityCallSign"), 0);
+                
+                if ((bool)(session.GetAttribute("returnClaim") ?? true))
+                    db.AvatarClaims.Claim(session.AvatarClaimId, Config.Call_Sign, (string)session.GetAttribute("cityCallSign"), 0);
+                else
+                    db.AvatarClaims.Delete(session.AvatarClaimId, Config.Call_Sign);
             }
         }
 
         public void Shutdown()
         {
-            Host.RemoveLot(Context.DbId);
+            Host.RemoveLot(((Context.Id & 0x40000000) > 0)?(int)Context.Id:Context.DbId);
             SetOnline(false);
             ReleaseLotClaim();
             BackgroundThread.Abort();
@@ -377,7 +429,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     Type = Protocol.Gluon.Model.ClaimType.LOT,
                     ClaimId = Context.ClaimId,
-                    EntityId = Context.DbId,
+                    EntityId = ((Context.Id&0x40000000)>0)?(int)Context.Id:Context.DbId,
                     FromOwner = Config.Call_Sign
                 });
             }
@@ -388,6 +440,21 @@ namespace FSO.Server.Servers.Lot.Domain
             Model.Lot_IsOnline = online;
             Host.Sync(Context, Model);
         }
+
+        public void SyncRoommates()
+        {
+            using (var db = DAFactory.Get())
+            {
+                var roomies = db.Roommates.GetLotRoommates(Context.DbId);
+                var modelVec = new List<uint>();
+                foreach (var roomie in roomies)
+                {
+                    if (roomie.is_pending == 0) modelVec.Add(roomie.avatar_id);
+                }
+                Model.Lot_RoommateVec = modelVec;
+                Host.SyncRoommates(Context, Model);
+            }
+        }
     }
 
     public interface ILotHost
@@ -397,7 +464,9 @@ namespace FSO.Server.Servers.Lot.Domain
         void DropClient(uint avatarID);
         void InBackground(Callback cb);
         void ReleaseAvatarClaim(IVoltronSession session);
+        void ReleaseAvatarClaim(uint avatarID);
         void Shutdown();
         void SetOnline(bool online);
+        void SyncRoommates();
     }
 }

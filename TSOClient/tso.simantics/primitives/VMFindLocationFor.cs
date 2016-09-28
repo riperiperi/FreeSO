@@ -36,16 +36,19 @@ namespace FSO.SimAntics.Primitives
             var refObj = (operand.UseLocalAsRef) ? context.VM.GetObjectById((short)context.Locals[operand.Local]) : context.Caller;
 
             var obj = context.StackObject;
+            var flags = VMPlaceRequestFlags.AcceptSlots;
+            if (operand.UserEditableTilesOnly) flags |= VMPlaceRequestFlags.UserBuildableLimit;
+            if (operand.AllowIntersection) flags |= VMPlaceRequestFlags.AllowIntersection;
 
             switch (operand.Mode)
             {
                 case 0:
                     //default
-                    if (FindLocationFor(obj, refObj, context.VM.Context)) return VMPrimitiveExitCode.GOTO_TRUE;
+                    if (FindLocationFor(obj, refObj, context.VM.Context, flags)) return VMPrimitiveExitCode.GOTO_TRUE;
                     else return VMPrimitiveExitCode.GOTO_FALSE;
                 case 1:
                     //out of world
-                    obj.SetPosition(LotTilePos.OUT_OF_WORLD, Direction.NORTH, context.VM.Context);
+                    obj.SetPosition(LotTilePos.OUT_OF_WORLD, Direction.NORTH, context.VM.Context, flags);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case 2:
                     //"smoke cloud" - halfway between callee and caller (is "caller" actually reference object?)
@@ -60,32 +63,32 @@ namespace FSO.SimAntics.Primitives
                     //along object vector
                     var intDir = (int)Math.Round(Math.Log((double)refObj.Direction, 2));
                     if (operand.Mode == 4) intDir = (intDir + 2) % 8; //lateral to object vector
-                    if (FindLocationVector(obj, refObj, context.VM.Context, intDir)) return VMPrimitiveExitCode.GOTO_TRUE;
+                    if (FindLocationVector(obj, refObj, context.VM.Context, intDir, flags)) return VMPrimitiveExitCode.GOTO_TRUE;
                     else return VMPrimitiveExitCode.GOTO_FALSE;
             }
 
             return VMPrimitiveExitCode.GOTO_FALSE;
         }
 
-        public static bool FindLocationVector(VMEntity obj, VMEntity refObj, VMContext context, int dir)
+        public static bool FindLocationVector(VMEntity obj, VMEntity refObj, VMContext context, int dir, VMPlaceRequestFlags flags)
         {
             LotTilePos step = DirectionVectors[dir];
             for (int i = 0; i < 32; i++)
             {
                 if (obj.SetPosition(new LotTilePos(refObj.Position) + step * (i/2),
-                    (Direction)(1 << (dir)), context).Status == VMPlacementError.Success)
+                    (Direction)(1 << (dir)), context, flags).Status == VMPlacementError.Success)
                     return true;
                 if (i%2 != 0)
                 {
                     if (obj.SetPosition(new LotTilePos(refObj.Position) - step * (i/2),
-                        (Direction)(1 << (dir)), context).Status == VMPlacementError.Success)
+                        (Direction)(1 << (dir)), context, flags).Status == VMPlacementError.Success)
                         return true;
                 }
             }
             return false;
         }
 
-        public static bool FindLocationFor(VMEntity obj, VMEntity refObj, VMContext context)
+        public static bool FindLocationFor(VMEntity obj, VMEntity refObj, VMContext context, VMPlaceRequestFlags flags)
         {
             for (int i = 0; i < 10; i++)
             {
@@ -93,7 +96,7 @@ namespace FSO.SimAntics.Primitives
                 {
                     for (int j = 0; j < 4; j++)
                     {
-                        if (obj.SetPosition(new LotTilePos(refObj.Position), (Direction)(1 << (j * 2)), context).Status == VMPlacementError.Success)
+                        if (obj.SetPosition(new LotTilePos(refObj.Position), (Direction)(1 << (j * 2)), context, flags).Status == VMPlacementError.Success)
                             return true;
                     }
                 }
@@ -105,7 +108,7 @@ namespace FSO.SimAntics.Primitives
                         for (int j = 0; j < 8; j++)
                         {
                             if (obj.SetPosition(LotTilePos.FromBigTile((short)(bPos.TileX + x), (short)(bPos.TileY + ((j % 2) * 2 - 1) * i), bPos.Level),
-                                (Direction)(1 << ((j / 2) * 2)), context).Status == VMPlacementError.Success)
+                                (Direction)(1 << ((j / 2) * 2)), context, flags).Status == VMPlacementError.Success)
                                 return true;
                         }
                     }
@@ -115,7 +118,7 @@ namespace FSO.SimAntics.Primitives
                         for (int j = 0; j < 8; j++)
                         {
                             if (obj.SetPosition(LotTilePos.FromBigTile((short)(bPos.TileX + ((j % 2) * 2 - 1) * i), (short)(bPos.TileY + y), bPos.Level),
-                                (Direction)(1 << ((j / 2) * 2)), context).Status == VMPlacementError.Success)
+                                (Direction)(1 << ((j / 2) * 2)), context, flags).Status == VMPlacementError.Success)
                                 return true;
                         }
                     }

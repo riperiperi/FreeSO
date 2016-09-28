@@ -11,6 +11,7 @@ namespace FSO.Server.Servers.City.Domain
     public class LotServerPicker
     {
         private List<LotServerState> Servers = new List<LotServerState>();
+        private Dictionary<string, LotServerState> ServersByCallsign = new Dictionary<string, LotServerState>();
 
         public Task<object> Pick(uint claimId)
         {
@@ -33,6 +34,17 @@ namespace FSO.Server.Servers.City.Domain
             }
         }
 
+        public IGluonSession GetLotServerSession(string callSign)
+        {
+            lock (Servers)
+            {
+                IGluonSession result = null;
+                LotServerState state = null;
+                if (ServersByCallsign.TryGetValue(callSign, out state)) result = state.Session;
+                return result;
+            }
+        }
+
         public void UpdateServerAdvertisement(IGluonSession session, AdvertiseCapacity request)
         {
             lock (Servers)
@@ -43,8 +55,9 @@ namespace FSO.Server.Servers.City.Domain
                         Session = session
                     };
                     Servers.Add(state);
+                    ServersByCallsign.Add(session.CallSign, state);
                 }
-
+                state.Session = session; //can be hot-swapped if we re-establish connection. TODO: verify and look for race conditions
                 state.MaxLots = request.MaxLots;
                 state.CurrentLots = request.CurrentLots;
                 state.CpuPercentAvg = request.CpuPercentAvg;

@@ -44,7 +44,7 @@ namespace FSO.Server.Servers.Lot.Handlers
                 return;
             }
 
-            if(Lots.TryAcceptClaim((int)request.EntityId, request.ClaimId, request.FromOwner))
+            if(Lots.TryAcceptClaim((int)request.EntityId, request.ClaimId, request.SpecialId, request.FromOwner))
             {
                 session.Write(new TransferClaimResponse
                 {
@@ -64,6 +64,11 @@ namespace FSO.Server.Servers.Lot.Handlers
                     EntityId = request.EntityId
                 });
             }
+        }
+
+        public void Handle(IGluonSession session, RequestLotClientTermination request)
+        {
+            Lots.TryDisconnectClient(request.LotId, request.AvatarId);
         }
     }
 }

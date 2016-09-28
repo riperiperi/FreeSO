@@ -13,6 +13,7 @@ using FSO.LotView.Model;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Entities;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -79,8 +80,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
 
-            var group = vm.Context.CreateObjectInstance(GUID, new LotTilePos(x, y, level), dir);
+            var group = vm.Context.CreateObjectInstance(GUID, LotTilePos.OUT_OF_WORLD, dir);
             if (group == null) return false;
+            group.ChangePosition(new LotTilePos(x, y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
             group.ExecuteEntryPoint(11, vm.Context); //User Placement
             if (group.Objects.Count == 0) return false;
             if (group.BaseObject.Position == LotTilePos.OUT_OF_WORLD)

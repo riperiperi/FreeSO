@@ -13,6 +13,7 @@ namespace FSO.Server.Database.DA.LotClaims
 
         bool Claim(uint id, string previousOwner, string newOwner);
         DbLotClaim Get(uint id);
+        DbLotClaim GetByLotID(int id);
 
         void RemoveAllByOwner(string owner);
         void Delete(uint id, string owner);

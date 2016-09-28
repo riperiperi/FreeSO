@@ -36,7 +36,7 @@ namespace FSO.Client.UI.Controls
 
         public override void Draw(UISpriteBatch batch)
         {
-            if (string.IsNullOrEmpty(Text)) { return; }
+            if (string.IsNullOrEmpty(Text) || !Visible) { return; }
             
             var wrapped = UIUtils.WordWrap(Text, MaxWidth - (PaddingX*2), TextStyle, new Vector2(TextStyle.Scale));
             int width = wrapped.MaxWidth + (PaddingX*2);
@@ -95,6 +95,7 @@ namespace FSO.Client.UI.Controls
             if (Tooltip.Visible)
             {
                 var mousePosition = state.MouseState.Position;
+                Console.WriteLine(mousePosition);
                 Tooltip.Position = Tooltip.Parent.GlobalPoint(new Vector2(mousePosition.X, mousePosition.Y)) + Tooltip.Offset;
             }
         }

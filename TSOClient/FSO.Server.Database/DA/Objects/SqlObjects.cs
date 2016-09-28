@@ -32,9 +32,51 @@ namespace FSO.Server.Database.DA.Objects
             return Context.Connection.Query<DbObject>("SELECT * FROM fso_objects WHERE object_id = @object_id", new { object_id = id }).FirstOrDefault();
         }
 
+        public bool Delete(uint id)
+        {
+            return Context.Connection.Execute("DELETE FROM fso_objects WHERE object_id = @object_id", new { object_id = id }) > 0;
+        }
+
         public List<DbObject> GetAvatarInventory(uint avatar_id)
         {
             return Context.Connection.Query<DbObject>("SELECT * FROM fso_objects WHERE owner_id = @avatar_id AND lot_id IS NULL", new { avatar_id = avatar_id }).ToList();
+        }
+
+        public List<DbObject> ObjOfTypeInAvatarInventory(uint avatar_id, uint guid)
+        {
+            return Context.Connection.Query<DbObject>("SELECT * FROM fso_objects WHERE owner_id = @avatar_id AND lot_id IS NULL AND type = @guid", 
+                new { avatar_id = avatar_id, guid = guid}).ToList();
+        }
+
+        public bool ConsumeObjsOfTypeInAvatarInventory(uint avatar_id, uint guid, int num)
+        {
+            var objs = ObjOfTypeInAvatarInventory(avatar_id, guid);
+            if (objs.Count < num) return false;
+            //perform transaction to remove correct number of items from inventory.
+            var t = Context.Connection.BeginTransaction();
+            try
+            {
+                var sel = new List<DbObject>();
+                for (int i = 0; i < num; i++) sel.Add(objs[i]);
+                var sCommand = new StringBuilder();
+                bool first = true;
+                foreach (var item in sel)
+                {
+                    if (first) sCommand.Append("(");
+                    else sCommand.Append(",");
+                    sCommand.Append(item.object_id);
+                    first = false;
+                }
+                sCommand.Append(");");
+                var deleted = Context.Connection.Execute("DELETE FROM fso_objects WHERE object_id IN "+sCommand.ToString());
+                if (deleted != num) throw new Exception("Inventory modified while attempting to delete objects!");
+            } catch (Exception)
+            {
+                t.Rollback();
+                return false;
+            }
+            t.Commit();
+            return true;
         }
 
         public List<DbObject> GetByAvatarId(uint avatar_id)

@@ -144,15 +144,14 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public override bool Tick(VM vm)
         {
-            HandleClients();
+            HandleClients(vm);
 
             lock (QueuedCmds) {
                 //verify the queued commands. Remove ones which fail (or defer til later)
                 for (int i=0; i<QueuedCmds.Count; i++)
                 {
-                    var caller = vm.GetObjectByPersist(QueuedCmds[i].Command.ActorUID);
-                    if (!(caller is VMAvatar)) caller = null;
-                    if (!QueuedCmds[i].Command.Verify(vm, (VMAvatar)caller)) QueuedCmds.RemoveAt(i--);
+                    var caller = vm.GetAvatarByPersist(QueuedCmds[i].Command.ActorUID);
+                    if (!QueuedCmds[i].Command.Verify(vm, caller)) QueuedCmds.RemoveAt(i--);
                 }
 
                 var tick = new VMNetTick();
@@ -194,7 +193,17 @@ namespace FSO.SimAntics.NetPlay.Drivers
             TickBuffer.Clear();
         }
 
-        public void SendOneOff(VMNetClient client, VMNetCommandBodyAbstract acmd) 
+        public override void SendDirectCommand(uint pid, VMNetCommandBodyAbstract acmd)
+        {
+            VMNetClient cli = null;
+            lock (Clients)
+            {
+                Clients.TryGetValue(pid, out cli);
+            }
+            if (cli != null) SendDirectCommand(cli, acmd);
+        }
+
+        public void SendDirectCommand(VMNetClient client, VMNetCommandBodyAbstract acmd) 
         {
             var cmd = new VMNetCommand(acmd);
             byte[] data;
@@ -226,13 +235,22 @@ namespace FSO.SimAntics.NetPlay.Drivers
             if (OnDropClient != null) OnDropClient(client);
         }
 
-        private void HandleClients()
+        private void HandleClients(VM vm)
         {
             lock (Clients)
             {
                 ClientsToDC.Clear();
                 foreach (var client in Clients)
                 {
+                    //does client have an avatar? did they have one before?
+                    if (vm.GetAvatarByPersist(client.Key) != null) { client.Value.HadAvatar = true; }
+                    else if (client.Value.HadAvatar)
+                    {
+                        //something removed this avatar. They have disconnected.
+                        ClientsToDC.Add(client.Value);
+                        continue;
+                    }
+
                     var packets = client.Value.GetMessages();
                     while (packets.Count > 0)
                     {
@@ -260,7 +278,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         private void SendGenericMessage(VMNetClient client, string title, string msg)
         {
-            SendOneOff(client, new VMGenericDialogCommand
+            SendDirectCommand(client, new VMGenericDialogCommand
             {
                 Title = title,
                 Message = msg
@@ -282,6 +300,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
             if (cmd.Type == VMCommandType.SimJoin)
             {
+                //note: currently avatars no longer send sim join commands, the server does when it gets the database info.
                 if (SandboxBans.Contains(client.RemoteIP))
                 {
                     SendGenericMessage(client, "Banned", "You have been banned from this sandbox server!");

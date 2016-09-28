@@ -99,7 +99,6 @@
     <Compile Include="DA\LotClaims\SqlLotsClaims.cs" />
     <Compile Include="DA\Lots\DbLot.cs" />
     <Compile Include="DA\Lots\DbLotServerTicket.cs" />
-    <Compile Include="DA\Lots\DbRoommate.cs" />
     <Compile Include="DA\Lots\ILots.cs" />
     <Compile Include="DA\Lots\SqlLots.cs" />
     <Compile Include="DA\MySqlContext.cs" />
@@ -109,6 +108,9 @@
     <Compile Include="DA\Relationships\DbRelationship.cs" />
     <Compile Include="DA\Relationships\IRelationships.cs" />
     <Compile Include="DA\Relationships\SqlRelationships.cs" />
+    <Compile Include="DA\Roommates\DbRoommate.cs" />
+    <Compile Include="DA\Roommates\IRoommates.cs" />
+    <Compile Include="DA\Roommates\SqlRoommates.cs" />
     <Compile Include="DA\Shards\IShards.cs" />
     <Compile Include="DA\Shards\Shard.cs" />
     <Compile Include="DA\Shards\ShardTicket.cs" />

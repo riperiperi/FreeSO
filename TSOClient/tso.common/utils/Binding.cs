@@ -21,6 +21,7 @@ namespace FSO.Common.Utils
 
         ~Binding()
         {
+            //i don't think the garbage collector will remove this if there is still a reference to its callback function.
             ClearWatching();
         }
 

@@ -16,6 +16,7 @@ using FSO.Client.Utils;
 using FSO.Client.GameContent;
 using FSO.Common.Utils;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Client.UI.Framework.Parser;
 
 namespace FSO.Client.UI.Controls
 {
@@ -72,7 +73,9 @@ namespace FSO.Client.UI.Controls
         public string Caption = "{0}%";
         public TextStyle CaptionStyle { get; set; }
 
+        [UIAttribute("backgroundImage")]
         public ITextureRef Background { get; set; }
+        [UIAttribute("foregroundImage")]
         public ITextureRef Bar { get; set; }
         public Rectangle BarMargin = Rectangle.Empty;
         public Rectangle BarOffset = Rectangle.Empty;
@@ -80,6 +83,7 @@ namespace FSO.Client.UI.Controls
         private Rectangle m_Bounds = Rectangle.Empty;
 
         private float m_MinValue = 0;
+        [UIAttribute("minValue")]
         public float MinValue
         {
             get { return m_MinValue; }
@@ -90,6 +94,7 @@ namespace FSO.Client.UI.Controls
         }
 
         private float m_MaxValue = 100;
+        [UIAttribute("maxValue")]
         public float MaxValue
         {
             get { return m_MaxValue; }

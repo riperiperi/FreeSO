@@ -171,14 +171,15 @@ namespace FSO.SimAntics.Utils
             bool diagCheck = (direction % 2 == 1);
             for (int i = 0; i < length; i++)
             {
-                if (pos.X <= 0 || pos.X >= target.Width || pos.Y <= 0 || pos.Y >= target.Height) return false;
+                if (target.OutsideClip((short)pos.X, (short)pos.Y, level)) return false;
                 var wall = target.GetWall((short)pos.X, (short)pos.Y, level);
                 wall.Segments &= ~WLMainSeg[direction];
                 if (!target.Context.CheckWallValid(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, level), wall)) return false;
 
                 if (!diagCheck)
                 {
-                    var tPos = pos + WLSubOff[direction / 2];
+                    var tPos = pos + WLSubOff[direction / 2]; //remove other side
+                    if (target.OutsideClip((short)tPos.X, (short)tPos.Y, level)) return false;
                     wall = target.GetWall((short)tPos.X, (short)tPos.Y, level);
                     wall.Segments &= ~WLSubSeg[direction / 2];
 
@@ -195,7 +196,7 @@ namespace FSO.SimAntics.Utils
             bool diagCheck = (direction % 2 == 1);
             for (int i = 0; i < length; i++)
             {
-                if (pos.X <= 0 || pos.X >= target.Width || pos.Y <= 0 || pos.Y >= target.Height) return false;
+                if (target.OutsideClip((short)pos.X, (short)pos.Y, level)) return false;
                 var wall = target.GetWall((short)pos.X, (short)pos.Y, level);
                 if ((wall.Segments & AnyDiag) == 0 && (!diagCheck || (wall.Segments == 0)))
                 {
@@ -203,7 +204,8 @@ namespace FSO.SimAntics.Utils
                     if (!target.Context.CheckWallValid(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, level), wall)) return false;
                     if (!diagCheck)
                     {
-                        var tPos = pos + WLSubOff[direction / 2];
+                        var tPos = pos + WLSubOff[direction / 2]; //get the other side of the wall
+                        if (target.OutsideClip((short)tPos.X, (short)tPos.Y, level)) return false; //both sides of wall must be in bounds
                         wall = target.GetWall((short)tPos.X, (short)tPos.Y, level);
                         if (!(level == 1 || target.Supported[level - 2][pos.Y * target.Width + pos.X] || target.Supported[level - 2][tPos.Y * target.Width + tPos.X])) return false;
                         if ((wall.Segments & AnyDiag) == 0)
@@ -241,7 +243,7 @@ namespace FSO.SimAntics.Utils
 
         public static int GetPatternDirection(VMArchitecture target, Point pos, ushort pattern, int direction, int altDir, sbyte level)
         {
-            if (pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y >= target.Height) return -1;
+            if(target.OutsideClip((short)pos.X, (short)pos.Y, level)) return -1;
 
             var wall = target.GetWall((short)pos.X, (short)pos.Y, level);
             if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
@@ -265,7 +267,7 @@ namespace FSO.SimAntics.Utils
 
         public static PatternReplaceCount WallPatternDot(VMArchitecture target, Point pos, ushort pattern, int direction, int altDir, sbyte level)
         {
-            if (pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y > target.Height) return new PatternReplaceCount { Total = -1 };
+            if (target.OutsideClip((short)pos.X, (short)pos.Y, level)) return new PatternReplaceCount { Total = -1 };
 
             //pattern replace count used a little differently here. cost still stores replaced cost, but total stores replaced direction.
             PatternReplaceCount replaceCost = new PatternReplaceCount(false);
@@ -337,10 +339,7 @@ namespace FSO.SimAntics.Utils
         /// </summary>
         public static PatternReplaceCount WallPatternFill(VMArchitecture target, Point pos, ushort pattern, sbyte level) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
         {
-            if (pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y >= target.Height) return new PatternReplaceCount();
-
-            pos.X = Math.Max(Math.Min(pos.X, target.Width-1), 0);
-            pos.Y = Math.Max(Math.Min(pos.Y, target.Height-1), 0);
+            if (target.OutsideClip((short)pos.X, (short)pos.Y, level)) return new PatternReplaceCount(); //can't start OOB
             var walls = target.Walls[level-1];
 
             var width = target.Width;
@@ -356,6 +355,7 @@ namespace FSO.SimAntics.Utils
             while (spread.Count > 0)
             {
                 var item = spread.Pop();
+                if (target.OutsideClip((short)item.X, (short)item.Y, level)) continue; //do not spread into OOB
 
                 var plusX = (item.X + 1) % width;
                 var minX = (item.X + width - 1) % width;
@@ -385,7 +385,7 @@ namespace FSO.SimAntics.Utils
                 {
                     if (mainWalls.TopLeftPattern != pattern && mainWalls.TopLeftThick)
                     {
-                        wallsCovered.Add(mainWalls.TopLeftPattern); ;
+                        wallsCovered.Add(mainWalls.TopLeftPattern);
                         mainWalls.TopLeftPattern = pattern;
                     }
                 }
@@ -482,10 +482,9 @@ namespace FSO.SimAntics.Utils
         /// </summary>
         public static PatternReplaceCount FloorPatternFill(VMArchitecture target, Point pos, ushort pattern, sbyte level) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
         {
-            if (pattern > 65533 || pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y >= target.Height) return new PatternReplaceCount();
+            if (pattern > 65533 || target.OutsideClip((short)pos.X, (short)pos.Y, level)) return new PatternReplaceCount();
 
-            pos.X = Math.Max(Math.Min(pos.X, target.Width - 1), 0);
-            pos.Y = Math.Max(Math.Min(pos.Y, target.Height - 1), 0);
+            //you cannot start out of bounds. spread is limited by bounds
             var walls = target.Walls[level-1];
 
             var width = target.Width;
@@ -501,6 +500,7 @@ namespace FSO.SimAntics.Utils
             while (spread.Count > 0)
             {
                 var item = spread.Pop();
+                if (target.OutsideClip((short)item.X, (short)item.Y, level)) continue; //do not spread into OOB
 
                 var plusX = (item.X + 1) % width;
                 var minX = (item.X + width - 1) % width;
@@ -566,7 +566,7 @@ namespace FSO.SimAntics.Utils
             if (rect.Width == 0 && rect.Height == 0)
             {
                 //dot mode, just fill a tile. can be a diagonal.
-                if (rect.X < 0 || rect.X >= target.Width || rect.Y < 0 || rect.Y >= target.Width) return floorsCovered;
+                if (target.OutsideClip((short)rect.X, (short)rect.Y, level)) return floorsCovered; //out of bounds
                 var wall = target.GetWall((short)rect.X, (short)rect.Y, level);
                 if ((wall.Segments & AnyDiag) > 0 && pattern < 65534)
                 {
@@ -602,11 +602,13 @@ namespace FSO.SimAntics.Utils
                 return floorsCovered;
             }
 
-            var xEnd = Math.Min(target.Width, rect.X + rect.Width+1);
-            var yEnd = Math.Min(target.Height, rect.Y + rect.Height+1);
-            for (int y = Math.Max(0, rect.Y); y < yEnd; y++)
+            if (level > (target.DisableClip?target.Stories:target.BuildableFloors)) return floorsCovered; //level out of bounds
+            var bounds = target.DisableClip ? new Rectangle(0, 0, target.Width, target.Height):target.BuildableArea;
+            var xEnd = Math.Min(bounds.Right, rect.X + rect.Width+1);
+            var yEnd = Math.Min(bounds.Bottom, rect.Y + rect.Height+1);
+            for (int y = Math.Max(bounds.Y, rect.Y); y < yEnd; y++)
             {
-                for (int x = Math.Max(0, rect.X); x < xEnd; x++)
+                for (int x = Math.Max(bounds.X, rect.X); x < xEnd; x++)
                 {
                     var wall = target.GetWall((short)x, (short)y, level);
                     if ((wall.Segments & AnyDiag) > 0) //diagonal floors are stored in walls

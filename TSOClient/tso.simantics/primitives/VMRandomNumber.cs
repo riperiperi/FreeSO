@@ -20,8 +20,6 @@ namespace FSO.SimAntics.Engine.Primitives
         {
             var operand = (VMRandomNumberOperand)args;
             var rangeValue = (ushort)VMMemory.GetVariable(context, operand.RangeScope, operand.RangeData);
-
-            if (context.Routine.Rti.Name.Trim('\0') == "spread - m") { }
             var result = context.VM.Context.NextRandom(rangeValue);
             VMMemory.SetVariable(context, operand.DestinationScope, operand.DestinationData, (short)result);
             return VMPrimitiveExitCode.GOTO_TRUE;

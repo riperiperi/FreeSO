@@ -26,8 +26,7 @@ namespace FSO.SimAntics
 {
     public class VMGameObject : VMEntity
     {
-
-        /** Definition **/
+        private VMGameObjectDisableFlags Disabled;
 
         public VMGameObject(GameObject def, ObjectComponent worldUI) : base(def)
         {
@@ -366,7 +365,7 @@ namespace FSO.SimAntics
         #region VM Marshalling Functions
         public VMGameObjectMarshal Save()
         {
-            var gameObj = new VMGameObjectMarshal { Direction = Direction };
+            var gameObj = new VMGameObjectMarshal { Direction = Direction, Disabled = Disabled };
             SaveEnt(gameObj);
             return gameObj;
         }
@@ -376,6 +375,7 @@ namespace FSO.SimAntics
             base.Load(input);
             Position = Position;
             Direction = input.Direction;
+            Disabled = input.Disabled;
             if (UseWorld)
             {
                 ((ObjectComponent)this.WorldUI).DynamicSpriteFlags = this.DynamicSpriteFlags;
@@ -468,5 +468,13 @@ namespace FSO.SimAntics
             }
         }
         #endregion
+    }
+
+    [Flags]
+    public enum VMGameObjectDisableFlags
+    {
+        LotCategoryWrong = 1,
+        TransactionIncomplete = 1<<1,
+        ObjectLimitExceeded = 1<<2, //when too many objects are on a lot and the object lot is lowered, the last few objects are disabled.
     }
 }

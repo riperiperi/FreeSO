@@ -96,6 +96,15 @@ namespace FSO.Client.Regulators
             AddState("Disconnect")
                 .OnData(typeof(AriesDisconnected))
                 .TransitionTo("Disconnected");
+
+            AddState("Reconnect")
+                .OnData(typeof(AriesDisconnected))
+                .TransitionTo("SelectCity");
+
+            AddState("Reconnecting")
+                .OnData(typeof(ShardSelectorServletRequest))
+                .TransitionTo("SelectCity")
+                .OnlyTransitionFrom("ReceivedCharacterData");
         }
 
         public void Connect(CityConnectionMode mode, ShardSelectorServletRequest shard)
@@ -105,7 +114,15 @@ namespace FSO.Client.Regulators
                 shard.ShardName = this.CurrentShard.ShardName;
             }
             Mode = mode;
-            AsyncProcessMessage(shard);
+            if (CurrentState.Name != "Disconnected")
+            {
+                CurrentShard = shard;
+                AsyncTransition("Reconnect");
+            }
+            else
+            {
+                AsyncProcessMessage(shard);
+            }
         }
 
         public void Disconnect(){
@@ -250,6 +267,22 @@ namespace FSO.Client.Regulators
                     {
                         AsyncTransition("Disconnected");
                     }
+                    break;
+
+                case "Reconnect":
+                    ShardSelectResponse = null;
+                    if (Client.IsConnected)
+                    {
+                        Client.Write(new ClientByePDU());
+                        Client.Disconnect();
+                    }
+                    else
+                    {
+                        AsyncTransition("Reconnecting");
+                    }
+                    break;
+                case "Reconnecting":
+                    AsyncProcessMessage(CurrentShard);
                     break;
             }
         }

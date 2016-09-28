@@ -88,11 +88,15 @@ namespace FSO.Server.Servers.City.Handlers
                     type != MaskedStruct.Messaging_Message_Avatar && type != MaskedStruct.Messaging_Icon_Avatar
                     && type != MaskedStruct.MapView_NearZoom_Lot_Thumbnail && type != MaskedStruct.Thumbnail_Lot
                     && type != MaskedStruct.CurrentCity && type != MaskedStruct.MapView_NearZoom_Lot
-                    && type != MaskedStruct.Thumbnail_Avatar)
+                    && type != MaskedStruct.Thumbnail_Avatar && type != MaskedStruct.SimPage_MyLot
+                    && type != MaskedStruct.SimPage_JobsPanel && type != MaskedStruct.FriendshipWeb_Avatar
+                    && type != MaskedStruct.SimPage_SkillsPanel)
                 {
                     //Currently broken for some reason
                     return;
                 }
+
+                if (type == MaskedStruct.FriendshipWeb_Avatar) { }
 
                 //Lookup the entity, then process the request and send the response
                 var task = DataService.Get(type, msg.Parameter.Value);
@@ -103,12 +107,23 @@ namespace FSO.Server.Servers.City.Handlers
                     var serialized = DataService.SerializeUpdate(type, entity, msg.Parameter.Value);
                     for (int i = 0; i < serialized.Count; i++)
                     {
-                        session.Write(new DataServiceWrapperPDU()
+                        object serial = serialized[i];
+                        /*if (serialized[i].Value is cTSOGenericData)
                         {
-                            SendingAvatarID = packet.SendingAvatarID,
-                            RequestTypeID = packet.RequestTypeID,
-                            Body = serialized[i]
-                        });
+                            serial = new cTSONetMessageStandard()
+                            {
+                                SendingAvatarID = packet.SendingAvatarID,
+                                MessageID = 0x8A2726E0,
+                                DataServiceType = msg.DataServiceType,
+                                ComplexParameter = serial
+                            };
+                        }*/
+                            session.Write(new DataServiceWrapperPDU()
+                            {
+                                SendingAvatarID = packet.SendingAvatarID,
+                                RequestTypeID = packet.RequestTypeID,
+                                Body = serial
+                            });
                     }
                 }
             }else if(packet.Body is cTSOTopicUpdateMessage)

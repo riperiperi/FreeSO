@@ -40,6 +40,7 @@ namespace FSO.Client.UI.Panels
 
         private int OldMX;
         private int OldMY;
+        private UpdateState LastState; //state for access from Sellback and friends.
         public bool DirChanged;
         public bool ShowTooltip;
 
@@ -104,7 +105,7 @@ namespace FSO.Client.UI.Panels
             VMPlacementError status = VMPlacementError.Success;
             for (int i = 0; i < 4; i++)
             {
-                status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, World.State.Level), dir, vm.Context).Status;
+                status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, World.State.Level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement).Status;
                 if (status != VMPlacementError.MustBeAgainstWall) break;
                 dir = (Direction)((((int)dir << 6) & 255) | ((int)dir >> 2));
             }
@@ -112,7 +113,7 @@ namespace FSO.Client.UI.Panels
 
             if (status != VMPlacementError.Success) 
             {
-                Holding.Group.ChangePosition(LotTilePos.OUT_OF_WORLD, Holding.Dir, vm.Context);
+                Holding.Group.ChangePosition(LotTilePos.OUT_OF_WORLD, Holding.Dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
 
                 Holding.Group.SetVisualPosition(new Vector3(pos,
                 (((Holding.Group.Objects[0].GetValue(VMStackObjectVariable.AllowedHeightFlags) & 1) == 1) ? 0 : 4f / 5f) + (World.State.Level-1)*2.95f),
@@ -228,12 +229,19 @@ namespace FSO.Client.UI.Panels
             if (Holding == null) return;
             if (Holding.IsBought)
             {
-                vm.SendCommand(new VMNetDeleteObjectCmd
+                if (Holding.CanDelete)
                 {
-                    ObjectID = Holding.MoveTarget,
-                    CleanupAll = true
-                });
-                HITVM.Get().PlaySoundEvent(UISounds.MoneyBack);
+                    vm.SendCommand(new VMNetDeleteObjectCmd
+                    {
+                        ObjectID = Holding.MoveTarget,
+                        CleanupAll = true
+                    });
+                    HITVM.Get().PlaySoundEvent(UISounds.MoneyBack);
+                } else
+                {
+                    ShowErrorAtMouse(LastState, VMPlacementError.CannotDeleteObject);
+                    return;
+                }
             }
             OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate.
             ClearSelected();
@@ -244,13 +252,20 @@ namespace FSO.Client.UI.Panels
             if (Holding == null) return;
             if (Holding.IsBought)
             {
-                var obj = vm.GetObjectById(Holding.MoveTarget);
-                if (obj != null)
+                if (Holding.CanDelete)
                 {
-                    vm.SendCommand(new VMNetSendToInventoryCmd
+                    var obj = vm.GetObjectById(Holding.MoveTarget);
+                    if (obj != null)
                     {
-                        ObjectPID = obj.PersistID,
-                    });
+                        vm.SendCommand(new VMNetSendToInventoryCmd
+                        {
+                            ObjectPID = obj.PersistID,
+                        });
+                    }
+                } else
+                {
+                    ShowErrorAtMouse(LastState, VMPlacementError.CannotDeleteObject);
+                    return;
                 }
             }
             OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate.
@@ -259,6 +274,7 @@ namespace FSO.Client.UI.Panels
 
         public void Update(UpdateState state, bool scrolled)
         {
+            LastState = state;
             if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
             MouseClicked = (MouseIsDown && (!MouseWasDown));
 
@@ -345,12 +361,15 @@ namespace FSO.Client.UI.Panels
                 {
                     var objGroup = vm.GetObjectById(newHover).MultitileGroup;
                     var objBasePos = objGroup.BaseObject.Position;
-                    if (objBasePos.Level == World.State.Level)
+                    var success = objGroup.BaseObject.IsUserMovable(vm.Context, false);
+                    if (objBasePos.Level != World.State.Level) success = VMPlacementError.CantEffectFirstLevelFromSecondLevel;
+                    if (success == VMPlacementError.Success)
                     {
-
                         var ghostGroup = vm.Context.GhostCopyGroup(objGroup);
+                        var canDelete = (objGroup.BaseObject.IsUserMovable(vm.Context, true)) == VMPlacementError.Success;
                         SetSelected(ghostGroup);
 
+                        Holding.CanDelete = canDelete;
                         Holding.MoveTarget = newHover;
                         Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
                         if (OnPickup != null) OnPickup(Holding, state);
@@ -358,20 +377,25 @@ namespace FSO.Client.UI.Panels
                     }
                     else
                     {
-                        state.UIState.TooltipProperties.Show = true;
-                        state.UIState.TooltipProperties.Color = Color.Black;
-                        state.UIState.TooltipProperties.Opacity = 1;
-                        state.UIState.TooltipProperties.Position = new Vector2(MouseDownX,
-                            MouseDownY);
-                        state.UIState.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + VMPlacementError.CantEffectFirstLevelFromSecondLevel.ToString());
-                        state.UIState.TooltipProperties.UpdateDead = false;
-                        ShowTooltip = true;
-                        HITVM.Get().PlaySoundEvent(UISounds.Error);
+                        ShowErrorAtMouse(state, success);
                     }
                 }
             }
 
             MouseWasDown = MouseIsDown;
+        }
+
+        private void ShowErrorAtMouse(UpdateState state, VMPlacementError error)
+        {
+            state.UIState.TooltipProperties.Show = true;
+            state.UIState.TooltipProperties.Color = Color.Black;
+            state.UIState.TooltipProperties.Opacity = 1;
+            state.UIState.TooltipProperties.Position = new Vector2(MouseDownX,
+                MouseDownY);
+            state.UIState.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + error.ToString());
+            state.UIState.TooltipProperties.UpdateDead = false;
+            ShowTooltip = true;
+            HITVM.Get().PlaySoundEvent(UISounds.Error);
         }
 
         public delegate void HolderEventHandler(UIObjectSelection holding, UpdateState state);
@@ -392,6 +416,7 @@ namespace FSO.Client.UI.Panels
         public sbyte Level;
         public int Price;
         public uint InventoryPID = 0;
+        public bool CanDelete;
 
         public bool IsBought
         {

@@ -22,6 +22,7 @@ using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Client.Controllers;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.IO;
+using FSO.Common.Utils;
 
 namespace FSO.Client.UI.Panels
 {
@@ -130,6 +131,7 @@ namespace FSO.Client.UI.Panels
             LiveModeButton.OnButtonClick += new ButtonClickDelegate(LiveModeButton_OnButtonClick);
             BuyModeButton.OnButtonClick += new ButtonClickDelegate(BuyModeButton_OnButtonClick);
             BuildModeButton.OnButtonClick += BuildModeButton_OnButtonClick;
+            HouseModeButton.OnButtonClick += (btn) => { SetPanel(4); };
 
             ZoomOutButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
             ZoomInButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
@@ -286,10 +288,10 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
-            //int min = NetworkFacade.ServerTime.Minute;
-            //int hour = NetworkFacade.ServerTime.Hour;
-            int min = 0;
-            int hour = 0;
+            var time = DateTime.UtcNow;
+            var tsoTime = TSOTime.FromUTC(time);
+            int min = tsoTime.Item2;
+            int hour = tsoTime.Item1;
 
             if (MoneyHighlightFrames > 0)
             {
@@ -395,13 +397,14 @@ namespace FSO.Client.UI.Panels
             BuyModeButton.Selected = false;
             BuildModeButton.Selected = false;
             LiveModeButton.Selected = false;
+            HouseModeButton.Selected = false;
             
             if (Game.InLot)
             {
                 Game.LotControl.QueryPanel.Active = false;
                 Game.LotControl.QueryPanel.Visible = false;
                 Game.LotControl.LiveMode = true;
-                Game.vm.Context.World.State.BuildMode = false;
+                Game.vm.Context.World.State.BuildMode = 0;
             }
 
             if (CurrentPanel != -1)
@@ -434,10 +437,13 @@ namespace FSO.Client.UI.Panels
                     case 2:
                         if (!Game.InLot) break; //not ingame
                         Panel = new UIBuyMode(Game.LotControl);
+
+                        //enable grid
+                        Game.vm.Context.World.State.BuildMode = 1;
+
                         Game.LotControl.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
-                        ((UIBuyMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuyModeButton.Selected = true;
                         SetFocus(UCPFocusMode.ActiveTab);
@@ -446,22 +452,34 @@ namespace FSO.Client.UI.Panels
                         if (!Game.InLot) break; //not ingame
                         Panel = new UIBuildMode(Game.LotControl);
 
-                        //enable air tile graphics
-                        Game.vm.Context.World.State.BuildMode = true;
+                        //enable air tile graphics + grid
+                        Game.vm.Context.World.State.BuildMode = 2;
 
                         Game.LotControl.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
-                        ((UIBuildMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuildModeButton.Selected = true;
+                        SetFocus(UCPFocusMode.ActiveTab);
+                        break;
+                    case 4:
+                        if (!Game.InLot) break; //not ingame
+                        Panel = new UIHouseMode(Game.LotControl);
+
+                        //enable grid
+                        Game.vm.Context.World.State.BuildMode = 1;
+
+                        Panel.X = 177;
+                        Panel.Y = 87;
+                        this.Add(Panel);
+                        HouseModeButton.Selected = true;
                         SetFocus(UCPFocusMode.ActiveTab);
                         break;
                     case 1:
                         if (!Game.InLot) break; //not ingame
                         Panel = new UILiveMode(Game.LotControl);
                         Panel.X = 177;
-                        Panel.Y = 63;
+                        Panel.Y = 61;
                         this.Add(Panel);
                         LiveModeButton.Selected = true;
                         SetFocus(UCPFocusMode.ActiveTab);

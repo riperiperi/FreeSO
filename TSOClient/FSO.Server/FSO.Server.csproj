@@ -155,6 +155,7 @@
     <Compile Include="Servers\City\CityServer.cs" />
     <Compile Include="Servers\City\CityServerConfiguration.cs" />
     <Compile Include="Servers\City\CityServerContext.cs" />
+    <Compile Include="Servers\City\Domain\JobMatchmaker.cs" />
     <Compile Include="Servers\City\Domain\LotAllocations.cs" />
     <Compile Include="Servers\City\Domain\LotServerPicker.cs" />
     <Compile Include="Servers\City\Handlers\FindPlayerHandler.cs" />

@@ -12,6 +12,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
         public VMTSOAvatarPermissions Permissions = VMTSOAvatarPermissions.Visitor;
         public HashSet<uint> IgnoredAvatars = new HashSet<uint>();
         public Dictionary<short, VMTSOJobInfo> JobInfo = new Dictionary<short, VMTSOJobInfo>();
+        public VMTSOAvatarFlags Flags;
 
         public VMTSOAvatarState() { }
 
@@ -39,6 +40,8 @@ namespace FSO.SimAntics.Model.TSOPlatform
                     JobInfo[id] = job;
                 }
             }
+            if (Version > 9)
+                Flags = (VMTSOAvatarFlags)reader.ReadUInt32();
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -54,6 +57,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
                 writer.Write(item.Key);
                 item.Value.SerializeInto(writer);
             }
+            writer.Write((uint)Flags);
         }
 
         public override void Tick(VM vm, object owner)
@@ -69,5 +73,11 @@ namespace FSO.SimAntics.Model.TSOPlatform
         BuildBuyRoommate = 2,
         Owner = 3,
         Admin = 4
+    }
+
+    [Flags]
+    public enum VMTSOAvatarFlags : uint
+    {
+        CanBeRoommate = 1 //TODO: update on becoming roomie of another lot, while on this lot.
     }
 }

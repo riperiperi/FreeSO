@@ -364,7 +364,7 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMGotoRoutingSlotOperand)
             });
 
-            AddPrimitive(new VMPrimitiveRegistration(new VMSnap()) //not functional right now
+            AddPrimitive(new VMPrimitiveRegistration(new VMSnap())
             {
                 Opcode = 46,
                 Name = "snap",
@@ -427,8 +427,14 @@ namespace FSO.SimAntics
             });
 
             //TODO: Set Dynamic Object Name
-            
+
             //TODO: Inventory Operations
+            AddPrimitive(new VMPrimitiveRegistration(new VMInventoryOperations())
+            {
+                Opcode = 67,
+                Name = "inventory_operations",
+                OperandModel = typeof(VMInventoryOperationsOperand)
+            });
 
         }
 
@@ -449,11 +455,10 @@ namespace FSO.SimAntics
         private void WallsChanged(VMArchitecture caller)
         {
             RegeneratePortalInfo();
-
-            //TODO: this could get very slow! find a way to make this quicker.
-            foreach (var obj in VM.Entities)
+            
+            foreach (var obj in SetToNextCache.Avatars)
             {
-                if (obj is VMAvatar && obj.Thread != null)
+                if (obj.Thread != null)
                 {
                     foreach (var frame in obj.Thread.Stack)
                     {
@@ -488,39 +493,77 @@ namespace FSO.SimAntics
                 obj.SetRoom(room);
             }
 
+            var visited = new HashSet<ushort>();
             for (ushort i=0; i<RoomInfo.Length; i++)
             {
-                RefreshLighting(i, i==(RoomInfo.Length-1));
+                RefreshLighting(i, i==(RoomInfo.Length-1), visited);
             }
             if (VM.UseWorld) World.InvalidateZoom();
         }
 
-        public void RefreshLighting(ushort room, bool commit)
+        public void RefreshLighting(ushort room, bool commit, HashSet<ushort> visited)
         {
-            if (RoomInfo == null) return;
+            if (RoomInfo == null || visited.Contains(room)) return;
+            visited.Add(room);
             var info = RoomInfo[room];
-            info.Light.AmbientLight = 0;
-            info.Light.OutsideLight = 0;
+            var light = new RoomLighting();
+            RoomInfo[room].Light = light;
+            light.AmbientLight = 0;
             if (info.Room.IsOutside)
             {
-                info.Light.OutsideLight = 100;
+                light.OutsideLight = 100;
             }
             else
             {
-                float areaScale = Math.Max(1, info.Room.Area / 100f);
-                foreach (var ent in info.Entities)
+                var queue = new Queue<ushort>();
+                queue.Enqueue(room);
+                var area = 0;
+                var outside = 0;
+                var inside = 0;
+
+                var roomScore = 0;
+                while (queue.Count > 0)
                 {
-                    var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
-                    var cont = ent.GetValue(VMStackObjectVariable.LightingContribution);
-                    if (cont > 0)
+                    var rm = queue.Dequeue();
+                    info = RoomInfo[rm];
+                    RoomInfo[rm].Light = light; //adjacent rooms share a light object. same for room score when we get to that.
+                    area += info.Room.Area;
+                    foreach (var ent in info.Entities)
                     {
-                        if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
-                            info.Light.OutsideLight += (ushort)Math.Min(100, cont / areaScale);
-                        else
-                            info.Light.AmbientLight += (ushort)Math.Min(100, cont / areaScale);
+                        var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
+                        var cont = ent.GetValue(VMStackObjectVariable.LightingContribution);
+                        if (cont > 0)
+                        {
+                            if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
+                                outside += (ushort)cont;
+                            else
+                                inside += (ushort)cont;
+                        }
+                        var roomImpact = ent.GetValue(VMStackObjectVariable.RoomImpact);
+                        if (roomImpact > 0) roomScore += roomImpact;
+                    }
+
+                    if (info.Room.AdjRooms != null)
+                    {
+                        foreach (var child in info.Room.AdjRooms)
+                        {
+                            if (!visited.Contains(child))
+                            {
+                                visited.Add(child);
+                                queue.Enqueue(child);
+                            }
+                        }
                     }
                 }
-                if (info.Light.OutsideLight > 100) info.Light.OutsideLight = 100;
+                float areaScale = Math.Max(1, area / 100f);
+                light.OutsideLight = Math.Min((ushort)100, (ushort)(outside / areaScale));
+                light.AmbientLight = Math.Min((ushort)100, (ushort)(inside / areaScale));
+
+                float areaRScale = Math.Max(1, area / 12f);
+                roomScore = (short)(roomScore / areaRScale);
+                roomScore -= (info.Room.IsOutside) ? 15 : 10;
+
+                light.RoomScore = (short)Math.Min(100, Math.Max(-100, roomScore));
             }
 
             if (commit && UseWorld) { 
@@ -576,8 +619,8 @@ namespace FSO.SimAntics
                 AddRoomPortal(obj, room);
             }
             obj.SetRoom(room);
-            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0)
-                RefreshLighting(room, true);
+            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
+                RefreshLighting(room, true, new HashSet<ushort>());
 
             SetToNextCache.RegisterObjectPos(obj);
         }
@@ -594,8 +637,8 @@ namespace FSO.SimAntics
             { //portal
                 RemoveRoomPortal(obj, room);
             }
-            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0)
-                RefreshLighting(room, true);
+            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
+                RefreshLighting(room, true, new HashSet<ushort>());
 
             SetToNextCache.UnregisterObjectPos(obj);
         }
@@ -644,6 +687,67 @@ namespace FSO.SimAntics
         public bool IsOutOfBounds(LotTilePos pos)
         {
             return (pos.x < 0 || pos.y < 0 || pos.Level < 1 || pos.TileX >= _Arch.Width || pos.TileY >= _Arch.Height || pos.Level > _Arch.Stories);
+        }
+
+        /// <summary>
+        /// Returns if the area is "out of bounds" for user placement.
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns></returns>
+        public bool IsUserOutOfBounds(LotTilePos pos)
+        {
+            var area = Architecture.BuildableArea;
+            return (pos.TileX < area.X || pos.TileY < area.Y || pos.Level < 1 || pos.TileX >= area.Right || pos.TileY >= area.Bottom || pos.Level > _Arch.BuildableFloors);
+        }
+
+        public void UpdateTSOBuildableArea()
+        {
+            var lotSInfo = VM.TSOState.Size;
+            var area = GetTSOBuildableArea(lotSInfo);
+            Architecture.UpdateBuildableArea(area, ((lotSInfo >> 8) & 255) + 2);
+        }
+
+        public Rectangle GetTSOBuildableArea(int lotSInfo)
+        {
+            //note: sync on this DOES matter as the OOB check performs on some primitives, and objects are double checked before placement.
+
+            var lotSize = lotSInfo & 255;
+            var lotFloors = ((lotSInfo >> 8)&255)+2;
+            var lotDir = (lotSInfo >> 16);
+
+            var dim = VMBuildableAreaInfo.BuildableSizes[lotSize];
+
+            //need to rotate the lot dir towards the road. bit weird cos we're rotating a rectangle
+
+            var w = Architecture.Width;
+            var h = Architecture.Height;
+            var corners = new Vector2[]
+            {
+                new Vector2(6, 6), // top, default orientation
+                new Vector2(w-7, 6), // right
+                new Vector2(w-7, h-7), // bottom
+                new Vector2(6, h-7) // left
+            };
+            var perpIncrease = new Vector2[]
+            {
+                new Vector2(0, -1), //bottom left road side
+                new Vector2(1, 0),
+                new Vector2(0, 1),
+                new Vector2(-1, 0)
+            };
+
+            //rotation 0: move perp from closer point to top bottom -> left (90 degree ccw of perp)
+            //rotation 1: choose closer pt to top left->top (90 degree ccw of perp)
+            //rotation 2: choose closer pt to top top->right (90 degree cw of perp)
+
+            var pt1 = corners[(lotDir + 2) % 4];
+            var pt2 = corners[(lotDir + 3) % 4];
+
+            var ctr = (pt1 + pt2) / 2;
+            var lotBase = ctr + perpIncrease[(3 - lotDir) % 4]*dim/2;
+            if (lotDir == 0 || lotDir == 3) lotBase += perpIncrease[lotDir]*(dim);
+
+            return new Rectangle((int)lotBase.X, (int)lotBase.Y, dim, dim);
         }
 
         public VMPlacementResult GetAvatarPlace(VMEntity target, LotTilePos pos, Direction dir)
@@ -770,6 +874,12 @@ namespace FSO.SimAntics
             else return (ushort)Architecture.Rooms[pos.Level-1].Map[pos.TileX + pos.TileY * _Arch.Width];
         }
 
+        public short GetRoomScore(ushort room)
+        {
+            if (room >= RoomInfo.Length) return 0;
+            return RoomInfo[room].Light.RoomScore;
+        }
+
         public VMMultitileGroup GhostCopyGroup(VMMultitileGroup group)
         {
             var newGroup = CreateObjectInstance(((group.MultiTile) ? group.BaseObject.MasterDefinition.GUID : group.BaseObject.Object.OBJ.GUID), LotTilePos.OUT_OF_WORLD, group.BaseObject.Direction, true);
@@ -844,7 +954,7 @@ namespace FSO.SimAntics
                 }
 
                 group.Init(this);
-                VMPlacementError couldPlace = group.ChangePosition(pos, direction, this).Status;
+                VMPlacementError couldPlace = group.ChangePosition(pos, direction, this, VMPlaceRequestFlags.Default).Status;
                 return group;
             }
             else
@@ -921,7 +1031,7 @@ namespace FSO.SimAntics
             {
                 Architecture = Architecture.Save(),
                 Clock = Clock.Save(),
-                Ambience = new VMAmbientSoundMarshal { ActiveSounds = Ambience.ActiveSounds.Keys.ToArray() },
+                Ambience = new VMAmbientSoundMarshal { ActiveBits = Ambience.ActiveBits },
                 RandomSeed = RandomSeed
             };
         }
@@ -932,10 +1042,10 @@ namespace FSO.SimAntics
             Architecture = new VMArchitecture(input.Architecture, this, Blueprint);
             Clock = new VMClock(input.Clock);
 
+            for (int i=0; i<VMAmbientSound.SoundByBitField.Count; i++) Ambience.SetAmbience((byte)i, (input.Ambience.ActiveBits&((ulong)1<<i)) > 0);
+
             if (VM.UseWorld)
             {
-                foreach (var active in input.Ambience.ActiveSounds) Ambience.SetAmbience(active, true);
-
                 World.State.WorldSize = input.Architecture.Width;
                 Blueprint.Terrain = new TerrainComponent(new Rectangle(1, 1, input.Architecture.Width - 2, input.Architecture.Height - 2), Blueprint);
                 Blueprint.Terrain.Initialize(this.World.State.Device, this.World.State);

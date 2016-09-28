@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using FSO.Server.Common;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace FSO.Server.Database.DA.Relationships
         public List<DbRelationship> GetBidirectional(uint entity_id)
         {
             return Context.Connection.Query<DbRelationship>(
-                "SELECT * FROM fso_relationships WHERE from_id = @entity_id OR to_id = @entity_id",
+                "SELECT * FROM fso_relationships WHERE (from_id = @entity_id AND to_id < 16777216) OR (to_id = @entity_id AND from_id < 16777216)",
                 new { entity_id = entity_id }
             ).ToList();
         }
@@ -43,13 +44,14 @@ namespace FSO.Server.Database.DA.Relationships
 
         public int UpdateMany(List<DbRelationship> entries)
         {
+            var date = Epoch.Now;
             var conn = (MySqlConnection)Context.Connection;
             int rows;
             using (MySqlCommand cmd = new MySqlCommand("", conn))
             {
                 try
                 {
-                    StringBuilder sCommand = new StringBuilder("INSERT INTO fso_relationships (from_id, to_id, value, `index`) VALUES ");
+                    StringBuilder sCommand = new StringBuilder("INSERT INTO fso_relationships (from_id, to_id, value, `index`, `date`) VALUES ");
 
                     bool first = true;
                     foreach (var item in entries)
@@ -64,6 +66,8 @@ namespace FSO.Server.Database.DA.Relationships
                         sCommand.Append(item.value);
                         sCommand.Append(",");
                         sCommand.Append(item.index);
+                        sCommand.Append(",");
+                        sCommand.Append(date);
                         sCommand.Append(")");
                     }
                     sCommand.Append(" ON DUPLICATE KEY UPDATE value = VALUES(`value`); ");

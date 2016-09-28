@@ -43,6 +43,11 @@ namespace FSO.Server.Database.DA.AvatarClaims
             return Context.Connection.Query<DbAvatarClaim>("SELECT * FROM fso_avatar_claims WHERE avatar_claim_id = @claim_id", new { claim_id = (int)id }).FirstOrDefault();
         }
 
+        public DbAvatarClaim GetByAvatarID(uint id)
+        {
+            return Context.Connection.Query<DbAvatarClaim>("SELECT * FROM fso_avatar_claims WHERE avatar_id = @id", new { id = id }).FirstOrDefault();
+        }
+
         public IEnumerable<DbAvatarClaim> GetAllByOwner(string owner)
         {
             return Context.Connection.Query<DbAvatarClaim>("SELECT * FROM fso_avatar_claims WHERE owner = @owner", new { owner = owner });

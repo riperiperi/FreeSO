@@ -20,7 +20,7 @@ namespace FSO.SimAntics.Engine
     {
         //should use a Trie for this in future, for performance reasons
         private static string[] valid = {
-            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "NameLocal:", "DynamicObjectName", "MoneyXL:", "Param", "\r\n"
+            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:", "DynamicObjectName", "MoneyXL:", "Param", "\r\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -89,7 +89,7 @@ namespace FSO.SimAntics.Engine
                         {
                             try
                             {
-                                if (cmdString == "DynamicStringLocal:")
+                                if (cmdString == "DynamicStringLocal:" || cmdString == "TimeLocal:")
                                 {
                                     values[1] = -1;
                                     values[2] = -1;
@@ -184,6 +184,16 @@ namespace FSO.SimAntics.Engine
                                     break;
                                 case "Local:":
                                     output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]).ToString()); break;
+                                case "TimeLocal:":
+                                    var hours = VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]);
+                                    var mins = VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[1]);
+                                    var suffix = (hours > 11) ? "pm" : "am";
+                                    if (hours > 12) hours -= 12;
+                                    output.Append(hours.ToString());
+                                    output.Append(":");
+                                    output.Append(mins.ToString().PadLeft(2, '0'));
+                                    output.Append(suffix);
+                                    break;
                                 case "Param:":
                                     output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Parameters, values[0]).ToString()); break;
                                 case "NameLocal:":

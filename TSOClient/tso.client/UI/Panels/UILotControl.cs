@@ -243,7 +243,7 @@ namespace FSO.Client.UI.Panels
 
         private void DialogResponse(byte code)
         {
-            if (BlockingDialog == null) return;
+            if (BlockingDialog == null || ActiveEntity == null) return;
             UIScreen.RemoveDialog(BlockingDialog);
             LastDialogID = 0;
             vm.SendCommand(new VMNetDialogResponseCmd {

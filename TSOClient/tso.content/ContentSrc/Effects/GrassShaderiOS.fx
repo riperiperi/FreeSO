@@ -97,13 +97,25 @@ void BladesPS(GrassPSVTX input, out float4 color:COLOR0)
     }
     else {
         //software depth
-        if (depthOutMode == false && unpackDepth(tex2D(depthMapSampler, input.ScreenPos.xy / ScreenSize)) < d) discard;
+        if (unpackDepth(tex2D(depthMapSampler, input.ScreenPos.xy / ScreenSize)) < d) discard;
         float bladeCol = rand.x*0.6;
         float4 green = lerp(LightGreen, DarkGreen, bladeCol);
         float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
         color = lerp(green, brown, input.GrassInfo.x) * DiffuseColor;
     }
 
+}
+
+void GridPS(GrassPSVTX input, out float4 color:COLOR0)
+{
+	if (floor(input.ScreenPos.xy + ScreenOffset).x % 2 == 0) discard;
+	//skip every second horizontal pixel. TODO: Original game skips 3/4 when land is sloped.
+	if (depthOutMode == true) {
+		discard;
+	}
+	else {
+		color = DiffuseColor;
+	}
 }
 
 void BasePS(GrassPSVTX input, out float4 color:COLOR0)
@@ -133,6 +145,22 @@ technique DrawBase
 #endif;
 
     }
+}
+
+technique DrawGrid
+{
+	pass MainPass
+	{
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 GrassVS();
+		PixelShader = compile ps_4_0_level_9_1 GridPS();
+#else
+		VertexShader = compile vs_3_0 GrassVS();
+		PixelShader = compile ps_3_0 GridPS();
+#endif;
+
+	}
 }
 
 technique DrawBlades

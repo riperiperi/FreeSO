@@ -206,7 +206,7 @@ namespace FSO.LotView.Components
                                 if (floor.Pixel != null) world._2D.Draw(floor);
                             }
                         }
-                        else if (world.BuildMode && level > 1 && blueprint.Supported[level-2][y*blueprint.Height+x])
+                        else if (world.BuildMode > 1 && level > 1 && blueprint.Supported[level-2][y*blueprint.Height+x])
                         {
                             var tilePosition = new Vector3(x, y, (level - 1) * 2.95f);
                             world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));

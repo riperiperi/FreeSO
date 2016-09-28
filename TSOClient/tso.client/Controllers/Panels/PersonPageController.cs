@@ -59,11 +59,16 @@ namespace FSO.Client.Controllers
             DataService.Sync(target, new string[] { "Avatar_Description" });
         }
 
+        public void SaveValue(Avatar target, string name)
+        {
+            DataService.Sync(target, new string[] { name });
+        }
+
         public void ForceRefreshData(UIPersonPageTab tab){
             Topic.Poll();
         }
 
-        private void ChangeTopic()
+        public void ChangeTopic()
         {
             List<ITopic> topics = new List<ITopic>();
             if (View.Visible && AvatarId != 0)
@@ -73,6 +78,10 @@ namespace FSO.Client.Controllers
                 {
                     case UIPersonPageTab.Description:
                         topics.Add(Topics.For(MaskedStruct.SimPage_DescriptionPanel, AvatarId));
+                        break;
+                    case UIPersonPageTab.Accomplishments:
+                        topics.Add(Topics.For(MaskedStruct.SimPage_SkillsPanel, AvatarId));
+                        topics.Add(Topics.For(MaskedStruct.SimPage_JobsPanel, AvatarId));
                         break;
                 }
             }

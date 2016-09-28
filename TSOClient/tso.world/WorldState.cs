@@ -87,8 +87,8 @@ namespace FSO.LotView
             }
         }
 
-        private bool _BuildMode;
-        public bool BuildMode
+        private int _BuildMode;
+        public int BuildMode
         {
             get
             {
@@ -124,7 +124,7 @@ namespace FSO.LotView
         public float PreciseZoom
         {
             get { return _PreciseZoom; }
-            set { _PreciseZoom = value; InvalidateZoom(); }
+            set { _PreciseZoom = value; InvalidatePreciseZoom(); }
         }
 
         public float SilentPreciseZoom
@@ -139,7 +139,7 @@ namespace FSO.LotView
         private WorldZoom _Zoom;
         public WorldZoom Zoom {
             get{ return _Zoom; }
-            set{ _Zoom = value; InvalidateZoom(); }
+            set{ var old = _Zoom; _Zoom = value; if (value != old) InvalidateZoom(); }
         }
 
         /// <summary>
@@ -183,6 +183,12 @@ namespace FSO.LotView
             World.InvalidateZoom();
         }
 
+        protected void InvalidatePreciseZoom()
+        {
+            InvalidateCamera();
+            World.InvalidatePreciseZoom();
+        }
+
         protected void InvalidateRotation()
         {
             WorldSpace.Invalidate();
@@ -217,7 +223,6 @@ namespace FSO.LotView
             WorldCamera.Zoom = Zoom;
             WorldCamera.Rotation = Rotation;
             WorldCamera.PreciseZoom = PreciseZoom;
-            _2D?.UpdateCageSize(WorldSpace.CadgeWidth/PreciseZoom, WorldSpace.CadgeHeight / PreciseZoom);
         }
     }
 
@@ -486,19 +491,6 @@ namespace FSO.LotView
                     CadgeHeight = 384;
                     CadgeBaseLine = 348;
                     break;
-            }
-
-            if (State.PreciseZoom != 1f)
-            {
-                TilePxWidth *= State.PreciseZoom;
-                TilePxHeight *= State.PreciseZoom;
-
-                TilePxWidthHalf *= State.PreciseZoom;
-                TilePxHeightHalf *= State.PreciseZoom;
-
-                CadgeWidth *= State.PreciseZoom;
-                CadgeHeight *= State.PreciseZoom;
-                CadgeBaseLine *= State.PreciseZoom;
             }
 
             OneUnitDistance = (float)Math.Sqrt(Math.Pow(TilePxWidth, 2) / 2.0);

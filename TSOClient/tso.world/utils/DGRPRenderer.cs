@@ -177,13 +177,13 @@ namespace FSO.LotView.Utils
                     var sprite = item.Sprite;
                     var dgrpSprite = item.DGRPSprite;
 
-                    var pxX = (world.WorldSpace.CadgeWidth / 2.0f)/world.PreciseZoom + dgrpSprite.SpriteOffset.X;
-                    var pxY = (world.WorldSpace.CadgeBaseLine / world.PreciseZoom - sprite.Pixel.Height) + dgrpSprite.SpriteOffset.Y;
+                    var pxX = (world.WorldSpace.CadgeWidth / 2.0f) + dgrpSprite.SpriteOffset.X;
+                    var pxY = (world.WorldSpace.CadgeBaseLine - sprite.Pixel.Height) + dgrpSprite.SpriteOffset.Y;
 
                     var centerRelative = dgrpSprite.ObjectOffset * new Vector3(1f / 16f, 1f / 16f, 1f / 5f);
                     centerRelative = Vector3.Transform(centerRelative, Matrix.CreateRotationZ(RadianDirection));
 
-                    var pxOff = world.WorldSpace.GetScreenFromTile(centerRelative) / world.PreciseZoom;
+                    var pxOff = world.WorldSpace.GetScreenFromTile(centerRelative);
 
                     sprite.DestRect.X = (int)(pxX + pxOff.X);
                     sprite.DestRect.Y = (int)(pxY + pxOff.Y);

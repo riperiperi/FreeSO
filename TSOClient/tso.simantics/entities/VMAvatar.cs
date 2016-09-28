@@ -69,7 +69,7 @@ namespace FSO.SimAntics
         private VMEntity HandObject;
         private float _RadianDirection;
 
-        private int KillTimeout = -1;
+        public int KillTimeout = -1;
         private static readonly int FORCE_DELETE_TIMEOUT = 60 * 30;
         private readonly ushort LEAVE_LOT_TREE = 8373;
 
@@ -468,7 +468,7 @@ namespace FSO.SimAntics
                 {
                     //uh oh!
                     var mailbox = Thread.Context.VM.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
-                    if (mailbox != null) VMFindLocationFor.FindLocationFor(this, mailbox, Thread.Context);
+                    if (mailbox != null) VMFindLocationFor.FindLocationFor(this, mailbox, Thread.Context, VMPlaceRequestFlags.Default);
                 }
             }
 
@@ -668,7 +668,7 @@ namespace FSO.SimAntics
                 case VMPersonDataVariable.OnlineJobID:
                     if (value > 4) return false;
                     if (!((VMTSOAvatarState)TSOState).JobInfo.ContainsKey(value)) ((VMTSOAvatarState)TSOState).JobInfo[value] = new VMTSOJobInfo();
-                    return true;
+                    break;
                 case VMPersonDataVariable.OnlineJobGrade:
                     if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
                         jobInfo.Level = value;

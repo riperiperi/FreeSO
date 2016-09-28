@@ -4,7 +4,9 @@ using FSO.Server.Database.DA;
 using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
+using FSO.Server.Protocol.Gluon.Packets;
 using FSO.Server.Protocol.Voltron.Packets;
+using FSO.Server.Servers.City.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,13 +21,15 @@ namespace FSO.Server.Servers.City.Handlers
         private IDataService DataService;
         private IDAFactory DAFactory;
         private CityServerContext Context;
+        private LotServerPicker LotServers;
 
-        public VoltronConnectionLifecycleHandler(ISessions sessions, IDataService dataService, IDAFactory da, CityServerContext context)
+        public VoltronConnectionLifecycleHandler(ISessions sessions, IDataService dataService, IDAFactory da, CityServerContext context, LotServerPicker lotServers)
         {
             this.VoltronSessions = sessions.GetOrCreateGroup(Groups.VOLTRON);
             this.DataService = dataService;
             this.DAFactory = da;
             this.Context = context;
+            this.LotServers = lotServers;
         }
 
         public void Handle(IVoltronSession session, ClientByePDU packet)
@@ -41,14 +45,31 @@ namespace FSO.Server.Servers.City.Handlers
 
             IVoltronSession voltronSession = (IVoltronSession)session;
 
-            //New avatar, enroll in voltron group
+            //unenroll in voltron group, mark as offline in data service.
             var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId);
-            //Mark as online
             avatar.Avatar_IsOnline = false;
             VoltronSessions.UnEnroll(session);
 
             using (var db = DAFactory.Get())
             {
+                // if the avatar has a lot ticket, we must destroy it and tell the relevant server to disconnect that client
+                var tickets = db.Lots.GetLotServerTicketsForClaimedAvatar(voltronSession.AvatarClaimId);
+                foreach (var ticket in tickets)
+                {
+                    //delete this ticket. tell the server we're through.
+                    //..but we need to find what server has claimed the lot the ticket is for.
+                    var lotServer = LotServers.GetLotServerSession(ticket.lot_owner);
+                    if (lotServer != null)
+                    {
+                        lotServer.Write(new RequestLotClientTermination()
+                        {
+                            AvatarId = voltronSession.AvatarId,
+                            LotId = ticket.lot_id,
+                            FromOwner = Context.Config.Call_Sign
+                        });
+                    }
+                    db.Lots.DeleteLotServerTicket(ticket.ticket_id);
+                }
                 db.AvatarClaims.Delete(voltronSession.AvatarClaimId, Context.Config.Call_Sign);
             }
         }

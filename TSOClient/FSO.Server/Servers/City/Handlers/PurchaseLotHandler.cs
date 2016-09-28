@@ -35,9 +35,8 @@ namespace FSO.Server.Servers.City.Handlers
 
         public async void Handle(IVoltronSession session, PurchaseLotRequest packet)
         {
-            if (session.IsAnonymous){
+            if (session.IsAnonymous) //CAS users can't do this.
                 return;
-            }
 
             var isPurchasable = Realestate.IsPurchasable(packet.LotLocation_X, packet.LotLocation_Y);
 
@@ -98,18 +97,28 @@ namespace FSO.Server.Servers.City.Handlers
                     DataService.Invalidate<FSO.Common.DataService.Model.Lot>(packedLocation);
                 }catch(Exception ex){
                     //Name taken
-                    session.Write(new PurchaseLotResponse()
+                    if (ex.Message == "NAME")
                     {
-                        Status = PurchaseLotStatus.FAILED,
-                        Reason = PurchaseLotFailureReason.NAME_TAKEN
-                    });
+                        session.Write(new PurchaseLotResponse()
+                        {
+                            Status = PurchaseLotStatus.FAILED,
+                            Reason = PurchaseLotFailureReason.NAME_TAKEN //TODO: this can also happen if the location was taken. (location is a UNIQUE row)
+                        });
+                    } else
+                    {
+                        session.Write(new PurchaseLotResponse()
+                        {
+                            Status = PurchaseLotStatus.FAILED,
+                            Reason = PurchaseLotFailureReason.UNKNOWN //likely already roommate somewhere else, or we got race condition'd by another roomie request
+                        });
+                    }
                     return;
                 }
             }
 
-            //TODO: Init lot with default thumbnail / blueprint?
+            //lot init happens on first join, as part of the loading process. If the lot somehow crashes before first save, it'll just be a blank slate again.
 
-            //TODO: Broadcast to the world a new lot exists
+            //TODO: Broadcast to the world a new lot exists. i think we do this?
 
             //Update my sim's lot
             var avatar = await DataService.Get<Avatar>(session.AvatarId);

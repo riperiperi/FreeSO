@@ -367,7 +367,7 @@ namespace FSO.Client.UI.Panels
             if (entity is VMGameObject && ((VMTSOObjectState)entity.TSOState).OwnerID > 0)
             {
                 var ownerID = ((VMTSOObjectState)entity.TSOState).OwnerID;
-                var ownerEnt = vm.GetObjectByPersist(ownerID);
+                var ownerEnt = vm.GetAvatarByPersist(ownerID);
                 owner = (ownerEnt != null) ? owner = ownerEnt.Name : "(offline user)";
             }
 

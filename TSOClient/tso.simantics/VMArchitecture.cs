@@ -26,6 +26,10 @@ namespace FSO.SimAntics
 
         public int LastTestCost;
 
+        public bool DisableClip;
+        public Rectangle BuildableArea;
+        public int BuildableFloors;
+
         //public for quick access and iteration. 
         //Make sure that on modifications you signal so that the render updates.
         public WallTile[][] Walls;
@@ -131,6 +135,19 @@ namespace FSO.SimAntics
             double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
 
             WorldUI.OutsideColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
+        }
+
+        public void UpdateBuildableArea(Rectangle area, int floors)
+        {
+            //notify the lotview this has changed too, so it can be drawn.
+            BuildableArea = area;
+            BuildableFloors = floors;
+            if (VM.UseWorld)
+            {
+                WorldUI.BuildableArea = BuildableArea;
+                WorldUI.Terrain.TerrainDirty = true;
+            }
+            FloorsDirty = true;
         }
 
         public void SetObjectSupported(short x, short y, sbyte level, bool support)
@@ -608,6 +625,15 @@ namespace FSO.SimAntics
         {
             var offset = GetOffset(tileX, tileY);
             return Floors[level-1][offset];
+        }
+
+        public bool OutsideClip(short tileX, short tileY, sbyte level)
+        {
+            var area = BuildableArea;
+            if (DisableClip)
+                return (tileX < 0 || tileY < 0 || level < 1 || tileX >= Width || tileY >= Height || level > Stories);
+            else
+                return (tileX < area.X || tileY < area.Y || level < 1 || tileX >= area.Right || tileY >= area.Bottom || level > BuildableFloors);
         }
 
         public bool SetFloor(short tileX, short tileY, sbyte level, FloorTile floor, bool force)

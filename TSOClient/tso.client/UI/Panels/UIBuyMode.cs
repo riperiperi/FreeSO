@@ -30,7 +30,6 @@ namespace FSO.Client.UI.Panels
         public Texture2D inventoryVisitorBackground { get; set; }
 
         public VM vm;
-        public VMAvatar SelectedAvatar;
 
         //roommate catalog elements
         public UIImage CatBg;
@@ -102,17 +101,20 @@ namespace FSO.Client.UI.Panels
             Background.BlockInput();
             this.AddAt(0, Background);
 
+            var InventoryButtonBackgroundImage = script.Create<UIImage>("InventoryButtonBackgroundImage");
+            this.AddAt(1, InventoryButtonBackgroundImage);
+
             CatBg = new UIImage(catalogBackground);
             CatBg.Position = new Microsoft.Xna.Framework.Vector2(250, 5);
-            this.AddAt(1, CatBg);
+            this.AddAt(2, CatBg);
 
             InventoryCatBg = new UIImage(inventoryRoommateBackground);
             InventoryCatBg.Position = new Microsoft.Xna.Framework.Vector2(250, 5);
-            this.AddAt(2, InventoryCatBg);
+            this.AddAt(3, InventoryCatBg);
 
             NonRMInventoryCatBg = new UIImage(inventoryVisitorBackground);
             NonRMInventoryCatBg.Position = new Microsoft.Xna.Framework.Vector2(68, 5);
-            this.AddAt(3, InventoryCatBg);
+            this.AddAt(4, InventoryCatBg);
 
             Catalog = new UICatalog(useSmall ? 14 : 24);
             Catalog.OnSelectionChange += new CatalogSelectionChangeDelegate(Catalog_OnSelectionChange);
@@ -276,7 +278,7 @@ namespace FSO.Client.UI.Panels
 
             if (OldSelection != -1) Catalog.SetActive(OldSelection, false);
             Catalog.SetActive(selection, true);
-            BuyItem = vm.Context.CreateObjectInstance(item.Item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
+            BuyItem = LotController.vm.Context.CreateObjectInstance(item.Item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
             if (BuyItem == null) return; //uh
             QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
             QueryPanel.Mode = 1;

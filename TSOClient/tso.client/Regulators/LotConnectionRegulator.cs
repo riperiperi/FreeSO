@@ -93,6 +93,7 @@ namespace FSO.Client.Regulators
                     var result = (FindLotResponse)data;
                     if(result.Status == Server.Protocol.Electron.Model.FindLotResponseStatus.FOUND)
                     {
+                        LotId = result.LotId;
                         FindLotResponse = result;
                         AsyncTransition("OpenSocket", result.Address);
                     }

@@ -16,5 +16,6 @@ namespace FSO.Server.Database.DA.Lots
         public int lot_id { get; set; }
         public int avatar_claim_id { get; set; }
         public string avatar_claim_owner { get; set; }
+        public string lot_owner { get; set; }
     }
 }

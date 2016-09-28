@@ -95,7 +95,7 @@ namespace FSO.SimAntics.Entities
             }
         }
 
-        public VMPlacementResult ChangePosition(LotTilePos pos, Direction direction, VMContext context)
+        public VMPlacementResult ChangePosition(LotTilePos pos, Direction direction, VMContext context, VMPlaceRequestFlags flags)
         {
             if (pos.Level > context.Architecture.Stories) return new VMPlacementResult(VMPlacementError.NotAllowedOnFloor);
 
@@ -138,7 +138,7 @@ namespace FSO.SimAntics.Entities
                     off = Vector3.Transform(off-leadOff, rotMat);
 
                     var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), (sbyte)(pos.Level + Offsets[i].Level));
-                    places[i] = sub.PositionValid(offPos, direction, context);
+                    places[i] = sub.PositionValid(offPos, direction, context, flags);
                     if (places[i].Status != VMPlacementError.Success)
                     {
                         //go back to where we started: we're no longer out of world.

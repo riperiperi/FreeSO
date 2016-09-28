@@ -59,6 +59,17 @@ namespace FSO.Client.UI.Panels
 
         /** Skills **/
 
+        public UISkillBar MechanicalSkillBar;
+        public UISkillBar CookingSkillBar;
+        public UISkillBar CharismaSkillBar;
+        public UISkillBar LogicSkillBar;
+        public UISkillBar BodySkillBar;
+        public UISkillBar CreativitySkillBar;
+
+        public UISkillBar[] SkillBars;
+
+        public UILabel LockPointsLabel { get; set; }
+
         /** Jobs **/
         public UITextEdit JobsText { get; set; }
         public UISlider JobsSlider { get; set; }
@@ -112,6 +123,10 @@ namespace FSO.Client.UI.Panels
         public UIImage OfflineEnemyBackgroundImage { get; set; }
         public UIImage OfflineNeutralBackgroundImage { get; set; }
 
+        /**
+         * Skills Progress Bars 
+         */
+
         private bool Open = true;
 
         /**
@@ -123,7 +138,11 @@ namespace FSO.Client.UI.Panels
         private UIAccomplishmentsTab _AccomplishmentsTab = UIAccomplishmentsTab.Skills;
         private UIRelationshipsTab _RelationshipsTab = UIRelationshipsTab.Outgoing;
         private string OriginalDescription;
+        private string JobAlertText;
+        private bool LocalDataChange;
 
+        private int TotalLocks = 20;
+        private int UsedLocks = 0;
 
         public UIPersonPage()
         {
@@ -212,9 +231,65 @@ namespace FSO.Client.UI.Panels
 
             var ui = this.RenderScript("personpage.uis");
 
+            MechanicalSkillBar = ui.Create<UISkillBar>("MechanicalSkillBarArea");
+            CookingSkillBar = ui.Create<UISkillBar>("CookingSkillBarArea");
+            CharismaSkillBar = ui.Create<UISkillBar>("CharismaSkillBarArea");
+            LogicSkillBar = ui.Create<UISkillBar>("LogicSkillBarArea");
+            BodySkillBar = ui.Create<UISkillBar>("BodySkillBarArea");
+            CreativitySkillBar = ui.Create<UISkillBar>("CreativitySkillBarArea");
+
+            SkillBars = new UISkillBar[] {
+                MechanicalSkillBar,
+                CookingSkillBar,
+                CharismaSkillBar,
+                LogicSkillBar,
+                BodySkillBar,
+                CreativitySkillBar,
+            };
+
+            for (int i = 0; i < SkillBars.Length; i++)
+            {
+                var bar = SkillBars[i];
+                bar.NumericId = 699 - i;
+                Add(SkillBars[i]);
+                bar.SkillID = i;
+                bar.OnSkillLock += (skillLock) =>
+                {
+                    if (CurrentAvatar != null && CurrentAvatar.Value != null && FindController<CoreGameScreenController>().IsMe(CurrentAvatar.Value.Avatar_Id))
+                    {
+                        var skills = CurrentAvatar.Value.Avatar_Skills;
+                        var dot = "Avatar_Skills.AvatarSkills_LockLv_" + GameFacade.Strings.GetString("189", (17 + bar.SkillID).ToString());
+                        LocalDataChange = true;
+                        skills.AvatarSkills_LockLv_Mechanical = (ushort)MechanicalSkillBar.LockLevel;
+                        skills.AvatarSkills_LockLv_Cooking = (ushort)CookingSkillBar.LockLevel;
+                        skills.AvatarSkills_LockLv_Charisma = (ushort)CharismaSkillBar.LockLevel;
+                        skills.AvatarSkills_LockLv_Logic = (ushort)LogicSkillBar.LockLevel;
+                        skills.AvatarSkills_LockLv_Body = (ushort)BodySkillBar.LockLevel;
+                        skills.AvatarSkills_LockLv_Creativity = (ushort)CreativitySkillBar.LockLevel;
+                        LocalDataChange = false;
+                        FindController<PersonPageController>().SaveValue(CurrentAvatar.Value, dot);
+                    }
+                    UpdateLockCounts();
+                };
+            }
+
             SimBox = ui.Create<UISim>("Person3dView");
             SimBox.AutoRotate = true;
             this.Add(SimBox);
+
+            //modify skill page a little to fix its layout for now
+            this.ChildrenWithinIdRange(600, 699).ForEach(x => {
+                if (x is UILabel)
+                {
+                    var lbl = ((UILabel)x);
+                    lbl.Y -= 5;
+                    if (x.NumericId != 606)
+                    {
+                        lbl.Alignment = TextAlignment.Right;
+                    }
+                }
+                x.X -= 8;
+            });
 
             BackgroundNameImage.With9Slice(20, 20, 0, 0);
 
@@ -261,6 +336,8 @@ namespace FSO.Client.UI.Panels
                 FindController<PersonPageController>().Close();
             };
 
+            JobsHelpButton.OnButtonClick += ShowJobInfo;
+
             /** Default state **/
             CurrentTab = UIPersonPageTab.Description;
             CurrentAccomplishmentsTab = UIAccomplishmentsTab.Skills;
@@ -276,6 +353,16 @@ namespace FSO.Client.UI.Panels
                 }, "Avatar_Name", "Avatar_IsOnline", "Avatar_Description");
             
             Redraw();
+        }
+
+        private void ShowJobInfo(UIElement button)
+        {
+            UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                Title = GameFacade.Strings.GetString("189", "64"),
+                Message = JobAlertText,
+                Buttons = UIAlertButton.Ok(),
+            }, true);
         }
 
         public void TrySaveDescription()
@@ -371,6 +458,7 @@ namespace FSO.Client.UI.Panels
             {
                 CurrentTab = UIPersonPageTab.Options;
             }
+            FindController<PersonPageController>().ChangeTopic();
         }
 
         public UIPersonPageTab CurrentTab
@@ -427,18 +515,75 @@ namespace FSO.Client.UI.Panels
         {
             this.Open = open;
             Redraw();
-            FindController<PersonPageController>().ForceRefreshData(_Tab);
+            FindController<PersonPageController>()?.ForceRefreshData(_Tab);
+        }
+
+        private void PopulateJobsText(Avatar ava)
+        {
+            HashSet<JobLevel> jobs = null;
+            JobLevel currentJob = null;
+            if (ava.Avatar_JobLevelVec != null)
+            {
+                jobs = new HashSet<JobLevel>(ava.Avatar_JobLevelVec);
+                currentJob = jobs.Where(x => x.JobLevel_JobType == ava.Avatar_CurrentJob).FirstOrDefault();
+            }
+            StringBuilder outText = new StringBuilder();
+            outText.Append(GameFacade.Strings.GetString("189", "60")+"\r\n"); //current title
+            if (ava.Avatar_CurrentJob == 0 || jobs == null || currentJob == null)
+            {
+                outText.Append(GameFacade.Strings.GetString("189", "61") + "\r\n\r\n"); //unemployed
+                JobAlertText = GameFacade.Strings.GetString("189", "66");
+            }
+            else
+            {
+                jobs.Remove(currentJob);
+                var title = GameFacade.Strings.GetString("272", (((currentJob.JobLevel_JobType - 1) * 11) + currentJob.JobLevel_JobGrade + 1).ToString());
+                outText.Append(title);
+                outText.Append("\r\n\r\n");
+                if (jobs.Count > 0)
+                {
+                    //remaining other jobs
+                    outText.Append(GameFacade.Strings.GetString("189", "62") + "\r\n"); //other titles
+                    foreach (var job in jobs)
+                    {
+                        outText.Append(GameFacade.Strings.GetString("272", (((job.JobLevel_JobType - 1) * 11) + job.JobLevel_JobGrade + 1).ToString()));
+                        outText.Append("\r\n");
+                    }
+                }
+                int poolTime = currentJob.JobLevel_JobType;
+                poolTime = (poolTime > 2) ? (poolTime - 1) : poolTime;
+                JobAlertText = GameFacade.Strings.GetString("189", "65", new string[] {
+                    GameFacade.Strings.GetString("189", (67+currentJob.JobLevel_JobType).ToString()),
+                    title,
+                    GameFacade.Strings.GetString("189", (73+poolTime*2).ToString()),
+                    GameFacade.Strings.GetString("189", (74+poolTime*2).ToString()),
+                    (currentJob.JobLevel_JobGrade == 10) ? GameFacade.Strings.GetString("189", "79") :
+                    GameFacade.Strings.GetString("272", (((currentJob.JobLevel_JobType - 1) * 11) + currentJob.JobLevel_JobGrade + 2).ToString())
+                });
+            }
+            JobsText.CurrentText = outText.ToString();
+            JobsText.SetSize(JobsText.Width, 160);
+        }
+
+        private void UpdateLockCounts()
+        {
+            UsedLocks = 0;
+            foreach (var bar in SkillBars) UsedLocks += bar.LockLevel;
+            LockPointsLabel.Caption = GameFacade.Strings.GetString("189", "49", new string[] { UsedLocks.ToString(), TotalLocks.ToString() });
+            foreach (var bar in SkillBars) bar.FreeLocks = TotalLocks - UsedLocks;
         }
 
         private void Redraw()
         {
+            if (LocalDataChange) return;
             var isOpen = Open == true;
             var isClosed = Open == false;
             var isOnline = false;
             var isMe = false;
             var hasProperty = false;
 
-            if(CurrentAvatar != null && CurrentAvatar.Value != null){
+            if (CurrentAvatar != null && CurrentAvatar.Value != null)
+            {
                 isOnline = CurrentAvatar.Value.Avatar_IsOnline;
                 isMe = FindController<CoreGameScreenController>().IsMe(CurrentAvatar.Value.Avatar_Id);
                 hasProperty = CurrentAvatar.Value.Avatar_LotGridXY != 0;
@@ -448,7 +593,28 @@ namespace FSO.Client.UI.Panels
                     OriginalDescription = CurrentAvatar.Value.Avatar_Description;
                     DescriptionText.CurrentText = OriginalDescription;
                 }
+                
+                if (CurrentAvatar.Value.Avatar_Skills != null)
+                {
+                    var skills = CurrentAvatar.Value.Avatar_Skills;
+                    MechanicalSkillBar.SkillLevel = skills.AvatarSkills_Mechanical;
+                    CookingSkillBar.SkillLevel = skills.AvatarSkills_Cooking;
+                    CharismaSkillBar.SkillLevel = skills.AvatarSkills_Charisma;
+                    LogicSkillBar.SkillLevel = skills.AvatarSkills_Logic;
+                    BodySkillBar.SkillLevel = skills.AvatarSkills_Body;
+                    CreativitySkillBar.SkillLevel = skills.AvatarSkills_Creativity;
+
+                    MechanicalSkillBar.LockLevel = skills.AvatarSkills_LockLv_Mechanical;
+                    CookingSkillBar.LockLevel = skills.AvatarSkills_LockLv_Cooking;
+                    CharismaSkillBar.LockLevel = skills.AvatarSkills_LockLv_Charisma;
+                    LogicSkillBar.LockLevel = skills.AvatarSkills_LockLv_Logic;
+                    BodySkillBar.LockLevel = skills.AvatarSkills_LockLv_Body;
+                    CreativitySkillBar.LockLevel = skills.AvatarSkills_LockLv_Creativity;
+                }
+                UpdateLockCounts();
+                PopulateJobsText(CurrentAvatar.Value);
             }
+            else PopulateJobsText(new Avatar());
 
             var isFriend = false;
             var isEnemy = false;

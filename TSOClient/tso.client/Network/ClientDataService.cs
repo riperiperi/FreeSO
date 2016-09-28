@@ -64,11 +64,35 @@ namespace FSO.Common.DataService
             return result.Task;
         }
 
-        public void Sync(object item, string[] fields)
+        public void Sync(object item, string[] fieldPaths)
         {
-            var tField = GetFieldsByName(item.GetType(), fields);
-            var keyField = item.GetType().GetProperties().First(x => x.GetCustomAttribute<Key>() != null);
-            var updates = SerializeUpdate(tField, item, (uint)keyField.GetValue(item));
+            var updates = new List<cTSOTopicUpdateMessage>();
+            foreach (var fieldPath in fieldPaths)
+            {
+                //the "item" is the top level. We can really serialize anything any number of fields deep.
+                //dot path is: provider, id, field, field, field...
+                var path = fieldPath.Split('.');
+                var dotPath = new uint[path.Length + 2];
+
+                var topField = GetFieldByName(item.GetType(), path[0]);
+                var keyField = item.GetType().GetProperties().First(x => x.GetCustomAttribute<Key>() != null);
+                var id = (uint)keyField.GetValue(item);
+
+                dotPath[0] = topField.ParentID;
+                dotPath[1] = id;
+                dotPath[2] = topField.ID;
+
+                var curObj = item.GetType().GetProperty(path[0]).GetValue(item);
+
+                for (int i = 1; i < path.Length; i++)
+                {
+                    var curField = GetFieldByName(curObj.GetType(), path[i]);
+                    dotPath[i + 2] = curField.ID;
+                    curObj = curObj.GetType().GetProperty(path[i]).GetValue(curObj);
+                }
+
+                updates.Add(SerializeUpdate(curObj, dotPath));
+            }
 
             if (updates.Count == 0) { return; }
             var packets = new DataServiceWrapperPDU[updates.Count];

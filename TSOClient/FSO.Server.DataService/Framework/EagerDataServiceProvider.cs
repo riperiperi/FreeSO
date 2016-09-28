@@ -64,6 +64,11 @@ namespace FSO.Common.DataService.Framework
             }
         }
 
+        public override void Invalidate(object key, object replacement)
+        {
+            Insert((KEY)key, (VALUE)replacement);
+        }
+
         private Task<object> Immediate(object value)
         {
             var tcs = new TaskCompletionSource<object>();

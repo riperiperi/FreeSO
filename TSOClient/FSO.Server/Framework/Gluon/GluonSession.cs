@@ -27,6 +27,10 @@ namespace FSO.Server.Framework.Gluon
         {
         }
 
+        public void DemandAvatars(List<uint> id, AvatarPermissions permission)
+        {
+        }
+
         public void DemandInternalSystem()
         {
         }

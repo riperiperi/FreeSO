@@ -69,6 +69,7 @@ namespace FSO.Client.UI.Panels
         public Texture2D VisitorThumbButtonImage { get; set; }
 
         private UILotThumbButton LotThumbnail { get; set; }
+        private UIRoommateList RoommateList { get; set; }
         private UIPersonButton OwnerButton { get; set; }
         private Texture2D DefaultThumb;
         private string OriginalDescription;
@@ -116,6 +117,9 @@ namespace FSO.Client.UI.Panels
             LotThumbnail.SetThumbnail(DefaultThumb, 0);
             Add(LotThumbnail);
 
+            RoommateList = script.Create<UIRoommateList>("RoommateList");
+            Add(RoommateList);
+
             OwnerButton = script.Create<UIPersonButton>("HouseLeaderThumbSetup");
             OwnerButton.FrameSize = UIPersonButtonSize.LARGE;
             Add(OwnerButton);
@@ -129,7 +133,7 @@ namespace FSO.Client.UI.Panels
             HouseDescriptionTextEdit.AttachSlider(HouseDescriptionSlider);
 
             HouseLinkButton.OnButtonClick += JoinLot;
-
+            HouseCategoryButton.OnButtonClick += ChangeCategory;
             LotThumbnail.OnLotClick += JoinLot;
 
             CurrentLot = new Binding<Lot>()
@@ -168,10 +172,21 @@ namespace FSO.Client.UI.Panels
                             return null;
                     }
                 })
-                .WithMultiBinding(x => RefreshUI(), "Lot_LeaderID", "Lot_IsOnline", "Lot_Thumbnail", "Lot_Description");
+                .WithMultiBinding(x => RefreshUI(), "Lot_LeaderID", "Lot_IsOnline", "Lot_Thumbnail", "Lot_Description", "Lot_RoommateVec");
 
             RefreshUI();
             NeighborhoodNameButton.Visible = false;
+        }
+
+        private void ChangeCategory(UIElement button)
+        {
+            var catDialog = new UILotCategoryDialog();
+            UIScreen.GlobalShowDialog(new DialogReference
+            {
+                Dialog = catDialog,
+                Controller = this,
+                Modal = true,
+            });
         }
 
         public void TrySaveDescription()
@@ -226,6 +241,13 @@ namespace FSO.Client.UI.Panels
             {
                 isOnline = CurrentLot.Value.Lot_IsOnline;
                 isMyProperty = FindController<CoreGameScreenController>().IsMe(CurrentLot.Value.Lot_LeaderID);
+                    
+                var roomies = new List<uint>();
+                if (CurrentLot.Value.Lot_RoommateVec != null) roomies.AddRange(CurrentLot.Value.Lot_RoommateVec);
+                roomies.Remove(CurrentLot.Value.Lot_LeaderID);
+                foreach (var roomie in roomies) if (FindController<CoreGameScreenController>().IsMe(roomie)) isRoommate = true;
+                RoommateList.UpdateList(roomies);
+
                 var thumb = CurrentLot.Value.Lot_Thumbnail.Data;
                 if (thumb.Length == 0)
                     LotThumbnail.SetThumbnail(DefaultThumb, 0);
@@ -243,6 +265,7 @@ namespace FSO.Client.UI.Panels
 
             BackgroundContractedImage.Visible = isClosed;
             BackgroundExpandedImage.Visible = isOpen;
+            RoommateList.Visible = isOpen;
 
             ExpandButton.Visible = isClosed;
             ExpandedCloseButton.Visible = isOpen;
@@ -261,6 +284,7 @@ namespace FSO.Client.UI.Panels
 
             VisitorsLeftScrollButton.Visible = VisitorsRightScrollButton.Visible = isOpen;
 
+            HouseCategoryButton.Disabled = !isMyProperty;
             if (isMyProperty) LotThumbnail.Mode = UILotRelationship.OWNER;
             else if (isRoommate) LotThumbnail.Mode = UILotRelationship.ROOMMATE;
             else LotThumbnail.Mode = UILotRelationship.VISITOR;
@@ -271,6 +295,34 @@ namespace FSO.Client.UI.Panels
             }else{
                 HouseLinkButton.Disabled = true;
                 LotThumbnail.Disabled = true;
+            }
+        }
+    }
+
+    public class UIRoommateList : UIContainer
+    {
+        private List<UIPersonButton> RoommateButtons = new List<UIPersonButton>();
+        public UIRoommateList() : base()
+        {
+        }
+
+        public void UpdateList(List<uint> roommates)
+        {
+            while (RoommateButtons.Count > roommates.Count) {
+                Remove(RoommateButtons[RoommateButtons.Count - 1]);
+                RoommateButtons.RemoveAt(RoommateButtons.Count - 1);
+            }
+            while (roommates.Count > RoommateButtons.Count) {
+                var btn = new UIPersonButton();
+                btn.FrameSize = UIPersonButtonSize.SMALL;
+                btn.X = RoommateButtons.Count * (20 + 6); //6 is gutter size
+                Add(btn);
+                RoommateButtons.Add(btn);
+            }
+            for (int i = 0; i < RoommateButtons.Count; i++)
+            {
+                if (RoommateButtons[i].AvatarId != roommates[i])
+                    RoommateButtons[i].AvatarId = roommates[i];
             }
         }
     }

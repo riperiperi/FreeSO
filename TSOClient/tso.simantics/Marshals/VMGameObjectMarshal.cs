@@ -10,6 +10,7 @@ namespace FSO.SimAntics.Marshals
     public class VMGameObjectMarshal : VMEntityMarshal
     {
         public Direction Direction;
+        public VMGameObjectDisableFlags Disabled;
 
         public VMGameObjectMarshal() { }
         public VMGameObjectMarshal(int version) : base(version) { }
@@ -18,11 +19,13 @@ namespace FSO.SimAntics.Marshals
         {
             base.Deserialize(reader);
             Direction = (Direction)reader.ReadByte();
+            if (Version > 9) Disabled = (VMGameObjectDisableFlags)reader.ReadByte();
         }
         public override void SerializeInto(BinaryWriter writer)
         {
             base.SerializeInto(writer);
             writer.Write((byte)Direction);
+            writer.Write((byte)Disabled);
         }
     }
 }

@@ -11,7 +11,7 @@ float4 DiffuseColor;
 float2 ScreenOffset;
 float GrassProb;
 
-bool DepthOutMode;
+bool depthOutMode;
 
 struct GrassVTX
 {
@@ -84,7 +84,7 @@ void BladesPS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB:COLOR
 
     float d = input.GrassInfo.w;
     depthB = packDepth(d);
-    if (DepthOutMode == true) {
+    if (depthOutMode == true) {
         color = depthB;
     }
     else {
@@ -96,12 +96,25 @@ void BladesPS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB:COLOR
 
 }
 
+void GridPS(GrassPSVTX input, out float4 color:COLOR0)
+{
+	if (floor(input.ScreenPos.xy + ScreenOffset).x % 2 == 0) discard;
+	//skip every second horizontal pixel. TODO: Original game skips 3/4 when land is sloped.
+	if (depthOutMode == true) {
+		discard;
+	}
+	else {
+		color = DiffuseColor;
+	}
+}
+
+
 void BasePS(GrassVTX input, out float4 color:COLOR0, out float4 depthB:COLOR1)
 {
     
     float d = input.GrassInfo.w;
     depthB = packDepth(d);
-    if (DepthOutMode == true) {
+    if (depthOutMode == true) {
         color = depthB;
     }
     else {
@@ -123,6 +136,22 @@ technique DrawBase
 #endif;
 
     }
+}
+
+technique DrawGrid
+{
+	pass MainPass
+	{
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 GrassVS();
+		PixelShader = compile ps_4_0_level_9_1 GridPS();
+#else
+		VertexShader = compile vs_3_0 GrassVS();
+		PixelShader = compile ps_3_0 GridPS();
+#endif;
+
+	}
 }
 
 technique DrawBlades

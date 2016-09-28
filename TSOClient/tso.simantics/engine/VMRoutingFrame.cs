@@ -141,6 +141,16 @@ namespace FSO.SimAntics.Engine
             }
         }
 
+        public bool IntersectsOurDestination(VMFindLocationResult target)
+        {
+            if (CurRoute == null) return false;
+            if (target.Chair != null && target.Chair == CurRoute.Chair) return true;
+            var pos = CurRoute.Position;
+            var tpos = target.Position;
+            var obs = new VMObstacle(pos.x - 6, pos.y - 6, pos.x + 6, pos.y + 6);
+            return obs.Contains(new Point(tpos.x, tpos.y));
+        }
+
         public bool InitRoutes(SLOTItem slot, VMEntity target)
         {
             Init();

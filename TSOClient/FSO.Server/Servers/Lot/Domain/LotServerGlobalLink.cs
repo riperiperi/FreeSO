@@ -16,6 +16,8 @@ using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Marshals;
+using FSO.Server.Database.DA.Lots;
+using FSO.Server.Database.DA.Roommates;
 
 namespace FSO.Server.Servers.Lot.Domain
 {
@@ -62,14 +64,107 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
-        public void RequestRoommate(VM vm, VMAvatar avatar)
+        public void RequestRoommate(VM vm, VMAvatar avatar, int mode, byte permissions)
         {
-            throw new NotImplementedException();
+            //0 = initiate. 1 = accept. 2 = reject.
+            //we have the "initiate" step so that users are reminded if they somehow dc before the transaction completes.
+            //users will be reminded of their in-progress roommate request every time they log in or leave a lot. (potentially check on most server actions)
+            var avatarID = avatar.PersistID;
+            var lotID = Context.DbId;
+            Host.InBackground(() =>
+            {
+                //TODO: use results in meaningful fashion
+                using (var db = DAFactory.Get())
+                {
+                    bool queryResult;
+                    switch (mode)
+                    {
+                        case 1:
+                            queryResult = db.Roommates.Create(new DbRoommate()
+                            {
+                                avatar_id = avatarID,
+                                lot_id = lotID,
+                                is_pending = 0,
+                                permissions_level = 0
+                            });
+                            if (queryResult)
+                            {
+                                vm.ForwardCommand(new VMChangePermissionsCmd()
+                                {
+                                    TargetUID = avatarID,
+                                    Level = VMTSOAvatarPermissions.Roommate,
+                                    Verified = true
+                                });
+                            }
+                            break;
+                        //the following code enables pending requests, like in the original game. I decided they only really make sense for requests initiated from city.
+                        /*
+                        case 0:
+                            queryResult = db.Roommates.Create(new DbRoommate()
+                            {
+                                avatar_id = avatarID,
+                                lot_id = lotID,
+                                is_pending = 1,
+                                permissions_level = 0
+                            });
+                            // dont do anything if we fail. I can see on-lot roommate requests having precedence over off-lot ones though, 
+                            // so forcing a wipe of old pending requests might make sense.
+                            break;
+                        case 1:
+                            //accept
+                            queryResult = db.Roommates.AcceptRoommateRequest(avatarID, lotID);
+                            //if it worked, tell everyone in the lot that there's a new roommate.
+                            if (queryResult)
+                            {
+                                vm.ForwardCommand(new VMChangePermissionsCmd()
+                                {
+                                    TargetUID = avatarID,
+                                    Level = VMTSOAvatarPermissions.Roommate,
+                                    Verified = true
+                                });
+                            }
+                            //todo: error feedback. I think the global call is meant to block for an answer and possibly return false.
+                            break;
+                        case 2:
+                            queryResult = db.Roommates.RemoveRoommate(avatarID, lotID) > 0;
+                            break;
+                            */
+                        case 3: //FSO specific mode: switch permissions.
+                            queryResult = db.Roommates.UpdatePermissionsLevel(avatarID, lotID, permissions);
+                            if (queryResult)
+                            {
+                                vm.ForwardCommand(new VMChangePermissionsCmd()
+                                {
+                                    TargetUID = avatarID,
+                                    Level = (permissions==0)?VMTSOAvatarPermissions.Roommate:VMTSOAvatarPermissions.BuildBuyRoommate,
+                                    Verified = true
+                                });
+                            }
+                            break;
+                    }
+                    Host.SyncRoommates();
+                }
+            });
         }
 
         public void RemoveRoommate(VM vm, VMAvatar avatar)
         {
-            throw new NotImplementedException();
+            var avatarID = avatar.PersistID;
+            var lotID = Context.DbId;
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    var queryResult = db.Roommates.RemoveRoommate(avatarID, lotID) > 0;
+                    vm.ForwardCommand(new VMChangePermissionsCmd()
+                    {
+                        TargetUID = avatarID,
+                        Level = VMTSOAvatarPermissions.Visitor,
+                        Verified = true
+                    });
+                    Host.SyncRoommates();
+                }
+            });
         }
 
         public void ObtainAvatarFromTicket(VM vm, string ticket, VMAsyncAvatarCallback callback)
@@ -187,9 +282,11 @@ namespace FSO.Server.Servers.Lot.Domain
             var objid = obj.ObjectID;
             uint guid = obj.Object.OBJ.GUID;
             if (obj.MasterDefinition != null) guid = obj.MasterDefinition.GUID;
+            uint? owner = ((VMTSOObjectState)obj.TSOState).OwnerID;
+            if (owner == 0) owner = null;
             DbObject dbo = new DbObject()
             {
-                owner_id = ((VMTSOObjectState)obj.TSOState).OwnerID,
+                owner_id = owner,
                 lot_id = Context.DbId,
                 shard_id = Context.ShardId,
                 dyn_obj_name = "",
@@ -209,17 +306,19 @@ namespace FSO.Server.Servers.Lot.Domain
                         if (callback != null) callback(objid, id);
                     }
                 }
-                catch (Exception e) { callback(objid, 0); }
+                catch (Exception) { callback(objid, 0); }
             });
         }
 
         private DbObject GenerateObjectPersist(VMMultitileGroup obj)
         {
             var bobj = obj.BaseObject;
+            uint? owner = ((VMTSOObjectState)obj.BaseObject.TSOState).OwnerID;
+            if (owner == 0) owner = null;
             return new DbObject()
             {
                 object_id = obj.BaseObject.PersistID,
-                owner_id = ((VMTSOObjectState)obj.BaseObject.TSOState).OwnerID,
+                owner_id = owner,
                 lot_id = Context.DbId,
                 dyn_obj_name = obj.Name,
                 graphic = (ushort)bobj.GetValue(VMStackObjectVariable.Graphic),
@@ -234,14 +333,14 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             if (objectPID == 0)
             {
-                callback(false);
+                callback(false, objectPID);
                 return; //non-persist objects cannot be moved to inventory!
             }
             Host.InBackground(() =>
             {
                 using (var db = DAFactory.Get())
                 {
-                    callback(db.Objects.SetInLot(objectPID, null));
+                    callback(db.Objects.SetInLot(objectPID, null), objectPID);
                 }
             });
         }
@@ -249,11 +348,10 @@ namespace FSO.Server.Servers.Lot.Domain
         public void MoveToInventory(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback)
         {
             var objectPID = obj.BaseObject.PersistID;
-            if (objectPID == 0)
-            {
-                callback(false);
-                return; //non-persist objects cannot be moved to inventory!
-            }
+            var objb = obj.BaseObject;
+            uint guid = objb.Object.OBJ.GUID;
+            if (objb.MasterDefinition != null) guid = objb.MasterDefinition.GUID;
+            var isNew = objectPID == 0;
             var state = new VMStandaloneObjectMarshal(obj);
             var dbState = GenerateObjectPersist(obj);
             dbState.lot_id = null; //we're removing this object from the lot
@@ -261,6 +359,21 @@ namespace FSO.Server.Servers.Lot.Domain
             {
                 try
                 {
+                    if (isNew)
+                    {
+                        try
+                        {
+                            using (var db = DAFactory.Get())
+                            {
+                                dbState.type = guid;
+                                dbState.shard_id = Context.ShardId;
+                                var id = db.Objects.Create(dbState);
+                                dbState.object_id = id;
+                                objectPID = id;
+                            }
+                        }
+                        catch (Exception) { callback(false, objectPID); }
+                    }
                     var objStr = objectPID.ToString("x8");
                     //make sure this exists
                     Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/"));
@@ -276,7 +389,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     {
                         using (var db = DAFactory.Get())
                         {
-                            callback(db.Objects.UpdatePersistState(objectPID, dbState)); //if object is on another lot or does not exist, this will fail.
+                            callback(db.Objects.UpdatePersistState(objectPID, dbState), objectPID); //if object is on another lot or does not exist, this will fail.
                         }
                         file.Close();
                     });
@@ -285,7 +398,31 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     //todo: specific types of exception that can be thrown here? instead of just catching em all
                     LOG.Error(e, "Failed to save inventory state for object " + objectPID.ToString("x8") + "!");
-                    callback(false);
+                    callback(false, objectPID);
+                }
+            });
+        }
+
+        public void ConsumeInventory(VM vm, uint ownerPID, uint guid, int mode, short num, VMAsyncInventoryConsumeCallback callback)
+        {
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    switch (mode)
+                    {
+                        case 0:
+                            callback(true, db.Objects.ObjOfTypeInAvatarInventory(ownerPID, guid).Count);
+                            return;
+                        case 1:
+                            if (num == 0) callback(true, 0);
+                            else
+                            {
+                                callback(db.Objects.ConsumeObjsOfTypeInAvatarInventory(ownerPID, guid, num), 0);
+                                UpdateInventoryFor(vm, ownerPID);
+                            }
+                            return;
+                    }
                 }
             });
         }
@@ -330,9 +467,36 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
-        public void DeleteObject(VM vm, uint objectPID, uint value, VMAsyncDeleteObjectCallback callback)
+        private void UpdateInventoryFor(VM vm, uint targetPID)
         {
-            throw new NotImplementedException();
+            using (var da = DAFactory.Get())
+            {
+                var inventory = da.Objects.GetAvatarInventory(targetPID);
+                var vmInventory = new List<VMInventoryItem>();
+                foreach (var item in inventory)
+                {
+                    vmInventory.Add(LotContainer.InventoryItemFromDB(item));
+                }
+                vm.SendDirectCommand(targetPID, new VMNetUpdateInventoryCmd { Items = vmInventory });
+            }
+        }
+
+        public void DeleteObject(VM vm, uint objectPID, VMAsyncDeleteObjectCallback callback)
+        {
+            Host.InBackground(() =>
+            {
+                if (objectPID == 0) callback(true);
+
+                var objStr = objectPID.ToString("x8");
+                var path = Path.Combine(Config.SimNFS, "Objects/" + objStr + "/");
+                if (Directory.Exists(path)) Directory.Delete(path, true); //delete any persist data we might have, plugins and inventory.
+
+                //remove object from db
+                using (var db = DAFactory.Get())
+                {
+                    callback(db.Objects.Delete(objectPID));
+                }
+            });
         }
     }
 }

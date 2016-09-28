@@ -46,7 +46,15 @@ namespace FSO.Server.Framework.Voltron
         public void DemandAvatar(uint id, AvatarPermissions permission)
         {
             if(AvatarId != id){
-                throw new SecurityException("Permission " + permission + " denied for avatar " + id);
+                throw new SecurityException("Permission " + permission + " denied for avatar " + AvatarId);
+            }
+        }
+
+        public void DemandAvatars(List<uint> ids, AvatarPermissions permission)
+        {
+            if (!ids.Contains(AvatarId))
+            {
+                throw new SecurityException("Permission " + permission + " denied for avatar " + AvatarId);
             }
         }
 

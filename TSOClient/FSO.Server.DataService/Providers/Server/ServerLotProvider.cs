@@ -17,6 +17,7 @@ using FSO.Common.Security;
 using System.Security;
 using System.IO;
 using FSO.Common.Serialization.Primitives;
+using FSO.Server.Database.DA.Roommates;
 
 namespace FSO.Common.DataService.Providers.Server
 {
@@ -59,7 +60,8 @@ namespace FSO.Common.DataService.Providers.Server
             {
                 var all = db.Lots.All(ShardId);
                 foreach(var item in all){
-                    var converted = HydrateOne(item);
+                    var roommates = db.Roommates.GetLotRoommates(item.lot_id);
+                    var converted = HydrateOne(item, roommates);
                     var intId = MapCoordinates.Pack(converted.Lot_Location.Location_X, converted.Lot_Location.Location_Y);
                     appender(intId, converted);
                 }
@@ -72,7 +74,11 @@ namespace FSO.Common.DataService.Providers.Server
             {
                 var lot = db.Lots.GetByLocation(ShardId, key);
                 if (lot == null) return null;
-                else return HydrateOne(lot);
+                else
+                {
+                    var roommates = db.Roommates.GetLotRoommates(lot.lot_id);
+                    return HydrateOne(lot, roommates);
+                }
             }
         }
 
@@ -83,7 +89,7 @@ namespace FSO.Common.DataService.Providers.Server
             CityRepresentation.City_ReservedLotInfo[value.Lot_Location_Packed] = value.Lot_IsOnline; //TODO: thread-safe all maps
         }
 
-        protected Lot HydrateOne(DbLot lot)
+        protected Lot HydrateOne(DbLot lot, List<DbRoommate> roommates)
         {
             var location = MapCoordinates.Unpack(lot.location);
 
@@ -115,12 +121,17 @@ namespace FSO.Common.DataService.Providers.Server
                 Lot_Price = (uint)Realestate.GetPurchasePrice(location.X, location.Y),
                 Lot_LeaderID = lot.owner_id,
                 Lot_OwnerVec = new List<uint>() { lot.owner_id },
-                Lot_RoommateVec = new List<uint>() { 65536, 65537 },
+                Lot_RoommateVec = new List<uint>(),
                 Lot_NumOccupants = 0,
                 Lot_LastCatChange = lot.category_change_date,
                 Lot_Description = lot.description,
                 Lot_Thumbnail = thumb
             };
+
+            foreach (var roomie in roommates)
+            {
+                if (roomie.is_pending == 0) result.Lot_RoommateVec.Add(roomie.avatar_id);
+            }
 
             return result;
         }
@@ -210,14 +221,15 @@ namespace FSO.Common.DataService.Providers.Server
 
                 //roommate only
                 case "Lot_Thumbnail":
-                    context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                    var roomies = lot.Lot_RoommateVec;
+                    context.DemandAvatars(roomies, AvatarPermissions.WRITE);
                     //TODO: needs to be generic data, png, size 288x288, less than 1MB
                     break;
                 case "Lot_IsOnline":
                 case "Lot_NumOccupants":
+                case "Lot_RoommateVec":
                     context.DemandInternalSystem();
                     break;
-
                 default:
                     throw new SecurityException("Field: " + path + " may not be mutated by users");
             }

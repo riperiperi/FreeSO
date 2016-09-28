@@ -9,6 +9,7 @@ namespace FSO.Server.Database.DA.AvatarClaims
     public interface IAvatarClaims
     {
         DbAvatarClaim Get(int id);
+        DbAvatarClaim GetByAvatarID(uint id);
         IEnumerable<DbAvatarClaim> GetAllByOwner(string owner);
 
         int? TryCreate(DbAvatarClaim claim);

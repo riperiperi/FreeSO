@@ -116,10 +116,10 @@ namespace FSO.LotView.Components
                     ((DisplayFlags & AvatarDisplayFlags.ShowAsGhost) > 0)?new Color(32, 255, 96)*0.66f:Color.White); 
             }
 
-            if (Headline != null)
+            if (Headline != null && !Headline.IsDisposed)
             {
                 var headOff = (transhead-Position) + new Vector3(0,0,0.66f);
-                var headPx = world.WorldSpace.GetScreenFromTile(headOff) / world.PreciseZoom;
+                var headPx = world.WorldSpace.GetScreenFromTile(headOff);
 
                 var item = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
                 item.Pixel = Headline;

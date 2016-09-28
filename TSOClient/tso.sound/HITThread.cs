@@ -28,7 +28,7 @@ namespace FSO.HIT
         public int LoopPointer = -1;
         public int WaitRemain = -1;
 
-        private bool SimpleMode; //certain sounds play with no HIT.
+        public bool SimpleMode; //certain sounds play with no HIT.
         private bool PlaySimple;
 
         private uint Patch; //sound id

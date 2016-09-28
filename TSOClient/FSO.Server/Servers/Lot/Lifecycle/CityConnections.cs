@@ -203,6 +203,10 @@ namespace FSO.Server.Servers.Lot.Lifecycle
         {
         }
 
+        public void DemandAvatars(List<uint> id, AvatarPermissions permission)
+        {
+        }
+
         public void DemandInternalSystem()
         {
         }

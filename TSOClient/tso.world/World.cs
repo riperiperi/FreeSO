@@ -36,8 +36,12 @@ namespace FSO.LotView
 
         /** How many pixels from each edge of the screen before we start scrolling the view **/
         public int ScrollBounds = 20;
+        public int FrameCounter = 0;
         public static bool DirectX = false;
         public float Opacity = 1f;
+
+        public int SmoothZoomTimer = -1;
+        public float SmoothZoomFrom = 1f;
 
         public WorldState State;
         protected bool HasInitGPU;
@@ -77,8 +81,7 @@ namespace FSO.LotView
             State._2D.AmbientLight = State.AmbientLight;
 
             PPXDepthEngine.InitGD(layer.Device);
-            //if (FSOEnvironment.SoftwareDepth)
-                PPXDepthEngine.InitScreenTargets(layer.Device);
+            PPXDepthEngine.InitScreenTargets(layer.Device);
 
             base.Camera = State.Camera;
 
@@ -105,6 +108,12 @@ namespace FSO.LotView
             }
             foreach (var sub in Blueprint.SubWorlds) sub.State.Zoom = State.Zoom;
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ZOOM));
+        }
+
+        public void InvalidatePreciseZoom()
+        {
+            if (Blueprint == null) { return; }
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.PRECISE_ZOOM));
         }
 
         public void InvalidateRotation()
@@ -289,6 +298,16 @@ namespace FSO.LotView
             return output;
         }
 
+        public void InitiateSmoothZoom(WorldZoom zoom)
+        {
+            SmoothZoomTimer = 0;
+            var curScale = (1 << (3 - (int)State.Zoom));
+            var zoomScale = (1 << (3 - (int)zoom));
+
+            SmoothZoomFrom = (float)zoomScale / curScale;
+            State.PreciseZoom = SmoothZoomFrom;
+        }
+
         public override void Update(UpdateState state)
         {
             base.Update(state);
@@ -301,6 +320,21 @@ namespace FSO.LotView
 
                 State.CenterTile -= (State.ScrollAnchor.Level - 1) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
             }
+
+            if (SmoothZoomTimer > -1)
+            {
+                SmoothZoomTimer++;
+                if (SmoothZoomTimer >= 15)
+                {
+                    State.PreciseZoom = 1f;
+                    SmoothZoomTimer = -1;
+                }
+                else
+                {
+                    var p = Math.Sin((SmoothZoomTimer / 30.0) * Math.PI);
+                    State.PreciseZoom = (float)((p) + (1 - p) * SmoothZoomFrom);
+                }
+            }
         }
 
         /// <summary>
@@ -309,10 +343,9 @@ namespace FSO.LotView
         /// <param name="device"></param>
         public override void PreDraw(GraphicsDevice device)
         {
-            State._2D.PreciseZoom = State.PreciseZoom;
             base.PreDraw(device);
             if (HasInit == false) { return; }
-
+            State._2D.PreciseZoom = State.PreciseZoom;
             State.OutsideColor = Blueprint.OutsideColor;
             foreach (var sub in Blueprint.SubWorlds) sub.PreDraw(device, State);
             if (Blueprint != null)
@@ -352,13 +385,10 @@ namespace FSO.LotView
         public override void Draw(GraphicsDevice device){
             if (HasInit == false) { return; }
 
-            //if (FSOEnvironment.SoftwareDepth)
-            //{
-                PPXDepthEngine.DrawBackbuffer(Opacity);
-                return;
-            //}
+            FrameCounter++;
 
-            //InternalDraw(device);
+            PPXDepthEngine.DrawBackbuffer(Opacity);
+            return;
         }
 
         private void InternalDraw(GraphicsDevice device)

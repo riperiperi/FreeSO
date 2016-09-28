@@ -20,6 +20,7 @@ namespace FSO.Common.DataService
         Task<object> Get(MaskedStruct type, object key);
 
         void Invalidate<T>(object key);
+        void Invalidate<T>(object key, T replacement);
 
         List<cTSOTopicUpdateMessage> SerializeUpdate(MaskedStruct mask, object value, uint id);
         List<cTSOTopicUpdateMessage> SerializeUpdate(StructField[] fields, object value, uint id);

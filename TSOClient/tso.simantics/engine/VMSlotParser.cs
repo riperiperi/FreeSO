@@ -16,6 +16,7 @@ using FSO.SimAntics.Model.Routing;
 using FSO.SimAntics.NetPlay.Model;
 using System.IO;
 using FSO.SimAntics.Marshals.Threads;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.Engine
 {
@@ -207,40 +208,66 @@ namespace FSO.SimAntics.Engine
                 }
             }
 
-            VMEntity chair = null;
+            VMFindLocationResult result = new VMFindLocationResult
+            {
+                Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level),
+                RadianDirection = facingDir,
+                FaceAnywhere = faceAnywhere,
+                RouteEntryFlags = entryFlags
+            };
+            var avatarInWay = false;
             if (Slot.SnapTargetSlot < 0)
             {
-                var solid = caller.PositionValid(tpos, Direction.NORTH, context);
+                var solid = caller.PositionValid(tpos, Direction.NORTH, context, VMPlaceRequestFlags.AcceptSlots);
                 if (solid.Status != Model.VMPlacementError.Success)
                 {
-                    if (solid.Object != null && solid.Object is VMGameObject)
+                    if (solid.Object != null)
                     {
-                        if (Slot.Sitting > 0 && solid.Object.EntryPoints[26].ActionFunction != 0)
+                        if (solid.Object is VMGameObject)
                         {
-                            chair = solid.Object;
+                            if (Slot.Sitting > 0 && solid.Object.EntryPoints[26].ActionFunction != 0)
+                            {
+                                result.Chair = solid.Object;
+                            }
+                            else
+                            {
+                                SetFail(VMRouteFailCode.DestTileOccupied, solid.Object);
+                                return;
+                            }
+                        } else
+                        {
+                            avatarInWay = true;
                         }
-                        else
+                    } 
+                }
+
+                if (result.Chair != null && (Math.Abs(DirectionUtils.Difference(result.Chair.RadianDirection, facingDir)) > Math.PI / 4))
+                    return; //not a valid goal.
+                if (result.Chair == null && OnlySit) return;
+
+                score = score * ((result.Chair != null) ? Slot.Sitting : Slot.Standing);
+                //if an avatar is in or going to our destination positon, we this spot becomes low priority as getting into it will require a shoo.
+                if (!avatarInWay)
+                {
+                    foreach (var avatar in context.SetToNextCache.Avatars)
+                    {
+                        //search for routing frame. is its destination the same as ours?
+                        if (avatar.Thread != null)
                         {
-                            SetFail(VMRouteFailCode.DestTileOccupied, solid.Object);
-                            return;
+                            var intersections = avatar.Thread.Stack.Where(x => x is VMRoutingFrame && ((VMRoutingFrame)x).IntersectsOurDestination(result));
+                            if (intersections.Count() > 0)
+                            {
+                                score = Math.Max(1, score);
+                                break;
+                            }
                         }
                     }
                 }
-
-                if (chair != null && (Math.Abs(DirectionUtils.Difference(chair.RadianDirection, facingDir)) > Math.PI / 4))
-                    return; //not a valid goal.
-                if (chair == null && OnlySit) return;
+                else score = Math.Max(1, score);
             }
+            result.Score = score;
 
-            Results.Add(new VMFindLocationResult
-            {
-                Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level),
-                Score = score * ((chair != null) ? Slot.Sitting : Slot.Standing), //todo: prefer closer?
-                RadianDirection = facingDir,
-                Chair = chair,
-                FaceAnywhere = faceAnywhere,
-                RouteEntryFlags = entryFlags
-            });
+            Results.Add(result);
         }
 
         private void SetFail(VMRouteFailCode code, VMEntity blocker)

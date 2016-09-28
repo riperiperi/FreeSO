@@ -271,15 +271,21 @@ namespace FSO.LotView.Components
 
         public override void Update(GraphicsDevice device, WorldState world)
         {
+            if (Headline != null)
+            {
+                if (blueprint != null && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                DynamicCounter = 0; //keep windows and doors on the top floor on the dynamic layer.
+            }
+
             if (HideForCutaway && Level > 0)
             {
-                if (!world.BuildMode && world.DynamicCutaway && Level == world.Level)
+                if (!(world.BuildMode > 1) && world.DynamicCutaway && Level == world.Level)
                 {
                     if (blueprint != null && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
                     DynamicCounter = 0; //keep windows and doors on the top floor on the dynamic layer.
                 }
 
-                if (Level != world.Level || world.BuildMode) CutawayHidden = false;
+                if (Level != world.Level || world.BuildMode > 1) CutawayHidden = false;
                 else
                 {
                     var tilePos = new Point((int)Math.Round(Position.X), (int)Math.Round(Position.Y));
@@ -320,13 +326,13 @@ namespace FSO.LotView.Components
         }
 
         public override void Draw(GraphicsDevice device, WorldState world){
-#if !DEBUG 
+//#if !DEBUG 
             if (!Visible || (Position.X < 0 && Position.Y < 0)) return;
-#endif
+//#endif
             if (CutawayHidden) return;
             if (this.DrawGroup != null) dgrp.Draw(world);
 
-            if (Headline != null)
+            if (Headline != null && !Headline.IsDisposed)
             {
                 var headOff = new Vector3(0, 0, 0.66f);
                 var headPx = world.WorldSpace.GetScreenFromTile(headOff);

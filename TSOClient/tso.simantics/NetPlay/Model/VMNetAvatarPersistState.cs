@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.IO;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Marshals;
+using FSO.SimAntics.Engine;
 
 namespace FSO.SimAntics.NetPlay.Model
 {
@@ -17,18 +18,20 @@ namespace FSO.SimAntics.NetPlay.Model
         // some of these attributes must be saved in the database, so they must be re-initialized by the server.
         // a lot of them are not in the database, so this state storage is the only way you're getting them.
 
-        public static int CURRENT_VERSION = 1;
+        public static int CURRENT_VERSION = 3;
         public int Version = CURRENT_VERSION;
 
         public string Name;
         public uint PersistID;
         public VMAvatarDefaultSuits DefaultSuits;
         public VMTSOAvatarPermissions Permissions;
+        public VMTSOAvatarFlags AvatarFlags;
         public uint Budget; //partial db... only here for check tree purposes. real transactions always go through db.
 
         public ulong BodyOutfit;
         public ulong HeadOutfit;
         public byte SkinTone; //ALSO person data 60
+        public bool IsWorker;
 
         public short[] MotiveData = new short[16]; //lots of this is garbage data. Copy relevant motives from DB.
         private short[] PersonData = new short[27]; //special selection of things which should persist.
@@ -122,11 +125,13 @@ namespace FSO.SimAntics.NetPlay.Model
             writer.Write(PersistID);
             DefaultSuits.SerializeInto(writer);
             writer.Write((byte)Permissions);
+            writer.Write((uint)AvatarFlags);
             writer.Write(Budget); //partial db... only here for check tree purposes. real transactions always go through db.
 
             writer.Write(BodyOutfit);
             writer.Write(HeadOutfit);
             writer.Write(SkinTone); //ALSO person data 60
+            writer.Write(IsWorker);
 
             writer.Write(VMSerializableUtils.ToByteArray(MotiveData));
             writer.Write(VMSerializableUtils.ToByteArray(PersonData));
@@ -152,11 +157,13 @@ namespace FSO.SimAntics.NetPlay.Model
             PersistID = reader.ReadUInt32();
             DefaultSuits = new VMAvatarDefaultSuits(reader);
             Permissions = (VMTSOAvatarPermissions)reader.ReadByte();
+            if (Version > 1) AvatarFlags = (VMTSOAvatarFlags)reader.ReadUInt32();
             Budget = reader.ReadUInt32();
 
             BodyOutfit = reader.ReadUInt64();
             HeadOutfit = reader.ReadUInt64();
             SkinTone = reader.ReadByte();
+            if (Version > 2) IsWorker = reader.ReadBoolean();
 
             for (int i = 0; i < MotiveData.Length; i++) MotiveData[i] = reader.ReadInt16();
             for (int i = 0; i < PersonData.Length; i++) PersonData[i] = reader.ReadInt16();
@@ -190,6 +197,7 @@ namespace FSO.SimAntics.NetPlay.Model
             avatar.HeadOutfit = HeadOutfit;
             avatar.Name = Name;
             ((VMTSOAvatarState)avatar.TSOState).Permissions = Permissions;
+            ((VMTSOAvatarState)avatar.TSOState).Flags = AvatarFlags;
             avatar.TSOState.Budget.Value = Budget;
 
             avatar.PersistID = PersistID;
@@ -199,6 +207,10 @@ namespace FSO.SimAntics.NetPlay.Model
             foreach (var obj in Relationships) avatar.MeToPersist[obj.Target] = new List<short>(obj.Values);
 
             ((VMTSOAvatarState)avatar.TSOState).JobInfo = OnlineJobInfo;
+            if (IsWorker)
+            {
+                avatar.SetPersonData(VMPersonDataVariable.OnlineJobStatusFlags, 1); //validated immediately.
+            }
         }
 
         public void Save(VMAvatar avatar)
@@ -209,6 +221,7 @@ namespace FSO.SimAntics.NetPlay.Model
             HeadOutfit = avatar.HeadOutfit;
             Name = avatar.Name;
             Permissions = ((VMTSOAvatarState)avatar.TSOState).Permissions;
+            AvatarFlags = ((VMTSOAvatarState)avatar.TSOState).Flags;
             Budget = avatar.TSOState.Budget.Value;
 
             for (int i = 0; i < MotiveData.Length; i++) MotiveData[i] = avatar.GetMotiveData((VMMotive)i);

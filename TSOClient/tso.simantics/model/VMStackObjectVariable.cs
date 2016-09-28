@@ -57,7 +57,7 @@ namespace FSO.SimAntics.Model
         FlagField2 = 40,
         Unused41 = 41,
         PlacementFlags = 42,
-        MovementFlags = 43,
+        MovementFlags = 43, //players can move it, players can delete it, stays after evict
         MaximumGrade = 44,
         BirthYear = 45,
         BirthMonth = 46,

@@ -92,11 +92,9 @@ namespace FSO.Server.Servers.City
                         //TODO: Check if its expired
                         da.Shards.DeleteTicket(packet.Password);
 
-                        //TODO: darren's requirement for an avatar claim currently breaks CAS. Which makes everything else impossible to test...
-                        //Just zero it for now (if no avatar id given)
                         int? claim = 0;
                         //We need to lock this avatar
-                        if (ticket.avatar_id != 0)
+                        if (ticket.avatar_id != 0) //if is 0, we're "anonymous", which limits what we can do to basically only CAS.
                         {
                             claim = da.AvatarClaims.TryCreate(new DbAvatarClaim
                             {
@@ -108,10 +106,25 @@ namespace FSO.Server.Servers.City
                             if (!claim.HasValue)
                             {
                                 //Try and disconnect this user, if we still can't get a claim out of luck
+                                //The voltron session close should handle removing any lot tickets and disconnecting them from the target servers
+                                //then it will remove the avatar claim. This takes time but it should be less than 5 seconds.
                                 var existingSession = Sessions.GetByAvatarId(ticket.avatar_id);
                                 if (existingSession != null)
                                 {
                                     existingSession.Close();
+                                }
+                                else
+                                {
+                                    //check if there really is an old claim
+                                    var oldClaim = da.AvatarClaims.GetByAvatarID(ticket.avatar_id);
+                                    if (oldClaim != null)
+                                    {
+                                        da.AvatarClaims.Delete(oldClaim.avatar_claim_id, Config.Call_Sign);
+                                        LOG.Debug("Zombie Avatar claim removed: Avatar ID " + ticket.avatar_id);
+                                    } else
+                                    {
+                                        LOG.Debug("Unknown claim error occurred. Connection will likely time out. Avatar ID " + ticket.avatar_id);
+                                    }
                                 }
 
                                 //TODO: Broadcast to lot servers to disconnect
@@ -131,7 +144,8 @@ namespace FSO.Server.Servers.City
                                         break;
                                     }
 
-                                    Thread.Sleep(1000);
+                                    Thread.Sleep(500);
+                                    i++;
                                 }
 
                                 if (!claim.HasValue)

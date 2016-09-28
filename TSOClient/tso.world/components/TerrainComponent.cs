@@ -28,8 +28,12 @@ namespace FSO.LotView.Components
         private byte[] GrassState; //0 = green, 255 = brown. to start with, should be randomly distriuted in range 0-128.
         private int NumPrimitives;
         private int BladePrimitives;
+        private int GridPrimitives;
+        private int TGridPrimitives;
         private IndexBuffer IndexBuffer;
         private IndexBuffer BladeIndexBuffer;
+        private IndexBuffer GridIndexBuffer;
+        private IndexBuffer TGridIndexBuffer;
         private VertexBuffer VertexBuffer;
 
         private TerrainType LightType = TerrainType.GRASS;
@@ -45,7 +49,7 @@ namespace FSO.LotView.Components
 
         private Effect Effect;
         public bool DrawGrid = false;
-        private bool TerrainDirty = true;
+        public bool TerrainDirty = true;
         private Blueprint Bp;
 
         public TerrainComponent(Rectangle size, Blueprint blueprint){
@@ -104,6 +108,8 @@ namespace FSO.LotView.Components
                 IndexBuffer.Dispose();
                 BladeIndexBuffer.Dispose();
                 VertexBuffer.Dispose();
+                GridIndexBuffer?.Dispose();
+                TGridIndexBuffer?.Dispose();
             }
 
             /** Convert rectangle to world units **/
@@ -169,7 +175,8 @@ namespace FSO.LotView.Components
                 }
             }
 
-            var rand = new Random();
+            var GridIndices = GetGridIndicesForArea(Bp.BuildableArea, quads);
+            var TGridIndices = GetGridIndicesForArea(Bp.TargetBuildableArea, quads);
 
             VertexBuffer = new VertexBuffer(device, typeof(TerrainVertex), Geom.Length, BufferUsage.None);
             VertexBuffer.SetData(Geom);
@@ -182,6 +189,54 @@ namespace FSO.LotView.Components
             BladeIndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, sizeof(int) * Indexes.Length, BufferUsage.None);
             BladeIndexBuffer.SetData(BladeIndexes);
             GeomLength = Geom.Length;
+
+            if (GridIndices.Length > 0)
+            {
+                GridIndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, sizeof(int) * GridIndices.Length, BufferUsage.None);
+                GridIndexBuffer.SetData(GridIndices);
+                GridPrimitives = GridIndices.Length / 2;
+            }
+
+            if (TGridIndices.Length > 0)
+            {
+                TGridIndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, sizeof(int) * TGridIndices.Length, BufferUsage.None);
+                TGridIndexBuffer.SetData(TGridIndices);
+                TGridPrimitives = TGridIndices.Length / 2;
+            }
+        }
+
+        private int[] GetGridIndicesForArea(Rectangle area, int quads)
+        {
+            var gridIndexOff = 0;
+            var w = area.Width;
+            var h = area.Height;
+            var ox = area.X - 1;
+            var oy = area.Y - 1;
+            int[] GridIndices = new int[(w * h) * 4 + (w + h) * 4]; //top left top right for all tiles, then the lines at the ends on bottom sides. Note that we need line start and endpoints.
+
+            for (var y = 0; y < h; y++)
+            {
+                for (var x = 0; x < w; x++)
+                {
+                    var tileOff = ((y + oy) * quads + x + ox) * 4;
+                    GridIndices[gridIndexOff++] = tileOff;
+                    GridIndices[gridIndexOff++] = tileOff + 1;
+                    GridIndices[gridIndexOff++] = tileOff;
+                    GridIndices[gridIndexOff++] = tileOff + 3;
+
+                    if (x == w - 1)
+                    {
+                        GridIndices[gridIndexOff++] = tileOff + 1; //+x
+                        GridIndices[gridIndexOff++] = tileOff + 2; //+x+y
+                    }
+                    if (y == h - 1)
+                    {
+                        GridIndices[gridIndexOff++] = tileOff + 3; //+y
+                        GridIndices[gridIndexOff++] = tileOff + 2; //+x+y
+                    }
+                }
+            }
+            return GridIndices;
         }
 
         /// <summary>
@@ -214,7 +269,10 @@ namespace FSO.LotView.Components
                 var offset = -world.WorldSpace.GetScreenOffset();
 
                 world._3D.ApplyCamera(Effect);
-                var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, ((world.Zoom == WorldZoom.Far) ? -5 : ((world.Zoom == WorldZoom.Medium) ? -4 : -3)) * (20 / 522f), 0);
+                var translation = ((world.Zoom == WorldZoom.Far) ? -7 : ((world.Zoom == WorldZoom.Medium) ? -5 : -3)) * (20 / 522f);
+                if (world.PreciseZoom < 1) translation /= world.PreciseZoom;
+                else translation *= world.PreciseZoom;
+                var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, translation, 0);
                 Effect.Parameters["World"].SetValue(worldmat);
 
                 Effect.Parameters["DiffuseColor"].SetValue(new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1.0f));
@@ -278,6 +336,52 @@ namespace FSO.LotView.Components
                             device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, BladePrimitives);
                         }
                     }
+                    if (FSOEnvironment.UseMRT)
+                    {
+                        device.SetRenderTargets(rts);
+                    }
+                }
+
+                if (GridPrimitives > 0 && world.BuildMode > 0)
+                {
+                    RenderTargetBinding[] rts = null;
+                    if (FSOEnvironment.UseMRT)
+                    {
+                        rts = device.GetRenderTargets();
+                        if (rts.Length > 1)
+                        {
+                            device.SetRenderTarget((RenderTarget2D)rts[0].RenderTarget);
+                        }
+                    }
+                    
+                    var depth = device.DepthStencilState;
+                    device.DepthStencilState = DepthStencilState.None;
+                    Effect.CurrentTechnique = Effect.Techniques["DrawGrid"];
+                    Effect.Parameters["World"].SetValue(Matrix.Identity * Matrix.CreateTranslation(0, ((int)(world.Zoom)-1) * (18 / 522f) * grassScale, 0));
+
+                    if (TGridPrimitives > 0)
+                    {
+                        //draw target size in red, below old size
+                        device.Indices = TGridIndexBuffer;
+                        Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0.5f, 1f, 0.5f, 1.0f));
+                        foreach (var pass in Effect.CurrentTechnique.Passes)
+                        {
+                            pass.Apply();
+                            device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, TGridPrimitives);
+                        }
+                    }
+
+                    Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0, 0, 0, 1.0f));
+                    device.Indices = GridIndexBuffer;
+                    foreach (var pass in Effect.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                        device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, GridPrimitives);
+                    }
+
+
+                    device.DepthStencilState = depth;
+
                     if (FSOEnvironment.UseMRT)
                     {
                         device.SetRenderTargets(rts);

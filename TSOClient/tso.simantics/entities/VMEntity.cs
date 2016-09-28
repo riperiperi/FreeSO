@@ -281,7 +281,7 @@ namespace FSO.SimAntics
                     {
                         var old = SoundThreads[i];
                         SoundThreads.RemoveAt(i--);
-                        if (old.Loop)
+                        if (old.Loop && old.Sound is HITThread && ((HITThread)old.Sound).SimpleMode)
                         {
                             var thread = HITVM.Get().PlaySoundEvent(old.Name);
                             if (thread != null)
@@ -593,6 +593,8 @@ namespace FSO.SimAntics
                     return (Container == null) ? (short)-1 : ContainerSlot;
                 case VMStackObjectVariable.SlotCount:
                     return (short)TotalSlots();
+                case VMStackObjectVariable.UseCount:
+                    return (short)((Thread == null)?0:GetUsers(Thread.Context, null).Count);
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
@@ -754,10 +756,88 @@ namespace FSO.SimAntics
             if (action != null) caller.Thread.EnqueueAction(action);
         }
 
-        public VMPlacementResult PositionValid(LotTilePos pos, Direction direction, VMContext context)
+        private VMPlacementError IndividualUserMovable(VMContext context, bool deleting)
+        {
+            if (this is VMAvatar || GetValue(VMStackObjectVariable.Hidden) > 0) return VMPlacementError.CantBePickedup;
+            var movementFlags = (VMMovementFlags)GetValue(VMStackObjectVariable.MovementFlags);
+            if ((movementFlags & VMMovementFlags.PlayersCanMove) == 0) return VMPlacementError.CantBePickedup;
+            if (deleting && (movementFlags & VMMovementFlags.PlayersCanDelete) == 0) return VMPlacementError.CannotDeleteObject;
+            if (context.IsUserOutOfBounds(Position)) return VMPlacementError.CantBePickedupOutOfBounds;
+            if (IsInUse(context, false)) return VMPlacementError.InUse;
+            var total = TotalSlots();
+            for (int i = 0; i < TotalSlots(); i++)
+            {
+                var item = GetSlot(i);
+                if (item != null && (deleting || item is VMAvatar)) return VMPlacementError.CantBePickedup;
+            }
+            return VMPlacementError.Success;
+        }
+
+        public VMPlacementError IsUserMovable(VMContext context, bool deleting)
+        {
+            foreach (var obj in MultitileGroup.Objects)
+            {
+                var result = obj.IndividualUserMovable(context, deleting);
+                if (result != VMPlacementError.Success) return result;
+            }
+            return VMPlacementError.Success;
+        }
+
+        public HashSet<VMEntity> GetUsers(VMContext context, HashSet<VMEntity> users)
+        {
+            if (users == null)
+            {
+                users = new HashSet<VMEntity>();
+                foreach (var obj in MultitileGroup.Objects)
+                {
+                    obj.GetUsers(context, users);
+                }
+            }
+            else
+            {
+                foreach (var ava in context.SetToNextCache.Avatars)
+                {
+                    foreach (var item in ava.Thread.Stack)
+                    {
+                        if (item.Callee == this) {
+                            users.Add(ava);
+                            break;
+                         }
+                    }
+                }
+            }
+            return users;
+        }
+
+        public bool IsInUse(VMContext context, bool multitile)
+        {
+            if (multitile)
+            {
+                foreach (var obj in MultitileGroup.Objects)
+                {
+                    if (obj.IsInUse(context, false)) return true;
+                }
+            }
+            else
+            {
+                if (GetFlag(VMEntityFlags.Occupied)) return true;
+                foreach (var ava in context.SetToNextCache.Avatars)
+                {
+                    foreach (var item in ava.Thread.Stack)
+                    {
+                        if (item.Callee == this) return true;
+                    }
+                }
+
+            }
+            return false;
+        }
+
+        public VMPlacementResult PositionValid(LotTilePos pos, Direction direction, VMContext context, VMPlaceRequestFlags flags)
         {
             if (pos == LotTilePos.OUT_OF_WORLD) return new VMPlacementResult();
-            else if (context.IsOutOfBounds(pos)) return new VMPlacementResult { Status = VMPlacementError.LocationOutOfBounds };
+            if ((((flags & VMPlaceRequestFlags.UserBuildableLimit) > 0) && context.IsUserOutOfBounds(pos)) || context.IsOutOfBounds(pos))
+                return new VMPlacementResult { Status = VMPlacementError.LocationOutOfBounds };
 
             //TODO: speedup with exit early checks
             //TODO: corner checks (wtf uses this)
@@ -777,6 +857,8 @@ namespace FSO.SimAntics
 
             //we've passed the wall test, now check if we intersect any objects.
             var valid = (this is VMAvatar)? context.GetAvatarPlace(this, pos, direction) : context.GetObjPlace(this, pos, direction);
+            if (valid.Object != null && ((flags & VMPlaceRequestFlags.AcceptSlots) == 0))
+                valid.Status = VMPlacementError.CantIntersectOtherObjects;
             return valid;
         }
 
@@ -880,6 +962,10 @@ namespace FSO.SimAntics
                 threads.Clear();
 
                 PrePositionChange(context);
+                //if we're the last object in a multitile group, and db persisted, remove us from the db.
+                //this deletes all plugin data for this object too.
+                if (context.VM.GlobalLink != null && PersistID > 0 && MultitileGroup.Objects.Count == 1)
+                    context.VM.GlobalLink.DeleteObject(context.VM, PersistID, (result) => { });
                 context.RemoveObjectInstance(this);
                 MultitileGroup.RemoveObject(this); //we're no longer part of the multitile group
 
@@ -908,10 +994,15 @@ namespace FSO.SimAntics
             Footprint = GetObstacle(Position, Direction);
             if (!(GhostImage || noEntryPoint)) ExecuteEntryPoint(9, context, true); //Placement
         }
-
-        public virtual VMPlacementResult SetPosition(LotTilePos pos, Direction direction, VMContext context)
+        
+        public VMPlacementResult SetPosition(LotTilePos pos, Direction direction, VMContext context)
         {
-            return MultitileGroup.ChangePosition(pos, direction, context);
+            return MultitileGroup.ChangePosition(pos, direction, context, VMPlaceRequestFlags.Default);
+        }
+
+        public VMPlacementResult SetPosition(LotTilePos pos, Direction direction, VMContext context, VMPlaceRequestFlags flags)
+        {
+            return MultitileGroup.ChangePosition(pos, direction, context, flags);
         }
 
         public virtual void SetIndivPosition(LotTilePos pos, Direction direction, VMContext context, VMPlacementResult info)
@@ -1175,6 +1266,29 @@ namespace FSO.SimAntics
         unused14 = 1 << 13,
         ArchitectualWindow = 1 << 14,
         ArchitectualDoor = 1 << 15
+    }
+
+    [Flags]
+    public enum VMMovementFlags
+    {
+        SimsCanMove = 1, //only cleared by payphone...
+        PlayersCanMove = 1 << 1,
+        SelfPropelled = 1 << 2, //unused
+        PlayersCanDelete = 1 << 3,
+        StaysAfterEvict = 1 << 4
+    }
+
+    [Flags]
+    public enum VMCensorshipFlags
+    {
+        Pelvis = 1,
+        SpineIfFemale = 1 << 1,
+        Head = 1 << 2,
+        LeftHand = 1 << 3,
+        RightHand = 1 << 4,
+        LeftFoot = 1 << 5,
+        RightFoot = 1 << 6,
+        FullBody = 1 << 7
     }
     public class VMPieMenuInteraction
     {

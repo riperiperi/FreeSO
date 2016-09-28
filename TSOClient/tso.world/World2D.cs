@@ -397,12 +397,15 @@ namespace FSO.LotView
                         recacheTerrain = true;
                         break;
                     case BlueprintDamageType.SCROLL:
-                        if (StaticObjects == null || StaticObjects.PxOffset != GetScrollIncrement(pxOffset))
+                        if (StaticObjects == null || StaticObjects.PxOffset != GetScrollIncrement(pxOffset, state))
                         {
                             redrawFloor = true;
                             redrawWall = true;
                             redrawStaticObjects = true;
                         }
+                        break;
+                    case BlueprintDamageType.PRECISE_ZOOM:
+                        redrawFloor = redrawWall = redrawStaticObjects = true;
                         break;
                     case BlueprintDamageType.LIGHTING_CHANGED:
                         redrawFloor = true;
@@ -458,7 +461,7 @@ namespace FSO.LotView
             damage.Clear();
             
             //scroll buffer loads in increments of SCROLL_BUFFER
-            var newOff = GetScrollIncrement(pxOffset);
+            var newOff = GetScrollIncrement(pxOffset, state);
             var oldCenter = state.CenterTile;
             state.CenterTile += state.WorldSpace.GetTileFromScreen(newOff-pxOffset); //offset the scroll to the position of the scroll buffer.
             var tileOffset = state.CenterTile;
@@ -518,10 +521,10 @@ namespace FSO.LotView
                     _2d.SetScroll(pxOffset);
                     while (buffer.NextPass())
                     {
-                        _2d.RenderCache(StaticFloorCache);
-                        foreach (var sub in Blueprint.SubWorlds) sub.DrawArch(gd, state);
                         Blueprint.Terrain.DepthMode = _2d.OutputDepth;
                         Blueprint.Terrain.Draw(gd, state);
+                        _2d.RenderCache(StaticFloorCache);
+                        foreach (var sub in Blueprint.SubWorlds) sub.DrawArch(gd, state);
                     }
                 }
                 StaticFloor = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
@@ -562,9 +565,10 @@ namespace FSO.LotView
             state.CenterTile = oldCenter; //revert to our real scroll position
         }
 
-        public Vector2 GetScrollIncrement(Vector2 pxOffset)
+        public Vector2 GetScrollIncrement(Vector2 pxOffset, WorldState state)
         {
-            return new Vector2((float)Math.Floor(pxOffset.X / SCROLL_BUFFER) * SCROLL_BUFFER, (float)Math.Floor(pxOffset.Y / SCROLL_BUFFER) * SCROLL_BUFFER);
+            var scrollSize = SCROLL_BUFFER / state.PreciseZoom;
+            return new Vector2((float)Math.Floor(pxOffset.X / scrollSize) * scrollSize, (float)Math.Floor(pxOffset.Y / scrollSize) * scrollSize);
         }
 
         /// <summary>
@@ -585,7 +589,7 @@ namespace FSO.LotView
             var tileOffset = state.CenterTile;
 
             state._2D.PreciseZoom = 1f;
-            //_2d.SetScroll(pxOffset*state.PreciseZoom);
+            _2d.SetScroll(new Vector2());
 
             _2d.Begin(state.Camera);
             if (StaticFloor != null)

@@ -20,7 +20,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             //TODO: some modes for this command. LOCK object (so it cannot be used while we save it), DELETE LOCKED, UNLOCK object (something bad happened)
 
             var obj = vm.GetObjectByPersist(ObjectPID);
-            if (obj != null)
+            if (obj != null && obj is VMGameObject)
             {
                 //was this my sim's object? try add it to our local inventory representaton
                 if (((VMTSOObjectState)obj.TSOState).OwnerID == vm.MyUID)
@@ -51,10 +51,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             var targObj = vm.GetObjectByPersist(ObjectPID);
             if (caller == null || targObj == null || //caller must be on lot, be a roommate.
                 ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate
-                || targObj.PersistID == 0 || targObj is VMAvatar)
+                || targObj.PersistID == 0 || targObj is VMAvatar || targObj.IsUserMovable(vm.Context, true) != VMPlacementError.Success)
                 return false;
             //todo: immediately lock this object
-            vm.GlobalLink.MoveToInventory(vm, targObj.MultitileGroup, (bool success) =>
+            vm.GlobalLink.MoveToInventory(vm, targObj.MultitileGroup, (bool success, uint pid) =>
             {
                 if (success)
                 {

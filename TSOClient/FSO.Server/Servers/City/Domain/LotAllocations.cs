@@ -4,6 +4,7 @@ using FSO.Server.Database.DA.Lots;
 using FSO.Server.Framework.Gluon;
 using FSO.Server.Protocol.Electron.Model;
 using FSO.Server.Protocol.Gluon.Packets;
+using Ninject;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -20,47 +21,51 @@ namespace FSO.Server.Servers.City.Domain
         private LotServerPicker PickingEngine;
         private IDAFactory DAFactory;
         private CityServerContext Context;
+        private JobMatchmaker Matchmaker;
 
-        public LotAllocations(LotServerPicker PickingEngine, IDAFactory daFactory, CityServerContext context)
+        public LotAllocations(LotServerPicker PickingEngine, IDAFactory daFactory, CityServerContext context, IKernel kernel)
         {
             this.PickingEngine = PickingEngine;
             this.DAFactory = daFactory;
             this.Context = context;
+            this.Matchmaker = kernel.Get<JobMatchmaker>();
         }
 
-        public Task<TryFindLotResult> TryFindOrOpen(uint lotId, ISecurityContext security)
+        public Task<TryFindLotResult> TryFindOrOpen(uint lotId, uint avatarId, ISecurityContext security)
         {
-            return TryFind(lotId, true, security);
+            return TryFind(lotId, avatarId, true, security);
         }
 
-        public Task<TryFindLotResult> TryFind(uint lotId, ISecurityContext security)
+        public Task<TryFindLotResult> TryFind(uint lotId, uint avatarId, ISecurityContext security)
         {
-            return TryFind(lotId, false, security);
+            return TryFind(lotId, avatarId, false, security);
         }
 
         public void OnTransferClaimResponse(TransferClaimResponse response)
         {
             if (response.Type != Protocol.Gluon.Model.ClaimType.LOT) { return; }
 
-            DbLot lot = null;
-            using (var da = DAFactory.Get())
+            uint? location;
+            if (response.ClaimId != 0)
             {
-                lot = da.Lots.Get(response.EntityId);
-            }
-
-            if (lot == null)
+                using (var da = DAFactory.Get())
+                {
+                    location = da.Lots.Get(response.EntityId)?.location;
+                }
+            } else
             {
-                return;
+                location = (uint)response.EntityId;
             }
+            if (location == null) return;
 
-            var allocation = Get(lot.location);
+            var allocation = Get(location.Value);
             lock (allocation)
             {
                 allocation.OnTransferClaimResponse(response);
                 if (allocation.State == LotAllocationState.FAILED)
                 {
                     //Failed, remove
-                    LotAllocation removedAllocation = Remove(lot.location);
+                    LotAllocation removedAllocation = Remove(location.Value);
                 }
             }
 
@@ -76,18 +81,26 @@ namespace FSO.Server.Servers.City.Domain
         /// <param name="lotId"></param>
         public void TryClose(int lotId, uint claimId)
         {
-            DbLot lot = null;
-            using (var da = DAFactory.Get())
+            uint? location = null;
+            if (claimId != 0)
             {
-                lot = da.Lots.Get(lotId);
+                using (var da = DAFactory.Get())
+                {
+                    location = da.Lots.Get(lotId)?.location;
+                }
+            }
+            else
+            {
+                //job lot. there is no claim, no db lot. Id is the location.
+                location = (uint)lotId;
             }
 
-            if (lot == null)
+            if (location == null)
             {
                 return;
             }
 
-            var allocation = Remove(lot.location);
+            var allocation = Remove(location ?? 0);
             if (allocation != null)
             {
                 lock (allocation)
@@ -96,8 +109,8 @@ namespace FSO.Server.Servers.City.Domain
                     //kill this allocation
                     //TODO: is this safe? should correctly interrupt in-progress allocations, but shouldn't get here in that case anyways
                 }
+                allocation.TryUnclaim();
             }
-            allocation.TryUnclaim();
         }
 
         /// <summary>
@@ -117,8 +130,22 @@ namespace FSO.Server.Servers.City.Domain
         /// <param name="openIfClosed"></param>
         /// <returns></returns>
 
-        private Task<TryFindLotResult> TryFind(uint lotId, bool openIfClosed, ISecurityContext security)
+        private Task<TryFindLotResult> TryFind(uint lotId, uint avatarId, bool openIfClosed, ISecurityContext security)
         {
+            bool jobLot = false;
+            var originalId = lotId;
+            if (lotId > 0x200 && lotId < 0x300)
+            {
+                //special: join available job lot instance
+                lotId = Matchmaker.TryGetJobLot(lotId, avatarId) ?? 0;
+                jobLot = true;
+                if (lotId == 0) return Immediate(new TryFindLotResult
+                {
+                    Status = FindLotResponseStatus.NO_CAPACITY
+                });
+            }
+            if (lotId > 0x200 && lotId < 0x10000) //job lot range
+                lotId |= 0x40000000;
             var allocation = Get(lotId);
             lock (allocation)
             {
@@ -135,38 +162,51 @@ namespace FSO.Server.Servers.City.Domain
                             });
                         }
 
-                        DbLot lot = null;
-                        using (var db = DAFactory.Get())
+                        if (!jobLot)
                         {
-                            //Convert the lot location into a lot db id
-                            lot = db.Lots.GetByLocation(Context.ShardId, lotId);
-                            if (lot == null)
+                            DbLot lot = null;
+                            using (var db = DAFactory.Get())
+                            {
+                                //Convert the lot location into a lot db id
+                                lot = db.Lots.GetByLocation(Context.ShardId, lotId);
+                                if (lot == null)
+                                {
+                                    Remove(lotId);
+                                    return Immediate(new TryFindLotResult
+                                    {
+                                        Status = FindLotResponseStatus.NO_SUCH_LOT
+                                    });
+                                }
+
+                                var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
+                                var avatars = new List<uint>();
+                                foreach (var roomie in roomies) avatars.Add(roomie.avatar_id);
+
+                                try
+                                {
+                                    security.DemandAvatars(avatars, AvatarPermissions.WRITE);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Remove(lotId);
+                                    return Immediate(new TryFindLotResult
+                                    {
+                                        Status = FindLotResponseStatus.NOT_PERMITTED_TO_OPEN
+                                    });
+                                }
+                            }
+
+                            if (!allocation.TryClaim(lot))
                             {
                                 Remove(lotId);
                                 return Immediate(new TryFindLotResult
                                 {
-                                    Status = FindLotResponseStatus.NO_SUCH_LOT
-                                });
-                            }
-
-                            //TODO: Roommates
-                            try {
-                                security.DemandAvatar(lot.owner_id, AvatarPermissions.WRITE);
-                            }catch(Exception ex){
-                                Remove(lotId);
-                                return Immediate(new TryFindLotResult {
-                                    Status = FindLotResponseStatus.NOT_PERMITTED_TO_OPEN
+                                    Status = FindLotResponseStatus.CLAIM_FAILED
                                 });
                             }
                         }
-
-                        if (!allocation.TryClaim(lot))
-                        {
-                            Remove(lotId);
-                            return Immediate(new TryFindLotResult
-                            {
-                                Status = FindLotResponseStatus.CLAIM_FAILED
-                            });
+                        else { 
+                            allocation.SetLot(new DbLot() { lot_id = (int)lotId }, originalId);
                         }
 
                         var pick = PickingEngine.PickServer();
@@ -193,7 +233,8 @@ namespace FSO.Server.Servers.City.Domain
                                 return new TryFindLotResult {
                                     Status = FindLotResponseStatus.FOUND,
                                     Server = allocation.Server,
-                                    LotDbId = allocation.LotDbId
+                                    LotDbId = allocation.LotDbId,
+                                    LotId = lotId,
                                 };
                             });
                         }
@@ -242,6 +283,7 @@ namespace FSO.Server.Servers.City.Domain
         private LotAllocation Remove(uint lotId)
         {
             LotAllocation removed = null;
+            if ((lotId & 0x40000000) > 0) Matchmaker.RemoveJobLot(lotId & 0x3FFFFFFF);
             _Locks.TryRemove(lotId, out removed);
             return removed;
         }
@@ -252,6 +294,7 @@ namespace FSO.Server.Servers.City.Domain
         public FindLotResponseStatus Status;
         public IGluonSession Server;
         public int LotDbId;
+        public uint LotId;
     }
 
     public class LotAllocation
@@ -266,6 +309,7 @@ namespace FSO.Server.Servers.City.Domain
         private TaskCompletionSource<LotPickResult> PickingTask;
         private Task<LotPickResult> PickingTaskWithTimeout;
         private DbLot Lot;
+        private uint SpecialId;
 
         public LotAllocation(IDAFactory da, CityServerContext context)
         {
@@ -314,6 +358,7 @@ namespace FSO.Server.Servers.City.Domain
         public void Free()
         {
             //Release the claim
+            if (ClaimId == null) return;
             using (var da = DAFactory.Get())
             {
                 da.LotClaims.Delete(ClaimId.Value, Context.Config.Call_Sign);
@@ -346,6 +391,12 @@ namespace FSO.Server.Servers.City.Domain
                     return false;
                 }
             }
+        }
+
+        public void SetLot(DbLot lot, uint specialId)
+        {
+            Lot = lot;
+            SpecialId = specialId;
         }
 
         public void TryUnclaim()
@@ -384,7 +435,8 @@ namespace FSO.Server.Servers.City.Domain
                     Type = Protocol.Gluon.Model.ClaimType.LOT,
                     //x,y used as id for lots
                     EntityId = Lot.lot_id,
-                    ClaimId = ClaimId.Value,
+                    SpecialId = SpecialId,
+                    ClaimId = ClaimId ?? 0,
                     FromOwner = Context.Config.Call_Sign
                 });
             }

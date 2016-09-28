@@ -14,6 +14,7 @@ namespace FSO.Server.Protocol.Gluon.Packets
         public ClaimType Type;
         public int EntityId;
         public uint ClaimId;
+        public uint SpecialId; //job lot info
         public string FromOwner;
 
         public override void Deserialize(IoBuffer input, ISerializationContext context)
@@ -21,6 +22,7 @@ namespace FSO.Server.Protocol.Gluon.Packets
             Type = input.GetEnum<ClaimType>();
             EntityId = input.GetInt32();
             ClaimId = input.GetUInt32();
+            SpecialId = input.GetUInt32();
             FromOwner = input.GetPascalString();
         }
 
@@ -34,6 +36,7 @@ namespace FSO.Server.Protocol.Gluon.Packets
             output.PutEnum(Type);
             output.PutInt32(EntityId);
             output.PutUInt32(ClaimId);
+            output.PutUInt32(SpecialId);
             output.PutPascalString(FromOwner);
         }
     }

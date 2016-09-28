@@ -1,4 +1,5 @@
 ﻿using FSO.Common.DataService.Framework;
+using FSO.Common.DataService.Framework.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,9 @@ namespace FSO.Common.DataService.Model
 {
     public class AvatarSkills : AbstractModel
     {
+        [Key]
+        public uint Avatar_Id { get; set; } //just used for client sync
+
         private ushort _AvatarSkills_Logic;
         public ushort AvatarSkills_Logic
         {

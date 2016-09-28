@@ -18,6 +18,7 @@ namespace FSO.SimAntics.NetPlay
     {
         public IVMTSOGlobalLink GlobalLink;
         public abstract void SendCommand(VMNetCommandBodyAbstract cmd);
+        public abstract void SendDirectCommand(uint pid, VMNetCommandBodyAbstract cmd);
         public abstract bool Tick(VM vm);
         public abstract string GetUserIP(uint uid);
         public VMCloseNetReason CloseReason;
@@ -50,9 +51,8 @@ namespace FSO.SimAntics.NetPlay
             {
                 if (cmd.Command is VMStateSyncCmd) doTick = false;
 
-                var caller = vm.GetObjectByPersist(cmd.Command.ActorUID);
-                if (!(caller is VMAvatar)) caller = null;
-                cmd.Command.Execute(vm, (VMAvatar)caller);
+                var caller = vm.GetAvatarByPersist(cmd.Command.ActorUID);
+                cmd.Command.Execute(vm, caller);
             }
             if (doTick && vm.Context.Ready)
             {

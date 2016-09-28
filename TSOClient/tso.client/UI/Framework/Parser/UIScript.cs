@@ -25,7 +25,7 @@ namespace FSO.Client.UI.Framework.Parser
         /// <summary>
         /// Nodes which represent functions
         /// </summary>
-        private static string[] FUNCTIONS = new string[] { "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText", "AddTextEdit", "AddSlider", "AddListBox", "AddFormatedText" };
+        private static string[] FUNCTIONS = new string[] { "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText", "AddTextEdit", "AddSlider", "AddListBox", "AddFormatedText", "AddProgressBar" };
 
         private Dictionary<string, string> Strings;
         private Dictionary<string, Texture2D> Textures;
@@ -90,6 +90,8 @@ namespace FSO.Client.UI.Framework.Parser
             if (ControlSettings.ContainsKey(id))
             {
                 DoSetControlProperties(instance, ControlSettings[id]);
+            } else if (NodesByID.ContainsKey(id)) {
+                DoSetControlProperties(instance, NodesByID[id]);
             }
             return instance;
         }
@@ -226,6 +228,18 @@ namespace FSO.Client.UI.Framework.Parser
 
             target.Add(textEdit);
             WireUp(node.ID, textEdit);
+        }
+
+        public void AddProgressBar(UINode node)
+        {
+            UIProgressBar pb = new UIProgressBar();
+            Components.Add(node.ID, pb);
+            pb.ID = node.ID;
+
+            DoSetControlProperties(pb, node);
+
+            target.Add(pb);
+            WireUp(node.ID, pb);
         }
 
 

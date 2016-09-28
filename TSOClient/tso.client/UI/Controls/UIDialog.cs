@@ -54,9 +54,6 @@ namespace FSO.Client.UI.Controls
 
         //Tolerance for how far out of the screen controls can be dragged.
         protected static int m_DragTolerance = 20;
-
-        private UIImage CloseButtonBackground;
-        private UIImage BottomRightButtonBackground;
         protected UIButton AcceptButton;
 
         public UIDialog(UIDialogStyle style, bool draggable) : this(style, UIDialogExtras.None, draggable)
