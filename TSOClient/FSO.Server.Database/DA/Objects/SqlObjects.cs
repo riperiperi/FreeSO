@@ -48,6 +48,22 @@ namespace FSO.Server.Database.DA.Objects
                 new { avatar_id = avatar_id, guid = guid}).ToList();
         }
 
+        public int ReturnLostObjects(uint lot_id, IEnumerable<uint> object_ids)
+        {
+            var sCommand = new StringBuilder();
+            bool first = true;
+            foreach (var item in object_ids)
+            {
+                if (first) sCommand.Append("(");
+                else sCommand.Append(",");
+                sCommand.Append(item);
+                first = false;
+            }
+            sCommand.Append(")");
+
+            return Context.Connection.Execute("UPDATE fso_objects SET lot_id = NULL WHERE lot_id = @lot_id AND object_id NOT IN " + sCommand.ToString(), new { lot_id = lot_id });
+        }
+
         public bool ConsumeObjsOfTypeInAvatarInventory(uint avatar_id, uint guid, int num)
         {
             var objs = ObjOfTypeInAvatarInventory(avatar_id, guid);

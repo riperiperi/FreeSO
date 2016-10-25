@@ -66,7 +66,18 @@ namespace FSO.SimAntics.Primitives
                 // 15. My Routing Footprint equals Temp0
                 // 16. Change Normal Output
                 case VMGenericTSOCallMode.GetInteractionResult: //17
-                    context.Thread.TempRegisters[0] = 2; //0=none, 1=reject, 2=accept, 3=pet
+                    //if our current interaction result is -1, then we need to start the process.
+                    if (context.ActionTree)
+                    {
+                        var interaction = context.Thread.Queue[0];
+                        if (interaction.InteractionResult == -1) interaction.InteractionResult = 0;
+                        else interaction.ResultCheckCounter++;
+
+                        if (interaction.InteractionResult > 0 || interaction.ResultCheckCounter < 30 * 10)
+                            context.Thread.TempRegisters[0] = interaction.InteractionResult; //0=waiting, 1=reject, 2=accept, 3=timeout
+                        else context.Thread.TempRegisters[0] = 3;
+                    } else
+                        context.Thread.TempRegisters[0] = 2;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.SetInteractionResult: //18
                     //todo: set interaction result to value of temp 0. UNUSED.
@@ -162,7 +173,7 @@ namespace FSO.SimAntics.Primitives
                     // 2 is "true". not sure what 1 is. (interaction shows up, but fails on trying to run it. likely "guessed" state for client)
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.ReturnLotCategory: //39
-                    context.Thread.TempRegisters[0] = 6; //skills lot. see #Lot Types in global.iff
+                    context.Thread.TempRegisters[0] = context.VM.TSOState.PropertyCategory; //skills lot. see #Lot Types in global.iff
                     //TODO: set based on lot state
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.TestStackObject: //40
@@ -175,7 +186,9 @@ namespace FSO.SimAntics.Primitives
                     //is temp0 radius (in full tiles) around stack object empty?
                     //used for resurrect. TODO.
                     return VMPrimitiveExitCode.GOTO_TRUE;
-                //43. Set Spotlight Status (TODO: GLOBAL SERVER)
+                case VMGenericTSOCallMode.SetSpotlightStatus:
+                    if (context.VM.GlobalLink != null) context.VM.GlobalLink.SetSpotlightStatus(context.VM, context.Thread.TempRegisters[0] == 1);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 //44. Is Full Refund (TODO: small grace period after purchase/until user exits buy mode)
                 //45. Refresh buy/build (TODO? we probably don't need this)
                 case VMGenericTSOCallMode.GetLotOwner: //46

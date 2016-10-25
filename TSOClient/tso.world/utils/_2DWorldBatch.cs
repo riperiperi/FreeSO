@@ -22,7 +22,7 @@ namespace FSO.LotView.Utils
     /// Similar to SpriteBatch but has additional features that target
     /// world object rendering in this game such as zbuffers.
     /// </summary>
-    public class _2DWorldBatch
+    public class _2DWorldBatch : IDisposable
     {
         protected Matrix World;
         protected Matrix View;
@@ -56,6 +56,8 @@ namespace FSO.LotView.Utils
         public float PreciseZoom;
         private float ScreenWidth;
         private float ScreenHeight;
+
+        private List<RenderTarget2D> Buffers = new List<RenderTarget2D>();
 
         public void SetScroll(Vector2 scroll)
         {
@@ -249,9 +251,6 @@ namespace FSO.LotView.Utils
                 Buffers[bufferIndex]
             );
         }
-
-        private List<RenderTarget2D> Buffers = new List<RenderTarget2D>();
-
 
         public void End() { End(null, true); }
         /// <summary>
@@ -628,6 +627,14 @@ namespace FSO.LotView.Utils
         public WorldTexture GetWorldTexture(IWorldTextureProvider item)
         {
             return item.GetWorldTexture(this.Device);
+        }
+
+        public void Dispose()
+        {
+            foreach (var buf in Buffers)
+            {
+                buf.Dispose();
+            }
         }
     }
 

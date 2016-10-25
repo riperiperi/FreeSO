@@ -41,9 +41,22 @@ namespace FSO.Common.DataService.Providers.Server
                     case "Avatar_Description":
                         db.Avatars.UpdateDescription(avatar.Avatar_Id, avatar.Avatar_Description);
                         break;
+                    case "Avatar_PrivacyMode":
+                        db.Avatars.UpdatePrivacyMode(avatar.Avatar_Id, avatar.Avatar_PrivacyMode);
+                        break;
                 }
             }
         }
+
+        private string[] LockNames = new string[]
+        {
+            "AvatarSkills_LockLv_Body",
+            "AvatarSkills_LockLv_Charisma",
+            "AvatarSkills_LockLv_Cooking",
+            "AvatarSkills_LockLv_Creativity",
+            "AvatarSkills_LockLv_Logic",
+            "AvatarSkills_LockLv_Mechanical"
+        };
 
         public override void DemandMutation(object entity, MutationType type, string path, object value, ISecurityContext context)
         {
@@ -65,13 +78,31 @@ namespace FSO.Common.DataService.Providers.Server
                 case "Avatar_Skills.AvatarSkills_LockLv_Logic":
                 case "Avatar_Skills.AvatarSkills_LockLv_Mechanical":
                     context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
+                    var level = (ushort)value;
+                    //need silly rules so this isnt gamed.
+                    //to change on city level must not be on a lot (city must own claim), need to db query the other locks
+
+                    var skills = avatar.Avatar_Skills;
+                    var limit = avatar.Avatar_SkillsLockPoints;
+                    var skillname = "lock_"+path.Substring(34).ToLower();
+
+                    using (var da = DAFactory.Get())
+                    {
+                        if (((da.AvatarClaims.GetByAvatarID(avatar.Avatar_Id)?.location) ?? 0) != 0) throw new Exception("Lot owns avatar! Lock using the VM commands.");
+                        if (level > limit - da.Avatars.GetOtherLocks(avatar.Avatar_Id, skillname)) throw new Exception("Cannot lock this many skills!");
+                    }
+                    break;
+                case "Avatar_PrivacyMode":
+                    context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
+                    var mode = (byte)value;
+                    if (mode > 1) throw new Exception("Invalid privacy mode!");
                     break;
                 default:
                     throw new SecurityException("Field: " + path + " may not be mutated by users");
             }
         }
 
-        protected override Avatar LazyLoad(uint key)
+        protected override Avatar LazyLoad(uint key, Avatar oldVal)
         {
             using (var db = DAFactory.Get())
             {
@@ -86,9 +117,18 @@ namespace FSO.Common.DataService.Providers.Server
                 }
                 List<DbJobLevel> levels = db.Avatars.GetJobLevels(key);
                 List<DbRelationship> rels = db.Relationships.GetBidirectional(key);
-
-                return HydrateOne(avatar, lot, levels, rels);
+                
+                var ava = HydrateOne(avatar, lot, levels, rels);
+                if (oldVal != null) ava.Avatar_IsOnline = oldVal.Avatar_IsOnline;
+                return ava;
             }
+        }
+
+        private static readonly uint AVATAR_RECACHE_SECONDS = 30;
+
+        protected override bool RequiresReload(uint key, Avatar value)
+        {
+            return (value != null && value.Avatar_IsOnline && Epoch.Now - value.FetchTime > AVATAR_RECACHE_SECONDS);
         }
 
         private Avatar HydrateOne(DbAvatar dbAvatar, DbLot dbLot, List<DbJobLevel> levels, List<DbRelationship> rels)
@@ -104,7 +144,9 @@ namespace FSO.Common.DataService.Providers.Server
                 AvatarAppearance_HeadOutfitID = dbAvatar.head,
                 AvatarAppearance_SkinTone = dbAvatar.skin_tone
             };
-            result.Avatar_Age = (uint)((Epoch.Now-dbAvatar.date)/((long)60*60*24));
+            var now = Epoch.Now;
+            result.FetchTime = now;
+            result.Avatar_Age = (uint)((now-dbAvatar.date)/((long)60*60*24));
             result.Avatar_Skills = new AvatarSkills
             {
                 AvatarSkills_Body = dbAvatar.skill_body,
@@ -120,6 +162,7 @@ namespace FSO.Common.DataService.Providers.Server
                 AvatarSkills_Mechanical = dbAvatar.skill_mechanical,
                 AvatarSkills_LockLv_Mechanical = dbAvatar.lock_mechanical
             };
+            result.Avatar_PrivacyMode = dbAvatar.privacy_mode;
             result.Avatar_SkillsLockPoints = (ushort)(20 + result.Avatar_Age/7);
 
             result.Avatar_JobLevelVec = new List<JobLevel>();

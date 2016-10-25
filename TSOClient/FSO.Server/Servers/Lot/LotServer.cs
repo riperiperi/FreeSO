@@ -82,7 +82,7 @@ namespace FSO.Server.Servers.Lot
                     if (ticket != null)
                     {
                         //TODO: Check if its expired
-                        da.Shards.DeleteTicket(packet.Password);
+                        da.Lots.DeleteLotServerTicket(packet.Password);
                     }
 
 

@@ -85,8 +85,23 @@ namespace FSO.Common.DataService.Providers.Server
         protected override void Insert(uint key, Lot value)
         {
             base.Insert(key, value);
-            LotsByName[value.Lot_Name] = value;
-            CityRepresentation.City_ReservedLotInfo[value.Lot_Location_Packed] = value.Lot_IsOnline; //TODO: thread-safe all maps
+            lock (LotsByName) LotsByName[value.Lot_Name] = value;
+            lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo[value.Lot_Location_Packed] = value.Lot_IsOnline;
+        }
+
+        protected override Lot Remove(uint key)
+        {
+            var value = base.Remove(key);
+            if (value != null)
+            {
+                lock (LotsByName) LotsByName.Remove(value.Lot_Name);
+                lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo.Remove(value.Lot_Location_Packed);
+
+                var clone = new HashSet<uint>(CityRepresentation.City_SpotlightsVector);
+                clone.Remove(value.Lot_Location_Packed);
+                CityRepresentation.City_SpotlightsVector = new List<uint>(clone);
+            }
+            return value;
         }
 
         protected Lot HydrateOne(DbLot lot, List<DbRoommate> roommates)
@@ -123,6 +138,7 @@ namespace FSO.Common.DataService.Providers.Server
                 Lot_OwnerVec = new List<uint>() { lot.owner_id },
                 Lot_RoommateVec = new List<uint>(),
                 Lot_NumOccupants = 0,
+                Lot_Category = (byte)lot.category,
                 Lot_LastCatChange = lot.category_change_date,
                 Lot_Description = lot.description,
                 Lot_Thumbnail = thumb
@@ -179,9 +195,22 @@ namespace FSO.Common.DataService.Providers.Server
                     }
                     break;
                 case "Lot_Category":
+                    using (var db = DAFactory.Get())
+                    {
+                        db.Lots.UpdateLotCategory(lot.DbId, (DbLotCategory)(lot.Lot_Category));
+                    }
                     break;
                 case "Lot_IsOnline":
-                    CityRepresentation.City_ReservedLotInfo[lot.Lot_Location_Packed] = lot.Lot_IsOnline;
+                    lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo[lot.Lot_Location_Packed] = lot.Lot_IsOnline;
+                    break;
+                case "Lot_SpotLightText":
+                    lock (CityRepresentation)
+                    {
+                        var clone = new HashSet<uint>(CityRepresentation.City_SpotlightsVector);
+                        if (lot.Lot_SpotLightText != "") clone.Add(lot.Lot_Location_Packed);
+                        else clone.Remove(lot.Lot_Location_Packed);
+                        CityRepresentation.City_SpotlightsVector = new List<uint>(clone);
+                    }
                     break;
             }
         }
@@ -213,10 +242,14 @@ namespace FSO.Common.DataService.Providers.Server
 
                 case "Lot_Category":
                     context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+
+                    if (lot.Lot_IsOnline) throw new SecurityException("Lot must be offline to change category!");
+
                     //7 days
+                    /*
                     if (lot.Lot_HoursSinceLastLotCatChange < 168){
                         throw new SecurityException("You must wait 7 days to change your lot category again");
-                    }
+                    }*/
                     break;
 
                 //roommate only
@@ -228,6 +261,7 @@ namespace FSO.Common.DataService.Providers.Server
                 case "Lot_IsOnline":
                 case "Lot_NumOccupants":
                 case "Lot_RoommateVec":
+                case "Lot_SpotLightText":
                     context.DemandInternalSystem();
                     break;
                 default:
@@ -246,9 +280,12 @@ namespace FSO.Common.DataService.Providers.Server
 
         public Lot GetByName(string name)
         {
-            if (LotsByName.ContainsKey(name))
+            lock (LotsByName)
             {
-                return LotsByName[name];
+                if (LotsByName.ContainsKey(name))
+                {
+                    return LotsByName[name];
+                }
             }
             return null;
         }

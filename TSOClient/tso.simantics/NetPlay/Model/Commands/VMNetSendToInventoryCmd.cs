@@ -13,6 +13,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public uint ObjectPID;
         public bool Verified;
+        public bool InternalDispatch;
+        public bool Success;
 
         public override bool Execute(VM vm, VMAvatar caller)
         {
@@ -22,22 +24,30 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             var obj = vm.GetObjectByPersist(ObjectPID);
             if (obj != null && obj is VMGameObject)
             {
-                //was this my sim's object? try add it to our local inventory representaton
-                if (((VMTSOObjectState)obj.TSOState).OwnerID == vm.MyUID)
+                if (Success)
                 {
-                    vm.MyInventory.Add(new VMInventoryItem()
+                    //was this my sim's object? try add it to our local inventory representaton
+                    if (((VMTSOObjectState)obj.TSOState).OwnerID == vm.MyUID)
                     {
-                        ObjectPID = ObjectPID,
-                        GUID = (obj.MasterDefinition?.GUID) ?? obj.Object.OBJ.GUID,
-                        Name = obj.MultitileGroup.Name,
-                        Value = (uint)obj.MultitileGroup.Price,
-                        Graphic = (ushort)obj.GetValue(VMStackObjectVariable.Graphic),
-                        DynFlags1 = obj.DynamicSpriteFlags,
-                        DynFlags2 = obj.DynamicSpriteFlags2,
-                    });
+                        vm.MyInventory.Add(new VMInventoryItem()
+                        {
+                            ObjectPID = ObjectPID,
+                            GUID = (obj.MasterDefinition?.GUID) ?? obj.Object.OBJ.GUID,
+                            Name = obj.MultitileGroup.Name,
+                            Value = (uint)obj.MultitileGroup.Price,
+                            Graphic = (ushort)obj.GetValue(VMStackObjectVariable.Graphic),
+                            DynFlags1 = obj.DynamicSpriteFlags,
+                            DynFlags2 = obj.DynamicSpriteFlags2,
+                        });
+                    }
+
+                    obj.PersistID = 0; //no longer representative of the object in db.
+                    obj.Delete(true, vm.Context);
+                } else
+                {
+                    foreach (var o in obj.MultitileGroup.Objects)
+                        ((VMGameObject)o).Disabled &= VMGameObjectDisableFlags.TransactionIncomplete;
                 }
-    
-                obj.Delete(true, vm.Context);
             }
 
 
@@ -49,18 +59,19 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Verified) return true;
             if (ObjectPID == 0) return false;
             var targObj = vm.GetObjectByPersist(ObjectPID);
-            if (caller == null || targObj == null || //caller must be on lot, be a roommate.
+            if (targObj == null) return false;
+            if (!InternalDispatch && (caller == null || //caller must be on lot, be a roommate.
                 ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate
-                || targObj.PersistID == 0 || targObj is VMAvatar || targObj.IsUserMovable(vm.Context, true) != VMPlacementError.Success)
+                || targObj.PersistID == 0 || targObj is VMAvatar || targObj.IsUserMovable(vm.Context, true) != VMPlacementError.Success))
                 return false;
-            //todo: immediately lock this object
+
+            if ((((VMGameObject)targObj).Disabled & VMGameObjectDisableFlags.TransactionIncomplete) > 0) return false;
+            VMNetLockCmd.LockObj(vm, targObj);
             vm.GlobalLink.MoveToInventory(vm, targObj.MultitileGroup, (bool success, uint pid) =>
             {
-                if (success)
-                {
-                    Verified = true;
-                    vm.ForwardCommand(this);
-                }
+                Success = success;
+                Verified = true;
+                vm.ForwardCommand(this);
             });
             return false;
         }
@@ -71,12 +82,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             base.SerializeInto(writer);
             writer.Write(ObjectPID);
+            writer.Write(Success);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
             ObjectPID = reader.ReadUInt32();
+            Success = reader.ReadBoolean();
         }
 
         #endregion

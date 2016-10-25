@@ -13,7 +13,7 @@ namespace FSO.SimAntics.Marshals
 {
     public class VMMarshal : VMSerializable
     {
-        public static readonly int LATEST_VERSION = 10;
+        public static readonly int LATEST_VERSION = 13;
 
         public int Version = LATEST_VERSION;
         public bool Compressed = true;
@@ -70,7 +70,7 @@ namespace FSO.SimAntics.Marshals
             MultitileGroups = new VMMultitileGroupMarshal[mtgN];
             for (int i = 0; i < mtgN; i++)
             {
-                MultitileGroups[i] = new VMMultitileGroupMarshal();
+                MultitileGroups[i] = new VMMultitileGroupMarshal(Version);
                 MultitileGroups[i].Deserialize(reader);
             }
 

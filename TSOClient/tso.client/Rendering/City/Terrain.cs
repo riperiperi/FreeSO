@@ -27,7 +27,7 @@ using FSO.LotView;
 
 namespace FSO.Client.Rendering.City
 {
-    public class Terrain : _3DAbstract
+    public class Terrain : _3DAbstract, IDisposable
     {
         public override List<_3DComponent> GetElements()
         {
@@ -87,6 +87,8 @@ namespace FSO.Client.Rendering.City
         public TerrainZoomMode m_Zoomed = TerrainZoomMode.Far;
         public float m_LotZoomProgress = 0;
 
+        private DateTime LastCityUpdate = DateTime.Now;
+
         private MouseState m_MouseState, m_LastMouseState;
         private bool m_MouseMove = false;
         private Vector2 m_MouseStart;
@@ -115,20 +117,24 @@ namespace FSO.Client.Rendering.City
             new int[] {-1, -1},
         };
 
+        private float DayOffset = 0.25f;
+        private float DayDuration = 0.60f;
         private Color[] m_TimeColors = new Color[]
         {
-            new Color(50, 70, 122)*1.5f,
-            new Color(50, 70, 122)*1.5f,
-            new Color(60, 80, 132)*1.5f,
-            new Color(60, 80, 132)*1.5f,
-            new Color(217, 109, 0),
+            new Color(50, 70, 122)*1.25f,
+            new Color(50, 70, 122)*1.25f,
+            new Color(55, 75, 111)*1.25f,
+            new Color(70, 70, 70)*1.25f,
+            new Color(217, 109, 50), //sunrise
+            new Color(255, 255, 255),
+            new Color(255, 255, 255), //peak
+            new Color(255, 255, 255), //peak
             new Color(255, 255, 255),
             new Color(255, 255, 255),
-            new Color(255, 255, 255),
-            new Color(255, 255, 255),
-            new Color(217, 109, 0),
-            new Color(60, 80, 80)*1.5f,
-            new Color(60, 80, 132)*1.5f,
+            new Color(217, 109, 50), //sunset
+            new Color(70, 70, 70)*1.25f,
+            new Color(55, 75, 111)*1.25f,
+            new Color(50, 70, 122)*1.25f,
         };
 
         private int m_Width, m_Height;
@@ -241,7 +247,7 @@ namespace FSO.Client.Rendering.City
 
         public override void DeviceReset(GraphicsDevice Device)
         {
-            UnloadEverything();
+            Dispose();
             LoadContent(m_GraphicsDevice);
             RegenData = true;
         }
@@ -310,10 +316,17 @@ namespace FSO.Client.Rendering.City
         public void populateCityLookup(LotTileEntry[] TileData)
         {
             LotTileData = TileData;
+            var oldLookup = new HashSet<Vector2>(LotTileLookup.Keys);
             LotTileLookup = new Dictionary<Vector2, LotTileEntry>();
             for (int i = 0; i < TileData.Length; i++)
             {
                 LotTileLookup[new Vector2(TileData[i].x, TileData[i].y)] = TileData[i];
+            }
+            oldLookup.ExceptWith(new HashSet<Vector2>(LotTileLookup.Keys));
+            foreach (var deleted in oldLookup)
+            {
+                //remove these from the cache.
+                m_HouseGraphics.Remove(((int)deleted.X << 16) | (int)deleted.Y);
             }
         }
 
@@ -339,7 +352,7 @@ namespace FSO.Client.Rendering.City
             RegenData = false; //don't do this again next frame...
         }
 
-        public void UnloadEverything()
+        public void Dispose()
         {
             ClearOldData();
             m_Elevation.Dispose(); 
@@ -355,10 +368,10 @@ namespace FSO.Client.Rendering.City
             m_Sand.Dispose(); 
             m_Forest.Dispose();
             m_DefaultHouse.Dispose(); 
-            m_LotOnline.Dispose(); 
-            m_LotOffline.Dispose();
-            m_WhiteLine.Dispose();
-            m_stpWhiteLine.Dispose();
+            //m_LotOnline.Dispose(); these are handled by the UI engine
+            //m_LotOffline.Dispose();
+            //m_WhiteLine.Dispose();
+            //m_stpWhiteLine.Dispose();
 
             for (int x = 0; x < 30; x++) m_TransA[x].Dispose();
             for (int x = 0; x < 30; x++) TransB[x].Dispose();
@@ -573,10 +586,12 @@ namespace FSO.Client.Rendering.City
                     double[] off4 = new double[] { ((roadByte >> 4) % 4) * 0.25, ((int)((roadByte >> 4) / 4)) * 0.25 }; //road corners uv selection
 
                     //huge segment of code for generating triangles incoming
+                    var norm1 = GetNormalAt(j, i);
 
                     m_Verts[index].Coord.X = j;
                     m_Verts[index].Coord.Y = m_ElevationData[(i * 512 + j) * 4] / 12.0f; //elevation
                     m_Verts[index].Coord.Z = i;
+                    m_Verts[index].Normal = norm1;
                     m_Verts[index].TextureCoord.X = (j + toX) / 512.0f;
                     m_Verts[index].TextureCoord.Y = (i + toY) / 512.0f;
                     m_Verts[index].Texture2Coord.X = (float)off[0];
@@ -591,10 +606,10 @@ namespace FSO.Client.Rendering.City
                     m_Verts[index].RoadCCoord.Y = (float)off4[1];
 
                     index++;
-
                     m_Verts[index].Coord.X = j + 1;
                     m_Verts[index].Coord.Y = m_ElevationData[(i * 512 + Math.Min(511, j + 1)) * 4] / 12.0f; //elevation
                     m_Verts[index].Coord.Z = i;
+                    m_Verts[index].Normal = GetNormalAt(Math.Min(511, j + 1), i);
                     m_Verts[index].TextureCoord.X = (j + toX + 1) / 512.0f;
                     m_Verts[index].TextureCoord.Y = (i + toY) / 512.0f;
                     m_Verts[index].Texture2Coord.X = (float)(off[0] + 0.125);
@@ -609,10 +624,11 @@ namespace FSO.Client.Rendering.City
                     m_Verts[index].RoadCCoord.Y = (float)off4[1];
 
                     index++;
-
+                    var norm2 = GetNormalAt(Math.Min(511, j + 1), Math.Min(511, i + 1));
                     m_Verts[index].Coord.X = j + 1;
                     m_Verts[index].Coord.Y = m_ElevationData[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1)) * 4] / 12.0f; //elevation
                     m_Verts[index].Coord.Z = i + 1;
+                    m_Verts[index].Normal = norm2;
                     m_Verts[index].TextureCoord.X = (j + toX + 1) / 512.0f;
                     m_Verts[index].TextureCoord.Y = (i + toY + 1) / 512.0f;
                     m_Verts[index].Texture2Coord.X = (float)(off[0] + 0.125);
@@ -633,6 +649,7 @@ namespace FSO.Client.Rendering.City
                     m_Verts[index].Coord.X = j;
                     m_Verts[index].Coord.Y = m_ElevationData[(i * 512 + j) * 4] / 12.0f; //elevation
                     m_Verts[index].Coord.Z = i;
+                    m_Verts[index].Normal = norm1;
                     m_Verts[index].TextureCoord.X = (j + toX) / 512.0f;
                     m_Verts[index].TextureCoord.Y = (i + toY) / 512.0f;
                     m_Verts[index].Texture2Coord.X = (float)(off[0]);
@@ -651,6 +668,7 @@ namespace FSO.Client.Rendering.City
                     m_Verts[index].Coord.X = j + 1;
                     m_Verts[index].Coord.Y = m_ElevationData[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1)) * 4] / 12.0f; //elevation
                     m_Verts[index].Coord.Z = i + 1;
+                    m_Verts[index].Normal = norm2;
                     m_Verts[index].TextureCoord.X = (j + toX + 1) / 512.0f;
                     m_Verts[index].TextureCoord.Y = (i + toY + 1) / 512.0f;
                     m_Verts[index].Texture2Coord.X = (float)(off[0] + 0.125);
@@ -669,6 +687,7 @@ namespace FSO.Client.Rendering.City
                     m_Verts[index].Coord.X = j;
                     m_Verts[index].Coord.Y = m_ElevationData[(Math.Min(511, i + 1) * 512 + j) * 4] / 12.0f; //elevation
                     m_Verts[index].Coord.Z = i + 1;
+                    m_Verts[index].Normal = GetNormalAt(j, Math.Min(511, i + 1));
                     m_Verts[index].TextureCoord.X = (j + toX) / 512.0f;
                     m_Verts[index].TextureCoord.Y = (i + toY + 1) / 512.0f;
                     m_Verts[index].Texture2Coord.X = (float)(off[0]);
@@ -689,6 +708,56 @@ namespace FSO.Client.Rendering.City
             vertBuf.SetData(m_Verts); //use vertex buffer to draw mesh as the data is always the same. we only have to set data once.
             m_MeshTris = m_Verts.Length / 3;
             m_Verts = null; //clear m_Verts now that it's copied to save some RAM.
+        }
+
+        private Vector3 GetNormalAt(int x, int y)
+        {
+            var sum = new Vector3();
+            var rotToNormalXY = Matrix.CreateRotationZ((float)(Math.PI/2));
+            var rotToNormalZY = Matrix.CreateRotationX(-(float)(Math.PI / 2));
+
+            if (x < 511)
+            {
+                var vec = new Vector3();
+                vec.X = 1;
+                vec.Y = GetElevationPoint(x + 1, y) - GetElevationPoint(x, y);
+                vec = Vector3.Transform(vec, rotToNormalXY);
+                sum += vec;
+            }
+
+            if (x > 1)
+            {
+                var vec = new Vector3();
+                vec.X = 1;
+                vec.Y = GetElevationPoint(x, y) - GetElevationPoint(x-1, y);
+                vec = Vector3.Transform(vec, rotToNormalXY);
+                sum += vec;
+            }
+
+            if (y < 511)
+            {
+                var vec = new Vector3();
+                vec.Z = 1;
+                vec.Y = GetElevationPoint(x, y + 1) - GetElevationPoint(x, y);
+                vec = Vector3.Transform(vec, rotToNormalZY);
+                sum += vec;
+            }
+
+            if (y > 1)
+            {
+                var vec = new Vector3();
+                vec.Z = 1;
+                vec.Y = GetElevationPoint(x, y) - GetElevationPoint(x, y - 1);
+                vec = Vector3.Transform(vec, rotToNormalZY);
+                sum += vec;
+            }
+            if (sum != Vector3.Zero) sum.Normalize();
+            return sum;
+        }
+
+        private float GetElevationPoint(int x, int y)
+        {
+            return m_ElevationData[(y * 512 + x) * 4] / 6.0f;
         }
 
         private byte[] ConvertToBinaryArray(Color[] ColorArray)
@@ -1056,6 +1125,12 @@ namespace FSO.Client.Rendering.City
 
             if (Visible)
             { //if we're not visible, do not update CityRenderer state...
+                if (DateTime.Now.Subtract(LastCityUpdate).TotalSeconds > 15)
+                {
+                    FindController<TerrainController>()?.RequestNewCity();
+                    LastCityUpdate = DateTime.Now;
+                }
+
                 m_LastMouseState = m_MouseState;
                 m_MouseState = Mouse.GetState();
 
@@ -1126,6 +1201,7 @@ namespace FSO.Client.Rendering.City
 
         public void SetTimeOfDay(double time) 
         {
+            time = Math.Min(0.999999999, time);
             Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
             Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))+1]; //second colour
             double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
@@ -1135,20 +1211,35 @@ namespace FSO.Client.Rendering.City
             m_LightPosition = new Vector3(0, 0, -263);
             Matrix Transform = Matrix.Identity;
 
-            Transform *= Matrix.CreateRotationY((float)((((time+0.25)%0.5)+0.5) * Math.PI * 2.0)); //Controls the rotation of the sun/moon around the city. 
+            double modTime;
+            var offStart = 1 - (DayOffset + DayDuration);
+            if (time < DayOffset)
+            {
+                modTime = (offStart + time) * 0.5 / (1 - DayDuration);
+            } else if (time > DayOffset+DayDuration)
+            {
+                modTime = (time - (1-offStart)) * 0.5 / (1 - DayDuration);
+            } else
+            {
+                modTime = (time - DayOffset) * 0.5 / DayDuration;
+            }
+
+            Transform *= Matrix.CreateRotationY((float)((modTime+0.5) * Math.PI * 2.0)); //Controls the rotation of the sun/moon around the city. 
             Transform *= Matrix.CreateRotationZ((float)(Math.PI*(45.0/180.0))); //Sun is at an angle of 45 degrees to horizon at it's peak. idk why, it's winter maybe? looks nice either way
             Transform *= Matrix.CreateRotationY((float)(Math.PI * 0.3)); //Offset from front-back a little. This might need some adjusting for the nicest sunset/sunrise locations.
             Transform *= Matrix.CreateTranslation(new Vector3(256, 0, 256)); //Move pivot center to center of mesh.
 
             m_LightPosition = Vector3.Transform(m_LightPosition, Transform);
 
-            if (Math.Abs((time % 0.5) - 0.25) < 0.05) //Near the horizon, shadows should gracefully fade out into the opposite shadows (moonlight/sunlight)
+            if (modTime > 0.25) modTime = 0.5 - modTime;
+
+            if (Math.Abs(modTime) < 0.05) //Near the horizon, shadows should gracefully fade out into the opposite shadows (moonlight/sunlight)
             {
-                m_ShadowMult = (float)(1-(Math.Abs((time % 0.5) - 0.25)*20))*0.35f+0.65f;
+                m_ShadowMult = (float)(1-(Math.Abs(modTime)*20))*0.50f+0.50f;
             }
             else
             {
-                m_ShadowMult = 0.65f; //Shadow strength. Remember to change the above if you alter this.
+                m_ShadowMult = 0.50f; //Shadow strength. Remember to change the above if you alter this.
             }
         }
         
@@ -1377,7 +1468,9 @@ namespace FSO.Client.Rendering.City
             VertexShader.Parameters["LightMatrix"].SetValue((WorldMatrix*LightView)*LightProject);
 
             PixelShader.CurrentTechnique = PixelShader.Techniques[0];
-            PixelShader.Parameters["LightCol"].SetValue(new Vector4(m_TintColor.R/255.0f, m_TintColor.G/255.0f, m_TintColor.B/255.0f, 1));
+            PixelShader.Parameters["LightCol"].SetValue(new Vector4(m_TintColor.R / 255.0f, m_TintColor.G / 255.0f, m_TintColor.B / 255.0f, 1));
+            var lightVec = Vector3.Normalize(m_LightPosition - new Vector3(256, 0, 256));
+            PixelShader.Parameters["LightVec"].SetValue(lightVec);
             PixelShader.Parameters["VertexColorTex"].SetValue(m_VertexColor);
             PixelShader.Parameters["TextureAtlasTex"].SetValue(Atlas);
             PixelShader.Parameters["TransAtlasTex"].SetValue(TransAtlas);
@@ -1409,7 +1502,14 @@ namespace FSO.Client.Rendering.City
                 VertexShader.CurrentTechnique.Passes[2].Apply();
             }
 
+            try
+            {
             m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_MeshTris);
+            }
+            catch (Exception e)
+            {
+
+            }
 
             m_MovMatrix = ViewMatrix;
 

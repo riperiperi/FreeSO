@@ -12,6 +12,7 @@ using FSO.Common.Utils;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.NetPlay.Model;
+using Microsoft.Xna.Framework;
 using Ninject;
 using Ninject.Parameters;
 using System;
@@ -55,6 +56,23 @@ namespace FSO.Client.Controllers
         public void AddWindow(UIContainer window)
         {
             Screen.WindowContainer.Add(window);
+
+            var position = new Vector2(25, 25);
+
+            /*
+            var bounds = Screen.GetBounds();
+
+            window.X = ((bounds.Width - window.Size.X) / 2);
+            window.Y = ((bounds.Height - window.Size.Y) / 2);
+            */
+
+            while (Screen.WindowContainer.GetChildren().Any(x => x.Position == position)) position += new Vector2(50, 50);
+            window.Position = position;
+        }
+
+        public void RemoveWindow(UIContainer window)
+        {
+            Screen.WindowContainer.Remove(window);
         }
 
         private void JoinLotRegulator_OnTransition(string transition, object data)
@@ -90,7 +108,7 @@ namespace FSO.Client.Controllers
                         else
                             msg = new VMNetMessage(VMNetMessageType.Direct, ((FSOVMDirectToClient)data).Data);
 
-                        Screen.Driver.ServerMessage(msg);
+                        Screen.Driver?.ServerMessage(msg);
                         break;
                 }
             });
@@ -186,6 +204,14 @@ namespace FSO.Client.Controllers
             }
         }
 
+        public void GetAvatarModel(uint key, Callback<Avatar> callback)
+        {
+            DataService.Get<Avatar>(key).ContinueWith(x =>
+            {
+                if (x.Result != null) callback(x.Result);
+            });
+        }
+
         public void HandleVMShutdown(VMCloseNetReason reason)
         {
             JoinLotRegulator.AsyncTransition("Disconnect");
@@ -199,6 +225,10 @@ namespace FSO.Client.Controllers
         public void Dispose()
         {
             JoinLotRegulator.OnTransition -= JoinLotRegulator_OnTransition;
+            Screen.CleanupLastWorld();
+            GameFacade.Scenes.Clear();
+            Terrain.Dispose();
+            Screen.JoinLotProgress.FindController<JoinLotProgressController>()?.Dispose();
         }
     }
 }

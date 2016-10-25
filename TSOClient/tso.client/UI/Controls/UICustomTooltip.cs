@@ -95,7 +95,6 @@ namespace FSO.Client.UI.Controls
             if (Tooltip.Visible)
             {
                 var mousePosition = state.MouseState.Position;
-                Console.WriteLine(mousePosition);
                 Tooltip.Position = Tooltip.Parent.GlobalPoint(new Vector2(mousePosition.X, mousePosition.Y)) + Tooltip.Offset;
             }
         }

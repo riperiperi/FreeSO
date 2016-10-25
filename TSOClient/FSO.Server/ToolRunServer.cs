@@ -1,4 +1,5 @@
-﻿using FSO.Common.Domain;
+﻿using FSO.Common.DataService.Framework;
+using FSO.Common.Domain;
 using FSO.Server.Database.DA;
 using FSO.Server.DataService;
 using FSO.Server.Debug;
@@ -70,6 +71,7 @@ namespace FSO.Server
             Kernel.Load<ServerDomainModule>();
 
             Servers = new List<AbstractServer>();
+            Kernel.Bind<IServerNFSProvider>().ToConstant(new ServerNFSProvider(Config.SimNFS));
 
             if(Config.Services.Api != null &&
                 Config.Services.Api.Enabled)

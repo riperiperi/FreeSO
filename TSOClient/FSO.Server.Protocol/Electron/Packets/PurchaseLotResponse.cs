@@ -13,6 +13,7 @@ namespace FSO.Server.Protocol.Electron.Packets
         public PurchaseLotStatus Status { get; set; }
         public PurchaseLotFailureReason Reason { get; set; } = PurchaseLotFailureReason.NONE;
         public uint NewLotId { get; set; }
+        public int NewFunds { get; set; }
 
         public override ElectronPacketType GetPacketType()
         {
@@ -24,6 +25,7 @@ namespace FSO.Server.Protocol.Electron.Packets
             Status = input.GetEnum<PurchaseLotStatus>();
             Reason = input.GetEnum<PurchaseLotFailureReason>();
             NewLotId = input.GetUInt32();
+            NewFunds = input.GetInt32();
         }
 
         public override void Serialize(IoBuffer output, ISerializationContext context)
@@ -31,6 +33,7 @@ namespace FSO.Server.Protocol.Electron.Packets
             output.PutEnum<PurchaseLotStatus>(Status);
             output.PutEnum<PurchaseLotFailureReason>(Reason);
             output.PutUInt32(NewLotId);
+            output.PutInt32(NewFunds);
         }
     }
 
@@ -48,6 +51,8 @@ namespace FSO.Server.Protocol.Electron.Packets
         INSUFFICIENT_FUNDS = 0x03,
         LOT_TAKEN = 0x04,
         LOT_NOT_PURCHASABLE = 0x05,
+        IN_LOT_CANT_EVICT = 0x06,
+        NOT_OFFLINE_FOR_MOVE = 0x07,
         UNKNOWN = 0x06
     }
 }

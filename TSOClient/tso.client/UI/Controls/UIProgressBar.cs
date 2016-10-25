@@ -66,17 +66,59 @@ namespace FSO.Client.UI.Controls
 
         public UIProgressBar(ITextureRef background, ITextureRef bar)
         {
-            this.Background = background;
-            this.Bar = bar;
+            this._Background = background;
+            this._Bar = bar;
         }
 
         public string Caption = "{0}%";
         public TextStyle CaptionStyle { get; set; }
 
+
+        [UIAttribute("size")]
+        public override Vector2 Size
+        {
+            get
+            {
+                return new Vector2(m_Width, m_Height);
+            }
+            set
+            {
+                SetSize(value.X, value.Y);
+            }
+        }
+
+        private ITextureRef _Background { get; set; }
+        private Texture2D _BGTex { get; set; }
         [UIAttribute("backgroundImage")]
-        public ITextureRef Background { get; set; }
+        public Texture2D Background
+        {
+            get
+            {
+                return _BGTex;
+            }
+            set
+            {
+                _BGTex = value;
+                _Background = new SlicedTextureRef(value, BarMargin);
+                SetSize(value.Width, value.Height);
+            }
+        }
+
+        private ITextureRef _Bar { get; set; }
+        private Texture2D _BarTex { get; set; }
         [UIAttribute("foregroundImage")]
-        public ITextureRef Bar { get; set; }
+        public Texture2D Bar
+        {
+            get
+            {
+                return _BarTex;
+            }
+            set
+            {
+                _BarTex = value;
+                _Bar = new SlicedTextureRef(value, BarMargin);
+            }
+        }
         public Rectangle BarMargin = Rectangle.Empty;
         public Rectangle BarOffset = Rectangle.Empty;
 
@@ -169,9 +211,10 @@ namespace FSO.Client.UI.Controls
 
         public override void Draw(UISpriteBatch SBatch)
         {
-            if (Background != null)
+            if (!Visible) return;
+            if (_Background != null)
             {
-                Background.Draw(SBatch, this, 0, 0, m_Width, m_Height);
+                _Background.Draw(SBatch, this, 0, 0, m_Width, m_Height);
             }
 
 
@@ -181,16 +224,16 @@ namespace FSO.Client.UI.Controls
 
             if (Mode == ProgressBarMode.Animated)
             {
-                Bar.Draw(SBatch, this, AnimationPosition, BarOffset.Y, DefaultBarWidth, barHeight);
+                _Bar.Draw(SBatch, this, AnimationPosition, BarOffset.Y, DefaultBarWidth, barHeight);
                 return;
             }
 
 
             var percent = (m_Value - m_MinValue) / (m_MaxValue - m_MinValue);
-            if (m_Value != 0 && Bar != null)
+            if (m_Value != 0 && _Bar != null)
             {
                 var barWidth = BarMargin.Right + (trackSize * percent);
-                Bar.Draw(SBatch, this, BarOffset.Left, BarOffset.Y, barWidth, barHeight);
+                _Bar.Draw(SBatch, this, BarOffset.Left, BarOffset.Y, barWidth, barHeight);
             }
 
             /** Draw value label **/

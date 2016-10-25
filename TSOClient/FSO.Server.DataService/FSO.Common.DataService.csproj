@@ -63,6 +63,7 @@
   <ItemGroup>
     <Compile Include="DataService.cs" />
     <Compile Include="Framework\AbstractDataServiceProvider.cs" />
+    <Compile Include="Framework\Attributes\ClientSourced.cs" />
     <Compile Include="Framework\Attributes\Demand.cs" />
     <Compile Include="Framework\Attributes\Key.cs" />
     <Compile Include="Framework\Attributes\Persist.cs" />

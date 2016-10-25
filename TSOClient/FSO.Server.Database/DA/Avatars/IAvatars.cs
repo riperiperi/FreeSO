@@ -17,11 +17,14 @@ namespace FSO.Server.Database.DA.Avatars
         List<DbAvatar> GetByUserId(uint user_id);
         List<uint> GetRoommateIds(int lot_id);
 
+        int GetOtherLocks(uint avatar_id, string except);
+
         int GetBudget(uint avatar_id);
         DbTransactionResult Transaction(uint source_id, uint avatar_id, int amount, short reason);
         DbTransactionResult TestTransaction(uint source_id, uint avatar_id, int amount, short reason);
 
         void UpdateDescription(uint id, string description);
+        void UpdatePrivacyMode(uint id, byte privacy);
         void UpdateAvatarLotSave(uint id, DbAvatar avatar);
         void UpdateAvatarJobLevel(DbJobLevel jobLevel);
 

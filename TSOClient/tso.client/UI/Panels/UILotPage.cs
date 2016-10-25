@@ -8,6 +8,7 @@ using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
 using FSO.Files;
 using FSO.Server.Database.DA.Lots;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -75,6 +76,7 @@ namespace FSO.Client.UI.Panels
         private string OriginalDescription;
 
         public Binding<Lot> CurrentLot;
+        public override Vector2 Size { get; set; }
 
         private bool _Open;
 
@@ -171,15 +173,21 @@ namespace FSO.Client.UI.Panels
                         default:
                             return null;
                     }
+                }).WithBinding(HouseCategoryButton, "Position", "Lot_Category", x =>
+                {
+                    return new Vector2(69+11-HouseCategoryButton.Texture.Width/8, 164+11-HouseCategoryButton.Texture.Height/2);
                 })
                 .WithMultiBinding(x => RefreshUI(), "Lot_LeaderID", "Lot_IsOnline", "Lot_Thumbnail", "Lot_Description", "Lot_RoommateVec");
 
             RefreshUI();
             NeighborhoodNameButton.Visible = false;
+
+            Size = BackgroundExpandedImage.Size.ToVector2();
         }
 
         private void ChangeCategory(UIElement button)
         {
+            //initiate dialog to get the target category
             var catDialog = new UILotCategoryDialog();
             UIScreen.GlobalShowDialog(new DialogReference
             {
@@ -187,6 +195,16 @@ namespace FSO.Client.UI.Panels
                 Controller = this,
                 Modal = true,
             });
+            catDialog.OnCategoryChange += ChangeCategory;
+        }
+
+        private void ChangeCategory(DbLotCategory cat)
+        {
+            if (CurrentLot != null && CurrentLot.Value != null && FindController<CoreGameScreenController>().IsMe(CurrentLot.Value.Lot_LeaderID))
+            {
+                CurrentLot.Value.Lot_Category = (byte)cat;
+                FindController<LotPageController>().SaveCategory(CurrentLot.Value);
+            }
         }
 
         public void TrySaveDescription()
@@ -249,7 +267,7 @@ namespace FSO.Client.UI.Panels
                 RoommateList.UpdateList(roomies);
 
                 var thumb = CurrentLot.Value.Lot_Thumbnail.Data;
-                if (thumb.Length == 0)
+                if (((thumb?.Length) ?? 0) == 0)
                     LotThumbnail.SetThumbnail(DefaultThumb, 0);
                 else
                     LotThumbnail.SetThumbnail(ImageLoader.FromStream(GameFacade.GraphicsDevice, new MemoryStream(thumb)), CurrentLot.Value.Id);

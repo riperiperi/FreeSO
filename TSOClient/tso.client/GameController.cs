@@ -19,6 +19,7 @@ using FSO.Common.Utils;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels;
 using FSO.Client.UI;
+using FSO.Common.DatabaseService.Model;
 
 namespace FSO.Client
 {
@@ -60,11 +61,14 @@ namespace FSO.Client
         /// </summary>
         public void ShowLogin()
         {
+            ChangeState<LoginScreen, LoginController>((view, controller) =>
+            {
+            });
+            /*
             var screen = Kernel.Get<LoginScreen>();
-
-            /** Remove preload screen **/
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
+            */
         }
 
         /// <summary>
@@ -89,7 +93,7 @@ namespace FSO.Client
         public void ConnectToCity(string cityName, uint avatarId){
             ChangeState<TransitionScreen, ConnectCityController>((view, controller) =>
             {
-                controller.Connect(cityName, avatarId, new Common.Utils.Callback(GotoCity), new Common.Utils.Callback(Disconnect));
+                controller.Connect(cityName, avatarId, () => { GotoCity(controller.AvatarData); }, new Common.Utils.Callback(Disconnect));
             });
         }
 
@@ -112,22 +116,32 @@ namespace FSO.Client
             });
         }
 
-        public void GotoCity(){
+        public void GotoCity(LoadAvatarByIDResponse dbAvatar){
             ChangeState<CoreGameScreen, CoreGameScreenController>((view, controller) =>{
+                view.VisualBudget = dbAvatar.Cash;
             });
         }
 
-        public void Disconnect(){
+        public void Disconnect()
+        {
+            Disconnect(false);
+        }
+
+        public void Disconnect(bool toLogin){
             ChangeState<TransitionScreen, DisconnectController>((view, controller) =>
             {
-                controller.Disconnect(HandleDisconnect);
+                controller.Disconnect(() => HandleDisconnect(toLogin));
             });
         }
 
-        private void HandleDisconnect(){
+
+        private void HandleDisconnect(bool forceLogin){
             //Depending on how long is left on the session take user
             //to SAS or login screen
-            ShowPersonSelection();
+            if (forceLogin)
+                ShowLogin();
+            else 
+                ShowPersonSelection();
         }
 
         public void FatalNetworkError(int code)
@@ -198,31 +212,11 @@ namespace FSO.Client
             });
         }
 
-
-
-
-
-        public void ShowCity()
-        {
-            var screen = Kernel.Get<CoreGameScreen>();
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(screen);
-        }
-
         public void ShowCredits()
         {
             var screen = Kernel.Get<Credits>();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
-        }
-
-        public void ShowLotDebug()
-        {
-            var screen = Kernel.Get<CoreGameScreen>(); //new LotDebugScreen();
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(screen);
-            //screen.InitTestLot();
-            //screen.ZoomLevel = 1;
         }
 
         public void StartDebugTools()

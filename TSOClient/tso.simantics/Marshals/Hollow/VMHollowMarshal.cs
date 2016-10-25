@@ -52,7 +52,7 @@ namespace FSO.SimAntics.Marshals.Hollow
             MultitileGroups = new VMMultitileGroupMarshal[mtgN];
             for (int i = 0; i < mtgN; i++)
             {
-                MultitileGroups[i] = new VMMultitileGroupMarshal();
+                MultitileGroups[i] = new VMMultitileGroupMarshal(Version);
                 MultitileGroups[i].Deserialize(reader);
             }
         }

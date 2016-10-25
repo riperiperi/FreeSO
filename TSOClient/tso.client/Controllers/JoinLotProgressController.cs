@@ -11,9 +11,10 @@ using System.Threading.Tasks;
 
 namespace FSO.Client.Controllers
 {
-    public class JoinLotProgressController
+    public class JoinLotProgressController : IDisposable
     {
         private UIJoinLotProgress View;
+        LotConnectionRegulator ConnectionReg;
 
         public JoinLotProgressController(UIJoinLotProgress view, LotConnectionRegulator regulator)
         {
@@ -21,6 +22,14 @@ namespace FSO.Client.Controllers
 
             regulator.OnError += Regulator_OnError;
             regulator.OnTransition += Regulator_OnTransition;
+
+            ConnectionReg = regulator;
+        }
+
+        public void Dispose()
+        {
+            ConnectionReg.OnError -= Regulator_OnError;
+            ConnectionReg.OnTransition -= Regulator_OnTransition;
         }
 
         private void Regulator_OnError(object data)

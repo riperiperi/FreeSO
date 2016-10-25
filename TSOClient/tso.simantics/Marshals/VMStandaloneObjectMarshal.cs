@@ -119,7 +119,7 @@ namespace FSO.SimAntics.Marshals
                 vm.Context.Blueprint.AddObject((ObjectComponent)obj.WorldUI);
                 vm.Context.Blueprint.ChangeObjectLocation((ObjectComponent)obj.WorldUI, obj.Position);
                 realEnt = obj;
-                obj.GenerateTreeByName(vm.Context);
+                obj.FetchTreeByName(vm.Context);
                 obj.Thread = new VMThread(vm.Context, obj, obj.Object.OBJ.StackSize);
 
                 vm.AddEntity(obj);

@@ -32,6 +32,7 @@ namespace FSO.Server.Servers.City.Handlers
 
         public async void Handle(IVoltronSession session, FindLotRequest packet)
         {
+            //ASYNC VOID METHOD: EXCEPTIONS WILL CRASH THE SERVER!
             if (session.IsAnonymous) //CAS users can't do this.
                 return;
 

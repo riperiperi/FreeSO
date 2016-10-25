@@ -22,34 +22,63 @@ namespace FSO.Common.DataService.Framework
             }
 
             var castKey = (KEY)key;
+            var reload = false;
 
             if (Values.ContainsKey(castKey)){
-                return Values[castKey];
+                var val = Values[castKey];
+                if (RequiresReload(castKey, (VALUE)val.Result)) reload = true;
+                else return Values[castKey];
             }
 
             lock (Values)
             {
-                if (Values.ContainsKey(castKey)){
+                if (reload)
+                {
+                    Task<object> oldVal;
+                    Values.TryRemove(castKey, out oldVal);
+
+                    var result = ResolveMissingKey(castKey, (VALUE)oldVal.Result);
+                    return Values.GetOrAdd(castKey, result);
+                }
+                else if (Values.ContainsKey(castKey))
+                {
                     return Values[castKey];
+                } else
+                {
+                    var result = ResolveMissingKey(castKey);
+                    return Values.GetOrAdd(castKey, result);
                 }
 
-                var result = ResolveMissingKey(castKey);
-                return Values.GetOrAdd(castKey, result);
+
             }
         }
 
         private Task<object> ResolveMissingKey(object key)
         {
+            return ResolveMissingKey(key, default(VALUE));
+        }
+
+        private Task<object> ResolveMissingKey(object key, VALUE oldVal)
+        {
             var cts = new CancellationTokenSource(LazyLoadTimeout);
             return Task.Factory.StartNew<object>(() =>
             {
-                return (object)LazyLoad((KEY)key);
+                return (object)LazyLoad((KEY)key, oldVal);
             }, cts.Token);
+        }
+        protected virtual VALUE LazyLoad(KEY key, VALUE oldVal)
+        {
+            return ModelActivator.NewInstance<VALUE>();
         }
 
         protected virtual VALUE LazyLoad(KEY key)
         {
-            return ModelActivator.NewInstance<VALUE>();
+            return LazyLoad(key, default(VALUE));
+        }
+
+        protected virtual bool RequiresReload(KEY key, VALUE value)
+        {
+            return false;
         }
     }
 }

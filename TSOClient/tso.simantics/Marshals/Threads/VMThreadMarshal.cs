@@ -74,7 +74,7 @@ namespace FSO.SimAntics.Marshals.Threads
             Queue = new VMQueuedActionMarshal[queueN];
             for (int i = 0; i < queueN; i++)
             {
-                Queue[i] = new VMQueuedActionMarshal();
+                Queue[i] = new VMQueuedActionMarshal(Version);
                 Queue[i].Deserialize(reader);
             }
             if (Version > 4) ActiveQueueBlock = reader.ReadByte();

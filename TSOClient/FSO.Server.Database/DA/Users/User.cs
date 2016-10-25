@@ -16,6 +16,8 @@ namespace FSO.Server.Database.DA.Users
         public bool is_admin { get; set; }
         public bool is_moderator { get; set; }
         public bool is_banned { get; set; }
+        public string register_ip { get; set; }
+        public string last_ip { get; set; }
     }
 
     public enum UserState

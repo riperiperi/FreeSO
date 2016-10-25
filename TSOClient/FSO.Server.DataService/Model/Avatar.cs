@@ -14,6 +14,8 @@ namespace FSO.Common.DataService.Model
         [Key]
         public uint Avatar_Id { get; set; }
 
+        public uint FetchTime;
+
         private bool _Avatar_IsFounder;
         public bool Avatar_IsFounder {
             get { return _Avatar_IsFounder; }
@@ -42,7 +44,16 @@ namespace FSO.Common.DataService.Model
             set { _Avatar_IsParentalControlLocked = value;  NotifyPropertyChanged("Avatar_IsParentalControlLocked"); }
         }
 
+        private byte _Avatar_PrivacyMode { get; set; }
+        [Persist]
+        public byte Avatar_PrivacyMode
+        {
+            get { return _Avatar_PrivacyMode; }
+            set { _Avatar_PrivacyMode = value; NotifyPropertyChanged("Avatar_PrivacyMode"); }
+        }
+
         private ushort _Avatar_CurrentJob { get; set; }
+        [ClientSourced]
         public ushort Avatar_CurrentJob
         {
             get { return _Avatar_CurrentJob; }
@@ -50,12 +61,14 @@ namespace FSO.Common.DataService.Model
         }
 
         private List<JobLevel> _Avatar_JobLevelVec { get; set; }
+        [ClientSourced]
         public List<JobLevel> Avatar_JobLevelVec
         {
             get { return _Avatar_JobLevelVec; }
             set { _Avatar_JobLevelVec = value; NotifyPropertyChanged("Avatar_JobLevelVec"); }
         }
-
+        
+        //todo: this can be client sourced... but it also needs to be completely mixed with new values.
         private List<Relationship> _Avatar_FriendshipVec { get; set; }
         public List<Relationship> Avatar_FriendshipVec
         {
@@ -85,6 +98,7 @@ namespace FSO.Common.DataService.Model
         }
 
         private ushort _Avatar_SkillsLockPoints;
+        [ClientSourced]
         public ushort Avatar_SkillsLockPoints
         {
             get { return _Avatar_SkillsLockPoints; }
@@ -103,6 +117,7 @@ namespace FSO.Common.DataService.Model
         }
 
         private AvatarSkills _Avatar_Skills;
+        [ClientSourced]
         public AvatarSkills Avatar_Skills
         {
             get { return _Avatar_Skills; }

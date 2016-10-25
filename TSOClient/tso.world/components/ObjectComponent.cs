@@ -327,7 +327,7 @@ namespace FSO.LotView.Components
 
         public override void Draw(GraphicsDevice device, WorldState world){
 //#if !DEBUG 
-            if (!Visible || (Position.X < 0 && Position.Y < 0)) return;
+            if (!Visible || (!world.DrawOOB && (Position.X < -2043 && Position.Y < -2043))) return;
 //#endif
             if (CutawayHidden) return;
             if (this.DrawGroup != null) dgrp.Draw(world);

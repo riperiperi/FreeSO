@@ -11,6 +11,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace FSO.Common.DataService
@@ -200,93 +201,113 @@ namespace FSO.Common.DataService
 
         public async void ApplyUpdate(cTSOTopicUpdateMessage update, ISecurityContext context)
         {
-            //TODO: exceptions here cause the server to self nuke.
-            var partialDotPath = new uint[update.DotPath.Length - 1];
-            Array.Copy(update.DotPath, partialDotPath, partialDotPath.Length);
-            var path = await ResolveDotPath(partialDotPath);
-
-            var target = path.GetValue();
-            if (target.Value == null) { throw new Exception("Cannot set property on null value"); }
-            
-            //Apply the change!
-            var targetType = target.Value.GetType();
-            var finalPath = update.DotPath[update.DotPath.Length - 1];
-            var value = GetUpdateValue(update.Value);
-
-            var provider = GetProvider(path.GetProvider());
-            var entity = path.GetEntity();
-
-            if (IsList(targetType))
+            try
             {
-                //Array, we expect the final path component to be an array index
-                var arr = (IList)target.Value;
-                if (finalPath < arr.Count)
+                var partialDotPath = new uint[update.DotPath.Length - 1];
+                Array.Copy(update.DotPath, partialDotPath, partialDotPath.Length);
+                var path = await ResolveDotPath(partialDotPath);
+
+                var target = path.GetValue();
+                if (target.Value == null) { throw new Exception("Cannot set property on null value"); }
+
+                //Apply the change!
+                var targetType = target.Value.GetType();
+                var finalPath = update.DotPath[update.DotPath.Length - 1];
+                var value = GetUpdateValue(update.Value);
+
+                var provider = GetProvider(path.GetProvider());
+                var entity = path.GetEntity();
+
+                if (IsList(targetType))
                 {
-                    //Update existing
-                    provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
-                    arr[(int)finalPath] = value;
-
-                    //TODO: make this async?
-                    if (target.Persist){
-                        provider.PersistMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value);
-                    }
-                }
-                else if (finalPath == arr.Count)
-                {
-                    //Insert
-                    provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
-                    arr.Add(value);
-
-                    if (target.Persist){
-                        provider.PersistMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value);
-                    }
-                }
-            }
-            else
-            {
-                //We expect a field value
-                if (target.TypeId == 0)
-                {
-                    throw new Exception("Trying to set field on unknown type");
-                }
-
-                var _struct = DataDefinition.GetStruct(target.TypeId);
-                var field = _struct.Fields.FirstOrDefault(x => x.ID == finalPath);
-                if (field == null) { throw new Exception("Unknown field in dot path"); }
-
-                var objectField = target.Value.GetType().GetProperty(field.Name);
-                if (objectField == null) { throw new Exception("Unknown field in model: " + objectField.Name); }
-
-
-                //If the value is null (0) and the field has a decoration of NullValueIndicatesDeletion
-                //Delete the value instead of setting it
-                var nullDelete = objectField.GetCustomAttribute<Key>();
-                if (nullDelete != null && IsNull(value))
-                {
-                    var parent = path.GetParent();
-                    if (IsList(parent.Value))
+                    //Array, we expect the final path component to be an array index
+                    var arr = (IList)target.Value;
+                    if (finalPath < arr.Count)
                     {
-                        provider.DemandMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(1), value, context);
-                        ((IList)parent.Value).Remove(target.Value);
+                        //Update existing
+                        provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
+                        arr[(int)finalPath] = value;
 
-                        if (parent.Persist){
-                            provider.PersistMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(1), value);
+                        //TODO: make this async?
+                        if (target.Persist)
+                        {
+                            provider.PersistMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value);
                         }
                     }
-                    else
+                    else if (finalPath == arr.Count)
                     {
-                        //TODO
+                        //Insert
+                        provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
+                        arr.Add(value);
+
+                        if (target.Persist)
+                        {
+                            provider.PersistMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value);
+                        }
                     }
                 }
                 else
                 {
-                    var persist = objectField.GetCustomAttribute<Persist>();
-                    provider.DemandMutation(entity.Value, MutationType.SET_FIELD_VALUE, path.GetKeyPath(objectField.Name), value, context);
-                    objectField.SetValue(target.Value, value);
-
-                    if (persist != null){
-                        provider.PersistMutation(entity.Value, MutationType.SET_FIELD_VALUE, path.GetKeyPath(objectField.Name), value);
+                    //We expect a field value
+                    if (target.TypeId == 0)
+                    {
+                        throw new Exception("Trying to set field on unknown type");
                     }
+
+                    var _struct = DataDefinition.GetStruct(target.TypeId);
+                    var field = _struct.Fields.FirstOrDefault(x => x.ID == finalPath);
+                    if (field == null) { throw new Exception("Unknown field in dot path"); }
+
+                    var objectField = target.Value.GetType().GetProperty(field.Name);
+                    if (objectField == null) { throw new Exception("Unknown field in model: " + objectField.Name); }
+
+
+                    //If the value is null (0) and the field has a decoration of NullValueIndicatesDeletion
+                    //Delete the value instead of setting it
+                    var nullDelete = objectField.GetCustomAttribute<Key>();
+                    if (nullDelete != null && IsNull(value))
+                    {
+                        var parent = path.GetParent();
+                        if (IsList(parent.Value))
+                        {
+                            provider.DemandMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(1), value, context);
+                            ((IList)parent.Value).Remove(target.Value);
+
+                            if (parent.Persist)
+                            {
+                                provider.PersistMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(1), value);
+                            }
+                        }
+                        else
+                        {
+                            //TODO
+                        }
+                    }
+                    else
+                    {
+                        var persist = objectField.GetCustomAttribute<Persist>();
+                        var clientSourced = (target.Value as AbstractModel)?.ClientSourced ?? false;
+                        //if the client is internally managing this value, do not update it.
+                        if (!clientSourced || objectField.GetCustomAttribute<ClientSourced>() == null)
+                        {
+                            provider.DemandMutation(entity.Value, MutationType.SET_FIELD_VALUE, path.GetKeyPath(objectField.Name), value, context);
+                            objectField.SetValue(target.Value, value);
+
+                            if (persist != null)
+                            {
+                                provider.PersistMutation(entity.Value, MutationType.SET_FIELD_VALUE, path.GetKeyPath(objectField.Name), value);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e)
+            {
+                if (e is SecurityException)
+                {
+                    LOG.Error("Unauthorised data service update:" + e.Message);
+                } else
+                {
+                    LOG.Error(e, "Data service update failed.");
                 }
             }
         }

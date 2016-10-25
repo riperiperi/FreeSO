@@ -41,6 +41,18 @@ namespace FSO.Common.DataService.Model
             }
         }
 
+        private string _Lot_SpotLightText; //FSO specific var
+        [Persist] //bit of a hack here... this "persists" through to the city representation. TODO: make not stupid
+        public string Lot_SpotLightText
+        {
+            get { return _Lot_SpotLightText; }
+            set
+            {
+                _Lot_SpotLightText = value;
+                NotifyPropertyChanged("Lot_IsSpotlight");
+            }
+        }
+
         private string _Lot_Name;
         public string Lot_Name
         {

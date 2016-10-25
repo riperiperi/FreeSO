@@ -22,7 +22,9 @@ namespace FSO.Server.Database.DA.Lots
 
         void UpdateRingBackup(int lot_id, sbyte ring_backup_num);
         void UpdateDescription(int lot_id, string description);
-        
+        void UpdateLotCategory(int lot_id, DbLotCategory category);
+        void UpdateLocation(int lot_id, uint location, bool startFresh);
+
         void CreateLotServerTicket(DbLotServerTicket ticket);
         void DeleteLotServerTicket(string id);
         DbLotServerTicket GetLotServerTicket(string id);

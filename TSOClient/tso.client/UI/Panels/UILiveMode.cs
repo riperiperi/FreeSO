@@ -20,6 +20,7 @@ using FSO.SimAntics.NetPlay.EODs.Model;
 using FSO.LotView.Components;
 using FSO.LotView;
 using FSO.Common;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -48,7 +49,7 @@ namespace FSO.Client.UI.Panels
         public Texture2D EODPanelImg { get; set; }
         public Texture2D EODPanelTallImg { get; set; }
         public Texture2D EODDoublePanelTallImg { get; set; }
-        
+
         public UIImage EODPanel { get; set; }
         public UIImage EODPanelTall { get; set; }
         public UIImage EODDoublePanelTall { get; set; }
@@ -75,6 +76,17 @@ namespace FSO.Client.UI.Panels
 
         public UIListBox MsgWinTextEntry { get; set; }
         public UITextEdit TimerTextEntry { get; set; }
+
+        //onlinejobs stuff
+        public UIImage StatusBarMsgWinStraight { get; set; }
+        public UIImage StatusBarTimerStraight { get; set; }
+        public UIImage StatusBarTimerBreakIcon { get; set; }
+        public UIImage StatusBarTimerWorkIcon { get; set; }
+        public UITextEdit StatusBarTimerTextEntry { get; set; }
+        public UIListBox StatusBarMsgWinTextEntry { get; set; }
+
+        public int StatusBarCycleTime;
+        public VMTSOJobUI JobUI;
 
         //normal stuff
         public UIButton MoodPanelButton;
@@ -191,6 +203,31 @@ namespace FSO.Client.UI.Panels
             Add(EODSubMediumLengthTall);
             Add(EODSubShortLength);
             Add(EODSubShortLengthTall);
+
+            StatusBarMsgWinStraight = script.Create<UIImage>("StatusBarMsgWinStraight");
+            StatusBarTimerStraight = script.Create<UIImage>("StatusBarTimerStraight");
+            StatusBarTimerBreakIcon = script.Create<UIImage>("StatusBarTimerBreakIcon");
+            StatusBarTimerWorkIcon = script.Create<UIImage>("StatusBarTimerWorkIcon");
+
+            StatusBarTimerStraight.X -= 1;
+            StatusBarTimerStraight.Y += 2;
+            StatusBarTimerBreakIcon.Y += 2;
+            StatusBarTimerWorkIcon.Y += 2;
+            StatusBarTimerTextEntry.Y += 2;
+            StatusBarTimerTextEntry.X += 3;
+            StatusBarMsgWinStraight.Y += 2;
+
+            AddAt(0, StatusBarTimerBreakIcon);
+            AddAt(0, StatusBarTimerWorkIcon);
+            AddAt(0, StatusBarTimerStraight);
+            AddAt(0, StatusBarMsgWinStraight);
+
+            StatusBarMsgWinStraight.Visible = false;
+            StatusBarTimerStraight.Visible = false;
+            StatusBarTimerBreakIcon.Visible = false;
+            StatusBarTimerWorkIcon.Visible = false;
+            StatusBarTimerTextEntry.Visible = false;
+            StatusBarMsgWinTextEntry.Visible = false;
 
             EODMsgWinLong = script.Create<UIImage>("EODMsgWinLong");
             EODMsgWinShort = script.Create<UIImage>("EODMsgWinShort");
@@ -381,6 +418,54 @@ namespace FSO.Client.UI.Panels
                 }
                 
                 UpdateMotives();
+            }
+
+            var jobMode = JobUI != null;
+            StatusBarTimerTextEntry.Visible = jobMode;
+            StatusBarMsgWinStraight.Visible = jobMode;
+            StatusBarMsgWinTextEntry.Visible = jobMode;
+            StatusBarTimerStraight.Visible = jobMode;
+
+            if (jobMode)
+            {
+                bool textDirty = false;
+                if (StatusBarMsgWinTextEntry.Items.Count != JobUI.MessageText.Count)
+                    textDirty = true;
+                else
+                {
+                    for (int i=0; i<JobUI.MessageText.Count; i++)
+                    {
+                        if (!StatusBarMsgWinTextEntry.Items[i].Columns[0].Equals(JobUI.MessageText[i]))
+                        {
+                            textDirty = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (textDirty)
+                {
+                    StatusBarMsgWinTextEntry.Items = JobUI.MessageText.Select(x => new UIListBoxItem(x, x)).ToList();
+                    StatusBarMsgWinTextEntry.ScrollOffset = 0;
+                    StatusBarCycleTime = 0;
+                }
+
+                StatusBarTimerBreakIcon.Visible = JobUI.Mode == VMTSOJobMode.Intermission;
+                StatusBarTimerWorkIcon.Visible = JobUI.Mode == VMTSOJobMode.Round;
+                var timeText = " " + JobUI.Minutes + ":" + (JobUI.Seconds.ToString().PadLeft(2, '0'));
+                if (StatusBarTimerTextEntry.CurrentText != timeText) StatusBarTimerTextEntry.CurrentText = timeText;
+
+                if (StatusBarCycleTime++ > 60*4 && StatusBarMsgWinTextEntry.Items.Count > 0)
+                {
+                    StatusBarMsgWinTextEntry.ScrollOffset = (StatusBarMsgWinTextEntry.ScrollOffset + 1) % StatusBarMsgWinTextEntry.Items.Count;
+                    StatusBarCycleTime = 0;
+                }
+            } else
+            {
+                StatusBarTimerBreakIcon.Visible = false;
+                StatusBarTimerWorkIcon.Visible = false;
+
+                JobUI = LotController.vm.TSOState.JobUI;
             }
 
             if (LastEODConfig != LotController.EODs.DisplayMode)

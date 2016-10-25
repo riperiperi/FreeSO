@@ -41,7 +41,12 @@ namespace FSO.SimAntics.NetPlay.Model
             { VMCommandType.PlaceInventory, typeof(VMNetPlaceInventoryCmd) },
             { VMCommandType.UpdateInventory, typeof(VMNetUpdateInventoryCmd) },
             { VMCommandType.ChangeEnvironment, typeof(VMNetChangeEnvironmentCmd) },
-            { VMCommandType.ChangeLotSize, typeof(VMNetChangeLotSizeCmd) }
+            { VMCommandType.ChangeLotSize, typeof(VMNetChangeLotSizeCmd) },
+            { VMCommandType.InteractionResult, typeof(VMNetInteractionResultCmd) },
+            { VMCommandType.AsyncPrice, typeof(VMNetAsyncPriceCmd) },
+            { VMCommandType.AsyncSale, typeof(VMNetAsyncSaleCmd) },
+            { VMCommandType.LockObject, typeof(VMNetLockCmd) },
+            { VMCommandType.SkillLock, typeof(VMNetSkillLockCmd) }
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -115,5 +120,12 @@ namespace FSO.SimAntics.NetPlay.Model
         //housemode
         ChangeEnvironment = 24,
         ChangeLotSize = 25,
+
+        InteractionResult = 26,
+
+        AsyncPrice = 27,
+        AsyncSale = 28,
+        LockObject = 29,
+        SkillLock = 30
     }
 }

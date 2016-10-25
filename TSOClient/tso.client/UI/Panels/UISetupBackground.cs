@@ -44,7 +44,7 @@ namespace FSO.Client.UI.Panels
             BackgroundCtnr.X = (ScreenWidth - (800 * scale)) / 2;
 
             Texture2D splashSeg;
-            using (var logostrm = File.Open("Content/Textures/splashSeg.png", FileMode.Open))
+            using (var logostrm = File.Open("Content/Textures/splashSeg.png", FileMode.Open, FileAccess.Read, FileShare.Read))
                 splashSeg = ImageLoader.FromStream(GameFacade.GraphicsDevice, logostrm);
 
             var bgEdge = new UIImage(splashSeg).With9Slice(64, 64, 1, 1);

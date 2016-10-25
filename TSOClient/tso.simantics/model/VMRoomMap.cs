@@ -28,7 +28,7 @@ namespace FSO.SimAntics.Model
         /// <summary>
         /// Generates the room map for the specified walls array.
         /// </summary>
-        public void GenerateMap(WallTile[] Walls, FloorTile[] Floors, int width, int height, List<VMRoom> rooms) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
+        public void GenerateMap(WallTile[] Walls, FloorTile[] Floors, int width, int height, List<VMRoom> rooms, sbyte floor, VMContext context) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
         {
             Map = new uint[width*height]; //although 0 is the base of the array, room 1 is known to simantics as room 0.
             //values of 0 indicate the room has not been chosen in that location yet.
@@ -127,7 +127,7 @@ namespace FSO.SimAntics.Model
                     }
 
                     var bounds = new Rectangle(rminX, rminY, (rmaxX - rminX) + 1, (rmaxY - rminY) + 1);
-                    var roomObs = GenerateRoomObs((ushort)rooms.Count, bounds);
+                    var roomObs = GenerateRoomObs((ushort)rooms.Count, (sbyte)(floor+1), bounds, context);
                     OptimizeObstacles(wallObs);
                     OptimizeObstacles(roomObs);
 
@@ -221,7 +221,7 @@ namespace FSO.SimAntics.Model
             spread.Push(new Point(x, y));
         }
 
-        public List<VMObstacle> GenerateRoomObs(ushort room, Rectangle bounds)
+        public List<VMObstacle> GenerateRoomObs(ushort room, sbyte level, Rectangle bounds, VMContext context)
         {
             var result = new List<VMObstacle>();
             var x1 = Math.Max(0, bounds.X - 1);
@@ -237,6 +237,26 @@ namespace FSO.SimAntics.Model
                     int tRoom = (ushort)Map[x + y * Width];
                     if (tRoom != room)
                     {
+                        //is there a door on this tile?
+                        var door = (context.SetToNextCache.GetObjectsAt(LotTilePos.FromBigTile((short)x, (short)y, level))?.FirstOrDefault(
+                            o => ((VMEntityFlags2)(o.GetValue(VMStackObjectVariable.FlagField2)) & VMEntityFlags2.ArchitectualDoor) > 0)
+                        );
+                        if (door != null)
+                        {
+                            //ok... is is a portal to this room? block all sides that are not a portal to this room
+                            var otherSide = door.MultitileGroup.Objects.FirstOrDefault(o => context.GetObjectRoom(o) == room && o.EntryPoints[15].ActionFunction != 0);
+                            if (otherSide != null)
+                            {
+                                //make a hole for this door
+                                if (next != null) next = null;
+                                // note: the sims 1 stops here. this creates issues where sims can walk through doors in some circumstance
+                                // eg. two doors back to back into the same room. The sim will not perform a room route to the middle room, they will just walk through the door.
+                                // like, through it. This also works for pools but some additional rules prevent you from doing anything too silly.
+                                // we want to create 1 unit thick walls blocking each non-portal side.
+                                continue;
+                            }
+                        }
+
                         if (next != null) next.x2 += 16;
                         else
                         {
@@ -250,6 +270,7 @@ namespace FSO.SimAntics.Model
                     }
                 }
             }
+            OptimizeObstacles(result);
             return result;
         }
 

@@ -39,7 +39,7 @@ namespace FSO.Server.Servers.Lot.Domain
             this.Kernel = kernel;
             this.CityConnections = connections;
 
-            LotStatusSync = ds.Get<FSO.Common.DataService.Model.Lot>("Lot_NumOccupants", "Lot_IsOnline");
+            LotStatusSync = ds.Get<FSO.Common.DataService.Model.Lot>("Lot_NumOccupants", "Lot_IsOnline", "Lot_SpotLightText");
             LotRoomiesSync = ds.Get<FSO.Common.DataService.Model.Lot>("Lot_RoommateVec");
         }
 
@@ -415,6 +415,7 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             Host.RemoveLot(((Context.Id & 0x40000000) > 0)?(int)Context.Id:Context.DbId);
             SetOnline(false);
+            SetSpotlight(false);
             ReleaseLotClaim();
             BackgroundThread.Abort();
             MainThread.Abort();
@@ -455,6 +456,12 @@ namespace FSO.Server.Servers.Lot.Domain
                 Host.SyncRoommates(Context, Model);
             }
         }
+
+        public void SetSpotlight(bool on)
+        {
+            Model.Lot_SpotLightText = on?"spot":"";
+            Host.Sync(Context, Model);
+        }
     }
 
     public interface ILotHost
@@ -467,6 +474,7 @@ namespace FSO.Server.Servers.Lot.Domain
         void ReleaseAvatarClaim(uint avatarID);
         void Shutdown();
         void SetOnline(bool online);
+        void SetSpotlight(bool on);
         void SyncRoommates();
     }
 }

@@ -39,6 +39,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             VMAvatar avatar = (VMAvatar)sim;
             AvatarState.Apply(avatar);
 
+            var oldRoomCount = vm.TSOState.Roommates.Count;
             //some off lot changes may have occurred. Keep things up to date if we're caught between database sync points (TODO: right now never, but should happen on every roomie change).
             if (AvatarState.Permissions > VMTSOAvatarPermissions.Visitor && AvatarState.Permissions < VMTSOAvatarPermissions.Admin)
             {
@@ -51,6 +52,20 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             {
                 vm.TSOState.Roommates.Remove(AvatarState.PersistID);
                 vm.TSOState.BuildRoommates.Remove(AvatarState.PersistID);
+            }
+
+            if (oldRoomCount != vm.TSOState.Roommates.Count)
+            {
+                //mark objects not owned by roommates for inventory transfer
+                foreach (var ent in vm.Entities)
+                {
+                    if (ent is VMGameObject && ent.PersistID > 0 && ((VMTSOObjectState)ent.TSOState).OwnerID == avatar.PersistID)
+                    {
+                        if (AvatarState.Permissions < VMTSOAvatarPermissions.Roommate) ((VMGameObject)ent).Disabled |= VMGameObjectDisableFlags.PendingRoommateDeletion;
+                        else ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.PendingRoommateDeletion;
+                        ((VMGameObject)ent).RefreshLight();
+                    }
+                }
             }
 
             vm.Context.SetToNextCache.RegisterAvatarPersist(avatar, avatar.PersistID);

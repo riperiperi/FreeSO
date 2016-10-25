@@ -143,6 +143,8 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Servers\Api\Controllers\StatusCodeHandler.cs" />
+    <Compile Include="Servers\Api\Controllers\UserAPI\CityInfoController.cs" />
+    <Compile Include="Servers\Api\Controllers\UserAPI\RegistrationController.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTConfiguration.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTokenFactory.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTTokenAuthentication.cs" />

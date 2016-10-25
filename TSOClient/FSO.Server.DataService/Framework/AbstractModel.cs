@@ -10,6 +10,7 @@ namespace FSO.Common.DataService.Framework
     [DataServiceModel]
     public abstract class AbstractModel : INotifyPropertyChanged, IModel
     {
+        public bool ClientSourced;
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void NotifyPropertyChanged(string name)

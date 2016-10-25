@@ -73,16 +73,23 @@ namespace FSO.Server.Servers.City.Handlers
                 throw new Exception("Permission denied, you cannot load an avatar you do not own");
             }
 
-            return new cTSONetMessageStandard()
-            {
-                MessageID = 0x8ADF865D,
-                DatabaseType = DBResponseType.LoadAvatarByID.GetResponseID(),
-                Parameter = msg.Parameter,
 
-                ComplexParameter = new LoadAvatarByIDResponse()
+            using (var da = DAFactory.Get())
+            {
+                var avatar = da.Avatars.Get(session.AvatarId);
+                if (avatar == null) return null;
+                return new cTSONetMessageStandard()
                 {
-                    AvatarId = session.AvatarId
-                }
+                    MessageID = 0x8ADF865D,
+                    DatabaseType = DBResponseType.LoadAvatarByID.GetResponseID(),
+                    Parameter = msg.Parameter,
+
+                    ComplexParameter = new LoadAvatarByIDResponse()
+                    {
+                        AvatarId = session.AvatarId,
+                        Cash = (uint)avatar.budget,
+                    }
+                };
             };
         }
 

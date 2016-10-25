@@ -195,6 +195,11 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             //todo: nice stub for this using database?
         }
 
+        public void PurchaseFromOwner(VM vm, VMMultitileGroup obj, uint purchaserPID, VMAsyncInventorySaveCallback callback, VMAsyncTransactionCallback tcallback)
+        {
+            //todo: nice stub for this using database?
+        }
+
         public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, VMAsyncInventoryRetrieveCallback callback)
         {
             //todo: nice stub for this using database?
@@ -213,6 +218,11 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         public void ConsumeInventory(VM vm, uint ownerPID, uint guid, int mode, short num, VMAsyncInventoryConsumeCallback callback)
         {
             //todo: nice stub for this using database?
+        }
+
+        public void SetSpotlightStatus(VM vm, bool on)
+        {
+
         }
     }
 }

@@ -298,7 +298,7 @@ namespace FSO.Client.UI.Panels
                 if (--MoneyHighlightFrames == 0) MoneyText.CaptionStyle.Color = TextStyle.DefaultLabel.Color;
             }
             uint budget = 0;
-            if (Game.InLot) 
+            if (Game.InLot)
             {
                 // if ingame, use time from ingame clock 
                 // (should be very close to server time anyways, if we set the game pacing up right...)
@@ -314,21 +314,30 @@ namespace FSO.Client.UI.Panels
 
                     //check if we have build/buy permissions
                     //TODO: global build/buy enable/disable (via the global calls)
-                    BuyModeButton.Disabled = ((VMTSOAvatarState)(avatar.TSOState)).Permissions
-                        < VMTSOAvatarPermissions.Roommate;
                     BuildModeButton.Disabled = ((VMTSOAvatarState)(avatar.TSOState)).Permissions
                         < VMTSOAvatarPermissions.BuildBuyRoommate;
                     HouseModeButton.Disabled = BuyModeButton.Disabled;
+
+                    if (CurrentPanel == 2)
+                    {
+                        var panel = (UIBuyMode)Panel;
+                        var isRoomie = ((VMTSOAvatarState)(avatar.TSOState)).Permissions
+                            >= VMTSOAvatarPermissions.Roommate;
+                        panel.SetRoommate(isRoomie);
+                    }
                 }
 
-                if (CurrentPanel == 2 && BuyModeButton.Disabled || CurrentPanel == 3 && BuildModeButton.Disabled) SetPanel(-1);
+                if (CurrentPanel == 3 && BuildModeButton.Disabled) SetPanel(-1);
+
             }
+            else budget = OldMoney;
 
             if (budget != OldMoney)
             {
                 OldMoney = budget;
                 MoneyText.CaptionStyle.Color = Color.White;
                 MoneyHighlightFrames = 45;
+                Game.VisualBudget = budget;
             }
 
             string suffix = (hour > 11) ? "pm" : "am";
@@ -336,8 +345,7 @@ namespace FSO.Client.UI.Panels
             if (hour == 0) hour = 12;
 
             TimeText.Caption = hour.ToString() + ":" + ZeroPad(min.ToString(), 2) + " " + suffix;
-
-            MoneyText.Caption = "$" + budget.ToString("##,#0");
+            MoneyText.Caption = "$" + Game.VisualBudget.ToString("##,#0");
 
             base.Update(state);
         }

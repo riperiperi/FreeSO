@@ -1,4 +1,5 @@
-﻿using FSO.Server.Clients;
+﻿using FSO.Common.Utils;
+using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,9 @@ namespace FSO.Client.Regulators
     {
         private PurchaseLotRequest CurrentRequest;
         private Network.Network Network;
+
+        public delegate void PurchasedLotHandler(int newBudget);
+        public event PurchasedLotHandler OnPurchased;
 
         public PurchaseLotRegulator(Network.Network network)
         {
@@ -48,7 +52,8 @@ namespace FSO.Client.Regulators
                     {
                         LotLocation_X = CurrentRequest.X,
                         LotLocation_Y = CurrentRequest.Y,
-                        Name = CurrentRequest.Name
+                        Name = CurrentRequest.Name,
+                        StartFresh = CurrentRequest.StartFresh
                     });
                     break;
                 case "ReceivedPurchaseResponse":
@@ -57,7 +62,9 @@ namespace FSO.Client.Regulators
                         //Error
                         ThrowErrorAndReset(response.Reason);
                     }else{
+
                         AsyncTransition("PurchaseComplete");
+                        GameThread.NextUpdate(x => { OnPurchased(response.NewFunds); });
                     }
                     break;
                 case "PurchaseComplete":
@@ -88,5 +95,6 @@ namespace FSO.Client.Regulators
         public ushort X;
         public ushort Y;
         public string Name;
+        public bool StartFresh;
     }
 }

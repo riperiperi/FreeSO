@@ -13,12 +13,14 @@ namespace FSO.Server.Protocol.Electron.Packets
         public ushort LotLocation_X;
         public ushort LotLocation_Y;
         public string Name;
+        public bool StartFresh;
 
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             LotLocation_X = input.GetUInt16();
             LotLocation_Y = input.GetUInt16();
             Name = input.GetPascalString();
+            StartFresh = input.GetBool();
         }
 
         public override ElectronPacketType GetPacketType()
@@ -31,6 +33,7 @@ namespace FSO.Server.Protocol.Electron.Packets
             output.PutUInt16(LotLocation_X);
             output.PutUInt16(LotLocation_Y);
             output.PutPascalString(Name);
+            output.PutBool(StartFresh);
         }
     }
 }

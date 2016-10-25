@@ -21,9 +21,11 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void RegisterNewObject(VM vm, VMEntity obj, VMAsyncPersistIDCallback callback);
         void MoveToInventory(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback);
         void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback);
+        void PurchaseFromOwner(VM vm, VMMultitileGroup obj, uint purchaserPID, VMAsyncInventorySaveCallback callback, VMAsyncTransactionCallback tcallback);
         void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, VMAsyncInventoryRetrieveCallback callback);
         void ConsumeInventory(VM vm, uint ownerPID, uint guid, int mode, short num, VMAsyncInventoryConsumeCallback callback);
         void DeleteObject(VM vm, uint objectPID, VMAsyncDeleteObjectCallback callback);
+        void SetSpotlightStatus(VM vm, bool on);
 
         void Tick(VM vm);
     }

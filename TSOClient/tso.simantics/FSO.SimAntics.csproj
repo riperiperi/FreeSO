@@ -113,6 +113,7 @@
     <Compile Include="Model\TSOPlatform\VMAsyncState.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOAvatarState.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOEntityState.cs" />
+    <Compile Include="Model\TSOPlatform\VMTSOJobUI.cs" />
     <Compile Include="Model\VMBuildableAreaInfo.cs" />
     <Compile Include="Model\VMInventoryItem.cs" />
     <Compile Include="Model\TSOPlatform\VMTSOJobInfo.cs" />
@@ -152,6 +153,8 @@
     <Compile Include="NetPlay\EODs\Handlers\VMEODStubPlugin.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODEvent.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAdjHollowSyncCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetAsyncPriceCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetAsyncSaleCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChangeEnvironmentCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChangeLotSizeCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetEODMessageCmd.cs" />
@@ -160,7 +163,7 @@
     <Compile Include="NetPlay\EODs\VMEODServer.cs" />
     <Compile Include="NetPlay\Model\Commands\VMChangePermissionsCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMGenericDialogCommand.cs" />
-    <Compile Include="NetPlay\Model\Commands\VMNetAyncResponseCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetAsyncResponseCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetDialogResponseCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetDeleteObjectCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMBlueprintRestoreCmd.cs" />
@@ -170,12 +173,15 @@
     <Compile Include="NetPlay\Model\Commands\VMNetGotoCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetInteractionCancelCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetInteractionCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetInteractionResultCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetLockCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetMoveObjectCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetPlaceInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSendToInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSimJoinCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetArchitectureCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSimLeaveCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetSkillLockCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetUpdateInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetUpdatePersistStateCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMRequestResyncCmd.cs" />

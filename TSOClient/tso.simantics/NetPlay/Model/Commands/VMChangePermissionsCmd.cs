@@ -38,6 +38,18 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (vm.GlobalLink != null && Level >= VMTSOAvatarPermissions.Admin)
                 ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Administrators.Add(obj.PersistID);
 
+            //mark objects not owned by roommates for inventory transfer
+            foreach (var ent in vm.Entities)
+            {
+                if (ent is VMGameObject && ent.PersistID > 0 && ((VMTSOObjectState)ent.TSOState).OwnerID == obj.PersistID)
+                {
+                    if (Level < VMTSOAvatarPermissions.Roommate) ((VMGameObject)ent).Disabled |= VMGameObjectDisableFlags.PendingRoommateDeletion;
+                    else ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.PendingRoommateDeletion;
+                    ((VMGameObject)ent).RefreshLight();
+                }
+            }
+
+
             return base.Execute(vm);
         }
 

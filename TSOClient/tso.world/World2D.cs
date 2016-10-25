@@ -211,6 +211,7 @@ namespace FSO.LotView
         {
             var oldZoom = state.Zoom;
             var oldRotation = state.Rotation;
+            var oldPreciseZoom = state.PreciseZoom;
             /** Center average position **/
             Vector3 average = new Vector3();
             for (int i = 0; i < positions.Length; i++)
@@ -221,8 +222,10 @@ namespace FSO.LotView
 
             state.SilentZoom = WorldZoom.Near;
             state.SilentRotation = WorldRotation.BottomRight;
+            state.SilentPreciseZoom = 1;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
+            state.DrawOOB = true;
             state.TempDraw = true;
             var pxOffset = new Vector2(442, 275) - state.WorldSpace.GetScreenFromTile(average);
 
@@ -255,6 +258,7 @@ namespace FSO.LotView
                         _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
                         _2d.OffsetTile(tilePosition);
                         _2d.SetObjID(obj.ObjectID);
+
                         obj.Draw(gd, state);
 
                         //return everything to normal
@@ -274,6 +278,8 @@ namespace FSO.LotView
             if (bounds.Height + bounds.Y > 1024) bounds.Height = 1024 - bounds.Y;
 
             //return things to normal
+            state.DrawOOB = false;
+            state.SilentPreciseZoom = oldPreciseZoom;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
             state.TempDraw = false;

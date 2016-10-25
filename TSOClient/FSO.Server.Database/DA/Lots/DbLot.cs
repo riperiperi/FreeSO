@@ -27,15 +27,15 @@ namespace FSO.Server.Database.DA.Lots
     public enum DbLotCategory
     {
         none = 0,
-        welcome = 1,
-        money = 2,
-        skills = 3,
+        money = 1,
+        offbeat = 2,
+        romance = 3,
         services = 4,
-        entertainment = 5,
-        romance = 6,
-        shopping = 7,
+        shopping = 5,
+        skills = 6,
+        welcome = 7,
         games = 8,
-        offbeat = 9,
+        entertainment = 9,
         residence = 10
     }
 

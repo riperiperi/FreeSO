@@ -31,6 +31,7 @@ namespace FSO.IDE.Common
                 World2D.BUFFER_SURFACE_FORMATS[0],
                 World2D.BUFFER_SURFACE_FORMATS[World2D.BUFFER_THUMB_DEPTH] }, new bool[] { true, false }, World2D.SCROLL_BUFFER);
             State._2D.AmbientLight = State.AmbientLight;
+            State.DrawOOB = true;
 
             base.Camera = State.Camera;
 

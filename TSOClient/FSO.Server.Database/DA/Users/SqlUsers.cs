@@ -29,6 +29,11 @@ namespace FSO.Server.Database.DA.Users
             return Context.Connection.Query<User>("SELECT * FROM fso_users WHERE user_id = @user_id", new { user_id = id }).FirstOrDefault();
         }
 
+        public List<User> GetByRegisterIP(string ip)
+        {
+            return Context.Connection.Query<User>("SELECT * FROM fso_users WHERE register_ip = @ip ORDER BY register_date DESC", new { ip = ip }).AsList();
+        }
+
         public PagedList<User> All(int offset = 1, int limit = 20, string orderBy = "register_date")
         {
             var connection = Context.Connection;
@@ -44,6 +49,14 @@ namespace FSO.Server.Database.DA.Users
                 "is_admin = @is_admin, is_moderator = @is_moderator, is_banned = @is_banned; select LAST_INSERT_ID();",
                 user
             ).First();
+        }
+
+        public void CreateAuth(UserAuthenticate auth)
+        {
+            Context.Connection.Execute(
+                "insert into fso_user_authenticate set user_id = @user_id, scheme_class = @scheme_class, data = @data;",
+                auth
+            );
         }
     }
 }

@@ -22,6 +22,7 @@ using Microsoft.Xna.Framework.Input;
 using FSO.Client.UI.Framework;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Common;
+using FSO.Client.UI.Controls;
 
 namespace FSO.Client.UI.Panels
 {
@@ -43,6 +44,7 @@ namespace FSO.Client.UI.Panels
         private UpdateState LastState; //state for access from Sellback and friends.
         public bool DirChanged;
         public bool ShowTooltip;
+        public bool Roommate;
 
         public event HolderEventHandler OnPickup;
         public event HolderEventHandler OnDelete;
@@ -226,7 +228,7 @@ namespace FSO.Client.UI.Panels
 
         public void SellBack(UIElement button)
         {
-            if (Holding == null) return;
+            if (Holding == null || !Roommate) return;
             if (Holding.IsBought)
             {
                 if (Holding.CanDelete)
@@ -272,6 +274,84 @@ namespace FSO.Client.UI.Panels
             ClearSelected();
         }
 
+        public void AsyncBuy(UIElement button)
+        {
+            if (Holding == null || !Holding.IsBought) return;
+            var obj = vm.GetObjectById(Holding.MoveTarget);
+            if (obj != null)
+            {
+                if (obj is VMAvatar || (((VMGameObject)obj).Disabled & VMGameObjectDisableFlags.ForSale) == 0)
+                {
+                    ShowErrorAtMouse(LastState, VMPlacementError.InUse);
+                } else
+                {
+                    UIAlert alert = null;
+                    alert = UIScreen.GlobalShowAlert(new UIAlertOptions
+                    {
+                        Title = GameFacade.Strings.GetString("206", "40"),
+                        Message = GameFacade.Strings.GetString("206", "41") + obj.ToString() + "\r\n"
+                        + GameFacade.Strings.GetString("206", "42", new string[] { "0" }) + "\r\n"
+                        + GameFacade.Strings.GetString("206", "43") + "$" + obj.MultitileGroup.Price.ToString("##,#0") + "\r\n"
+                        + GameFacade.Strings.GetString("206", "44") + "$" + obj.MultitileGroup.BaseObject.TSOState.Budget.Value.ToString("##,#0") + "\r\n"
+                        + GameFacade.Strings.GetString("206", "46") + "$" + obj.MultitileGroup.SalePrice.ToString("##,#0") + "\r\n"
+                        + GameFacade.Strings.GetString("206", "47"),
+                        Buttons = new UIAlertButton[]
+                        {
+                            new UIAlertButton(UIAlertButtonType.Yes, (btn) => {
+                                vm.SendCommand(new VMNetAsyncSaleCmd
+                                {
+                                    ObjectPID = obj.PersistID,
+                                });
+                                UIScreen.RemoveDialog(alert);
+                            }),
+                            new UIAlertButton(UIAlertButtonType.No),
+                        }
+                    }, true);
+                }
+            }
+
+            OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate.
+            ClearSelected();
+        }
+
+        public void AsyncSale(UIElement button)
+        {
+            if (Holding == null || !Holding.IsBought) return;
+            var obj = vm.GetObjectById(Holding.MoveTarget);
+            if (obj != null)
+            {
+                var movable = obj.IsUserMovable(vm.Context, true);
+                if (movable == VMPlacementError.Success)
+                {
+                    var dialog = new UIAsyncPriceDialog(obj.ToString(), (obj.MultitileGroup.Price<0)?0:(uint)obj.MultitileGroup.Price);
+                    dialog.OnPriceChange += (uint salePrice) =>
+                    {
+                        vm.SendCommand(new VMNetAsyncPriceCmd
+                        {
+                            NewPrice = (int)Math.Min(int.MaxValue, salePrice),
+                            ObjectPID = obj.PersistID
+                        });
+                    };
+                    UIScreen.GlobalShowDialog(dialog, true);
+                }
+                else ShowErrorAtMouse(LastState, movable);
+            }
+        }
+
+        public void AsyncCancelSale(UIElement button)
+        {
+            if (Holding == null || !Holding.IsBought) return;
+            var obj = vm.GetObjectById(Holding.MoveTarget);
+            if (obj != null)
+            {
+                vm.SendCommand(new VMNetAsyncPriceCmd
+                {
+                    NewPrice = -1,
+                    ObjectPID = obj.PersistID
+                });
+            }
+        }
+
         public void Update(UpdateState state, bool scrolled)
         {
             LastState = state;
@@ -289,7 +369,7 @@ namespace FSO.Client.UI.Panels
                     ClearSelected();
                 }
             }
-            if (Holding != null)
+            if (Holding != null && Roommate)
             {
                 if (MouseClicked) Holding.Clicked = true;
                 if (MouseIsDown && Holding.Clicked)
@@ -361,7 +441,7 @@ namespace FSO.Client.UI.Panels
                 {
                     var objGroup = vm.GetObjectById(newHover).MultitileGroup;
                     var objBasePos = objGroup.BaseObject.Position;
-                    var success = objGroup.BaseObject.IsUserMovable(vm.Context, false);
+                    var success = (Roommate || objGroup.SalePrice > -1)?objGroup.BaseObject.IsUserMovable(vm.Context, false): VMPlacementError.ObjectNotOwnedByYou;
                     if (objBasePos.Level != World.State.Level) success = VMPlacementError.CantEffectFirstLevelFromSecondLevel;
                     if (success == VMPlacementError.Success)
                     {
@@ -369,6 +449,7 @@ namespace FSO.Client.UI.Panels
                         var canDelete = (objGroup.BaseObject.IsUserMovable(vm.Context, true)) == VMPlacementError.Success;
                         SetSelected(ghostGroup);
 
+                        Holding.RealEnt = objGroup.BaseObject;
                         Holding.CanDelete = canDelete;
                         Holding.MoveTarget = newHover;
                         Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
@@ -417,6 +498,7 @@ namespace FSO.Client.UI.Panels
         public int Price;
         public uint InventoryPID = 0;
         public bool CanDelete;
+        public VMEntity RealEnt;
 
         public bool IsBought
         {

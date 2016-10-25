@@ -39,12 +39,14 @@ namespace FSO.Client.UI.Panels
 
         //roommate inventory catalog elements
         public UIImage InventoryCatBg;
+        public UIImage InventoryButtonBackgroundImage { get; set; }
         public UISlider InventoryCatalogRoommateSlider { get; set; }
         public UIButton InventoryCatalogRoommatePreviousPageButton { get; set; } //that's a mouthful
         public UIButton InventoryCatalogRoommateNextPageButton { get; set; }
 
         //non-roommate inventory catalog elements
         public UIImage NonRMInventoryCatBg;
+        public UIImage InventoryCatalogVisitorIcon;
         public UISlider InventoryCatalogVisitorSlider { get; set; }
         public UIButton InventoryCatalogVisitorPreviousPageButton { get; set; } //that's a mouthful
         public UIButton InventoryCatalogVisitorNextPageButton { get; set; }
@@ -101,20 +103,20 @@ namespace FSO.Client.UI.Panels
             Background.BlockInput();
             this.AddAt(0, Background);
 
-            var InventoryButtonBackgroundImage = script.Create<UIImage>("InventoryButtonBackgroundImage");
+            InventoryButtonBackgroundImage = script.Create<UIImage>("InventoryButtonBackgroundImage");
             this.AddAt(1, InventoryButtonBackgroundImage);
-
-            CatBg = new UIImage(catalogBackground);
-            CatBg.Position = new Microsoft.Xna.Framework.Vector2(250, 5);
+            
+            CatBg = script.Create<UIImage>("ProductCatalogImage");
             this.AddAt(2, CatBg);
 
-            InventoryCatBg = new UIImage(inventoryRoommateBackground);
-            InventoryCatBg.Position = new Microsoft.Xna.Framework.Vector2(250, 5);
+            InventoryCatBg = script.Create<UIImage>("InventoryCatalogRoommateImage");
             this.AddAt(3, InventoryCatBg);
 
-            NonRMInventoryCatBg = new UIImage(inventoryVisitorBackground);
-            NonRMInventoryCatBg.Position = new Microsoft.Xna.Framework.Vector2(68, 5);
-            this.AddAt(4, InventoryCatBg);
+            NonRMInventoryCatBg = script.Create<UIImage>("InventoryCatalogVisitorImage");
+            this.AddAt(4, NonRMInventoryCatBg);
+
+            InventoryCatalogVisitorIcon = script.Create<UIImage>("InventoryCatalogVisitorIcon");
+            this.AddAt(5, InventoryCatalogVisitorIcon);
 
             Catalog = new UICatalog(useSmall ? 14 : 24);
             Catalog.OnSelectionChange += new CatalogSelectionChangeDelegate(Catalog_OnSelectionChange);
@@ -192,8 +194,8 @@ namespace FSO.Client.UI.Panels
         {
             QueryPanel.Mode = 0;
             QueryPanel.Active = true;
+            QueryPanel.SetInfo(LotController.vm, holding.RealEnt ?? holding.Group.BaseObject, holding.IsBought);
             QueryPanel.Tab = 1;
-            QueryPanel.SetInfo(LotController.vm, holding.Group.BaseObject, holding.IsBought);
         }
         private void HolderPutDown(UIObjectSelection holding, UpdateState state)
         {
@@ -398,21 +400,26 @@ namespace FSO.Client.UI.Panels
             InventoryCatalogRoommatePreviousPageButton.Visible = (mode == 2 && Roommate);
 
             NonRMInventoryCatBg.Visible = (mode == 2 && !Roommate);
+            InventoryCatalogVisitorIcon.Visible = (mode == 2 && !Roommate);
             InventoryCatalogVisitorSlider.Visible = (mode == 2 && !Roommate);
             InventoryCatalogVisitorNextPageButton.Visible = (mode == 2 && !Roommate);
             InventoryCatalogVisitorPreviousPageButton.Visible = (mode == 2 && !Roommate);
 
             if (mode == 1) { Catalog.X = 275; Catalog.PageSize = 24; }
             else if (mode == 2 && Roommate) { Catalog.X = 272; Catalog.PageSize = 24; }
-            else if (mode == 2 && !Roommate) { Catalog.X = 95; Catalog.PageSize = 30; }
+            else if (mode == 2 && !Roommate) { Catalog.X = 98; Catalog.PageSize = 30; }
+
+            Catalog.SetPage(0);
 
             Mode = mode;
         }
 
         public void SetRoommate(bool value)
         {
+            LotController.ObjectHolder.Roommate = value;
+            LotController.QueryPanel.Roommate = value;
+            if (Roommate == value) return;
             Roommate = value;
-
             SetMode(Mode);
             SetRoomCategories(RoomCategories);
         }
@@ -428,6 +435,7 @@ namespace FSO.Client.UI.Panels
             LightingButton.Visible = active;
             MiscButton.Visible = active;
             PetsButton.Visible = active;
+            InventoryButton.Visible = active;
             MapBuildingModeButton.Visible = false;
 
             active = Roommate && (value);

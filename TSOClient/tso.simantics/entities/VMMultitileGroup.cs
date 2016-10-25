@@ -24,6 +24,7 @@ namespace FSO.SimAntics.Entities
         public bool MultiTile;
         public string Name = "";
         public int Price;
+        public int SalePrice = -1;
         public List<VMEntity> Objects = new List<VMEntity>();
         public List<LotTilePos> Offsets = new List<LotTilePos>();
 
@@ -266,6 +267,7 @@ namespace FSO.SimAntics.Entities
                 MultiTile = MultiTile,
                 Name = Name,
                 Price = Price,
+                SalePrice = SalePrice,
                 Objects = objs,
                 Offsets = Offsets.ToArray()
             };
@@ -276,6 +278,8 @@ namespace FSO.SimAntics.Entities
             MultiTile = input.MultiTile;
             Name = input.Name;
             Price = input.Price;
+            SalePrice = input.SalePrice;
+            if (SalePrice == 0) SalePrice = -1;
             Objects = new List<VMEntity>();
             for (int i= 0; i<input.Objects.Length; i++)
             {

@@ -486,7 +486,7 @@ namespace FSO.SimAntics
 
                 if (ent is VMGameObject && !(ent.Container != null && ent.Container is VMAvatar))
                 {
-                    if (ent.MultitileGroup.Objects.All(x => x.GetValue(VMStackObjectVariable.Hidden) > 0)) continue;
+                    if (ent.MultitileGroup.Objects.All(x => x.GetValue(VMStackObjectVariable.Hidden) > 0 || (!Context.RoomInfo[Context.GetRoomAt(x.Position)].Room.IsOutside))) continue;
                     //todo: recursively check if parent object is vm avatar.
                     //restoring state ignores objects with invalid containers anyways.
                     ents.Add(((VMGameObject)ent).HollowSave());
@@ -550,7 +550,7 @@ namespace FSO.SimAntics
                     obj.Position = obj.Position;
                     realEnt = obj;
                 }
-                realEnt.GenerateTreeByName(Context);
+                realEnt.FetchTreeByName(Context);
                 Entities.Add(realEnt);
                 Context.SetToNextCache.NewObject(realEnt);
                 ObjectsById.Add(ent.ObjectID, realEnt);
@@ -609,7 +609,6 @@ namespace FSO.SimAntics
                 }
             }
             Context.UpdateTSOBuildableArea();
-
             if (OnFullRefresh != null) OnFullRefresh();
         }
 
@@ -617,6 +616,7 @@ namespace FSO.SimAntics
         {
             var clientJoin = (Context.Architecture == null);
             var oldWorld = Context.World;
+            input.Context.Ambience.ActiveBits = 0;
             Context = new VMContext(input.Context, Context);
             Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             Context.VM = this;
@@ -628,7 +628,6 @@ namespace FSO.SimAntics
             var includedEnts = new List<VMHollowGameObjectMarshal>();
             foreach (var ent in input.Entities)
             {
-                if (!Context.RoomInfo[Context.GetRoomAt(ent.Position)].Room.IsOutside) continue;
                 VMEntity realEnt;
                 var objDefinition = FSO.Content.Content.Get().WorldObjects.Get(ent.GUID);
 

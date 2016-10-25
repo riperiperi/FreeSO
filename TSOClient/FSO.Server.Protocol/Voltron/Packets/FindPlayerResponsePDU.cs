@@ -13,8 +13,16 @@ namespace FSO.Server.Protocol.Voltron.Packets
         public uint StatusCode;
         public string ReasonText;
 
+        public int AvatarID;
+        public int RoomID;
+        public int StageID;
+
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
+            StatusCode = input.GetUInt32();
+            ReasonText = input.GetPascalString();
+
+            //Room Info
         }
 
         public override VoltronPacketType GetPacketType()
@@ -32,17 +40,17 @@ namespace FSO.Server.Protocol.Voltron.Packets
 
 
             //Room Info
-            output.PutPascalString("");
-            output.PutPascalString("");
+            output.PutPascalString("A 16318812");
+            output.PutPascalString("1");
             output.Put((byte)0);
 
             //Owner
-            output.PutPascalString("");
-            output.PutPascalString("");
+            output.PutPascalString("A 65538");
+            output.PutPascalString("1");
 
             //Stage id
-            output.PutPascalString("");
-            output.PutPascalString("");
+            output.PutPascalString("A 16318812");
+            output.PutPascalString("1");
 
             //Currnet ocupancy
             output.PutUInt32(10);
@@ -57,7 +65,7 @@ namespace FSO.Server.Protocol.Voltron.Packets
             output.Put((byte)1);
 
             //Group
-            output.PutPascalString("");
+            output.PutPascalString("1");
 
             //Admin list
             output.PutUInt16(0);
@@ -81,7 +89,8 @@ namespace FSO.Server.Protocol.Voltron.Packets
             output.PutUInt32(0);
             output.PutUInt32(0);
 
-            output.PutPascalString("");
+            //player info
+            output.PutPascalString("A "+AvatarID.ToString());
             output.PutPascalString("");
             output.Put(0);
             output.Put(0);

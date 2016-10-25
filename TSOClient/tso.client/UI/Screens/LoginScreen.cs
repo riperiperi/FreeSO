@@ -19,7 +19,7 @@ using FSO.HIT;
 
 namespace FSO.Client.UI.Screens
 {
-    public class LoginScreen : GameScreen
+    public class LoginScreen : GameScreen, IDisposable
     {
         private UISetupBackground Background;
         private UILoginDialog LoginDialog;
@@ -30,6 +30,7 @@ namespace FSO.Client.UI.Screens
         public LoginScreen(LoginRegulator regulator)
         {
             this.Regulator = regulator;
+            regulator.Logout();
 
             HITVM.Get().PlaySoundEvent(UIMusic.None);
 
@@ -80,9 +81,9 @@ namespace FSO.Client.UI.Screens
 
             var gameplayButton = new UIButton()
             {
-                Caption = "Simantics & Lot Debug",
+                Caption = "Sandbox Mode",
                 Y = 10,
-                Width = 200,
+                Width = 125,
                 X = 10
             };
             this.Add(gameplayButton);
@@ -92,7 +93,7 @@ namespace FSO.Client.UI.Screens
             Regulator.OnTransition += AuthRegulator_OnTransition;
         }
 
-        ~LoginScreen()
+        public void Dispose()
         {
             Regulator.OnError -= AuthRegulator_OnError;
             Regulator.OnTransition -= AuthRegulator_OnTransition;

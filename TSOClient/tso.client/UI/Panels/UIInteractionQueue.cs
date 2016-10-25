@@ -83,6 +83,12 @@ namespace FSO.Client.UI.Panels
                             itemui.IconOwner = elem.IconOwner;
                             itemui.UpdateInteractionIcon();
                         }
+
+                        if (itemui.InteractionResult != elem.InteractionResult)
+                        {
+                            itemui.InteractionResult = elem.InteractionResult;
+                            itemui.UpdateInteractionResult();
+                        }
                         break;
                     }
                     if (elem.Mode != VMQueueMode.Idle && (j == 0 || elem.Mode != VMQueueMode.ParentExit) && (!skipParentIdle || elem.Mode != VMQueueMode.ParentIdle)) position++;
@@ -128,6 +134,7 @@ namespace FSO.Client.UI.Panels
                             Active = (i == 0)
                         };
                         itemui.UI.OnMouseEvent += new ButtonClickDelegate(InteractionClicked);
+                        itemui.UI.OnInteractionResult += InteractionResult;
                         itemui.UI.ParentEntry = itemui;
                         itemui.Name = elem.Name;
                         itemui.UI.Tooltip = itemui.Name;
@@ -144,6 +151,31 @@ namespace FSO.Client.UI.Panels
                 if (elem.Mode == VMQueueMode.ParentIdle) skipParentIdle = true;
             }
 
+        }
+
+        private void InteractionResult(UIElement ui, bool accepted)
+        {
+            if (QueueOwner == null) return;
+            UIInteraction item = (UIInteraction)ui;
+            var itemui = item.ParentEntry;
+            var queue = QueueOwner.Thread.Queue;
+            for (int i = 0; i < queue.Count; i++)
+            {
+                if (queue[i] == itemui.Interaction)
+                {
+                    HITVM.Get().PlaySoundEvent(UISounds.CallSend);
+                    if (!(itemui.Interaction.Cancelled && itemui.Interaction.Priority <= 0))
+                    {
+                        vm.SendCommand(new VMNetInteractionResultCmd
+                        {
+                            ActionUID = itemui.Interaction.UID,
+                            ActorUID = QueueOwner.PersistID,
+                            Accepted = accepted
+                        });
+                    }
+                    break;
+                }
+            }
         }
 
         private void InteractionClicked(UIElement ui)
@@ -181,6 +213,8 @@ namespace FSO.Client.UI.Panels
         public bool Cancelled;
         public string Name;
 
+        public sbyte InteractionResult = -1;
+
         public double TweenProgress;
         public Vector2 TargetPos;
         public Vector2 SourcePos;
@@ -209,6 +243,11 @@ namespace FSO.Client.UI.Panels
         public void UpdateInteractionIcon()
         {
             UI.Icon = IconOwner.GetIcon(GameFacade.GraphicsDevice, 0);
+        }
+
+        public void UpdateInteractionResult()
+        {
+            UI.UpdateInteractionResult(InteractionResult);
         }
     }
 }

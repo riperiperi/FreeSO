@@ -35,6 +35,13 @@ namespace FSO.Common.DataService.Framework
             Values.AddOrUpdate(key, value, (oKey, oValue) => value);
         }
 
+        protected virtual VALUE Remove(KEY key)
+        {
+            object value;
+            Values.TryRemove(key, out value);
+            return (VALUE)value;
+        }
+
         public override Task<object> Get(object key)
         {
             if (Values.ContainsKey((KEY)key)){
@@ -61,6 +68,9 @@ namespace FSO.Common.DataService.Framework
             if (newVal != null)
             {
                 Insert((KEY)key, newVal);
+            } else
+            {
+                Remove((KEY)key);
             }
         }
 

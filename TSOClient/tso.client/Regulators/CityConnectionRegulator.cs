@@ -46,7 +46,7 @@ namespace FSO.Client.Regulators
                 .TransitionTo("SelectCity");
 
             AddState("SelectCity")
-                .OnlyTransitionFrom("Disconnected");
+                .OnlyTransitionFrom("Disconnected", "Reconnecting");
 
             AddState("ConnectToCitySelector")
                 .OnData(typeof(ShardSelectorServletResponse))
@@ -99,12 +99,12 @@ namespace FSO.Client.Regulators
 
             AddState("Reconnect")
                 .OnData(typeof(AriesDisconnected))
-                .TransitionTo("SelectCity");
+                .TransitionTo("Reconnecting");
 
             AddState("Reconnecting")
                 .OnData(typeof(ShardSelectorServletRequest))
                 .TransitionTo("SelectCity")
-                .OnlyTransitionFrom("ReceivedCharacterData");
+                .OnlyTransitionFrom("Reconnect");
         }
 
         public void Connect(CityConnectionMode mode, ShardSelectorServletRequest shard)

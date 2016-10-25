@@ -18,6 +18,7 @@ using FSO.Client.Controllers;
 using FSO.Common.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Client.Model;
+using Microsoft.Xna.Framework;
 
 namespace FSO.Client.UI.Panels
 {
@@ -63,6 +64,9 @@ namespace FSO.Client.UI.Panels
 
         private UIPersonButton PersonButton;
         public Binding<UserReference> User;
+        public Binding<UserReference> MyUser;
+
+        public override Vector2 Size { get; set; }
 
         /// <summary>
         /// Creates a new UIMessage instance.
@@ -115,6 +119,7 @@ namespace FSO.Client.UI.Panels
             HistoryTextEdit.SetSize(333, 100);
 
             CloseButton.OnButtonClick += new ButtonClickDelegate(CloseButton_OnButtonClick);
+            MinimizeButton.OnButtonClick += MinimizeButton_OnButtonClick;
 
             PersonButton = script.Create<UIPersonButton>("AvatarThumbnail");
             PersonButton.FrameSize = UIPersonButtonSize.SMALL;
@@ -123,7 +128,15 @@ namespace FSO.Client.UI.Panels
             User = new Binding<UserReference>()
                 .WithBinding(SimNameText, "Caption", "Name");
 
+            MyUser = new Binding<UserReference>();
+
             User.ValueChanged += (x) => PersonButton.User.Value = x;
+            Size = Background.Size.ToVector2();
+        }
+
+        private void MinimizeButton_OnButtonClick(UIElement button)
+        {
+            FindController<MessagingWindowController>().Hide();
         }
 
         /// <summary>

@@ -321,7 +321,6 @@ namespace FSO.SimAntics.Engine
             //portals are used to traverse floors, so we do not care about the floor each point is on.
             //when evaluating possible adjacent tiles we use the Caller's current floor.
 
-
             LotTilePos startPos = Caller.Position;
             CurrentWaypoint = LotTilePos.OUT_OF_WORLD;
             var myRoom = VM.Context.GetRoomAt(startPos);
@@ -353,7 +352,7 @@ namespace FSO.SimAntics.Engine
             }
 
             obstacles.AddRange(roomInfo.Room.WallObs);
-            if (!IgnoreRooms) obstacles.AddRange(roomInfo.Room.RoomObs);
+            obstacles.AddRange(roomInfo.Room.RoomObs);
 
             var startPoint = new Point((int)startPos.x, (int)startPos.y);
             var endPoint = new Point((int)CurRoute.Position.x, (int)CurRoute.Position.y);
@@ -488,7 +487,7 @@ namespace FSO.SimAntics.Engine
                 } else return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
             }
 
-            if (RoomRouteInvalid && State != VMRoutingFrameState.BEGIN_TURN && State != VMRoutingFrameState.END_TURN)
+            if (RoomRouteInvalid && State != VMRoutingFrameState.BEGIN_TURN && State != VMRoutingFrameState.END_TURN && State != VMRoutingFrameState.FAILED && State != VMRoutingFrameState.TURN_ONLY)
             {
                 RoomRouteInvalid = false;
                 IgnoredRooms.Clear();

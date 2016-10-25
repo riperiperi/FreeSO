@@ -22,7 +22,7 @@ using System.Text;
 
 namespace FSO.Client.Controllers
 {
-    public class TerrainController
+    public class TerrainController : IDisposable
     {
         private CoreGameScreenController Parent;
         private Terrain View;
@@ -44,6 +44,7 @@ namespace FSO.Client.Controllers
 
             PurchaseRegulator.OnError += PurchaseRegulator_OnError;
             PurchaseRegulator.OnTransition += PurchaseRegulator_OnTransition;
+            PurchaseRegulator.OnPurchased += PurchaseRegulator_OnPurchased;
             Realestate = domain.GetByShard(network.MyShard.Id);
 
             CurrentHoverLot = new Binding<Lot>()
@@ -52,10 +53,16 @@ namespace FSO.Client.Controllers
             CurrentCity = new Binding<City>().WithMultiBinding(RefreshCity, "City_ReservedLotInfo", "City_SpotlightsVector");
         }
 
-        ~TerrainController()
+        private void PurchaseRegulator_OnPurchased(int newBudget)
+        {
+            Parent.Screen.VisualBudget = (uint)newBudget;
+        }
+
+        public void Dispose()
         {
             PurchaseRegulator.OnError -= PurchaseRegulator_OnError;
             PurchaseRegulator.OnTransition -= PurchaseRegulator_OnTransition;
+            PurchaseRegulator.OnPurchased -= PurchaseRegulator_OnPurchased;
         }
 
         public void ZoomIn(){
@@ -115,6 +122,11 @@ namespace FSO.Client.Controllers
                 CurrentCity.Value = city.Result;
                 DataService.Request(Server.DataService.Model.MaskedStruct.CurrentCity, 0);
             });
+        }
+
+        public void RequestNewCity()
+        {
+            DataService.Request(MaskedStruct.CurrentCity, 0);
         }
 
         public bool IsPurchasable(int x, int y)
@@ -208,14 +220,86 @@ namespace FSO.Client.Controllers
             _BuyLot = lot;
             Parent.Screen.CityTooltipHitArea.HideTooltip();
 
+            var price = lot.Lot_Price;
+            var ourCash = Parent.Screen.VisualBudget;
+
+            DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
+            {
+                if (!x.IsFaulted && x.Result != null && x.Result.Avatar_LotGridXY != 0)
+                {
+                    //we already have a lot. We need to show the right dialog depending on whether or not we're owner.
+                    var oldID = x.Result.Avatar_LotGridXY;
+                    DataService.Request(MaskedStruct.PropertyPage_LotInfo, oldID).ContinueWith(y =>
+                    {
+                        if (!y.IsFaulted && y.Result != null)
+                        {
+                            var old = (Lot)y.Result;
+                            UIAlertOptions AlertOptions = new UIAlertOptions();
+                            if (old.Lot_LeaderID == Network.MyCharacter)
+                            {
+                                //we are the owner
+                                var oldVal = old.Lot_Price;
+                                var moveFee = 2000;
+                                var moveCost = moveFee+price;
+                                if (old.Lot_RoommateVec.Count > 1)
+                                {
+                                    //we have other roommates.
+                                    AlertOptions.Title = GameFacade.Strings.GetString("215", "10");
+                                    AlertOptions.Message = GameFacade.Strings.GetString("215", "12", 
+                                        new string[] { "$" + price.ToString(), "$" + ourCash.ToString(), "$" + moveCost.ToString(), "$" + moveFee.ToString(), "$" + oldVal.ToString() });
+                                    AlertOptions.Buttons = new UIAlertButton[] {
+                                        new UIAlertButton(UIAlertButtonType.Yes, (button) => { MoveLot(false); }, GameFacade.Strings.GetString("215", "14")),
+                                        new UIAlertButton(UIAlertButtonType.Cancel, BuyPropertyAlert_OnCancel)
+                                    };
+                                } else
+                                {
+                                    //we live alone
+                                    AlertOptions.Title = GameFacade.Strings.GetString("215", "10");
+                                    AlertOptions.Message = GameFacade.Strings.GetString("215", "16",
+                                        new string[] { "$" + price.ToString(), "$" + ourCash.ToString(), "$" + moveCost.ToString(), "$" + moveFee.ToString(), "$" + oldVal.ToString() });
+                                    AlertOptions.Buttons = new UIAlertButton[] {
+                                        new UIAlertButton(UIAlertButtonType.OK, (button) => { MoveLot(false); }, GameFacade.Strings.GetString("215", "17")),
+                                        new UIAlertButton(UIAlertButtonType.Yes, (button) => { MoveLot(true); }, GameFacade.Strings.GetString("215", "18")),
+                                        new UIAlertButton(UIAlertButtonType.Cancel, BuyPropertyAlert_OnCancel)
+                                    };
+                                }
+                            } else
+                            {
+                                //we are a roommate.
+                                //can leave and start a new lot with no issue.
+                                AlertOptions.Title = GameFacade.Strings.GetString("215", "10");
+                                AlertOptions.Message = GameFacade.Strings.GetString("215", "20", new string[] { "$"+price.ToString(), "$" + ourCash.ToString() });
+                                AlertOptions.Buttons = new UIAlertButton[] {
+                                    new UIAlertButton(UIAlertButtonType.Yes, new ButtonClickDelegate(BuyPropertyAlert_OnButtonClick)),
+                                    new UIAlertButton(UIAlertButtonType.No, BuyPropertyAlert_OnCancel)
+                                };
+                            }
+
+                            AlertOptions.Width = 600;
+                            _LotBuyAlert = UIScreen.GlobalShowAlert(AlertOptions, true);
+                        } else
+                        {
+                            ShowNormalLotBuy("$"+price.ToString(), "$" + ourCash.ToString());
+                        }
+                    });
+                } else
+                {
+                    ShowNormalLotBuy("$"+price.ToString(), "$" + ourCash.ToString());
+                }
+            });
+
             //TODO: Put my actual money in
             //TODO: Disable yes if cant afford
+        }
+
+        private void ShowNormalLotBuy(string price, string ourCash)
+        {
             UIAlertOptions AlertOptions = new UIAlertOptions();
             AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
-            AlertOptions.Message = GameFacade.Strings.GetString("215", "23", new string[]{ lot.Lot_Price.ToString(), "0" });
+            AlertOptions.Message = GameFacade.Strings.GetString("215", "23", new string[] { price, ourCash });
             AlertOptions.Buttons = new UIAlertButton[] {
                     new UIAlertButton(UIAlertButtonType.Yes, new ButtonClickDelegate(BuyPropertyAlert_OnButtonClick)),
-                    new UIAlertButton(UIAlertButtonType.No) };
+                    new UIAlertButton(UIAlertButtonType.No, BuyPropertyAlert_OnCancel) };
 
             _LotBuyAlert = UIScreen.GlobalShowAlert(AlertOptions, true);
         }
@@ -234,6 +318,25 @@ namespace FSO.Client.Controllers
                 Modal = true,
             });
         }
+
+        private void BuyPropertyAlert_OnCancel(UIElement button)
+        {
+            UIScreen.RemoveDialog(_LotBuyAlert);
+            _LotBuyAlert = null;
+        }
+
+        public void MoveLot(bool freshStart)
+        {
+            UIScreen.RemoveDialog(_LotBuyAlert);
+            _LotBuyAlert = null;
+            PurchaseRegulator.Purchase(new PurchaseLotRequest
+            {
+                X = _BuyLot.Lot_Location.Location_X,
+                Y = _BuyLot.Lot_Location.Location_Y,
+                Name = "",
+                StartFresh = freshStart
+            });
+        }
         
         public void PurchaseLot(string name)
         {
@@ -246,6 +349,7 @@ namespace FSO.Client.Controllers
                 Y = _BuyLot.Lot_Location.Location_Y,
                 Name = name
             });
+            _LotBuyName = null;
         }
 
 

@@ -17,6 +17,8 @@ namespace FSO.Server.Protocol.Electron
         FSOVMTickBroadcast,
         FSOVMDirectToClient,
         FSOVMCommand,
+        FindAvatarRequest,
+        FindAvatarResponse,
         Unknown
     }
 
@@ -44,6 +46,10 @@ namespace FSO.Server.Protocol.Electron
                     return ElectronPacketType.FSOVMDirectToClient;
                 case 0x0009:
                     return ElectronPacketType.FSOVMCommand;
+                case 0x000A:
+                    return ElectronPacketType.FindAvatarRequest;
+                case 0x000B:
+                    return ElectronPacketType.FindAvatarResponse;
                 default:
                     return ElectronPacketType.Unknown;
             }
@@ -71,6 +77,10 @@ namespace FSO.Server.Protocol.Electron
                     return 0x0008;
                 case ElectronPacketType.FSOVMCommand:
                     return 0x0009;
+                case ElectronPacketType.FindAvatarRequest:
+                    return 0x000A;
+                case ElectronPacketType.FindAvatarResponse:
+                    return 0x000B;
             }
 
             return 0xFFFF;

@@ -241,6 +241,10 @@ namespace FSO.SimAntics.Engine
                     } 
                 }
 
+                if (context.SetToNextCache.GetObjectsAt(tpos)?.Any(
+                    x => ((VMEntityFlags2)x.GetValue(VMStackObjectVariable.FlagField2) & VMEntityFlags2.ArchitectualDoor) > 0) ?? false)
+                    avatarInWay = true; //prefer not standing in front of a door. (todo: merge with above check?)
+
                 if (result.Chair != null && (Math.Abs(DirectionUtils.Difference(result.Chair.RadianDirection, facingDir)) > Math.PI / 4))
                     return; //not a valid goal.
                 if (result.Chair == null && OnlySit) return;
@@ -254,16 +258,16 @@ namespace FSO.SimAntics.Engine
                         //search for routing frame. is its destination the same as ours?
                         if (avatar.Thread != null)
                         {
-                            var intersections = avatar.Thread.Stack.Where(x => x is VMRoutingFrame && ((VMRoutingFrame)x).IntersectsOurDestination(result));
-                            if (intersections.Count() > 0)
+                            var intersects = avatar.Thread.Stack.Any(x => x is VMRoutingFrame && ((VMRoutingFrame)x).IntersectsOurDestination(result));
+                            if (intersects)
                             {
-                                score = Math.Max(1, score);
+                                score = Math.Max(double.Epsilon, score);
                                 break;
                             }
                         }
                     }
                 }
-                else score = Math.Max(1, score);
+                else score = Math.Max(double.Epsilon, score);
             }
             result.Score = score;
 

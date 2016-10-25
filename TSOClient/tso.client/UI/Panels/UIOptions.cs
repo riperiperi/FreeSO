@@ -124,7 +124,21 @@ namespace FSO.Client.UI.Panels
 
         private void SelectSimButton_OnButtonClick(UIElement button)
         {
-            var alert = UIScreen.GlobalShowAlert(new UIAlertOptions { Title = "Not Implemented", Message = "This feature is not implemented yet!" }, true);
+            UIAlert alert = null;
+            var options = new UIAlertOptions
+            {
+                Title = GameFacade.Strings.GetString("185", "6"),
+                Message = GameFacade.Strings.GetString("185", "7"),
+                Buttons = new UIAlertButton[]
+                {
+                    new UIAlertButton(UIAlertButtonType.Yes, (btn) => {
+                        GameFacade.Controller.Disconnect();
+                        UIScreen.RemoveDialog(alert);
+                    }),
+                    new UIAlertButton(UIAlertButtonType.No, (btn) => { UIScreen.RemoveDialog(alert); })
+                }
+            };
+            alert = UIScreen.GlobalShowAlert(options, true);
         }
     }
 

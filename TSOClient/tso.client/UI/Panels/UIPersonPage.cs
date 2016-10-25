@@ -1,9 +1,11 @@
 ﻿using FSO.Client.Controllers;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Client.UI.Screens;
 using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
+using FSO.SimAntics.NetPlay.Model.Commands;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -89,6 +91,8 @@ namespace FSO.Client.UI.Panels
         /** Relationships **/
         public UIButton OutgoingSubTabButton { get; set; }
         public UIButton IncomingSubTabButton { get; set; }
+        public UILabel DailyRelationship { get; set; }
+        public UILabel LifetimeRelationship { get; set; }
 
         public UIImage RelationshipsTabBackgroundImage { get; set; }
         public UIImage RelationshipsTabImage { get; set; }
@@ -99,6 +103,9 @@ namespace FSO.Client.UI.Panels
 
         public UIImage IncomingSubTabBackgroundImage { get; set; }
         public UIImage IncomingSubTabImage { get; set; }
+
+        public UIRelationshipBar STRBar { get; set; }
+        public UIRelationshipBar LTRBar { get; set; }
 
 
         /** Options **/
@@ -133,6 +140,8 @@ namespace FSO.Client.UI.Panels
          * Model
          */
         public Binding<Avatar> CurrentAvatar { get; internal set; }
+        public Binding<Avatar> MyAvatar { get; internal set; }
+        public override Vector2 Size { get; set; }
 
         private UIPersonPageTab _Tab = UIPersonPageTab.Description;
         private UIAccomplishmentsTab _AccomplishmentsTab = UIAccomplishmentsTab.Skills;
@@ -143,6 +152,21 @@ namespace FSO.Client.UI.Panels
 
         private int TotalLocks = 20;
         private int UsedLocks = 0;
+
+        private int RelOutSTR = 0;
+        private int RelOutLTR = 0;
+        private int RelInSTR = 0;
+        private int RelInLTR = 0;
+
+        private static byte[] VMSkillMap = new byte[]
+        {
+            5,
+            2,
+            1,
+            4,
+            0,
+            3,
+        };
 
         public UIPersonPage()
         {
@@ -255,6 +279,8 @@ namespace FSO.Client.UI.Panels
                 bar.SkillID = i;
                 bar.OnSkillLock += (skillLock) =>
                 {
+                    var screen = GameFacade.Screens.CurrentUIScreen as CoreGameScreen;
+
                     if (CurrentAvatar != null && CurrentAvatar.Value != null && FindController<CoreGameScreenController>().IsMe(CurrentAvatar.Value.Avatar_Id))
                     {
                         var skills = CurrentAvatar.Value.Avatar_Skills;
@@ -267,11 +293,29 @@ namespace FSO.Client.UI.Panels
                         skills.AvatarSkills_LockLv_Body = (ushort)BodySkillBar.LockLevel;
                         skills.AvatarSkills_LockLv_Creativity = (ushort)CreativitySkillBar.LockLevel;
                         LocalDataChange = false;
-                        FindController<PersonPageController>().SaveValue(CurrentAvatar.Value, dot);
+                        if (screen.vm == null) FindController<PersonPageController>().SaveValue(CurrentAvatar.Value, dot);
                     }
+
+                    if (screen.vm != null)
+                    {
+                        screen.vm.SendCommand(new VMNetSkillLockCmd()
+                        {
+                            SkillID = VMSkillMap[bar.SkillID],
+                            LockLevel = (byte)bar.LockLevel
+                        });
+                    }
+
                     UpdateLockCounts();
                 };
             }
+
+            STRBar = ui.Create<UIRelationshipBar>("STRBar");
+            LTRBar = ui.Create<UIRelationshipBar>("LTRBar");
+            Add(STRBar);
+            Add(LTRBar);
+            STRBar.NumericId = 1009;
+            LTRBar.NumericId = 1010;
+            LTRBar.Value = -50;
 
             SimBox = ui.Create<UISim>("Person3dView");
             SimBox.AutoRotate = true;
@@ -351,8 +395,15 @@ namespace FSO.Client.UI.Panels
                 {
                     Redraw();
                 }, "Avatar_Name", "Avatar_IsOnline", "Avatar_Description");
-            
+
+            MyAvatar = new Binding<Avatar>()
+                .WithMultiBinding(x =>
+                {
+                    RelationshipChange();
+                }, "Avatar_FriendshipVec");
+
             Redraw();
+            Size = BackgroundExpandedImage.Size.ToVector2();
         }
 
         private void ShowJobInfo(UIElement button)
@@ -611,6 +662,7 @@ namespace FSO.Client.UI.Panels
                     BodySkillBar.LockLevel = skills.AvatarSkills_LockLv_Body;
                     CreativitySkillBar.LockLevel = skills.AvatarSkills_LockLv_Creativity;
                 }
+                TotalLocks = CurrentAvatar.Value.Avatar_SkillsLockPoints;
                 UpdateLockCounts();
                 PopulateJobsText(CurrentAvatar.Value);
             }
@@ -684,6 +736,8 @@ namespace FSO.Client.UI.Panels
             OptionsTabImage.Visible = isOpen && isOptions;
             OptionsBackgroundImage.Visible = isOpen && isOptions;
 
+            if (isRelationships) RelationshipChange();
+
             if (isClosed)
             {
                 this.ChildrenWithinIdRange(400, 1299).ForEach(x => x.Visible = false);
@@ -704,6 +758,42 @@ namespace FSO.Client.UI.Panels
 
             /** Options **/
             this.ChildrenWithinIdRange(700, 799).ForEach(x => x.Visible = isOptions);
+        }
+
+        public void RelationshipChange()
+        {
+            RelOutSTR = 0;
+            RelOutLTR = 0;
+            RelInSTR = 0;
+            RelInLTR = 0;
+            if (MyAvatar.Value != null && MyAvatar.Value.Avatar_FriendshipVec != null && CurrentAvatar.Value != null)
+            {
+                var rels = new List<Relationship>(MyAvatar.Value.Avatar_FriendshipVec);
+                foreach (var rel in rels)
+                {
+                    if (rel.Relationship_TargetID == CurrentAvatar.Value.Avatar_Id)
+                    {
+                        if (rel.Relationship_IsOutgoing)
+                        {
+                            RelOutSTR = rel.Relationship_STR;
+                            RelOutLTR = rel.Relationship_LTR;
+                        } else
+                        {
+                            RelInSTR = rel.Relationship_STR;
+                            RelInLTR = rel.Relationship_LTR;
+                        }
+                    }
+                }
+            }
+
+            var isOutgoing = _RelationshipsTab == UIRelationshipsTab.Outgoing;
+            var str = isOutgoing ? RelOutSTR : RelInSTR;
+            var ltr = isOutgoing ? RelOutLTR : RelInLTR;
+
+            STRBar.Value = str;
+            LTRBar.Value = ltr;
+            DailyRelationship.Caption = str.ToString();
+            LifetimeRelationship.Caption = ltr.ToString();
         }
     }
 

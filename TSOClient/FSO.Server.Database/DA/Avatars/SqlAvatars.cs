@@ -68,15 +68,25 @@ namespace FSO.Server.Database.DA.Avatars
 
         public List<DbAvatar> SearchWildcard(int shard_id, string name, int limit)
         {
+            name = name
+                .Replace("!", "!!")
+                .Replace("%", "!%")
+                .Replace("_", "!_")
+                .Replace("[", "!["); //must sanitize format...
             return Context.Connection.Query<DbAvatar>(
                 "SELECT avatar_id, name FROM fso_avatars WHERE shard_id = @shard_id AND name LIKE @name LIMIT @limit",
-                new { name = name, limit = limit, shard_id = shard_id }
+                new { name = "%" + name + "%", limit = limit, shard_id = shard_id }
             ).ToList();
         }
 
         public void UpdateDescription(uint id, string description)
         {
             Context.Connection.Query("UPDATE fso_avatars SET description = @desc WHERE avatar_id = @id", new { id = id, desc = description });
+        }
+
+        public void UpdatePrivacyMode(uint id, byte mode)
+        {
+            Context.Connection.Query("UPDATE fso_avatars SET privacy_mode = @privacy_mode WHERE avatar_id = @id", new { id = id, privacy_mode = mode });
         }
 
         public void UpdateAvatarLotSave(uint id, DbAvatar avatar)
@@ -106,6 +116,30 @@ namespace FSO.Server.Database.DA.Avatars
                 + "ticker_gardener = @ticker_gardener, "
                 + "ticker_maid = @ticker_maid, "
                 + "ticker_repairman = @ticker_repairman WHERE avatar_id = @avatar_id", avatar);
+        }
+
+        private static string[] LockNames = new string[]
+        {
+            "lock_mechanical",
+            "lock_cooking",
+            "lock_charisma",
+            "lock_logic",
+            "lock_body",
+            "lock_creativity"
+        };
+
+        public int GetOtherLocks(uint avatar_id, string except)
+        {
+            string columns = "(";
+            foreach (var l in LockNames)
+            {
+                if (l == except) continue;
+                columns += l;
+                columns += " + ";
+            }
+            columns += "0) AS Sum";
+
+            return Context.Connection.Query<int>("SELECT "+columns+" FROM fso_avatars WHERE avatar_id = @id", new { id = avatar_id }).FirstOrDefault();
         }
 
         //budget and transactions

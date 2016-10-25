@@ -272,7 +272,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Patch\WORKAROUND_poolladder.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Textures\splashSeg.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

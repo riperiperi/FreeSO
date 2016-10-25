@@ -214,7 +214,12 @@ void psZSprite(ZVertexOut v, out float4 color:COLOR) {
 	color = tex2D(pixelSampler, v.texCoords);
 	if (color.a == 0) discard;
 
-    if (floor(v.roomVec.x * 256) == 254 && floor(v.roomVec.y*256)==255) color = float4(float3(1.0, 1.0, 1.0)-color.xyz, color.a);
+	bool lastSeg = floor(v.roomVec.y * 256) == 255;
+	if (lastSeg == true && floor(v.roomVec.x * 256) == 254) color = float4(float3(1.0, 1.0, 1.0) - color.xyz, color.a);
+	else if (lastSeg == true && floor(v.roomVec.x * 256) == 253) {
+		float gray = dot(color.xyz, float3(0.2989, 0.5870, 0.1140));
+		color = float4(gray, gray, gray, color.a);
+	}
     else if (v.roomVec.x == 0.0) color = color;
     else color *= tex2D(ambientSampler, v.roomVec);
 

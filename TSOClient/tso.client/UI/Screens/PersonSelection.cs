@@ -24,6 +24,7 @@ using Ninject;
 using FSO.Client.Controllers;
 using FSO.HIT;
 using FSO.Client.UI.Model;
+using FSO.Common;
 
 namespace FSO.Client.UI.Screens
 {
@@ -60,8 +61,10 @@ namespace FSO.Client.UI.Screens
             }
             else
             {
-                ui = this.RenderScript("personselection" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
+                ui = this.RenderScript("personselection1024.uis");
             }
+
+            Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / 2, (GlobalSettings.Default.GraphicsHeight - 768) / 2) * FSOEnvironment.DPIScaleFactor;
 
             m_ExitButton = (UIButton)ui["ExitButton"];
 
@@ -123,7 +126,12 @@ namespace FSO.Client.UI.Screens
                 }
             }
 
-            this.AddAt(0, new UIImage(BackgroundImage));
+            /** Backgrounds **/
+            var bg = new UIImage(BackgroundImage).With9Slice(128, 128, 84, 84);
+            this.AddAt(0, bg);
+            bg.SetSize(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
+            bg.Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / -2, (GlobalSettings.Default.GraphicsHeight - 768) / -2);
+
             if (BackgroundImageDialog != null)
             {
                 this.AddAt(1, new UIImage(BackgroundImageDialog)

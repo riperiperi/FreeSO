@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Common.Rendering.Framework.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -60,6 +61,8 @@ namespace FSO.Client.UI.Panels
         private UITooltipHandler m_TooltipHandler;
         private Message Message;
 
+        private uint Tick;
+
         public UIMessageIcon(Message message)
         {
             Message = message;
@@ -83,6 +86,13 @@ namespace FSO.Client.UI.Panels
             this.Add(AvatarThumbnail);
 
             m_TooltipHandler = UIUtils.GiveTooltip(this);
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            button.Selected = !Message.Read && (Tick > 30);
+            if (Tick++ >= 60) Tick -= 60;
         }
 
         private void Button_OnButtonClick(UIElement button)

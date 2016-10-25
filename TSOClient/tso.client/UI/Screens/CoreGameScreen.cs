@@ -65,6 +65,7 @@ namespace FSO.Client.UI.Screens
         private LotView.World World;
         public FSO.SimAntics.VM vm;
         public VMClientDriver Driver;
+        public uint VisualBudget;
 
         public bool InLot
         {
@@ -391,6 +392,8 @@ namespace FSO.Client.UI.Screens
             vm.CloseNet(VMCloseNetReason.LeaveLot);
             Driver.OnClientCommand -= VMSendCommand;
             GameFacade.Scenes.Remove(World);
+            World.Dispose();
+            LotControl.Dispose();
             this.Remove(LotControl);
             ucp.SetPanel(-1);
             ucp.SetInLot(false);

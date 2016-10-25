@@ -44,32 +44,36 @@ namespace FSO.Server.Servers.City.Handlers
             }
 
             IVoltronSession voltronSession = (IVoltronSession)session;
+            VoltronSessions.UnEnroll(session);
+
+            if (voltronSession.IsAnonymous) return;
 
             //unenroll in voltron group, mark as offline in data service.
             var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId);
             avatar.Avatar_IsOnline = false;
-            VoltronSessions.UnEnroll(session);
 
             using (var db = DAFactory.Get())
             {
-                // if the avatar has a lot ticket, we must destroy it and tell the relevant server to disconnect that client
-                var tickets = db.Lots.GetLotServerTicketsForClaimedAvatar(voltronSession.AvatarClaimId);
-                foreach (var ticket in tickets)
+                // if we don't own the claim for the avatar, we need to tell the server that does to release the avatar.
+                // right now it's just lot servers.
+
+                var claim = db.AvatarClaims.GetByAvatarID((uint)voltronSession.AvatarClaimId);
+                if (claim != null && claim.owner != Context.Config.Call_Sign)
                 {
-                    //delete this ticket. tell the server we're through.
-                    //..but we need to find what server has claimed the lot the ticket is for.
-                    var lotServer = LotServers.GetLotServerSession(ticket.lot_owner);
+                    var lotServer = LotServers.GetLotServerSession(claim.owner);
                     if (lotServer != null)
                     {
+                        var lot = db.Lots.GetByLocation(Context.ShardId, claim.location);
                         lotServer.Write(new RequestLotClientTermination()
                         {
                             AvatarId = voltronSession.AvatarId,
-                            LotId = ticket.lot_id,
+                            LotId = (lot != null)?lot.lot_id:((int)claim.location),
                             FromOwner = Context.Config.Call_Sign
                         });
                     }
-                    db.Lots.DeleteLotServerTicket(ticket.ticket_id);
                 }
+
+                //nuke the claim anyways to be sure.
                 db.AvatarClaims.Delete(voltronSession.AvatarClaimId, Context.Config.Call_Sign);
             }
         }

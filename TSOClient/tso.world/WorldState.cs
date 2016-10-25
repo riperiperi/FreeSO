@@ -169,6 +169,11 @@ namespace FSO.LotView
             set { _Rotation = value; }
         }
 
+        /// <summary>
+        /// Draw entities even if they are out of world. (for thumbnails)
+        /// </summary>
+        public bool DrawOOB;
+
         private Vector2 _CenterTile = Vector2.Zero;
         public Vector2 CenterTile
         {

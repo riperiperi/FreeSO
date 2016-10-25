@@ -19,6 +19,7 @@ namespace FSO.Client.UI.Framework
                 var now = update.Time.ElapsedGameTime.Ticks;
                 if(now - LastClick < 1000)
                 {
+                    LastClick = now;
                     return true;
                 }
                 LastClick = now;

@@ -11,6 +11,7 @@ struct VertexToPixel
 	float2 RoadCTextureCoord : TEXCOORD5;
 	float2 vPos: TEXCOORD6;
 	float Depth: TEXCOORD7;
+	float3 Normal: NORMAL0;
 };
 
 struct VertexToShad
@@ -85,6 +86,7 @@ sampler2D RCSamplerTex = sampler_state
     MagFilter = POINT;
 };
 float4 LightCol;
+float4 LightVec;
 float2 ShadSize;
 float ShadowMult;
 
@@ -129,17 +131,21 @@ float shadowLerp(sampler2D depths, float2 size, float2 uv, float compare){
 
 float4 CityPS(VertexToPixel Input) : COLOR0
 {
-
 	float4 BCol = GetCityColor(Input);
 	float depth = Input.Depth.x;
+	float diffuse = dot(normalize(Input.Normal), LightVec);
+	if (diffuse < 0) diffuse *= 0.5;
 
-	return float4(BCol.xyz*lerp(ShadowMult, 1, shadowLerp(ShadSampler, ShadSize, Input.vPos, depth+0.003*(2048.0/ShadSize.x))), 1);
+	return float4(BCol.xyz*lerp(ShadowMult, 1, min(diffuse, shadowLerp(ShadSampler, ShadSize, Input.vPos, depth+0.003*(2048.0/ShadSize.x)))), 1);
 
 }
 
 float4 CityPSNoShad(VertexToPixel Input) : COLOR0
 {
-	return GetCityColor(Input);
+	float4 BCol = GetCityColor(Input);
+	float diffuse = dot(normalize(Input.Normal), LightVec);
+	if (diffuse < 0) diffuse *= 0.5;
+	return float4(BCol.xyz*lerp(ShadowMult, 1, diffuse), 1);
 }
 
 float4 ShadowMapPS(VertexToShad Input) : COLOR0

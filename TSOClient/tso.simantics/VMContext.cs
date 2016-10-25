@@ -605,6 +605,17 @@ namespace FSO.SimAntics
             if (target != null) RoomInfo[room].Portals.Remove(target);
         }
 
+        /// <summary>
+        /// Regenerates room obstacles for a specific room. These are the obstacles preventing routing from walking the sim into another room.
+        /// They are removed by door portals, so whenever they are moved they need to be regenerated for both rooms the portal is between.
+        /// </summary>
+        /// <param name="room"></param>
+        /// <param name="level"></param>
+        public void RegenRoomObs(ushort room, sbyte level)
+        {
+            RoomInfo[room].Room.RoomObs = Architecture.Rooms[level - 1].GenerateRoomObs(room, level, RoomInfo[room].Room.Bounds, this);
+        }
+
         public void RegisterObjectPos(VMEntity obj)
         {
             var pos = obj.Position;
@@ -617,6 +628,7 @@ namespace FSO.SimAntics
             if (obj.EntryPoints[15].ActionFunction != 0)
             { //portal
                 AddRoomPortal(obj, room);
+                RegenRoomObs(room, obj.Position.Level); //the other portal side will call this on the other room, which is what we really affect.
             }
             obj.SetRoom(room);
             if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
@@ -636,6 +648,7 @@ namespace FSO.SimAntics
             if (obj.EntryPoints[15].ActionFunction != 0)
             { //portal
                 RemoveRoomPortal(obj, room);
+                RegenRoomObs(room, obj.Position.Level); //the other portal side will call this on the other room, which is what we really affect.
             }
             if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
                 RefreshLighting(room, true, new HashSet<ushort>());

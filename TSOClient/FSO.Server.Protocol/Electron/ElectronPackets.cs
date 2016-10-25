@@ -19,7 +19,9 @@ namespace FSO.Server.Protocol.Electron
             typeof(FindLotResponse),
             typeof(FSOVMTickBroadcast),
             typeof(FSOVMDirectToClient),
-            typeof(FSOVMCommand)
+            typeof(FSOVMCommand),
+            typeof(FindAvatarRequest),
+            typeof(FindAvatarResponse),
         };
 
         static ElectronPackets()

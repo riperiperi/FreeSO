@@ -11,7 +11,7 @@ namespace FSO.SimAntics.Entities
 {
     public class VMAvatarMotiveDecay : VMSerializable
     {
-        public string[] LotMotiveNames = new string[]
+        public static string[] LotMotiveNames = new string[]
         {
             "Hunger",
             "Comfort",
@@ -23,7 +23,22 @@ namespace FSO.SimAntics.Entities
             "Social"
         };
 
-        public VMMotive[] DecrementMotives = new VMMotive[]
+        public static string[] CategoryNames = new string[]
+        {
+            "None",
+            "Money",
+            "Offbeat",
+            "Romance",
+            "Services",
+            "Shopping",
+            "Skills",
+            "Welcome",
+            "Games",
+            "Entertainment",
+            "Residence"
+        };
+
+        public static VMMotive[] DecrementMotives = new VMMotive[]
         {
             VMMotive.Hunger,
             VMMotive.Comfort,
@@ -47,7 +62,7 @@ namespace FSO.SimAntics.Entities
             if (context.Clock.Minutes == LastMinute) return;
             LastMinute = context.Clock.Minutes;
 
-            string category = "Skills";
+            string category = CategoryNames[context.VM.TSOState.PropertyCategory];
             string sleepState = (avatar.GetMotiveData(VMMotive.SleepState) == 0)?"Awake":"Asleep";
 
             int moodSum = 0;

@@ -157,7 +157,11 @@ namespace FSO.Client.Regulators
         protected override void OnBeforeTransition(RegulatorState oldState, RegulatorState newState, object data)
         {
         }
-
+        public void Disconnect()
+        {
+            AsyncTransition("Disconnect");
+        }
+        
         public void JoinLot(uint id)
         {
             AsyncProcessMessage(new JoinLotRequest { LotId = id });

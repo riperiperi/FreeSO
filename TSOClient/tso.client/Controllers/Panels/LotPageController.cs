@@ -44,6 +44,7 @@ namespace FSO.Client.Controllers.Panels
             {
                 View.CurrentLot.Value = x.Result;
             });
+            View.Parent.Add(View);
             View.Visible = true;
             ChangeTopic();
         }
@@ -51,6 +52,11 @@ namespace FSO.Client.Controllers.Panels
         public void SaveDescription(Lot target)
         {
             DataService.Sync(target, new string[] { "Lot_Description" });
+        }
+        
+        public void SaveCategory(Lot target)
+        {
+            DataService.Sync(target, new string[] { "Lot_Category" });
         }
 
         private void ChangeTopic()

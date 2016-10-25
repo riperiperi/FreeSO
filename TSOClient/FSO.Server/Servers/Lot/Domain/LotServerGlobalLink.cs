@@ -344,6 +344,52 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
             });
         }
+        private void SaveInventoryState(bool isNew, uint objectPID, VMStandaloneObjectMarshal state, DbObject dbState, uint guid, VMAsyncInventorySaveCallback callback)
+        {
+            try
+            {
+                if (isNew)
+                {
+                    try
+                    {
+                        using (var db = DAFactory.Get())
+                        {
+                            dbState.type = guid;
+                            dbState.shard_id = Context.ShardId;
+                            var id = db.Objects.Create(dbState);
+                            dbState.object_id = id;
+                            objectPID = id;
+                        }
+                    }
+                    catch (Exception) { callback(false, objectPID); }
+                }
+                var objStr = objectPID.ToString("x8");
+                //make sure this exists
+                Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/"));
+                byte[] data;
+                using (var stream = new MemoryStream())
+                {
+                    var writer = new BinaryWriter(stream);
+                    state.SerializeInto(writer);
+                    data = stream.ToArray();
+                }
+                var file = File.Open(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo"), FileMode.Create);
+                file.WriteAsync(data, 0, data.Length).ContinueWith((x) =>
+                {
+                    using (var db = DAFactory.Get())
+                    {
+                        callback(db.Objects.UpdatePersistState(objectPID, dbState), objectPID); //if object is on another lot or does not exist, this will fail.
+                    }
+                    file.Close();
+                });
+            }
+            catch (Exception e)
+            {
+                //todo: specific types of exception that can be thrown here? instead of just catching em all
+                LOG.Error(e, "Failed to save inventory state for object " + objectPID.ToString("x8") + "!");
+                callback(false, objectPID);
+            }
+        }
 
         public void MoveToInventory(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback)
         {
@@ -355,50 +401,59 @@ namespace FSO.Server.Servers.Lot.Domain
             var state = new VMStandaloneObjectMarshal(obj);
             var dbState = GenerateObjectPersist(obj);
             dbState.lot_id = null; //we're removing this object from the lot
+            
             Host.InBackground(() =>
             {
-                try
+                SaveInventoryState(isNew, objectPID, state, dbState, guid, callback);
+            });
+        }
+
+        public void PurchaseFromOwner(VM vm, VMMultitileGroup obj, uint purchaserPID, VMAsyncInventorySaveCallback callback, VMAsyncTransactionCallback tcallback)
+        {
+            var objectPID = obj.BaseObject.PersistID;
+            var objb = obj.BaseObject;
+            uint guid = objb.Object.OBJ.GUID;
+            if (objb.MasterDefinition != null) guid = objb.MasterDefinition.GUID;
+            var isNew = objectPID == 0;
+            var state = new VMStandaloneObjectMarshal(obj);
+            var dbState = GenerateObjectPersist(obj);
+            var salePrice = obj.SalePrice;
+            var owner = ((VMTSOObjectState)objb.TSOState).OwnerID;
+            //object will stay on lot for now.
+
+            Host.InBackground(() =>
+            {
+                using (var da = DAFactory.Get())
                 {
-                    if (isNew)
+                    SaveInventoryState(isNew, objectPID, state, dbState, guid, (bool success, uint objPID) =>
                     {
-                        try
+                        if (success)
                         {
-                            using (var db = DAFactory.Get())
+                            //todo: transaction-ify this whole thing? might need a large scale rollback...
+                            var tresult = da.Avatars.Transaction(purchaserPID, owner, salePrice, 0);
+                            if (tresult == null) tresult = new Database.DA.Avatars.DbTransactionResult() { success = false };
+
+                            //update the budgets of the respective characters.
+                            var finalAmount = salePrice;
+                            tcallback(tresult.success, tresult.amount,
+                            purchaserPID, (uint)tresult.source_budget,
+                            owner, (uint)tresult.dest_budget);
+
+                            if (tresult.success)
                             {
-                                dbState.type = guid;
-                                dbState.shard_id = Context.ShardId;
-                                var id = db.Objects.Create(dbState);
-                                dbState.object_id = id;
-                                objectPID = id;
+                                dbState.owner_id = purchaserPID;
+                                dbState.lot_id = null;
+                                da.Objects.UpdatePersistState(objPID, dbState); //perform the final object transfer. todo: logging
+                                callback(true, objPID);
                             }
+                            else
+                            {
+                                callback(false, objPID);
+                            }
+
                         }
-                        catch (Exception) { callback(false, objectPID); }
-                    }
-                    var objStr = objectPID.ToString("x8");
-                    //make sure this exists
-                    Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/"));
-                    byte[] data;
-                    using (var stream = new MemoryStream())
-                    {
-                        var writer = new BinaryWriter(stream);
-                        state.SerializeInto(writer);
-                        data = stream.ToArray();
-                    }
-                    var file = File.Open(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo"), FileMode.Create);
-                    file.WriteAsync(data, 0, data.Length).ContinueWith((x) =>
-                    {
-                        using (var db = DAFactory.Get())
-                        {
-                            callback(db.Objects.UpdatePersistState(objectPID, dbState), objectPID); //if object is on another lot or does not exist, this will fail.
-                        }
-                        file.Close();
+                        else callback(false, objPID);
                     });
-                }
-                catch (Exception e)
-                {
-                    //todo: specific types of exception that can be thrown here? instead of just catching em all
-                    LOG.Error(e, "Failed to save inventory state for object " + objectPID.ToString("x8") + "!");
-                    callback(false, objectPID);
                 }
             });
         }
@@ -497,6 +552,11 @@ namespace FSO.Server.Servers.Lot.Domain
                     callback(db.Objects.Delete(objectPID));
                 }
             });
+        }
+
+        public void SetSpotlightStatus(VM vm, bool on)
+        {
+            Host.SetSpotlight(on);
         }
     }
 }

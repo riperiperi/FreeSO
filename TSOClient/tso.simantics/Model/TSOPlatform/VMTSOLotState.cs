@@ -19,6 +19,8 @@ namespace FSO.SimAntics.Model.TSOPlatform
         public HashSet<uint> Roommates = new HashSet<uint>();
         public HashSet<uint> BuildRoommates = new HashSet<uint>();
 
+        public VMTSOJobUI JobUI;
+
         public VMTSOLotState() { }
         public VMTSOLotState(int version) : base(version) { }
 
@@ -42,6 +44,15 @@ namespace FSO.SimAntics.Model.TSOPlatform
             BuildRoommates = new HashSet<uint>();
             var broomCount = reader.ReadInt16();
             for (int i = 0; i < broomCount; i++) BuildRoommates.Add(reader.ReadUInt32());
+
+            if (Version > 10)
+            {
+                if (reader.ReadBoolean())
+                {
+                    JobUI = new VMTSOJobUI();
+                    JobUI.Deserialize(reader);
+                }
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -57,6 +68,9 @@ namespace FSO.SimAntics.Model.TSOPlatform
             foreach (var roomie in Roommates) writer.Write(roomie);
             writer.Write((short)BuildRoommates.Count);
             foreach (var roomie in BuildRoommates) writer.Write(roomie);
+
+            writer.Write(JobUI != null);
+            if (JobUI != null) JobUI.SerializeInto(writer);
         }
 
         public override void Tick(VM vm, object owner)

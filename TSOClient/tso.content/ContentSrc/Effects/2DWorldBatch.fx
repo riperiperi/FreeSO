@@ -205,15 +205,27 @@ ZVertexOut restoreZSprite(ZVertexIn v){
 }
 
 void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
-	color = tex2D(pixelSampler, v.texCoords);
-	if (color.a == 0) discard;
+	float4 pixel = tex2D(pixelSampler, v.texCoords);
+	if (pixel.a == 0) discard;
 
-	if (floor(v.roomVec.x * 256) == 254 && floor(v.roomVec.y*256)==255) color = float4(float3(1.0, 1.0, 1.0)-color.xyz, color.a);
-    else if (v.roomVec.x == 0.0) color = color;
-	else color *= tex2D(ambientSampler, v.roomVec);
+	bool lastSeg = floor(v.roomVec.y * 256) == 255;
+	int xRoom = floor(v.roomVec.x * 256);
+	if (lastSeg == true && xRoom == 254) {
+		pixel = float4(float3(1.0, 1.0, 1.0) - pixel.xyz, pixel.a);
+	} else if (lastSeg == true && xRoom == 253) {
+		float gray = dot(pixel.xyz, float3(0.2989, 0.5870, 0.1140));
+		pixel = float4(gray, gray, gray, pixel.a);
+	}
+	else if (v.roomVec.x == 0.0) {
+		pixel = pixel;
+	}
+	else {
+		pixel *= tex2D(ambientSampler, v.roomVec);
+	}
 
-	color.rgb *= color.a; //"pre"multiply, just here for experimentation
+	pixel.rgb *= pixel.a; //"pre"multiply, just here for experimentation
 
+	color = pixel;
     float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4;
     depth = (v.backDepth + (difference*v.frontDepth));
 }
@@ -285,7 +297,13 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COL
     if (depthOutMode == true) {
         color = depthB;
     } else {
-		if (floor(v.roomVec.x * 256) == 254 && floor(v.roomVec.y * 256) == 255) pixel = float4(float3(1.0, 1.0, 1.0) - pixel.xyz, pixel.a);
+		bool lastRow = floor(v.roomVec.y * 256) == 255;
+		int col = floor(v.roomVec.x * 256);
+		if (lastRow == true && col == 254) pixel = float4(float3(1.0, 1.0, 1.0) - pixel.xyz, pixel.a);
+		else if (lastRow == true && col == 253) {
+			float gray = dot(pixel.xyz, float3(0.2989, 0.5870, 0.1140));
+			pixel = float4(gray, gray, gray, pixel.a);
+		}
 		else if (v.roomVec.x != 0.0) pixel *= tex2D(ambientSampler, v.roomVec);
 		color = pixel;
 

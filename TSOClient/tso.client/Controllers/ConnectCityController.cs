@@ -1,5 +1,6 @@
 ﻿using FSO.Client.Regulators;
 using FSO.Client.UI.Screens;
+using FSO.Common.DatabaseService.Model;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.CitySelector;
 using System;
@@ -16,6 +17,7 @@ namespace FSO.Client.Controllers
         private CityConnectionRegulator CityConnectionRegulator;
         private Callback onConnect;
         private Callback onError;
+        public LoadAvatarByIDResponse AvatarData;
 
         public ConnectCityController(TransitionScreen view,
                                      CityConnectionRegulator cityConnectionRegulator)
@@ -78,6 +80,13 @@ namespace FSO.Client.Controllers
                     break;
                 case "ReceivedAvatarData":
                     //10 ^Spleens Reticulated^              # Received Avatar data from DB...
+
+                    var dbResponse = (LoadAvatarByIDResponse)data;
+                    if (dbResponse != null)
+                    {
+                        AvatarData = dbResponse;
+                    }
+
                     View.SetProgress((7.0f / 14.0f) * 100, 10);
                     break;
                 case "AskForCharacterData":

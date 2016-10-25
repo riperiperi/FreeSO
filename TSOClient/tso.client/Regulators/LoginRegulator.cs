@@ -119,5 +119,10 @@ namespace FSO.Client.Regulators
         public void Login(AuthRequest request){
             this.AsyncProcessMessage(request);
         }
+
+        public void Logout()
+        {
+            this.AsyncTransition("NotLoggedIn");
+        }
     }
 }

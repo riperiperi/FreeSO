@@ -194,7 +194,7 @@ namespace FSO.LotView.Utils
                     if (sprite.DestRect.Y + sprite.Pixel.Height > maxY) maxY = sprite.DestRect.Y + sprite.Pixel.Height;
 
                     sprite.WorldPosition = centerRelative * 3f;
-                    sprite.Room = ((dgrpSprite.Flags & DGRPSpriteFlags.Luminous) > 0 && Room != 65534)?(ushort)65535:Room;
+                    sprite.Room = ((dgrpSprite.Flags & DGRPSpriteFlags.Luminous) > 0 && Room != 65534 && Room != 65533)?(ushort)65535:Room;
                 }
                 Bounding = new Rectangle(minX, minY, maxX - minX, maxY - minY);
 

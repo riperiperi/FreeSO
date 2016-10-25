@@ -66,18 +66,20 @@ namespace FSO.SimAntics
 
         private Color[] m_TimeColors = new Color[]
         {
-            new Color(50, 70, 122)*1.5f,
-            new Color(50, 70, 122)*1.5f,
-            new Color(60, 80, 132)*1.5f,
-            new Color(60, 80, 132)*1.5f,
-            new Color(217, 109, 0),
+            new Color(50, 70, 122)*1.25f,
+            new Color(50, 70, 122)*1.25f,
+            new Color(55, 75, 111)*1.25f,
+            new Color(70, 70, 70)*1.25f,
+            new Color(217, 109, 50), //sunrise
+            new Color(255, 255, 255),
+            new Color(255, 255, 255), //peak
+            new Color(255, 255, 255), //peak
             new Color(255, 255, 255),
             new Color(255, 255, 255),
-            new Color(255, 255, 255),
-            new Color(255, 255, 255),
-            new Color(217, 109, 0),
-            new Color(60, 80, 80)*1.5f,
-            new Color(60, 80, 132)*1.5f,     
+            new Color(217, 109, 50), //sunset
+            new Color(70, 70, 70)*1.25f,
+            new Color(55, 75, 111)*1.25f,
+            new Color(50, 70, 122)*1.25f,
         };
 
         public VMArchitecture(int width, int height, Blueprint blueprint, VMContext context)
@@ -240,7 +242,7 @@ namespace FSO.SimAntics
             RoomData.Add(new VMRoom()); //dummy at index 0
             for (int i=0; i<Stories; i++)
             {
-                Rooms[i].GenerateMap(Walls[i], Floors[i], Width, Height, RoomData);
+                Rooms[i].GenerateMap(Walls[i], Floors[i], Width, Height, RoomData, (sbyte)i, Context);
                 if (VM.UseWorld) WorldUI.RoomMap[i] = Rooms[i].Map;
                 RegenerateSupported(i + 1);
             }

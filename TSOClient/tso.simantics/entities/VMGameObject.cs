@@ -21,12 +21,13 @@ using FSO.SimAntics.Model.Routing;
 using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Marshals.Hollow;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.SimAntics
 {
     public class VMGameObject : VMEntity
     {
-        private VMGameObjectDisableFlags Disabled;
+        public VMGameObjectDisableFlags Disabled;
 
         public VMGameObject(GameObject def, ObjectComponent worldUI) : base(def)
         {
@@ -99,11 +100,26 @@ namespace FSO.SimAntics
             if (UseWorld)
             {
                 var flags = (VMEntityFlags2)GetValue(VMStackObjectVariable.FlagField2);
-                WorldUI.Room = ((flags & VMEntityFlags2.GeneratesLight) > 0 && 
-                    GetValue(VMStackObjectVariable.LightingContribution)>0 && 
-                    (flags & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) == 0) 
-                    ? (ushort)65535 : (ushort)GetValue(VMStackObjectVariable.Room);
+                if (Disabled >= VMGameObjectDisableFlags.LotCategoryWrong) WorldUI.Room = 65533; //grayscale
+                else
+                {
+                    WorldUI.Room = ((flags & VMEntityFlags2.GeneratesLight) > 0 &&
+                        GetValue(VMStackObjectVariable.LightingContribution) > 0 &&
+                        (flags & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) == 0)
+                        ? (ushort)65535 : (ushort)GetValue(VMStackObjectVariable.Room);
+                }
             }
+        }
+
+        public void DisableIfTSOCategoryWrong(VMContext context)
+        {
+            OBJD obj = Object.OBJ;
+            if (MasterDefinition != null) obj = MasterDefinition;
+            var category = context.VM.TSOState.PropertyCategory;
+            if (obj.LotCategories > 0 && (obj.LotCategories & (1 << category)) == 0)
+                Disabled |= VMGameObjectDisableFlags.LotCategoryWrong;
+            else
+                Disabled &= ~VMGameObjectDisableFlags.LotCategoryWrong; 
         }
 
         public override void Init(FSO.SimAntics.VMContext context){
@@ -115,6 +131,42 @@ namespace FSO.SimAntics
             }
 
             base.Init(context);
+            DisableIfTSOCategoryWrong(context);
+        }
+
+        public override void Tick()
+        {
+            base.Tick();
+            if ((Disabled & VMGameObjectDisableFlags.PendingRoommateDeletion) > 0)
+            {
+                //can we be deleted and moved back to inventory? maybe some stuff on us needs to be first.
+                var context = Thread.Context;
+                var current = DeepestObjInSlot(this);
+                if (current is VMGameObject && !current.IsInUse(context, true))
+                {
+                    if (current.PersistID > 0)
+                    {
+                        //if this is called more than once, it will fail as the object is already locked.
+                        context.VM.ForwardCommand(new VMNetSendToInventoryCmd()
+                        {
+                            InternalDispatch = true,
+                            ObjectPID = current.PersistID,
+                        });
+                    }
+                }
+            }
+        }
+
+        private VMEntity DeepestObjInSlot(VMEntity pt)
+        {
+            //todo: make sure nobody can create cyclic slots
+            var slots = pt.TotalSlots();
+            for (int i=0; i<slots; i++)
+            {
+                var ent = pt.GetSlot(i);
+                if (ent != null) return DeepestObjInSlot(ent);
+            }
+            return this;
         }
 
         public override float RadianDirection
@@ -473,8 +525,11 @@ namespace FSO.SimAntics
     [Flags]
     public enum VMGameObjectDisableFlags
     {
-        LotCategoryWrong = 1,
-        TransactionIncomplete = 1<<1,
-        ObjectLimitExceeded = 1<<2, //when too many objects are on a lot and the object lot is lowered, the last few objects are disabled.
+        TransactionIncomplete = 1 << 0,
+        ForSale = 1 << 1,
+        //past this point disabled objects appear in grayscale.
+        LotCategoryWrong = 1 << 2,
+        ObjectLimitExceeded = 1 << 3, //when too many objects are on a lot and the object lot is lowered, the last few objects are disabled.
+        PendingRoommateDeletion = 1 << 4
     }
 }

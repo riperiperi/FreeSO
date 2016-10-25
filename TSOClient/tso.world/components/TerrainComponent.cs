@@ -359,7 +359,7 @@ namespace FSO.LotView.Components
                     Effect.CurrentTechnique = Effect.Techniques["DrawGrid"];
                     Effect.Parameters["World"].SetValue(Matrix.Identity * Matrix.CreateTranslation(0, ((int)(world.Zoom)-1) * (18 / 522f) * grassScale, 0));
 
-                    if (TGridPrimitives > 0)
+                    if (TGridPrimitives > 0 && !TGridIndexBuffer.IsDisposed)
                     {
                         //draw target size in red, below old size
                         device.Indices = TGridIndexBuffer;

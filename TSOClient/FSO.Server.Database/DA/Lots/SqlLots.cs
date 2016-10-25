@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using FSO.Server.Common;
 using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.Shards;
 using System;
@@ -106,6 +107,11 @@ namespace FSO.Server.Database.DA.Lots
 
         public List<DbLot> SearchWildcard(int shard_id, string name, int limit)
         {
+            name = name
+                .Replace("!", "!!")
+                .Replace("%", "!%")
+                .Replace("_", "!_")
+                .Replace("[", "!["); //must sanitize format...
             return Context.Connection.Query<DbLot>(
                 "SELECT lot_id, location, name FROM fso_lots WHERE shard_id = @shard_id AND name LIKE @name LIMIT @limit",
                 new { shard_id = shard_id, name = "%" + name + "%", limit = limit }
@@ -142,6 +148,16 @@ namespace FSO.Server.Database.DA.Lots
         public void UpdateDescription(int lot_id, string description)
         {
             Context.Connection.Query("UPDATE fso_lots SET description = @desc WHERE lot_id = @id", new { id = lot_id, desc = description });
+        }
+
+        public void UpdateLotCategory(int lot_id, DbLotCategory category)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET category = @category, category_change_date = @time WHERE lot_id = @id", new { id = lot_id, category = category.ToString(), time = Epoch.Now });
+        }
+
+        public void UpdateLocation(int lot_id, uint location, bool startFresh)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET location = @location, move_flags = @move WHERE lot_id = @id", new { id = lot_id, location = location, move = (byte)(startFresh?2:1) });
         }
     }
 }

@@ -13,8 +13,8 @@ namespace FSO.Server.Servers.City.Handlers
         public void Handle(IVoltronSession session, FindPlayerPDU packet)
         {
             session.Write(new FindPlayerResponsePDU {
-                StatusCode = 0x01,
-                ReasonText = ""
+                StatusCode = 0x00,
+                ReasonText = "uh"
             });
         }
     }

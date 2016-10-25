@@ -44,7 +44,7 @@ namespace FSO.Client.UI.Framework
         {
             var alert = new UIAlert(options);
             GlobalShowDialog(alert, modal);
-            alert.CenterAround(UIScreen.Current);
+            alert.CenterAround(UIScreen.Current, -(int)UIScreen.Current.X * 2, -(int)UIScreen.Current.Y * 2);
             return alert;
         }
 
@@ -67,7 +67,7 @@ namespace FSO.Client.UI.Framework
 
             if (dialog.Dialog is UIDialog)
             {
-                ((UIDialog)dialog.Dialog).CenterAround(UIScreen.Current);
+                ((UIDialog)dialog.Dialog).CenterAround(UIScreen.Current, -(int)UIScreen.Current.X * 2, -(int)UIScreen.Current.Y * 2);
             }
         }
 
@@ -85,7 +85,7 @@ namespace FSO.Client.UI.Framework
 
             if (dialog is UIDialog)
             {
-                ((UIDialog)dialog).CenterAround(UIScreen.Current);
+                ((UIDialog)dialog).CenterAround(UIScreen.Current, -(int)UIScreen.Current.X*2, -(int)UIScreen.Current.Y * 2);
             }
         }
 

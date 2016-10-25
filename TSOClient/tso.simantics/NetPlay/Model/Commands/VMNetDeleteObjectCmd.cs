@@ -19,42 +19,112 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     public class VMNetDeleteObjectCmd : VMNetCommandBodyAbstract
     {
         public short ObjectID;
+        public uint ObjectPID;
         public bool CleanupAll;
+        public bool Verified;
+        public bool Success;
         public override bool Execute(VM vm, VMAvatar caller)
         {
-            if (((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate) return false;
-            VMEntity obj = vm.GetObjectById(ObjectID);
-            if (obj == null || caller == null || (obj is VMAvatar) || obj.IsUserMovable(vm.Context, true) != VMPlacementError.Success) return false;
-            obj.Delete(CleanupAll, vm.Context);
-
-            //TODO: Check if user is owner of object. Sendback to owner inventory if a roommate deletes.
-
-            // If we're the server, tell the global server to give their money back.
-            if (vm.GlobalLink != null)
+            if (ObjectPID == 0) //only has value when this is an inventory move.
             {
-                vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, obj.MultitileGroup.Price,
-                (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
+                VMEntity obj = vm.GetObjectById(ObjectID);
+                if (obj == null || caller == null) return false;
+                obj.Delete(CleanupAll, vm.Context);
+
+                // If we're the server, tell the global link to give their money back.
+                if (vm.GlobalLink != null)
                 {
-                    vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                    { //update budgets on clients. id of 0 means there is no target thread.
-                        Responded = true,
-                        Success = success,
-                        TransferAmount = transferAmount,
-                        UID1 = uid1,
-                        Budget1 = budget1,
-                        UID2 = uid2,
-                        Budget2 = budget2
-                    }));
-                });
+                    vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, obj.MultitileGroup.Price,
+                    (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
+                    {
+                        vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
+                        { //update budgets on clients. id of 0 means there is no target thread.
+                            Responded = true,
+                            Success = success,
+                            TransferAmount = transferAmount,
+                            UID1 = uid1,
+                            Budget1 = budget1,
+                            UID2 = uid2,
+                            Budget2 = budget2
+                        }));
+                    });
+                }
+                vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
+                    caller.Name,
+                    vm.GetUserIP(caller.PersistID),
+                    "deleted " + obj.ToString()
+                ));
+            }
+            else
+            {
+                //inventory move. Just delete the object.
+                VMEntity obj = vm.GetObjectByPersist(ObjectPID);
+                if (obj == null) return false;
+
+                if (Success)
+                {
+                    if (((VMTSOObjectState)obj.TSOState).OwnerID == vm.MyUID)
+                    {
+                        //if the owner is here, tell them this object is now in their inventory.
+                        //if they're elsewhere, they'll see it the next time their inventory updates. 
+                        //Inventory accesses are not by index, but PID, and straight to DB... so this won't cause any race conditions.
+                        vm.MyInventory.Add(new VMInventoryItem()
+                        {
+                            ObjectPID = ObjectPID,
+                            GUID = (obj.MasterDefinition?.GUID) ?? obj.Object.OBJ.GUID,
+                            Name = obj.MultitileGroup.Name,
+                            Value = (uint)obj.MultitileGroup.Price,
+                            Graphic = (ushort)obj.GetValue(VMStackObjectVariable.Graphic),
+                            DynFlags1 = obj.DynamicSpriteFlags,
+                            DynFlags2 = obj.DynamicSpriteFlags2,
+                        });
+                    }
+                    obj.PersistID = 0; //no longer representative of the object in db.
+                    obj.Delete(CleanupAll, vm.Context);
+
+                    vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
+                        caller?.Name ?? "disconnected user",
+                        vm.GetUserIP(caller.PersistID),
+                        "sent " + obj.ToString() + " back to the inventory of its owner."
+                    ));
+                } else
+                {
+                    //something bad happened. just unlock the object.
+                    foreach (var o in obj.MultitileGroup.Objects)
+                        ((VMGameObject)o).Disabled &= VMGameObjectDisableFlags.TransactionIncomplete;
+                }
             }
 
-            vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
-                caller.Name,
-                vm.GetUserIP(caller.PersistID),
-                "deleted " + obj.ToString()
-            ));
-
             return true;
+        }
+
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            if (Verified) return true;
+            ObjectPID = 0;
+            if (caller == null || ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate) return false;
+            VMEntity obj = vm.GetObjectById(ObjectID);
+            if (obj == null || (obj is VMAvatar) || obj.IsUserMovable(vm.Context, true) != VMPlacementError.Success) return false;
+            if ((((VMGameObject)obj).Disabled & VMGameObjectDisableFlags.TransactionIncomplete) > 0) return false; //can't delete objects mid trasaction...
+            VMNetLockCmd.LockObj(vm, obj);
+
+            var canDelete = obj.PersistID == 0 || ((VMTSOObjectState)obj.TSOState).OwnerID == caller.PersistID;
+            if (canDelete)
+            {
+                //straight up delete this object. another check will be done at the execution stage.
+                return true;
+            } else
+            {
+                //send to the owner's inventory
+                ObjectPID = obj.PersistID; //we don't want to accidentally delete the wrong object - so use its real persist id.
+                vm.GlobalLink.MoveToInventory(vm, obj.MultitileGroup, (bool success, uint pid) =>
+                {
+                    Success = success;
+                    Verified = true;
+                    vm.ForwardCommand(this);
+                });
+                return false;
+            }
         }
 
         #region VMSerializable Members
@@ -63,14 +133,18 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             base.SerializeInto(writer);
             writer.Write(ObjectID);
+            writer.Write(ObjectPID);
             writer.Write(CleanupAll);
+            writer.Write(Success);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
             ObjectID = reader.ReadInt16();
+            ObjectPID = reader.ReadUInt32();
             CleanupAll = reader.ReadBoolean();
+            Success = reader.ReadBoolean();
         }
 
         #endregion

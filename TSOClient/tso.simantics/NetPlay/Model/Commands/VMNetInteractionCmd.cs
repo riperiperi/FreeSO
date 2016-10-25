@@ -23,6 +23,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             VMEntity callee = vm.GetObjectById(CalleeID);
             VMEntity caller = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
             if (callee == null || caller == null) return false;
+            if (callee is VMGameObject && ((VMGameObject)callee).Disabled > 0) return false;
             callee.PushUserInteraction(Interaction, caller, vm.Context, new short[] { Param0, 0, 0, 0 });
 
             return true;

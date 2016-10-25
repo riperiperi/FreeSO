@@ -132,7 +132,6 @@ namespace FSO.Server.Servers.City.Handlers
 
             using (var db = DAFactory.Get())
             {
-                //TODO: Handle unique name errors, enforce avatar limit, enforce per city limit?
                 var newAvatar = new DbAvatar();
                 newAvatar.shard_id = Context.ShardId;
                 newAvatar.name = packet.Name;
@@ -144,7 +143,20 @@ namespace FSO.Server.Servers.City.Handlers
                 newAvatar.gender = packet.Gender == Protocol.Voltron.Model.Gender.FEMALE ? DbAvatarGender.female : DbAvatarGender.male;
                 newAvatar.user_id = session.UserId;
 
-                newId = db.Avatars.Create(newAvatar);
+                try
+                {
+                    newId = db.Avatars.Create(newAvatar);
+                } catch (Exception e)
+                {
+                    //unique name error or avatar limit exceeded.
+                    //todo: special error for avatar limit? exception is thrown from BEFORE INSERT trigger.
+                    session.Write(new CreateASimResponse
+                    {
+                        Status = CreateASimStatus.FAILED,
+                        Reason = CreateASimFailureReason.NAME_TAKEN
+                    });
+                    return;
+                }
             }
 
             ((VoltronSession)session).AvatarId = newId;

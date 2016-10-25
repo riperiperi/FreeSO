@@ -13,16 +13,18 @@ namespace FSO.Client.Controllers
     {
         private TransitionScreen View;
         private CityConnectionRegulator CityConnectionRegulator;
+        private LotConnectionRegulator LotConnectionRegulator;
 
         private Callback onDisconnected;
 
-        public DisconnectController(TransitionScreen view, CityConnectionRegulator cityRegulator)
+        public DisconnectController(TransitionScreen view, CityConnectionRegulator cityRegulator, LotConnectionRegulator lotRegulator)
         {
             View = view;
             View.ShowProgress = false;
 
             CityConnectionRegulator = cityRegulator;
             CityConnectionRegulator.OnTransition += CityConnectionRegulator_OnTransition;
+            LotConnectionRegulator = lotRegulator;
         }
 
         private void CityConnectionRegulator_OnTransition(string state, object data)
@@ -41,6 +43,8 @@ namespace FSO.Client.Controllers
         {
             this.onDisconnected = onDisconnected;
             CityConnectionRegulator.Disconnect();
+            LotConnectionRegulator.Disconnect();
+
         }
 
         public void Dispose()

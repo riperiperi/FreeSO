@@ -10,9 +10,11 @@ namespace FSO.Server.Database.DA.Users
     public interface IUsers
     {
         User GetById(uint id);
+        List<User> GetByRegisterIP(string ip);
         User GetByUsername(string username);
         UserAuthenticate GetAuthenticationSettings(uint userId);
         PagedList<User> All(int offset = 0, int limit = 20, string orderBy = "register_date");
         uint Create(User user);
+        void CreateAuth(UserAuthenticate auth);
     }
 }

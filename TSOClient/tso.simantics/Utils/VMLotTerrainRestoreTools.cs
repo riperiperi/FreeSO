@@ -17,6 +17,8 @@ namespace FSO.SimAntics.Utils
 {
     public static class VMLotTerrainRestoreTools
     {
+
+        #region Road Surroundings Map Data
         //    /\
         //   /  \
         //  /    \
@@ -223,6 +225,71 @@ namespace FSO.SimAntics.Utils
             2,   4,   6,   8,   12,  16,  32,  64,  128, 196, 225, 196, 128, 64,  32,  16,  12,  8,   6,   4,   2,
         };
 
+        #endregion
+
+        #region Water Surroundings Map Data
+
+        private const short W = -2;
+
+        public static short[] TopWaterCorner =
+        {
+            6, 6,
+            W, W, W, W, W, W,
+            W, W, W, W, W, W,
+            W, W, W, W, 0, 0,
+            W, W, W, 0, 0, 0,
+            W, W, 0, 0, 0, 0,
+            W, W, 0, 0, 0, 0,
+        };
+
+        public static short[] RightWaterCorner =
+        {
+            6, 6,
+            W, W, W, W, W, W,
+            W, W, W, W, W, W,
+            0, 0, W, W, W, W,
+            0, 0, 0, W, W, W,
+            0, 0, 0, 0, W, W,
+            0, 0, 0, 0, W, W,
+        };
+
+        public static short[] BottomWaterCorner =
+        {
+            6, 6,
+            0, 0, 0, 0, W, W,
+            0, 0, 0, 0, W, W,
+            0, 0, 0, W, W, W,
+            0, 0, W, W, W, W,
+            W, W, W, W, W, W,
+            W, W, W, W, W, W,
+        };
+
+        public static short[] LeftWaterCorner =
+        {
+            6, 6,
+            W, W, 0, 0, 0, 0,
+            W, W, 0, 0, 0, 0,
+            W, W, W, 0, 0, 0,
+            W, W, W, W, 0, 0,
+            W, W, W, W, W, W,
+            W, W, W, W, W, W,
+        };
+
+        public static short[] WaterLineSegments =
+        { //length, thickness
+        //6, 0,
+        //7, 1,
+        13, 1,
+        10, 2,
+        31, 3,
+        10, 2,
+        13, 1
+        //7, 1,
+        //6, 0
+        }; //adds up to 77
+
+        #endregion
+
         public static uint[][] BlankTerrainObjects =
         new uint[][]{
             //grass:
@@ -286,12 +353,17 @@ namespace FSO.SimAntics.Utils
 
         public static void StampTilemap(VMArchitecture arch, short[] tilemap, short x, short y, sbyte level)
         {
+            StampTilemap(arch, tilemap, x, y, level, false);
+        }
+
+        public static void StampTilemap(VMArchitecture arch, short[] tilemap, short x, short y, sbyte level, bool skipZero)
+        {
             var width = tilemap[0];
             var height = tilemap[1];
 
             for (int i=2; i<tilemap.Length; i++)
             {
-                if (tilemap[i] == 0) continue;
+                if (skipZero && tilemap[i] == 0) continue;
                 var xo = (i - 2) % width;
                 var yo = (i - 2) / width;
                 if (x + xo >= arch.Width - 1 || y + yo >= arch.Height - 1) continue;
@@ -303,12 +375,34 @@ namespace FSO.SimAntics.Utils
         {
             for (int xo = 0; xo < xtimes; xo++)
             {
+                var x2 = (short)(x + xo);
+                if (x2 < 1 || x2 >= arch.Width-1) continue;
                 for (int yo = 0; yo < ytimes; yo++)
                 {
-                    arch.SetFloor((short)(x + xo), (short)(y + yo), level, new FloorTile() { Pattern = (ushort)tile }, true);
+                    var y2 = (short)(y + yo);
+                    if (y2 < 1 || y2 >= arch.Height-1) continue;
+                    arch.SetFloor(x2, y2, level, new FloorTile() { Pattern = (ushort)tile }, true);
                 }
             }
         }
+
+        public static void FillTileLine(VMArchitecture arch, short tile, short x, short y, sbyte level, short[] line, bool horiz)
+        {
+            for (int i=0; i<line.Length; i+=2)
+            {
+                var segLen = line[i];
+                var thickness = line[i + 1];
+                if (horiz) {
+                    FillTiles(arch, tile, x, (short)(y - thickness), level, segLen, thickness * 2 +1);
+                    x += segLen;
+                } else
+                {
+                    FillTiles(arch, tile, (short)(x - thickness), y, level, thickness * 2+1, segLen);
+                    y += segLen;
+                }
+            }
+        }
+
 
         public static void RepeatTilemap(VMArchitecture arch, short[] tilemap, short x, short y, sbyte level, int xtimes, int ytimes)
         {
@@ -353,14 +447,8 @@ namespace FSO.SimAntics.Utils
             var arch = vm.Context.Architecture;
             arch.DisableClip = true;
 
-            if (blend.Base == TerrainType.WATER)
-            {
-                //...
-                VMArchitectureTools.FloorPatternRect(arch, new Rectangle(1, 1, arch.Width - 2, arch.Height - 2), 0, 65534, 1);
-                return;
-            }
-
-            arch.Terrain.LightType = blend.Base;
+            var baseB = blend.Base;
+            arch.Terrain.LightType = (baseB == TerrainType.WATER) ? TerrainType.SAND : blend.Base;
             arch.Terrain.DarkType = (blend.Blend == TerrainType.WATER) ? blend.Base : blend.Blend;
             arch.Terrain.GenerateGrassStates();
 
@@ -370,11 +458,32 @@ namespace FSO.SimAntics.Utils
             VMArchitectureTools.FloorPatternRect(arch, new Rectangle(0, arch.Height - 7, arch.Width, 7), 0, 0, 1);
             VMArchitectureTools.FloorPatternRect(arch, new Rectangle(0, 0, 5, arch.Height), 0, 0, 1);
 
+            if (baseB == TerrainType.WATER)
+            {
+                //...
+                VMArchitectureTools.FloorPatternRect(arch, new Rectangle(1, 1, arch.Width - 3, arch.Height - 3), 0, 65534, 1);
+            }
+
             //blend flags start at top left, then go clockwise. (top right, bottom right..)
+
+            if ((blend.WaterFlags & 1) > 0) FillTileLine(arch, -2, 0, 0, 1, WaterLineSegments, false);
+            if ((blend.WaterFlags & 4) > 0) FillTileLine(arch, -2, 0, 0, 1, WaterLineSegments, true);
+            if ((blend.WaterFlags & 16) > 0) FillTileLine(arch, -2, (short)(arch.Width - 1), 0, 1, WaterLineSegments, false);
+            if ((blend.WaterFlags & 64) > 0) FillTileLine(arch, -2, 0, (short)(arch.Height - 1), 1, WaterLineSegments, true);
+
+            if ((blend.WaterFlags & 5) == 5) StampTilemap(arch, TopWaterCorner, 1, 1, 1);
+            if ((blend.WaterFlags & 20) == 20) StampTilemap(arch, RightWaterCorner, (short)(arch.Width - 7), 1, 1);
+            if ((blend.WaterFlags & 80) == 80) StampTilemap(arch, BottomWaterCorner, (short)(arch.Width - 7), (short)(arch.Height - 7), 1);
+            if ((blend.WaterFlags & 65) == 65) StampTilemap(arch, LeftWaterCorner, 1, (short)(arch.Height - 7), 1);
+
+            /*
+
             if ((blend.WaterFlags & 1) > 0) VMArchitectureTools.FloorPatternRect(arch, new Rectangle(1, 1, 4, arch.Height - 2), 0, 65534, 1);
             if ((blend.WaterFlags & 2) > 0) VMArchitectureTools.FloorPatternRect(arch, new Rectangle(1, 1, arch.Width-2, 4), 0, 65534, 1);
             if ((blend.WaterFlags & 4) > 0) VMArchitectureTools.FloorPatternRect(arch, new Rectangle(arch.Width-5, 1, 4, arch.Height - 2), 0, 65534, 1);
             if ((blend.WaterFlags & 8) > 0) VMArchitectureTools.FloorPatternRect(arch, new Rectangle(1, arch.Height-5, arch.Width-2, 4), 0, 65534, 1);
+
+            */
 
             ApplyTerrainBlend(arch, RotateByte(blend.AdjFlags, 0), new Rectangle(0, 0, arch.Width - 1, 24), 255, 0, -11,
                 new Point[] { new Point(0, 0), new Point(arch.Width - 1, 0) },
@@ -397,7 +506,7 @@ namespace FSO.SimAntics.Utils
                 new float[] { (15f / 180f) * (float)Math.PI, (-15f / 180f) * (float)Math.PI });
 
             //and finally, hard blends into the next terrain type 
-            
+
             FillTerrainRect(arch, new Rectangle(0, 0, 1, arch.Height - 1), (byte)(((blend.AdjFlags & 1) > 0)?255:0));
             FillTerrainRect(arch, new Rectangle(0, 0, arch.Width-1, 1), (byte)(((blend.AdjFlags & 4) > 0) ? 255 : 0));
             FillTerrainRect(arch, new Rectangle(arch.Width - 2, 0, 1, arch.Height - 1), (byte)(((blend.AdjFlags & 16) > 0) ? 255 : 0));
@@ -663,10 +772,10 @@ namespace FSO.SimAntics.Utils
                 FillTiles(arch, 9, (short)(arch.Width - 4), (short)(arch.Height - 2), 1, 3, 1);
             }
             
-            if ((roads & 12) == 12) StampTilemap(arch, TopRoadInnerCorner, 1, 1, 1);
-            if ((roads & 6) == 6) StampTilemap(arch, RightRoadInnerCorner, (short)(arch.Width - 9), 1, 1);
-            if ((roads & 3) == 3) StampTilemap(arch, BottomRoadInnerCorner, (short)(arch.Width - 9), (short)(arch.Height - 9), 1);
-            if ((roads & 9) == 9) StampTilemap(arch, LeftRoadInnerCorner, 1, (short)(arch.Height - 9), 1);
+            if ((roads & 12) == 12) StampTilemap(arch, TopRoadInnerCorner, 1, 1, 1, true);
+            if ((roads & 6) == 6) StampTilemap(arch, RightRoadInnerCorner, (short)(arch.Width - 9), 1, 1, true);
+            if ((roads & 3) == 3) StampTilemap(arch, BottomRoadInnerCorner, (short)(arch.Width - 9), (short)(arch.Height - 9), 1, true);
+            if ((roads & 9) == 9) StampTilemap(arch, LeftRoadInnerCorner, 1, (short)(arch.Height - 9), 1, true);
 
 
             //corners start bit 1 = citymapTopRight = left,

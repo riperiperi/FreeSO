@@ -23,7 +23,7 @@ namespace FSO.LotView
     /// <summary>
     /// Represents world (I.E lots in the game.)
     /// </summary>
-    public class World : _3DScene
+    public class World : _3DScene, IDisposable
     {
         /// <summary>
         /// Creates a new World instance.
@@ -445,6 +445,12 @@ namespace FSO.LotView
         {
             State._2D.Begin(this.State.Camera);
             return _2DWorld.GetLotThumb(gd, State);
+        }
+
+        public void Dispose()
+        {
+            State.AmbientLight.Dispose();
+            State._2D.Dispose();
         }
     }
 }

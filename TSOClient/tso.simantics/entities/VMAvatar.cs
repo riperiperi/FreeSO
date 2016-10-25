@@ -463,7 +463,6 @@ namespace FSO.SimAntics
             if (Thread != null)
             {
                 MotiveDecay.Tick(this, Thread.Context);
-                SetPersonData(VMPersonDataVariable.OnlineJobGrade, Math.Max((short)0, Thread.Context.VM.GetGlobalValue(11))); //force job grade to what we expect
                 if (Position == LotTilePos.OUT_OF_WORLD)
                 {
                     //uh oh!
@@ -720,7 +719,8 @@ namespace FSO.SimAntics
 
         public override VMObstacle GetObstacle(LotTilePos pos, Direction dir)
         {
-            return new VMObstacle(
+            return (KillTimeout > -1) ? null :
+                new VMObstacle(
                 (pos.x - 3),
                 (pos.y - 3),
                 (pos.x + 3),

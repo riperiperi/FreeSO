@@ -204,6 +204,12 @@ namespace FSO.SimAntics
             SetFlag(VMEntityFlags.ChairFacing, true);
         }
 
+        public void ResetData()
+        {
+            ObjectData = new short[80];
+            this.Attributes = new List<short>(Object.OBJ.NumAttributes);
+        }
+
         /// <summary>
         /// Supply a game object who's tree table this VMEntity can use.
         /// See: TSO.Files.formats.iff.chunks.TTAB
@@ -369,7 +375,7 @@ namespace FSO.SimAntics
 
         public virtual void Init(VMContext context)
         {
-            GenerateTreeByName(context);
+            FetchTreeByName(context);
             if (!GhostImage) this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
             ExecuteEntryPoint(0, context, true); //Init
@@ -413,10 +419,9 @@ namespace FSO.SimAntics
             if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
         }
 
-        public void GenerateTreeByName(VMContext context)
+        public void FetchTreeByName(VMContext context)
         {
             TreeByName = Object.Resource.TreeByName;
-                new Dictionary<string, VMTreeByNameTableEntry>();
         }
 
         public bool ExecuteEntryPoint(int entry, VMContext context, bool runImmediately)
@@ -761,7 +766,7 @@ namespace FSO.SimAntics
             if (this is VMAvatar || GetValue(VMStackObjectVariable.Hidden) > 0) return VMPlacementError.CantBePickedup;
             var movementFlags = (VMMovementFlags)GetValue(VMStackObjectVariable.MovementFlags);
             if ((movementFlags & VMMovementFlags.PlayersCanMove) == 0) return VMPlacementError.CantBePickedup;
-            if (deleting && (movementFlags & VMMovementFlags.PlayersCanDelete) == 0) return VMPlacementError.CannotDeleteObject;
+            if (deleting && (movementFlags & VMMovementFlags.PlayersCanDelete) == 0) return VMPlacementError.ObjectNotOwnedByYou;
             if (context.IsUserOutOfBounds(Position)) return VMPlacementError.CantBePickedupOutOfBounds;
             if (IsInUse(context, false)) return VMPlacementError.InUse;
             var total = TotalSlots();
@@ -936,7 +941,15 @@ namespace FSO.SimAntics
             var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
             int rotate = (8-(DirectionToWallOff(Direction) + 1)) % 4;
             byte rotPart = (byte)RotateWallSegs((WallSegments)((int)placeFlags%15), rotate);
-            SetValue(VMStackObjectVariable.WallAdjacencyFlags, (short)RotateWallSegs(wall.Segments, rotate));
+
+            var mainSegs = (WallSegments)RotateWallSegs(wall.Segments, (4-rotate)%4);
+            var wallAdj = (VMWallAdjacencyFlags)0; //wall adjacency uses a weird bit order. TODO: Wall in front of left/right (used by stairs)
+            if ((mainSegs & WallSegments.TopLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnLeft;
+            if ((mainSegs & WallSegments.TopRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallInFront;
+            if ((mainSegs & WallSegments.BottomRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnRight;
+            if ((mainSegs & WallSegments.BottomLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallBehind;
+
+            SetValue(VMStackObjectVariable.WallAdjacencyFlags, (short)wallAdj);
 
             if (rotPart == 0) return;
 
@@ -1289,6 +1302,17 @@ namespace FSO.SimAntics
         LeftFoot = 1 << 5,
         RightFoot = 1 << 6,
         FullBody = 1 << 7
+    }
+
+    [Flags]
+    public enum VMWallAdjacencyFlags
+    {
+        WallOnLeft = 1,
+        WallOnRight = 1<<1,
+        WallInFront = 1<<2,
+        WallBehind = 1<<3,
+        WallAboveLeft = 1<<4,
+        WallAboveRight = 1<<5
     }
     public class VMPieMenuInteraction
     {

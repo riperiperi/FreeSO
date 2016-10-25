@@ -42,7 +42,7 @@ namespace FSO.Client.UI.Panels
     /// <summary>
     /// Generates pie menus when the player clicks on objects.
     /// </summary>
-    public class UILotControl : UIContainer
+    public class UILotControl : UIContainer, IDisposable
     {
         private UIMouseEventRef MouseEvt;
         private bool MouseIsOn;
@@ -86,6 +86,7 @@ namespace FSO.Client.UI.Panels
         private int RMBScrollY;
 
         public UICheatHandler Cheats;
+        public UIAvatarDataServiceUpdater AvatarDS;
 
         // NOTE: Blocking dialog system assumes that nothing goes wrong with data transmission (which it shouldn't, because we're using TCP)
         // and that the code actually blocks further dialogs from appearing while waiting for a response.
@@ -126,6 +127,10 @@ namespace FSO.Client.UI.Panels
             QueryPanel = new UIQueryPanel(World);
             QueryPanel.OnSellBackClicked += ObjectHolder.SellBack;
             QueryPanel.OnInventoryClicked += ObjectHolder.MoveToInventory;
+            QueryPanel.OnAsyncBuyClicked += ObjectHolder.AsyncBuy;
+            QueryPanel.OnAsyncSaleClicked += ObjectHolder.AsyncSale;
+            QueryPanel.OnAsyncPriceClicked += ObjectHolder.AsyncSale;
+            QueryPanel.OnAsyncSaleCancelClicked += ObjectHolder.AsyncCancelSale;
             QueryPanel.X = 0;
             QueryPanel.Y = -114;
 
@@ -139,6 +144,7 @@ namespace FSO.Client.UI.Panels
             vm.OnBreakpoint += Vm_OnBreakpoint;
 
             Cheats = new UICheatHandler(this);
+            AvatarDS = new UIAvatarDataServiceUpdater(this);
             EODs = new UIEODController(this);
         }
 
@@ -290,7 +296,6 @@ namespace FSO.Client.UI.Panels
                     bool objSelected = ObjectHover > 0 && InteractionsAvailable;
                     if (objSelected || (GotoObject.Position != LotTilePos.OUT_OF_WORLD && ObjectHover <= 0))
                     {
-                        HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
                         if (objSelected)
                         {
                             obj = vm.GetObjectById(ObjectHover);
@@ -299,29 +304,45 @@ namespace FSO.Client.UI.Panels
                             obj = GotoObject;
                         }
                         obj = obj.MultitileGroup.GetInteractionGroupLeader(obj);
-
-                        var menu = obj.GetPieMenu(vm, ActiveEntity, false);
-                        if (menu.Count != 0)
+                        if (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)
                         {
-                            PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
-                            this.Add(PieMenu);
-                            PieMenu.X = state.MouseState.X / FSOEnvironment.DPIScaleFactor;
-                            PieMenu.Y = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
-                            PieMenu.UpdateHeadPosition(state.MouseState.X, state.MouseState.Y);
+                            var flags = ((VMGameObject)obj).Disabled;
+                            //TODO: Object Purchase
+
+                            if ((flags & VMGameObjectDisableFlags.ForSale) > 0)
+                            {
+                                //for sale
+                                var retailPrice = obj.MultitileGroup.Price; //wrong... should get this from catalog
+                                var salePrice = obj.MultitileGroup.SalePrice;
+                                ShowErrorTooltip(state, 22, true, "$"+retailPrice.ToString("##,#0"), "$"+salePrice.ToString("##,#0"));
+                            }
+                            else if ((flags & VMGameObjectDisableFlags.LotCategoryWrong) > 0)
+                                ShowErrorTooltip(state, 21, true); //category wrong
+                            else if ((flags & VMGameObjectDisableFlags.TransactionIncomplete) > 0)
+                                ShowErrorTooltip(state, 27, true); //transaction not yet complete
+                            else if ((flags & VMGameObjectDisableFlags.ObjectLimitExceeded) > 0)
+                                ShowErrorTooltip(state, 24, true); //object is temporarily disabled... todo: something more helpful
+                            else if ((flags & VMGameObjectDisableFlags.PendingRoommateDeletion) > 0)
+                                ShowErrorTooltip(state, 16, true); //pending roommate deletion
+                        } else
+                        {
+                            HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
+                            var menu = obj.GetPieMenu(vm, ActiveEntity, false);
+                            if (menu.Count != 0)
+                            {
+                                PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
+                                this.Add(PieMenu);
+                                PieMenu.X = state.MouseState.X / FSOEnvironment.DPIScaleFactor;
+                                PieMenu.Y = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
+                                PieMenu.UpdateHeadPosition(state.MouseState.X, state.MouseState.Y);
+                            }
                         }
+
+
                     }
                     else
                     {
-                        HITVM.Get().PlaySoundEvent(UISounds.Error);
-                        state.UIState.TooltipProperties.Show = true;
-                        state.UIState.TooltipProperties.Color = Color.Black;
-                        state.UIState.TooltipProperties.Opacity = 1;
-                        state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
-                            state.MouseState.Y);
-                        state.UIState.Tooltip = GameFacade.Strings.GetString("159", "0");
-                        state.UIState.TooltipProperties.UpdateDead = false;
-                        ShowTooltip = true;
-                        TipIsError = true;
+                        ShowErrorTooltip(state, 0, true);
                     }
                 }
                 else
@@ -344,6 +365,20 @@ namespace FSO.Client.UI.Panels
                 ShowTooltip = false;
                 TipIsError = false;
             }
+        }
+
+        private void ShowErrorTooltip(UpdateState state, uint id, bool playSound, params string[] args)
+        {
+            if (playSound) HITVM.Get().PlaySoundEvent(UISounds.Error);
+            state.UIState.TooltipProperties.Show = true;
+            state.UIState.TooltipProperties.Color = Color.Black;
+            state.UIState.TooltipProperties.Opacity = 1;
+            state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
+                state.MouseState.Y);
+            state.UIState.Tooltip = GameFacade.Strings.GetString("159", id.ToString(), args);
+            state.UIState.TooltipProperties.UpdateDead = false;
+            ShowTooltip = true;
+            TipIsError = true;
         }
 
         public void ClosePie() 
@@ -393,16 +428,32 @@ namespace FSO.Client.UI.Panels
                     if (ObjectHover > 0)
                     {
                         var obj = vm.GetObjectById(ObjectHover);
-                        if (obj is VMAvatar && !TipIsError)
+                        if (!TipIsError)
                         {
-                            state.UIState.TooltipProperties.Show = true;
-                            state.UIState.TooltipProperties.Color = Color.Black;
-                            state.UIState.TooltipProperties.Opacity = 1;
-                            state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
-                                state.MouseState.Y);
-                            state.UIState.Tooltip = GetAvatarString(obj as VMAvatar);
-                            state.UIState.TooltipProperties.UpdateDead = false;
-                            ShowTooltip = true;
+                            if (obj is VMAvatar)
+                            {
+                                state.UIState.TooltipProperties.Show = true;
+                                state.UIState.TooltipProperties.Color = Color.Black;
+                                state.UIState.TooltipProperties.Opacity = 1;
+                                state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
+                                    state.MouseState.Y);
+                                state.UIState.Tooltip = GetAvatarString(obj as VMAvatar);
+                                state.UIState.TooltipProperties.UpdateDead = false;
+                                ShowTooltip = true;
+                            }
+                            else if (((VMGameObject)obj).Disabled > 0)
+                            {
+                                var flags = ((VMGameObject)obj).Disabled;
+                                if ((flags & VMGameObjectDisableFlags.ForSale) > 0)
+                                {
+                                    //for sale
+                                    var retailPrice = obj.MultitileGroup.Price; //wrong... should get this from catalog
+                                    var salePrice = obj.MultitileGroup.SalePrice;
+                                    ShowErrorTooltip(state, 22, false, "$" + retailPrice.ToString("##,#0"), "$" + salePrice.ToString("##,#0"));
+                                    TipIsError = false;
+                                }
+                            }
+
                         }
                     }
                     if (!ShowTooltip)
@@ -488,10 +539,11 @@ namespace FSO.Client.UI.Panels
         public override void Update(UpdateState state)
         {
             base.Update(state);
-            Cheats.Update(state);
 
             if (!vm.Ready) return;
 
+            Cheats.Update(state);
+            AvatarDS.Update();
             if (ActiveEntity == null || ActiveEntity.Dead || ActiveEntity.PersistID != SelectedSimID)
             {
                 ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SelectedSimID); //try and hook onto a sim if we have none selected.
@@ -640,6 +692,11 @@ namespace FSO.Client.UI.Panels
                     }
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            AvatarDS.ReleaseAvatars();
         }
     }
 }

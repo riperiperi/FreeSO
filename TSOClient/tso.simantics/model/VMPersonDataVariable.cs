@@ -95,6 +95,7 @@ namespace FSO.SimAntics.Model
         DecorationFlags = 78,
         DecorationDirtyFlags = 79,
         InteractionMask = 80,
+        SkillLockBase = 81,
         SkillLockBody = 81,
         SkillLockCharisma = 82,
         SkillLockCooking = 83,

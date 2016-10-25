@@ -278,8 +278,8 @@ namespace FSO.Client.UI.Panels
         {
             QueryPanel.Mode = 0;
             QueryPanel.Active = true;
+            QueryPanel.SetInfo(LotController.vm, holding.RealEnt ?? holding.Group.BaseObject, holding.IsBought);
             QueryPanel.Tab = 1;
-            QueryPanel.SetInfo(LotController.vm, holding.Group.BaseObject, holding.IsBought);
         }
         private void HolderPutDown(UIObjectSelection holding, UpdateState state)
         {

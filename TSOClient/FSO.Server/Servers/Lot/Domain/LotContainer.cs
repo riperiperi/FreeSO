@@ -1,6 +1,7 @@
 ﻿using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Utils;
+using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Lots;
@@ -89,6 +90,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     lot_id = Context.DbId,
                     location = Context.Id,
+                    category = DbLotCategory.money,
                     name = "Job Lot",
                 };
                 LotAdj = new List<DbLot>();
@@ -248,6 +250,74 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
+        private void ReturnInvalidObjects()
+        {
+            var objectsOnLot = new List<uint>();
+            var total = 0;
+            var complete = 0;
+            var wait = new AutoResetEvent(false);
+            var ents = new List<VMEntity>(Lot.Entities);
+            foreach (var ent in ents)
+            {
+                if (ent.PersistID >= 16777216 && ent is VMGameObject)
+                {
+                    if (ent.MultitileGroup.Objects.Count == 0) continue;
+                    objectsOnLot.Add(ent.PersistID);
+                    if (!Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID))
+                    {
+                        //we need to send objects in slots back to their owners inventory too, so we don't lose what was on tables etc.
+                        var sendback = new List<VMEntity>();
+                        sendback.Add(ent);
+                        ObjListAllContained(sendback, ent);
+
+                        foreach (var delE in sendback)
+                        {
+                            if (delE.MultitileGroup.Objects.Count == 0) continue;
+                            if (delE.PersistID >= 16777216 && delE is VMGameObject)
+                            {
+                                total++;
+                                VMGlobalLink.MoveToInventory(Lot, delE.MultitileGroup, (success, objid) =>
+                                {
+                                    complete++;
+                                    wait.Set();
+                                });
+
+                            } //if not persist, simply gets deleted :'(
+                            delE.PersistID = 0; //no longer representative of the object in db.
+                            delE.Delete(true, Lot.Context);
+                        }
+                    }
+                }
+            }
+
+            while (complete < total)
+            {
+                wait.Reset();
+                wait.WaitOne(16);
+            }
+
+            if (objectsOnLot.Count != 0 && !JobLot)
+            {
+                using (var da = DAFactory.Get())
+                {
+                    da.Objects.ReturnLostObjects((uint)Context.DbId, objectsOnLot);
+                }
+            }
+        }
+
+        private void ObjListAllContained(List<VMEntity> ents, VMEntity ent)
+        {
+            for (int i=0; i<ent.TotalSlots(); i++)
+            {
+                var slotE = ent.GetSlot(i);
+                if (slotE != null)
+                {
+                    ents.Add(slotE);
+                    ObjListAllContained(ents, slotE); //recursive
+                }
+            }
+        }
+
         private void CleanLot()
         {
             var avatars = new List<VMEntity>(Lot.Entities.Where(x => x is VMAvatar && x.PersistID != 0));
@@ -344,6 +414,7 @@ namespace FSO.Server.Servers.Lot.Domain
             vm.TSOState.OwnerID = LotPersist.owner_id;
             vm.TSOState.Roommates = new HashSet<uint>();
             vm.TSOState.BuildRoommates = new HashSet<uint>();
+            vm.TSOState.PropertyCategory = (byte)LotPersist.category;
             foreach (var roomie in LotRoommates)
             {
                 if (roomie.is_pending > 0) continue;
@@ -364,6 +435,20 @@ namespace FSO.Server.Servers.Lot.Domain
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(vm);
 
             vm.MyUID = uint.MaxValue - 1;
+            ReturnInvalidObjects();
+
+            foreach (var ent in vm.Entities)
+            {
+                if (ent is VMGameObject)
+                {
+                    ((VMGameObject)ent).DisableIfTSOCategoryWrong(vm.Context);
+                    if (ent.GetFlag(VMEntityFlags.Occupied))
+                    {
+                        ent.ResetData();
+                        ent.Init(vm.Context); //objects should not be occupied when we join the lot...
+                    }
+                }
+            }
         }
 
         private void DropClient(VMNetClient target)
@@ -466,12 +551,6 @@ namespace FSO.Server.Servers.Lot.Domain
                     SaveAvatars(Lot.Context.SetToNextCache.Avatars.Cast<VMAvatar>(), false);
                     AvatarSaveTicker = AVATAR_SAVE_PERIOD;
                 }
-
-                /*lock (AvatarsToSave)
-                {
-                    SaveAvatars(AvatarsToSave.Select(x => Lot.GetAvatarByPersist(x)), false);
-                    AvatarsToSave.Clear();
-                }*/
 
                 lock (SessionsToRelease)
                 {
@@ -634,7 +713,10 @@ namespace FSO.Server.Servers.Lot.Domain
             state.Budget = (uint)avatar.budget;
             state.SkinTone = avatar.skin_tone;
 
-            state.SkillLock = avatar.skilllock;
+            var now = Epoch.Now;
+            var age = (uint)((now - avatar.date) / ((long)60 * 60 * 24));
+
+            state.SkillLock = (short)(20 + age / 7);
             state.SkillLockBody = (short)avatar.lock_body;
             state.SkillLockCharisma = (short)avatar.lock_charisma;
             state.SkillLockCooking = (short)avatar.lock_cooking;
@@ -764,6 +846,7 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             //shut down this lot. Do a final save and close everything down.
             LOG.Info("Lot with dbid = " + Context.DbId + " shutting down.");
+            ReturnInvalidObjects();
             SaveRing();
             Host.Shutdown();
         }

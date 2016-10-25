@@ -91,9 +91,12 @@
     <Compile Include="Electron\ElectronPackets.cs" />
     <Compile Include="Electron\ElectronPacketType.cs" />
     <Compile Include="Electron\IElectronPacket.cs" />
+    <Compile Include="Electron\Model\FindAvatarResponseStatus.cs" />
     <Compile Include="Electron\Model\FindLotResponseStatus.cs" />
+    <Compile Include="Electron\Packets\FindAvatarResponse.cs" />
     <Compile Include="Electron\Packets\FindLotResponse.cs" />
     <Compile Include="Electron\Packets\CreateASimResponse.cs" />
+    <Compile Include="Electron\Packets\FindAvatarRequest.cs" />
     <Compile Include="Electron\Packets\FSOVMDirectToClient.cs" />
     <Compile Include="Electron\Packets\FSOVMCommand.cs" />
     <Compile Include="Electron\Packets\FSOVMTickBroadcast.cs" />

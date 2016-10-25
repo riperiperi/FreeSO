@@ -9,6 +9,7 @@ struct VertexToPixel
 	float2 BlendTextureCoord : TEXCOORD3;
 	float2 RoadTextureCoord : TEXCOORD4;
 	float2 RoadCTextureCoord : TEXCOORD5;
+	float3 Normal : NORMAL0;
 };
 
 struct VertexToPixelOut
@@ -23,6 +24,7 @@ struct VertexToPixelOut
 	float2 RoadCTextureCoord : TEXCOORD5;
 	float2 vPos : TEXCOORD6;
 	float Depth : TEXCOORD7;
+	float3 Normal : NORMAL0;
 };
 
 struct VertexToShad
@@ -49,6 +51,7 @@ VertexToPixelOut CityNoShadVS(VertexToPixel Input)
 	Output.BlendTextureCoord = Input.BlendTextureCoord;
 	Output.RoadTextureCoord = Input.RoadTextureCoord;
 	Output.RoadCTextureCoord = Input.RoadCTextureCoord;
+	Output.Normal = Input.Normal;
 	return Output;
 }
 
