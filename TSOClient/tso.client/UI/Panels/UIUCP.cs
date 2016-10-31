@@ -23,6 +23,7 @@ using FSO.Client.Controllers;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Utils;
+using FSO.Common.Rendering.Framework;
 
 namespace FSO.Client.UI.Panels
 {
@@ -401,6 +402,8 @@ namespace FSO.Client.UI.Panels
         }
 
         public void SetPanel(int newPanel) {
+            GameFacade.Cursor.SetCursor(CursorType.Hourglass);
+
             OptionsModeButton.Selected = false;
             BuyModeButton.Selected = false;
             BuildModeButton.Selected = false;
@@ -504,7 +507,7 @@ namespace FSO.Client.UI.Panels
                 PanelBlocker = null;
                 CurrentPanel = -1;
             }
-            
+            GameFacade.Cursor.SetCursor(CursorType.Normal);
         }
 
         public void UpdateWallsMode()

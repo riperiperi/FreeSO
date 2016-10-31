@@ -27,7 +27,6 @@ namespace FSO.Server.Servers.City.Handlers
 
         public void Handle(IVoltronSession session, SetInvinciblePDU packet)
         {
-
         }
     }
 }

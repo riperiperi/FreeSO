@@ -1,9 +1,11 @@
 ﻿using FSO.Client.Model;
 using FSO.Client.UI.Controls;
+using FSO.Client.UI.Framework;
 using FSO.Client.Utils;
 using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService;
+using FSO.Common.Utils;
 using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
 using FSO.Server.DataService.Model;
@@ -295,6 +297,12 @@ namespace FSO.Client.Regulators
 
         public void MessageReceived(AriesClient client, object message)
         {
+            if (message is AnnouncementMsgPDU)
+            {
+                GameThread.InUpdate(() => {
+                    UIScreen.GlobalShowAnnouncement((AnnouncementMsgPDU)message);
+                    });
+            }
             if (message is RequestClientSession || 
                 message is HostOnlinePDU){
                 this.AsyncProcessMessage(message);

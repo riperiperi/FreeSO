@@ -116,10 +116,16 @@ namespace FSO.Client.Controllers
 
         public void JoinLot(uint id)
         {
-            if (JoinLotRegulator.GetCurrentLotID() == 0)
+            var lot = JoinLotRegulator.GetCurrentLotID();
+            if (lot == 0)
             {
                 JoinLotRegulator.JoinLot(id);
                 ReconnectLotID = 0;
+            }
+            else if (lot == id)
+            {
+                //we're already on this lot. zoom in!
+                Screen.ZoomLevel = 0;
             }
             else
             {
@@ -229,6 +235,7 @@ namespace FSO.Client.Controllers
             GameFacade.Scenes.Clear();
             Terrain.Dispose();
             Screen.JoinLotProgress.FindController<JoinLotProgressController>()?.Dispose();
+            ((PersonPageController)Screen.PersonPage.Controller)?.Dispose();
         }
     }
 }

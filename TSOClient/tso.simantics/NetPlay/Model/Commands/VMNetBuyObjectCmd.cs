@@ -77,6 +77,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         private bool TryPlace(VM vm, VMAvatar caller)
         {
+            if (!vm.TSOState.CanPlaceNewUserObject(vm)) return false;
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
 
@@ -120,7 +121,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             if (Verified) return true; //set internally when transaction succeeds. trust that the verification happened.
             if (caller == null || //caller must be on lot, have build permissions
-                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate)
+                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate ||
+                !vm.TSOState.CanPlaceNewUserObject(vm))
                 return false;
 
             //get entry in catalog. first verify if it can be bought at all. (if not, error out)

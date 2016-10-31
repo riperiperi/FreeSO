@@ -65,6 +65,7 @@ namespace FSO.Server.Servers.City.Domain
 
                 var code = requestID - 0x200;
                 var jobtype = (code-1) / 0x10;
+                var jobgrade = (code - 1) % 0x10;
                 List<JobEntry> instances = null;
                 if (!JobTypeToInstance.TryGetValue(requestID, out instances))
                 {
@@ -89,15 +90,17 @@ namespace FSO.Server.Servers.City.Domain
                         GradeType = requestID,
                         Avatars = new List<uint>()
                     };
+                    var jobString = "{job:" + jobtype + ":" + jobgrade + "}";
                     DataService.Invalidate(instance.RealID, new FSO.Common.DataService.Model.Lot
                     {
                         DbId = 0,
                         Id = instance.RealID,
-                        Lot_Name = "Job Lot",
+                        Lot_Name = jobString,
                         Lot_Location = new Location(),
-                        Lot_Description = "",
+                        Lot_Description = jobString,
                         Lot_IsOnline = true,
-                        Lot_OwnerVec = new List<uint>(),
+                        Lot_LeaderID = uint.MaxValue,
+                        Lot_OwnerVec = new List<uint>() { uint.MaxValue },
                         Lot_RoommateVec = new List<uint>()
                     });
                     instances.Add(instance);

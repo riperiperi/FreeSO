@@ -40,7 +40,7 @@ namespace FSO.Client.UI.Panels.EODs
         public UIImage PersonBG3;
         public UIImage PersonBG4;
 
-        public UIPersonIcon[] Players = new UIPersonIcon[4];
+        public UIVMPersonButton[] Players = new UIVMPersonButton[4];
 
         public VMEODPizzaState State;
 
@@ -156,7 +156,7 @@ namespace FSO.Client.UI.Panels.EODs
                 {
                     if (Players[i] != null)
                         Remove(Players[i]);
-                    Players[i] = new UIPersonIcon((VMAvatar)avatar, Controller.Lot.vm, true);
+                    Players[i] = new UIVMPersonButton((VMAvatar)avatar, Controller.Lot.vm, true);
                     var bgs = new UIImage[] { PersonBG1, PersonBG2, PersonBG3, PersonBG4 };
                     Players[i].Position = bgs[i].Position + new Microsoft.Xna.Framework.Vector2(2, 2);
                     Add(Players[i]);

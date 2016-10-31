@@ -100,7 +100,7 @@
     <Compile Include="Debug\IDEHook.cs" />
     <Compile Include="GameStartProxy.cs" />
     <Compile Include="GlobalSettings.cs" />
-    <Compile Include="UI\Controls\UIPersonIcon.cs" />
+    <Compile Include="UI\Controls\UIVMPersonButton.cs" />
     <Compile Include="UI\Framework\UIExternalContainer.cs" />
     <Compile Include="UI\Model\UIMusic.cs" />
     <Compile Include="UI\Panels\EODs\EODLiveModeOpt.cs" />

@@ -21,6 +21,11 @@ namespace FSO.Server.Database.DA.Avatars
             return Context.Connection.Query<DbAvatar>("SELECT * FROM fso_avatars WHERE avatar_id = @id", new { id = id }).FirstOrDefault();
         }
 
+        public int GetPrivacyMode(uint id)
+        {
+            return Context.Connection.Query<int>("SELECT privacy_mode FROM fso_avatars WHERE avatar_id = @id", new { id = id }).FirstOrDefault();
+        }
+
         public uint Create(DbAvatar avatar)
         {
             return (uint)Context.Connection.Query<int>("INSERT INTO fso_avatars (shard_id, user_id, name, " +
@@ -47,14 +52,6 @@ namespace FSO.Server.Database.DA.Avatars
             return Context.Connection.Query<DbAvatar>(
                 "SELECT * FROM fso_avatars WHERE user_id = @user_id", 
                 new { user_id = user_id }
-            ).ToList();
-        }
-
-        public List<uint> GetRoommateIds(int lot_id)
-        {
-            return Context.Connection.Query<uint>(
-                "SELECT avatar_id FROM fso_avatars WHERE lot_id = @lot_id",
-                new { lot_id = lot_id }
             ).ToList();
         }
 
@@ -95,7 +92,6 @@ namespace FSO.Server.Database.DA.Avatars
             Context.Connection.Query("UPDATE fso_avatars SET "
                 + "motive_data = @motive_data, "
                 + "skilllock = @skilllock, "
-                + "lockpoints = @lockpoints, "
                 + "lock_mechanical = @lock_mechanical, "
                 + "lock_cooking = @lock_cooking, "
                 + "lock_charisma = @lock_charisma, "

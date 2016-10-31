@@ -54,7 +54,7 @@ namespace FSO.SimAntics
         public ulong RandomSeed;
 
         public GameGlobal Globals;
-        public VMSetToNextCache SetToNextCache;
+        public VMObjectQueries ObjectQueries;
         public VMRoomInfo[] RoomInfo;
         
         public VM VM;
@@ -65,7 +65,7 @@ namespace FSO.SimAntics
             //oldContext is passed in case we need to inherit certain things, like the ambient sound player
             this.World = world;
             this.Clock = new VMClock();
-            this.SetToNextCache = new VMSetToNextCache(this);
+            this.ObjectQueries = new VMObjectQueries(this);
 
             if (oldContext == null)
             {
@@ -456,7 +456,7 @@ namespace FSO.SimAntics
         {
             RegeneratePortalInfo();
             
-            foreach (var obj in SetToNextCache.Avatars)
+            foreach (var obj in ObjectQueries.Avatars)
             {
                 if (obj.Thread != null)
                 {
@@ -634,7 +634,7 @@ namespace FSO.SimAntics
             if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
                 RefreshLighting(room, true, new HashSet<ushort>());
 
-            SetToNextCache.RegisterObjectPos(obj);
+            ObjectQueries.RegisterObjectPos(obj);
         }
 
         public void UnregisterObjectPos(VMEntity obj)
@@ -653,12 +653,12 @@ namespace FSO.SimAntics
             if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
                 RefreshLighting(room, true, new HashSet<ushort>());
 
-            SetToNextCache.UnregisterObjectPos(obj);
+            ObjectQueries.UnregisterObjectPos(obj);
         }
 
         public bool CheckWallValid(LotTilePos pos, WallTile wall)
         {
-            var objs = SetToNextCache.GetObjectsAt(pos);
+            var objs = ObjectQueries.GetObjectsAt(pos);
             if (objs == null) return true;
             foreach (var obj in objs)
             {
@@ -669,7 +669,7 @@ namespace FSO.SimAntics
 
         public bool CheckFloorValid(LotTilePos pos, FloorTile floor)
         {
-            var objs = SetToNextCache.GetObjectsAt(pos);
+            var objs = ObjectQueries.GetObjectsAt(pos);
             if (objs == null) return true;
             foreach (var obj in objs)
             {
@@ -682,7 +682,7 @@ namespace FSO.SimAntics
         {
             if (IsOutOfBounds(pos) || (pos.Level < 1) || 
                 (pos.Level != 1 && Architecture.GetFloor(pos.TileX, pos.TileY, pos.Level).Pattern == 0)) return new VMSolidResult { Solid = true };
-            var objs = SetToNextCache.GetObjectsAt(pos);
+            var objs = ObjectQueries.GetObjectsAt(pos);
             if (objs == null) return new VMSolidResult();
             foreach (var obj in objs)
             {
@@ -715,6 +715,7 @@ namespace FSO.SimAntics
 
         public void UpdateTSOBuildableArea()
         {
+            VMBuildableAreaInfo.UpdateOverbudgetObjects(VM);
             var lotSInfo = VM.TSOState.Size;
             var area = GetTSOBuildableArea(lotSInfo);
             Architecture.UpdateBuildableArea(area, ((lotSInfo >> 8) & 255) + 2);

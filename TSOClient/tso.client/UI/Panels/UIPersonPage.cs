@@ -115,7 +115,13 @@ namespace FSO.Client.UI.Panels
         public UIButton KickOutButton { get; set; }
         public UIButton IgnoreButton { get; set; }
         public UIButton MessageButton { get; set; }
+        public UIButton FindSimButton { get; set; }
         public UIButton FindHouseButton { get; set; }
+
+        /** Person & Privacy **/
+        public Texture2D FindPersonButtonImage { get; set; }
+        public Texture2D FindPrivacyOnButtonImage { get; set; }
+        public Texture2D FindPrivacyOffButtonImage { get; set; }
 
         public UIImage OptionsTabBackgroundImage { get; set; }
         public UIImage OptionsTabImage { get; set; }
@@ -373,6 +379,8 @@ namespace FSO.Client.UI.Panels
             FindHouseButton.OnButtonClick += (UIElement e) =>{
                 FindController<CoreGameScreenController>().ShowLotPage(CurrentAvatar.Value.Avatar_LotGridXY);
             };
+            FindSimButton.OnButtonClick += FindSimClicked;
+
             ContractedCloseButton.OnButtonClick += (UIElement e) =>{
                 FindController<PersonPageController>().Close();
             };
@@ -394,7 +402,7 @@ namespace FSO.Client.UI.Panels
                 .WithMultiBinding(x =>
                 {
                     Redraw();
-                }, "Avatar_Name", "Avatar_IsOnline", "Avatar_Description");
+                }, "Avatar_Name", "Avatar_IsOnline", "Avatar_Description", "Avatar_PrivacyMode");
 
             MyAvatar = new Binding<Avatar>()
                 .WithMultiBinding(x =>
@@ -404,6 +412,46 @@ namespace FSO.Client.UI.Panels
 
             Redraw();
             Size = BackgroundExpandedImage.Size.ToVector2();
+        }
+
+        private void FindSimClicked(UIElement button)
+        {
+            if (FindSimButton.Texture == FindPersonButtonImage)
+            {
+                FindController<PersonPageController>().FindAvatarLocation();
+            }
+            else
+            {
+                byte toggleValue = 0;
+                string message = "";
+                if (FindSimButton.Texture == FindPrivacyOnButtonImage)
+                {
+                    toggleValue = 0;
+                    message = GameFacade.Strings.GetString("189", "54"); //is enabled, want to disable
+                }
+                else
+                {
+                    toggleValue = 1;
+                    message = GameFacade.Strings.GetString("189", "55"); //is disabled, want to enable
+                }
+
+                UIAlert alert = null;
+                alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Title = GameFacade.Strings.GetString("189", "53"),
+                    Message = message,
+                    Buttons = new UIAlertButton[] {
+                        new UIAlertButton(UIAlertButtonType.Yes, (btn) => {
+                            if (CurrentAvatar.Value != null) {
+                                CurrentAvatar.Value.Avatar_PrivacyMode = toggleValue;
+                                FindController<PersonPageController>().SaveValue(CurrentAvatar.Value, "Avatar_PrivacyMode");
+                            }
+                            UIScreen.RemoveDialog(alert);
+                            }),
+                        new UIAlertButton(UIAlertButtonType.No, (btn) => UIScreen.RemoveDialog(alert))
+                        },
+                }, true);
+            }
         }
 
         private void ShowJobInfo(UIElement button)
@@ -632,6 +680,7 @@ namespace FSO.Client.UI.Panels
             var isOnline = false;
             var isMe = false;
             var hasProperty = false;
+            var privacyOn = false;
 
             if (CurrentAvatar != null && CurrentAvatar.Value != null)
             {
@@ -663,24 +712,35 @@ namespace FSO.Client.UI.Panels
                     CreativitySkillBar.LockLevel = skills.AvatarSkills_LockLv_Creativity;
                 }
                 TotalLocks = CurrentAvatar.Value.Avatar_SkillsLockPoints;
+                privacyOn = CurrentAvatar.Value.Avatar_PrivacyMode > 0;
                 UpdateLockCounts();
                 PopulateJobsText(CurrentAvatar.Value);
             }
             else PopulateJobsText(new Avatar());
 
-            var isFriend = false;
-            var isEnemy = false;
-            var isNeutral = isMe ? false : true;
+            RelationshipChange();
+
+            var isFriend = RelOutLTR > 50;
+            var isEnemy = RelOutLTR < -50;
+            var isNeutral = !(isFriend || isEnemy);
 
             SelfRimImage.Visible = isOnline && isMe;
-            FriendRimImage.Visible = isOnline && isFriend;
-            EnemyRimImage.Visible = isOnline && isEnemy;
-            NeutralRimImage.Visible = isOnline && isNeutral;
-
             OfflineSelfBackgroundImage.Visible = !isOnline && isMe;
-            OfflineFriendBackgroundImage.Visible = !isOnline && isFriend;
-            OfflineEnemyBackgroundImage.Visible = !isOnline && isEnemy;
-            OfflineNeutralBackgroundImage.Visible = !isOnline && isNeutral;
+            if (!isMe)
+            {
+                FriendRimImage.Visible = isOnline && isFriend;
+                EnemyRimImage.Visible = isOnline && isEnemy;
+                NeutralRimImage.Visible = isOnline && isNeutral;
+                OfflineFriendBackgroundImage.Visible = !isOnline && isFriend;
+                OfflineEnemyBackgroundImage.Visible = !isOnline && isEnemy;
+                OfflineNeutralBackgroundImage.Visible = !isOnline && isNeutral;
+                FindSimButton.Texture = FindPersonButtonImage;
+                FindSimButton.Tooltip = GameFacade.Strings.GetString("189", "8");
+            } else
+            {
+                FindSimButton.Texture = (privacyOn) ? FindPrivacyOnButtonImage : FindPrivacyOffButtonImage;
+                FindSimButton.Tooltip = GameFacade.Strings.GetString("189", (privacyOn) ? "57":"56");
+            }
 
             MessageButton.Disabled = isMe || !isOnline;
 
@@ -736,7 +796,8 @@ namespace FSO.Client.UI.Panels
             OptionsTabImage.Visible = isOpen && isOptions;
             OptionsBackgroundImage.Visible = isOpen && isOptions;
 
-            if (isRelationships) RelationshipChange();
+            RelationshipsTabButton.Disabled = isMe;
+            OptionsTabButton.Disabled = isMe;
 
             if (isClosed)
             {
@@ -766,7 +827,7 @@ namespace FSO.Client.UI.Panels
             RelOutLTR = 0;
             RelInSTR = 0;
             RelInLTR = 0;
-            if (MyAvatar.Value != null && MyAvatar.Value.Avatar_FriendshipVec != null && CurrentAvatar.Value != null)
+            if (MyAvatar != null && MyAvatar.Value != null && MyAvatar.Value.Avatar_FriendshipVec != null && CurrentAvatar.Value != null)
             {
                 var rels = new List<Relationship>(MyAvatar.Value.Avatar_FriendshipVec);
                 foreach (var rel in rels)

@@ -140,7 +140,7 @@
     <Compile Include="Model\VMPersonDataVariable.cs" />
     <Compile Include="Model\VMRoomInfo.cs" />
     <Compile Include="Model\VMRuntimeHeadline.cs" />
-    <Compile Include="Model\VMSetToNextCache.cs" />
+    <Compile Include="Model\VMObjectQueries.cs" />
     <Compile Include="Model\VMStackObjectDefinitionVariable.cs" />
     <Compile Include="Model\VMStackObjectVariable.cs" />
     <Compile Include="NetPlay\Drivers\VMClientDriver.cs" />

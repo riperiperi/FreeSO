@@ -34,7 +34,7 @@ namespace FSO.Client.UI.Panels.LotControls
             if (Ticker++ > 60*4)
             {
                 var changed = new HashSet<uint>();
-                foreach (var avatar in vm.Context.SetToNextCache.AvatarsByPersist)
+                foreach (var avatar in vm.Context.ObjectQueries.AvatarsByPersist)
                 {
                     changed.Add(avatar.Key);
                     UpdateAvatar(avatar.Key, avatar.Value);

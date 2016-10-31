@@ -150,7 +150,7 @@ namespace FSO.SimAntics
         public VMAvatar GetAvatarByPersist(uint id)
         {
             VMAvatar result = null;
-            Context.SetToNextCache.AvatarsByPersist.TryGetValue(id, out result);
+            Context.ObjectQueries.AvatarsByPersist.TryGetValue(id, out result);
             return result;
         }
 
@@ -284,7 +284,7 @@ namespace FSO.SimAntics
             entity.ObjectID = ObjectId;
             ObjectsById.Add(entity.ObjectID, entity);
             AddToObjList(this.Entities, entity);
-            if (!entity.GhostImage) Context.SetToNextCache.NewObject(entity);
+            if (!entity.GhostImage) Context.ObjectQueries.NewObject(entity);
             ObjectId = NextObjID();
         }
 
@@ -312,7 +312,7 @@ namespace FSO.SimAntics
         {
             if (Entities.Contains(entity))
             {
-                Context.SetToNextCache.RemoveObject(entity);
+                Context.ObjectQueries.RemoveObject(entity);
                 this.Entities.Remove(entity);
                 ObjectsById.Remove(entity.ObjectID);
                 if (entity.ObjectID < ObjectId) ObjectId = entity.ObjectID; //this id is now the smallest free object id.
@@ -420,9 +420,9 @@ namespace FSO.SimAntics
         public VMSandboxRestoreState Sandbox()
         {
             var state = new VMSandboxRestoreState { Entities = Entities, ObjectId = ObjectId,
-                ObjectsById = ObjectsById, SetToNext = Context.SetToNextCache, RandomSeed = Context.RandomSeed };
+                ObjectsById = ObjectsById, ObjectQueries = Context.ObjectQueries, RandomSeed = Context.RandomSeed };
 
-            Context.SetToNextCache = new VMSetToNextCache(Context);
+            Context.ObjectQueries = new VMObjectQueries(Context);
             Entities = new List<VMEntity>();
             ObjectsById = new Dictionary<short, VMEntity>();
             ObjectId = 1;
@@ -435,7 +435,7 @@ namespace FSO.SimAntics
             Entities = state.Entities;
             ObjectsById = state.ObjectsById;
             ObjectId = state.ObjectId;
-            Context.SetToNextCache = state.SetToNext;
+            Context.ObjectQueries = state.ObjectQueries;
             Context.RandomSeed = state.RandomSeed;
         }
 
@@ -552,7 +552,7 @@ namespace FSO.SimAntics
                 }
                 realEnt.FetchTreeByName(Context);
                 Entities.Add(realEnt);
-                Context.SetToNextCache.NewObject(realEnt);
+                Context.ObjectQueries.NewObject(realEnt);
                 ObjectsById.Add(ent.ObjectID, realEnt);
             }
 
@@ -572,7 +572,9 @@ namespace FSO.SimAntics
 
             foreach (var multi in input.MultitileGroups)
             {
-                new VMMultitileGroup(multi, Context); //should self register
+                var grp = new VMMultitileGroup(multi, Context); //should self register
+                var persist = grp.BaseObject?.PersistID ?? 0;
+                if (persist != 0) Context.ObjectQueries.RegisterMultitilePersist(grp, persist);
             }
 
             foreach (var ent in Entities)
@@ -641,7 +643,7 @@ namespace FSO.SimAntics
 
                 includedEnts.Add(ent);
                 Entities.Add(realEnt);
-                Context.SetToNextCache.NewObject(realEnt);
+                Context.ObjectQueries.NewObject(realEnt);
                 ObjectsById.Add(ent.ObjectID, realEnt);
             }
 
@@ -682,7 +684,7 @@ namespace FSO.SimAntics
         public List<VMEntity> Entities;
         public Dictionary<short, VMEntity> ObjectsById;
         public short ObjectId = 1;
-        public VMSetToNextCache SetToNext;
+        public VMObjectQueries ObjectQueries;
         public ulong RandomSeed;
     }
 }

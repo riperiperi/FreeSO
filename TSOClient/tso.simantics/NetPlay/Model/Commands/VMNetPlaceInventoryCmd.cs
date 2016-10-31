@@ -65,6 +65,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         private bool TryPlace(VM vm, VMAvatar caller)
         {
+            if (!vm.TSOState.CanPlaceNewUserObject(vm)) return false;
             VMStandaloneObjectMarshal state;
 
             if ((Data?.Length ?? 0) == 0) state = null;
@@ -132,6 +133,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 if (obj is VMGameObject) ((VMTSOObjectState)obj.TSOState).OwnerID = caller.PersistID;
                 obj.PersistID = ObjectPID;
             }
+            vm.Context.ObjectQueries.RegisterMultitilePersist(CreatedGroup, ObjectPID);
 
             //is this my sim's object? try remove it from our local inventory representaton
             if (((VMTSOObjectState)CreatedGroup.BaseObject.TSOState).OwnerID == vm.MyUID)
@@ -159,7 +161,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             if (Verified) return true; //set internally when transaction succeeds. trust that the verification happened.
             if (caller == null || //caller must be on lot, be a roommate.
-                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate)
+                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate ||
+                !vm.TSOState.CanPlaceNewUserObject(vm))
                 return false;
 
             vm.GlobalLink.RetrieveFromInventory(vm, ObjectPID, caller.PersistID, (uint guid, byte[] data) =>

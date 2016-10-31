@@ -126,6 +126,7 @@ namespace FSO.Client.UI.Screens
                     {
                         if (m_ZoomLevel < 4)
                         { //coming from lot view... snap zoom % to 0 or 1
+                            Title.SetTitle(GameFacade.CurrentCityName);
                             CityRenderer.m_ZoomProgress = 1;
                             HITVM.Get().PlaySoundEvent(UIMusic.Map); //play the city music as well
                             CityRenderer.Visible = true;
@@ -266,6 +267,7 @@ namespace FSO.Client.UI.Screens
         public void Initialize(string cityName, int cityMap, TerrainController terrainController)
         {
             Title.SetTitle(cityName);
+            GameFacade.CurrentCityName = cityName;
             InitializeMap(cityMap);
             InitializeMouse();
             ZoomLevel = 5; //screen always starts at far zoom, city visible.
@@ -464,6 +466,7 @@ namespace FSO.Client.UI.Screens
                     JoinLotProgress.Progress = 100f*(0.5f+progress*0.5f);
                     break;
                 case 3:
+                    GameFacade.Cursor.SetCursor(CursorType.Normal);
                     UIScreen.RemoveDialog(JoinLotProgress);
                     ZoomLevel = 1;
                     ucp.SetInLot(true);

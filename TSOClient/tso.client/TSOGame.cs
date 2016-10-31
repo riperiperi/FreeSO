@@ -90,7 +90,7 @@ namespace FSO.Client
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
             GameFacade.GraphicsDeviceManager = Graphics;
-            GameFacade.Cursor = new CursorManager(this.Window);
+            GameFacade.Cursor = new CursorManager(GraphicsDevice);
             if (!GameFacade.Linux) GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""));
 
             /** Init any computed values **/

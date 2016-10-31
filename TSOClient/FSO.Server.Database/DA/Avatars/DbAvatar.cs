@@ -19,17 +19,14 @@ namespace FSO.Server.Database.DA.Avatars
         public ulong body { get; set; }
         public string description { get; set; }
         public int budget { get; set; }
-        public int? lot_id { get; set; }
-        public ushort lot_permissions { get; set; }
         public byte privacy_mode { get; set; }
 
         //lot persist state beyond this point (very mutable)
 
         public byte[] motive_data { get; set; }
         //locks
-
-        public byte skilllock { get; set; }
-        public ushort lockpoints { get; set; }
+        
+        public byte skilllock { get; set; } //number of skill locks we had at last avatar save. this is usually handled by data service.
         public ushort lock_mechanical { get; set; }
         public ushort lock_cooking { get; set; }
         public ushort lock_charisma { get; set; }

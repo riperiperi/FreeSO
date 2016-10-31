@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Rendering.Framework;
 
 namespace FSO.Client.UI.Panels
 {
@@ -63,6 +65,12 @@ namespace FSO.Client.UI.Panels
                 Y = 122
             };
             this.Add(m_ProgressLabel);
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            if (Visible) GameFacade.Cursor.SetCursor(CursorType.Hourglass);
         }
 
         public float Progress

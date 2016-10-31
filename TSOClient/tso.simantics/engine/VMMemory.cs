@@ -602,7 +602,6 @@ namespace FSO.SimAntics.Engine.Utils
                     return true;
 
                 case VMVariableScope.Parameters: //9
-                    /** Not too sure if this is illegal **/
                     context.Args[data] = value;
                     return true;
 

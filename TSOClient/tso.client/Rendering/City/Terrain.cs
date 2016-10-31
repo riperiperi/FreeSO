@@ -1316,35 +1316,30 @@ namespace FSO.Client.Rendering.City
 					    Triggered = true;
 					    m_TargVOffX += m_ScrollSpeed;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowRight);
-					    //changeCursor("right.cur")
 				    }
                     if (m_MouseState.X < 32) 
                     {
 					    Triggered = true;
 					    m_TargVOffX -= m_ScrollSpeed;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowLeft);
-					    //changeCursor("left.cur");
 				    }
                     if (m_MouseState.Y > m_ScrHeight - 32)
                     {
 					    Triggered = true;
 					    m_TargVOffY -= m_ScrollSpeed;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowDown);
-					    //changeCursor("down.cur");
 				    }
                     if (m_MouseState.Y < 32)
                     {
 					    Triggered = true;
                         m_TargVOffY += m_ScrollSpeed;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowUp);
-					    //changeCursor("up.cur");
 				    } 
 
 				    if (!Triggered)
                     {
 					    m_ScrollSpeed = 0.1f; //not scrolling. Reset speed, set default cursor.
                         CursorManager.INSTANCE.SetCursor(CursorType.Normal);
-					    //changeCursor("auto", true); AKA the default cursor.
 				    } 
                     else
 					    m_ScrollSpeed += 0.005f; //if edge scrolling make the speed increase the longer the mouse is at the edge.

@@ -2,6 +2,8 @@
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels;
+using FSO.Common.Rendering.Framework;
+using FSO.Common.Utils;
 using FSO.Server.Protocol.Electron.Model;
 using System;
 using System.Collections.Generic;
@@ -35,6 +37,8 @@ namespace FSO.Client.Controllers
         private void Regulator_OnError(object data)
         {
             //UIScreen.RemoveDialog(View);
+
+            GameFacade.Cursor.SetCursor(CursorType.Normal);
 
             var errorTitle = GameFacade.Strings.GetString("211", "45");
             var errorBody = GameFacade.Strings.GetString("211", "45");
@@ -79,51 +83,52 @@ namespace FSO.Client.Controllers
         {
             var progress = 0;
 
-            switch (state)
+            GameThread.InUpdate(() =>
             {
-                case "Disconnected":
-                    UIScreen.RemoveDialog(View);
-                    break;
+                switch (state)
+                {
+                    case "Disconnected":
+                        UIScreen.RemoveDialog(View);
+                        break;
 
-                case "SelectLot":
-                    UIScreen.GlobalShowDialog(View, true);
-                    break;
+                    case "SelectLot":
+                        UIScreen.GlobalShowDialog(View, true);
+                        break;
 
-                case "FindLot":
-                    break;
+                    case "FindLot":
+                        break;
 
-                case "FoundLot":
-                case "OpenSocket":
-                case "SocketOpen":
-                    progress = 1;
-                    break;
+                    case "FoundLot":
+                    case "OpenSocket":
+                    case "SocketOpen":
+                        progress = 1;
+                        break;
 
-                case "HostOnline":
-                case "RequestClientSession":
-                    progress = 2;
-                    break;
+                    case "HostOnline":
+                    case "RequestClientSession":
+                        progress = 2;
+                        break;
 
-                case "PartiallyConnected":
-                    progress = 3;
-                    break;
+                    case "PartiallyConnected":
+                        progress = 3;
+                        break;
 
-                case "LotCommandStream":
-                    progress = 4;
-                    break;
-            }
-
-
-            var progressPercent = (((float)progress) / 6.0f) * 100;
-            if (progress < 4) View.Progress = progressPercent;
-            switch (progress)
-            {
-                case 0:
-                    View.ProgressCaption = GameFacade.Strings.GetString("211", "4");
-                    break;
-                default:
-                    View.ProgressCaption = GameFacade.Strings.GetString("211", (21 + progress).ToString());
-                    break;
-            }
+                    case "LotCommandStream":
+                        progress = 4;
+                        break;
+                }
+                var progressPercent = (((float)progress) / 6.0f) * 100;
+                if (progress < 4) View.Progress = progressPercent;
+                switch (progress)
+                {
+                    case 0:
+                        View.ProgressCaption = GameFacade.Strings.GetString("211", "4");
+                        break;
+                    default:
+                        View.ProgressCaption = GameFacade.Strings.GetString("211", (21 + progress).ToString());
+                        break;
+                }
+            });
         }
     }
 }

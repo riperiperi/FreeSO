@@ -13,6 +13,7 @@ using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.Lot.Lifecycle;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,8 @@ namespace FSO.Server.Servers.Lot.Domain
 {
     public class LotHost
     {
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
+
         private Dictionary<int, LotHostEntry> Lots = new Dictionary<int, LotHostEntry>();
         private LotServerConfiguration Config;
         private IDAFactory DAFactory;
@@ -31,6 +34,9 @@ namespace FSO.Server.Servers.Lot.Domain
         private IDataServiceSync<FSO.Common.DataService.Model.Lot> LotStatusSync;
         private IDataServiceSync<FSO.Common.DataService.Model.Lot> LotRoomiesSync;
         private CityConnections CityConnections;
+
+        private bool AwaitingShutdown;
+        private TaskCompletionSource<bool> ShutdownWait = new TaskCompletionSource<bool>();
 
         public LotHost(LotServerConfiguration config, IDAFactory da, IKernel kernel, IDataServiceSyncFactory ds, CityConnections connections)
         {
@@ -41,6 +47,45 @@ namespace FSO.Server.Servers.Lot.Domain
 
             LotStatusSync = ds.Get<FSO.Common.DataService.Model.Lot>("Lot_NumOccupants", "Lot_IsOnline", "Lot_SpotLightText");
             LotRoomiesSync = ds.Get<FSO.Common.DataService.Model.Lot>("Lot_RoommateVec");
+        }
+
+        public async Task<bool> Shutdown()
+        {
+            bool noWaiting = true;
+            lock (Lots)
+            {
+                if (AwaitingShutdown) return false;
+                
+                LOG.Info("Lot server "+ Config.Call_Sign + " shutting down...");
+                AwaitingShutdown = true;
+                foreach (var lot in Lots)
+                {
+                    noWaiting = false;
+                    lot.Value.ForceShutdown(false);
+                }
+            }
+
+            if (noWaiting)
+            {
+                LOG.Info("Lot server " + Config.Call_Sign + " was hosting nothing!");
+                CityConnections.Stop();
+                return true;
+            }
+            return await ShutdownWait.Task;
+        }
+
+        public void ShutdownComplete(LotHostEntry entry)
+        {
+            lock (Lots)
+            {
+                if (AwaitingShutdown && Lots.Count == 0)
+                {
+                    //this lot server has completely shut down!
+                    LOG.Info("Lot server "+ Config.Call_Sign + " successfully shut down!");
+                    CityConnections.Stop();
+                    ShutdownWait.SetResult(true);
+                }
+            }
         }
 
         public void Sync(LotContext context, FSO.Common.DataService.Model.Lot lot)
@@ -109,17 +154,25 @@ namespace FSO.Server.Servers.Lot.Domain
         private LotHostEntry GetLot(IVoltronSession session)
         {
             var lotId = (int?)session.GetAttribute("currentLot");
-            if(lotId == null)
+            if (lotId == null)
             {
                 return null;
             }
-            return GetLot(lotId.Value);
+            lock (Lots)
+            {
+                if (Lots.ContainsKey(lotId.Value))
+                {
+                    return Lots[lotId.Value];
+                }
+            }
+            return null;
         }
 
         private LotHostEntry GetLot(int id)
         {
             lock (Lots)
             {
+                if (AwaitingShutdown) return null;
                 if (Lots.ContainsKey(id))
                 {
                     return Lots[id];
@@ -132,7 +185,8 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             lock (Lots)
             {
-                if(Lots.Values.Count >= Config.Max_Lots)
+                if (AwaitingShutdown) return null;
+                if (Lots.Values.Count >= Config.Max_Lots)
                 {
                     //No room
                     return null;
@@ -223,7 +277,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private AutoResetEvent BackgroundNotify = new AutoResetEvent(false);
         private Thread BackgroundThread;
         private List<Callback> BackgroundTasks = new List<Callback>();
-
+        private bool ShuttingDown;
 
         public LotHostEntry(LotHost host, IKernel kernel, IDAFactory da, LotServerConfiguration config)
         {
@@ -361,7 +415,7 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             lock (_Visitors)
             {
-                if(_Visitors.Count >= 24)
+                if(_Visitors.Count >= 64 || ShuttingDown)
                 {
                     //Full
                     return false;
@@ -413,12 +467,34 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void Shutdown()
         {
+            if (!ShuttingDown) ForceShutdown(true);
             Host.RemoveLot(((Context.Id & 0x40000000) > 0)?(int)Context.Id:Context.DbId);
             SetOnline(false);
             SetSpotlight(false);
             ReleaseLotClaim();
             BackgroundThread.Abort();
+            Host.ShutdownComplete(this);
             MainThread.Abort();
+        }
+
+        public void ForceShutdown(bool lotClosed)
+        {
+            //drop all clients. do not accept new ones.
+            lock (_Visitors)
+            {
+                if (ShuttingDown) return;
+                ShuttingDown = true;
+                foreach (var visitor in _Visitors)
+                {
+                    if (!lotClosed) visitor.Value.SetAttribute("returnClaim", false);
+                    visitor.Value.Close();
+                }
+            }
+            if (!lotClosed)
+            {
+                //we still need to close the lot safely. Start a rapid simulation to end the lot asap.
+                Container.ForceShutdown();
+            }
         }
 
         public void ReleaseLotClaim()

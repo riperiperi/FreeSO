@@ -26,6 +26,12 @@ angular.module('admin', ['ngSanitize', 'restangular', 'ui.router', 'ngMaterial',
             templateUrl: 'app/admin/users/users.html',
             requiresAuth: true,
             resolve: resolve
+        }).state('admin.shards', {
+            url: '/shards',
+            controller: 'ShardsCtrl',
+            templateUrl: 'app/admin/shards/shards.html',
+            requiresAuth: true,
+            resolve: resolve
         });;
 
     $urlRouterProvider.otherwise('/login');

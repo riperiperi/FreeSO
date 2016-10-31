@@ -5,6 +5,7 @@ using Ninject.Parameters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,8 +13,9 @@ namespace FSO.Server
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
+            AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve;
             Type toolType = null;
             object toolOptions = null;
 
@@ -51,7 +53,13 @@ namespace FSO.Server
             );
 
             var tool = (ITool)kernel.Get(toolType, new ConstructorArgument("options", toolOptions));
-            tool.Run();
+            return tool.Run();
+
+        }
+        private static Assembly AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            throw new Exception("um?");
+            return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.FullName == args.Name);
         }
     }
 }

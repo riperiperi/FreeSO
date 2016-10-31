@@ -15,7 +15,9 @@ namespace FSO.Server.Protocol.Gluon
             typeof(AdvertiseCapacity),
             typeof(TransferClaim),
             typeof(TransferClaimResponse),
-            typeof(RequestLotClientTermination)
+            typeof(RequestLotClientTermination),
+            typeof(ShardShutdownRequest),
+            typeof(ShardShutdownCompleteResponse)
         };
 
         static GluonPackets()

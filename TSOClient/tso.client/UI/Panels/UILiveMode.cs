@@ -31,7 +31,7 @@ namespace FSO.Client.UI.Panels
     {
         public UIImage Background;
         public UIImage Divider;
-        public UIPersonIcon Thumb;
+        public UIVMPersonButton Thumb;
         public UIMotiveDisplay MotiveDisplay;
         public Texture2D DividerImg { get; set; }
         public Texture2D PeopleListBackgroundImg { get; set; }
@@ -411,7 +411,7 @@ namespace FSO.Client.UI.Panels
                 if (SelectedAvatar != LastSelected)
                 {
                     if (Thumb != null) Remove(Thumb);
-                    Thumb = new UIPersonIcon(SelectedAvatar, LotController.vm, false);
+                    Thumb = new UIVMPersonButton(SelectedAvatar, LotController.vm, false);
                     UpdateThumbPosition();
                     Add(Thumb);
                     LastSelected = SelectedAvatar;

@@ -16,7 +16,7 @@ namespace FSO.Client.UI.Panels
         private VM vm;
         private HashSet<VMAvatar> Display;
         private int Page;
-        private List<UIPersonIcon> CurrentIcons;
+        private List<UIVMPersonButton> CurrentIcons;
 
         public int Columns = 9;
         public int Rows = 2;
@@ -26,7 +26,7 @@ namespace FSO.Client.UI.Panels
             this.vm = vm;
             Page = 0;
             Display = new HashSet<VMAvatar>();
-            CurrentIcons = new List<UIPersonIcon>();
+            CurrentIcons = new List<UIVMPersonButton>();
             UpdatePeople();
         }
 
@@ -44,7 +44,7 @@ namespace FSO.Client.UI.Panels
                 }  
             }
 
-            foreach (var sim in vm.Context.SetToNextCache.Avatars)
+            foreach (var sim in vm.Context.ObjectQueries.Avatars)
             {
                 if (!Display.Contains(sim) && sim.PersistID != vm.MyUID)
                 {
@@ -80,7 +80,7 @@ namespace FSO.Client.UI.Panels
                 {
                     var ind = startInd + x + Columns * y;
                     if (ind < Display.Count) {
-                        var icon = new UIPersonIcon(Display.ElementAt(ind), vm, false);
+                        var icon = new UIVMPersonButton(Display.ElementAt(ind), vm, false);
                         CurrentIcons.Add(icon);
                         Add(icon);
                         icon.Position = new Vector2(x*(34+12), y*(34+11));

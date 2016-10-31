@@ -246,6 +246,23 @@ namespace FSO.LotView
                     case CursorType.ArrowRight:
                         scrollVector = basis[0];
                         break;
+
+                    case CursorType.ArrowUpLeft:
+                        scrollVector = -basis[1] - basis[0];
+                        break;
+
+                    case CursorType.ArrowUpRight:
+                        scrollVector = basis[0] - basis[1];
+                        break;
+
+                    case CursorType.ArrowDownLeft:
+                        scrollVector = basis[1] - basis[0];
+                        break;
+
+                    case CursorType.ArrowDownRight:
+                        scrollVector = basis[1] + basis[0];
+                        break;
+
                 }
 
                 /** We need to scroll **/
@@ -292,7 +309,7 @@ namespace FSO.LotView
                     output[0] = new Vector2(1, 1);
                     break;
             }
-            int multiplier = (1 << (3 - (int)State.Zoom));
+            int multiplier = ((1 << (3 - (int)State.Zoom)) * 3) / 2;
             output[0] *= multiplier;
             output[1] *= multiplier;
             return output;

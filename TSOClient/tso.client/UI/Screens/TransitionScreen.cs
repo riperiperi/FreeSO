@@ -33,6 +33,7 @@ namespace FSO.Client.UI.Screens
         public TransitionScreen()
         {
             /** Background image **/
+            GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Hourglass);
             m_Background = new UISetupBackground();
 
             var lbl = new UILabel();

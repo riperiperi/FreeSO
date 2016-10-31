@@ -15,9 +15,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     public class VMNetInteractionCancelCmd : VMNetCommandBodyAbstract
     {
         public ushort ActionUID;
-        public override bool Execute(VM vm)
+        public override bool Execute(VM vm, VMAvatar caller)
         {
-            VMEntity caller = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
             if (caller == null) return false;
 
             caller.Thread.CancelAction(ActionUID);

@@ -1,4 +1,5 @@
 ﻿using FSO.Server.Framework.Gluon;
+using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Protocol.Gluon.Packets;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace FSO.Server.Servers.City.Domain
     {
         private List<LotServerState> Servers = new List<LotServerState>();
         private Dictionary<string, LotServerState> ServersByCallsign = new Dictionary<string, LotServerState>();
+        private TaskCompletionSource<bool> AllServersShutdown;
+        private HashSet<IGluonSession> ServersShutdown;
 
         public Task<object> Pick(uint claimId)
         {
@@ -42,6 +45,38 @@ namespace FSO.Server.Servers.City.Domain
                 LotServerState state = null;
                 if (ServersByCallsign.TryGetValue(callSign, out state)) result = state.Session;
                 return result;
+            }
+        }
+
+        public async Task<bool> ShutdownAllLotServers(ShutdownType type)
+        {
+            if (AllServersShutdown != null) return false;
+            AllServersShutdown = new TaskCompletionSource<bool>();
+            ServersShutdown = new HashSet<IGluonSession>();
+            lock (Servers)
+            {
+                lock (ServersShutdown) {
+                    foreach (var server in Servers)
+                    {
+                        var s = server.Session;
+                        ServersShutdown.Add(s);
+                        s.Write(new ShardShutdownRequest
+                        {
+                            ShardId = 0,
+                            Type = type
+                        });
+                    }
+                }
+            }
+            return await AllServersShutdown.Task;
+        }
+
+        public void RegisterShutdown(IGluonSession session)
+        {
+            lock (ServersShutdown)
+            {
+                ServersShutdown.Remove(session);
+                if (ServersShutdown.Count == 0) AllServersShutdown.SetResult(true);
             }
         }
 

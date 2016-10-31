@@ -192,6 +192,7 @@ namespace FSO.Client
         {
             GameThread.NextUpdate(x =>
             {
+                GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Normal); //reset cursor
                 if (CurrentController != null)
                 {
                     if (CurrentController is IDisposable)

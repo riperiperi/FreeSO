@@ -27,7 +27,7 @@ namespace FSO.Server
             this.DAFactory = factory;
         }
 
-        public void Run()
+        public int Run()
         {
             Console.WriteLine("Starting database init");
 
@@ -72,6 +72,7 @@ namespace FSO.Server
                     Console.WriteLine("No changes applied");
                 }
             }
+            return 0;
         }
     }
 }

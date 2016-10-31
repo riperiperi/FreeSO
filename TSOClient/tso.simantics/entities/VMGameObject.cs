@@ -136,7 +136,6 @@ namespace FSO.SimAntics
 
         public override void Tick()
         {
-            base.Tick();
             if ((Disabled & VMGameObjectDisableFlags.PendingRoommateDeletion) > 0)
             {
                 //can we be deleted and moved back to inventory? maybe some stuff on us needs to be first.
@@ -155,6 +154,24 @@ namespace FSO.SimAntics
                     }
                 }
             }
+
+            if ((Disabled & VMGameObjectDisableFlags.ObjectLimitExceeded) > 0) { 
+                if ((Disabled & VMGameObjectDisableFlags.ObjectLimitThreadDisable) > 0) return;
+                else if (!IsInUse(Thread.Context, true) && !PartOfPortal())
+                {
+                    Disabled |= VMGameObjectDisableFlags.ObjectLimitThreadDisable;
+                }
+            }
+            base.Tick();
+        }
+
+        public bool PartOfPortal()
+        {
+            foreach (var obj in MultitileGroup.Objects)
+            {
+                if (obj.EntryPoints[15].ActionFunction != 0) return true;
+            }
+            return false;
         }
 
         private VMEntity DeepestObjInSlot(VMEntity pt)
@@ -530,6 +547,7 @@ namespace FSO.SimAntics
         //past this point disabled objects appear in grayscale.
         LotCategoryWrong = 1 << 2,
         ObjectLimitExceeded = 1 << 3, //when too many objects are on a lot and the object lot is lowered, the last few objects are disabled.
-        PendingRoommateDeletion = 1 << 4
+        PendingRoommateDeletion = 1 << 4,
+        ObjectLimitThreadDisable = 1 << 5 //activated when object limit exceeded and object is no longer in use.
     }
 }

@@ -45,7 +45,7 @@ namespace FSO.Client.UI.Panels
     public class UILotControl : UIContainer, IDisposable
     {
         private UIMouseEventRef MouseEvt;
-        private bool MouseIsOn;
+        public bool MouseIsOn;
 
         private UIPieMenu PieMenu;
         private UIChatPanel ChatPanel;
@@ -81,7 +81,7 @@ namespace FSO.Client.UI.Panels
         private int OldMY;
         private bool FoundMe; //if false and avatar changes, center. Should center on join lot.
 
-        private bool RMBScroll;
+        public bool RMBScroll;
         private int RMBScrollX;
         private int RMBScrollY;
 
@@ -272,6 +272,7 @@ namespace FSO.Client.UI.Panels
             else if (type == UIMouseEventType.MouseOut)
             {
                 MouseIsOn = false;
+                GameFacade.Cursor.SetCursor(CursorType.Normal);
                 Tooltip = null;
             }
             else if (type == UIMouseEventType.MouseDown)
@@ -307,7 +308,6 @@ namespace FSO.Client.UI.Panels
                         if (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)
                         {
                             var flags = ((VMGameObject)obj).Disabled;
-                            //TODO: Object Purchase
 
                             if ((flags & VMGameObjectDisableFlags.ForSale) > 0)
                             {
@@ -492,8 +492,9 @@ namespace FSO.Client.UI.Panels
                     }
                 } else
                 {
+
                     cursor = CursorType.Normal;
-                }
+                } 
 
                 CursorManager.INSTANCE.SetCursor(cursor);
             }
@@ -591,6 +592,25 @@ namespace FSO.Client.UI.Panels
                     {
                         scrollBy = new Vector2(state.MouseState.X - RMBScrollX, state.MouseState.Y - RMBScrollY);
                         scrollBy *= 0.0005f;
+
+                        var angle = (Math.Atan2(state.MouseState.X - RMBScrollX, (RMBScrollY - state.MouseState.Y)*2) / Math.PI) * 4;
+                        angle += 8;
+                        angle %= 8;
+
+                        CursorType type = CursorType.ArrowUp;
+                        switch ((int)Math.Round(angle))
+                        {
+                            case 0: type = CursorType.ArrowUp; break;
+                            case 1: type = CursorType.ArrowUpRight; break;
+                            case 2: type = CursorType.ArrowRight; break;
+                            case 3: type = CursorType.ArrowDownRight; break;
+                            case 4: type = CursorType.ArrowDown; break;
+                            case 5: type = CursorType.ArrowDownLeft; break;
+                            case 6: type = CursorType.ArrowLeft; break;
+                            case 7: type = CursorType.ArrowUpLeft; break;
+                        }
+                        GameFacade.Cursor.SetCursor(type);
+                       Console.WriteLine(Math.Round(angle) % 8);
                     }
                     World.Scroll(scrollBy);
                     scrolled = true;
@@ -608,10 +628,14 @@ namespace FSO.Client.UI.Panels
                     }
                     else
                     {
-                        RMBScroll = false;
                         if (!scrolled && GlobalSettings.Default.EdgeScroll && !state.TouchMode) scrolled = World.TestScroll(state);
                     }
+                }
 
+                if (state.MouseState.RightButton != ButtonState.Pressed)
+                {
+                    if (RMBScroll) GameFacade.Cursor.SetCursor(CursorType.Normal);
+                    RMBScroll = false;
                 }
 
                 if (LiveMode) LiveModeUpdate(state, scrolled);

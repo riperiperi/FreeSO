@@ -46,6 +46,7 @@ namespace FSO.Client
         public static UpdateState LastUpdateState;
         public static Thread GameThread;
         public static bool Focus = true;
+        public static string CurrentCityName = "";
 
         public static bool Linux;
         public static bool DirectX;
@@ -54,14 +55,6 @@ namespace FSO.Client
         public static UIMessageController MessageController = new UIMessageController();
 
         //Entries received from city server, see UIPacketHandlers.OnCityTokenResponse()
-
-//TODO: Merge conflict here, was this removed?
-        /// <summary>
-        /// Place where the game can store cached values, e.g. pre modified textures to improve
-        /// 2nd load speed, etc.
-        /// </summary>
-        public static string CacheDirectory;
-        public static string CacheRoot = @"TSOCache/";
 
         public static void Init()
         {

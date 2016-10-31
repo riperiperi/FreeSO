@@ -31,7 +31,10 @@ namespace FSO.Server
 
         private bool Running;
         private List<AbstractServer> Servers;
+        private List<CityServer> CityServers;
+        private ApiServer ActiveApiServer;
         private RunServerOptions Options;
+        private Protocol.Gluon.Model.ShutdownType ShutdownMode;
 
         public ToolRunServer(RunServerOptions options, ServerConfiguration config, IKernel kernel)
         {
@@ -40,20 +43,20 @@ namespace FSO.Server
             this.Kernel = kernel;
         }
 
-        public void Run()
+        public int Run()
         {
             LOG.Info("Starting server");
 
             if(Config.Services == null)
             {
                 LOG.Warn("No services found in the configuration file, exiting");
-                return;
+                return 1;
             }
 
             if (!Directory.Exists(Config.GameLocation))
             {
                 LOG.Fatal("The directory specified as gameLocation in config.json does not exist");
-                return;
+                return 1;
             }
 
             Directory.CreateDirectory(Config.SimNFS);
@@ -71,13 +74,22 @@ namespace FSO.Server
             Kernel.Load<ServerDomainModule>();
 
             Servers = new List<AbstractServer>();
+            CityServers = new List<CityServer>();
             Kernel.Bind<IServerNFSProvider>().ToConstant(new ServerNFSProvider(Config.SimNFS));
 
             if(Config.Services.Api != null &&
                 Config.Services.Api.Enabled)
             {
+                var childKernel = new ChildKernel(
+                    Kernel
+                );
+
+                var api = childKernel.Get<ApiServer>(new ConstructorArgument("config", Config.Services.Api));
+                api.OnRequestShutdown += RequestedShutdown;
+                api.OnBroadcastMessage += BroadcastMessage;
+                ActiveApiServer = api;
                 Servers.Add(
-                    Kernel.Get<ApiServer>(new ConstructorArgument("config", Config.Services.Api))
+                    api
                 );
             }
 
@@ -90,9 +102,9 @@ namespace FSO.Server
                     new ShardDataServiceModule(Config.SimNFS)
                 );
 
-                Servers.Add(
-                    childKernel.Get<CityServer>(new ConstructorArgument("config", cityServer))
-                );
+                var city = childKernel.Get<CityServer>(new ConstructorArgument("config", cityServer));
+                CityServers.Add(city);
+                Servers.Add(city);
             }
 
             foreach(var lotServer in Config.Services.Lots)
@@ -108,8 +120,14 @@ namespace FSO.Server
                 );
             }
 
+            foreach (var server in Servers)
+            {
+                server.OnInternalShutdown += ServerInternalShutdown;
+            }
+
             Running = true;
 
+            AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
 
             NetworkDebugger debugInterface = null;
@@ -142,15 +160,116 @@ namespace FSO.Server
                 while (Running)
                 {
                     Thread.Sleep(1000);
+                    lock (Servers)
+                    {
+                        if (Servers.Count == 0)
+                        {
+                            LOG.Info("All servers shut down, shutting down program...");
+
+                            /*var domain = AppDomain.CreateDomain("RebootApp");
+
+                            var assembly = "FSO.Server.Updater, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
+                            var type = "FSO.Server.Updater.Program";
+
+                            var updater = typeof(FSO.Server.Updater.Program);
+
+                            domain.CreateInstance(assembly, type);
+                            AppDomain.Unload(AppDomain.CurrentDomain);*/
+                            return 2 + (int)ShutdownMode;
+                        }
+                    }
+                }
+            }
+            return 1;
+        }
+
+        private int[] ShutdownAlertTimings = new int[]
+        {
+            30*60, //30 mins
+            15*60, //15 mins
+            10*60,
+            5*60,
+            4*60,
+            3*60,
+            2*60,
+            60,
+            30
+        };
+
+        private void BroadcastMessage(string sender, string title, string message)
+        {
+            //TODO: select which shards to operate on
+            foreach (var city in CityServers)
+            {
+                city.Sessions.All().Broadcast(new Protocol.Voltron.Packets.AnnouncementMsgPDU()
+                {
+                    SenderID = "??" + sender,
+                    Message = "\r\n"+message,
+                    Subject = title
+                });
+            }
+        }
+
+        private async void RequestedShutdown(uint time, Protocol.Gluon.Model.ShutdownType type)
+        {
+            //TODO: select which shards to operate on
+            ShutdownMode = type;
+            LOG.Info("Shutdown requested in "+time+" seconds.");
+
+            var remaining = (int)time;
+            foreach (var alertTime in ShutdownAlertTimings)
+            {
+                if (remaining < alertTime) continue;
+                //wait until this alert time and display an announcement
+                var waitTime = remaining - alertTime;
+                await Task.Delay((int)waitTime * 1000);
+                remaining -= waitTime;
+
+                string timeString = (remaining % 60 == 0 && remaining > 60) ? ((remaining / 60) + " minutes") : (remaining + " seconds");
+                BroadcastMessage("FreeSO Server", "Shutting down", "The game server will go down for maintainance in " + timeString + ".");
+            }
+
+            await Task.Delay((int)remaining * 1000);
+            
+            LOG.Info("Shutdown commencing.");
+            List<Task<bool>> ShutdownTasks = new List<Task<bool>>();
+            foreach (var city in CityServers)
+            {
+                ShutdownTasks.Add(city.Shutdown(type));
+            }
+            await Task.WhenAll(ShutdownTasks.ToArray());
+            LOG.Info("Successfully shut down all city servers!");
+            if (ActiveApiServer != null) {
+                lock (Servers)
+                {
+                    ActiveApiServer.Shutdown();
+                    Servers.Remove(ActiveApiServer);
                 }
             }
         }
 
+        private void ServerInternalShutdown(AbstractServer server, Protocol.Gluon.Model.ShutdownType data)
+        {
+            lock (Servers)
+            {
+                Servers.Remove(server);
+            }
+            ShutdownMode = data;
+        }
+
+        private void CurrentDomain_DomainUnload(object sender, EventArgs e)
+        {
+            CurrentDomain_ProcessExit(sender, e);
+        }
+
         private void CurrentDomain_ProcessExit(object sender, EventArgs e)
         {
-            foreach (AbstractServer server in Servers)
+            lock (Servers)
             {
-                server.Shutdown();
+                foreach (AbstractServer server in Servers)
+                {
+                    server.Shutdown();
+                }
             }
 
             Running = false;

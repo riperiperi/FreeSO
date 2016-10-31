@@ -800,7 +800,7 @@ namespace FSO.SimAntics
             }
             else
             {
-                foreach (var ava in context.SetToNextCache.Avatars)
+                foreach (var ava in context.ObjectQueries.Avatars)
                 {
                     foreach (var item in ava.Thread.Stack)
                     {
@@ -826,14 +826,13 @@ namespace FSO.SimAntics
             else
             {
                 if (GetFlag(VMEntityFlags.Occupied)) return true;
-                foreach (var ava in context.SetToNextCache.Avatars)
+                foreach (var ava in context.ObjectQueries.Avatars)
                 {
                     foreach (var item in ava.Thread.Stack)
                     {
                         if (item.Callee == this) return true;
                     }
                 }
-
             }
             return false;
         }

@@ -43,15 +43,23 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             //some off lot changes may have occurred. Keep things up to date if we're caught between database sync points (TODO: right now never, but should happen on every roomie change).
             if (AvatarState.Permissions > VMTSOAvatarPermissions.Visitor && AvatarState.Permissions < VMTSOAvatarPermissions.Admin)
             {
-                vm.TSOState.Roommates.Add(AvatarState.PersistID);
-                if (AvatarState.Permissions > VMTSOAvatarPermissions.Roommate)
-                    vm.TSOState.BuildRoommates.Add(AvatarState.PersistID);
-                else
-                    vm.TSOState.BuildRoommates.Remove(AvatarState.PersistID);
+                if (!vm.TSOState.Roommates.Contains(AvatarState.PersistID))
+                {
+                    vm.TSOState.Roommates.Add(AvatarState.PersistID);
+                    if (AvatarState.Permissions > VMTSOAvatarPermissions.Roommate)
+                        vm.TSOState.BuildRoommates.Add(AvatarState.PersistID);
+                    else
+                        vm.TSOState.BuildRoommates.Remove(AvatarState.PersistID);
+                    VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
+                }
             } else
             {
-                vm.TSOState.Roommates.Remove(AvatarState.PersistID);
-                vm.TSOState.BuildRoommates.Remove(AvatarState.PersistID);
+                if (vm.TSOState.Roommates.Contains(AvatarState.PersistID))
+                {
+                    vm.TSOState.Roommates.Remove(AvatarState.PersistID);
+                    vm.TSOState.BuildRoommates.Remove(AvatarState.PersistID);
+                    VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
+                }
             }
 
             if (oldRoomCount != vm.TSOState.Roommates.Count)
@@ -68,7 +76,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 }
             }
 
-            vm.Context.SetToNextCache.RegisterAvatarPersist(avatar, avatar.PersistID);
+            vm.Context.ObjectQueries.RegisterAvatarPersist(avatar, avatar.PersistID);
             if (ActorUID == uint.MaxValue - 1)
             {
                 avatar.SetValue(VMStackObjectVariable.Hidden, 1);

@@ -1,0 +1,56 @@
+<md-fab-toolbar count="toolbar.count" md-direction='left' class="md-fab-bottom-right">
+    <md-fab-trigger class="align-with-text">
+        <md-button aria-label="menu" class="md-fab md-primary">
+            <ng-md-icon icon="menu"></ng-md-icon>
+        </md-button>
+    </md-fab-trigger>
+
+    <md-toolbar>
+        <md-fab-actions class = "md-toolbar-tools">
+            <md-button class="md-icon-button" aria-label="Shutdown" ng-click="showShutdown($event)">
+                <ng-md-icon icon="settings_power"></ng-md-icon>
+            </md-button>
+
+            <md-button class="md-icon-button" aria-label="Announcement" ng-click="showAnnouncement($event)">
+                <ng-md-icon icon="message"></ng-md-icon>
+            </md-button>
+        </md-fab-actions>
+    </md-toolbar>
+</md-fab-toolbar>
+
+<md-toolbar ng-show="!showSearch">
+    <div class="md-toolbar-tools">
+        <md-button ng-click="toggleSidenav('left')" hide-gt-md aria-label="Menu">
+            <ng-md-icon icon="menu"></ng-md-icon>
+        </md-button>
+        <h3>
+            Shards
+        </h3>
+        <span flex></span>
+    </div>
+</md-toolbar>
+<md-content flex md-scroll-y>
+    <md-data-table-container>
+        <table md-data-table md-row-select="selected" md-progress="deferred">
+            <thead md-order="query.order" md-trigger="onOrderChange">
+                <tr>
+                    <th name="Name"></th>
+                    <th name="Status"></th>
+                    <th name="Internal Host"></th>
+                    <th name="Public Host"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr md-auto-select ng-repeat="shard in shards">
+                    <td>{{shard.name}}</td>
+                    <td>{{shard.status}}</td>
+                    <td>{{shard.internal_host}}</td>
+                    <td>{{shard.public_host}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </md-data-table-container>
+
+    <md-data-table-pagination md-limit="query.limit" md-page="query.page" md-total="{{shards.total}}" md-trigger="onPaginationChange"></md-data-table-pagination>
+</md-content>
+

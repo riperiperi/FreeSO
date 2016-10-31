@@ -12,6 +12,8 @@ namespace FSO.Server.Protocol.Gluon
         TransferClaim,
         TransferClaimResponse,
         RequestLotClientTermination,
+        ShardShutdownRequest,
+        ShardShutdownCompleteResponse,
         Unknown
     }
 
@@ -27,6 +29,12 @@ namespace FSO.Server.Protocol.Gluon
                     return GluonPacketType.TransferClaim;
                 case 0x0003:
                     return GluonPacketType.TransferClaimResponse;
+                case 0x0004:
+                    return GluonPacketType.RequestLotClientTermination;
+                case 0x0005:
+                    return GluonPacketType.ShardShutdownRequest;
+                case 0x0006:
+                    return GluonPacketType.ShardShutdownCompleteResponse;
                 default:
                     return GluonPacketType.Unknown;
             }
@@ -42,6 +50,12 @@ namespace FSO.Server.Protocol.Gluon
                     return 0x0002;
                 case GluonPacketType.TransferClaimResponse:
                     return 0x0003;
+                case GluonPacketType.RequestLotClientTermination:
+                    return 0x0004;
+                case GluonPacketType.ShardShutdownRequest:
+                    return 0x0005;
+                case GluonPacketType.ShardShutdownCompleteResponse:
+                    return 0x0006;
             }
 
             return 0xFFFF;

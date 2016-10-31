@@ -44,6 +44,7 @@ namespace FSO.Content
         public DBPFFile Hitlists; //HitListsTemp.dat
 
         public Dictionary<uint, Track> TracksById;
+        public Dictionary<uint, Track> TracksByBackupId;
         private Dictionary<uint, Hitlist> HitlistsById;
 
 
@@ -89,6 +90,7 @@ namespace FSO.Content
 
             SFXCache = new Dictionary<uint, SoundEffect>();
             TracksById = new Dictionary<uint, Track>();
+            TracksByBackupId = new Dictionary<uint, Track>();
             HitlistsById = new Dictionary<uint, Hitlist>();
 
             AddTracksFrom(TSOAudio);
@@ -103,7 +105,10 @@ namespace FSO.Content
             var tracks = dbpf.GetItemsByType(DBPFTypeID.TRK);
             for (var i=0; i<tracks.Count; i++) 
             {
-                TracksById.Add(tracks[i].Key, new Track(tracks[i].Value));
+                var track = new Track(tracks[i].Value);
+                var realid = tracks[i].Key;
+                TracksById.Add(realid, track);
+                TracksByBackupId[track.TrackID] = track;
             }
         }
 

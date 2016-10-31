@@ -26,6 +26,8 @@ using FSO.Server.Framework.Voltron;
 using FSO.Common.Serialization;
 using FSO.Common.Domain.Shards;
 using FSO.Server.Protocol.CitySelector;
+using FSO.Common.Utils;
+using FSO.Server.Protocol.Gluon.Model;
 
 namespace FSO.Server.Framework.Aries
 {
@@ -234,14 +236,17 @@ namespace FSO.Server.Framework.Aries
         {
         }
 
-
         public override void Shutdown()
         {
-
+            Acceptor.Dispose();
+            var sessions = _Sessions.RawSessions;
+            lock (sessions)
+            {
+                var sessionClone = new List<IAriesSession>(sessions);
+                foreach (var session in sessionClone)
+                    session.Close();
+            }
         }
-
-
-        
 
 
         public abstract Type[] GetHandlers();
@@ -249,9 +254,13 @@ namespace FSO.Server.Framework.Aries
         public List<ISocketSession> GetSocketSessions()
         {
             var result = new List<ISocketSession>();
-            foreach(var item in _Sessions.RawSessions)
+            var sessions = _Sessions.RawSessions;
+            lock (sessions)
             {
-                result.Add(item);
+                foreach (var item in sessions)
+                {
+                    result.Add(item);
+                }
             }
             return result;
         }

@@ -1,4 +1,5 @@
 ﻿using FSO.SimAntics.Engine.TSOTransaction;
+using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             var obj = vm.GetAvatarByPersist(TargetUID);
             if (obj == null) return false;
 
+            var roomieChange = false;
             var oldState = ((VMTSOAvatarState)obj.TSOState).Permissions;
 
             if (vm.GlobalLink != null && oldState >= VMTSOAvatarPermissions.Admin)
@@ -25,6 +27,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (oldState >= VMTSOAvatarPermissions.Roommate)
             {
                 vm.TSOState.Roommates.Remove(obj.PersistID);
+                roomieChange = true;
                 ((VMTSOAvatarState)obj.TSOState).Flags |= VMTSOAvatarFlags.CanBeRoommate;
             }
             if (oldState >= VMTSOAvatarPermissions.BuildBuyRoommate) vm.TSOState.BuildRoommates.Remove(obj.PersistID);
@@ -32,6 +35,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Level >= VMTSOAvatarPermissions.Roommate)
             {
                 ((VMTSOAvatarState)obj.TSOState).Flags &= ~VMTSOAvatarFlags.CanBeRoommate;
+                roomieChange = true;
                 vm.TSOState.Roommates.Add(obj.PersistID);
             }
             if (Level >= VMTSOAvatarPermissions.BuildBuyRoommate) vm.TSOState.BuildRoommates.Add(obj.PersistID);
@@ -39,17 +43,19 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Administrators.Add(obj.PersistID);
 
             //mark objects not owned by roommates for inventory transfer
-            foreach (var ent in vm.Entities)
+            if (roomieChange)
             {
-                if (ent is VMGameObject && ent.PersistID > 0 && ((VMTSOObjectState)ent.TSOState).OwnerID == obj.PersistID)
+                VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
+                foreach (var ent in vm.Entities)
                 {
-                    if (Level < VMTSOAvatarPermissions.Roommate) ((VMGameObject)ent).Disabled |= VMGameObjectDisableFlags.PendingRoommateDeletion;
-                    else ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.PendingRoommateDeletion;
-                    ((VMGameObject)ent).RefreshLight();
+                    if (ent is VMGameObject && ent.PersistID > 0 && ((VMTSOObjectState)ent.TSOState).OwnerID == obj.PersistID)
+                    {
+                        if (Level < VMTSOAvatarPermissions.Roommate) ((VMGameObject)ent).Disabled |= VMGameObjectDisableFlags.PendingRoommateDeletion;
+                        else ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.PendingRoommateDeletion;
+                        ((VMGameObject)ent).RefreshLight();
+                    }
                 }
             }
-
-
             return base.Execute(vm);
         }
 

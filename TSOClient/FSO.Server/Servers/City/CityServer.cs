@@ -5,6 +5,7 @@ using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Aries.Packets;
+using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.City.Domain;
 using FSO.Server.Servers.City.Handlers;
@@ -75,6 +76,21 @@ namespace FSO.Server.Servers.City
             }
 
             base.Bootstrap();
+        }
+
+        public override void Shutdown()
+        {
+            Shutdown(ShutdownType.SHUTDOWN).RunSynchronously();
+        }
+
+        public async Task<bool> Shutdown(ShutdownType type)
+        {
+            var lotServers = Kernel.Get<LotServerPicker>();
+            var task = lotServers.ShutdownAllLotServers(type);
+            await Task.WhenAny(task, Task.Delay(30 * 1000)); //wait at most 30 seconds for a city server shutdown.
+            base.Shutdown();
+            SignalInternalShutdown(type);
+            return task.Result;
         }
 
         protected override void HandleVoltronSessionResponse(IAriesSession session, object message)
@@ -188,6 +204,8 @@ namespace FSO.Server.Servers.City
                 typeof(LotServerClosedownHandler),
                 typeof(MessagingHandler),
                 typeof(JoinLotHandler),
+                typeof(LotServerShutdownResponseHandler),
+                typeof(ElectronFindAvatarHandler),
             };
         }
     }

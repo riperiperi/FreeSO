@@ -48,7 +48,7 @@ namespace FSO.Client.Rendering.City
             new VertexElement( sizeof(float)*(3+10), VertexElementFormat.Vector2, 
                 VertexElementUsage.TextureCoordinate, 5),
             new VertexElement( sizeof(float)*(3+12), VertexElementFormat.Vector3,
-                VertexElementUsage.Normal, 0)
+                VertexElementUsage.TextureCoordinate, 6)
         );
 
         VertexDeclaration IVertexType.VertexDeclaration

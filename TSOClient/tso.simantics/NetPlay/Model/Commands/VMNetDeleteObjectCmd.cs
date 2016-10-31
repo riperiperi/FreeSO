@@ -79,7 +79,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                             DynFlags2 = obj.DynamicSpriteFlags2,
                         });
                     }
-                    obj.PersistID = 0; //no longer representative of the object in db.
+                    vm.Context.ObjectQueries.RemoveMultitilePersist(vm, obj.PersistID);
+                    foreach (var o in obj.MultitileGroup.Objects) o.PersistID = 0; //no longer representative of the object in db.
                     obj.Delete(CleanupAll, vm.Context);
 
                     vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,

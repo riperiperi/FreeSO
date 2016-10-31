@@ -1,10 +1,14 @@
 ﻿using FSO.Client.Network;
+using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
+using FSO.Server.Clients;
 using FSO.Server.DataService.Model;
+using FSO.Server.Protocol.Electron.Model;
+using FSO.Server.Protocol.Electron.Packets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +18,7 @@ using System.Timers;
 
 namespace FSO.Client.Controllers
 {
-    public class PersonPageController
+    public class PersonPageController : IAriesMessageSubscriber, IDisposable
     {
         private UIPersonPage View;
         private IClientDataService DataService;
@@ -32,6 +36,8 @@ namespace FSO.Client.Controllers
             this.DataService = dataService;
             this.Network = network;
             Topic = dataService.CreateTopicSubscription();
+
+            Network.CityClient.AddSubscriber(this);
         }
 
         ~PersonPageController(){
@@ -67,6 +73,14 @@ namespace FSO.Client.Controllers
             View.Parent.Add(View);
             View.Visible = true;
             ChangeTopic();
+        }
+
+        public void FindAvatarLocation()
+        {
+            Network.CityClient.Write(new FindAvatarRequest()
+            {
+                AvatarId = AvatarId
+            });
         }
 
         public void SaveDescription(Avatar target)
@@ -110,6 +124,39 @@ namespace FSO.Client.Controllers
                 }
             }
             Topic.Set(topics);
+        }
+
+        public void MessageReceived(AriesClient client, object message)
+        {
+            if (message is FindAvatarResponse)
+            {
+                var loc = (FindAvatarResponse)message;
+                GameThread.InUpdate(() =>
+                {
+                    switch (loc.Status)
+                    {
+                        case FindAvatarResponseStatus.FOUND:
+                            View.FindController<CoreGameScreenController>()?.ShowLotPage(loc.LotId & 0x3FFFFFFF); //ignore transient part
+                            break;
+                        default:
+                            if (loc.Status == FindAvatarResponseStatus.PRIVACY_ENABLED) loc.Status = FindAvatarResponseStatus.NOT_ON_LOT;
+                            UIAlert alert = null;
+                            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+                            {
+                                Title = "",
+                                Message = GameFacade.Strings.GetString("189", (49+(int)loc.Status).ToString()),
+                                Buttons = UIAlertButton.Ok((btn) => UIScreen.RemoveDialog(alert)),
+                                Alignment = TextAlignment.Left
+                            }, true);
+                            break;
+                    }
+                });
+            }
+        }
+
+        public void Dispose()
+        {
+            Network.CityClient.RemoveSubscriber(this);
         }
     }
 }

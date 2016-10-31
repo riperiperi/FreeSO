@@ -11,10 +11,12 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using FSO.LotView.Components;
+using FSO.Client.UI.Screens;
+using FSO.Client.Controllers;
 
 namespace FSO.Client.UI.Controls
 {
-    public class UIPersonIcon : UIButton
+    public class UIVMPersonButton : UIButton
     {
         public VMAvatar Avatar;
         public VM vm;
@@ -26,7 +28,7 @@ namespace FSO.Client.UI.Controls
         private Texture2D Target;
         private bool RMB;
 
-        public UIPersonIcon(VMAvatar ava, VM vm, bool small)
+        public UIVMPersonButton(VMAvatar ava, VM vm, bool small)
         {
             Avatar = ava;
             this.vm = vm;
@@ -50,6 +52,13 @@ namespace FSO.Client.UI.Controls
                 worldState.Level = Avatar.Position.Level;
 
                 worldState.CenterTile -= (Avatar.Position.Level - 1) * worldState.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)worldState.Zoom));
+
+                //try show person page. this assumes that we are in the core game screen.
+                if (Avatar.PersistID != 0 && UIScreen.Current is CoreGameScreen)
+                {
+                    var cg = (CoreGameScreen)UIScreen.Current;
+                    cg.PersonPage.FindController<PersonPageController>()?.Show(Avatar.PersistID);
+                }
             }
         }
 

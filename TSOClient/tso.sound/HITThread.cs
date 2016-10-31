@@ -222,7 +222,23 @@ namespace FSO.HIT
                 }
                 else
                 {
-                    Debug.WriteLine("Couldn't find track: " + value +", with alternative "+fallback);
+                    if (audContent.TracksByBackupId.ContainsKey(value))
+                    {
+                        ActiveTrack = audContent.TracksByBackupId[value];
+                        Patch = ActiveTrack.SoundID;
+                    }
+                    else
+                    {
+                        if (audContent.TracksByBackupId.ContainsKey(fallback))
+                        {
+                            ActiveTrack = audContent.TracksByBackupId[fallback];
+                            Patch = ActiveTrack.SoundID;
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Couldn't find track: " + value + ", with alternative " + fallback);
+                        }
+                    }
                 }
             }
         }

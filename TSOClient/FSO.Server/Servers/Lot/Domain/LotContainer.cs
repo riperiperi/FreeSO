@@ -63,6 +63,8 @@ namespace FSO.Server.Servers.Lot.Domain
         public int LotSaveTicker = 0;
         public int AvatarSaveTicker = 0;
 
+        private bool ShuttingDown;
+
         private HashSet<uint> AvatarsToSave = new HashSet<uint>();
         private HashSet<IVoltronSession> SessionsToRelease = new HashSet<IVoltronSession>();
         private List<DbRelationship> RelationshipsToSave = new List<DbRelationship>();
@@ -283,7 +285,8 @@ namespace FSO.Server.Servers.Lot.Domain
                                 });
 
                             } //if not persist, simply gets deleted :'(
-                            delE.PersistID = 0; //no longer representative of the object in db.
+                            Lot.Context.ObjectQueries.RemoveMultitilePersist(Lot, delE.PersistID);
+                            foreach (var o in delE.MultitileGroup.Objects) o.PersistID = 0; //no longer representative of the object in db.
                             delE.Delete(true, Lot.Context);
                         }
                     }
@@ -430,6 +433,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
             vm.Context.Clock.Hours = tsoTime.Item1;
             vm.Context.Clock.Minutes = tsoTime.Item2;
+            vm.Context.UpdateTSOBuildableArea();
 
             VMLotTerrainRestoreTools.RestoreTerrain(vm);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(vm);
@@ -493,10 +497,11 @@ namespace FSO.Server.Servers.Lot.Domain
             AvatarSaveTicker = AVATAR_SAVE_PERIOD;
             while (true)
             {
+                bool noRemainingUsers = ClientCount == 0;
                 lastTick++;
                 //sometimes avatars can be killed immediately after their kill timer starts (this frame will run the leave lot interaction)
                 //this works around that possibility. 
-                var preTickAvatars = Lot.Context.SetToNextCache.Avatars.Select(x => (VMAvatar)x).ToList();
+                var preTickAvatars = Lot.Context.ObjectQueries.Avatars.Select(x => (VMAvatar)x).ToList();
                 try
                 {
                     Lot.Tick();
@@ -507,12 +512,12 @@ namespace FSO.Server.Servers.Lot.Domain
                     LOG.Error("VM ERROR: "+e.StackTrace);
                 }
 
-                if (ClientCount == 0)
+                if (noRemainingUsers)
                 {
                     if (TimeToShutdown == -1)
                         TimeToShutdown = TICKRATE * 20; //lot shuts down 20 seconds after everyone leaves
                     else {
-                        if (--TimeToShutdown == 0)
+                        if (--TimeToShutdown == 0 || (ShuttingDown && TimeToShutdown < (TICKRATE * 20 - 10)))
                         {
                             Shutdown();
                             break; //kill the lot
@@ -536,7 +541,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     SaveAvatars(beingKilled, true);
                 }
 
-                foreach (var avatar in Lot.Context.SetToNextCache.AvatarsByPersist)
+                foreach (var avatar in Lot.Context.ObjectQueries.AvatarsByPersist)
                 {
                     if (avatar.Value.KillTimeout == 1)
                     {
@@ -548,7 +553,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 if (--AvatarSaveTicker <= 0)
                 {
                     //save all avatars
-                    SaveAvatars(Lot.Context.SetToNextCache.Avatars.Cast<VMAvatar>(), false);
+                    SaveAvatars(Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>(), false);
                     AvatarSaveTicker = AVATAR_SAVE_PERIOD;
                 }
 
@@ -840,6 +845,12 @@ namespace FSO.Server.Servers.Lot.Domain
             state.motive_data = motives;
 
             return state;
+        }
+
+        public void ForceShutdown()
+        {
+            //this lot needs to be shutdown asap. As soon as all avatars are disconnected/saved, clean lot and shutdown.
+            ShuttingDown = true;
         }
 
         public void Shutdown()

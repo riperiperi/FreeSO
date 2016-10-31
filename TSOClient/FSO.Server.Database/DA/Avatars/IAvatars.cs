@@ -11,11 +11,11 @@ namespace FSO.Server.Database.DA.Avatars
         uint Create(DbAvatar avatar);
 
         DbAvatar Get(uint id);
+        int GetPrivacyMode(uint id);
         DbJobLevel GetCurrentJobLevel(uint avatar_id);
         List<DbJobLevel> GetJobLevels(uint avatar_id);
         IEnumerable<DbAvatar> All(int shard_id);
         List<DbAvatar> GetByUserId(uint user_id);
-        List<uint> GetRoommateIds(int lot_id);
 
         int GetOtherLocks(uint avatar_id, string except);
 

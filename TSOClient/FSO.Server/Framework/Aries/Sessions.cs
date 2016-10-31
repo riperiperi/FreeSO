@@ -27,9 +27,13 @@ namespace FSO.Server.Framework.Aries
 
         public IVoltronSession GetByAvatarId(uint id)
         {
-            return (IVoltronSession)_Sessions.FirstOrDefault(x => {
-                return x is IVoltronSession && ((IVoltronSession)x).AvatarId == id;
-            });
+            lock (_Sessions)
+            {
+                return (IVoltronSession)_Sessions.FirstOrDefault(x =>
+                {
+                    return x is IVoltronSession && ((IVoltronSession)x).AvatarId == id;
+                });
+            }
         }
 
         public T UpgradeSession<T>(IAriesSession session, Callback<T> init) where T : AriesSession
@@ -74,22 +78,22 @@ namespace FSO.Server.Framework.Aries
         public void Add(IAriesSession session){
             if (session is IGluonSession)
             {
-                _GluonSessions.Add((IGluonSession)session);
+                lock (_GluonSessions) _GluonSessions.Add((IGluonSession)session);
             }
             else
             {
-                _Sessions.Add(session);
+                lock (_Sessions) _Sessions.Add(session);
             }
         }
 
         public void Remove(IAriesSession session){
             if(session is IGluonSession)
             {
-                _GluonSessions.Remove((IGluonSession)session);
+                lock (_GluonSessions) _GluonSessions.Remove((IGluonSession)session);
             }
             else
             {
-                _Sessions.Remove(session);
+                lock (_Sessions) _Sessions.Remove(session);
             }
         }
     }
@@ -131,8 +135,12 @@ namespace FSO.Server.Framework.Aries
 
         public void Broadcast(params object[] messages){
             //TODO: Make this more efficient
-            foreach(var session in Sessions){
-                session.Write(messages);
+            lock (Sessions)
+            {
+                foreach (var session in Sessions)
+                {
+                    session.Write(messages);
+                }
             }
         }
     }

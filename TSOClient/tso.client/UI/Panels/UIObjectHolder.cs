@@ -23,6 +23,7 @@ using FSO.Client.UI.Framework;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Common;
 using FSO.Client.UI.Controls;
+using FSO.Common.Rendering.Framework;
 
 namespace FSO.Client.UI.Panels
 {
@@ -105,13 +106,17 @@ namespace FSO.Client.UI.Panels
             //rotate through to try all configurations
             var dir = Holding.Dir;
             VMPlacementError status = VMPlacementError.Success;
-            for (int i = 0; i < 4; i++)
+            if (!Holding.IsBought && !vm.TSOState.CanPlaceNewUserObject(vm)) status = VMPlacementError.TooManyObjectsOnTheLot;
+            else
             {
-                status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, World.State.Level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement).Status;
-                if (status != VMPlacementError.MustBeAgainstWall) break;
-                dir = (Direction)((((int)dir << 6) & 255) | ((int)dir >> 2));
+                for (int i = 0; i < 4; i++)
+                {
+                    status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, World.State.Level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement).Status;
+                    if (status != VMPlacementError.MustBeAgainstWall) break;
+                    dir = (Direction)((((int)dir << 6) & 255) | ((int)dir >> 2));
+                }
+                if (Holding.Dir != dir) Holding.Dir = dir;
             }
-            if (Holding.Dir != dir) Holding.Dir = dir;
 
             if (status != VMPlacementError.Success) 
             {
@@ -358,8 +363,10 @@ namespace FSO.Client.UI.Panels
             if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
             MouseClicked = (MouseIsDown && (!MouseWasDown));
 
+            CursorType cur = CursorType.SimsMove;
             if (Holding != null)
             {
+                if (Roommate) cur = CursorType.SimsPlace;
                 if (state.KeyboardState.IsKeyDown(Keys.Delete))
                 {
                     SellBack(null);
@@ -377,6 +384,7 @@ namespace FSO.Client.UI.Panels
                     bool updatePos = MouseClicked;
                     int xDiff = state.MouseState.X - MouseDownX;
                     int yDiff = state.MouseState.Y - MouseDownY;
+                    cur = CursorType.SimsRotate;
                     if (Math.Sqrt(xDiff * xDiff + yDiff * yDiff) > 64)
                     {
                         int dir;
@@ -390,6 +398,9 @@ namespace FSO.Client.UI.Panels
                             if (yDiff > 0) dir = 2;
                             else dir = 3;
                         }
+
+                        cur = (CursorType)(dir + (int)CursorType.SimsRotateNE);
+
                         var newDir = (Direction)(1 << (((dir + 4 - (int)World.State.Rotation) % 4) * 2));
                         if (newDir != Holding.Dir || MouseClicked)
                         {
@@ -461,6 +472,11 @@ namespace FSO.Client.UI.Panels
                         ShowErrorAtMouse(state, success);
                     }
                 }
+            }
+
+            if (ParentControl.MouseIsOn && !ParentControl.RMBScroll)
+            {
+                GameFacade.Cursor.SetCursor(cur);
             }
 
             MouseWasDown = MouseIsDown;

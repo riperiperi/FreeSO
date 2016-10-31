@@ -39,7 +39,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                             DynFlags2 = obj.DynamicSpriteFlags2,
                         });
                     }
-
+                    vm.Context.ObjectQueries.RemoveMultitilePersist(vm, obj.PersistID);
                     obj.PersistID = 0; //no longer representative of the object in db.
                     obj.Delete(true, vm.Context);
                     if (VM.UseWorld) HIT.HITVM.Get().PlaySoundEvent("ui_letter_send");

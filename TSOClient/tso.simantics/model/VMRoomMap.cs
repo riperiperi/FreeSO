@@ -238,7 +238,7 @@ namespace FSO.SimAntics.Model
                     if (tRoom != room)
                     {
                         //is there a door on this tile?
-                        var door = (context.SetToNextCache.GetObjectsAt(LotTilePos.FromBigTile((short)x, (short)y, level))?.FirstOrDefault(
+                        var door = (context.ObjectQueries.GetObjectsAt(LotTilePos.FromBigTile((short)x, (short)y, level))?.FirstOrDefault(
                             o => ((VMEntityFlags2)(o.GetValue(VMStackObjectVariable.FlagField2)) & VMEntityFlags2.ArchitectualDoor) > 0)
                         );
                         if (door != null)

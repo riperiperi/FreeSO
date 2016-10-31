@@ -17,6 +17,19 @@ using Ninject;
 
 namespace FSO.Client.UI.Controls
 {
+    /// <summary>
+    /// TODO: This and UIPersonIcon are two of the same deal... but we have different desires for each.
+    /// This must:
+    /// - Open person page when clicked
+    /// - Access data service to show icons for people not on lot
+    /// VM variant must:
+    /// - Center avatar when clicked
+    /// - Autogenerate and show icons for pets and some NPCs (via world, TODO)
+    /// - Icons for NPCs at all!
+    /// - Follow-center when right-clicked.
+    /// 
+    /// Right now UIVMPersonButton is running the show for all VM related panels.
+    /// </summary>
     public class UIPersonButton : UIContainer
     {
         public Binding<UserReference> User { get; internal set; }
@@ -50,13 +63,19 @@ namespace FSO.Client.UI.Controls
             set
             {
                 _AvatarId = value;
-
-                DataService.Get<Avatar>(_AvatarId).ContinueWith(x =>
+                if (value == uint.MaxValue)
                 {
-                    if (x.Result == null) { return; }
-                    User.Value = UserReference.Wrap(x.Result);
-                });
-                DataService.Request(Server.DataService.Model.MaskedStruct.SimPage_Main, _AvatarId);
+                    User.Value = UserReference.Of(Common.Enum.UserReferenceType.MOMI);
+                }
+                else
+                {
+                    DataService.Get<Avatar>(_AvatarId).ContinueWith(x =>
+                    {
+                        if (x.Result == null) { return; }
+                        User.Value = UserReference.Wrap(x.Result);
+                    });
+                    DataService.Request(Server.DataService.Model.MaskedStruct.SimPage_Main, _AvatarId);
+                }
             }
         }
 

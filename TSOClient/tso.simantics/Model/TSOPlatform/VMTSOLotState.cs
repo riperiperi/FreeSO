@@ -18,6 +18,8 @@ namespace FSO.SimAntics.Model.TSOPlatform
         public uint OwnerID;
         public HashSet<uint> Roommates = new HashSet<uint>();
         public HashSet<uint> BuildRoommates = new HashSet<uint>();
+        public int ObjectLimit;
+        public bool LimitExceeded;
 
         public VMTSOJobUI JobUI;
 
@@ -71,6 +73,11 @@ namespace FSO.SimAntics.Model.TSOPlatform
 
             writer.Write(JobUI != null);
             if (JobUI != null) JobUI.SerializeInto(writer);
+        }
+
+        public bool CanPlaceNewUserObject(VM vm)
+        {
+            return (vm.Context.ObjectQueries.NumUserObjects < ObjectLimit);
         }
 
         public override void Tick(VM vm, object owner)

@@ -57,6 +57,9 @@ namespace FSO.Client.UI.Panels
         private Dictionary<UIButton, int> CategoryMap;
         private List<UICatalogElement> CurrentCategory;
 
+        private UILabel ObjLimitLabel;
+        private int LastObjCount = -1;
+
         public UICatalog Catalog;
         public UIObjectHolder Holder;
         public UIQueryPanel QueryPanel;
@@ -132,6 +135,20 @@ namespace FSO.Client.UI.Panels
             Holder.OnDelete += HolderDelete;
             Holder.OnPutDown += HolderPutDown;
             Add(QueryPanel);
+
+            LotController.ObjectHolder.Roommate = true;
+            LotController.QueryPanel.Roommate = true;
+
+            ObjLimitLabel = new UILabel();
+            ObjLimitLabel.CaptionStyle = ObjLimitLabel.CaptionStyle.Clone();
+            ObjLimitLabel.CaptionStyle.Shadow = true;
+            ObjLimitLabel.CaptionStyle.Color = Microsoft.Xna.Framework.Color.White;
+            ObjLimitLabel.Caption = "127/250 Objects";
+            ObjLimitLabel.Y = -20;
+            ObjLimitLabel.X = Background.Width / 2 - 100;
+            ObjLimitLabel.Size = new Microsoft.Xna.Framework.Vector2(200, 0);
+            ObjLimitLabel.Alignment = TextAlignment.Center;
+            Add(ObjLimitLabel);
         }
 
         public void PageSlider(UIElement element)
@@ -313,6 +330,21 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
+            var objCount = LotController.vm.Context.ObjectQueries.NumUserObjects;
+            if (LastObjCount != objCount)
+            {
+                var limit = LotController.vm.TSOState.ObjectLimit;
+                ObjLimitLabel.Caption = objCount + "/" + limit + " Objects";
+                var lerp = objCount / (float)limit;
+                if (lerp < 0.5)
+                    ObjLimitLabel.CaptionStyle.Color = Color.White;
+                if (lerp < 0.75)
+                    ObjLimitLabel.CaptionStyle.Color = Color.Lerp(Color.White, new Color(255, 201, 38), lerp * 4 - 2);
+                else
+                    ObjLimitLabel.CaptionStyle.Color = Color.Lerp(new Color(255, 201, 38), Color.Red, lerp * 4 - 3);
+                LastObjCount = objCount;
+            }
+
             if (LotController.ActiveEntity != null) Catalog.Budget = (int)LotController.ActiveEntity.TSOState.Budget.Value;
             base.Update(state);
         }

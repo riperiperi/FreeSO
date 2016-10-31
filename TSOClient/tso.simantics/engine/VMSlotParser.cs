@@ -241,7 +241,7 @@ namespace FSO.SimAntics.Engine
                     } 
                 }
 
-                if (context.SetToNextCache.GetObjectsAt(tpos)?.Any(
+                if (context.ObjectQueries.GetObjectsAt(tpos)?.Any(
                     x => ((VMEntityFlags2)x.GetValue(VMStackObjectVariable.FlagField2) & VMEntityFlags2.ArchitectualDoor) > 0) ?? false)
                     avatarInWay = true; //prefer not standing in front of a door. (todo: merge with above check?)
 
@@ -253,7 +253,7 @@ namespace FSO.SimAntics.Engine
                 //if an avatar is in or going to our destination positon, we this spot becomes low priority as getting into it will require a shoo.
                 if (!avatarInWay)
                 {
-                    foreach (var avatar in context.SetToNextCache.Avatars)
+                    foreach (var avatar in context.ObjectQueries.Avatars)
                     {
                         //search for routing frame. is its destination the same as ours?
                         if (avatar.Thread != null)

@@ -33,11 +33,13 @@ namespace FSO.Content
     public class Content
     {
         public static void Init(string basepath, GraphicsDevice device){
+            if (INSTANCE != null) return;
             INSTANCE = new Content(basepath, ContentMode.CLIENT, device);
         }
 
         public static void Init(string basepath, ContentMode mode)
         {
+            if (INSTANCE != null) return;
             INSTANCE = new Content(basepath, mode, null);
         }
 

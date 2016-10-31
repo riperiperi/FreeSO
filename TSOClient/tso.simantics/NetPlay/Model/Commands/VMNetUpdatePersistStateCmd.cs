@@ -16,8 +16,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             VMEntity obj = vm.GetObjectById(ObjectID);
             if (obj == null || (obj is VMAvatar)) return false;
+            if (obj.PersistID > 0) vm.Context.ObjectQueries.RemoveMultitilePersist(vm, obj.PersistID); //in case persist is reassigned somehow
             foreach (var e in obj.MultitileGroup.Objects)
                 e.PersistID = PersistID;
+            vm.Context.ObjectQueries.RegisterMultitilePersist(obj.MultitileGroup, obj.PersistID);
             return true;
         }
 

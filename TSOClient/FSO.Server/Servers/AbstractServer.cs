@@ -1,4 +1,6 @@
-﻿using FSO.Server.Common;
+﻿using FSO.Common.Utils;
+using FSO.Server.Common;
+using FSO.Server.Protocol.Gluon.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,5 +15,11 @@ namespace FSO.Server.Servers
         public abstract void Shutdown();
 
         public abstract void AttachDebugger(IServerDebugger debugger);
+
+        public event Callback<AbstractServer, ShutdownType> OnInternalShutdown;
+        public void SignalInternalShutdown(ShutdownType type)
+        {
+            OnInternalShutdown?.Invoke(this, type);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using FSO.LotView.Model;
+using FSO.SimAntics.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Text;
 
 namespace FSO.SimAntics.Model
 {
-    public class VMSetToNextCache
+    public class VMObjectQueries
     {
         private VMContext Context;
         private Dictionary<int, List<VMEntity>> TileToObjects = new Dictionary<int, List<VMEntity>>();
@@ -14,8 +15,17 @@ namespace FSO.SimAntics.Model
         private Dictionary<uint, List<VMEntity>> ObjectsByGUID = new Dictionary<uint, List<VMEntity>>();
         public List<VMEntity> Avatars = new List<VMEntity>();
         public Dictionary<uint, VMAvatar> AvatarsByPersist = new Dictionary<uint, VMAvatar>();
+        public Dictionary<uint, VMMultitileGroup> MultitileByPersist = new Dictionary<uint, VMMultitileGroup>();
 
-        public VMSetToNextCache(VMContext context)
+        public int NumUserObjects
+        {
+            get
+            {
+                return MultitileByPersist.Count;
+            }
+        }
+
+        public VMObjectQueries(VMContext context)
         {
             Context = context;
         }
@@ -80,6 +90,17 @@ namespace FSO.SimAntics.Model
             if (persistID != 0) AvatarsByPersist[persistID] = ava;
         }
 
+        public void RegisterMultitilePersist(VMMultitileGroup mul, uint persistID)
+        {
+            if (persistID != 0) MultitileByPersist[persistID] = mul;
+        }
+
+        public void RemoveMultitilePersist(VM vm, uint persistID)
+        {
+            MultitileByPersist.Remove(persistID);
+            if (vm.TSOState.LimitExceeded) VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
+        }
+
         public void NewObject(VMEntity obj)
         {
             var guid = obj.Object.OBJ.GUID;
@@ -114,6 +135,14 @@ namespace FSO.SimAntics.Model
             {
                 Avatars.Remove(obj);
                 AvatarsByPersist.Remove(obj.PersistID);
+            } else if (obj.PersistID > 0 && obj.MultitileGroup.Objects.Count == 1)
+            {
+                MultitileByPersist.Remove(obj.PersistID);
+                if (obj.Thread != null)
+                {
+                    var vm = obj.Thread.Context.VM;
+                    if (vm.TSOState.LimitExceeded) VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
+                }
             }
         }
 

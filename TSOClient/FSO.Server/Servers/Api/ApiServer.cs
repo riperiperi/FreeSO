@@ -16,6 +16,7 @@ using Nancy.Bootstrappers.Ninject;
 using Nancy.Bootstrapper;
 using Nancy;
 using FSO.Server.Common;
+using FSO.Server.Protocol.Gluon.Model;
 
 namespace FSO.Server.Servers.Api
 {
@@ -27,10 +28,20 @@ namespace FSO.Server.Servers.Api
         private IKernel Kernel;
         private NancyHost Nancy;
 
+        //TODO: connect to shards to do these? right now this assumes the API server is on the same server as all shards.
+        //would mean we could move these out of this class too.
+        public event APIRequestShutdownDelegate OnRequestShutdown;
+        public event APIBroadcastMessageDelegate OnBroadcastMessage;
+
+        public delegate void APIRequestShutdownDelegate(uint time, ShutdownType type);
+        public delegate void APIBroadcastMessageDelegate(string sender, string title, string message);
+
         public ApiServer(ApiServerConfiguration config, IKernel kernel)
         {
             this.Config = config;
             this.Kernel = kernel;
+
+            Kernel.Bind<ApiServer>().ToConstant(this);
         }
 
         public override void Start()
@@ -56,6 +67,16 @@ namespace FSO.Server.Servers.Api
             {
                 Nancy.Stop();
             }
+        }
+
+        public void RequestShutdown(uint time, ShutdownType type)
+        {
+            OnRequestShutdown?.Invoke(time, type);
+        }
+
+        public void BroadcastMessage(string sender, string title, string message)
+        {
+            OnBroadcastMessage?.Invoke(sender, title, message);
         }
 
         public override void AttachDebugger(IServerDebugger debugger)

@@ -16,6 +16,8 @@ using FSO.Client.Utils;
 using FSO.Client.Regulators;
 using FSO.Client.UI.Model;
 using FSO.HIT;
+using FSO.Files.Utils;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.Client.UI.Screens
 {
@@ -27,12 +29,15 @@ namespace FSO.Client.UI.Screens
 
         private LoginRegulator Regulator;
 
+        private Texture2D TestCursor;
+
         public LoginScreen(LoginRegulator regulator)
         {
             this.Regulator = regulator;
             regulator.Logout();
 
             HITVM.Get().PlaySoundEvent(UIMusic.None);
+            HITVM.Get().PlaySoundEvent("sting_fire");
 
             Background = new UISetupBackground();
 
@@ -43,6 +48,8 @@ namespace FSO.Client.UI.Screens
             lbl.Y = 558;
             Background.BackgroundCtnr.Add(lbl);
             this.Add(Background);
+
+            TestCursor = CurLoader.LoadCursor(GameFacade.GraphicsDevice, File.Open(Content.Content.Get().GetPath("uigraphics/shared/cursors/livenothing.cur"), FileMode.Open)).Item1;
 
             /** Progress bar **/
             LoginProgress = new UILoginProgress();
@@ -171,6 +178,12 @@ namespace FSO.Client.UI.Screens
             Options.Message = GameFacade.Strings.GetString("210", "36 301");
             Options.Title = GameFacade.Strings.GetString("210", "40");
             UI.Framework.UIScreen.GlobalShowAlert(Options, true);
+        }
+
+        public override void Draw(UISpriteBatch batch)
+        {
+            base.Draw(batch);
+            DrawLocalTexture(batch, TestCursor, new Microsoft.Xna.Framework.Vector2());
         }
     }
 }

@@ -119,6 +119,7 @@
     <Compile Include="IniFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tuning.cs" />
+    <Compile Include="Utils\CurLoader.cs" />
     <Compile Include="Utils\IFileInfoUtilizer.cs" />
     <Compile Include="Utils\IoWriter.cs" />
     <Compile Include="Utils\IoBuffer.cs" />

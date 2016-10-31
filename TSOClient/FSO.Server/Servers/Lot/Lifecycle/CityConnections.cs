@@ -62,7 +62,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
             {
                 try
                 {
-                    ConnectionWatcher.Interrupt();
+                    ConnectionWatcher.Abort();
                 }
                 catch (Exception ex)
                 {

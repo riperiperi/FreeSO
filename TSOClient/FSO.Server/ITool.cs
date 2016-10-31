@@ -8,6 +8,6 @@ namespace FSO.Server
 {
     interface ITool
     {
-        void Run();
+        int Run();
     }
 }

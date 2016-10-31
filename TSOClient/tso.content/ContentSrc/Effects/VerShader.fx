@@ -9,7 +9,7 @@ struct VertexToPixel
 	float2 BlendTextureCoord : TEXCOORD3;
 	float2 RoadTextureCoord : TEXCOORD4;
 	float2 RoadCTextureCoord : TEXCOORD5;
-	float3 Normal : NORMAL0;
+	float3 Normal : TEXCOORD6;
 };
 
 struct VertexToPixelOut
@@ -22,9 +22,8 @@ struct VertexToPixelOut
 	float2 BlendTextureCoord : TEXCOORD3;
 	float2 RoadTextureCoord : TEXCOORD4;
 	float2 RoadCTextureCoord : TEXCOORD5;
-	float2 vPos : TEXCOORD6;
-	float Depth : TEXCOORD7;
-	float3 Normal : NORMAL0;
+	float3 vPos : TEXCOORD6;
+	float3 Normal : TEXCOORD7;
 };
 
 struct VertexToShad
@@ -62,10 +61,10 @@ VertexToPixelOut CityVS(VertexToPixel Input)
 	//calculate position of vertice in relation to light, for comparison to Shadow Map
 	float4 LightPos = GetPositionFromLight(Input.VertexPosition);
 	
-	Output.vPos = 0.5*(LightPos.xy/LightPos.w)+float2(0.5, 0.5);
+	Output.vPos.xy = 0.5*(LightPos.xy/LightPos.w)+float2(0.5, 0.5);
 	Output.vPos.y = (1.0f - Output.vPos.y); //position of vertice on shadow map
 	
-	Output.Depth.x = 1 - (LightPos.z/LightPos.w); //feed depth relative to light to compare against shadow map depth
+	Output.vPos.z = 1 - (LightPos.z/LightPos.w); //feed depth relative to light to compare against shadow map depth
 	return Output;
 }
 

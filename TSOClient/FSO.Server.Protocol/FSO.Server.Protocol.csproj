@@ -109,8 +109,11 @@
     <Compile Include="Gluon\GluonPacketType.cs" />
     <Compile Include="Gluon\IGluonPacket.cs" />
     <Compile Include="Gluon\Model\ClaimType.cs" />
+    <Compile Include="Gluon\Model\ShutdownType.cs" />
     <Compile Include="Gluon\Packets\AdvertiseCapacity.cs" />
     <Compile Include="Gluon\Packets\RequestLotClientTermination.cs" />
+    <Compile Include="Gluon\Packets\ShardShutdownCompleteResponse.cs" />
+    <Compile Include="Gluon\Packets\ShardShutdownRequest.cs" />
     <Compile Include="Gluon\Packets\TransferClaim.cs" />
     <Compile Include="Gluon\Packets\TransferClaimResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -135,6 +138,7 @@
     <Compile Include="Voltron\Model\MagicNumberEnum.cs" />
     <Compile Include="Voltron\Model\Sender.cs" />
     <Compile Include="Voltron\Model\SkinTone.cs" />
+    <Compile Include="Voltron\Packets\AnnouncementMsgPDU.cs" />
     <Compile Include="Voltron\Packets\ChatMsgPDU.cs" />
     <Compile Include="Voltron\Packets\ServerByePDU.cs" />
     <Compile Include="Voltron\Packets\ClientByePDU.cs" />

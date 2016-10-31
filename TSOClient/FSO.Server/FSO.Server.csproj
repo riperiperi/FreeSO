@@ -65,24 +65,24 @@
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Nancy, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nancy.1.2.0\lib\net40\Nancy.dll</HintPath>
+    <Reference Include="Nancy, Version=1.4.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.1.4.3\lib\net40\Nancy.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Nancy.Authentication.Stateless, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nancy.Authentication.Stateless.1.2.0\lib\net40\Nancy.Authentication.Stateless.dll</HintPath>
+    <Reference Include="Nancy.Authentication.Stateless, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.Authentication.Stateless.1.4.1\lib\net40\Nancy.Authentication.Stateless.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Nancy.Authentication.Token, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nancy.Authentication.Token.1.2.0\lib\net40\Nancy.Authentication.Token.dll</HintPath>
+    <Reference Include="Nancy.Authentication.Token, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.Authentication.Token.1.4.1\lib\net40\Nancy.Authentication.Token.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Nancy.Bootstrappers.Ninject, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nancy.Bootstrappers.Ninject.1.2.0\lib\net40\Nancy.Bootstrappers.Ninject.dll</HintPath>
+    <Reference Include="Nancy.Bootstrappers.Ninject, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.Bootstrappers.Ninject.1.4.1\lib\net40\Nancy.Bootstrappers.Ninject.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Nancy.Hosting.Self, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nancy.Hosting.Self.1.2.0\lib\net40\Nancy.Hosting.Self.dll</HintPath>
+    <Reference Include="Nancy.Hosting.Self, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.Hosting.Self.1.4.1\lib\net40\Nancy.Hosting.Self.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -98,7 +98,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.0.1\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.3.10\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
@@ -142,6 +142,7 @@
     <Compile Include="ServerConfiguration.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Servers\Api\Controllers\Admin\AdminShardOpController.cs" />
     <Compile Include="Servers\Api\Controllers\StatusCodeHandler.cs" />
     <Compile Include="Servers\Api\Controllers\UserAPI\CityInfoController.cs" />
     <Compile Include="Servers\Api\Controllers\UserAPI\RegistrationController.cs" />
@@ -160,11 +161,13 @@
     <Compile Include="Servers\City\Domain\JobMatchmaker.cs" />
     <Compile Include="Servers\City\Domain\LotAllocations.cs" />
     <Compile Include="Servers\City\Domain\LotServerPicker.cs" />
+    <Compile Include="Servers\City\Handlers\ElectronFindPlayerHandler.cs" />
     <Compile Include="Servers\City\Handlers\FindPlayerHandler.cs" />
     <Compile Include="Servers\City\Handlers\JoinLotHandler.cs" />
     <Compile Include="Servers\City\Handlers\LotServerAuthenticationHandler.cs" />
     <Compile Include="Servers\City\Handlers\LotServerClosedownHandler.cs" />
     <Compile Include="Servers\City\Handlers\LotServerLifecycleHandler.cs" />
+    <Compile Include="Servers\City\Handlers\LotServerShutdownResponseHandler.cs" />
     <Compile Include="Servers\City\Handlers\MessagingHandler.cs" />
     <Compile Include="Servers\City\Handlers\PurchaseLotHandler.cs" />
     <Compile Include="Servers\City\Handlers\VoltronConnectionLifecycleHandler.cs" />
@@ -178,6 +181,7 @@
     <Compile Include="Servers\Lot\Handlers\LotNegotiationHandler.cs" />
     <Compile Include="Servers\Lot\Domain\LotContainer.cs" />
     <Compile Include="Servers\Lot\Domain\LotContext.cs" />
+    <Compile Include="Servers\Lot\Handlers\ShardShutdownHandler.cs" />
     <Compile Include="Servers\Lot\Handlers\VoltronConnectionLifecycleHandler.cs" />
     <Compile Include="Servers\Lot\Lifecycle\CityConnections.cs" />
     <Compile Include="Servers\Lot\LotServer.cs" />
@@ -239,6 +243,10 @@
     <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
       <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>
       <Name>FSO.Server.Protocol</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Updater\FSO.Server.Watchdog.csproj">
+      <Project>{bedcdf02-3349-4e64-9bfd-38c499303822}</Project>
+      <Name>FSO.Server.Watchdog</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>

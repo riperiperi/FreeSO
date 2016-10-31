@@ -4,7 +4,7 @@
   "simNFS": "LocalNFS/",
 
   "database": {
-    "connectionString": "server=127.0.0.1;uid=fsoserver;pwd=password;database=fso;"
+    "connectionString": "server=192.168.1.227;uid=fsoserver;pwd=password;database=fso;"
   },
 
   "services": {

@@ -14,6 +14,9 @@ using System.Reflection;
 using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using System.IO;
+using Microsoft.Xna.Framework.Input;
+using FSO.Files.Utils;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.Common.Rendering.Framework
 {
@@ -32,7 +35,18 @@ namespace FSO.Common.Rendering.Framework
         LiveObjectAvail,
         LiveObjectUnavail,
         LivePerson,
-        IBeam
+        IBeam,
+
+        SimsRotate,
+        SimsRotateNE,
+        SimsRotateSE,
+        SimsRotateSW,
+        SimsRotateNW,
+
+        SimsMove,
+        SimsPlace,
+
+        Hourglass
     }
 
     /// <summary>
@@ -42,32 +56,31 @@ namespace FSO.Common.Rendering.Framework
     {
         public static CursorManager INSTANCE;
 
-        //private Dictionary<CursorType, Cursor> m_CursorMap;
-        private GameWindow Window;
+        private Dictionary<CursorType, MouseCursor> m_CursorMap;
+        private GraphicsDevice GD;
         public CursorType CurrentCursor { get; internal set;} = CursorType.Normal;
 
-        public CursorManager(GameWindow window)
+        public CursorManager(GraphicsDevice gd)
         {
             INSTANCE = this;
-            //m_CursorMap = new Dictionary<CursorType, Cursor>();
-            this.Window = window;
+            m_CursorMap = new Dictionary<CursorType, MouseCursor>();
+            this.GD = gd;
         }
 
         public void SetCursor(CursorType type)
         {
-            /*
             if (m_CursorMap.ContainsKey(type))
             {
                 CurrentCursor = type;
-                if (type != CursorType.Normal) Cursor.Current = m_CursorMap[type];
-            }*/
+                Mouse.SetCursor(m_CursorMap[type]);
+            }
         }
 
         public void Init(string basepath)
         {
 
             var map = new Dictionary<CursorType, string>(){
-                {CursorType.Normal, "arrow.cur"},
+                //{CursorType.Normal, "arrow.cur"},
                 {CursorType.ArrowUp, "up.cur"},
                 {CursorType.ArrowUpLeft, "upleft.cur"},
                 {CursorType.ArrowUpRight, "upright.cur"},
@@ -79,35 +92,37 @@ namespace FSO.Common.Rendering.Framework
                 {CursorType.LiveNothing, "livenothing.cur"},
                 {CursorType.LiveObjectAvail, "liveobjectavail.cur"},
                 {CursorType.LiveObjectUnavail, "liveobjectunavail.cur"},
-                {CursorType.LivePerson, "liveperson.cur"}
+                {CursorType.LivePerson, "liveperson.cur"},
+
+                {CursorType.SimsRotate, "simsrotate.cur" },
+                {CursorType.SimsRotateNE, "simsrotatene.cur" },
+                {CursorType.SimsRotateNW, "simsrotatenw.cur" },
+                {CursorType.SimsRotateSE, "simsrotatese.cur" },
+                {CursorType.SimsRotateSW, "simsrotatesw.cur" },
+
+                {CursorType.SimsMove, "simsmove.cur" },
+                {CursorType.SimsPlace, "simsplace.cur" },
+
+                {CursorType.Hourglass, "hourglass.cur" }
             };
 
             foreach(var item in map){
-				/*
                 m_CursorMap.Add(item.Key,
                     LoadCustomCursor(
-                        Path.Combine(basepath, @"uigraphics\shared\cursors\" + item.Value)
+                        Path.Combine(basepath, "uigraphics/shared/cursors/" + item.Value)
                     ));
-                    */
             }
-
-            //m_CursorMap.Add(CursorType.IBeam, Cursors.IBeam);
+            
+            m_CursorMap.Add(CursorType.IBeam, MouseCursor.IBeam);
+            //m_CursorMap.Add(CursorType.Hourglass, MouseCursor.Wait);
+            m_CursorMap.Add(CursorType.Normal, MouseCursor.Arrow);
         }
 
 
 
-        /*private static Cursor LoadCustomCursor(string path)
+        private MouseCursor LoadCustomCursor(string path)
         {
-            IntPtr hCurs = LoadCursorFromFile(path);
-            if (hCurs == IntPtr.Zero) throw new Win32Exception();
-            var curs = new Cursor(hCurs);
-            // Note: force the cursor to own the handle so it gets released properly
-            var fi = typeof(Cursor).GetField("ownHandle", BindingFlags.NonPublic | BindingFlags.Instance);
-            fi.SetValue(curs, true);
-            return curs;
+            return CurLoader.LoadMonoCursor(GD, File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read));
         }
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        private static extern IntPtr LoadCursorFromFile(string path);
-        */
     }
 }

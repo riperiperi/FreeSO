@@ -31,6 +31,7 @@ namespace FSO.Server.Servers.Lot
             Kernel.Bind<LotServerConfiguration>().ToConstant(Config);
             Kernel.Bind<LotHost>().To<LotHost>().InSingletonScope();
             Kernel.Bind<CityConnections>().To<CityConnections>().InSingletonScope();
+            Kernel.Bind<LotServer>().ToConstant(this);
 
             Lots = Kernel.Get<LotHost>();
         }
@@ -148,8 +149,16 @@ namespace FSO.Server.Servers.Lot
             return new Type[] {
                 typeof(CityServerAuthenticationHandler),
                 typeof(LotNegotiationHandler),
-                typeof(VoltronConnectionLifecycleHandler)
+                typeof(VoltronConnectionLifecycleHandler),
+                typeof(ShardShutdownHandler)
             };
+        }
+
+        public override void Shutdown()
+        {
+            var task = Lots.Shutdown();
+            task.Wait();
+            base.Shutdown();
         }
     }
 }
