@@ -249,18 +249,22 @@ namespace FSO.LotView
 
                     case CursorType.ArrowUpLeft:
                         scrollVector = -basis[1] - basis[0];
+                        scrollVector *= new Vector2(1, 0.5f);
                         break;
 
                     case CursorType.ArrowUpRight:
                         scrollVector = basis[0] - basis[1];
+                        scrollVector *= new Vector2(1, 0.5f);
                         break;
 
                     case CursorType.ArrowDownLeft:
                         scrollVector = basis[1] - basis[0];
+                        scrollVector *= new Vector2(1, 0.5f);
                         break;
 
                     case CursorType.ArrowDownRight:
                         scrollVector = basis[1] + basis[0];
+                        scrollVector *= new Vector2(1, 0.5f);
                         break;
 
                 }

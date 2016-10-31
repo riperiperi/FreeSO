@@ -610,7 +610,6 @@ namespace FSO.Client.UI.Panels
                             case 7: type = CursorType.ArrowUpLeft; break;
                         }
                         GameFacade.Cursor.SetCursor(type);
-                       Console.WriteLine(Math.Round(angle) % 8);
                     }
                     World.Scroll(scrollBy);
                     scrolled = true;
