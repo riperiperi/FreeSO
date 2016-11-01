@@ -481,7 +481,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             var palt = new Color[256];
             int i = 0;
             foreach (var c in colors)
-                palt[i++] = new Color(c.R, c.G, c.B, 255);
+                palt[i++] = new Color(c.R, c.G, c.B, (byte)255);
 
             return palt;
         }
