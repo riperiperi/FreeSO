@@ -146,13 +146,13 @@ namespace FSO.Client
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            //MessageBox.Show("Exception: \r\n" + e.ExceptionObject.ToString());
+            System.Windows.Forms.MessageBox.Show("Exception: \r\n" + e.ExceptionObject.ToString());
         }
 
         private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
             LogThis.Log.LogThis("Exception: " + e.Exception.ToString(), LogThis.eloglevel.error);
-            //MessageBox.Show("Exception: \r\n" + e.Exception.ToString());
+            System.Windows.Forms.MessageBox.Show("Exception: \r\n" + e.Exception.ToString());
         }
 
         /// <summary>
