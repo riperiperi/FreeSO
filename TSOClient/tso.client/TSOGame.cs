@@ -67,6 +67,7 @@ namespace FSO.Client
                 new NetworkModule()
             );
             GameFacade.Kernel = kernel;
+
             if (FSOEnvironment.DPIScaleFactor != 1 || FSOEnvironment.SoftwareDepth)
             {
                 GlobalSettings.Default.GraphicsWidth = GraphicsDevice.Viewport.Width / FSOEnvironment.DPIScaleFactor;

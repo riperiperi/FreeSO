@@ -54,7 +54,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>FreeSO.ico</ApplicationIcon>
+    <ApplicationIcon>Beta.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -337,7 +337,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Content Include="Beta.ico" />
     <Content Include="Game.ico" />
+    <EmbeddedResource Include="IconNormal.bmp" />
     <EmbeddedResource Include="Icon.bmp" />
     <Content Include="soft_oal.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -367,6 +369,7 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="GOLDEngine">
       <HintPath>Dependencies\GOLDEngine.dll</HintPath>
@@ -457,7 +460,7 @@
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
       <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
       <Name>MonoGame.Framework.WindowsGL</Name>
-      <Private>False</Private>
+      <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\FSO.Common.DatabaseService\FSO.Common.DatabaseService.csproj">
       <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>

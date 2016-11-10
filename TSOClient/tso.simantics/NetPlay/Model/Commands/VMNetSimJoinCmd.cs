@@ -52,7 +52,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         vm.TSOState.BuildRoommates.Remove(AvatarState.PersistID);
                     VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
                 }
-            } else
+            } else if (AvatarState.Permissions != VMTSOAvatarPermissions.Admin)
             {
                 if (vm.TSOState.Roommates.Contains(AvatarState.PersistID))
                 {

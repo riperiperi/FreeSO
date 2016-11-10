@@ -19,18 +19,9 @@ namespace FSO.Server.Utils
             {
                 result = Image.FromStream(stream);
             }
-            catch (Exception ex)
+            catch (Exception )
             {
-                try
-                {
-                    result = (Bitmap)Image.FromStream(stream); //try as bmp
-                }
-                catch (Exception)
-                {
-                    stream.Seek(0, SeekOrigin.Begin);
-                    var tga = new Paloma.TargaImage(stream);
-                    result = tga.Image;
-                }
+                return new TexBitmap() { Data = new byte[0] };
             }
             stream.Close();
 

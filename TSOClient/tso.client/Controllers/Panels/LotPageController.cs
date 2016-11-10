@@ -59,6 +59,11 @@ namespace FSO.Client.Controllers.Panels
             DataService.Sync(target, new string[] { "Lot_Category" });
         }
 
+        public void SaveName(Lot target)
+        {
+            DataService.Sync(target, new string[] { "Lot_Name" });
+        }
+
         private void ChangeTopic()
         {
             List<ITopic> topics = new List<ITopic>();

@@ -22,6 +22,7 @@ namespace FSO.Client.UI.Controls
         public delegate void SkillLockChoiceDelegate(int level);
         public event SkillLockChoiceDelegate OnSkillLock;
 
+        public bool DisableLock;
         public int SkillLevel;
         public int LockLevel;
         public int HoverLevel;
@@ -93,10 +94,15 @@ namespace FSO.Client.UI.Controls
             m_TooltipHandler = UIUtils.GiveTooltip(this); //buttons can have tooltips
         }
 
+        public override Rectangle GetBounds()
+        {
+            return new Rectangle(new Point(), Size.ToPoint());
+        }
+
         public override void Update(UpdateState state)
         {
             base.Update(state);
-            if (m_isOver)
+            if (m_isOver && !DisableLock)
             {
                 HoverLevel = (int)Math.Round(GlobalPoint(state.MouseState.Position.ToVector2()).X/6);
                 if (HoverLevel > SkillLevel / 100) HoverLevel = SkillLevel / 100;
@@ -106,7 +112,10 @@ namespace FSO.Client.UI.Controls
                 HoverLevel = 0;
             }
 
-            Tooltip = (SkillLevel / 100f).ToString();
+            if (Visible) {
+                var nameStr = GameFacade.Strings.GetString("189", (23 + SkillID).ToString());
+                Tooltip = nameStr.Substring(0, nameStr.Length - 7)+(SkillLevel / 100f).ToString("0.00");
+            }
 
             ClickHandler.Region.Width = m_Width;
             ClickHandler.Region.Height = m_Height;
@@ -125,8 +134,11 @@ namespace FSO.Client.UI.Controls
                     break;
 
                 case UIMouseEventType.MouseDown:
-                    LockLevel = HoverLevel;
-                    OnSkillLock?.Invoke(HoverLevel);
+                    if (!DisableLock)
+                    {
+                        LockLevel = HoverLevel;
+                        OnSkillLock?.Invoke(HoverLevel);
+                    }
                     break;
 
                 case UIMouseEventType.MouseUp:

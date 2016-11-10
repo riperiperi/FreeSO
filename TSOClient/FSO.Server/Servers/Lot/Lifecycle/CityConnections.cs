@@ -17,6 +17,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
 {
     public class CityConnections
     {
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
         private Dictionary<LotServerConfigurationCity, CityConnection> Connections;
         private Thread ConnectionWatcher;
         private bool _Running;
@@ -89,6 +90,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
                 {
                     if (!connection.Connected)
                     {
+                        LOG.Info("Not connected!");
                         connection.Connect();
                     }else{
                         connection.Write(capacity);
@@ -166,6 +168,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
 
         public void SessionClosed(AriesClient client)
         {
+            LOG.Info("Lot Server "+LotServerConfig.Call_Sign+" disconnected!");
             Connected = false;
             _Connecting = false;
         }
@@ -177,7 +180,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
 
         public void InputClosed(AriesClient session)
         {
-
+            LOG.Info("Lot Server " + LotServerConfig.Call_Sign + " disconnected! (input closed)");
         }
 
         public void Write(params object[] messages)

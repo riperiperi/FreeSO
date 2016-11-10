@@ -466,10 +466,15 @@ namespace FSO.SimAntics.Utils
 
             //blend flags start at top left, then go clockwise. (top right, bottom right..)
 
-            if ((blend.WaterFlags & 1) > 0) FillTileLine(arch, -2, 0, 0, 1, WaterLineSegments, false);
-            if ((blend.WaterFlags & 4) > 0) FillTileLine(arch, -2, 0, 0, 1, WaterLineSegments, true);
-            if ((blend.WaterFlags & 16) > 0) FillTileLine(arch, -2, (short)(arch.Width - 1), 0, 1, WaterLineSegments, false);
-            if ((blend.WaterFlags & 64) > 0) FillTileLine(arch, -2, 0, (short)(arch.Height - 1), 1, WaterLineSegments, true);
+            if ((blend.WaterFlags & 1) > 0) FillTileLine(arch, W, 0, 0, 1, WaterLineSegments, false);
+            if ((blend.WaterFlags & 4) > 0) FillTileLine(arch, W, 0, 0, 1, WaterLineSegments, true);
+            if ((blend.WaterFlags & 16) > 0) FillTileLine(arch, W, (short)(arch.Width - 1), 0, 1, WaterLineSegments, false);
+            if ((blend.WaterFlags & 64) > 0) FillTileLine(arch, W, 0, (short)(arch.Height - 1), 1, WaterLineSegments, true);
+
+            if ((blend.WaterFlags & 2) > 0) FillTiles(arch, W, 1, 1, 1, 1, 1);
+            if ((blend.WaterFlags & 8) > 0) FillTiles(arch, W, (short)(arch.Width - 2), 1, 1, 1, 1);
+            if ((blend.WaterFlags & 32) > 0) FillTiles(arch, W, (short)(arch.Width - 2), (short)(arch.Height - 2), 1, 1, 1);
+            if ((blend.WaterFlags & 128) > 0) FillTiles(arch, W, 1, (short)(arch.Height - 2), 1, 1, 1);
 
             if ((blend.WaterFlags & 5) == 5) StampTilemap(arch, TopWaterCorner, 1, 1, 1);
             if ((blend.WaterFlags & 20) == 20) StampTilemap(arch, RightWaterCorner, (short)(arch.Width - 7), 1, 1);
@@ -484,6 +489,22 @@ namespace FSO.SimAntics.Utils
             if ((blend.WaterFlags & 8) > 0) VMArchitectureTools.FloorPatternRect(arch, new Rectangle(1, arch.Height-5, arch.Width-2, 4), 0, 65534, 1);
 
             */
+
+            //hard blends into the next terrain type 
+
+            FillTerrainRect(arch, new Rectangle(0, 0, 1, arch.Height - 1), (byte)(((blend.AdjFlags & 1) > 0) ? 255 : 0));
+            FillTerrainRect(arch, new Rectangle(0, 0, arch.Width - 1, 1), (byte)(((blend.AdjFlags & 4) > 0) ? 255 : 0));
+            FillTerrainRect(arch, new Rectangle(arch.Width - 2, 0, 1, arch.Height - 1), (byte)(((blend.AdjFlags & 16) > 0) ? 255 : 0));
+            FillTerrainRect(arch, new Rectangle(0, arch.Height - 2, arch.Width - 1, 1), (byte)(((blend.AdjFlags & 64) > 0) ? 255 : 0));
+
+            /*
+            FillTerrainRect(arch, new Rectangle(0, 0, 1, 1), (byte)(((blend.AdjFlags & 2) > 0) ? 255 : 0));
+            FillTerrainRect(arch, new Rectangle(arch.Width - 2, 0, 1, 1), (byte)(((blend.AdjFlags & 8) > 0) ? 255 : 0));
+            FillTerrainRect(arch, new Rectangle(arch.Width - 2, arch.Height - 2, 1, 1), (byte)(((blend.AdjFlags & 32) > 0) ? 255 : 0));
+            FillTerrainRect(arch, new Rectangle(0, arch.Height - 2, 1, 1), (byte)(((blend.AdjFlags & 128) > 0) ? 255 : 0));
+            */
+
+            //smooth blends into the next terrain type
 
             ApplyTerrainBlend(arch, RotateByte(blend.AdjFlags, 0), new Rectangle(0, 0, arch.Width - 1, 24), 255, 0, -11,
                 new Point[] { new Point(0, 0), new Point(arch.Width - 1, 0) },
@@ -504,18 +525,6 @@ namespace FSO.SimAntics.Utils
                 new Point[] { new Point(0, arch.Height - 1), new Point(0, 0) },
                 new float[] { (45f / 180f) * (float)Math.PI, (135f / 180f) * (float)Math.PI},
                 new float[] { (15f / 180f) * (float)Math.PI, (-15f / 180f) * (float)Math.PI });
-
-            //and finally, hard blends into the next terrain type 
-
-            FillTerrainRect(arch, new Rectangle(0, 0, 1, arch.Height - 1), (byte)(((blend.AdjFlags & 1) > 0)?255:0));
-            FillTerrainRect(arch, new Rectangle(0, 0, arch.Width-1, 1), (byte)(((blend.AdjFlags & 4) > 0) ? 255 : 0));
-            FillTerrainRect(arch, new Rectangle(arch.Width - 2, 0, 1, arch.Height - 1), (byte)(((blend.AdjFlags & 16) > 0) ? 255 : 0));
-            FillTerrainRect(arch, new Rectangle(0, arch.Height - 2, arch.Width - 1, 1), (byte)(((blend.AdjFlags & 64) > 0) ? 255 : 0));
-
-            FillTerrainRect(arch, new Rectangle(0, 0, 1, 1), (byte)(((blend.AdjFlags & 2) > 0) ? 255 : 0));
-            FillTerrainRect(arch, new Rectangle(arch.Width - 2, 0, 1, 1), (byte)(((blend.AdjFlags & 8) > 0) ? 255 : 0));
-            FillTerrainRect(arch, new Rectangle(arch.Width - 2, arch.Height - 2, 1, 1), (byte)(((blend.AdjFlags & 32) > 0) ? 255 : 0));
-            FillTerrainRect(arch, new Rectangle(0, arch.Height - 2, 1, 1), (byte)(((blend.AdjFlags & 128) > 0) ? 255 : 0));
 
             RestoreRoad(vm, roads);
 
@@ -556,18 +565,18 @@ namespace FSO.SimAntics.Utils
         // looking towards the lot
         // (M=mailbox, B=bin, P=phone, 1/2=carportal)
         // (0x39CCF441, 0xA4258067, 0x313D2F9A, (0x865A6812, 0xD564C66B))
-        // |====|====
+        // |===M|====
         // |   M B  P
-        // |^^^M^^^^^
+        // |^^^^^^^^^
         // 2    1
 
         private static GUIDToPosition[] MovePositions = {
             //center relative (vertical line above)
-            new GUIDToPosition(0x39CCF441, -1, 2, 4), //mailbox (2tile)
+            new GUIDToPosition(0x39CCF441, -1, 0, 0), //mailbox (2tile)
             new GUIDToPosition(0xA4258067, 1, 1, 0), //bin
             new GUIDToPosition(0x313D2F9A, 4, 1, 0), //phone
-            new GUIDToPosition(0x865A6812, 0, 3, 6), //car portal 1
-            new GUIDToPosition(0xD564C66B, -5, 3, 6), //car portal 2
+            new GUIDToPosition(0x865A6812, 0, 3, 2), //car portal 1
+            new GUIDToPosition(0xD564C66B, -5, 3, 2), //car portal 2
         };
 
         /// <summary>
@@ -636,7 +645,7 @@ namespace FSO.SimAntics.Utils
             if (npc1 != null) npc1.SetPosition(LotTilePos.FromBigTile((short)pt1.X, (short)pt1.Y, 1), (Direction)(1 << ((lotDir * 2 + 0) % 8)), vm.Context);
             var npc2 = EntityByGUID(vm, 0x4E57C380);
             if (npc2 != null) npc2.SetPosition(LotTilePos.FromBigTile((short)pt2.X, (short)pt2.Y, 1), (Direction)(1 << ((lotDir * 2 + 0) % 8)), vm.Context);
-            var ped = EntityByGUID(vm, 0x4E57C380);
+            var ped = EntityByGUID(vm, 0x81E6BEF9);
             if (ped != null) ped.SetPosition(LotTilePos.FromBigTile((short)ctr.X, (short)ctr.Y, 1), (Direction)(1 << ((lotDir * 2 + 0) % 8)), vm.Context);
 
             var rPos = ctr + (-13 * xperp) + (2 * yperp);

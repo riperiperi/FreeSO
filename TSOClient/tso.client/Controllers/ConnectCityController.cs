@@ -50,58 +50,61 @@ namespace FSO.Client.Controllers
 
         private void CityConnectionRegulator_OnTransition(string state, object data)
         {
-            switch (state)
+            GameThread.NextUpdate((x) =>
             {
-                case "Disconnected":
-                    break;
-                case "SelectCity":
-                    //4  ^Starting engines^                 # City is Selected...
-                    View.SetProgress((1.0f / 14.0f) * 100, 4);
-                    break;
-                case "ConnectToCitySelector":
-                    //5  ^Talking with the mothership^      # Connecting to City Selector...
-                    View.SetProgress((2.0f / 14.0f) * 100, 5);
-                    break;
-                case "CitySelected":
-                    //6  ^1^ # Processing XML response...
-                    View.SetProgress((3.0f / 14.0f) * 100, 6);
-                    break;
-                case "OpenSocket":
-                    //7	  ^Sterilizing TCP/IP sockets^       # Connecting to City...
-                    View.SetProgress((4.0f / 14.0f) * 100, 7);
-                    break;
-                case "PartiallyConnected":
-                    //7	  ^Sterilizing TCP/IP sockets^       # Connecting to City...
-                    View.SetProgress((5.0f / 14.0f) * 100, 8);
-                    break;
-                case "AskForAvatarData":
-                    //9  ^Reticulating spleens^             # Asking for Avatar data from DB...
-                    View.SetProgress((6.0f / 14.0f) * 100, 9);
-                    break;
-                case "ReceivedAvatarData":
-                    //10 ^Spleens Reticulated^              # Received Avatar data from DB...
+                switch (state)
+                {
+                    case "Disconnected":
+                        break;
+                    case "SelectCity":
+                        //4  ^Starting engines^                 # City is Selected...
+                        View.SetProgress((1.0f / 14.0f) * 100, 4);
+                        break;
+                    case "ConnectToCitySelector":
+                        //5  ^Talking with the mothership^      # Connecting to City Selector...
+                        View.SetProgress((2.0f / 14.0f) * 100, 5);
+                        break;
+                    case "CitySelected":
+                        //6  ^1^ # Processing XML response...
+                        View.SetProgress((3.0f / 14.0f) * 100, 6);
+                        break;
+                    case "OpenSocket":
+                        //7	  ^Sterilizing TCP/IP sockets^       # Connecting to City...
+                        View.SetProgress((4.0f / 14.0f) * 100, 7);
+                        break;
+                    case "PartiallyConnected":
+                        //7	  ^Sterilizing TCP/IP sockets^       # Connecting to City...
+                        View.SetProgress((5.0f / 14.0f) * 100, 8);
+                        break;
+                    case "AskForAvatarData":
+                        //9  ^Reticulating spleens^             # Asking for Avatar data from DB...
+                        View.SetProgress((6.0f / 14.0f) * 100, 9);
+                        break;
+                    case "ReceivedAvatarData":
+                        //10 ^Spleens Reticulated^              # Received Avatar data from DB...
 
-                    var dbResponse = (LoadAvatarByIDResponse)data;
-                    if (dbResponse != null)
-                    {
-                        AvatarData = dbResponse;
-                    }
+                        var dbResponse = (LoadAvatarByIDResponse)data;
+                        if (dbResponse != null)
+                        {
+                            AvatarData = dbResponse;
+                        }
 
-                    View.SetProgress((7.0f / 14.0f) * 100, 10);
-                    break;
-                case "AskForCharacterData":
-                    //11 ^Purging psychographic metrics^    # Asking for Character data from DB...
-                    View.SetProgress((8.0f / 14.0f) * 100, 11);
-                    break;
+                        View.SetProgress((7.0f / 14.0f) * 100, 10);
+                        break;
+                    case "AskForCharacterData":
+                        //11 ^Purging psychographic metrics^    # Asking for Character data from DB...
+                        View.SetProgress((8.0f / 14.0f) * 100, 11);
+                        break;
 
-                case "ReceivedCharacterData":
-                    //12 ^Metrics Purged^                   # Received Character data from DB...
-                    View.SetProgress((9.0f / 14.0f) * 100, 12);
-                    break;
-                case "Connected":
-                    onConnect();
-                    break;
-            }
+                    case "ReceivedCharacterData":
+                        //12 ^Metrics Purged^                   # Received Character data from DB...
+                        View.SetProgress((9.0f / 14.0f) * 100, 12);
+                        break;
+                    case "Connected":
+                        onConnect();
+                        break;
+                }
+            });
         }
 
         public void Dispose()

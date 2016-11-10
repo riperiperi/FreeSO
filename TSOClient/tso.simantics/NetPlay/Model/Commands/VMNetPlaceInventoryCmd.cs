@@ -48,7 +48,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             else
             {
                 //oops, we can't place this object or some other issue occured. move it back to inventory.
-                if (CreatedGroup != null) CreatedGroup.Delete(vm.Context);
+                if (CreatedGroup != null)
+                {
+                    foreach (var o in CreatedGroup.Objects) o.PersistID = 0; //no longer representative of the object in db.
+                    CreatedGroup.Delete(vm.Context);
+                }
                 if (vm.GlobalLink != null)
                 {
                     //do a force move to inventory here. do not need to resave state, since it has not changed since the place.
@@ -78,6 +82,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     {
                         state.Deserialize(reader);
                     }
+                    foreach (var e in state.Entities) ((VMGameObjectMarshal)e).Disabled = 0;
                 }
                 catch (Exception)
                 {

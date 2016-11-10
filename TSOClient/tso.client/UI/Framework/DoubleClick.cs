@@ -16,8 +16,8 @@ namespace FSO.Client.UI.Framework
         {
             if(type == UIMouseEventType.MouseUp)
             {
-                var now = update.Time.ElapsedGameTime.Ticks;
-                if(now - LastClick < 1000)
+                var now = (long)(DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds;
+                if (now - LastClick < 500)
                 {
                     LastClick = now;
                     return true;

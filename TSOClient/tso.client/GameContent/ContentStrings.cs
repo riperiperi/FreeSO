@@ -119,7 +119,10 @@ namespace FSO.Client.GameContent
             foreach (var file in files)
             {
                 var tableID = Path.GetFileName(file);
-                tableID = tableID.Substring(1, tableID.IndexOf("_", 1) - 1);
+                var second_ = tableID.IndexOf("_", 1);
+                if (second_ == -1) return;
+
+                tableID = tableID.Substring(1, second_ - 1);
 
                 var tableData = new Dictionary<string, string>();
 

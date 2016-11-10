@@ -22,6 +22,7 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels.LotControls;
 using FSO.Client.UI.Model;
 using FSO.Common;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -112,6 +113,7 @@ namespace FSO.Client.UI.Panels
                 { HandButton, 28 },
             };
 
+            TerrainButton.Disabled = (LotController?.ActiveEntity?.TSOState as VMTSOAvatarState)?.Permissions < VMTSOAvatarPermissions.Admin;
             TerrainButton.OnButtonClick += ChangeCategory;
             WaterButton.OnButtonClick += ChangeCategory;
             WallButton.OnButtonClick += ChangeCategory;

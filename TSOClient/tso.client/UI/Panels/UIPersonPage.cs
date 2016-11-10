@@ -675,6 +675,7 @@ namespace FSO.Client.UI.Panels
         private void Redraw()
         {
             if (LocalDataChange) return;
+            NameText.Y = 5;
             var isOpen = Open == true;
             var isClosed = Open == false;
             var isOnline = false;
@@ -720,20 +721,15 @@ namespace FSO.Client.UI.Panels
 
             RelationshipChange();
 
-            var isFriend = RelOutLTR > 50;
-            var isEnemy = RelOutLTR < -50;
+            foreach (var bar in SkillBars) bar.DisableLock = !isMe;
+
+            var isFriend = RelOutLTR >= 50;
+            var isEnemy = RelOutLTR <= -50;
             var isNeutral = !(isFriend || isEnemy);
 
             SelfRimImage.Visible = isOnline && isMe;
             OfflineSelfBackgroundImage.Visible = !isOnline && isMe;
-            if (!isMe)
-            {
-                FriendRimImage.Visible = isOnline && isFriend;
-                EnemyRimImage.Visible = isOnline && isEnemy;
-                NeutralRimImage.Visible = isOnline && isNeutral;
-                OfflineFriendBackgroundImage.Visible = !isOnline && isFriend;
-                OfflineEnemyBackgroundImage.Visible = !isOnline && isEnemy;
-                OfflineNeutralBackgroundImage.Visible = !isOnline && isNeutral;
+            if (!isMe) { 
                 FindSimButton.Texture = FindPersonButtonImage;
                 FindSimButton.Tooltip = GameFacade.Strings.GetString("189", "8");
             } else
@@ -741,6 +737,12 @@ namespace FSO.Client.UI.Panels
                 FindSimButton.Texture = (privacyOn) ? FindPrivacyOnButtonImage : FindPrivacyOffButtonImage;
                 FindSimButton.Tooltip = GameFacade.Strings.GetString("189", (privacyOn) ? "57":"56");
             }
+            FriendRimImage.Visible = isOnline && isFriend;
+            EnemyRimImage.Visible = isOnline && isEnemy;
+            NeutralRimImage.Visible = isOnline && isNeutral;
+            OfflineFriendBackgroundImage.Visible = !isOnline && isFriend;
+            OfflineEnemyBackgroundImage.Visible = !isOnline && isEnemy;
+            OfflineNeutralBackgroundImage.Visible = !isOnline && isNeutral;
 
             MessageButton.Disabled = isMe || !isOnline;
 

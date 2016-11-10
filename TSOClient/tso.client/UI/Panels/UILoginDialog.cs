@@ -30,7 +30,7 @@ namespace FSO.Client.UI.Panels
             m_TxtAccName = UITextEdit.CreateTextBox();
             m_TxtAccName.X = 20;
             m_TxtAccName.Y = 72;
-            m_TxtAccName.MaxChars = 16;
+            m_TxtAccName.MaxChars = 32;
             m_TxtAccName.SetSize(310, 27);
             m_TxtAccName.CurrentText = GlobalSettings.Default.LastUser;
             m_TxtAccName.OnChange += M_TxtAccName_OnChange;
@@ -42,7 +42,7 @@ namespace FSO.Client.UI.Panels
             m_TxtPass = UITextEdit.CreateTextBox();
             m_TxtPass.X = 20;
             m_TxtPass.Y = 128;
-            m_TxtPass.MaxChars = 16;
+            m_TxtPass.MaxChars = 64;
             m_TxtPass.SetSize(310, 27);
             m_TxtPass.Password = true;
             m_TxtPass.OnChange += M_TxtAccName_OnChange;

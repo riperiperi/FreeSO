@@ -30,6 +30,7 @@ namespace FSO.SimAntics.NetPlay
         public delegate void VMNetClosedHandler(VMCloseNetReason reason);
 
         private int DesyncCooldown = 0;
+        public uint LastTick = 0;
 
         protected void InternalTick(VM vm, VMNetTick tick)
         {
@@ -45,20 +46,28 @@ namespace FSO.SimAntics.NetPlay
                     System.Console.WriteLine("WARN - DESYNC - Too soon to try again!");
                 }
             }
+
             vm.Context.RandomSeed = tick.RandomSeed;
             bool doTick = !tick.ImmediateMode;
             foreach(var cmd in tick.Commands)
             {
-                if (cmd.Command is VMStateSyncCmd) doTick = false;
+                if (cmd.Command is VMStateSyncCmd)
+                {
+                    if (LastTick + 1 != tick.TickID) System.Console.WriteLine("Jump to tick " + tick.TickID);
+                    doTick = false;
+                }
 
                 var caller = vm.GetAvatarByPersist(cmd.Command.ActorUID);
                 cmd.Command.Execute(vm, caller);
             }
-            if (doTick && vm.Context.Ready)
+            if (tick.TickID < LastTick) System.Console.WriteLine("Tick wrong! Got " + tick.TickID + ", Missed " + ((int)tick.TickID - (LastTick + 1)));
+            else if (doTick && vm.Context.Ready)
             {
+                if (tick.TickID > LastTick + 1) System.Console.WriteLine("Tick wrong! Got " + tick.TickID + ", Missed " + ((int)tick.TickID - (LastTick + 1)));
                 vm.InternalTick();
                 if (DesyncCooldown > 0) DesyncCooldown--;
             }
+            LastTick = tick.TickID;
         }
         public virtual void Shutdown()
         {

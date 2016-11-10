@@ -106,7 +106,7 @@ namespace FSO.Server.Framework.Aries
             }
             catch(Exception ex)
             {
-                LOG.Error("Unknown error bootstrapping server", ex);
+                LOG.Error("Unknown error bootstrapping server: "+ex.ToString(), ex);
             }
         }
 

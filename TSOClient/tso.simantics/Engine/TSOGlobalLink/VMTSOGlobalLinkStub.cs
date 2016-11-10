@@ -127,13 +127,13 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             vm.Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Leave, avatar.Name));
         }
 
-        public void RequestRoommate(VM vm, VMAvatar avatar, int mode, byte permissions)
+        public void RequestRoommate(VM vm, uint pid, int mode, byte permissions)
         {
             //in final game: signal to city server persistant roommate request state.
             //right now: immedaiately add as roommate
             vm.ForwardCommand(new VMChangePermissionsCmd()
             {
-                TargetUID = avatar.PersistID,
+                TargetUID = pid,
                 Level = VMTSOAvatarPermissions.Roommate,
                 Verified = true
             });

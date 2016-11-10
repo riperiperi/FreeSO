@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Nancy.Security;
 using FSO.Server.Database.DA.Shards;
 using FSO.Common.Domain.Shards;
+using NLog;
 
 namespace FSO.Server.Servers.Api.Controllers
 {
@@ -25,6 +26,14 @@ namespace FSO.Server.Servers.Api.Controllers
 
         private static String ERROR_SHARD_NOT_FOUND_CODE = "503";
         private static String ERROR_SHARD_NOT_FOUND_MSG = "Shard not found";
+
+        private static String ERROR_AVATAR_NOT_FOUND_CODE = "504";
+        private static String ERROR_AVATAR_NOT_FOUND_MSG = "Avatar not found";
+
+        private static String ERROR_AVATAR_NOT_YOURS_CODE = "505";
+        private static String ERROR_AVATAR_NOT_YOURS_MSG = "You do not own this avatar!";
+
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         public CitySelectorController(IDAFactory DAFactory, ApiServerConfiguration config, JWTFactory jwt, IShardsDomain shardsDomain) : base("/cityselector")
         {
@@ -121,7 +130,25 @@ namespace FSO.Server.Servers.Api.Controllers
                     ShardStatusItem shard = shardsDomain.GetByName(shardName);
                     if (shard != null)
                     {
-                        var avatarDBID = uint.Parse(avatarId);
+                        var tryIP = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                        var ip = tryIP ?? this.Request.UserHostAddress;
+
+                        uint avatarDBID = uint.Parse(avatarId);
+
+                        if (avatarDBID != 0)
+                        {
+                            var avatar = db.Avatars.Get(avatarDBID);
+                            if (avatar == null) {
+                                //can't join server with an avatar that doesn't exist
+                                return Response.AsXml(new XMLErrorMessage(ERROR_AVATAR_NOT_FOUND_CODE, ERROR_AVATAR_NOT_FOUND_MSG));
+                            }
+                            if (avatar.user_id != user.UserID || avatar.shard_id != shard.Id)
+                            {
+                                //make sure we own the avatar we're trying to connect with
+                                LOG.Info("SECURITY: Invalid avatar login attempt from " + ip + ", user "+user.UserID);
+                                return Response.AsXml(new XMLErrorMessage(ERROR_AVATAR_NOT_YOURS_CODE, ERROR_AVATAR_NOT_YOURS_MSG));
+                            }
+                        }
 
                         /** Make an auth ticket **/
                         var ticket = new ShardTicket
@@ -130,7 +157,7 @@ namespace FSO.Server.Servers.Api.Controllers
                             user_id = user.UserID,
                             avatar_id = avatarDBID,
                             date = Epoch.Now,
-                            ip = this.Request.UserHostAddress
+                            ip = ip
                         };
                         db.Shards.CreateTicket(ticket);
 

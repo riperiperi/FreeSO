@@ -259,76 +259,81 @@ namespace FSO.LotView.Components
             if (VertexBuffer == null) return;
             PPXDepthEngine.RenderPPXDepth(Effect, true, (depthMode) =>
             {
-                Effect.Parameters["LightGreen"].SetValue(LightGreen.ToVector4());
-                Effect.Parameters["DarkGreen"].SetValue(DarkGreen.ToVector4());
-                Effect.Parameters["DarkBrown"].SetValue(DarkBrown.ToVector4());
-                Effect.Parameters["LightBrown"].SetValue(LightBrown.ToVector4());
-                Effect.Parameters["ScreenSize"].SetValue(new Vector2(device.Viewport.Width, device.Viewport.Height));
-                //Effect.Parameters["depthOutMode"].SetValue(DepthMode && (!FSOEnvironment.UseMRT));
+            Effect.Parameters["LightGreen"].SetValue(LightGreen.ToVector4());
+            Effect.Parameters["DarkGreen"].SetValue(DarkGreen.ToVector4());
+            Effect.Parameters["DarkBrown"].SetValue(DarkBrown.ToVector4());
+            Effect.Parameters["LightBrown"].SetValue(LightBrown.ToVector4());
+            Effect.Parameters["ScreenSize"].SetValue(new Vector2(device.Viewport.Width, device.Viewport.Height) / world.PreciseZoom);
+            //Effect.Parameters["depthOutMode"].SetValue(DepthMode && (!FSOEnvironment.UseMRT));
 
-                var offset = -world.WorldSpace.GetScreenOffset();
+            var offset = -world.WorldSpace.GetScreenOffset();
 
-                world._3D.ApplyCamera(Effect);
-                var translation = ((world.Zoom == WorldZoom.Far) ? -7 : ((world.Zoom == WorldZoom.Medium) ? -5 : -3)) * (20 / 522f);
-                if (world.PreciseZoom < 1) translation /= world.PreciseZoom;
-                else translation *= world.PreciseZoom;
-                var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, translation, 0);
-                Effect.Parameters["World"].SetValue(worldmat);
+            world._3D.ApplyCamera(Effect);
+            var translation = ((world.Zoom == WorldZoom.Far) ? -7 : ((world.Zoom == WorldZoom.Medium) ? -5 : -3)) * (20 / 522f);
+            if (world.PreciseZoom < 1) translation /= world.PreciseZoom;
+            else translation *= world.PreciseZoom;
+            var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, translation, 0);
+            Effect.Parameters["World"].SetValue(worldmat);
 
-                Effect.Parameters["DiffuseColor"].SetValue(new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1.0f));
+            Effect.Parameters["DiffuseColor"].SetValue(new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1.0f));
 
-                device.SetVertexBuffer(VertexBuffer);
-                device.Indices = IndexBuffer;
+            device.SetVertexBuffer(VertexBuffer);
+            device.Indices = IndexBuffer;
 
-                Effect.CurrentTechnique = Effect.Techniques["DrawBase"];
-                foreach (var pass in Effect.CurrentTechnique.Passes)
+            Effect.CurrentTechnique = Effect.Techniques["DrawBase"];
+            foreach (var pass in Effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, NumPrimitives);
+            }
+
+            int grassScale;
+            float grassDensity;
+            switch (world.Zoom)
+            {
+                case WorldZoom.Far:
+                    grassScale = 4;
+                    grassDensity = 0.56f;
+                    break;
+                case WorldZoom.Medium:
+                    grassScale = 2;
+                    grassDensity = 0.50f;
+                    break;
+                default:
+                    grassScale = 1;
+                    grassDensity = 0.43f;
+                    break;
+            }
+
+            grassDensity *= GrassDensityScale;
+
+            if (BladePrimitives > 0)
+            {
+                Effect.CurrentTechnique = Effect.Techniques["DrawBlades"];
+                int grassNum = (int)Math.Ceiling(GrassHeight / (float)grassScale);
+
+                //if (depthMode && (!FSOEnvironment.UseMRT)) return;
+                RenderTargetBinding[] rts = null;
+                if (FSOEnvironment.UseMRT)
                 {
-                    pass.Apply();
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, NumPrimitives);
-                }
-
-                int grassScale;
-                float grassDensity;
-                switch (world.Zoom)
-                {
-                    case WorldZoom.Far:
-                        grassScale = 4;
-                        grassDensity = 0.56f;
-                        break;
-                    case WorldZoom.Medium:
-                        grassScale = 2;
-                        grassDensity = 0.50f;
-                        break;
-                    default:
-                        grassScale = 1;
-                        grassDensity = 0.43f;
-                        break;
-                }
-
-                grassDensity *= GrassDensityScale;
-
-                if (BladePrimitives > 0)
-                {
-                    Effect.CurrentTechnique = Effect.Techniques["DrawBlades"];
-                    int grassNum = (int)Math.Ceiling(GrassHeight / (float)grassScale);
-
-                    //if (depthMode && (!FSOEnvironment.UseMRT)) return;
-                    RenderTargetBinding[] rts = null;
-                    if (FSOEnvironment.UseMRT)
+                    rts = device.GetRenderTargets();
+                    if (rts.Length > 1)
                     {
-                        rts = device.GetRenderTargets();
-                        if (rts.Length > 1)
-                        {
-                            device.SetRenderTarget((RenderTarget2D)rts[0].RenderTarget);
-                        }
+                        device.SetRenderTarget((RenderTarget2D)rts[0].RenderTarget);
                     }
-                    device.Indices = BladeIndexBuffer;
-                    for (int i = 0; i < grassNum; i++)
-                    {
-                        Effect.Parameters["World"].SetValue(Matrix.Identity * Matrix.CreateTranslation(0, i * (20 / 522f) * grassScale, 0));
-                        Effect.Parameters["GrassProb"].SetValue(grassDensity * ((grassNum - (i / (2f * grassNum))) / (float)grassNum));
-                        offset += new Vector2(0, 1);
-                        Effect.Parameters["ScreenOffset"].SetValue(offset);
+                }
+                device.Indices = BladeIndexBuffer;
+                for (int i = 0; i < grassNum; i++)
+                {
+                    Effect.Parameters["World"].SetValue(Matrix.Identity * Matrix.CreateTranslation(0, i * (20 / 522f) * grassScale, 0));
+                    Effect.Parameters["GrassProb"].SetValue(grassDensity * ((grassNum - (i / (2f * grassNum))) / (float)grassNum));
+                    offset += new Vector2(0, 1);
+
+                        
+                    var off2 = new Vector2(world.WorldSpace.WorldPxWidth, world.WorldSpace.WorldPxHeight);
+                    off2 = (off2 / world.PreciseZoom - off2) / 2;
+
+                        Effect.Parameters["ScreenOffset"].SetValue(offset - off2);
 
                         foreach (var pass in Effect.CurrentTechnique.Passes)
                         {

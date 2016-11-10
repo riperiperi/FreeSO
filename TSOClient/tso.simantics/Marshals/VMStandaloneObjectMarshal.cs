@@ -48,7 +48,7 @@ namespace FSO.SimAntics.Marshals
                 Entities[i] = ent;
             }
             
-            MultitileGroup = new VMMultitileGroupMarshal();
+            MultitileGroup = new VMMultitileGroupMarshal(Version);
             MultitileGroup.Deserialize(reader);
         }
 
@@ -96,7 +96,9 @@ namespace FSO.SimAntics.Marshals
             int i = 0;
             foreach (var ent in group.Objects)
             {
-                Entities[i++] = ((VMGameObject)ent).Save();
+                var sent = ((VMGameObject)ent).Save();
+                sent.Contained = new short[sent.Contained.Length];
+                Entities[i++] = sent;
             }
         }
 
@@ -115,6 +117,7 @@ namespace FSO.SimAntics.Marshals
                 var worldObject = new ObjectComponent(objDefinition);
                 var obj = new VMGameObject(objDefinition, worldObject);
                 obj.Load((VMGameObjectMarshal)ent);
+                obj.Contained = new VMEntity[ent.Contained.Length]; //we aren't loading slot data, but we need to initialize this.
                 obj.Position = LotTilePos.OUT_OF_WORLD;
                 vm.Context.Blueprint.AddObject((ObjectComponent)obj.WorldUI);
                 vm.Context.Blueprint.ChangeObjectLocation((ObjectComponent)obj.WorldUI, obj.Position);
@@ -126,8 +129,7 @@ namespace FSO.SimAntics.Marshals
                 MultitileGroup.Objects[i++] = obj.ObjectID; //update saved group, in multitile group order (as saved)
                 if (VM.UseWorld) obj.WorldUI.ObjectID = obj.ObjectID;
             }
-
-            //NOTE: LoadCrossRef not used, as we do not want to load slot data.
+            
             return new VMMultitileGroup(MultitileGroup, vm.Context); //should self register
         }
     }

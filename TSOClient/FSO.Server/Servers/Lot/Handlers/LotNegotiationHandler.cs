@@ -1,6 +1,7 @@
 ﻿using FSO.Server.Framework.Gluon;
 using FSO.Server.Protocol.Gluon.Packets;
 using FSO.Server.Servers.Lot.Domain;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace FSO.Server.Servers.Lot.Handlers
 {
     public class LotNegotiationHandler
     {
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
         private LotHost Lots;
 
         public LotNegotiationHandler(LotHost lots)
@@ -20,7 +22,9 @@ namespace FSO.Server.Servers.Lot.Handlers
 
         public void Handle(IGluonSession session, TransferClaim request)
         {
-            if(request.Type != Protocol.Gluon.Model.ClaimType.LOT)
+            LOG.Info("Recieved lot host request... ");
+
+            if (request.Type != Protocol.Gluon.Model.ClaimType.LOT)
             {
                 session.Write(new TransferClaimResponse {
                     Status = TransferClaimResponseStatus.REJECTED,

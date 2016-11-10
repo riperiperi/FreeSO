@@ -89,7 +89,7 @@ namespace FSO.Client.UI.Panels.LotControls
             model.ClientSourced = true;
             model.Avatar_CurrentJob = (ushort)avatar.GetPersonData(VMPersonDataVariable.OnlineJobID);
 
-            model.Avatar_SkillsLockPoints = (ushort)avatar.GetPersonData(VMPersonDataVariable.SkillLock);
+            model.Avatar_SkillsLockPoints = (ushort)avatar.SkillLocks;
             model.Avatar_Skills = new AvatarSkills()
             {
                 AvatarSkills_Body = (ushort)avatar.GetPersonData(VMPersonDataVariable.BodySkill),
@@ -99,12 +99,12 @@ namespace FSO.Client.UI.Panels.LotControls
                 AvatarSkills_Logic = (ushort)avatar.GetPersonData(VMPersonDataVariable.LogicSkill),
                 AvatarSkills_Mechanical = (ushort)avatar.GetPersonData(VMPersonDataVariable.MechanicalSkill),
 
-                AvatarSkills_LockLv_Body = (ushort)avatar.GetPersonData(VMPersonDataVariable.SkillLockBody),
-                AvatarSkills_LockLv_Charisma = (ushort)avatar.GetPersonData(VMPersonDataVariable.SkillLockCharisma),
-                AvatarSkills_LockLv_Cooking = (ushort)avatar.GetPersonData(VMPersonDataVariable.SkillLockCooking),
-                AvatarSkills_LockLv_Creativity = (ushort)avatar.GetPersonData(VMPersonDataVariable.SkillLockCreativity),
-                AvatarSkills_LockLv_Logic = (ushort)avatar.GetPersonData(VMPersonDataVariable.SkillLockLogic),
-                AvatarSkills_LockLv_Mechanical = (ushort)avatar.GetPersonData(VMPersonDataVariable.SkillLockMechanical),
+                AvatarSkills_LockLv_Body = (ushort)(avatar.GetPersonData(VMPersonDataVariable.SkillLockBody)/100),
+                AvatarSkills_LockLv_Charisma = (ushort)(avatar.GetPersonData(VMPersonDataVariable.SkillLockCharisma) / 100),
+                AvatarSkills_LockLv_Cooking = (ushort)(avatar.GetPersonData(VMPersonDataVariable.SkillLockCooking) / 100),
+                AvatarSkills_LockLv_Creativity = (ushort)(avatar.GetPersonData(VMPersonDataVariable.SkillLockCreativity) / 100),
+                AvatarSkills_LockLv_Logic = (ushort)(avatar.GetPersonData(VMPersonDataVariable.SkillLockLogic) / 100),
+                AvatarSkills_LockLv_Mechanical = (ushort)(avatar.GetPersonData(VMPersonDataVariable.SkillLockMechanical) / 100),
             };
 
             var jobs = new List<JobLevel>();

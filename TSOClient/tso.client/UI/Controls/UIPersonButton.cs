@@ -65,7 +65,10 @@ namespace FSO.Client.UI.Controls
                 _AvatarId = value;
                 if (value == uint.MaxValue)
                 {
-                    User.Value = UserReference.Of(Common.Enum.UserReferenceType.MOMI);
+                    GameThread.NextUpdate((x) =>
+                    {
+                        User.Value = UserReference.Of(Common.Enum.UserReferenceType.MOMI);
+                    });
                 }
                 else
                 {

@@ -85,6 +85,7 @@ namespace FSO.Client.UI.Panels
             Labels = new List<UIChatBalloon>();
 
             TextBox = new UITextBox();
+            TextBox.SetBackgroundTexture(null, 0, 0, 0, 0);
             TextBox.Visible = false;
             Add(TextBox);
             TextBox.Position = new Vector2(25, 25);
@@ -144,6 +145,17 @@ namespace FSO.Client.UI.Panels
             string message = TextBox.CurrentText;
             SendMessage(message);
             TextBox.Clear();
+        }
+
+        public List<Rectangle> GetInvalid(UIChatBalloon label)
+        {
+            var to = Labels.IndexOf(label);
+            var copy = new List<Rectangle>(InvalidAreas);
+            for (int i=0; i<to; i++)
+            {
+                if (Labels[i].Visible && Labels[i].Alpha > 0) copy.Add(Labels[i].DisplayRect);
+            }
+            return copy;
         }
 
         public override void Update(UpdateState state)
@@ -214,7 +226,12 @@ namespace FSO.Client.UI.Panels
                     label.Alpha = label.FadeTime / 10f;
                 }
 
-                label.TargetPt = avatar.WorldUI.GetScreenPos(vm.Context.World.State) + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom));
+                var world = vm.Context.World.State;
+                var off2 = new Vector2(world.WorldSpace.WorldPxWidth, world.WorldSpace.WorldPxHeight);
+                off2 = (off2 / world.PreciseZoom - off2) / 2;
+
+                label.TargetPt = ((avatar.WorldUI.GetScreenPos(vm.Context.World.State) + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom)))
+                   + off2) * world.PreciseZoom ;
 
             }
             base.Update(state);
@@ -222,6 +239,8 @@ namespace FSO.Client.UI.Panels
 
         public override void Draw(UISpriteBatch batch)
         {
+            var whitePx = TextureGenerator.GetPxWhite(batch.GraphicsDevice);
+            if (TextBox.Visible) DrawLocalTexture(batch, whitePx, null, TextBox.Position, TextBox.Size, new Color(0x00, 0x33, 0x66) * 0.75f);
             base.Draw(batch);
         }
 

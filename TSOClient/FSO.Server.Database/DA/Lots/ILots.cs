@@ -9,6 +9,7 @@ namespace FSO.Server.Database.DA.Lots
     public interface ILots
     {
         IEnumerable<DbLot> All(int shard_id);
+        List<DbLot> AllLocations(int shard_id);
         DbLot GetByLocation(int shard_id, uint location);
         List<DbLot> GetAdjToLocation(int shard_id, uint location);
         DbLot GetByOwner(uint owner_id);

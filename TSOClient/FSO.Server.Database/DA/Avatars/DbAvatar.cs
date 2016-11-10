@@ -43,6 +43,7 @@ namespace FSO.Server.Database.DA.Avatars
 
         public ulong body_swimwear { get; set; }
         public ulong body_sleepwear { get; set; }
+        public ulong body_current { get; set; }
 
         public ushort current_job { get; set; }
         public ushort is_ghost { get; set; }

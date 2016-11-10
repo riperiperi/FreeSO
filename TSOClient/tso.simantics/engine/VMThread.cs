@@ -689,7 +689,7 @@ namespace FSO.SimAntics.Engine
             if (action == null) return null;
             var result = new List<VMPieMenuInteraction>();
 
-            if (((action.Flags & TTABFlags.MustRun) == 0) && Entity is VMAvatar && ((action.Flags2 & TSOFlags.AllowCSRs) == 0)) //just let everyone use the CSR interactions
+            if (((action.Flags & TTABFlags.MustRun) == 0) && Entity is VMAvatar) //just let everyone use the CSR interactions
             {
                 var avatar = (VMAvatar)Entity;
 
@@ -719,11 +719,10 @@ namespace FSO.SimAntics.Engine
                 //if flags are empty apart from "Non-Empty", force everything but visitor. (a kind of default state)
                 if (tsoCompare == TSOFlags.NonEmpty) tsoCompare |= TSOFlags.AllowFriends | TSOFlags.AllowRoommates | TSOFlags.AllowObjectOwner;
 
-                //DEBUG: enable debug interction for all roommates. change to only CSRs for production!
+                //DEBUG: enable debug interction for all CSRs.
                 if ((action.Flags & TTABFlags.Debug) > 0)
                 {
-
-                    if ((tsoState & TSOFlags.AllowRoommates) > 0)
+                    if ((tsoState & TSOFlags.AllowCSRs) > 0)
                         return result; //do not bother running check
                     else
                         return null; //disable debug for everyone else.
@@ -740,7 +739,7 @@ namespace FSO.SimAntics.Engine
 
                     var negatedFlags = (~tsoCompare) & negMask;
                     if ((negatedFlags & tsoState) > 0) return null; //we are disallowed
-                                                                    //if ((tsoCompare & TSOFlags.AllowCSRs) > 0) return null; // && (tsoState & TSOFlags.AllowCSRs) == 0
+                    if ((tsoCompare & TSOFlags.AllowCSRs) > 0 && (tsoState & TSOFlags.AllowCSRs) == 0) return null; // only admins can run csr.
                 }
             }
             if (((action.Flags & TTABFlags.MustRun) == 0 || ((action.Flags & TTABFlags.TSORunCheckAlways) > 0))

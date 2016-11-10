@@ -77,7 +77,7 @@ namespace FSO.Client.Controllers
 
         private void JoinLotRegulator_OnTransition(string transition, object data)
         {
-            GameThread.NextUpdate((state) =>
+            GameThread.InUpdate(() =>
             {
                 switch (transition)
                 {
@@ -89,7 +89,7 @@ namespace FSO.Client.Controllers
                         if (ReconnectLotID != 0)
                         {
                             GameThread.SetTimeout(() => {
-                                JoinLot(ReconnectLotID);
+                                if (ReconnectLotID != 0) JoinLot(ReconnectLotID);
                             }, 100);
                         }
                         //destroy the currently active lot (if possible)

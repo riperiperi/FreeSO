@@ -91,7 +91,7 @@ namespace FSO.Client.UI.Panels.WorldUI
 
             if (Sprite != null)
             {
-                SPRFrame bigFrame = (BGSprite != null) ? BGSprite.Frames[ZoomFrame] : Sprite.Frames[ZoomFrame];
+                var bigFrame = (BGSprite != null) ? BGSprite.Frames[ZoomFrame].GetTexture(GameFacade.GraphicsDevice) : Sprite.Frames[ZoomFrame].GetTexture(GameFacade.GraphicsDevice);
                 if (bigFrame.Width == 0) return;
                 Texture = new RenderTarget2D(GameFacade.GraphicsDevice, Math.Max(1,bigFrame.Width), Math.Max(1,bigFrame.Height));
             }

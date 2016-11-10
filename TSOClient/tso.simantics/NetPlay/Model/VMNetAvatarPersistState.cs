@@ -58,6 +58,7 @@ namespace FSO.SimAntics.NetPlay.Model
         public short IncomingFriends { get { return PersonData[9]; } set { PersonData[9] = value; } } //61
 
         public short SkillLock { get { return PersonData[10]; } set { PersonData[10] = value; } } //70 - bitfield specifying which skills have been locked on this sim. ~~>DB<~~
+        //NOTE: internally stores number of skill locks available, because i'm cheeky
         public short SkillLockBody { get { return PersonData[11]; } set { PersonData[11] = value; } } //81 ~~>DB<~~
         public short SkillLockCharisma { get { return PersonData[12]; } set { PersonData[12] = value; } } //82 ~~>DB<~~
         public short SkillLockCooking { get { return PersonData[13]; } set { PersonData[13] = value; } } //83 ~~>DB<~~
@@ -211,13 +212,16 @@ namespace FSO.SimAntics.NetPlay.Model
             {
                 avatar.SetPersonData(VMPersonDataVariable.OnlineJobStatusFlags, 1); //validated immediately.
             }
+            avatar.SkillLocks = SkillLock;
         }
 
         public void Save(VMAvatar avatar)
         {
             SkinTone = (byte)avatar.SkinTone;
             DefaultSuits = avatar.DefaultSuits; //todo: clone?
-            BodyOutfit = avatar.BodyOutfit;
+            //if naked, save in daywear.
+            BodyOutfit = (avatar.BodyOutfit == 0x24E0000000D || avatar.BodyOutfit == 0x10000000D)?avatar.DefaultSuits.Daywear:avatar.BodyOutfit;
+
             HeadOutfit = avatar.HeadOutfit;
             Name = avatar.Name;
             Permissions = ((VMTSOAvatarState)avatar.TSOState).Permissions;
@@ -225,10 +229,12 @@ namespace FSO.SimAntics.NetPlay.Model
             Budget = avatar.TSOState.Budget.Value;
 
             for (int i = 0; i < MotiveData.Length; i++) MotiveData[i] = avatar.GetMotiveData((VMMotive)i);
+            MotiveData[(int)(VMMotive.SleepState)] = 0;
             for (int i = 0; i < PersonDataMap.Length; i++)
             {
                 PersonData[i] = avatar.GetPersonData((VMPersonDataVariable)PersonDataMap[i]);
             }
+            SkillLock = avatar.SkillLocks;
             OnlineJobInfo = ((VMTSOAvatarState)avatar.TSOState).JobInfo;
         }
     }

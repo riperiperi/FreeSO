@@ -121,6 +121,7 @@ namespace FSO.Client.UI.Screens
                 }
                 else //cityrenderer! we'll need to recreate this if it doesn't exist...
                 {
+                    CityTooltipHitArea.HideTooltip();
                     if (CityRenderer == null) m_ZoomLevel = value; //set to far zoom... again, we should eventually create this.
                     else
                     {

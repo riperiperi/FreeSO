@@ -142,6 +142,10 @@ namespace FSO.Server.Servers.City.Handlers
                 newAvatar.skin_tone = (byte)packet.SkinTone;
                 newAvatar.gender = packet.Gender == Protocol.Voltron.Model.Gender.FEMALE ? DbAvatarGender.female : DbAvatarGender.male;
                 newAvatar.user_id = session.UserId;
+                newAvatar.budget = 20000;
+
+                var user = db.Users.GetById(session.UserId);
+                if ((user?.is_moderator) ?? false) newAvatar.moderation_level = 1;
 
                 try
                 {

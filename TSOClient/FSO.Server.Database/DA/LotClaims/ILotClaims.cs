@@ -17,5 +17,6 @@ namespace FSO.Server.Database.DA.LotClaims
 
         void RemoveAllByOwner(string owner);
         void Delete(uint id, string owner);
+        List<DbLotStatus> AllLocations(int shardId);
     }
 }

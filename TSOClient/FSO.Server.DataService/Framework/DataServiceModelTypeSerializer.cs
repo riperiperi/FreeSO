@@ -34,7 +34,13 @@ namespace FSO.Common.DataService.Framework
             var refs = entry.GetReferencedAssemblies();
             foreach(var assembly in refs){
                 if (assembly.Name.StartsWith("FSO.")){
-                    ScanAssembly(Assembly.Load(assembly));
+                    try
+                    {
+                        ScanAssembly(Assembly.Load(assembly));
+                    }
+                    catch (Exception) {
+                        Console.WriteLine("huh??");
+                    }
                 }
             };
         }

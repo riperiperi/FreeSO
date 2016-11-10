@@ -20,6 +20,8 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.HIT;
 using FSO.Client.UI.Model;
+using FSO.SimAntics.Model.TSOPlatform;
+using FSO.Client.Utils;
 
 namespace FSO.Client.UI.Panels
 {
@@ -182,9 +184,109 @@ namespace FSO.Client.UI.Panels
     /// </summary>
     public class UIRoommatesPanel : UIContainer
     {
+        public UILabel TitleLabel { get; set; }
+        public UIRoommateCheckList RoommateList;
+        public Texture2D BuildIconImage { get; set; }
+
+        public HashSet<uint> OldRoommates;
+        public HashSet<uint> OldBuilders;
+        private UILotControl LotControl;
+
         public UIRoommatesPanel(UILotControl lotController)
         {
-            this.RenderScript("roommatespanel.uis");
+            this.LotControl = lotController;
+            var script = this.RenderScript("roommatespanel.uis");
+            RoommateList = script.Create<UIRoommateCheckList>("RoommateList");
+            RoommateList.OnCheckChange += RoommateList_OnCheckChange;
+            Add(RoommateList);
+            TitleLabel.CaptionStyle = TitleLabel.CaptionStyle.Clone();
+            TitleLabel.CaptionStyle.Shadow = true;
+            TitleLabel.Alignment = TextAlignment.Left;
+            TitleLabel.Y -= 8;
+
+            var buildico = new UIImage(BuildIconImage);
+            buildico.Position = new Vector2(30-18, 30+34+8); //to the left of all the checkboxes
+            buildico.Tooltip = GameFacade.Strings.GetString("178", "2");
+            UIUtils.GiveTooltip(buildico);
+            Add(buildico);
+            UpdateList();
+        }
+
+        private void RoommateList_OnCheckChange(int index)
+        {
+            var id = OldRoommates.ElementAt(index);
+            var builder = OldBuilders.Contains(id);
+            LotControl.vm.SendCommand(new VMChangePermissionsCmd
+            {
+                TargetUID = id,
+                Level = (builder) ? VMTSOAvatarPermissions.Roommate : VMTSOAvatarPermissions.BuildBuyRoommate,
+            });
+        }
+
+        private void UpdateList()
+        {
+            var state = LotControl.vm.TSOState;
+            RoommateList.UpdateList(state.Roommates, state.BuildRoommates);
+            OldRoommates = new HashSet<uint>(state.Roommates);
+            OldBuilders = new HashSet<uint>(state.BuildRoommates);
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            var lotState = LotControl.vm.TSOState;
+            if (!OldRoommates.SetEquals(lotState.Roommates) || !OldBuilders.SetEquals(lotState.BuildRoommates))
+            {
+                UpdateList();
+            }
+        }
+    }
+
+    public class UIRoommateCheckList : UIContainer
+    {
+        private List<UIPersonButton> RoommateButtons = new List<UIPersonButton>();
+        private List<UIButton> CheckButtons = new List<UIButton>();
+        public event Callback<int> OnCheckChange; 
+        public bool Disabled = false;
+        public UIRoommateCheckList() : base()
+        {
+        }
+
+        public void UpdateList(HashSet<uint> roommates, HashSet<uint> buildRoommates)
+        {
+            while (RoommateButtons.Count > roommates.Count)
+            {
+                Remove(RoommateButtons[RoommateButtons.Count - 1]);
+                Remove(CheckButtons[CheckButtons.Count - 1]);
+                RoommateButtons.RemoveAt(RoommateButtons.Count - 1);
+                CheckButtons.RemoveAt(CheckButtons.Count - 1);
+            }
+            while (roommates.Count > RoommateButtons.Count)
+            {
+                var btn = new UIPersonButton();
+                btn.FrameSize = UIPersonButtonSize.LARGE;
+                btn.X = RoommateButtons.Count * (34 + 6); //6 is gutter size
+                Add(btn);
+                RoommateButtons.Add(btn);
+
+                var cbt = new UIButton();
+                cbt.ImageStates = 6;
+                cbt.Texture = GetTexture(0x0000049400000001);
+                cbt.X = CheckButtons.Count * (34 + 6) + 9; //6 is gutter size, 10 is margin for checkbutton
+                cbt.Y = 34 + 8;
+                cbt.OnButtonClick += (e) => { OnCheckChange?.Invoke(CheckButtons.IndexOf((UIButton)e)); };
+                Add(cbt);
+                CheckButtons.Add(cbt);
+            }
+            for (int i = 0; i < RoommateButtons.Count; i++)
+            {
+                var id = roommates.ElementAt(i);
+                if (RoommateButtons[i].AvatarId != id)
+                    RoommateButtons[i].AvatarId = id;
+                var builder = buildRoommates.Contains(id);
+                CheckButtons[i].ForceState = (Disabled) ? (builder ? 5 : 4) : (builder?3:-1);
+                CheckButtons[i].Tooltip = GameFacade.Strings.GetString("178", builder?"3":"4");
+            }
         }
     }
 

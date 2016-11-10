@@ -80,6 +80,7 @@ namespace FSO.Client.UI.Panels
             SearchSlider.AttachButtons(SearchScrollUpButton, SearchScrollDownButton, 1);
             SearchResult.AttachSlider(SearchSlider);
             SearchResult.OnDoubleClick += SearchResult_OnDoubleClick;
+            SearchResult.RowHeight -= 3;
 
             ListBoxColors = script.Create<UIListBoxTextStyle>("ListBoxColors", SearchResult.FontStyle);
         }
@@ -167,6 +168,7 @@ namespace FSO.Client.UI.Panels
             }
 
             NoSearchResultsText.Visible = SearchResult.Items.Count == 0;
+            SearchResult.Items = SearchResult.Items;
         }
 
         public void SetResults(List<GizmoAvatarSearchResult> results){
@@ -219,7 +221,7 @@ namespace FSO.Client.UI.Panels
             base.Update(state);
             if (UpdateCooldown-- < 0)
             {
-                populateWithXMLHouses();
+                //populateWithXMLHouses();
                 UpdateCooldown = 100;
             }
         }

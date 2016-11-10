@@ -207,6 +207,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\SDL2.dll" />
+    <Content Include="version.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

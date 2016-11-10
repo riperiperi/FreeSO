@@ -15,7 +15,6 @@ namespace FSO.Server
     {
         static int Main(string[] args)
         {
-            AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve;
             Type toolType = null;
             object toolOptions = null;
 
@@ -55,11 +54,6 @@ namespace FSO.Server
             var tool = (ITool)kernel.Get(toolType, new ConstructorArgument("options", toolOptions));
             return tool.Run();
 
-        }
-        private static Assembly AssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            throw new Exception("um?");
-            return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.FullName == args.Name);
         }
     }
 }

@@ -130,6 +130,7 @@ namespace FSO.Server
             AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
 
+            /*
             NetworkDebugger debugInterface = null;
 
             if (Options.Debug)
@@ -140,6 +141,7 @@ namespace FSO.Server
                     server.AttachDebugger(debugInterface);
                 }
             }
+            */
 
             LOG.Info("Starting services");
             foreach (AbstractServer server in Servers)
@@ -150,12 +152,12 @@ namespace FSO.Server
             //Hacky reference to maek sure the assembly is included
             FSO.Common.DatabaseService.Model.LoadAvatarByIDRequest x;
 
-            if (debugInterface != null)
+            /*if (debugInterface != null)
             {
                 Application.EnableVisualStyles();
                 Application.Run(debugInterface);
             }
-            else
+            else*/
             {
                 while (Running)
                 {

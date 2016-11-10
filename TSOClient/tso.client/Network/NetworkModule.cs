@@ -101,20 +101,28 @@ namespace FSO.Client.Network
 
         public object Create(IContext context)
         {
-            var authClientConfig = Content.Ini.Get("gameentry.ini");
-            var serverAddress = authClientConfig["Auth"]["Server"];
-            if(serverAddress.IndexOf(",") != -1){
-                //Choose the first
-                serverAddress = serverAddress.Substring(0, serverAddress.IndexOf(","));
-            }
-
-            if(serverAddress.IndexOf("://") == -1)
+            if (GlobalSettings.Default.UseCustomServer)
             {
-                //Default to https
-                serverAddress = "https://" + serverAddress;
+                return new AuthClient(GlobalSettings.Default.GameEntryUrl);
             }
+            else
+            {
+                var authClientConfig = Content.Ini.Get("gameentry.ini");
+                var serverAddress = authClientConfig["Auth"]["Server"];
+                if (serverAddress.IndexOf(",") != -1)
+                {
+                    //Choose the first
+                    serverAddress = serverAddress.Substring(0, serverAddress.IndexOf(","));
+                }
 
-            return new AuthClient(serverAddress);
+                if (serverAddress.IndexOf("://") == -1)
+                {
+                    //Default to https
+                    serverAddress = "https://" + serverAddress;
+                }
+
+                return new AuthClient(serverAddress);
+            }
         }
     }
 
@@ -138,30 +146,37 @@ namespace FSO.Client.Network
 
         public object Create(IContext context)
         {
-            var cityClientConfig = Content.Ini.Get("cityselector.ini");
-            var serverAddress = cityClientConfig["CitySelector"]["ServerName"];
-            if (serverAddress.IndexOf(",") != -1)
+            if (GlobalSettings.Default.UseCustomServer)
             {
-                //Choose the first
-                serverAddress = serverAddress.Substring(0, serverAddress.IndexOf(","));
+                return new CityClient(GlobalSettings.Default.CitySelectorUrl);
             }
-
-            var port = int.Parse(cityClientConfig["CitySelector"]["ServerPort"]);
-
-            if (serverAddress.IndexOf("://") == -1)
+            else
             {
-                if (port == 80)
+                var cityClientConfig = Content.Ini.Get("cityselector.ini");
+                var serverAddress = cityClientConfig["CitySelector"]["ServerName"];
+                if (serverAddress.IndexOf(",") != -1)
                 {
-                    serverAddress = "http://" + serverAddress;
+                    //Choose the first
+                    serverAddress = serverAddress.Substring(0, serverAddress.IndexOf(","));
                 }
-                else
-                {
-                    //Default to https
-                    serverAddress = "https://" + serverAddress;
-                }
-            }
 
-            return new CityClient(serverAddress);
+                var port = int.Parse(cityClientConfig["CitySelector"]["ServerPort"]);
+
+                if (serverAddress.IndexOf("://") == -1)
+                {
+                    if (port == 80)
+                    {
+                        serverAddress = "http://" + serverAddress;
+                    }
+                    else
+                    {
+                        //Default to https
+                        serverAddress = "https://" + serverAddress;
+                    }
+                }
+
+                return new CityClient(serverAddress);
+            }
         }
     }
 }

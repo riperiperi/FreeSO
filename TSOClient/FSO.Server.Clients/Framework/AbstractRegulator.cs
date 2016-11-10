@@ -145,54 +145,49 @@ namespace FSO.Server.Clients.Framework
 
             lock (this)
             {
-                if (InTransition)
-                {
-                    return false;
-                }
-
                 InTransition = true;
-            }
 
-            var oldState = this.CurrentState;
-            var state = this.States[newState];
-            
-            //state to own state is valid. see LotConnectionRegulator.
-            /*
-            if (oldState == state)
-            {
-                InTransition = false;
-                return false;
-            }*/
+                var oldState = this.CurrentState;
+                var state = this.States[newState];
 
-            try
-            {
-                foreach (var validator in Validators)
+                //state to own state is valid. see LotConnectionRegulator.
+                /*
+                if (oldState == state)
                 {
-                    if (validator.CanTransition(oldState.Name, state.Name) == false)
+                    InTransition = false;
+                    return false;
+                }*/
+
+                try
+                {
+                    foreach (var validator in Validators)
                     {
-                        InTransition = false;
-                        return false;
+                        if (validator.CanTransition(oldState.Name, state.Name) == false)
+                        {
+                            InTransition = false;
+                            return false;
+                        }
                     }
-                }
 
-                OnBeforeTransition(oldState, state, data);
-                this.CurrentState = state;
-                if (this.OnTransition != null)
-                {
-                    this.OnTransition(newState, data);
+                    OnBeforeTransition(oldState, state, data);
+                    this.CurrentState = state;
+                    if (this.OnTransition != null)
+                    {
+                        this.OnTransition(newState, data);
+                    }
+                    this.OnAfterTransition(oldState, state, data);
+                    return true;
                 }
-                this.OnAfterTransition(oldState, state, data);
-                return true;
+                catch (Exception ex)
+                {
+                    this.ThrowError(ex);
+                }
+                finally
+                {
+                    InTransition = false;
+                }
+                return false;
             }
-            catch (Exception ex)
-            {
-                this.ThrowError(ex);
-            }
-            finally
-            {
-                InTransition = false;
-            }
-            return false;
         }
 
         public void SyncProcessMessage(object message)
@@ -270,7 +265,6 @@ namespace FSO.Server.Clients.Framework
 
         public RegulatorState OnlyTransitionFrom(params string[] states)
         {
-
             this.Regulator.AddTransitionValidator(new TransitionFromValidator(states, this.Name));
             return this;
         }

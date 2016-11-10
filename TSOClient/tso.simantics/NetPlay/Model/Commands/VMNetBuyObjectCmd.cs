@@ -26,6 +26,16 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public Direction dir;
         public bool Verified;
 
+        private static HashSet<int> RoomieWhiteList = new HashSet<int>()
+        {
+            12, 13, 14, 15, 16, 17, 18, 19, 20
+        };
+        private static HashSet<int> BuilderWhiteList = new HashSet<int>()
+        {
+            12, 13, 14, 15, 16, 17, 18, 19, 20,
+            0, 1, 2, 3, 4, 5, 7, 8, 9 //29 is terrain tool
+        };
+
         private VMMultitileGroup CreatedGroup;
 
         private List<uint> Blacklist = new List<uint>
@@ -129,8 +139,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             //TODO: error feedback for client
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
+            var whitelist = (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Roommate) ? RoomieWhiteList : BuilderWhiteList;
 
-            if (item == null || item.Value.Category == -1)
+            if (item == null || !whitelist.Contains(item.Value.Category))
             {
                 if (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Admin) return true;
                 return false; //not purchasable

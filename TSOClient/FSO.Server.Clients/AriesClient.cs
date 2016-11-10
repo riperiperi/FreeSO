@@ -129,34 +129,34 @@ namespace FSO.Server.Clients
 
         public void SessionCreated(IoSession session)
         {
+            List<IAriesEventSubscriber> _subs;
             lock (EventSubscribers)
-            {
-                EventSubscribers.ForEach(x => x.SessionCreated(this));
-            }
+                _subs = new List<IAriesEventSubscriber>(EventSubscribers);
+            _subs.ForEach(x => x.SessionCreated(this));
         }
 
         public void SessionOpened(IoSession session)
         {
+            List<IAriesEventSubscriber> _subs;
             lock (EventSubscribers)
-            {
-                EventSubscribers.ForEach(x => x.SessionOpened(this));
-            }
+                _subs = new List<IAriesEventSubscriber>(EventSubscribers);
+            _subs.ForEach(x => x.SessionOpened(this));
         }
 
         public void SessionClosed(IoSession session)
         {
+            List<IAriesEventSubscriber> _subs;
             lock (EventSubscribers)
-            {
-                EventSubscribers.ForEach(x => x.SessionClosed(this));
-            }
+                _subs = new List<IAriesEventSubscriber>(EventSubscribers);
+            _subs.ForEach(x => x.SessionClosed(this));
         }
 
         public void SessionIdle(IoSession session, IdleStatus status)
         {
+            List<IAriesEventSubscriber> _subs;
             lock (EventSubscribers)
-            {
-                EventSubscribers.ForEach(x => x.SessionIdle(this));
-            }
+                _subs = new List<IAriesEventSubscriber>(EventSubscribers);
+            _subs.ForEach(x => x.SessionIdle(this));
         }
 
         public void ExceptionCaught(IoSession session, Exception cause)
@@ -168,10 +168,11 @@ namespace FSO.Server.Clients
         public void MessageReceived(IoSession session, object message)
         {
             if (message is ServerByePDU) session.Close(false);
+
+            List<IAriesMessageSubscriber> _subs;
             lock (EventSubscribers)
-            {
-                MessageSubscribers.ForEach(x => x.MessageReceived(this, message));
-            }
+                _subs = new List<IAriesMessageSubscriber>(MessageSubscribers);
+            _subs.ForEach(x => x.MessageReceived(this, message));
         }
 
         public void MessageSent(IoSession session, object message)
@@ -180,10 +181,10 @@ namespace FSO.Server.Clients
 
         public void InputClosed(IoSession session)
         {
+            List<IAriesEventSubscriber> _subs;
             lock (EventSubscribers)
-            {
-                EventSubscribers.ForEach(x => x.InputClosed(this));
-            }
+                _subs = new List<IAriesEventSubscriber>(EventSubscribers);
+            _subs.ForEach(x => x.InputClosed(this));
         }
     }
 }

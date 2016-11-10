@@ -131,7 +131,7 @@ namespace FSO.Client.UI.Panels
             var dr = new Rectangle(DesiredRectPos, new Point(DisplayRect.Width, DisplayRect.Height)); 
 
             bool changed = false;
-            foreach (var area in Owner.InvalidAreas)
+            foreach (var area in Owner.GetInvalid(this))
             {
                 if (dr.Intersects(area))
                 {

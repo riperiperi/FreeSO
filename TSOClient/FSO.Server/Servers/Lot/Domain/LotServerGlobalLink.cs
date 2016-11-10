@@ -64,12 +64,11 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
-        public void RequestRoommate(VM vm, VMAvatar avatar, int mode, byte permissions)
+        public void RequestRoommate(VM vm, uint avatarID, int mode, byte permissions)
         {
             //0 = initiate. 1 = accept. 2 = reject.
             //we have the "initiate" step so that users are reminded if they somehow dc before the transaction completes.
             //users will be reminded of their in-progress roommate request every time they log in or leave a lot. (potentially check on most server actions)
-            var avatarID = avatar.PersistID;
             var lotID = Context.DbId;
             Host.InBackground(() =>
             {

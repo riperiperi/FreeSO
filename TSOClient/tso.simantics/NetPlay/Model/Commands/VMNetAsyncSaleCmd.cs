@@ -40,13 +40,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         });
                     }
                     vm.Context.ObjectQueries.RemoveMultitilePersist(vm, obj.PersistID);
-                    obj.PersistID = 0; //no longer representative of the object in db.
+                    foreach (var o in obj.MultitileGroup.Objects) o.PersistID = 0; //no longer representative of the object in db.
                     obj.Delete(true, vm.Context);
                     if (VM.UseWorld) HIT.HITVM.Get().PlaySoundEvent("ui_letter_send");
                 } else
                 {
                     foreach (var o in obj.MultitileGroup.Objects)
-                        ((VMGameObject)o).Disabled &= VMGameObjectDisableFlags.TransactionIncomplete;
+                        ((VMGameObject)o).Disabled &= ~VMGameObjectDisableFlags.TransactionIncomplete;
                 }
             }
 

@@ -19,6 +19,7 @@ namespace FSO.Client.Regulators
         public AriesClient Client { get; internal set; }
         private AriesClient City;
         private uint LotId;
+        private bool IsDisconnecting = true;
 
         private FindLotResponse FindLotResponse;
 
@@ -80,13 +81,14 @@ namespace FSO.Client.Regulators
             switch (newState.Name)
             {
                 case "SelectLot":
+                    IsDisconnecting = false;
                     AsyncTransition("FindLot", data);
                     break;
 
                 case "FindLot":
-                    LotId = ((JoinLotRequest)data).LotId;
+                    //LotId = ((JoinLotRequest)data).LotId;
                     City.Write(new FSO.Server.Protocol.Electron.Packets.FindLotRequest {
-                        LotId = LotId
+                        LotId = ((JoinLotRequest)data).LotId
                     });
                     break;
                 case "FoundLot":
@@ -137,11 +139,12 @@ namespace FSO.Client.Regulators
                     AsyncTransition("PartiallyConnected");
                     break;
                 case "UnexpectedDisconnect":
+                    IsDisconnecting = true;
                     AsyncTransition("Disconnected");
                     break;
 
                 case "Disconnect":
-                    if (Client.IsConnected)
+                    if (Client.IsConnected && !IsDisconnecting)
                     {
                         Client.Write(new ClientByePDU());
                         Client.Disconnect();
@@ -189,7 +192,8 @@ namespace FSO.Client.Regulators
                     message is FSOVMTickBroadcast ||
                     message is FSOVMDirectToClient)
                 {
-                    this.AsyncProcessMessage(message);
+                    //force in order
+                    this.SyncProcessMessage(message);
                 }
             }
         }
@@ -206,6 +210,7 @@ namespace FSO.Client.Regulators
 
         public void SessionClosed(AriesClient client)
         {
+            Console.WriteLine("close");
             AsyncProcessMessage(new AriesDisconnected());
         }
 
@@ -216,7 +221,8 @@ namespace FSO.Client.Regulators
 
         public void InputClosed(AriesClient session)
         {
-
+            Console.WriteLine("close2");
+            AsyncProcessMessage(new AriesDisconnected());
         }
     }
 

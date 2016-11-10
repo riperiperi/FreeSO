@@ -61,12 +61,15 @@ namespace FSO.Server.Servers.Api.Controllers
                         return Response.AsText(printError(ERROR_110_CODE, ERROR_110_MSG));
                     }
 
+                    var tryIP = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                    var ip = tryIP ?? this.Request.UserHostAddress;
+
                     /** Make a ticket **/
                     ticket = new AuthTicket();
                     ticket.ticket_id = Guid.NewGuid().ToString().Replace("-", "");
                     ticket.user_id = user.user_id;
                     ticket.date = Epoch.Now;
-                    ticket.ip = this.Request.UserHostAddress;
+                    ticket.ip = ip;
 
                     db.AuthTickets.Create(ticket);
                 }

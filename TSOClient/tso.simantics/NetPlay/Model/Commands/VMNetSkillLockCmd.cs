@@ -13,22 +13,32 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public byte SkillID;
         public byte LockLevel;
 
+        private static VMPersonDataVariable[] LockToSkill =
+        {
+            VMPersonDataVariable.BodySkill,
+            VMPersonDataVariable.CharismaSkill,
+            VMPersonDataVariable.CookingSkill,
+            VMPersonDataVariable.CreativitySkill,
+            VMPersonDataVariable.LogicSkill,
+            VMPersonDataVariable.MechanicalSkill
+        };
+
         public override bool Execute(VM vm, VMAvatar caller)
         {
             //need caller to be present
             if (caller == null) return false;
-            var limit = caller.GetPersonData(VMPersonDataVariable.SkillLock);
+            var limit = caller.SkillLocks;
             SkillID = Math.Min(SkillID, (byte)5); //must be 0-5
             int otherLocked = 0;
             for (int i=0; i<6; i++) //sum other skill locks to see what we can feasibly put in this skill
             {
                 if (i == SkillID) continue;
-                otherLocked += caller.GetPersonData((VMPersonDataVariable)((int)VMPersonDataVariable.SkillLockBase + i));
+                otherLocked += caller.GetPersonData((VMPersonDataVariable)((int)VMPersonDataVariable.SkillLockBase + i))/100;
             }
             if (otherLocked >= limit) return false; //cannot lock this skill at all
-            LockLevel = Math.Min(LockLevel, (byte)(limit - otherLocked)); //can only lock up to the limit
+            LockLevel = (byte)Math.Min(caller.GetPersonData(LockToSkill[SkillID])/100, Math.Min(LockLevel, (byte)(limit - otherLocked))); //can only lock up to the limit
 
-            caller.SetPersonData((VMPersonDataVariable)((int)VMPersonDataVariable.SkillLockBase + SkillID), LockLevel);
+            caller.SetPersonData((VMPersonDataVariable)((int)VMPersonDataVariable.SkillLockBase + SkillID), (short)(LockLevel*100));
             return true;
         }
 

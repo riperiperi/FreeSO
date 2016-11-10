@@ -364,6 +364,21 @@ namespace FSO.LotView
         /// <param name="device"></param>
         public override void PreDraw(GraphicsDevice device)
         {
+            //bound the scroll so we can't see gray space.
+            float boundfactor = 0.5f;
+            switch (State.Zoom)
+            {
+                case WorldZoom.Near:
+                    boundfactor = 1.20f; break;
+                case WorldZoom.Medium:
+                    boundfactor = 1.05f; break;
+            }
+            boundfactor *= Blueprint?.Width ?? 64;
+            var off = 0.5f * (Blueprint?.Width ?? 64);
+            var tile = State.CenterTile;
+            tile = new Vector2(Math.Min(boundfactor + off, Math.Max(off - boundfactor, tile.X)), Math.Min(boundfactor + off, Math.Max(off - boundfactor, tile.Y)));
+            if (tile != State.CenterTile) State.CenterTile = tile;
+
             base.PreDraw(device);
             if (HasInit == false) { return; }
             State._2D.PreciseZoom = State.PreciseZoom;

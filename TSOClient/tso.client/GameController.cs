@@ -190,7 +190,7 @@ namespace FSO.Client
 
         private void ChangeState<TView, TController>(Callback<TView, TController> onCreated) where TView : UIScreen
         {
-            GameThread.NextUpdate(x =>
+            GameThread.InUpdate(() =>
             {
                 GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Normal); //reset cursor
                 if (CurrentController != null)

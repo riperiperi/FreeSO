@@ -171,7 +171,7 @@ namespace FSO.Client.UI.Controls
             m_Width = width;
             m_Height = height;
             
-            NineSliceMargins.CalculateScales(m_Width, m_Height);
+            if (NineSliceMargins != null) NineSliceMargins.CalculateScales(m_Width, m_Height);
             m_Bounds = new Rectangle(0, 0, (int)m_Width, (int)m_Height);
             
             if (m_MouseEvent != null)

@@ -609,6 +609,10 @@ namespace FSO.SimAntics
         {
             switch (var) //special cases
             {
+                case VMStackObjectVariable.Flags:
+                    if (((value ^ ObjectData[(short)var]) & (int)VMEntityFlags.HasZeroExtent) > 0)
+                        Footprint = GetObstacle(Position, Direction);
+                    break;
                 case VMStackObjectVariable.Direction:
                     value = (short)(((int)value + 65536) % 8);
                     switch (value) {
@@ -763,7 +767,7 @@ namespace FSO.SimAntics
 
         private VMPlacementError IndividualUserMovable(VMContext context, bool deleting)
         {
-            if (this is VMAvatar || GetValue(VMStackObjectVariable.Hidden) > 0) return VMPlacementError.CantBePickedup;
+            if (this is VMAvatar) return VMPlacementError.CantBePickedup;
             var movementFlags = (VMMovementFlags)GetValue(VMStackObjectVariable.MovementFlags);
             if ((movementFlags & VMMovementFlags.PlayersCanMove) == 0) return VMPlacementError.CantBePickedup;
             if (deleting && (movementFlags & VMMovementFlags.PlayersCanDelete) == 0) return VMPlacementError.ObjectNotOwnedByYou;
@@ -1219,7 +1223,7 @@ namespace FSO.SimAntics
         FireProof = 1 << 11,
         TurnedOff = 1 << 12,
         NeedsMaintinance = 1 << 13,
-        ShowDynObjNameInTooltip = 1 << 14
+        ShowDynObjNameInTooltip = 1 << 14,
     }
 
 

@@ -104,7 +104,8 @@ namespace FSO.Common.Utils
     {
         public static bool UpdateExecuting;
         private static List<UpdateHook> _UpdateHooks = new List<UpdateHook>();
-        private static List<Callback<UpdateState>> _UpdateCallbacks = new List<Callback<UpdateState>>();
+        private static Queue<Callback<UpdateState>> _UpdateCallbacks = new Queue<Callback<UpdateState>>();
+        public static TimedReferenceController Caching = new TimedReferenceController();
 
         public static GameThreadTimeout SetTimeout(Callback callback, long delay)
         {
@@ -139,7 +140,7 @@ namespace FSO.Common.Utils
         {
             lock (_UpdateCallbacks)
             {
-                _UpdateCallbacks.Add(callback);
+                _UpdateCallbacks.Enqueue(callback);
             }
         }
 
@@ -167,7 +168,7 @@ namespace FSO.Common.Utils
             TaskCompletionSource<T> task = new TaskCompletionSource<T>();
             lock (_UpdateCallbacks)
             {
-                _UpdateCallbacks.Add(x =>
+                _UpdateCallbacks.Enqueue(x =>
                 {
                     task.SetResult(callback(x));
                 });
@@ -177,28 +178,39 @@ namespace FSO.Common.Utils
 
         public static void DigestUpdate(UpdateState state)
         {
+            Queue<Callback<UpdateState>> _callbacks;
             lock (_UpdateCallbacks)
             {
-                var _callbacks = _UpdateCallbacks;
-                _UpdateCallbacks = new List<Callback<UpdateState>>();
+                _callbacks = new Queue<Callback<UpdateState>>(_UpdateCallbacks);
+                _UpdateCallbacks.Clear();
+            }
+            while (_callbacks.Count > 0)
+            {
+                _callbacks.Dequeue()(state);
+            }
 
-                foreach (var callback in _callbacks)
+            List<UpdateHook> _hooks;
+            List<UpdateHook> toRemove = new List<UpdateHook>();
+            lock (_UpdateHooks)
+            {
+                _hooks = new List<UpdateHook>(_UpdateHooks);
+            }
+            for (int i = 0; i < _hooks.Count; i++)
+            {
+                var item = _hooks[i];
+                item.Callback(state);
+                if (item.RemoveNext)
                 {
-                    callback(state);
+                    toRemove.Add(item);
                 }
             }
             lock (_UpdateHooks)
             {
-                for(int i=0; i < _UpdateHooks.Count; i++)
-                {
-                    var item = _UpdateHooks[i];
-                    item.Callback(state);
-                    if (item.RemoveNext){
-                        _UpdateHooks.RemoveAt(i);
-                        i--;
-                    }
-                }
+                foreach (var rem in toRemove) _UpdateHooks.Remove(rem);
             }
+
+            //finally, check cache controller
+            Caching.Tick();
         }
     }
 }

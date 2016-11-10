@@ -248,7 +248,8 @@ namespace FSO.Server.Servers.City.Domain
                         {
                             Status = FindLotResponseStatus.FOUND,
                             Server = allocation.Server,
-                            LotDbId = allocation.LotDbId
+                            LotDbId = allocation.LotDbId,
+                            LotId = lotId
                         });
                         
                     //Should never get here..

@@ -20,14 +20,14 @@ namespace FSO.SimAntics.Primitives
     public class VMFindLocationFor : VMPrimitiveHandler
     {
         private static LotTilePos[] DirectionVectors = {
-            new LotTilePos(16, 0, 0),
-            new LotTilePos(16, 16, 0),
             new LotTilePos(0, 16, 0),
             new LotTilePos(-16, 16, 0),
             new LotTilePos(-16, 0, 0),
             new LotTilePos(-16, -16, 0),
             new LotTilePos(0, -16, 0),
             new LotTilePos(16, -16, 0),
+            new LotTilePos(16, 0, 0),
+            new LotTilePos(16, 16, 0),
         };
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)

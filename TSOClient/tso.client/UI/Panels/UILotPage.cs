@@ -136,6 +136,7 @@ namespace FSO.Client.UI.Panels
 
             HouseLinkButton.OnButtonClick += JoinLot;
             HouseCategoryButton.OnButtonClick += ChangeCategory;
+            HouseNameButton.OnButtonClick += ChangeName;
             LotThumbnail.OnLotClick += JoinLot;
 
             CurrentLot = new Binding<Lot>()
@@ -183,6 +184,30 @@ namespace FSO.Client.UI.Panels
             NeighborhoodNameButton.Visible = false;
 
             Size = BackgroundExpandedImage.Size.ToVector2();
+        }
+
+        private void ChangeName(UIElement button)
+        {
+            var lotName = new UILotPurchaseDialog();
+            lotName.OnNameChosen += (name) =>
+            {
+                if (CurrentLot != null && CurrentLot.Value != null && FindController<CoreGameScreenController>().IsMe(CurrentLot.Value.Lot_LeaderID))
+                {
+                    CurrentLot.Value.Lot_Name = name;
+                    FindController<LotPageController>().SaveName(CurrentLot.Value);
+                }
+                UIScreen.RemoveDialog(lotName);
+            };
+            if (CurrentLot != null && CurrentLot.Value != null)
+            {
+                lotName.NameTextEdit.CurrentText = CurrentLot.Value.Lot_Name;
+            }
+            UIScreen.GlobalShowDialog(new DialogReference
+            {
+                Dialog = lotName,
+                Controller = this,
+                Modal = true,
+            });
         }
 
         private void ChangeCategory(UIElement button)
@@ -280,6 +305,8 @@ namespace FSO.Client.UI.Panels
             }
 
             var canJoin = isMyProperty || isRoommate || isOnline;
+
+            HouseNameButton.Disabled = !isMyProperty;
 
             BackgroundContractedImage.Visible = isClosed;
             BackgroundExpandedImage.Visible = isOpen;

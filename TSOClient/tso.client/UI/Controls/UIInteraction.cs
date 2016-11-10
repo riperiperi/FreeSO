@@ -82,7 +82,7 @@ namespace FSO.Client.UI.Controls
                 var tween = GameFacade.Screens.Tween.To(AcceptButton, 0.33f, new Dictionary<string, float>()
                     {
                         {"Y", 44.0f },
-                    }, TweenQuad.EaseIn);
+                    }, TweenQuad.EaseOut);
                 AcceptButton.OnButtonClick += (btn) => { OnInteractionResult?.Invoke(this, true); };
 
                 DeclineButton = new UIButton();
@@ -93,7 +93,7 @@ namespace FSO.Client.UI.Controls
                 var tween2 = GameFacade.Screens.Tween.To(DeclineButton, 0.33f, new Dictionary<string, float>()
                     {
                         {"Y", 44.0f },
-                    }, TweenQuad.EaseIn);
+                    }, TweenQuad.EaseOut);
                 DeclineButton.OnButtonClick += (btn) => { OnInteractionResult?.Invoke(this, false); };
             }
 
@@ -103,6 +103,8 @@ namespace FSO.Client.UI.Controls
                 DeclineButton.Disabled = false;
                 AcceptButton.Selected = false;
                 DeclineButton.Selected = false;
+                AcceptButton.Opacity = 1f;
+                DeclineButton.Opacity = 1f;
             }
             else if (result == 1)
             {
@@ -110,6 +112,7 @@ namespace FSO.Client.UI.Controls
                 DeclineButton.Disabled = false;
                 AcceptButton.Selected = false;
                 DeclineButton.Selected = true;
+                AcceptButton.Opacity = 0.5f;
             }
             else if (result == 2)
             {
@@ -117,6 +120,7 @@ namespace FSO.Client.UI.Controls
                 DeclineButton.Disabled = true;
                 AcceptButton.Selected = true;
                 DeclineButton.Selected = false;
+                DeclineButton.Opacity = 0.5f;
             }
             else
             {

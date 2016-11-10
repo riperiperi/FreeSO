@@ -46,7 +46,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 } else
                 {
                     foreach (var o in obj.MultitileGroup.Objects)
-                        ((VMGameObject)o).Disabled &= VMGameObjectDisableFlags.TransactionIncomplete;
+                        ((VMGameObject)o).Disabled &= ~VMGameObjectDisableFlags.TransactionIncomplete;
                 }
             }
 

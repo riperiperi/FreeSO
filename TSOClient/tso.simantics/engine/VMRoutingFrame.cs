@@ -790,6 +790,9 @@ namespace FSO.SimAntics.Engine
 
                                             var tree = callee.GetBHAVWithOwner(SHOO_TREE, VM.Context);
                                             result.Object.Thread.ExecuteSubRoutine(colRoute, tree.bhav, tree.owner, new VMSubRoutineOperand());
+                                            var frame = result.Object.Thread.Stack.LastOrDefault();
+                                            frame.StackObject = callee;
+                                            frame.Callee = callee;
 
                                             WalkInterrupt(60);
                                         }
@@ -1043,9 +1046,11 @@ namespace FSO.SimAntics.Engine
         {
             var start = base.Save();
 
-            var atC = new short[AvatarsToConsider.Count];
+            var aliveAvatars = AvatarsToConsider.Where(x => !x.Dead).ToList();
+
+            var atC = new short[aliveAvatars.Count];
             int i = 0;
-            foreach (var item in AvatarsToConsider)
+            foreach (var item in aliveAvatars)
             {
                 atC[i++] = item.ObjectID;
             }
@@ -1148,6 +1153,7 @@ namespace FSO.SimAntics.Engine
             IgnoredRooms = new HashSet<VMRoomPortal>(inR.IgnoredRooms);
             AvatarsToConsider = new HashSet<VMAvatar>();
 
+            //these can be dead
             foreach (var avatar in inR.AvatarsToConsider)
                 AvatarsToConsider.Add((VMAvatar)context.VM.GetObjectById(avatar));
 

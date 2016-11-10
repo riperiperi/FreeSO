@@ -50,7 +50,7 @@ namespace FSO.Server.Servers.City.Handlers
 
             //unenroll in voltron group, mark as offline in data service.
             var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId);
-            avatar.Avatar_IsOnline = false;
+            if (avatar != null) avatar.Avatar_IsOnline = false;
 
             using (var db = DAFactory.Get())
             {

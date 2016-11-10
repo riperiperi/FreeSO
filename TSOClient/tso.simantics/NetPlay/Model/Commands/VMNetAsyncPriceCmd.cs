@@ -20,6 +20,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             VMEntity obj = vm.GetObjectByPersist(ObjectPID);
             //object must not be in use to set it for sale (will be disabled).
             if (obj == null || (obj is VMAvatar) || obj.IsUserMovable(vm.Context, true) != VMPlacementError.Success) return false;
+            if ((((VMGameObject)obj).Disabled & VMGameObjectDisableFlags.TransactionIncomplete) > 0) return false; //can't change price mid trasaction...
             //must own the object to set it for sale
             if (obj.PersistID == 0 || ((VMTSOObjectState)obj.TSOState).OwnerID != caller.PersistID) return false;
 

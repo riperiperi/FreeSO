@@ -275,6 +275,8 @@ namespace FSO.Client.UI.Controls
             set { m_Disabled = value; CalculateState(); }
         }
 
+        public int ForceState = -1;
+
         /// <summary>
         /// Gets or sets the current frame for this button.
         /// </summary>
@@ -374,6 +376,7 @@ namespace FSO.Client.UI.Controls
             {
                 frame = 3;
             }
+            if (ForceState > -1) frame = ForceState;
             frame = Math.Min(m_ImageStates - 1, frame);
             int offset = frame * m_Width;
             int vOffset = m_ButtonFrame * m_Height;

@@ -228,27 +228,38 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
                 else
                 {
-                    var claim = da.LotClaims.Get(claimId);
-                    if(claim == null)
+                    try
                     {
-                        lock (Lots) Lots.Remove(lotId);
+                        LOG.Info("Checking out db... " + lotId + "...");
+                        var claim = da.LotClaims.Get(claimId);
+                        if (claim == null)
+                        {
+                            lock (Lots) Lots.Remove(lotId);
+                            return false;
+                        }
+
+                        var lot = da.Lots.Get(claim.lot_id);
+                        if (lot == null)
+                        {
+                            lock (Lots) Lots.Remove(lotId);
+                            return false;
+                        }
+
+                        LOG.Info("Starting claimed lot with dbid = " + lotId + "...");
+                        GetLot(claim.lot_id).Bootstrap(new LotContext
+                        {
+                            DbId = lot.lot_id,
+                            Id = lot.location,
+                            ClaimId = claimId,
+                            ShardId = lot.shard_id
+                        });
+                        LOG.Info("Bootstrapped lot with dbid = " + lotId + "!");
+                        return true;
+                    } catch (Exception e)
+                    {
+                        LOG.Info("Lot bootstrap error! EXCEPTION: " + e.ToString());
                         return false;
                     }
-
-                    var lot = da.Lots.Get(claim.lot_id);
-                    if(lot == null)
-                    {
-                        lock (Lots) Lots.Remove(lotId);
-                        return false;
-                    }
-
-                    GetLot(claim.lot_id).Bootstrap(new LotContext {
-                        DbId = lot.lot_id,
-                        Id = lot.location,
-                        ClaimId = claimId,
-                        ShardId = lot.shard_id 
-                    });
-                    return true;
                 }
             }
         }
@@ -258,6 +269,8 @@ namespace FSO.Server.Servers.Lot.Domain
 
     public class LotHostEntry : ILotHost
     {
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
+
         //Partial model for syncing updates
         private FSO.Common.DataService.Model.Lot Model;
         private LotHost Host;
@@ -352,7 +365,9 @@ namespace FSO.Server.Servers.Lot.Domain
             this.Context = context;
             Model.Id = context.Id;
             Model.DbId = context.DbId;
-            
+
+            LOG.Info("Bootstrapping lot with dbid = " + context.DbId + "...");
+
             //Each lot gets its own set of bindings
             Kernel = new ChildKernel(
                 ParentKernel
@@ -373,8 +388,31 @@ namespace FSO.Server.Servers.Lot.Domain
 
         private void _DigestBackground()
         {
-            while (BackgroundNotify.WaitOne())
+            try
             {
+                while (BackgroundNotify.WaitOne())
+                {
+                    List<Callback> tasks = new List<Callback>();
+                    lock (BackgroundTasks)
+                    {
+                        tasks.AddRange(BackgroundTasks);
+                        BackgroundTasks.Clear();
+                    }
+
+                    foreach (var task in tasks)
+                    {
+                        try
+                        {
+                            task.Invoke();
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                    }
+                }
+            }
+            catch (ThreadAbortException) {
+                //complete remaining tasks
                 List<Callback> tasks = new List<Callback>();
                 lock (BackgroundTasks)
                 {
@@ -472,9 +510,8 @@ namespace FSO.Server.Servers.Lot.Domain
             SetOnline(false);
             SetSpotlight(false);
             ReleaseLotClaim();
-            BackgroundThread.Abort();
             Host.ShutdownComplete(this);
-            MainThread.Abort();
+            BackgroundThread.Abort();
         }
 
         public void ForceShutdown(bool lotClosed)

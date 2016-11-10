@@ -434,9 +434,11 @@ namespace FSO.Client.UI.Panels
             InventoryCatalogVisitorNextPageButton.Visible = (mode == 2 && !Roommate);
             InventoryCatalogVisitorPreviousPageButton.Visible = (mode == 2 && !Roommate);
 
-            if (mode == 1) { Catalog.X = 275; Catalog.PageSize = 24; }
-            else if (mode == 2 && Roommate) { Catalog.X = 272; Catalog.PageSize = 24; }
-            else if (mode == 2 && !Roommate) { Catalog.X = 98; Catalog.PageSize = 30; }
+            var useSmall = (FSOEnvironment.UIZoomFactor > 1f || GlobalSettings.Default.GraphicsWidth < 1024);
+
+            if (mode == 1) { Catalog.X = 275; Catalog.PageSize = (useSmall)?14:24; }
+            else if (mode == 2 && Roommate) { Catalog.X = 272; Catalog.PageSize = (useSmall) ? 14 : 24; }
+            else if (mode == 2 && !Roommate) { Catalog.X = 98; Catalog.PageSize = (useSmall) ? 22 : 30; }
 
             Catalog.SetPage(0);
 

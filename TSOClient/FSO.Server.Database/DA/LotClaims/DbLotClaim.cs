@@ -13,4 +13,10 @@ namespace FSO.Server.Database.DA.LotClaims
         public int lot_id { get; set; }
         public string owner { get; set; }
     }
+
+    public class DbLotStatus
+    {
+        public uint location { get; set; }
+        public int active { get; set; }
+    }
 }

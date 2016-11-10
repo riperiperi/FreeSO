@@ -29,9 +29,9 @@ namespace FSO.Server.Database.DA.Avatars
         public uint Create(DbAvatar avatar)
         {
             return (uint)Context.Connection.Query<int>("INSERT INTO fso_avatars (shard_id, user_id, name, " +
-                                        "gender, date, skin_tone, head, body, description) " +
+                                        "gender, date, skin_tone, head, body, description, budget, moderation_level) " +
                                         " VALUES (@shard_id, @user_id, @name, @gender, @date, " +
-                                        " @skin_tone, @head, @body, @description); SELECT LAST_INSERT_ID();", new
+                                        " @skin_tone, @head, @body, @description, @budget, @moderation_level); SELECT LAST_INSERT_ID();", new
                                         {
                                             shard_id = avatar.shard_id,
                                             user_id = avatar.user_id,
@@ -41,7 +41,9 @@ namespace FSO.Server.Database.DA.Avatars
                                             skin_tone = avatar.skin_tone,
                                             head = avatar.head,
                                             body = avatar.body,
-                                            description = avatar.description
+                                            description = avatar.description,
+                                            budget = avatar.budget,
+                                            moderation_level = avatar.moderation_level
                                         }).First();
             //for now, everything else assumes default values.
         }
@@ -104,8 +106,10 @@ namespace FSO.Server.Database.DA.Avatars
                 + "skill_logic = @skill_logic, "
                 + "skill_body = @skill_body, "
                 + "skill_creativity = @skill_creativity, "
+                + "body = @body, "
                 + "body_swimwear = @body_swimwear, "
                 + "body_sleepwear = @body_sleepwear, "
+                + "body_current = @body_current, "
                 + "current_job = @current_job, "
                 + "is_ghost = @is_ghost, "
                 + "ticker_death = @ticker_death, "

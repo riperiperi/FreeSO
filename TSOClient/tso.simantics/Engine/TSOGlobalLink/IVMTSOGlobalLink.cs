@@ -12,7 +12,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     {
         void LeaveLot(VM vm, VMAvatar avatar);
         void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback);
-        void RequestRoommate(VM vm, VMAvatar avatar, int mode, byte permissions);
+        void RequestRoommate(VM vm, uint pid, int mode, byte permissions);
         void RemoveRoommate(VM vm, VMAvatar avatar);
         void ObtainAvatarFromTicket(VM vm, string ticket, VMAsyncAvatarCallback callback);
         void QueueArchitecture(VMNetArchitectureCmd cmd);

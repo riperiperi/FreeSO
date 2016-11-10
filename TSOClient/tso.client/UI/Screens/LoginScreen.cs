@@ -29,8 +29,6 @@ namespace FSO.Client.UI.Screens
 
         private LoginRegulator Regulator;
 
-        private Texture2D TestCursor;
-
         public LoginScreen(LoginRegulator regulator)
         {
             this.Regulator = regulator;
@@ -48,8 +46,6 @@ namespace FSO.Client.UI.Screens
             lbl.Y = 558;
             Background.BackgroundCtnr.Add(lbl);
             this.Add(Background);
-
-            TestCursor = CurLoader.LoadCursor(GameFacade.GraphicsDevice, File.Open(Content.Content.Get().GetPath("uigraphics/shared/cursors/livenothing.cur"), FileMode.Open)).Item1;
 
             /** Progress bar **/
             LoginProgress = new UILoginProgress();
@@ -183,7 +179,6 @@ namespace FSO.Client.UI.Screens
         public override void Draw(UISpriteBatch batch)
         {
             base.Draw(batch);
-            DrawLocalTexture(batch, TestCursor, new Microsoft.Xna.Framework.Vector2());
         }
     }
 }

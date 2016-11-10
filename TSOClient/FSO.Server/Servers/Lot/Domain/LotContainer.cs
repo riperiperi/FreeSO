@@ -88,12 +88,15 @@ namespace FSO.Server.Servers.Lot.Domain
 
             JobLot = (context.Id & 0x40000000) > 0;
             if (JobLot) {
+                var jobPacked = Context.DbId - 0x200;
+                var jobLevel = (short)((jobPacked - 1) & 0xF);
+                var jobType = (short)((jobPacked - 1) / 0xF);
                 LotPersist = new DbLot
                 {
                     lot_id = Context.DbId,
                     location = Context.Id,
                     category = DbLotCategory.money,
-                    name = "Job Lot",
+                    name = "{job:"+jobType+":"+jobLevel+"}",
                 };
                 LotAdj = new List<DbLot>();
                 LotRoommates = new List<DbRoommate>();
@@ -116,7 +119,6 @@ namespace FSO.Server.Servers.Lot.Domain
                 Realestate = realestate.GetByShard(LotPersist.shard_id);
                 GenerateTerrain();
             }
-            ResetVM();
         }
 
         public void GenerateTerrain()
@@ -149,9 +151,9 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
-        public bool AttemptLoadRing()
+        public void LoadAdj()
         {
-            //first let's try load our adjacent lots.
+            LOG.Info("Loading adj lots for lot with dbid = " + Context.DbId);
             HollowLots = new byte[9][];
             var myPos = MapCoordinates.Unpack(LotPersist.location);
             foreach (var lot in LotAdj)
@@ -164,6 +166,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     var pos = MapCoordinates.Unpack(lot.location);
                     var x = (pos.X - myPos.X) + 1;
                     var y = (pos.Y - myPos.Y) + 1;
+                    if (x < 0 || x > 2 || y < 0 || y > 2) continue; //out of range (why does this happen?)
                     using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     {
                         int numBytesToRead = Convert.ToInt32(fs.Length);
@@ -171,18 +174,25 @@ namespace FSO.Server.Servers.Lot.Domain
                         fs.Read(file, 0, numBytesToRead);
                         HollowLots[y * 3 + x] = file;
                     }
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     LOG.Warn("Failed to load adjacent lot :(");
-                    LOG.Warn(e.StackTrace);
+                    LOG.Warn(e.ToString());
                     //don't bother
                 }
             }
+        }
 
+        public bool AttemptLoadRing()
+        {
+            //first let's try load our adjacent lots.
             int attempts = 0;
             var lotStr = LotPersist.lot_id.ToString("x8");
+
             while (++attempts < Config.RingBufferSize)
             {
+                LOG.Info("Checking ring "+attempts+" for lot with dbid = " + Context.DbId);
                 try
                 {
                     var path = Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/state_"+LotPersist.ring_backup_num.ToString()+".fsov");
@@ -350,6 +360,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void ResetVM()
         {
+            LOG.Info("Resetting VM for lot with dbid = " + Context.DbId);
             VMGlobalLink = Kernel.Get<LotServerGlobalLink>();
             VMDriver = new VMServerDriver(VMGlobalLink);
             VMDriver.OnTickBroadcast += TickBroadcast;
@@ -361,6 +372,7 @@ namespace FSO.Server.Servers.Lot.Domain
             vm.Init();
 
             bool isNew = false;
+            LoadAdj();
             if (!JobLot && LotPersist.ring_backup_num > -1 && AttemptLoadRing())
             {
                 
@@ -433,23 +445,29 @@ namespace FSO.Server.Servers.Lot.Domain
 
             vm.Context.Clock.Hours = tsoTime.Item1;
             vm.Context.Clock.Minutes = tsoTime.Item2;
-            vm.Context.UpdateTSOBuildableArea();
 
             VMLotTerrainRestoreTools.RestoreTerrain(vm);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(vm);
 
+            vm.Context.UpdateTSOBuildableArea();
+
             vm.MyUID = uint.MaxValue - 1;
             ReturnInvalidObjects();
 
-            foreach (var ent in vm.Entities)
+            var entClone = new List<VMEntity>(vm.Entities);
+            foreach (var ent in entClone)
             {
                 if (ent is VMGameObject)
                 {
+                    ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.TransactionIncomplete;
                     ((VMGameObject)ent).DisableIfTSOCategoryWrong(vm.Context);
                     if (ent.GetFlag(VMEntityFlags.Occupied))
                     {
                         ent.ResetData();
                         ent.Init(vm.Context); //objects should not be occupied when we join the lot...
+                    }
+                    {
+                        ent.ExecuteEntryPoint(2, vm.Context, true);
                     }
                 }
             }
@@ -486,6 +504,15 @@ namespace FSO.Server.Servers.Lot.Domain
         /// </summary>
         public void Run()
         {
+            try
+            {
+                ResetVM();
+            } catch (Exception e)
+            {
+                LOG.Info("LOT " + Context.DbId + " LOAD EXECPTION:" + e.ToString());
+                Host.Shutdown();
+                return;
+            }
             LOG.Info("Starting to host lot with dbid = " + Context.DbId);
             Host.SetOnline(true);
 
@@ -510,6 +537,8 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     //something bad happened. not entirely sure how we should deal with this yet
                     LOG.Error("VM ERROR: "+e.StackTrace);
+                    Host.Shutdown();
+                    return;
                 }
 
                 if (noRemainingUsers)
@@ -520,7 +549,7 @@ namespace FSO.Server.Servers.Lot.Domain
                         if (--TimeToShutdown == 0 || (ShuttingDown && TimeToShutdown < (TICKRATE * 20 - 10)))
                         {
                             Shutdown();
-                            break; //kill the lot
+                            return; //kill the lot
                         }
                     }
                 }
@@ -712,7 +741,7 @@ namespace FSO.Server.Servers.Lot.Domain
             state.DefaultSuits.Daywear = avatar.body;
             state.DefaultSuits.Swimwear = avatar.body_swimwear;
             state.DefaultSuits.Sleepwear = avatar.body_sleepwear;
-            state.BodyOutfit = avatar.body;
+            state.BodyOutfit = (avatar.body_current == 0)?avatar.body:avatar.body_current;
             state.HeadOutfit = avatar.head;
             state.Gender = (short)avatar.gender;
             state.Budget = (uint)avatar.budget;
@@ -722,12 +751,12 @@ namespace FSO.Server.Servers.Lot.Domain
             var age = (uint)((now - avatar.date) / ((long)60 * 60 * 24));
 
             state.SkillLock = (short)(20 + age / 7);
-            state.SkillLockBody = (short)avatar.lock_body;
-            state.SkillLockCharisma = (short)avatar.lock_charisma;
-            state.SkillLockCooking = (short)avatar.lock_cooking;
-            state.SkillLockCreativity = (short)avatar.lock_creativity;
-            state.SkillLockLogic = (short)avatar.lock_logic;
-            state.SkillLockMechanical = (short)avatar.lock_logic;
+            state.SkillLockBody = (short)(avatar.lock_body*100);
+            state.SkillLockCharisma = (short)(avatar.lock_charisma * 100);
+            state.SkillLockCooking = (short)(avatar.lock_cooking * 100);
+            state.SkillLockCreativity = (short)(avatar.lock_creativity * 100);
+            state.SkillLockLogic = (short)(avatar.lock_logic * 100);
+            state.SkillLockMechanical = (short)(avatar.lock_mechanical * 100);
 
             state.BodySkill = (short)avatar.skill_body;
             state.CharismaSkill = (short)avatar.skill_charisma;
@@ -754,8 +783,6 @@ namespace FSO.Server.Servers.Lot.Domain
                     StatusFlags = (short)job.job_statusflags
                 };
             }
-            
-            if (avatar.moderation_level > 0) state.Permissions = VMTSOAvatarPermissions.Admin;
 
             if (myRoomieLots.Count == 0)
                 state.AvatarFlags |= VMTSOAvatarFlags.CanBeRoommate; //we're not roommate anywhere, so we can be here.
@@ -773,6 +800,8 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
             }
             else state.Permissions = VMTSOAvatarPermissions.Visitor;
+
+            if (avatar.moderation_level > 0) state.Permissions = VMTSOAvatarPermissions.Admin;
 
             var motives = new short[16];
             for (int i=0; i<16; i++)
@@ -810,14 +839,15 @@ namespace FSO.Server.Servers.Lot.Domain
             state.body = avatar.DefaultSuits.Daywear;
             state.body_sleepwear = avatar.DefaultSuits.Sleepwear;
             state.body_swimwear = avatar.DefaultSuits.Swimwear;
+            state.body_current = avatar.BodyOutfit;
 
             state.skilllock = (byte)avatar.SkillLock;
-            state.lock_body = (ushort)avatar.SkillLockBody;
-            state.lock_charisma = (ushort)avatar.SkillLockCharisma;
-            state.lock_cooking = (ushort)avatar.SkillLockCooking;
-            state.lock_creativity = (ushort)avatar.SkillLockCreativity;
-            state.lock_logic = (ushort)avatar.SkillLockLogic;
-            state.lock_mechanical = (ushort)avatar.SkillLockMechanical;
+            state.lock_body = (ushort)(avatar.SkillLockBody / 100);
+            state.lock_charisma = (ushort)(avatar.SkillLockCharisma / 100);
+            state.lock_cooking = (ushort)(avatar.SkillLockCooking / 100);
+            state.lock_creativity = (ushort)(avatar.SkillLockCreativity / 100);
+            state.lock_logic = (ushort)(avatar.SkillLockLogic / 100);
+            state.lock_mechanical = (ushort)(avatar.SkillLockMechanical / 100);
 
             state.skill_body = (ushort)avatar.BodySkill;
             state.skill_charisma = (ushort)avatar.CharismaSkill;
@@ -857,7 +887,11 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             //shut down this lot. Do a final save and close everything down.
             LOG.Info("Lot with dbid = " + Context.DbId + " shutting down.");
-            ReturnInvalidObjects();
+            try
+            {
+                ReturnInvalidObjects();
+            }
+            catch (Exception e) { }
             SaveRing();
             Host.Shutdown();
         }

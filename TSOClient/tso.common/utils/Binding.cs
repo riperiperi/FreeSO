@@ -51,9 +51,11 @@ namespace FSO.Common.Utils
         {
             lock (Watching)
             {
-                foreach (var item in Watching)
+                var clone = new List<INotifyPropertyChanged>(Watching);
+                foreach (var item in clone)
                 {
                     item.PropertyChanged -= OnPropertyChanged;
+                    Watching.Remove(item);
                 }
             }
         }

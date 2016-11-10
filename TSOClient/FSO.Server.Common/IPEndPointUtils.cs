@@ -17,8 +17,14 @@ namespace FSO.Server.Common
             System.Net.IPAddress ip;
             if (!System.Net.IPAddress.TryParse(ep[0], out ip))
             {
-                throw new FormatException("Invalid ip-adress");
+                var addrs = Dns.GetHostEntry(ep[0]).AddressList;
+                if (addrs.Length == 0)
+                {
+                    throw new FormatException("Invalid ip-address");
+                }
+                else ip = addrs[0];
             }
+
             int port;
             if (!int.TryParse(ep[1], NumberStyles.None, NumberFormatInfo.CurrentInfo, out port))
             {

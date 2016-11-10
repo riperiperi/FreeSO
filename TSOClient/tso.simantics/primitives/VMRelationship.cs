@@ -92,12 +92,13 @@ namespace FSO.SimAntics.Primitives
             else if (operand.SetMode == 1)
             { //todo, special system for server persistent avatars and pets
                 var value = VMMemory.GetVariable(context, operand.VarScope, operand.VarData);
-                relToTarg[operand.RelVar] = value;
+                relToTarg[operand.RelVar] = Math.Max((short)-100, Math.Min((short)100, value));
             }
             else if (operand.SetMode == 2)
             {
                 var value = VMMemory.GetVariable(context, operand.VarScope, operand.VarData);
                 relToTarg[operand.RelVar] += value;
+                relToTarg[operand.RelVar] = Math.Max((short)-100, Math.Min((short)100, relToTarg[operand.RelVar]));
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;

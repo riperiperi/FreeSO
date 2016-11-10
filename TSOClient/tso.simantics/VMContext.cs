@@ -746,7 +746,7 @@ namespace FSO.SimAntics
             {
                 new Vector2(0, -1), //bottom left road side
                 new Vector2(1, 0),
-                new Vector2(0, 1),
+                new Vector2(0, -1),
                 new Vector2(-1, 0)
             };
 

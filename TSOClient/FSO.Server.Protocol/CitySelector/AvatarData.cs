@@ -68,9 +68,7 @@ namespace FSO.Server.Protocol.CitySelector
             }
 
             var descString = element.ReadTextNode("Description");
-            if(descString != null){
-                this.Description = descString;
-            }
+            this.Description = descString ?? "";
         }
 
         #endregion

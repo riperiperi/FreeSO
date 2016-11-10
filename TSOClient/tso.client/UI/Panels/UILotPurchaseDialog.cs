@@ -1,6 +1,8 @@
 ﻿using FSO.Client.Controllers;
 using FSO.Client.GameContent;
 using FSO.Client.UI.Controls;
+using FSO.Client.UI.Framework;
+using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -32,6 +34,8 @@ namespace FSO.Client.UI.Panels
         public string InvalidNameErrorCensor { get; set; }
         public string CloseButtonTooltip { get; set; }
         public string AcceptButtonTooltip { get; set; }
+
+        public event Callback<string> OnNameChosen;
 
         public UILotPurchaseDialog() : base(UIDialogStyle.Standard| UIDialogStyle.OK | UIDialogStyle.Close, false)
         {
@@ -65,11 +69,25 @@ namespace FSO.Client.UI.Panels
             RefreshValidation();
 
             OKButton.OnButtonClick += AcceptButton_OnButtonClick;
+            CloseButton.OnButtonClick += CloseButton_OnButtonClick;
+        }
+
+        private void CloseButton_OnButtonClick(Framework.UIElement button)
+        {
+            //todo: special behaviour?
+            UIScreen.RemoveDialog(this);
         }
 
         private void AcceptButton_OnButtonClick(Framework.UIElement button)
         {
-            FindController<TerrainController>().PurchaseLot(NameTextEdit.CurrentText);
+            if (OnNameChosen != null)
+            {
+                OnNameChosen(NameTextEdit.CurrentText);
+            }
+            else
+            {
+                FindController<TerrainController>().PurchaseLot(NameTextEdit.CurrentText);
+            }
         }
 
         private void NameTextEdit_OnChange(Framework.UIElement element)

@@ -14,7 +14,17 @@ namespace FSO.Server.Watchdog
     {
         //really simple console application to retrieve and extract a server distribution from teamcity.
 
-        static void Main(string[] args)
+        static HashSet<string> IgnoreFiles = new HashSet<string>()
+        {
+            "watchdog.exe",
+            "config.json",
+            "watchdog.ini",
+            "Ninject.dll",
+            "Ninject.xml",
+            "NLog.config"
+        };
+
+        static int Main(string[] args)
         {
             var restart = true;
             while (restart)
@@ -22,7 +32,17 @@ namespace FSO.Server.Watchdog
                 var setup = AppDomain.CurrentDomain.SetupInformation;
                 setup.ConfigurationFile = Path.Combine(Path.GetDirectoryName(setup.ConfigurationFile), "server.exe.config");
                 var childDomain = AppDomain.CreateDomain("serverDomain", null, setup);
-                var result = childDomain.ExecuteAssembly("server.exe", args);
+                int result = 3;
+                try
+                {
+                    result = childDomain.ExecuteAssembly("server.exe", args);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Unhandled exception occurred!");
+                    Console.WriteLine(e.ToString());
+                    e.ToString();
+                }
                 AppDomain.Unload(childDomain);
 
                 if (result > 1)
@@ -36,27 +56,34 @@ namespace FSO.Server.Watchdog
                             Update(new string[0]); break;
                     }
                 }
+                return result; 
+                //was trying to do something smart here with appdomains to reload the app without closing it
+                //but it breaks mono... so to loop running the application you need to use a shell script.
+                //just loop while this watcher doesn't return 2 (shutdown)
             }
+            return 0;
         }
 
         static void Update(string[] args)
         {
-            if (args.Length < 2)
+            var config = Config.Default;
+            Uri url;
+
+            if (!config.UseTeamCity)
             {
-                var nargs = new string[2];
-                nargs[0] = (args.Length == 0) ? "http://servo.freeso.org" : args[0];
-                nargs[1] = "FreeSO_TsoClient";
-                args = nargs;
+                Console.WriteLine("Fetching update from " + config.NormalUpdateUrl + "...");
+                url = new Uri(config.NormalUpdateUrl);
             }
-            var teamcityUrl = args[0]; //http://servo.freeso.org
-            var projectName = args[1]; //FreeSO_TsoClient
-            Console.WriteLine("Fetching update from " + teamcityUrl + "/" + projectName + "...");
+            else
+            {
+                Console.WriteLine("Fetching update from " + config.TeamCityUrl + "/" + config.TeamCityProject + "...");
+                var baseUri = new Uri(config.TeamCityUrl);
+                if (!Uri.TryCreate(baseUri, "guestAuth/downloadArtifacts.html?buildTypeId=" + config.TeamCityProject + "&buildId=lastSuccessful", out url))
+                    url = null;
+            }
 
             var wait = new AutoResetEvent(false);
-
-            Uri result = null;
-            var baseUri = new Uri(teamcityUrl);
-            if (Uri.TryCreate(baseUri, "guestAuth/downloadArtifacts.html?buildTypeId=" + projectName + "&buildId=lastSuccessful", out result)) {
+            if (url != null) {
                 if (Directory.Exists("selfUpdate/")) Directory.Delete("selfUpdate/", true);
                 Directory.CreateDirectory("selfUpdate/");
                 Directory.CreateDirectory("selfUpdate/artifacts");
@@ -73,9 +100,16 @@ namespace FSO.Server.Watchdog
                         var entries = archive.Entries;
                         foreach (var entry in entries)
                         {
+                            if (IgnoreFiles.Contains(entry.FullName)) continue;
                             var targPath = Path.Combine("./", entry.FullName);
                             Directory.CreateDirectory(Path.GetDirectoryName(targPath));
-                            entry.ExtractToFile(targPath, true);
+                            try
+                            {
+                                entry.ExtractToFile(targPath, true);
+                            } catch (Exception e)
+                            {
+                                Console.WriteLine("Could not replace " + targPath + "!");
+                            }
                         }
                         archive.Dispose();
                     }
@@ -84,7 +118,7 @@ namespace FSO.Server.Watchdog
                     wait.Set();
                 };
 
-                client.DownloadFileAsync(result, "selfUpdate/artifacts.zip");
+                client.DownloadFileAsync(url, "selfUpdate/artifacts.zip");
             }
 
             wait.WaitOne();

@@ -203,7 +203,7 @@ namespace FSO.Server.Servers.City.Handlers
 
             //Update my sim's lot
             var avatar = await DataService.Get<Avatar>(session.AvatarId);
-            avatar.Avatar_LotGridXY = packedLocation;
+            if (avatar != null) avatar.Avatar_LotGridXY = packedLocation;
             
             session.Write(new PurchaseLotResponse()
             {

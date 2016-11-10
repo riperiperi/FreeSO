@@ -428,6 +428,7 @@ namespace FSO.Client.UI.Panels
 
             if (jobMode)
             {
+                JobUI = LotController.vm.TSOState.JobUI;
                 bool textDirty = false;
                 if (StatusBarMsgWinTextEntry.Items.Count != JobUI.MessageText.Count)
                     textDirty = true;

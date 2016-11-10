@@ -352,22 +352,12 @@ namespace FSO.SimAntics
 
             for (int i=0; i<MotiveData.Length; i++)
             {
-                MotiveData[i] = 75;
+                MotiveData[i] = 100;
             }
 
             SetMotiveData(VMMotive.SleepState, 0); //max all motives except sleep state
 
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
-            SetPersonData(VMPersonDataVariable.OnlineJobID, 1); //for testing wash hands after toilet
-
-            SetPersonData(VMPersonDataVariable.CreativitySkill, 1000);
-            SetPersonData(VMPersonDataVariable.CookingSkill, 1000);
-            SetPersonData(VMPersonDataVariable.CharismaSkill, 1000);
-            SetPersonData(VMPersonDataVariable.LogicSkill, 1000);
-            SetPersonData(VMPersonDataVariable.BodySkill, 1000);
-
-            SetPersonData(VMPersonDataVariable.NumOutgoingFriends, 100);
-            SetPersonData(VMPersonDataVariable.IncomingFriends, 100);
         }
 
         public override void Reset(VMContext context)
@@ -482,7 +472,7 @@ namespace FSO.SimAntics
                     if (state.PlayingBackwards) state.CurrentFrame -= state.Speed;
                     else state.CurrentFrame += state.Speed;
                     var currentFrame = state.CurrentFrame;
-                    var currentTime = currentFrame * 33.33f;
+                    var currentTime = (currentFrame * 1000) / 30;
                     var timeProps = state.TimePropertyLists;
                     if (!state.PlayingBackwards)
                     {
@@ -514,18 +504,17 @@ namespace FSO.SimAntics
                             HandleTimePropsEvent(tp);
                         }
                     }
-
-                    var status = Animator.RenderFrame(avatar.Avatar, state.Anim, (int)state.CurrentFrame, state.CurrentFrame%1f, state.Weight/totalWeight);
-                    if (status != AnimationStatus.IN_PROGRESS)
+                }
+                var status = Animator.RenderFrame(avatar.Avatar, state.Anim, (int)state.CurrentFrame, state.CurrentFrame % 1f, state.Weight / totalWeight);
+                if (status != AnimationStatus.IN_PROGRESS)
+                {
+                    if (state.Loop)
                     {
-                        if (state.Loop)
-                        {
-                            if (state.PlayingBackwards) state.CurrentFrame += state.Anim.NumFrames;
-                            else state.CurrentFrame -= state.Anim.NumFrames;
-                        }
-                        else
-                            state.EndReached = true;
+                        if (state.PlayingBackwards) state.CurrentFrame += state.Anim.NumFrames;
+                        else state.CurrentFrame -= state.Anim.NumFrames;
                     }
+                    else
+                        state.EndReached = true;
                 }
             }
 
@@ -579,7 +568,7 @@ namespace FSO.SimAntics
                     Args = new short[4],
                     InteractionNumber = -1,
                     Priority = short.MaxValue,
-                    Flags = TTABFlags.Leapfrog | TTABFlags.MustRun
+                    Flags = TTABFlags.MustRun
                 }
             );
             if (KillTimeout == -1) KillTimeout = 0;
@@ -635,6 +624,16 @@ namespace FSO.SimAntics
                 case VMPersonDataVariable.IsHousemate:
                     var level = ((VMTSOAvatarState)TSOState).Permissions;
                     return (short)((level >= VMTSOAvatarPermissions.BuildBuyRoommate)?2:((level >= VMTSOAvatarPermissions.Roommate)?1:0));
+                case VMPersonDataVariable.NumOutgoingFriends:
+                case VMPersonDataVariable.IncomingFriends:
+                    return (short)(MeToPersist.Count(x => x.Key < 16777216 && x.Value.Count > 1 && x.Value[1] >= 50) * 5); //tuning cheats
+                case VMPersonDataVariable.SkillLock:
+                    return (short)(((GetPersonData(VMPersonDataVariable.SkillLockBody) > 0) ? 1 : 0) |
+                        ((GetPersonData(VMPersonDataVariable.SkillLockCharisma) > 0) ? 2 : 0) |
+                        ((GetPersonData(VMPersonDataVariable.SkillLockCooking) > 0) ? 4 : 0) |
+                        ((GetPersonData(VMPersonDataVariable.SkillLockCreativity) > 0) ? 8 : 0) |
+                        ((GetPersonData(VMPersonDataVariable.SkillLockLogic) > 0) ? 16 : 0) |
+                        ((GetPersonData(VMPersonDataVariable.SkillLockMechanical) > 0) ? 32 : 0));
             }
             return PersonData[(ushort)variable];
         }
@@ -658,6 +657,18 @@ namespace FSO.SimAntics
             }
         }
 
+        public short SkillLocks
+        {
+            get
+            {
+                return PersonData[70];
+            }
+            set
+            {
+                PersonData[70] = value;
+            }
+        }
+
         public virtual bool SetPersonData(VMPersonDataVariable variable, short value)
             {
             if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
@@ -666,7 +677,11 @@ namespace FSO.SimAntics
             {
                 case VMPersonDataVariable.OnlineJobID:
                     if (value > 4) return false;
-                    if (!((VMTSOAvatarState)TSOState).JobInfo.ContainsKey(value)) ((VMTSOAvatarState)TSOState).JobInfo[value] = new VMTSOJobInfo();
+                    if (!((VMTSOAvatarState)TSOState).JobInfo.ContainsKey(value))
+                    {
+                        ((VMTSOAvatarState)TSOState).JobInfo[value] = new VMTSOJobInfo();
+                        ((VMTSOAvatarState)TSOState).JobInfo[value].StatusFlags = 1;
+                    }
                     break;
                 case VMPersonDataVariable.OnlineJobGrade:
                     if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
@@ -681,8 +696,11 @@ namespace FSO.SimAntics
                         jobInfo.StatusFlags = value;
                     return true;
                 case VMPersonDataVariable.OnlineJobXP:
-                    if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
+                    if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo)) {
+                        var diff = value - jobInfo.Experience;
+                        if (diff > 0) value = (short)(jobInfo.Experience + diff * 5); //TODO: WIP: NOTE: IMPORTANT: 5x job scaling for testing
                         jobInfo.Experience = value;
+                    }
                     return true;
                 case VMPersonDataVariable.Priority:
                     if (Thread.Queue.Count != 0 && Thread.Stack.LastOrDefault().ActionTree)
@@ -693,6 +711,8 @@ namespace FSO.SimAntics
                     return true;
                 case VMPersonDataVariable.RenderDisplayFlags:
                     if (WorldUI != null) ((AvatarComponent)WorldUI).DisplayFlags = (AvatarDisplayFlags)value;
+                    return true;
+                case VMPersonDataVariable.SkillLock:
                     return true;
             }
             PersonData[(ushort)variable] = value;
