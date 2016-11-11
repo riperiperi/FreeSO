@@ -1,28 +1,29 @@
 ﻿-- User table, does not include password info so we dont return this into RAM unless we absolutely need to. Also will help do SSO eventually
 CREATE TABLE IF NOT EXISTS `fso_users` (
-	`user_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-	`username` VARCHAR(50) NOT NULL,
-	`email` VARCHAR(120) NOT NULL,
-	`user_state` ENUM('valid','email_confirm','moderated') NOT NULL DEFAULT 'email_confirm',
-	`register_date` INT(10) NOT NULL,
-	`is_admin` TINYINT(3) NOT NULL,
-	`is_moderator` TINYINT(3) NOT NULL,
-	`is_banned` TINYINT(3) NOT NULL,
-	PRIMARY KEY (`user_id`),
-	UNIQUE INDEX `username` (`username`)
+  `user_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `email` varchar(120) NOT NULL,
+  `user_state` enum('valid','email_confirm','moderated') NOT NULL DEFAULT 'email_confirm',
+  `register_date` int(10) NOT NULL,
+  `is_admin` tinyint(3) NOT NULL,
+  `is_moderator` tinyint(3) NOT NULL,
+  `is_banned` tinyint(3) NOT NULL,
+  `register_ip` varchar(50) NOT NULL DEFAULT '127.0.0.1',
+  `last_ip` varchar(50) NOT NULL DEFAULT '127.0.0.1',
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `username` (`username`)
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;
 
 -- Stores password hashes
 CREATE TABLE IF NOT EXISTS `fso_user_authenticate` (
-	`user_id` INT UNSIGNED NOT NULL,
-	`scheme_class` VARCHAR(75) NOT NULL,
-	`data` MEDIUMBLOB NOT NULL,
-	PRIMARY KEY (`user_id`)
-)
-COLLATE='utf8_general_ci'
-ENGINE=InnoDB;
+  `user_id` int(10) unsigned NOT NULL,
+  `scheme_class` varchar(75) NOT NULL,
+  `data` mediumblob NOT NULL,
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `fk_users_pass` FOREIGN KEY (`user_id`) REFERENCES `fso_users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Default user
 INSERT INTO fso_users VALUES (1, 'admin', 'admin@freeso.org', 'valid', 1439646790, 1, 1, 0) ON DUPLICATE KEY UPDATE user_id = user_id;
