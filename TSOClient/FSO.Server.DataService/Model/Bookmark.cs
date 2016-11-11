@@ -37,6 +37,6 @@ namespace FSO.Common.DataService.Model
 
     public enum BookmarkType : byte
     {
-        BOOKMARK = 0x01
+        AVATAR = 0x01
     }
 }

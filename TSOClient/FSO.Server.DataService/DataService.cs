@@ -234,7 +234,7 @@ namespace FSO.Common.DataService
                             provider.PersistMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value);
                         }
                     }
-                    else if (finalPath == arr.Count)
+                    else if (finalPath >= arr.Count)
                     {
                         //Insert
                         provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
@@ -270,12 +270,12 @@ namespace FSO.Common.DataService
                         var parent = path.GetParent();
                         if (IsList(parent.Value))
                         {
-                            provider.DemandMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(1), value, context);
+                            provider.DemandMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(1), target.Value, context);
                             ((IList)parent.Value).Remove(target.Value);
 
                             if (parent.Persist)
                             {
-                                provider.PersistMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(1), value);
+                                provider.PersistMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(1), target.Value);
                             }
                         }
                         else

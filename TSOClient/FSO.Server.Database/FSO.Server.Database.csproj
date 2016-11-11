@@ -90,6 +90,9 @@
     <Compile Include="DA\Avatars\DbJobLevel.cs" />
     <Compile Include="DA\Avatars\IAvatars.cs" />
     <Compile Include="DA\Avatars\SqlAvatars.cs" />
+    <Compile Include="DA\Bookmarks\DbBookmark.cs" />
+    <Compile Include="DA\Bookmarks\IBookmarks.cs" />
+    <Compile Include="DA\Bookmarks\SqlBookmarks.cs" />
     <Compile Include="DA\DbChanges\DbChange.cs" />
     <Compile Include="DA\IDA.cs" />
     <Compile Include="DA\IDAFactory.cs" />
@@ -149,6 +152,7 @@
     <Content Include="DatabaseScripts\changes\0001_3_max_avatars.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="DatabaseScripts\changes\0004_bookmarks.sql" />
     <Content Include="DatabaseScripts\fso_transactions.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

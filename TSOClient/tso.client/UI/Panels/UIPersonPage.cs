@@ -117,6 +117,7 @@ namespace FSO.Client.UI.Panels
         public UIButton MessageButton { get; set; }
         public UIButton FindSimButton { get; set; }
         public UIButton FindHouseButton { get; set; }
+        public UIButton BookmarkButton { get; set; }
 
         /** Person & Privacy **/
         public Texture2D FindPersonButtonImage { get; set; }
@@ -347,6 +348,9 @@ namespace FSO.Client.UI.Panels
              * Wire up behavior
              */
 
+            /** Bookmark **/
+            this.BookmarkButton.OnButtonClick += BookmarkButton_OnButtonClick;
+
             /** Scroll bars **/
             this.DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
             this.DescriptionText.AttachSlider(this.DescriptionSlider);
@@ -408,10 +412,58 @@ namespace FSO.Client.UI.Panels
                 .WithMultiBinding(x =>
                 {
                     RelationshipChange();
-                }, "Avatar_FriendshipVec");
+                }, "Avatar_FriendshipVec")
+                .WithMultiBinding(x => {
+                    BookmarksChanged();
+                }, "Avatar_BookmarksVec");
+
 
             Redraw();
             Size = BackgroundExpandedImage.Size.ToVector2();
+        }
+
+        private void BookmarksChanged()
+        {
+            var bookmark = false;
+
+            if (MyAvatar != null && MyAvatar.Value != null 
+                && MyAvatar.Value.Avatar_BookmarksVec != null && CurrentAvatar.Value != null)
+            {
+                bookmark = MyAvatar.Value.Avatar_BookmarksVec.FirstOrDefault(
+                    x => x.Bookmark_TargetID == CurrentAvatar.Value.Avatar_Id && x.Bookmark_Type == (byte)BookmarkType.AVATAR
+                ) != null;
+            }
+
+            BookmarkButton.Selected = bookmark;
+        }
+
+        private void BookmarkButton_OnButtonClick(UIElement button)
+        {
+            var controller = FindController<PersonPageController>();
+            
+            if (MyAvatar != null && MyAvatar.Value != null && CurrentAvatar.Value != null)
+            {
+                if(MyAvatar.Value.Avatar_BookmarksVec != null)
+                {
+                    var bookmark = MyAvatar.Value.Avatar_BookmarksVec.FirstOrDefault(
+                        x => x.Bookmark_TargetID == CurrentAvatar.Value.Avatar_Id && x.Bookmark_Type == (byte)BookmarkType.AVATAR
+                    );
+
+                    if (bookmark != null)
+                    {
+                        BookmarkButton.Selected = false;
+                        controller.RemoveBookmark(MyAvatar.Value, bookmark);
+                        return;
+                    }
+                }
+
+                BookmarkButton.Selected = true;
+                controller.AddBookmark(MyAvatar.Value, new Bookmark()
+                {
+                    Bookmark_TargetID = CurrentAvatar.Value.Avatar_Id,
+                    Bookmark_Type = (byte)BookmarkType.AVATAR
+                });
+            }
         }
 
         private void FindSimClicked(UIElement button)
@@ -720,6 +772,7 @@ namespace FSO.Client.UI.Panels
             else PopulateJobsText(new Avatar());
 
             RelationshipChange();
+            BookmarksChanged();
 
             foreach (var bar in SkillBars) bar.DisableLock = !isMe;
 

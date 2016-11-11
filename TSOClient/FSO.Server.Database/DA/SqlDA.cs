@@ -14,6 +14,7 @@ using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Database.DA.Objects;
 using FSO.Server.Database.DA.Relationships;
 using FSO.Server.Database.DA.Roommates;
+using FSO.Server.Database.DA.Bookmarks;
 
 namespace FSO.Server.Database.DA
 {
@@ -150,6 +151,19 @@ namespace FSO.Server.Database.DA
                     _AvatarClaims = new SqlAvatarClaims(Context);
                 }
                 return _AvatarClaims;
+            }
+        }
+
+        private IBookmarks _Bookmarks;
+        public IBookmarks Bookmarks
+        {
+            get
+            {
+                if(_Bookmarks == null)
+                {
+                    _Bookmarks = new SqlBookmarks(Context);
+                }
+                return _Bookmarks;
             }
         }
 

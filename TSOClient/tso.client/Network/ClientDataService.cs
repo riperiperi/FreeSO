@@ -19,6 +19,7 @@ using FSO.Common.DataService.Providers.Client;
 using FSO.Client.Network;
 using System.Reflection;
 using FSO.Common.DataService.Framework.Attributes;
+using System.Collections;
 
 namespace FSO.Common.DataService
 {
@@ -64,24 +65,110 @@ namespace FSO.Common.DataService
             return result.Task;
         }
 
+        private PropertyInfo GetKeyField(Type type)
+        {
+            var keyField = type.GetProperties().First(x => x.GetCustomAttribute<Key>() != null);
+            return keyField;
+        }
+
+        private uint[] GetDotPath(object item, string fieldPath)
+        {
+            //the "item" is the top level. We can really serialize anything any number of fields deep.
+            //dot path is: provider, id, field, field, field...
+            var path = fieldPath.Split('.');
+            var dotPath = new uint[path.Length + 2];
+
+            var topField = GetFieldByName(item.GetType(), path[0]);
+            var keyField = GetKeyField(item.GetType());
+            var id = (uint)keyField.GetValue(item);
+
+            dotPath[0] = topField.ParentID;
+            dotPath[1] = id;
+            dotPath[2] = topField.ID;
+
+            return dotPath;
+        }
+
+        public void SetArrayItem(object item, string fieldPath, uint index, object value)
+        {
+            //Set the key field to null tells the data service to remove it
+            var arrayDotPath = GetDotPath(item, fieldPath);
+            Array.Resize(ref arrayDotPath, arrayDotPath.Length + 1);
+            arrayDotPath[arrayDotPath.Length - 1] = (uint)index;
+
+            var update = SerializeUpdate(value, arrayDotPath);
+            CityClient.Write(new DataServiceWrapperPDU()
+            {
+                Body = update,
+                RequestTypeID = 0,
+                SendingAvatarID = NextMessageId()
+            });
+        }
+
+        public void RemoveFromArray(object item, string fieldPath, object value)
+        {
+            if (value == null) { return; }
+
+            var array = (IList)GetFieldFromPath(item, fieldPath);
+            var index = array.IndexOf(value);
+            if(index != -1)
+            {
+                //In TSO, you set the key field to null to indicate the array item should be deleted
+                var arrayDotPath = GetDotPath(item, fieldPath);
+                Array.Resize(ref arrayDotPath, arrayDotPath.Length + 2);
+                arrayDotPath[arrayDotPath.Length - 2] = (uint)index;
+
+                var keyField = GetKeyField(value.GetType());
+                var structField = GetFieldByName(value.GetType(), keyField.Name);
+                
+                arrayDotPath[arrayDotPath.Length - 1] = structField.ID;
+
+                var update = SerializeUpdate((uint)0, arrayDotPath);
+                CityClient.Write(new DataServiceWrapperPDU()
+                {
+                    Body = update,
+                    RequestTypeID = 0,
+                    SendingAvatarID = NextMessageId()
+                });
+            }
+        }
+
+        public void AddToArray(object item, string fieldPath, object value)
+        {
+            var arrayDotPath = GetDotPath(item, fieldPath);
+            Array.Resize(ref arrayDotPath, arrayDotPath.Length + 1);
+            //DataService appends if index is >= length
+            arrayDotPath[arrayDotPath.Length - 1] = uint.MaxValue;
+            var update = SerializeUpdate(value, arrayDotPath);
+            CityClient.Write(new DataServiceWrapperPDU()
+            {
+                Body = update,
+                RequestTypeID = 0,
+                SendingAvatarID = NextMessageId()
+            });
+        }
+
+        private object GetFieldFromPath(object item, string fieldPath)
+        {
+            var path = fieldPath.Split('.');
+            var curObj = item.GetType().GetProperty(path[0]).GetValue(item);
+
+            for (int i = 1; i < path.Length; i++)
+            {
+                var curField = GetFieldByName(curObj.GetType(), path[i]);
+                curObj = curObj.GetType().GetProperty(path[i]).GetValue(curObj);
+            }
+
+            return curObj;
+        }
+
         public void Sync(object item, string[] fieldPaths)
         {
             var updates = new List<cTSOTopicUpdateMessage>();
             foreach (var fieldPath in fieldPaths)
             {
-                //the "item" is the top level. We can really serialize anything any number of fields deep.
-                //dot path is: provider, id, field, field, field...
                 var path = fieldPath.Split('.');
-                var dotPath = new uint[path.Length + 2];
-
-                var topField = GetFieldByName(item.GetType(), path[0]);
-                var keyField = item.GetType().GetProperties().First(x => x.GetCustomAttribute<Key>() != null);
-                var id = (uint)keyField.GetValue(item);
-
-                dotPath[0] = topField.ParentID;
-                dotPath[1] = id;
-                dotPath[2] = topField.ID;
-
+                var dotPath = GetDotPath(item, fieldPath);
                 var curObj = item.GetType().GetProperty(path[0]).GetValue(item);
 
                 for (int i = 1; i < path.Length; i++)

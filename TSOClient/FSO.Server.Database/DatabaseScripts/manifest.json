@@ -64,6 +64,14 @@
 	  "requires":[
 		"52795d47-a25e-418f-a618-fb89300aab01"
 	  ]
+    },
+	{
+      "id": "3b7c199c-c369-4f2c-855b-2554e93484bc",
+      "script": "changes/0004_bookmarks.sql",
+      "idempotent": false,
+	  "requires":[
+		"bec36bbc-1774-44cb-a7c5-03f4a00e801c"
+	  ]
     }
   ]
 }
