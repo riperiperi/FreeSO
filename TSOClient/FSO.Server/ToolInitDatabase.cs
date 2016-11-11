@@ -62,7 +62,19 @@ namespace FSO.Server
                             change.Status == DbChangeScriptStatus.NOT_INSTALLED ||
                             (change.Status == DbChangeScriptStatus.MODIFIED && change.Idempotent))
                         {
-                            changeTool.ApplyChange(change);
+                            try {
+                                changeTool.ApplyChange(change);
+                            }catch(DbMigrateException e)
+                            {
+                                Console.Error.WriteLine("Error applying change: " + change.ScriptFilename);
+                                Console.Error.WriteLine("\"" + e.Message + "\"");
+                                Console.WriteLine("Would you like to continue? (y|n)?");
+                                input = Console.ReadLine().Trim();
+                                if (!input.StartsWith("y"))
+                                {
+                                    return -1;
+                                }
+                            }
                         }
                     }
 

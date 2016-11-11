@@ -4,6 +4,7 @@ using FSO.Common.Security;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Avatars;
+using FSO.Server.Database.DA.Bookmarks;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Relationships;
 using FSO.Server.Database.DA.Shards;
@@ -44,6 +45,36 @@ namespace FSO.Common.DataService.Providers.Server
                     case "Avatar_PrivacyMode":
                         db.Avatars.UpdatePrivacyMode(avatar.Avatar_Id, avatar.Avatar_PrivacyMode);
                         break;
+                    case "Avatar_BookmarksVec":
+                        switch (type)
+                        {
+                            case MutationType.ARRAY_REMOVE_ITEM:
+                                //Remove bookmark at index value
+                                var removedBookmark = value as Bookmark;
+                                if (removedBookmark != null)
+                                {
+                                    db.Bookmarks.Delete(new DbBookmark
+                                    {
+                                        avatar_id = avatar.Avatar_Id,
+                                        type = removedBookmark.Bookmark_Type,
+                                        target_id = removedBookmark.Bookmark_TargetID
+                                    });
+                                }
+                                break;
+                            case MutationType.ARRAY_SET_ITEM:
+                                //Add a new bookmark
+                                var newBookmark = value as Bookmark;
+                                if(newBookmark != null)
+                                {
+                                    db.Bookmarks.Create(new DbBookmark {
+                                        avatar_id = avatar.Avatar_Id,
+                                        target_id = newBookmark.Bookmark_TargetID,
+                                        type = newBookmark.Bookmark_Type
+                                    });
+                                }
+                                break;
+                        }
+                        break;
                 }
             }
         }
@@ -65,6 +96,8 @@ namespace FSO.Common.DataService.Providers.Server
             switch (path)
             {
                 case "Avatar_BookmarksVec":
+                    context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
+                    break;
                 case "Avatar_Description":
                     context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
                     var desc = value as string;
@@ -117,8 +150,9 @@ namespace FSO.Common.DataService.Providers.Server
                 }
                 List<DbJobLevel> levels = db.Avatars.GetJobLevels(key);
                 List<DbRelationship> rels = db.Relationships.GetBidirectional(key);
+                List<DbBookmark> bookmarks = db.Bookmarks.GetByAvatarId(key);
                 
-                var ava = HydrateOne(avatar, lot, levels, rels);
+                var ava = HydrateOne(avatar, lot, levels, rels, bookmarks);
                 if (oldVal != null) ava.Avatar_IsOnline = oldVal.Avatar_IsOnline;
                 return ava;
             }
@@ -131,7 +165,7 @@ namespace FSO.Common.DataService.Providers.Server
             return (value != null && value.Avatar_IsOnline && Epoch.Now - value.FetchTime > AVATAR_RECACHE_SECONDS);
         }
 
-        private Avatar HydrateOne(DbAvatar dbAvatar, DbLot dbLot, List<DbJobLevel> levels, List<DbRelationship> rels)
+        private Avatar HydrateOne(DbAvatar dbAvatar, DbLot dbLot, List<DbJobLevel> levels, List<DbRelationship> rels, List<DbBookmark> bookmarks)
         {
             var result = new Avatar();
             result.Avatar_Id = dbAvatar.avatar_id;
@@ -210,10 +244,14 @@ namespace FSO.Common.DataService.Providers.Server
                 result.Avatar_LotGridXY = dbLot.location;
             }
 
-            result.Avatar_BookmarksVec = new List<Bookmark>()
+            result.Avatar_BookmarksVec = bookmarks.Select(x =>
             {
-                { new Bookmark { Bookmark_TargetID = 0x02, Bookmark_Type = (byte)BookmarkType.BOOKMARK } }
-            };
+                return new Bookmark {
+                    Bookmark_Type = x.type,
+                    Bookmark_TargetID = x.target_id
+                };
+            }).ToList();
+
             return result;
         }
     }

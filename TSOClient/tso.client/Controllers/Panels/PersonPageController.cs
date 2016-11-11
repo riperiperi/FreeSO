@@ -75,6 +75,18 @@ namespace FSO.Client.Controllers
             ChangeTopic();
         }
 
+        public void RemoveBookmark(Avatar target, Bookmark bookmark)
+        {
+            DataService.RemoveFromArray(target, "Avatar_BookmarksVec", bookmark);
+            DataService.Request(MaskedStruct.MyAvatar, Network.MyCharacter);
+        }
+
+        public void AddBookmark(Avatar target, Bookmark bookmark)
+        {
+            DataService.AddToArray(target, "Avatar_BookmarksVec", bookmark);
+            DataService.Request(MaskedStruct.MyAvatar, Network.MyCharacter);
+        }
+
         public void FindAvatarLocation()
         {
             Network.CityClient.Write(new FindAvatarRequest()

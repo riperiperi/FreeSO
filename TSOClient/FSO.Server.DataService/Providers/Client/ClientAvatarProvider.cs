@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FSO.Common.DataService;
 
 namespace FSO.Server.DataService.Providers.Client
 {
@@ -14,6 +15,8 @@ namespace FSO.Server.DataService.Providers.Client
         protected override Avatar CreateInstance(uint key)
         {
             var avatar = base.CreateInstance(key);
+            avatar.RequestDefaultData = true;
+
             //TODO: Use the string tables
             avatar.Avatar_Id = key;
             avatar.Avatar_Name = "Retrieving...";

@@ -1,12 +1,12 @@
 ﻿CREATE TABLE IF NOT EXISTS `fso_shards` (
-	`shard_id` INT NOT NULL,
-	`name` VARCHAR(100) NOT NULL,
-	`rank` INT NOT NULL,
-	`map` VARCHAR(10) NOT NULL,
-	`status` ENUM('up','down','busy','full','closed','frontier') NOT NULL,
-	`internal_host` VARCHAR(100) NOT NULL,
-	`public_host` VARCHAR(100) NOT NULL,
-	PRIMARY KEY (`shard_id`)
+  `shard_id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `rank` int(11) NOT NULL,
+  `map` varchar(10) NOT NULL,
+  `status` enum('up','down','busy','full','closed','frontier') NOT NULL,
+  `internal_host` varchar(100) NOT NULL,
+  `public_host` varchar(100) NOT NULL,
+  PRIMARY KEY (`shard_id`)
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;

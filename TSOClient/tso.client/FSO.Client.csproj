@@ -68,6 +68,7 @@
     <Compile Include="Controllers\GizmoController.cs" />
     <Compile Include="Controllers\GizmoSearchController.cs" />
     <Compile Include="Controllers\LoadingScreenController.cs" />
+    <Compile Include="Controllers\Panels\BookmarksController.cs" />
     <Compile Include="Controllers\Panels\LotPageController.cs" />
     <Compile Include="Controllers\Panels\PersonPageController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
@@ -87,6 +88,7 @@
     <Compile Include="UI\Framework\DoubleClick.cs" />
     <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
     <Compile Include="UI\Panels\UIAsyncPriceDialog.cs" />
+    <Compile Include="UI\Panels\UIBookmarks.cs" />
     <Compile Include="UI\Panels\UIDebugMenu.cs" />
     <Compile Include="UI\Panels\UIEnvPanel.cs" />
     <Compile Include="UI\Panels\UIGizmoPIP.cs" />

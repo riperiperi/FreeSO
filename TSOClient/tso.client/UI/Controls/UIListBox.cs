@@ -403,6 +403,11 @@ namespace FSO.Client.UI.Controls
 
                         DrawLocalTexture(batch, (Texture2D)columnValue, from, to);
                     }
+                    else if(columnValue != null)
+                    {
+                        //Convert it to a string
+                        DrawLocalString(batch, (string)columnValue.ToString(), new Vector2(columnX, rowY), style, columnBounds, columnSpec.Alignment);
+                    }
 
                     columnX += columnSpec.Width;
                 }

@@ -189,6 +189,16 @@ namespace FSO.Client.Controllers
             }
         }
 
+        public void ToggleBookmarks()
+        {
+            ((BookmarksController)Screen.Bookmarks.Controller).Toggle();
+        }
+
+        public void ShowBookmarks()
+        {
+            ((BookmarksController)Screen.Bookmarks.Controller).Show();
+        }
+
         public void ShowPersonPage(uint avatarId){
             ((PersonPageController)Screen.PersonPage.Controller).Show(avatarId);
         }

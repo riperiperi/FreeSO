@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using FSO.Server.Database.DA.DbChanges;
 using FSO.Server.Common;
+using MySql.Data.MySqlClient;
 
 namespace FSO.Server.Database.Management
 {
@@ -76,7 +77,11 @@ namespace FSO.Server.Database.Management
             {
                 var cmd = transaction.Connection.CreateCommand();
                 cmd.CommandText = change.ScriptData;
-                cmd.ExecuteNonQuery();
+                try {
+                    cmd.ExecuteNonQuery();
+                } catch (MySqlException e){
+                    throw new DbMigrateException(e.Message);
+                }
 
                 connection.Execute("INSERT INTO fso_db_changes VALUES (@id, @filename, @date, @hash) ON DUPLICATE KEY UPDATE hash=@hash, date = @date, filename = @filename", new DbChange {
                     id = change.ScriptID,
@@ -109,6 +114,13 @@ namespace FSO.Server.Database.Management
         }
     }
 
+    public class DbMigrateException : Exception
+    {
+        public DbMigrateException(string message) : base(message)
+        {
+        }
+    }
+
     public class DbChangeScript
     {
         public DbChangeScriptStatus Status;
@@ -117,6 +129,7 @@ namespace FSO.Server.Database.Management
         public string ScriptData;
         public string Hash;
         public bool Idempotent;
+        public List<string> Requires;
     }
 
     public enum DbChangeScriptStatus
