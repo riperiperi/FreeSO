@@ -109,7 +109,7 @@ namespace FSO.Common.DataService
         private Task<object[]> GetMany(IDataServiceProvider provider, object[] keys){
             Task<object>[] tasks = new Task<object>[keys.Length];
             for(int i=0; i < keys.Length; i++){
-                tasks[i] = provider.Get(keys[i]);
+                tasks[i] = Get(provider, keys[i]);
             }
 
             return Task.WhenAll<object>(tasks);
@@ -141,7 +141,7 @@ namespace FSO.Common.DataService
             return Get(provider, key);
         }
 
-        private Task<object> Get(IDataServiceProvider provider, object key){
+        protected virtual Task<object> Get(IDataServiceProvider provider, object key){
             return provider.Get(key);
         }
 
@@ -552,5 +552,6 @@ namespace FSO.Common.DataService
                 ProviderByDerivedStruct.Add(MaskedStructUtils.FromID(item.ID), provider);
             }
         }
+        
     }
 }
