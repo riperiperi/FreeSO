@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Mina.Core.Buffer;
 using System.Reflection;
+using FSO.Common.Utils;
 
 namespace FSO.Common.Serialization.TypeSerializers
 {
@@ -18,13 +19,11 @@ namespace FSO.Common.Serialization.TypeSerializers
         public cTSOValueDecorated(){
             //
             //var assembly = Assembly.GetAssembly(typeof(cTSOSerializer));
-            var entry = Assembly.GetEntryAssembly();
-            var refs = entry.GetReferencedAssemblies();
-            foreach(var assembly in refs){
-                if (assembly.Name.StartsWith("FSO.")){
-                    ScanAssembly(Assembly.Load(assembly));
-                }
-            };
+            var assemblies = AssemblyUtils.GetFreeSOLibs();
+            foreach(var asm in assemblies)
+            {
+                ScanAssembly(asm);
+            }
         }
 
         protected virtual void ScanAssembly(Assembly assembly)

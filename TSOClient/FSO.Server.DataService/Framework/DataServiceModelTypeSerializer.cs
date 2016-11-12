@@ -8,6 +8,7 @@ using Mina.Core.Buffer;
 using FSO.Files.Formats.tsodata;
 using FSO.Common.Serialization.Primitives;
 using System.Reflection;
+using FSO.Common.Utils;
 
 namespace FSO.Common.DataService.Framework
 {
@@ -28,21 +29,20 @@ namespace FSO.Common.DataService.Framework
                 StructsByName.Add(obj.Name, obj);
                 StructById.Add(obj.ID, obj);
             }
-            
 
-            var entry = Assembly.GetEntryAssembly();
-            var refs = entry.GetReferencedAssemblies();
-            foreach(var assembly in refs){
-                if (assembly.Name.StartsWith("FSO.")){
-                    try
-                    {
-                        ScanAssembly(Assembly.Load(assembly));
-                    }
-                    catch (Exception) {
-                        Console.WriteLine("huh??");
-                    }
+
+            var assemblies = AssemblyUtils.GetFreeSOLibs();
+            foreach (var asm in assemblies)
+            {
+                try
+                {
+                    ScanAssembly(asm);
                 }
-            };
+                catch (Exception)
+                {
+                    Console.WriteLine("huh??");
+                }
+            }
         }
 
         protected virtual void ScanAssembly(Assembly assembly)
