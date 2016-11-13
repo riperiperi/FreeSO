@@ -194,6 +194,7 @@
     <Compile Include="Utils\TextureUtils.cs" />
     <Compile Include="Utils\TimedReferenceCache.cs" />
     <Compile Include="Utils\TSOTime.cs" />
+    <Compile Include="Utils\ValuePointer.cs" />
     <Compile Include="Utils\XMLList.cs" />
   </ItemGroup>
   <ItemGroup>

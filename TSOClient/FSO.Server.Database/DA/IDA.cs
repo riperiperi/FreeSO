@@ -1,6 +1,7 @@
 ﻿using FSO.Server.Database.DA.AuthTickets;
 using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Database.DA.Avatars;
+using FSO.Server.Database.DA.Bookmarks;
 using FSO.Server.Database.DA.LotClaims;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Objects;
@@ -28,6 +29,7 @@ namespace FSO.Server.Database.DA
         ILots Lots { get; }
         ILotClaims LotClaims { get; }
         IAvatarClaims AvatarClaims { get; }
+        IBookmarks Bookmarks { get; }
 
         void Flush();
     }

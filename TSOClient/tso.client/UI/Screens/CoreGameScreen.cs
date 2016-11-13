@@ -51,6 +51,7 @@ namespace FSO.Client.UI.Screens
         public UIContainer WindowContainer;
         public UIPersonPage PersonPage;
         public UILotPage LotPage;
+        public UIBookmarks Bookmarks;
 
         private Queue<SimConnectStateChange> StateChanges;
 
@@ -262,6 +263,11 @@ namespace FSO.Client.UI.Screens
             LotPage.Visible = false;
             LotPage.BindController<LotPageController>();
             WindowContainer.Add(LotPage);
+
+            Bookmarks = new UIBookmarks();
+            Bookmarks.Visible = false;
+            Bookmarks.BindController<BookmarksController>();
+            WindowContainer.Add(Bookmarks);
         }
 
 
