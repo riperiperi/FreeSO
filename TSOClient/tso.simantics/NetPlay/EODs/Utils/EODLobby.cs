@@ -8,8 +8,21 @@ namespace FSO.SimAntics.NetPlay.EODs.Utils
 {
     public class EODLobby
     {
+        public static int[] ParsePlayers(string msg)
+        {
+            return msg.Split('\n').Select(x => {
+                int result = 0;
+                int.TryParse(x, out result);
+                return result;
+            }).ToArray();
+        }
+    }
+
+    public class EODLobby<T> : EODLobby
+    {
         private VMEODServer Server;
-        private VMEODClient[] Players;
+        public VMEODClient[] Players { get; internal set; }
+        private T[] SlotData;
 
         private string BroadcastPlayersOnChangeHandler;
         private string OnJoinSendHandler;
@@ -19,21 +32,46 @@ namespace FSO.SimAntics.NetPlay.EODs.Utils
         {
             this.Server = server;
             this.Players = new VMEODClient[numSlots];
+            this.SlotData = new T[numSlots];
+            for(var i=0; i < numSlots; i++){
+                SlotData[i] = Activator.CreateInstance<T>();
+            }
+        }
+        
+
+        public T GetSlotData(int slot){
+            return SlotData[slot];
         }
 
-        public EODLobby OnFailedToJoinDisconnect()
+        public T GetSlotData(VMEODClient client)
+        {
+            var slot = GetPlayerSlot(client);
+            if(slot != -1)
+            {
+                return GetSlotData(slot);
+            }
+            return default(T);
+        }
+
+        public short GetPlayerSlot(VMEODClient client)
+        {
+            var slot = Array.IndexOf(Players, client);
+            return (short)slot;
+        }
+
+        public EODLobby<T> OnFailedToJoinDisconnect()
         {
             _DisconnectIfSlotTaken = true;
             return this;
         }
 
-        public EODLobby OnJoinSend(string handlerName)
+        public EODLobby<T> OnJoinSend(string handlerName)
         {
             OnJoinSendHandler = handlerName;
             return this;
         }
 
-        public EODLobby BroadcastPlayersOnChange(string handlerName)
+        public EODLobby<T> BroadcastPlayersOnChange(string handlerName)
         {
             BroadcastPlayersOnChangeHandler = handlerName;
             return this;
@@ -101,24 +139,20 @@ namespace FSO.SimAntics.NetPlay.EODs.Utils
                     }
                     msg += ((player == null) ? 0 : player.Avatar.ObjectID);
                 }
-                
-                foreach(var player in Players)
-                {
-                    if (player != null)
-                    {
-                        player.Send(BroadcastPlayersOnChangeHandler, msg);
-                    }
-                }
+
+                Broadcast(BroadcastPlayersOnChangeHandler, msg);
             }
         }
 
-        public static int[] ParsePlayers(string msg)
+        public void Broadcast(string evt, string body)
         {
-            return msg.Split('\n').Select(x => {
-                int result = 0;
-                int.TryParse(x, out result);
-                return result;
-            }).ToArray();
+            foreach (var player in Players)
+            {
+                if (player != null)
+                {
+                    player.Send(evt, body);
+                }
+            }
         }
     }
 }
