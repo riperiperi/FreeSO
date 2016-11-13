@@ -86,6 +86,9 @@
     <Compile Include="UI\Controls\UISkillBar.cs" />
     <Compile Include="UI\Controls\UIValidationMessages.cs" />
     <Compile Include="UI\Framework\DoubleClick.cs" />
+    <Compile Include="UI\Panels\EODs\UIPaperChaseEOD.cs" />
+    <Compile Include="UI\Panels\EODs\Utils\UIEODLobby.cs" />
+    <Compile Include="UI\Panels\EODs\Utils\UIEODLobbyController.cs" />
     <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
     <Compile Include="UI\Panels\UIAsyncPriceDialog.cs" />
     <Compile Include="UI\Panels\UIBookmarks.cs" />

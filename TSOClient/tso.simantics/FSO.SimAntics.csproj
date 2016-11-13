@@ -148,10 +148,12 @@
     <Compile Include="NetPlay\EODs\Handlers\Data\VMEODSignsData.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDanceFloorPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODHandler.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODPaperChasePlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODPizzaMakerPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODSignsPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODStubPlugin.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODEvent.cs" />
+    <Compile Include="NetPlay\EODs\Utils\EODLobby.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAdjHollowSyncCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAsyncPriceCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAsyncSaleCmd.cs" />
