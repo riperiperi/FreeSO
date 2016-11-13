@@ -49,8 +49,8 @@ namespace FSO.Debug.Controls
         private VMInstruction Instruction;
         private VMPrimitiveRegistration Primitive;
         public VMInstructionDisplay(VMInstruction inst){
-
-            this.Primitive = inst.Function.VM.Context.Primitives[inst.Opcode];
+            //Routine no longer has an instance of VM.
+            //this.Primitive = inst.Function.VM.Context.Primitives[inst.Opcode];
             //vm.Context.GetPrimitive(inst.Opcode)
             this.Instruction = inst;
         }

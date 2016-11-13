@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using FSO.Common.Content;
 using FSO.Files.FAR1;
 using FSO.Files.Utils;
+using FSO.Common.Utils;
 
 namespace FSO.Content.Framework
 {
@@ -27,7 +28,7 @@ namespace FSO.Content.Framework
         protected Dictionary<string, Far1ProviderEntry<T>> EntriesByName;
 
         protected IContentCodec<T> Codec;
-        protected Dictionary<string, T> Cache;
+        protected TimedReferenceCache<string, T> Cache;
         private string[] FarFiles;
         private Regex FarFilePattern;
 
@@ -121,22 +122,16 @@ namespace FSO.Content.Framework
 
         public T Get(Far1ProviderEntry<T> entry)
         {
-            lock (Cache)
+            return Cache.GetOrAdd(entry.FarEntry.Filename, (name) =>
             {
-                if (this.Cache.ContainsKey(entry.FarEntry.Filename))
-                {
-                    return this.Cache[entry.FarEntry.Filename];
-                }
-
                 byte[] data = entry.Archive.GetEntry(entry.FarEntry);
                 using (var stream = new MemoryStream(data, false))
                 {
                     T result = this.Codec.Decode(stream);
                     if (result is IFileInfoUtilizer) ((IFileInfoUtilizer)result).SetFilename(entry.FarEntry.Filename);
-                    this.Cache.Add(entry.FarEntry.Filename, result);
                     return result;
                 }
-            }
+            });
         }
 
         public T ThrowawayGet(Far1ProviderEntry<T> entry)
@@ -153,7 +148,7 @@ namespace FSO.Content.Framework
 
         public void Init()
         {
-            Cache = new Dictionary<string, T>();
+            Cache = new TimedReferenceCache<string, T>();
             EntriesByName = new Dictionary<string, Far1ProviderEntry<T>>();
 
             if (FarFilePattern != null)

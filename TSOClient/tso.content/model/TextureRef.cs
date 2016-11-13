@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FSO.Common;
+using FSO.Common.Rendering;
 
 namespace FSO.Content.Model
 {
@@ -80,31 +81,45 @@ namespace FSO.Content.Model
         protected abstract Stream GetStream();
 
 
+        private bool WasReferenced = true;
+        ~AbstractTextureRef()
+        {
+            if (WasReferenced)
+            {
+                TimedReferenceController.KeepAlive(this, KeepAliveType.DEREFERENCED);
+                WasReferenced = false;
+                GC.ReRegisterForFinalize(this);
+            }
+        }
+        public void Rereferenced()
+        {
+            WasReferenced = true;
+        }
+
         public Texture2D Get(GraphicsDevice device)
         {
             lock (this)
             {
-                if (_Instance != null && !_Instance.IsDisposed)
+                if (_Instance == null || _Instance.IsDisposed) //|| ((CachableTexture2D)result).BeingDisposed)
                 {
-                    return _Instance;
-                }
-
-                using (var stream = GetStream())
-                {
-                    if (Thread.CurrentThread == FSOEnvironment.GameThread)
+                    using (var stream = GetStream())
                     {
-                        _Instance = Process(device, stream);
-                    }
-                    else
-                    {
-                        //We need to get into the game thread to do this work
-                        _Instance = GameThread.NextUpdate<Texture2D>(x =>
+                        if (Thread.CurrentThread == FSOEnvironment.GameThread)
                         {
-                            return Process(device, stream);
-                        }).Result;
+                            _Instance = Process(device, stream);
+                        }
+                        else
+                        {
+                            //We need to get into the game thread to do this work
+                            _Instance = GameThread.NextUpdate<Texture2D>(x =>
+                            {
+                                return Process(device, stream);
+                            }).Result;
+                        }
                     }
-                    return _Instance;
+                    _Instance.Tag = this; //form a destiny bond with the texture
                 }
+                return _Instance;
             }
         }
 

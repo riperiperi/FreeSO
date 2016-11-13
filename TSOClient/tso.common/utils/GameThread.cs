@@ -105,7 +105,6 @@ namespace FSO.Common.Utils
         public static bool UpdateExecuting;
         private static List<UpdateHook> _UpdateHooks = new List<UpdateHook>();
         private static Queue<Callback<UpdateState>> _UpdateCallbacks = new Queue<Callback<UpdateState>>();
-        public static TimedReferenceController Caching = new TimedReferenceController();
 
         public static GameThreadTimeout SetTimeout(Callback callback, long delay)
         {
@@ -210,7 +209,7 @@ namespace FSO.Common.Utils
             }
 
             //finally, check cache controller
-            Caching.Tick();
+            TimedReferenceController.Tick();
         }
     }
 }

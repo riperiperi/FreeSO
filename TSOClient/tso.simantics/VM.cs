@@ -120,7 +120,6 @@ namespace FSO.SimAntics
             this.Context = context;
             this.Driver = driver;
             Headline = headline;
-            OnBHAVChange += VM_OnBHAVChange;
         }
 
         private void VM_OnBHAVChange()
@@ -170,8 +169,9 @@ namespace FSO.SimAntics
 
         public void Reset()
         {
-            var avatars = new List<VMEntity>(Entities.Where(x => x is VMAvatar && x.PersistID > 0));
-            //TODO: all avatars with persist ID are not npcs in TSO. right now though everything has a persist ID...
+            //some objects expect that the server delete all avatars upon loading the lot (pets, food counters)
+            //var avatars = new List<VMEntity>(Entities.Where(x => x is VMAvatar && x.PersistID > 0));
+            var avatars = Context.ObjectQueries.Avatars;
             foreach (var avatar in avatars) avatar.Delete(true, Context);
 
             var ents = new List<VMEntity>(Entities);
@@ -179,9 +179,8 @@ namespace FSO.SimAntics
             {
                 if (ent.Thread.BlockingState != null) ent.Thread.BlockingState = null;
                 if (ent.Thread.EODConnection != null) ent.Thread.EODConnection = null;
-                if (ent.Object.OBJ.GUID == 0x3929AADC) ent.Delete(true, Context);
+                if (ent.Object.OBJ.GUID == 0x3929AADC) ent.Delete(true, Context); //also remove any reserved tiles
             }
-            //foreach (var ent in ents) ent.Reset(Context); duplicates dogs apparently?? tf
         }
 
         private bool AlternateTick;
@@ -376,6 +375,14 @@ namespace FSO.SimAntics
                 var routine = VMTranslator.Assemble(this, bhav);
                 _Assembled.Add(bhav, routine);
                 return routine;
+            }
+        }
+
+        public static void ClearAssembled()
+        {
+            lock (_Assembled)
+            {
+                _Assembled.Clear();
             }
         }
 
@@ -590,8 +597,11 @@ namespace FSO.SimAntics
             var clock = Context.Clock;
             Context.Architecture.SetTimeOfDay(clock.Hours / 24.0 + clock.Minutes / (24.0 * 60) + clock.Seconds / (24.0 * 60 * 60));
 
-            Context.Architecture.RegenRoomMap();
-            Context.RegeneratePortalInfo();
+            Context.Architecture.SignalAllDirty();
+            Context.DisableRouteInvalidation = true;
+            Context.Architecture.Tick();
+            Context.DisableRouteInvalidation = false;
+
             Context.Architecture.WallDirtyState(input.Context.Architecture);
 
             foreach (var snd in oldSounds)
@@ -664,15 +674,26 @@ namespace FSO.SimAntics
                 if (ent.Container == null) ent.PositionChange(Context, true); //called recursively for contained objects.
             }
 
-            Context.Architecture.RegenRoomMap();
-            Context.RegeneratePortalInfo();
+            input.Context.Architecture.WallsDirty = true;
+            input.Context.Architecture.FloorsDirty = true;
             Context.Architecture.WallDirtyState(input.Context.Architecture);
+            Context.Architecture.Tick();
         }
 
         internal void BreakpointHit(VMEntity entity)
         {
             if (OnBreakpoint == null) entity.Thread.ThreadBreak = VMThreadBreakMode.Active; //no handler..
             else OnBreakpoint(entity);
+        }
+
+        public void ListenBHAVChanges()
+        {
+            OnBHAVChange -= VM_OnBHAVChange;
+        }
+
+        public void SuppressBHAVChanges()
+        {
+            OnBHAVChange -= VM_OnBHAVChange;
         }
         #endregion
     }

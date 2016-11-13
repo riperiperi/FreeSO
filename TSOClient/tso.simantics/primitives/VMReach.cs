@@ -32,7 +32,20 @@ namespace FSO.SimAntics.Primitives
 
             if (operand.Mode == 0)
             { //reach to stack object
-                height = 4; //todo: get slot height
+                var container = context.StackObject.Container;
+                if (container == null)
+                {
+                    height = 0;
+                }
+                else
+                {
+                    var slot = container.Slots.Slots[0][context.StackObject.ContainerSlot];
+                    if (slot != null)
+                    {
+                        height = (int)Math.Round((slot.Height != 5) ? SLOT.HeightOffsets[slot.Height - 1] : slot.Offset.Z);
+                    }
+                    else height = 0;
+                }
             }
             else if (operand.Mode == 1)
             {
@@ -51,9 +64,11 @@ namespace FSO.SimAntics.Primitives
             }
 
             string animationName;
-            if (height < 2) animationName = "a2o-reach-floorht.anim";
+            if (context.Caller.Container != null) animationName = "a20-sit-reach-table";
+            else if (height < 2) animationName = "a2o-reach-floorht.anim";
             else if (height < 4) animationName = "a2o-reach-seatht.anim";
             else animationName = "a2o-reach-tableht.anim";
+
 
             var animation = FSO.Content.Content.Get().AvatarAnimations.Get(animationName);
             if(animation == null){
@@ -64,7 +79,6 @@ namespace FSO.SimAntics.Primitives
             /** Are we starting the animation or progressing it? **/
             if (avatar.CurrentAnimationState == null || avatar.CurrentAnimationState.Anim != animation)
             { //start the grab!
-
                 /** Start it **/
 
                 avatar.Animations.Clear();

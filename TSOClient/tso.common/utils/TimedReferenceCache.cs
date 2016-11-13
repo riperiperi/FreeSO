@@ -7,67 +7,90 @@ using System.Threading.Tasks;
 
 namespace FSO.Common.Utils
 {
-    public class TimedReferenceController
+    public static class TimedReferenceController
     {
-        private int CurRingNum = 0;
-        private List<HashSet<object>> ReferenceRing;
-        private Dictionary<object, int> ObjectToRing;
-        private int CheckFreq = 0;
-        private int TicksToNextCheck;
-        private CacheType Type;
-        public CacheType CurrentType { get { return Type; } }
+        private static int CurRingNum = 0;
+        private static List<HashSet<object>> ReferenceRing;
+        private static Dictionary<object, int> ObjectToRing;
+        private static int CheckFreq = 0;
+        private static int TicksToNextCheck;
+        private static CacheType Type;
+        private static object InternalLock = new object { };
+        public static CacheType CurrentType { get { return Type; } }
 
-        public TimedReferenceController()
+        static TimedReferenceController()
         {
             SetMode(CacheType.ACTIVE);
         }
 
-        public void SetMode(CacheType type)
+        public static void Clear()
         {
-            lock (this) {
+            lock (InternalLock)
+            {
+                ObjectToRing = new Dictionary<object, int>();
+                foreach (var item in ReferenceRing)
+                {
+                    foreach (var obj in item)
+                    {
+                        (obj as ITimedCachable)?.Rereferenced(false);
+                    }
+                    item.Clear();
+                }
+                GC.Collect(2);
+            }
+        }
+
+        public static void SetMode(CacheType type)
+        {
+            lock (InternalLock) {
                 ObjectToRing = new Dictionary<object, int>();
                 switch (type)
                 {
                     case CacheType.AGGRESSIVE:
                         ReferenceRing = new List<HashSet<object>>();
                         CheckFreq = 1 * 60;
-                        for (int i = 0; i < 5; i++) ReferenceRing[i] = new HashSet<object>();
+                        for (int i = 0; i < 5; i++) ReferenceRing.Add(new HashSet<object>());
                         break;
                     case CacheType.ACTIVE:
                         ReferenceRing = new List<HashSet<object>>();
-                        CheckFreq = 10 * 60;
-                        for (int i = 0; i < 10; i++) ReferenceRing[i] = new HashSet<object>();
+                        CheckFreq = 5 * 60;
+                        for (int i = 0; i < 3; i++) ReferenceRing.Add(new HashSet<object>());
                         break;
                     case CacheType.PERMANENT:
                     case CacheType.PASSIVE:
                         ReferenceRing = new List<HashSet<object>>();
                         CheckFreq = int.MaxValue;
-                        for (int i = 0; i < 1; i++) ReferenceRing[i] = new HashSet<object>();
+                        ReferenceRing.Add(new HashSet<object>());
                         break;
                 }
+                Type = type;
             }
         }
 
-        public void Tick()
+        public static void Tick()
         {
             if (Type == CacheType.PERMANENT) return;
             if (TicksToNextCheck-- <= 0)
             {
-                lock (this)
+                lock (InternalLock)
                 {
                     var toDereference = ReferenceRing[CurRingNum];
+                    Console.WriteLine("cleared " + toDereference.Count + " from cachecycle " + CurRingNum);
                     foreach (var obj in toDereference) ObjectToRing.Remove(obj);
                     toDereference.Clear();
                     CurRingNum = (CurRingNum + 1) % ReferenceRing.Count;
                 }
                 TicksToNextCheck = CheckFreq;
+                //GC.Collect();
+                if (CurRingNum == 0) GC.Collect();
             }
         }
 
-        public void KeepAlive(object o, KeepAliveType type)
+        public static void KeepAlive(object o, KeepAliveType type)
         {
+            if (type == KeepAliveType.ACCESS && (o is ITimedCachable)) ((ITimedCachable)o).Rereferenced(true);
             //should be called whenever the object is referenced
-            lock (this)
+            lock (InternalLock)
             {
                 var offset = ReferenceRing.Count - 1;
                 var becomes = (CurRingNum + offset) % ReferenceRing.Count;
@@ -107,21 +130,35 @@ namespace FSO.Common.Utils
     public class TimedReferenceCache<KEY, VALUE>
     {
         private ConcurrentDictionary<KEY, WeakReference> Cache = new ConcurrentDictionary<KEY, WeakReference>();
-
+        private bool PermaMode = false;
+        private List<VALUE> PermaRef = new List<VALUE>();
         private VALUE GetOrAddInternal(KEY key, Func<KEY, VALUE> valueFactory)
         {
             bool didCreate = false;
             VALUE created = default(VALUE);
             var value = Cache.GetOrAdd(key, (k) =>
             {
-                created = valueFactory(k);
-                didCreate = true;
-                return new WeakReference(created, true);
+                //ConcurrentDictionary does not ensure we don't accidentally create things twice. This lock will help us, but I don't think it ensures a perfect world.
+                lock (this) {
+                    WeakReference prev;
+                    if (Cache.TryGetValue(key, out prev) && prev.IsAlive) return prev; //already created this value.
+                    created = valueFactory(k);
+                    didCreate = true;
+                    return new WeakReference(created, true);
+                }
             });
 
             var refVal = value.Target;
-            if (didCreate)
+            if (didCreate && refVal == (object)created)
+            {
+                //i made this. if we're perma cache ensure a permanent reference.
+                if (TimedReferenceController.CurrentType == CacheType.PERMANENT)
+                {
+                    PermaRef.Add(created);
+                    PermaMode = true;
+                }
                 return created;
+            }
             else if (refVal != null || value.IsAlive)
                 return (VALUE)refVal;
             else
@@ -136,9 +173,9 @@ namespace FSO.Common.Utils
         public VALUE GetOrAdd(KEY key, Func<KEY, VALUE> valueFactory)
         {
             var result = GetOrAddInternal(key, valueFactory);
-            if (result != null)
+            if (result != null && !PermaMode)
             {
-                GameThread.Caching.KeepAlive(result, KeepAliveType.ACCESS);
+                TimedReferenceController.KeepAlive(result, KeepAliveType.ACCESS);
             }
             return result;
         }

@@ -693,7 +693,7 @@ namespace FSO.SimAntics.Engine
             {
                 var avatar = (VMAvatar)Entity;
 
-                if (avatar.GetSlot(0) != null && (action.Flags | TTABFlags.TSOAvailableCarrying) == 0) return null;
+                if (avatar.GetSlot(0) != null && (action.Flags & TTABFlags.TSOAvailableCarrying) == 0) return null;
 
                 if ((action.Flags & (TTABFlags.AllowCats | TTABFlags.AllowDogs)) > 0)
                 {

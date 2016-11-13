@@ -772,12 +772,13 @@ namespace FSO.SimAntics
             if ((movementFlags & VMMovementFlags.PlayersCanMove) == 0) return VMPlacementError.CantBePickedup;
             if (deleting && (movementFlags & VMMovementFlags.PlayersCanDelete) == 0) return VMPlacementError.ObjectNotOwnedByYou;
             if (context.IsUserOutOfBounds(Position)) return VMPlacementError.CantBePickedupOutOfBounds;
-            if (IsInUse(context, false)) return VMPlacementError.InUse;
+            if (IsInUse(context, true)) return VMPlacementError.InUse;
             var total = TotalSlots();
             for (int i = 0; i < TotalSlots(); i++)
             {
                 var item = GetSlot(i);
-                if (item != null && (deleting || item is VMAvatar)) return VMPlacementError.CantBePickedup;
+                if (item != null &&
+                    (deleting || item is VMAvatar || item.IsUserMovable(context, deleting) != VMPlacementError.Success)) return VMPlacementError.CantBePickedup;
             }
             return VMPlacementError.Success;
         }

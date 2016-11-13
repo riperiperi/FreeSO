@@ -251,7 +251,7 @@ namespace FSO.Client.UI.Panels
 
         private void Top100ItemSelect(UIElement button)
         {
-            ((CoreGameScreen)(Parent.Parent)).InitTestLot(((UIXMLLotEntry)Top100ResultList.SelectedItem.Data).Path, true);
+            //((CoreGameScreen)(Parent.Parent)).InitTestLot(((UIXMLLotEntry)Top100ResultList.SelectedItem.Data).Path, true);
         }
     }
 

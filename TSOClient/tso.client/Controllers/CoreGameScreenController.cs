@@ -214,7 +214,13 @@ namespace FSO.Client.Controllers
         {
             DataService.Get<Avatar>(key).ContinueWith(x =>
             {
-                if (x.Result != null) callback(x.Result);
+                if (x.Result != null)
+                {
+                    GameThread.InUpdate(() =>
+                    {
+                        callback(x.Result);
+                    });
+                }
             });
         }
 

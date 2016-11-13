@@ -139,6 +139,7 @@ namespace FSO.Client.Rendering.City
 
         private int m_Width, m_Height;
 
+        private SpriteBatch m_Batch;
         private RenderTarget2D ShadowTarget;
         private int OldShadowRes;
 
@@ -230,6 +231,7 @@ namespace FSO.Client.Rendering.City
 
             m_Width = m_Elevation.Width;
             m_Height = m_Elevation.Height;
+            m_Batch = new SpriteBatch(GameFacade.GraphicsDevice);
         }
 
         public Terrain(GraphicsDevice Device) : base(Device)
@@ -967,7 +969,7 @@ namespace FSO.Client.Rendering.City
 
         private void DrawHouses(float HB) //draws house icons in far view
         {
-            SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
+            var spriteBatch = m_Batch;
             spriteBatch.Begin();
             float iScale = (float)m_ScrWidth / (HB * 2);
             LotTileEntry[] lots = LotTileData;
@@ -1000,7 +1002,7 @@ namespace FSO.Client.Rendering.City
 
         private void DrawSprites(float HB, float VB)
         {
-            SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
+            var spriteBatch = m_Batch;
             spriteBatch.Begin();
 
             if (m_Zoomed == TerrainZoomMode.Far && m_HandleMouse)
@@ -1015,7 +1017,6 @@ namespace FSO.Client.Rendering.City
             if (m_ZoomProgress < 0.5)
             {
                 spriteBatch.End();
-                spriteBatch.Dispose();
                 return;
             }
 
@@ -1101,7 +1102,6 @@ namespace FSO.Client.Rendering.City
 
             Draw2DPoly(); //fill the tiles below online houses BEFORE actually drawing the houses and trees!
             spriteBatch.End();
-            spriteBatch.Dispose();
         }
 
         public Vector2 transformSpr(float iScale, Vector3 pos) 

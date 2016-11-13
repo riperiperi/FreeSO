@@ -623,6 +623,14 @@ namespace FSO.LotView.Utils
             }
         }
 
+        public void ClearTextureCache()
+        {
+            lock (_TextureCache)
+            {
+                _TextureCache.Clear();
+            }
+        }
+
         private Dictionary<IWorldTextureProvider, WorldTexture> _WorldTextureCache = new Dictionary<IWorldTextureProvider, WorldTexture>();
         public WorldTexture GetWorldTexture(IWorldTextureProvider item)
         {

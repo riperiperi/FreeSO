@@ -39,6 +39,17 @@ namespace FSO.Client.UI.Panels
                 //ShowTool(new ContentBrowser());
             };
             Add(ContentBrowserBtn);
+
+            var connectLocalBtn = new UIButton();
+            connectLocalBtn.Caption = (GlobalSettings.Default.UseCustomServer) ? "Use default server (TSO)" : "Use custom defined server";
+            connectLocalBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 100);
+            connectLocalBtn.Width = 300;
+            connectLocalBtn.OnButtonClick += x =>
+            {
+                GlobalSettings.Default.UseCustomServer = !GlobalSettings.Default.UseCustomServer;
+                connectLocalBtn.Caption = (GlobalSettings.Default.UseCustomServer) ? "Use default server (TSO)" : "Use custom defined server";
+            };
+            Add(connectLocalBtn);
         }
     }
 }

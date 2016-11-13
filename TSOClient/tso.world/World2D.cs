@@ -22,7 +22,7 @@ namespace FSO.LotView
     /// <summary>
     /// Handles rendering the 2D world
     /// </summary>
-    public class World2D
+    public class World2D : IDisposable
     {
         public static SurfaceFormat[] BUFFER_SURFACE_FORMATS = new SurfaceFormat[] {
             /** Thumbnail buffer **/
@@ -657,6 +657,13 @@ namespace FSO.LotView
         {
             foreach (var b in buf) b.Dispose();
             buf.Clear();
+        }
+
+        public void Dispose()
+        {
+            ClearDrawBuffer(StaticWallCache);
+            ClearDrawBuffer(StaticFloorCache);
+            ClearDrawBuffer(StaticObjectsCache);
         }
     }
 

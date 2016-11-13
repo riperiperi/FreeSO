@@ -144,8 +144,8 @@ namespace FSO.SimAntics.Engine
         Maximum = 100,
         Autonomous = 2,
         UserDriven = 50,
-        ParentIdle = 25,
-        ParentExit = 24,
+        ParentIdle = 40,
+        ParentExit = 30,
         Idle = 0
     }
 

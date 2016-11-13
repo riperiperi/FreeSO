@@ -20,7 +20,7 @@ using FSO.Common.Utils;
 
 namespace FSO.LotView.Components
 {
-    public class TerrainComponent : WorldComponent
+    public class TerrainComponent : WorldComponent, IDisposable
     {
         private Rectangle Size;
 
@@ -393,6 +393,18 @@ namespace FSO.LotView.Components
                     }
                 }
             });
+        }
+
+        public void Dispose()
+        {
+            if (VertexBuffer != null)
+            {
+                IndexBuffer.Dispose();
+                BladeIndexBuffer.Dispose();
+                VertexBuffer.Dispose();
+                GridIndexBuffer?.Dispose();
+                TGridIndexBuffer?.Dispose();
+            }
         }
     }
 }

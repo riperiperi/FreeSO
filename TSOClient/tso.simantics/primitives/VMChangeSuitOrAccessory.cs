@@ -45,12 +45,12 @@ namespace FSO.SimAntics.Primitives
                     if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)
                     {
                         avatar.BoundAppearances.Remove(suitFile);
-                        if (VM.UseWorld) avatar.Avatar.RemoveAccessory(apr); 
+                        if (VM.UseWorld && apr != null) avatar.Avatar.RemoveAccessory(apr); 
                     }
                     else
                     {
                         avatar.BoundAppearances.Add(suitFile);
-                        if (VM.UseWorld) avatar.Avatar.AddAccessory(apr);
+                        if (VM.UseWorld && apr != null) avatar.Avatar.AddAccessory(apr);
                     }
                 } else if (suit is ulong)
                 {

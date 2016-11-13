@@ -112,8 +112,13 @@ namespace FSO.LotView.Components
             if (!Visible) return;
 
             if (Avatar != null){
-                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, Room, 
-                    ((DisplayFlags & AvatarDisplayFlags.ShowAsGhost) > 0)?new Color(32, 255, 96)*0.66f:Color.White); 
+
+                Color col = Color.White;
+                if ((DisplayFlags & AvatarDisplayFlags.ShowAsGhost) > 0) col = new Color(32, 255, 96) * 0.66f;
+                else if ((DisplayFlags & AvatarDisplayFlags.TSOGhost) != 0) col = new Color(255, 255, 255, 64);
+
+
+                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, Room, col); 
             }
 
             if (Headline != null && !Headline.IsDisposed)

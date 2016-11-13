@@ -255,6 +255,7 @@ namespace FSO.SimAntics.Engine
                 {
                     foreach (var avatar in context.ObjectQueries.Avatars)
                     {
+                        if (avatar == caller) continue;
                         //search for routing frame. is its destination the same as ours?
                         if (avatar.Thread != null)
                         {

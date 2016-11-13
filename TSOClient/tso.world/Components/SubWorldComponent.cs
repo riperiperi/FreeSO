@@ -178,5 +178,10 @@ namespace FSO.LotView.Components
             parentState.CenterTile = parentScroll;
             parentState._2D.AmbientLight = parentLight;
         }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+        }
     }
 }

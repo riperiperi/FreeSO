@@ -723,8 +723,8 @@ namespace FSO.Client.UI.Panels
 
             foreach (var bar in SkillBars) bar.DisableLock = !isMe;
 
-            var isFriend = RelOutLTR >= 50;
-            var isEnemy = RelOutLTR <= -50;
+            var isFriend = RelOutLTR >= 60;
+            var isEnemy = RelOutLTR <= -60;
             var isNeutral = !(isFriend || isEnemy);
 
             SelfRimImage.Visible = isOnline && isMe;

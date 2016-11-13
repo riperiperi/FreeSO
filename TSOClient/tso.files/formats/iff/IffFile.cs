@@ -12,6 +12,7 @@ using System.IO;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Utils;
 using System.Reflection;
+using FSO.Common.Utils;
 
 namespace FSO.Files.Formats.IFF
 {
@@ -19,7 +20,7 @@ namespace FSO.Files.Formats.IFF
     /// Interchange File Format (IFF) is a chunk-based file format for binary resource data 
     /// intended to promote a common model for store and use by an executable.
     /// </summary>
-    public class IffFile : IFileInfoUtilizer
+    public class IffFile : IFileInfoUtilizer, ITimedCachable
     {
         /// <summary>
         /// Set to true to force the game to retain a copy of all chunk data at time of loading (used to generate piffs)
@@ -76,6 +77,28 @@ namespace FSO.Files.Formats.IFF
                 this.Read(stream);
                 SetFilename(Path.GetFileName(filepath));
             }
+        }
+
+        private bool WasReferenced = true;
+        ~IffFile()
+        {
+            if (WasReferenced)
+            {
+                TimedReferenceController.KeepAlive(this, KeepAliveType.DEREFERENCED);
+                WasReferenced = false;
+                GC.ReRegisterForFinalize(this);
+            } else
+            {
+                var all = SilentListAll();
+                foreach (var chunk in all)
+                {
+                    chunk.Dispose();
+                }
+            }
+        }
+        public void Rereferenced(bool saved)
+        {
+            WasReferenced = saved;
         }
 
         /// <summary>

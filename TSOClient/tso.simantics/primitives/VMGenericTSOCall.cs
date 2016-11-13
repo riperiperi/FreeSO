@@ -67,7 +67,7 @@ namespace FSO.SimAntics.Primitives
                 // 16. Change Normal Output
                 case VMGenericTSOCallMode.GetInteractionResult: //17
                     //if our current interaction result is -1, then we need to start the process.
-                    if (context.ActionTree || !(context.Caller is VMAvatar && ((VMAvatar)context.Caller).PersistID == 0))
+                    if (context.ActionTree && context.Caller is VMAvatar && ((VMAvatar)context.Caller).PersistID != 0)
                     {
                         var interaction = context.Thread.Queue[0];
                         if (interaction.InteractionResult == -1) interaction.InteractionResult = 0;

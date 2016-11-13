@@ -322,7 +322,8 @@ namespace FSO.SimAntics.Engine
             //when evaluating possible adjacent tiles we use the Caller's current floor.
 
             LotTilePos startPos = Caller.Position;
-            CurrentWaypoint = LotTilePos.OUT_OF_WORLD;
+            CurrentWaypoint = CurRoute.Position;
+            WalkTo = null;
             var myRoom = VM.Context.GetRoomAt(startPos);
 
             var roomInfo = VM.Context.RoomInfo[myRoom];
@@ -370,10 +371,10 @@ namespace FSO.SimAntics.Engine
                 return true;
             }
 
-            WalkTo = router.Route(startPoint, endPoint);
+            WalkTo = router.Route(startPoint, endPoint); //returns linked list with size 1 or greater or null
             if (WalkTo != null)
             {
-                if (WalkTo.First.Value != endPoint) WalkTo.RemoveFirst();
+                if (WalkTo.First.Value != endPoint && WalkTo.Count > 1) WalkTo.RemoveFirst();
                 AdvanceWaypoint();
             }
             return (WalkTo != null);
@@ -702,8 +703,7 @@ namespace FSO.SimAntics.Engine
                         TurnFrames--;
                     }
                     else avatar.RadianDirection = (float)TargetDirection;
-
-
+                    
                     var diff = CurrentWaypoint - PreviousPosition;
                     diff.x = (short)((diff.x * MoveFrames) / MoveTotalFrames);
                     diff.y = (short)((diff.y * MoveFrames) / MoveTotalFrames);

@@ -424,11 +424,12 @@ namespace FSO.Client.UI.Panels
                 {
                     case 3:
                     case 2:
-                        if (Game.InLot) FindController<CoreGameScreenController>().UploadLotThumbnail();
+                        if (Game.InLot && Game.vm.TSOState.Roommates.Contains(Game.vm.MyUID)) FindController<CoreGameScreenController>().UploadLotThumbnail();
                         break;
                 }
                 this.Remove(Panel);
                 Panel.Destroy();
+                Panel = null;
 
                 if (Game.InLot) Game.LotControl.PanelActive = false;
             }

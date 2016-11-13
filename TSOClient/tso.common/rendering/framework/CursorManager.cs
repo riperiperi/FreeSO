@@ -15,8 +15,8 @@ using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using System.IO;
 using Microsoft.Xna.Framework.Input;
-using FSO.Files.Utils;
 using Microsoft.Xna.Framework.Graphics;
+using FSO.Common.Utils;
 
 namespace FSO.Common.Rendering.Framework
 {

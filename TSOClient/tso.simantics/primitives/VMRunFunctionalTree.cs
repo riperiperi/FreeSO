@@ -28,6 +28,7 @@ namespace FSO.SimAntics.Engine.Primitives
 
             var entry = VMFindBestObjectForFunction.FunctionToEntryPoint[operand.Function];
             var ent = context.StackObject;
+            if (ent == null || ent.Dead) return VMPrimitiveExitCode.GOTO_FALSE;
             if (ent.EntryPoints[entry].ActionFunction != 0)
             {
                 bool Execute;

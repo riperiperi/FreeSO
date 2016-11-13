@@ -697,6 +697,13 @@ namespace FSO.SimAntics
             SignalTerrainRedraw();
         }
 
+        public void SignalAllDirty()
+        {
+            WallsDirty = true;
+            FloorsDirty = true;
+            Redraw = true;
+        }
+
         public void WallDirtyState(VMArchitectureMarshal input)
         {
             WallsDirty = input.WallsDirty;

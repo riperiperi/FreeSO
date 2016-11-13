@@ -39,6 +39,7 @@ namespace FSO.Client
 		public TSOGame() : base()
         {
             GameFacade.Game = this;
+            if (GameFacade.DirectX) TimedReferenceController.SetMode(CacheType.PERMANENT);
             Content.RootDirectory = FSOEnvironment.GFXContentDir;
             Graphics.SynchronizeWithVerticalRetrace = true;
             

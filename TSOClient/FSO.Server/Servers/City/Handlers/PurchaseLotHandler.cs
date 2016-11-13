@@ -70,6 +70,7 @@ namespace FSO.Server.Servers.City.Handlers
                             Status = PurchaseLotStatus.FAILED,
                             Reason = PurchaseLotFailureReason.NOT_OFFLINE_FOR_MOVE //TODO: race condition might make this possible?
                         });
+                        return;
                     }
 
                     if (roommates.Count > 1)

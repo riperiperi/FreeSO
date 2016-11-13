@@ -42,7 +42,8 @@ namespace FSO.SimAntics.Engine.Primitives
 
                 if (avatar.GetSlot(0) != null) //if we're carrying something, set carry animation to default carry.
                 {
-                    avatar.CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false);
+                    if (avatar.CarryAnimationState != null)
+                        avatar.CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false);
                 }
                 else avatar.CarryAnimationState = null;
                 return VMPrimitiveExitCode.GOTO_TRUE;

@@ -54,7 +54,7 @@ namespace FSO.Client
             { "DebugSkin", "0"},
             { "LanguageCode", "1"},
 
-            { "UseCustomServer", "false" },
+            { "UseCustomServer", "true" },
             { "GameEntryUrl", "http://api.freeso.org" },
             { "CitySelectorUrl", "http://api.freeso.org" },
         };
