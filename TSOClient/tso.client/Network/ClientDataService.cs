@@ -320,7 +320,7 @@ namespace FSO.Common.DataService
             foreach(var item in dsEntities)
             {
                 var id = GetId(item);
-                idMap.Add(id, (DSENTITY)item);
+                idMap[id] = (DSENTITY)item;
             }
 
             foreach(var item in input)

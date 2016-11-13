@@ -215,81 +215,100 @@ namespace FSO.Client.Controllers
 
         private void ShowLotBuyDialog(Lot lot)
         {
-            if (_LotBuyAlert != null) { return; }
-
-            _BuyLot = lot;
-            Parent.Screen.CityTooltipHitArea.HideTooltip();
-
-            var price = lot.Lot_Price;
-            var ourCash = Parent.Screen.VisualBudget;
-
-            DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
+            GameThread.InUpdate(() =>
             {
-                if (!x.IsFaulted && x.Result != null && x.Result.Avatar_LotGridXY != 0)
+                if (_LotBuyAlert != null) { return; }
+                _LotBuyAlert = new UIAlert(new UIAlertOptions() { Title = "", Message = "" }); //just fill this space til we spawn the dialog.
+                _BuyLot = lot;
+                Parent.Screen.CityTooltipHitArea.HideTooltip();
+
+                var price = lot.Lot_Price;
+                var ourCash = Parent.Screen.VisualBudget;
+
+                DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
                 {
-                    //we already have a lot. We need to show the right dialog depending on whether or not we're owner.
-                    var oldID = x.Result.Avatar_LotGridXY;
-                    DataService.Request(MaskedStruct.PropertyPage_LotInfo, oldID).ContinueWith(y =>
+                    if (!x.IsFaulted && x.Result != null && x.Result.Avatar_LotGridXY != 0)
                     {
-                        if (!y.IsFaulted && y.Result != null)
+                        //we already have a lot. We need to show the right dialog depending on whether or not we're owner.
+                        var oldID = x.Result.Avatar_LotGridXY;
+                        DataService.Request(MaskedStruct.PropertyPage_LotInfo, oldID).ContinueWith(y =>
                         {
-                            var old = (Lot)y.Result;
-                            UIAlertOptions AlertOptions = new UIAlertOptions();
-                            if (old.Lot_LeaderID == Network.MyCharacter)
+                            GameThread.InUpdate(() =>
                             {
-                                //we are the owner
-                                var oldVal = old.Lot_Price;
-                                var moveFee = 2000;
-                                var moveCost = moveFee+price;
-                                if (old.Lot_RoommateVec.Count > 1)
+                                bool canBuy = true;
+                                if (!y.IsFaulted && y.Result != null)
                                 {
-                                    //we have other roommates.
-                                    AlertOptions.Title = GameFacade.Strings.GetString("215", "10");
-                                    AlertOptions.Message = GameFacade.Strings.GetString("215", "12", 
-                                        new string[] { "$" + price.ToString(), "$" + ourCash.ToString(), "$" + moveCost.ToString(), "$" + moveFee.ToString(), "$" + oldVal.ToString() });
-                                    AlertOptions.Buttons = new UIAlertButton[] {
+                                    var old = (Lot)y.Result;
+                                    UIAlertOptions AlertOptions = new UIAlertOptions();
+                                    if (old.Lot_LeaderID == Network.MyCharacter)
+                                    {
+                                        //we are the owner
+                                        var oldVal = old.Lot_Price;
+                                        var moveFee = 2000;
+                                        var moveCost = moveFee + price;
+
+                                        canBuy = (moveCost - oldVal) <= ourCash;
+                                        if (old.Lot_RoommateVec.Count > 1)
+                                        {
+                                            //we have other roommates.
+                                            AlertOptions.Title = GameFacade.Strings.GetString("215", "10");
+                                            AlertOptions.Message = GameFacade.Strings.GetString("215", "12",
+                                                new string[] { "$" + price.ToString(), "$" + ourCash.ToString(), "$" + moveCost.ToString(), "$" + moveFee.ToString(), "$" + oldVal.ToString() });
+                                            AlertOptions.Buttons = new UIAlertButton[] {
                                         new UIAlertButton(UIAlertButtonType.Yes, (button) => { MoveLot(false); }, GameFacade.Strings.GetString("215", "14")),
                                         new UIAlertButton(UIAlertButtonType.Cancel, BuyPropertyAlert_OnCancel)
-                                    };
-                                } else
-                                {
-                                    //we live alone
-                                    AlertOptions.Title = GameFacade.Strings.GetString("215", "10");
-                                    AlertOptions.Message = GameFacade.Strings.GetString("215", "16",
-                                        new string[] { "$" + price.ToString(), "$" + ourCash.ToString(), "$" + moveCost.ToString(), "$" + moveFee.ToString(), "$" + oldVal.ToString() });
-                                    AlertOptions.Buttons = new UIAlertButton[] {
+                                        };
+                                        }
+                                        else
+                                        {
+                                            //we live alone
+                                            AlertOptions.Title = GameFacade.Strings.GetString("215", "10");
+                                            AlertOptions.Message = GameFacade.Strings.GetString("215", "16",
+                                                new string[] { "$" + price.ToString(), "$" + ourCash.ToString(), "$" + moveCost.ToString(), "$" + moveFee.ToString(), "$" + oldVal.ToString() });
+                                            AlertOptions.Buttons = new UIAlertButton[] {
                                         new UIAlertButton(UIAlertButtonType.OK, (button) => { MoveLot(false); }, GameFacade.Strings.GetString("215", "17")),
                                         new UIAlertButton(UIAlertButtonType.Yes, (button) => { MoveLot(true); }, GameFacade.Strings.GetString("215", "18")),
                                         new UIAlertButton(UIAlertButtonType.Cancel, BuyPropertyAlert_OnCancel)
-                                    };
-                                }
-                            } else
-                            {
-                                //we are a roommate.
-                                //can leave and start a new lot with no issue.
-                                AlertOptions.Title = GameFacade.Strings.GetString("215", "10");
-                                AlertOptions.Message = GameFacade.Strings.GetString("215", "20", new string[] { "$"+price.ToString(), "$" + ourCash.ToString() });
-                                AlertOptions.Buttons = new UIAlertButton[] {
+                                        };
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //we are a roommate.
+                                        //can leave and start a new lot with no issue.
+                                        canBuy = price <= ourCash;
+                                        AlertOptions.Title = GameFacade.Strings.GetString("215", "10");
+                                        AlertOptions.Message = GameFacade.Strings.GetString("215", "20", new string[] { "$" + price.ToString(), "$" + ourCash.ToString() });
+                                        AlertOptions.Buttons = new UIAlertButton[] {
                                     new UIAlertButton(UIAlertButtonType.Yes, new ButtonClickDelegate(BuyPropertyAlert_OnButtonClick)),
                                     new UIAlertButton(UIAlertButtonType.No, BuyPropertyAlert_OnCancel)
-                                };
-                            }
+                                    };
+                                    }
 
-                            AlertOptions.Width = 600;
-                            _LotBuyAlert = UIScreen.GlobalShowAlert(AlertOptions, true);
-                        } else
-                        {
-                            ShowNormalLotBuy("$"+price.ToString(), "$" + ourCash.ToString());
-                        }
-                    });
-                } else
-                {
-                    ShowNormalLotBuy("$"+price.ToString(), "$" + ourCash.ToString());
-                }
+                                    AlertOptions.Width = 600;
+                                    _LotBuyAlert = UIScreen.GlobalShowAlert(AlertOptions, true);
+                                    UIButton toDisable;
+                                    if (_LotBuyAlert.ButtonMap.TryGetValue(UIAlertButtonType.OK, out toDisable)) toDisable.Disabled = !canBuy;
+                                    if (_LotBuyAlert.ButtonMap.TryGetValue(UIAlertButtonType.Yes, out toDisable)) toDisable.Disabled = !canBuy;
+                                }
+                                else
+                                {
+                                    canBuy = price <= ourCash;
+                                    ShowNormalLotBuy("$" + price.ToString(), "$" + ourCash.ToString());
+                                    UIButton toDisable;
+                                    if (_LotBuyAlert.ButtonMap.TryGetValue(UIAlertButtonType.Yes, out toDisable)) toDisable.Disabled = !canBuy;
+                                }
+                            });
+                        });
+                    }
+                    else
+                    {
+                        //we kind of need the price for this!
+                        _LotBuyAlert = null;
+                        //ShowNormalLotBuy("$"+price.ToString(), "$" + ourCash.ToString());
+                    }
+                });
             });
-
-            //TODO: Put my actual money in
-            //TODO: Disable yes if cant afford
         }
 
         private void ShowNormalLotBuy(string price, string ourCash)

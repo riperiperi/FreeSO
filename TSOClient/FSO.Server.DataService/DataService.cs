@@ -238,6 +238,7 @@ namespace FSO.Common.DataService
                     {
                         //Insert
                         provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
+                        //TODO: clone list before doing add
                         arr.Add(value);
 
                         if (target.Persist)
@@ -384,6 +385,11 @@ namespace FSO.Common.DataService
                     {
                         var arr = (IList)obj;
                         var arrIndex = path.Dequeue();
+                        if (arrIndex >= arr.Count)
+                        {
+                            if (arr.Count == 0) throw new Exception("Item at index not found, unable to apply update");
+                            arrIndex = (uint)(arr.Count - 1);
+                        }
 
                         if (arrIndex < arr.Count)
                         {

@@ -303,7 +303,7 @@ namespace FSO.Client.UI.Panels
                         if (screen.vm == null) FindController<PersonPageController>().SaveValue(CurrentAvatar.Value, dot);
                     }
 
-                    if (screen.vm != null)
+                    if (screen?.vm != null)
                     {
                         screen.vm.SendCommand(new VMNetSkillLockCmd()
                         {
@@ -350,6 +350,7 @@ namespace FSO.Client.UI.Panels
 
             /** Bookmark **/
             this.BookmarkButton.OnButtonClick += BookmarkButton_OnButtonClick;
+            this.IgnoreButton.OnButtonClick += IgnoreButton_OnButtonClick;
 
             /** Scroll bars **/
             this.DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
@@ -425,6 +426,7 @@ namespace FSO.Client.UI.Panels
         private void BookmarksChanged()
         {
             var bookmark = false;
+            var ignore = false;
 
             if (MyAvatar != null && MyAvatar.Value != null 
                 && MyAvatar.Value.Avatar_BookmarksVec != null && CurrentAvatar.Value != null)
@@ -432,36 +434,72 @@ namespace FSO.Client.UI.Panels
                 bookmark = MyAvatar.Value.Avatar_BookmarksVec.FirstOrDefault(
                     x => x.Bookmark_TargetID == CurrentAvatar.Value.Avatar_Id && x.Bookmark_Type == (byte)BookmarkType.AVATAR
                 ) != null;
+                ignore = MyAvatar.Value.Avatar_BookmarksVec.FirstOrDefault(
+                    x => x.Bookmark_TargetID == CurrentAvatar.Value.Avatar_Id && x.Bookmark_Type == (byte)BookmarkType.IGNORE_AVATAR
+                ) != null;
             }
 
             BookmarkButton.Selected = bookmark;
+            IgnoreButton.Selected = ignore;
         }
 
         private void BookmarkButton_OnButtonClick(UIElement button)
         {
+            if (CurrentAvatar.Value != null)
+                ToggleBookmark(BookmarkType.AVATAR, BookmarkButton, CurrentAvatar.Value.Avatar_Id);
+        }
+
+        private void IgnoreButton_OnButtonClick(UIElement button)
+        {
+            if (CurrentAvatar.Value != null)
+                ToggleBookmark(BookmarkType.IGNORE_AVATAR, IgnoreButton, CurrentAvatar.Value.Avatar_Id);
+        }
+
+        public void ToggleBookmark(BookmarkType type, UIButton btn, uint target_id)
+        {
             var controller = FindController<PersonPageController>();
-            
-            if (MyAvatar != null && MyAvatar.Value != null && CurrentAvatar.Value != null)
+            bool setIgnore = false;
+            var screen = GameFacade.Screens.CurrentUIScreen as CoreGameScreen;
+
+            if (MyAvatar != null && MyAvatar.Value != null)
             {
-                if(MyAvatar.Value.Avatar_BookmarksVec != null)
+                if (MyAvatar.Value.Avatar_BookmarksVec != null)
                 {
                     var bookmark = MyAvatar.Value.Avatar_BookmarksVec.FirstOrDefault(
-                        x => x.Bookmark_TargetID == CurrentAvatar.Value.Avatar_Id && x.Bookmark_Type == (byte)BookmarkType.AVATAR
+                        x => x.Bookmark_TargetID == target_id && x.Bookmark_Type == (byte)type
                     );
 
                     if (bookmark != null)
                     {
-                        BookmarkButton.Selected = false;
+                        if (btn != null) btn.Selected = false;
                         controller.RemoveBookmark(MyAvatar.Value, bookmark);
+                        if (type == BookmarkType.IGNORE_AVATAR && screen?.vm != null)
+                        {
+                            screen.vm.SendCommand(new VMNetSetIgnoreCmd()
+                            {
+                                TargetPID = target_id,
+                                SetIgnore = false
+                            });
+                        }
                         return;
                     }
                 }
 
-                BookmarkButton.Selected = true;
+                if (btn != null) btn.Selected = true;
                 controller.AddBookmark(MyAvatar.Value, new Bookmark()
                 {
-                    Bookmark_TargetID = CurrentAvatar.Value.Avatar_Id,
-                    Bookmark_Type = (byte)BookmarkType.AVATAR
+                    Bookmark_TargetID = target_id,
+                    Bookmark_Type = (byte)type
+                });
+                setIgnore = true;
+            }
+            
+            if (type == BookmarkType.IGNORE_AVATAR && screen?.vm != null)
+            {
+                screen.vm.SendCommand(new VMNetSetIgnoreCmd()
+                {
+                    TargetPID = target_id,
+                    SetIgnore = setIgnore
                 });
             }
         }
@@ -853,6 +891,7 @@ namespace FSO.Client.UI.Panels
 
             RelationshipsTabButton.Disabled = isMe;
             OptionsTabButton.Disabled = isMe;
+            BookmarkButton.Disabled = isMe;
 
             if (isClosed)
             {

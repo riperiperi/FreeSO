@@ -48,6 +48,7 @@ namespace FSO.Client.UI.Panels
             {
                 GlobalSettings.Default.UseCustomServer = !GlobalSettings.Default.UseCustomServer;
                 connectLocalBtn.Caption = (GlobalSettings.Default.UseCustomServer) ? "Use default server (TSO)" : "Use custom defined server";
+                GlobalSettings.Default.Save();
             };
             Add(connectLocalBtn);
         }

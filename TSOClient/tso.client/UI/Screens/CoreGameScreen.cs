@@ -526,6 +526,17 @@ namespace FSO.Client.UI.Screens
             vm.OnChatEvent += Vm_OnChatEvent;
             vm.OnEODMessage += LotControl.EODs.OnEODMessage;
             vm.OnRequestLotSwitch += VMLotSwitch;
+            vm.OnGenericVMEvent += Vm_OnGenericVMEvent;
+        }
+
+        private void Vm_OnGenericVMEvent(VMEventType type, object data)
+        {
+            switch (type)
+            {
+                case VMEventType.TSOUnignore:
+                    PersonPage.ToggleBookmark(Common.DataService.Model.BookmarkType.IGNORE_AVATAR, null, (uint)data);
+                    break;
+            }
         }
 
         private void VMLotSwitch(uint lotId)

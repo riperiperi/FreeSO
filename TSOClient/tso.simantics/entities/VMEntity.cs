@@ -578,19 +578,7 @@ namespace FSO.SimAntics
                 case VMStackObjectVariable.ObjectId:
                     return ObjectID;
                 case VMStackObjectVariable.Direction:
-                    switch (this.Direction)
-                    {
-                        case FSO.LotView.Model.Direction.WEST:
-                            return 6;
-                        case FSO.LotView.Model.Direction.SOUTH:
-                            return 4;
-                        case FSO.LotView.Model.Direction.EAST:
-                            return 2;
-                        case FSO.LotView.Model.Direction.NORTH:
-                            return 0;
-                        default:
-                            return 0;
-                    }
+                    return (short)((Math.Round((RadianDirection / Math.PI) * 4) + 8) % 8);
                 case VMStackObjectVariable.ContainerId:
                 case VMStackObjectVariable.ParentId: //TODO: different?
                     return (Container == null) ? (short)0 : Container.ObjectID;

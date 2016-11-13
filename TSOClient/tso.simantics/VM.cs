@@ -92,6 +92,7 @@ namespace FSO.SimAntics
         public event VMBreakpointHandler OnBreakpoint;
         public event VMEODMessageHandler OnEODMessage;
         public event VMLotSwitchHandler OnRequestLotSwitch;
+        public event VMGenericEvtHandler OnGenericVMEvent;
         
         public delegate void VMDialogHandler(VMDialogInfo info);
         public delegate void VMChatEventHandler(VMChatEvent evt);
@@ -99,6 +100,7 @@ namespace FSO.SimAntics
         public delegate void VMBreakpointHandler(VMEntity entity);
         public delegate void VMEODMessageHandler(VMNetEODMessageCmd msg);
         public delegate void VMLotSwitchHandler(uint lotId);
+        public delegate void VMGenericEvtHandler(VMEventType type, object data);
 
         public IVMTSOGlobalLink GlobalLink
         {
@@ -171,7 +173,7 @@ namespace FSO.SimAntics
         {
             //some objects expect that the server delete all avatars upon loading the lot (pets, food counters)
             //var avatars = new List<VMEntity>(Entities.Where(x => x is VMAvatar && x.PersistID > 0));
-            var avatars = Context.ObjectQueries.Avatars;
+            var avatars = new List<VMEntity>(Context.ObjectQueries.Avatars);
             foreach (var avatar in avatars) avatar.Delete(true, Context);
 
             var ents = new List<VMEntity>(Entities);
@@ -422,6 +424,11 @@ namespace FSO.SimAntics
         public void SignalLotSwitch(uint lotId)
         {
             OnRequestLotSwitch?.Invoke(lotId);
+        }
+
+        public void SignalGenericVMEvt(VMEventType type, object data)
+        {
+            OnGenericVMEvent?.Invoke(type, data);
         }
 
         public VMSandboxRestoreState Sandbox()
@@ -707,5 +714,10 @@ namespace FSO.SimAntics
         public short ObjectId = 1;
         public VMObjectQueries ObjectQueries;
         public ulong RandomSeed;
+    }
+
+    public enum VMEventType
+    {
+        TSOUnignore
     }
 }

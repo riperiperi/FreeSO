@@ -142,10 +142,17 @@ namespace FSO.SimAntics.Primitives
 
                 //30. Create Cheat Neighbour
                 case VMGenericTSOCallMode.IsTemp0AvatarIgnoringTemp1Avatar: //31
-                    context.Thread.TempRegisters[0] = 0;
+                    context.Thread.TempRegisters[0] = (short)(((VMTSOAvatarState)(context.VM.GetObjectById(context.Thread.TempRegisters[0]).TSOState))
+                        .IgnoredAvatars.Contains(context.VM.GetObjectById(context.Thread.TempRegisters[1]).PersistID) ? 1 : 0);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 //32. Play Next Song on Radio Station in Temp 0 (TODO)
-                //33. Temp0 Avatar Unignore Temp1 Avatar
+                case VMGenericTSOCallMode.Temp0AvatarUnignoreTemp1Avatar:
+                    var avatar = context.VM.GetObjectById(context.Thread.TempRegisters[0]);
+                    if (avatar.PersistID == context.VM.MyUID)
+                    {
+                        context.VM.SignalGenericVMEvt(VMEventType.TSOUnignore, (uint)context.VM.GetObjectById(context.Thread.TempRegisters[1]).PersistID);
+                    }
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.GlobalRepairCostInTempXL0: //34
                     context.Thread.TempXL[0] = 0; //TODO
                     return VMPrimitiveExitCode.GOTO_TRUE;

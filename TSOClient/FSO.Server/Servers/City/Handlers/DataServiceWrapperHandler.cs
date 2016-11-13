@@ -46,15 +46,22 @@ namespace FSO.Server.Servers.City.Handlers
                         }
                     }
 
-                    var result = await DataService.SerializePath(resultDotPath.ToArray());
-                    if (result != null)
+                    try
                     {
-                        session.Write(new DataServiceWrapperPDU()
+                        var result = await DataService.SerializePath(resultDotPath.ToArray());
+                        if (result != null)
                         {
-                            SendingAvatarID = packet.SendingAvatarID,
-                            RequestTypeID = packet.RequestTypeID,
-                            Body = result
-                        });
+                            session.Write(new DataServiceWrapperPDU()
+                            {
+                                SendingAvatarID = packet.SendingAvatarID,
+                                RequestTypeID = packet.RequestTypeID,
+                                Body = result
+                            });
+                        }
+                    } catch (Exception e)
+                    {
+                        //TODO
+                        //keep this silent for now - bookmarks tend to spam errors.
                     }
                 }
             }

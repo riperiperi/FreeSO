@@ -33,7 +33,7 @@ namespace FSO.SimAntics.Primitives
             if (operand.Mode == 0)
             { //reach to stack object
                 var container = context.StackObject.Container;
-                if (container == null)
+                if (container == null || container is VMAvatar)
                 {
                     height = 0;
                 }
@@ -64,7 +64,7 @@ namespace FSO.SimAntics.Primitives
             }
 
             string animationName;
-            if (context.Caller.Container != null) animationName = "a20-sit-reach-table";
+            if (context.Caller.Container != null) animationName = "a2o-sit-reach-table.anim";
             else if (height < 2) animationName = "a2o-reach-floorht.anim";
             else if (height < 4) animationName = "a2o-reach-seatht.anim";
             else animationName = "a2o-reach-tableht.anim";

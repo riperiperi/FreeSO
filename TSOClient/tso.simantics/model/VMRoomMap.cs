@@ -161,21 +161,23 @@ namespace FSO.SimAntics.Model
             var floor = floors[x + y * width].Pattern;
 
             bool hasExpectation = (expectedTile == 0 && noAir) || (expectedTile > 65533);
-            bool cantSpread = (hasExpectation && expectedTile != floor) || (!hasExpectation && ((floor == 0 && noAir) || floor > 65533));
 
             ushort targRoom;
             uint roomApply;
+            ushort targFloor;
             if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
             {
                 if (inDir < 2)
                 {
                     //bottom (bottom right pattern)
+                    targFloor = wall.TopLeftPattern;
                     targRoom = (ushort)map[x + y * width];
                     roomApply = room;
                 }
                 else
                 {
                     //top (bottom left pattern)
+                    targFloor = wall.TopLeftStyle;
                     targRoom = (ushort)(map[x + y * width] >> 16);
                     roomApply = (uint)room<<16;
                 }
@@ -185,12 +187,14 @@ namespace FSO.SimAntics.Model
                 if (inDir > 0 && inDir < 3)
                 {
                     //left
+                    targFloor = wall.TopLeftPattern;
                     targRoom = (ushort)map[x + y * width];
                     roomApply = room;
                 }
                 else
                 {
                     //right
+                    targFloor = wall.TopLeftStyle;
                     targRoom = (ushort)(map[x + y * width] >> 16);
                     roomApply = (uint)room << 16;
                 }
@@ -198,8 +202,11 @@ namespace FSO.SimAntics.Model
             else
             {
                 targRoom = (ushort)map[x + y * width];
+                targFloor = floor;
                 roomApply = (uint)(room | (room << 16));
             }
+
+            bool cantSpread = (hasExpectation && expectedTile != targFloor) || (!hasExpectation && ((targFloor == 0 && noAir) || targFloor > 65533));
 
             if (targRoom > 0 || cantSpread)
             {

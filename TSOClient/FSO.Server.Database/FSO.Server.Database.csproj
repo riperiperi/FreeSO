@@ -152,7 +152,9 @@
     <Content Include="DatabaseScripts\changes\0001_3_max_avatars.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="DatabaseScripts\changes\0004_bookmarks.sql" />
+    <Content Include="DatabaseScripts\changes\0004_bookmarks.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="DatabaseScripts\fso_transactions.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

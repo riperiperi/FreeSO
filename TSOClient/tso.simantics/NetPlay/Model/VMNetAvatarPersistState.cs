@@ -18,7 +18,7 @@ namespace FSO.SimAntics.NetPlay.Model
         // some of these attributes must be saved in the database, so they must be re-initialized by the server.
         // a lot of them are not in the database, so this state storage is the only way you're getting them.
 
-        public static int CURRENT_VERSION = 3;
+        public static int CURRENT_VERSION = 4;
         public int Version = CURRENT_VERSION;
 
         public string Name;
@@ -73,14 +73,15 @@ namespace FSO.SimAntics.NetPlay.Model
 
         //ONLINE JOBS!
         public short OnlineJobID { get { return PersonData[21]; } set { PersonData[21] = value; } } //91 ~~>DB<~~
-
-        public Dictionary<short, VMTSOJobInfo> OnlineJobInfo = new Dictionary<short, VMTSOJobInfo>();
         /*public short OnlineJobGrade { get { return PersonData[22]; } set { PersonData[22] = value; } } //92 ~~>DB<~~
         public short OnlineJobXP { get { return PersonData[23]; } set { PersonData[23] = value; } } //93 ~~>DB<~~
         public short OnlineJobSickDays { get { return PersonData[24]; } set { PersonData[24] = value; } } //94 ~~>DB<~~
         public short OnlineJobStatusFlags { get { return PersonData[25]; } set { PersonData[25] = value; } } //98 ~~>DB<~~*/
 
         public short BadgeLevel { get { return PersonData[26]; } set { PersonData[26] = value; } } //100 (not sure, maybe number of days active?)
+
+        public Dictionary<short, VMTSOJobInfo> OnlineJobInfo = new Dictionary<short, VMTSOJobInfo>();
+        public HashSet<uint> IgnoredAvatars = new HashSet<uint>();
 
         public static int[] PersonDataMap =
         {
@@ -149,6 +150,12 @@ namespace FSO.SimAntics.NetPlay.Model
                 writer.Write(item.Key);
                 item.Value.SerializeInto(writer);
             }
+
+            writer.Write(IgnoredAvatars.Count);
+            foreach (var ava in IgnoredAvatars)
+            {
+                writer.Write(ava);
+            }
         }
 
         public void Deserialize(BinaryReader reader)
@@ -185,6 +192,15 @@ namespace FSO.SimAntics.NetPlay.Model
                 job.Deserialize(reader);
                 OnlineJobInfo[id] = job;
             }
+
+            if (Version > 3)
+            {
+                var ignored = reader.ReadInt32();
+                for (int i=0; i<ignored; i++)
+                {
+                    IgnoredAvatars.Add(reader.ReadUInt32());
+                }
+            }
         }
 
         public void Apply(VMAvatar avatar)
@@ -213,6 +229,7 @@ namespace FSO.SimAntics.NetPlay.Model
                 avatar.SetPersonData(VMPersonDataVariable.OnlineJobStatusFlags, 1); //validated immediately.
             }
             avatar.SkillLocks = SkillLock;
+            ((VMTSOAvatarState)avatar.TSOState).IgnoredAvatars = IgnoredAvatars;
         }
 
         public void Save(VMAvatar avatar)
@@ -236,6 +253,7 @@ namespace FSO.SimAntics.NetPlay.Model
             }
             SkillLock = avatar.SkillLocks;
             OnlineJobInfo = ((VMTSOAvatarState)avatar.TSOState).JobInfo;
+            IgnoredAvatars = ((VMTSOAvatarState)avatar.TSOState).IgnoredAvatars;
         }
     }
 }

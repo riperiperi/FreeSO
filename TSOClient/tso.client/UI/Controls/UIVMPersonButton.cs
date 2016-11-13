@@ -129,6 +129,7 @@ namespace FSO.Client.UI.Controls
                     case VMTSOAvatarPermissions.Owner: prefixNum = 1; break;
                 }
             }
+
             return GameFacade.Strings.GetString("217", prefixNum.ToString()) + ava.ToString();
         }
 

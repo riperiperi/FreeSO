@@ -145,31 +145,54 @@ namespace FSO.SimAntics.Engine
                 var maxScore = Math.Max(DesiredProximity - MinProximity, MaxProximity - DesiredProximity) + (LotTilePos.Distance(obj.Position, caller.Position)+MaxProximity)/3 + 2;
                 var ignoreRooms = (Flags & SLOTFlags.IgnoreRooms) > 0;
 
-                var resolutionBound = (MaxProximity / Slot.Resolution) * Slot.Resolution;
-
-                for (int x = -resolutionBound; x <= resolutionBound; x += Slot.Resolution)
+                SLOTEnumerationFunction((x, y, distance) =>
                 {
-                    for (int y = -resolutionBound; y <= resolutionBound; y += Slot.Resolution)
+                    var pos = new Vector2(circleCtr.X + x / 16.0f, circleCtr.Y + y / 16.0f);
+                    if (distance >= MinProximity - 0.5 && distance <= MaxProximity + 0.5 && (ignoreRooms || context.VM.Context.GetRoomAt(new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level)) == room)) //slot is within proximity
                     {
-                        var pos = new Vector2(circleCtr.X + x / 16.0f, circleCtr.Y + y / 16.0f);
-                        double distance = Math.Sqrt(x * x + y * y);
-                        if (distance >= MinProximity - 0.01 && distance <= MaxProximity + 0.01 && (ignoreRooms || context.VM.Context.GetRoomAt(new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level)) == room)) //slot is within proximity
+                        var routeEntryFlags = (GetSearchDirection(circleCtr, pos, obj.RadianDirection) & Flags); //the route needs to know what conditions it fulfilled
+                        if (routeEntryFlags > 0) //within search location
                         {
-                            var routeEntryFlags = (GetSearchDirection(circleCtr, pos, obj.RadianDirection) & Flags); //the route needs to know what conditions it fulfilled
-                            if (routeEntryFlags > 0) //within search location
-                            {
-                                double baseScore = ((maxScore - Math.Abs(DesiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f);
-                                VerifyAndAddLocation(obj, pos, center, routeEntryFlags, baseScore, context, caller, float.NaN);
-                            }
+                            double baseScore = ((maxScore - Math.Abs(DesiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f);
+                            VerifyAndAddLocation(obj, pos, center, routeEntryFlags, baseScore, context, caller, float.NaN);
                         }
                     }
-                }
+                });
             }
             /** Sort by how close they are to desired proximity **/
             
             if (Results.Count > 1) Results = Results.OrderBy(x => -x.Score).ToList(); //avoid sort because it acts incredibly unusually
             if (Results.Count > 0) FailCode = VMRouteFailCode.Success;
             return Results;
+        }
+
+        private void SLOTEnumerationFunction (Callback<int, int, double> outputFunc)
+        {
+            if (Slot.MaxProximity == Slot.MinProximity)
+            {
+                //circle. pick points in the 8 directions to check.
+                for (int i = 0; i < 8; i++)
+                {
+                    var angle = (i * Math.PI) / 4.0;
+                    var x = (int)Math.Round(Math.Sin(angle) * Slot.MinProximity); //most directions shouldn't cause floating point issues here.
+                    var y = (int)Math.Round(Math.Cos(angle) * Slot.MinProximity);
+                    outputFunc(x, y, Slot.MinProximity);
+                }
+            }
+            else
+            {
+                //range. use the resolution settings.
+                var resolutionBound = (MaxProximity / Slot.Resolution) * Slot.Resolution;
+
+                for (int x = -resolutionBound; x <= resolutionBound; x += Slot.Resolution)
+                {
+                    for (int y = -resolutionBound; y <= resolutionBound; y += Slot.Resolution)
+                    {
+                        double distance = Math.Sqrt(x * x + y * y);
+                        outputFunc(x, y, distance);
+                    }
+                }
+            }
         }
 
         private void VerifyAndAddLocation(VMEntity obj, Vector2 pos, Vector2 center, SLOTFlags entryFlags, double score, VMContext context, VMEntity caller, float facingDir)
@@ -308,7 +331,7 @@ namespace FSO.SimAntics.Engine
             if (dir >= 45.0 - ANGLE_ERROR && dir <= 135.0 + ANGLE_ERROR) result |= SLOTFlags.EAST;
             if ((dir >= 90.0 - ANGLE_ERROR && dir <= 180.0 + ANGLE_ERROR) || (dir <= -180.0 + ANGLE_ERROR)) result |= SLOTFlags.SOUTH_EAST;
             if (dir >= 135.0 - ANGLE_ERROR || dir <= -135.0 + ANGLE_ERROR) result |= SLOTFlags.SOUTH;
-            if ((dir >= -180.0 - ANGLE_ERROR && dir <= -135.0 + ANGLE_ERROR) || (dir >= 180.0 - ANGLE_ERROR)) result |= SLOTFlags.SOUTH_WEST;
+            if ((dir >= -180.0 - ANGLE_ERROR && dir <= -90.0 + ANGLE_ERROR) || (dir >= 180.0 - ANGLE_ERROR)) result |= SLOTFlags.SOUTH_WEST;
             if (dir >= -135.0 - ANGLE_ERROR && dir <= -45.0 + ANGLE_ERROR) result |= SLOTFlags.WEST;
             if (dir >= -90.0 - ANGLE_ERROR && dir <= 0.0 + ANGLE_ERROR) result |= SLOTFlags.NORTH_WEST; 
 
