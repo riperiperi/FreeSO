@@ -22,17 +22,17 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMReach : VMPrimitiveHandler
     {
-        public bool failed = false;
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMReachOperand)args;
-
+            var completedPickup = false;
             int height;
 
             if (operand.Mode == 0)
             { //reach to stack object
                 var container = context.StackObject.Container;
+                if (container == context.Caller) completedPickup = true;
                 if (container == null || container is VMAvatar)
                 {
                     height = 0;
@@ -71,22 +71,20 @@ namespace FSO.SimAntics.Primitives
 
 
             var animation = FSO.Content.Content.Get().AvatarAnimations.Get(animationName);
-            if(animation == null){
-                return VMPrimitiveExitCode.ERROR;
+            if (animation == null) {
+                return VMPrimitiveExitCode.GOTO_FALSE;
             }
             var avatar = (VMAvatar)context.Caller;
             
             /** Are we starting the animation or progressing it? **/
-            if (avatar.CurrentAnimationState == null || avatar.CurrentAnimationState.Anim != animation)
+            if (avatar.CurrentAnimationState == null || (avatar.CurrentAnimationState.Anim != animation && !completedPickup))
             { //start the grab!
                 /** Start it **/
-
                 avatar.Animations.Clear();
                 avatar.Animations.Add(new VMAnimationState(animation, false));
 
                 avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
                 avatar.Avatar.RightHandGesture = SimHandGesture.Idle;
-                failed = false;
                 return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
             }
             else
@@ -110,7 +108,7 @@ namespace FSO.SimAntics.Primitives
                             }
                             else
                             {
-                                failed = true;
+                                //failed = true;
                             }
                         }
                         else if (operand.Mode == 1)
@@ -123,18 +121,17 @@ namespace FSO.SimAntics.Primitives
                                 var item = context.StackObject.GetSlot(slotNum);
                                 if (item != null)
                                 {
-                                    if (!context.Caller.PlaceInSlot(item, 0, true, context.VM.Context)) failed = true;
+                                    var failed = !context.Caller.PlaceInSlot(item, 0, true, context.VM.Context);
                                 }
-                                else failed = true; //can't grab from an empty space
+                                //else failed = true; //can't grab from an empty space
                             }
                             else //drop
                             {
                                 var itemTest = context.StackObject.GetSlot(slotNum);
                                 if (itemTest == null)
                                 {
-                                    if (!context.StackObject.PlaceInSlot(holding, slotNum, true, context.VM.Context)) failed = true;
+                                    var failed = !context.StackObject.PlaceInSlot(holding, slotNum, true, context.VM.Context);
                                 }
-                                else failed = true; //can't drop in an occupied space
                             }
                         }
                     }

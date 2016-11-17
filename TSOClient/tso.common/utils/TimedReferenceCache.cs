@@ -75,7 +75,6 @@ namespace FSO.Common.Utils
                 lock (InternalLock)
                 {
                     var toDereference = ReferenceRing[CurRingNum];
-                    Console.WriteLine("cleared " + toDereference.Count + " from cachecycle " + CurRingNum);
                     foreach (var obj in toDereference) ObjectToRing.Remove(obj);
                     toDereference.Clear();
                     CurRingNum = (CurRingNum + 1) % ReferenceRing.Count;

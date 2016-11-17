@@ -213,10 +213,16 @@ namespace FSO.Common.Serialization
                 strlen = value.Length;
             }
 
-            //TODO: VLC
-            buffer.Put((byte)strlen);
+            bool write = strlen > 0;
+            bool first = true;
+            while (strlen > 0 || first)
+            {
+                buffer.Put((byte)(((strlen > 127) ? (uint)128 : 0) | (strlen & 127)));
+                strlen >>= 7;
+                first = false;
+            }
 
-            if (strlen > 0)
+            if (write)
             {
                 foreach (char ch in value.ToCharArray())
                 {

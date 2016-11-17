@@ -175,13 +175,15 @@ namespace FSO.Server.Servers.City.Handlers
                     }
                     catch (Exception ex)
                     {
+                        var returnMoney = db.Avatars.Transaction(uint.MaxValue, session.AvatarId, price, 5); //refund
                         //Name taken
                         if (ex.Message == "NAME")
                         {
                             session.Write(new PurchaseLotResponse()
                             {
                                 Status = PurchaseLotStatus.FAILED,
-                                Reason = PurchaseLotFailureReason.NAME_TAKEN //TODO: this can also happen if the location was taken. (location is a UNIQUE row)
+                                Reason = PurchaseLotFailureReason.NAME_TAKEN, //TODO: this can also happen if the location was taken. (location is a UNIQUE row)
+                                NewFunds = returnMoney.dest_budget
                             });
                         }
                         else
@@ -189,7 +191,8 @@ namespace FSO.Server.Servers.City.Handlers
                             session.Write(new PurchaseLotResponse()
                             {
                                 Status = PurchaseLotStatus.FAILED,
-                                Reason = PurchaseLotFailureReason.UNKNOWN //likely already roommate somewhere else, or we got race condition'd by another roomie request
+                                Reason = PurchaseLotFailureReason.UNKNOWN, //likely already roommate somewhere else, or we got race condition'd by another roomie request
+                                NewFunds = returnMoney.dest_budget
                             });
                         }
                         return;

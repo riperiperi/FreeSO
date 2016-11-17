@@ -224,14 +224,29 @@ namespace FSO.Common.DataService
                     var arr = (IList)target.Value;
                     if (finalPath < arr.Count)
                     {
-                        //Update existing
-                        provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
-                        arr[(int)finalPath] = value;
-
-                        //TODO: make this async?
-                        if (target.Persist)
+                        //Update existing or remove on null (at index)
+                        if (IsNull(value))
                         {
-                            provider.PersistMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value);
+                            var removeItem = ((IList)target.Value)[(int)finalPath];
+                            provider.DemandMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(), removeItem, context);
+                            ((IList)target.Value).RemoveAt((int)finalPath);
+
+                            //TODO: make this async?
+                            if (target.Persist)
+                            {
+                                provider.PersistMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(), removeItem);
+                            }
+                        }
+                        else
+                        {
+                            provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
+                            arr[(int)finalPath] = value;
+
+                            //TODO: make this async?
+                            if (target.Persist)
+                            {
+                                provider.PersistMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value);
+                            }
                         }
                     }
                     else if (finalPath >= arr.Count)

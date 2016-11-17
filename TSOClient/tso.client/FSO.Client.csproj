@@ -69,6 +69,7 @@
     <Compile Include="Controllers\GizmoSearchController.cs" />
     <Compile Include="Controllers\LoadingScreenController.cs" />
     <Compile Include="Controllers\Panels\BookmarksController.cs" />
+    <Compile Include="Controllers\Panels\LotAdmitController.cs" />
     <Compile Include="Controllers\Panels\LotPageController.cs" />
     <Compile Include="Controllers\Panels\PersonPageController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />

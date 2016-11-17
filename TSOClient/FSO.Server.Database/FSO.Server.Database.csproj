@@ -97,6 +97,9 @@
     <Compile Include="DA\IDA.cs" />
     <Compile Include="DA\IDAFactory.cs" />
     <Compile Include="DA\ISqlContext.cs" />
+    <Compile Include="DA\LotAdmit\DbLotAdmit.cs" />
+    <Compile Include="DA\LotAdmit\ILotAdmit.cs" />
+    <Compile Include="DA\LotAdmit\SqlLotAdmit.cs" />
     <Compile Include="DA\LotClaims\DbLotClaim.cs" />
     <Compile Include="DA\LotClaims\ILotClaims.cs" />
     <Compile Include="DA\LotClaims\SqlLotsClaims.cs" />
@@ -153,6 +156,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\changes\0004_bookmarks.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0005_lotadmit_primarykey.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\fso_transactions.sql">

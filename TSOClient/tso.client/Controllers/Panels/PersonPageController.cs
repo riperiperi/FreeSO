@@ -65,7 +65,23 @@ namespace FSO.Client.Controllers
                 DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
                 {
                     View.MyAvatar.Value = x.Result;
+                    if (x.Result != null && x.Result.Avatar_LotGridXY != 0 && (View.MyLot.Value == null || View.MyLot.Value.Lot_Location_Packed != x.Result.Avatar_LotGridXY))
+                    {
+                        DataService.Request(MaskedStruct.AdmitInfo_Lot, x.Result.Avatar_LotGridXY).ContinueWith(y =>
+                        {
+                            View.MyLot.Value = (Lot)y.Result;
+                        });
+                    }
                 });
+            } else
+            {
+                if (View.MyAvatar.Value != null && View.MyAvatar.Value.Avatar_LotGridXY != 0 && (View.MyLot.Value == null || View.MyLot.Value.Lot_Location_Packed != View.MyAvatar.Value.Avatar_LotGridXY))
+                {
+                    DataService.Request(MaskedStruct.AdmitInfo_Lot, View.MyAvatar.Value.Avatar_LotGridXY).ContinueWith(y =>
+                    {
+                        View.MyLot.Value = (Lot)y.Result;
+                    });
+                }
             }
 
             View.CurrentTab = UIPersonPageTab.Description;
@@ -85,6 +101,20 @@ namespace FSO.Client.Controllers
         {
             DataService.AddToArray(target, "Avatar_BookmarksVec", bookmark);
             DataService.Request(MaskedStruct.MyAvatar, Network.MyCharacter);
+        }
+
+        public void RemoveAdmitBan(Lot target, uint target_avatar, bool ban)
+        {
+            var mode = (ban) ? "Ban" : "Admit";
+            DataService.RemoveFromArray(target, "Lot_LotAdmitInfo.LotAdmitInfo_"+mode+"List", target_avatar);
+            DataService.Request(MaskedStruct.AdmitInfo_Lot, target.Id);
+        }
+
+        public void AddAdmitBan(Lot target, uint target_avatar, bool ban)
+        {
+            var mode = (ban) ? "Ban" : "Admit";
+            DataService.AddToArray(target, "Lot_LotAdmitInfo.LotAdmitInfo_" + mode + "List", target_avatar);
+            DataService.Request(MaskedStruct.AdmitInfo_Lot, target.Id);
         }
 
         public void FindAvatarLocation()

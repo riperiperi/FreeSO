@@ -148,6 +148,7 @@ namespace FSO.Client.UI.Panels
          */
         public Binding<Avatar> CurrentAvatar { get; internal set; }
         public Binding<Avatar> MyAvatar { get; internal set; }
+        public Binding<Lot> MyLot { get; internal set; }
         public override Vector2 Size { get; set; }
 
         private UIPersonPageTab _Tab = UIPersonPageTab.Description;
@@ -352,6 +353,9 @@ namespace FSO.Client.UI.Panels
             this.BookmarkButton.OnButtonClick += BookmarkButton_OnButtonClick;
             this.IgnoreButton.OnButtonClick += IgnoreButton_OnButtonClick;
 
+            this.AdmitCheckBox.OnButtonClick += AdmitCheckBox_OnButtonClick;
+            this.BanCheckBox.OnButtonClick += BanCheckBox_OnButtonClick;
+
             /** Scroll bars **/
             this.DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
             this.DescriptionText.AttachSlider(this.DescriptionSlider);
@@ -418,9 +422,26 @@ namespace FSO.Client.UI.Panels
                     BookmarksChanged();
                 }, "Avatar_BookmarksVec");
 
+            MyLot = new Binding<Lot>()
+                .WithMultiBinding(x =>
+                {
+                    AdmitBanChanged();
+                }, "Lot_LotAdmitInfo.LotAdmitInfo_AdmitList", "Lot_LotAdmitInfo.LotAdmitInfo_BanList");
 
             Redraw();
             Size = BackgroundExpandedImage.Size.ToVector2();
+        }
+
+        private void BanCheckBox_OnButtonClick(UIElement button)
+        {
+            if (CurrentAvatar.Value != null)
+                ToggleAdmitBan(true, BanCheckBox, CurrentAvatar.Value.Avatar_Id);
+        }
+
+        private void AdmitCheckBox_OnButtonClick(UIElement button)
+        {
+            if (CurrentAvatar.Value != null)
+                ToggleAdmitBan(false, AdmitCheckBox, CurrentAvatar.Value.Avatar_Id);
         }
 
         private void BookmarksChanged()
@@ -441,6 +462,23 @@ namespace FSO.Client.UI.Panels
 
             BookmarkButton.Selected = bookmark;
             IgnoreButton.Selected = ignore;
+        }
+
+        private void AdmitBanChanged()
+        {
+            var admit = false;
+            var ban = false;
+
+            if (MyLot != null && MyLot.Value != null && CurrentAvatar.Value != null)
+            {
+                if (MyLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_AdmitList != null)
+                    admit = MyLot.Value.Lot_LotAdmitInfo.LotAdmitInfo_AdmitList.Contains(CurrentAvatar.Value.Avatar_Id);
+                if (MyLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_BanList != null)
+                    ban = MyLot.Value.Lot_LotAdmitInfo.LotAdmitInfo_BanList.Contains(CurrentAvatar.Value.Avatar_Id);
+            }
+
+            AdmitCheckBox.Selected = admit;
+            BanCheckBox.Selected = ban;
         }
 
         private void BookmarkButton_OnButtonClick(UIElement button)
@@ -501,6 +539,32 @@ namespace FSO.Client.UI.Panels
                     TargetPID = target_id,
                     SetIgnore = setIgnore
                 });
+            }
+        }
+
+        public void ToggleAdmitBan(bool ban, UIButton btn, uint target_id)
+        {
+            var controller = FindController<PersonPageController>();
+            bool set = false;
+            var screen = GameFacade.Screens.CurrentUIScreen as CoreGameScreen;
+
+            if (MyLot != null && MyLot.Value != null)
+            {
+                var list = (ban) ? MyLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_BanList : MyLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_AdmitList;
+                if (list != null)
+                {
+                    var admitted = list.Contains(target_id);
+                    if (admitted)
+                    {
+                        if (btn != null) btn.Selected = false;
+                        controller.RemoveAdmitBan(MyLot.Value, target_id, ban);
+                        return;
+                    }
+                }
+
+                if (btn != null) btn.Selected = true;
+                controller.AddAdmitBan(MyLot.Value, target_id, ban);
+                set = true;
             }
         }
 
@@ -888,6 +952,7 @@ namespace FSO.Client.UI.Panels
             OptionsTabBackgroundImage.Visible = isOpen && !isOptions;
             OptionsTabImage.Visible = isOpen && isOptions;
             OptionsBackgroundImage.Visible = isOpen && isOptions;
+            if (isOptions) AdmitBanChanged();
 
             RelationshipsTabButton.Disabled = isMe;
             OptionsTabButton.Disabled = isMe;

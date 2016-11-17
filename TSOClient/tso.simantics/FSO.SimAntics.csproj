@@ -37,7 +37,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;VM_DESYNC_DEBUG</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
@@ -69,6 +69,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Engine\Debug\VMSyncTrace.cs" />
     <Compile Include="Engine\Routing\VMRectRouter.cs" />
     <Compile Include="Engine\TSOGlobalLink\IVMTSOGlobalLink.cs" />
     <Compile Include="Engine\TSOGlobalLink\VMTSOGlobalLinkStub.cs" />

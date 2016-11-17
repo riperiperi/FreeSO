@@ -722,7 +722,7 @@ namespace FSO.SimAntics
                 case VMPersonDataVariable.IsGhost:
                     SetPersonData(VMPersonDataVariable.RenderDisplayFlags, (short)(GetPersonData(VMPersonDataVariable.RenderDisplayFlags) & ~(-1)));
                     if (value > 0) SetPersonData(VMPersonDataVariable.RenderDisplayFlags, (short)(GetPersonData(VMPersonDataVariable.RenderDisplayFlags) | -1));
-                    return true;
+                    break;
             }
             PersonData[(ushort)variable] = value;
             return true;

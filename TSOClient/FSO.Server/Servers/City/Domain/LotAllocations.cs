@@ -144,8 +144,12 @@ namespace FSO.Server.Servers.City.Domain
                     Status = FindLotResponseStatus.NO_CAPACITY
                 });
             }
-            if (lotId > 0x200 && lotId < 0x10000) //job lot range
+            if (lotId > 0x200 && lotId < 0x10000)
+            { //job lot range
                 lotId |= 0x40000000;
+                jobLot = true;
+            }
+
             var allocation = Get(lotId);
             lock (allocation)
             {
@@ -184,7 +188,7 @@ namespace FSO.Server.Servers.City.Domain
 
                                 try
                                 {
-                                    security.DemandAvatars(avatars, AvatarPermissions.WRITE);
+                                    if (lot.admit_mode < 4) security.DemandAvatars(avatars, AvatarPermissions.WRITE);
                                 }
                                 catch (Exception ex)
                                 {
@@ -244,6 +248,45 @@ namespace FSO.Server.Servers.City.Domain
                         break;
 
                     case LotAllocationState.ALLOCATED:
+                        if (!jobLot)
+                        {
+                            //check admit type (might be expensive?)
+                            using (var db = DAFactory.Get())
+                            {
+                                var lot = db.Lots.GetByLocation(Context.ShardId, lotId);
+                                if (lot != null)
+                                {
+                                    if (lot.admit_mode > 0 && lot.admit_mode < 4)
+                                    {
+                                        //special admit mode
+
+                                        var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
+                                        var avatars = new List<uint>();
+                                        foreach (var roomie in roomies) avatars.Add(roomie.avatar_id);
+
+                                        try
+                                        {
+                                            security.DemandAvatars(avatars, AvatarPermissions.WRITE);
+                                        }
+                                        catch (Exception ex)
+                                        {
+
+                                            //if we're not a roommate, check admit rules
+                                            if ((lot.admit_mode == 1 && !db.LotAdmit.GetLotAdmitDeny(lot.lot_id, 0).Contains(avatarId)) //admit list
+                                                || (lot.admit_mode == 2 && db.LotAdmit.GetLotAdmitDeny(lot.lot_id, 1).Contains(avatarId)) //ban list 
+                                                || (lot.admit_mode == 3)) //ban all
+                                            {
+                                                return Immediate(new TryFindLotResult
+                                                {
+                                                    Status = FindLotResponseStatus.NO_ADMIT
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         return Immediate(new TryFindLotResult
                         {
                             Status = FindLotResponseStatus.FOUND,

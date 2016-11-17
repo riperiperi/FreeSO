@@ -155,13 +155,20 @@ namespace FSO.Common.DataService.Model
             set { _Lot_RoommateVec = value; NotifyPropertyChanged("Lot_RoommateVec"); }
         }
 
+        private LotAdmitInfo _Lot_LotAdmitInfo;
+        public LotAdmitInfo Lot_LotAdmitInfo
+        {
+            get { return _Lot_LotAdmitInfo; }
+            set { _Lot_LotAdmitInfo = value; NotifyPropertyChanged("Lot_LotAdmitInfo"); }
+        }
+
         public Location Lot_Location { get; set; }
 
         public uint Lot_Location_Packed
         {
             get
             {
-                return MapCoordinates.Pack(Lot_Location.Location_X, Lot_Location.Location_Y);
+                return (Lot_Location == null)?0:MapCoordinates.Pack(Lot_Location.Location_X, Lot_Location.Location_Y);
             }
         }
 

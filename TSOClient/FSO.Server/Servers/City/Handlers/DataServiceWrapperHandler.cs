@@ -108,7 +108,7 @@ namespace FSO.Server.Servers.City.Handlers
                         && type != MaskedStruct.CurrentCity && type != MaskedStruct.MapView_NearZoom_Lot
                         && type != MaskedStruct.Thumbnail_Avatar && type != MaskedStruct.SimPage_MyLot
                         && type != MaskedStruct.SimPage_JobsPanel && type != MaskedStruct.FriendshipWeb_Avatar
-                        && type != MaskedStruct.SimPage_SkillsPanel)
+                        && type != MaskedStruct.SimPage_SkillsPanel && type != MaskedStruct.AdmitInfo_Lot)
                     {
                         //Currently broken for some reason
                         return;

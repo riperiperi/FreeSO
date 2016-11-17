@@ -3,6 +3,7 @@ using FSO.Common.DataService.Framework;
 using FSO.Common.DataService.Framework.Attributes;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -60,17 +61,17 @@ namespace FSO.Common.DataService.Model
             set { _Avatar_CurrentJob = value; NotifyPropertyChanged("Avatar_CurrentJob"); }
         }
 
-        private List<JobLevel> _Avatar_JobLevelVec { get; set; }
+        private ImmutableList<JobLevel> _Avatar_JobLevelVec { get; set; }
         [ClientSourced]
-        public List<JobLevel> Avatar_JobLevelVec
+        public ImmutableList<JobLevel> Avatar_JobLevelVec
         {
             get { return _Avatar_JobLevelVec; }
             set { _Avatar_JobLevelVec = value; NotifyPropertyChanged("Avatar_JobLevelVec"); }
         }
         
         //todo: this can be client sourced... but it also needs to be completely mixed with new values.
-        private List<Relationship> _Avatar_FriendshipVec { get; set; }
-        public List<Relationship> Avatar_FriendshipVec
+        private ImmutableList<Relationship> _Avatar_FriendshipVec { get; set; }
+        public ImmutableList<Relationship> Avatar_FriendshipVec
         {
             get { return _Avatar_FriendshipVec; }
             set { _Avatar_FriendshipVec = value; NotifyPropertyChanged("Avatar_FriendshipVec"); }
@@ -128,10 +129,10 @@ namespace FSO.Common.DataService.Model
             }
         }
 
-        private List<Bookmark> _Avatar_BookmarksVec;
+        private ImmutableList<Bookmark> _Avatar_BookmarksVec;
 
         [Persist]
-        public List<Bookmark> Avatar_BookmarksVec
+        public ImmutableList<Bookmark> Avatar_BookmarksVec
         {
             get { return _Avatar_BookmarksVec; }
             set

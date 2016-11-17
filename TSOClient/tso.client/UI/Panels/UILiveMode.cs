@@ -168,7 +168,7 @@ namespace FSO.Client.UI.Panels
             }
             
             EODPanel = new UIImage(EODPanelImg);
-            EODPanel.Y = 20;
+            //EODPanel.Y = 20;
             EODPanelTall = new UIImage(EODPanelTallImg);
             //EODDoublePanelTall = new UIImage(EODDoublePanelTallImg);
 

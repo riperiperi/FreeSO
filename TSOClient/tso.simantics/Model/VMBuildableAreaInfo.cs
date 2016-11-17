@@ -128,7 +128,8 @@ namespace FSO.SimAntics.Model
             }
 
             int i = 0;
-            foreach (var obj in vm.Context.ObjectQueries.MultitileByPersist.Values)
+            var ordered = vm.Context.ObjectQueries.MultitileByPersist.Values.OrderBy(x => x.BaseObject.ObjectID);
+            foreach (var obj in ordered)
             {
                 var isPortal = (obj.Objects.Count > 0) && (obj.BaseObject is VMGameObject) && ((VMGameObject)obj.BaseObject).PartOfPortal();
                 foreach (var o in obj.Objects)

@@ -28,6 +28,7 @@ using FSO.SimAntics.NetPlay.EODs;
 using FSO.SimAntics.NetPlay.Drivers;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Marshals.Hollow;
+using FSO.SimAntics.Engine.Debug;
 
 namespace FSO.SimAntics
 {
@@ -84,6 +85,7 @@ namespace FSO.SimAntics
 
         //attributes for the current VM session. TODO: move to platform specific variants
         public uint MyUID; //UID of this client in the VM
+        public VMSyncTrace Trace;
         public List<VMInventoryItem> MyInventory = new List<VMInventoryItem>();
 
         public event VMDialogHandler OnDialog;
@@ -167,6 +169,9 @@ namespace FSO.SimAntics
             GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
             if (Driver is VMServerDriver) EODHost = new VMEODHost();
+            #if VM_DESYNC_DEBUG
+                Trace = new VMSyncTrace();
+            #endif
         }
 
         public void Reset()
@@ -272,6 +277,24 @@ namespace FSO.SimAntics
             {
                 Context.NextRandom(1);
                 obj.Tick(); //run object specific tick behaviors, like lockout count decrement
+#if VM_DESYNC_DEBUG
+                if (obj.Thread != null) {
+                    foreach (var item in obj.Thread.Stack)
+                    {
+                        Context.NextRandom(1);
+                        if (item is VMRoutingFrame)
+                        {
+                            Trace.Trace(obj.ObjectID + "("+Context.RandomSeed+"): "+"VMRoutingFrame with state: "+ ((VMRoutingFrame)item).State.ToString());
+                        }
+                        else
+                        {
+                            var opcode = item.GetCurrentInstruction().Opcode;
+                            var primitive = (opcode > 255) ? null : Context.Primitives[opcode];
+                            Trace.Trace(obj.ObjectID + "(" + Context.RandomSeed + "): " + item.Routine.Rti.Name.TrimEnd('\0')+':'+item.InstructionPointer+" ("+ ((primitive == null) ? opcode.ToString() : primitive.Name) + ")");
+                        }
+                    }
+                }
+#endif
             }
             //Context.SetToNextCache.VerifyPositions(); use only for debug!
         }
@@ -453,7 +476,7 @@ namespace FSO.SimAntics
             Context.RandomSeed = state.RandomSeed;
         }
 
-        #region VM Marshalling Functions
+#region VM Marshalling Functions
         public VMMarshal Save()
         {
             var ents = new VMEntityMarshal[Entities.Count];
@@ -702,7 +725,7 @@ namespace FSO.SimAntics
         {
             OnBHAVChange -= VM_OnBHAVChange;
         }
-        #endregion
+#endregion
     }
 
     public delegate void VMBHAVChangeDelegate();

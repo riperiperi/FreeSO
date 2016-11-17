@@ -2,6 +2,7 @@
 using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Bookmarks;
+using FSO.Server.Database.DA.LotAdmit;
 using FSO.Server.Database.DA.LotClaims;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Objects;
@@ -27,6 +28,7 @@ namespace FSO.Server.Database.DA
         IRelationships Relationships { get; }
         IRoommates Roommates { get; }
         ILots Lots { get; }
+        ILotAdmit LotAdmit { get; }
         ILotClaims LotClaims { get; }
         IAvatarClaims AvatarClaims { get; }
         IBookmarks Bookmarks { get; }

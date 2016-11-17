@@ -24,7 +24,6 @@ namespace FSO.Common.DataService
         /// </summary>
         List<OUTPUT> EnrichList<OUTPUT, INPUT, DSENTITY>(List<INPUT> input, Func<INPUT, uint> idFunction, Func<INPUT, DSENTITY, OUTPUT> outputConverter);
 
-
         ITopicSubscription CreateTopicSubscription();
 
     }

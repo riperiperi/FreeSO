@@ -594,6 +594,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Icon.bmp" />
     <Content Include="IDE.ico" />
     <Content Include="IDERes\arrowBG.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

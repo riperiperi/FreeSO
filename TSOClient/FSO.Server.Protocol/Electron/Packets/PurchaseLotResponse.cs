@@ -53,6 +53,6 @@ namespace FSO.Server.Protocol.Electron.Packets
         LOT_NOT_PURCHASABLE = 0x05,
         IN_LOT_CANT_EVICT = 0x06,
         NOT_OFFLINE_FOR_MOVE = 0x07,
-        UNKNOWN = 0x06
+        UNKNOWN = 0xFF
     }
 }

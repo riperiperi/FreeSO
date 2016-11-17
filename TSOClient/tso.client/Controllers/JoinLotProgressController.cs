@@ -62,6 +62,10 @@ namespace FSO.Client.Controllers
                         errorTitle = GameFacade.Strings.GetString("211", "45");
                         errorBody = GameFacade.Strings.GetString("211", "41");
                         break;
+                    case FindLotResponseStatus.NO_ADMIT:
+                        errorTitle = GameFacade.Strings.GetString("211", "45");
+                        errorBody = GameFacade.Strings.GetString("211", "42");
+                        break;
                     default:
                         break;
                 }

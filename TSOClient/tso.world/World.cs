@@ -45,6 +45,7 @@ namespace FSO.LotView
         public float SmoothZoomFrom = 1f;
 
         public WorldState State;
+        public bool UseBackbuffer = true;
         protected bool HasInitGPU;
         protected bool HasInitBlueprint;
         protected bool HasInit;
@@ -408,13 +409,13 @@ namespace FSO.LotView
             _3DWorld.PreDraw(device, State);
             State._3D.End();
 
-            //if (FSOEnvironment.SoftwareDepth)
-            //{
+            if (UseBackbuffer)
+            {
 
                 PPXDepthEngine.SetPPXTarget(null, null, true);
                 InternalDraw(device);
                 device.SetRenderTarget(null);
-            //}
+            }
 
             return;
         }
@@ -431,8 +432,10 @@ namespace FSO.LotView
             {
                 State._2D.ClearTextureCache();
             }
-
-            PPXDepthEngine.DrawBackbuffer(Opacity);
+            if (!UseBackbuffer)
+                InternalDraw(device);
+            else
+                PPXDepthEngine.DrawBackbuffer(Opacity);
             return;
         }
 

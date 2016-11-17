@@ -88,6 +88,7 @@
     <Compile Include="Model\JobLevel.cs" />
     <Compile Include="Model\Location.cs" />
     <Compile Include="Model\Lot.cs" />
+    <Compile Include="Model\LotAdmitInfo.cs" />
     <Compile Include="Model\MaskedStructs.cs" />
     <Compile Include="Model\Relationship.cs" />
     <Compile Include="NullDataService.cs" />

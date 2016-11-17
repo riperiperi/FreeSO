@@ -15,6 +15,7 @@ using FSO.Server.Database.DA.Objects;
 using FSO.Server.Database.DA.Relationships;
 using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.Bookmarks;
+using FSO.Server.Database.DA.LotAdmit;
 
 namespace FSO.Server.Database.DA
 {
@@ -127,6 +128,19 @@ namespace FSO.Server.Database.DA
                     _lots = new SqlLots(Context);
                 }
                 return _lots;
+            }
+        }
+
+        private ILotAdmit _LotAdmit;
+        public ILotAdmit LotAdmit
+        {
+            get
+            {
+                if (_LotAdmit == null)
+                {
+                    _LotAdmit = new SqlLotAdmit(Context);
+                }
+                return _LotAdmit;
             }
         }
 
