@@ -2,6 +2,7 @@
 using FSO.Common.DataService.Framework.Attributes;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,9 +11,9 @@ namespace FSO.Common.DataService.Model
 {
     public class LotAdmitInfo : AbstractModel
     {
-        private List<uint> _LotAdmitInfo_AdmitList;
+        private ImmutableList<uint> _LotAdmitInfo_AdmitList;
         [Persist]
-        public List<uint> LotAdmitInfo_AdmitList
+        public ImmutableList<uint> LotAdmitInfo_AdmitList
         {
             get { return _LotAdmitInfo_AdmitList; }
             set
@@ -34,9 +35,9 @@ namespace FSO.Common.DataService.Model
             }
         }
         
-        private List<uint> _LotAdmitInfo_BanList;
+        private ImmutableList<uint> _LotAdmitInfo_BanList;
         [Persist]
-        public List<uint> LotAdmitInfo_BanList
+        public ImmutableList<uint> LotAdmitInfo_BanList
         {
             get { return _LotAdmitInfo_BanList; }
             set

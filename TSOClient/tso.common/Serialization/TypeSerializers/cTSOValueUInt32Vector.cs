@@ -1,6 +1,7 @@
 ﻿using Mina.Core.Buffer;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 
@@ -29,12 +30,12 @@ namespace FSO.Common.Serialization.TypeSerializers
             {
                 result.Add((uint)input.GetUInt32());
             }
-            return result;
+            return ImmutableList.ToImmutableList(result);
         }
 
         public void Serialize(IoBuffer output, object value, ISerializationContext serializer)
         {
-            List<uint> list = (List<uint>)value;
+            IList<uint> list = (IList<uint>)value;
             output.PutUInt32((uint)list.Count);
             for (int i = 0; i < list.Count; i++)
             {

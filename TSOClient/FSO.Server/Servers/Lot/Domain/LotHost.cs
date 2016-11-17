@@ -16,6 +16,7 @@ using Ninject.Extensions.ChildKernel;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -565,7 +566,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     if (roomie.is_pending == 0) modelVec.Add(roomie.avatar_id);
                 }
-                Model.Lot_RoommateVec = modelVec;
+                Model.Lot_RoommateVec = ImmutableList.ToImmutableList(modelVec);
                 Host.SyncRoommates(Context, Model);
             }
         }

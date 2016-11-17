@@ -117,7 +117,7 @@ namespace FSO.Content.Model
                             }).Result;
                         }
                     }
-                    GC.SuppressFinalize(_Instance); //do not run the default finalizer on the texture.
+                    if (!FSOEnvironment.DirectX) GC.SuppressFinalize(_Instance); //do not run the default finalizer on the texture.
                     _Instance.Tag = this; //form a destiny bond with the texture
                 }
                 return _Instance;

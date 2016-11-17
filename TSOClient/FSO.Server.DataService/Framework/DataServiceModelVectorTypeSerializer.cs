@@ -5,6 +5,7 @@ using Mina.Core.Buffer;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace FSO.Common.DataService.Framework
 
         public override bool CanSerialize(Type type)
         {
-            if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>)){
+            if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ImmutableList<>)){
                 var genericArgs = type.GetGenericArguments();
                 if(genericArgs.Length == 1)
                 {
@@ -54,14 +55,17 @@ namespace FSO.Common.DataService.Framework
                 else if (result == null)
                 {
                     //still need to make the list!
-                    var listType = typeof(List<>);
-                    var constructedListType = listType.MakeGenericType(item.GetType());
+                    var listType = typeof(ImmutableList);
+                    var consMethod = listType.GetMethods().Where(method => method.IsGenericMethod).FirstOrDefault();
+                    var generic = consMethod.MakeGenericMethod(item.GetType());
 
-                    result = Activator.CreateInstance(constructedListType);
+                    result = generic.Invoke(null, new object[] { }); //listType.MakeGenericType(item.GetType());
+
+                    //result = Activator.CreateInstance(constructedListType);
                     for (int j=0; j<leadingNulls; j++)
-                        result.GetType().GetMethod("Add").Invoke(result, new object[] { null });
+                        result = result.GetType().GetMethod("Add").Invoke(result, new object[] { null });
                 }
-                if (result != null) result.GetType().GetMethod("Add").Invoke(result, new object[] { item });
+                if (result != null) result = result.GetType().GetMethod("Add").Invoke(result, new object[] { item });
             }
 
             return result;

@@ -2,6 +2,7 @@
 using FSO.Common.DataService.Framework.Attributes;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,21 +14,21 @@ namespace FSO.Common.DataService.Model
         [Key]
         public uint City_Id { get; set; } //unused
 
-        private List<bool> _City_ReservedLotVector;
-        public List<bool> City_ReservedLotVector {
+        private ImmutableList<bool> _City_ReservedLotVector;
+        public ImmutableList<bool> City_ReservedLotVector {
             get { return _City_ReservedLotVector; }
             set { _City_ReservedLotVector = value; NotifyPropertyChanged("City_ReservedLotVector"); }
         }
 
-        private List<bool> _City_OnlineLotVector;
-        public List<bool> City_OnlineLotVector
+        private ImmutableList<bool> _City_OnlineLotVector;
+        public ImmutableList<bool> City_OnlineLotVector
         {
             get { return _City_OnlineLotVector; }
             set { _City_OnlineLotVector = value; NotifyPropertyChanged("City_OnlineLotVector"); }
         }
 
-        private List<uint> _City_TopTenNeighborhoodsVector;
-        public List<uint> City_TopTenNeighborhoodsVector
+        private ImmutableList<uint> _City_TopTenNeighborhoodsVector;
+        public ImmutableList<uint> City_TopTenNeighborhoodsVector
         {
             get { return _City_TopTenNeighborhoodsVector; }
             set { _City_TopTenNeighborhoodsVector = value; NotifyPropertyChanged("City_TopTenNeighborhoodsVector"); }
@@ -35,8 +36,8 @@ namespace FSO.Common.DataService.Model
 
         //City_LotDBIDByInstanceID map
 
-        private List<uint> _City_NeighborhoodsVec;
-        public List<uint> City_NeighborhoodsVec
+        private ImmutableList<uint> _City_NeighborhoodsVec;
+        public ImmutableList<uint> City_NeighborhoodsVec
         {
             get { return _City_NeighborhoodsVec; }
             set { _City_NeighborhoodsVec = value; NotifyPropertyChanged("City_NeighborhoodsVec"); }
@@ -49,8 +50,8 @@ namespace FSO.Common.DataService.Model
             set { _City_ReservedLotInfo = value; NotifyPropertyChanged("City_ReservedLotInfo"); }
         }
 
-        private List<uint> _City_SpotlightsVector;
-        public List<uint> City_SpotlightsVector
+        private ImmutableList<uint> _City_SpotlightsVector;
+        public ImmutableList<uint> City_SpotlightsVector
         {
             get { return _City_SpotlightsVector; }
             set { _City_SpotlightsVector = value; NotifyPropertyChanged("City_SpotlightsVector"); }
@@ -58,8 +59,8 @@ namespace FSO.Common.DataService.Model
 
         //City_LotInstanceIDByDBID map
 
-        private List<uint> _City_Top100ListIDs;
-        public List<uint> City_Top100ListIDs
+        private ImmutableList<uint> _City_Top100ListIDs;
+        public ImmutableList<uint> City_Top100ListIDs
         {
             get { return _City_Top100ListIDs; }
             set { _City_Top100ListIDs = value; NotifyPropertyChanged("City_Top100ListIDs"); }

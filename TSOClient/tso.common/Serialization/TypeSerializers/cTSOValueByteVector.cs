@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Mina.Core.Buffer;
+using System.Collections.Immutable;
 
 namespace FSO.Common.Serialization.TypeSerializers
 {
@@ -27,7 +28,7 @@ namespace FSO.Common.Serialization.TypeSerializers
             for(int i=0; i < count; i++){
                 result.Add(buffer.Get());
             }
-            return result;
+            return ImmutableList.ToImmutableList(result);
         }
 
         public void Serialize(IoBuffer output, object value, ISerializationContext serializer)

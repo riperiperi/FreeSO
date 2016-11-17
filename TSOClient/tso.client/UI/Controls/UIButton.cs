@@ -368,13 +368,13 @@ namespace FSO.Client.UI.Controls
 
             /** Draw the button as a 3 slice **/
             var frame = m_CurrentFrame;
-            if (Selected)
-            {
-                frame = 1;
-            }
             if (m_Disabled)
             {
                 frame = 3;
+            }
+            if (Selected)
+            {
+                frame = 1;
             }
             if (ForceState > -1) frame = ForceState;
             frame = Math.Min(m_ImageStates - 1, frame);
