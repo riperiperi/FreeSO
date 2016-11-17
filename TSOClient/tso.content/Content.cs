@@ -100,6 +100,8 @@ namespace FSO.Content
             Ini = new IniProvider(this);
             CityMaps = new CityMapsProvider(this);
 
+            RackOutfits = new RackOutfitsProvider(this);
+
             Init();
         }
 
@@ -145,6 +147,7 @@ namespace FSO.Content
             AvatarCollections.Init();
             Ini.Init();
             CityMaps.Init();
+            RackOutfits.Init();
 
             DataDefinition = new TSODataDefinition();
             using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
@@ -253,5 +256,8 @@ namespace FSO.Content
 
         /** Maps **/
         public CityMapsProvider CityMaps;
+
+        /** Rack Outfits **/
+        public RackOutfitsProvider RackOutfits;
     }
 }
