@@ -23,6 +23,14 @@ namespace FSO.Client.UI.Panels.EODs
             Controller = controller;
         }
 
+        public virtual void OnExpand()
+        {
+        }
+
+        public virtual void OnContract()
+        {
+        }
+
         public virtual void OnClose()
         {
             Controller.CloseEOD();

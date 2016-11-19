@@ -16,7 +16,8 @@ namespace FSO.Client.UI.Panels.EODs
             { 0x2a6356a0, typeof(UISignsEOD) },
             { 0x4a5be8ab, typeof(UIDanceFloorEOD) },
             { 0xea47ae39, typeof(UIPizzaMakerEOD) },
-            { 0xca418206, typeof(UIPaperChaseEOD) }
+            { 0xca418206, typeof(UIPaperChaseEOD) },
+            { 0x2b58020b, typeof(UIDebugEOD) }
         };
 
         //this class is a container so that it can hold EODs without them being active in Live Mode.

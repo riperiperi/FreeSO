@@ -106,7 +106,7 @@ namespace FSO.Client.UI.Controls
         {
             get
             {
-                return new Vector2(m_WidthDiv3, m_Height);
+                return new Vector2(Width == 0 ? m_Width : Width, m_Height);
             }
             set
             {

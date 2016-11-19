@@ -84,6 +84,18 @@ namespace FSO.Client.UI.Framework.Parser
             }
         }
 
+        public void ApplyControlProperties(object instance, string id)
+        {
+            if (ControlSettings.ContainsKey(id))
+            {
+                DoSetControlProperties(instance, ControlSettings[id]);
+            }
+            else if (NodesByID.ContainsKey(id))
+            {
+                DoSetControlProperties(instance, NodesByID[id]);
+            }
+        }
+
         public T Create<T>(string id)
         {
             var instance = Activator.CreateInstance<T>();
@@ -106,6 +118,16 @@ namespace FSO.Client.UI.Framework.Parser
             return (T)instance;
         }
 
+        public object GetControlProperty(string id, string field)
+        {
+            var result = GetControlProperty(target, id);
+            if (result is Dictionary<string, object>)
+            {
+                return ((Dictionary<string, object>)result)[field];
+            }
+            return result;
+        }
+
         public object GetControlProperty(string id)
         {
             return GetControlProperty(target, id);
@@ -116,6 +138,15 @@ namespace FSO.Client.UI.Framework.Parser
             if (ControlSettings.ContainsKey(id))
             {
                 var props = DoGetControlProperties(target, ControlSettings[id]);
+                if (props.Keys.Count == 1)
+                {
+                    return props[props.Keys.First()];
+                }
+                return props;
+            }else if (NodesByID.ContainsKey(id))
+            {
+                var node = NodesByID[id];
+                var props = DoGetControlProperties(target, node);
                 if (props.Keys.Count == 1)
                 {
                     return props[props.Keys.First()];

@@ -14,12 +14,15 @@ namespace FSO.Client.UI.Panels.EODs
         public EODTimer Timer;
         public byte Buttons; //0,1,2. graphics for 3 are present but currently unused.
         public bool Expandable; //enables "double panel" mode. can only be used with tall EOD.
+        public bool Expanded = true;
     }
 
     public enum EODHeight
     {
         Normal,
-        Tall
+        Tall,
+        TallTall,
+        Trade
     }
 
     public enum EODLength

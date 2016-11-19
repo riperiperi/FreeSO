@@ -47,6 +47,11 @@ namespace FSO.Client.UI.Controls
             this.m_TextureRef = Texture;
         }
 
+        public void Reset()
+        {
+            m_Width = 0;
+            m_Height = 0;
+        }
 
         private UIMouseEventRef m_MouseEvent;
         /// <summary>
