@@ -35,8 +35,8 @@ namespace FSO.LotView.Components
         public RoofComponent(Blueprint bp)
         {
             blueprint = bp;
-            RoofRects = new List<RoofRect>[bp.Stories - 1];
-            Drawgroups = new RoofDrawGroup[bp.Stories - 1];
+            RoofRects = new List<RoofRect>[bp.Stories];
+            Drawgroups = new RoofDrawGroup[bp.Stories];
             this.Effect = WorldContent.GrassEffect;
         }
 
@@ -44,7 +44,7 @@ namespace FSO.LotView.Components
         {
             var roofs = Content.Content.Get().WorldRoofs;
             Texture = roofs.Get(roofs.IDToName((int)RoofStyle)).Get(device);
-            for (int i=1; i<blueprint.Stories; i++)
+            for (int i=1; i<=blueprint.Stories; i++)
             {
                 RegenRoof((sbyte)(i + 1), device);
             }
@@ -380,7 +380,7 @@ namespace FSO.LotView.Components
 
         public bool IndoorsOrFloor(int x, int y, int level)
         {
-            return TileIndoors(x,y,level) || blueprint.GetFloor((short)x, (short)y, (sbyte)level).Pattern != 0;
+            return level <= blueprint.Stories && (TileIndoors(x,y,level) || blueprint.GetFloor((short)x, (short)y, (sbyte)level).Pattern != 0);
         }
 
         public bool IsRoofable(LotTilePos pos)
