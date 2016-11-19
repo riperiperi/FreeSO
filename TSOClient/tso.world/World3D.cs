@@ -45,6 +45,7 @@ namespace FSO.LotView
                     avatar.Draw(gd, state);
                 }
             }
+            if (state.DrawRoofs) Blueprint.RoofComp.Draw(gd, state);
         }
     }
 }

@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using FSO.LotView.Model;
+using FSO.SimAntics.Engine;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -23,12 +24,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         private static uint GOTO_GUID = 0x000007C4;
 
-        public override bool Execute(VM vm)
+        public override bool Execute(VM vm, VMAvatar caller)
         {
+            if (caller == null) return false;
+            if (caller.Thread.Queue.Count >= VMThread.MAX_USER_ACTIONS) return false;
             VMEntity callee = vm.Context.CreateObjectInstance(GOTO_GUID, new LotTilePos(x, y, level), Direction.NORTH).Objects[0];
-            VMEntity caller = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
-            //TODO: check if net user owns caller!
-            if (callee == null || callee.Position == LotTilePos.OUT_OF_WORLD || caller == null) return false;
+            if (callee?.Position == LotTilePos.OUT_OF_WORLD) callee.Delete(true, vm.Context);
+            if (callee == null) return false;
             callee.PushUserInteraction(Interaction, caller, vm.Context);
 
             return true;

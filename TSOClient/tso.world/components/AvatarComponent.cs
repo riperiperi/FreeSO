@@ -20,6 +20,7 @@ namespace FSO.LotView.Components
     public class AvatarComponent : EntityComponent
     {
         public Avatar Avatar;
+        public bool IsPet;
 
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -76,7 +77,7 @@ namespace FSO.LotView.Components
             get
             {
                 if (Container == null) return _Position;
-                else return Container.GetSLOTPosition(ContainerSlot) + new Vector3(0.5f, 0.5f, -1.4f); //apply offset to snap character into slot
+                else return Container.GetSLOTPosition(ContainerSlot) + new Vector3(0.5f, 0.5f, (IsPet?0:-1.4f)); //apply offset to snap character into slot
             }
             set
             {

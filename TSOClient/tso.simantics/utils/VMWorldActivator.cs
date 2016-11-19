@@ -44,7 +44,7 @@ namespace FSO.SimAntics.Utils
             var size = TargetSize;
             if (size == 0) size = model.Size;
             model.Size = size;
-            this.Blueprint = new Blueprint(size, size);
+            if (VM.UseWorld) this.Blueprint = new Blueprint(size, size);
             VM.Context.Blueprint = Blueprint;
             VM.Context.Architecture = new VMArchitecture(size, size, Blueprint, VM.Context);
 

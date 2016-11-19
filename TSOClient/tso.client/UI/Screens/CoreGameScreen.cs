@@ -356,7 +356,7 @@ namespace FSO.Client.UI.Screens
                         World.Opacity = Math.Max(0, (CityRenderer.m_LotZoomProgress - 0.5f) * 2);
 
                         var scale =
-                            1/((CityRenderer.m_LotZoomProgress * (1/CityRenderer.m_LotZoomSize) + (1 - CityRenderer.m_LotZoomProgress) * (1/Terrain.NEAR_ZOOM_SIZE)))
+                            1/((CityRenderer.m_LotZoomProgress * (1/CityRenderer.m_LotZoomSize) + (1 - CityRenderer.m_LotZoomProgress) * (1/(Terrain.NEAR_ZOOM_SIZE*CityRenderer.m_WheelZoom))))
                             / CityRenderer.m_LotZoomSize;
 
                         World.State.PreciseZoom = scale;

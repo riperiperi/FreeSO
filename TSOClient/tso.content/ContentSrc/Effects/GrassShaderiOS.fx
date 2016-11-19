@@ -13,6 +13,17 @@ float GrassProb;
 
 bool depthOutMode;
 
+bool UseTexture;
+texture BaseTex;
+sampler TexSampler = sampler_state {
+	texture = <BaseTex>;
+	MinFilter = Linear;
+	MagFilter = Linear;
+	MipFilter = Linear;
+	AddressU = Wrap;
+	AddressV = Wrap;
+};
+
 texture depthMap : Diffuse;
 
 sampler depthMapSampler = sampler_state {
@@ -128,6 +139,9 @@ void BasePS(GrassPSVTX input, out float4 color:COLOR0)
     else {
         if (depthOutMode == false && unpackDepth(tex2D(depthMapSampler, input.ScreenPos.xy / ScreenSize)) < d) discard;
         color = input.Color*DiffuseColor;
+		if (UseTexture == true) {
+			color *= tex2D(TexSampler, input.GrassInfo.yz);
+		}
     }
 }
 

@@ -69,6 +69,12 @@ namespace FSO.Client.UI.Panels
 
         private int OldSelection = -1;
 
+        private UISlider RoofSlider;
+        private UIButton RoofSteepBtn;
+        private UIButton RoofShallowBtn;
+        private uint TicksSinceRoof = 0;
+        private bool SendRoofValue = false;
+
         public UIBuildMode(UILotControl lotController)
         {
             LotController = lotController;
@@ -109,7 +115,7 @@ namespace FSO.Client.UI.Panels
                 { FloorButton, 9 },
                 { DoorButton, 0 },
                 { WindowButton, 1 },
-                { RoofButton, 28 },
+                { RoofButton, 6 },
                 { HandButton, 28 },
             };
 
@@ -151,7 +157,45 @@ namespace FSO.Client.UI.Panels
             ObjLimitLabel.Size = new Microsoft.Xna.Framework.Vector2(200, 0);
             ObjLimitLabel.Alignment = TextAlignment.Center;
             Add(ObjLimitLabel);
+
+            RoofSteepBtn = new UIButton(GetTexture(0x4C200000001));
+            RoofSteepBtn.X = 46;
+            RoofSteepBtn.Y = 6;
+            Add(RoofSteepBtn);
+            RoofShallowBtn = new UIButton(GetTexture(0x4C700000001));
+            RoofShallowBtn.X = 46;
+            RoofShallowBtn.Y = 92;
+            Add(RoofShallowBtn);
+
+
+            RoofSlider = new UISlider();
+            RoofSlider.Orientation = 1;
+            RoofSlider.Texture = GetTexture(0x4AB00000001);
+            RoofSlider.MinValue = 0f;
+            RoofSlider.MaxValue = 1.25f;
+            RoofSlider.AllowDecimals = true;
+            RoofSlider.AttachButtons(RoofSteepBtn, RoofShallowBtn, 0.25f);
+            RoofSlider.X = 48;
+            RoofSlider.Y = 24;
+            RoofSlider.OnChange += (elem) =>
+            {
+                if (RoofSlider.Value != (1.25f - LotController.vm.Context.Architecture.RoofPitch))
+                {
+                    LotController.vm.Context.Blueprint.RoofComp.SetStylePitch(
+                        LotController.vm.Context.Architecture.RoofStyle,
+                        (1.25f - RoofSlider.Value)
+                        );
+                    SendRoofValue = true;
+                }
+            };
+            RoofSlider.SetSize(0, 64f);
+            Add(RoofSlider);
+
+            RoofSteepBtn.Visible = false;
+            RoofShallowBtn.Visible = false;
+            RoofSlider.Visible = false;
         }
+    
 
         public void PageSlider(UIElement element)
         {
@@ -210,6 +254,12 @@ namespace FSO.Client.UI.Panels
             CurrentCategory = UICatalog.Catalog[CategoryMap[button]];
             Catalog.SetCategory(CurrentCategory);
 
+            var isRoof = CategoryMap[button] == 6;
+            RoofShallowBtn.Visible = isRoof;
+            RoofSteepBtn.Visible = isRoof;
+            RoofSlider.Visible = isRoof;
+            RoofSlider.Value = 1.25f - LotController.vm.Context.Architecture.RoofPitch;
+
             int total = Catalog.TotalPages();
             OldSelection = -1;
 
@@ -251,10 +301,13 @@ namespace FSO.Client.UI.Panels
             {
                 var res = item.Special.Res;
                 var resID = item.Special.ResID;
-                QueryPanel.SetInfo(res.GetIcon(resID), res.GetName(resID), res.GetDescription(resID), res.GetPrice(resID));
-                QueryPanel.Mode = 1;
-                QueryPanel.Tab = 0;
-                QueryPanel.Active = true;
+                if (res.GetName(resID) != "")
+                {
+                    QueryPanel.SetInfo(res.GetIcon(resID), res.GetName(resID), res.GetDescription(resID), res.GetPrice(resID));
+                    QueryPanel.Mode = 1;
+                    QueryPanel.Tab = 0;
+                    QueryPanel.Active = true;
+                }
                 LotController.CustomControl = (UICustomLotControl)Activator.CreateInstance(item.Special.Control, LotController.vm, LotController.World, LotController, item.Special.Parameters);
             }
             else
@@ -348,6 +401,17 @@ namespace FSO.Client.UI.Panels
             }
 
             if (LotController.ActiveEntity != null) Catalog.Budget = (int)LotController.ActiveEntity.TSOState.Budget.Value;
+            TicksSinceRoof++;
+            if (TicksSinceRoof > 30 && SendRoofValue)
+            {
+                LotController.vm.SendCommand(new SimAntics.NetPlay.Model.Commands.VMNetSetRoofCmd()
+                {
+                    Pitch = 1.25f - RoofSlider.Value,
+                    Style = LotController.vm.Context.Architecture.RoofStyle
+                });
+                SendRoofValue = false;
+                TicksSinceRoof = 0;
+            }
             base.Update(state);
         }
     }

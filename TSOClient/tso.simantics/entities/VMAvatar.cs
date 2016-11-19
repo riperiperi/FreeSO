@@ -203,6 +203,8 @@ namespace FSO.SimAntics
                 WorldUI = new AvatarComponent();
                 var avatarc = (AvatarComponent)WorldUI;
                 avatarc.Avatar = Avatar;
+                var type = BodyStrings.GetString(0);
+                if (type != "adult" && type != "child") avatarc.IsPet = true;
             }
 
 

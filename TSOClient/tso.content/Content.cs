@@ -94,6 +94,7 @@ namespace FSO.Content
             WorldWalls = new WorldWallProvider(this);
             WorldObjectGlobals = new WorldGlobalProvider(this);
             WorldCatalog = new WorldObjectCatalog();
+            WorldRoofs = new WorldRoofProvider(this);
 
             Audio = new Audio(this);
             GlobalTuning = new Tuning(Path.Combine(basePath, "tuning.dat"));
@@ -112,6 +113,7 @@ namespace FSO.Content
             WorldObjectGlobals.Init();
             WorldWalls.Init();
             WorldFloors.Init();
+            WorldRoofs.Init();
             WorldCatalog.Init(this);
         }
 
@@ -223,6 +225,7 @@ namespace FSO.Content
         public WorldFloorProvider WorldFloors;
         public WorldWallProvider WorldWalls;
         public WorldObjectCatalog WorldCatalog;
+        public WorldRoofProvider WorldRoofs;
 
         public UIGraphicsProvider UIGraphics;
         

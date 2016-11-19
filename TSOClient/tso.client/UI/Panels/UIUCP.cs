@@ -107,6 +107,7 @@ namespace FSO.Client.UI.Panels
         private UIBlocker SelfBlocker;
         private UIBlocker PanelBlocker;
         private UIBlocker GameBlocker;
+        private UILabel FloorNumLabel;
 
         public UIUCP(UIScreen owner)
         {
@@ -167,6 +168,16 @@ namespace FSO.Client.UI.Panels
             FirstFloorButton.Selected = (Game.Level == 1);
 
             MoneyText.CaptionStyle = MoneyText.CaptionStyle.Clone();
+
+            var temp = new UILabel();
+            temp.X = FirstFloorButton.X + 20;
+            temp.Y = FirstFloorButton.Y - 8;
+            temp.Caption = "1";
+            temp.CaptionStyle = temp.CaptionStyle.Clone();
+            temp.CaptionStyle.Size = 7;
+            temp.CaptionStyle.Shadow = true;
+            Add(temp);
+            FloorNumLabel = temp;
 
             SetInLot(false);
             SetMode(UCPMode.CityMode);
@@ -301,6 +312,9 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
+            FloorNumLabel.X = SecondFloorButton.X + 7;
+            FloorNumLabel.Y = SecondFloorButton.Y - 14;
+
             var time = DateTime.UtcNow;
             var tsoTime = TSOTime.FromUTC(time);
             int min = tsoTime.Item2;
@@ -339,6 +353,8 @@ namespace FSO.Client.UI.Panels
                         panel.SetRoommate(isRoomie);
                     }
                 }
+                var level = Game.LotControl.World.State.Level.ToString();
+                if (FloorNumLabel.Caption != level) FloorNumLabel.Caption = level;
 
                 if (CurrentPanel == 3 && BuildModeButton.Disabled) SetPanel(-1);
 
@@ -532,6 +548,7 @@ namespace FSO.Client.UI.Panels
                 WallsCutawayButton.Visible = (mode == 1);
                 WallsUpButton.Visible = (mode == 2);
                 RoofButton.Visible = (mode == 3);
+                Game.LotControl.World.State.DrawRoofs = (mode == 3);
             } else {
                 WallsDownButton.Visible = false;
                 WallsCutawayButton.Visible = false;
@@ -558,6 +575,7 @@ namespace FSO.Client.UI.Panels
 
             BackgroundMatchmaker.Visible = isCityMode;
             Background.Visible = isLotMode;
+            FloorNumLabel.Visible = isLotMode;
 
             UpdateWallsMode();
 

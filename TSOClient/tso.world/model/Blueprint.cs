@@ -37,6 +37,8 @@ namespace FSO.LotView.Model
         public FloorTile[][] Floors;
         public FloorComponent FloorComp;
 
+        public RoofComponent RoofComp;
+
         public bool[][] Supported; //directly the VM's copy at all times. DO NOT MODIFY.
 
         public List<ObjectComponent> Objects = new List<ObjectComponent>();
@@ -53,6 +55,7 @@ namespace FSO.LotView.Model
         public Color OutsideColor = Color.White;
         public RoomLighting[] Light = new RoomLighting[0];
         public uint[][] RoomMap;
+        public List<Room> Rooms = new List<Room>();
 
         public Color[] RoomColors;
         public Rectangle BuildableArea;
@@ -67,6 +70,7 @@ namespace FSO.LotView.Model
             WallComp.blueprint = this;
             this.FloorComp = new FloorComponent();
             FloorComp.blueprint = this;
+            this.RoofComp = new RoofComponent(this);
         
             RoomColors = new Color[65536];
             this.WallsAt = new List<int>[Stories];
@@ -119,6 +123,13 @@ namespace FSO.LotView.Model
         public void SignalWallChange()
         {
             Damage.Add(new BlueprintDamage(BlueprintDamageType.WALL_CHANGED, 0, 0, 1)); 
+            //todo: should this even have a position? we're rerendering the whole thing atm
+            //should eventually consider level
+        }
+
+        public void SignalRoomChange()
+        {
+            Damage.Add(new BlueprintDamage(BlueprintDamageType.ROOM_CHANGED, 0, 0, 1));
             //todo: should this even have a position? we're rerendering the whole thing atm
             //should eventually consider level
         }
@@ -222,7 +233,9 @@ namespace FSO.LotView.Model
         PRECISE_ZOOM,
         WALL_CUT_CHANGED,
         LEVEL_CHANGED,
-        LIGHTING_CHANGED
+        LIGHTING_CHANGED,
+        ROOM_CHANGED,
+        ROOF_STYLE_CHANGED
     }
 
     public class BlueprintObjectList {

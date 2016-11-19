@@ -26,6 +26,8 @@ namespace FSO.SimAntics.Engine
     /// </summary>
     public class VMThread
     {
+        public static int MAX_USER_ACTIONS = 20;
+
         public VMContext Context;
         private VMEntity Entity;
 
@@ -588,7 +590,7 @@ namespace FSO.SimAntics.Engine
             {
                 // shove this action in the queue to try run it next tick.
                 // interaction can be run normally if we actually hit it using allow push. (unlikely)
-                // otherwise next tick will detect the "run immediately" interaction's prescence. 
+                // otherwise next tick will detect the "run immediately" interaction's presence. 
                 // and it will be pushed to the stack immediately.
                 // TODO: check if any interactions of this kind clobber the temps.
                 // this doesnt ""run immediately"", but is good enough.

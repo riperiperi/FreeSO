@@ -182,6 +182,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetPlaceInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSendToInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSetIgnoreCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetSetRoofCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSimJoinCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetArchitectureCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSimLeaveCmd.cs" />

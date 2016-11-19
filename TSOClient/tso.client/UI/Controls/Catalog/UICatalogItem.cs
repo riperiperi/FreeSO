@@ -77,7 +77,7 @@ namespace FSO.Client.UI.Controls.Catalog
             DrawLocalTexture(batch, Background, new Vector2(0, 0));
             if (Icon != null)
             {
-                if (Icon.Height > 48) //poor mans way of saying "special icon" eg floors
+                if (Icon.Height > 48 || Icon.Width == Icon.Height) //poor mans way of saying "special icon" eg floors
                 {
                     float scale = 37.0f / Math.Max(Icon.Height, Icon.Width);
                     DrawLocalTexture(batch, Icon, new Rectangle(0, 0, Icon.Width, Icon.Height), new Vector2(2 + ((37 - Icon.Width * scale) / 2), 2 + ((37 - Icon.Height * scale) / 2)), new Vector2(scale, scale));

@@ -118,6 +118,7 @@
     <Compile Include="WorldObjectProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UIGraphicsProvider.cs" />
+    <Compile Include="WorldRoofProvider.cs" />
     <Compile Include="WorldWallProvider.cs" />
   </ItemGroup>
   <ItemGroup>

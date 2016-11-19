@@ -69,6 +69,7 @@ namespace FSO.Client.UI.Controls.Catalog
                     for (int i = 0; i < 30; i++) _Catalog[i].Sort(new CatalogSorter());
 
                     AddWallStyles();
+                    AddRoofs();
 
                     return _Catalog;
                 }
@@ -127,6 +128,34 @@ namespace FSO.Client.UI.Controls.Catalog
                         ResID = floor.ID,
                         Res = res,
                         Parameters = new List<int> { (int)floor.ID } //pattern
+                    }
+                });
+            }
+        }
+
+        private static void AddRoofs()
+        {
+            var res = new UICatalogRoofResProvider();
+
+            var total = Content.Content.Get().WorldRoofs.Count;
+
+            for (int i = 0; i < total; i++)
+            {
+                sbyte category = 6;
+                _Catalog[category].Insert(0, new UICatalogElement
+                {
+                    Item = new ObjectCatalogItem()
+                    {
+                        Name = "",
+                        Category = category,
+                        Price = 0,
+                    },
+                    Special = new UISpecialCatalogElement
+                    {
+                        Control = typeof(UIRoofer),
+                        ResID = (uint)i,
+                        Res = res,
+                        Parameters = new List<int> { i } //pattern
                     }
                 });
             }

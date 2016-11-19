@@ -47,7 +47,8 @@ namespace FSO.SimAntics.NetPlay.Model
             { VMCommandType.AsyncSale, typeof(VMNetAsyncSaleCmd) },
             { VMCommandType.LockObject, typeof(VMNetLockCmd) },
             { VMCommandType.SkillLock, typeof(VMNetSkillLockCmd) },
-            { VMCommandType.SetIgnore, typeof(VMNetSetIgnoreCmd) }
+            { VMCommandType.SetIgnore, typeof(VMNetSetIgnoreCmd) },
+            { VMCommandType.SetRoof, typeof(VMNetSetRoofCmd) }
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -128,6 +129,7 @@ namespace FSO.SimAntics.NetPlay.Model
         AsyncSale = 28,
         LockObject = 29,
         SkillLock = 30,
-        SetIgnore = 31
+        SetIgnore = 31,
+        SetRoof = 32,
     }
 }

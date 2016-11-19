@@ -20,7 +20,7 @@ namespace FSO.SimAntics.Engine
     {
         //should use a Trie for this in future, for performance reasons
         private static string[] valid = {
-            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:", "DynamicObjectName", "MoneyXL:", "Param", "\r\n"
+            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:", "FixedLocal:", "DynamicObjectName", "MoneyXL:", "Param", "\r\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -184,6 +184,8 @@ namespace FSO.SimAntics.Engine
                                     break;
                                 case "Local:":
                                     output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]).ToString()); break;
+                                case "FixedLocal:":
+                                    output.Append((VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0])/100f).ToString("F2")); break;
                                 case "TimeLocal:":
                                     var hours = VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]);
                                     var mins = VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[1]);
@@ -197,7 +199,7 @@ namespace FSO.SimAntics.Engine
                                 case "Param:":
                                     output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Parameters, values[0]).ToString()); break;
                                 case "NameLocal:":
-                                    output.Append("(NameLocal)"); break;
+                                    output.Append(context.VM.GetObjectById(VMMemory.GetVariable(context, Scopes.VMVariableScope.Local, values[0])).ToString()); break;
                                 default:
                                     output.Append(cmdString);
                                     break;

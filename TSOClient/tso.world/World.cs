@@ -508,6 +508,7 @@ namespace FSO.LotView
                     world.Dispose();
                 }
                 Blueprint.Terrain?.Dispose();
+                Blueprint.RoofComp?.Dispose();
             }
         }
     }

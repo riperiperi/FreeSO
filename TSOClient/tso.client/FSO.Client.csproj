@@ -81,6 +81,7 @@
     <Compile Include="Network\TopicSubscription.cs" />
     <Compile Include="Regulators\LotConnectionRegulator.cs" />
     <Compile Include="Regulators\PurchaseLotRegulator.cs" />
+    <Compile Include="UI\Controls\Catalog\UICatalogRoofResProvider.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />
     <Compile Include="UI\Controls\UICustomTooltip.cs" />
@@ -91,6 +92,7 @@
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobby.cs" />
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobbyController.cs" />
     <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
+    <Compile Include="UI\Panels\LotControls\UIRoofer.cs" />
     <Compile Include="UI\Panels\UIAsyncPriceDialog.cs" />
     <Compile Include="UI\Panels\UIBookmarks.cs" />
     <Compile Include="UI\Panels\UIDebugMenu.cs" />

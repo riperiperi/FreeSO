@@ -1054,7 +1054,7 @@ namespace FSO.SimAntics
 
         public virtual void Load(VMContextMarshal input)
         {
-            Blueprint = new Blueprint(input.Architecture.Width, input.Architecture.Height);
+            if (VM.UseWorld) Blueprint = new Blueprint(input.Architecture.Width, input.Architecture.Height);
             Architecture = new VMArchitecture(input.Architecture, this, Blueprint);
             Clock = new VMClock(input.Clock);
 
