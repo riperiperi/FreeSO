@@ -343,7 +343,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
             });
         }
-        private void SaveInventoryState(bool isNew, uint objectPID, VMStandaloneObjectMarshal state, DbObject dbState, uint guid, VMAsyncInventorySaveCallback callback)
+        private void SaveInventoryState(bool isNew, uint objectPID, VMStandaloneObjectMarshal state, DbObject dbState, uint guid, VMAsyncInventorySaveCallback callback, bool runSync)
         {
             try
             {
@@ -373,14 +373,27 @@ namespace FSO.Server.Servers.Lot.Domain
                     data = stream.ToArray();
                 }
                 var file = File.Open(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo"), FileMode.Create);
-                file.WriteAsync(data, 0, data.Length).ContinueWith((x) =>
+
+                if (runSync)
                 {
+                    file.Write(data, 0, data.Length);
                     using (var db = DAFactory.Get())
                     {
                         callback(db.Objects.UpdatePersistState(objectPID, dbState), objectPID); //if object is on another lot or does not exist, this will fail.
                     }
                     file.Close();
-                });
+                }
+                else
+                {
+                    file.WriteAsync(data, 0, data.Length).ContinueWith((x) =>
+                    {
+                        using (var db = DAFactory.Get())
+                        {
+                            callback(db.Objects.UpdatePersistState(objectPID, dbState), objectPID); //if object is on another lot or does not exist, this will fail.
+                    }
+                        file.Close();
+                    });
+                }
             }
             catch (Exception e)
             {
@@ -390,7 +403,13 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
+
         public void MoveToInventory(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback)
+        {
+            MoveToInventory(vm, obj, callback, false);
+        }
+
+        public void MoveToInventory(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback, bool runSync)
         {
             var objectPID = obj.BaseObject.PersistID;
             var objb = obj.BaseObject;
@@ -400,11 +419,18 @@ namespace FSO.Server.Servers.Lot.Domain
             var state = new VMStandaloneObjectMarshal(obj);
             var dbState = GenerateObjectPersist(obj);
             dbState.lot_id = null; //we're removing this object from the lot
-            
-            Host.InBackground(() =>
+
+            if (runSync)
             {
-                SaveInventoryState(isNew, objectPID, state, dbState, guid, callback);
-            });
+                SaveInventoryState(isNew, objectPID, state, dbState, guid, callback, true);
+            }
+            else
+            {
+                Host.InBackground(() =>
+                {
+                    SaveInventoryState(isNew, objectPID, state, dbState, guid, callback, false);
+                });
+            }
         }
 
         public void PurchaseFromOwner(VM vm, VMMultitileGroup obj, uint purchaserPID, VMAsyncInventorySaveCallback callback, VMAsyncTransactionCallback tcallback)
@@ -452,7 +478,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
                         }
                         else callback(false, objPID);
-                    });
+                    }, true);
                 }
             });
         }

@@ -614,7 +614,7 @@ namespace FSO.SimAntics
             {
                 var grp = new VMMultitileGroup(multi, Context); //should self register
                 var persist = grp.BaseObject?.PersistID ?? 0;
-                if (persist != 0) Context.ObjectQueries.RegisterMultitilePersist(grp, persist);
+                if (persist != 0 && grp.BaseObject is VMGameObject) Context.ObjectQueries.RegisterMultitilePersist(grp, persist);
             }
 
             foreach (var ent in Entities)

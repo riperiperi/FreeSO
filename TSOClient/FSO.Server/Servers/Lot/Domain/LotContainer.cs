@@ -76,6 +76,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private IShardRealestateDomain Realestate;
         private VMTSOSurroundingTerrain Terrain;
         private bool JobLot;
+        private ManualResetEvent LotActive = new ManualResetEvent(false);
         
         public LotContainer(IDAFactory da, LotContext context, ILotHost host, IKernel kernel, LotServerConfiguration config, IRealestateDomain realestate)
         {
@@ -267,7 +268,6 @@ namespace FSO.Server.Servers.Lot.Domain
             var objectsOnLot = new List<uint>();
             var total = 0;
             var complete = 0;
-            var wait = new AutoResetEvent(false);
             var ents = new List<VMEntity>(Lot.Entities);
             foreach (var ent in ents)
             {
@@ -288,25 +288,18 @@ namespace FSO.Server.Servers.Lot.Domain
                             if (delE.PersistID >= 16777216 && delE is VMGameObject)
                             {
                                 total++;
+                                //this is run synchro.
                                 VMGlobalLink.MoveToInventory(Lot, delE.MultitileGroup, (success, objid) =>
                                 {
+                                    Lot.Context.ObjectQueries.RemoveMultitilePersist(Lot, delE.PersistID);
+                                    foreach (var o in delE.MultitileGroup.Objects) o.PersistID = 0; //no longer representative of the object in db.
+                                    delE.Delete(true, Lot.Context);
                                     complete++;
-                                    wait.Set();
-                                });
-
-                            } //if not persist, simply gets deleted :'(
-                            Lot.Context.ObjectQueries.RemoveMultitilePersist(Lot, delE.PersistID);
-                            foreach (var o in delE.MultitileGroup.Objects) o.PersistID = 0; //no longer representative of the object in db.
-                            delE.Delete(true, Lot.Context);
+                                }, true);
+                            }
                         }
                     }
                 }
-            }
-
-            while (complete < total)
-            {
-                wait.Reset();
-                wait.WaitOne(16);
             }
 
             if (objectsOnLot.Count != 0 && !JobLot)
@@ -471,6 +464,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                 }
             }
+            LotActive.Set();
         }
 
         private void DropClient(VMNetClient target)
@@ -615,6 +609,7 @@ namespace FSO.Server.Servers.Lot.Domain
         //Run on the background thread
         public void AvatarJoin(IVoltronSession session)
         {
+            LotActive.WaitOne(); //wait til we're active at least
             using (var da = DAFactory.Get())
             {
                 ClientCount++;
