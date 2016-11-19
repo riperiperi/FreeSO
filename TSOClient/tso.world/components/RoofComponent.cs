@@ -102,7 +102,7 @@ namespace FSO.LotView.Components
         {
             var rects = RoofRects[level-2];
             if (rects == null) return;
-            if (Drawgroups[level - 2] != null)
+            if (Drawgroups[level - 2] != null && Drawgroups[level - 2].NumPrimitives > 0)
             {
                 Drawgroups[level - 2].VertexBuffer.Dispose();
                 Drawgroups[level - 2].IndexBuffer.Dispose();
@@ -179,11 +179,14 @@ namespace FSO.LotView.Components
             }
             
             var result = new RoofDrawGroup();
-            result.VertexBuffer = new VertexBuffer(device, typeof(TerrainVertex), Geom.Length, BufferUsage.None);
-            if (Geom.Length > 0) result.VertexBuffer.SetData(Geom);
+            if (numPrimitives > 0)
+            {
+                result.VertexBuffer = new VertexBuffer(device, typeof(TerrainVertex), Geom.Length, BufferUsage.None);
+                if (Geom.Length > 0) result.VertexBuffer.SetData(Geom);
 
-            result.IndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, sizeof(int) * Indexes.Length, BufferUsage.None);
-            if (Geom.Length > 0) result.IndexBuffer.SetData(Indexes);
+                result.IndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, sizeof(int) * Indexes.Length, BufferUsage.None);
+                if (Geom.Length > 0) result.IndexBuffer.SetData(Indexes);
+            }
 
             result.NumPrimitives = numPrimitives;
 
@@ -448,7 +451,7 @@ namespace FSO.LotView.Components
         {
             foreach (var buf in Drawgroups)
             {
-                if (buf != null)
+                if (buf != null && buf.NumPrimitives > 0)
                 {
                     buf.IndexBuffer.Dispose();
                     buf.VertexBuffer.Dispose();
