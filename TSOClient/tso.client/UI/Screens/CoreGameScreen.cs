@@ -278,6 +278,7 @@ namespace FSO.Client.UI.Screens
             InitializeMap(cityMap);
             InitializeMouse();
             ZoomLevel = 5; //screen always starts at far zoom, city visible.
+            CityRenderer.m_ZoomProgress = 0;
 
             JoinLotProgress = new UIJoinLotProgress();
             JoinLotProgress.BindController<JoinLotProgressController>();

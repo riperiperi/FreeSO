@@ -145,7 +145,7 @@ namespace FSO.Client.Rendering.City
         private SpriteBatch m_Batch;
         private RenderTarget2D ShadowTarget;
         private int OldShadowRes;
-        private int ShadowRegenTimer;
+        private int ShadowRegenTimer = 1;
 
         private Texture2D LoadTex(string Path)
         {
@@ -1503,8 +1503,11 @@ namespace FSO.Client.Rendering.City
                     ShadowRegenTimer = 60;
                 }
                 ShadowMap = ShadowTarget;
-                PixelShader.Parameters["ShadowMap"].SetValue(ShadowMap);
-                PixelShader.Parameters["ShadSize"].SetValue(new Vector2(ShadowMap.Width, ShadowMap.Height));
+                if (ShadowMap != null)
+                {
+                    PixelShader.Parameters["ShadowMap"].SetValue(ShadowMap);
+                    PixelShader.Parameters["ShadSize"].SetValue(new Vector2(ShadowMap.Width, ShadowMap.Height));
+                }
             }
             VertexShader.Parameters["LightMatrix"].SetValue(m_LightMatrix);
             m_GraphicsDevice.Clear(Color.Black);

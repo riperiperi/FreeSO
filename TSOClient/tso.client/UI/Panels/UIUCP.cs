@@ -170,8 +170,8 @@ namespace FSO.Client.UI.Panels
             MoneyText.CaptionStyle = MoneyText.CaptionStyle.Clone();
 
             var temp = new UILabel();
-            temp.X = FirstFloorButton.X + 20;
-            temp.Y = FirstFloorButton.Y - 8;
+            temp.X = SecondFloorButton.X + 7;
+            temp.Y = SecondFloorButton.Y - 14;
             temp.Caption = "1";
             temp.CaptionStyle = temp.CaptionStyle.Clone();
             temp.CaptionStyle.Size = 7;
@@ -312,9 +312,6 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
-            FloorNumLabel.X = SecondFloorButton.X + 7;
-            FloorNumLabel.Y = SecondFloorButton.Y - 14;
-
             var time = DateTime.UtcNow;
             var tsoTime = TSOTime.FromUTC(time);
             int min = tsoTime.Item2;
