@@ -42,6 +42,9 @@ namespace FSO.IDE.EditorComponent
             CallerObject = obj;
 
             BHAVNames = obj.Resource.Get<TPRP>(active.ChunkID);
+            if(BHAVNames == null && SemiGlobal != null){
+                BHAVNames = SemiGlobal.Get<TPRP>(active.ChunkID);
+            }
             Active = active;
         }
 
