@@ -108,6 +108,9 @@
     <Compile Include="DA\Objects\DbObject.cs" />
     <Compile Include="DA\Objects\IObjects.cs" />
     <Compile Include="DA\Objects\SqlObjects.cs" />
+    <Compile Include="DA\Outfits\DbOutfit.cs" />
+    <Compile Include="DA\Outfits\IOutfits.cs" />
+    <Compile Include="DA\Outfits\SqlOutfits.cs" />
     <Compile Include="DA\Relationships\DbRelationship.cs" />
     <Compile Include="DA\Relationships\IRelationships.cs" />
     <Compile Include="DA\Relationships\SqlRelationships.cs" />

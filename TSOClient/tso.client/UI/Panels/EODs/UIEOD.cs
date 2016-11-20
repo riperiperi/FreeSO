@@ -23,6 +23,19 @@ namespace FSO.Client.UI.Panels.EODs
             Controller = controller;
         }
 
+        public UILotControl LotController
+        {
+            get
+            {
+                var liveMode = FindParent<UILiveMode>();
+                if(liveMode != null)
+                {
+                    return liveMode.LotController;
+                }
+                return null;
+            }
+        }
+
         public virtual void OnExpand()
         {
         }

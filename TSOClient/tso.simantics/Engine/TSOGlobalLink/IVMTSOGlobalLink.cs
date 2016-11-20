@@ -1,4 +1,5 @@
-﻿using FSO.SimAntics.Entities;
+﻿using FSO.SimAntics.Engine.TSOGlobalLink.Model;
+using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
@@ -27,6 +28,12 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void DeleteObject(VM vm, uint objectPID, VMAsyncDeleteObjectCallback callback);
         void SetSpotlightStatus(VM vm, bool on);
 
+        //Outfits
+        void StockOutfit(VM vm, uint objectPID, ulong asset_id, int price, VMAsyncStockOutfitCallback callback);
+        void GetOutfits(VM vm, VMGLOutfitOwner owner, uint ownerPID, VMAsyncGetOutfitsCallback callback);
+        void DeleteOutfit(VM vm, uint outfitPID, VMGLOutfitOwner owner, uint ownerPID, VMAsyncDeleteOutfitCallback callback);
+        void UpdateOutfitSalePrice(VM vm, uint outfitPID, uint objectPID, int newSalePrice, VMAsyncUpdateOutfitSalePriceCallback callback);
+
         void Tick(VM vm);
     }
 
@@ -39,4 +46,9 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public delegate void VMAsyncInventoryRetrieveCallback(uint guid, byte[] data);
     public delegate void VMAsyncInventoryConsumeCallback(bool success, int result); //todo: failure reasons
     public delegate void VMAsyncDeleteObjectCallback(bool success); //todo: failure reasons
+
+    public delegate void VMAsyncStockOutfitCallback(bool success, uint outfit_id);
+    public delegate void VMAsyncGetOutfitsCallback(VMGLOutfit[] outfits);
+    public delegate void VMAsyncDeleteOutfitCallback(bool success);
+    public delegate void VMAsyncUpdateOutfitSalePriceCallback(bool success);
 }

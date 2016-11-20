@@ -18,6 +18,7 @@ using FSO.SimAntics.Entities;
 using FSO.SimAntics.Marshals;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Roommates;
+using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 
 namespace FSO.Server.Servers.Lot.Domain
 {
@@ -556,6 +557,90 @@ namespace FSO.Server.Servers.Lot.Domain
         public void SetSpotlightStatus(VM vm, bool on)
         {
             Host.SetSpotlight(on);
+        }
+
+        public void StockOutfit(VM vm, uint objectPID, ulong asset_id, int price, VMAsyncStockOutfitCallback callback)
+        {
+            Host.InBackground(() => {
+                if (objectPID == 0)
+                {
+                    callback(false, 0);
+                }
+
+                using (var db = DAFactory.Get())
+                {
+                    try {
+                        var result = db.Outfits.Create(new Database.DA.Outfits.DbOutfit {
+                            object_owner = objectPID,
+                            asset_id = asset_id,
+                            purchase_price = price,
+                            sale_price = price
+                        });
+
+                        callback(result != 0, result);
+                    }catch(Exception ex){
+                        callback(false, 0);
+                    }
+                }
+            });
+        }
+
+        public void GetOutfits(VM vm, VMGLOutfitOwner owner, uint ownerPID, VMAsyncGetOutfitsCallback callback)
+        {
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    var outfits = owner == VMGLOutfitOwner.OBJECT ? db.Outfits.GetByObjectId(ownerPID) : db.Outfits.GetByAvatarId(ownerPID);
+                    callback(
+                        outfits.Select(x => {
+                            var outfit = new VMGLOutfit()
+                            {
+                                asset_id = x.asset_id,
+                                outfit_id = x.outfit_id,
+                                sale_price = x.sale_price,
+                                purchase_price = x.purchase_price
+                            };
+
+                            if (x.avatar_owner != null && x.avatar_owner.HasValue)
+                            {
+                                outfit.owner_type = VMGLOutfitOwner.AVATAR;
+                                outfit.owner_id = x.avatar_owner.Value;
+                            }else if(x.object_owner != null && x.object_owner.HasValue)
+                            {
+                                outfit.owner_type = VMGLOutfitOwner.OBJECT;
+                                outfit.owner_id = x.object_owner.Value;
+                            }
+
+                            return outfit;
+                        }).ToArray()
+                    );
+                }
+            });
+        }
+
+        public void DeleteOutfit(VM vm, uint outfitPID, VMGLOutfitOwner owner, uint ownerPID, VMAsyncDeleteOutfitCallback callback)
+        {
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    if (owner == VMGLOutfitOwner.OBJECT){
+                        callback(db.Outfits.DeleteFromObject(outfitPID, ownerPID));
+                    }
+                }
+            });
+        }
+
+        public void UpdateOutfitSalePrice(VM vm, uint outfitPID, uint objectPID, int newSalePrice, VMAsyncUpdateOutfitSalePriceCallback callback)
+        {
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    callback(db.Outfits.UpdatePrice(outfitPID, objectPID, newSalePrice));   
+                }
+            });
         }
     }
 }

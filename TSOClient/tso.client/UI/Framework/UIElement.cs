@@ -1074,6 +1074,25 @@ namespace FSO.Client.UI.Framework
             return default(T);
         }
 
+        public T FindParent<T>() where T : UIElement
+        {
+            var target = this;
+            while (target != null)
+            {
+                if (target is T)
+                {
+                    return (T)target;
+                }
+                target = target.Parent;
+            }
+
+            if (LogicalParent != null)
+            {
+                return LogicalParent.FindParent<T>();
+            }
+            return default(T);
+        }
+
     }
 
 }

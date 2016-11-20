@@ -47,8 +47,8 @@ namespace FSO.Content
 
                 var outfit = new RackOutfit
                 {
-                    AssetID = ulong.Parse(assetId.InnerText.Substring(2), NumberStyles.HexNumber),
-                    Price = uint.Parse(price.InnerText)
+                    AssetID = (uint)ulong.Parse(assetId.InnerText.Substring(2), NumberStyles.HexNumber),
+                    Price = int.Parse(price.InnerText)
                 };
 
                 if (name.EndsWith("Male"))
@@ -102,7 +102,7 @@ namespace FSO.Content
                 case "Swimwear":
                     return RackType.Swimwear;
                 case "Sleepwear":
-                    return RackType.Swimwear;
+                    return RackType.Sleepwear;
                 case "Decor_Head":
                     return RackType.Decor_Head;
                 case "Decor_Back":

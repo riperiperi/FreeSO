@@ -92,7 +92,7 @@ namespace FSO.Client.UI.Panels
 
         public UIPersonGrid PersonGrid;
 
-        UILotControl LotController;
+        public UILotControl LotController;
         private VMAvatar SelectedAvatar
         {
             get

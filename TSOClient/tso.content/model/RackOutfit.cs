@@ -10,13 +10,18 @@ namespace FSO.Content.Model
     public class RackOutfit
     {
         public ulong AssetID { get; set; }
-        public uint Price { get; set; }
+        public int Price { get; set; }
         public RackOutfitGender Gender { get; set; }
         public RackType RackType { get; set; }
 
         public ulong GetOutfitID()
         {
-            return (AssetID << 32) | 0xd;
+            return GetOutfitID(AssetID);
+        }
+
+        public static ulong GetOutfitID(ulong assetId)
+        {
+            return (assetId << 32) | 0xd;
         }
     }
 

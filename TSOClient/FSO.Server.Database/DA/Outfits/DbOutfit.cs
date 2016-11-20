@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace FSO.Server.Database.DA.Outfits
+{
+    public class DbOutfit
+    {
+        public uint outfit_id { get; set; }
+        public Nullable<uint> avatar_owner { get; set; }
+        public Nullable<uint> object_owner { get; set; }
+        public ulong asset_id { get; set; }
+        public int sale_price { get; set; }
+        public int purchase_price { get; set; }
+    }
+}
