@@ -149,6 +149,8 @@ namespace FSO.Client.UI.Controls
         {
             get
             {
+                if (m_DataProvider == null) { return 0; }
+
                 var maxPage = Math.Ceiling((double)m_DataProvider.Count / (double)ItemsPerPage);
                 if(maxPage == 0){
                     return 1;

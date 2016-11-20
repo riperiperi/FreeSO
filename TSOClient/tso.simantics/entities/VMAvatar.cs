@@ -77,6 +77,7 @@ namespace FSO.SimAntics
             APPEARANCE DATA
         */
         public VMAvatarDefaultSuits DefaultSuits = new VMAvatarDefaultSuits(false);
+        public VMAvatarDynamicSuits DynamicSuits = new VMAvatarDynamicSuits(false);
         public HashSet<string> BoundAppearances = new HashSet<string>();
 
         private ulong _BodyOutfit;
@@ -901,6 +902,7 @@ namespace FSO.SimAntics
                 RadianDirection = RadianDirection,
                 KillTimeout = KillTimeout,
                 DefaultSuits = DefaultSuits,
+                DynamicSuits = DynamicSuits,
 
                 BoundAppearances = BoundAppearances.ToArray(),
                 BodyOutfit = BodyOutfit,
@@ -930,6 +932,7 @@ namespace FSO.SimAntics
             RadianDirection = input.RadianDirection;
             KillTimeout = input.KillTimeout;
             DefaultSuits = input.DefaultSuits;
+            DynamicSuits = input.DynamicSuits;
 
             BoundAppearances = new HashSet<string>(input.BoundAppearances);
 
@@ -999,6 +1002,42 @@ namespace FSO.SimAntics
             Daywear = reader.ReadUInt64();
             Swimwear = reader.ReadUInt64();
             Sleepwear = reader.ReadUInt64();
+        }
+    }
+
+    public class VMAvatarDynamicSuits : VMSerializable
+    {
+        public ulong Daywear;
+        public ulong Swimwear;
+        public ulong Sleepwear;
+        public ulong Costume;
+
+        public VMAvatarDynamicSuits(bool female){
+            Daywear = 0x24C0000000D;
+            Swimwear = (ulong)((female) ? 0x620000000D : 0x5470000000D);
+            Sleepwear = (ulong)((female) ? 0x5150000000D : 0x5440000000D);
+            Costume = Daywear;
+        }
+
+        public VMAvatarDynamicSuits(BinaryReader reader)
+        {
+            Deserialize(reader);
+        }
+
+        public void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write(Daywear);
+            writer.Write(Swimwear);
+            writer.Write(Sleepwear);
+            writer.Write(Costume);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Daywear = reader.ReadUInt64();
+            Swimwear = reader.ReadUInt64();
+            Sleepwear = reader.ReadUInt64();
+            Costume = reader.ReadUInt64();
         }
     }
 }

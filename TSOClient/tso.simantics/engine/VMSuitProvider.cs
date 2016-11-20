@@ -123,6 +123,16 @@ namespace FSO.SimAntics.Engine
                             return (ulong)(0x5740000000D);
                         case VMPersonSuits.TeleporterMishap:
                           return (ulong)(male ? 0x2900000000D : 0x4A0000000D);
+
+
+                        case VMPersonSuits.DynamicDaywear:
+                            return avatar.DynamicSuits.Daywear;
+                        case VMPersonSuits.DynamicSleepwear:
+                            return avatar.DynamicSuits.Sleepwear;
+                        case VMPersonSuits.DynamicSwimwear:
+                            return avatar.DynamicSuits.Swimwear;
+                        case VMPersonSuits.DynamicCostume:
+                            return avatar.DynamicSuits.Costume;
                     }
 
                     return null;

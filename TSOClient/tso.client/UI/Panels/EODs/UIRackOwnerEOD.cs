@@ -17,13 +17,9 @@ using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Panels.EODs
 {
-    public class UIRackOwnerEOD : UIEOD
+    public class UIRackOwnerEOD : UIAbstractRackEOD
     {
-
-        private UIScript Script;
-        private RackType RackType;
         private UICollectionViewer OutfitBrowserOwner;
-        private UICollectionViewer OutfitBrowser;
 
         public UIImage OwnerBackground;
 
@@ -32,57 +28,36 @@ namespace FSO.Client.UI.Panels.EODs
         public UIButton btnMale { get; set; }
         public UIButton btnFemale { get; set; }
 
-        public UITextEdit Outfit1Price { get; set; }
-        public UITextEdit Outfit2Price { get; set; }
-        public UITextEdit Outfit3Price { get; set; }
-        public UITextEdit Outfit4Price { get; set; }
-        public UITextEdit Outfit5Price { get; set; }
-        public UITextEdit Outfit6Price { get; set; }
-        public UITextEdit Outfit7Price { get; set; }
-        public UITextEdit Outfit8Price { get; set; }
-        private UITextEdit[] OutfitPrices;
 
         private RackOutfitGender SelectedGender;
-        private VMGLOutfit[] Stock;
 
         private Dictionary<uint, int> DirtyPrices = new Dictionary<uint, int>();
         private GameThreadTimeout DirtyTimeout;
 
-        public UIRackOwnerEOD(UIEODController controller) : base(controller)
+        public UIRackOwnerEOD(UIEODController controller) : base(controller, "rackownereod.uis")
         {
-            InitUI();
-            InitEOD();
         }
 
-        private void InitUI(){
-            Script = this.RenderScript("rackownereod.uis");
+        
+        protected override void InitUI(){
+            base.InitUI();
 
             OwnerBackground = Script.Create<UIImage>("controlBackgroundOwner");
             AddAt(0, OwnerBackground);
-            AddAt(0, Script.Create<UIImage>("controlBackground"));
 
             OutfitBrowserOwner = Script.Create<UICollectionViewer>("OutfitBrowserOwner");
-            OutfitBrowserOwner.OnChange += UpdateState;
+            OutfitBrowserOwner.OnChange += x => UpdateUIState();
             OutfitBrowserOwner.PaginationHeight = 15;
             OutfitBrowserOwner.PaginationHeightDeduction = 0;
             OutfitBrowserOwner.Init();
             Add(OutfitBrowserOwner);
-
-            OutfitBrowser = Script.Create<UICollectionViewer>("OutfitBrowser");
-            OutfitBrowser.PaginationStyle = UIPaginationStyle.LEFT_RIGHT_ARROWS;
-            OutfitBrowser.Init();
-            OutfitBrowser.OnSelectedPageChanged += x => UpdateState();
-            OutfitBrowser.OnChange += x => UpdateState();
-            Add(OutfitBrowser);
 
             btnMale.OnButtonClick += ToggleGender;
             btnFemale.OnButtonClick += ToggleGender;
             btnStock.OnButtonClick += BtnStock_OnButtonClick;
             btnDelete.OnButtonClick += BtnDelete_OnButtonClick;
 
-            OutfitPrices = new UITextEdit[] { Outfit1Price, Outfit2Price, Outfit3Price, Outfit4Price, Outfit5Price, Outfit6Price, Outfit7Price, Outfit8Price };
-
-            foreach(var price in OutfitPrices){
+            foreach (var price in OutfitPrices){
                 price.OnChange += Price_OnChange;
             }
         }
@@ -149,10 +124,9 @@ namespace FSO.Client.UI.Panels.EODs
 
         private void BtnDelete_OnButtonClick(UIElement button)
         {
-            var selecteGridItem = OutfitBrowser.SelectedItem as UIGridViewerItem;
-            if (selecteGridItem == null) { return; }
+            var selectedOutfit = GetSelectedOutfit();
+            if (selectedOutfit == null) { return; }
 
-            var selectedOutfit = (VMGLOutfit)selecteGridItem.Data;
             UIAlert alert = null;
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
@@ -172,10 +146,9 @@ namespace FSO.Client.UI.Panels.EODs
         /// <param name="button"></param>
         private void BtnStock_OnButtonClick(Framework.UIElement button)
         {
-            var selecteGridItem = OutfitBrowserOwner.SelectedItem as UIGridViewerItem;
-            if (selecteGridItem == null) { return; }
+            var selectedOutfit = GetSelectedOwnerOutfit();
+            if (selectedOutfit == null) { return; }
 
-            var selectedOutfit = (RackOutfit)selecteGridItem.Data;
             UIAlert alert = null;
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
@@ -196,117 +169,17 @@ namespace FSO.Client.UI.Panels.EODs
             }else if(button == btnFemale){
                 SelectedGender = RackOutfitGender.Female;
             }
-            UpdateState();
-            SetOutfits();
+            UpdateUIState();
+            SetOwnerOutfits();
         }
 
-        private void UpdateState()
+
+        /**
+         * Owner outfit grid
+         */
+        protected override void SetRackType(RackType type)
         {
-            if(SelectedGender == RackOutfitGender.Neutral){
-                btnMale.Disabled = true;
-                btnFemale.Disabled = true;
-            }else{
-                btnMale.Selected = SelectedGender == RackOutfitGender.Male;
-                btnFemale.Selected = SelectedGender == RackOutfitGender.Female;
-            }
-
-            btnStock.Disabled = OutfitBrowserOwner.SelectedItem == null;
-
-            var selecteOutfitd = OutfitBrowserOwner.SelectedItem as UIGridViewerItem;
-            if (selecteOutfitd == null){
-                SetTip("");
-            }else{
-                var rackOutfit = (RackOutfit)selecteOutfitd.Data;
-
-                if (LotController != null && rackOutfit.Price > LotController.ActiveEntity.TSOState.Budget.Value){
-                    SetTip(GameFacade.Strings.GetString("265", "13"));
-                    btnStock.Disabled = true;
-                }
-                else{
-                    SetTip(GameFacade.Strings.GetString("265", "14") + rackOutfit.Price);
-                }
-            }
-
-            if (Stock != null && Stock.Length >= VMEODRackOwnerPlugin.MAX_OUTFITS)
-            {
-                btnStock.Disabled = true;
-                SetTip(GameFacade.Strings.GetString("265", "12"));
-            }
-
-            btnDelete.Disabled = OutfitBrowser.SelectedItem == null;
-
-            //Align pricing with scroll position
-
-            for(var i=0; i < 8; i++){
-                var priceField = OutfitPrices[i];
-                var priceIndex = GetPriceIndex(i);
-
-                if (priceIndex != -1)
-                {
-                    priceField.CurrentText = Stock[priceIndex].sale_price.ToString();
-                    priceField.Mode = UITextEditMode.Editor;
-                }
-                else{
-                    priceField.CurrentText = "";
-                    priceField.Mode = UITextEditMode.ReadOnly;
-                }
-            }
-
-            //OutfitPrices
-        }
-
-        private int GetPriceIndex(int i)
-        {
-            var offset = OutfitBrowser.SelectedPage * OutfitBrowser.ItemsPerPage;
-            var stockLength = Stock != null ? Stock.Length : 0;
-
-            if(offset + i < stockLength)
-            {
-                return offset + i;
-            }
-            else
-            {
-                return -1;
-            }
-        }
-
-        private void UpdateState(Framework.UIElement element)
-        {
-            UpdateState();
-        }
-
-        private void InitEOD()
-        {
-            PlaintextHandlers["rackowner_show"] = Show;
-            BinaryHandlers["rackowner_browse"] = Browse;
-        }
-
-        public void Browse(string evt, byte[] body)
-        {
-            var packet = IoBufferUtils.Deserialize<VMEODRackOwnerBrowseResponse>(body, null);
-            Stock = packet.Outfits;
-
-            var dataProvider = new List<object>();
-
-            foreach (var outfit in Stock)
-            {
-                Outfit TmpOutfit = Content.Content.Get().AvatarOutfits.Get(RackOutfit.GetOutfitID(outfit.asset_id));
-                Appearance TmpAppearance = Content.Content.Get().AvatarAppearances.Get(TmpOutfit.GetAppearance(AppearanceType.Light));
-                FSO.Common.Content.ContentID thumbID = TmpAppearance.ThumbnailID;
-
-                dataProvider.Add(new UIGridViewerItem
-                {
-                    Data = outfit,
-                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID).Get(GameFacade.GraphicsDevice))
-                });
-            }
-            OutfitBrowser.DataProvider = dataProvider;
-            UpdateState();
-        }
-
-        public void Show(string evt, string txt)
-        {
-            RackType = (RackType)short.Parse(txt);
+            base.SetRackType(type);
             switch (RackType)
             {
                 case RackType.Decor_Back:
@@ -319,23 +192,10 @@ namespace FSO.Client.UI.Panels.EODs
                     SelectedGender = RackOutfitGender.Male;
                     break;
             }
-            SetOutfits();
-            UpdateState();
-
-            Controller.ShowEODMode(new EODLiveModeOpt
-            {
-                Buttons = 1,
-                Expandable = true,
-                Height = EODHeight.TallTall,
-                Length = EODLength.Full,
-                Timer = EODTimer.None,
-                Tips = EODTextTips.Short,
-                TopPanelLength = EODLength.Full,
-                TopPanelButtons = 1
-            });
+            SetOwnerOutfits();
         }
 
-        private void SetOutfits()
+        private void SetOwnerOutfits()
         {
             var outfits = Content.Content.Get().RackOutfits.GetByRackType(RackType);
             OutfitBrowserOwner.DataProvider = RackOutfitsToDataProvider(outfits);
@@ -362,10 +222,65 @@ namespace FSO.Client.UI.Panels.EODs
             return dataProvider;
         }
 
-        public override void OnClose()
+
+
+        /**
+         * UI management
+         */
+
+
+        protected override void UpdateUIState()
         {
-            Send("close", "");
-            base.OnClose();
+            base.UpdateUIState();
+
+            var selectedOwnerOutfit = GetSelectedOwnerOutfit();
+            var selectedOutfit = GetSelectedOutfit();
+            
+            //Stock button + tips
+            if (IsFull)
+            {
+                SetTip(GameFacade.Strings.GetString("265", "12"));
+                btnStock.Disabled = true;
+            }
+            else if(selectedOwnerOutfit != null)
+            {
+                if (LotController != null && selectedOwnerOutfit.Price > LotController.ActiveEntity.TSOState.Budget.Value){
+                    //Cant afford it
+                    SetTip(GameFacade.Strings.GetString("265", "13"));
+                    btnStock.Disabled = true;
+                }
+                else
+                {
+                    //Can afford it
+                    SetTip(GameFacade.Strings.GetString("265", "14") + selectedOwnerOutfit.Price);
+                    btnStock.Disabled = false;
+                }
+            }else{
+                SetTip("");
+                btnStock.Disabled = false;
+            }
+
+            //Delete button
+            btnDelete.Disabled = selectedOutfit == null;
+
+            //Gender buttons
+            if (SelectedGender == RackOutfitGender.Neutral){
+                btnMale.Disabled = true;
+                btnFemale.Disabled = true;
+            }else{
+                btnMale.Selected = SelectedGender == RackOutfitGender.Male;
+                btnFemale.Selected = SelectedGender == RackOutfitGender.Female;
+            }
+        }
+
+        private RackOutfit GetSelectedOwnerOutfit()
+        {
+            var selecteOutfit = OutfitBrowserOwner.SelectedItem as UIGridViewerItem;
+            if(selecteOutfit != null)
+            {
+                return (RackOutfit)selecteOutfit.Data;
+            }
+            return null;
         }
 
         private void SetExpanded(bool expanded)
@@ -386,5 +301,24 @@ namespace FSO.Client.UI.Panels.EODs
         {
             SetExpanded(false);
         }
+
+        protected override EODLiveModeOpt GetEODOptions()
+        {
+            return new EODLiveModeOpt
+            {
+                Buttons = 1,
+                Expandable = true,
+                Expanded = true,
+                Height = EODHeight.TallTall,
+                Length = EODLength.Full,
+                Timer = EODTimer.None,
+                Tips = EODTextTips.Short,
+                TopPanelLength = EODLength.Full,
+                TopPanelButtons = 1
+            };
+        }
+
+
+        
     }
 }

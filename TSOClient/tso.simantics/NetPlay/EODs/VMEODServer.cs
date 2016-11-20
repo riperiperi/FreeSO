@@ -31,7 +31,8 @@ namespace FSO.SimAntics.NetPlay.EODs
             { 0x4a5be8ab, typeof(VMEODDanceFloorPlugin) },
             { 0xea47ae39, typeof(VMEODPizzaMakerPlugin) },
             { 0xca418206, typeof(VMEODPaperChasePlugin) },
-            { 0x2b58020b, typeof(VMEODRackOwnerPlugin) }
+            { 0x2b58020b, typeof(VMEODRackOwnerPlugin) },
+            { 0xcb492685, typeof(VMEODRackPlugin) }
         };
 
         public List<VMEODClient> Clients;

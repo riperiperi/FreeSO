@@ -156,6 +156,8 @@
     <Compile Include="NetPlay\EODs\Handlers\VMEODHandler.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODPaperChasePlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODPizzaMakerPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMAbstractEODRackPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODRackPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODSignsPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODStubPlugin.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODEvent.cs" />
@@ -186,6 +188,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetMoveObjectCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetPlaceInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSendToInventoryCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetSetOutfitCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSimJoinCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetArchitectureCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSimLeaveCmd.cs" />
