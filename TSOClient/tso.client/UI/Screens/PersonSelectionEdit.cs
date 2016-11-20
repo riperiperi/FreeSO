@@ -297,6 +297,9 @@ namespace FSO.Client.UI.Screens
 
         private void RefreshSim()
         {
+            if(m_HeadSkinBrowser.SelectedItem == null || m_BodySkinBrowser.SelectedItem == null){
+                return;
+            }
             var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
             var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
 
