@@ -242,7 +242,21 @@ namespace FSO.Vitaboy
                 }
             }
         }
-        
+
+        public void AddAccessory(Outfit oft)
+        {
+            var aprId = oft.GetAppearance(m_Appearance);
+            var appearance = FSO.Content.Content.Get().AvatarAppearances.Get(aprId);
+            this.AddAccessory(appearance);
+        }
+
+        public void RemoveAccessory(Outfit oft)
+        {
+            var aprId = oft.GetAppearance(m_Appearance);
+            var appearance = FSO.Content.Content.Get().AvatarAppearances.Get(aprId);
+            this.RemoveAccessory(appearance);
+        }
+
         private AppearanceType m_Appearance = AppearanceType.Light;
 
         /// <summary>

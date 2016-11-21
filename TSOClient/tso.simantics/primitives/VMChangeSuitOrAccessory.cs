@@ -22,8 +22,9 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMChangeSuitOrAccessoryOperand)args;
-
             var avatar = (VMAvatar)context.Caller;
+
+            var outfitType = GetOutfitType(operand);
 
             if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Update) == VMChangeSuitOrAccessoryFlags.Update)
             { //update default outfit with outfit in stringset 304 with index in temp 0
@@ -33,8 +34,7 @@ namespace FSO.SimAntics.Primitives
             else 
             {
                 var suit = VMSuitProvider.GetSuit(context, operand.SuitScope, operand.SuitData);
-                if (suit == null)
-                {
+                if (suit == null){
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
 
@@ -54,14 +54,66 @@ namespace FSO.SimAntics.Primitives
                     }
                 } else if (suit is ulong)
                 {
-                    var oft = (ulong)suit;
-                    avatar.SetPersonData(Model.VMPersonDataVariable.CurrentOutfit, operand.SuitData);
-                    avatar.BodyOutfit = oft;
+                    if (outfitType == OutfitType.BODY)
+                    {
+                        avatar.SetPersonData(Model.VMPersonDataVariable.CurrentOutfit, operand.SuitData);
+                        avatar.BodyOutfit = (ulong)suit;
+                    }else if(outfitType == OutfitType.ACCESSORY){
+                        if (VM.UseWorld){
+                            var outfit = Content.Content.Get().AvatarOutfits.Get((ulong)suit);
+                            if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove){
+                                avatar.Avatar.RemoveAccessory(outfit);
+                            }else{
+                                avatar.Avatar.AddAccessory(outfit);
+                            }
+                        }
+                    }
                 }
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
+
+
+        private OutfitType GetOutfitType(VMChangeSuitOrAccessoryOperand operand)
+        {
+            switch (operand.SuitScope)
+            {
+                case VMSuitScope.Global:
+                case VMSuitScope.Object:
+                    return OutfitType.ACCESSORY;
+                case VMSuitScope.Person:
+                    switch ((VMPersonSuits)operand.SuitData)
+                    {
+                        case VMPersonSuits.DefaultDaywear:
+                        case VMPersonSuits.DefaultSleepwear:
+                        case VMPersonSuits.DefaultSwimwear:
+                        case VMPersonSuits.DynamicCostume:
+                        case VMPersonSuits.DynamicDaywear:
+                        case VMPersonSuits.DynamicSleepwear:
+                        case VMPersonSuits.DynamicSwimwear:
+                        case VMPersonSuits.JobOutfit:
+                        case VMPersonSuits.Naked:
+                        case VMPersonSuits.SkeletonMinus:
+                        case VMPersonSuits.SkeletonPlus:
+                        case VMPersonSuits.TeleporterMishap:
+                            return OutfitType.BODY;
+
+                        default:
+                            return OutfitType.ACCESSORY;
+                    }
+                default:
+                    return OutfitType.ACCESSORY;
+            }
+        }
+        
+    }
+
+    public enum OutfitType
+    {
+        HEAD,
+        BODY,
+        ACCESSORY
     }
 
     public class VMChangeSuitOrAccessoryOperand : VMPrimitiveOperand {

@@ -642,5 +642,16 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
             });
         }
+
+        public void PurchaseOutfit(VM vm, uint outfitPID, uint objectPID, uint avatarPID, VMAsyncPurchaseOutfitCallback callback)
+        {
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    callback(db.Outfits.ChangeOwner(outfitPID, objectPID, avatarPID));
+                }
+            });
+        }
     }
 }

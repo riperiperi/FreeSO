@@ -104,7 +104,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
     {
         TryOnOutfit = 1,
         PurchaseOutfit = 2,
-        TryOnOutfit_2 = 3,
+        PutOnNow = 3,
         StockOutfit = 4,
         SetOutfitCount = 8,
         PutClothesBack = 10

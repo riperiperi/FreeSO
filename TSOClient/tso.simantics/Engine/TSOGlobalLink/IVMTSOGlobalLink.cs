@@ -33,6 +33,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void GetOutfits(VM vm, VMGLOutfitOwner owner, uint ownerPID, VMAsyncGetOutfitsCallback callback);
         void DeleteOutfit(VM vm, uint outfitPID, VMGLOutfitOwner owner, uint ownerPID, VMAsyncDeleteOutfitCallback callback);
         void UpdateOutfitSalePrice(VM vm, uint outfitPID, uint objectPID, int newSalePrice, VMAsyncUpdateOutfitSalePriceCallback callback);
+        void PurchaseOutfit(VM vm, uint outfitPID, uint objectPID, uint avatarPID, VMAsyncPurchaseOutfitCallback callback);
 
         void Tick(VM vm);
     }
@@ -51,4 +52,5 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public delegate void VMAsyncGetOutfitsCallback(VMGLOutfit[] outfits);
     public delegate void VMAsyncDeleteOutfitCallback(bool success);
     public delegate void VMAsyncUpdateOutfitSalePriceCallback(bool success);
+    public delegate void VMAsyncPurchaseOutfitCallback(bool success);
 }

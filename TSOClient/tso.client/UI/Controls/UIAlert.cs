@@ -287,6 +287,11 @@ namespace FSO.Client.UI.Controls
             return new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.Yes, yesCallback), new UIAlertButton(UIAlertButtonType.No, noCallback) };
         }
 
+        public static UIAlertButton[] YesNoCancel(ButtonClickDelegate yesCallback, ButtonClickDelegate noCallback, ButtonClickDelegate cancel)
+        {
+            return new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.Yes, yesCallback), new UIAlertButton(UIAlertButtonType.No, noCallback), new UIAlertButton(UIAlertButtonType.Cancel, cancel) };
+        }
+
         public UIAlertButtonType Type = UIAlertButtonType.OK;
         public ButtonClickDelegate Handler = null; //if null, just use default (exit UIAlert)
         public string Text = null; //custom text, if null then we just use cst.

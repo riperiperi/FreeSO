@@ -42,8 +42,18 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 case VMPersonSuits.DynamicCostume:
                     avatar.DynamicSuits.Costume = Outfit;
                     break;
-
-                //TODO: Accessories
+                case VMPersonSuits.DecorationHead:
+                    avatar.Decoration.Head = Outfit;
+                    break;
+                case VMPersonSuits.DecorationBack:
+                    avatar.Decoration.Back = Outfit;
+                    break;
+                case VMPersonSuits.DecorationShoes:
+                    avatar.Decoration.Shoes = Outfit;
+                    break;
+                case VMPersonSuits.DecorationTail:
+                    avatar.Decoration.Tail = Outfit;
+                    break;
             }
 
             return true;

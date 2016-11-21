@@ -29,6 +29,7 @@ namespace FSO.SimAntics.Marshals
 
         public VMAvatarDefaultSuits DefaultSuits;
         public VMAvatarDynamicSuits DynamicSuits;
+        public VMAvatarDecoration Decoration;
         public string[] BoundAppearances;
 
         public ulong BodyOutfit;
@@ -80,6 +81,7 @@ namespace FSO.SimAntics.Marshals
             if(Version >= 15)
             {
                 DynamicSuits = new VMAvatarDynamicSuits(reader);
+                Decoration = new VMAvatarDecoration(reader);
             }
 
             var aprs = reader.ReadInt32();
@@ -119,6 +121,7 @@ namespace FSO.SimAntics.Marshals
 
             DefaultSuits.SerializeInto(writer);
             DynamicSuits.SerializeInto(writer);
+            Decoration.SerializeInto(writer);
 
             writer.Write(BoundAppearances.Length);
             foreach (var item in BoundAppearances) { writer.Write(item); }

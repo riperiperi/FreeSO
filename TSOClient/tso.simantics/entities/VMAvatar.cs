@@ -39,7 +39,8 @@ namespace FSO.SimAntics
         /** Animation vars **/
 
         public List<VMAnimationState> Animations;
-        public VMAnimationState CurrentAnimationState {
+        public VMAnimationState CurrentAnimationState
+        {
             get
             {
                 return (Animations.Count == 0) ? null : Animations[0];
@@ -78,6 +79,7 @@ namespace FSO.SimAntics
         */
         public VMAvatarDefaultSuits DefaultSuits = new VMAvatarDefaultSuits(false);
         public VMAvatarDynamicSuits DynamicSuits = new VMAvatarDynamicSuits(false);
+        public VMAvatarDecoration Decoration = new VMAvatarDecoration();
         public HashSet<string> BoundAppearances = new HashSet<string>();
 
         private ulong _BodyOutfit;
@@ -114,6 +116,8 @@ namespace FSO.SimAntics
                 return _HeadOutfit;
             }
         }
+
+        
 
         private AppearanceType _SkinTone;
         public AppearanceType SkinTone
@@ -215,7 +219,8 @@ namespace FSO.SimAntics
             }
         }
 
-        public void SetAvatarType(STR data) {
+        public void SetAvatarType(STR data)
+        {
             if (data == null)
             {
                 AvatarType = VMAvatarType.Adult;
@@ -252,7 +257,8 @@ namespace FSO.SimAntics
             }
         }
 
-        public void SetAvatarBodyStrings(STR data, VMContext context) {
+        public void SetAvatarBodyStrings(STR data, VMContext context)
+        {
             if (data == null) return;
 
             try
@@ -263,7 +269,7 @@ namespace FSO.SimAntics
                 if (randBody != "")
                 {
                     var bodySpl = randBody.Split(';');
-                    DefaultSuits.Daywear = Convert.ToUInt64(bodySpl[context.NextRandom((ulong)bodySpl.Length-1)], 16);
+                    DefaultSuits.Daywear = Convert.ToUInt64(bodySpl[context.NextRandom((ulong)bodySpl.Length - 1)], 16);
                 }
                 else if (body != "")
                 {
@@ -278,7 +284,7 @@ namespace FSO.SimAntics
                 if (randHead != "")
                 {
                     var headSpl = randHead.Split(';');
-                    HeadOutfit = Convert.ToUInt64(headSpl[context.NextRandom((ulong)headSpl.Length-1)], 16);
+                    HeadOutfit = Convert.ToUInt64(headSpl[context.NextRandom((ulong)headSpl.Length - 1)], 16);
                 }
                 else if (head != "")
                 {
@@ -351,7 +357,7 @@ namespace FSO.SimAntics
             SetAvatarBodyStrings(Object.Resource.Get<STR>(Object.OBJ.BodyStringID), context);
             InitBodyData(context);
 
-            for (int i=0; i<MotiveData.Length; i++)
+            for (int i = 0; i < MotiveData.Length; i++)
             {
                 MotiveData[i] = 100;
             }
@@ -548,7 +554,7 @@ namespace FSO.SimAntics
         public void UserLeaveLot()
         {
             if (Thread.Context.VM.EODHost != null) Thread.Context.VM.EODHost.ForceDisconnect(this); //try this a lot.
-            if (Thread.Queue.Exists(x => x.ActionRoutine.ID == LEAVE_LOT_TREE && Thread.Queue.IndexOf(x) <= Thread.ActiveQueueBlock+1)) return; //we're already leaving
+            if (Thread.Queue.Exists(x => x.ActionRoutine.ID == LEAVE_LOT_TREE && Thread.Queue.IndexOf(x) <= Thread.ActiveQueueBlock + 1)) return; //we're already leaving
             var actions = new List<VMQueuedAction>(Thread.Queue);
             foreach (var action in actions)
             {
@@ -585,10 +591,10 @@ namespace FSO.SimAntics
                 if (!state.EndReached)
                 {
                     float visualFrame = state.CurrentFrame;
-                    if (state.PlayingBackwards) visualFrame -= state.Speed/2;
-                    else visualFrame += state.Speed/2;
+                    if (state.PlayingBackwards) visualFrame -= state.Speed / 2;
+                    else visualFrame += state.Speed / 2;
 
-                    Animator.RenderFrame(avatar.Avatar, state.Anim, (int)visualFrame, visualFrame%1, state.Weight/totalWeight);
+                    Animator.RenderFrame(avatar.Avatar, state.Anim, (int)visualFrame, visualFrame % 1, state.Weight / totalWeight);
                 }
             }
             if (avatar.CarryAnimationState != null) Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame, 0.0f, 1f);
@@ -624,7 +630,7 @@ namespace FSO.SimAntics
                     return (Thread.Queue.Count == 0) ? (short)0 : Thread.Queue[0].Priority;
                 case VMPersonDataVariable.IsHousemate:
                     var level = ((VMTSOAvatarState)TSOState).Permissions;
-                    return (short)((level >= VMTSOAvatarPermissions.BuildBuyRoommate)?2:((level >= VMTSOAvatarPermissions.Roommate)?1:0));
+                    return (short)((level >= VMTSOAvatarPermissions.BuildBuyRoommate) ? 2 : ((level >= VMTSOAvatarPermissions.Roommate) ? 1 : 0));
                 case VMPersonDataVariable.NumOutgoingFriends:
                 case VMPersonDataVariable.IncomingFriends:
                     return (short)(MeToPersist.Count(x => x.Key < 16777216 && x.Value.Count > 1 && x.Value[1] >= 50) * 5); //tuning cheats
@@ -671,7 +677,7 @@ namespace FSO.SimAntics
         }
 
         public virtual bool SetPersonData(VMPersonDataVariable variable, short value)
-            {
+        {
             if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
             VMTSOJobInfo jobInfo = null;
             switch (variable)
@@ -697,7 +703,8 @@ namespace FSO.SimAntics
                         jobInfo.StatusFlags = value;
                     return true;
                 case VMPersonDataVariable.OnlineJobXP:
-                    if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo)) {
+                    if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
+                    {
                         var diff = value - jobInfo.Experience;
                         if (diff > 0) value = (short)(jobInfo.Experience + diff * 5); //TODO: WIP: NOTE: IMPORTANT: 5x job scaling for testing
                         jobInfo.Experience = value;
@@ -903,6 +910,7 @@ namespace FSO.SimAntics
                 KillTimeout = KillTimeout,
                 DefaultSuits = DefaultSuits,
                 DynamicSuits = DynamicSuits,
+                Decoration = Decoration,
 
                 BoundAppearances = BoundAppearances.ToArray(),
                 BodyOutfit = BodyOutfit,
@@ -933,10 +941,12 @@ namespace FSO.SimAntics
             KillTimeout = input.KillTimeout;
             DefaultSuits = input.DefaultSuits;
             DynamicSuits = input.DynamicSuits;
+            Decoration = input.Decoration;
 
             BoundAppearances = new HashSet<string>(input.BoundAppearances);
 
-            if (VM.UseWorld) { 
+            if (VM.UseWorld)
+            {
                 foreach (var aprN in BoundAppearances)
                 {
                     var apr = FSO.Content.Content.Get().AvatarAppearances.Get(aprN);
@@ -965,7 +975,8 @@ namespace FSO.SimAntics
         #endregion
     }
 
-    public enum VMAvatarType : byte {
+    public enum VMAvatarType : byte
+    {
         Adult,
         Child,
         Cat,
@@ -1012,7 +1023,8 @@ namespace FSO.SimAntics
         public ulong Sleepwear;
         public ulong Costume;
 
-        public VMAvatarDynamicSuits(bool female){
+        public VMAvatarDynamicSuits(bool female)
+        {
             Daywear = 0x24C0000000D;
             Swimwear = (ulong)((female) ? 0x620000000D : 0x5470000000D);
             Sleepwear = (ulong)((female) ? 0x5150000000D : 0x5440000000D);
@@ -1038,6 +1050,39 @@ namespace FSO.SimAntics
             Swimwear = reader.ReadUInt64();
             Sleepwear = reader.ReadUInt64();
             Costume = reader.ReadUInt64();
+        }
+    }
+
+    public class VMAvatarDecoration : VMSerializable
+    {
+        public ulong Head;
+        public ulong Back;
+        public ulong Shoes;
+        public ulong Tail;
+
+        public VMAvatarDecoration()
+        {
+        }
+
+        public VMAvatarDecoration(BinaryReader reader)
+        {
+            Deserialize(reader);
+        }
+
+        public void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write(Head);
+            writer.Write(Back);
+            writer.Write(Shoes);
+            writer.Write(Tail);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Head = reader.ReadUInt64();
+            Back = reader.ReadUInt64();
+            Shoes = reader.ReadUInt64();
+            Tail = reader.ReadUInt64();
         }
     }
 }

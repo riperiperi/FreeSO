@@ -244,5 +244,9 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         {
 
         }
+
+        public void PurchaseOutfit(VM vm, uint outfitPID, uint objectPID, uint avatarPID, VMAsyncPurchaseOutfitCallback callback)
+        {
+        }
     }
 }

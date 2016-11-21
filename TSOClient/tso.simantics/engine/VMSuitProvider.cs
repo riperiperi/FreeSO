@@ -133,6 +133,15 @@ namespace FSO.SimAntics.Engine
                             return avatar.DynamicSuits.Swimwear;
                         case VMPersonSuits.DynamicCostume:
                             return avatar.DynamicSuits.Costume;
+
+                        case VMPersonSuits.DecorationHead:
+                            return avatar.Decoration.Head;
+                        case VMPersonSuits.DecorationBack:
+                            return avatar.Decoration.Back;
+                        case VMPersonSuits.DecorationShoes:
+                            return avatar.Decoration.Shoes;
+                        case VMPersonSuits.DecorationTail:
+                            return avatar.Decoration.Tail;
                     }
 
                     return null;
