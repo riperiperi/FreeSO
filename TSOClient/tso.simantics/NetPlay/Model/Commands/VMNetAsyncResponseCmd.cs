@@ -14,7 +14,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     /// <summary>
     /// For asynchronous events, such as transactions, inventory access and plugins. Updates the
     /// state for a thread waiting on an asynchronous response, usually waking it up.
-    /// CANNOT be sent by clients. Must be sent to server.
+    /// CANNOT be sent by clients. Must be sent by server.
     /// 
     /// The intention is for the async state updates being sent to the SimAntics VM are run at 
     /// the same time on both the client and server VMs.
@@ -23,6 +23,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public short ID;
         public VMAsyncState State;
+
+        public override bool AcceptFromClient { get { return false; } }
 
         public VMNetAsyncResponseCmd() { }
 

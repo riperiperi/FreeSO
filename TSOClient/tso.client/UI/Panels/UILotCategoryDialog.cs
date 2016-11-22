@@ -1,6 +1,6 @@
 ﻿using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
-using FSO.Server.Database.DA.Lots;
+using FSO.Common.DataService.Model;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -26,9 +26,9 @@ namespace FSO.Client.UI.Panels
         public UIButton CategoryButton_Residence { get; set; }
         public UIButton CategoryButton_None { get; set; }
 
-        public Dictionary<UIButton, DbLotCategory> ButtonToCategory;
+        public Dictionary<UIButton, LotCategory> ButtonToCategory;
 
-        public delegate void CategoryChangeHandler(DbLotCategory cat);
+        public delegate void CategoryChangeHandler(LotCategory cat);
         public event CategoryChangeHandler OnCategoryChange;
 
         public UILotCategoryDialog() : base(UIDialogStyle.Close, true)
@@ -44,19 +44,19 @@ namespace FSO.Client.UI.Panels
             }
 
 
-            ButtonToCategory = new Dictionary<UIButton, DbLotCategory>()
+            ButtonToCategory = new Dictionary<UIButton, LotCategory>()
             {
-                { CategoryButton_Welcome, DbLotCategory.welcome },
-                { CategoryButton_Money, DbLotCategory.money },
-                { CategoryButton_Skills, DbLotCategory.skills },
-                { CategoryButton_Services, DbLotCategory.services },
-                { CategoryButton_Entertainment, DbLotCategory.entertainment },
-                { CategoryButton_Romance, DbLotCategory.romance },
-                { CategoryButton_Shopping, DbLotCategory.shopping },
-                { CategoryButton_Games, DbLotCategory.games },
-                { CategoryButton_Offbeat, DbLotCategory.offbeat },
-                { CategoryButton_Residence, DbLotCategory.residence },
-                { CategoryButton_None, DbLotCategory.none }
+                { CategoryButton_Welcome, LotCategory.welcome },
+                { CategoryButton_Money, LotCategory.money },
+                { CategoryButton_Skills, LotCategory.skills },
+                { CategoryButton_Services, LotCategory.services },
+                { CategoryButton_Entertainment, LotCategory.entertainment },
+                { CategoryButton_Romance, LotCategory.romance },
+                { CategoryButton_Shopping, LotCategory.shopping },
+                { CategoryButton_Games, LotCategory.games },
+                { CategoryButton_Offbeat, LotCategory.offbeat },
+                { CategoryButton_Residence, LotCategory.residence },
+                { CategoryButton_None, LotCategory.none }
             };
 
             foreach (var pair in ButtonToCategory)

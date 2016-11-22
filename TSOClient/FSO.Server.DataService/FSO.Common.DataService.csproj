@@ -48,7 +48,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.0.0\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.3.11\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -100,10 +100,6 @@
     <Compile Include="Providers\Client\ClientAvatarProvider.cs" />
     <Compile Include="Providers\Client\ClientCityProvider.cs" />
     <Compile Include="Providers\Client\ClientLotProvider.cs" />
-    <Compile Include="Providers\Server\ServerAvatarProvider.cs" />
-    <Compile Include="Providers\Server\ServerCityProvider.cs" />
-    <Compile Include="Providers\Server\ServerLotProvider.cs" />
-    <Compile Include="ServerDataService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -120,10 +116,6 @@
     <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
       <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
       <Name>FSO.Server.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\FSO.Server.Database\FSO.Server.Database.csproj">
-      <Project>{430acd60-e798-43f0-ad61-8b5a35df6ab2}</Project>
-      <Name>FSO.Server.Database</Name>
     </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
       <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>

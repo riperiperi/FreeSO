@@ -295,8 +295,9 @@ namespace FSO.Client.UI.Screens
             }
 
             UIAlertOptions AlertOptions = new UIAlertOptions();
-            AlertOptions.Title = "{{169:9}}";
-            AlertOptions.Message = "{{169:10}}";
+
+            AlertOptions.Title = GameFacade.Strings.GetString("169", "9");
+            AlertOptions.Message = GameFacade.Strings.GetString("169", "10");
             AlertOptions.Buttons = new UIAlertButton[] {
                 new UIAlertButton(UIAlertButtonType.OK, new ButtonClickDelegate(PersonSlot_OnButtonClick)),
                 new UIAlertButton(UIAlertButtonType.Cancel)
@@ -349,10 +350,11 @@ namespace FSO.Client.UI.Screens
             CityThumb.Texture = cityThumbTex;
 
             SetTab(PersonSlotTab.EnterTab);
-            
+
+            Sim.Avatar.Appearance = (AppearanceType)Enum.Parse(typeof(AppearanceType), avatar.AppearanceType.ToString());
             Sim.Avatar.BodyOutfitId = avatar.BodyOutfitID;
             Sim.Avatar.HeadOutfitId = avatar.HeadOutfitID;
-            Sim.Avatar.Appearance = (AppearanceType)Enum.Parse(typeof(AppearanceType), avatar.AppearanceType.ToString());
+
             Sim.Visible = true;
 
             PersonDescriptionText.CurrentText = avatar.Description;
@@ -366,6 +368,7 @@ namespace FSO.Client.UI.Screens
             }
 
             EnterTabButton.Disabled = isAvailable;
+            if (isAvailable) EnterTabButton.Selected = false;
             DescTabButton.Disabled = isAvailable;
 
             NewAvatarButton.Visible = isAvailable;

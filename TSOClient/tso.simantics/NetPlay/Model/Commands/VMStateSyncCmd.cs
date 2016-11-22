@@ -15,6 +15,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public VMMarshal State;
         public VMSyncTraceTick Trace;
 
+        //very important: we can't deserialize state information from the client. They might try to exhaust our memory, take a huge amount of our time or do bad things!
+        public override bool AcceptFromClient { get { return false; } }
+
         public override bool Execute(VM vm)
         {
 #if VM_DESYNC_DEBUG

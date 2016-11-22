@@ -20,6 +20,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public ushort Version = CurVer;
 
+        public override bool AcceptFromClient { get { return false; } }
+
         public VMNetAvatarPersistState AvatarState;
 
         public static ushort CurVer = 0xFFEE;
@@ -92,41 +94,6 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
-            /*
-
-            //OLD NET ticket->data service
-
-            Name = Name.Replace("\r\n", "");
-            if (Verified == true) return true;
-            if (Ticket == null) Ticket = "local" + ":" + Name;
-
-            var tempName = Name; //obviously not a concern for final server. but for now... prevents people logging in with 2x same persist
-            int i = 1;
-            while (vm.Entities.Any(x => (x is VMAvatar) && ((VMAvatar)x).Name == tempName))
-            {
-                tempName = Name + " (" + (i++) + ")";
-            }
-            Name = tempName;
-
-            if (FromNet && RequesterID == uint.MaxValue - 1) return false; //only server can set themselves as server...
-            RequesterID = ActorUID;
-            vm.GlobalLink.ObtainAvatarFromTicket(vm, Ticket, (uint persistID, VMTSOAvatarPermissions permissions) =>
-                {
-                    //first, verify if their sim has left the lot yet. if not, they cannot join until they have left.
-                    //(only really happens with an immediate rejoin)
-                    if (vm.Entities.FirstOrDefault(x => x.PersistID == persistID) != null && Client != null)
-                    {
-                        Client.Disconnect(); //would like to send a message but need a rework of VMServerDriver to make it happen
-                        return;
-                    }
-
-                    //TODO: a lot more persist state
-                    this.ActorUID = persistID;
-                    this.Permissions = permissions;
-                    this.Verified = true;
-                    vm.ForwardCommand(this);
-                });
-            */
             return !FromNet; //can only be sent out by server
         }
 

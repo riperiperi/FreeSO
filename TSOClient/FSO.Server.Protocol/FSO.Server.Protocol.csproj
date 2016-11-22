@@ -48,7 +48,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.0.1\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.3.11\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -91,8 +91,10 @@
     <Compile Include="Electron\ElectronPackets.cs" />
     <Compile Include="Electron\ElectronPacketType.cs" />
     <Compile Include="Electron\IElectronPacket.cs" />
+    <Compile Include="Electron\Model\ChangeRoommateType.cs" />
     <Compile Include="Electron\Model\FindAvatarResponseStatus.cs" />
     <Compile Include="Electron\Model\FindLotResponseStatus.cs" />
+    <Compile Include="Electron\Packets\ChangeRoommateRequest.cs" />
     <Compile Include="Electron\Packets\FindAvatarResponse.cs" />
     <Compile Include="Electron\Packets\FindLotResponse.cs" />
     <Compile Include="Electron\Packets\CreateASimResponse.cs" />

@@ -1,5 +1,4 @@
-﻿using FSO.Server.Database.DA.Shards;
-using FSO.Server.Protocol.CitySelector;
+﻿using FSO.Server.Protocol.CitySelector;
 using System;
 using System.Collections.Generic;
 using System.Linq;

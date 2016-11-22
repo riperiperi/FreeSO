@@ -26,6 +26,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public int OffsetY;
         public int TargetSize;
 
+        public override bool AcceptFromClient { get { return false; } }
+
         public override bool Execute(VM vm)
         {
             XmlHouseData lotInfo;
@@ -48,6 +50,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             vm.SetGlobalValue(11, JobLevel);
 
             return true;
+        }
+
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            return !FromNet;
         }
 
         #region VMSerializable Members

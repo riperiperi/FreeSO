@@ -19,6 +19,7 @@ namespace FSO.Server.Protocol.Electron
         FSOVMCommand,
         FindAvatarRequest,
         FindAvatarResponse,
+        ChangeRoommateRequest,
         Unknown
     }
 
@@ -50,6 +51,8 @@ namespace FSO.Server.Protocol.Electron
                     return ElectronPacketType.FindAvatarRequest;
                 case 0x000B:
                     return ElectronPacketType.FindAvatarResponse;
+                case 0x000C:
+                    return ElectronPacketType.ChangeRoommateRequest;
                 default:
                     return ElectronPacketType.Unknown;
             }
@@ -81,6 +84,8 @@ namespace FSO.Server.Protocol.Electron
                     return 0x000A;
                 case ElectronPacketType.FindAvatarResponse:
                     return 0x000B;
+                case ElectronPacketType.ChangeRoommateRequest:
+                    return 0x000C;
             }
 
             return 0xFFFF;

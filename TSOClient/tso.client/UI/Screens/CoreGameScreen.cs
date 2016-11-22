@@ -295,6 +295,7 @@ namespace FSO.Client.UI.Screens
             CityRenderer.LoadContent(GameFacade.GraphicsDevice);
             CityRenderer.RegenData = true;
             CityRenderer.SetTimeOfDay(0.5);
+            CityRenderer.Plugin = new Rendering.City.Plugins.MapPainterPlugin(CityRenderer);
             GameFacade.Scenes.Add(CityRenderer);
 
             CityTooltip = new UICustomTooltip();

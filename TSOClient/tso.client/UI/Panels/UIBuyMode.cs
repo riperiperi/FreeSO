@@ -278,6 +278,7 @@ namespace FSO.Client.UI.Panels
                 } else { refreshInventory = true; }
                 if (refreshInventory)
                 {
+                    var lastCatPage = Catalog.GetPage();
                     LastInventory = new List<VMInventoryItem>(inventory);
                     if (CurrentInventory == null) CurrentInventory = new List<UICatalogElement>();
                     CurrentInventory.Clear();
@@ -291,7 +292,11 @@ namespace FSO.Client.UI.Panels
                         //todo: make icon for correct graphic.
                         CurrentInventory.Add(new UICatalogElement { Item = obj });
                     }
-                    if (Mode == 2) ChangeCategory(InventoryButton); //refresh display
+                    if (Mode == 2)
+                    {
+                        ChangeCategory(InventoryButton); //refresh display
+                        Catalog.SetPage(Math.Min(Catalog.TotalPages()-1, lastCatPage));
+                    }
                 }
             }
             base.Update(state);

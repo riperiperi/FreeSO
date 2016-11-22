@@ -7,7 +7,6 @@ using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
 using FSO.Files;
-using FSO.Server.Database.DA.Lots;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -146,30 +145,30 @@ namespace FSO.Client.UI.Panels
                 .WithBinding(OwnerButton, "AvatarId", "Lot_LeaderID")
                 .WithBinding(HouseCategoryButton, "Texture", "Lot_Category", x =>
                 {
-                    var category = (DbLotCategory)Enum.Parse(typeof(DbLotCategory), x.ToString());
+                    var category = (LotCategory)Enum.Parse(typeof(LotCategory), x.ToString());
                     switch (category)
                     {
-                        case DbLotCategory.none:
+                        case LotCategory.none:
                             return HouseCategory_NoCategoryButtonImage;
-                        case DbLotCategory.welcome:
+                        case LotCategory.welcome:
                             return HouseCategory_WelcomeButtonImage;
-                        case DbLotCategory.money:
+                        case LotCategory.money:
                             return HouseCategory_MoneyButtonImage;
-                        case DbLotCategory.entertainment:
+                        case LotCategory.entertainment:
                             return HouseCategory_EntertainmentButtonImage;
-                        case DbLotCategory.games:
+                        case LotCategory.games:
                             return HouseCategory_GamesButtonImage;
-                        case DbLotCategory.offbeat:
+                        case LotCategory.offbeat:
                             return HouseCategory_OffbeatButtonImage;
-                        case DbLotCategory.residence:
+                        case LotCategory.residence:
                             return HouseCategory_ResidenceButtonImage;
-                        case DbLotCategory.romance:
+                        case LotCategory.romance:
                             return HouseCategory_RomanceButtonImage;
-                        case DbLotCategory.services:
+                        case LotCategory.services:
                             return HouseCategory_ServicesButtonImage;
-                        case DbLotCategory.shopping:
+                        case LotCategory.shopping:
                             return HouseCategory_ShoppingButtonImage;
-                        case DbLotCategory.skills:
+                        case LotCategory.skills:
                             return HouseCategory_SkillsButtonImage;
                         default:
                             return null;
@@ -223,7 +222,7 @@ namespace FSO.Client.UI.Panels
             catDialog.OnCategoryChange += ChangeCategory;
         }
 
-        private void ChangeCategory(DbLotCategory cat)
+        private void ChangeCategory(LotCategory cat)
         {
             if (CurrentLot != null && CurrentLot.Value != null && FindController<CoreGameScreenController>().IsMe(CurrentLot.Value.Lot_LeaderID))
             {

@@ -302,14 +302,17 @@ namespace FSO.Client.UI.Panels
                 item.CaptionStyle = item.CaptionStyle.Clone();
                 item.CaptionStyle.Shadow = true;
             }
+            var noPermission = (!lotController.vm.TSOState.BuildRoommates.Contains(lotController.vm.MyUID) && lotController.vm.TSOState.OwnerID != lotController.vm.MyUID);
             var j = 0;
             foreach (var item in CheckButtons)
             {
+                if (noPermission) item.Disabled = true;
                 var index = j++; item.OnButtonClick += (btn) => { SelectItem(item, index, false); };
             }
             j = 0;
             foreach (var item in RadioButtons)
             {
+                if (noPermission) item.Disabled = true;
                 var index = j++; item.OnButtonClick += (btn) => { SelectItem(item, index, true); };
             }
             Script = script;

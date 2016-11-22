@@ -471,6 +471,7 @@
     <Content Include="Content\Patch\skillobjects_10xmultiplier.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Content\Patch\pondduck_fixref.piff" />
     <None Include="Content\Patch\soccerball.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

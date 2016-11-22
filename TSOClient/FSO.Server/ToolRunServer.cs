@@ -4,6 +4,7 @@ using FSO.Common.Utils;
 using FSO.Server.Database.DA;
 using FSO.Server.DataService;
 using FSO.Server.Debug;
+using FSO.Server.Domain;
 using FSO.Server.Servers;
 using FSO.Server.Servers.Api;
 using FSO.Server.Servers.City;

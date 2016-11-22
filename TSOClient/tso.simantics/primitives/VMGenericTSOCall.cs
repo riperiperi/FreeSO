@@ -218,7 +218,8 @@ namespace FSO.SimAntics.Primitives
                     var obj = context.VM.GetObjectById(context.Thread.TempRegisters[0]); 
                     if (context.StackObject is VMAvatar || obj == null) return VMPrimitiveExitCode.GOTO_TRUE;
 
-                    ((VMTSOObjectState)context.StackObject.TSOState).OwnerID = obj.PersistID;
+                    foreach (var owned in context.StackObject.MultitileGroup.Objects)
+                        ((VMTSOObjectState)owned.TSOState).OwnerID = obj.PersistID;
                     //TODO: immediately persist? what to do when new owner has hit their object limit?
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 //53. Is On Editable Tile

@@ -139,8 +139,14 @@
     <Compile Include="DataService\DataServiceSyncFactory.cs" />
     <Compile Include="DataService\GlobalDataServiceModule.cs" />
     <Compile Include="DataService\IDataServiceSyncFactory.cs" />
+    <Compile Include="DataService\Providers\ServerAvatarProvider.cs" />
+    <Compile Include="DataService\Providers\ServerCityProvider.cs" />
+    <Compile Include="DataService\Providers\ServerLotProvider.cs" />
+    <Compile Include="DataService\ServerDataService.cs" />
     <Compile Include="DataService\ServerNFSProvider.cs" />
     <Compile Include="DataService\ShardDataServiceModule.cs" />
+    <Compile Include="Domain\ServerDomainModule.cs" />
+    <Compile Include="Domain\Shards.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServer.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServerConfig.cs" />
     <Compile Include="Framework\Aries\AriesPacketRouter.cs" />
@@ -180,6 +186,7 @@
     <Compile Include="Servers\City\Domain\JobMatchmaker.cs" />
     <Compile Include="Servers\City\Domain\LotAllocations.cs" />
     <Compile Include="Servers\City\Domain\LotServerPicker.cs" />
+    <Compile Include="Servers\City\Handlers\ChangeRoommateHandler.cs" />
     <Compile Include="Servers\City\Handlers\ElectronFindPlayerHandler.cs" />
     <Compile Include="Servers\City\Handlers\FindPlayerHandler.cs" />
     <Compile Include="Servers\City\Handlers\JoinLotHandler.cs" />

@@ -1,7 +1,6 @@
 ﻿using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Domain.Shards;
 using FSO.Content.Model;
-using FSO.Server.Database.DA.Shards;
 using FSO.Server.Protocol.CitySelector;
 using System;
 using System.Collections.Generic;

@@ -80,10 +80,20 @@ namespace FSO.SimAntics.NetPlay.Model
 
         public void Deserialize(BinaryReader reader)
         {
+            TryDeserialize(reader, true);
+        }
+
+        public bool TryDeserialize(BinaryReader reader, bool isClient)
+        {
             Type = (VMCommandType)reader.ReadByte();
             Type cmdType = CmdMap[Type];
             Command = (VMNetCommandBodyAbstract)Activator.CreateInstance(cmdType);
-            Command.Deserialize(reader);
+            if (Command.AcceptFromClient || isClient)
+            {
+                Command.Deserialize(reader);
+                return true;
+            }
+            return false;
         }
 
         #endregion

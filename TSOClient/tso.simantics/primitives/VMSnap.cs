@@ -42,7 +42,7 @@ namespace FSO.SimAntics.Primitives
                     slot = VMMemory.GetSlot(context, VMSlotScope.StackVariable, operand.Index);
                     break;
                 case VMSnapSlotScope.BeContained:
-                    return (context.StackObject.PlaceInSlot(context.Caller, 0, true, context.VM.Context)) ? VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
+                    return (context.StackObject.PlaceInSlot(context.Caller, 0, true, context.VM.Context)) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                 case VMSnapSlotScope.InFront:
                     slot = new SLOTItem { Type = 3, Standing = 1, MinProximity = 16, Rsflags = SLOTFlags.NORTH };
                     break;
@@ -53,6 +53,8 @@ namespace FSO.SimAntics.Primitives
                     slot = VMMemory.GetSlot(context, VMSlotScope.Global, operand.Index);
                     break;
             }
+
+            if (slot == null) return VMPrimitiveExitCode.GOTO_FALSE;
 
             if (operand.Mode != VMSnapSlotScope.BeContained)
             {

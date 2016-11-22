@@ -1011,7 +1011,7 @@ namespace FSO.SimAntics
                     vmObject.MainStackOBJ = MainStackOBJ;
 
                     group.Init(this);
-                    vmObject.SetPosition(pos, direction, this);
+                    var result = vmObject.SetPosition(pos, direction, this);
                     
                     return group;
                 }

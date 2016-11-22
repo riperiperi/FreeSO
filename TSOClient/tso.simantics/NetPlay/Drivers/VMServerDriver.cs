@@ -295,10 +295,12 @@ namespace FSO.SimAntics.NetPlay.Drivers
             var cmd = new VMNetCommand();
             try {
                 using (var reader = new BinaryReader(new MemoryStream(message.Data))) {
-                    cmd.Deserialize(reader);
+                    if (!cmd.TryDeserialize(reader, false)) return; //ignore things that should never be sent to the server
                 }
-            } catch (Exception)
+            }
+            catch (Exception)
             {
+                //corrupt commands are currently a death sentence for the client. nothing should be corrupt over TCP except in rare cases.
                 ClientsToDC.Add(client);
                 return;
             }

@@ -12,6 +12,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public short ObjectID;
         public uint PersistID;
 
+        public override bool AcceptFromClient { get { return false; } }
+
         public override bool Execute(VM vm)
         {
             VMEntity obj = vm.GetObjectById(ObjectID);

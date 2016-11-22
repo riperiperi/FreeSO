@@ -12,6 +12,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public List<VMInventoryItem> Items;
 
+        public override bool AcceptFromClient { get { return false; } }
+
         public override bool Execute(VM vm)
         {
             //sent direct to the target, so we should believe the inventory is ours.

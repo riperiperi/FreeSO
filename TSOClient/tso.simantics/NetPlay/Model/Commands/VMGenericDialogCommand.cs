@@ -8,6 +8,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 {
     public class VMGenericDialogCommand : VMNetCommandBodyAbstract
     {
+        public override bool AcceptFromClient { get { return false; } }
+
         public string Title;
         public string Message;
         public override bool Execute(VM vm)

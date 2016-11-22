@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FSO.Server.Database.DA.Shards;
 using FSO.Server.Protocol.CitySelector;
 
 namespace FSO.Common.Domain.Shards

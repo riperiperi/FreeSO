@@ -12,6 +12,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public byte[][] HollowAdj;
 
+        public override bool AcceptFromClient { get { return false; } }
+
         public override bool Execute(VM vm)
         {
             vm.HollowAdj = HollowAdj;

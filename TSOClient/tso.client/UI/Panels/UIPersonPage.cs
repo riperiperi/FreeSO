@@ -407,6 +407,7 @@ namespace FSO.Client.UI.Panels
             CurrentAvatar = new Binding<Avatar>()
                 .WithBinding(this, "HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID")
                 .WithBinding(this, "SimBox.Avatar.BodyOutfitId", "Avatar_Appearance.AvatarAppearance_BodyOutfitID")
+                .WithBinding(this, "SimBox.Avatar.Appearance", "Avatar_Appearance.AvatarAppearance_SkinTone", (x) => (Vitaboy.AppearanceType)((byte)x))
                 .WithBinding(this, "AvatarName", "Avatar_Name")
                 .WithMultiBinding(x =>
                 {
@@ -848,7 +849,7 @@ namespace FSO.Client.UI.Panels
                     OriginalDescription = CurrentAvatar.Value.Avatar_Description;
                     DescriptionText.CurrentText = OriginalDescription;
                 }
-                
+
                 if (CurrentAvatar.Value.Avatar_Skills != null)
                 {
                     var skills = CurrentAvatar.Value.Avatar_Skills;
@@ -884,13 +885,13 @@ namespace FSO.Client.UI.Panels
 
             SelfRimImage.Visible = isOnline && isMe;
             OfflineSelfBackgroundImage.Visible = !isOnline && isMe;
-            if (!isMe) { 
+            if (!isMe) {
                 FindSimButton.Texture = FindPersonButtonImage;
                 FindSimButton.Tooltip = GameFacade.Strings.GetString("189", "8");
             } else
             {
                 FindSimButton.Texture = (privacyOn) ? FindPrivacyOnButtonImage : FindPrivacyOffButtonImage;
-                FindSimButton.Tooltip = GameFacade.Strings.GetString("189", (privacyOn) ? "57":"56");
+                FindSimButton.Tooltip = GameFacade.Strings.GetString("189", (privacyOn) ? "57" : "56");
             }
             FriendRimImage.Visible = isOnline && isFriend;
             EnemyRimImage.Visible = isOnline && isEnemy;
@@ -978,6 +979,11 @@ namespace FSO.Client.UI.Panels
 
             /** Options **/
             this.ChildrenWithinIdRange(700, 799).ForEach(x => x.Visible = isOptions);
+
+            if (isOptions)
+            {
+                KickOutButton.Visible = true;
+            }
         }
 
         public void RelationshipChange()

@@ -596,7 +596,7 @@ namespace FSO.Client.UI.Panels
             sizeLabel.CaptionStyle = sizeLabel.CaptionStyle.Clone();
             sizeLabel.CaptionStyle.Shadow = true;
             sizeLabel.CaptionStyle.Size = 6;
-            sizeLabel.Position = new Vector2(LargerButton.X+3, LargerButton.Y + 11);
+            sizeLabel.Position = new Vector2(LargerButton.X + 3, LargerButton.Y + 11);
             sizeLabel.Size = new Vector2(45, 0);
             sizeLabel.Alignment = TextAlignment.Center;
             sizeLabel.Caption = "Size";
@@ -606,7 +606,7 @@ namespace FSO.Client.UI.Panels
             floorsLabel.CaptionStyle = sizeLabel.CaptionStyle.Clone();
             floorsLabel.CaptionStyle.Shadow = true;
             floorsLabel.CaptionStyle.Size = 6;
-            floorsLabel.Position = new Vector2(FloorsLargerButton.X+3, FloorsLargerButton.Y + 11);
+            floorsLabel.Position = new Vector2(FloorsLargerButton.X + 3, FloorsLargerButton.Y + 11);
             floorsLabel.Size = new Vector2(45, 0);
             floorsLabel.Alignment = TextAlignment.Center;
             floorsLabel.Caption = "Floors";
@@ -625,6 +625,15 @@ namespace FSO.Client.UI.Panels
             Add(PreviewImage);
 
             UpdateCost();
+
+            if (lotController.vm.TSOState.OwnerID != lotController.vm.MyUID)
+            {
+                LargerButton.Disabled = true;
+                SmallerButton.Disabled = true;
+                FloorsLargerButton.Disabled = true;
+                FloorsSmallerButton.Disabled = true;
+                AcceptButton.Disabled = true;
+            }
         }
 
         private void PurchaseLotSize(UIElement button)

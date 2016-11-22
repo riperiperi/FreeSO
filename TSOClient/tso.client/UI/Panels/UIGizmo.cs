@@ -375,8 +375,9 @@ namespace FSO.Client.UI.Panels
 
             CurrentAvatar = new Binding<Avatar>()
                 .WithBinding(PIP, "SimBox.Avatar.BodyOutfitId", "Avatar_Appearance.AvatarAppearance_BodyOutfitID")
-                .WithBinding(PIP, "SimBox.Avatar.HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID");
-            
+                .WithBinding(PIP, "SimBox.Avatar.HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID")
+                .WithBinding(PIP, "SimBox.Avatar.Appearance", "Avatar_Appearance.AvatarAppearance_SkinTone", (x) => (Vitaboy.AppearanceType)((byte)x));
+
             Tab = UIGizmoTab.Property;
             View = UIGizmoView.Filters;
             SetOpen(true);

@@ -8,10 +8,12 @@ using System.Threading.Tasks;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
-    class VMNetEODEventCmd : VMNetCommandBodyAbstract
+    public class VMNetEODEventCmd : VMNetCommandBodyAbstract
     {
         public short ObjectID;
         public VMEODEvent Event;
+
+        public override bool AcceptFromClient { get { return false; } }
 
         public override bool Execute(VM vm)
         {
@@ -26,6 +28,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Event.Code == -1) state.Ended = true;
 
             return true;
+        }
+
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            return !FromNet;
         }
 
         #region VMSerializable Members

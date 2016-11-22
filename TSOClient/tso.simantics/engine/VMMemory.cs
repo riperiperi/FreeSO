@@ -823,13 +823,16 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMSlotScope.Global:
                     var slots = context.Global.Resource.Get<SLOT>(100);
                     if (slots != null && slots.Slots.ContainsKey(3) && data < slots.Slots[3].Count){
+                        if (data >= slots.Slots[3].Count) return null;
                         var slot = slots.Slots[3][data];
                         return slot;
                     }
                     return null;
                 case VMSlotScope.Literal:
+                    if (data >= context.StackObject.Slots.Slots[3].Count) return null;
                     return context.StackObject.Slots.Slots[3][data];
                 case VMSlotScope.StackVariable:
+                    if (context.Args[data] >= context.StackObject.Slots.Slots[3].Count) return null;
                     return context.StackObject.Slots.Slots[3][context.Args[data]];
             }
             return null;

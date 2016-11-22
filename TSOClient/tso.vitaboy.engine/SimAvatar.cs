@@ -32,6 +32,7 @@ namespace FSO.Vitaboy
             m_Handgroup = old.m_Handgroup;
             m_Body = old.m_Body;
             m_Head = old.m_Head;
+            m_Appearance = old.m_Appearance;
 
             ReloadSkeleton();
             ReloadHead();

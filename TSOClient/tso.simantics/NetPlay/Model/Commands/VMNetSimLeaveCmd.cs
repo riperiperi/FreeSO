@@ -25,7 +25,6 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             {
                 // the user has left the lot with their sim still on it...
                 // force leave lot. generate an action with incredibly high priority and cancel current
-                // TODO: timeout for forceful removal
 
                 sim.UserLeaveLot();
             }
