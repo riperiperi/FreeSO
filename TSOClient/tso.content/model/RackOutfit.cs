@@ -14,7 +14,7 @@ namespace FSO.Content.Model
         public RackOutfitGender Gender { get; set; }
         public RackType RackType { get; set; }
 
-        public ulong GetOutfitID()
+        /*public ulong GetOutfitID()
         {
             return GetOutfitID(AssetID);
         }
@@ -22,7 +22,7 @@ namespace FSO.Content.Model
         public static ulong GetOutfitID(ulong assetId)
         {
             return (assetId << 32) | 0xd;
-        }
+        }*/
     }
 
     public enum RackOutfitGender

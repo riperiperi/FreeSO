@@ -559,24 +559,34 @@ namespace FSO.Server.Servers.Lot.Domain
             Host.SetSpotlight(on);
         }
 
-        public void StockOutfit(VM vm, uint objectPID, ulong asset_id, int price, VMAsyncStockOutfitCallback callback)
+        public void StockOutfit(VM vm, VMGLOutfit outfit, VMAsyncStockOutfitCallback callback)
         {
             Host.InBackground(() => {
-                if (objectPID == 0)
+                if (outfit.owner_id == 0)
                 {
                     callback(false, 0);
+                    return;
                 }
 
                 using (var db = DAFactory.Get())
                 {
                     try {
-                        var result = db.Outfits.Create(new Database.DA.Outfits.DbOutfit {
-                            object_owner = objectPID,
-                            asset_id = asset_id,
-                            purchase_price = price,
-                            sale_price = price
-                        });
+                        var model = new Database.DA.Outfits.DbOutfit
+                        {
+                            asset_id = outfit.asset_id,
+                            purchase_price = outfit.purchase_price,
+                            sale_price = outfit.sale_price,
+                            outfit_type = outfit.outfit_type,
+                            outfit_source = outfit.outfit_source == VMGLOutfitSource.cas ? Database.DA.Outfits.DbOutfitSource.cas : Database.DA.Outfits.DbOutfitSource.rack
+                        };
 
+                        if(outfit.owner_type == VMGLOutfitOwner.AVATAR){
+                            model.avatar_owner = outfit.owner_id;
+                        }else if(outfit.owner_type == VMGLOutfitOwner.OBJECT){
+                            model.object_owner = outfit.owner_id;
+                        }
+
+                        var result = db.Outfits.Create(model);
                         callback(result != 0, result);
                     }catch(Exception ex){
                         callback(false, 0);
@@ -599,7 +609,9 @@ namespace FSO.Server.Servers.Lot.Domain
                                 asset_id = x.asset_id,
                                 outfit_id = x.outfit_id,
                                 sale_price = x.sale_price,
-                                purchase_price = x.purchase_price
+                                purchase_price = x.purchase_price,
+                                outfit_type = x.outfit_type,
+                                outfit_source = x.outfit_source == Database.DA.Outfits.DbOutfitSource.cas ? VMGLOutfitSource.cas : VMGLOutfitSource.rack
                             };
 
                             if (x.avatar_owner != null && x.avatar_owner.HasValue)

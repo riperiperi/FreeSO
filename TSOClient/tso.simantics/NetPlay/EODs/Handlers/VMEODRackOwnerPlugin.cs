@@ -14,6 +14,7 @@ using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.Engine.Utils;
 using System.Text.RegularExpressions;
+using FSO.SimAntics.Engine.Scopes;
 
 namespace FSO.SimAntics.NetPlay.EODs.Handlers
 {
@@ -53,7 +54,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             var VM = client.vm;
             
             VM.GlobalLink.UpdateOutfitSalePrice(VM, outfitId, Server.Object.PersistID,newSalePrice, success => {
-                BroadcastStock(VM, false);
+                BroadcastOutfits(VM, false);
             });
         }
 
@@ -69,7 +70,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
             //TODO: Some kind of refund?
             VM.GlobalLink.DeleteOutfit(VM, outfitId, VMGLOutfitOwner.OBJECT, Server.Object.PersistID, success => {
-                BroadcastStock(VM, true);
+                BroadcastOutfits(VM, true);
             });
         }
 
@@ -105,16 +106,22 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     if (success)
                     {
                         //Create the outfit
-                        VM.GlobalLink.StockOutfit(VM, Server.Object.PersistID, outfit.AssetID, outfit.Price, (bool created, uint outfitId) => {
+                        VM.GlobalLink.StockOutfit(VM, new VMGLOutfit {
+                            owner_type = VMGLOutfitOwner.OBJECT,
+                            owner_id = Server.Object.PersistID,
+                            asset_id = outfit.AssetID,
+                            purchase_price = outfit.Price,
+                            sale_price = outfit.Price,
+                            outfit_type = (byte)GetSuitType(this.RackType),
+                            outfit_source = VMGLOutfitSource.rack
+                        }, (bool created, uint outfitId) => {
                             client.SendOBJEvent(new VMEODEvent((short)VMEODRackEvent.StockOutfit, 0));
-                            BroadcastStock(VM, true);
+                            BroadcastOutfits(VM, true);
                         });
                     }else{
                         client.SendOBJEvent(new VMEODEvent((short)VMEODRackEvent.StockOutfit, 0));
                     }
             });
         }
-        
-
     }
 }

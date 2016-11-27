@@ -14,9 +14,10 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink.Model
         public ulong asset_id { get; set; }
         public int sale_price { get; set; }
         public int purchase_price { get; set; }
-
         public VMGLOutfitOwner owner_type { get; set; }
         public uint owner_id { get; set; }
+        public byte outfit_type { get; set; }
+        public VMGLOutfitSource outfit_source { get; set; }
 
         public void Serialize(IoBuffer output, ISerializationContext context)
         {
@@ -26,6 +27,8 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink.Model
             output.PutInt32(purchase_price);
             output.PutEnum(owner_type);
             output.PutUInt32(owner_id);
+            output.Put(outfit_type);
+            output.PutEnum(outfit_source);
         }
 
         public void Deserialize(IoBuffer input, ISerializationContext context)
@@ -36,6 +39,8 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink.Model
             purchase_price = input.GetInt32();
             owner_type = input.GetEnum<VMGLOutfitOwner>();
             owner_id = input.GetUInt32();
+            outfit_type = input.Get();
+            outfit_source = input.GetEnum<VMGLOutfitSource>();
         }
     }
 
@@ -44,5 +49,11 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink.Model
     {
         AVATAR = 1,
         OBJECT = 2
+    }
+
+    public enum VMGLOutfitSource : byte
+    {
+        cas,
+        rack
     }
 }

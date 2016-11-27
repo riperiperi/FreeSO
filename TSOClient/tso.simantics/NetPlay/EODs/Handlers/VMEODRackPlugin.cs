@@ -65,7 +65,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                 PutOnNow(outfit, client);
                             }
 
-                            BroadcastStock(VM, true);
+                            BroadcastOutfits(VM, true);
                         });
                     }
                 });
@@ -79,7 +79,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             {
                 UID = client.Avatar.PersistID,
                 Scope = slot,
-                Outfit = RackOutfit.GetOutfitID(outfit.asset_id)
+                Outfit = outfit.asset_id
             });
             client.SendOBJEvent(new VMEODEvent((short)VMEODRackEvent.PutOnNow, (short)RackType));
         }
@@ -100,51 +100,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 client.vm.SendCommand(new VMNetSetOutfitCmd {
                     UID = client.Avatar.PersistID,
                     Scope = slot,
-                    Outfit = RackOutfit.GetOutfitID(outfit.asset_id)
+                    Outfit = outfit.asset_id
                 });
                 //3 uses dynamic costume, by using this we avoid updating default outfits without a good reason to
                 client.SendOBJEvent(new VMEODEvent((short)VMEODRackEvent.TryOnOutfit, (short)RackType));
             });
-        }
-
-        private VMPersonSuits GetSuitSlot(bool tryOn)
-        {
-            var slot = VMPersonSuits.DynamicCostume;
-
-            if (!tryOn)
-            {
-                switch (RackType)
-                {
-                    case RackType.Formalwear:
-                    case RackType.Daywear:
-                        slot = VMPersonSuits.DefaultDaywear;
-                        break;
-                    case RackType.Sleepwear:
-                        slot = VMPersonSuits.DefaultSleepwear;
-                        break;
-                    case RackType.Swimwear:
-                        slot = VMPersonSuits.DefaultSwimwear;
-                        break;
-                }
-            }
-
-            switch (RackType)
-            {
-                case RackType.Decor_Head:
-                    slot = VMPersonSuits.DecorationHead;
-                    break;
-                case RackType.Decor_Back:
-                    slot = VMPersonSuits.DecorationBack;
-                    break;
-                case RackType.Decor_Shoe:
-                    slot = VMPersonSuits.DecorationShoes;
-                    break;
-                case RackType.Decor_Tail:
-                    slot = VMPersonSuits.DecorationTail;
-                    break;
-            }
-
-            return slot;
         }
 
         public override void OnDisconnection(VMEODClient client)

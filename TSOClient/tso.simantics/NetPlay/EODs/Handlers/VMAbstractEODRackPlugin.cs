@@ -1,6 +1,7 @@
 ﻿using FSO.Common.Serialization;
 using FSO.Common.Utils;
 using FSO.Content.Model;
+using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 using FSO.SimAntics.NetPlay.EODs.Model;
 using FSO.SimAntics.NetPlay.EODs.Utils;
@@ -27,7 +28,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             PlaintextHandlers["close"] = Lobby.Close;
         }
 
-        protected void GetStock(VM vm, Callback<VMGLOutfit[]> callback)
+        protected virtual void GetOutfits(VM vm, Callback<VMGLOutfit[]> callback)
         {
             vm.GlobalLink.GetOutfits(vm, VMGLOutfitOwner.OBJECT, Server.Object.PersistID, x =>
             {
@@ -37,7 +38,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         protected void GetOutfit(VM vm, uint outfitPID, Callback<VMGLOutfit> callback)
         {
-            GetStock(vm, x =>
+            GetOutfits(vm, x =>
             {
                 callback(x.FirstOrDefault(y => y.outfit_id == outfitPID));
             });
@@ -48,15 +49,15 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         /// </summary>
         /// <param name="vm"></param>
         /// <param name="updateNumOutfits"></param>
-        protected void BroadcastStock(VM vm, bool updateNumOutfits)
+        protected void BroadcastOutfits(VM vm, bool updateNumOutfits)
         {
-            GetStock(vm, x =>
+            GetOutfits(vm, x =>
             {
                 var packet = new VMEODRackStockResponse()
                 {
                     Outfits = x
                 };
-                Lobby.Broadcast("rack_show_stock", packet);
+                Lobby.Broadcast("set_outfits", packet);
 
                 if (updateNumOutfits)
                 {
@@ -81,7 +82,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 }
                 RackType = (RackType)rackType;
                 client.Send("rack_show", ((short)RackType).ToString());
-                BroadcastStock(client.vm, false);
+                BroadcastOutfits(client.vm, false);
             }
         }
 
@@ -96,6 +97,47 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             {
                 return Lobby.Players[0];
             }
+        }
+
+        protected VMPersonSuits GetSuitType(RackType type)
+        {
+            switch (type)
+            {
+                case RackType.Formalwear:
+                case RackType.Daywear:
+                    return VMPersonSuits.DefaultDaywear;
+                case RackType.Sleepwear:
+                    return VMPersonSuits.DefaultSleepwear;
+                case RackType.Swimwear:
+                    return VMPersonSuits.DefaultSwimwear;
+                case RackType.Decor_Head:
+                    return VMPersonSuits.DecorationHead;
+                case RackType.Decor_Back:
+                    return VMPersonSuits.DecorationBack;
+                case RackType.Decor_Shoe:
+                    return VMPersonSuits.DecorationShoes;
+                case RackType.Decor_Tail:
+                    return VMPersonSuits.DecorationTail;
+                default:
+                    throw new Exception("Illegal state");
+            }
+        }
+
+        protected VMPersonSuits GetSuitSlot(bool tryOn)
+        {
+            if (tryOn)
+            {
+                switch (this.RackType)
+                {
+                    case RackType.Daywear:
+                    case RackType.Formalwear:
+                    case RackType.Sleepwear:
+                    case RackType.Swimwear:
+                        return VMPersonSuits.DynamicCostume;
+                }
+            }
+
+            return GetSuitType(this.RackType);
         }
     }
 

@@ -29,7 +29,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void SetSpotlightStatus(VM vm, bool on);
 
         //Outfits
-        void StockOutfit(VM vm, uint objectPID, ulong asset_id, int price, VMAsyncStockOutfitCallback callback);
+        void StockOutfit(VM vm, VMGLOutfit outfit, VMAsyncStockOutfitCallback callback);
         void GetOutfits(VM vm, VMGLOutfitOwner owner, uint ownerPID, VMAsyncGetOutfitsCallback callback);
         void DeleteOutfit(VM vm, uint outfitPID, VMGLOutfitOwner owner, uint ownerPID, VMAsyncDeleteOutfitCallback callback);
         void UpdateOutfitSalePrice(VM vm, uint outfitPID, uint objectPID, int newSalePrice, VMAsyncUpdateOutfitSalePriceCallback callback);

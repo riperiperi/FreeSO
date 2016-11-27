@@ -83,7 +83,7 @@ namespace FSO.Client.UI.Controls
 
                 this.Add(m_PaginationBar);
             }
-            else
+            else if(m_PaginationStyle == UIPaginationStyle.LEFT_RIGHT_ARROWS)
             {
                 if (m_LeftArrow == null || m_RightArrow == null)
                 {
@@ -186,7 +186,8 @@ namespace FSO.Client.UI.Controls
     public enum UIPaginationStyle
     {
         LEFT_RIGHT_ARROWS,
-        PAGINATION_BAR
+        PAGINATION_BAR,
+        NONE
     }
 
     public class UIGridViewerItem

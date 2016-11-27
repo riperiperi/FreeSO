@@ -66,7 +66,7 @@ namespace FSO.Client.UI.Panels.EODs
         protected virtual void InitEOD()
         {
             PlaintextHandlers["rack_show"] = ShowEOD;
-            BinaryHandlers["rack_show_stock"] = ShowStock;
+            BinaryHandlers["set_outfits"] = ShowStock;
         }
 
         protected virtual void UpdateUIState()
@@ -96,7 +96,7 @@ namespace FSO.Client.UI.Panels.EODs
 
             foreach (var outfit in Stock){
                 //TODO: Use current avatars appearance type
-                Outfit TmpOutfit = Content.Content.Get().AvatarOutfits.Get(RackOutfit.GetOutfitID(outfit.asset_id));
+                Outfit TmpOutfit = Content.Content.Get().AvatarOutfits.Get(outfit.asset_id);
                 Appearance TmpAppearance = Content.Content.Get().AvatarAppearances.Get(TmpOutfit.GetAppearance(AppearanceType.Light));
                 FSO.Common.Content.ContentID thumbID = TmpAppearance.ThumbnailID;
 

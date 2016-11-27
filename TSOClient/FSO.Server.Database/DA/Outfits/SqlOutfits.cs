@@ -15,10 +15,18 @@ namespace FSO.Server.Database.DA.Outfits
         public uint Create(DbOutfit outfit)
         {
             try {
-                return (uint)Context.Connection.Query<int>("INSERT INTO fso_outfits (avatar_owner, object_owner, asset_id, sale_price, purchase_price) " +
-                                            " VALUES (@avatar_owner, @object_owner, @asset_id, @sale_price, @purchase_price); " +
+                return (uint)Context.Connection.Query<int>("INSERT INTO fso_outfits (avatar_owner, object_owner, asset_id, sale_price, purchase_price, outfit_type, outfit_source) " +
+                                            " VALUES (@avatar_owner, @object_owner, @asset_id, @sale_price, @purchase_price, @outfit_type, @outfit_source); " +
                                             " SELECT LAST_INSERT_ID();"
-                                            , outfit).First();
+                                            , new {
+                                                avatar_owner = outfit.avatar_owner,
+                                                object_owner = outfit.object_owner,
+                                                asset_id = outfit.asset_id,
+                                                sale_price = outfit.sale_price,
+                                                purchase_price = outfit.purchase_price,
+                                                outfit_type = outfit.outfit_type,
+                                                outfit_source = outfit.outfit_source.ToString()
+                                            }).First();
             }catch(Exception ex){
                 return uint.MaxValue;
             }

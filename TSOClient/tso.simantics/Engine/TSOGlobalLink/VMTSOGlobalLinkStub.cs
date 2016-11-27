@@ -226,7 +226,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
 
         }
 
-        public void StockOutfit(VM vm, uint objectPID, ulong asset_id, int price, VMAsyncStockOutfitCallback callback)
+        public void StockOutfit(VM vm, VMGLOutfit outfit, VMAsyncStockOutfitCallback callback)
         {
             //todo: local stub?
         }

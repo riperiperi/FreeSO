@@ -51,6 +51,9 @@ namespace FSO.Content
                     Price = int.Parse(price.InnerText)
                 };
 
+                //Convert to full content id so its consistent with DbAvatar
+                outfit.AssetID = (outfit.AssetID << 32) | 0xd;
+
                 if (name.EndsWith("Male"))
                 {
                     outfit.Gender = RackOutfitGender.Male;
