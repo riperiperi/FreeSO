@@ -84,7 +84,7 @@ namespace FSO.Client.UI.Panels.EODs
                     bool male = (avatar.GetPersonData(VMPersonDataVariable.Gender) == 0);
 
                     //Is it for my gender?
-                    var outfit = Content.Content.Get().RackOutfits.GetByRackType(RackType).Outfits.FirstOrDefault(x => x.AssetID == selected.asset_id);
+                    var outfit = Content.Content.Get().RackOutfits.GetAllOutfits().FirstOrDefault(x => x.AssetID == selected.asset_id);
                     if(outfit != null){
                         if(outfit.Gender == Content.Model.RackOutfitGender.Neutral){
                             isMyGender = true;

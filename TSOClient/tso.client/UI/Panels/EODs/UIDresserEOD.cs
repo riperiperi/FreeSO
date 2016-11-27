@@ -116,6 +116,18 @@ namespace FSO.Client.UI.Panels.EODs
             }else if(button == btnSwim)
             {
                 SelectedTab = VMPersonSuits.DefaultSwimwear;
+            }else if(button == btnDecorHead)
+            {
+                SelectedTab = VMPersonSuits.DecorationHead;
+            }else if(button == btnDecorBack)
+            {
+                SelectedTab = VMPersonSuits.DecorationBack;
+            }else if(button == btnDecorShoes)
+            {
+                SelectedTab = VMPersonSuits.DecorationShoes;
+            }else if(button == btnDecorTail)
+            {
+                SelectedTab = VMPersonSuits.DecorationTail;
             }
 
             UpdateDataProvider();

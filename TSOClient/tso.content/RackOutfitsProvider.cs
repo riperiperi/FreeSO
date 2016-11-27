@@ -86,6 +86,16 @@ namespace FSO.Content
             }
         }
 
+        public List<RackOutfit> GetAllOutfits()
+        {
+            var result = new List<RackOutfit>();
+            foreach(var rack in Racks.Values)
+            {
+                result.AddRange(rack.Outfits);
+            }
+            return result;
+        }
+
         public RackOutfits GetByRackType(RackType rackType){
             return Racks[rackType];
         }
