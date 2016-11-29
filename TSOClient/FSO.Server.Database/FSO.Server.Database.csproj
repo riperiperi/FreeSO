@@ -164,7 +164,7 @@
     <Content Include="DatabaseScripts\changes\0005_lotadmit_primarykey.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="DatabaseScripts\changes\0005_outfits.sql" />
+    <Content Include="DatabaseScripts\changes\0006_outfits.sql" />
     <Content Include="DatabaseScripts\fso_transactions.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
