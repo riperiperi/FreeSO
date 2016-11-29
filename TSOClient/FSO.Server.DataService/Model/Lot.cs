@@ -5,6 +5,7 @@ using FSO.Common.Serialization.Primitives;
 using FSO.Server.Common;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -137,8 +138,8 @@ namespace FSO.Common.DataService.Model
             }
         }
 
-        private List<uint> _Lot_OwnerVec;
-        public List<uint> Lot_OwnerVec
+        private ImmutableList<uint> _Lot_OwnerVec;
+        public ImmutableList<uint> Lot_OwnerVec
         {
             get { return _Lot_OwnerVec; }
             set
@@ -148,11 +149,18 @@ namespace FSO.Common.DataService.Model
             }
         }
 
-        private List<uint> _Lot_RoommateVec;
-        public List<uint> Lot_RoommateVec
+        private ImmutableList<uint> _Lot_RoommateVec;
+        public ImmutableList<uint> Lot_RoommateVec
         {
             get { return _Lot_RoommateVec; }
             set { _Lot_RoommateVec = value; NotifyPropertyChanged("Lot_RoommateVec"); }
+        }
+
+        private LotAdmitInfo _Lot_LotAdmitInfo;
+        public LotAdmitInfo Lot_LotAdmitInfo
+        {
+            get { return _Lot_LotAdmitInfo; }
+            set { _Lot_LotAdmitInfo = value; NotifyPropertyChanged("Lot_LotAdmitInfo"); }
         }
 
         public Location Lot_Location { get; set; }
@@ -161,7 +169,7 @@ namespace FSO.Common.DataService.Model
         {
             get
             {
-                return MapCoordinates.Pack(Lot_Location.Location_X, Lot_Location.Location_Y);
+                return (Lot_Location == null)?0:MapCoordinates.Pack(Lot_Location.Location_X, Lot_Location.Location_Y);
             }
         }
 

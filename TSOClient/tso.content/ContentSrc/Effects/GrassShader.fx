@@ -13,6 +13,17 @@ float GrassProb;
 
 bool depthOutMode;
 
+bool UseTexture;
+texture BaseTex;
+sampler TexSampler = sampler_state {
+	texture = <BaseTex>;
+	MinFilter = Linear;
+	MagFilter = Linear;
+	MipFilter = Linear;
+	AddressU = Wrap;
+	AddressV = Wrap;
+};
+
 struct GrassVTX
 {
     float4 Position : SV_Position0;
@@ -119,6 +130,9 @@ void BasePS(GrassVTX input, out float4 color:COLOR0, out float4 depthB:COLOR1)
     }
     else {
         color = input.Color*DiffuseColor;
+		if (UseTexture == true) {
+			color *= tex2D(TexSampler, input.GrassInfo.yz);
+		}
     }
 }
 

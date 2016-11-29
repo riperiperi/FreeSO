@@ -60,6 +60,20 @@ namespace FSO.Client.UI.Panels.EODs
             Controller.EODTime = " "+((time<0)?"":((time/60)+":"+((time%60).ToString().PadLeft(2, '0'))));
         }
 
+        public void CloseInteraction()
+        {
+            var me = Controller.Lot.ActiveEntity;
+            if (me != null) {
+                var action = me.Thread.Queue.First(x => x.Mode != SimAntics.Engine.VMQueueMode.Idle);
+                if (action != null) {
+                    Controller.Lot.vm.SendCommand(new VMNetInteractionCancelCmd
+                    {
+                        ActionUID = action.UID
+                    });
+                }
+            }
+        }
+
         public void Send(string evt, string data)
         {
             Controller.Lot.vm.SendCommand(new VMNetEODMessageCmd

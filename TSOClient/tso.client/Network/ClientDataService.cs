@@ -91,11 +91,19 @@ namespace FSO.Common.DataService
 
             var topField = GetFieldByName(item.GetType(), path[0]);
             var keyField = GetKeyField(item.GetType());
+
             var id = (uint)keyField.GetValue(item);
 
             dotPath[0] = topField.ParentID;
             dotPath[1] = id;
             dotPath[2] = topField.ID;
+            var curObj = item.GetType().GetProperty(path[0]).GetValue(item);
+            for (int i=1; i<path.Length; i++)
+            {
+                var curField = GetFieldByName(curObj.GetType(), path[i]);
+                dotPath[2 + i] = curField.ID;
+                curObj = curObj.GetType().GetProperty(path[i]).GetValue(curObj);
+            }
 
             return dotPath;
         }
@@ -125,14 +133,21 @@ namespace FSO.Common.DataService
             if (index != -1)
             {
                 //In TSO, you set the key field to null to indicate the array item should be deleted
+                //...unless we're a value type, in which case we only send the index and default(T).
                 var arrayDotPath = GetDotPath(item, fieldPath);
-                Array.Resize(ref arrayDotPath, arrayDotPath.Length + 2);
-                arrayDotPath[arrayDotPath.Length - 2] = (uint)index;
+                bool structItem = !value.GetType().IsValueType;
+                var resizeCount = structItem ? 2 : 1;
 
-                var keyField = GetKeyField(value.GetType());
-                var structField = GetFieldByName(value.GetType(), keyField.Name);
+                Array.Resize(ref arrayDotPath, arrayDotPath.Length + resizeCount);
+                arrayDotPath[arrayDotPath.Length - resizeCount] = (uint)index;
 
-                arrayDotPath[arrayDotPath.Length - 1] = structField.ID;
+                if (structItem)
+                {
+                    var keyField = GetKeyField(value.GetType());
+                    var structField = GetFieldByName(value.GetType(), keyField.Name);
+
+                    arrayDotPath[arrayDotPath.Length - 1] = structField.ID;
+                }
 
                 var update = SerializeUpdate((uint)0, arrayDotPath);
                 CityClient.Write(new DataServiceWrapperPDU()
@@ -320,7 +335,7 @@ namespace FSO.Common.DataService
             foreach(var item in dsEntities)
             {
                 var id = GetId(item);
-                idMap.Add(id, (DSENTITY)item);
+                idMap[id] = (DSENTITY)item;
             }
 
             foreach(var item in input)

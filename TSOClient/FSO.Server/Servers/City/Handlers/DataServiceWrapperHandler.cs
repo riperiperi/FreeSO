@@ -46,15 +46,22 @@ namespace FSO.Server.Servers.City.Handlers
                         }
                     }
 
-                    var result = await DataService.SerializePath(resultDotPath.ToArray());
-                    if (result != null)
+                    try
                     {
-                        session.Write(new DataServiceWrapperPDU()
+                        var result = await DataService.SerializePath(resultDotPath.ToArray());
+                        if (result != null)
                         {
-                            SendingAvatarID = packet.SendingAvatarID,
-                            RequestTypeID = packet.RequestTypeID,
-                            Body = result
-                        });
+                            session.Write(new DataServiceWrapperPDU()
+                            {
+                                SendingAvatarID = packet.SendingAvatarID,
+                                RequestTypeID = packet.RequestTypeID,
+                                Body = result
+                            });
+                        }
+                    } catch (Exception e)
+                    {
+                        //TODO
+                        //keep this silent for now - bookmarks tend to spam errors.
                     }
                 }
             }
@@ -101,7 +108,7 @@ namespace FSO.Server.Servers.City.Handlers
                         && type != MaskedStruct.CurrentCity && type != MaskedStruct.MapView_NearZoom_Lot
                         && type != MaskedStruct.Thumbnail_Avatar && type != MaskedStruct.SimPage_MyLot
                         && type != MaskedStruct.SimPage_JobsPanel && type != MaskedStruct.FriendshipWeb_Avatar
-                        && type != MaskedStruct.SimPage_SkillsPanel)
+                        && type != MaskedStruct.SimPage_SkillsPanel && type != MaskedStruct.AdmitInfo_Lot)
                     {
                         //Currently broken for some reason
                         return;

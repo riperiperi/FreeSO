@@ -50,7 +50,8 @@ namespace FSO.SimAntics.Model
             }
 
             /** Sort time property lists by time **/
-            TimePropertyLists.Sort(new TimePropertyListItemSorter());
+            //stable sort
+            TimePropertyLists.OrderBy(x => x.ID); //.Sort(new TimePropertyListItemSorter());
         }
 
         #region VM Marshalling Functions

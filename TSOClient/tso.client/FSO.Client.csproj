@@ -69,6 +69,7 @@
     <Compile Include="Controllers\GizmoSearchController.cs" />
     <Compile Include="Controllers\LoadingScreenController.cs" />
     <Compile Include="Controllers\Panels\BookmarksController.cs" />
+    <Compile Include="Controllers\Panels\LotAdmitController.cs" />
     <Compile Include="Controllers\Panels\LotPageController.cs" />
     <Compile Include="Controllers\Panels\PersonPageController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="Network\TopicSubscription.cs" />
     <Compile Include="Regulators\LotConnectionRegulator.cs" />
     <Compile Include="Regulators\PurchaseLotRegulator.cs" />
+    <Compile Include="UI\Controls\Catalog\UICatalogRoofResProvider.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UIDynamicContainers.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />
@@ -98,6 +100,7 @@
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobby.cs" />
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobbyController.cs" />
     <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
+    <Compile Include="UI\Panels\LotControls\UIRoofer.cs" />
     <Compile Include="UI\Panels\UIAsyncPriceDialog.cs" />
     <Compile Include="UI\Panels\UIBookmarks.cs" />
     <Compile Include="UI\Panels\UIDebugMenu.cs" />
@@ -140,6 +143,7 @@
     <Compile Include="Utils\MonogameLinker.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
     <Compile Include="Utils\UIUtils.cs" />
+    <Compile Include="Utils\WinFormsClipboard.cs" />
     <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll">
       <Link>Monogame\Linux\MonoGame.Framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -384,6 +388,10 @@
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.3.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System" />
     <Reference Include="System.Windows.Forms" />
@@ -477,7 +485,7 @@
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
       <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
       <Name>MonoGame.Framework.WindowsGL</Name>
-      <Private>True</Private>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\FSO.Common.DatabaseService\FSO.Common.DatabaseService.csproj">
       <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>

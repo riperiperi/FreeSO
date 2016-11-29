@@ -60,6 +60,13 @@ namespace FSO.SimAntics.Engine.Primitives
             VMStackObjectVariable.RepairState
         };
 
+        public static Dictionary<VMStackObjectVariable, short> Thresholds = new Dictionary<VMStackObjectVariable, short>()
+        {
+            { VMStackObjectVariable.DirtyLevel, 800 },
+            { VMStackObjectVariable.RepairState, 600 },
+            { VMStackObjectVariable.GardeningValue, 25 }
+        };
+
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMFindBestObjectForFunctionOperand)args;
@@ -100,14 +107,14 @@ namespace FSO.SimAntics.Engine.Primitives
 
                     if (Execute)
                     {
-                        if (ent.IsInUse(context.VM.Context, false)) continue; //this object is in use. this check is more expensive than check trees, so do it last.
+                        if (ent.IsInUse(context.VM.Context, true)) continue; //this object is in use. this check is more expensive than check trees, so do it last.
                         //calculate the score for this object.
                         int score = 0;
                         if (ScoreVar[operand.Function] != VMStackObjectVariable.Invalid) {
                             var funcVar = ScoreVar[operand.Function];
                             score = ent.GetValue(funcVar);
-                            if (funcVar == VMStackObjectVariable.DirtyLevel && score < 800) continue; //only clean "dirty" things.
-                            else if (funcVar == VMStackObjectVariable.RepairState && score < 600) continue; //only fix "broken" things.
+                            short threshold;
+                            if (Thresholds.TryGetValue(funcVar, out threshold) && score < threshold) continue;
                         }
 
                         LotTilePos posDiff = ent.Position - context.Caller.Position;

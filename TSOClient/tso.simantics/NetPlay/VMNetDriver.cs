@@ -64,6 +64,9 @@ namespace FSO.SimAntics.NetPlay
             else if (doTick && vm.Context.Ready)
             {
                 if (tick.TickID > LastTick + 1) System.Console.WriteLine("Tick wrong! Got " + tick.TickID + ", Missed " + ((int)tick.TickID - (LastTick + 1)));
+#if VM_DESYNC_DEBUG
+                vm.Trace.NewTick(tick.TickID);
+#endif
                 vm.InternalTick();
                 if (DesyncCooldown > 0) DesyncCooldown--;
             }

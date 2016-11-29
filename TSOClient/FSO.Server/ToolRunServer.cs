@@ -1,5 +1,6 @@
 ﻿using FSO.Common.DataService.Framework;
 using FSO.Common.Domain;
+using FSO.Common.Utils;
 using FSO.Server.Database.DA;
 using FSO.Server.DataService;
 using FSO.Server.Debug;
@@ -46,8 +47,9 @@ namespace FSO.Server
         public int Run()
         {
             LOG.Info("Starting server");
+            TimedReferenceController.SetMode(CacheType.PERMANENT);
 
-            if(Config.Services == null)
+            if (Config.Services == null)
             {
                 LOG.Warn("No services found in the configuration file, exiting");
                 return 1;

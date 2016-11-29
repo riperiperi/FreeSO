@@ -459,7 +459,6 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
-            base.Update(state);
             if (SelectedAvatar != null)
             {
                 if (SelectedAvatar != LastSelected)
@@ -470,9 +469,10 @@ namespace FSO.Client.UI.Panels
                     Add(Thumb);
                     LastSelected = SelectedAvatar;
                 }
-                
+
                 UpdateMotives();
             }
+            base.Update(state);
 
             var jobMode = JobUI != null;
             StatusBarTimerTextEntry.Visible = jobMode;

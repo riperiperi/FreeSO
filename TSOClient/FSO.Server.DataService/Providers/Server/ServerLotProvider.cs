@@ -18,6 +18,8 @@ using System.Security;
 using System.IO;
 using FSO.Common.Serialization.Primitives;
 using FSO.Server.Database.DA.Roommates;
+using FSO.Server.Database.DA.LotAdmit;
+using System.Collections.Immutable;
 
 namespace FSO.Common.DataService.Providers.Server
 {
@@ -44,13 +46,13 @@ namespace FSO.Common.DataService.Providers.Server
             NFS = nfs;
             CityRepresentation = new City()
             {
-                City_NeighborhoodsVec = new List<uint>(),
-                City_OnlineLotVector = new List<bool>(),
-                City_ReservedLotVector = new List<bool>(),
+                City_NeighborhoodsVec = ImmutableList.Create<uint>(),
+                City_OnlineLotVector = ImmutableList.Create<bool>(),
+                City_ReservedLotVector = ImmutableList.Create<bool>(),
                 City_ReservedLotInfo = new Dictionary<uint, bool>(),
-                City_SpotlightsVector = new List<uint>(),
-                City_Top100ListIDs = new List<uint>(),
-                City_TopTenNeighborhoodsVector = new List<uint>()
+                City_SpotlightsVector = ImmutableList.Create<uint>(),
+                City_Top100ListIDs = ImmutableList.Create<uint>(),
+                City_TopTenNeighborhoodsVector = ImmutableList.Create<uint>()
             };
         }
 
@@ -61,7 +63,8 @@ namespace FSO.Common.DataService.Providers.Server
                 var all = db.Lots.All(ShardId);
                 foreach(var item in all){
                     var roommates = db.Roommates.GetLotRoommates(item.lot_id);
-                    var converted = HydrateOne(item, roommates);
+                    var admit = db.LotAdmit.GetLotInfo(item.lot_id);
+                    var converted = HydrateOne(item, roommates, admit);
                     var intId = MapCoordinates.Pack(converted.Lot_Location.Location_X, converted.Lot_Location.Location_Y);
                     appender(intId, converted);
                 }
@@ -77,7 +80,8 @@ namespace FSO.Common.DataService.Providers.Server
                 else
                 {
                     var roommates = db.Roommates.GetLotRoommates(lot.lot_id);
-                    return HydrateOne(lot, roommates);
+                    var admit = db.LotAdmit.GetLotInfo(lot.lot_id);
+                    return HydrateOne(lot, roommates, admit);
                 }
             }
         }
@@ -96,15 +100,13 @@ namespace FSO.Common.DataService.Providers.Server
             {
                 lock (LotsByName) LotsByName.Remove(value.Lot_Name);
                 lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo.Remove(value.Lot_Location_Packed);
-
-                var clone = new HashSet<uint>(CityRepresentation.City_SpotlightsVector);
-                clone.Remove(value.Lot_Location_Packed);
-                CityRepresentation.City_SpotlightsVector = new List<uint>(clone);
+                
+                CityRepresentation.City_SpotlightsVector = CityRepresentation.City_SpotlightsVector.Remove(value.Lot_Location_Packed);
             }
             return value;
         }
 
-        protected Lot HydrateOne(DbLot lot, List<DbRoommate> roommates)
+        protected Lot HydrateOne(DbLot lot, List<DbRoommate> roommates, List<DbLotAdmit> admit)
         {
             var location = MapCoordinates.Unpack(lot.location);
 
@@ -135,8 +137,9 @@ namespace FSO.Common.DataService.Providers.Server
                 Lot_Location = new Location { Location_X = location.X, Location_Y = location.Y },
                 Lot_Price = (uint)Realestate.GetPurchasePrice(location.X, location.Y),
                 Lot_LeaderID = lot.owner_id,
-                Lot_OwnerVec = new List<uint>() { lot.owner_id },
-                Lot_RoommateVec = new List<uint>(),
+                Lot_OwnerVec = ImmutableList.Create(lot.owner_id),
+                Lot_RoommateVec = ImmutableList.Create<uint>(),
+                Lot_LotAdmitInfo = new LotAdmitInfo() { LotAdmitInfo_AdmitMode = lot.admit_mode },
                 Lot_NumOccupants = 0,
                 Lot_Category = (byte)lot.category,
                 Lot_LastCatChange = lot.category_change_date,
@@ -146,8 +149,18 @@ namespace FSO.Common.DataService.Providers.Server
 
             foreach (var roomie in roommates)
             {
-                if (roomie.is_pending == 0) result.Lot_RoommateVec.Add(roomie.avatar_id);
+                if (roomie.is_pending == 0) result.Lot_RoommateVec = result.Lot_RoommateVec.Add(roomie.avatar_id);
             }
+
+            var admitL = new List<uint>();
+            var banL = new List<uint>();
+            foreach (var item in admit)
+            {
+                if (item.admit_type == 0) admitL.Add(item.avatar_id);
+                else banL.Add(item.avatar_id);
+            }
+            result.Lot_LotAdmitInfo.LotAdmitInfo_AdmitList = ImmutableList.ToImmutableList(admitL);
+            result.Lot_LotAdmitInfo.LotAdmitInfo_BanList = ImmutableList.ToImmutableList(banL);
 
             return result;
         }
@@ -166,8 +179,8 @@ namespace FSO.Common.DataService.Providers.Server
                 Lot_Location = new Location { Location_X = location.X, Location_Y = location.Y },
                 //Lot_Price = 0,
                 Lot_Price = (uint)Realestate.GetPurchasePrice(location.X, location.Y),
-                Lot_OwnerVec = new List<uint>() { },
-                Lot_RoommateVec = new List<uint>() { },
+                Lot_OwnerVec = ImmutableList.Create<uint>(),
+                Lot_RoommateVec = ImmutableList.Create<uint>(),
 
                 Lot_Thumbnail = new Serialization.Primitives.cTSOGenericData(new byte[0]),
                 Lot_ThumbnailCheckSum = key
@@ -206,10 +219,16 @@ namespace FSO.Common.DataService.Providers.Server
                 case "Lot_SpotLightText":
                     lock (CityRepresentation)
                     {
-                        var clone = new HashSet<uint>(CityRepresentation.City_SpotlightsVector);
+                        var clone = new HashSet<uint>(CityRepresentation.City_SpotlightsVector); //need to convert this to a hashset to add to it properly
                         if (lot.Lot_SpotLightText != "") clone.Add(lot.Lot_Location_Packed);
                         else clone.Remove(lot.Lot_Location_Packed);
-                        CityRepresentation.City_SpotlightsVector = new List<uint>(clone);
+                        CityRepresentation.City_SpotlightsVector = ImmutableList.ToImmutableList(clone);
+                    }
+                    break;
+                case "Lot_LotAdmitInfo.LotAdmitInfo_AdmitMode":
+                    using (var db = DAFactory.Get())
+                    {
+                        db.Lots.UpdateLotAdmitMode(lot.DbId, (byte)value);
                     }
                     break;
             }
@@ -263,6 +282,44 @@ namespace FSO.Common.DataService.Providers.Server
                 case "Lot_RoommateVec":
                 case "Lot_SpotLightText":
                     context.DemandInternalSystem();
+                    break;
+                case "Lot_LotAdmitInfo.LotAdmitInfo_AdmitList":
+                case "Lot_LotAdmitInfo.LotAdmitInfo_BanList":
+                    context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                    int atype = (path == "Lot_LotAdmitInfo.LotAdmitInfo_AdmitList") ? 0 : 1;
+                    using (var db = DAFactory.Get())
+                    { //need to check db constraints
+                        switch (type)
+                        {
+                            case MutationType.ARRAY_REMOVE_ITEM:
+                                //Remove bookmark at index value
+                                var removedAva = (uint)value;
+                                db.LotAdmit.Delete(new DbLotAdmit
+                                {
+                                    lot_id = (int)lot.DbId,
+                                    avatar_id = removedAva,
+                                    admit_type = (byte)atype
+                                });
+                                break;
+                            case MutationType.ARRAY_SET_ITEM:
+                                //Add a new bookmark
+                                var newAva = (uint)value;
+                                db.LotAdmit.Create(new DbLotAdmit
+                                {
+                                    lot_id = (int)lot.DbId,
+                                    avatar_id = newAva,
+                                    admit_type = (byte)atype
+                                });
+                                break;
+                        }
+                    }
+                    break;
+                case "Lot_LotAdmitInfo.LotAdmitInfo_AdmitMode":
+                    context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                    //can only set valid values
+                    var mode = (byte)value;
+                    if (mode < 0 || mode > 3) 
+                        throw new Exception("Invalid admit mode!");
                     break;
                 default:
                     throw new SecurityException("Field: " + path + " may not be mutated by users");

@@ -119,8 +119,11 @@ namespace FSO.SimAntics.Marshals
                 obj.Load((VMGameObjectMarshal)ent);
                 obj.Contained = new VMEntity[ent.Contained.Length]; //we aren't loading slot data, but we need to initialize this.
                 obj.Position = LotTilePos.OUT_OF_WORLD;
-                vm.Context.Blueprint.AddObject((ObjectComponent)obj.WorldUI);
-                vm.Context.Blueprint.ChangeObjectLocation((ObjectComponent)obj.WorldUI, obj.Position);
+                if (VM.UseWorld)
+                {
+                    vm.Context.Blueprint.AddObject((ObjectComponent)obj.WorldUI);
+                    vm.Context.Blueprint.ChangeObjectLocation((ObjectComponent)obj.WorldUI, obj.Position);
+                }
                 realEnt = obj;
                 obj.FetchTreeByName(vm.Context);
                 obj.Thread = new VMThread(vm.Context, obj, obj.Object.OBJ.StackSize);

@@ -22,7 +22,11 @@ namespace FSO.Client.UI.Panels
         public UISlider BookmarkListSlider { get; set; }
         public UIButton BookmarkListScrollUpButton { get; set; }
         public UIButton BookmarkScrollDownButton { get; set; }
+        public UIButton SimsTabButton { get; set; }
         public UIButton IgnoreTabButton { get; set; }
+
+        public UIImage SimsTab { get; set; }
+        public UIImage IgnoreTab { get; set; }
 
         public Binding<Avatar> Binding;
 
@@ -31,12 +35,18 @@ namespace FSO.Client.UI.Panels
             var ui = this.RenderScript("bookmarks.uis");
 
             var background = ui.Create<UIImage>("BookmarkBackground");
+            SimsTab = ui.Create<UIImage>("SimsTab");
+            AddAt(0, SimsTab);
+            IgnoreTab = ui.Create<UIImage>("IgnoreTab");
+            AddAt(0, IgnoreTab);
+            IgnoreTab.Visible = false;
+
             AddAt(0, ui.Create<UIImage>("Tab1Background"));
             AddAt(0, ui.Create<UIImage>("Tab2Background"));
             AddAt(0, ui.Create<UIImage>("ListBoxBackground"));
             AddAt(0, background);
 
-            IgnoreTabButton.Disabled = true;
+
             UIUtils.MakeDraggable(background, this, true);
 
             BookmarkListSlider.AttachButtons(BookmarkListScrollUpButton, BookmarkScrollDownButton, 1);
@@ -44,6 +54,19 @@ namespace FSO.Client.UI.Panels
             BookmarkListBox.OnDoubleClick += BookmarkListBox_OnDoubleClick;
             BookmarkListBoxColors = ui.Create<UIListBoxTextStyle>("BookmarkListBoxColors", BookmarkListBox.FontStyle);
             CloseButton.OnButtonClick += CloseButton_OnButtonClick;
+            IgnoreTabButton.OnButtonClick += (btn) => { ChangeType(BookmarkType.IGNORE_AVATAR); };
+            SimsTabButton.OnButtonClick += (btn) => { ChangeType(BookmarkType.AVATAR); };
+        }
+
+        private void ChangeType(BookmarkType type)
+        {
+            FindController<BookmarksController>().ChangeType(type);
+
+            var bookmark = type == BookmarkType.AVATAR;
+            SimsTabButton.Selected = bookmark;
+            SimsTab.Visible = bookmark;
+            IgnoreTabButton.Selected = !bookmark;
+            IgnoreTab.Visible = !bookmark;
         }
 
         private void BookmarkListBox_OnDoubleClick(UIElement button)

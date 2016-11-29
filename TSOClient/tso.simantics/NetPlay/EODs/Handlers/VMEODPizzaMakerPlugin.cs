@@ -189,7 +189,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         public void P_Close(string evt, string text, VMEODClient client)
         {
-            Server.Disconnect(client);
+            //Server.Disconnect(client);
         }
 
         public void P_Ingredient(string evt, string text, VMEODClient client)

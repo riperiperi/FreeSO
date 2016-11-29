@@ -29,5 +29,10 @@ namespace FSO.Server.Database.DA.Bookmarks
         {
             return Context.Connection.Query<DbBookmark>("SELECT * FROM fso_bookmarks WHERE avatar_id = @avatar_id", new { avatar_id = avatar_id }).ToList();
         }
+
+        public List<uint> GetAvatarIgnore(uint avatar_id)
+        {
+            return Context.Connection.Query<uint>("SELECT target_id FROM fso_bookmarks WHERE avatar_id = @avatar_id AND type = 5", new { avatar_id = avatar_id }).ToList();
+        }
     }
 }

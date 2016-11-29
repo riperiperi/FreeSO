@@ -4,6 +4,9 @@
  * http://mozilla.org/MPL/2.0/. 
  */
 
+//disabled for now so FSO.Files can reference this project.
+
+ /*
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +38,7 @@ namespace FSO.Common.Utils
 
             sections.Add("<link rel=\"stylesheet\" type=\"text/css\" href=\"main.css\"></link>");
 
-            /** Add the default patterns **/
+            //Add the default patterns
             patterns.Add("h1", "<h1>{0}</h1>");
             patterns.Add("h2", "<h2>{0}</h2>");
             patterns.Add("h3", "<h3>{0}</h3>");
@@ -174,6 +177,8 @@ namespace FSO.Common.Utils
                 AppendItem(sb, t);
 
             }**/
+
+            /**
         }
 
         private string ExportSpriteFrame(SPRFrame frame)
@@ -346,3 +351,4 @@ namespace FSO.Common.Utils
         public Func<T, object> Value;
     }
 }
+*/

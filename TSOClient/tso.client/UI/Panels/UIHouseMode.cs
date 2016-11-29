@@ -22,6 +22,10 @@ using FSO.HIT;
 using FSO.Client.UI.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Client.Utils;
+using FSO.Client.Controllers.Panels;
+using FSO.Client.Controllers;
+using FSO.Common.DataService.Model;
+using FSO.Client.UI.Screens;
 
 namespace FSO.Client.UI.Panels
 {
@@ -109,8 +113,8 @@ namespace FSO.Client.UI.Panels
 
             if (CurrentPanel != -1)
             {
-                if (Panel is UIBuildableAreaPanel)
-                    ((UIBuildableAreaPanel)Panel)?.Dispose();
+                if (Panel is IDisposable)
+                    ((IDisposable)Panel)?.Dispose();
                 this.Remove(Panel);
             }
             if (newPanel != CurrentPanel)
@@ -129,6 +133,7 @@ namespace FSO.Client.UI.Panels
                         break;
                     case 4:
                         Panel = new UIAdmitBanPanel(LotControl);
+                        var ctr = Panel.BindController<LotAdmitController>();
                         break;
                     case 5:
                         Panel = new UIEnvPanel(LotControl);
@@ -304,14 +309,207 @@ namespace FSO.Client.UI.Panels
     /// <summary>
     /// Fine-grained control of who can or can't enter the lot. TODO: list component
     /// </summary>
-    public class UIAdmitBanPanel : UIContainer
+    public class UIAdmitBanPanel : UIContainer, IDisposable
     {
+        public uint LotID
+        {
+            get
+            {
+                return GameFacade.Screens.CurrentUIScreen.FindController<CoreGameScreenController>()?.GetCurrentLotID() ?? 0;
+            }
+        }
+
+        private byte _Mode;
+        public byte Mode
+        {
+            set
+            {
+                _Mode = value;
+                SetMode(false);
+            }
+            get
+            {
+                return _Mode;
+            }
+        }
+
+        public UIButton AdmitAllButton { get; set; }
+        public UIButton AdmitListButton { get; set; }
+        public UIButton BanListButtton { get; set; }
+        public UIButton BanAllButton { get; set; }
+
+        public UIButton PreviousPageButton { get; set; }
+        public UIButton NextPageButton { get; set; }
+
         private UIImage Background;
+        private UIAdmitList AdmitList;
         public UIAdmitBanPanel(UILotControl lotController)
         {
             var script = this.RenderScript("admitbanpanel.uis");
+            foreach (var child in Children)
+            {
+                if (child is UILabel)
+                {
+                    var label = ((UILabel)child);
+                    label.CaptionStyle = label.CaptionStyle.Clone();
+                    label.CaptionStyle.Shadow = true;
+                    label.Alignment = TextAlignment.Right;
+                }
+            }
             Background = script.Create<UIImage>("Background");
             this.AddAt(0, Background);
+            AdmitList = script.Create<UIAdmitList>("AdmitInfoListSetup");
+            this.Add(AdmitList);
+
+            AdmitAllButton.OnButtonClick += (btn) => { _Mode = 0; SetMode(true); };
+            AdmitListButton.OnButtonClick += (btn) => { _Mode = 1; SetMode(true); };
+            BanListButtton.OnButtonClick += (btn) => { _Mode = 2; SetMode(true); };
+            BanAllButton.OnButtonClick += (btn) => { _Mode = 3; SetMode(true); };
+
+            PreviousPageButton.OnButtonClick += (btn) => ChangePage(-1);
+            NextPageButton.OnButtonClick += (btn) => ChangePage(1);
+            AdmitList.OnAvatarClick += (id) =>
+            {
+                if (UIScreen.Current is CoreGameScreen)
+                {
+                    var cg = (CoreGameScreen)UIScreen.Current;
+                    cg.PersonPage.FindController<PersonPageController>()?.Show(id);
+                }
+            };
+            
+            if (lotController.vm.TSOState.OwnerID != lotController.vm.MyUID)
+            {
+                AdmitAllButton.Disabled = true;
+                AdmitListButton.Disabled = true;
+                BanListButtton.Disabled = true;
+                BanAllButton.Disabled = true;
+            }
+        }
+
+        public void ChangePage(int delta)
+        {
+            if (delta != 0) AdmitList.SetPage(Math.Max(0, Math.Min(AdmitList.Page + delta, AdmitList.TotalPages-1)));
+
+            PreviousPageButton.Disabled = (AdmitList.Page == 0);
+            NextPageButton.Disabled = (AdmitList.Page == AdmitList.TotalPages-1);
+        }
+
+        public void SetResults(List<Avatar> avas)
+        {
+            AdmitList.UpdateList(avas);
+        }
+
+        public void SetMode(bool write)
+        {
+            AdmitAllButton.Selected = false;
+            AdmitListButton.Selected = false;
+            BanListButtton.Selected = false;
+            BanAllButton.Selected = false;
+
+            switch (_Mode)
+            {
+                case 0: //admit all
+                    AdmitAllButton.Selected = true;
+                    AdmitList.Visible = false;
+                    break;
+                case 1: //admit list
+                    AdmitListButton.Selected = true;
+                    FindController<LotAdmitController>()?.SetBanMode(false);
+                    AdmitList.Visible = true;
+                    break;
+                case 2: //ban list
+                    BanListButtton.Selected = true;
+                    FindController<LotAdmitController>()?.SetBanMode(true);
+                    AdmitList.Visible = true;
+                    break;
+                case 3: //ban all
+                    BanAllButton.Selected = true;
+                    AdmitList.Visible = false;
+                    break;
+            }
+            ChangePage(0);
+            NextPageButton.Visible = AdmitList.Visible;
+            PreviousPageButton.Visible = AdmitList.Visible;
+            if (write) FindController<LotAdmitController>().UpdateMode(_Mode);
+        }
+
+        public void Dispose()
+        {
+            FindController<LotAdmitController>()?.Dispose();
+        }
+    }
+
+    public class UIAdmitList : UIContainer
+    {
+        private UIListBox List1;
+        private UIListBox List2;
+        public int Page;
+        private List<Avatar> Data = new List<Avatar>();
+        public int TotalPages;
+        public event Callback<uint> OnAvatarClick;
+
+        public UIAdmitList()
+        {
+            List1 = new UIListBox();
+            List1.X = -15;
+            List1.SetSize(100, 20 * 4);
+            List1.NumVisibleRows = 4;
+            List1.RowHeight = 20;
+
+            List1.TextStyle = new UIListBoxTextStyle()
+            {
+                Normal = TextStyle.DefaultLabel.Clone(),
+                NormalColor = new Color(247, 232, 145),
+                Selected = TextStyle.DefaultLabel.Clone(),
+                SelectedColor = Color.Black,
+                Highlighted = TextStyle.DefaultLabel.Clone(),
+                HighlightedColor = Color.White,
+                Disabled = TextStyle.DefaultLabel.Clone(),
+                DisabledColor = Color.Gray
+            };
+            List1.Columns = new UIListBoxColumnCollection();
+            List1.Columns.Add(new UIListBoxColumn() { Width = 100 });
+            List1.SelectionFillColor = new Color(250, 200, 140);
+            Add(List1);
+            List2 = new UIListBox();
+            List2.X = 85;
+            List2.SetSize(100, 20 * 4);
+            List2.NumVisibleRows = 4;
+            List2.RowHeight = 20;
+            List2.TextStyle = List1.TextStyle;
+            List2.Columns = List1.Columns;
+            List2.SelectionFillColor = new Color(250, 200, 140);
+            Add(List2);
+
+            List1.OnDoubleClick += (btn) => { if (List1.SelectedIndex != -1) OnAvatarClick?.Invoke((List1.SelectedItem.Data as Avatar).Avatar_Id); };
+            List2.OnDoubleClick += (btn) => { if (List2.SelectedIndex != -1) OnAvatarClick?.Invoke((List2.SelectedItem.Data as Avatar).Avatar_Id); };
+            List1.OnChange += (elem) => { if (List1.SelectedIndex != -1 && List2.SelectedIndex != -1) List2.SelectedIndex = -1; };
+            List2.OnChange += (elem) => { if (List2.SelectedIndex != -1 && List1.SelectedIndex != -1) List1.SelectedIndex = -1; };
+        }
+
+        public void UpdateList(List<Avatar> list)
+        {
+            Data = list;
+            TotalPages = Math.Max(1, (list.Count + 7) / 8);
+            SetPage(0);
+        }
+
+        public void SetPage(int page)
+        {
+            if (page >= TotalPages || page < 0) return;
+            List1.SelectedIndex = -1;
+            List2.SelectedIndex = -1;
+            var sublist1 = Data.GetRange(page*8, Math.Min(4,Data.Count-page*8));
+            List1.Items = sublist1.ConvertAll(x => new UIListBoxItem(x, new ValuePointer(x, "Avatar_Name")));
+
+            if (page * 8 + 4 < Data.Count)
+            {
+                var sublist2 = Data.GetRange(page * 8 + 4, Math.Min(4, Data.Count - (page * 8+4)));
+                List2.Items = sublist2.ConvertAll(x => new UIListBoxItem(x, new ValuePointer(x, "Avatar_Name")));
+            }
+            else List2.Items = new List<UIListBoxItem>();
+
+            Page = page;
         }
     }
 
@@ -319,7 +517,7 @@ namespace FSO.Client.UI.Panels
     /// Lets the owner upgrade or downgrade the property size. Modded a little for FreeSO to support floors.
     /// (TODO: move mods to UIScript mod instead of hardcoding them)
     /// </summary>
-    public class UIBuildableAreaPanel : UIContainer
+    public class UIBuildableAreaPanel : UIContainer, IDisposable
     {
         private UIImage BuildableAreaBackground;
 

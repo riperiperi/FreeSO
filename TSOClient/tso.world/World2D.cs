@@ -22,7 +22,7 @@ namespace FSO.LotView
     /// <summary>
     /// Handles rendering the 2D world
     /// </summary>
-    public class World2D
+    public class World2D : IDisposable
     {
         public static SurfaceFormat[] BUFFER_SURFACE_FORMATS = new SurfaceFormat[] {
             /** Thumbnail buffer **/
@@ -86,6 +86,7 @@ namespace FSO.LotView
 
             //lot thumb
             true,
+            false,
         };
 
         public static readonly int NUM_2D_BUFFERS = 12;
@@ -310,8 +311,9 @@ namespace FSO.LotView
 
             var oldCenter = state.CenterTile;
             state.CenterTile = new Vector2(Blueprint.Width/2, Blueprint.Height/2);
+            state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2(2304 - state.WorldSpace.WorldPxWidth, 2304 - state.WorldSpace.WorldPxHeight) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
-            pxOffset -= new Vector2(2304 - state.WorldSpace.WorldPxWidth, 2304 - state.WorldSpace.WorldPxHeight)/2;
+            //pxOffset -= 
             state.TempDraw = true;
 
             var _2d = state._2D;
@@ -340,7 +342,9 @@ namespace FSO.LotView
                         _2d.OffsetTile(tilePosition);
                         obj.Draw(gd, state);
                     }
+                    Blueprint.RoofComp.Draw(gd, state);
                 }
+
             }
 
             //return things to normal
@@ -453,11 +457,18 @@ namespace FSO.LotView
                     case BlueprintDamageType.WALL_CUT_CHANGED:
                         recacheWalls = true;
                         break;
+                    case BlueprintDamageType.ROOF_STYLE_CHANGED:
+                        Blueprint.RoofComp.StyleDirty = true;
+                        break;
+                    case BlueprintDamageType.ROOM_CHANGED:
+                        Blueprint.RoofComp.ShapeDirty = true;
+                        break;
                     case BlueprintDamageType.FLOOR_CHANGED:
                     case BlueprintDamageType.WALL_CHANGED:
                         recacheTerrain = true;
                         recacheFloors = true;
                         recacheWalls = true;
+                        Blueprint.RoofComp.ShapeDirty = true;
                         break;
                 }
                 if (recacheFloors || recacheTerrain) redrawFloor = true;
@@ -657,6 +668,13 @@ namespace FSO.LotView
         {
             foreach (var b in buf) b.Dispose();
             buf.Clear();
+        }
+
+        public void Dispose()
+        {
+            ClearDrawBuffer(StaticWallCache);
+            ClearDrawBuffer(StaticFloorCache);
+            ClearDrawBuffer(StaticObjectsCache);
         }
     }
 

@@ -165,6 +165,10 @@
       <Project>{d8232422-9d79-4200-a981-eb70ed82ccf3}</Project>
       <Name>TargaImagePCL</Name>
     </ProjectReference>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
+      <Name>FSO.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

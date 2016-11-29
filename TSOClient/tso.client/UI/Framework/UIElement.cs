@@ -601,6 +601,7 @@ namespace FSO.Client.UI.Framework
             //to.Y += style.BaselineOffset;
             to.X = (float)Math.Floor(to.X);
             to.Y = (float)Math.Floor(to.Y);
+            if (style.Shadow) batch.DrawString(style.SpriteFont, text, LocalPoint(to) + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
             batch.DrawString(style.SpriteFont, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
         }
 

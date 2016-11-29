@@ -208,6 +208,8 @@ namespace FSO.SimAntics
                 WorldUI = new AvatarComponent();
                 var avatarc = (AvatarComponent)WorldUI;
                 avatarc.Avatar = Avatar;
+                var type = BodyStrings.GetString(0);
+                if (type != "adult" && type != "child") avatarc.IsPet = true;
             }
 
 
@@ -540,7 +542,11 @@ namespace FSO.SimAntics
             PersonData[(int)VMPersonDataVariable.TickCounter]++;
             if (KillTimeout > -1)
             {
-                if (++KillTimeout > FORCE_DELETE_TIMEOUT) Delete(true, Thread.Context);
+                if (++KillTimeout > FORCE_DELETE_TIMEOUT)
+                {
+                    if (Thread.Context.VM.EODHost != null) Thread.Context.VM.EODHost.ForceDisconnect(this); //it's unsalvagable!
+                    Delete(true, Thread.Context);
+                }
                 else
                 {
                     SetPersonData(VMPersonDataVariable.RenderDisplayFlags, 1);
@@ -553,8 +559,9 @@ namespace FSO.SimAntics
 
         public void UserLeaveLot()
         {
-            if (Thread.Context.VM.EODHost != null) Thread.Context.VM.EODHost.ForceDisconnect(this); //try this a lot.
-            if (Thread.Queue.Exists(x => x.ActionRoutine.ID == LEAVE_LOT_TREE && Thread.Queue.IndexOf(x) <= Thread.ActiveQueueBlock + 1)) return; //we're already leaving
+            //interaction cancel should handle this
+            //if (Thread.Context.VM.EODHost != null) Thread.Context.VM.EODHost.ForceDisconnect(this); //try this a lot.
+            if (Thread.Queue.Exists(x => x.ActionRoutine.ID == LEAVE_LOT_TREE && Thread.Queue.IndexOf(x) <= Thread.ActiveQueueBlock+1)) return; //we're already leaving
             var actions = new List<VMQueuedAction>(Thread.Queue);
             foreach (var action in actions)
             {
@@ -633,7 +640,7 @@ namespace FSO.SimAntics
                     return (short)((level >= VMTSOAvatarPermissions.BuildBuyRoommate) ? 2 : ((level >= VMTSOAvatarPermissions.Roommate) ? 1 : 0));
                 case VMPersonDataVariable.NumOutgoingFriends:
                 case VMPersonDataVariable.IncomingFriends:
-                    return (short)(MeToPersist.Count(x => x.Key < 16777216 && x.Value.Count > 1 && x.Value[1] >= 50) * 5); //tuning cheats
+                    return (short)(MeToPersist.Count(x => x.Key < 16777216 && x.Value.Count > 1 && x.Value[1] >= 60) * 5); //tuning cheats
                 case VMPersonDataVariable.SkillLock:
                     return (short)(((GetPersonData(VMPersonDataVariable.SkillLockBody) > 0) ? 1 : 0) |
                         ((GetPersonData(VMPersonDataVariable.SkillLockCharisma) > 0) ? 2 : 0) |
@@ -722,6 +729,10 @@ namespace FSO.SimAntics
                     return true;
                 case VMPersonDataVariable.SkillLock:
                     return true;
+                case VMPersonDataVariable.IsGhost:
+                    SetPersonData(VMPersonDataVariable.RenderDisplayFlags, (short)(GetPersonData(VMPersonDataVariable.RenderDisplayFlags) & ~(-1)));
+                    if (value > 0) SetPersonData(VMPersonDataVariable.RenderDisplayFlags, (short)(GetPersonData(VMPersonDataVariable.RenderDisplayFlags) | -1));
+                    break;
             }
             PersonData[(ushort)variable] = value;
             return true;
@@ -950,7 +961,7 @@ namespace FSO.SimAntics
                 foreach (var aprN in BoundAppearances)
                 {
                     var apr = FSO.Content.Content.Get().AvatarAppearances.Get(aprN);
-                    Avatar.AddAccessory(apr);
+                    if (apr != null) Avatar.AddAccessory(apr);
                 }
             }
 

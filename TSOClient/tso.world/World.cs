@@ -23,7 +23,7 @@ namespace FSO.LotView
     /// <summary>
     /// Represents world (I.E lots in the game.)
     /// </summary>
-    public class World : _3DScene, IDisposable
+    public class World : _3DScene
     {
         /// <summary>
         /// Creates a new World instance.
@@ -36,7 +36,8 @@ namespace FSO.LotView
 
         /** How many pixels from each edge of the screen before we start scrolling the view **/
         public int ScrollBounds = 20;
-        public int FrameCounter = 0;
+        public uint FrameCounter = 0;
+        public uint LastCacheClear = 0;
         public static bool DirectX = false;
         public float Opacity = 1f;
 
@@ -44,6 +45,7 @@ namespace FSO.LotView
         public float SmoothZoomFrom = 1f;
 
         public WorldState State;
+        public bool UseBackbuffer = true;
         protected bool HasInitGPU;
         protected bool HasInitBlueprint;
         protected bool HasInit;
@@ -108,6 +110,8 @@ namespace FSO.LotView
             }
             foreach (var sub in Blueprint.SubWorlds) sub.State.Zoom = State.Zoom;
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ZOOM));
+
+            State._2D?.ClearTextureCache();
         }
 
         public void InvalidatePreciseZoom()
@@ -126,6 +130,8 @@ namespace FSO.LotView
             }
             foreach (var sub in Blueprint.SubWorlds) sub.State.Rotation = State.Rotation;
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ROTATE));
+
+            State._2D?.ClearTextureCache();
         }
 
         public void InvalidateScroll()
@@ -403,13 +409,13 @@ namespace FSO.LotView
             _3DWorld.PreDraw(device, State);
             State._3D.End();
 
-            //if (FSOEnvironment.SoftwareDepth)
-            //{
+            if (UseBackbuffer)
+            {
 
                 PPXDepthEngine.SetPPXTarget(null, null, true);
                 InternalDraw(device);
                 device.SetRenderTarget(null);
-            //}
+            }
 
             return;
         }
@@ -422,8 +428,14 @@ namespace FSO.LotView
             if (HasInit == false) { return; }
 
             FrameCounter++;
-
-            PPXDepthEngine.DrawBackbuffer(Opacity);
+            if (FrameCounter < LastCacheClear + 60*60)
+            {
+                State._2D.ClearTextureCache();
+            }
+            if (!UseBackbuffer)
+                InternalDraw(device);
+            else
+                PPXDepthEngine.DrawBackbuffer(Opacity);
             return;
         }
 
@@ -483,10 +495,21 @@ namespace FSO.LotView
             return _2DWorld.GetLotThumb(gd, State);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
             State.AmbientLight.Dispose();
-            State._2D.Dispose();
+            if (State._2D != null) State._2D.Dispose();
+            if (_2DWorld != null) _2DWorld.Dispose();
+            if (Blueprint != null)
+            {
+                foreach (var world in Blueprint.SubWorlds)
+                {
+                    world.Dispose();
+                }
+                Blueprint.Terrain?.Dispose();
+                Blueprint.RoofComp?.Dispose();
+            }
         }
     }
 }

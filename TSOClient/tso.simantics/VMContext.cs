@@ -58,6 +58,7 @@ namespace FSO.SimAntics
         public VMRoomInfo[] RoomInfo;
         
         public VM VM;
+        public bool DisableRouteInvalidation;
 
         public VMContext(LotView.World world) : this(world, null) { }
 
@@ -455,7 +456,8 @@ namespace FSO.SimAntics
         private void WallsChanged(VMArchitecture caller)
         {
             RegeneratePortalInfo();
-            
+
+            if (DisableRouteInvalidation) return;
             foreach (var obj in ObjectQueries.Avatars)
             {
                 if (obj.Thread != null)
@@ -1052,7 +1054,7 @@ namespace FSO.SimAntics
 
         public virtual void Load(VMContextMarshal input)
         {
-            Blueprint = new Blueprint(input.Architecture.Width, input.Architecture.Height);
+            if (VM.UseWorld) Blueprint = new Blueprint(input.Architecture.Width, input.Architecture.Height);
             Architecture = new VMArchitecture(input.Architecture, this, Blueprint);
             Clock = new VMClock(input.Clock);
 

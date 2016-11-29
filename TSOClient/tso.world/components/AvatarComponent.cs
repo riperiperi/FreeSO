@@ -20,6 +20,7 @@ namespace FSO.LotView.Components
     public class AvatarComponent : EntityComponent
     {
         public Avatar Avatar;
+        public bool IsPet;
 
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -76,7 +77,7 @@ namespace FSO.LotView.Components
             get
             {
                 if (Container == null) return _Position;
-                else return Container.GetSLOTPosition(ContainerSlot) + new Vector3(0.5f, 0.5f, -1.4f); //apply offset to snap character into slot
+                else return Container.GetSLOTPosition(ContainerSlot) + new Vector3(0.5f, 0.5f, (IsPet?0:-1.4f)); //apply offset to snap character into slot
             }
             set
             {
@@ -112,8 +113,13 @@ namespace FSO.LotView.Components
             if (!Visible) return;
 
             if (Avatar != null){
-                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, Room, 
-                    ((DisplayFlags & AvatarDisplayFlags.ShowAsGhost) > 0)?new Color(32, 255, 96)*0.66f:Color.White); 
+
+                Color col = Color.White;
+                if ((DisplayFlags & AvatarDisplayFlags.ShowAsGhost) > 0) col = new Color(32, 255, 96) * 0.66f;
+                else if ((DisplayFlags & AvatarDisplayFlags.TSOGhost) != 0) col = new Color(255, 255, 255, 64);
+
+
+                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, Room, col); 
             }
 
             if (Headline != null && !Headline.IsDisposed)

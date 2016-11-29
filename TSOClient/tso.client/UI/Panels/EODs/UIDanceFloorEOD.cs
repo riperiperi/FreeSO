@@ -95,7 +95,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         public override void OnClose()
         {
-            Send("close", "");
+            CloseInteraction();
             base.OnClose();
         }
     }

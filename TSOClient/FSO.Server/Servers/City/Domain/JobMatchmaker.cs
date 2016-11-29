@@ -2,6 +2,7 @@
 using FSO.Common.DataService.Model;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -100,8 +101,8 @@ namespace FSO.Server.Servers.City.Domain
                         Lot_Description = jobString,
                         Lot_IsOnline = true,
                         Lot_LeaderID = uint.MaxValue,
-                        Lot_OwnerVec = new List<uint>() { uint.MaxValue },
-                        Lot_RoommateVec = new List<uint>()
+                        Lot_OwnerVec = ImmutableList.Create(uint.MaxValue),
+                        Lot_RoommateVec = ImmutableList.Create<uint>()
                     });
                     instances.Add(instance);
                     InstanceIDToInstance.Add(instance.RealID, instance);

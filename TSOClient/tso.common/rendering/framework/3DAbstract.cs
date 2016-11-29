@@ -18,7 +18,7 @@ namespace FSO.Common.Rendering.Framework
     /// <summary>
     /// Base class for scenes with 3D elements.
     /// </summary>
-    public abstract class _3DAbstract
+    public abstract class _3DAbstract : IDisposable
     {
         public ICamera Camera;
         public string ID;
@@ -29,6 +29,7 @@ namespace FSO.Common.Rendering.Framework
         public abstract void Draw(GraphicsDevice device);
 
         protected _3DLayer Parent;
+        private EventHandler<EventArgs> ResetEvent;
 
         public virtual void PreDraw(GraphicsDevice device)
         {   
@@ -46,7 +47,8 @@ namespace FSO.Common.Rendering.Framework
         public _3DAbstract(GraphicsDevice Device)
         {
             m_Device = Device;
-            m_Device.DeviceReset += new EventHandler<EventArgs>(m_Device_DeviceReset);
+            ResetEvent = new EventHandler<EventArgs>(m_Device_DeviceReset);
+            m_Device.DeviceReset += ResetEvent;
         }
 
         /// <summary>
@@ -80,6 +82,11 @@ namespace FSO.Common.Rendering.Framework
                 return (T)Controller;
             }
             return default(T);
+        }
+
+        public virtual void Dispose()
+        {
+            if (m_Device != null) m_Device.DeviceReset -= ResetEvent;
         }
     }
 }

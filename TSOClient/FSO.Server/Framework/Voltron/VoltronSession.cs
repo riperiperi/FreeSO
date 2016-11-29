@@ -50,7 +50,7 @@ namespace FSO.Server.Framework.Voltron
             }
         }
 
-        public void DemandAvatars(List<uint> ids, AvatarPermissions permission)
+        public void DemandAvatars(IEnumerable<uint> ids, AvatarPermissions permission)
         {
             if (!ids.Contains(AvatarId))
             {

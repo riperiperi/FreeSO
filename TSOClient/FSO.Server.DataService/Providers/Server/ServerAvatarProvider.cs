@@ -12,6 +12,7 @@ using Ninject;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Security;
 using System.Text;
@@ -45,36 +46,6 @@ namespace FSO.Common.DataService.Providers.Server
                     case "Avatar_PrivacyMode":
                         db.Avatars.UpdatePrivacyMode(avatar.Avatar_Id, avatar.Avatar_PrivacyMode);
                         break;
-                    case "Avatar_BookmarksVec":
-                        switch (type)
-                        {
-                            case MutationType.ARRAY_REMOVE_ITEM:
-                                //Remove bookmark at index value
-                                var removedBookmark = value as Bookmark;
-                                if (removedBookmark != null)
-                                {
-                                    db.Bookmarks.Delete(new DbBookmark
-                                    {
-                                        avatar_id = avatar.Avatar_Id,
-                                        type = removedBookmark.Bookmark_Type,
-                                        target_id = removedBookmark.Bookmark_TargetID
-                                    });
-                                }
-                                break;
-                            case MutationType.ARRAY_SET_ITEM:
-                                //Add a new bookmark
-                                var newBookmark = value as Bookmark;
-                                if(newBookmark != null)
-                                {
-                                    db.Bookmarks.Create(new DbBookmark {
-                                        avatar_id = avatar.Avatar_Id,
-                                        target_id = newBookmark.Bookmark_TargetID,
-                                        type = newBookmark.Bookmark_Type
-                                    });
-                                }
-                                break;
-                        }
-                        break;
                 }
             }
         }
@@ -97,6 +68,38 @@ namespace FSO.Common.DataService.Providers.Server
             {
                 case "Avatar_BookmarksVec":
                     context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
+                    using (var db = DAFactory.Get())
+                    { //need to check db constraints here.
+                        switch (type)
+                        {
+                            case MutationType.ARRAY_REMOVE_ITEM:
+                                //Remove bookmark at index value
+                                var removedBookmark = value as Bookmark;
+                                if (removedBookmark != null)
+                                {
+                                    db.Bookmarks.Delete(new DbBookmark
+                                    {
+                                        avatar_id = avatar.Avatar_Id,
+                                        type = removedBookmark.Bookmark_Type,
+                                        target_id = removedBookmark.Bookmark_TargetID
+                                    });
+                                }
+                                break;
+                            case MutationType.ARRAY_SET_ITEM:
+                                //Add a new bookmark
+                                var newBookmark = value as Bookmark;
+                                if (newBookmark != null)
+                                {
+                                    db.Bookmarks.Create(new DbBookmark
+                                    {
+                                        avatar_id = avatar.Avatar_Id,
+                                        target_id = newBookmark.Bookmark_TargetID,
+                                        type = newBookmark.Bookmark_Type
+                                    });
+                                }
+                                break;
+                        }
+                    }
                     break;
                 case "Avatar_Description":
                     context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
@@ -199,16 +202,17 @@ namespace FSO.Common.DataService.Providers.Server
             result.Avatar_PrivacyMode = dbAvatar.privacy_mode;
             result.Avatar_SkillsLockPoints = (ushort)(20 + result.Avatar_Age/7);
 
-            result.Avatar_JobLevelVec = new List<JobLevel>();
+            var jobs = new List<JobLevel>();
             foreach (var level in levels)
             {
-                result.Avatar_JobLevelVec.Add(new JobLevel
+                jobs.Add(new JobLevel
                 {
                     JobLevel_JobType = level.job_type,
                     JobLevel_JobExperience = level.job_experience,
                     JobLevel_JobGrade = level.job_level
                 });
             }
+            result.Avatar_JobLevelVec = ImmutableList.ToImmutableList(jobs);
             result.Avatar_CurrentJob = dbAvatar.current_job;
 
             var fvec = new Dictionary<Tuple<uint, bool>, Relationship>();
@@ -238,19 +242,19 @@ namespace FSO.Common.DataService.Providers.Server
                 if (rel.index == 0) relObj.Relationship_STR = (sbyte)rel.value;
                 else relObj.Relationship_LTR = (sbyte)rel.value;
             }
-            result.Avatar_FriendshipVec = new List<Relationship>(fvec.Values);
+            result.Avatar_FriendshipVec = ImmutableList.ToImmutableList(fvec.Values);
 
             if (dbLot != null){
                 result.Avatar_LotGridXY = dbLot.location;
             }
 
-            result.Avatar_BookmarksVec = bookmarks.Select(x =>
+            result.Avatar_BookmarksVec = ImmutableList.ToImmutableList(bookmarks.Select(x =>
             {
                 return new Bookmark {
                     Bookmark_Type = x.type,
                     Bookmark_TargetID = x.target_id
                 };
-            }).ToList();
+            }));
 
             return result;
         }

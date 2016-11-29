@@ -623,10 +623,11 @@ namespace FSO.Server.Servers.Lot.Domain
                 var jobinfo = da.Avatars.GetJobLevels(session.AvatarId);
                 var inventory = da.Objects.GetAvatarInventory(session.AvatarId);
                 var myRoomieLots = da.Roommates.GetAvatarsLots(session.AvatarId); //might want to use other entries to update the roomies table entirely.
+                var myIgnored = da.Bookmarks.GetAvatarIgnore(session.AvatarId);
                 LOG.Info("Avatar " + avatar.name + " has joined");
 
                 //Load all the avatars data
-                var state = StateFromDB(avatar, rels, jobinfo, myRoomieLots);
+                var state = StateFromDB(avatar, rels, jobinfo, myRoomieLots, myIgnored);
 
                 var client = new VMNetClient();
                 client.AvatarState = state;
@@ -732,7 +733,7 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
-        private VMNetAvatarPersistState StateFromDB(DbAvatar avatar, List<DbRelationship> rels, List<DbJobLevel> jobs, List<DbRoommate> myRoomieLots)
+        private VMNetAvatarPersistState StateFromDB(DbAvatar avatar, List<DbRelationship> rels, List<DbJobLevel> jobs, List<DbRoommate> myRoomieLots, List<uint> ignored)
         {
             var state = new VMNetAvatarPersistState();
             state.Name = avatar.name;
@@ -773,6 +774,7 @@ namespace FSO.Server.Servers.Lot.Domain
             state.RepairmanRehireTicker = (short)avatar.ticker_repairman;
 
             state.OnlineJobID = (short)avatar.current_job;
+            state.IgnoredAvatars = new HashSet<uint>(ignored);
             foreach (var job in jobs)
             {
                 state.OnlineJobInfo[(short)job.job_type] = new VMTSOJobInfo()

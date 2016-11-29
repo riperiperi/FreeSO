@@ -87,6 +87,14 @@ namespace FSO.LotView
             }
         }
 
+        public bool DrawRoofs;
+
+        public int SilentBuildMode
+        {
+            get { return _BuildMode; }
+            set { _BuildMode = value; }
+        }
+
         private int _BuildMode;
         public int BuildMode
         {

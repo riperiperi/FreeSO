@@ -9,6 +9,7 @@ using NLog;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Security;
@@ -222,23 +223,44 @@ namespace FSO.Common.DataService
                 {
                     //Array, we expect the final path component to be an array index
                     var arr = (IList)target.Value;
+                    var parent = path.GetParent();
+                    var objectField = parent.Value.GetType().GetProperty(target.Name);
                     if (finalPath < arr.Count)
                     {
-                        //Update existing
-                        provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
-                        arr[(int)finalPath] = value;
-
-                        //TODO: make this async?
-                        if (target.Persist)
+                        //Update existing or remove on null (at index)
+                        if (IsNull(value))
                         {
-                            provider.PersistMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value);
+                            var removeItem = ((IList)target.Value)[(int)finalPath];
+                            provider.DemandMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(), removeItem, context);
+                            objectField.SetValue(parent.Value, GetGenericMethod(targetType, "RemoveAt").Invoke(target.Value, new object[] { (int)finalPath }));
+
+                            //TODO: make this async?
+                            if (target.Persist)
+                            {
+                                provider.PersistMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(), removeItem);
+                            }
+                        }
+                        else
+                        {
+                            provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
+
+                            objectField.SetValue(parent.Value, GetGenericMethod(targetType, "SetItem").Invoke(target.Value, new object[] { (int)finalPath, value }));
+                            //arr[(int)finalPath] = value;
+
+                            //TODO: make this async?
+                            if (target.Persist)
+                            {
+                                provider.PersistMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value);
+                            }
                         }
                     }
                     else if (finalPath >= arr.Count)
                     {
                         //Insert
                         provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
-                        arr.Add(value);
+
+                        objectField.SetValue(parent.Value, GetGenericMethod(targetType, "Add").Invoke(target.Value, new object[] { value }));
+                        //arr.Add(value);
 
                         if (target.Persist)
                         {
@@ -261,7 +283,6 @@ namespace FSO.Common.DataService
                     var objectField = target.Value.GetType().GetProperty(field.Name);
                     if (objectField == null) { throw new Exception("Unknown field in model: " + objectField.Name); }
 
-
                     //If the value is null (0) and the field has a decoration of NullValueIndicatesDeletion
                     //Delete the value instead of setting it
                     var nullDelete = objectField.GetCustomAttribute<Key>();
@@ -270,8 +291,13 @@ namespace FSO.Common.DataService
                         var parent = path.GetParent();
                         if (IsList(parent.Value))
                         {
+                            var listParent = path.Path[path.Path.Length - 3];
+                            var lpField = listParent.Value.GetType().GetProperty(parent.Name);
+
                             provider.DemandMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(1), target.Value, context);
-                            ((IList)parent.Value).Remove(target.Value);
+                            lpField.SetValue(listParent.Value, GetGenericMethod(parent.Value.GetType(), "Remove", new Type[] { parent.Value.GetType().GenericTypeArguments[0] })
+                                .Invoke(parent.Value, new object[] { target.Value }));
+                            //((IList)parent.Value).Remove(target.Value);
 
                             if (parent.Persist)
                             {
@@ -384,6 +410,11 @@ namespace FSO.Common.DataService
                     {
                         var arr = (IList)obj;
                         var arrIndex = path.Dequeue();
+                        if (arrIndex >= arr.Count)
+                        {
+                            if (arr.Count == 0) throw new Exception("Item at index not found, unable to apply update");
+                            arrIndex = (uint)(arr.Count - 1);
+                        }
 
                         if (arrIndex < arr.Count)
                         {
@@ -419,7 +450,17 @@ namespace FSO.Common.DataService
 
         private bool IsList(Type targetType)
         {
-            return targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(List<>);
+            return targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(ImmutableList<>);
+        }
+
+        private MethodInfo GetGenericMethod(Type targetType, string name, Type[] args)
+        {
+            return targetType.GetMethod(name, args);
+        }
+
+        private MethodInfo GetGenericMethod(Type targetType, string name)
+        {
+            return targetType.GetMethod(name);
         }
 
         private bool IsNull(object value)

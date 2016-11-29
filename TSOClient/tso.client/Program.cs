@@ -13,6 +13,7 @@ using System.Reflection;
 using FSO.Common;
 using FSO.Client.Debug;
 using System.Windows.Forms;
+using FSO.Common.Rendering.Framework.IO;
 
 namespace FSO.Client
 {
@@ -36,6 +37,7 @@ namespace FSO.Client
             AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
             //Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+            ClipboardHandler.Default = new WinFormsClipboard();
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;

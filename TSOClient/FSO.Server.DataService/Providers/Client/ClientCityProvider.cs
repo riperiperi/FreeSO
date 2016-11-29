@@ -2,6 +2,7 @@
 using FSO.Common.DataService.Model;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,13 +15,13 @@ namespace FSO.Common.DataService.Providers.Client
         {
             var city = new City
             {
-                City_NeighborhoodsVec = new List<uint>(),
-                City_OnlineLotVector = new List<bool>(),
+                City_NeighborhoodsVec = ImmutableList.Create<uint>(),
+                City_OnlineLotVector = ImmutableList.Create<bool>(),
                 City_ReservedLotInfo = new Dictionary<uint, bool>(),
-                City_ReservedLotVector = new List<bool>(),
-                City_SpotlightsVector = new List<uint>(),
-                City_Top100ListIDs = new List<uint>(),
-                City_TopTenNeighborhoodsVector = new List<uint>()
+                City_ReservedLotVector = ImmutableList.Create<bool>(),
+                City_SpotlightsVector = ImmutableList.Create<uint>(),
+                City_Top100ListIDs = ImmutableList.Create<uint>(),
+                City_TopTenNeighborhoodsVector = ImmutableList.Create<uint>()
             };
 
             return city;

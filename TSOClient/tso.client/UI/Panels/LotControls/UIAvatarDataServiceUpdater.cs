@@ -5,6 +5,7 @@ using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -117,7 +118,7 @@ namespace FSO.Client.UI.Panels.LotControls
                     JobLevel_JobGrade = (ushort)level.Value.Level
                 });
             }
-            model.Avatar_JobLevelVec = jobs;
+            model.Avatar_JobLevelVec = ImmutableList.ToImmutableList(jobs);
             /*
             var friendships = new List<Relationship>();
             foreach (var rel in avatar.MeToPersist)

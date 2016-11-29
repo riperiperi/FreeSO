@@ -278,6 +278,7 @@ namespace FSO.Client.UI.Screens
             InitializeMap(cityMap);
             InitializeMouse();
             ZoomLevel = 5; //screen always starts at far zoom, city visible.
+            CityRenderer.m_ZoomProgress = 0;
 
             JoinLotProgress = new UIJoinLotProgress();
             JoinLotProgress.BindController<JoinLotProgressController>();
@@ -356,7 +357,7 @@ namespace FSO.Client.UI.Screens
                         World.Opacity = Math.Max(0, (CityRenderer.m_LotZoomProgress - 0.5f) * 2);
 
                         var scale =
-                            1/((CityRenderer.m_LotZoomProgress * (1/CityRenderer.m_LotZoomSize) + (1 - CityRenderer.m_LotZoomProgress) * (1/Terrain.NEAR_ZOOM_SIZE)))
+                            1/((CityRenderer.m_LotZoomProgress * (1/CityRenderer.m_LotZoomSize) + (1 - CityRenderer.m_LotZoomProgress) * (1/(Terrain.NEAR_ZOOM_SIZE*CityRenderer.m_WheelZoom))))
                             / CityRenderer.m_LotZoomSize;
 
                         World.State.PreciseZoom = scale;
@@ -388,6 +389,12 @@ namespace FSO.Client.UI.Screens
         public void CleanupLastWorld()
         {
             if (vm == null) return;
+
+            //clear our cache too, if the setting lets us do that
+            TimedReferenceController.Clear();
+            TimedReferenceController.Clear();
+            VM.ClearAssembled();
+
             if (ZoomLevel < 4) ZoomLevel = 5;
             vm.Context.Ambience.Kill();
             foreach (var ent in vm.Entities) { //stop object sounds
@@ -406,9 +413,11 @@ namespace FSO.Client.UI.Screens
             this.Remove(LotControl);
             ucp.SetPanel(-1);
             ucp.SetInLot(false);
+            vm.SuppressBHAVChanges();
             vm = null;
             World = null;
             Driver = null;
+            LotControl = null;
         }
 
         public void InitiateLotSwitch()
@@ -493,6 +502,7 @@ namespace FSO.Client.UI.Screens
             Driver.OnShutdown += VMShutdown;
 
             vm = new VM(new VMContext(World), Driver, new UIHeadlineRendererProvider());
+            vm.ListenBHAVChanges();
             vm.Init();
 
             LotControl = new UILotControl(vm, World);
@@ -517,120 +527,22 @@ namespace FSO.Client.UI.Screens
             vm.OnChatEvent += Vm_OnChatEvent;
             vm.OnEODMessage += LotControl.EODs.OnEODMessage;
             vm.OnRequestLotSwitch += VMLotSwitch;
+            vm.OnGenericVMEvent += Vm_OnGenericVMEvent;
+        }
+
+        private void Vm_OnGenericVMEvent(VMEventType type, object data)
+        {
+            switch (type)
+            {
+                case VMEventType.TSOUnignore:
+                    PersonPage.ToggleBookmark(Common.DataService.Model.BookmarkType.IGNORE_AVATAR, null, (uint)data);
+                    break;
+            }
         }
 
         private void VMLotSwitch(uint lotId)
         {
             FindController<CoreGameScreenController>()?.SwitchLot(lotId);
-        }
-
-        public void InitTestLot(string path, bool host)
-        {
-            /*
-            if (Connecting) return;
-
-            if (vm != null) CleanupLastWorld();
-
-            World = new LotView.World(GameFacade.Game.GraphicsDevice);
-            GameFacade.Scenes.Add(World);
-
-            VMNetDriver driver;
-            if (host)
-            {
-                driver = new VMServerDriver(new VMTSOGlobalLinkStub());
-            }
-            else
-            {
-                Connecting = true;
-                ConnectingDialog = new UILoginProgress();
-
-                ConnectingDialog.Caption = GameFacade.Strings.GetString("211", "1");
-                ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "24");
-                //this.Add(ConnectingDialog);
-
-                UIScreen.ShowDialog(ConnectingDialog, true);
-
-                driver = new VMClientDriver(ClientStateChange);
-            }
-
-            vm = new VM(new VMContext(World), driver, new UIHeadlineRendererProvider());
-            vm.Init();
-            vm.LotName = (path == null) ? "localhost" : path.Split('/').LastOrDefault(); //quick hack just so we can remember where we are
-
-            if (host)
-            {
-                //check: do we have an fsov to try loading from?
-
-                string filename = Path.GetFileName(path);
-                try
-                {
-                    using (var file = new BinaryReader(File.OpenRead(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/")+filename.Substring(0, filename.Length-4)+".fsov")))
-                    {
-                        var marshal = new SimAntics.Marshals.VMMarshal();
-                        marshal.Deserialize(file);
-                        vm.Load(marshal);
-                        vm.Reset();
-                    }
-                }
-                catch (Exception) {
-                    short jobLevel = -1;
-
-                    //quick hack to find the job level from the chosen blueprint
-                    //the final server will know this from the fact that it wants to create a job lot in the first place...
-
-                    try
-                    {
-                        if (filename.StartsWith("nightclub") || filename.StartsWith("restaurant") || filename.StartsWith("robotfactory"))
-                            jobLevel = Convert.ToInt16(filename.Substring(filename.Length - 9, 2));
-                    }
-                    catch (Exception) { }
-
-                    vm.SendCommand(new VMBlueprintRestoreCmd
-                    {
-                        JobLevel = jobLevel,
-                        XMLData = File.ReadAllBytes(path)
-                    });
-                }
-            }
-
-            uint simID = (uint)(new Random()).Next();
-            vm.MyUID = simID;
-
-            vm.SendCommand(new VMNetSimJoinCmd
-            {
-                ActorUID = simID,
-                HeadID = GlobalSettings.Default.DebugHead,
-                BodyID = GlobalSettings.Default.DebugBody,
-                SkinTone = (byte)GlobalSettings.Default.DebugSkin,
-                Gender = !GlobalSettings.Default.DebugGender,
-                Name = GlobalSettings.Default.LastUser
-            });
-
-            LotControl = new UILotControl(vm, World);
-            this.AddAt(0, LotControl);
-
-            vm.Context.Clock.Hours = 10;
-            if (m_ZoomLevel > 3)
-            {
-                World.Visible = false;
-                LotControl.Visible = false;
-            }
-
-            if (host)
-            {
-                ZoomLevel = 1;
-                ucp.SetInLot(true);
-            } else
-            {
-                ZoomLevel = Math.Max(ZoomLevel, 4);
-            }
-
-            if (IDEHook.IDE != null) IDEHook.IDE.StartIDE(vm);
-
-            vm.OnFullRefresh += VMRefreshed;
-            vm.OnChatEvent += Vm_OnChatEvent;
-            vm.OnEODMessage += LotControl.EODs.OnEODMessage;
-            */
         }
 
         private void Vm_OnChatEvent(SimAntics.NetPlay.Model.VMChatEvent evt)

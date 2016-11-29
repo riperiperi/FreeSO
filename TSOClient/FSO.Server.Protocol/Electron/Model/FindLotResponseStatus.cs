@@ -14,6 +14,7 @@ namespace FSO.Server.Protocol.Electron.Model
         NOT_PERMITTED_TO_OPEN,
         CLAIM_FAILED,
         NO_CAPACITY,
+        NO_ADMIT,
         UNKNOWN_ERROR
     }
 }

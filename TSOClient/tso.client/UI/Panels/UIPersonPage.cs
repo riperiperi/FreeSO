@@ -148,6 +148,7 @@ namespace FSO.Client.UI.Panels
          */
         public Binding<Avatar> CurrentAvatar { get; internal set; }
         public Binding<Avatar> MyAvatar { get; internal set; }
+        public Binding<Lot> MyLot { get; internal set; }
         public override Vector2 Size { get; set; }
 
         private UIPersonPageTab _Tab = UIPersonPageTab.Description;
@@ -303,7 +304,7 @@ namespace FSO.Client.UI.Panels
                         if (screen.vm == null) FindController<PersonPageController>().SaveValue(CurrentAvatar.Value, dot);
                     }
 
-                    if (screen.vm != null)
+                    if (screen?.vm != null)
                     {
                         screen.vm.SendCommand(new VMNetSkillLockCmd()
                         {
@@ -350,6 +351,10 @@ namespace FSO.Client.UI.Panels
 
             /** Bookmark **/
             this.BookmarkButton.OnButtonClick += BookmarkButton_OnButtonClick;
+            this.IgnoreButton.OnButtonClick += IgnoreButton_OnButtonClick;
+
+            this.AdmitCheckBox.OnButtonClick += AdmitCheckBox_OnButtonClick;
+            this.BanCheckBox.OnButtonClick += BanCheckBox_OnButtonClick;
 
             /** Scroll bars **/
             this.DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
@@ -417,14 +422,32 @@ namespace FSO.Client.UI.Panels
                     BookmarksChanged();
                 }, "Avatar_BookmarksVec");
 
+            MyLot = new Binding<Lot>()
+                .WithMultiBinding(x =>
+                {
+                    AdmitBanChanged();
+                }, "Lot_LotAdmitInfo.LotAdmitInfo_AdmitList", "Lot_LotAdmitInfo.LotAdmitInfo_BanList");
 
             Redraw();
             Size = BackgroundExpandedImage.Size.ToVector2();
         }
 
+        private void BanCheckBox_OnButtonClick(UIElement button)
+        {
+            if (CurrentAvatar.Value != null)
+                ToggleAdmitBan(true, BanCheckBox, CurrentAvatar.Value.Avatar_Id);
+        }
+
+        private void AdmitCheckBox_OnButtonClick(UIElement button)
+        {
+            if (CurrentAvatar.Value != null)
+                ToggleAdmitBan(false, AdmitCheckBox, CurrentAvatar.Value.Avatar_Id);
+        }
+
         private void BookmarksChanged()
         {
             var bookmark = false;
+            var ignore = false;
 
             if (MyAvatar != null && MyAvatar.Value != null 
                 && MyAvatar.Value.Avatar_BookmarksVec != null && CurrentAvatar.Value != null)
@@ -432,37 +455,116 @@ namespace FSO.Client.UI.Panels
                 bookmark = MyAvatar.Value.Avatar_BookmarksVec.FirstOrDefault(
                     x => x.Bookmark_TargetID == CurrentAvatar.Value.Avatar_Id && x.Bookmark_Type == (byte)BookmarkType.AVATAR
                 ) != null;
+                ignore = MyAvatar.Value.Avatar_BookmarksVec.FirstOrDefault(
+                    x => x.Bookmark_TargetID == CurrentAvatar.Value.Avatar_Id && x.Bookmark_Type == (byte)BookmarkType.IGNORE_AVATAR
+                ) != null;
             }
 
             BookmarkButton.Selected = bookmark;
+            IgnoreButton.Selected = ignore;
+        }
+
+        private void AdmitBanChanged()
+        {
+            var admit = false;
+            var ban = false;
+
+            if (MyLot != null && MyLot.Value != null && CurrentAvatar.Value != null)
+            {
+                if (MyLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_AdmitList != null)
+                    admit = MyLot.Value.Lot_LotAdmitInfo.LotAdmitInfo_AdmitList.Contains(CurrentAvatar.Value.Avatar_Id);
+                if (MyLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_BanList != null)
+                    ban = MyLot.Value.Lot_LotAdmitInfo.LotAdmitInfo_BanList.Contains(CurrentAvatar.Value.Avatar_Id);
+            }
+
+            AdmitCheckBox.Selected = admit;
+            BanCheckBox.Selected = ban;
         }
 
         private void BookmarkButton_OnButtonClick(UIElement button)
         {
+            if (CurrentAvatar.Value != null)
+                ToggleBookmark(BookmarkType.AVATAR, BookmarkButton, CurrentAvatar.Value.Avatar_Id);
+        }
+
+        private void IgnoreButton_OnButtonClick(UIElement button)
+        {
+            if (CurrentAvatar.Value != null)
+                ToggleBookmark(BookmarkType.IGNORE_AVATAR, IgnoreButton, CurrentAvatar.Value.Avatar_Id);
+        }
+
+        public void ToggleBookmark(BookmarkType type, UIButton btn, uint target_id)
+        {
             var controller = FindController<PersonPageController>();
-            
-            if (MyAvatar != null && MyAvatar.Value != null && CurrentAvatar.Value != null)
+            bool setIgnore = false;
+            var screen = GameFacade.Screens.CurrentUIScreen as CoreGameScreen;
+
+            if (MyAvatar != null && MyAvatar.Value != null)
             {
-                if(MyAvatar.Value.Avatar_BookmarksVec != null)
+                if (MyAvatar.Value.Avatar_BookmarksVec != null)
                 {
                     var bookmark = MyAvatar.Value.Avatar_BookmarksVec.FirstOrDefault(
-                        x => x.Bookmark_TargetID == CurrentAvatar.Value.Avatar_Id && x.Bookmark_Type == (byte)BookmarkType.AVATAR
+                        x => x.Bookmark_TargetID == target_id && x.Bookmark_Type == (byte)type
                     );
 
                     if (bookmark != null)
                     {
-                        BookmarkButton.Selected = false;
+                        if (btn != null) btn.Selected = false;
                         controller.RemoveBookmark(MyAvatar.Value, bookmark);
+                        if (type == BookmarkType.IGNORE_AVATAR && screen?.vm != null)
+                        {
+                            screen.vm.SendCommand(new VMNetSetIgnoreCmd()
+                            {
+                                TargetPID = target_id,
+                                SetIgnore = false
+                            });
+                        }
                         return;
                     }
                 }
 
-                BookmarkButton.Selected = true;
+                if (btn != null) btn.Selected = true;
                 controller.AddBookmark(MyAvatar.Value, new Bookmark()
                 {
-                    Bookmark_TargetID = CurrentAvatar.Value.Avatar_Id,
-                    Bookmark_Type = (byte)BookmarkType.AVATAR
+                    Bookmark_TargetID = target_id,
+                    Bookmark_Type = (byte)type
                 });
+                setIgnore = true;
+            }
+            
+            if (type == BookmarkType.IGNORE_AVATAR && screen?.vm != null)
+            {
+                screen.vm.SendCommand(new VMNetSetIgnoreCmd()
+                {
+                    TargetPID = target_id,
+                    SetIgnore = setIgnore
+                });
+            }
+        }
+
+        public void ToggleAdmitBan(bool ban, UIButton btn, uint target_id)
+        {
+            var controller = FindController<PersonPageController>();
+            bool set = false;
+            var screen = GameFacade.Screens.CurrentUIScreen as CoreGameScreen;
+
+            if (MyLot != null && MyLot.Value != null)
+            {
+                var list = (ban) ? MyLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_BanList : MyLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_AdmitList;
+                if (list != null)
+                {
+                    var admitted = list.Contains(target_id);
+                    if (admitted)
+                    {
+                        if (btn != null) btn.Selected = false;
+                        controller.RemoveAdmitBan(MyLot.Value, target_id, ban);
+                        return;
+                    }
+                }
+
+                if (btn != null) btn.Selected = true;
+                controller.AddAdmitBan(MyLot.Value, target_id, ban);
+                set = true;
             }
         }
 
@@ -776,8 +878,8 @@ namespace FSO.Client.UI.Panels
 
             foreach (var bar in SkillBars) bar.DisableLock = !isMe;
 
-            var isFriend = RelOutLTR >= 50;
-            var isEnemy = RelOutLTR <= -50;
+            var isFriend = RelOutLTR >= 60;
+            var isEnemy = RelOutLTR <= -60;
             var isNeutral = !(isFriend || isEnemy);
 
             SelfRimImage.Visible = isOnline && isMe;
@@ -850,9 +952,11 @@ namespace FSO.Client.UI.Panels
             OptionsTabBackgroundImage.Visible = isOpen && !isOptions;
             OptionsTabImage.Visible = isOpen && isOptions;
             OptionsBackgroundImage.Visible = isOpen && isOptions;
+            if (isOptions) AdmitBanChanged();
 
             RelationshipsTabButton.Disabled = isMe;
             OptionsTabButton.Disabled = isMe;
+            BookmarkButton.Disabled = isMe;
 
             if (isClosed)
             {

@@ -165,6 +165,11 @@ namespace FSO.Server.Database.DA.Lots
             Context.Connection.Query("UPDATE fso_lots SET category = @category, category_change_date = @time WHERE lot_id = @id", new { id = lot_id, category = category.ToString(), time = Epoch.Now });
         }
 
+        public void UpdateLotAdmitMode(int lot_id, byte admit_mode)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET admit_mode = @admit_mode WHERE lot_id = @id", new { id = lot_id, admit_mode = admit_mode });
+        }
+
         public void UpdateLocation(int lot_id, uint location, bool startFresh)
         {
             Context.Connection.Query("UPDATE fso_lots SET location = @location, move_flags = @move WHERE lot_id = @id", new { id = lot_id, location = location, move = (byte)(startFresh?2:1) });

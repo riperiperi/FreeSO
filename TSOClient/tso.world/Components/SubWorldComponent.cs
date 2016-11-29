@@ -65,7 +65,9 @@ namespace FSO.LotView.Components
             var damage = Blueprint.Damage;
             var _2d = state._2D;
             var oldLevel = state.Level;
+            var oldBuild = state.BuildMode;
             state.SilentLevel = State.Level;
+            state.SilentBuildMode = 0;
 
             /**
              * This is a little bit different from a normal 2d world. All objects are part of the static 
@@ -140,6 +142,7 @@ namespace FSO.LotView.Components
                 state._2D.End(StaticObjectsCache, true);
             }
 
+            state.SilentBuildMode = oldBuild;
             state.SilentLevel = oldLevel;
         }
 
@@ -157,6 +160,10 @@ namespace FSO.LotView.Components
             Blueprint.Terrain.Draw(gd, parentState);
             parentState._2D.RenderCache(StaticArchCache);
             parentState._2D.Pause();
+            var level = parentState.SilentLevel;
+            parentState.SilentLevel = 5;
+            Blueprint.RoofComp.Draw(gd, parentState);
+            parentState.SilentLevel = level;
 
             parentState.CenterTile = parentScroll;
             parentState._2D.AmbientLight = parentLight;
@@ -177,6 +184,11 @@ namespace FSO.LotView.Components
 
             parentState.CenterTile = parentScroll;
             parentState._2D.AmbientLight = parentLight;
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
         }
     }
 }

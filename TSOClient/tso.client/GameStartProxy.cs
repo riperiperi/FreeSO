@@ -14,9 +14,9 @@ namespace FSO.Client
     {
         public void Start(bool useDX)
         {
-			TSOGame game = new TSOGame();
             GameFacade.DirectX = useDX;
 			World.DirectX = useDX;
+            TSOGame game = new TSOGame();
             game.Run();
             game.Dispose();
         }

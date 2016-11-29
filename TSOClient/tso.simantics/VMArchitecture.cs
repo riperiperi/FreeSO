@@ -40,6 +40,8 @@ namespace FSO.SimAntics
         public FloorTile[][] VisFloors;
 
         public VMArchitectureTerrain Terrain;
+        public uint RoofStyle = 16;
+        public float RoofPitch = 0.66f;
 
         public bool[][] ObjectSupport;
         public bool[][] Supported;
@@ -81,6 +83,16 @@ namespace FSO.SimAntics
             new Color(55, 75, 111)*1.25f,
             new Color(50, 70, 122)*1.25f,
         };
+
+        public void SetRoof(float pitch, uint style)
+        {
+            RoofPitch = pitch;
+            RoofStyle = style;
+            if (VM.UseWorld)
+            {
+                WorldUI.RoofComp.SetStylePitch(style, pitch);
+            }
+        }
 
         public VMArchitecture(int width, int height, Blueprint blueprint, VMContext context)
         {
@@ -136,7 +148,7 @@ namespace FSO.SimAntics
             Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1)) + 1]; //second colour
             double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
 
-            WorldUI.OutsideColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
+            if (VM.UseWorld) WorldUI.OutsideColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
         }
 
         public void UpdateBuildableArea(Rectangle area, int floors)
@@ -246,6 +258,18 @@ namespace FSO.SimAntics
                 if (VM.UseWorld) WorldUI.RoomMap[i] = Rooms[i].Map;
                 RegenerateSupported(i + 1);
             }
+
+            if (VM.UseWorld)
+            {
+                WorldUI.Rooms = RoomData.ConvertAll(x => new Room
+                {
+                    Area = x.Area,
+                    Bounds = x.Bounds,
+                    IsOutside = x.IsOutside,
+                    IsPool = x.IsPool,
+                    RoomID = x.RoomID
+                });
+            }
         }
 
         public void Tick()
@@ -253,6 +277,11 @@ namespace FSO.SimAntics
             if (WallsDirty || FloorsDirty)
             {
                 RegenRoomMap();
+                if (VM.UseWorld)
+                {
+                    WorldUI.SignalRoomChange();
+                    WorldUI.RoofComp.SetStylePitch(RoofStyle, RoofPitch);
+                }
                 if (WallsChanged != null) WallsChanged(this);
             }
 
@@ -679,7 +708,10 @@ namespace FSO.SimAntics
                 Floors = Floors,
 
                 WallsDirty = WallsDirty,
-                FloorsDirty = FloorsDirty
+                FloorsDirty = FloorsDirty,
+
+                RoofPitch = RoofPitch,
+                RoofStyle = RoofStyle
             };
         }
 
@@ -693,8 +725,18 @@ namespace FSO.SimAntics
             Walls = input.Walls;
             Floors = input.Floors;
 
+            RoofPitch = input.RoofPitch;
+            RoofStyle = input.RoofStyle;
+
             RegenWallsAt();
             SignalTerrainRedraw();
+        }
+
+        public void SignalAllDirty()
+        {
+            WallsDirty = true;
+            FloorsDirty = true;
+            Redraw = true;
         }
 
         public void WallDirtyState(VMArchitectureMarshal input)

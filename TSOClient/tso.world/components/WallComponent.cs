@@ -202,7 +202,12 @@ namespace FSO.LotView.Components
 
                                     //draw overlay if exists
 
-                                    if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 0, down, world));
+                                    if (overlayID != 0)
+                                    {
+                                        var spr = GetWallSprite(GetPattern(overlayID), null, 0, down, world);
+                                        spr.Room = 1;
+                                        world._2D.Draw(spr);
+                                    }
 
                                     var contOff = tilePosition + RotateOffset(world.Rotation, new Vector3(0, -1, 0));
 
@@ -336,7 +341,12 @@ namespace FSO.LotView.Components
                                 {
                                     world._2D.Draw(_Sprite);
 
-                                    if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 1, down, world));
+                                    if (overlayID != 0)
+                                    {
+                                        var spr = GetWallSprite(GetPattern(overlayID), null, 1, down, world);
+                                        spr.Room = 1;
+                                        world._2D.Draw(spr);
+                                    }
                                     var contOff = tilePosition + RotateOffset(world.Rotation, new Vector3(-1, 0, 0));
                                     if (comp.TopRightThick)
                                     {
@@ -472,7 +482,12 @@ namespace FSO.LotView.Components
                                 {
                                     world._2D.Draw(_Sprite);
 
-                                    if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 2, down, world));
+                                    if (overlayID != 0)
+                                    {
+                                        var spr = GetWallSprite(GetPattern(overlayID), null, 2, down, world);
+                                        spr.Room = 1;
+                                        world._2D.Draw(spr);
+                                    }
 
                                     //draw diagonally cut floors
                                     if (comp.TopLeftPattern != 0)
@@ -526,8 +541,12 @@ namespace FSO.LotView.Components
                                 {
                                     world._2D.Draw(_Sprite);
 
-                                    if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 3, down, world));
-
+                                    if (overlayID != 0)
+                                    {
+                                        var spr = GetWallSprite(GetPattern(overlayID), null, 3, down, world);
+                                        spr.Room = 1;
+                                        world._2D.Draw(spr);
+                                    }
                                     //draw diagonally cut floors
                                     if (comp.TopLeftPattern != 0)
                                     {

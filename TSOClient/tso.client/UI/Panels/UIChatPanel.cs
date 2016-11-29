@@ -21,6 +21,7 @@ using FSO.Client.Utils;
 using FSO.Common.Utils;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.Common;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -207,6 +208,9 @@ namespace FSO.Client.UI.Panels
                 Labels.Add(balloon);
             }
 
+            var myAvatar = vm.GetAvatarByPersist(vm.MyUID);
+            var myIgnoring = ((VMTSOAvatarState)myAvatar?.TSOState)?.IgnoredAvatars ?? new HashSet<uint>();
+
             for (int i=0; i<Labels.Count; i++)
             {
                 var label = Labels[i];
@@ -214,16 +218,22 @@ namespace FSO.Client.UI.Panels
 
                 if (label.Message != avatar.Message)
                     label.SetNameMessage(avatar.Name, avatar.Message);
-
-                if (avatar.MessageTimeout < 30)
+                if (myIgnoring.Contains(avatar.PersistID))
                 {
-                    label.FadeTime = avatar.MessageTimeout / 3;
-                    label.Alpha = avatar.MessageTimeout / 30f;
+                    label.Alpha = 0;
                 }
                 else
                 {
-                    if (label.FadeTime < 10) label.FadeTime++;
-                    label.Alpha = label.FadeTime / 10f;
+                    if (avatar.MessageTimeout < 30)
+                    {
+                        label.FadeTime = avatar.MessageTimeout / 3;
+                        label.Alpha = avatar.MessageTimeout / 30f;
+                    }
+                    else
+                    {
+                        if (label.FadeTime < 10) label.FadeTime++;
+                        label.Alpha = label.FadeTime / 10f;
+                    }
                 }
 
                 var world = vm.Context.World.State;
@@ -247,7 +257,15 @@ namespace FSO.Client.UI.Panels
         public void ReceiveEvent(VMChatEvent evt)
         {
             if (evt.Type == VMChatEventType.Arch) PropertyLog.ReceiveEvent(evt);
-            else HistoryDialog.ReceiveEvent(evt);
+            else
+            {
+                var myAvatar = vm.GetAvatarByPersist(vm.MyUID);
+                var myIgnoring = ((VMTSOAvatarState)myAvatar?.TSOState)?.IgnoredAvatars ?? new HashSet<uint>();
+                if (!myIgnoring.Contains(evt.SenderUID))
+                {
+                    HistoryDialog.ReceiveEvent(evt);
+                }
+            }
         }
 
         public void SetLotName(string name)

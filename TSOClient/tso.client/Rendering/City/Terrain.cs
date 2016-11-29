@@ -85,12 +85,15 @@ namespace FSO.Client.Rendering.City
         public static float NEAR_ZOOM_SIZE = 288;
         public float m_LotZoomSize = 72*128; //near zoom, set by world
         public TerrainZoomMode m_Zoomed = TerrainZoomMode.Far;
+        public float m_WheelZoomTarg = 1f;
+        public float m_WheelZoom = 1f;
         public float m_LotZoomProgress = 0;
 
         private DateTime LastCityUpdate = DateTime.Now;
 
         private MouseState m_MouseState, m_LastMouseState;
         private bool m_MouseMove = false;
+        private int? m_LastWheelPos; //null if invalid, increments in 120 it seems.
         private Vector2 m_MouseStart;
         private int m_ScrHeight, m_ScrWidth;
         private float m_ScrollSpeed;
@@ -139,8 +142,10 @@ namespace FSO.Client.Rendering.City
 
         private int m_Width, m_Height;
 
+        private SpriteBatch m_Batch;
         private RenderTarget2D ShadowTarget;
         private int OldShadowRes;
+        private int ShadowRegenTimer = 1;
 
         private Texture2D LoadTex(string Path)
         {
@@ -230,6 +235,7 @@ namespace FSO.Client.Rendering.City
 
             m_Width = m_Elevation.Width;
             m_Height = m_Elevation.Height;
+            m_Batch = new SpriteBatch(GameFacade.GraphicsDevice);
         }
 
         public Terrain(GraphicsDevice Device) : base(Device)
@@ -967,7 +973,7 @@ namespace FSO.Client.Rendering.City
 
         private void DrawHouses(float HB) //draws house icons in far view
         {
-            SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
+            var spriteBatch = m_Batch;
             spriteBatch.Begin();
             float iScale = (float)m_ScrWidth / (HB * 2);
             LotTileEntry[] lots = LotTileData;
@@ -1000,7 +1006,7 @@ namespace FSO.Client.Rendering.City
 
         private void DrawSprites(float HB, float VB)
         {
-            SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
+            var spriteBatch = m_Batch;
             spriteBatch.Begin();
 
             if (m_Zoomed == TerrainZoomMode.Far && m_HandleMouse)
@@ -1015,7 +1021,6 @@ namespace FSO.Client.Rendering.City
             if (m_ZoomProgress < 0.5)
             {
                 spriteBatch.End();
-                spriteBatch.Dispose();
                 return;
             }
 
@@ -1101,7 +1106,6 @@ namespace FSO.Client.Rendering.City
 
             Draw2DPoly(); //fill the tiles below online houses BEFORE actually drawing the houses and trees!
             spriteBatch.End();
-            spriteBatch.Dispose();
         }
 
         public Vector2 transformSpr(float iScale, Vector3 pos) 
@@ -1115,7 +1119,11 @@ namespace FSO.Client.Rendering.City
         public void UIMouseEvent(String type)
         {
             if (type.Equals("MouseOver", StringComparison.InvariantCultureIgnoreCase)) m_HandleMouse = true;
-            if (type.Equals("MouseOut", StringComparison.InvariantCultureIgnoreCase)) m_HandleMouse = false;
+            if (type.Equals("MouseOut", StringComparison.InvariantCultureIgnoreCase))
+            {
+                m_LastWheelPos = null;
+                m_HandleMouse = false;
+            }
         }
 
         public override void Update(UpdateState state)
@@ -1147,13 +1155,15 @@ namespace FSO.Client.Rendering.City
                         }
 
                         m_SelTile = currentTile;
+
+                        if (m_LastWheelPos != null)
+                            m_WheelZoomTarg = Math.Max(0.5f, Math.Min(1f, m_WheelZoomTarg - (m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) / 1000f));
                     }
 
                     if (m_MouseState.RightButton == ButtonState.Pressed && m_LastMouseState.RightButton == ButtonState.Released)
                     {
                         m_MouseStart = new Vector2(m_MouseState.X, m_MouseState.Y); //if middle mouse button activated, record where we started pressing it (to use for panning)
                     }
-
                     else if (m_MouseState.LeftButton == ButtonState.Released && m_LastMouseState.LeftButton == ButtonState.Pressed) //if clicked...
                     {
                         if (m_Zoomed == TerrainZoomMode.Far)
@@ -1182,6 +1192,8 @@ namespace FSO.Client.Rendering.City
 
                         CurrentUIScr.ucp.UpdateZoomButton();
                     }
+
+                    m_LastWheelPos = state.MouseState.ScrollWheelValue;
                 }
                 else
                 {
@@ -1190,7 +1202,7 @@ namespace FSO.Client.Rendering.City
 
                 //m_SecondsBehind += time.ElapsedGameTime.TotalSeconds;
                 //m_SecondsBehind -= 1 / 60;
-                FixedTimeUpdate();
+                FixedTimeUpdate(state);
                 //SetTimeOfDay(m_DayNightCycle % 1); //calculates sun/moon light colour and position
                 //m_DayNightCycle += 0.001; //adjust the cycle speed here. When ingame, set m_DayNightCycle to to the percentage of time passed through the day. (0 to 1)
 
@@ -1291,7 +1303,7 @@ namespace FSO.Client.Rendering.City
                         m_ElevationData[(Math.Min(y + 1, 511) * 512 + x) * 4]) / 4; //elevation of sprite is the average elevation of the 4 vertices of the tile
         }
 
-        private void FixedTimeUpdate()
+        private void FixedTimeUpdate(UpdateState state)
         {
             m_SpotOsc = (m_SpotOsc + 0.01f) % 1; //spotlight oscillation. Cycles fully every 100 frames.
             if (m_Zoomed != TerrainZoomMode.Far) m_ZoomProgress += (1.0f - m_ZoomProgress) / 5.0f;
@@ -1309,7 +1321,7 @@ namespace FSO.Client.Rendering.City
                         m_MouseState.X - m_MouseStart.X) / Math.PI) * 4) + 4;
                     ChangeCursor(dir);*/
                 }
-                else //edge scroll check - do this even if mouse events are blocked
+                else if (GlobalSettings.Default.EdgeScroll && state.ProcessMouseEvents) //edge scroll check - do this even if mouse events are blocked
                 {
                     if (m_MouseState.X > m_ScrWidth - 32)
                     {
@@ -1356,7 +1368,9 @@ namespace FSO.Client.Rendering.City
             {
                 m_LotZoomProgress += (1.0f - m_LotZoomProgress) / 10.0f;
             }
-            else m_LotZoomProgress += (0 - m_LotZoomProgress) / 10.0f; 
+            else m_LotZoomProgress += (0 - m_LotZoomProgress) / 10.0f;
+
+            m_WheelZoom += (m_WheelZoomTarg - m_WheelZoom) / 10.0f;
         }
 
         private Texture2D DrawDepth(Effect VertexShader, Effect PixelShader)
@@ -1411,13 +1425,14 @@ namespace FSO.Client.Rendering.City
         {
             float ResScale = 768.0f / m_ScrHeight; //scales up the vertical height to match that of the target resolution (for the far view)
             float FisoScale = (float)(Math.Sqrt(0.5 * 0.5 * 2) / 5.10f) * ResScale; // is 5.10 on far zoom
-            float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / NEAR_ZOOM_SIZE;  // currently set 144 to near zoom
+            float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / (NEAR_ZOOM_SIZE*m_WheelZoom);  // currently set 144 to near zoom
             float LisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / m_LotZoomSize;  // currently set 144 to near zoom
 
             float IsoScale = (1 - m_ZoomProgress) * FisoScale + (m_ZoomProgress) * ZisoScale;
             return (1-m_LotZoomProgress) * IsoScale + m_LotZoomProgress * LisoScale;
         }
 
+        private Matrix m_LightMatrix;
         public override void Draw(GraphicsDevice gfx)
         {
             m_GraphicsDevice = gfx;
@@ -1444,12 +1459,6 @@ namespace FSO.Client.Rendering.City
             Matrix ViewMatrix = Matrix.Identity;
             Matrix WorldMatrix = Matrix.Identity;
 
-            Matrix LightView = Matrix.CreateLookAt(m_LightPosition, new Vector3(256, 0, 256), new Vector3(0, 1, 0)); //Create light view - looks from light position to center of mesh.
-            Vector2 pos = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
-            Vector3 LightOff = Vector3.Transform(new Vector3(pos.X, 0, pos.Y), LightView); //finds position in light space of approximate center of camera (to be used for only shadowing near the camera in near view)
-
-            float size = (1 - m_ZoomProgress) * 262 + (m_ZoomProgress * 40); //size of draw window to use for shadowing. 40 is good for near view, it could be less but that wouldn't work correctly on higher ground.
-            Matrix LightProject = Matrix.CreateOrthographicOffCenter(-size + LightOff.X, size + LightOff.X, -size + LightOff.Y, size + LightOff.Y, 0.1f, 524); //create light projection using offsets + size.
 
             ViewMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (float)(1.0 - m_ZoomProgress) / 2, 1)); //makes world flatter in near view. This effect is present in the original, 
             //you just can't notice it as there is no zoom in animation. It also renders in true isometric... but that's an awful idea and makes lots look unusual when placed on flat tiles.
@@ -1460,7 +1469,6 @@ namespace FSO.Client.Rendering.City
 
             VertexShader.CurrentTechnique = VertexShader.Techniques[0];
             VertexShader.Parameters["BaseMatrix"].SetValue((WorldMatrix*ViewMatrix)*ProjectionMatrix);
-            VertexShader.Parameters["LightMatrix"].SetValue((WorldMatrix*LightView)*LightProject);
 
             PixelShader.CurrentTechnique = PixelShader.Techniques[0];
             PixelShader.Parameters["LightCol"].SetValue(new Vector4(m_TintColor.R / 255.0f, m_TintColor.G / 255.0f, m_TintColor.B / 255.0f, 1));
@@ -1479,10 +1487,29 @@ namespace FSO.Client.Rendering.City
 
             if (ShadowsEnabled)
             {
-                ShadowMap = DrawDepth(VertexShader, PixelShader);
-                PixelShader.Parameters["ShadowMap"].SetValue(ShadowMap);
-                PixelShader.Parameters["ShadSize"].SetValue(new Vector2(ShadowMap.Width, ShadowMap.Height));
+                if (--ShadowRegenTimer < 0 || (m_ZoomProgress > 0.1f && m_ZoomProgress < 0.9f))
+                {
+                    Matrix LightView = Matrix.CreateLookAt(m_LightPosition, new Vector3(256, 0, 256), new Vector3(0, 1, 0)); //Create light view - looks from light position to center of mesh.
+                    Vector2 pos = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
+                    Vector3 LightOff = Vector3.Transform(new Vector3(pos.X, 0, pos.Y), LightView); //finds position in light space of approximate center of camera (to be used for only shadowing near the camera in near view)
+
+                    float size = (1 - m_ZoomProgress) * 262 + (m_ZoomProgress * 40); //size of draw window to use for shadowing. 40 is good for near view, it could be less but that wouldn't work correctly on higher ground.
+                    Matrix LightProject = Matrix.CreateOrthographicOffCenter(-size + LightOff.X, size + LightOff.X, -size + LightOff.Y, size + LightOff.Y, 0.1f, 524); //create light projection using offsets + size.
+
+                    m_LightMatrix = (WorldMatrix * LightView) * LightProject;
+                    VertexShader.Parameters["LightMatrix"].SetValue(m_LightMatrix);
+                    ShadowMap = DrawDepth(VertexShader, PixelShader);
+
+                    ShadowRegenTimer = 60;
+                }
+                ShadowMap = ShadowTarget;
+                if (ShadowMap != null)
+                {
+                    PixelShader.Parameters["ShadowMap"].SetValue(ShadowMap);
+                    PixelShader.Parameters["ShadSize"].SetValue(new Vector2(ShadowMap.Width, ShadowMap.Height));
+                }
             }
+            VertexShader.Parameters["LightMatrix"].SetValue(m_LightMatrix);
             m_GraphicsDevice.Clear(Color.Black);
 
 

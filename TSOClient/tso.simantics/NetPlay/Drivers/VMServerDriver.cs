@@ -22,6 +22,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
         private List<VMNetCommand> QueuedCmds;
 
         private const int TICKS_PER_PACKET = 2;
+        private uint ProblemTick;
         private List<VMNetTick> TickBuffer;
 
         // Networking Abstractions
@@ -105,9 +106,13 @@ namespace FSO.SimAntics.NetPlay.Drivers
             watch.Start();
 
             var state = vm.Save();
-            var cmd = new VMNetCommand(new VMStateSyncCmd { State = state });
+            var statecmd = new VMStateSyncCmd { State = state };
+#if VM_DESYNC_DEBUG
+            statecmd.Trace = vm.Trace.GetTick(ProblemTick);
+#endif
+            var cmd = new VMNetCommand(statecmd);
 
-            //currently just hack this on the tick system. will change when we switch to not gonzonet
+            //currently just hack this on the tick system. might switch later
             var ticks = new VMNetTickList { Ticks = new List<VMNetTick> {
                 new VMNetTick {
                     Commands = new List<VMNetCommand> { cmd },
@@ -321,6 +326,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 lock (ClientsToSync)
                 {
                     //todo: throttle
+                    ProblemTick = ((VMRequestResyncCmd)cmd.Command).TickID;
                     ClientsToSync.Add(client);
                 }
             }

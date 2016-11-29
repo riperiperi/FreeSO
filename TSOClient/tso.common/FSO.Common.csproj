@@ -101,6 +101,10 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.3.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Core">
     </Reference>
     <Reference Include="System.Xml.Linq">
@@ -121,6 +125,7 @@
     <Compile Include="Enum\UserReferenceType.cs" />
     <Compile Include="Model\IntersectRectSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rendering\CachableTexture2D.cs" />
     <Compile Include="Rendering\Framework\3DComponent.cs" />
     <Compile Include="Rendering\Framework\3DLayer.cs" />
     <Compile Include="Rendering\Framework\3DScene.cs" />
@@ -134,6 +139,7 @@
     <Compile Include="Rendering\Framework\GameScreen.cs" />
     <Compile Include="Rendering\Framework\I3DGeometry.cs" />
     <Compile Include="Rendering\Framework\IGraphicsLayer.cs" />
+    <Compile Include="Rendering\Framework\IO\ClipboardHandler.cs" />
     <Compile Include="Rendering\Framework\IO\IDepthProvider.cs" />
     <Compile Include="Rendering\Framework\IO\IFocusableUI.cs" />
     <Compile Include="Rendering\Framework\IO\InputManager.cs" />
@@ -177,12 +183,14 @@
     <Compile Include="Utils\Binding.cs" />
     <Compile Include="Utils\Callback.cs" />
     <Compile Include="Utils\CollectionUtils.cs" />
+    <Compile Include="Utils\CurLoader.cs" />
     <Compile Include="Utils\DirectionUtils.cs" />
     <Compile Include="Utils\DotPath.cs" />
     <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\GameThread.cs" />
     <Compile Include="Utils\HTMLPrinter.cs" />
     <Compile Include="Utils\IffPrinter.cs" />
+    <Compile Include="Utils\ITimedCachable.cs" />
     <Compile Include="Utils\IXMLEntity.cs" />
     <Compile Include="Utils\MoneyFormatter.cs" />
     <Compile Include="Utils\Promise.cs" />
@@ -203,10 +211,6 @@
     <ProjectReference Include="..\..\Other\libs\mp3sharp\mp3sharp\Mp3Sharp.csproj">
       <Project>{834cab58-648d-47cc-ac6f-d01c08c809a4}</Project>
       <Name>Mp3Sharp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\tso.files\FSO.Files.csproj">
-      <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
-      <Name>FSO.Files</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

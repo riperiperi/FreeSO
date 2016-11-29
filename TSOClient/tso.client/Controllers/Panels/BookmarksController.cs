@@ -17,6 +17,7 @@ namespace FSO.Client.Controllers.Panels
         private IClientDataService DataService;
         private UIBookmarks View;
         private Binding<Avatar> Binding;
+        private BookmarkType CurrentType = BookmarkType.AVATAR;
 
         public BookmarksController(UIBookmarks view, IClientDataService dataService, Network.Network network)
         {
@@ -36,12 +37,18 @@ namespace FSO.Client.Controllers.Panels
             });
         }
 
+        public void ChangeType(BookmarkType type)
+        {
+            CurrentType = type;
+            RefreshResults();
+        }
+
         public void RefreshResults()
         {
             var list = new List<BookmarkListItem>();
             if(Binding.Value != null && Binding.Value.Avatar_BookmarksVec != null)
             {
-                var bookmarks = Binding.Value.Avatar_BookmarksVec;
+                var bookmarks = Binding.Value.Avatar_BookmarksVec.Where(x => x.Bookmark_Type == (byte)CurrentType).ToList();
                 var enriched = DataService.EnrichList<BookmarkListItem, Bookmark, Avatar>(bookmarks, x => x.Bookmark_TargetID, (bookmark, avatar) =>
                 {
                     return new BookmarkListItem {

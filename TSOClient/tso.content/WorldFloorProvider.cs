@@ -178,7 +178,7 @@ namespace FSO.Content
                 var spr = FloorGlobals.Get<SPR2>(0x800);
                 if (!spr.SpritePreprocessed)
                 {
-                    spr.CopyZToAlpha();
+                    spr.ZAsAlpha = true;
                     spr.SpritePreprocessed = true;
                 }
                 return TextureUtils.Copy(device, spr.Frames[0].GetTexture(device));
@@ -191,7 +191,7 @@ namespace FSO.Content
             var spr = FloorGlobals.Get<SPR2>(id);
             if (id > 0x800 && id < 0x810 && !spr.SpritePreprocessed)
             {
-                spr.CopyZToAlpha();
+                spr.ZAsAlpha = true;
                 spr.SpritePreprocessed = true;
             }
             return spr;

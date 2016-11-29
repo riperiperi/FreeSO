@@ -18,7 +18,6 @@ namespace FSO.SimAntics
         public VMRoutine(){
         }
 
-        public VM VM;
         public byte Type;
         public VMInstruction[] Instructions;
         public ushort Locals;

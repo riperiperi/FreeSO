@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,14 @@ namespace FSO.Common.DataService.Framework
 
         public static object NewInstance(Type type)
         {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ImmutableList<>))
+            {
+                var listType = typeof(ImmutableList);
+                var consMethod = listType.GetMethods().Where(method => method.IsGenericMethod).FirstOrDefault();
+                var generic = consMethod.MakeGenericMethod(type.GenericTypeArguments[0]);
+
+                return generic.Invoke(null, new object[] { }); 
+            }
             var instance = Activator.CreateInstance(type);
             var properties = type.GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
             

@@ -24,6 +24,9 @@ namespace FSO.SimAntics.Marshals
         public bool WallsDirty;
         public bool FloorsDirty;
 
+        public uint RoofStyle = 16;
+        public float RoofPitch = 0.66f;
+
         public int Version;
         public VMArchitectureMarshal() { }
         public VMArchitectureMarshal(int version) { Version = version; }
@@ -53,6 +56,12 @@ namespace FSO.SimAntics.Marshals
 
             WallsDirty = reader.ReadBoolean();
             FloorsDirty = reader.ReadBoolean();
+
+            if (Version > 13)
+            {
+                RoofStyle = reader.ReadUInt32();
+                RoofPitch = reader.ReadSingle();
+            }
         }
 
         public void SerializeInto(BinaryWriter writer)
@@ -80,6 +89,9 @@ namespace FSO.SimAntics.Marshals
 
             writer.Write(WallsDirty);
             writer.Write(FloorsDirty);
+
+            writer.Write(RoofStyle);
+            writer.Write(RoofPitch);
         }
     }
 

@@ -823,7 +823,8 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMSlotScope.Global:
                     var slots = context.Global.Resource.Get<SLOT>(100);
                     if (slots != null && slots.Slots.ContainsKey(3) && data < slots.Slots[3].Count){
-                        return slots.Slots[3][data];
+                        var slot = slots.Slots[3][data];
+                        return slot;
                     }
                     return null;
                 case VMSlotScope.Literal:

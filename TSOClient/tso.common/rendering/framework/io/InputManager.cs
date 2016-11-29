@@ -206,12 +206,7 @@ namespace FSO.Common.Rendering.Framework.IO
 
                                     var str = m_SBuilder.ToString().Substring(selectionStart, selectionEnd - selectionStart);
 
-                                    var copyThread = new Thread(x =>
-                                    {
-                                        //System.Windows.Forms.Clipboard.SetText((String.IsNullOrEmpty(str)) ? " " : str);
-                                    });
-                                    copyThread.SetApartmentState(ApartmentState.STA);
-                                    copyThread.Start();
+                                    ClipboardHandler.Default.Set(str);
 
                                     if (key == Keys.X)
                                     {
@@ -222,16 +217,7 @@ namespace FSO.Common.Rendering.Framework.IO
 
                             case Keys.V:
                                 /** Paste text in **/
-                                var wait = new AutoResetEvent(false);
-                                string clipboardText = "";
-                                var clipThread = new Thread(x =>
-                                {
-                                    //clipboardText = System.Windows.Forms.Clipboard.GetText(System.Windows.Forms.TextDataFormat.Text);
-                                    wait.Set();
-                                });
-                                clipThread.SetApartmentState(ApartmentState.STA);
-                                clipThread.Start();
-                                wait.WaitOne();
+                                var clipboardText = ClipboardHandler.Default.Get();
                                 
                                 if (clipboardText != null)
                                 {
@@ -259,6 +245,7 @@ namespace FSO.Common.Rendering.Framework.IO
                                 break;
                             }
                         } else {
+                            result.UnhandledKeys.Add(key);
                             processChar = true;
                         }
                     }
@@ -270,7 +257,8 @@ namespace FSO.Common.Rendering.Framework.IO
                     else if (state.FrameTextInput != null) continue;
                     else value = TranslateChar(key, result.ShiftDown, result.CapsDown, result.NumLockDown);
                     /** For now we dont support tabs in text **/
-                    if (value != '\0' && value != '\t' && value != '\b' && value != '\r')
+                    
+                    if (!char.IsControl(value) && value != '\0' && value != '\t' && value != '\b' && value != '\r')
                     {
                         if (allowInput)
                         {

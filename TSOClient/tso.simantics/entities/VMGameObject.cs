@@ -145,12 +145,14 @@ namespace FSO.SimAntics
                 {
                     if (current.PersistID > 0)
                     {
-                        //if this is called more than once, it will fail as the object is already locked.
-                        context.VM.ForwardCommand(new VMNetSendToInventoryCmd()
+                        if (context.VM.IsServer && (Disabled & VMGameObjectDisableFlags.TransactionIncomplete) == 0)
                         {
-                            InternalDispatch = true,
-                            ObjectPID = current.PersistID,
-                        });
+                            context.VM.ForwardCommand(new VMNetSendToInventoryCmd()
+                            {
+                                InternalDispatch = true,
+                                ObjectPID = current.PersistID,
+                            });
+                        }
                     }
                 }
             }

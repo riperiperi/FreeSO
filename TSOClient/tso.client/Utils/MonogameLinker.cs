@@ -48,7 +48,7 @@ namespace FSO.Client.Utils
                     monogameDir = "Monogame/MacOS/";
                 }
 
-                //if (File.Exists("Monogame.Framework.dll")) File.Delete("Monogame.Framework.dll");
+                if (File.Exists("Monogame.Framework.dll")) File.Delete("Monogame.Framework.dll");
 
                 AssemblyDir = monogameDir;
             } catch (Exception e)
