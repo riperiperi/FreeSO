@@ -1,4 +1,5 @@
-﻿using FSO.Content.Model;
+﻿using FSO.Common.Utils;
+using FSO.Content.Model;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 using FSO.SimAntics.NetPlay.EODs.Model;
@@ -37,37 +38,52 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
             var VM = client.vm;
 
+
             GetOutfit(VM, outfitId, outfit =>
             {
                 if (outfit == null) { return; }
 
-                //Take payment
-                VM.GlobalLink.PerformTransaction(client.vm, false, client.Avatar.PersistID, Server.Object.PersistID, (int)outfit.sale_price,
 
-                (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
+                //Make sure we don't already have this outfit, can't have an outfit twice
+                VM.GlobalLink.GetOutfits(VM, VMGLOutfitOwner.AVATAR, Controller.Avatar.PersistID, avatarOutfits =>
                 {
-                    //TODO: Make this part of global link
-                    VM.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                    {
-                        Responded = true,
-                        Success = success,
-                        TransferAmount = transferAmount,
-                        UID1 = uid1,
-                        Budget1 = budget1,
-                        UID2 = uid2,
-                        Budget2 = budget2
-                    }));
-
-                    if (success){
-                        //Transfer outfit to my avatar
-                        VM.GlobalLink.PurchaseOutfit(VM, outfit.outfit_id, Server.Object.PersistID, client.Avatar.PersistID, purchaseSuccess => {
-                            if(purchaseSuccess && putOnNow){
-                                PutOnNow(outfit, client);
-                            }
-
-                            BroadcastOutfits(VM, true);
-                        });
+                    if(avatarOutfits.FirstOrDefault(x => x.asset_id == outfit.asset_id) != null){
+                        //I already have this outfit
+                        return;
                     }
+
+                    //Take payment
+                    VM.GlobalLink.PerformTransaction(VM, false, client.Avatar.PersistID, Server.Object.PersistID, (int)outfit.sale_price,
+
+                    (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
+                    {
+                        //TODO: Make this part of global link
+                        VM.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
+                            {
+                                Responded = true,
+                                Success = success,
+                                TransferAmount = transferAmount,
+                                UID1 = uid1,
+                                Budget1 = budget1,
+                                UID2 = uid2,
+                                Budget2 = budget2
+                            }));
+
+                        if (success)
+                        {
+                            //Transfer outfit to my avatar
+                            VM.GlobalLink.PurchaseOutfit(VM, outfit.outfit_id, Server.Object.PersistID, client.Avatar.PersistID, purchaseSuccess => {
+                                    if (purchaseSuccess && putOnNow)
+                                    {
+                                        PutOnNow(outfit, client);
+                                    }
+
+                                    BroadcastOutfits(VM, true);
+                                });
+                        }
+                    });
+
+
                 });
             });
         }
