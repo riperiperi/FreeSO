@@ -46,6 +46,11 @@ namespace FSO.Server.Database.DA.Outfits
         {
             return Context.Connection.Execute("DELETE FROM fso_outfits WHERE outfit_id = @outfit_id AND object_owner = @object_owner", new { outfit_id = outfit_id, object_owner = object_id }) > 0;
         }
+        
+        public bool DeleteFromAvatar(uint outfit_id, uint avatar_id)
+        {
+            return Context.Connection.Execute("DELETE FROM fso_outfits WHERE outfit_id = @outfit_id AND avatar_owner = @avatar_owner", new { outfit_id = outfit_id, avatar_owner = avatar_id }) > 0;
+        }
 
         public List<DbOutfit> GetByAvatarId(uint avatar_id)
         {

@@ -19,6 +19,8 @@ using FSO.SimAntics.Marshals;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Roommates;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
+using FSO.SimAntics.Engine.Scopes;
+using FSO.Server.Database.DA.Avatars;
 
 namespace FSO.Server.Servers.Lot.Domain
 {
@@ -639,6 +641,8 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     if (owner == VMGLOutfitOwner.OBJECT){
                         callback(db.Outfits.DeleteFromObject(outfitPID, ownerPID));
+                    }else if(owner == VMGLOutfitOwner.AVATAR){
+                        callback(db.Outfits.DeleteFromAvatar(outfitPID, ownerPID));
                     }
                 }
             });

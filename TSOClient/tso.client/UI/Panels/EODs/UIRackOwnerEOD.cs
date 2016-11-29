@@ -204,13 +204,14 @@ namespace FSO.Client.UI.Panels.EODs
 
         private List<object> RackOutfitsToDataProvider(RackOutfits outfits)
         {
+            var appearanceType = GetAppearanceType();
             var dataProvider = new List<object>();
             foreach (var outfit in outfits.Outfits)
             {
                 if (outfit.Gender != SelectedGender) { continue; }
 
                 Outfit TmpOutfit = Content.Content.Get().AvatarOutfits.Get(outfit.AssetID);
-                Appearance TmpAppearance = Content.Content.Get().AvatarAppearances.Get(TmpOutfit.GetAppearance(AppearanceType.Light));
+                Appearance TmpAppearance = Content.Content.Get().AvatarAppearances.Get(TmpOutfit.GetAppearance(appearanceType));
                 FSO.Common.Content.ContentID thumbID = TmpAppearance.ThumbnailID;
                 
                 dataProvider.Add(new UIGridViewerItem

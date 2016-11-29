@@ -12,6 +12,8 @@ using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 using FSO.Vitaboy;
 using FSO.Common.Utils;
+using FSO.SimAntics;
+using FSO.Client.UI.Framework;
 
 namespace FSO.Client.UI.Panels.EODs
 {
@@ -31,9 +33,14 @@ namespace FSO.Client.UI.Panels.EODs
         public UIButton btnDecorBack { get; set; }
         public UIButton btnDecorShoes { get; set; }
         public UIButton btnDecorTail { get; set; }
-
         public UIButton btnDelete { get; set; }
         public UIButton btnAccept { get; set; }
+
+        public UIRadioButton btnDefault1 { get; set; }
+        public UIRadioButton btnDefault2 { get; set; }
+        public UIRadioButton btnDefault3 { get; set; }
+        public UIRadioButton btnDefault4 { get; set; }
+        public UIRadioButton btnDefault5 { get; set; }
 
         private UIImage Background;
         private VMPersonSuits SelectedTab = VMPersonSuits.DefaultDaywear;
@@ -45,40 +52,6 @@ namespace FSO.Client.UI.Panels.EODs
         {
             InitUI();
             InitEOD();
-        }
-
-        private void BtnAccept_OnButtonClick(Framework.UIElement button)
-        {
-            var outfit = GetSelectedOutfit();
-            if (outfit == null) { return; }
-            Send("dresser_change_outfit", outfit.outfit_id.ToString());
-        }
-
-        private void UpdateUIState()
-        {
-            var selected = GetSelectedOutfit() != null;
-            btnAccept.Disabled = !selected;
-            btnDelete.Disabled = !selected;
-        }
-
-        private void UpdateDataProvider()
-        {
-            var dataProvider = new List<object>();
-
-            foreach (var outfit in Outfits.Where(x => x.outfit_type == (byte)SelectedTab))
-            {
-                //TODO: Use current avatars appearance type
-                Outfit TmpOutfit = Content.Content.Get().AvatarOutfits.Get(outfit.asset_id);
-                Appearance TmpAppearance = Content.Content.Get().AvatarAppearances.Get(TmpOutfit.GetAppearance(AppearanceType.Light));
-                FSO.Common.Content.ContentID thumbID = TmpAppearance.ThumbnailID;
-
-                dataProvider.Add(new UIGridViewerItem
-                {
-                    Data = outfit,
-                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID).Get(GameFacade.GraphicsDevice))
-                });
-            }
-            OutfitBrowser.DataProvider = dataProvider;
         }
 
         private void InitUI()
@@ -104,39 +77,24 @@ namespace FSO.Client.UI.Panels.EODs
             Add(OutfitBrowser);
 
             btnAccept.OnButtonClick += BtnAccept_OnButtonClick;
-        }
+            btnDelete.OnButtonClick += BtnDelete_OnButtonClick;
 
-        private void SetTab(Framework.UIElement button)
-        {
-            if(button == btnDay){
-                SelectedTab = VMPersonSuits.DefaultDaywear;
-            }else if(button == btnSleep)
-            {
-                SelectedTab = VMPersonSuits.DefaultSleepwear;
-            }else if(button == btnSwim)
-            {
-                SelectedTab = VMPersonSuits.DefaultSwimwear;
-            }else if(button == btnDecorHead)
-            {
-                SelectedTab = VMPersonSuits.DecorationHead;
-            }else if(button == btnDecorBack)
-            {
-                SelectedTab = VMPersonSuits.DecorationBack;
-            }else if(button == btnDecorShoes)
-            {
-                SelectedTab = VMPersonSuits.DecorationShoes;
-            }else if(button == btnDecorTail)
-            {
-                SelectedTab = VMPersonSuits.DecorationTail;
+            var defaultButtons = DefaultButtons;
+            for(var i=0; i < defaultButtons.Length; i++){
+                defaultButtons[i].RadioData = i;
+                defaultButtons[i].RadioGroup = "DresserDefault";
+                defaultButtons[i].OnButtonClick += DefaultRadio_OnButtonClick;
             }
-
-            UpdateDataProvider();
-            UpdateUIState();
         }
+
+        /**
+         * EOD callbacks
+         */
 
         protected void InitEOD()
         {
             PlaintextHandlers["dresser_show"] = ShowEOD;
+            PlaintextHandlers["dresser_refresh_default"] = (evt, body) => UpdateUIState();
             BinaryHandlers["set_outfits"] = SetOutfits;
         }
 
@@ -153,6 +111,204 @@ namespace FSO.Client.UI.Panels.EODs
             var options = GetEODOptions();
             UpdateUIState();
             Controller.ShowEODMode(options);
+        }
+
+        /**
+         * UI Events
+         */
+        
+        private void BtnDelete_OnButtonClick(Framework.UIElement button)
+        {
+            if (OutfitBrowser.DataProvider == null) { return; }
+
+            var index = OutfitBrowser.SelectedIndex;
+            if (index >= 0 && index < OutfitBrowser.DataProvider.Count)
+            {
+                var outfit = (VMGLOutfit)((UIGridViewerItem)OutfitBrowser.DataProvider[index]).Data;
+                if (outfit == null) { return; }
+
+                UIAlert alert = null;
+                alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Title = GameFacade.Strings.GetString("266", "7"),
+                    Message = GameFacade.Strings.GetString("266", "8"),
+                    Buttons = UIAlertButton.YesNo(
+                        yes => {
+                            Send("dresser_delete_outfit", outfit.outfit_id.ToString());
+                            UIScreen.RemoveDialog(alert);
+                        },
+                        no => {
+                            UIScreen.RemoveDialog(alert);
+                        }
+                    ),
+                    Alignment = TextAlignment.Left
+                }, true);
+            }
+        }
+
+        private void DefaultRadio_OnButtonClick(Framework.UIElement button)
+        {
+            if (OutfitBrowser.DataProvider == null) { return; }
+
+            var index = (int)((UIRadioButton)button).RadioData;
+            if (index >= 0 && index < OutfitBrowser.DataProvider.Count)
+            {
+                var outfit = (VMGLOutfit)((UIGridViewerItem)OutfitBrowser.DataProvider[index]).Data;
+                if (outfit == null) { return; }
+
+                Send("dresser_set_default", ((short)SelectedTab).ToString() + "," + outfit.outfit_id.ToString());
+            }
+        }
+
+        private void BtnAccept_OnButtonClick(Framework.UIElement button)
+        {
+            var outfit = GetSelectedOutfit();
+            if (outfit == null) { return; }
+            Send("dresser_change_outfit", outfit.outfit_id.ToString());
+        }
+
+        private void SetTab(Framework.UIElement button)
+        {
+            if (button == btnDay)
+            {
+                SelectedTab = VMPersonSuits.DefaultDaywear;
+            }
+            else if (button == btnSleep)
+            {
+                SelectedTab = VMPersonSuits.DefaultSleepwear;
+            }
+            else if (button == btnSwim)
+            {
+                SelectedTab = VMPersonSuits.DefaultSwimwear;
+            }
+            else if (button == btnDecorHead)
+            {
+                SelectedTab = VMPersonSuits.DecorationHead;
+            }
+            else if (button == btnDecorBack)
+            {
+                SelectedTab = VMPersonSuits.DecorationBack;
+            }
+            else if (button == btnDecorShoes)
+            {
+                SelectedTab = VMPersonSuits.DecorationShoes;
+            }
+            else if (button == btnDecorTail)
+            {
+                SelectedTab = VMPersonSuits.DecorationTail;
+            }
+
+            UpdateDataProvider();
+            UpdateUIState();
+        }
+
+
+        /**
+         * UI Utils
+         */
+
+        private void UpdateUIState()
+        {
+            var selected = GetSelectedOutfit() != null;
+            btnAccept.Disabled = !selected;
+            btnDelete.Disabled = !selected;
+
+            var canSetDefaults = CanSetDefaults();
+            var numOutfits = OutfitBrowser.DataProvider != null ? OutfitBrowser.DataProvider.Count : 0;
+            var selectedDefault = GetDefaultOutfitIndex();
+
+            if (!VMPersonSuitsUtils.IsDecoration(SelectedTab)){
+                if(numOutfits <= 1){
+                    //Must leave at least one outfit
+                    btnDelete.Disabled = true;
+                }
+            }
+
+            for (var i=0; i < DefaultButtons.Length; i++)
+            {
+                var defaultButton = DefaultButtons[i];
+                if (canSetDefaults){
+                    defaultButton.Visible = true;
+                    defaultButton.Selected = selectedDefault == i;
+                    defaultButton.Disabled = i >= numOutfits;
+                }
+                else{
+                    defaultButton.Visible = false;
+                }
+            }
+        }
+
+        private void UpdateDataProvider()
+        {
+            var dataProvider = new List<object>();
+            var outfitsInCategory = Outfits.Where(x => x.outfit_type == (byte)SelectedTab).ToList();
+            var appearanceType = GetAppearanceType();
+
+            foreach (var outfit in outfitsInCategory)
+            {
+                //TODO: Use current avatars appearance type
+                Outfit TmpOutfit = Content.Content.Get().AvatarOutfits.Get(outfit.asset_id);
+                Appearance TmpAppearance = Content.Content.Get().AvatarAppearances.Get(TmpOutfit.GetAppearance(appearanceType));
+                FSO.Common.Content.ContentID thumbID = TmpAppearance.ThumbnailID;
+
+                dataProvider.Add(new UIGridViewerItem
+                {
+                    Data = outfit,
+                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID).Get(GameFacade.GraphicsDevice))
+                });
+            }
+            OutfitBrowser.DataProvider = dataProvider;
+        }
+
+
+        private int GetDefaultOutfitIndex()
+        {
+            if (OutfitBrowser.DataProvider == null) {
+                return -1;
+            }
+
+            var defaultOutfitForCategory = GetDefaultOutfit();
+            var item = OutfitBrowser.DataProvider.FirstOrDefault(x =>
+            {
+                var outfit = (VMGLOutfit)((UIGridViewerItem)x).Data;
+                return outfit.asset_id == defaultOutfitForCategory;
+            });
+
+            if (item == null) { return -1; }
+            return OutfitBrowser.DataProvider.IndexOf(item);
+        }
+
+        public AppearanceType GetAppearanceType()
+        {
+            if (LotController != null && LotController.ActiveEntity is VMAvatar)
+            {
+                var avatar = (VMAvatar)LotController.ActiveEntity;
+                return avatar.Avatar.Appearance;
+            }
+            return AppearanceType.Light;
+        }
+
+        private ulong GetDefaultOutfit()
+        {
+            ulong outfit = 0;
+            if (LotController != null && LotController.ActiveEntity is VMAvatar)
+            {
+                var avatar = (VMAvatar)LotController.ActiveEntity;
+                switch (SelectedTab)
+                {
+                    case VMPersonSuits.DefaultDaywear:
+                        outfit = avatar.DefaultSuits.Daywear;
+                        break;
+                    case VMPersonSuits.DefaultSleepwear:
+                        outfit = avatar.DefaultSuits.Sleepwear;
+                        break;
+                    case VMPersonSuits.DefaultSwimwear:
+                        outfit = avatar.DefaultSuits.Swimwear;
+                        break;
+                }
+            }
+
+            return outfit;
         }
 
         protected EODLiveModeOpt GetEODOptions()
@@ -182,6 +338,32 @@ namespace FSO.Client.UI.Panels.EODs
                 return (VMGLOutfit)selectedItem.Data;
             }
             return null;
+        }
+
+        private bool CanSetDefaults()
+        {
+            if (SelectedTab == VMPersonSuits.DecorationBack ||
+                SelectedTab == VMPersonSuits.DecorationHead ||
+                SelectedTab == VMPersonSuits.DecorationShoes ||
+                SelectedTab == VMPersonSuits.DecorationTail)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public UIRadioButton[] DefaultButtons
+        {
+            get
+            {
+                return new UIRadioButton[] {
+                    btnDefault1,
+                    btnDefault2,
+                    btnDefault3,
+                    btnDefault4,
+                    btnDefault5
+                };
+            }
         }
     }
     

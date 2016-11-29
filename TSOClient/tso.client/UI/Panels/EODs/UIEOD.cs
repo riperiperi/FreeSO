@@ -1,4 +1,5 @@
 ﻿using FSO.Client.UI.Framework;
+using FSO.Client.UI.Screens;
 using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
@@ -27,12 +28,12 @@ namespace FSO.Client.UI.Panels.EODs
         {
             get
             {
-                var liveMode = FindParent<UILiveMode>();
-                if(liveMode != null)
-                {
-                    return liveMode.LotController;
+                var screen = UIScreen.Current as CoreGameScreen;
+                if (screen == null){
+                    return null;
                 }
-                return null;
+
+                return screen.LotControl;
             }
         }
 

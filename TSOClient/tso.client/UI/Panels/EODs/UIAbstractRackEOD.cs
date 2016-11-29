@@ -3,6 +3,7 @@ using FSO.Client.UI.Framework.Parser;
 using FSO.Common.Serialization;
 using FSO.Common.Utils;
 using FSO.Content.Model;
+using FSO.SimAntics;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.Vitaboy;
@@ -91,13 +92,14 @@ namespace FSO.Client.UI.Panels.EODs
         {
             var packet = IoBufferUtils.Deserialize<VMEODRackStockResponse>(body, null);
             Stock = packet.Outfits;
+            var appearanceType = GetAppearanceType();
 
             var dataProvider = new List<object>();
 
             foreach (var outfit in Stock){
                 //TODO: Use current avatars appearance type
                 Outfit TmpOutfit = Content.Content.Get().AvatarOutfits.Get(outfit.asset_id);
-                Appearance TmpAppearance = Content.Content.Get().AvatarAppearances.Get(TmpOutfit.GetAppearance(AppearanceType.Light));
+                Appearance TmpAppearance = Content.Content.Get().AvatarAppearances.Get(TmpOutfit.GetAppearance(appearanceType));
                 FSO.Common.Content.ContentID thumbID = TmpAppearance.ThumbnailID;
 
                 dataProvider.Add(new UIGridViewerItem {
@@ -152,6 +154,16 @@ namespace FSO.Client.UI.Panels.EODs
                 return (VMGLOutfit)selectedItem.Data;
             }
             return null;
+        }
+
+        public AppearanceType GetAppearanceType()
+        {
+            if (LotController != null && LotController.ActiveEntity is VMAvatar)
+            {
+                var avatar = (VMAvatar)LotController.ActiveEntity;
+                return avatar.Avatar.Appearance;
+            }
+            return AppearanceType.Light;
         }
 
         /**

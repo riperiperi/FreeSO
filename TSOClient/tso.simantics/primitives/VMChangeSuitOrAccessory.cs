@@ -61,10 +61,55 @@ namespace FSO.SimAntics.Primitives
                     }else if(outfitType == OutfitType.ACCESSORY){
                         if (VM.UseWorld){
                             var outfit = Content.Content.Get().AvatarOutfits.Get((ulong)suit);
-                            if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove){
+
+                            if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)
+                            {
                                 avatar.Avatar.RemoveAccessory(outfit);
-                            }else{
-                                avatar.Avatar.AddAccessory(outfit);
+                            }
+                            else
+                            {
+                                //The clothing rack does not seem to have any way to remove accessories so I have implemented as a toggle
+                                //until we know better
+                                switch ((VMPersonSuits)operand.SuitData)
+                                {
+                                    case VMPersonSuits.DecorationHead:
+                                        if(avatar.Avatar.DecorationHead == outfit){
+                                            //Remove it
+                                            avatar.Avatar.DecorationHead = null;
+                                        }else{
+                                            //Add it
+                                            avatar.Avatar.DecorationHead = outfit;
+                                        }
+                                        break;
+                                    case VMPersonSuits.DecorationBack:
+                                        if (avatar.Avatar.DecorationBack == outfit){
+                                            //Remove it
+                                            avatar.Avatar.DecorationBack = null;
+                                        }else{
+                                            //Add it
+                                            avatar.Avatar.DecorationBack = outfit;
+                                        }
+                                        break;
+                                    case VMPersonSuits.DecorationShoes:
+                                        if (avatar.Avatar.DecorationShoes == outfit){
+                                            //Remove it
+                                            avatar.Avatar.DecorationShoes = null;
+                                        }else{
+                                            //Add it
+                                            avatar.Avatar.DecorationShoes = outfit;
+                                        }
+                                        break;
+                                    case VMPersonSuits.DecorationTail:
+                                        if (avatar.Avatar.DecorationTail == outfit){
+                                            //Remove it
+                                            avatar.Avatar.DecorationTail = null;
+                                        }else{
+                                            //Add it
+                                            avatar.Avatar.DecorationTail = outfit;
+                                        }
+                                        break;
+                                }
+                                
                             }
                         }
                     }

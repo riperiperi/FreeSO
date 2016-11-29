@@ -15,5 +15,6 @@ namespace FSO.Server.Database.DA.Outfits
         bool UpdatePrice(uint outfit_id, uint object_id, int new_price);
         bool ChangeOwner(uint outfit_id, uint object_owner, uint new_avatar_owner);
         bool DeleteFromObject(uint outfit_id, uint object_id);
+        bool DeleteFromAvatar(uint outfit_id, uint avatar_id);
     }
 }

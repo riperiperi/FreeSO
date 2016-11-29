@@ -174,6 +174,16 @@ namespace FSO.Client.UI.Framework.Parser
             WireUp(node.ID, label);
         }
 
+        private Type GetPropertyType(string id, Type defaultType)
+        {
+            var prop = targetType.GetProperty(id);
+            if (prop != null)
+            {
+                return prop.PropertyType;
+            }
+
+            return defaultType;
+        }
 
         /// <summary>
         /// Handles AddButton nodes in a UIScript.
@@ -186,22 +196,24 @@ namespace FSO.Client.UI.Framework.Parser
         /// <param name="node"></param>
         public void AddButton(UINode node)
         {
+            var type = GetPropertyType(node.ID, typeof(UIButton));
+
             UIButton btn = null;
             if (node.Attributes.ContainsKey("image"))
             {
                 var txKey = node.Attributes["image"];
                 if (Textures.ContainsKey(txKey))
                 {
-                    btn = new UIButton(Textures[txKey.ToLowerInvariant()]);
+                    btn = (UIButton)Activator.CreateInstance(type, new object[] { Textures[txKey.ToLowerInvariant()] });
                 }
                 else
                 {
-                    btn = new UIButton();
+                    btn = (UIButton)Activator.CreateInstance(type);
                 }
             }
             else
             {
-                btn = new UIButton();
+                btn = (UIButton)Activator.CreateInstance(type);
             }
             Components.Add(node.ID, btn);
             btn.ID = node.ID;
