@@ -24,7 +24,7 @@ namespace FSO.Content
 
         public void Init()
         {
-            var purchasable = Content.GetPath("packingslips\\purchasable.xml");
+            var purchasable = Content.GetPath("packingslips/purchasable.xml");
             if (!File.Exists(purchasable)){
                 return;
             }

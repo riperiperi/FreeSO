@@ -303,9 +303,9 @@ namespace FSO.Client.Controllers
                     }
                     else
                     {
-                        //we kind of need the price for this!
+                        //we don't have a lot
                         _LotBuyAlert = null;
-                        //ShowNormalLotBuy("$"+price.ToString(), "$" + ourCash.ToString());
+                        ShowNormalLotBuy("$"+price.ToString(), "$" + ourCash.ToString());
                     }
                 });
             });
