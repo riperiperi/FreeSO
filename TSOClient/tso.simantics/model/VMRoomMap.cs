@@ -42,27 +42,63 @@ namespace FSO.SimAntics.Model
             //The first recursion (outside) cannot fill into diagonals.
             bool remaining = true;
             bool outside = true;
+            int i = 0;
             while (remaining)
             {
-                var spread = new Stack<Point>();
+                var spread = new Stack<SpreadItem>();
                 remaining = false;
-                for (int i = 0; i < Map.Length; i++)
+                while (i < Map.Length)
                 {
-                    if (Map[i] == 0)
+                    remaining = true;
+
+                    //get the wall on this tile. 
+                    var wall = Walls[i];
+                    var segs = wall.Segments;
+                    var room = (uint)rooms.Count;
+                    if (Map[i] == 0 && (segs & (WallSegments.AnyDiag)) == 0)
                     {
+                        //normal tile - no diagonal
                         ExpectedTile = Floors[i].Pattern;
-                        remaining = true;
-                        Map[i] = (ushort)rooms.Count;
-                        spread.Push(new Point(i % width, i / width));
+                        Map[i] = room | (room << 16);
+                        spread.Push(new SpreadItem(new Point(i % width, i / width), WallSegments.AnyAdj));
                         break;
                     }
+                    else if ((Map[i] & 0xFFFF) == 0)
+                    {
+                        //start spreading from this side of the diagonal
+                        WallSegments validSpread;
+                        if ((segs & WallSegments.HorizontalDiag) > 0)
+                            validSpread = WallSegments.TopLeft | WallSegments.TopRight;
+                        else
+                            validSpread = WallSegments.TopRight | WallSegments.BottomRight;
+                        Map[i] |= room;
+                        ExpectedTile = wall.TopLeftPattern;
+                        spread.Push(new SpreadItem(new Point(i % width, i / width), validSpread));
+                        break;
+                    }
+                    else if ((Map[i] & 0xFFFF0000) == 0)
+                    {
+                        //start spreading the other side
+                        WallSegments validSpread;
+                        if ((segs & WallSegments.HorizontalDiag) > 0)
+                            validSpread = WallSegments.BottomLeft | WallSegments.BottomRight;
+                        else
+                            validSpread = WallSegments.TopLeft | WallSegments.BottomLeft;
+                        Map[i] |= room << 16;
+                        ExpectedTile = wall.TopLeftStyle;
+                        spread.Push(new SpreadItem(new Point(i % width, i / width), validSpread));
+                        break;
+                    }
+                    else remaining = false;
+                    i++;
                 }
 
                 if (remaining)
                 {
-                    int rminX = spread.Peek().X;
+                    i++;
+                    int rminX = spread.Peek().Pt.X;
                     int rmaxX = rminX;
-                    int rminY = spread.Peek().Y;
+                    int rminY = spread.Peek().Pt.Y;
                     int rmaxY = rminY;
                     var wallObs = new List<VMObstacle>();
                     var adjRooms = new HashSet<ushort>();
@@ -70,7 +106,8 @@ namespace FSO.SimAntics.Model
                     while (spread.Count > 0)
                     {
                         area++;
-                        var item = spread.Pop();
+                        var itemT = spread.Pop();
+                        var item = itemT.Pt;
 
                         if (item.X > rmaxX) rmaxX = item.X;
                         if (item.X < rminX) rminX = item.X;
@@ -89,19 +126,19 @@ namespace FSO.SimAntics.Model
 
                         if ((mainWalls.Segments & WallSegments.HorizontalDiag) > 0)
                         {
-                            wallObs.Add(new VMObstacle(obsX + 9, obsY - 1, obsX + 17, obsY + 7));
-                            wallObs.Add(new VMObstacle(obsX + 4, obsY + 4, obsX + 12, obsY + 12));
-                            wallObs.Add(new VMObstacle(obsX - 1, obsY + 9, obsX + 7, obsY + 17));
+                            wallObs.Add(new VMObstacle(obsX + 11, obsY - 1, obsX + 17, obsY + 5));
+                            wallObs.Add(new VMObstacle(obsX + 7, obsY + 3, obsX + 13, obsY + 9));
+                            wallObs.Add(new VMObstacle(obsX + 3, obsY + 7, obsX + 9, obsY + 13));
+                            wallObs.Add(new VMObstacle(obsX - 1, obsY + 11, obsX + 5, obsY + 17));
                         }
 
                         if ((mainWalls.Segments & WallSegments.VerticalDiag) > 0)
                         {
-                            wallObs.Add(new VMObstacle(obsX - 1, obsY - 1, obsX + 7, obsY + 7));
-                            wallObs.Add(new VMObstacle(obsX + 4, obsY + 4, obsX + 12, obsY + 12));
-                            wallObs.Add(new VMObstacle(obsX + 9, obsY + 9, obsX + 17, obsY + 17));
+                            wallObs.Add(new VMObstacle(obsX - 1, obsY - 1, obsX + 5, obsY + 5));
+                            wallObs.Add(new VMObstacle(obsX + 3, obsY + 3, obsX + 9, obsY + 9));
+                            wallObs.Add(new VMObstacle(obsX + 7, obsY + 7, obsX + 13, obsY + 13));
+                            wallObs.Add(new VMObstacle(obsX + 11, obsY + 11, obsX + 17, obsY + 17));
                         }
-
-                        if ((byte)mainWalls.Segments > 15) continue; //don't spread on diagonals for now
 
                         var PXWalls = Walls[plusX + item.Y * width];
                         var PYWalls = Walls[item.X + plusY * width];
@@ -111,19 +148,21 @@ namespace FSO.SimAntics.Model
                         if ((mainWalls.Segments & WallSegments.BottomLeft) > 0 && !PYWalls.TopRightDoor) wallObs.Add(new VMObstacle(obsX - 3, obsY + 13, obsX + 19, obsY + 19)); 
                         if ((mainWalls.Segments & WallSegments.BottomRight) > 0 && !PXWalls.TopLeftDoor) wallObs.Add(new VMObstacle(obsX + 13, obsY - 3, obsX + 19, obsY + 19));
 
-                        //
+                        bool segAllow = ((PXWalls.Segments & WallSegments.TopLeft) == 0);
+                        if ((segAllow || PXWalls.TopLeftStyle != 1) && ((itemT.Dir & WallSegments.BottomRight) > 0))
+                            SpreadOnto(Walls, Floors, plusX, item.Y, 0, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad, adjRooms, !segAllow);
 
-                        if (((PXWalls.Segments & WallSegments.TopLeft) == 0 || PXWalls.TopLeftStyle != 1))
-                            SpreadOnto(Walls, Floors, plusX, item.Y, 0, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad, adjRooms);
+                        segAllow = ((mainWalls.Segments & WallSegments.TopLeft) == 0);
+                        if ((segAllow || mainWalls.TopLeftStyle != 1) && ((itemT.Dir & WallSegments.TopLeft) > 0))
+                            SpreadOnto(Walls, Floors, minX, item.Y, 2, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad, adjRooms, !segAllow);
 
-                        if (((mainWalls.Segments & WallSegments.TopLeft) == 0 || mainWalls.TopLeftStyle != 1))
-                            SpreadOnto(Walls, Floors, minX, item.Y, 2, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad, adjRooms);
+                        segAllow = ((PYWalls.Segments & WallSegments.TopRight) == 0);
+                        if ((segAllow || PYWalls.TopRightStyle != 1) && ((itemT.Dir & WallSegments.BottomLeft) > 0))
+                            SpreadOnto(Walls, Floors, item.X, plusY, 1, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad, adjRooms, !segAllow);
 
-                        if (((PYWalls.Segments & WallSegments.TopRight) == 0 || PYWalls.TopRightStyle != 1))
-                            SpreadOnto(Walls, Floors, item.X, plusY, 1, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad, adjRooms);
-
-                        if (((mainWalls.Segments & WallSegments.TopRight) == 0 || mainWalls.TopRightStyle != 1))
-                            SpreadOnto(Walls, Floors, item.X, minY, 3, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad, adjRooms);
+                        segAllow = ((mainWalls.Segments & WallSegments.TopRight) == 0);
+                        if ((segAllow || mainWalls.TopRightStyle != 1) && ((itemT.Dir & WallSegments.TopRight) > 0))
+                            SpreadOnto(Walls, Floors, item.X, minY, 3, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad, adjRooms, !segAllow);
                     }
 
                     var bounds = new Rectangle(rminX, rminY, (rmaxX - rminX) + 1, (rmaxY - rminY) + 1);
@@ -155,30 +194,34 @@ namespace FSO.SimAntics.Model
         }
 
         private static void SpreadOnto(WallTile[] walls, FloorTile[] floors, int x, int y, int inDir, uint[] map, int width, int height, 
-            Stack<Point> spread, ushort room, ushort expectedTile, bool noAir, HashSet<ushort> adjRoom)
+            Stack<SpreadItem> spread, ushort room, ushort expectedTile, bool noAir, HashSet<ushort> adjRoom, bool forceAdj)
         {
-            var wall = walls[x + y * width];
-            var floor = floors[x + y * width].Pattern;
+            var index = x + y * width;
+            var wall = walls[index];
+            var floor = floors[index].Pattern;
 
             bool hasExpectation = (expectedTile == 0 && noAir) || (expectedTile > 65533);
 
             ushort targRoom;
             uint roomApply;
             ushort targFloor;
+            WallSegments validSpread;
             if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
             {
                 if (inDir < 2)
                 {
-                    //bottom (bottom right pattern)
+                    //top (bottom right pattern)
+                    validSpread = WallSegments.TopLeft | WallSegments.TopRight;
                     targFloor = wall.TopLeftPattern;
-                    targRoom = (ushort)map[x + y * width];
+                    targRoom = (ushort)map[index];
                     roomApply = room;
                 }
                 else
                 {
-                    //top (bottom left pattern)
+                    //bottom (bottom left pattern)
+                    validSpread = WallSegments.BottomLeft | WallSegments.BottomRight;
                     targFloor = wall.TopLeftStyle;
-                    targRoom = (ushort)(map[x + y * width] >> 16);
+                    targRoom = (ushort)(map[index] >> 16);
                     roomApply = (uint)room<<16;
                 }
             }
@@ -186,32 +229,35 @@ namespace FSO.SimAntics.Model
             {
                 if (inDir > 0 && inDir < 3)
                 {
-                    //left
+                    //right
+                    validSpread = WallSegments.TopRight | WallSegments.BottomRight;
                     targFloor = wall.TopLeftPattern;
-                    targRoom = (ushort)map[x + y * width];
+                    targRoom = (ushort)map[index];
                     roomApply = room;
                 }
                 else
                 {
-                    //right
+                    //left
+                    validSpread = WallSegments.TopLeft | WallSegments.BottomLeft;
                     targFloor = wall.TopLeftStyle;
-                    targRoom = (ushort)(map[x + y * width] >> 16);
+                    targRoom = (ushort)(map[index] >> 16);
                     roomApply = (uint)room << 16;
                 }
             }
             else
             {
-                targRoom = (ushort)map[x + y * width];
+                validSpread = WallSegments.AnyAdj;
+                targRoom = (ushort)map[index];
                 targFloor = floor;
                 roomApply = (uint)(room | (room << 16));
             }
 
             bool cantSpread = (hasExpectation && expectedTile != targFloor) || (!hasExpectation && ((targFloor == 0 && noAir) || targFloor > 65533));
 
-            if (targRoom > 0 || cantSpread)
+            if (forceAdj || targRoom > 0 || cantSpread)
             {
-                //cannot spread onto this room - we've either been here before or a non-wall is segmenting the space
-                //eg. a pool, air, fences.
+                //cannot spread onto this (sub)tile - we've either been here before or a non-wall is segmenting the space
+                //eg. a pool, air, fence
                 if (targRoom != room && targRoom > 0)
                 {
                     //a non-wall is segmenting the space. targRoom contains the room we are adjacent to.
@@ -222,10 +268,10 @@ namespace FSO.SimAntics.Model
             }
             else
             {
-                map[x + y * width] |= roomApply;
+                map[index] |= roomApply;
             }
 
-            spread.Push(new Point(x, y));
+            spread.Push(new SpreadItem(new Point(x, y), validSpread));
         }
 
         public List<VMObstacle> GenerateRoomObs(ushort room, sbyte level, Rectangle bounds, VMContext context)
@@ -241,8 +287,8 @@ namespace FSO.SimAntics.Model
                 VMObstacle next = null;
                 for (int x = x1; x < x2; x++)
                 {
-                    int tRoom = (ushort)Map[x + y * Width];
-                    if (tRoom != room)
+                    uint tRoom = Map[x + y * Width];
+                    if ((ushort)tRoom != room && (tRoom>>16) != room)
                     {
                         //is there a door on this tile?
                         var door = (context.ObjectQueries.GetObjectsAt(LotTilePos.FromBigTile((short)x, (short)y, level))?.FirstOrDefault(
@@ -260,6 +306,8 @@ namespace FSO.SimAntics.Model
                                 // eg. two doors back to back into the same room. The sim will not perform a room route to the middle room, they will just walk through the door.
                                 // like, through it. This also works for pools but some additional rules prevent you from doing anything too silly.
                                 // we want to create 1 unit thick walls blocking each non-portal side.
+                                
+                                // todo: fix for this
                                 continue;
                             }
                         }
@@ -339,6 +387,18 @@ namespace FSO.SimAntics.Model
                 }
                 System.Diagnostics.Debug.WriteLine(sb.ToString());
             }
+        }
+    }
+
+    public struct SpreadItem
+    {
+        public Point Pt;
+        public WallSegments Dir;
+
+        public SpreadItem (Point pt, WallSegments dir)
+        {
+            Pt = pt;
+            Dir = dir;
         }
     }
 }

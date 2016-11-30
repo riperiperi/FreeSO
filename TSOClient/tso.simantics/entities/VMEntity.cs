@@ -25,6 +25,7 @@ using FSO.SimAntics.Marshals;
 using FSO.Common.Utils;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model.Sound;
+using FSO.SimAntics.Primitives;
 
 namespace FSO.SimAntics
 {
@@ -980,7 +981,9 @@ namespace FSO.SimAntics
                     var obj = GetSlot(i);
                     if (obj != null)
                     {
-                        obj.SetPosition(Position, obj.Direction, context);
+                        this.Position = obj.Position;
+                        obj.SetPosition(LotTilePos.OUT_OF_WORLD, obj.Direction, context);
+                        VMFindLocationFor.FindLocationFor(obj, this, context, VMPlaceRequestFlags.AcceptSlots);
                     }
                 }
 

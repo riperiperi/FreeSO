@@ -41,7 +41,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (caller == null) return false;
 
             //careful here! if the object can't be placed, we have to give the user their money back.
-            if (TryPlace(vm, caller))
+            if (!vm.Context.ObjectQueries.MultitileByPersist.ContainsKey(GUID) && TryPlace(vm, caller))
             {
                 return true;
             }
@@ -137,6 +137,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             {
                 if (obj is VMGameObject) ((VMTSOObjectState)obj.TSOState).OwnerID = caller.PersistID;
                 obj.PersistID = ObjectPID;
+                ((VMGameObject)obj).DisableIfTSOCategoryWrong(vm.Context);
             }
             vm.Context.ObjectQueries.RegisterMultitilePersist(CreatedGroup, ObjectPID);
 

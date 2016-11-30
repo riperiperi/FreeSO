@@ -55,7 +55,7 @@ namespace FSO.Client.UI.Screens
 
         private Queue<SimConnectStateChange> StateChanges;
 
-        private Terrain CityRenderer; //city view
+        public Terrain CityRenderer; //city view
         public UICustomTooltip CityTooltip;
         public UICustomTooltipContainer CityTooltipHitArea;
         public UIMessageTray MessageTray;
@@ -295,7 +295,6 @@ namespace FSO.Client.UI.Screens
             CityRenderer.LoadContent(GameFacade.GraphicsDevice);
             CityRenderer.RegenData = true;
             CityRenderer.SetTimeOfDay(0.5);
-            CityRenderer.Plugin = new Rendering.City.Plugins.MapPainterPlugin(CityRenderer);
             GameFacade.Scenes.Add(CityRenderer);
 
             CityTooltip = new UICustomTooltip();

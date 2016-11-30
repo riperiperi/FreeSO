@@ -192,7 +192,7 @@ namespace FSO.Client.UI.Panels
 
         private void SecondFloor(UIElement button)
         {
-            Game.vm.Context.World.State.ScrollAnchor = null; //stop following a sim on a manual adjustment
+            Game.LotControl.World.State.ScrollAnchor = null; //stop following a sim on a manual adjustment
             Game.Level = Math.Min((sbyte)(Game.Level + 1), Game.Stories);
             SecondFloorButton.Selected = (Game.Level == Game.Stories);
             FirstFloorButton.Selected = (Game.Level == 1);
@@ -272,7 +272,7 @@ namespace FSO.Client.UI.Panels
 
         private void FirstFloor(UIElement button)
         {
-            Game.vm.Context.World.State.ScrollAnchor = null; //stop following a sim on a manual adjustment
+            Game.LotControl.World.State.ScrollAnchor = null; //stop following a sim on a manual adjustment
             Game.Level = Math.Max((sbyte)(Game.Level - 1), (sbyte)1);
             SecondFloorButton.Selected = (Game.Level == Game.Stories);
             FirstFloorButton.Selected = (Game.Level == 1);
@@ -440,7 +440,7 @@ namespace FSO.Client.UI.Panels
                 Game.LotControl.QueryPanel.Active = false;
                 Game.LotControl.QueryPanel.Visible = false;
                 Game.LotControl.LiveMode = true;
-                Game.vm.Context.World.State.BuildMode = 0;
+                Game.LotControl.World.State.BuildMode = 0;
             }
 
             if (CurrentPanel != -1)
@@ -476,7 +476,7 @@ namespace FSO.Client.UI.Panels
                         Panel = new UIBuyMode(Game.LotControl);
 
                         //enable grid
-                        Game.vm.Context.World.State.BuildMode = 1;
+                        Game.LotControl.World.State.BuildMode = 1;
 
                         Game.LotControl.LiveMode = false;
                         Panel.X = 177;
@@ -490,7 +490,7 @@ namespace FSO.Client.UI.Panels
                         Panel = new UIBuildMode(Game.LotControl);
 
                         //enable air tile graphics + grid
-                        Game.vm.Context.World.State.BuildMode = 2;
+                        Game.LotControl.World.State.BuildMode = 2;
 
                         Game.LotControl.LiveMode = false;
                         Panel.X = 177;
@@ -504,7 +504,7 @@ namespace FSO.Client.UI.Panels
                         Panel = new UIHouseMode(Game.LotControl);
 
                         //enable grid
-                        Game.vm.Context.World.State.BuildMode = 1;
+                        Game.LotControl.World.State.BuildMode = 1;
 
                         Panel.X = 177;
                         Panel.Y = 87;

@@ -110,7 +110,7 @@ namespace FSO.Client.Rendering.City.Plugins
         private int WallLength;
         private int WallDir;
         private bool Erasing;
-        public byte[] BaseRoad;
+        public byte[] OriginalData;
 
         private bool MouseDown;
         private bool MouseClicked;
@@ -130,8 +130,12 @@ namespace FSO.Client.Rendering.City.Plugins
             "Sand"
         };
         public int SelectedModifier;
+        public int BrushSize;
         public PainterMode Mode;
         private Rectangle? ChangeBounds;
+
+        private Dictionary<Point, float> ElevationMod;
+        private int ElevationFrames = 0;
 
         public MapPainterPlugin(Terrain city) : base(city)
         {
@@ -157,31 +161,45 @@ namespace FSO.Client.Rendering.City.Plugins
             sb.Begin();
             sb.DrawString(TextStyle.DefaultLabel.Font.GetNearest(12).Font, Mode.ToString(), new Vector2(10, 10), Color.White);
 
-            if (Mode == PainterMode.ROAD)
+            switch (Mode)
             {
-                if (MouseDown)
-                {
-                    var onScreen2 = City.Get2DFromTile(WallBase.X, WallBase.Y);
-                    City.DrawLine(TextureGenerator.GetPxWhite(sb.GraphicsDevice), onScreen2, onScreen2 + new Vector2(0, -50), sb, 5, 100);
-                }
+                case PainterMode.ROAD:
+                    if (MouseDown)
+                    {
+                        var onScreen2 = City.Get2DFromTile(WallBase.X, WallBase.Y);
+                        City.DrawLine(TextureGenerator.GetPxWhite(sb.GraphicsDevice), onScreen2, onScreen2 + new Vector2(0, -50), sb, 5, 100);
+                    }
 
-                var wallPos = new Point((int)Math.Round(LastPos.X), (int)Math.Round(LastPos.Y));
-                var onScreen = City.Get2DFromTile(wallPos.X, wallPos.Y);
-                City.DrawLine(TextureGenerator.GetPxWhite(sb.GraphicsDevice), onScreen, onScreen + new Vector2(0, -30), sb, 3, 100);
-            }
-            else
-            {
-                float iScale = (float)(1 / (City.GetIsoScale() * 2));
+                    var wallPos = new Point((int)Math.Round(LastPos.X), (int)Math.Round(LastPos.Y));
+                    var onScreen = City.Get2DFromTile(wallPos.X, wallPos.Y);
+                    City.DrawLine(TextureGenerator.GetPxWhite(sb.GraphicsDevice), onScreen, onScreen + new Vector2(0, -30), sb, 3, 100);
+                    break;
+                case PainterMode.TERRAINTYPE:
+                    float iScale = (float)(1 / (City.GetIsoScale() * 2));
 
-                Color selColor = Color.White;
+                    Color selColor = Color.White;
 
-                switch (Mode)
-                {
-                    case PainterMode.TERRAINTYPE:
-                        selColor = TerrainTypes[SelectedModifier]; break;
-                }
-                City.PathTile((int)LastPos.X, (int)LastPos.Y, iScale, new Color(selColor, 0.5f));
-                City.Draw2DPoly();
+                    switch (Mode)
+                    {
+                        case PainterMode.TERRAINTYPE:
+                            selColor = TerrainTypes[SelectedModifier]; break;
+                    }
+
+                    BrushFunc(BrushSize, (x, y, strength) =>
+                    {
+                        if (strength > 0) City.PathTile((int)LastPos.X + x, (int)LastPos.Y + y, iScale, new Color(selColor, 0.5f));
+                    });
+                    City.Draw2DPoly();
+                    break;
+                case PainterMode.ELEVATION_CIRCLE:
+                    var ePos = new Point((int)Math.Round(LastPos.X), (int)Math.Round(LastPos.Y));
+                    BrushFunc(BrushSize, (x, y, strength) =>
+                    {
+                        //if (strength <= 0) return;
+                        var eOnScreen = City.Get2DFromTile(ePos.X + x, ePos.Y + y);
+                        City.DrawLine(TextureGenerator.GetPxWhite(sb.GraphicsDevice), eOnScreen, eOnScreen + new Vector2(0, -50) * strength, sb, 3, 100);
+                    });
+                    break;
             }
 
             sb.End();
@@ -190,11 +208,11 @@ namespace FSO.Client.Rendering.City.Plugins
         public override void TileHover(Vector2? tile)
         {
             if (tile != null && MouseDown) {
+                var wallPos = new Point((int)Math.Round(tile.Value.X), (int)Math.Round(tile.Value.Y));
                 switch (Mode)
                 {
                     case PainterMode.ROAD:
-                        var wallPos = new Point((int)Math.Round(tile.Value.X), (int)Math.Round(tile.Value.Y));
-                        if (wallPos != WallTarget)
+                        if (wallPos != WallTarget && OriginalData != null)
                         {
                             WallTarget = wallPos;
                             var xd = (WallTarget.X - WallBase.X);
@@ -202,7 +220,7 @@ namespace FSO.Client.Rendering.City.Plugins
                             WallLength = (int)Math.Sqrt(xd * xd + yd * yd);
                             WallDir = (int)DirectionUtils.PosMod(Math.Round(Math.Atan2(yd, xd) / (Math.PI / 2)), 4);
 
-                            Array.Copy(BaseRoad, City.MapData.RoadData, BaseRoad.Length);
+                            Array.Copy(OriginalData, City.MapData.RoadData, OriginalData.Length);
                             if (Erasing) EraseWall(City.MapData.RoadData, WallBase, WallLength, WallDir);
                             else DrawWall(City.MapData.RoadData, WallBase, WallLength, WallDir);
 
@@ -213,12 +231,28 @@ namespace FSO.Client.Rendering.City.Plugins
                         var newPt = tile.Value.ToPoint();
                         if (MouseClicked || newPt != LastPos.ToPoint())
                         {
-                            City.MapData.TerrainTypeColorData[newPt.X + newPt.Y * 512] = TerrainTypes[SelectedModifier];
-                            AddChange(new Rectangle(newPt.X - 1, newPt.Y - 1, 3, 3));
+                            BrushFunc(BrushSize, (x, y, strength) =>
+                            {
+                                if (strength > 0) City.MapData.TerrainTypeColorData[newPt.X+x + (newPt.Y+y) * 512] = TerrainTypes[SelectedModifier];
+                            });
+
+                            AddChange(new Rectangle(newPt.X - (1+BrushSize), newPt.Y - (1+BrushSize), 3+BrushSize*2, 3+BrushSize*2));
                             City.GenerateCityMesh(GameFacade.GraphicsDevice, ChangeBounds);
                             MouseClicked = false;
                             break;
                         }
+                        break;
+                    case PainterMode.ELEVATION_CIRCLE:
+                        if (OriginalData == null) return;
+                        BrushFunc(BrushSize, (x, y, strength) =>
+                        {
+                            if (strength > 0) {
+                                var loc = new Point(wallPos.X + x, wallPos.Y + y);
+                                if (ElevationMod.ContainsKey(loc)) ElevationMod[loc] += ((Erasing)?-1:1)* strength / 5;
+                                else ElevationMod[loc] = ((Erasing) ? -1 : 1) * strength / 5;
+                            }
+                        });
+                        AddChange(new Rectangle(wallPos.X - (1 + BrushSize), wallPos.Y - (1 + BrushSize), 2 + BrushSize * 2, 2 + BrushSize * 2));
                         break;
                 }
             }
@@ -228,17 +262,25 @@ namespace FSO.Client.Rendering.City.Plugins
 
         public override void TileMouseDown(Vector2 tile)
         {
+            ChangeBounds = null;
+            var wallPos = new Point((int)Math.Round(tile.X), (int)Math.Round(tile.Y));
             switch (Mode)
             {
                 case PainterMode.ROAD:
-                    var wallPos = new Point((int)Math.Round(tile.X), (int)Math.Round(tile.Y));
-                    BaseRoad = new byte[City.MapData.RoadData.Length];
-                    Array.Copy(City.MapData.RoadData, BaseRoad, BaseRoad.Length);
+                    OriginalData = new byte[City.MapData.RoadData.Length];
+                    Array.Copy(City.MapData.RoadData, OriginalData, OriginalData.Length);
 
                     WallBase = wallPos;
                     WallTarget = wallPos;
                     WallLength = 0;
                     WallDir = 0;
+                    break;
+                case PainterMode.ELEVATION_CIRCLE:
+                    OriginalData = new byte[City.MapData.ElevationData.Length];
+                    Array.Copy(City.MapData.ElevationData, OriginalData, OriginalData.Length);
+
+                    ElevationMod = new Dictionary<Point, float>();
+                    ElevationFrames = 0;
                     break;
             }
 
@@ -248,22 +290,47 @@ namespace FSO.Client.Rendering.City.Plugins
 
         public override void TileMouseUp(Vector2? tile)
         {
-            if (Mode == PainterMode.ROAD)
+            switch (Mode)
             {
-                if (WallLength != 0)
-                {
+                case PainterMode.ROAD:
+                    if (WallLength != 0)
+                    {
+                        ChangeBounds = null;
+                    }
+                    else
+                    {
+                        RestoreOld();
+                    }
+                    break;
+                case PainterMode.ELEVATION_CIRCLE:
                     ChangeBounds = null;
-                }
-                else
-                {
-                    RestoreOld();
-                }
+                    break;
             }
             MouseDown = false;
         }
 
+        public void SwitchMode(PainterMode newMode)
+        {
+            if (Mode != newMode) TileMouseUp(null);
+            Mode = newMode;
+            OriginalData = null;
+        }
+
         public override void Update(UpdateState state)
         {
+            if (Mode == PainterMode.ELEVATION_CIRCLE && MouseDown && ChangeBounds != null && ElevationFrames-- <= 0)
+            {
+                Array.Copy(OriginalData, City.MapData.ElevationData, OriginalData.Length);
+                foreach (var mod in ElevationMod)
+                {
+                    var index = mod.Key.X + mod.Key.Y * 512;
+                    if (index < 0 || index > City.MapData.ElevationData.Length) continue;
+                    City.MapData.ElevationData[index] = (byte)Math.Max(0, Math.Min(255, Math.Round(City.MapData.ElevationData[index]+mod.Value)));
+                }
+                City.GenerateCityMesh(GameFacade.GraphicsDevice, ChangeBounds);
+                ElevationFrames = 5;
+            }
+
             Erasing = state.KeyboardState.IsKeyDown(Keys.LeftControl);
             if (state.MouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released)
             {
@@ -271,20 +338,45 @@ namespace FSO.Client.Rendering.City.Plugins
                 MouseDown = false;
             }
             var keys = state.KeyboardState;
-            if (keys.IsKeyDown(Keys.R)) Mode = PainterMode.ROAD;
-            if (keys.IsKeyDown(Keys.T)) Mode = PainterMode.TERRAINTYPE;
+            if (keys.IsKeyDown(Keys.R)) SwitchMode(PainterMode.ROAD);
+            if (keys.IsKeyDown(Keys.T)) SwitchMode(PainterMode.TERRAINTYPE);
+            if (keys.IsKeyDown(Keys.E)) SwitchMode(PainterMode.ELEVATION_CIRCLE);
 
+            var oldS = SelectedModifier;
             if (keys.IsKeyDown(Keys.NumPad0)) SelectedModifier = 0;
             if (keys.IsKeyDown(Keys.NumPad1)) SelectedModifier = 1;
             if (keys.IsKeyDown(Keys.NumPad2)) SelectedModifier = 2;
             if (keys.IsKeyDown(Keys.NumPad3)) SelectedModifier = 3;
             if (keys.IsKeyDown(Keys.NumPad4)) SelectedModifier = 4;
+
+            if (state.KeyboardState.IsKeyDown(Keys.LeftShift))
+            {
+                BrushSize = SelectedModifier;
+                SelectedModifier = oldS;
+            }
+        }
+
+        public void BrushFunc(int width, Callback<int, int, float> callback)
+        {
+            var boxWidth = width * 2 + 1;
+            for (int y = 0; y < boxWidth; y++)
+            {
+                for (int x = 0; x < boxWidth; x++)
+                {
+                    var dist = Math.Sqrt((x-width)*(x-width) + (y-width)*(y-width)) / (width + 0.5);
+                    callback(x-width, y-width, (float)Math.Max(0, Math.Cos(dist * Math.PI / 2)));
+                }
+            }
         }
 
         public void RestoreOld ()
         {
-            if (BaseRoad != null) City.MapData.RoadData = BaseRoad;
-            BaseRoad = null;
+            if (OriginalData != null)
+            {
+                if (Mode == PainterMode.ROAD) City.MapData.RoadData = OriginalData;
+                else if (Mode == PainterMode.ELEVATION_CIRCLE) City.MapData.ElevationData = OriginalData;
+            }
+            OriginalData = null;
             City.GenerateCityMesh(GameFacade.GraphicsDevice, ChangeBounds);
             ChangeBounds = null;
         }

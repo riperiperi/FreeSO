@@ -1,5 +1,6 @@
 ﻿using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Client.UI.Screens;
 using FSO.Debug.Content;
 using System;
 using System.Collections.Generic;
@@ -42,7 +43,7 @@ namespace FSO.Client.UI.Panels
 
             var connectLocalBtn = new UIButton();
             connectLocalBtn.Caption = (GlobalSettings.Default.UseCustomServer) ? "Use default server (TSO)" : "Use custom defined server";
-            connectLocalBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 100);
+            connectLocalBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 90);
             connectLocalBtn.Width = 300;
             connectLocalBtn.OnButtonClick += x =>
             {
@@ -51,6 +52,29 @@ namespace FSO.Client.UI.Panels
                 GlobalSettings.Default.Save();
             };
             Add(connectLocalBtn);
+
+            /*
+            var cityPainterBtn = new UIButton();
+            cityPainterBtn.Caption = "Toggle City Painter";
+            cityPainterBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 130);
+            cityPainterBtn.Width = 300;
+            cityPainterBtn.OnButtonClick += x =>
+            {
+                var core = (GameFacade.Screens.CurrentUIScreen as CoreGameScreen);
+                if (core == null) return;
+                if (core.CityRenderer.Plugin == null)
+                {
+                    core.CityRenderer.Plugin = new Rendering.City.Plugins.MapPainterPlugin(core.CityRenderer);
+                    cityPainterBtn.Caption = "Disable City Painter";
+                }
+                else
+                {
+                    core.CityRenderer.Plugin = null;
+                    cityPainterBtn.Caption = "Enable City Painter";
+                }
+            };
+            Add(cityPainterBtn);
+            */
         }
     }
 }

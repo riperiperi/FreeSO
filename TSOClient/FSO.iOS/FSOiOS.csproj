@@ -45,14 +45,11 @@
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
     <MtouchLink>None</MtouchLink>
     <MtouchArch>ARMv7, ARM64</MtouchArch>
-    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
-    <MtouchTlsProvider>Default</MtouchTlsProvider>
     <MtouchDebug>True</MtouchDebug>
     <MtouchUseLlvm>True</MtouchUseLlvm>
     <BuildIpa>True</BuildIpa>
     <IpaIncludeArtwork>False</IpaIncludeArtwork>
     <IpaPackageName>FreeSO</IpaPackageName>
-    <MtouchSdkVersion>9.3</MtouchSdkVersion>
     <MtouchProfiling>False</MtouchProfiling>
     <MtouchFastDev>False</MtouchFastDev>
     <MtouchUseThumb>False</MtouchUseThumb>
@@ -61,7 +58,7 @@
     <DeviceSpecificBuild>False</DeviceSpecificBuild>
     <MtouchI18n>west</MtouchI18n>
     <IpaMetadata>iTunesMetadata.plist</IpaMetadata>
-    <MtouchExtraArgs>-v -v -v -v</MtouchExtraArgs>
+    <MtouchExtraArgs>-v -v -v -v </MtouchExtraArgs>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
     <Optimize>true</Optimize>
@@ -100,6 +97,14 @@
     <MtouchTlsProvider>Default</MtouchTlsProvider>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Common.Logging.Core, Version=3.4.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\Common.Logging.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging.Portable, Version=3.4.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\Common.Logging.Portable.dll</HintPath>
+    </Reference>
     <Reference Include="FSO.Common.DatabaseService">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Common.DatabaseService.dll</HintPath>
     </Reference>
@@ -125,20 +130,23 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\tso.client\bin\WindowsGL\Release\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+    <Reference Include="Ninject, Version=4.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\Ninject.dll</HintPath>
+      <HintPath>..\packages\Ninject.4.0.0-beta-0134\lib\netstandard1.5\Ninject.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.3.11\lib\Xamarin.iOS10\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="RestSharp">
-      <HintPath>..\tso.client\bin\WindowsGL\Release\RestSharp.dll</HintPath>
+    <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\RestSharp.105.2.3\lib\Xamarin.iOS10\RestSharp.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable">
-      <HintPath>..\tso.client\bin\WindowsGL\Release\System.Collections.Immutable.dll</HintPath>
+    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.3.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
@@ -472,6 +480,7 @@
     <BundleResource Include="Content\Patch\WORKAROUND_poolladder.piff">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </BundleResource>
+    <None Include="app.config" />
     <None Include="Entitlements.plist" />
     <None Include="Info.plist" />
     <None Include="packages.config" />
@@ -535,6 +544,12 @@
     <BundleResource Include="Content\Blueprints\empty_lot_fso.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </BundleResource>
+    <Content Include="Common.Logging.Core.dll" />
+    <Content Include="Common.Logging.Core.pdb" />
+    <Content Include="Common.Logging.Core.xml" />
+    <Content Include="Common.Logging.Portable.dll" />
+    <Content Include="Common.Logging.Portable.pdb" />
+    <Content Include="Common.Logging.Portable.XML" />
     <Content Include="LICENSE.txt" />
     <Content Include="Ninject.dll" />
     <Content Include="Ninject.xml" />

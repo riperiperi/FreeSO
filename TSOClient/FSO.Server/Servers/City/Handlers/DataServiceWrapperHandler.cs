@@ -114,8 +114,6 @@ namespace FSO.Server.Servers.City.Handlers
                         return;
                     }
 
-                    if (type == MaskedStruct.FriendshipWeb_Avatar) { }
-
                     //Lookup the entity, then process the request and send the response
                     var task = DataService.Get(type, msg.Parameter.Value);
                     if (task != null)

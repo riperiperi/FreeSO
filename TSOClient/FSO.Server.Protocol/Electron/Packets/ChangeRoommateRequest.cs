@@ -22,7 +22,7 @@ namespace FSO.Server.Protocol.Electron.Packets
 
         public override ElectronPacketType GetPacketType()
         {
-            return ElectronPacketType.FindAvatarRequest;
+            return ElectronPacketType.ChangeRoommateRequest;
         }
 
         public override void Serialize(IoBuffer output, ISerializationContext context)

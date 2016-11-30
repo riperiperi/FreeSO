@@ -379,7 +379,10 @@ namespace FSO.Server.Servers.Lot.Domain
                     file.Write(data, 0, data.Length);
                     using (var db = DAFactory.Get())
                     {
-                        callback(db.Objects.UpdatePersistState(objectPID, dbState), objectPID); //if object is on another lot or does not exist, this will fail.
+                        //todo: race where inventory object could potentially be placed on the lot before the old instance of it is deleted
+                        //probably just block objects with same persist id from being placed.
+                        db.Objects.UpdatePersistState(objectPID, dbState);
+                        callback(true, objectPID);
                     }
                     file.Close();
                 }
@@ -389,8 +392,9 @@ namespace FSO.Server.Servers.Lot.Domain
                     {
                         using (var db = DAFactory.Get())
                         {
-                            callback(db.Objects.UpdatePersistState(objectPID, dbState), objectPID); //if object is on another lot or does not exist, this will fail.
-                    }
+                            db.Objects.UpdatePersistState(objectPID, dbState);
+                            callback(true, objectPID);
+                        }
                         file.Close();
                     });
                 }

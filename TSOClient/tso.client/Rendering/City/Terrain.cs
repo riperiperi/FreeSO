@@ -709,7 +709,6 @@ namespace FSO.Client.Rendering.City
         public void GenerateCityMesh(GraphicsDevice GfxDevice, Rectangle? range)
         {
             RegenMeshVerts(range);
-
             if (vertBuf == null) vertBuf = new VertexBuffer(m_GraphicsDevice, typeof(MeshVertex), m_Verts.Length, BufferUsage.WriteOnly);
             vertBuf.SetData(m_Verts); //use vertex buffer to draw mesh as the data is always the same. we only have to set data once.
             m_MeshTris = m_Verts.Length / 3;
@@ -1009,6 +1008,7 @@ namespace FSO.Client.Rendering.City
         public Vector2 Get2DFromTile(int x, int y)
         {
             float iScale = (float)(1/(m_LastIsoScale * 2));
+            if (x < 0 || y < 0) return new Vector2();
             return transformSpr(iScale, new Vector3(x, MapData.ElevationData[(y * 512 + x)] / 12.0f, y));
         }
 

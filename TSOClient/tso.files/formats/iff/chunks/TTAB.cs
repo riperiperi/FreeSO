@@ -409,7 +409,9 @@ namespace FSO.Files.Formats.IFF.Chunks
         TSOAvailableCarrying = 1 << 16, //COVERED
         TSOIsRepair = 1 << 17, //TODO (only available when wear = 0)
         TSORunCheckAlways = 1 << 18, //TODO
-        TSOAvailableWhenDead = 1<<19 //COVERED
+        TSOAvailableWhenDead = 1<<19, //COVERED
+
+        FSOPushTail = 1<<30
     }
 
     public enum TSOFlags

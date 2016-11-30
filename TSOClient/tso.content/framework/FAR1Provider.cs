@@ -179,7 +179,6 @@ namespace FSO.Content.Framework
                     {
                         if (EntriesByName.ContainsKey(entry.Filename))
                         {
-                            System.Diagnostics.Debug.WriteLine("Duplicate! " + entry.Filename);
                         }
                         EntriesByName[entry.Filename] = referenceItem;
                     }
