@@ -41,4 +41,52 @@ namespace FSO.SimAntics.Engine.Scopes
         DynamicCostume = 25,
         signnotepad = 26
     }
+
+    public class VMPersonSuitsUtils
+    {
+        public static bool IsDefaultSuit(VMPersonSuits type)
+        {
+            if (type != VMPersonSuits.DefaultDaywear &&
+                type != VMPersonSuits.DefaultSleepwear &&
+                type != VMPersonSuits.DefaultSwimwear)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public static ulong GetValue(VMAvatar avatar, VMPersonSuits type)
+        {
+            switch (type)
+            {
+                case VMPersonSuits.DefaultDaywear:
+                    return avatar.DefaultSuits.Daywear;
+                case VMPersonSuits.DefaultSleepwear:
+                    return avatar.DefaultSuits.Sleepwear;
+                case VMPersonSuits.DefaultSwimwear:
+                    return avatar.DefaultSuits.Swimwear;
+                case VMPersonSuits.DynamicCostume:
+                    return avatar.DynamicSuits.Costume;
+                case VMPersonSuits.DynamicDaywear:
+                    return avatar.DynamicSuits.Daywear;
+                case VMPersonSuits.DynamicSleepwear:
+                    return avatar.DynamicSuits.Sleepwear;
+                case VMPersonSuits.DynamicSwimwear:
+                    return avatar.DynamicSuits.Swimwear;
+            }
+            return 0;
+        }
+
+        public static bool IsDecoration(VMPersonSuits suit)
+        {
+            if (suit == VMPersonSuits.DecorationHead ||
+                suit == VMPersonSuits.DecorationBack ||
+                suit == VMPersonSuits.DecorationShoes ||
+                suit == VMPersonSuits.DecorationTail)
+            {
+                return true;
+            }
+            return false;
+        }
+    }
 }

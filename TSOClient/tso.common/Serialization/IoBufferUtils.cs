@@ -14,6 +14,25 @@ namespace FSO.Common.Serialization
             buffer.PutSerializable(context, obj, false);
         }
 
+        public static byte[] GetBytes(this IoBuffer buffer)
+        {
+            var result = new byte[buffer.Limit];
+            buffer.Get(result, 0, buffer.Limit);
+            return result;
+        }
+
+        public static T Deserialize<T>(byte[] bytes, ISerializationContext context) where T : IoBufferDeserializable
+        {
+            var buffer = IoBuffer.Wrap(bytes);
+            return Deserialize<T>(buffer, context);
+        }
+
+        public static T Deserialize<T>(IoBuffer buffer, ISerializationContext context) where T : IoBufferDeserializable
+        {
+            var model = Activator.CreateInstance<T>();
+            model.Deserialize(buffer, context);
+            return (T)model;
+        }
 
         public static IoBuffer SerializableToIoBuffer(object obj, ISerializationContext context)
         {

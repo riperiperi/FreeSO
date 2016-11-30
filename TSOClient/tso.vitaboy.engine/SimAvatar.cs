@@ -223,7 +223,91 @@ namespace FSO.Vitaboy
                 ReloadBody();
             }
         }
-        
+
+        private Outfit m_DecorationHead;
+        public Outfit DecorationHead
+        {
+            get
+            {
+                return m_DecorationHead;
+            }
+            set
+            {
+                if(m_DecorationHead != null)
+                {
+                    RemoveAccessory(m_DecorationHead);
+                }
+                m_DecorationHead = value;
+                if(m_DecorationHead != null)
+                {
+                    AddAccessory(m_DecorationHead);
+                }
+            }
+        }
+
+        private Outfit m_DecorationBack;
+        public Outfit DecorationBack
+        {
+            get
+            {
+                return m_DecorationBack;
+            }
+            set
+            {
+                if (m_DecorationBack != null)
+                {
+                    RemoveAccessory(m_DecorationBack);
+                }
+                m_DecorationBack = value;
+                if (m_DecorationBack != null)
+                {
+                    AddAccessory(m_DecorationBack);
+                }
+            }
+        }
+
+        private Outfit m_DecorationShoes;
+        public Outfit DecorationShoes
+        {
+            get
+            {
+                return m_DecorationShoes;
+            }
+            set
+            {
+                if (m_DecorationShoes != null)
+                {
+                    RemoveAccessory(m_DecorationShoes);
+                }
+                m_DecorationShoes = value;
+                if (m_DecorationShoes != null)
+                {
+                    AddAccessory(m_DecorationShoes);
+                }
+            }
+        }
+
+        private Outfit m_DecorationTail;
+        public Outfit DecorationTail
+        {
+            get
+            {
+                return m_DecorationTail;
+            }
+            set
+            {
+                if (m_DecorationTail != null)
+                {
+                    RemoveAccessory(m_DecorationTail);
+                }
+                m_DecorationTail = value;
+                if (m_DecorationTail != null)
+                {
+                    AddAccessory(m_DecorationTail);
+                }
+            }
+        }
+
         /// <summary>
         /// Reloads the body mesh.
         /// </summary>
@@ -243,7 +327,21 @@ namespace FSO.Vitaboy
                 }
             }
         }
-        
+
+        public void AddAccessory(Outfit oft)
+        {
+            var aprId = oft.GetAppearance(m_Appearance);
+            var appearance = FSO.Content.Content.Get().AvatarAppearances.Get(aprId);
+            this.AddAccessory(appearance);
+        }
+
+        public void RemoveAccessory(Outfit oft)
+        {
+            var aprId = oft.GetAppearance(m_Appearance);
+            var appearance = FSO.Content.Content.Get().AvatarAppearances.Get(aprId);
+            this.RemoveAccessory(appearance);
+        }
+
         private AppearanceType m_Appearance = AppearanceType.Light;
 
         /// <summary>

@@ -106,10 +106,13 @@
     <Compile Include="Model\AudioReference.cs" />
     <Compile Include="Model\AudioType.cs" />
     <Compile Include="Model\CityMap.cs" />
+    <Compile Include="Model\RackOutfit.cs" />
+    <Compile Include="Model\RackOutfits.cs" />
     <Compile Include="Model\TextureRef.cs" />
     <Compile Include="Model\WallStyle.cs" />
     <Compile Include="Model\Floor.cs" />
     <Compile Include="Model\Wall.cs" />
+    <Compile Include="RackOutfitsProvider.cs" />
     <Compile Include="ResAction.cs" />
     <Compile Include="WorldFloorProvider.cs" />
     <Compile Include="WorldGlobalProvider.cs" />

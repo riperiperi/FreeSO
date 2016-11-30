@@ -13,7 +13,7 @@ namespace FSO.SimAntics.Marshals
 {
     public class VMMarshal : VMSerializable
     {
-        public static readonly int LATEST_VERSION = 14;
+        public static readonly int LATEST_VERSION = 15;
 
         public int Version = LATEST_VERSION;
         public bool Compressed = true;

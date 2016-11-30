@@ -86,12 +86,20 @@
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
     <Compile Include="UI\Controls\Catalog\UICatalogRoofResProvider.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
+    <Compile Include="UI\Controls\UIDynamicContainers.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />
     <Compile Include="UI\Controls\UICustomTooltip.cs" />
+    <Compile Include="UI\Controls\UIRadioButton.cs" />
     <Compile Include="UI\Controls\UISkillBar.cs" />
     <Compile Include="UI\Controls\UIValidationMessages.cs" />
     <Compile Include="UI\Framework\DoubleClick.cs" />
+    <Compile Include="UI\Framework\IUIAutoSize.cs" />
+    <Compile Include="UI\Panels\EODs\UIDebugEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIDresserEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIPaperChaseEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIAbstractRackEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIRackEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIRackOwnerEOD.cs" />
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobby.cs" />
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobbyController.cs" />
     <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
@@ -366,6 +374,10 @@
     <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="Mina.NET, Version=2.0.11.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Mina.2.0.11\lib\net40\Mina.NET.dll</HintPath>
     </Reference>
     <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Ninject.3.2.2.0\lib\net40\Ninject.dll</HintPath>

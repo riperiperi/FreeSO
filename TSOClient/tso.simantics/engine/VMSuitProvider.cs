@@ -102,7 +102,7 @@ namespace FSO.SimAntics.Engine
                     bool male = (avatar.GetPersonData(VMPersonDataVariable.Gender) == 0);
                     switch (type)
                     {
-                        //todo: Dynamic Daywear, decorations (tail etc), cockroach head
+                        //todo: (tail etc), cockroach head
 
                         case VMPersonSuits.DefaultDaywear:
                             return avatar.DefaultSuits.Daywear;
@@ -123,6 +123,25 @@ namespace FSO.SimAntics.Engine
                             return (ulong)(0x5740000000D);
                         case VMPersonSuits.TeleporterMishap:
                           return (ulong)(male ? 0x2900000000D : 0x4A0000000D);
+
+
+                        case VMPersonSuits.DynamicDaywear:
+                            return avatar.DynamicSuits.Daywear;
+                        case VMPersonSuits.DynamicSleepwear:
+                            return avatar.DynamicSuits.Sleepwear;
+                        case VMPersonSuits.DynamicSwimwear:
+                            return avatar.DynamicSuits.Swimwear;
+                        case VMPersonSuits.DynamicCostume:
+                            return avatar.DynamicSuits.Costume;
+
+                        case VMPersonSuits.DecorationHead:
+                            return avatar.Decoration.Head;
+                        case VMPersonSuits.DecorationBack:
+                            return avatar.Decoration.Back;
+                        case VMPersonSuits.DecorationShoes:
+                            return avatar.Decoration.Shoes;
+                        case VMPersonSuits.DecorationTail:
+                            return avatar.Decoration.Tail;
                     }
 
                     return null;

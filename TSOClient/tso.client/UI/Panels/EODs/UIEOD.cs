@@ -1,4 +1,5 @@
 ﻿using FSO.Client.UI.Framework;
+using FSO.Client.UI.Screens;
 using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
@@ -21,6 +22,27 @@ namespace FSO.Client.UI.Panels.EODs
             PlaintextHandlers = new Dictionary<string, EODDirectPlaintextEventHandler>();
             BinaryHandlers = new Dictionary<string, EODDirectBinaryEventHandler>();
             Controller = controller;
+        }
+
+        public UILotControl LotController
+        {
+            get
+            {
+                var screen = UIScreen.Current as CoreGameScreen;
+                if (screen == null){
+                    return null;
+                }
+
+                return screen.LotControl;
+            }
+        }
+
+        public virtual void OnExpand()
+        {
+        }
+
+        public virtual void OnContract()
+        {
         }
 
         public virtual void OnClose()

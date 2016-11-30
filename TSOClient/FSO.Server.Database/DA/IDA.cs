@@ -6,6 +6,7 @@ using FSO.Server.Database.DA.LotAdmit;
 using FSO.Server.Database.DA.LotClaims;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Objects;
+using FSO.Server.Database.DA.Outfits;
 using FSO.Server.Database.DA.Relationships;
 using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.Shards;
@@ -32,6 +33,7 @@ namespace FSO.Server.Database.DA
         ILotClaims LotClaims { get; }
         IAvatarClaims AvatarClaims { get; }
         IBookmarks Bookmarks { get; }
+        IOutfits Outfits { get; }
 
         void Flush();
     }

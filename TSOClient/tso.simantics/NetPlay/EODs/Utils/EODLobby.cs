@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Common.Serialization;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -153,6 +154,23 @@ namespace FSO.SimAntics.NetPlay.EODs.Utils
                     player.Send(evt, body);
                 }
             }
+        }
+
+        public void Broadcast(string evt, byte[] body)
+        {
+            foreach (var player in Players)
+            {
+                if (player != null)
+                {
+                    player.Send(evt, body);
+                }
+            }
+        }
+
+        public void Broadcast(string evt, IoBufferSerializable body)
+        {
+            var buffer = IoBufferUtils.SerializableToIoBuffer(body, null);
+            Broadcast(evt, buffer.GetBytes());
         }
     }
 }

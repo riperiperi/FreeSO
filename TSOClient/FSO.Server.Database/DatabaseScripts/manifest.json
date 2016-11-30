@@ -81,6 +81,15 @@
 		"bec36bbc-1774-44cb-a7c5-03f4a00e801c",
 		"52795d47-a25e-418f-a618-fb89300aab02"
 	  ]
+    },
+	{
+      "id": "28b9a5c0-886c-4307-912b-05d4ddd5ba9e",
+      "script": "changes/0006_outfits.sql",
+      "idempotent": false,
+	  "requires":[
+		"bec36bbc-1774-44cb-a7c5-03f4a00e801c",
+		"52795d47-a25e-418f-a618-fb89300aab02"
+	  ]
     }
   ]
 }
