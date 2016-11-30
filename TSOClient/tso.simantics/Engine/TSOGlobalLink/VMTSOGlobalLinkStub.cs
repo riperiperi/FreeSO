@@ -9,6 +9,7 @@ using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.Engine.TSOGlobalLink;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Entities;
+using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 
 namespace FSO.SimAntics.Engine.TSOTransaction
 {
@@ -223,6 +224,29 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         public void SetSpotlightStatus(VM vm, bool on)
         {
 
+        }
+
+        public void StockOutfit(VM vm, VMGLOutfit outfit, VMAsyncStockOutfitCallback callback)
+        {
+            //todo: local stub?
+        }
+
+        public void GetOutfits(VM vm, VMGLOutfitOwner owner, uint ownerPID, VMAsyncGetOutfitsCallback callback)
+        {
+            callback(new VMGLOutfit[0]);
+        }
+
+        public void DeleteOutfit(VM vm, uint outfitPID, VMGLOutfitOwner owner, uint ownerPID, VMAsyncDeleteOutfitCallback callback)
+        {
+        }
+
+        public void UpdateOutfitSalePrice(VM vm, uint outfitPID, uint objectPID, int newSalePrice, VMAsyncUpdateOutfitSalePriceCallback callback)
+        {
+
+        }
+
+        public void PurchaseOutfit(VM vm, uint outfitPID, uint objectPID, uint avatarPID, VMAsyncPurchaseOutfitCallback callback)
+        {
         }
     }
 }

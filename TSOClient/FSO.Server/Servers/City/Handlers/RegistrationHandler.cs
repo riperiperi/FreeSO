@@ -14,6 +14,7 @@ using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Common;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.SimAntics.Engine.Scopes;
 
 namespace FSO.Server.Servers.City.Handlers
 {
@@ -144,6 +145,15 @@ namespace FSO.Server.Servers.City.Handlers
                 newAvatar.user_id = session.UserId;
                 newAvatar.budget = 20000;
 
+                if(packet.Gender == Protocol.Voltron.Model.Gender.MALE){
+                    newAvatar.body_swimwear = 0x5470000000D;
+                    newAvatar.body_sleepwear = 0x5440000000D;
+                }else{
+
+                    newAvatar.body_swimwear = 0x620000000D;
+                    newAvatar.body_sleepwear = 0x5150000000D;
+                }
+
                 var user = db.Users.GetById(session.UserId);
                 if ((user?.is_moderator) ?? false) newAvatar.moderation_level = 1;
 
@@ -158,6 +168,47 @@ namespace FSO.Server.Servers.City.Handlers
                     {
                         Status = CreateASimStatus.FAILED,
                         Reason = CreateASimFailureReason.NAME_TAKEN
+                    });
+                    return;
+                }
+
+                //create clothes
+                try
+                {
+                    db.Outfits.Create(new Database.DA.Outfits.DbOutfit {
+                        avatar_owner = newId,
+                        asset_id = newAvatar.body,
+                        purchase_price = 0,
+                        sale_price = 0,
+                        outfit_type = (byte)VMPersonSuits.DefaultDaywear,
+                        outfit_source = Database.DA.Outfits.DbOutfitSource.cas
+                    });
+
+                    db.Outfits.Create(new Database.DA.Outfits.DbOutfit
+                    {
+                        avatar_owner = newId,
+                        asset_id = newAvatar.body_sleepwear,
+                        purchase_price = 0,
+                        sale_price = 0,
+                        outfit_type = (byte)VMPersonSuits.DefaultSleepwear,
+                        outfit_source = Database.DA.Outfits.DbOutfitSource.cas
+                    });
+
+                    db.Outfits.Create(new Database.DA.Outfits.DbOutfit
+                    {
+                        avatar_owner = newId,
+                        asset_id = newAvatar.body_swimwear,
+                        purchase_price = 0,
+                        sale_price = 0,
+                        outfit_type = (byte)VMPersonSuits.DefaultSwimwear,
+                        outfit_source = Database.DA.Outfits.DbOutfitSource.cas
+                    });
+                }
+                catch(Exception e){
+                    session.Write(new CreateASimResponse
+                    {
+                        Status = CreateASimStatus.FAILED,
+                        Reason = CreateASimFailureReason.NONE
                     });
                     return;
                 }

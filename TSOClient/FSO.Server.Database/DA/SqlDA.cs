@@ -16,6 +16,7 @@ using FSO.Server.Database.DA.Relationships;
 using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.Bookmarks;
 using FSO.Server.Database.DA.LotAdmit;
+using FSO.Server.Database.DA.Outfits;
 
 namespace FSO.Server.Database.DA
 {
@@ -178,6 +179,19 @@ namespace FSO.Server.Database.DA
                     _Bookmarks = new SqlBookmarks(Context);
                 }
                 return _Bookmarks;
+            }
+        }
+
+        private IOutfits _Outfits;
+        public IOutfits Outfits
+        {
+            get
+            {
+                if(_Outfits == null)
+                {
+                    _Outfits = new SqlOutfits(Context);
+                }
+                return _Outfits;
             }
         }
 

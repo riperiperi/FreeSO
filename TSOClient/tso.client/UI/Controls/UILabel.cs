@@ -18,7 +18,7 @@ namespace FSO.Client.UI.Controls
     /// <summary>
     /// A drawable label containing text.
     /// </summary>
-    public class UILabel : UIElement
+    public class UILabel : UIElement, IUIAutoSize
     {
         /// <summary>
         /// The font to use when rendering the label
@@ -43,12 +43,13 @@ namespace FSO.Client.UI.Controls
         /// If size is set you can make use of alignment settings
         /// </summary>
         [UIAttribute("size")]
-        public new virtual Vector2 Size {
+        public override Vector2 Size
+        {
             get
             {
                 if (m_Size != null)
                 {
-                    return new Vector2(m_Size.X, m_Size.Y);
+                    return new Vector2(m_Size.Width, m_Size.Height);
                 }
                 return Vector2.Zero;
             }
@@ -144,6 +145,11 @@ namespace FSO.Client.UI.Controls
             }
 
             _InDraw = false;
+        }
+
+        public void AutoSize()
+        {
+            this.Size = CaptionStyle.MeasureString(Caption);
         }
     }
 }

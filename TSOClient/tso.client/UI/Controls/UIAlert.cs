@@ -282,6 +282,15 @@ namespace FSO.Client.UI.Controls
             return new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, callback) };
         }
 
+        public static UIAlertButton[] YesNo(ButtonClickDelegate yesCallback, ButtonClickDelegate noCallback)
+        {
+            return new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.Yes, yesCallback), new UIAlertButton(UIAlertButtonType.No, noCallback) };
+        }
+
+        public static UIAlertButton[] YesNoCancel(ButtonClickDelegate yesCallback, ButtonClickDelegate noCallback, ButtonClickDelegate cancel)
+        {
+            return new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.Yes, yesCallback), new UIAlertButton(UIAlertButtonType.No, noCallback), new UIAlertButton(UIAlertButtonType.Cancel, cancel) };
+        }
 
         public UIAlertButtonType Type = UIAlertButtonType.OK;
         public ButtonClickDelegate Handler = null; //if null, just use default (exit UIAlert)

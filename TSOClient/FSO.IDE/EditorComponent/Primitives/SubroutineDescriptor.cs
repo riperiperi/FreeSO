@@ -23,7 +23,47 @@ namespace FSO.IDE.EditorComponent.Primitives
         public override string GetTitle(EditorScope scope)
         {
             var op = (VMSubRoutineOperand)Operand;
-            return scope.GetSubroutineName(PrimID);
+            var name = scope.GetSubroutineName(PrimID);
+
+            var paramNames = new string[4];
+            for(var i=0; i < 4; i++){
+                paramNames[i] = "arg" + i;
+            }
+
+            var bhav = scope.GetBHAV(PrimID);
+            if(bhav != null){
+                //There might be param names
+                var labels = scope.GetLabels(bhav.ChunkID);
+                if(labels.ParamNames != null){
+                    for(var i=0; i < 4; i++){
+                        if(i < labels.ParamNames.Length){
+                            paramNames[i] = labels.ParamNames[i];
+                        }
+                    }
+                }
+            }
+
+            //Add parameter names and values
+            name += "(";
+            for(var i=0; i < bhav.Args; i++){
+                if(i > 0){
+                    name += ", ";
+                }
+
+                name += paramNames[i] + "=";
+
+                short argValue = op.Arguments[i];
+                string argValueString = argValue + "";
+
+                if(argValue == -1){
+                    argValueString = scope.GetVarName(VMVariableScope.Temps, (short)i);
+                }
+
+                name += argValueString;
+            }
+            name += ")";
+
+            return name;
         }
 
         public override string GetBody(EditorScope scope)

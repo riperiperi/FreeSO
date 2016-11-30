@@ -41,8 +41,39 @@ namespace FSO.IDE.EditorComponent
             StackObject = obj;
             CallerObject = obj;
 
-            BHAVNames = obj.Resource.Get<TPRP>(active.ChunkID);
+            BHAVNames = GetLabels(active.ChunkID);
             Active = active;
+        }
+
+        public TPRP GetLabels(ushort chunkID)
+        {
+            if (chunkID >= 8192)
+            {
+                // Semi-Global
+                if (SemiGlobal != null)
+                {
+                    return SemiGlobal.Get<TPRP>(chunkID);
+                }
+                return null;
+            }
+            else if (chunkID >= 4096)
+            {
+                // Private sub-routine call
+                if(Object != null)
+                {
+                    return Object.Resource.Get<TPRP>(chunkID);
+                }
+                return null;
+            }
+            else
+            {
+                // Global sub-routine call
+                if(Globals != null)
+                {
+                    return Globals.Resource.Get<TPRP>(chunkID);
+                }
+                return null;
+            }
         }
 
         public string GetSubroutineName(ushort id)

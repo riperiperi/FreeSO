@@ -28,6 +28,8 @@ namespace FSO.SimAntics.Marshals
         public int KillTimeout = -1; //version 2
 
         public VMAvatarDefaultSuits DefaultSuits;
+        public VMAvatarDynamicSuits DynamicSuits;
+        public VMAvatarDecoration Decoration;
         public string[] BoundAppearances;
 
         public ulong BodyOutfit;
@@ -76,6 +78,12 @@ namespace FSO.SimAntics.Marshals
 
             DefaultSuits = new VMAvatarDefaultSuits(reader);
 
+            if(Version >= 15)
+            {
+                DynamicSuits = new VMAvatarDynamicSuits(reader);
+                Decoration = new VMAvatarDecoration(reader);
+            }
+
             var aprs = reader.ReadInt32();
             BoundAppearances = new string[aprs];
             for (int i = 0; i < aprs; i++) BoundAppearances[i] = reader.ReadString();
@@ -112,6 +120,9 @@ namespace FSO.SimAntics.Marshals
             writer.Write(KillTimeout);
 
             DefaultSuits.SerializeInto(writer);
+            DynamicSuits.SerializeInto(writer);
+            Decoration.SerializeInto(writer);
+
             writer.Write(BoundAppearances.Length);
             foreach (var item in BoundAppearances) { writer.Write(item); }
 

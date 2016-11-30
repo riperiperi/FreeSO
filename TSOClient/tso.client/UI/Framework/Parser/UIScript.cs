@@ -84,6 +84,18 @@ namespace FSO.Client.UI.Framework.Parser
             }
         }
 
+        public void ApplyControlProperties(object instance, string id)
+        {
+            if (ControlSettings.ContainsKey(id))
+            {
+                DoSetControlProperties(instance, ControlSettings[id]);
+            }
+            else if (NodesByID.ContainsKey(id))
+            {
+                DoSetControlProperties(instance, NodesByID[id]);
+            }
+        }
+
         public T Create<T>(string id)
         {
             var instance = Activator.CreateInstance<T>();
@@ -106,6 +118,16 @@ namespace FSO.Client.UI.Framework.Parser
             return (T)instance;
         }
 
+        public object GetControlProperty(string id, string field)
+        {
+            var result = GetControlProperty(target, id);
+            if (result is Dictionary<string, object>)
+            {
+                return ((Dictionary<string, object>)result)[field];
+            }
+            return result;
+        }
+
         public object GetControlProperty(string id)
         {
             return GetControlProperty(target, id);
@@ -116,6 +138,15 @@ namespace FSO.Client.UI.Framework.Parser
             if (ControlSettings.ContainsKey(id))
             {
                 var props = DoGetControlProperties(target, ControlSettings[id]);
+                if (props.Keys.Count == 1)
+                {
+                    return props[props.Keys.First()];
+                }
+                return props;
+            }else if (NodesByID.ContainsKey(id))
+            {
+                var node = NodesByID[id];
+                var props = DoGetControlProperties(target, node);
                 if (props.Keys.Count == 1)
                 {
                     return props[props.Keys.First()];
@@ -143,6 +174,16 @@ namespace FSO.Client.UI.Framework.Parser
             WireUp(node.ID, label);
         }
 
+        private Type GetPropertyType(string id, Type defaultType)
+        {
+            var prop = targetType.GetProperty(id);
+            if (prop != null)
+            {
+                return prop.PropertyType;
+            }
+
+            return defaultType;
+        }
 
         /// <summary>
         /// Handles AddButton nodes in a UIScript.
@@ -155,22 +196,24 @@ namespace FSO.Client.UI.Framework.Parser
         /// <param name="node"></param>
         public void AddButton(UINode node)
         {
+            var type = GetPropertyType(node.ID, typeof(UIButton));
+
             UIButton btn = null;
             if (node.Attributes.ContainsKey("image"))
             {
                 var txKey = node.Attributes["image"];
                 if (Textures.ContainsKey(txKey))
                 {
-                    btn = new UIButton(Textures[txKey.ToLowerInvariant()]);
+                    btn = (UIButton)Activator.CreateInstance(type, new object[] { Textures[txKey.ToLowerInvariant()] });
                 }
                 else
                 {
-                    btn = new UIButton();
+                    btn = (UIButton)Activator.CreateInstance(type);
                 }
             }
             else
             {
-                btn = new UIButton();
+                btn = (UIButton)Activator.CreateInstance(type);
             }
             Components.Add(node.ID, btn);
             btn.ID = node.ID;
