@@ -20,9 +20,11 @@ namespace FSO.Server.Protocol.CitySelector
         public AvatarAppearanceType AppearanceType { get; set; }
         public ulong HeadOutfitID { get; set; }
         public ulong BodyOutfitID { get; set; }
-
         public string Description { get; set; }
 
+        /** Lot **/
+        public int? LotId { get; set; }
+        public string LotName { get; set; }
 
         #region IXMLPrinter Members
 
@@ -37,6 +39,11 @@ namespace FSO.Server.Protocol.CitySelector
             result.AppendTextNode("Head", HeadOutfitID.ToString());
             result.AppendTextNode("Body", BodyOutfitID.ToString());
             result.AppendTextNode("Appearance", AppearanceType.ToString());
+
+            if (LotId.HasValue){
+                result.AppendTextNode("LotId", LotId.Value.ToString());
+                result.AppendTextNode("LotName", LotName);
+            }
 
             result.AppendTextNode("Description", Description);
 
@@ -66,6 +73,14 @@ namespace FSO.Server.Protocol.CitySelector
             {
                 this.AppearanceType = (AvatarAppearanceType)Enum.Parse(typeof(AvatarAppearanceType), apprString);
             }
+
+            var lotId = element.ReadTextNode("LotId");
+            if(lotId != null)
+            {
+                this.LotId = int.Parse(lotId);
+            }
+
+            LotName = element.ReadTextNode("LotName");
 
             var descString = element.ReadTextNode("Description");
             this.Description = descString ?? "";

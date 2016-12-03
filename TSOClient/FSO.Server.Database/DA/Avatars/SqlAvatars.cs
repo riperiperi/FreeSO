@@ -275,5 +275,26 @@ namespace FSO.Server.Database.DA.Avatars
                 +" job_sickdays=VALUES(`job_sickdays`), job_statusflags=VALUES(`job_statusflags`); ", jobLevel);
             return;
         }
+
+        public List<DbAvatarSummary> GetSummaryByUserId(uint user_id)
+        {
+            return Context.Connection.Query<DbAvatarSummary>(
+                @"SELECT a.avatar_id, 
+		                 a.shard_id,
+		                 a.user_id,
+		                 a.name,
+		                 a.gender,
+		                 a.date,
+		                 a.skin_tone,
+		                 a.head,
+		                 a.body,
+		                 a.description,
+		                 r.lot_id, 
+		                 l.name as lot_name
+                FROM fso_avatars a
+                    LEFT OUTER JOIN fso_roommates r on r.avatar_id = a.avatar_id
+                    LEFT OUTER JOIN fso_lots l on l.lot_id = r.lot_id
+                WHERE a.user_id = @user_id", new { user_id = user_id }).ToList();
+        }
     }
 }
