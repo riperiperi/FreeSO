@@ -284,7 +284,10 @@ namespace FSO.Client.UI.Panels
                     CurrentInventory.Clear();
                     foreach (var item in inventory)
                     {
-                        var obj = Content.Content.Get().WorldCatalog.GetItemByGUID(item.GUID).Value;
+                        var catItem = Content.Content.Get().WorldCatalog.GetItemByGUID(item.GUID);
+                        if (catItem == null) { continue; }
+
+                        var obj = catItem.Value;
                         //note that catalog items are structs, so we can modify their properties freely without affecting the permanant store.
                         //todo: what if this is null? it shouldn't be, but still
                         obj.Name = (item.Name == "")?obj.Name:item.Name;
