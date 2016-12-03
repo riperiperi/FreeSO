@@ -319,6 +319,8 @@ namespace FSO.LotView
             var _2d = state._2D;
             _2d.AmbientLight = TextureGenerator.GetPxWhite(gd);
             Promise<Texture2D> bufferTexture = null;
+            var lastLight = state.OutsideColor;
+            state.OutsideColor = Color.White;
             state._2D.OBJIDMode = false;
             using (var buffer = state._2D.WithBuffer(BUFFER_LOTTHUMB, ref bufferTexture))
             {
@@ -349,6 +351,7 @@ namespace FSO.LotView
 
             //return things to normal
             _2d.AmbientLight = state.AmbientLight;
+            state.OutsideColor = lastLight;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
             state.TempDraw = false;

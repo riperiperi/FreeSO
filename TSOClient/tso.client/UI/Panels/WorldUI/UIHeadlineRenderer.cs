@@ -98,9 +98,9 @@ namespace FSO.Client.UI.Panels.WorldUI
             else if (Headline.Operand.Group == VMSetBalloonHeadlineOperandGroup.Algorithmic && LastZoom != WorldZoom.Far)
             {
                 AlgTex = (Headline.IconTarget == null)?WhitePx:Headline.IconTarget.GetIcon(GameFacade.GraphicsDevice, (int)LastZoom - 1);
-                Point bigFrame = (BGSprite != null) ? new Point(BGSprite.Frames[ZoomFrame].Width, BGSprite.Frames[ZoomFrame].Height) : new Point(AlgTex.Width, AlgTex.Height);
-                if (bigFrame.X == 0) return;
-                Texture = new RenderTarget2D(GameFacade.GraphicsDevice, bigFrame.X, bigFrame.Y);
+                var bigFrame = (BGSprite != null) ? BGSprite.Frames[ZoomFrame].GetTexture(GameFacade.GraphicsDevice) : AlgTex;
+                if (bigFrame.Width == 0) return;
+                Texture = new RenderTarget2D(GameFacade.GraphicsDevice, bigFrame.Width, bigFrame.Height);
             }
             else AlgTex = null;
             Invalidated = true;

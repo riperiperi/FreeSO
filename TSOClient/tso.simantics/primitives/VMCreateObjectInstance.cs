@@ -108,7 +108,8 @@ namespace FSO.SimAntics.Engine.Primitives
 
             if (operand.Position == VMCreateObjectPosition.InSlot0OfStackObject) context.StackObject.PlaceInSlot(obj, 0, true, context.VM.Context);
             else if (operand.Position == VMCreateObjectPosition.InMyHand) context.Caller.PlaceInSlot(obj, 0, true, context.VM.Context);
-
+            else if (operand.Position == VMCreateObjectPosition.UnderneathMe && obj.Position == LotTilePos.OUT_OF_WORLD)
+                mobj.ChangePosition(context.Caller.Position, dir, context.VM.Context, Model.VMPlaceRequestFlags.AllowIntersection);
             if (operand.Position != VMCreateObjectPosition.OutOfWorld && obj.Position == LotTilePos.OUT_OF_WORLD && obj.Container == null)
             {
                 obj.Delete(true, context.VM.Context);

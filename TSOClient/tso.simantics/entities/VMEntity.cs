@@ -835,7 +835,7 @@ namespace FSO.SimAntics
         {
             if (pos == LotTilePos.OUT_OF_WORLD) return new VMPlacementResult();
             if ((((flags & VMPlaceRequestFlags.UserBuildableLimit) > 0) && context.IsUserOutOfBounds(pos)) || context.IsOutOfBounds(pos))
-                return new VMPlacementResult { Status = VMPlacementError.LocationOutOfBounds };
+                return new VMPlacementResult(VMPlacementError.LocationOutOfBounds);
 
             //TODO: speedup with exit early checks
             //TODO: corner checks (wtf uses this)
@@ -846,38 +846,39 @@ namespace FSO.SimAntics
             if (this is VMGameObject) //needs special handling for avatar eventually
             {
                 VMPlacementError wallValid = WallChangeValid(wall, direction, true);
-                if (wallValid != VMPlacementError.Success) return new VMPlacementResult { Status = wallValid };
+                if (wallValid != VMPlacementError.Success) return new VMPlacementResult(wallValid);
             }
 
-            var floor = arch.GetFloor(pos.TileX, pos.TileY, pos.Level);
+            var floor = arch.GetPreciseFloor(pos);
             VMPlacementError floorValid = FloorChangeValid(floor, pos.Level);
-            if (floorValid != VMPlacementError.Success) return new VMPlacementResult { Status = floorValid };
+            if (floorValid != VMPlacementError.Success) return new VMPlacementResult(floorValid);
 
             //we've passed the wall test, now check if we intersect any objects.
+            if ((flags & VMPlaceRequestFlags.AllowIntersection) > 0) return new VMPlacementResult(VMPlacementError.Success);
             var valid = (this is VMAvatar)? context.GetAvatarPlace(this, pos, direction) : context.GetObjPlace(this, pos, direction);
             if (valid.Object != null && ((flags & VMPlaceRequestFlags.AcceptSlots) == 0))
                 valid.Status = VMPlacementError.CantIntersectOtherObjects;
             return valid;
         }
 
-        public VMPlacementError FloorChangeValid(FloorTile floor, sbyte level)
+        public VMPlacementError FloorChangeValid(ushort floor, sbyte level)
         {
             var placeFlags = (VMPlacementFlags)ObjectData[(int)VMStackObjectVariable.PlacementFlags];
 
-            if (floor.Pattern == 65535)
+            if (floor == 65535)
             {
                 if ((placeFlags & (VMPlacementFlags.AllowOnPool | VMPlacementFlags.RequirePool)) == 0) return VMPlacementError.CantPlaceOnWater;
             }
             else
             {
                 if ((placeFlags & VMPlacementFlags.RequirePool) > 0) return VMPlacementError.MustPlaceOnPool;
-                if (floor.Pattern == 65534)
+                if (floor == 65534)
                 {
                     if ((placeFlags & (VMPlacementFlags.OnWater | VMPlacementFlags.RequireWater)) == 0) return VMPlacementError.CantPlaceOnWater;
                 } else
                 {
                     if ((placeFlags & VMPlacementFlags.RequireWater) > 0) return VMPlacementError.MustPlaceOnWater;
-                    if (floor.Pattern == 0)
+                    if (floor == 0)
                     {
                         if (level == 1)
                         {

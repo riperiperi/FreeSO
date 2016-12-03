@@ -281,6 +281,9 @@ namespace FSO.Common.Utils
                 {
                     for (int c = 0; c < 4; c++)
                     {
+                        var targy = (y / factor);
+                        var targx = (x / factor);
+                        if (targy >= newHeight || targx >= newWidth) continue;
                         int avg = 0;
                         int total = 0;
                         for (int yo = y; yo < y+factor && yo < Texture.Height; yo++)
@@ -293,8 +296,7 @@ namespace FSO.Common.Utils
                         }
 
                         avg /= total;
-                        if (avg > 0) { }
-                        target[((y/factor) * newWidth + (x/factor))*4 + c] = (byte)avg;
+                        target[(targy * newWidth + targx)*4 + c] = (byte)avg;
                     }
                 }
             }

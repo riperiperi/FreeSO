@@ -675,7 +675,7 @@ namespace FSO.SimAntics
             if (objs == null) return true;
             foreach (var obj in objs)
             {
-                if (obj.FloorChangeValid(floor, pos.Level) != VMPlacementError.Success) return false;
+                if (obj.FloorChangeValid(floor.Pattern, pos.Level) != VMPlacementError.Success) return false;
             }
             return true;
         }
@@ -877,9 +877,7 @@ namespace FSO.SimAntics
 
         public ushort GetObjectRoom(VMEntity obj)
         {
-            if (obj.Position == LotTilePos.OUT_OF_WORLD) return 0;
-            if (obj.Position.Level < 1 || obj.Position.Level > _Arch.Stories) return 0;
-            return (ushort)Architecture.Rooms[obj.Position.Level - 1].Map[obj.Position.TileX + obj.Position.TileY*_Arch.Width];
+            return GetRoomAt(obj.Position);
         }
 
         public ushort GetRoomAt(LotTilePos pos)
@@ -887,7 +885,30 @@ namespace FSO.SimAntics
             if (pos.TileX < 0 || pos.TileX >= _Arch.Width) return 0;
             else if (pos.TileY < 0 || pos.TileY >= _Arch.Height) return 0;
             else if (pos.Level < 1 || pos.Level > _Arch.Stories) return 0;
-            else return (ushort)Architecture.Rooms[pos.Level-1].Map[pos.TileX + pos.TileY * _Arch.Width];
+            else
+            {
+                uint tileRoom = Architecture.Rooms[pos.Level - 1].Map[pos.TileX + pos.TileY * _Arch.Width];
+                if ((tileRoom & 0xFFFF) != (tileRoom >> 16))
+                {
+                    var walls = _Arch.GetWall(pos.TileX, pos.TileY, pos.Level);
+
+                    if ((walls.Segments & WallSegments.VerticalDiag) > 0) 
+                    {
+                        if ((pos.x % 16) - (pos.y % 16) > 0)
+                            return (ushort)tileRoom;
+                        else
+                            return (ushort)(tileRoom >> 16);
+                    }
+                    else if ((walls.Segments & WallSegments.HorizontalDiag) > 0)
+                    {
+                        if ((pos.x % 16) + (pos.y % 16) > 15)
+                            return (ushort)(tileRoom >> 16);
+                        else
+                            return (ushort)tileRoom;
+                    }
+                }
+                return (ushort)tileRoom;
+            }
         }
 
         public short GetRoomScore(ushort room)

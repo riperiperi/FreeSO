@@ -894,7 +894,10 @@ namespace FSO.SimAntics
             var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
             var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
 
-            return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
+            var ico = FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
+
+            //todo: better dispose handling for these icons
+            return (store > 0)?TextureUtils.Decimate(ico, gd, 1<<(2-store)):ico;
         }
 
         #region VM Marshalling Functions

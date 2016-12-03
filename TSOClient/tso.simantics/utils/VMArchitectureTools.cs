@@ -103,9 +103,14 @@ namespace FSO.SimAntics.Utils
                     wall.Segments |= WLMainSeg[direction];
                     if (diagCheck)
                     {
+                        var floor = target.GetFloor((short)pos.X, (short)pos.Y, level);
                         wall.TopRightStyle = style;
                         wall.BottomLeftPattern = pattern;
                         wall.BottomRightPattern = pattern;
+                        wall.TopLeftStyle = floor.Pattern;
+                        wall.TopLeftPattern = floor.Pattern;
+                        floor.Pattern = 0;
+                        target.SetFloor((short)pos.X, (short)pos.Y, level, floor, true);
                     }
                     else if (WLMainSeg[direction] == WallSegments.TopRight)
                     {
@@ -200,7 +205,7 @@ namespace FSO.SimAntics.Utils
                 var wall = target.GetWall((short)pos.X, (short)pos.Y, level);
                 if ((wall.Segments & AnyDiag) == 0 && (!diagCheck || (wall.Segments == 0)))
                 {
-                    wall.Segments &= ~WLMainSeg[direction];
+                    wall.Segments |= WLMainSeg[direction];
                     if (!target.Context.CheckWallValid(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, level), wall)) return false;
                     if (!diagCheck)
                     {
@@ -508,7 +513,6 @@ namespace FSO.SimAntics.Utils
                 var minY = (item.Y + height - 1) % height;
 
                 var mainWalls = walls[item.X + item.Y * width];
-                var floor = target.GetFloor((short)item.X, (short)item.Y, level);
                 if ((byte)mainWalls.Segments > 15)
                 {
                     //draw floor onto a diagonal;
@@ -535,6 +539,7 @@ namespace FSO.SimAntics.Utils
                 else
                 {
                     //normal tile, draw a floor here.
+                    var floor = target.GetFloor((short)item.X, (short)item.Y, level);
                     if (floor.Pattern != pattern)
                     {
                         var old = floor.Pattern;

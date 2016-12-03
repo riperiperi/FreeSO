@@ -652,6 +652,26 @@ namespace FSO.SimAntics
             return Walls[level-1][GetOffset(tileX, tileY)];
         }
 
+        public ushort GetPreciseFloor(LotTilePos pos)
+        {
+            var wall = GetWall(pos.TileX, pos.TileY, pos.Level);
+            if ((wall.Segments & WallSegments.VerticalDiag) > 0)
+            {
+                if ((pos.x % 16) - (pos.y % 16) > 0)
+                    return wall.TopLeftStyle;
+                else
+                    return wall.TopLeftPattern;
+            }
+            else if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
+            {
+                if ((pos.x % 16) + (pos.y % 16) > 15)
+                    return wall.TopLeftStyle;
+                else
+                    return wall.TopLeftPattern;
+            }
+            return GetFloor(pos.TileX, pos.TileY, pos.Level).Pattern;
+        }
+
         public FloorTile GetFloor(short tileX, short tileY, sbyte level)
         {
             var offset = GetOffset(tileX, tileY);

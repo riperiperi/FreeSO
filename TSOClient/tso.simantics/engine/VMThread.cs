@@ -374,7 +374,7 @@ namespace FSO.SimAntics.Engine
             for (var i = 0; i < childFrame.Args.Length; i++)
             {
                 short argValue = (i > 3) ? (short)-1 : args.Arguments[i];
-                if (argValue == -1)
+                if (argValue == -1 && args.UseTemp0)
                 {
                     argValue = TempRegisters[i];
                 }

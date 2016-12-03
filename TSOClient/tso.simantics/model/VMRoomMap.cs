@@ -68,11 +68,17 @@ namespace FSO.SimAntics.Model
                         //start spreading from this side of the diagonal
                         WallSegments validSpread;
                         if ((segs & WallSegments.HorizontalDiag) > 0)
+                        {
                             validSpread = WallSegments.TopLeft | WallSegments.TopRight;
+                            ExpectedTile = wall.TopLeftStyle;
+                        }
                         else
+                        {
                             validSpread = WallSegments.TopRight | WallSegments.BottomRight;
+                            ExpectedTile = wall.TopLeftPattern;
+                        }
+
                         Map[i] |= room;
-                        ExpectedTile = wall.TopLeftPattern;
                         spread.Push(new SpreadItem(new Point(i % width, i / width), validSpread));
                         break;
                     }
@@ -81,12 +87,18 @@ namespace FSO.SimAntics.Model
                         //start spreading the other side
                         WallSegments validSpread;
                         if ((segs & WallSegments.HorizontalDiag) > 0)
+                        {
                             validSpread = WallSegments.BottomLeft | WallSegments.BottomRight;
+                            ExpectedTile = wall.TopLeftPattern;
+                        }
                         else
+                        {
                             validSpread = WallSegments.TopLeft | WallSegments.BottomLeft;
+                            ExpectedTile = wall.TopLeftStyle;
+                        }
                         Map[i] |= room << 16;
-                        ExpectedTile = wall.TopLeftStyle;
                         spread.Push(new SpreadItem(new Point(i % width, i / width), validSpread));
+                        i++;
                         break;
                     }
                     else remaining = false;
@@ -95,7 +107,6 @@ namespace FSO.SimAntics.Model
 
                 if (remaining)
                 {
-                    i++;
                     int rminX = spread.Peek().Pt.X;
                     int rmaxX = rminX;
                     int rminY = spread.Peek().Pt.Y;
@@ -174,7 +185,7 @@ namespace FSO.SimAntics.Model
                     {
                         var room = rooms[roomN];
                         room.AdjRooms.Add((ushort)rooms.Count);
-                        if (outside) room.IsOutside = true;
+                        if (outside) MakeOutside(rooms, room);
                         else if (room.IsOutside) outside = true;
                     }
 
@@ -190,6 +201,21 @@ namespace FSO.SimAntics.Model
                     });
                     outside = false;
                 }
+            }
+        }
+        public void MakeOutside(List<VMRoom> rooms, VMRoom room)
+        {
+            room.IsOutside = true;
+            var toVisit = new Queue<ushort>(room.AdjRooms);
+            while (toVisit.Count > 0)
+            {
+                var visit = toVisit.Dequeue();
+                if (visit >= rooms.Count) continue;
+                var roomElem = rooms[visit];
+                if (roomElem.IsOutside) continue;
+                roomElem.IsOutside = true;
+                foreach (var adj in roomElem.AdjRooms)
+                    toVisit.Enqueue(adj);
             }
         }
 
@@ -212,7 +238,7 @@ namespace FSO.SimAntics.Model
                 {
                     //top (bottom right pattern)
                     validSpread = WallSegments.TopLeft | WallSegments.TopRight;
-                    targFloor = wall.TopLeftPattern;
+                    targFloor = wall.TopLeftStyle;
                     targRoom = (ushort)map[index];
                     roomApply = room;
                 }
@@ -220,7 +246,7 @@ namespace FSO.SimAntics.Model
                 {
                     //bottom (bottom left pattern)
                     validSpread = WallSegments.BottomLeft | WallSegments.BottomRight;
-                    targFloor = wall.TopLeftStyle;
+                    targFloor = wall.TopLeftPattern;
                     targRoom = (ushort)(map[index] >> 16);
                     roomApply = (uint)room<<16;
                 }

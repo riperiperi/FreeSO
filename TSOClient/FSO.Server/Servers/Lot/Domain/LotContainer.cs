@@ -77,6 +77,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private VMTSOSurroundingTerrain Terrain;
         private bool JobLot;
         private ManualResetEvent LotActive = new ManualResetEvent(false);
+        private Queue<Action> LotThreadActions = new Queue<Action>();
         
         public LotContainer(IDAFactory da, LotContext context, ILotHost host, IKernel kernel, LotServerConfiguration config, IRealestateDomain realestate)
         {
@@ -592,8 +593,42 @@ namespace FSO.Server.Servers.Lot.Domain
                     SessionsToRelease.Clear();
                 }
 
+                lock (LotThreadActions)
+                {
+                    while (LotThreadActions.Count > 0)
+                    {
+                        LotThreadActions.Dequeue()();
+                    }
+                }
+
                 Thread.Sleep((int)Math.Max(0, (((lastTick + 1)*1000)/TICKRATE) - timeKeeper.ElapsedMilliseconds));
             }
+        }
+
+        public void BlockOnLotThread(Action action)
+        {
+            var evt = new AutoResetEvent(false);
+            lock (LotThreadActions)
+            {
+                LotThreadActions.Enqueue(() =>
+                {
+                    action();
+                    evt.Set();
+                });
+            }
+            evt.WaitOne();
+        }
+
+        public bool IsAvatarOnLot(uint pid)
+        {
+            //we need to check if the avatar's sim is still on the lot. their data + claim might have left, but the avatar could still be here.
+            bool result = false;
+            LotActive.WaitOne(); //wait til we're active at least
+            BlockOnLotThread(() =>
+            {
+                if (Lot != null) result = Lot.Context.ObjectQueries.AvatarsByPersist.ContainsKey(pid);
+            });
+            return result;
         }
 
         public void SaveAvatars(IEnumerable<VMAvatar> avatars, bool ignoreKill)
