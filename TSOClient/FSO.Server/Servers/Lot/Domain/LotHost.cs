@@ -454,7 +454,7 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             lock (_Visitors)
             {
-                if (_Visitors.Count >= 64 || ShuttingDown || Container.IsAvatarOnLot(session.AvatarId))
+                if (_Visitors.Count >= 64 || ShuttingDown)//|| Container.IsAvatarOnLot(session.AvatarId))
                 {
                     //cannot join
                     return false;

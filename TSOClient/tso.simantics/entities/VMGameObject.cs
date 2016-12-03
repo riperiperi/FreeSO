@@ -206,8 +206,16 @@ namespace FSO.SimAntics
         public override Direction Direction { 
             get { return _Direction; }
             set {
-                _Direction = value;
-                if (UseWorld) WorldUI.Direction = value;
+                var notches = GetValue(VMStackObjectVariable.RotationNotches);
+                if (notches > 1)
+                {
+                    var index = Array.IndexOf(DirectionNotches, value);
+                    if (index != -1)
+                        _Direction = DirectionNotches[index - (index % notches)];
+                }
+                else _Direction = value;
+
+                if (UseWorld) WorldUI.Direction = _Direction;
             }
         }
 

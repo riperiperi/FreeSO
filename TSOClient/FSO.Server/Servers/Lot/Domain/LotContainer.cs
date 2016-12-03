@@ -327,6 +327,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         private void CleanLot()
         {
+            LOG.Info("Cleaning lot with dbid = " + Context.DbId);
             var avatars = new List<VMEntity>(Lot.Entities.Where(x => x is VMAvatar && x.PersistID != 0));
             //step 1, force everyone to leave.
             foreach (var avatar in avatars)
@@ -369,7 +370,7 @@ namespace FSO.Server.Servers.Lot.Domain
             LoadAdj();
             if (!JobLot && LotPersist.ring_backup_num > -1 && AttemptLoadRing())
             {
-                
+                LOG.Info("Successfully loaded and cleaned fsov for dbid = " + Context.DbId);
             }
             else
             {

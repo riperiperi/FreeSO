@@ -132,6 +132,19 @@ namespace FSO.SimAntics
         }
 
         //positioning properties
+
+        protected static Direction[] DirectionNotches = new Direction[]
+        {
+            Direction.NORTH,
+            Direction.NORTHEAST,
+            Direction.EAST,
+            Direction.SOUTHEAST,
+            Direction.SOUTH,
+            Direction.SOUTHWEST,
+            Direction.WEST,
+            Direction.NORTHWEST
+        };
+
         public LotTilePos Position
         {
             get { return _Position; }
@@ -604,23 +617,8 @@ namespace FSO.SimAntics
                     break;
                 case VMStackObjectVariable.Direction:
                     value = (short)(((int)value + 65536) % 8);
-                    switch (value) {
-                        case 6:
-                            Direction = FSO.LotView.Model.Direction.WEST;
-                            return true;
-                        case 4:
-                            Direction = FSO.LotView.Model.Direction.SOUTH;
-                            return true;
-                        case 2:
-                            Direction = FSO.LotView.Model.Direction.EAST;
-                            return true;
-                        case 0:
-                            Direction = FSO.LotView.Model.Direction.NORTH;
-                            return true;
-                        default:
-                            return true;
-                            //throw new Exception("Diagonal Set Not Implemented!");
-                    }
+                    Direction = DirectionNotches[value];
+                    break;
                 case VMStackObjectVariable.Hidden:
                     if (UseWorld) WorldUI.Visible = value == 0;
                     break;
