@@ -41,7 +41,7 @@ namespace FSO.Client.Controllers
                 case "Success":
                     //Connect to the city with our new avatar
                     var response = (CreateASimResponse)data;
-                    GameFacade.Controller.ConnectToCity(null, response.NewAvatarId);
+                    GameFacade.Controller.ConnectToCity(null, response.NewAvatarId, null);
                     break;
             }
         }

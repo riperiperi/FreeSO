@@ -276,7 +276,7 @@ namespace FSO.Client.UI.Screens
         {
             if (this.Avatar != null)
             {
-                ((PersonSelectionController)Screen.Controller).ConnectToAvatar(Avatar);
+                ((PersonSelectionController)Screen.Controller).ConnectToAvatar(Avatar, button == HouseButton);
             }
             else
             {
@@ -336,6 +336,10 @@ namespace FSO.Client.UI.Screens
 
             var shard = Screen.LoginRegulator.Shards.All.First(x => x.Name == avatar.ShardName);
             CityNameText.Caption = shard.Name;
+
+            if (avatar.LotId.HasValue && avatar.LotName != null) {
+                HouseNameText.Caption = avatar.LotName;
+            }
 
             var cityThumb = GameFacade.GameFilePath(
                 "cities\\city_" + shard.Map + "\\thumbnail.bmp");
@@ -420,6 +424,11 @@ namespace FSO.Client.UI.Screens
             DeleteAvatarButton.Visible = !isEnter;
             PersonDescriptionText.Visible = !isEnter;
             DescriptionTabBackgroundImage.Visible = !isEnter;
+
+            var hasLot = Avatar != null && Avatar.LotId.HasValue;
+
+            HouseNameText.Visible = isEnter && hasLot;
+            HouseButton.Visible = isEnter && hasLot;
         }
 
         private void DescTabButton_OnButtonClick(UIElement button)

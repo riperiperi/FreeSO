@@ -90,10 +90,11 @@ namespace FSO.Client
         }
 
 
-        public void ConnectToCity(string cityName, uint avatarId){
+        public void ConnectToCity(string cityName, uint avatarId, uint? lotId)
+        {
             ChangeState<TransitionScreen, ConnectCityController>((view, controller) =>
             {
-                controller.Connect(cityName, avatarId, () => { GotoCity(controller.AvatarData); }, new Common.Utils.Callback(Disconnect));
+                controller.Connect(cityName, avatarId, () => { GotoCity(controller.AvatarData, lotId); }, new Common.Utils.Callback(Disconnect));
             });
         }
 
@@ -116,9 +117,14 @@ namespace FSO.Client
             });
         }
 
-        public void GotoCity(LoadAvatarByIDResponse dbAvatar){
+        public void GotoCity(LoadAvatarByIDResponse dbAvatar, uint? lotId)
+        {
             ChangeState<CoreGameScreen, CoreGameScreenController>((view, controller) =>{
                 view.VisualBudget = dbAvatar.Cash;
+
+                if (lotId.HasValue){
+                    controller.JoinLot(lotId.Value);
+                }
             });
         }
 

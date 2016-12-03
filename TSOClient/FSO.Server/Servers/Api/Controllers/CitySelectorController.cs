@@ -107,7 +107,8 @@ namespace FSO.Server.Servers.Api.Controllers
                             AppearanceType = (AvatarAppearanceType)Enum.Parse(typeof(AvatarAppearanceType), avatar.skin_tone.ToString()),
                             Description = avatar.description,
                             LotId = avatar.lot_id,
-                            LotName = avatar.lot_name
+                            LotName = avatar.lot_name,
+                            LotLocation = avatar.lot_location
                         });
                     }
                 }

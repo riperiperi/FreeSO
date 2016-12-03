@@ -290,11 +290,13 @@ namespace FSO.Server.Database.DA.Avatars
 		                 a.body,
 		                 a.description,
 		                 r.lot_id, 
-		                 l.name as lot_name
+		                 l.name as lot_name,
+                         l.location as lot_location
                 FROM fso_avatars a
                     LEFT OUTER JOIN fso_roommates r on r.avatar_id = a.avatar_id
                     LEFT OUTER JOIN fso_lots l on l.lot_id = r.lot_id
-                WHERE a.user_id = @user_id", new { user_id = user_id }).ToList();
+                WHERE a.user_id = @user_id
+                ORDER BY a.date ASC", new { user_id = user_id }).ToList();
         }
     }
 }

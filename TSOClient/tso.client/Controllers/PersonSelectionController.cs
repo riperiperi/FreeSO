@@ -23,9 +23,9 @@ namespace FSO.Client.Controllers
             this.Regulator = regulator;
         }
 
-        public void ConnectToAvatar(AvatarData avatar)
+        public void ConnectToAvatar(AvatarData avatar, bool autoJoinLot)
         {
-            GameFacade.Controller.ConnectToCity(avatar.ShardName, avatar.ID);
+            GameFacade.Controller.ConnectToCity(avatar.ShardName, avatar.ID, autoJoinLot ? avatar.LotLocation : null);
         }
 
         public void CreateAvatar()

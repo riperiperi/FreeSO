@@ -23,7 +23,8 @@ namespace FSO.Server.Protocol.CitySelector
         public string Description { get; set; }
 
         /** Lot **/
-        public int? LotId { get; set; }
+        public uint? LotId { get; set; }
+        public uint? LotLocation { get; set; }
         public string LotName { get; set; }
 
         #region IXMLPrinter Members
@@ -40,9 +41,10 @@ namespace FSO.Server.Protocol.CitySelector
             result.AppendTextNode("Body", BodyOutfitID.ToString());
             result.AppendTextNode("Appearance", AppearanceType.ToString());
 
-            if (LotId.HasValue){
+            if (LotId.HasValue && LotLocation.HasValue && LotName != null){
                 result.AppendTextNode("LotId", LotId.Value.ToString());
                 result.AppendTextNode("LotName", LotName);
+                result.AppendTextNode("LotLocation", LotLocation.Value.ToString());
             }
 
             result.AppendTextNode("Description", Description);
@@ -77,7 +79,13 @@ namespace FSO.Server.Protocol.CitySelector
             var lotId = element.ReadTextNode("LotId");
             if(lotId != null)
             {
-                this.LotId = int.Parse(lotId);
+                this.LotId = uint.Parse(lotId);
+            }
+
+            var lotLocation = element.ReadTextNode("LotLocation");
+            if (lotLocation != null)
+            {
+                this.LotLocation = uint.Parse(lotLocation);
             }
 
             LotName = element.ReadTextNode("LotName");

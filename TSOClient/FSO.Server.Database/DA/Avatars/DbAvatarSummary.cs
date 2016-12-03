@@ -21,7 +21,8 @@ namespace FSO.Server.Database.DA.Avatars
         public string description { get; set; }
         
         //fso_lots
-        public int? lot_id { get; set; }
+        public uint? lot_id { get; set; }
+        public uint? lot_location { get; set; }
         public string lot_name { get; set; }
     }
 }
