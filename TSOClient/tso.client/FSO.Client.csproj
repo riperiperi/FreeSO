@@ -75,6 +75,7 @@
     <Compile Include="Controllers\TerrainController.cs" />
     <Compile Include="GameContent\UIFileIDs.cs" />
     <Compile Include="Model\UserReference.cs" />
+    <Compile Include="GameContent\CacheModule.cs" />
     <Compile Include="Network\ClientDataService.cs" />
     <Compile Include="Network\IClientDataService.cs" />
     <Compile Include="Network\Topics.cs" />

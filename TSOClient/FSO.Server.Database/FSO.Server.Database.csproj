@@ -87,6 +87,7 @@
     <Compile Include="DA\AvatarClaims\IAvatarClaims.cs" />
     <Compile Include="DA\AvatarClaims\SqlAvatarClaims.cs" />
     <Compile Include="DA\Avatars\DbAvatar.cs" />
+    <Compile Include="DA\Avatars\DbAvatarSummary.cs" />
     <Compile Include="DA\Avatars\DbJobLevel.cs" />
     <Compile Include="DA\Avatars\IAvatars.cs" />
     <Compile Include="DA\Avatars\SqlAvatars.cs" />

@@ -185,6 +185,9 @@
     <Compile Include="Utils\AssemblyUtils.cs" />
     <Compile Include="Utils\Base64JsonConverter.cs" />
     <Compile Include="Utils\Binding.cs" />
+    <Compile Include="Utils\Cache\CacheKey.cs" />
+    <Compile Include="Utils\Cache\FileSystemCache.cs" />
+    <Compile Include="Utils\Cache\ICache.cs" />
     <Compile Include="Utils\Callback.cs" />
     <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\CurLoader.cs" />

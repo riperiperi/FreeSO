@@ -65,7 +65,8 @@ namespace FSO.Client
         {
             var kernel = new StandardKernel(
                 new RegulatorsModule(),
-                new NetworkModule()
+                new NetworkModule(),
+                new CacheModule()
             );
             GameFacade.Kernel = kernel;
 

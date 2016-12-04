@@ -125,7 +125,14 @@ namespace FSO.Client.UI.Controls
                         }
 
                         var y = 0;
-                        for(int i=0; i < _WrappedOutput.Lines.Count; i++)
+                        if((Alignment & TextAlignment.Middle) == TextAlignment.Middle)
+                        {
+                            y = (m_Size.Height - _WrappedOutput.Height) / 2;
+                        }else if((Alignment & TextAlignment.Bottom) == TextAlignment.Bottom){
+                            y = m_Size.Height - _WrappedOutput.Height;
+                        }
+
+                        for (int i=0; i < _WrappedOutput.Lines.Count; i++)
                         {
                             var line = _WrappedOutput.Lines[i];
                             var rect = new Rectangle(0, 0, m_Size.Width, CaptionStyle.LineHeight);
