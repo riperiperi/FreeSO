@@ -18,6 +18,11 @@ namespace FSO.Content
         private int Completed;
         private GraphicsDevice Graphics;
 
+        public void Add(IContentReference reference)
+        {
+            Pending.Add(reference);
+        }
+
         public void Add(IEnumerable<IContentReference> reference)
         {
             Pending.AddRange(reference);

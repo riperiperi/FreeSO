@@ -28,6 +28,14 @@ namespace FSO.Server.Domain
             }
         }
 
+        public int? CurrentShard
+        {
+            get
+            {
+                throw new Exception("CurrentShard not avaliable in server domain");
+            }
+        }
+
         private void Poll()
         {
             using (var db = _DbFactory.Get())

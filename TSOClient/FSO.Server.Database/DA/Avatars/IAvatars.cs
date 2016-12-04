@@ -15,7 +15,9 @@ namespace FSO.Server.Database.DA.Avatars
         DbJobLevel GetCurrentJobLevel(uint avatar_id);
         List<DbJobLevel> GetJobLevels(uint avatar_id);
         IEnumerable<DbAvatar> All(int shard_id);
+
         List<DbAvatar> GetByUserId(uint user_id);
+        List<DbAvatarSummary> GetSummaryByUserId(uint user_id);
 
         int GetOtherLocks(uint avatar_id, string except);
 

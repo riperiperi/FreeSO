@@ -95,7 +95,7 @@ namespace FSO.Server.Servers.Api.Controllers
 
                 using (var db = DAFactory.Get())
                 {
-                    var avatars = db.Avatars.GetByUserId(user.UserID);
+                    var avatars = db.Avatars.GetSummaryByUserId(user.UserID);
 
                     foreach(var avatar in avatars){
                         result.Add(new AvatarData {
@@ -105,7 +105,10 @@ namespace FSO.Server.Servers.Api.Controllers
                             HeadOutfitID = avatar.head,
                             BodyOutfitID = avatar.body,
                             AppearanceType = (AvatarAppearanceType)Enum.Parse(typeof(AvatarAppearanceType), avatar.skin_tone.ToString()),
-                            Description = avatar.description
+                            Description = avatar.description,
+                            LotId = avatar.lot_id,
+                            LotName = avatar.lot_name,
+                            LotLocation = avatar.lot_location
                         });
                     }
                 }

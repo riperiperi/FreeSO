@@ -25,6 +25,8 @@ using FSO.Client.Controllers;
 using FSO.HIT;
 using FSO.Client.UI.Model;
 using FSO.Common;
+using FSO.Common.Utils.Cache;
+using FSO.Common.Domain.Shards;
 
 namespace FSO.Client.UI.Screens
 {
@@ -48,10 +50,13 @@ namespace FSO.Client.UI.Screens
 
         public LoginRegulator LoginRegulator;
 
-        public PersonSelection(LoginRegulator loginRegulator) : base()
+        private ICache Cache;
+
+        public PersonSelection(LoginRegulator loginRegulator, ICache cache) : base()
         {
             //Arrange UI
             this.LoginRegulator = loginRegulator;
+            this.Cache = cache;
             
             UIScript ui = null;
             if (GlobalSettings.Default.ScaleUI)
@@ -154,6 +159,26 @@ namespace FSO.Client.UI.Screens
             HITVM.Get().PlaySoundEvent(UIMusic.SAS);
         }
 
+        public Texture2D GetLotThumbnail(string shardName, uint lotId)
+        {
+            var shard = LoginRegulator.Shards.GetByName(shardName);
+            var shardKey = CacheKey.For("shards", shard.Id);
+            var thumbKey = CacheKey.Combine(shardKey, "lot_thumbs", lotId);
+
+            if (Cache.ContainsKey(thumbKey))
+            {
+                var thumbData = Cache.Get<byte[]>(thumbKey).Result;
+                var thumb = ImageLoader.FromStream(GameFacade.GraphicsDevice, new MemoryStream(thumbData));
+                return thumb;
+            }
+            else
+            {
+                var thumb = TextureUtils.TextureFromFile(GameFacade.GraphicsDevice, GameFacade.GameFilePath("userdata/houses/defaulthouse.bmp"));
+                TextureUtils.ManualTextureMask(ref thumb, new uint[] { 0xFF000000 });
+                return thumb;
+            }
+        }
+
         /// <summary>
         /// Device was reset, SceneManager called Content.Unload(), so reload everything.
         /// </summary>
@@ -220,6 +245,7 @@ namespace FSO.Client.UI.Screens
         private PersonSelection Screen { get; set; }
         public AvatarData Avatar;
         private UIImage CityThumb { get; set; }
+        private UIImage HouseThumb { get; set; }
 
         private UISim Sim;
 
@@ -259,6 +285,15 @@ namespace FSO.Client.UI.Screens
             CityThumb.SetSize(78, 58);
             Screen.Add(CityThumb);
 
+
+            HouseThumb = new UIImage
+            {
+                X = HouseButton.X + 6,
+                Y = HouseButton.Y + 6
+            };
+            HouseThumb.SetSize(78, 58);
+            Screen.Add(HouseThumb);
+
             Sim = new UISim();
             Sim.Visible = false;
             Sim.Position = AvatarButton.Position + new Vector2(1, 10);
@@ -276,7 +311,7 @@ namespace FSO.Client.UI.Screens
         {
             if (this.Avatar != null)
             {
-                ((PersonSelectionController)Screen.Controller).ConnectToAvatar(Avatar);
+                ((PersonSelectionController)Screen.Controller).ConnectToAvatar(Avatar, button == HouseButton);
             }
             else
             {
@@ -336,6 +371,11 @@ namespace FSO.Client.UI.Screens
 
             var shard = Screen.LoginRegulator.Shards.All.First(x => x.Name == avatar.ShardName);
             CityNameText.Caption = shard.Name;
+
+            if (avatar.LotId.HasValue && avatar.LotName != null) {
+                HouseNameText.Caption = avatar.LotName;
+                HouseThumb.Texture = Screen.GetLotThumbnail(avatar.ShardName, avatar.LotLocation.Value);
+            }
 
             var cityThumb = GameFacade.GameFilePath(
                 "cities\\city_" + shard.Map + "\\thumbnail.bmp");
@@ -420,6 +460,11 @@ namespace FSO.Client.UI.Screens
             DeleteAvatarButton.Visible = !isEnter;
             PersonDescriptionText.Visible = !isEnter;
             DescriptionTabBackgroundImage.Visible = !isEnter;
+
+            var hasLot = Avatar != null && Avatar.LotId.HasValue;
+
+            HouseNameText.Visible = isEnter && hasLot;
+            HouseButton.Visible = isEnter && hasLot;
         }
 
         private void DescTabButton_OnButtonClick(UIElement button)

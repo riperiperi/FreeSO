@@ -9,6 +9,8 @@ namespace FSO.Common.Domain.Shards
 {
     public class ClientShards : IShardsDomain
     {
+        public int? CurrentShard { get; set; }
+
         public List<ShardStatusItem> All
         {
             get; set;

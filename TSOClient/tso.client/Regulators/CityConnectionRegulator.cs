@@ -5,6 +5,7 @@ using FSO.Client.Utils;
 using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService;
+using FSO.Common.Domain.Shards;
 using FSO.Common.Utils;
 using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
@@ -32,14 +33,16 @@ namespace FSO.Client.Regulators
         public ShardSelectorServletRequest CurrentShard;
         private IDatabaseService DB;
         private IClientDataService DataService;
+        private IShardsDomain Shards;
 
-        public CityConnectionRegulator(CityClient cityApi, [Named("City")] AriesClient cityClient, IDatabaseService db, IClientDataService ds, IKernel kernel)
+        public CityConnectionRegulator(CityClient cityApi, [Named("City")] AriesClient cityClient, IDatabaseService db, IClientDataService ds, IKernel kernel, IShardsDomain shards)
         {
             this.CityApi = cityApi;
             this.Client = cityClient;
             this.Client.AddSubscriber(this);
             this.DB = db;
             this.DataService = ds;
+            this.Shards = shards;
 
             AddState("Disconnected")
                 .Default()
@@ -192,6 +195,8 @@ namespace FSO.Client.Regulators
                     break;
 
                 case "HostOnline":
+                    ((ClientShards)Shards).CurrentShard = Shards.GetByName(CurrentShard.ShardName).Id;
+                    
                     Client.Write(
                         new ClientOnlinePDU {
                         },
@@ -293,6 +298,9 @@ namespace FSO.Client.Regulators
                     break;
                 case "Reconnecting":
                     AsyncProcessMessage(CurrentShard);
+                    break;
+                case "Disconnected":
+                    ((ClientShards)Shards).CurrentShard = null;
                     break;
             }
         }
