@@ -1,4 +1,5 @@
-﻿using FSO.Server.Clients;
+﻿using FSO.Common.DataService;
+using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
 using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.CitySelector;
@@ -22,14 +23,17 @@ namespace FSO.Client.Regulators
         private bool IsDisconnecting = true;
 
         private FindLotResponse FindLotResponse;
+        private IClientDataService DataService;
 
-        public LotConnectionRegulator([Named("City")] AriesClient cityClient, [Named("Lot")] AriesClient lotClient)
+        public LotConnectionRegulator([Named("City")] AriesClient cityClient, [Named("Lot")] AriesClient lotClient, IClientDataService dataService)
         {
             this.City = cityClient;
             this.City.AddSubscriber(this);
 
             this.Client = lotClient;
             this.Client.AddSubscriber(this);
+
+            this.DataService = dataService;
 
             City.AddSubscriber(this);
 
@@ -137,6 +141,9 @@ namespace FSO.Client.Regulators
                     );
                     
                     AsyncTransition("PartiallyConnected");
+
+                    //When we join a property, get the lot info to update the thumbnail cache
+                    DataService.Request(Server.DataService.Model.MaskedStruct.PropertyPage_LotInfo, LotId);
                     break;
                 case "UnexpectedDisconnect":
                     IsDisconnecting = true;
@@ -148,6 +155,9 @@ namespace FSO.Client.Regulators
                     {
                         Client.Write(new ClientByePDU());
                         Client.Disconnect();
+
+                        //When we leave a property, get the lot info to update the thumbnail cache
+                        DataService.Request(Server.DataService.Model.MaskedStruct.PropertyPage_LotInfo, LotId);
                     }
                     else
                     {
