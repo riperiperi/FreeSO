@@ -44,7 +44,7 @@ namespace FSO.SimAntics
 
         public VMEntityRTTI RTTI;
         public bool GhostImage;
-        public VMMultitileGroup GhostOriginal; //Ignore collisions/slots from any of these objects.
+        public VMMultitileGroup IgnoreIntersection; //Ignore collisions/slots from any of these objects.
 
         //own properties (for instance)
         public short ObjectID;

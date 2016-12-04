@@ -747,7 +747,7 @@ namespace FSO.SimAntics
             var perpIncrease = new Vector2[]
             {
                 new Vector2(0, -1), //bottom left road side
-                new Vector2(1, 0),
+                new Vector2(-1, 0),
                 new Vector2(0, -1),
                 new Vector2(-1, 0)
             };
@@ -831,7 +831,7 @@ namespace FSO.SimAntics
             foreach (var obj in objs)
             {
                 if (obj.MultitileGroup == target.MultitileGroup || (obj is VMAvatar && allowAvatars) 
-                    || (target.GhostImage && target.GhostOriginal != null && target.GhostOriginal.Objects.Contains(obj))) continue;
+                    || (target.GhostImage && target.IgnoreIntersection != null && target.IgnoreIntersection.Objects.Contains(obj))) continue;
                 var oFoot = obj.Footprint;
 
                 if (oFoot != null && oFoot.Intersects(footprint)
@@ -925,7 +925,7 @@ namespace FSO.SimAntics
             {
                 newGroup.Price = group.Price;
                 for (int i=0; i < Math.Min(newGroup.Objects.Count, group.Objects.Count); i++) {
-                    newGroup.Objects[i].GhostOriginal = group;
+                    newGroup.Objects[i].IgnoreIntersection = group;
                     newGroup.Objects[i].SetValue(VMStackObjectVariable.Graphic, group.Objects[i].GetValue(VMStackObjectVariable.Graphic));
                     newGroup.Objects[i].DynamicSpriteFlags = group.Objects[i].DynamicSpriteFlags;
                     newGroup.Objects[i].DynamicSpriteFlags2 = group.Objects[i].DynamicSpriteFlags2;
@@ -957,6 +957,20 @@ namespace FSO.SimAntics
             {
                 return null;
             }
+
+            var catalog = Content.Content.Get().WorldCatalog;
+            var item = catalog.GetItemByGUID(GUID);
+
+            int salePrice = 0;
+            if (item != null) salePrice = (int)item.Value.Price;
+            var limit = objDefinition.OBJ.DepreciationLimit;
+            if (salePrice > limit) //only try to deprecate if we're above the limit. Prevents objects with a limit above their price being money fountains.
+            {
+                salePrice -= objDefinition.OBJ.InitialDepreciation;
+                if (salePrice < limit) salePrice = limit;
+            }
+
+            group.Price = (int)salePrice;
 
             var master = objDefinition.OBJ.MasterID;
             if (master != 0 && objDefinition.OBJ.SubIndex == -1)
