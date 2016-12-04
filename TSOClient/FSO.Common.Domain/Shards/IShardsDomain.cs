@@ -12,5 +12,6 @@ namespace FSO.Common.Domain.Shards
         List<ShardStatusItem> All { get; }
         ShardStatusItem GetById(int id);
         ShardStatusItem GetByName(string name);
+        int? CurrentShard { get; }
     }
 }

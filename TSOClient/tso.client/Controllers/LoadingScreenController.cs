@@ -1,4 +1,6 @@
 ﻿using FSO.Client.UI.Screens;
+using FSO.Common.Content;
+using FSO.Common.Utils.Cache;
 using FSO.Content;
 using System;
 using System.Collections.Generic;
@@ -12,9 +14,13 @@ namespace FSO.Client.Controllers
     {
         public ContentPreloader Loader;
 
-        public LoadingScreenController(LoadingScreen view, Content.Content content)
+        public LoadingScreenController(LoadingScreen view, Content.Content content, ICache cache)
         {
             Loader = new ContentPreloader();
+
+            /** Init cache **/
+            Loader.Add(new CacheInit((FileSystemCache)cache));
+
             /** UI Textures **/
             Loader.Add(content.UIGraphics.List());
             /** Sim stuff **/
@@ -27,6 +33,25 @@ namespace FSO.Client.Controllers
         public void Preload()
         {
             Loader.Preload(GameFacade.GraphicsDevice);
+        }
+    }
+
+    /// <summary>
+    /// Not really content, but allows us to keep the loading UI going until init is done
+    /// </summary>
+    public class CacheInit : IContentReference
+    {
+        private FileSystemCache Cache;
+
+        public CacheInit(FileSystemCache cache)
+        {
+            this.Cache = cache;
+        }
+
+        public object GetGeneric()
+        {
+            Cache.Init();
+            return Cache;
         }
     }
 }
