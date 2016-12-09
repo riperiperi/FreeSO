@@ -28,6 +28,7 @@ namespace FSO.SimAntics.Primitives
             if (fwav == null) fwav = context.VM.Context.Globals.Resource.Get<FWAV>(operand.EventID);
 
             var owner = (operand.StackObjAsSource) ? context.StackObject : context.Caller;
+            if (owner == null) return VMPrimitiveExitCode.GOTO_TRUE;
             if (fwav != null && owner.SoundThreads.FirstOrDefault(x => x.Name == fwav.Name) == null)
             {
                 var thread = HITVM.Get().PlaySoundEvent(fwav.Name);

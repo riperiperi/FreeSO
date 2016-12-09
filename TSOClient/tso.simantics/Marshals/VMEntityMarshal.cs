@@ -40,6 +40,8 @@ namespace FSO.SimAntics.Marshals
         public ulong DynamicSpriteFlags2;
         public LotTilePos Position;
 
+        public uint TimestampLockoutCount;
+
         public int Version;
 
         public VMEntityMarshal() { }
@@ -108,6 +110,11 @@ namespace FSO.SimAntics.Marshals
             if (Version > 2) DynamicSpriteFlags2 = reader.ReadUInt64();
             Position = new LotTilePos();
             Position.Deserialize(reader);
+
+            if (Version > 16)
+            {
+                TimestampLockoutCount = reader.ReadUInt32();
+            }
         }
 
         public virtual void SerializeInto(BinaryWriter writer)
@@ -148,6 +155,8 @@ namespace FSO.SimAntics.Marshals
             writer.Write(DynamicSpriteFlags); /** Used to show/hide dynamic sprites **/
             writer.Write(DynamicSpriteFlags2);
             Position.SerializeInto(writer);
+
+            writer.Write(TimestampLockoutCount);
         }
     }
 

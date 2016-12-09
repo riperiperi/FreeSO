@@ -67,6 +67,11 @@ namespace FSO.SimAntics.Engine
         // the thread resets, and a SimAntics Error pops up.
         public int TicksThisFrame = 0;
         // the maximum number of primitives a thread can execute in one frame. Tweak appropriately.
+
+        // variables for internal scheduler
+        public uint ScheduleIdleStart; // keep track of tick when we started idling for an object. must be synced!
+        public uint ScheduleIdleEnd;
+
         public static readonly int MAX_LOOP_COUNT = 500000;
 
         public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMStackFrame initFrame)
@@ -96,6 +101,7 @@ namespace FSO.SimAntics.Engine
                 temp.Tick();
                 temp.ThreadBreak = VMThreadBreakMode.Active; //cannot breakpoint in check trees
             }
+            if (temp.DialogCooldown > 0) { }
             return (temp.DialogCooldown > 0) ? VMPrimitiveExitCode.ERROR : temp.LastStackExitCode;
         }
 
@@ -447,6 +453,11 @@ namespace FSO.SimAntics.Engine
             {
                 // Don't advance the instruction pointer, this primitive isnt finished yet
                 case VMPrimitiveExitCode.CONTINUE_NEXT_TICK:
+                    ScheduleIdleStart = Context.VM.Scheduler.CurrentTickID;
+                    Context.VM.Scheduler.ScheduleTickIn(Entity, 1);
+                    ContinueExecution = false;
+                    break;
+                case VMPrimitiveExitCode.CONTINUE_FUTURE_TICK:
                     ContinueExecution = false;
                     break;
                 case VMPrimitiveExitCode.ERROR:
@@ -497,6 +508,15 @@ namespace FSO.SimAntics.Engine
                 case 254:
                     Pop(VMPrimitiveExitCode.RETURN_TRUE); break;
                 case 253:
+                    //attempt to continue along only path available. 
+                    if (frame.GetCurrentInstruction().TruePointer != 253)
+                    {
+                        MoveToInstruction(frame, frame.GetCurrentInstruction().TruePointer, continueExecution); return;
+                    }
+                    else if (frame.GetCurrentInstruction().FalsePointer != 253)
+                    {
+                        MoveToInstruction(frame, frame.GetCurrentInstruction().FalsePointer, continueExecution); return;
+                    }
                     Pop(VMPrimitiveExitCode.ERROR); break;
                 default:
                     frame.InstructionPointer = instruction;
@@ -800,7 +820,8 @@ namespace FSO.SimAntics.Engine
                 Interrupt = Interrupt,
 
                 ActionUID = ActionUID,
-                DialogCooldown = DialogCooldown
+                DialogCooldown = DialogCooldown,
+                ScheduleIdleStart = ScheduleIdleStart
             };
         }
 
@@ -824,6 +845,7 @@ namespace FSO.SimAntics.Engine
             Interrupt = input.Interrupt;
             ActionUID = input.ActionUID;
             DialogCooldown = input.DialogCooldown;
+            ScheduleIdleStart = input.ScheduleIdleStart;
         }
 
         public VMThread(VMThreadMarshal input, VMContext context, VMEntity entity)

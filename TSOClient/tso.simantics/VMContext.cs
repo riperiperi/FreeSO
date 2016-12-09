@@ -831,7 +831,7 @@ namespace FSO.SimAntics
             foreach (var obj in objs)
             {
                 if (obj.MultitileGroup == target.MultitileGroup || (obj is VMAvatar && allowAvatars) 
-                    || (target.GhostImage && target.IgnoreIntersection != null && target.IgnoreIntersection.Objects.Contains(obj))) continue;
+                    || (target.IgnoreIntersection != null && target.IgnoreIntersection.Objects.Contains(obj))) continue;
                 var oFoot = obj.Footprint;
 
                 if (oFoot != null && oFoot.Intersects(footprint)

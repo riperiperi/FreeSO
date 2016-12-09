@@ -67,7 +67,7 @@ namespace FSO.SimAntics.NetPlay
 #if VM_DESYNC_DEBUG
                 vm.Trace.NewTick(tick.TickID);
 #endif
-                vm.InternalTick();
+                vm.InternalTick(tick.TickID);
                 if (DesyncCooldown > 0) DesyncCooldown--;
             }
             LastTick = tick.TickID;
