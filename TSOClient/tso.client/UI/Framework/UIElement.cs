@@ -1094,6 +1094,25 @@ namespace FSO.Client.UI.Framework
             return default(T);
         }
 
+
+        private Dictionary<string, UIDebounce> _Debounces;
+
+        public void Debounce(string id, Callback callback)
+        {
+            Debounce(id, UIDebounce.DEFAULT_TIMEOUT, callback);
+        }
+
+        public void Debounce(string id, int timeout, Callback callback)
+        {
+            if (_Debounces == null) { _Debounces = new Dictionary<string, UIDebounce>(); }
+
+            if (!_Debounces.ContainsKey(id)){
+                _Debounces.Add(id, new UIDebounce(timeout));
+            }
+
+            _Debounces[id].Invoke(callback);
+        }
+
     }
 
 }

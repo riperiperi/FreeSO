@@ -95,6 +95,7 @@
     <Compile Include="UI\Controls\UIValidationMessages.cs" />
     <Compile Include="UI\Framework\DoubleClick.cs" />
     <Compile Include="UI\Framework\IUIAutoSize.cs" />
+    <Compile Include="UI\Framework\UIDebounce.cs" />
     <Compile Include="UI\Panels\EODs\UIDebugEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDresserEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIPaperChaseEOD.cs" />
