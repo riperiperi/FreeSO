@@ -174,5 +174,16 @@ namespace FSO.SimAntics.NetPlay.EODs
             };
             vm.ForwardCommand(cmd);
         }
+
+        public void Send(string evt, VMSerializable body)
+        {
+            using(var stream = new MemoryStream())
+            {
+                var writer = new BinaryWriter(stream);
+                body.SerializeInto(writer);
+                stream.Seek(0, SeekOrigin.Begin);
+                Send(evt, stream.ToArray()); 
+            }
+        }
     }
 }
