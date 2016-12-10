@@ -111,7 +111,7 @@ namespace FSO.Client.UI.Panels.EODs
             ScoreTextEntryRHS.MaxChars = 3;
 
             ScoreTextEntryLHS.OnChange += x => Debounce("lhs", () => SetScore(VMEODScoreboardTeam.LHS, ScoreTextEntryLHS.CurrentText));
-            ScoreTextEntryRHS.OnChange += x => Debounce("rhs", () => SetScore(VMEODScoreboardTeam.LHS, ScoreTextEntryLHS.CurrentText));
+            ScoreTextEntryRHS.OnChange += x => Debounce("rhs", () => SetScore(VMEODScoreboardTeam.RHS, ScoreTextEntryRHS.CurrentText));
         }
 
         private void SetScore(VMEODScoreboardTeam team, string text)
