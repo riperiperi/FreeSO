@@ -46,7 +46,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public BanList SandboxBans;
 
-        private uint TickID = 0;
+        private uint TickID = 1;
 
         public VMServerDriver(IVMTSOGlobalLink globalLink)
         {

@@ -72,7 +72,7 @@ namespace FSO.Common.DataService
 
             //TODO: Add timeouts
             var result = new PendingDataRequest(messageId, this, Get(mask, id));
-            PendingCallbacks.Add(messageId, result);
+            lock (PendingCallbacks) PendingCallbacks.Add(messageId, result);
             return result.Task;
         }
 

@@ -375,6 +375,9 @@ namespace FSO.Client.UI.Screens
             if (avatar.LotId.HasValue && avatar.LotName != null) {
                 HouseNameText.Caption = avatar.LotName;
                 HouseThumb.Texture = Screen.GetLotThumbnail(avatar.ShardName, avatar.LotLocation.Value);
+                HouseThumb.Y += HouseThumb.Size.Y / 2;
+                HouseThumb.SetSize(HouseThumb.Size.X, (int)(HouseThumb.Size.X * ((double)HouseThumb.Texture.Height / HouseThumb.Texture.Width)));
+                HouseThumb.Y -= HouseThumb.Size.Y / 2;
             }
 
             var cityThumb = GameFacade.GameFilePath(
@@ -452,6 +455,7 @@ namespace FSO.Client.UI.Screens
             CityButton.Visible = isEnter;
             EnterTabBackgroundImage.Visible = isEnter;
             CityThumb.Visible = isEnter;
+            HouseThumb.Visible = isEnter;
 
             PersonDescriptionScrollUpButton.Visible = !isEnter;
             PersonDescriptionScrollDownButton.Visible = !isEnter;

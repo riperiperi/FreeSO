@@ -91,6 +91,7 @@
     <Compile Include="Engine\VMPrimitiveHandler.cs" />
     <Compile Include="Engine\VMPrimitiveOperand.cs" />
     <Compile Include="Engine\VMQueuedAction.cs" />
+    <Compile Include="Engine\VMScheduler.cs" />
     <Compile Include="Engine\VMSimanticsException.cs" />
     <Compile Include="Engine\VMSlotParser.cs" />
     <Compile Include="Engine\VMSuitProvider.cs" />
@@ -269,6 +270,7 @@
     <Compile Include="Primitives\VMTransferFunds.cs" />
     <Compile Include="Utils\TimePropertyListItemSorter.cs" />
     <Compile Include="Utils\VMArchitectureTools.cs" />
+    <Compile Include="Utils\VMLotRotate.cs" />
     <Compile Include="Utils\VMLotTerrainRestoreTools.cs" />
     <Compile Include="Utils\VMWorldActivator.cs" />
     <Compile Include="Utils\VMWorldExporter.cs" />

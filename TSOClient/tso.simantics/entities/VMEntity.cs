@@ -44,7 +44,7 @@ namespace FSO.SimAntics
 
         public VMEntityRTTI RTTI;
         public bool GhostImage;
-        public VMMultitileGroup GhostOriginal; //Ignore collisions/slots from any of these objects.
+        public VMMultitileGroup IgnoreIntersection; //Ignore collisions/slots from any of these objects.
 
         //own properties (for instance)
         public short ObjectID;
@@ -108,6 +108,8 @@ namespace FSO.SimAntics
         private LotTilePos _Position = new LotTilePos(LotTilePos.OUT_OF_WORLD);
         public EntityComponent WorldUI;
 
+        public uint TimestampLockoutCount = 0;
+
         //inferred properties (from object resource)
         public GameGlobalResource SemiGlobal;
         public TTAB TreeTable;
@@ -132,6 +134,19 @@ namespace FSO.SimAntics
         }
 
         //positioning properties
+
+        protected static Direction[] DirectionNotches = new Direction[]
+        {
+            Direction.NORTH,
+            Direction.NORTHEAST,
+            Direction.EAST,
+            Direction.SOUTHEAST,
+            Direction.SOUTH,
+            Direction.SOUTHWEST,
+            Direction.WEST,
+            Direction.NORTHWEST
+        };
+
         public LotTilePos Position
         {
             get { return _Position; }
@@ -244,12 +259,15 @@ namespace FSO.SimAntics
 
         public virtual void Tick()
         {
-            //decrement lockout count
-
             if (Thread != null)
             {
+                Thread.ScheduleIdleEnd = 0;
                 Thread.TicksThisFrame = 0;
                 Thread.Tick();
+                if (Thread.ScheduleIdleEnd == 0 && !Dead)
+                {
+                    Thread.Context.VM.Scheduler.ScheduleTickIn(this, 1);
+                }
                 if (SoundThreads.Count > 0) TickSounds();
             }
             if (Headline != null)
@@ -270,7 +288,6 @@ namespace FSO.SimAntics
             {
                 WorldUI.Headline = null;
             }
-            if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
         }
 
         public void TickSounds()
@@ -333,6 +350,11 @@ namespace FSO.SimAntics
             return result;
         }
 
+        public bool RunEveryFrame()
+        {
+            return (this is VMAvatar || (Headline != null) || (SoundThreads.Count > 0) || ((VMGameObject)this).Disabled > 0);
+        }
+
         public OBJfFunctionEntry[] GenerateFunctionTable(OBJD obj)
         {
             OBJfFunctionEntry[] result = new OBJfFunctionEntry[33];
@@ -377,7 +399,11 @@ namespace FSO.SimAntics
         public virtual void Init(VMContext context)
         {
             FetchTreeByName(context);
-            if (!GhostImage) this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
+            if (!GhostImage)
+            {
+                this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
+                context.VM.Scheduler.ScheduleTickIn(this, 1);
+            }
 
             ExecuteEntryPoint(0, context, true); //Init
 
@@ -418,6 +444,9 @@ namespace FSO.SimAntics
 
             if (EntryPoints[3].ActionFunction != 0) ExecuteEntryPoint(3, context, true); //Reset
             if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
+
+            context.VM.Scheduler.DescheduleTick(this);
+            context.VM.Scheduler.ScheduleTickIn(this, 1);
         }
 
         public void FetchTreeByName(VMContext context)
@@ -589,6 +618,9 @@ namespace FSO.SimAntics
                     return (short)TotalSlots();
                 case VMStackObjectVariable.UseCount:
                     return (short)((Thread == null)?0:GetUsers(Thread.Context, null).Count);
+                case VMStackObjectVariable.LockoutCount:
+                    var count = ObjectData[(short)var];
+                    return (short)((Thread == null) ? count : Math.Max((long)count - (Thread.Context.VM.Scheduler.CurrentTickID - TimestampLockoutCount), 0));
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
@@ -604,25 +636,13 @@ namespace FSO.SimAntics
                     break;
                 case VMStackObjectVariable.Direction:
                     value = (short)(((int)value + 65536) % 8);
-                    switch (value) {
-                        case 6:
-                            Direction = FSO.LotView.Model.Direction.WEST;
-                            return true;
-                        case 4:
-                            Direction = FSO.LotView.Model.Direction.SOUTH;
-                            return true;
-                        case 2:
-                            Direction = FSO.LotView.Model.Direction.EAST;
-                            return true;
-                        case 0:
-                            Direction = FSO.LotView.Model.Direction.NORTH;
-                            return true;
-                        default:
-                            return true;
-                            //throw new Exception("Diagonal Set Not Implemented!");
-                    }
+                    Direction = DirectionNotches[value];
+                    break;
                 case VMStackObjectVariable.Hidden:
                     if (UseWorld) WorldUI.Visible = value == 0;
+                    break;
+                case VMStackObjectVariable.LockoutCount:
+                    if (Thread != null) TimestampLockoutCount = Thread.Context.VM.Scheduler.CurrentTickID;
                     break;
             }
 
@@ -1140,6 +1160,7 @@ namespace FSO.SimAntics
             target.DynamicSpriteFlags = DynamicSpriteFlags;
             target.DynamicSpriteFlags2 = DynamicSpriteFlags2;
             target.Position = _Position;
+            target.TimestampLockoutCount = TimestampLockoutCount;
         }
 
         public virtual void Load(VMEntityMarshal input)
@@ -1173,6 +1194,8 @@ namespace FSO.SimAntics
             DynamicSpriteFlags = input.DynamicSpriteFlags;
             DynamicSpriteFlags2 = input.DynamicSpriteFlags2;
             Position = input.Position;
+
+            TimestampLockoutCount = input.TimestampLockoutCount;
 
             if (UseWorld) WorldUI.Visible = GetValue(VMStackObjectVariable.Hidden) == 0;
         }

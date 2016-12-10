@@ -458,6 +458,7 @@ namespace FSO.SimAntics.Engine
 
         public VMPrimitiveExitCode Tick()
         {
+            VM.Context.NextRandom(1); //rng cycle - for desync detect
             var avatar = (VMAvatar)Caller;
 
             if (State != VMRoutingFrameState.FAILED && avatar.GetFlag(VMEntityFlags.InteractionCanceled) && avatar.GetPersonData(VMPersonDataVariable.NonInterruptable) == 0)

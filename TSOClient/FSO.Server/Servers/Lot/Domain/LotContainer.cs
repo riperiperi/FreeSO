@@ -62,6 +62,7 @@ namespace FSO.Server.Servers.Lot.Domain
         public int TimeToShutdown = -1;
         public int LotSaveTicker = 0;
         public int AvatarSaveTicker = 0;
+        public int KeepAliveTicker = 0;
 
         private bool ShuttingDown;
 
@@ -72,6 +73,7 @@ namespace FSO.Server.Servers.Lot.Domain
         public static readonly int TICKRATE = 30;
         public static readonly int LOT_SAVE_PERIOD = TICKRATE * 60 * 10;
         public static readonly int AVATAR_SAVE_PERIOD = TICKRATE * 60 * 1;
+        public static readonly int KEEP_ALIVE_PERIOD = TICKRATE * 3;
 
         private IShardRealestateDomain Realestate;
         private VMTSOSurroundingTerrain Terrain;
@@ -327,6 +329,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         private void CleanLot()
         {
+            LOG.Info("Cleaning lot with dbid = " + Context.DbId);
             var avatars = new List<VMEntity>(Lot.Entities.Where(x => x is VMAvatar && x.PersistID != 0));
             //step 1, force everyone to leave.
             foreach (var avatar in avatars)
@@ -369,7 +372,7 @@ namespace FSO.Server.Servers.Lot.Domain
             LoadAdj();
             if (!JobLot && LotPersist.ring_backup_num > -1 && AttemptLoadRing())
             {
-                
+                LOG.Info("Successfully loaded and cleaned fsov for dbid = " + Context.DbId);
             }
             else
             {
@@ -501,107 +504,124 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             try
             {
-                ResetVM();
-            } catch (Exception e)
-            {
-                LOG.Info("LOT " + Context.DbId + " LOAD EXECPTION:" + e.ToString());
-                Host.Shutdown();
-                return;
-            }
-            LOG.Info("Starting to host lot with dbid = " + Context.DbId);
-            Host.SetOnline(true);
-
-            var timeKeeper = new Stopwatch(); //todo: smarter timing
-            timeKeeper.Start();
-            long lastTick = 0;
-
-            LotSaveTicker = LOT_SAVE_PERIOD;
-            AvatarSaveTicker = AVATAR_SAVE_PERIOD;
-            while (true)
-            {
-                bool noRemainingUsers = ClientCount == 0;
-                lastTick++;
-                //sometimes avatars can be killed immediately after their kill timer starts (this frame will run the leave lot interaction)
-                //this works around that possibility. 
-                var preTickAvatars = Lot.Context.ObjectQueries.Avatars.Select(x => (VMAvatar)x).ToList();
                 try
                 {
-                    Lot.Tick();
+                    ResetVM();
                 }
                 catch (Exception e)
                 {
-                    //something bad happened. not entirely sure how we should deal with this yet
-                    LOG.Error("VM ERROR: "+e.StackTrace);
+                    LOG.Info("LOT " + Context.DbId + " LOAD EXECPTION:" + e.ToString());
                     Host.Shutdown();
                     return;
                 }
+                LOG.Info("Starting to host lot with dbid = " + Context.DbId);
+                Host.SetOnline(true);
 
-                if (noRemainingUsers)
+                var timeKeeper = new Stopwatch(); //todo: smarter timing
+                timeKeeper.Start();
+                long lastTick = 0;
+
+                LotSaveTicker = LOT_SAVE_PERIOD;
+                AvatarSaveTicker = AVATAR_SAVE_PERIOD;
+                while (true)
                 {
-                    if (TimeToShutdown == -1)
-                        TimeToShutdown = TICKRATE * 20; //lot shuts down 20 seconds after everyone leaves
-                    else {
-                        if (--TimeToShutdown == 0 || (ShuttingDown && TimeToShutdown < (TICKRATE * 20 - 10)))
+                    bool noRemainingUsers = ClientCount == 0;
+                    lastTick++;
+                    //sometimes avatars can be killed immediately after their kill timer starts (this frame will run the leave lot interaction)
+                    //this works around that possibility. 
+                    var preTickAvatars = Lot.Context.ObjectQueries.Avatars.Select(x => (VMAvatar)x).ToList();
+                    try
+                    {
+                        Lot.Tick();
+                    }
+                    catch (Exception e)
+                    {
+                        //something bad happened. not entirely sure how we should deal with this yet
+                        LOG.Error("VM ERROR: " + e.StackTrace);
+                        Host.Shutdown();
+                        return;
+                    }
+
+                    if (noRemainingUsers)
+                    {
+                        if (TimeToShutdown == -1)
+                            TimeToShutdown = TICKRATE * 20; //lot shuts down 20 seconds after everyone leaves
+                        else
                         {
-                            Shutdown();
-                            return; //kill the lot
+                            if (--TimeToShutdown == 0 || (ShuttingDown && TimeToShutdown < (TICKRATE * 20 - 10)))
+                            {
+                                Shutdown();
+                                return; //kill the lot
+                            }
                         }
                     }
-                }
-                else if (TimeToShutdown != -1)
-                    TimeToShutdown = -1;
+                    else if (TimeToShutdown != -1)
+                        TimeToShutdown = -1;
 
-                if (--LotSaveTicker <= 0)
-                {
-                    SaveRing();
-                    LotSaveTicker = LOT_SAVE_PERIOD;
-                }
-
-                var beingKilled = preTickAvatars.Where(x => x.KillTimeout == 1);
-                if (beingKilled.Count() > 0)
-                {
-                    //avatars that are being killed could die before their user disconnects. It's important to save them immediately.
-                    LOG.Info("Avatar Kill Save");
-                    SaveAvatars(beingKilled, true);
-                }
-
-                foreach (var avatar in Lot.Context.ObjectQueries.AvatarsByPersist)
-                {
-                    if (avatar.Value.KillTimeout == 1)
+                    if (--LotSaveTicker <= 0)
                     {
-                        //this avatar has begun being killed. Save them immediately.
-                        SaveAvatar(avatar.Value);
+                        SaveRing();
+                        LotSaveTicker = LOT_SAVE_PERIOD;
                     }
-                }
 
-                if (--AvatarSaveTicker <= 0)
-                {
-                    //save all avatars
-                    SaveAvatars(Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>(), false);
-                    AvatarSaveTicker = AVATAR_SAVE_PERIOD;
-                }
-
-                lock (SessionsToRelease)
-                {
-                    //save avatar state, then release their avatar claims afterwards.
-                    //SaveAvatars(SessionsToRelease.Select(x => Lot.GetAvatarByPersist(x.AvatarId)), true); //todo: is this performed by the fact that we started the persist save above?
-                    foreach (var session in SessionsToRelease)
+                    var beingKilled = preTickAvatars.Where(x => x.KillTimeout == 1);
+                    if (beingKilled.Count() > 0)
                     {
-                        LOG.Info("Avatar Session Release");
-                        Host.ReleaseAvatarClaim(session);
+                        //avatars that are being killed could die before their user disconnects. It's important to save them immediately.
+                        LOG.Info("Avatar Kill Save");
+                        SaveAvatars(beingKilled, true);
                     }
-                    SessionsToRelease.Clear();
-                }
 
-                lock (LotThreadActions)
-                {
-                    while (LotThreadActions.Count > 0)
+                    foreach (var avatar in Lot.Context.ObjectQueries.AvatarsByPersist)
                     {
-                        LotThreadActions.Dequeue()();
+                        if (avatar.Value.KillTimeout == 1)
+                        {
+                            //this avatar has begun being killed. Save them immediately.
+                            SaveAvatar(avatar.Value);
+                        }
                     }
-                }
 
-                Thread.Sleep((int)Math.Max(0, (((lastTick + 1)*1000)/TICKRATE) - timeKeeper.ElapsedMilliseconds));
+                    if (--AvatarSaveTicker <= 0)
+                    {
+                        //save all avatars
+                        SaveAvatars(Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>(), false);
+                        AvatarSaveTicker = AVATAR_SAVE_PERIOD;
+                    }
+
+                    lock (SessionsToRelease)
+                    {
+                        //save avatar state, then release their avatar claims afterwards.
+                        //SaveAvatars(SessionsToRelease.Select(x => Lot.GetAvatarByPersist(x.AvatarId)), true); //todo: is this performed by the fact that we started the persist save above?
+                        foreach (var session in SessionsToRelease)
+                        {
+                            LOG.Info("Avatar Session Release");
+                            Host.ReleaseAvatarClaim(session);
+                        }
+                        SessionsToRelease.Clear();
+                    }
+
+                    lock (LotThreadActions)
+                    {
+                        while (LotThreadActions.Count > 0)
+                        {
+                            LotThreadActions.Dequeue()();
+                        }
+                    }
+
+                    if (--KeepAliveTicker <= 0)
+                    {
+                        Host.InBackground(null);
+                        KeepAliveTicker = KEEP_ALIVE_PERIOD;
+                    }
+
+                    Thread.Sleep((int)Math.Max(0, (((lastTick + 1) * 1000) / TICKRATE) - timeKeeper.ElapsedMilliseconds));
+                }
+            }
+            catch (Exception e)
+            {
+                LOG.Info("Fatal exception on lot " + Context.DbId + ":" + e.ToString());
+                Host.Shutdown();
+                return;
             }
         }
 

@@ -385,14 +385,19 @@ namespace FSO.Server.Servers.Lot.Domain
             MainThread = new Thread(Container.Run);
             MainThread.Start();
         }
-        
 
+        //timeout for the background thread recieving more tasks.
+        private static readonly int BACKGROUND_NOTIFY_TIMEOUT = 2000;
+        //the number of times recieving no background tasks after which we assume the main thread is stuck in an infinite loop.
+        private static readonly int BACKGROUND_TIMEOUT_ABANDON_COUNT = 4;
+        private int BgTimeoutExpiredCount = 0;
         private void _DigestBackground()
         {
             try
             {
-                while (BackgroundNotify.WaitOne())
+                while (true)
                 {
+                    var notified = BackgroundNotify.WaitOne(BACKGROUND_NOTIFY_TIMEOUT);
                     List<Callback> tasks = new List<Callback>();
                     lock (BackgroundTasks)
                     {
@@ -400,11 +405,21 @@ namespace FSO.Server.Servers.Lot.Domain
                         BackgroundTasks.Clear();
                     }
 
+                    if (tasks.Count > 1000) LOG.Error("Surprising number of background tasks for lot with dbid = " + Context.DbId + ": "+tasks.Count);
+
+                    if (tasks.Count > 0) BgTimeoutExpiredCount = 0;
+                    else if (++BgTimeoutExpiredCount > BACKGROUND_TIMEOUT_ABANDON_COUNT)
+                    {
+                        BgTimeoutExpiredCount = int.MinValue;
+                        LOG.Error("Main thread for lot with dbid = " + Context.DbId + " entered an infinite loop and had to be terminated!");
+                        MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
+                    }
+
                     foreach (var task in tasks)
                     {
                         try
                         {
-                            task.Invoke();
+                            task?.Invoke();
                         }
                         catch (Exception ex)
                         {
@@ -454,7 +469,7 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             lock (_Visitors)
             {
-                if (_Visitors.Count >= 64 || ShuttingDown || Container.IsAvatarOnLot(session.AvatarId))
+                if (_Visitors.Count >= 64 || ShuttingDown)//|| Container.IsAvatarOnLot(session.AvatarId))
                 {
                     //cannot join
                     return false;

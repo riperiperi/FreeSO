@@ -110,6 +110,14 @@ namespace FSO.Client.Regulators
                 .OnData(typeof(ShardSelectorServletRequest))
                 .TransitionTo("SelectCity")
                 .OnlyTransitionFrom("Reconnect");
+
+            GameThread.SetInterval(() =>
+            {
+                if (Client.IsConnected)
+                {
+                    Client.Write(new Server.Protocol.Electron.Packets.KeepAlive());
+                }
+            }, 20000); //keep alive every 20 seconds. prevents disconnection by aggressive NAT.
         }
 
         public void Connect(CityConnectionMode mode, ShardSelectorServletRequest shard)

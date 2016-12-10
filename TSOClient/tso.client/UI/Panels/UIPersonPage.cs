@@ -830,7 +830,6 @@ namespace FSO.Client.UI.Panels
         private void Redraw()
         {
             if (LocalDataChange) return;
-            NameText.Y = 5;
             var isOpen = Open == true;
             var isClosed = Open == false;
             var isOnline = false;

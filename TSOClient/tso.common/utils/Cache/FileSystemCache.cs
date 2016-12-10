@@ -18,6 +18,7 @@ namespace FSO.Common.Utils.Cache
         private bool _Active;
         private long _CacheSize;
         private long _MaxCacheSize;
+        private Thread _MainThread;
 
         private LinkedList<FileSystemCacheEntry> _Cache;
         private Dictionary<CacheKey, FileSystemCacheEntry> _Index;
@@ -31,6 +32,8 @@ namespace FSO.Common.Utils.Cache
             _MaxCacheSize = maxSize;
             _Cache = new LinkedList<FileSystemCacheEntry>();
             _Index = new Dictionary<CacheKey, FileSystemCacheEntry>();
+
+            _MainThread = Thread.CurrentThread;
         }
 
         public void Init()
@@ -53,7 +56,7 @@ namespace FSO.Common.Utils.Cache
 
         private void DigestLoop()
         {
-            while (_Active)
+            while (_Active && _MainThread.IsAlive)
             {
                 Digest();
                 Thread.Sleep(DIGEST_DELAY);
@@ -169,17 +172,25 @@ namespace FSO.Common.Utils.Cache
             var clone = new byte[bytes.Length];
             Buffer.BlockCopy(bytes, 0, clone, 0, bytes.Length);
 
-            _Mutations.Enqueue(new FileSystemCacheAddMutation {
-                Key = key,
-                Data = clone
-            });
+            lock (_Mutations)
+            {
+                _Mutations.Enqueue(new FileSystemCacheAddMutation
+                {
+                    Key = key,
+                    Data = clone
+                });
+            }
         }
 
         public void Remove(CacheKey key)
         {
-            _Mutations.Enqueue(new FileSystemCacheRemoveMutation {
-                Key = key
-            });
+            lock (_Mutations)
+            {
+                _Mutations.Enqueue(new FileSystemCacheRemoveMutation
+                {
+                    Key = key
+                });
+            }
         }
 
         public Task<T> Get<T>(CacheKey key)
@@ -266,7 +277,10 @@ namespace FSO.Common.Utils.Cache
 
         public void Execute(FileSystemCache cache)
         {
-            File.WriteAllBytes(cache.GetFilePath(Key), Data);
+            var path = cache.GetFilePath(Key);
+            var finalPart = path.LastIndexOf('/');
+            Directory.CreateDirectory((finalPart == -1)?path:path.Substring(0, finalPart));
+            File.WriteAllBytes(path, Data);
 
             var entry = cache.GetEntry(Key);
             if (entry == null)

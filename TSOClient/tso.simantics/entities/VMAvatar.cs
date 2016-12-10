@@ -966,6 +966,12 @@ namespace FSO.SimAntics
                     var apr = FSO.Content.Content.Get().AvatarAppearances.Get(aprN);
                     if (apr != null) Avatar.AddAccessory(apr);
                 }
+
+                var oftProvider = Content.Content.Get().AvatarOutfits;
+                if (Decoration.Back != 0) Avatar.DecorationBack = oftProvider.Get(Decoration.Back);
+                if (Decoration.Head != 0) Avatar.DecorationHead = oftProvider.Get(Decoration.Head);
+                if (Decoration.Tail != 0) Avatar.DecorationTail = oftProvider.Get(Decoration.Tail);
+                if (Decoration.Shoes != 0) Avatar.DecorationShoes = oftProvider.Get(Decoration.Shoes);
             }
 
             SkinTone = input.SkinTone;

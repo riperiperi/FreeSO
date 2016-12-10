@@ -658,16 +658,16 @@ namespace FSO.SimAntics
             if ((wall.Segments & WallSegments.VerticalDiag) > 0)
             {
                 if ((pos.x % 16) - (pos.y % 16) > 0)
-                    return wall.TopLeftStyle;
-                else
                     return wall.TopLeftPattern;
+                else
+                    return wall.TopLeftStyle;
             }
             else if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
             {
                 if ((pos.x % 16) + (pos.y % 16) > 15)
-                    return wall.TopLeftStyle;
-                else
                     return wall.TopLeftPattern;
+                else
+                    return wall.TopLeftStyle;
             }
             return GetFloor(pos.TileX, pos.TileY, pos.Level).Pattern;
         }

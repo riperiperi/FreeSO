@@ -242,7 +242,7 @@ namespace FSO.Client.UI.Panels
 
         public void UpdateInteractionIcon()
         {
-            UI.Icon = IconOwner.GetIcon(GameFacade.GraphicsDevice, 0);
+            UI.Icon = IconOwner?.GetIcon(GameFacade.GraphicsDevice, 0);
         }
 
         public void UpdateInteractionResult()

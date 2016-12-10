@@ -37,6 +37,7 @@ namespace FSO.SimAntics
     /// </summary>
     public class VM
     {
+        public static bool UseSchedule = true;
         private static bool _UseWorld = true;
         public static bool UseWorld
         {
@@ -62,6 +63,9 @@ namespace FSO.SimAntics
         public List<VMEntity> Entities = new List<VMEntity>();
         public short[] GlobalState;
         public VMPlatformState PlatformState;
+
+        public VMScheduler Scheduler;
+
         public VMTSOLotState TSOState
         {
             get { return (PlatformState != null && PlatformState is VMTSOLotState) ? (VMTSOLotState)PlatformState : null; }
@@ -121,9 +125,10 @@ namespace FSO.SimAntics
         public VM(VMContext context, VMNetDriver driver, VMHeadlineRendererProvider headline)
         {
             context.VM = this;
-            this.Context = context;
-            this.Driver = driver;
+            Context = context;
+            Driver = driver;
             Headline = headline;
+            Scheduler = new VMScheduler(this);
         }
 
         private void VM_OnBHAVChange()
@@ -260,8 +265,9 @@ namespace FSO.SimAntics
             }
         }
 
-        public void InternalTick()
+        public void InternalTick(uint tickID)
         {
+            Scheduler.BeginTick(tickID);
             if (GlobalLink != null) GlobalLink.Tick(this);
             if (EODHost != null) EODHost.Tick();
             Context.Clock.Tick();
@@ -272,11 +278,12 @@ namespace FSO.SimAntics
 
             Context.Architecture.Tick();
 
-            var entCpy = Entities.ToArray();
-            foreach (var obj in entCpy)
-            {
-                Context.NextRandom(1);
-                obj.Tick(); //run object specific tick behaviors, like lockout count decrement
+            if (!UseSchedule) {
+                var entCpy = Entities.ToArray();
+                foreach (var obj in entCpy)
+                {
+                    Context.NextRandom(1);
+                    obj.Tick(); //run object specific tick behaviors, like lockout count decrement
 #if VM_DESYNC_DEBUG
                 if (obj.Thread != null) {
                     foreach (var item in obj.Thread.Stack)
@@ -295,7 +302,12 @@ namespace FSO.SimAntics
                     }
                 }
 #endif
+                }
+            } else
+            {
+                Scheduler.RunTick();
             }
+
             //Context.SetToNextCache.VerifyPositions(); use only for debug!
         }
 
@@ -339,6 +351,7 @@ namespace FSO.SimAntics
                 Context.ObjectQueries.RemoveObject(entity);
                 this.Entities.Remove(entity);
                 ObjectsById.Remove(entity.ObjectID);
+                Scheduler.DescheduleTick(entity);
                 if (entity.ObjectID < ObjectId) ObjectId = entity.ObjectID; //this id is now the smallest free object id.
             }
             entity.Dead = true;
@@ -565,6 +578,7 @@ namespace FSO.SimAntics
             }
 
             Entities = new List<VMEntity>();
+            Scheduler.Reset();
             ObjectsById = new Dictionary<short, VMEntity>();
             foreach (var ent in input.Entities)
             {
@@ -603,6 +617,7 @@ namespace FSO.SimAntics
                 var realEnt = Entities[i++];
 
                 realEnt.Thread = new VMThread(threadMarsh, Context, realEnt);
+                Scheduler.ScheduleTickIn(realEnt, 1);
 
                 if (realEnt is VMAvatar)
                     ((VMAvatar)realEnt).LoadCrossRef((VMAvatarMarshal)ent, Context);

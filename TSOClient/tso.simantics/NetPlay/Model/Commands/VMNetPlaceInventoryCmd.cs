@@ -114,19 +114,6 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 CreatedGroup.ExecuteEntryPoint(11, vm.Context); //User Placement
                 if (CreatedGroup.Objects.Count == 0) return false;
 
-                int salePrice = 0;
-                if (item != null) salePrice = (int)item.Value.Price;
-                var def = CreatedGroup.BaseObject.MasterDefinition;
-                if (def == null) def = CreatedGroup.BaseObject.Object.OBJ;
-                var limit = def.DepreciationLimit;
-                if (salePrice > limit) //only try to deprecate if we're above the limit. Prevents objects with a limit above their price being money fountains.
-                {
-                    salePrice -= def.InitialDepreciation;
-                    if (salePrice < limit) salePrice = limit;
-                }
-
-                CreatedGroup.Price = (int)salePrice;
-
                 if (CreatedGroup.BaseObject.Position == LotTilePos.OUT_OF_WORLD)
                 {
                     return false;

@@ -104,6 +104,7 @@
     <Compile Include="Electron\Packets\FSOVMTickBroadcast.cs" />
     <Compile Include="Electron\Packets\InstantMessage.cs" />
     <Compile Include="Electron\Packets\FindLotRequest.cs" />
+    <Compile Include="Electron\Packets\KeepAlive.cs" />
     <Compile Include="Electron\Packets\PurchaseLotRequest.cs" />
     <Compile Include="Electron\Packets\PurchaseLotResponse.cs" />
     <Compile Include="Gluon\AbstractElectronPacket.cs" />

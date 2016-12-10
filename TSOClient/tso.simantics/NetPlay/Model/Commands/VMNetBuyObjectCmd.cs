@@ -102,18 +102,6 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 return false;
             }
 
-            int salePrice = 0;
-            if (item != null) salePrice = (int)item.Value.Price;
-            var def = group.BaseObject.MasterDefinition;
-            if (def == null) def = group.BaseObject.Object.OBJ;
-            var limit = def.DepreciationLimit;
-            if (salePrice > limit) //only try to deprecate if we're above the limit. Prevents objects with a limit above their price being money fountains.
-            {
-                salePrice -= def.InitialDepreciation;
-                if (salePrice < limit) salePrice = limit;
-            }
-
-            group.Price = (int)salePrice;
             foreach (var obj in group.Objects) {
                 if (obj is VMGameObject) ((VMTSOObjectState)obj.TSOState).OwnerID = caller.PersistID;
             }
