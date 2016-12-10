@@ -1,8 +1,10 @@
 ﻿using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.SimAntics.NetPlay.EODs.Model;
+using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,7 +35,8 @@ namespace FSO.SimAntics.NetPlay.EODs
             { 0xca418206, typeof(VMEODPaperChasePlugin) },
             { 0x2b58020b, typeof(VMEODRackOwnerPlugin) },
             { 0xcb492685, typeof(VMEODRackPlugin) },
-            { 0x8b300068, typeof(VMEODDresserPlugin) }
+            { 0x8b300068, typeof(VMEODDresserPlugin) },
+            { 0x0949E698 , typeof(VMEODScoreboardPlugin) }
         };
 
         public List<VMEODClient> Clients;

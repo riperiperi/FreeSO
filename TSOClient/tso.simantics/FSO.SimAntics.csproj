@@ -152,6 +152,7 @@
     <Compile Include="NetPlay\Drivers\VMClientDriver.cs" />
     <Compile Include="NetPlay\Drivers\VMServerDriver.cs" />
     <Compile Include="NetPlay\EODs\Handlers\Data\VMEODSignsData.cs" />
+    <Compile Include="NetPlay\EODs\Archetypes\VMBasicEOD.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDresserPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODRackOwnerPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDanceFloorPlugin.cs" />
@@ -160,10 +161,12 @@
     <Compile Include="NetPlay\EODs\Handlers\VMEODPizzaMakerPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMAbstractEODRackPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODRackPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODScoreboardPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODSignsPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODStubPlugin.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODEvent.cs" />
     <Compile Include="NetPlay\EODs\Utils\EODLobby.cs" />
+    <Compile Include="NetPlay\EODs\Utils\EODPersist.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAdjHollowSyncCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAsyncPriceCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAsyncSaleCmd.cs" />
