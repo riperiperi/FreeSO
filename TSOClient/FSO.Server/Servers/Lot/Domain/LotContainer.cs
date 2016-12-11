@@ -204,6 +204,17 @@ namespace FSO.Server.Servers.Lot.Domain
                     {
                         var marshal = new VMMarshal();
                         marshal.Deserialize(file);
+
+                        if (LotPersist.move_flags > 0)
+                        {
+                            //must rotate lot to face its new road direction!
+                            var oldDir = ((VMTSOLotState)marshal.PlatformState).Size >> 16;
+                            var newDir = VMLotTerrainRestoreTools.PickRoadDir(Terrain.Roads[1, 1]);
+
+                            var rotate = new VMLotRotate(marshal);
+                            rotate.Rotate(((newDir - oldDir) + 4) % 4);
+                        }
+
                         Lot.Load(marshal);
                         CleanLot();
                         Lot.Reset();
@@ -369,6 +380,7 @@ namespace FSO.Server.Servers.Lot.Domain
             vm.Init();
 
             bool isNew = false;
+            bool isMoved = (LotPersist.move_flags > 0);
             LoadAdj();
             if (!JobLot && LotPersist.ring_backup_num > -1 && AttemptLoadRing())
             {
@@ -443,7 +455,7 @@ namespace FSO.Server.Servers.Lot.Domain
             vm.Context.Clock.Hours = tsoTime.Item1;
             vm.Context.Clock.Minutes = tsoTime.Item2;
 
-            VMLotTerrainRestoreTools.RestoreTerrain(vm);
+            if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(vm);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(vm);
 
             vm.Context.UpdateTSOBuildableArea();

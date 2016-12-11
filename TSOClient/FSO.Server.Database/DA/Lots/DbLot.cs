@@ -22,6 +22,7 @@ namespace FSO.Server.Database.DA.Lots
         public uint buildable_area { get; set; }
         public sbyte ring_backup_num { get; set; }
         public byte admit_mode { get; set; }
+        public byte move_flags { get; set; }
     }
 
     public enum DbLotCategory

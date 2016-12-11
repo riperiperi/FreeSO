@@ -161,7 +161,6 @@ namespace FSO.SimAntics
                 WorldUI.BuildableArea = BuildableArea;
                 WorldUI.Terrain.TerrainDirty = true;
             }
-            FloorsDirty = true;
         }
 
         public void SetObjectSupported(short x, short y, sbyte level, bool support)

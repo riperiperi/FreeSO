@@ -131,6 +131,7 @@ namespace FSO.SimAntics.Marshals
                 vm.AddEntity(obj);
                 MultitileGroup.Objects[i++] = obj.ObjectID; //update saved group, in multitile group order (as saved)
                 if (VM.UseWorld) obj.WorldUI.ObjectID = obj.ObjectID;
+                vm.Scheduler.ScheduleTickIn(obj, 1);
             }
             
             return new VMMultitileGroup(MultitileGroup, vm.Context); //should self register

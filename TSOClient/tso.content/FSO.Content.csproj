@@ -474,6 +474,9 @@
     <Content Include="Content\Patch\skillobjects_10xmultiplier.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Patch\oj-rest-ticketdisplay_180degreeview.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Content\Patch\oj-robots-future-end-racecondition-fix.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

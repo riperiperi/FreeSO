@@ -22,6 +22,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             vm.TSOState.Size &= 0xFF0000;
             vm.TSOState.Size |= (LotSize) | (LotStories << 8);
             vm.Context.UpdateTSOBuildableArea();
+            vm.Context.Architecture.SignalAllDirty();
             return true;
         }
 

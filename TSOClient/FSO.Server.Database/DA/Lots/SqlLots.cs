@@ -130,7 +130,7 @@ namespace FSO.Server.Database.DA.Lots
 
         public void UpdateRingBackup(int lot_id, sbyte ring_backup_num)
         {
-            Context.Connection.Query("UPDATE fso_lots SET ring_backup_num = @ring_backup_num WHERE lot_id = @id", 
+            Context.Connection.Query("UPDATE fso_lots SET ring_backup_num = @ring_backup_num, move_flags = 0 WHERE lot_id = @id", 
                 new { ring_backup_num = ring_backup_num, id = lot_id });
         }
 
