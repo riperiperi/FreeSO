@@ -786,8 +786,8 @@ namespace FSO.Client.UI.Controls
             var topLeft = new Vector2(TextMargin.Left, TextMargin.Top);
             var position = topLeft;
             var txtScale = TextStyle.Scale * _Scale;
-            
-            m_NumVisibleLines = (int)Math.Floor(m_Height / m_LineHeight);
+
+            m_NumVisibleLines = Math.Max(1, (int)Math.Floor(m_Height / m_LineHeight));
             /** Make sure the current vscroll is valid **/
             VerticalScrollPosition = m_VScroll;
 
