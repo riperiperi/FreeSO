@@ -334,9 +334,11 @@ namespace FSO.Client.UI.Framework.Parser
             
             foreach (var att in node.Attributes)
             {
-                if (atts.ContainsKey(att.Key))
+                var controlField = atts.Keys.FirstOrDefault(x => string.Equals(x, att.Key, StringComparison.CurrentCultureIgnoreCase));
+
+                if (controlField != null)
                 {
-                    var uiAtt = atts[att.Key];
+                    var uiAtt = atts[controlField];
                     var value = GetAtt(node, att.Key, uiAtt);
                     if (value != null) uiAtt.Field.SetValue(control, value, new object[] { });
                 }

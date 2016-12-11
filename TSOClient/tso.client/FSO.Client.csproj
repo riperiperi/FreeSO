@@ -95,12 +95,15 @@
     <Compile Include="UI\Controls\UIValidationMessages.cs" />
     <Compile Include="UI\Framework\DoubleClick.cs" />
     <Compile Include="UI\Framework\IUIAutoSize.cs" />
+    <Compile Include="UI\Framework\UIDebounce.cs" />
+    <Compile Include="UI\Panels\EODs\Archetypes\UIBasicEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDebugEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDresserEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIPaperChaseEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIAbstractRackEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIRackEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIRackOwnerEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIScoreboardEOD.cs" />
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobby.cs" />
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobbyController.cs" />
     <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
