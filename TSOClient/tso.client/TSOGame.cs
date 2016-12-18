@@ -117,6 +117,14 @@ namespace FSO.Client
             }
         }
 
+		/// <summary>
+		/// Run this instance with GameRunBehavior forced as Synchronous.
+		/// </summary>
+		public new void Run()
+		{
+			Run(GameRunBehavior.Synchronous);
+		}
+
         /// <summary>
         /// Only used on desktop targets. Use extensive reflection to AVOID linking on iOS!
         /// </summary>

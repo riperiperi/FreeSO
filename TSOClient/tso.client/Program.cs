@@ -25,7 +25,7 @@ namespace FSO.Client
 
         public static void Main(string[] args)
         {
-            if (InitWithArguments(args))
+			if (InitWithArguments(args))
                 (new GameStartProxy()).Start(UseDX);
         }
 
@@ -40,8 +40,12 @@ namespace FSO.Client
 
             ILocator gameLocator;
             bool linux = pid == PlatformID.MacOSX || pid == PlatformID.Unix;
-            if (linux) gameLocator = new LinuxLocator();
-            else gameLocator = new WindowsLocator();
+			if (linux && Directory.Exists("/Users")) 
+                gameLocator = new MacOSLocator();
+			else if (linux)
+				gameLocator = new LinuxLocator();
+            else
+				gameLocator = new WindowsLocator();
 
             bool useDX = false;
 
