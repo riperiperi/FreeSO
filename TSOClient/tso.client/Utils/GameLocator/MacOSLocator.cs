@@ -6,7 +6,7 @@ namespace FSO.Client.Utils.GameLocator
     {
         public string FindTheSimsOnline()
         {
-			return string.Format("{0}/Documents/The Sims Online/TSOClient/", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+            return string.Format("{0}/Documents/The Sims Online/TSOClient/", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
         }
     }
 }
