@@ -25,7 +25,7 @@ namespace FSO.Client
 
         public static void Main(string[] args)
         {
-            if (InitWithArguments(args))
+			if (InitWithArguments(args))
                 (new GameStartProxy()).Start(UseDX);
         }
 

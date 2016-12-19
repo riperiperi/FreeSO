@@ -45,9 +45,9 @@ namespace FSO.Client.Utils
                     monogameDir = "Monogame/MacOS/";
                 }
                 else
-                {
-                    monogameDir = "Monogame/Linux/";
-                }
+				{
+					monogameDir = "Monogame/Linux/";
+				}
 
                 //DirectoryCopy(contentDir, "Content/", true);
                 if (File.Exists("Monogame.Framework.dll")) File.Delete("Monogame.Framework.dll");
