@@ -90,6 +90,15 @@
 		"bec36bbc-1774-44cb-a7c5-03f4a00e801c",
 		"52795d47-a25e-418f-a618-fb89300aab02"
 	  ]
+    },
+	{
+      "id": "f9abf5f8-c9d5-4e3a-9c25-21b8ecbf64aa",
+      "script": "changes/0007_fso_lot_visits.sql",
+      "idempotent": false,
+	  "requires":[
+		"bec36bbc-1774-44cb-a7c5-03f4a00e801c",
+		"52795d47-a25e-418f-a618-fb89300aab01"
+	  ]
     }
   ]
 }

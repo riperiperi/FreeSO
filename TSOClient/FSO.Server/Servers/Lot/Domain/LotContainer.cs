@@ -5,6 +5,7 @@ using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Lots;
+using FSO.Server.Database.DA.LotVisitors;
 using FSO.Server.Database.DA.Objects;
 using FSO.Server.Database.DA.Relationships;
 using FSO.Server.Database.DA.Roommates;
@@ -574,6 +575,8 @@ namespace FSO.Server.Servers.Lot.Domain
                     {
                         SaveRing();
                         LotSaveTicker = LOT_SAVE_PERIOD;
+
+                        Host.UpdateActiveVisitRecords();
                     }
 
                     var beingKilled = preTickAvatars.Where(x => x.KillTimeout == 1);
@@ -702,6 +705,22 @@ namespace FSO.Server.Servers.Lot.Domain
                     DropClient(client);
                     return;
                 }
+
+                var visitorType = DbLotVisitorType.visitor;
+                switch (state.Permissions)
+                {
+                    case VMTSOAvatarPermissions.Owner:
+                    case VMTSOAvatarPermissions.Admin:
+                        visitorType = DbLotVisitorType.owner;
+                        break;
+                    case VMTSOAvatarPermissions.BuildBuyRoommate:
+                    case VMTSOAvatarPermissions.Roommate:
+                        visitorType = DbLotVisitorType.roommate;
+                        break;
+                }
+
+                Host.RecordStartVisit(session, visitorType);
+
                 VMDriver.ConnectClient(client);
                 VMDriver.SendDirectCommand(client, new VMNetAdjHollowSyncCmd { HollowAdj = HollowLots });
 

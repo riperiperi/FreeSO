@@ -17,6 +17,7 @@ using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.Bookmarks;
 using FSO.Server.Database.DA.LotAdmit;
 using FSO.Server.Database.DA.Outfits;
+using FSO.Server.Database.DA.LotVisitors;
 
 namespace FSO.Server.Database.DA
 {
@@ -192,6 +193,19 @@ namespace FSO.Server.Database.DA
                     _Outfits = new SqlOutfits(Context);
                 }
                 return _Outfits;
+            }
+        }
+
+        private ILotVisits _Visits;
+        public ILotVisits LotVisits
+        {
+            get
+            {
+                if(_Visits == null)
+                {
+                    _Visits = new SqlLotVisits(Context);
+                }
+                return _Visits;
             }
         }
 

@@ -5,6 +5,7 @@ using FSO.Server.Database.DA.Bookmarks;
 using FSO.Server.Database.DA.LotAdmit;
 using FSO.Server.Database.DA.LotClaims;
 using FSO.Server.Database.DA.Lots;
+using FSO.Server.Database.DA.LotVisitors;
 using FSO.Server.Database.DA.Objects;
 using FSO.Server.Database.DA.Outfits;
 using FSO.Server.Database.DA.Relationships;
@@ -34,6 +35,7 @@ namespace FSO.Server.Database.DA
         IAvatarClaims AvatarClaims { get; }
         IBookmarks Bookmarks { get; }
         IOutfits Outfits { get; }
+        ILotVisits LotVisits { get; }
 
         void Flush();
     }

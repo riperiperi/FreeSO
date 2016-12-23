@@ -3,6 +3,7 @@ using FSO.Common.Serialization.Primitives;
 using FSO.Common.Utils;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
+using FSO.Server.Database.DA.LotVisitors;
 using FSO.Server.DataService;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Gluon;
@@ -508,15 +509,27 @@ namespace FSO.Server.Servers.Lot.Domain
             session.SetAttribute("currentLot", null);
             SyncNumVisitors();
 
-            using (var db = DAFactory.Get())
+            InBackground(() =>
             {
-                //return claim to the city we got it from.
-                
-                if ((bool)(session.GetAttribute("returnClaim") ?? true))
-                    db.AvatarClaims.Claim(session.AvatarClaimId, Config.Call_Sign, (string)session.GetAttribute("cityCallSign"), 0);
-                else
-                    db.AvatarClaims.Delete(session.AvatarClaimId, Config.Call_Sign);
-            }
+                using (var db = DAFactory.Get())
+                {
+                    //return claim to the city we got it from.
+
+                    if ((bool)(session.GetAttribute("returnClaim") ?? true))
+                        db.AvatarClaims.Claim(session.AvatarClaimId, Config.Call_Sign, (string)session.GetAttribute("cityCallSign"), 0);
+                    else
+                        db.AvatarClaims.Delete(session.AvatarClaimId, Config.Call_Sign);
+                }
+
+                if (session.GetAttribute("visitId") != null)
+                {
+                    var id = (int)session.GetAttribute("visitId");
+                    using (var da = DAFactory.Get())
+                    {
+                        da.LotVisits.Leave(id);
+                    }
+                }
+            });
         }
 
         public void Shutdown()
@@ -591,6 +604,40 @@ namespace FSO.Server.Servers.Lot.Domain
             Model.Lot_SpotLightText = on?"spot":"";
             Host.Sync(Context, Model);
         }
+
+        public void RecordStartVisit(IVoltronSession session, DbLotVisitorType visitorType)
+        {
+            using (var da = DAFactory.Get())
+            {
+                var id = da.LotVisits.Visit(session.AvatarId, visitorType, Context.DbId);
+                if (id != null && id.HasValue){
+                    session.SetAttribute("visitId", id.Value);
+                }
+            }
+        }
+
+        public void UpdateActiveVisitRecords()
+        {
+            var visitIds = new List<int>();
+            foreach (var visitor in _Visitors.Values)
+            {
+                var id = visitor.GetAttribute("visitId");
+                if (id != null)
+                {
+                    visitIds.Add((int)id);
+                }
+            }
+
+            InBackground(() =>
+            {
+                //Update the timestamp on visit records, this helps us count
+                //active sessions in top 100 + visitor bonus calculations
+                using (var db = DAFactory.Get())
+                {
+                    db.LotVisits.Renew(visitIds.ToArray());
+                }
+            });
+        }
     }
 
     public interface ILotHost
@@ -605,5 +652,9 @@ namespace FSO.Server.Servers.Lot.Domain
         void SetOnline(bool online);
         void SetSpotlight(bool on);
         void SyncRoommates();
+
+        //Visitor audits
+        void RecordStartVisit(IVoltronSession session, DbLotVisitorType visitorType);
+        void UpdateActiveVisitRecords();
     }
 }
