@@ -201,6 +201,7 @@
     <Compile Include="Servers\City\Handlers\DBRequestWrapperHandler.cs" />
     <Compile Include="Servers\City\Handlers\RegistrationHandler.cs" />
     <Compile Include="Servers\City\Handlers\SetPreferencesHandler.cs" />
+    <Compile Include="Servers\City\Tasks\CityMaintenance.cs" />
     <Compile Include="Servers\Lot\Domain\LotHost.cs" />
     <Compile Include="Servers\Lot\Domain\LotServerGlobalLink.cs" />
     <Compile Include="Servers\Lot\Handlers\CityServerAuthenticationHandler.cs" />
@@ -219,6 +220,7 @@
     <Compile Include="Servers\AbstractServer.cs" />
     <Compile Include="Servers\Api\ApiServerConfiguration.cs" />
     <Compile Include="Utils\SoftwareImageLoader.cs" />
+    <Compile Include="Utils\TaskEngine.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Admin\bower.json" />

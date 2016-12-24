@@ -9,6 +9,8 @@ using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.City.Domain;
 using FSO.Server.Servers.City.Handlers;
+using FSO.Server.Servers.City.Tasks;
+using FSO.Server.Utils;
 using Ninject;
 using NLog;
 using System;
@@ -76,6 +78,18 @@ namespace FSO.Server.Servers.City
             }
 
             base.Bootstrap();
+
+            var taskEngine = Kernel.Get<TaskEngine>();
+            //Jobs
+            if(Config.Maintenance != null)
+            {
+                taskEngine.AddTask("maintenance", Config.Maintenance.Cron, typeof(CityMaintenance), new TaskOptions {
+                    AllowTaskOverlap = false,
+                    Timeout = Config.Maintenance.Timeout,
+                    Data = Config.Maintenance,
+                    CustomKernel = Kernel
+                });
+            }
         }
 
         public override void Shutdown()

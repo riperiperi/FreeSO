@@ -5,6 +5,7 @@ using FSO.Server.Database.DA.Bookmarks;
 using FSO.Server.Database.DA.LotAdmit;
 using FSO.Server.Database.DA.LotClaims;
 using FSO.Server.Database.DA.Lots;
+using FSO.Server.Database.DA.LotTop100;
 using FSO.Server.Database.DA.LotVisitors;
 using FSO.Server.Database.DA.Objects;
 using FSO.Server.Database.DA.Outfits;
@@ -36,6 +37,7 @@ namespace FSO.Server.Database.DA
         IBookmarks Bookmarks { get; }
         IOutfits Outfits { get; }
         ILotVisits LotVisits { get; }
+        ILotTop100 LotTop100 { get; }
 
         void Flush();
     }

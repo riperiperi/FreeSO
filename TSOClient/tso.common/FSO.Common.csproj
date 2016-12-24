@@ -199,6 +199,7 @@
     <Compile Include="Utils\IffPrinter.cs" />
     <Compile Include="Utils\ITimedCachable.cs" />
     <Compile Include="Utils\IXMLEntity.cs" />
+    <Compile Include="Utils\LinqUtils.cs" />
     <Compile Include="Utils\MoneyFormatter.cs" />
     <Compile Include="Utils\Promise.cs" />
     <Compile Include="Utils\PPXDepthEngine.cs" />

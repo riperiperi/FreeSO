@@ -23,4 +23,19 @@ BEGIN
 	#Record visit
 	INSERT INTO fso_lot_visits (avatar_id, lot_id, type, status) VALUES (p_avatar_id, p_lot_id, p_visitor_type, 'active'); 
 	RETURN LAST_INSERT_ID();
-END
+END;
+
+CREATE TABLE IF NOT EXISTS `fso_lot_top_100` (
+  `category` enum('none','welcome','money','skills','services','entertainment','romance','shopping','games','offbeat','residence') NOT NULL,
+  `rank` tinyint(4) unsigned NOT NULL,
+  `shard_id` int(11) NOT NULL,
+  `lot_id` int(11) DEFAULT NULL,
+  `minutes` int(11) DEFAULT NULL,
+  `date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`category`,`rank`,`shard_id`),
+  KEY `FK_fso_lots_top_100_fso_shards` (`shard_id`),
+  KEY `FK_fso_lots_top_100_fso_lots` (`lot_id`),
+  CONSTRAINT `FK_fso_lots_top_100_fso_lots` FOREIGN KEY (`lot_id`) REFERENCES `fso_lots` (`lot_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_fso_lots_top_100_fso_shards` FOREIGN KEY (`shard_id`) REFERENCES `fso_shards` (`shard_id`)
+) COLLATE='utf8_general_ci'
+  ENGINE=InnoDB;

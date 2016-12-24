@@ -108,6 +108,9 @@
     <Compile Include="DA\Lots\DbLotServerTicket.cs" />
     <Compile Include="DA\Lots\ILots.cs" />
     <Compile Include="DA\Lots\SqlLots.cs" />
+    <Compile Include="DA\LotTop100\ILotTop100.cs" />
+    <Compile Include="DA\LotTop100\DbLotTop100.cs" />
+    <Compile Include="DA\LotTop100\SqlLotTop100.cs" />
     <Compile Include="DA\LotVisits\DbLotVisit.cs" />
     <Compile Include="DA\LotVisits\ILotVisits.cs" />
     <Compile Include="DA\LotVisits\SqlLotVisits.cs" />

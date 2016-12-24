@@ -18,6 +18,7 @@ using FSO.Server.Database.DA.Bookmarks;
 using FSO.Server.Database.DA.LotAdmit;
 using FSO.Server.Database.DA.Outfits;
 using FSO.Server.Database.DA.LotVisitors;
+using FSO.Server.Database.DA.LotTop100;
 
 namespace FSO.Server.Database.DA
 {
@@ -206,6 +207,19 @@ namespace FSO.Server.Database.DA
                     _Visits = new SqlLotVisits(Context);
                 }
                 return _Visits;
+            }
+        }
+
+        private ILotTop100 _LotTop100;
+        public ILotTop100 LotTop100
+        {
+            get
+            {
+                if(_LotTop100 == null)
+                {
+                    _LotTop100 = new SqlLotTop100(Context);
+                }
+                return _LotTop100;
             }
         }
 

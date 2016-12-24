@@ -33,5 +33,19 @@ namespace FSO.Server.Database.DA.LotVisitors
         /// </summary>
         /// <param name="visit_ids"></param>
         void Renew(IEnumerable<int> visit_ids);
+
+        /// <summary>
+        /// Purge data older than the date given
+        /// </summary>
+        /// <param name="days"></param>
+        void PurgeByDate(DateTime date);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        IEnumerable<DbLotVisit> StreamBetween(DateTime start, DateTime end);
     }
 }

@@ -20,6 +20,11 @@ namespace FSO.Server.Database.DA.Lots
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE lot_id = @id", new { id = id }).FirstOrDefault();
         }
 
+        public List<DbLot> Get(IEnumerable<int> ids)
+        {
+            return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE lot_id in @ids", new { ids = ids }).ToList();
+        }
+
         /// <summary>
         /// Special. We need to create the lot and assign an owner level roommate entry immediately, so we need to use a transaction.
         /// </summary>

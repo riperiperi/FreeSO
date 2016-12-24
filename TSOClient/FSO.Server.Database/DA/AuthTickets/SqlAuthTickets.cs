@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Dapper;
+using FSO.Server.Common;
 
 namespace FSO.Server.Database.DA.AuthTickets
 {
@@ -27,6 +28,11 @@ namespace FSO.Server.Database.DA.AuthTickets
         {
             return 
                 Context.Connection.Query<AuthTicket>("SELECT * FROM fso_auth_tickets WHERE ticket_id = @ticket_id", new { ticket_id = id }).FirstOrDefault();
+        }
+
+        public void Purge(uint time)
+        {
+            Context.Connection.Execute("DELETE FROM fso_auth_tickets WHERE date < @time", new { time = time });
         }
     }
 }

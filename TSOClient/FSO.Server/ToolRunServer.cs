@@ -9,6 +9,7 @@ using FSO.Server.Servers;
 using FSO.Server.Servers.Api;
 using FSO.Server.Servers.City;
 using FSO.Server.Servers.Lot;
+using FSO.Server.Utils;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
 using Ninject.Parameters;
@@ -38,11 +39,14 @@ namespace FSO.Server
         private RunServerOptions Options;
         private Protocol.Gluon.Model.ShutdownType ShutdownMode;
 
-        public ToolRunServer(RunServerOptions options, ServerConfiguration config, IKernel kernel)
+        private TaskEngine TaskEngine;
+
+        public ToolRunServer(RunServerOptions options, ServerConfiguration config, IKernel kernel, TaskEngine task)
         {
             this.Options = options;
             this.Config = config;
             this.Kernel = kernel;
+            this.TaskEngine = task;
         }
 
         public int Run()
@@ -151,6 +155,8 @@ namespace FSO.Server
             {
                 server.Start();
             }
+
+            TaskEngine.Start();
 
             //Hacky reference to maek sure the assembly is included
             FSO.Common.DatabaseService.Model.LoadAvatarByIDRequest x;
@@ -269,6 +275,8 @@ namespace FSO.Server
 
         private void CurrentDomain_ProcessExit(object sender, EventArgs e)
         {
+            TaskEngine.Stop();
+
             lock (Servers)
             {
                 foreach (AbstractServer server in Servers)

@@ -20,7 +20,14 @@
         "id": 1,
         "binding": "0.0.0.0:33100",
         "certificate": "auth.east.ea.com.pfx",
-		"secret": "3d7d8500-2c72-4bb0-98dd-872e5bfeac33"
+		"secret": "3d7d8500-2c72-4bb0-98dd-872e5bfeac33",
+
+		"maintenance":{
+			"cron":"0 4 * * *",
+			"timeout":3600,
+			"visits_retention_period":7,
+			"top100_average_period": 4
+		}
       }
     ],
 

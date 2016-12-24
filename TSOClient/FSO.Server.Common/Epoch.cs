@@ -17,6 +17,11 @@ namespace FSO.Server.Common
             }
         }
 
+        public static uint FromDate(DateTime time)
+        {
+            return (uint)(time.ToUniversalTime() - new DateTime(1970, 1, 1)).TotalSeconds;
+        }
+
         public static uint Default
         {
             get { return 0; }

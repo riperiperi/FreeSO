@@ -42,5 +42,16 @@ namespace FSO.Server.Database.DA.LotVisitors
             }catch (Exception ex){
             }
         }
+
+        public void PurgeByDate(DateTime date)
+        {
+            Context.Connection.Query("DELETE FROM `fso_lot_visits` WHERE time_closed IS NOT NULL AND time_closed < @date", new { date = date });
+            Context.Connection.Query("DELETE FROM `fso_lot_visits` WHERE time_closed IS NULL AND time_created < @date", new { date = date });
+        }
+        
+        public IEnumerable<DbLotVisit> StreamBetween(DateTime start, DateTime end)
+        {
+            return Context.Connection.Query<DbLotVisit>("SELECT * FROM `fso_lot_visits` WHERE status != 'failed' AND time_closed IS NOT NULL", new { start = start, end = end }, buffered: false);
+        }
     }
 }

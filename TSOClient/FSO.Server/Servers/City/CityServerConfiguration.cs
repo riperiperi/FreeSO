@@ -11,5 +11,14 @@ namespace FSO.Server.Servers.City
     {
         public int ID;
         public string Secret;
+
+        public CityServerMaintenanceConfiguration Maintenance;
+    }
+
+    public class CityServerMaintenanceConfiguration
+    {
+        public string Cron;
+        public int Timeout = 3600;
+        public int Visits_Retention_Period = 7;
     }
 }
