@@ -88,7 +88,10 @@ namespace FSO.Server.Clients
         }
 
         public void Disconnect(){
-            Session.Close(false);
+            if (Session != null)
+            {
+                Session.Close(false);
+            }
         }
 
         public void Connect(IPEndPoint target)
