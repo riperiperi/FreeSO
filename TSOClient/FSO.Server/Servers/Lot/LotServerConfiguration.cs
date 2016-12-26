@@ -11,8 +11,6 @@ namespace FSO.Server.Servers.Lot
     {
         public int Max_Lots = 1;
 
-        public string Internal_Host;
-        public string Public_Host;
         public string SimNFS;
         public int RingBufferSize = 10;
 
@@ -27,6 +25,5 @@ namespace FSO.Server.Servers.Lot
     {
         public int ID;
         public string Host;
-        public string Secret;
     }
 }

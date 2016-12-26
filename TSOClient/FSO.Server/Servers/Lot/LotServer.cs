@@ -160,5 +160,12 @@ namespace FSO.Server.Servers.Lot
             task.Wait();
             base.Shutdown();
         }
+
+        protected override DbHost CreateHost()
+        {
+            var host = base.CreateHost();
+            host.role = DbHostRole.lot;
+            return host;
+        }
     }
 }

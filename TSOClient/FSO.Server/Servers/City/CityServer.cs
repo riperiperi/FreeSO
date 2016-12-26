@@ -1,6 +1,7 @@
 ﻿using FSO.Common.Domain.Shards;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.AvatarClaims;
+using FSO.Server.Database.DA.Hosts;
 using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
@@ -201,6 +202,14 @@ namespace FSO.Server.Servers.City
 
             //Failed authentication
             rawSession.Close();
+        }
+
+        protected override DbHost CreateHost()
+        {
+            var host = base.CreateHost();
+            host.role = DbHostRole.city;
+            host.shard_id = Config.ID;
+            return host;
         }
 
         public override Type[] GetHandlers()
