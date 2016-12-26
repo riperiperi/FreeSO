@@ -99,6 +99,22 @@
 		"bec36bbc-1774-44cb-a7c5-03f4a00e801c",
 		"52795d47-a25e-418f-a618-fb89300aab01"
 	  ]
+    },
+	{
+      "id": "52182afb-a175-430a-99ad-0c1c4db924ac",
+      "script": "changes/0008_fso_hosts.sql",
+      "idempotent": false,
+	  "requires":[
+		"def48038-d0d6-4b10-a129-0b9c736e4d35"
+	  ]
+    },
+	{
+      "id": "9e4dc7d8-06b7-4f2f-84a8-4da737072d55",
+      "script": "changes/0009_fso_tasks.sql",
+      "idempotent": false,
+	  "requires":[
+		"def48038-d0d6-4b10-a129-0b9c736e4d35"
+	  ]
     }
   ]
 }

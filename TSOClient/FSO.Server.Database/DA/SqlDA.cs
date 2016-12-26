@@ -19,6 +19,8 @@ using FSO.Server.Database.DA.LotAdmit;
 using FSO.Server.Database.DA.Outfits;
 using FSO.Server.Database.DA.LotVisitors;
 using FSO.Server.Database.DA.LotTop100;
+using FSO.Server.Database.DA.Hosts;
+using FSO.Server.Database.DA.Tasks;
 
 namespace FSO.Server.Database.DA
 {
@@ -220,6 +222,31 @@ namespace FSO.Server.Database.DA
                     _LotTop100 = new SqlLotTop100(Context);
                 }
                 return _LotTop100;
+            }
+        }
+
+        private IHosts _Hosts;
+        public IHosts Hosts
+        {
+            get
+            {
+                if(_Hosts == null)
+                {
+                    _Hosts = new SqlHosts(Context);
+                }
+                return _Hosts;
+            }
+        }
+
+        private ITasks _Tasks;
+        public ITasks Tasks
+        {
+            get
+            {
+                if(_Tasks == null){
+                    _Tasks = new SqlTasks(Context);
+                }
+                return _Tasks;
             }
         }
 

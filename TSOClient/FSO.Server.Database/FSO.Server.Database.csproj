@@ -95,6 +95,9 @@
     <Compile Include="DA\Bookmarks\IBookmarks.cs" />
     <Compile Include="DA\Bookmarks\SqlBookmarks.cs" />
     <Compile Include="DA\DbChanges\DbChange.cs" />
+    <Compile Include="DA\Hosts\DbHost.cs" />
+    <Compile Include="DA\Hosts\IHosts.cs" />
+    <Compile Include="DA\Hosts\SqlHosts.cs" />
     <Compile Include="DA\IDA.cs" />
     <Compile Include="DA\IDAFactory.cs" />
     <Compile Include="DA\ISqlContext.cs" />
@@ -133,6 +136,9 @@
     <Compile Include="DA\Shards\SqlShards.cs" />
     <Compile Include="DA\SqlDA.cs" />
     <Compile Include="DA\MySqlDAFactory.cs" />
+    <Compile Include="DA\Tasks\DbTask.cs" />
+    <Compile Include="DA\Tasks\ITasks.cs" />
+    <Compile Include="DA\Tasks\SqlTasks.cs" />
     <Compile Include="DA\Users\IUsers.cs" />
     <Compile Include="DA\Users\SqlUsers.cs" />
     <Compile Include="DA\Users\User.cs" />
@@ -172,6 +178,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\changes\0006_outfits.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0009_fso_tasks.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0008_fso_hosts.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\changes\0007_fso_lot_visits.sql">
