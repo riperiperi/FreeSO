@@ -50,7 +50,7 @@ namespace FSO.Server
                 new DatabaseModule(),
                 new GlobalDataServiceModule(),
                 new Nancy.Bootstrappers.Ninject.FactoryModule(),
-                new TaskEngineModule()
+                new GluonHostPoolModule()
             );
 
             var tool = (ITool)kernel.Get(toolType, new ConstructorArgument("options", toolOptions));

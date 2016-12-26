@@ -190,7 +190,7 @@
     <Compile Include="Servers\City\Handlers\ElectronFindPlayerHandler.cs" />
     <Compile Include="Servers\City\Handlers\FindPlayerHandler.cs" />
     <Compile Include="Servers\City\Handlers\JoinLotHandler.cs" />
-    <Compile Include="Servers\City\Handlers\LotServerAuthenticationHandler.cs" />
+    <Compile Include="Servers\Shared\Handlers\GluonAuthenticationHandler.cs" />
     <Compile Include="Servers\City\Handlers\LotServerClosedownHandler.cs" />
     <Compile Include="Servers\City\Handlers\LotServerLifecycleHandler.cs" />
     <Compile Include="Servers\City\Handlers\LotServerShutdownResponseHandler.cs" />
@@ -219,6 +219,7 @@
     <Compile Include="Servers\Api\ApiServer.cs" />
     <Compile Include="Servers\AbstractServer.cs" />
     <Compile Include="Servers\Api\ApiServerConfiguration.cs" />
+    <Compile Include="Utils\GluonHostPool.cs" />
     <Compile Include="Utils\SoftwareImageLoader.cs" />
     <Compile Include="Utils\TaskEngine.cs" />
   </ItemGroup>

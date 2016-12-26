@@ -10,7 +10,7 @@ using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.City.Domain;
 using FSO.Server.Servers.City.Handlers;
-using FSO.Server.Servers.City.Tasks;
+using FSO.Server.Servers.Shared.Handlers;
 using FSO.Server.Utils;
 using Ninject;
 using NLog;
@@ -222,7 +222,7 @@ namespace FSO.Server.Servers.City
                 typeof(VoltronConnectionLifecycleHandler),
                 typeof(FindPlayerHandler),
                 typeof(PurchaseLotHandler),
-                typeof(LotServerAuthenticationHandler),
+                typeof(GluonAuthenticationHandler),
                 typeof(LotServerLifecycleHandler),
                 typeof(LotServerClosedownHandler),
                 typeof(MessagingHandler),

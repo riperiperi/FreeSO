@@ -14,6 +14,9 @@ namespace FSO.Server.Protocol.Gluon
         RequestLotClientTermination,
         ShardShutdownRequest,
         ShardShutdownCompleteResponse,
+
+        HealthPing,
+        HealthPingResponse,
         Unknown
     }
 
@@ -35,6 +38,10 @@ namespace FSO.Server.Protocol.Gluon
                     return GluonPacketType.ShardShutdownRequest;
                 case 0x0006:
                     return GluonPacketType.ShardShutdownCompleteResponse;
+                case 0x0007:
+                    return GluonPacketType.HealthPing;
+                case 0x0008:
+                    return GluonPacketType.HealthPingResponse;
                 default:
                     return GluonPacketType.Unknown;
             }
@@ -56,6 +63,10 @@ namespace FSO.Server.Protocol.Gluon
                     return 0x0005;
                 case GluonPacketType.ShardShutdownCompleteResponse:
                     return 0x0006;
+                case GluonPacketType.HealthPing:
+                    return 0x0007;
+                case GluonPacketType.HealthPingResponse:
+                    return 0x0008;
             }
 
             return 0xFFFF;

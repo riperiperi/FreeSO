@@ -3,6 +3,7 @@ using FSO.Server.Framework.Gluon;
 using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.Utils;
 using FSO.Server.Servers.Lot.Lifecycle;
+using Ninject;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,13 @@ namespace FSO.Server.Servers.Lot.Handlers
     /// </summary>
     public class CityServerAuthenticationHandler
     {
+        private string Secret;
+
+        public CityServerAuthenticationHandler([Named("secret")] string secret)
+        {
+            this.Secret = secret;
+        }
+
         public void Handle(IGluonSession session, RequestClientSession request)
         {
             //Respond asking for a gluon challenge
@@ -25,7 +33,7 @@ namespace FSO.Server.Servers.Lot.Handlers
         public void Handle(IGluonSession session, RequestChallengeResponse challenge)
         {
             var rawSession = ((CityConnection)session);
-            var answer = ChallengeResponse.AnswerChallenge(challenge.Challenge, rawSession.CityConfig.Secret);
+            var answer = ChallengeResponse.AnswerChallenge(challenge.Challenge, Secret);
 
             session.Write(new AnswerChallenge {
                 Answer = answer

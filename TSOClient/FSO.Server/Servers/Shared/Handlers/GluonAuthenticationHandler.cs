@@ -1,7 +1,10 @@
 ﻿using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Gluon;
 using FSO.Server.Protocol.Aries.Packets;
+using FSO.Server.Protocol.Gluon.Packets;
 using FSO.Server.Protocol.Utils;
+using FSO.Server.Utils;
+using Ninject;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,16 +12,18 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSO.Server.Servers.City.Handlers
+namespace FSO.Server.Servers.Shared.Handlers
 {
-    public class LotServerAuthenticationHandler
+    public class GluonAuthenticationHandler
     {
-        private CityServerConfiguration Config;
+        private IGluonHostPool HostPool;
         private ISessions Sessions;
+        private string Secret;
 
-        public LotServerAuthenticationHandler(CityServerConfiguration config, ISessions sessions){
-            this.Config = config;
+        public GluonAuthenticationHandler(ISessions sessions, [Named("secret")] string secret, IGluonHostPool hostPool){
             this.Sessions = sessions;
+            this.Secret = secret;
+            this.HostPool = hostPool;
         }
 
         public void Handle(IAriesSession session, RequestChallenge request)
@@ -43,7 +48,7 @@ namespace FSO.Server.Servers.City.Handlers
                 return;
             }
 
-            var myAnswer = ChallengeResponse.AnswerChallenge(challenge, Config.Secret);
+            var myAnswer = ChallengeResponse.AnswerChallenge(challenge, Secret);
             if(myAnswer != answer.Answer)
             {
                 session.Close();
@@ -58,6 +63,14 @@ namespace FSO.Server.Servers.City.Handlers
                 x.InternalHost = (string)session.GetAttribute("internalHost");
             });
             newSession.Write(new AnswerAccepted());
+        }
+
+        public void Handle(IGluonSession session, HealthPing ping)
+        {
+            session.Write(new HealthPingResponse {
+                CallId = ping.CallId,
+                PoolHash = HostPool.PoolHash
+            });
         }
     }
 }

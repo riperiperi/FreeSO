@@ -38,15 +38,15 @@ namespace FSO.Server
         private ApiServer ActiveApiServer;
         private RunServerOptions Options;
         private Protocol.Gluon.Model.ShutdownType ShutdownMode;
+        
+        private IGluonHostPool HostPool;
 
-        private TaskEngine TaskEngine;
-
-        public ToolRunServer(RunServerOptions options, ServerConfiguration config, IKernel kernel, TaskEngine task)
+        public ToolRunServer(RunServerOptions options, ServerConfiguration config, IKernel kernel, IGluonHostPool hostPool)
         {
             this.Options = options;
             this.Config = config;
             this.Kernel = kernel;
-            this.TaskEngine = task;
+            this.HostPool = hostPool;
         }
 
         public int Run()
@@ -157,7 +157,7 @@ namespace FSO.Server
                 server.Start();
             }
 
-            TaskEngine.Start();
+            HostPool.Start();
 
             //Hacky reference to maek sure the assembly is included
             FSO.Common.DatabaseService.Model.LoadAvatarByIDRequest x;
@@ -276,7 +276,7 @@ namespace FSO.Server
 
         private void CurrentDomain_ProcessExit(object sender, EventArgs e)
         {
-            TaskEngine.Stop();
+            HostPool.Stop();
 
             lock (Servers)
             {
