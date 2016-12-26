@@ -118,6 +118,8 @@
     <Compile Include="Gluon\Packets\HealthPingResponse.cs" />
     <Compile Include="Gluon\Packets\IGluonCall.cs" />
     <Compile Include="Gluon\Packets\RequestLotClientTermination.cs" />
+    <Compile Include="Gluon\Packets\RequestTask.cs" />
+    <Compile Include="Gluon\Packets\RequestTaskResponse.cs" />
     <Compile Include="Gluon\Packets\ShardShutdownCompleteResponse.cs" />
     <Compile Include="Gluon\Packets\ShardShutdownRequest.cs" />
     <Compile Include="Gluon\Packets\TransferClaim.cs" />

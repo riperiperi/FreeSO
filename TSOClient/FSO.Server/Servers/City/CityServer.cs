@@ -79,18 +79,6 @@ namespace FSO.Server.Servers.City
             }
 
             base.Bootstrap();
-
-            var taskEngine = Kernel.Get<TaskEngine>();
-            //Jobs
-            if(Config.Maintenance != null)
-            {
-                taskEngine.AddTask("maintenance", Config.Maintenance.Cron, typeof(CityMaintenance), new TaskOptions {
-                    AllowTaskOverlap = false,
-                    Timeout = Config.Maintenance.Timeout,
-                    Data = Config.Maintenance,
-                    CustomKernel = Kernel
-                });
-            }
         }
 
         public override void Shutdown()

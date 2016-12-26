@@ -9,6 +9,7 @@ using FSO.Server.Servers;
 using FSO.Server.Servers.Api;
 using FSO.Server.Servers.City;
 using FSO.Server.Servers.Lot;
+using FSO.Server.Servers.Tasks;
 using FSO.Server.Utils;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
@@ -126,6 +127,18 @@ namespace FSO.Server
                 Servers.Add(
                     childKernel.Get<LotServer>(new ConstructorArgument("config", lotServer))
                 );
+            }
+
+            if (Config.Services.Tasks != null 
+                && Config.Services.Tasks.Enabled)
+            {
+                var childKernel = new ChildKernel(
+                    Kernel,
+                    new TaskEngineModule()
+                );
+
+                var tasks = childKernel.Get<TaskServer>(new ConstructorArgument("config", Config.Services.Tasks));
+                Servers.Add(tasks);
             }
 
             foreach (var server in Servers)

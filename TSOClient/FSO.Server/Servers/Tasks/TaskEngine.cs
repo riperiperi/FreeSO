@@ -1,6 +1,10 @@
-﻿using Ninject;
+﻿using FSO.Server.Database.DA;
+using FSO.Server.Database.DA.Tasks;
+using Ninject;
 using Ninject.Modules;
 using NLog;
+using NLog.Config;
+using NLog.Targets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,22 +14,25 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace FSO.Server.Utils
+namespace FSO.Server.Servers.Tasks
 {
     public class TaskEngine
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         private IKernel Kernel;
+        private IDAFactory DAFactory;
+
         private System.Timers.Timer Timer = new System.Timers.Timer(30000);
         private List<TaskEngineEntry> Entries;
         private List<ITask> Running;
         private DateTime Last;
 
-        public TaskEngine(IKernel kernel)
+        public TaskEngine(IKernel kernel, IDAFactory daFactory)
         {
             Last = DateTime.Now;
             Kernel = kernel;
+            DAFactory = daFactory;
             Entries = new List<TaskEngineEntry>();
             Timer.AutoReset = true;
             Timer.Elapsed += Timer_Elapsed;
@@ -57,16 +64,23 @@ namespace FSO.Server.Utils
 
             foreach(var task in Entries)
             {
-                if (task.Schedule.isTime(time)){
+                /*if (task.Schedule.isTime(time)){
                     Run(task);
-                }
+                }*/
             }
         }
         
-        private void Run(TaskEngineEntry entry)
+        public int Run(string name)
         {
             try
             {
+                var entry = Entries.FirstOrDefault(x => x.Name == name);
+                if(entry == null)
+                {
+                    LOG.Info("unknown task: " + name);
+                    return -1;
+                }
+
                 LOG.Info("ready to start task: " + entry.Name);
 
                 if(entry.Options.AllowTaskOverlap == false)
@@ -75,7 +89,7 @@ namespace FSO.Server.Utils
                     foreach(var task in Running){
                         if (entry.Type.IsAssignableFrom(task.GetType())){
                             LOG.Warn("could not start task, previous task is still running");
-                            return;
+                            return -2;
                         }
                     }
                 }
@@ -89,7 +103,29 @@ namespace FSO.Server.Utils
                 else{
                     instance = (ITask)Kernel.Get(entry.Type);
                 }
-                
+
+
+                int taskId = 0;
+                using (var db = DAFactory.Get())
+                {
+                    taskId = db.Tasks.Create(new DbTask {
+                        task_type = instance.GetTaskType(),
+                        task_status = DbTaskStatus.in_progress
+                    });
+                }
+
+
+                /*LoggingConfiguration config = new LoggingConfiguration();
+                FileTarget fileTarget = new FileTarget();
+                config.AddTarget("logfile", fileTarget);
+                fileTarget.FileName = @"C:\Logfile\Log.txt";
+
+                LoggingRule rule = new LoggingRule("*", LogLevel.Debug, fileTarget);
+                config.LoggingRules.Add(rule);*/
+                //NLog.LogManager.Configuration = config;
+
+                //LogManager.GetLogger()
+
                 var context = new TaskContext(this);
                 context.Data = entry.Options.Data;
                 Running.Add(instance);
@@ -101,6 +137,7 @@ namespace FSO.Server.Utils
                 }, cts.Token).ContinueWith(x =>
                 {
                     Running.Remove(instance);
+                    var endStatus = DbTaskStatus.failed;
                     if (x.IsFaulted)
                     {
                         LOG.Error(x.Exception, entry.Name + " task failed");
@@ -108,23 +145,33 @@ namespace FSO.Server.Utils
                     else
                     {
                         LOG.Info(entry.Name + " task complete");
+                        endStatus = DbTaskStatus.completed;
+                    }
+
+                    using (var db = DAFactory.Get())
+                    {
+                        db.Tasks.SetStatus(taskId, endStatus);
                     }
                 });
+
+                return taskId;
             }catch(Exception ex){
-                LOG.Error(ex, "unknown error starting task " + entry.Name);
+                LOG.Error(ex, "unknown error starting task " + name);
+                return -1;
             }
         }
 
-        public void AddTask(string name, string cron, Type type, TaskOptions options)
+        public void AddTask(string name, Type type, TaskOptions options)
         {
-            var schedule = new CronSchedule(cron);
+            /*var schedule = new CronSchedule(cron);
             if (!schedule.isValid()){
                 throw new Exception("Invalid cron expression: " + cron);
-            }
+            }*/
+
+            /** public CronSchedule Schedule; **/
 
             Entries.Add(new TaskEngineEntry {
                 Name = name,
-                Schedule = schedule,
                 Type = type,
                 Options = options
             });
@@ -142,7 +189,6 @@ namespace FSO.Server.Utils
     public class TaskEngineEntry
     {
         public string Name;
-        public CronSchedule Schedule;
         public Type Type;
         public TaskOptions Options;
     }
@@ -169,6 +215,8 @@ namespace FSO.Server.Utils
     {
         void Run(TaskContext context);
         void Abort();
+
+        DbTaskType GetTaskType();
     }
 
 
@@ -184,7 +232,7 @@ namespace FSO.Server.Utils
     {
         #region Readonly Class Members
 
-        readonly static Regex divided_regex = new Regex(@"(\*/\d+)");
+        readonly static Regex divided_regex = new Regex(@"(\*/\d +)");
         readonly static Regex range_regex = new Regex(@"(\d+\-\d+)\/?(\d+)?");
         readonly static Regex wild_regex = new Regex(@"(\*)");
         readonly static Regex list_regex = new Regex(@"(((\d+,)*\d+)+)");

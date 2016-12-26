@@ -147,6 +147,7 @@
     <Compile Include="DataService\ShardDataServiceModule.cs" />
     <Compile Include="Domain\ServerDomainModule.cs" />
     <Compile Include="Domain\Shards.cs" />
+    <Compile Include="Servers\Tasks\Domain\PruneDatabaseTask.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServer.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServerConfig.cs" />
     <Compile Include="Framework\Aries\AriesPacketRouter.cs" />
@@ -201,7 +202,6 @@
     <Compile Include="Servers\City\Handlers\DBRequestWrapperHandler.cs" />
     <Compile Include="Servers\City\Handlers\RegistrationHandler.cs" />
     <Compile Include="Servers\City\Handlers\SetPreferencesHandler.cs" />
-    <Compile Include="Servers\City\Tasks\CityMaintenance.cs" />
     <Compile Include="Servers\Lot\Domain\LotHost.cs" />
     <Compile Include="Servers\Lot\Domain\LotServerGlobalLink.cs" />
     <Compile Include="Servers\Lot\Handlers\CityServerAuthenticationHandler.cs" />
@@ -214,6 +214,8 @@
     <Compile Include="Servers\Lot\LotServer.cs" />
     <Compile Include="Servers\Lot\LotServerConfiguration.cs" />
     <Compile Include="Servers\Lot\LotServerModule.cs" />
+    <Compile Include="Servers\Tasks\Handlers\TaskEngineHandler.cs" />
+    <Compile Include="Servers\Tasks\TaskServer.cs" />
     <Compile Include="ToolInitDatabase.cs" />
     <Compile Include="ToolRunServer.cs" />
     <Compile Include="Servers\Api\ApiServer.cs" />
@@ -221,7 +223,7 @@
     <Compile Include="Servers\Api\ApiServerConfiguration.cs" />
     <Compile Include="Utils\GluonHostPool.cs" />
     <Compile Include="Utils\SoftwareImageLoader.cs" />
-    <Compile Include="Utils\TaskEngine.cs" />
+    <Compile Include="Servers\Tasks\TaskEngine.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Admin\bower.json" />

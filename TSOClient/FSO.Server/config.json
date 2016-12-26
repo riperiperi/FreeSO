@@ -8,6 +8,15 @@
   },
 
   "services": {
+	"tasks":{
+		"enabled": true,
+		"call_sign": "callisto",
+        "binding": "0.0.0.0:35100",
+		"internal_host": "127.0.0.1:35",
+		"public_host": "127.0.0.1:35",
+		"certificate": "auth.east.ea.com.pfx"
+	},
+
     "api": {
       "enabled": true,
       "bindings": [ "https://auth.east.ea.com:443/", "http://localhost:80/" ],
