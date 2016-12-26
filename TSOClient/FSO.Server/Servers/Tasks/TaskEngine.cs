@@ -150,7 +150,7 @@ namespace FSO.Server.Servers.Tasks
 
                     using (var db = DAFactory.Get())
                     {
-                        db.Tasks.SetStatus(taskId, endStatus);
+                        db.Tasks.CompleteTask(taskId, endStatus);
                     }
                 });
 

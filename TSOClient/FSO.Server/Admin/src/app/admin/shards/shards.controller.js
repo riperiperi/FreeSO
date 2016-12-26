@@ -29,10 +29,10 @@ angular.module('admin')
       };
 
       var refresh = function () {
-          //var offset = ($scope.query.page - 1) * $scope.query.limit;
-          //return Api.all("/shards").getList({offset: offset, limit: $scope.query.limit}).then(function (shards) {
-          //   $scope.shards = shards;
-          //});
+          $scope.promise = Api.all("/shards").getList().then(function (shards) {
+             $scope.shards = shards;
+          });
+          return $scope.promise;
       }
 
       refresh();

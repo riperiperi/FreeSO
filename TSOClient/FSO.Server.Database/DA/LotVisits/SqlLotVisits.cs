@@ -51,7 +51,12 @@ namespace FSO.Server.Database.DA.LotVisitors
         
         public IEnumerable<DbLotVisit> StreamBetween(DateTime start, DateTime end)
         {
-            return Context.Connection.Query<DbLotVisit>("SELECT * FROM `fso_lot_visits` WHERE status != 'failed' AND time_closed IS NOT NULL", new { start = start, end = end }, buffered: false);
+            return Context.Connection.Query<DbLotVisit>(
+                "SELECT * FROM `fso_lot_visits` WHERE status != 'failed' " + 
+                    "AND time_closed IS NOT NULL " + 
+                    "AND type = 'visitor' " +
+                    "AND (time_created BETWEEN @start AND @end OR time_closed BETWEEN @start and @end)",
+                new { start = start, end = end }, buffered: false);
         }
     }
 }

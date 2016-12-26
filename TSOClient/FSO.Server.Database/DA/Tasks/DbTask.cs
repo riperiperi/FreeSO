@@ -12,7 +12,7 @@ namespace FSO.Server.Database.DA.Tasks
         public DbTaskType task_type { get; set; }
         public DbTaskStatus task_status { get; set; }
         public DateTime time_created { get; set; }
-        public DateTime time_completed { get; set; }
+        public DateTime? time_completed { get; set; }
         public int? shard_id { get; set; }
     }
 

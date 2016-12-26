@@ -26,6 +26,16 @@ namespace FSO.Server.Database.DA.Tasks
             }).First();
         }
 
+
+        public void CompleteTask(int task_id, DbTaskStatus status)
+        {
+            Context.Connection.Execute("UPDATE fso_tasks set task_status = @task_status, time_completed = current_timestamp WHERE task_id = @task_id", new
+            {
+                task_id = task_id,
+                task_status = status.ToString()
+            });
+        }
+
         public void SetStatus(int task_id, DbTaskStatus status)
         {
             Context.Connection.Execute("UPDATE fso_tasks set task_status = @task_status WHERE task_id = @task_id", new {
@@ -41,5 +51,6 @@ namespace FSO.Server.Database.DA.Tasks
             var results = connection.Query<DbTask>("SELECT * FROM fso_tasks ORDER BY time_created DESC LIMIT @offset, @limit", new { offset = offset, limit = limit });
             return new PagedList<DbTask>(results, offset, total);
         }
+
     }
 }

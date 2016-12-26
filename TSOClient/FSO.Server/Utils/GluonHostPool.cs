@@ -223,6 +223,7 @@ namespace FSO.Server.Utils
         public string PublicHost { get; set; }
         public DbHostRole Role { get; set; }
         public GluonHostStatus Status { get; internal set; }
+        public DateTime BootTime { get; set; }
 
         private GluonHostPool Pool;
         private AriesClient Client;
@@ -275,6 +276,8 @@ namespace FSO.Server.Utils
             if(Role != host.role){
                 Role = host.role;
             }
+
+            BootTime = host.time_boot;
 
             if (hostChanged){
                 Close();
@@ -430,6 +433,7 @@ namespace FSO.Server.Utils
     {
         DbHostRole Role { get; }
         bool Connected { get; }
+        DateTime BootTime { get; }
         Task<IGluonCall> Call<IN>(IN input) where IN : IGluonCall;
     }
 
