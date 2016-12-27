@@ -32,7 +32,7 @@
 <md-content flex md-scroll-y>
 
     <md-table-container>
-        <table md-table ng-model="selected" md-progress="promise">
+        <table md-row-select multiple ng-model="selected" md-table ng-model="selected" md-progress="promise">
             <thead md-head md-order="query.order" md-on-reorder="onOrderChange">
                 <tr md-row>
                     <th md-column md-order-by="name"><span>Name</span></th>
@@ -42,7 +42,7 @@
                 </tr>
             </thead>
             <tbody md-body>
-                <tr md-row ng-repeat="shard in shards">
+                <tr md-row md-select="shard" md-select-id="shard_id" md-auto-select ng-repeat="shard in shards">
                     <td md-cell>{{shard.name}}</td>
                     <td md-cell>{{ {"0":"up", "1":"down", "2":"busy", "3": "full", "4":"closed", "5":"Frontier"}[shard.status] }}</td>
                     <td md-cell>{{shard.internal_host}}</td>

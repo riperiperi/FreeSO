@@ -128,6 +128,11 @@ namespace FSO.Server.Utils
         {
             return Pool.Values;
         }
+
+        public IGluonHost GetByShardId(int shard_id)
+        {
+            return Pool.Values.FirstOrDefault(x => x.ShardId == shard_id);
+        }
     }
 
     public class GluonHostPoolMonitor
@@ -224,6 +229,7 @@ namespace FSO.Server.Utils
         public DbHostRole Role { get; set; }
         public GluonHostStatus Status { get; internal set; }
         public DateTime BootTime { get; set; }
+        public int? ShardId { get; set; }
 
         private GluonHostPool Pool;
         private AriesClient Client;
@@ -278,6 +284,7 @@ namespace FSO.Server.Utils
             }
 
             BootTime = host.time_boot;
+            ShardId = host.shard_id;
 
             if (hostChanged){
                 Close();
@@ -422,6 +429,7 @@ namespace FSO.Server.Utils
         string PoolHash { get; }
 
         IGluonHost Get(string callSign);
+        IGluonHost GetByShardId(int shard_id);
         IEnumerable<IGluonHost> GetByRole(DbHostRole role);
         IEnumerable<IGluonHost> GetAll();
 

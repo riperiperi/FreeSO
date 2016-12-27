@@ -61,6 +61,7 @@ namespace FSO.Server.Servers.Api.Controllers.Admin
         public string sender;
         public string subject;
         public string message;
+        public int[] shard_ids;
     }
 
     public class ShutdownModel
@@ -68,5 +69,6 @@ namespace FSO.Server.Servers.Api.Controllers.Admin
         public int timeout;
         public bool restart;
         public bool update;
+        public int[] shard_ids;
     }
 }

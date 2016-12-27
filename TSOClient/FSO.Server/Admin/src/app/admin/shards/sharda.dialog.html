@@ -9,7 +9,10 @@
                 <md-input-container flex> <label>Subject</label> <input md-maxlength="50" ng-model="ann.subject" required placeholder="Subject"> </md-input-container>
             </div>
             <div layout layout-sm="column">
-                <md-input-container flex> <label>Message</label> <textarea required ng-model="ann.message" placeholder="Message" md-select-on-focus> </md-input-container>
+                <md-input-container flex> 
+                    <label>Message</label> 
+                    <textarea required ng-model="ann.message" placeholder="Message" md-select-on-focus></textarea>
+                </md-input-container>
             </div>
         </form>
     </md-content>

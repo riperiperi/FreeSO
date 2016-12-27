@@ -17,7 +17,7 @@
         <table md-table ng-model="selected" md-progress="promise">
         <thead md-head md-order="query.order" md-on-reorder="onOrderChange">
             <tr md-row>
-                <th md-column><span></span></th>
+                    <th md-column><span>Role</span></th>
                     <th md-column md-order-by="call_sign"><span>Call Sign</span></th>
                     <th md-column>Connected</th>
                     <th md-column md-order-by="time_boot">Startup Time</th>
@@ -29,12 +29,12 @@
                 <tr md-row ng-repeat="host in hosts">
 
                     <td md-cell>
-                        <ng-md-icon icon="{{  {0:'terrain', 1: 'home', 2: 'alarm'}[host.role] }}"></ng-md-icon>
+                        <ng-md-icon title="{{  {0:'City', 1: 'Lots', 2: 'Tasks'}[host.role] }}" icon="{{  {0:'terrain', 1: 'home', 2: 'alarm'}[host.role] }}"></ng-md-icon>
                     </td>
                     <td md-cell>{{host.call_sign}}</td>
                     <td md-cell>
-                        <ng-md-icon ng-show="host.connected" icon="cloud_circle" style="fill: green"></ng-md-icon> 
-                        <ng-md-icon ng-show="!host.connected" icon="cloud_circle" style="fill: red"></ng-md-icon> 
+                        <ng-md-icon title="Up" ng-show="host.connected" icon="cloud_circle" style="fill: green"></ng-md-icon> 
+                        <ng-md-icon title="Down" ng-show="!host.connected" icon="cloud_circle" style="fill: red"></ng-md-icon> 
                     </td>
                     <td md-cell>{{host.time_boot | amCalendar}}</td>
                     <td md-cell>{{host.internal_host}}</td>
