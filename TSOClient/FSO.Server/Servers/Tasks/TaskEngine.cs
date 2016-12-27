@@ -28,6 +28,7 @@ namespace FSO.Server.Servers.Tasks
         private List<TaskEngineEntry> Entries;
         private List<ITask> Running;
         private DateTime Last;
+        private List<ScheduledTaskRunOptions> _Schedule;
 
         public TaskEngine(IKernel kernel, IDAFactory daFactory)
         {
@@ -35,6 +36,7 @@ namespace FSO.Server.Servers.Tasks
             Kernel = kernel;
             DAFactory = daFactory;
             Entries = new List<TaskEngineEntry>();
+            _Schedule = new List<ScheduledTaskRunOptions>();
             Timer.AutoReset = true;
             Timer.Elapsed += Timer_Elapsed;
             Running = new List<ITask>();
@@ -63,21 +65,28 @@ namespace FSO.Server.Servers.Tasks
             }
             Last = time;
 
-            foreach(var task in Entries)
+            foreach(var task in _Schedule)
             {
-                /*if (task.Schedule.isTime(time)){
+                if (task.CronSchedule.isTime(time)){
                     Run(task);
-                }*/
+                }
             }
         }
 
-        public int Run(string name)
+        public void Schedule(ScheduledTaskRunOptions options)
         {
-            return Run(name, null, "{}");
+            options.CronSchedule = new CronSchedule(options.Cron);
+            if (!options.CronSchedule.isValid()){
+                throw new Exception("Invalid cron expression: " + options.Cron);
+            }
+            
+           _Schedule.Add(options);
         }
 
-        public int Run(string name, Nullable<int> shard_id, string parameterJson)
+        public int Run(TaskRunOptions options)
         {
+            var name = options.Task;
+
             try
             {
                 var entry = Entries.FirstOrDefault(x => x.Name == name);
@@ -89,27 +98,9 @@ namespace FSO.Server.Servers.Tasks
 
                 LOG.Info("ready to start task: " + entry.Name);
 
-                if(entry.Options.AllowTaskOverlap == false)
-                {
-                    //Can only have one task of this type running at once
-                    foreach(var task in Running){
-                        if (entry.Type.IsAssignableFrom(task.GetType())){
-                            LOG.Warn("could not start task, previous task is still running");
-                            return -2;
-                        }
-                    }
-                }
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(options.Timeout));
 
-                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(entry.Options.Timeout));
-
-                ITask instance = null;
-                if(entry.Options.CustomKernel != null){
-                    instance = (ITask)entry.Options.CustomKernel.Get(entry.Type);
-                }
-                else{
-                    instance = (ITask)Kernel.Get(entry.Type);
-                }
-
+                ITask instance = (ITask)Kernel.Get(entry.Type);
 
                 int taskId = 0;
                 using (var db = DAFactory.Get())
@@ -117,8 +108,25 @@ namespace FSO.Server.Servers.Tasks
                     taskId = db.Tasks.Create(new DbTask {
                         task_type = instance.GetTaskType(),
                         task_status = DbTaskStatus.in_progress,
-                        shard_id = shard_id
+                        shard_id = options.Shard_Id
                     });
+                }
+
+                if (options.AllowTaskOverlap == false)
+                {
+                    //Can only have one task of this type running at once
+                    foreach (var task in Running)
+                    {
+                        if (entry.Type.IsAssignableFrom(task.GetType()))
+                        {
+                            LOG.Warn("could not start task, previous task is still running");
+                            using (var db = DAFactory.Get())
+                            {
+                                db.Tasks.CompleteTask(taskId, DbTaskStatus.failed);
+                            }
+                            return -2;
+                        }
+                    }
                 }
 
 
@@ -134,8 +142,8 @@ namespace FSO.Server.Servers.Tasks
                 //LogManager.GetLogger()
 
                 var context = new TaskContext(this);
-                context.ShardId = shard_id;
-                context.ParameterJson = parameterJson;
+                context.ShardId = options.Shard_Id;
+                context.ParameterJson = JsonConvert.SerializeObject(options.Parameter);
                 Running.Add(instance);
 
                 Task.Run(() =>
@@ -169,19 +177,11 @@ namespace FSO.Server.Servers.Tasks
             }
         }
 
-        public void AddTask(string name, Type type, TaskOptions options)
+        public void AddTask(string name, Type type)
         {
-            /*var schedule = new CronSchedule(cron);
-            if (!schedule.isValid()){
-                throw new Exception("Invalid cron expression: " + cron);
-            }*/
-
-            /** public CronSchedule Schedule; **/
-
             Entries.Add(new TaskEngineEntry {
                 Name = name,
-                Type = type,
-                Options = options
+                Type = type
             });
         }
     }
@@ -198,14 +198,21 @@ namespace FSO.Server.Servers.Tasks
     {
         public string Name;
         public Type Type;
-        public TaskOptions Options;
     }
 
-    public class TaskOptions
+    public class TaskRunOptions
     {
+        public string Task;
         public bool AllowTaskOverlap = false;
         public int Timeout = 3600; //1hr
-        public IKernel CustomKernel;
+        public int? Shard_Id;
+        public dynamic Parameter;
+    }
+
+    public class ScheduledTaskRunOptions : TaskRunOptions
+    {
+        public string Cron;
+        public CronSchedule CronSchedule;
     }
 
     public class TaskContext

@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Framework.Gluon;
 using FSO.Server.Protocol.Gluon.Packets;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,11 @@ namespace FSO.Server.Servers.Tasks.Handlers
                 shardId = task.ShardId;
             }
 
-            var id = TaskEngine.Run(task.TaskType, shardId, task.ParameterJson);
+            var id = TaskEngine.Run(new TaskRunOptions() {
+                Task = task.TaskType,
+                Shard_Id = shardId,
+                Parameter = JsonConvert.DeserializeObject(task.ParameterJson)
+            });
             session.Write(new RequestTaskResponse() {
                 CallId = task.CallId,
                 TaskId = id

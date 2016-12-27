@@ -20,26 +20,33 @@ namespace FSO.Server.Servers.Tasks
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
         private TaskEngine Engine;
+        private TaskServerConfiguration Config;
 
         public TaskServer(TaskServerConfiguration config, IKernel kernel, TaskEngine engine) : base(config, kernel)
         {
             Engine = engine;
+            Config = config;
 
-            Engine.AddTask(DbTaskType.prune_database.ToString(), typeof(PruneDatabaseTask), new TaskOptions {
-                AllowTaskOverlap = false,
-                Timeout = (int)TimeSpan.FromHours(1).TotalSeconds
-            });
-
-            Engine.AddTask(DbTaskType.top100.ToString(), typeof(Top100Task), new TaskOptions {
-                AllowTaskOverlap = false,
-                Timeout = (int)TimeSpan.FromHours(1).TotalSeconds
-            });
+            Engine.AddTask(DbTaskType.prune_database.ToString(), typeof(PruneDatabaseTask));
+            Engine.AddTask(DbTaskType.top100.ToString(), typeof(Top100Task));
         }
 
         public override void Start()
         {
             LOG.Info("starting task server");
+
+            foreach(var task in Config.Schedule){
+                Engine.Schedule(task);
+            }
+
+            Engine.Start();
             base.Start();
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            Engine.Stop();
         }
 
         public override Type[] GetHandlers(){
@@ -62,5 +69,6 @@ namespace FSO.Server.Servers.Tasks
     public class TaskServerConfiguration : AbstractAriesServerConfig
     {
         public bool Enabled { get; set; } = true;
+        public List<ScheduledTaskRunOptions> Schedule;
     }
 }
