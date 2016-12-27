@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('admin')
-  .controller('TasksCtrl', function ($scope, Api, $mdDialog) {
+  .controller('TasksCtrl', function ($scope, Api, $mdDialog, $interval) {
       
       $scope.query = {
           filter: '',
@@ -31,7 +31,11 @@ angular.module('admin')
 
       refresh();
 
+      var refreshInterval = $interval(refresh, 5000);
 
+      $scope.$on('$destroy', function () {
+          $interval.cancel(refreshInterval);
+      });
 
       $scope.showAdd = function (event) {
           $mdDialog.show({

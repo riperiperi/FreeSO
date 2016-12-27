@@ -14,6 +14,7 @@ namespace FSO.Server.Database.DA.Tasks
         public DateTime time_created { get; set; }
         public DateTime? time_completed { get; set; }
         public int? shard_id { get; set; }
+        public string shard_name { get; set; }
     }
 
     public enum DbTaskType

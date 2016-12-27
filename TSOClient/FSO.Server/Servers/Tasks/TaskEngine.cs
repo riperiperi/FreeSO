@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Tasks;
+using Newtonsoft.Json;
 using Ninject;
 using Ninject.Modules;
 using NLog;
@@ -69,8 +70,13 @@ namespace FSO.Server.Servers.Tasks
                 }*/
             }
         }
-        
+
         public int Run(string name)
+        {
+            return Run(name, null, "{}");
+        }
+
+        public int Run(string name, Nullable<int> shard_id, string parameterJson)
         {
             try
             {
@@ -110,7 +116,8 @@ namespace FSO.Server.Servers.Tasks
                 {
                     taskId = db.Tasks.Create(new DbTask {
                         task_type = instance.GetTaskType(),
-                        task_status = DbTaskStatus.in_progress
+                        task_status = DbTaskStatus.in_progress,
+                        shard_id = shard_id
                     });
                 }
 
@@ -127,7 +134,8 @@ namespace FSO.Server.Servers.Tasks
                 //LogManager.GetLogger()
 
                 var context = new TaskContext(this);
-                context.Data = entry.Options.Data;
+                context.ShardId = shard_id;
+                context.ParameterJson = parameterJson;
                 Running.Add(instance);
 
                 Task.Run(() =>
@@ -197,17 +205,22 @@ namespace FSO.Server.Servers.Tasks
     {
         public bool AllowTaskOverlap = false;
         public int Timeout = 3600; //1hr
-        public object Data;
         public IKernel CustomKernel;
     }
 
     public class TaskContext
     {
         private TaskEngine Engine;
-        public object Data;
+        public int? ShardId;
+        public string ParameterJson;
 
         public TaskContext(TaskEngine engine)
         {
+        }
+
+        public T GetParameter<T>()
+        {
+            return JsonConvert.DeserializeObject<T>(ParameterJson);
         }
     }
 

@@ -5,6 +5,7 @@ using FSO.Server.Servers.Api.JsonWebToken;
 using FSO.Server.Utils;
 using Nancy;
 using Nancy.ModelBinding;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,7 +53,9 @@ namespace FSO.Server.Servers.Api.Controllers.Admin
                 }else{
                     try {
                         var id = taskServer.Call(new RequestTask() {
-                            TaskType = task.task_type.ToString()
+                            TaskType = task.task_type.ToString(),
+                            ParameterJson = JsonConvert.SerializeObject(task.parameter),
+                            ShardId = (task.shard_id == null || !task.shard_id.HasValue) ? -1 : task.shard_id.Value
                         }).Result;
                         return Response.AsJson(id);
                     }catch(Exception ex)
@@ -67,5 +70,7 @@ namespace FSO.Server.Servers.Api.Controllers.Admin
     public class TaskRequest
     {
         public DbTaskType task_type;
+        public int? shard_id;
+        public dynamic parameter;
     }
 }

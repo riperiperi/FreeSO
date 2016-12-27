@@ -19,6 +19,7 @@
             <tr md-row>
                     <th md-column md-order-by="task_id"><span>ID</span></th>
                     <th md-column md-order-by="task_type">Type</th>
+                    <th md-column md-order-by="shard_id">Shard</th>
                     <th md-column md-order-by="task_status">Status</th>
                     <th md-column md-order-by="time_created">Start Time</th>
                     <th md-column md-order-by="time_completed">End Time</th>
@@ -26,10 +27,13 @@
             </thead>
             <tbody md-body>
                 <tr md-row ng-repeat="task in tasks">
-
                     <td md-cell>{{task.task_id}}</td>
                     <td md-cell>{{ {0:'prune_database', 1:'top100'}[task.task_type] }}</td>
-                    <td md-cell>{{ {0:'in_progress',1:'completed',2:'failed'}[task.task_status] }}</td>
+                    <td md-cell>{{ task.shard_name }}</td>
+                    <td md-cell>
+                        <ng-md-icon title="In Progress" ng-show="task.task_status == 0" icon="timer" style="fill: orange"></ng-md-icon> 
+                        <ng-md-icon title="Completed" ng-show="task.task_status == 1" icon="check_circle" style="fill: green"></ng-md-icon> 
+                        <ng-md-icon title="Failed" ng-show="task.task_status == 2" icon="error" style="fill: red"></ng-md-icon> 
                     <td md-cell>{{task.time_created | amCalendar}}</td>
                     <td md-cell>{{task.time_completed | amCalendar}}</td>
                 </tr>

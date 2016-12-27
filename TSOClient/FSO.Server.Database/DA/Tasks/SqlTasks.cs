@@ -48,7 +48,7 @@ namespace FSO.Server.Database.DA.Tasks
         {
             var connection = Context.Connection;
             var total = connection.Query<int>("SELECT COUNT(*) FROM fso_tasks").FirstOrDefault();
-            var results = connection.Query<DbTask>("SELECT * FROM fso_tasks ORDER BY time_created DESC LIMIT @offset, @limit", new { offset = offset, limit = limit });
+            var results = connection.Query<DbTask>("SELECT t.*, s.name as shard_name FROM fso_tasks t LEFT JOIN fso_shards s ON s.shard_id = t.shard_id ORDER BY time_created DESC LIMIT @offset, @limit", new { offset = offset, limit = limit });
             return new PagedList<DbTask>(results, offset, total);
         }
 

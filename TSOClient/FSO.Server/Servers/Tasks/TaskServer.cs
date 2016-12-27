@@ -29,6 +29,11 @@ namespace FSO.Server.Servers.Tasks
                 AllowTaskOverlap = false,
                 Timeout = (int)TimeSpan.FromHours(1).TotalSeconds
             });
+
+            Engine.AddTask(DbTaskType.top100.ToString(), typeof(Top100Task), new TaskOptions {
+                AllowTaskOverlap = false,
+                Timeout = (int)TimeSpan.FromHours(1).TotalSeconds
+            });
         }
 
         public override void Start()
