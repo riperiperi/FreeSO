@@ -1,6 +1,7 @@
 ﻿using FSO.Common.DatabaseService.Model;
 using FSO.Common.Serialization.Primitives;
 using FSO.Server.Database.DA;
+using FSO.Server.Domain;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Voltron.Packets;
@@ -16,11 +17,13 @@ namespace FSO.Server.Servers.City.Handlers
     {
         private IDAFactory DAFactory;
         private CityServerContext Context;
+        private ServerTop100Domain Top100;
 
-        public DBRequestWrapperHandler(CityServerContext context, IDAFactory da)
+        public DBRequestWrapperHandler(CityServerContext context, IDAFactory da, ServerTop100Domain Top100)
         {
             this.DAFactory = da;
             this.Context = context;
+            this.Top100 = Top100;
         }
 
         public void Handle(IVoltronSession session, DBRequestWrapperPDU packet)
@@ -51,6 +54,10 @@ namespace FSO.Server.Servers.City.Handlers
                 case DBRequestType.Search:
                     response = HandleSearchWildcard(session, msg);
                     break;
+
+                case DBRequestType.GetTopResultSetByID:
+                    response = HandleGetTop100(session, msg);
+                    break;
             }
 
             if(response != null){
@@ -64,6 +71,26 @@ namespace FSO.Server.Servers.City.Handlers
             }
         }
 
+        private object HandleGetTop100(IVoltronSession session, cTSONetMessageStandard msg)
+        {
+            var request = msg.ComplexParameter as GetTop100Request;
+            if (request == null) { return null; }
+
+            var results = Top100.Query(request.Category);
+
+            return new cTSONetMessageStandard()
+            {
+                MessageID = 0x69AC83C4,
+                DatabaseType = DBResponseType.GetTopResultSetByID.GetResponseID(),
+                Parameter = msg.Parameter,
+
+                ComplexParameter = new GetTop100Response()
+                {
+                    Items = results
+                }
+            };
+        }
+
         private object HandleLoadAvatarById(IVoltronSession session, cTSONetMessageStandard msg)
         {
             var request = msg.ComplexParameter as LoadAvatarByIDRequest;
@@ -72,7 +99,6 @@ namespace FSO.Server.Servers.City.Handlers
             if(request.AvatarId != session.AvatarId){
                 throw new Exception("Permission denied, you cannot load an avatar you do not own");
             }
-
 
             using (var da = DAFactory.Get())
             {

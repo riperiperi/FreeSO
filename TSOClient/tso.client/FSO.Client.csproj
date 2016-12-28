@@ -60,6 +60,7 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Controllers\GizmoTop100Controller.cs" />
     <Compile Include="Controllers\JoinLotProgressController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\MessagingController.cs" />

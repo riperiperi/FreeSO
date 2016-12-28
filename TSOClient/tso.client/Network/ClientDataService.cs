@@ -348,6 +348,32 @@ namespace FSO.Common.DataService
         }
 
 
+        public List<OUTPUT> EnrichList<OUTPUT, INPUT, DSENTITY>(List<INPUT> input, Func<INPUT, uint?> idFunction, Func<INPUT, DSENTITY, OUTPUT> outputConverter)
+        {
+            var result = new List<OUTPUT>();
+            var ids = input.Select(x => idFunction(x)).Where(x => x != null && x.HasValue).Select(x => (object)x).ToArray();
+            var dsEntities = GetMany(typeof(DSENTITY), ids).Result;
+
+            var idMap = new Dictionary<uint, DSENTITY>();
+            foreach (var item in dsEntities)
+            {
+                var id = GetId(item);
+                idMap[id] = (DSENTITY)item;
+            }
+
+            foreach (var item in input)
+            {
+                var itemId = idFunction(item);
+                DSENTITY dsItem = default(DSENTITY);
+                if(itemId != null && itemId.HasValue){
+                    dsItem = idMap[itemId.Value];
+                }
+                result.Add(outputConverter(item, dsItem));
+            }
+
+            return result;
+        }
+
         protected override Task<object> Get(IDataServiceProvider provider, object key)
         {
             var result = base.Get(provider, key);

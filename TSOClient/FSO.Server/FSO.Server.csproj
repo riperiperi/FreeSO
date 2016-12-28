@@ -127,6 +127,7 @@
     </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -147,7 +148,9 @@
     <Compile Include="DataService\ShardDataServiceModule.cs" />
     <Compile Include="Domain\ServerDomainModule.cs" />
     <Compile Include="Domain\Shards.cs" />
+    <Compile Include="Domain\ServerTop100Domain.cs" />
     <Compile Include="Servers\Api\Controllers\Admin\AdminTasksController.cs" />
+    <Compile Include="Servers\City\CityServerModule.cs" />
     <Compile Include="Servers\Tasks\Domain\PruneDatabaseTask.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServer.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServerConfig.cs" />

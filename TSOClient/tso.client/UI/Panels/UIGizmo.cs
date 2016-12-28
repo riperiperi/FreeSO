@@ -22,6 +22,7 @@ using FSO.Common.DataService.Model;
 using FSO.Client.Controllers;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common;
+using FSO.Common.Enum;
 
 namespace FSO.Client.UI.Panels
 {
@@ -80,7 +81,8 @@ namespace FSO.Client.UI.Panels
             SearchSlider.AttachButtons(SearchScrollUpButton, SearchScrollDownButton, 1);
             SearchResult.AttachSlider(SearchSlider);
             SearchResult.OnDoubleClick += SearchResult_OnDoubleClick;
-            SearchResult.RowHeight -= 3;
+            SearchResult.Size = new Microsoft.Xna.Framework.Vector2(188, 108);
+            SearchResult.Mask = true;
 
             ListBoxColors = script.Create<UIListBoxTextStyle>("ListBoxColors", SearchResult.FontStyle);
         }
@@ -140,6 +142,8 @@ namespace FSO.Client.UI.Panels
         {
             SearchResult.Items.Clear();
 
+            var rank = 1;
+
             if (_Tab == UIGizmoTab.People){
                 NarrowSearchButton.Disabled = WideSearchUpButton.Disabled = PendingSimSearch;
 
@@ -147,8 +151,9 @@ namespace FSO.Client.UI.Panels
                 {
                     SearchResult.Items.AddRange(SimResults.Select(x =>
                     {
-                        return new UIListBoxItem(x.Result, new object[] { null, x.Result.Name }) {
-                            CustomStyle = ListBoxColors
+                        return new UIListBoxItem(x.Result, new object[] { (rank++).ToString(), x.Result.Name }) {
+                            CustomStyle = ListBoxColors,
+                            UseDisabledStyleByDefault = new ValuePointer(x, "IsOffline")
                         };
                     }));
                 }
@@ -159,9 +164,10 @@ namespace FSO.Client.UI.Panels
                 {
                     SearchResult.Items.AddRange(LotResults.Select(x =>
                     {
-                        return new UIListBoxItem(x.Result, new object[] { null, x.Result.Name })
+                        return new UIListBoxItem(x.Result, new object[] { (rank++).ToString(), x.Result.Name })
                         {
-                            CustomStyle = ListBoxColors
+                            CustomStyle = ListBoxColors,
+                            UseDisabledStyleByDefault = new ValuePointer(x, "IsOffline")
                         };
                     }));
                 }
@@ -195,9 +201,13 @@ namespace FSO.Client.UI.Panels
         public UIListBox Top100SubList { get; set; }
         public UIListBox Top100ResultList { get; set; }
 
+        private UIListBoxTextStyle ListBoxColors;
         private int UpdateCooldown;
 
         public UIImage Background; //public so we can disable visibility when not selected... workaround to stop background mouse blocking still happening when panel is hidden
+        private UISlider HiddenSubSlider;
+
+        private UIGizmoTab _Tab;
 
         public UIGizmoTop100(UIScript script, UIGizmo parent)
         {
@@ -207,13 +217,99 @@ namespace FSO.Client.UI.Panels
             
             script.LinkMembers(this, true);
 
+            HiddenSubSlider = new UISlider();
+            Top100SubList.Columns[0].TextureBounds = new Microsoft.Xna.Framework.Vector2(17, 17);
+            Top100SubList.Columns[0].TextureSelectedFrame = 1;
+            Top100SubList.Columns[0].TextureHoverFrame = 2;
+            Top100SubList.OnChange += Top100SubList_OnChange;
+            Top100SubList.AttachSlider(HiddenSubSlider);
+            HiddenSubSlider.AttachButtons(Top100SubListScrollUpButton, Top100SubListScrollDownButton, 1);
+
             Top100Slider.AttachButtons(Top100ListScrollUpButton, Top100ListScrollDownButton, 1);
             Top100ResultList.AttachSlider(Top100Slider);
+            Top100ResultList.Mask = true;
+            Top100ResultList.SetSize(150, 138);
+            Top100ResultList.OnDoubleClick += Top100ResultList_OnDoubleClick;
 
-            populateWithXMLHouses();
+            //populateWithXMLHouses();
 
             Top100ResultList.OnDoubleClick += Top100ItemSelect;
             UpdateCooldown = 100;
+
+            ListBoxColors = script.Create<UIListBoxTextStyle>("ListBoxColors", Top100ResultList.FontStyle);
+        }
+
+        public UIGizmoTab Tab
+        {
+            set
+            {
+                _Tab = value;
+                FindController<GizmoTop100Controller>().SetTab(_Tab);
+            }
+        }
+
+        private void Top100ResultList_OnDoubleClick(UIElement button)
+        {
+            if (Top100ResultList.SelectedItem == null) { return; }
+
+            var selected = Top100ResultList.SelectedItem.Data as Top100ListItem;
+            if (selected != null)
+            {
+                if(selected.Top100Entry.TargetId != null)
+                {
+                    if(selected.Lot != null)
+                    {
+                        FindController<CoreGameScreenController>().ShowLotPage(selected.Lot.Id);
+                    }else if(selected.Avatar != null)
+                    {
+                        FindController<CoreGameScreenController>().ShowPersonPage(selected.Avatar.Avatar_Id);
+                    }
+                }
+            }
+        }
+
+        private void Top100SubList_OnChange(UIElement element)
+        {
+            if (Top100SubList.SelectedItem == null) { return; }
+
+            var selected = Top100SubList.SelectedItem.Data as Top100CategoryListItem;
+            if(selected != null)
+            {
+                var controller = FindController<GizmoTop100Controller>();
+                if (controller != null){
+                    controller.SetCategory(selected.Category);
+                }
+            }
+        }
+
+        public void DisplayCategories(List<Top100CategoryListItem> results)
+        {
+            Top100SubList.Items = results.Select(x =>
+            {
+                return new UIListBoxItem(x, x.Icon)
+                {
+                };
+            }).ToList();
+        }
+
+        public void SelectCategory(Top100Category category)
+        {
+            var item = Top100SubList.Items.FirstOrDefault(x => ((Top100CategoryListItem)x.Data).Category == category);
+            if(Top100SubList.SelectedItem != item){
+                Top100SubList.SelectedItem = item;
+            }
+        }
+
+        public void DisplayResults(List<Top100ListItem> results)
+        {
+            Top100ResultList.Items = results.Select(x =>
+            {
+                return new UIListBoxItem(x, (x.Top100Entry.Rank + 1).ToString(), new ValuePointer(x, "TargetName")) {
+                    Disabled = x.Top100Entry.TargetId == null,
+                    UseDisabledStyleByDefault = new ValuePointer(x, "TargetIsOffline"),
+                    CustomStyle = ListBoxColors
+                };
+            }).ToList();
         }
 
         public override void Update(UpdateState state)
@@ -355,6 +451,7 @@ namespace FSO.Client.UI.Panels
             this.Add(Search);
 
             Top100 = new UIGizmoTop100(ui, this);
+            Top100.BindController<GizmoTop100Controller>();
             Top100.Visible = false;
             Top100.Background.Visible = false;
             this.Add(Top100);
@@ -434,6 +531,7 @@ namespace FSO.Client.UI.Panels
             {
                 _Tab = value;
                 Search.Tab = value;
+                Top100.Tab = value;
             }
         }
 

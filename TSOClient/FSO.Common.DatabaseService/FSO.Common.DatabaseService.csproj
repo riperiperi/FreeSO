@@ -68,6 +68,8 @@
     <Compile Include="IDatabaseService.cs" />
     <Compile Include="Model\DBRequestType.cs" />
     <Compile Include="Model\DBResponseType.cs" />
+    <Compile Include="Model\GetTop100Request.cs" />
+    <Compile Include="Model\GetTop100Response.cs" />
     <Compile Include="Model\SearchRequest.cs" />
     <Compile Include="Model\SearchResponse.cs" />
     <Compile Include="Model\LoadAvatarByIDRequest.cs" />

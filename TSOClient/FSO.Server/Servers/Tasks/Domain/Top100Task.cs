@@ -1,4 +1,5 @@
-﻿using FSO.Common.Utils;
+﻿using FSO.Common.Enum;
+using FSO.Common.Utils;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
@@ -100,15 +101,15 @@ namespace FSO.Server.Servers.Tasks.Domain
                 hours.Clear();
 
                 var categories = results.GroupBy(x => x.category).ToDictionary(x => x.Key, x => x.ToList());
-                foreach (var cat in Enum.GetValues(typeof(DbLotCategory)))
+                foreach (var cat in Enum.GetValues(typeof(LotCategory)))
                 {
-                    if (!categories.ContainsKey((DbLotCategory)cat)){
-                        categories.Add((DbLotCategory)cat, null);
+                    if (!categories.ContainsKey((LotCategory)cat)){
+                        categories.Add((LotCategory)cat, null);
                     }
                 }
 
                 //We don't do top 100 for none category
-                categories.Remove(DbLotCategory.none);
+                categories.Remove(LotCategory.none);
 
                 foreach (var category in categories.Keys)
                 {

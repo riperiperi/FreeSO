@@ -160,6 +160,10 @@
       <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
       <Name>FSO.Server.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
+      <Name>FSO.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="DatabaseScripts\changes\0003_max_roomates.sql">

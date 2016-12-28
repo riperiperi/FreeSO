@@ -1,5 +1,6 @@
 ﻿using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
+using FSO.Common.Enum;
 using FSO.Common.Utils;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
@@ -100,7 +101,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     lot_id = Context.DbId,
                     location = Context.Id,
-                    category = DbLotCategory.money,
+                    category = LotCategory.money,
                     name = "{job:"+jobType+":"+jobLevel+"}",
                 };
                 LotAdj = new List<DbLot>();

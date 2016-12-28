@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Common.Enum;
 
 namespace FSO.Server.Database.DA.LotTop100
 {
@@ -11,6 +12,20 @@ namespace FSO.Server.Database.DA.LotTop100
     {
         public SqlLotTop100(ISqlContext context) : base(context)
         {
+        }
+
+        public IEnumerable<DbLotTop100> All()
+        {
+            return Context.Connection.Query<DbLotTop100>("SELECT top.*, l.name as lot_name, l.location as lot_location FROM fso_lot_top_100 top LEFT JOIN fso_lots l ON top.lot_id = l.lot_id");
+        }
+
+        public IEnumerable<DbLotTop100> GetByCategory(int shard_id, LotCategory category)
+        {
+            return Context.Connection.Query<DbLotTop100>("SELECT top.*, l.name as lot_name, l.location as lot_location FROM fso_lot_top_100 top LEFT JOIN fso_lots l ON top.lot_id = l.lot_id WHERE top.category = @category AND top.shard_id = @shard_id", new
+            {
+                category = category.ToString(),
+                shard_id = shard_id
+            });
         }
 
         public void Replace(IEnumerable<DbLotTop100> values)

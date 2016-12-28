@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using FSO.Common.Enum;
 using FSO.Server.Common;
 using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.Shards;
@@ -165,7 +166,7 @@ namespace FSO.Server.Database.DA.Lots
             Context.Connection.Query("UPDATE fso_lots SET description = @desc WHERE lot_id = @id", new { id = lot_id, desc = description });
         }
 
-        public void UpdateLotCategory(int lot_id, DbLotCategory category)
+        public void UpdateLotCategory(int lot_id, LotCategory category)
         {
             Context.Connection.Query("UPDATE fso_lots SET category = @category, category_change_date = @time WHERE lot_id = @id", new { id = lot_id, category = category.ToString(), time = Epoch.Now });
         }

@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Caching;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -77,6 +78,7 @@ namespace FSO.Server
             LOG.Info("Scanning content");
             Content.Content.Init(Config.GameLocation, Content.ContentMode.SERVER);
             Kernel.Bind<Content.Content>().ToConstant(Content.Content.Get());
+            Kernel.Bind<MemoryCache>().ToConstant(new MemoryCache("fso_server"));
 
             LOG.Info("Loading domain logic");
             Kernel.Load<ServerDomainModule>();
@@ -108,7 +110,8 @@ namespace FSO.Server
                  */
                 var childKernel = new ChildKernel(
                     Kernel,
-                    new ShardDataServiceModule(Config.SimNFS)
+                    new ShardDataServiceModule(Config.SimNFS),
+                    new CityServerModule()
                 );
 
                 var city = childKernel.Get<CityServer>(new ConstructorArgument("config", cityServer));
