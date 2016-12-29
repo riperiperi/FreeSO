@@ -115,6 +115,23 @@
 	  "requires":[
 		"def48038-d0d6-4b10-a129-0b9c736e4d35"
 	  ]
+    },
+	{
+      "id": "2149dfea-970e-4161-901d-b59106fa484f",
+      "script": "changes/0010_fso_top100.sql",
+      "idempotent": false,
+	  "requires":[
+		"bec36bbc-1774-44cb-a7c5-03f4a00e801c",
+		"52795d47-a25e-418f-a618-fb89300aab01"
+	  ]
+    },
+	{
+      "id": "4838258c-765d-42c9-8439-0505000b372f",
+      "script": "changes/0011_fso_bonus.sql",
+      "idempotent": false,
+	  "requires":[
+		"bec36bbc-1774-44cb-a7c5-03f4a00e801c"
+	  ]
     }
   ]
 }

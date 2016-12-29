@@ -12,5 +12,6 @@ namespace FSO.Server.Database.DA.LotTop100
         void Replace(IEnumerable<DbLotTop100> values);
         IEnumerable<DbLotTop100> All();
         IEnumerable<DbLotTop100> GetByCategory(int shard_id, LotCategory category);
+        bool Calculate(DateTime date, int shard_id);
     }
 }

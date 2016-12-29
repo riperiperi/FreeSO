@@ -4,6 +4,7 @@ using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.LotTop100;
+using FSO.Server.Database.DA.LotVisitTotals;
 using FSO.Server.Database.DA.Tasks;
 using System;
 using System.Collections.Generic;
@@ -37,116 +38,51 @@ namespace FSO.Server.Servers.Tasks.Domain
 
             using (var db = DAFactory.Get())
             {
-                //Scan every lot that has had visitors over the visitor period
-                //While doing this, calculate top 100 for the shard and visitor bonus
-                var day4End = Midnight();
-                var day4Start = day4End.Subtract(TimeSpan.FromDays(1));
-                var day3End = day4Start;
-                var day3Start = day3End.Subtract(TimeSpan.FromDays(1));
-                var day2End = day3Start;
-                var day2Start = day2End.Subtract(TimeSpan.FromDays(1));
-                var day1End = day2Start;
-                var day1Start = day1End.Subtract(TimeSpan.FromDays(1));
-
+                var endDate = Midnight();
+                var startDate = endDate.Subtract(TimeSpan.FromDays(4));
                 var shardId = context.ShardId;
 
-                var stream = db.LotVisits.StreamBetween(shardId.Value, day1Start, day4End);
-                var enumerator = stream.GetEnumerator();
 
-                //The calculation is quite messy for SQL to do so implemented as code
-                //We buffer the visits from SQL efficiently but the running totals are held in RAM
-                //~32 bytes per lot that had visitors in the past 4 days ~3.5MB for 100,000 lots visited. 
-                //Good enough for now.
-                var hours = new Dictionary<int, double[]>();
-
-                while (Running && enumerator.MoveNext())
+                while (startDate < endDate)
                 {
-                    var visit = enumerator.Current;
+                    var dayStart = startDate;
+                    var dayEnd = dayStart.Add(TimeSpan.FromDays(1));
 
-                    var day1 = CalculateDateOverlap(day1Start, day1End, visit.time_created, visit.time_closed.Value);
-                    var day2 = CalculateDateOverlap(day2Start, day2End, visit.time_created, visit.time_closed.Value);
-                    var day3 = CalculateDateOverlap(day3Start, day3End, visit.time_created, visit.time_closed.Value);
-                    var day4 = CalculateDateOverlap(day4Start, day4End, visit.time_created, visit.time_closed.Value);
+                    var stream = db.LotVisits.StreamBetween(shardId.Value, dayStart, dayEnd);
+                    var enumerator = stream.GetEnumerator();
 
-                    if (!hours.ContainsKey(visit.lot_id))
+                    //The calculation is quite messy for SQL to do so implemented as code
+                    //We buffer the visits from SQL efficiently but the running totals are held in RAM
+                    //~32 bytes per lot that had visitors in the past 4 days ~3.5MB for 100,000 lots visited. 
+                    //Good enough for now.
+                    var hours = new Dictionary<int, double>();
+
+                    while (Running && enumerator.MoveNext())
                     {
-                        hours.Add(visit.lot_id, new double[4]);
-                    }
-
-                    var lotHours = hours[visit.lot_id];
-                    lotHours[0] += day1.TotalMinutes;
-                    lotHours[1] += day2.TotalMinutes;
-                    lotHours[2] += day3.TotalMinutes;
-                    lotHours[3] += day4.TotalMinutes;
-                }
-
-                var results = hours.Keys.Batch(50).SelectMany(x =>
-                {
-                    var sideData = db.Lots.Get(x);
-
-                    return sideData.Select(lot =>
-                    {
-                        var lotHours = hours[lot.lot_id];
-                        var total = (lotHours[0] + lotHours[1] + lotHours[2] + lotHours[3]) / 4.0d;
-
-                        return new
+                        var visit = enumerator.Current;
+                        var span = CalculateDateOverlap(dayStart, dayEnd, visit.time_created, visit.time_closed.Value);
+                        if (hours.ContainsKey(visit.lot_id))
                         {
-                            lot_id = lot.lot_id,
-                            category = lot.category,
-                            total = total
-                        };
-                    });
-                }).ToList();
-
-                hours.Clear();
-
-                var categories = results.GroupBy(x => x.category).ToDictionary(x => x.Key, x => x.ToList());
-                foreach (var cat in Enum.GetValues(typeof(LotCategory)))
-                {
-                    if (!categories.ContainsKey((LotCategory)cat)){
-                        categories.Add((LotCategory)cat, null);
-                    }
-                }
-
-                //We don't do top 100 for none category
-                categories.Remove(LotCategory.none);
-
-                foreach (var category in categories.Keys)
-                {
-                    var items = categories[category];
-                    var top100List = new List<DbLotTop100>();
-
-                    if (items != null)
-                    {
-                        var ordered = items.OrderByDescending(x => x.total).Take(100).ToList();
-                        for (byte i = 0; i < ordered.Count; i++)
+                            hours[visit.lot_id] += span.TotalMinutes;
+                        }
+                        else
                         {
-                            var item = ordered[i];
 
-                            top100List.Add(new DbLotTop100
-                            {
-                                shard_id = shardId.Value,
-                                category = category,
-                                rank = i,
-                                lot_id = item.lot_id,
-                                minutes = (int)Math.Floor(item.total)
-                            });
+                            hours.Add(visit.lot_id, span.TotalMinutes);
                         }
                     }
-                    
 
-                    //Fill in any gaps
-                    for (byte i = (byte)top100List.Count; i < 100; i++)
+                    db.LotVisitTotals.Insert(hours.Where(x => x.Value > 0).Select(x =>
                     {
-                        top100List.Add(new DbLotTop100
-                        {
-                            shard_id = shardId.Value,
-                            category = category,
-                            rank = i
-                        });
-                    }
+                        return new DbLotVisitTotal() { lot_id = x.Key, date = dayStart, minutes = (int)x.Value };
+                    }));
 
-                    db.LotTop100.Replace(top100List);
+                    startDate = startDate.Add(TimeSpan.FromDays(1));
+                }
+
+                var top100Calculated = db.LotTop100.Calculate(endDate, context.ShardId.Value);
+                if (!top100Calculated){
+                    throw new Exception("Unknown error while calculating top 100 lots");
                 }
             }
         }
@@ -200,9 +136,21 @@ namespace FSO.Server.Servers.Tasks.Domain
         }
     }
 
-
+    public class Top100Lot
+    {
+        public int lot_id;
+        public LotCategory category;
+        public int total;
+        public int rank = -1;
+    }
 
     public class Top100TaskParameter
     {
+    }
+
+    public class Top100TaskTuning
+    {
+        public int BonusPerVisitorHour { get; set; } = 5;
+        public int BonusPerPropertyTop100Rank { get; set; } = 10;
     }
 }

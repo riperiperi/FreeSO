@@ -21,6 +21,8 @@ using FSO.Server.Database.DA.LotVisitors;
 using FSO.Server.Database.DA.LotTop100;
 using FSO.Server.Database.DA.Hosts;
 using FSO.Server.Database.DA.Tasks;
+using FSO.Server.Database.DA.Bonus;
+using FSO.Server.Database.DA.LotVisitTotals;
 
 namespace FSO.Server.Database.DA
 {
@@ -247,6 +249,32 @@ namespace FSO.Server.Database.DA
                     _Tasks = new SqlTasks(Context);
                 }
                 return _Tasks;
+            }
+        }
+
+        private IBonus _Bonus;
+        public IBonus Bonus
+        {
+            get
+            {
+                if(_Bonus == null)
+                {
+                    _Bonus = new SqlBonus(Context);
+                }
+                return _Bonus;
+            }
+        }
+
+        private ILotVisitTotals _Totals;
+        public ILotVisitTotals LotVisitTotals
+        {
+            get
+            {
+                if(_Totals == null)
+                {
+                    _Totals = new SqlLotVisitTotals(Context);
+                }
+                return _Totals;
             }
         }
 

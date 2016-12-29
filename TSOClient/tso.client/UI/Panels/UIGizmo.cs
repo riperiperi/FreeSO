@@ -304,7 +304,7 @@ namespace FSO.Client.UI.Panels
         {
             Top100ResultList.Items = results.Select(x =>
             {
-                return new UIListBoxItem(x, (x.Top100Entry.Rank + 1).ToString(), new ValuePointer(x, "TargetName")) {
+                return new UIListBoxItem(x, x.Top100Entry.Rank.ToString(), new ValuePointer(x, "TargetName")) {
                     Disabled = x.Top100Entry.TargetId == null,
                     UseDisabledStyleByDefault = new ValuePointer(x, "TargetIsOffline"),
                     CustomStyle = ListBoxColors

@@ -105,6 +105,17 @@ namespace FSO.Client.Controllers
                         });
                     }
 
+                    //Fill in any gaps
+                    while(enriched.Count < 100)
+                    {
+                        enriched.Add(new Top100ListItem {
+                            Top100Entry = new Top100Entry()
+                            {
+                                Rank = (byte)enriched.Count
+                            }
+                        });
+                    }
+
                     enriched = enriched.OrderBy(i => i.Top100Entry.Rank).ToList();
                     View.DisplayResults(enriched);
                 });

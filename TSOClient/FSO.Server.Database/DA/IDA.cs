@@ -1,6 +1,7 @@
 ﻿using FSO.Server.Database.DA.AuthTickets;
 using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Database.DA.Avatars;
+using FSO.Server.Database.DA.Bonus;
 using FSO.Server.Database.DA.Bookmarks;
 using FSO.Server.Database.DA.Hosts;
 using FSO.Server.Database.DA.LotAdmit;
@@ -8,6 +9,7 @@ using FSO.Server.Database.DA.LotClaims;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.LotTop100;
 using FSO.Server.Database.DA.LotVisitors;
+using FSO.Server.Database.DA.LotVisitTotals;
 using FSO.Server.Database.DA.Objects;
 using FSO.Server.Database.DA.Outfits;
 using FSO.Server.Database.DA.Relationships;
@@ -39,7 +41,9 @@ namespace FSO.Server.Database.DA
         IBookmarks Bookmarks { get; }
         IOutfits Outfits { get; }
         ILotVisits LotVisits { get; }
+        ILotVisitTotals LotVisitTotals { get; }
         ILotTop100 LotTop100 { get; }
+        IBonus Bonus { get; }
 
         //System tables
         IHosts Hosts { get; }

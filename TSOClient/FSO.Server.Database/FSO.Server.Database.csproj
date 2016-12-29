@@ -91,6 +91,9 @@
     <Compile Include="DA\Avatars\DbJobLevel.cs" />
     <Compile Include="DA\Avatars\IAvatars.cs" />
     <Compile Include="DA\Avatars\SqlAvatars.cs" />
+    <Compile Include="DA\Bonus\DbBonus.cs" />
+    <Compile Include="DA\Bonus\IBonus.cs" />
+    <Compile Include="DA\Bonus\SqlBonus.cs" />
     <Compile Include="DA\Bookmarks\DbBookmark.cs" />
     <Compile Include="DA\Bookmarks\IBookmarks.cs" />
     <Compile Include="DA\Bookmarks\SqlBookmarks.cs" />
@@ -114,9 +117,12 @@
     <Compile Include="DA\LotTop100\ILotTop100.cs" />
     <Compile Include="DA\LotTop100\DbLotTop100.cs" />
     <Compile Include="DA\LotTop100\SqlLotTop100.cs" />
+    <Compile Include="DA\LotVisitTotals\DbLotVisitTotal.cs" />
+    <Compile Include="DA\LotVisitTotals\ILotVisitTotals.cs" />
     <Compile Include="DA\LotVisits\DbLotVisit.cs" />
     <Compile Include="DA\LotVisits\ILotVisits.cs" />
     <Compile Include="DA\LotVisits\SqlLotVisits.cs" />
+    <Compile Include="DA\LotVisitTotals\SqlLotVisitTotals.cs" />
     <Compile Include="DA\MySqlContext.cs" />
     <Compile Include="DA\Objects\DbObject.cs" />
     <Compile Include="DA\Objects\IObjects.cs" />
@@ -143,6 +149,7 @@
     <Compile Include="DA\Users\SqlUsers.cs" />
     <Compile Include="DA\Users\User.cs" />
     <Compile Include="DA\Users\UserAuthenticate.cs" />
+    <Compile Include="DA\Utils\BufferedInsert.cs" />
     <Compile Include="DA\Utils\FilterOptions.cs" />
     <Compile Include="DA\Utils\PagedList.cs" />
     <Compile Include="Management\DbChangeTool.cs" />

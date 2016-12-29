@@ -70,5 +70,12 @@ namespace FSO.Server.Servers.Tasks
     {
         public bool Enabled { get; set; } = true;
         public List<ScheduledTaskRunOptions> Schedule;
+
+
+    }
+
+    public class TaskTuning
+    {
+        public Top100TaskTuning Top100 { get; set; } = new Top100TaskTuning();
     }
 }
