@@ -20,7 +20,7 @@ namespace FSO.Server.Database.DA.Tasks
     public enum DbTaskType
     {
         prune_database,
-        top100
+        bonus
     }
 
     public enum DbTaskStatus

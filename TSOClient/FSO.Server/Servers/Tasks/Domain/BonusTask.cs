@@ -2,6 +2,7 @@
 using FSO.Common.Utils;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
+using FSO.Server.Database.DA.Bonus;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.LotTop100;
 using FSO.Server.Database.DA.LotVisitTotals;
@@ -17,44 +18,50 @@ namespace FSO.Server.Servers.Tasks.Domain
     /// <summary>
     /// Calculate top 100
     /// </summary>
-    public class Top100Task : ITask
+    public class BonusTask : ITask
     {
         private IDAFactory DAFactory;
         private bool Running;
+        private TaskTuning Tuning;
 
-        public Top100Task(IDAFactory DAFactory)
+        public BonusTask(IDAFactory DAFactory, TaskTuning tuning)
         {
             this.DAFactory = DAFactory;
+            this.Tuning = tuning;
         }
 
         public void Run(TaskContext context)
         {
             Running = true;
+            var tuning = Tuning.Bonus;
+            if(tuning == null)
+            {
+                tuning = new BonusTaskTuning();
+            }
 
-            if(context.ShardId == null || !context.ShardId.HasValue)
+            if (context.ShardId == null || !context.ShardId.HasValue)
             {
                 throw new Exception("Top 100 must be given a shard_id to process");
             }
 
             using (var db = DAFactory.Get())
             {
-                var endDate = Midnight();
-                var startDate = endDate.Subtract(TimeSpan.FromDays(4));
+                var endTime = Midnight();
+                var endDay = endTime.Subtract(TimeSpan.FromMilliseconds(1));
+                endDay = new DateTime(endDay.Year, endDay.Month, endDay.Day);
+                
+                var startTime = endTime.Subtract(TimeSpan.FromDays(4));
                 var shardId = context.ShardId;
 
 
-                while (startDate < endDate)
+                while (startTime < endTime)
                 {
-                    var dayStart = startDate;
+                    var dayStart = startTime;
                     var dayEnd = dayStart.Add(TimeSpan.FromDays(1));
 
                     var stream = db.LotVisits.StreamBetween(shardId.Value, dayStart, dayEnd);
                     var enumerator = stream.GetEnumerator();
 
-                    //The calculation is quite messy for SQL to do so implemented as code
-                    //We buffer the visits from SQL efficiently but the running totals are held in RAM
-                    //~32 bytes per lot that had visitors in the past 4 days ~3.5MB for 100,000 lots visited. 
-                    //Good enough for now.
                     var hours = new Dictionary<int, double>();
 
                     while (Running && enumerator.MoveNext())
@@ -67,7 +74,6 @@ namespace FSO.Server.Servers.Tasks.Domain
                         }
                         else
                         {
-
                             hours.Add(visit.lot_id, span.TotalMinutes);
                         }
                     }
@@ -77,13 +83,44 @@ namespace FSO.Server.Servers.Tasks.Domain
                         return new DbLotVisitTotal() { lot_id = x.Key, date = dayStart, minutes = (int)x.Value };
                     }));
 
-                    startDate = startDate.Add(TimeSpan.FromDays(1));
+                    startTime = startTime.Add(TimeSpan.FromDays(1));
                 }
 
-                var top100Calculated = db.LotTop100.Calculate(endDate, context.ShardId.Value);
+                var top100Calculated = db.LotTop100.Calculate(endTime, context.ShardId.Value);
                 if (!top100Calculated){
                     throw new Exception("Unknown error while calculating top 100 lots");
                 }
+
+                var bonusMetrics = db.Bonus.GetMetrics(endDay, context.ShardId.Value);
+
+                db.Bonus.Insert(bonusMetrics.Select(x =>
+                {
+                    int? bonus_property = null;
+                    int? bonus_visitor = null;
+                    int? bonus_sim = null;
+
+                    if(x.visitor_minutes != null && x.visitor_minutes >= 60){
+                        bonus_visitor = (int)Math.Floor((double)x.visitor_minutes / (double)60) * tuning.visitor_bonus.per_unit;
+                    }
+
+                    if(x.property_rank != null){
+                        bonus_property = (100 - x.property_rank.Value + 1) * tuning.property_bonus.per_unit;
+
+                        if(tuning.property_bonus.overrides != null &&
+                            tuning.property_bonus.overrides.ContainsKey(x.property_rank.Value)){
+                            bonus_property = tuning.property_bonus.overrides[x.property_rank.Value];
+                        }
+                    }
+
+                    return new DbBonus()
+                    {
+                        avatar_id = x.avatar_id,
+                        period = endDay,
+                        bonus_property = bonus_property,
+                        bonus_visitor = bonus_visitor,
+                        bonus_sim = bonus_sim
+                    };
+                }));
             }
         }
 
@@ -132,7 +169,7 @@ namespace FSO.Server.Servers.Tasks.Domain
 
         public DbTaskType GetTaskType()
         {
-            return DbTaskType.top100;
+            return DbTaskType.bonus;
         }
     }
 
@@ -144,13 +181,24 @@ namespace FSO.Server.Servers.Tasks.Domain
         public int rank = -1;
     }
 
-    public class Top100TaskParameter
+    public class BonusTaskParameter
     {
     }
 
-    public class Top100TaskTuning
+    public class BonusTaskTuning
     {
-        public int BonusPerVisitorHour { get; set; } = 5;
-        public int BonusPerPropertyTop100Rank { get; set; } = 10;
+        public PropertyBonusTuning property_bonus { get; set; } = new PropertyBonusTuning();
+        public VisitorBonusTuning visitor_bonus { get; set; } = new VisitorBonusTuning();
+    }
+
+    public class PropertyBonusTuning
+    {
+        public int per_unit { get; set; } = 10;
+        public Dictionary<byte, int> overrides { get; set; }
+    }
+
+    public class VisitorBonusTuning
+    {
+        public int per_unit { get; set; } = 5;
     }
 }

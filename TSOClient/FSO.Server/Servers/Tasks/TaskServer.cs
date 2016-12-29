@@ -28,7 +28,7 @@ namespace FSO.Server.Servers.Tasks
             Config = config;
 
             Engine.AddTask(DbTaskType.prune_database.ToString(), typeof(PruneDatabaseTask));
-            Engine.AddTask(DbTaskType.top100.ToString(), typeof(Top100Task));
+            Engine.AddTask(DbTaskType.bonus.ToString(), typeof(BonusTask));
         }
 
         public override void Start()
@@ -70,12 +70,11 @@ namespace FSO.Server.Servers.Tasks
     {
         public bool Enabled { get; set; } = true;
         public List<ScheduledTaskRunOptions> Schedule;
-
-
+        public TaskTuning Tuning { get; set; }
     }
 
     public class TaskTuning
     {
-        public Top100TaskTuning Top100 { get; set; } = new Top100TaskTuning();
+        public BonusTaskTuning Bonus { get; set; }
     }
 }

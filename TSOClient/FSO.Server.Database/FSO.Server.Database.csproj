@@ -92,6 +92,7 @@
     <Compile Include="DA\Avatars\IAvatars.cs" />
     <Compile Include="DA\Avatars\SqlAvatars.cs" />
     <Compile Include="DA\Bonus\DbBonus.cs" />
+    <Compile Include="DA\Bonus\DbBonusMetrics.cs" />
     <Compile Include="DA\Bonus\IBonus.cs" />
     <Compile Include="DA\Bonus\SqlBonus.cs" />
     <Compile Include="DA\Bookmarks\DbBookmark.cs" />

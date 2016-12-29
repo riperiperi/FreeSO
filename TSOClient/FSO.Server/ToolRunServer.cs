@@ -140,6 +140,9 @@ namespace FSO.Server
                     new TaskEngineModule()
                 );
 
+                childKernel.Bind<TaskServerConfiguration>().ToConstant(Config.Services.Tasks);
+                childKernel.Bind<TaskTuning>().ToConstant(Config.Services.Tasks.Tuning);
+
                 var tasks = childKernel.Get<TaskServer>(new ConstructorArgument("config", Config.Services.Tasks));
                 Servers.Add(tasks);
             }

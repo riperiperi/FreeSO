@@ -26,7 +26,7 @@
 			},
 			{
 				"cron":"0 4 * * *", 
-				"task":"top100", 
+				"task":"bonus", 
 				"timeout":3600,
 				"shard_id": 1,
 				"parameter":{
@@ -35,9 +35,18 @@
 		],
 
 		"tuning":{
-			"top100":{
-				"bonus_per_visitor_hour": 5,
-				"bonus_per_property_top100_rank": 10
+			"bonus":{
+				"property_bonus":{
+					"per_unit": 20,
+					"overrides":{
+						"1": 1500,
+						"2": 1250,
+						"3": 1000
+					}
+				},
+				"visitor_bonus":{
+					"per_unit": 8
+				}
 			}
 		}
 	},

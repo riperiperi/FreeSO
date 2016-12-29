@@ -27,6 +27,12 @@ namespace FSO.Server.Servers.Tasks.Domain
                 var expireTime = Epoch.Now - 600;
                 db.AuthTickets.Purge(expireTime);
                 db.Shards.PurgeTickets(expireTime);
+
+                var retentionPeriod = Epoch.Now - (86400 * 14);
+                var retentionDate = Epoch.ToDate(retentionPeriod);
+
+                db.LotVisitTotals.Purge(retentionDate);
+                db.Bonus.Purge(retentionDate);
             }
         }
 

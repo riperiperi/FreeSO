@@ -220,7 +220,7 @@
     <Compile Include="Servers\Lot\LotServer.cs" />
     <Compile Include="Servers\Lot\LotServerConfiguration.cs" />
     <Compile Include="Servers\Lot\LotServerModule.cs" />
-    <Compile Include="Servers\Tasks\Domain\Top100Task.cs" />
+    <Compile Include="Servers\Tasks\Domain\BonusTask.cs" />
     <Compile Include="Servers\Tasks\Handlers\TaskEngineHandler.cs" />
     <Compile Include="Servers\Tasks\TaskServer.cs" />
     <Compile Include="ToolInitDatabase.cs" />

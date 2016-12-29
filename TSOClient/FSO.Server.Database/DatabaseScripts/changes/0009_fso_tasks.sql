@@ -1,6 +1,6 @@
 ﻿CREATE TABLE IF NOT EXISTS `fso_tasks` (
   `task_id` int(11) NOT NULL AUTO_INCREMENT,
-  `task_type` enum('prune_database','top100') NOT NULL,
+  `task_type` enum('prune_database','bonus') NOT NULL,
   `task_status` enum('in_progress','completed','failed') NOT NULL,
   `time_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `time_completed` datetime DEFAULT NULL,

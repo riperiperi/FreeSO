@@ -11,7 +11,7 @@
                     <label>Type</label> 
                     <md-select required ng-model="task.task_type">
                         <md-option value="prune_database">Prune Database</md-option>
-                        <md-option value="top100">Calculate Top 100</md-option>
+                        <md-option value="bonus">Bonus &amp; Top 100</md-option>
                     </md-select>
                 </md-input-container>
             </div>
@@ -20,7 +20,7 @@
             <div layout layout-sm="column">
                 <md-input-container flex> 
                     <label>Shard</label> 
-                    <md-select required ng-model="task.shard_id" ng-required="task.task_type == 'top100'" ng-show="task.task_type == 'top100'">
+                    <md-select required ng-model="task.shard_id" ng-required="task.task_type == 'bonus'" ng-show="task.task_type == 'bonus'">
                         <md-option ng-repeat="shard in shards" value="{{shard.shard_id}}">{{shard.name}}</md-option>
                     </md-select>
                 </md-input-container>
