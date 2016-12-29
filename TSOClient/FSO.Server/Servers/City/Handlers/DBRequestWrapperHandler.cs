@@ -104,6 +104,9 @@ namespace FSO.Server.Servers.City.Handlers
             {
                 var avatar = da.Avatars.Get(session.AvatarId);
                 if (avatar == null) return null;
+
+                var bonus = da.Bonus.GetByAvatarId(avatar.avatar_id);
+
                 return new cTSONetMessageStandard()
                 {
                     MessageID = 0x8ADF865D,
@@ -114,6 +117,15 @@ namespace FSO.Server.Servers.City.Handlers
                     {
                         AvatarId = session.AvatarId,
                         Cash = (uint)avatar.budget,
+                        Bonus = bonus.Select(x =>
+                        {
+                            return new LoadAvatarBonus() {
+                                PropertyBonus = x.bonus_property == null ? (uint)0 : (uint)x.bonus_property.Value,
+                                SimBonus = x.bonus_sim == null ? (uint)0 : (uint)x.bonus_sim.Value,
+                                VisitorBonus = x.bonus_visitor == null ? (uint)0 : (uint)x.bonus_visitor,
+                                Date = x.period.ToShortDateString()
+                            };
+                        }).ToList()
                     }
                 };
             };

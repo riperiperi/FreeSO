@@ -16,7 +16,7 @@ namespace FSO.Server.Database.DA.Bonus
 
         public IEnumerable<DbBonus> GetByAvatarId(uint avatar_id)
         {
-            return Context.Connection.Query<DbBonus>("SELECT * FROM fso_bonus WHERE avatar_id = @avatar_id ORDER BY time_issued DESC LIMIT 14", new { avatar_id = avatar_id });
+            return Context.Connection.Query<DbBonus>("SELECT * FROM fso_bonus WHERE avatar_id = @avatar_id ORDER BY period DESC LIMIT 14", new { avatar_id = avatar_id });
         }
 
         public IEnumerable<DbBonusMetrics> GetMetrics(DateTime date, int shard_id)
