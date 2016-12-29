@@ -18,7 +18,7 @@ BEGIN
     END;
 	
 	SET @date = p_date;
-	SET @start_date = DATE_SUB(@date, INTERVAL 3 DAY);
+	SET @start_date = DATE_SUB(@date, INTERVAL 4 DAY);
 	SET @timestamp = current_timestamp;
 	SET @row_number = 0;
 	
