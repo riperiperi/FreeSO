@@ -122,6 +122,11 @@ namespace FSO.Client
             ChangeState<CoreGameScreen, CoreGameScreenController>((view, controller) =>{
                 view.VisualBudget = dbAvatar.Cash;
 
+                if(dbAvatar.Bonus != null && dbAvatar.Bonus.Count > 0)
+                {
+                    UIScreen.ShowDialog(new UIBonusDialog(dbAvatar.Bonus), true);
+                }
+
                 if (lotId.HasValue){
                     controller.JoinLot(lotId.Value);
                 }

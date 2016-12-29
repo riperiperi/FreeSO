@@ -110,6 +110,7 @@
     <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
     <Compile Include="UI\Panels\LotControls\UIRoofer.cs" />
     <Compile Include="UI\Panels\UIAsyncPriceDialog.cs" />
+    <Compile Include="UI\Panels\UIBonusDialog.cs" />
     <Compile Include="UI\Panels\UIBookmarks.cs" />
     <Compile Include="UI\Panels\UIDebugMenu.cs" />
     <Compile Include="UI\Panels\UIEnvPanel.cs" />
