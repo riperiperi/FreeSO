@@ -123,6 +123,8 @@
     <Compile Include="Content\ContentID.cs" />
     <Compile Include="Content\IContentProvider.cs" />
     <Compile Include="Content\IContentReference.cs" />
+    <Compile Include="Enum\LotCategory.cs" />
+    <Compile Include="Enum\Top100Category.cs" />
     <Compile Include="FSOEnvironment.cs" />
     <Compile Include="IniConfig.cs" />
     <Compile Include="Log.cs" />
@@ -199,6 +201,7 @@
     <Compile Include="Utils\IffPrinter.cs" />
     <Compile Include="Utils\ITimedCachable.cs" />
     <Compile Include="Utils\IXMLEntity.cs" />
+    <Compile Include="Utils\LinqUtils.cs" />
     <Compile Include="Utils\MoneyFormatter.cs" />
     <Compile Include="Utils\Promise.cs" />
     <Compile Include="Utils\PPXDepthEngine.cs" />

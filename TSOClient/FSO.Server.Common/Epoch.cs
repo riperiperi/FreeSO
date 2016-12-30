@@ -17,6 +17,17 @@ namespace FSO.Server.Common
             }
         }
 
+        public static uint FromDate(DateTime time)
+        {
+            return (uint)(time.ToUniversalTime() - new DateTime(1970, 1, 1)).TotalSeconds;
+        }
+
+        public static DateTime ToDate(uint time)
+        {
+            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            return epoch.AddSeconds(time);
+        }
+
         public static uint Default
         {
             get { return 0; }

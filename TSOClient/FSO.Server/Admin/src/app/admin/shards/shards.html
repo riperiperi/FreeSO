@@ -1,18 +1,18 @@
 <md-fab-toolbar count="toolbar.count" md-direction='left' class="md-fab-bottom-right">
     <md-fab-trigger class="align-with-text">
         <md-button aria-label="menu" class="md-fab md-primary">
-            <ng-md-icon icon="menu"></ng-md-icon>
+            <md-icon ng-md-icon icon="menu"></md-icon>
         </md-button>
     </md-fab-trigger>
 
     <md-toolbar>
         <md-fab-actions class = "md-toolbar-tools">
             <md-button class="md-icon-button" aria-label="Shutdown" ng-click="showShutdown($event)">
-                <ng-md-icon icon="settings_power"></ng-md-icon>
+                <md-icon ng-md-icon icon="settings_power"></md-icon>
             </md-button>
 
             <md-button class="md-icon-button" aria-label="Announcement" ng-click="showAnnouncement($event)">
-                <ng-md-icon icon="message"></ng-md-icon>
+                <md-icon ng-md-icon icon="message"></md-icon>
             </md-button>
         </md-fab-actions>
     </md-toolbar>
@@ -30,22 +30,44 @@
     </div>
 </md-toolbar>
 <md-content flex md-scroll-y>
+
+    <md-table-container>
+        <table md-row-select multiple ng-model="selected" md-table ng-model="selected" md-progress="promise">
+            <thead md-head md-order="query.order" md-on-reorder="onOrderChange">
+                <tr md-row>
+                    <th md-column md-order-by="name"><span>Name</span></th>
+                    <th md-column md-order-by="status"><span>Status</span></th>
+                    <th md-column>Internal Host</th>
+                    <th md-column>Public Host</th>
+                </tr>
+            </thead>
+            <tbody md-body>
+                <tr md-row md-select="shard" md-select-id="shard_id" md-auto-select ng-repeat="shard in shards">
+                    <td md-cell>{{shard.name}}</td>
+                    <td md-cell>{{ {"0":"up", "1":"down", "2":"busy", "3": "full", "4":"closed", "5":"Frontier"}[shard.status] }}</td>
+                    <td md-cell>{{shard.internal_host}}</td>
+                    <td md-cell>{{shard.public_host}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </md-table-container>
+
+    <md-table-pagination md-limit="query.limit" md-limit-options="[5, 10, 15]" md-page="query.page" md-total="{{shards.total}}" md-on-paginate="onPaginationChange" md-page-select></md-table-pagination>
+
+
+
+
+
+
     <md-data-table-container>
-        <table md-data-table md-row-select="selected" md-progress="deferred">
+        <table md-data-table md-row-select="selected" md-progress="">
             <thead md-order="query.order" md-trigger="onOrderChange">
                 <tr>
-                    <th name="Name"></th>
-                    <th name="Status"></th>
-                    <th name="Internal Host"></th>
-                    <th name="Public Host"></th>
                 </tr>
             </thead>
             <tbody>
                 <tr md-auto-select ng-repeat="shard in shards">
-                    <td>{{shard.name}}</td>
-                    <td>{{shard.status}}</td>
-                    <td>{{shard.internal_host}}</td>
-                    <td>{{shard.public_host}}</td>
+                    
                 </tr>
             </tbody>
         </table>

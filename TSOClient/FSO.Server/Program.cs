@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Database;
 using FSO.Server.DataService;
+using FSO.Server.Utils;
 using Ninject;
 using Ninject.Parameters;
 using System;
@@ -48,7 +49,8 @@ namespace FSO.Server
                 new ServerConfigurationModule(),
                 new DatabaseModule(),
                 new GlobalDataServiceModule(),
-                new Nancy.Bootstrappers.Ninject.FactoryModule()
+                new Nancy.Bootstrappers.Ninject.FactoryModule(),
+                new GluonHostPoolModule()
             );
 
             var tool = (ITool)kernel.Get(toolType, new ConstructorArgument("options", toolOptions));

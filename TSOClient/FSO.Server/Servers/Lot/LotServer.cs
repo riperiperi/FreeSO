@@ -13,6 +13,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Server.Database.DA.Hosts;
+using FSO.Server.Servers.Shared.Handlers;
 
 namespace FSO.Server.Servers.Lot
 {
@@ -150,7 +152,8 @@ namespace FSO.Server.Servers.Lot
                 typeof(CityServerAuthenticationHandler),
                 typeof(LotNegotiationHandler),
                 typeof(VoltronConnectionLifecycleHandler),
-                typeof(ShardShutdownHandler)
+                typeof(ShardShutdownHandler),
+                typeof(GluonAuthenticationHandler)
             };
         }
 
@@ -159,6 +162,13 @@ namespace FSO.Server.Servers.Lot
             var task = Lots.Shutdown();
             task.Wait();
             base.Shutdown();
+        }
+
+        protected override DbHost CreateHost()
+        {
+            var host = base.CreateHost();
+            host.role = DbHostRole.lot;
+            return host;
         }
     }
 }

@@ -9,6 +9,8 @@ using FSO.Server.Servers;
 using FSO.Server.Servers.Api;
 using FSO.Server.Servers.City;
 using FSO.Server.Servers.Lot;
+using FSO.Server.Servers.Tasks;
+using FSO.Server.Utils;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
 using Ninject.Parameters;
@@ -17,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Caching;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,12 +40,15 @@ namespace FSO.Server
         private ApiServer ActiveApiServer;
         private RunServerOptions Options;
         private Protocol.Gluon.Model.ShutdownType ShutdownMode;
+        
+        private IGluonHostPool HostPool;
 
-        public ToolRunServer(RunServerOptions options, ServerConfiguration config, IKernel kernel)
+        public ToolRunServer(RunServerOptions options, ServerConfiguration config, IKernel kernel, IGluonHostPool hostPool)
         {
             this.Options = options;
             this.Config = config;
             this.Kernel = kernel;
+            this.HostPool = hostPool;
         }
 
         public int Run()
@@ -72,6 +78,7 @@ namespace FSO.Server
             LOG.Info("Scanning content");
             Content.Content.Init(Config.GameLocation, Content.ContentMode.SERVER);
             Kernel.Bind<Content.Content>().ToConstant(Content.Content.Get());
+            Kernel.Bind<MemoryCache>().ToConstant(new MemoryCache("fso_server"));
 
             LOG.Info("Loading domain logic");
             Kernel.Load<ServerDomainModule>();
@@ -79,6 +86,7 @@ namespace FSO.Server
             Servers = new List<AbstractServer>();
             CityServers = new List<CityServer>();
             Kernel.Bind<IServerNFSProvider>().ToConstant(new ServerNFSProvider(Config.SimNFS));
+            Kernel.Bind<string>().ToConstant(Config.Secret).Named("secret");
 
             if(Config.Services.Api != null &&
                 Config.Services.Api.Enabled)
@@ -102,7 +110,8 @@ namespace FSO.Server
                  */
                 var childKernel = new ChildKernel(
                     Kernel,
-                    new ShardDataServiceModule(Config.SimNFS)
+                    new ShardDataServiceModule(Config.SimNFS),
+                    new CityServerModule()
                 );
 
                 var city = childKernel.Get<CityServer>(new ConstructorArgument("config", cityServer));
@@ -121,6 +130,21 @@ namespace FSO.Server
                 Servers.Add(
                     childKernel.Get<LotServer>(new ConstructorArgument("config", lotServer))
                 );
+            }
+
+            if (Config.Services.Tasks != null 
+                && Config.Services.Tasks.Enabled)
+            {
+                var childKernel = new ChildKernel(
+                    Kernel,
+                    new TaskEngineModule()
+                );
+
+                childKernel.Bind<TaskServerConfiguration>().ToConstant(Config.Services.Tasks);
+                childKernel.Bind<TaskTuning>().ToConstant(Config.Services.Tasks.Tuning);
+
+                var tasks = childKernel.Get<TaskServer>(new ConstructorArgument("config", Config.Services.Tasks));
+                Servers.Add(tasks);
             }
 
             foreach (var server in Servers)
@@ -151,6 +175,8 @@ namespace FSO.Server
             {
                 server.Start();
             }
+
+            HostPool.Start();
 
             //Hacky reference to maek sure the assembly is included
             FSO.Common.DatabaseService.Model.LoadAvatarByIDRequest x;
@@ -269,6 +295,8 @@ namespace FSO.Server
 
         private void CurrentDomain_ProcessExit(object sender, EventArgs e)
         {
+            HostPool.Stop();
+
             lock (Servers)
             {
                 foreach (AbstractServer server in Servers)

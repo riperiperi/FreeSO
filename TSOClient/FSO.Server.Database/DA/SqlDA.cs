@@ -17,6 +17,12 @@ using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.Bookmarks;
 using FSO.Server.Database.DA.LotAdmit;
 using FSO.Server.Database.DA.Outfits;
+using FSO.Server.Database.DA.LotVisitors;
+using FSO.Server.Database.DA.LotTop100;
+using FSO.Server.Database.DA.Hosts;
+using FSO.Server.Database.DA.Tasks;
+using FSO.Server.Database.DA.Bonus;
+using FSO.Server.Database.DA.LotVisitTotals;
 
 namespace FSO.Server.Database.DA
 {
@@ -192,6 +198,83 @@ namespace FSO.Server.Database.DA
                     _Outfits = new SqlOutfits(Context);
                 }
                 return _Outfits;
+            }
+        }
+
+        private ILotVisits _Visits;
+        public ILotVisits LotVisits
+        {
+            get
+            {
+                if(_Visits == null)
+                {
+                    _Visits = new SqlLotVisits(Context);
+                }
+                return _Visits;
+            }
+        }
+
+        private ILotTop100 _LotTop100;
+        public ILotTop100 LotTop100
+        {
+            get
+            {
+                if(_LotTop100 == null)
+                {
+                    _LotTop100 = new SqlLotTop100(Context);
+                }
+                return _LotTop100;
+            }
+        }
+
+        private IHosts _Hosts;
+        public IHosts Hosts
+        {
+            get
+            {
+                if(_Hosts == null)
+                {
+                    _Hosts = new SqlHosts(Context);
+                }
+                return _Hosts;
+            }
+        }
+
+        private ITasks _Tasks;
+        public ITasks Tasks
+        {
+            get
+            {
+                if(_Tasks == null){
+                    _Tasks = new SqlTasks(Context);
+                }
+                return _Tasks;
+            }
+        }
+
+        private IBonus _Bonus;
+        public IBonus Bonus
+        {
+            get
+            {
+                if(_Bonus == null)
+                {
+                    _Bonus = new SqlBonus(Context);
+                }
+                return _Bonus;
+            }
+        }
+
+        private ILotVisitTotals _Totals;
+        public ILotVisitTotals LotVisitTotals
+        {
+            get
+            {
+                if(_Totals == null)
+                {
+                    _Totals = new SqlLotVisitTotals(Context);
+                }
+                return _Totals;
             }
         }
 

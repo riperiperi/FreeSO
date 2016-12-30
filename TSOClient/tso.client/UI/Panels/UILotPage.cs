@@ -5,6 +5,7 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
+using FSO.Common.Enum;
 using FSO.Common.Utils;
 using FSO.Files;
 using Microsoft.Xna.Framework;

@@ -35,9 +35,10 @@ angular.module('admin')
 
       var refresh = function () {
           var offset = ($scope.query.page - 1) * $scope.query.limit;
-          return Api.all("/users").getList({offset: offset, limit: $scope.query.limit}).then(function (users) {
+          $scope.promise = Api.all("/users").getList({ offset: offset, limit: $scope.query.limit, order: $scope.query.order}).then(function (users) {
               $scope.users = users;
           });
+          return $scope.promise;
       }
 
       refresh();

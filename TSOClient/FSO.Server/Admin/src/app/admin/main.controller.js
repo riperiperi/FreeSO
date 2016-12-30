@@ -14,7 +14,17 @@ angular.module('admin')
           {
               link: '/admin/shards',
               title: 'Shards',
-              icon: 'storage'
+              icon: 'terrain'
+          },
+          {
+              link: '/admin/hosts',
+              title: 'Hosts',
+              icon: 'cloud'
+          },
+          {
+              link: '/admin/tasks',
+              title: 'Tasks',
+              icon: 'alarm'
           }
       ];
 

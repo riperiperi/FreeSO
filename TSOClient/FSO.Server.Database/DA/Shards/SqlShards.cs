@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Dapper;
+using FSO.Server.Common;
 
 namespace FSO.Server.Database.DA.Shards
 {
@@ -32,6 +33,10 @@ namespace FSO.Server.Database.DA.Shards
             return
                 Context.Connection.Query<ShardTicket>("SELECT * FROM fso_shard_tickets WHERE ticket_id = @ticket_id", new { ticket_id = id }).FirstOrDefault();
         }
-        
+
+        public void PurgeTickets(uint time)
+        {
+            Context.Connection.Query("DELETE FROM fso_shard_tickets WHERE date < @time", new { time = time });
+        }
     }
 }

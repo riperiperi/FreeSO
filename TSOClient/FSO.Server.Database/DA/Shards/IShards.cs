@@ -13,5 +13,6 @@ namespace FSO.Server.Database.DA.Shards
         void CreateTicket(ShardTicket ticket);
         void DeleteTicket(string ticket_id);
         ShardTicket GetTicket(string ticket_id);
+        void PurgeTickets(uint time);
     }
 }

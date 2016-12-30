@@ -1,8 +1,8 @@
 ﻿'use strict';
 
 angular.module('admin')
-  .controller('ShardXDialogCtrl', function ($scope, Api, $mdDialog) {
-      $scope.sd = { timeout: 60, restart: true };
+  .controller('ShardXDialogCtrl', function ($scope, Api, $mdDialog, shards) {
+      $scope.sd = { timeout: 60, restart: true, shard_ids: shards };
 
       $scope.cancel = function () {
           $mdDialog.cancel();

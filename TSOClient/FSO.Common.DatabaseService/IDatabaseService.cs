@@ -11,5 +11,6 @@ namespace FSO.Common.DatabaseService
     {
         Task<LoadAvatarByIDResponse> LoadAvatarById(LoadAvatarByIDRequest request);
         Task<SearchResponse> Search(SearchRequest request, bool exact);
+        Task<GetTop100Response> GetTop100(GetTop100Request request);
     }
 }

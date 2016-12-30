@@ -1,5 +1,6 @@
 ﻿using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.Shards;
+using FSO.Common.Domain.Top100;
 using Ninject.Modules;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,7 @@ namespace FSO.Common.Domain
         {
             Bind<IShardsDomain>().To<Shards.ClientShards>().InSingletonScope();
             Bind<IRealestateDomain>().To<FSO.Common.Domain.Realestate.RealestateDomain>().InSingletonScope();
+            Bind<ITop100Domain>().To<Top100Domain>().InSingletonScope();
         }
     }
 }

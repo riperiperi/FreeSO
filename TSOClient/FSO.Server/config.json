@@ -1,13 +1,56 @@
 ﻿{
   "gameLocation": "C:\\Program Files\\Maxis\\The Sims Online\\TSOClient\\",
   "secret": "38F7E3B816EF9F31BFAB8F4C9716C90D106BD85E9D6913FBB4D833C866F837B0",
-  "simNFS": "LocalNFS/",
+  "simNFS": "C:\\Files\\Temp\\fso",
 
   "database": {
-    "connectionString": "server=192.168.1.227;uid=fsoserver;pwd=password;database=fso;"
+    "connectionString": "server=127.0.0.1;uid=root;pwd=;database=fso2;"
   },
 
   "services": {
+	"tasks":{
+		"enabled": true,
+		"call_sign": "callisto",
+        "binding": "0.0.0.0:35100",
+		"internal_host": "127.0.0.1:35",
+		"public_host": "127.0.0.1:35",
+		"certificate": "auth.east.ea.com.pfx",
+
+		"schedule":[
+			{
+				"cron":"0 3 * * *", 
+				"task":"prune_database", 
+				"timeout":3600,
+				"parameter":{
+				}
+			},
+			{
+				"cron":"0 4 * * *", 
+				"task":"bonus", 
+				"timeout":3600,
+				"shard_id": 1,
+				"parameter":{
+				}
+			}
+		],
+
+		"tuning":{
+			"bonus":{
+				"property_bonus":{
+					"per_unit": 20,
+					"overrides":{
+						"1": 1500,
+						"2": 1250,
+						"3": 1000
+					}
+				},
+				"visitor_bonus":{
+					"per_unit": 8
+				}
+			}
+		}
+	},
+
     "api": {
       "enabled": true,
       "bindings": [ "https://auth.east.ea.com:443/", "http://localhost:80/" ],
@@ -19,8 +62,17 @@
 		"call_sign": "ganymede",
         "id": 1,
         "binding": "0.0.0.0:33100",
+		"internal_host": "127.0.0.1:33",
+		"public_host": "127.0.0.1:33",
+
         "certificate": "auth.east.ea.com.pfx",
-		"secret": "3d7d8500-2c72-4bb0-98dd-872e5bfeac33"
+
+		"maintenance":{
+			"cron":"0 4 * * *",
+			"timeout":3600,
+			"visits_retention_period":7,
+			"top100_average_period": 4
+		}
       }
     ],
 
@@ -37,8 +89,7 @@
 			"cities": [
 				{
 					"id": 1,
-					"host":"127.0.0.1:33100",
-					"secret":"3d7d8500-2c72-4bb0-98dd-872e5bfeac33"
+					"host":"127.0.0.1:33100"
 				}
 			]
 		}

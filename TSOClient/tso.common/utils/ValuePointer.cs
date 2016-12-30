@@ -39,5 +39,20 @@ namespace FSO.Common.Utils
                 return string.Empty;
             }
         }
+
+        public static T Get<T>(object value)
+        {
+            if(value == null)
+            {
+                return default(T);
+            }
+
+            if(value is ValuePointer)
+            {
+                return (T)((ValuePointer)value).Get();
+            }
+
+            return (T)value;
+        }
     }
 }

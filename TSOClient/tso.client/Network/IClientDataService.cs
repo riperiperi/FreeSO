@@ -23,6 +23,7 @@ namespace FSO.Common.DataService
         /// set
         /// </summary>
         List<OUTPUT> EnrichList<OUTPUT, INPUT, DSENTITY>(List<INPUT> input, Func<INPUT, uint> idFunction, Func<INPUT, DSENTITY, OUTPUT> outputConverter);
+        List<OUTPUT> EnrichList<OUTPUT, INPUT, DSENTITY>(List<INPUT> input, Func<INPUT, uint?> idFunction, Func<INPUT, DSENTITY, OUTPUT> outputConverter);
 
         ITopicSubscription CreateTopicSubscription();
 

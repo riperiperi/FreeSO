@@ -2,6 +2,7 @@
 using FSO.Common.DataService.Model;
 using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
+using FSO.Common.Enum;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
@@ -165,7 +166,7 @@ namespace FSO.Server.Servers.City.Handlers
                             owner_id = session.AvatarId,
                             created_date = Epoch.Now,
                             category_change_date = Epoch.Default,
-                            category = DbLotCategory.none,
+                            category = LotCategory.none,
 
                             buildable_area = 1,
                             description = ""

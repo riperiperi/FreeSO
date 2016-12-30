@@ -1,5 +1,5 @@
 <md-button class="md-fab md-fab-bottom-right" aria-label="Add" ng-click="showAdd($event)">
-    <ng-md-icon icon="add"></ng-md-icon>
+    <md-icon ng-md-icon icon="add"></md-icon>
 </md-button>
 <md-toolbar ng-show="!showSearch">
     <div class="md-toolbar-tools">
@@ -13,26 +13,27 @@
     </div>
 </md-toolbar>
 <md-content flex md-scroll-y>
-    <md-data-table-container>
-        <table md-data-table md-row-select="selected" md-progress="deferred">
-            <thead md-order="query.order" md-trigger="onOrderChange">
-                <tr>
-                    <th name="Username"></th>
-                    <th name="Email"></th>
-                    <th name="Role"></th>
-                    <th name="Created"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr md-auto-select ng-repeat="user in users">
-                    <td>{{user.username}}</td>
-                    <td>{{user.email}}</td>
-                    <td>{{getRole(user)}}</td>
-                    <td>{{(user.register_date*1000) | amCalendar}}</td>
-                </tr>
-            </tbody>
+    <md-table-container>
+        <table md-table ng-model="selected" md-progress="promise">
+        <thead md-head md-order="query.order" md-on-reorder="onOrderChange">
+            <tr md-row>
+            <th md-column md-order-by="username"><span>Username</span></th>
+            <th md-column md-order-by="email"><span>Email</span></th>
+            <th md-column>Role</th>
+            <th md-column md-order-by="register_date">Created</th>
+            </tr>
+        </thead>
+        <tbody md-body>
+            <tr md-row ng-repeat="user in users">
+                <td md-cell>{{user.username}}</td>
+                <td md-cell>{{user.email}}</td>
+                <td md-cell>{{getRole(user)}}</td>
+                <td md-cell>{{(user.register_date*1000) | amCalendar}}</td>
+            </tr>
+        </tbody>
         </table>
-    </md-data-table-container>
+    </md-table-container>
 
-    <md-data-table-pagination md-limit="query.limit" md-page="query.page" md-total="{{users.total}}" md-trigger="onPaginationChange"></md-data-table-pagination>
+    <md-table-pagination md-limit="query.limit" md-limit-options="[5, 10, 15]" md-page="query.page" md-total="{{users.total}}" md-on-paginate="onPaginationChange" md-page-select></md-table-pagination>
+
 </md-content>

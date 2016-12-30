@@ -32,7 +32,19 @@ angular.module('admin', ['ngSanitize', 'restangular', 'ui.router', 'ngMaterial',
             templateUrl: 'app/admin/shards/shards.html',
             requiresAuth: true,
             resolve: resolve
-        });;
+        }).state('admin.hosts', {
+            url: '/hosts',
+            controller: 'HostsCtrl',
+            templateUrl: 'app/admin/hosts/hosts.html',
+            requiresAuth: true,
+            resolve: resolve
+        }).state('admin.tasks', {
+            url: '/tasks',
+            controller: 'TasksCtrl',
+            templateUrl: 'app/admin/tasks/tasks.html',
+            requiresAuth: true,
+            resolve: resolve
+        });
 
     $urlRouterProvider.otherwise('/login');
 

@@ -141,5 +141,11 @@ namespace FSO.Common.DataService.Model
                 NotifyPropertyChanged("Avatar_BookmarksVec");
             }
         }
+
+
+        public bool IsDefaultName
+        {
+            get { return Avatar_Name == "Retrieving..."; }
+        }
     }
 }
