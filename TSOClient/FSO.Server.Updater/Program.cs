@@ -117,6 +117,13 @@ namespace FSO.Server.Watchdog
                 //    url = null;
             }
 
+            using (var file = File.Open("updateUrl.txt", FileMode.Create, FileAccess.Write))
+            {
+                var writer = new StreamWriter(file);
+                writer.WriteLine(url.ToString().Replace(":id/server-", ":id/client-"));
+                writer.Close();
+            }
+
             var wait = new AutoResetEvent(false);
             if (url != null) {
                 if (Directory.Exists("selfUpdate/")) Directory.Delete("selfUpdate/", true);

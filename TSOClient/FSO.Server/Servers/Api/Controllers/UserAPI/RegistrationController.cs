@@ -24,7 +24,7 @@ namespace FSO.Server.Servers.Api.Controllers.UserAPI
         /// </summary>
         private static Regex USERNAME_VALIDATION = new Regex("^([a-z0-9]){1}([a-z0-9_]){2,23}$");
 
-        public RegistrationController(IDAFactory daFactory, JWTFactory jwt) : base("/userapi/registration")
+        public RegistrationController(IDAFactory daFactory, JWTFactory jwt, ApiServerConfiguration config) : base("/userapi/registration")
         {
             JWTTokenAuthentication.Enable(this, jwt);
 
@@ -39,10 +39,13 @@ namespace FSO.Server.Servers.Api.Controllers.UserAPI
             this.Post["/"] = x =>
             {
                 var user = this.Bind<RegistrationModel>();
-                var ip = this.Request.UserHostAddress;
+                var tryIP = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                var ip = tryIP ?? this.Request.UserHostAddress;
 
                 user.username = user.username ?? "";
+                user.username = user.username.ToLowerInvariant();
                 user.email = user.email ?? "";
+                user.key = user.key ?? "";
                 string failReason = null;
                 if (user.username.Length < 3) failReason = "user_short";
                 else if (user.username.Length > 24) failReason = "user_long";
@@ -54,6 +57,16 @@ namespace FSO.Server.Servers.Api.Controllers.UserAPI
                     return Response.AsJson(new RegistrationError()
                     {
                         error = "bad_request",
+                        error_description = failReason
+                    });
+                }
+
+                bool isAdmin = false;
+                if (config.registration_key != null && config.registration_key != user.key)
+                {
+                    return Response.AsJson(new RegistrationError()
+                    {
+                        error = "key_wrong",
                         error_description = failReason
                     });
                 }
@@ -80,8 +93,8 @@ namespace FSO.Server.Servers.Api.Controllers.UserAPI
                     var userModel = new User();
                     userModel.username = user.username;
                     userModel.email = user.email;
-                    userModel.is_admin = false;
-                    userModel.is_moderator = false;
+                    userModel.is_admin = isAdmin;
+                    userModel.is_moderator = isAdmin;
                     userModel.user_state = UserState.valid;
                     userModel.register_date = now;
                     userModel.is_banned = false;
@@ -126,5 +139,6 @@ namespace FSO.Server.Servers.Api.Controllers.UserAPI
         public string username;
         public string email;
         public string password;
+        public string key;
     }
 }

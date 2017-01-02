@@ -76,11 +76,11 @@ namespace FSO.Server.Database.Management
             using (var transaction = connection.BeginTransaction(System.Data.IsolationLevel.RepeatableRead))
             {
                 var cmd = transaction.Connection.CreateCommand();
-                cmd.CommandText = change.ScriptData;
+                cmd.CommandText = change.ScriptData.Replace("@", "\\@");
                 try {
                     cmd.ExecuteNonQuery();
                 } catch (MySqlException e){
-                    throw new DbMigrateException(e.Message);
+                    throw new DbMigrateException(e.ToString());
                 }
 
                 connection.Execute("INSERT INTO fso_db_changes VALUES (@id, @filename, @date, @hash) ON DUPLICATE KEY UPDATE hash=@hash, date = @date, filename = @filename", new DbChange {

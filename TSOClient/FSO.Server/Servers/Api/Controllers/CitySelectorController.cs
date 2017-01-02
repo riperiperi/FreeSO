@@ -52,7 +52,19 @@ namespace FSO.Server.Servers.Api.Controllers
                 VersionName = str.Substring(0, split);
                 VersionNumber = str.Substring(split + 1);
             }
-            DownloadURL = (config.UpdateBaseURL ?? "").TrimEnd('/') + "/client-" + VersionNumber + ".zip";
+
+            try
+            {
+                using (var file = File.Open("updateUrl.txt", FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    var reader = new StreamReader(file);
+                    DownloadURL = reader.ReadLine();
+                    reader.Close();
+                }
+            } catch (Exception)
+            {
+                DownloadURL = ""; // couldn't find info from the watchdog
+            }
 
             //Take the auth ticket, establish trust and then create a cookie (reusing JWT)
             this.Get["/app/InitialConnectServlet"] = _ =>

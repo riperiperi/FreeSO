@@ -29,9 +29,9 @@ namespace FSO.Server.Servers.Api
         public int AuthTicketDuration = 300;
 
         /// <summary>
-        /// The base URL used when serving client updates. [url]/client-###.zip
+        /// If non-null, the user must provide this key to register an account.
         /// </summary>
-        public string UpdateBaseURL = null;
+        public string registration_key = null;
     }
 
     public enum ApiServerControllers

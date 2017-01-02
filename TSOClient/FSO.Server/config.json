@@ -37,7 +37,7 @@
 		"tuning":{
 			"bonus":{
 				"property_bonus":{
-					"per_unit": 20,
+					"per_unit": 10,
 					"overrides":{
 						"1": 1500,
 						"2": 1250,
