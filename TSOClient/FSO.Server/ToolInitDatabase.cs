@@ -52,8 +52,11 @@ namespace FSO.Server
                 Console.WriteLine("Apply changes (y|n)? Make sure you have backed up your database first");
 
                 var input = Console.ReadLine().Trim();
-                if (input.StartsWith("y"))
+                if (input.StartsWith("y") || input.StartsWith("r"))
                 {
+                    //Repair just updates fso_db_changes to latest
+                    var repair = input.StartsWith("r");
+
                     Console.WriteLine("Applying changes");
 
                     foreach (var change in changes)
@@ -63,7 +66,7 @@ namespace FSO.Server
                             (change.Status == DbChangeScriptStatus.MODIFIED && change.Idempotent))
                         {
                             try {
-                                changeTool.ApplyChange(change);
+                                changeTool.ApplyChange(change, repair);
                             }catch(DbMigrateException e)
                             {
                                 Console.Error.WriteLine("Error applying change: " + change.ScriptFilename);

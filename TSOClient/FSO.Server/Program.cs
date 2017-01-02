@@ -53,6 +53,17 @@ namespace FSO.Server
                 new GluonHostPoolModule()
             );
 
+            //If db init, allow @ variables in the query itself. We could always enable this but for added security
+            //we are conditionally adding it only for db migrations
+            if (toolType == typeof(ToolInitDatabase))
+            {
+                var config = kernel.Get<ServerConfiguration>();
+                if (!config.Database.ConnectionString.EndsWith(";")){
+                    config.Database.ConnectionString += ";";
+                }
+                config.Database.ConnectionString += "Allow User Variables=True";
+            }
+
             var tool = (ITool)kernel.Get(toolType, new ConstructorArgument("options", toolOptions));
             return tool.Run();
 
