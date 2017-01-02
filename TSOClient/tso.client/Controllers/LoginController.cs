@@ -66,7 +66,7 @@ namespace FSO.Client.Controllers
                     var downloader = new UIWebDownloaderDialog(GameFacade.Strings.GetString("f101", "1"), new DownloadItem[]
                     {
                         new DownloadItem {
-                            Url = "http://servo.freeso.org/repository/download/FreeSO_TsoClient/484:id/client-405.zip?guest=1",
+                            Url = url,
                             DestPath = "PatchFiles/patch.zip",
                             Name = GameFacade.Strings.GetString("f101", "10")
                         }
