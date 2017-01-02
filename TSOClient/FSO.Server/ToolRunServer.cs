@@ -86,7 +86,6 @@ namespace FSO.Server
             Servers = new List<AbstractServer>();
             CityServers = new List<CityServer>();
             Kernel.Bind<IServerNFSProvider>().ToConstant(new ServerNFSProvider(Config.SimNFS));
-            Kernel.Bind<string>().ToConstant(Config.Secret).Named("secret");
 
             if(Config.Services.Api != null &&
                 Config.Services.Api.Enabled)

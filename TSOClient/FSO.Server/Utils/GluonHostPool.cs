@@ -237,7 +237,8 @@ namespace FSO.Server.Utils
         private Dictionary<Guid, TaskCompletionSource<IGluonCall>> Callbacks;
         private AriesPacketRouter Router;
 
-        public GluonHost(GluonHostPool pool, string callSign, IKernel kernel, [Named("secret")] string secret){
+        public GluonHost(GluonHostPool pool, string callSign, IKernel kernel, ServerConfiguration config)
+        {
             this.Pool = pool;
             this.CallSign = callSign;
             this.Client = new AriesClient(Pool.Kernel);
@@ -253,7 +254,7 @@ namespace FSO.Server.Utils
             Router.On<RequestChallengeResponse>((session, message) =>
             {
                 var challenge = (RequestChallengeResponse)message;
-                var answer = ChallengeResponse.AnswerChallenge(challenge.Challenge, secret);
+                var answer = ChallengeResponse.AnswerChallenge(challenge.Challenge, config.Secret);
 
                 session.Write(new AnswerChallenge{
                     Answer = answer

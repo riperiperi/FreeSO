@@ -36,6 +36,7 @@ namespace FSO.Client.UI.Screens
             regulator.Logout();
 
             HITVM.Get().PlaySoundEvent(UIMusic.None);
+            GlobalSettings.Default.Save();
 
             Background = new UISetupBackground();
 

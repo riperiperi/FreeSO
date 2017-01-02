@@ -19,9 +19,9 @@ namespace FSO.Server.Servers.Lot.Handlers
     {
         private string Secret;
 
-        public CityServerAuthenticationHandler([Named("secret")] string secret)
+        public CityServerAuthenticationHandler(ServerConfiguration config)
         {
-            this.Secret = secret;
+            this.Secret = config.Secret;
         }
 
         public void Handle(IGluonSession session, RequestClientSession request)

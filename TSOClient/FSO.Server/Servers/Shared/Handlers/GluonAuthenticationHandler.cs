@@ -20,9 +20,9 @@ namespace FSO.Server.Servers.Shared.Handlers
         private ISessions Sessions;
         private string Secret;
 
-        public GluonAuthenticationHandler(ISessions sessions, [Named("secret")] string secret, IGluonHostPool hostPool){
+        public GluonAuthenticationHandler(ISessions sessions, ServerConfiguration config, IGluonHostPool hostPool){
             this.Sessions = sessions;
-            this.Secret = secret;
+            this.Secret = config.Secret;
             this.HostPool = hostPool;
         }
 
