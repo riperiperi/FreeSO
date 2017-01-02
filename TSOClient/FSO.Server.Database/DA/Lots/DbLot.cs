@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Common.Enum;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,26 +19,11 @@ namespace FSO.Server.Database.DA.Lots
         public uint neighborhood_id { get; set; }
         public uint created_date { get; set; }
         public uint category_change_date { get; set; }
-        public DbLotCategory category { get; set; }
+        public LotCategory category { get; set; }
         public uint buildable_area { get; set; }
         public sbyte ring_backup_num { get; set; }
         public byte admit_mode { get; set; }
         public byte move_flags { get; set; }
-    }
-
-    public enum DbLotCategory
-    {
-        none = 0,
-        money = 1,
-        offbeat = 2,
-        romance = 3,
-        services = 4,
-        shopping = 5,
-        skills = 6,
-        welcome = 7,
-        games = 8,
-        entertainment = 9,
-        residence = 10
     }
 
     /**Lot

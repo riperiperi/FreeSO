@@ -24,6 +24,9 @@ angular.module('admin').factory('Api', function (Restangular, Token, $rootScope)
 
             if (operation === "getList") {
                 data.total = response.headers('X-Total-Count');
+                if (!data.total) {
+                    data.total = data.length;
+                }
             }
 
             return data;

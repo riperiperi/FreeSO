@@ -28,6 +28,7 @@ using FSO.Common.Domain.Shards;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.Gluon.Model;
+using FSO.Server.Database.DA.Hosts;
 
 namespace FSO.Server.Framework.Aries
 {
@@ -54,6 +55,11 @@ namespace FSO.Server.Framework.Aries
             this.DAFactory = Kernel.Get<IDAFactory>();
             this.Config = config;
 
+            if(config.Public_Host == null || config.Internal_Host == null ||
+                config.Call_Sign == null || config.Binding == null)
+            {
+                throw new Exception("Server configuration missing required fields");
+            }
 
             Kernel.Bind<IAriesPacketRouter>().ToConstant(_Router);
             Kernel.Bind<ISessions>().ToConstant(this._Sessions);
@@ -71,11 +77,28 @@ namespace FSO.Server.Framework.Aries
         {
             this.Debugger = debugger;
         }
+        
+        protected virtual DbHost CreateHost()
+        {
+            return new Database.DA.Hosts.DbHost
+            {
+                call_sign = Config.Call_Sign,
+                status = Database.DA.Hosts.DbHostStatus.up,
+                time_boot = DateTime.UtcNow,
+                internal_host = Config.Public_Host,
+                public_host = Config.Internal_Host
+            };
+        }
 
         public override void Start()
         {
             Bootstrap();
-            
+
+            using (var db = DAFactory.Get())
+            {
+                db.Hosts.CreateHost(CreateHost());
+            }
+
             Acceptor = new AsyncSocketAcceptor();
 
             try {
@@ -250,8 +273,20 @@ namespace FSO.Server.Framework.Aries
                 foreach (var session in sessionClone)
                     session.Close();
             }
+
+            MarkHostDown();
         }
 
+        public void MarkHostDown()
+        {
+            using (var db = DAFactory.Get())
+            {
+                try {
+                    db.Hosts.SetStatus(Config.Call_Sign, DbHostStatus.down);
+                }catch(Exception ex){
+                }
+            }
+        }
 
         public abstract Type[] GetHandlers();
 

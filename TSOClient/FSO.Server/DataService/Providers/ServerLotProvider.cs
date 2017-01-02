@@ -20,6 +20,7 @@ using FSO.Common.Serialization.Primitives;
 using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.LotAdmit;
 using System.Collections.Immutable;
+using FSO.Common.Enum;
 
 namespace FSO.Server.DataService.Providers
 {
@@ -210,7 +211,7 @@ namespace FSO.Server.DataService.Providers
                 case "Lot_Category":
                     using (var db = DAFactory.Get())
                     {
-                        db.Lots.UpdateLotCategory(lot.DbId, (DbLotCategory)(lot.Lot_Category));
+                        db.Lots.UpdateLotCategory(lot.DbId, (LotCategory)(lot.Lot_Category));
                     }
                     break;
                 case "Lot_IsOnline":

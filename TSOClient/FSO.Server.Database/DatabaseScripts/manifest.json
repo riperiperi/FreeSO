@@ -90,6 +90,48 @@
 		"bec36bbc-1774-44cb-a7c5-03f4a00e801c",
 		"52795d47-a25e-418f-a618-fb89300aab02"
 	  ]
+    },
+	{
+      "id": "f9abf5f8-c9d5-4e3a-9c25-21b8ecbf64aa",
+      "script": "changes/0007_fso_lot_visits.sql",
+      "idempotent": false,
+	  "requires":[
+		"bec36bbc-1774-44cb-a7c5-03f4a00e801c",
+		"52795d47-a25e-418f-a618-fb89300aab01"
+	  ]
+    },
+	{
+      "id": "52182afb-a175-430a-99ad-0c1c4db924ac",
+      "script": "changes/0008_fso_hosts.sql",
+      "idempotent": false,
+	  "requires":[
+		"def48038-d0d6-4b10-a129-0b9c736e4d35"
+	  ]
+    },
+	{
+      "id": "9e4dc7d8-06b7-4f2f-84a8-4da737072d55",
+      "script": "changes/0009_fso_tasks.sql",
+      "idempotent": false,
+	  "requires":[
+		"def48038-d0d6-4b10-a129-0b9c736e4d35"
+	  ]
+    },
+	{
+      "id": "2149dfea-970e-4161-901d-b59106fa484f",
+      "script": "changes/0010_fso_top100.sql",
+      "idempotent": false,
+	  "requires":[
+		"bec36bbc-1774-44cb-a7c5-03f4a00e801c",
+		"52795d47-a25e-418f-a618-fb89300aab01"
+	  ]
+    },
+	{
+      "id": "4838258c-765d-42c9-8439-0505000b372f",
+      "script": "changes/0011_fso_bonus.sql",
+      "idempotent": false,
+	  "requires":[
+		"bec36bbc-1774-44cb-a7c5-03f4a00e801c"
+	  ]
     }
   ]
 }

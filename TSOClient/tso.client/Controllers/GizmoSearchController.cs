@@ -72,11 +72,51 @@ namespace FSO.Client.Controllers
     {
         public Avatar Avatar;
         public SearchResponseItem Result;
+
+        public bool IsOnline
+        {
+            get
+            {
+                if(Avatar != null)
+                {
+                    return Avatar.Avatar_IsOnline;
+                }
+                return false;
+            }
+        }
+
+        public bool IsOffline
+        {
+            get
+            {
+                return !IsOnline;
+            }
+        }
     }
 
     public class GizmoLotSearchResult
     {
         public Lot Lot;
         public SearchResponseItem Result;
+
+        public bool IsOnline
+        {
+            get
+            {
+                if (Lot != null)
+                {
+                    return Lot.Lot_IsOnline;
+                }
+                return false;
+            }
+        }
+
+        public bool IsOffline
+        {
+            get
+            {
+                return !IsOnline;
+            }
+        }
     }
 }

@@ -22,8 +22,6 @@ namespace FSO.Client.UI.Controls
 {
     public class UIListBox : UIElement
     {
-        [UIAttribute("rowHeight")]
-        public int RowHeight { get; set; }
         private UIMouseEventRef MouseHandler;
         public event ChangeDelegate OnChange;
         public event ButtonClickDelegate OnDoubleClick;
@@ -31,16 +29,32 @@ namespace FSO.Client.UI.Controls
         public int NumVisibleRows { get; internal set; }
         public int ScrollOffset { get; set; }
 
+        public bool AllowDisabledSelection = false;
+        public bool Mask = false;
+
         public UIListBox()
         {
-            RowHeight = 18;
             MouseHandler = this.ListenForMouse(new Rectangle(0, 0, 10, 10), OnMouseEvent);
+            RowHeight = 16;
         }
 
 
 
 
         #region Fields
+
+        private int _RowHeight;
+
+        [UIAttribute("rowHeight")]
+        public int RowHeight
+        {
+            get { return _RowHeight; }
+            set
+            {
+                _RowHeight = value;
+                CalculateHitArea();
+            }
+        }
 
         private int m_VisibleRows = -1;
 
@@ -55,6 +69,7 @@ namespace FSO.Client.UI.Controls
             {
                 m_VisibleRows = value;
                 CalculateScroll();
+                CalculateHitArea();
             }
         }
 
@@ -127,7 +142,9 @@ namespace FSO.Client.UI.Controls
             }
             set
             {
+                var previousSelection = SelectedItem;
                 m_Items = value;
+                SelectedItem = previousSelection;
                 CalculateScroll();
             }
         }
@@ -222,12 +239,9 @@ namespace FSO.Client.UI.Controls
 
         private void OnMouseEvent(UIMouseEventType type, UpdateState update)
         {
-            if(DoubleClicker.TryDoubleClick(type, update))
+            if(OnDoubleClick != null && DoubleClicker.TryDoubleClick(type, update))
             {
-                if (OnDoubleClick != null)
-                {
-                    OnDoubleClick(null);
-                }
+                OnDoubleClick(null);
                 return;
             }
 
@@ -266,11 +280,16 @@ namespace FSO.Client.UI.Controls
         {
             get
             {
-                if (m_SelectedRow >= 0 && m_SelectedRow < Items.Count)
+                if (Items != null && m_SelectedRow >= 0 && m_SelectedRow < Items.Count)
                 {
                     return Items[m_SelectedRow];
                 }
                 return null;
+            }
+            set
+            {
+                var index = Items.IndexOf(value);
+                SelectedIndex = index;
             }
         }
 
@@ -292,30 +311,75 @@ namespace FSO.Client.UI.Controls
             {
                 /** Is this row enabled? **/
                 var row = Items[estRow];
-                if (row.Disabled) { return -1; }
+                if (ValuePointer.Get<Boolean>(row.Disabled) && AllowDisabledSelection == false) { return -1; }
 
                 return estRow;
             }
             return -1;
         }
 
-
         public void SetSize(float width, float height)
         {
             m_Width = width;
             m_Height = height;
 
-            MouseHandler.Region.Width = (int)width;
-            MouseHandler.Region.Height = (int)height;
-
+            CalculateHitArea();
             CalculateScroll();
         }
 
+        private void CalculateHitArea()
+        {
+            MouseHandler.Region.Width = (int)m_Width;
 
+            if (Mask)
+            {
+                MouseHandler.Region.Height = (int)m_Height;
+            }
+            else
+            {
+                MouseHandler.Region.Height = RowHeight * NumVisibleRows;
+            }
+        }
+
+        private Texture2D ListScene;
+
+        public override void PreDraw(UISpriteBatch batch)
+        {
+            base.PreDraw(batch);
+
+            if (Mask)
+            {
+                Promise<Texture2D> bufferTexture = null;
+                using (batch.WithBuffer(ref bufferTexture))
+                {
+                    _Draw(batch);
+                }
+
+                ListScene = bufferTexture.Get();
+            }
+        }
 
         public override void Draw(UISpriteBatch batch)
         {
             if (!Visible) return;
+
+            //Mask
+            if (Mask)
+            {
+                if (ListScene != null)
+                {
+                    var globalEdge = LocalPoint(Size);
+                    batch.Draw(ListScene, Vector2.Zero, new Rectangle(0, 0, (int)globalEdge.X, (int)globalEdge.Y), _BlendColor);
+                }
+            }
+            else
+            {
+                _Draw(batch);
+            }         
+        }
+
+        private void _Draw(UISpriteBatch batch)
+        {
             for (var i = 0; i < NumVisibleRows; i++)
             {
                 var rowIndex = i + ScrollOffset;
@@ -343,18 +407,28 @@ namespace FSO.Client.UI.Controls
                 {
                     ts = row.CustomStyle;
                 }
-                var style = ts.Normal;
-                if (selected)
+                TextStyle style = null;
+                var isDisabled = ValuePointer.Get<Boolean>(row.Disabled);
+
+                if (ts != null)
                 {
-                    style = ts.Selected;
-                }
-                else if (hover)
-                {
-                    style = ts.Highlighted;
-                }
-                else if (row.Disabled)
-                {
-                    style = ts.Disabled;
+                    style = ts.Normal;
+                    if (ValuePointer.Get<Boolean>(row.UseDisabledStyleByDefault))
+                    {
+                        style = ts.Disabled;
+                    }
+                    if (selected)
+                    {
+                        style = ts.Selected;
+                    }
+                    else if (hover)
+                    {
+                        style = ts.Highlighted;
+                    }
+                    else if (isDisabled)
+                    {
+                        style = ts.Disabled;
+                    }
                 }
 
                 for (var x = 0; x < row.Columns.Length; x++)
@@ -362,6 +436,10 @@ namespace FSO.Client.UI.Controls
                     var columnValue = row.Columns[x];
                     var columnSpec = m_Columns[x];
                     var columnBounds = new Rectangle(0, 0, columnSpec.Width, RowHeight);
+
+                    if(columnValue is FSO.Content.Model.ITextureRef){
+                        columnValue = ((FSO.Content.Model.ITextureRef)columnValue).Get(batch.GraphicsDevice);
+                    }
 
                     if (columnValue is string)
                     {
@@ -372,38 +450,71 @@ namespace FSO.Client.UI.Controls
                         var tex = (Texture2D)columnValue;
                         var texWidthDiv4 = tex.Width / 4;
                         /** We assume its a 4 state button **/
-                        Rectangle from = new Rectangle(0, 0, texWidthDiv4, tex.Height);
+                        Rectangle from = new Rectangle(texWidthDiv4 * columnSpec.TextureDefaultFrame, 0, texWidthDiv4, tex.Height);
                         if (selected)
                         {
-                            from.X = texWidthDiv4 * 2;
+                            from.X = texWidthDiv4 * columnSpec.TextureSelectedFrame;
                         }
                         else if (hover)
                         {
-                            from.X = texWidthDiv4;
+                            from.X = texWidthDiv4 * columnSpec.TextureHoverFrame;
+                        }
+                        else if (isDisabled)
+                        {
+                            from.X = texWidthDiv4 * columnSpec.TextureDisabledFrame;
+                        }
+
+                        var destWidth = texWidthDiv4;
+                        var destHeight = tex.Height;
+
+
+                        if(columnSpec.TextureBounds != null && columnSpec.TextureBounds.HasValue)
+                        {
+                            var boundsX = columnSpec.TextureBounds.Value.X;
+                            var boundsY = columnSpec.TextureBounds.Value.Y;
+
+                            if (!columnSpec.TextureMaintainAspectRatio)
+                            {
+                                destWidth = (int)boundsX;
+                                destHeight = (int)boundsY;
+                            }
+                            else
+                            {
+                                if(destWidth > destHeight)
+                                {
+                                    destWidth = (int)boundsX;
+                                    destHeight = (int)(((float)tex.Height / (float)texWidthDiv4) * destWidth);
+                                }
+                                else
+                                {
+                                    destHeight = (int)boundsY;
+                                    destWidth = (int)(((float)texWidthDiv4 / (float)tex.Height) * destHeight);
+                                }
+                            }
                         }
 
                         var to = new Vector2(columnX, rowY);
                         if ((columnSpec.Alignment & TextAlignment.Middle) == TextAlignment.Middle)
                         {
-                            to.Y = (RowHeight - tex.Height) / 2;
+                            to.Y = rowY + ((RowHeight - destHeight) / 2);
                         }
                         else if ((columnSpec.Alignment & TextAlignment.Bottom) == TextAlignment.Bottom)
                         {
-                            to.Y = (RowHeight - tex.Height);
+                            to.Y = rowY + ((RowHeight - destHeight));
                         }
 
                         if ((columnSpec.Alignment & TextAlignment.Center) == TextAlignment.Center)
                         {
-                            to.X = columnX + ((columnBounds.Width - texWidthDiv4) / 2);
+                            to.X = columnX + ((columnBounds.Width - destWidth) / 2);
                         }
                         else if ((columnSpec.Alignment & TextAlignment.Right) == TextAlignment.Right)
                         {
-                            to.X = columnX + (columnBounds.Width - texWidthDiv4);
+                            to.X = columnX + (columnBounds.Width - destWidth);
                         }
 
-                        DrawLocalTexture(batch, (Texture2D)columnValue, from, to);
+                        DrawLocalTexture(batch, (Texture2D)columnValue, from, to, new Vector2((float)destWidth / (float)texWidthDiv4, (float)destHeight / (float)tex.Height));
                     }
-                    else if(columnValue != null)
+                    else if (columnValue != null)
                     {
                         //Convert it to a string
                         DrawLocalString(batch, (string)columnValue.ToString(), new Vector2(columnX, rowY), style, columnBounds, columnSpec.Alignment);
@@ -413,7 +524,6 @@ namespace FSO.Client.UI.Controls
                 }
             }
         }
-
 
         public override Rectangle GetBounds()
         {
@@ -426,6 +536,14 @@ namespace FSO.Client.UI.Controls
     {
         public int Width = 50;
         public TextAlignment Alignment = TextAlignment.Left;
+
+        public Vector2? TextureBounds;
+        public bool TextureMaintainAspectRatio = true;
+
+        public int TextureDefaultFrame = 0;
+        public int TextureHoverFrame = 1;
+        public int TextureSelectedFrame = 2;
+        public int TextureDisabledFrame = 3;
     }
 
     public class UIListBoxColumnCollection : List<UIListBoxColumn>, UIAttributeParser
@@ -480,8 +598,9 @@ namespace FSO.Client.UI.Controls
 
         public object Data;
         public object[] Columns;
-        public bool Disabled = false;
+        public object Disabled = false;
         public UIListBoxTextStyle CustomStyle;
+        public object UseDisabledStyleByDefault = false; //Offline avatars and properties use the disabled style without the row being disabled
 
         public UIListBoxItem(object data, params object[] columns)
         {

@@ -3,6 +3,8 @@
 angular.module('admin')
   .controller('ShardsCtrl', function ($scope, Api, $mdDialog) {
       
+      $scope.selected = [];
+
       $scope.query = {
           filter: '',
           order: '',
@@ -29,10 +31,10 @@ angular.module('admin')
       };
 
       var refresh = function () {
-          //var offset = ($scope.query.page - 1) * $scope.query.limit;
-          //return Api.all("/shards").getList({offset: offset, limit: $scope.query.limit}).then(function (shards) {
-          //   $scope.shards = shards;
-          //});
+          $scope.promise = Api.all("/shards").getList().then(function (shards) {
+             $scope.shards = shards;
+          });
+          return $scope.promise;
       }
 
       refresh();
@@ -45,7 +47,10 @@ angular.module('admin')
               templateUrl: 'app/admin/shards/sharda.dialog.html',
               parent: angular.element(document.body),
               targetEvent: event,
-              clickOutsideToClose: true
+              clickOutsideToClose: true,
+              locals: {
+                  shards: $scope.selected.map(function (x) { return x.shard_id; })
+              }
           })
             .then(function (answer) {
                 Api.all("shards/announce").post(answer).then(function (result) {
@@ -58,16 +63,20 @@ angular.module('admin')
       }
 
       $scope.showShutdown = function (event) {
+
+          console.log($scope.selected);
           $mdDialog.show({
               controller: 'ShardXDialogCtrl',
               templateUrl: 'app/admin/shards/shardx.dialog.html',
               parent: angular.element(document.body),
               targetEvent: event,
-              clickOutsideToClose: true
+              clickOutsideToClose: true,
+              locals: {
+                  shards: $scope.selected.map(function (x) { return x.shard_id; })
+              }
           })
             .then(function (answer) {
                 Api.all("shards/shutdown").post(answer).then(function (result) {
-                    console.log(result);
                     refresh();
                 });
             }, function () {

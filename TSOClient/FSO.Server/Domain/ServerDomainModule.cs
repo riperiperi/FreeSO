@@ -1,5 +1,6 @@
 ﻿using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.Shards;
+using FSO.Common.Domain.Top100;
 using Ninject.Modules;
 using System;
 using System.Collections.Generic;

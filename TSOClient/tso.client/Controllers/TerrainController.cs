@@ -110,6 +110,23 @@ namespace FSO.Client.Controllers
             if (CurrentCity.Value != null)
             {
                 var mapData = LotTileEntry.GenFromCity(CurrentCity.Value);
+
+                //We know if lots are online, we can update the data service
+                DataService.GetMany<Lot>(mapData.Select(x => (object)(uint)x.packed_pos).ToArray()).ContinueWith(x =>
+                {
+                    if (!x.IsCompleted){
+                        return;
+                    }
+
+                    foreach (var lot in x.Result)
+                    {
+                        var mapItem = mapData.FirstOrDefault(y => y.packed_pos == lot.Id);
+                        if (mapItem != null) {
+                            lot.Lot_IsOnline = (mapItem.flags & LotTileFlags.Online) == LotTileFlags.Online;
+                        }
+                    }
+                });
+
                 GameThread.NextUpdate((state) => View.populateCityLookup(mapData));        
             }
         }

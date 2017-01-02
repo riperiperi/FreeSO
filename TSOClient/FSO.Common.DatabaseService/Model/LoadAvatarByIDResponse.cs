@@ -2,6 +2,7 @@
 using FSO.Common.Serialization;
 using FSO.Common.Serialization.TypeSerializers;
 using FSO.Common.DatabaseService.Framework;
+using System.Collections.Generic;
 
 namespace FSO.Common.DatabaseService.Model
 {
@@ -24,6 +25,8 @@ namespace FSO.Common.DatabaseService.Model
         public short AvatarSkills_Creativity;
 
         public uint Cash = 0x46474849;
+        public List<LoadAvatarBonus> Bonus;
+
 
         public void Serialize(IoBuffer output, ISerializationContext context)
         {
@@ -79,23 +82,33 @@ namespace FSO.Common.DatabaseService.Model
             output.PutUInt32(0x74757677);
 
             //Bonus count
-            output.PutUInt32(0x01);
+            if(Bonus == null){
+                output.PutUInt32(0);
+            }
+            else
+            {
+                output.PutUInt32((uint)Bonus.Count);
+                for(var i=0; i < Bonus.Count; i++)
+                {
+                    var bonus = Bonus[i];
 
-            //Unknown
-            output.PutUInt32(0x7C7D7E7F);
-            output.PutUInt32(0x80818283);
+                    //Unknown
+                    output.PutUInt32(0x7C7D7E7F);
+                    output.PutUInt32(0x80818283);
 
-            //Sim bonus
-            output.PutUInt32(0x84858687);
+                    //Sim bonus
+                    output.PutUInt32(bonus.SimBonus);
 
-            //Property bonus
-            output.PutUInt32(0x88898A8B);
+                    //Property bonus
+                    output.PutUInt32(bonus.PropertyBonus);
 
-            //Visitor bonus
-            output.PutUInt32(0x8C8D8E8F);
-            
-            //Date string
-            output.PutPascalVLCString("H");
+                    //Visitor bonus
+                    output.PutUInt32(bonus.VisitorBonus);
+
+                    //Date string
+                    output.PutPascalVLCString(bonus.Date);
+                }
+            }
 
 
             //Unknown
@@ -208,6 +221,57 @@ namespace FSO.Common.DatabaseService.Model
             input.Get(); //0x45
 
             Cash = input.GetUInt32();
+
+            //More unknown
+            input.GetUInt32(); //0x4a4b4c4d
+            input.GetUInt32(); //0x4e4f5051
+            input.Get(); //0x52
+
+            input.GetPascalVLCString(); //C
+            input.GetPascalVLCString(); //D
+            input.GetPascalVLCString(); //E
+            input.GetPascalVLCString(); //F
+            input.GetPascalVLCString(); //G
+
+            input.GetUInt32(); //0x54555657
+            input.GetUInt32(); //0x58595A5B
+            input.GetUInt32(); //0x5C5D5E5F
+            input.GetUInt32(); //0x60616263
+            input.GetUInt32(); //0x64656667
+            input.GetUInt32(); //0x68696A6B
+            input.GetUInt32(); //0x6C6D6E6F
+            input.GetUInt32(); //0x70717273
+            input.GetUInt32(); //0x74757677
+
+
+            Bonus = new List<LoadAvatarBonus>();
+            var bonusCount = input.GetUInt32();
+            for(var i=0; i < bonusCount; i++)
+            {
+                //Unknown
+                input.GetUInt32(); //0x7C7D7E7F
+                input.GetUInt32(); //0x80818283
+
+                var simBonus = input.GetUInt32();
+                var propertyBonus = input.GetUInt32();
+                var visitorBonus = input.GetUInt32();
+                var dateString = input.GetPascalVLCString();
+
+                Bonus.Add(new LoadAvatarBonus {
+                    Date = dateString,
+                    PropertyBonus = propertyBonus,
+                    VisitorBonus = visitorBonus,
+                    SimBonus = simBonus
+                });
+            }
         }
+    }
+
+    public class LoadAvatarBonus
+    {
+        public uint SimBonus { get; set; }
+        public uint PropertyBonus { get; set; }
+        public uint VisitorBonus { get; set; }
+        public string Date { get; set; }
     }
 }

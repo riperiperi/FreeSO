@@ -1,6 +1,7 @@
 ﻿using FSO.Common.Domain.Shards;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.AvatarClaims;
+using FSO.Server.Database.DA.Hosts;
 using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
@@ -9,6 +10,8 @@ using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.City.Domain;
 using FSO.Server.Servers.City.Handlers;
+using FSO.Server.Servers.Shared.Handlers;
+using FSO.Server.Utils;
 using Ninject;
 using NLog;
 using System;
@@ -189,6 +192,14 @@ namespace FSO.Server.Servers.City
             rawSession.Close();
         }
 
+        protected override DbHost CreateHost()
+        {
+            var host = base.CreateHost();
+            host.role = DbHostRole.city;
+            host.shard_id = Config.ID;
+            return host;
+        }
+
         public override Type[] GetHandlers()
         {
             return new Type[]{
@@ -199,7 +210,7 @@ namespace FSO.Server.Servers.City
                 typeof(VoltronConnectionLifecycleHandler),
                 typeof(FindPlayerHandler),
                 typeof(PurchaseLotHandler),
-                typeof(LotServerAuthenticationHandler),
+                typeof(GluonAuthenticationHandler),
                 typeof(LotServerLifecycleHandler),
                 typeof(LotServerClosedownHandler),
                 typeof(MessagingHandler),

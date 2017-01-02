@@ -54,6 +54,8 @@
     <Compile Include="Realestate\RealestateDomain.cs" />
     <Compile Include="Shards\ClientShards.cs" />
     <Compile Include="Shards\IShardsDomain.cs" />
+    <Compile Include="Top100\ITop100Domain.cs" />
+    <Compile Include="Top100\Top100Domain.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">

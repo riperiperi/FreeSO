@@ -29,6 +29,11 @@ namespace FSO.Common.DatabaseService
             CityClient.AddSubscriber(this);
         }
 
+        public Task<GetTop100Response> GetTop100(GetTop100Request request)
+        {
+            return Request<GetTop100Response>(DBRequestType.GetTopResultSetByID, DBResponseType.GetTopResultSetByID, null, request);
+        }
+
         public Task<LoadAvatarByIDResponse> LoadAvatarById(LoadAvatarByIDRequest request)
         {
             return Request<LoadAvatarByIDResponse>(DBRequestType.LoadAvatarByID, DBResponseType.LoadAvatarByID, null, request);
@@ -119,6 +124,7 @@ namespace FSO.Common.DatabaseService
                 return val;
             }
         }
+
     }
 
     public class PendingRequest
