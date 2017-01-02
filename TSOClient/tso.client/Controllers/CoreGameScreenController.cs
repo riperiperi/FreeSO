@@ -250,6 +250,7 @@ namespace FSO.Client.Controllers
             Screen.CleanupLastWorld();
             GameFacade.Scenes.Clear();
             Terrain.Dispose();
+            Chat.Dispose();
             Screen.JoinLotProgress.FindController<JoinLotProgressController>()?.Dispose();
             ((PersonPageController)Screen.PersonPage.Controller)?.Dispose();
         }

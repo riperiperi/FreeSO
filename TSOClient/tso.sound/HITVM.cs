@@ -171,6 +171,9 @@ namespace FSO.HIT
             {
                 var evtent = Events[evt];
 
+                //objects call the wrong event for piano playing
+                //there is literally no file or evidence that this is not hard code mapped to PlayPiano in TSO, so it's hardcoded here.
+                //the track and HSM associated with the piano_play event, however, are correct. it's just the subroutine that is renamed.
                 if (evt.Equals("piano_play", StringComparison.InvariantCultureIgnoreCase))
                 {
                     evt = "playpiano";
@@ -218,8 +221,8 @@ namespace FSO.HIT
                 {
                     var thread = new HITThread(evtent.ResGroup.hit, this);
                     thread.PC = SubroutinePointer;
+                    thread.LoopPointer = (int)thread.PC;
                     if (TrackID != 0) thread.SetTrack(TrackID, evtent.TrackID);
-
                     Sounds.Add(thread);
                     ActiveEvents.Add(evt, thread);
                     return thread;

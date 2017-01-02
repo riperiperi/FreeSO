@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace FSO.Client.Controllers
 {
-    public class MessagingController : IAriesMessageSubscriber
+    public class MessagingController : IAriesMessageSubscriber, IDisposable
     {
         private CoreGameScreenController Game;
         private List<Message> ActiveMessages = new List<Message>();
@@ -34,11 +34,6 @@ namespace FSO.Client.Controllers
             this.DataService = dataService;
 
             this.Network.CityClient.AddSubscriber(this);
-        }
-
-        ~MessagingController()
-        {
-            this.Network.CityClient.RemoveSubscriber(this);
         }
 
         public void SendLetter(MessageAuthor author){
@@ -227,6 +222,11 @@ namespace FSO.Client.Controllers
                     });
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            this.Network.CityClient.RemoveSubscriber(this);
         }
     }
 

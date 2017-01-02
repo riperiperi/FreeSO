@@ -25,6 +25,7 @@ using FSO.Common.Utils;
 using FSO.Client.Controllers;
 using FSO.LotView;
 using FSO.Client.Rendering.City.Plugins;
+using FSO.Common;
 
 namespace FSO.Client.Rendering.City
 {
@@ -150,7 +151,8 @@ namespace FSO.Client.Rendering.City
 
         private Texture2D LoadTex(string Path)
         {
-            return LoadTex(new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read));
+            using (var strm = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                return LoadTex(strm);
         }
 
         private Texture2D LoadTex(Stream stream)
@@ -177,10 +179,23 @@ namespace FSO.Client.Rendering.City
 
             String gamepath = GameFacade.GameFilePath("");
 
-            string CityStr = gamepath + "cities/" + ((m_CityNumber >= 10) ? "city_00" + m_CityNumber.ToString() : "city_000" + m_CityNumber.ToString());
-            m_VertexColor = LoadTex(CityStr + "/vertexcolor.bmp");
+            string CityStr = "city_" + m_CityNumber.ToString("0000");
+            string ext = "bmp";
+            if (m_CityNumber >= 100)
+            {
+                //start FSO cities
+                //the first few will be client included
+                //probably after 200 will be inherited from content packs, when they are implemented
+                ext = "png";
+                CityStr = Path.Combine(FSOEnvironment.ContentDir, "Cities/", CityStr);
+            } else
+            {
+                CityStr = gamepath + "cities/" + CityStr;
+            }
+            m_VertexColor = LoadTex(CityStr + "/vertexcolor."+ext);
 
-            MapData = new CityMapData(CityStr, LoadTex);
+            MapData = new CityMapData();
+            MapData.Load(CityStr, LoadTex, ext);
             m_Width = MapData.Width;
             m_Height = MapData.Height;
 
@@ -812,7 +827,7 @@ namespace FSO.Client.Rendering.City
             double[] bounds = new double[] {Math.Round(mid.X-19), Math.Round(mid.Y-19), Math.Round(mid.X+19), Math.Round(mid.Y+19)};
             double[] pos = new double[] { m_MouseState.X, m_MouseState.Y };
 
-            for (int y=(int)bounds[1]; y<bounds[3]; y++) 
+            for (int y=(int)bounds[3]; y>bounds[1]; y--) 
             {
                 if (y < 0 || y > 511) continue;
                 for (int x=(int)bounds[0]; x<bounds[2]; x++) 
@@ -1203,9 +1218,9 @@ namespace FSO.Client.Rendering.City
                         m_SelTile = curTileInt;
                         m_VecSelTile = currentTile;
                         Plugin?.TileHover(currentTile);
-
-                        if (m_LastWheelPos != null)
-                            m_WheelZoomTarg = Math.Max(0.5f, Math.Min(1f, m_WheelZoomTarg - (m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) / 1000f));
+                        
+                        if (m_LastWheelPos != null && Math.Abs(m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) < 1000)
+                            m_WheelZoomTarg = Math.Max((Plugin == null)?0.5f:0.25f, Math.Min(1f, m_WheelZoomTarg - (m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) / 1000f));
                     }
 
                     if (m_MouseState.RightButton == ButtonState.Pressed && m_LastMouseState.RightButton == ButtonState.Released)
@@ -1359,17 +1374,17 @@ namespace FSO.Client.Rendering.City
 
         private void FixedTimeUpdate(UpdateState state)
         {
-            m_SpotOsc = (m_SpotOsc + 0.01f) % 1; //spotlight oscillation. Cycles fully every 100 frames.
-            if (m_Zoomed != TerrainZoomMode.Far) m_ZoomProgress += (1.0f - m_ZoomProgress) / 5.0f;
+            var rScale = 60f / FSOEnvironment.RefreshRate;
+            m_SpotOsc = (m_SpotOsc + 0.01f*rScale) % 1; //spotlight oscillation. Cycles fully every 100 frames.
+            if (m_Zoomed != TerrainZoomMode.Far) m_ZoomProgress += (1.0f - m_ZoomProgress) * (float)(1-Math.Pow(4 / 5.0f, rScale));
             if (m_Zoomed == TerrainZoomMode.Near)
             {
                 bool Triggered = false;
 
                 if (m_MouseMove)
                 {
-                    m_TargVOffX += (m_MouseState.X - m_MouseStart.X) / 1000; //move by fraction of distance between the mouse and where it started in both axis
-                    m_TargVOffY -= (m_MouseState.Y - m_MouseStart.Y) / 1000;
-                    
+                    m_TargVOffX += (m_MouseState.X - m_MouseStart.X) * (float)(1 - Math.Pow(999 / 1000.0f, rScale)); //move by fraction of distance between the mouse and where it started in both axis
+                    m_TargVOffY -= (m_MouseState.Y - m_MouseStart.Y) * (float)(1 - Math.Pow(999 / 1000.0f, rScale));
 
                     /*var dir = Math.Round((Math.Atan2(m_MouseStart.X - m_MouseState.Y,
                         m_MouseState.X - m_MouseStart.X) / Math.PI) * 4) + 4;
@@ -1380,25 +1395,25 @@ namespace FSO.Client.Rendering.City
                     if (m_MouseState.X > m_ScrWidth - 32)
                     {
 					    Triggered = true;
-					    m_TargVOffX += m_ScrollSpeed;
+					    m_TargVOffX += m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowRight);
 				    }
                     if (m_MouseState.X < 32) 
                     {
 					    Triggered = true;
-					    m_TargVOffX -= m_ScrollSpeed;
+					    m_TargVOffX -= m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowLeft);
 				    }
                     if (m_MouseState.Y > m_ScrHeight - 32)
                     {
 					    Triggered = true;
-					    m_TargVOffY -= m_ScrollSpeed;
+					    m_TargVOffY -= m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowDown);
 				    }
                     if (m_MouseState.Y < 32)
                     {
 					    Triggered = true;
-                        m_TargVOffY += m_ScrollSpeed;
+                        m_TargVOffY += m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowUp);
 				    } 
 
@@ -1415,16 +1430,16 @@ namespace FSO.Client.Rendering.City
                 m_TargVOffY = Math.Max(-100, Math.Min(m_TargVOffY, 103));
             }
             else if (m_Zoomed == TerrainZoomMode.Far && m_LotZoomProgress < 0.3)
-                m_ZoomProgress += (0 - m_ZoomProgress) / 5.0f; //zoom progress interpolation. Isn't very fixed but it's a nice gradiation.
+                m_ZoomProgress += (0 - m_ZoomProgress) * (float)(1-Math.Pow(4 / 5.0f, rScale)); //zoom progress interpolation. Isn't very fixed but it's a nice gradiation.
 
             //lot zoom.
             if (m_Zoomed == TerrainZoomMode.Lot && m_ZoomProgress > 0.995)
             {
-                m_LotZoomProgress += (1.0f - m_LotZoomProgress) / 10.0f;
+                m_LotZoomProgress += (1.0f - m_LotZoomProgress) * (float)(1 - Math.Pow(9 / 10.0f, rScale));
             }
-            else m_LotZoomProgress += (0 - m_LotZoomProgress) / 10.0f;
+            else m_LotZoomProgress += (0 - m_LotZoomProgress) * (float)(1 - Math.Pow(9 / 10.0f, rScale));
 
-            m_WheelZoom += (m_WheelZoomTarg - m_WheelZoom) / 10.0f;
+            m_WheelZoom += (m_WheelZoomTarg - m_WheelZoom) * (float)(1 - Math.Pow(9 / 10.0f, rScale));
         }
 
         private Texture2D DrawDepth(Effect VertexShader, Effect PixelShader)
@@ -1526,7 +1541,7 @@ namespace FSO.Client.Rendering.City
             VertexShader.Parameters["BaseMatrix"].SetValue((WorldMatrix*ViewMatrix)*ProjectionMatrix);
 
             PixelShader.CurrentTechnique = PixelShader.Techniques[0];
-            PixelShader.Parameters["LightCol"].SetValue(new Vector4(m_TintColor.R / 255.0f, m_TintColor.G / 255.0f, m_TintColor.B / 255.0f, 1));
+            PixelShader.Parameters["LightCol"].SetValue(new Vector4(m_TintColor.R / 255.0f, m_TintColor.G / 255.0f, m_TintColor.B / 255.0f, 1)*1.25f);
             var lightVec = Vector3.Normalize(m_LightPosition - new Vector3(256, 0, 256));
             PixelShader.Parameters["LightVec"].SetValue(lightVec);
             PixelShader.Parameters["VertexColorTex"].SetValue(m_VertexColor);

@@ -28,6 +28,12 @@ namespace FSO.Server.Database.DA.AvatarClaims
             }
         }
 
+        public void RemoveRemaining(string previousOwner, uint location)
+        {
+            Context.Connection.Query("DELETE FROM fso_avatar_claims WHERE location = @location AND owner = @previous_owner", new { previous_owner = previousOwner, location = location });
+        }
+
+
         public void Delete(int id, string owner)
         {
             Context.Connection.Query("DELETE FROM fso_avatar_claims WHERE owner = @owner AND avatar_claim_id = @claim_id", new { owner = owner, claim_id = (int)id });

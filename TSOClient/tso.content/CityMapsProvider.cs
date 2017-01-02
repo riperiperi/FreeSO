@@ -1,4 +1,5 @@
-﻿using FSO.Common.Content;
+﻿using FSO.Common;
+using FSO.Common.Content;
 using FSO.Content.Model;
 using System;
 using System.Collections.Concurrent;
@@ -27,6 +28,13 @@ namespace FSO.Content
             Cache = new ConcurrentDictionary<int, CityMap>();
 
             var dir = Content.GetPath("cities");
+            foreach (var map in Directory.GetDirectories(dir))
+            {
+                var id = int.Parse(Path.GetFileName(map).Replace("city_", ""));
+                DirCache.Add(id, map);
+            }
+
+            dir = Path.Combine(FSOEnvironment.ContentDir, "Cities/");
             foreach (var map in Directory.GetDirectories(dir))
             {
                 var id = int.Parse(Path.GetFileName(map).Replace("city_", ""));

@@ -661,6 +661,7 @@ namespace FSO.SimAntics.Engine
                     }
                     else
                     {
+                        avatar.TurnVelocity = TurnTweak;
                         avatar.RadianDirection += TurnTweak; //while we're turning, adjust our direction
                         return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                     }
@@ -700,7 +701,9 @@ namespace FSO.SimAntics.Engine
 
                     if (TurnFrames > 0)
                     {
-                        avatar.RadianDirection = (float)(TargetDirection + DirectionUtils.Difference(TargetDirection, WalkDirection) * (TurnFrames / 10.0));
+                        var newDir = (float)(TargetDirection + DirectionUtils.Difference(TargetDirection, WalkDirection) * (TurnFrames / 10.0));
+                        avatar.TurnVelocity = newDir - avatar.RadianDirection;
+                        avatar.RadianDirection = newDir;
                         TurnFrames--;
                     }
                     else avatar.RadianDirection = (float)TargetDirection;
@@ -820,7 +823,8 @@ namespace FSO.SimAntics.Engine
                         }
 
                     }
-                    Caller.VisualPosition = Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), MoveFrames / (float)MoveTotalFrames);
+                    avatar.VisualPosition = Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), MoveFrames / (float)MoveTotalFrames);
+                    avatar.VisualPositionStart = avatar.VisualPosition;
 
                     var velocity = Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), Velocity / (float)MoveTotalFrames) - PreviousPosition.ToVector3();
                     velocity.Z = 0;

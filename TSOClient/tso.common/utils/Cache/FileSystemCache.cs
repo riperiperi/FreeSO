@@ -26,14 +26,13 @@ namespace FSO.Common.Utils.Cache
 
         public FileSystemCache(string directory, long maxSize)
         {
+            _MainThread = Thread.CurrentThread;
             _Directory = directory;
             _Mutations = new Queue<FileSystemCacheMutation>();
             _CacheSize = 0;
             _MaxCacheSize = maxSize;
             _Cache = new LinkedList<FileSystemCacheEntry>();
             _Index = new Dictionary<CacheKey, FileSystemCacheEntry>();
-
-            _MainThread = Thread.CurrentThread;
         }
 
         public void Init()
@@ -56,7 +55,7 @@ namespace FSO.Common.Utils.Cache
 
         private void DigestLoop()
         {
-            while (_Active && _MainThread.IsAlive)
+            while (_Active && _MainThread?.IsAlive != false)
             {
                 Digest();
                 Thread.Sleep(DIGEST_DELAY);

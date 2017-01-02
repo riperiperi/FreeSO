@@ -53,7 +53,6 @@ namespace FSO.Client.UI.Panels
             };
             Add(connectLocalBtn);
 
-            /*
             var cityPainterBtn = new UIButton();
             cityPainterBtn.Caption = "Toggle City Painter";
             cityPainterBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 130);
@@ -74,7 +73,6 @@ namespace FSO.Client.UI.Panels
                 }
             };
             Add(cityPainterBtn);
-            */
         }
     }
 }

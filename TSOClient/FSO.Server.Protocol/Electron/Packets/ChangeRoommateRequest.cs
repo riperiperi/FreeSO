@@ -13,11 +13,13 @@ namespace FSO.Server.Protocol.Electron.Packets
     {
         public ChangeRoommateType Type;
         public uint AvatarId;
+        public uint LotLocation;
 
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             Type = input.GetEnum<ChangeRoommateType>();
             AvatarId = input.GetUInt32();
+            LotLocation = input.GetUInt32();
         }
 
         public override ElectronPacketType GetPacketType()
@@ -29,6 +31,7 @@ namespace FSO.Server.Protocol.Electron.Packets
         {
             output.PutEnum(Type);
             output.PutUInt32(AvatarId);
+            output.PutUInt32(LotLocation);
         }
     }
 }

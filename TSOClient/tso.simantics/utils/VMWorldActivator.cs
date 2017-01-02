@@ -92,6 +92,7 @@ namespace FSO.SimAntics.Utils
                 Blueprint.Terrain = CreateTerrain(model);
             }
 
+            arch.SignalTerrainRedraw();
             arch.Tick();
             return this.Blueprint;
         }

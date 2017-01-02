@@ -517,8 +517,11 @@ namespace FSO.Files.Formats.IFF.Chunks
                 Pixel = this.GetTexture(device, false)
             };
             result.ZBuffer = this.GetZTexture(device, false);
-            PixelData = null;
-            ZBufferData = null;
+            if (!IffFile.RETAIN_CHUNK_DATA)
+            {
+                PixelData = null;
+                ZBufferData = null;
+            }
             return result;
         }
 

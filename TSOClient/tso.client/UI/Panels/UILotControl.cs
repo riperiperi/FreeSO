@@ -618,7 +618,7 @@ namespace FSO.Client.UI.Panels
                         }
                         GameFacade.Cursor.SetCursor(type);
                     }
-                    World.Scroll(scrollBy);
+                    World.Scroll(scrollBy * (60f / FSOEnvironment.RefreshRate));
                     scrolled = true;
                 }
                 if (MouseIsOn)

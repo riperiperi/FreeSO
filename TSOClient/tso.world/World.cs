@@ -41,7 +41,7 @@ namespace FSO.LotView
         public static bool DirectX = false;
         public float Opacity = 1f;
 
-        public int SmoothZoomTimer = -1;
+        public float SmoothZoomTimer = -1;
         public float SmoothZoomFrom = 1f;
 
         public WorldState State;
@@ -278,7 +278,7 @@ namespace FSO.LotView
                 /** We need to scroll **/
                 if (scrollVector != Vector2.Zero)
                 {
-                    State.CenterTile += scrollVector * new Vector2(0.0625f, 0.0625f);
+                    State.CenterTile += scrollVector * 0.0625f * (60f / FSOEnvironment.RefreshRate);
                     State.ScrollAnchor = null;
                 }
             }
@@ -350,7 +350,7 @@ namespace FSO.LotView
 
             if (SmoothZoomTimer > -1)
             {
-                SmoothZoomTimer++;
+                SmoothZoomTimer += 60f / FSOEnvironment.RefreshRate;
                 if (SmoothZoomTimer >= 15)
                 {
                     State.PreciseZoom = 1f;

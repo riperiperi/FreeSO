@@ -13,6 +13,7 @@ using Nancy.Security;
 using FSO.Server.Database.DA.Shards;
 using FSO.Common.Domain.Shards;
 using NLog;
+using System.IO;
 
 namespace FSO.Server.Servers.Api.Controllers
 {
@@ -35,9 +36,23 @@ namespace FSO.Server.Servers.Api.Controllers
 
         private static Logger LOG = LogManager.GetCurrentClassLogger();
 
+        private string VersionNumber = "0";
+        private string VersionName;
+        private string DownloadURL;
+
         public CitySelectorController(IDAFactory DAFactory, ApiServerConfiguration config, JWTFactory jwt, IShardsDomain shardsDomain) : base("/cityselector")
         {
             JsonWebToken.JWTTokenAuthentication.Enable(this, jwt);
+
+            var str = GetServerVersion();
+            var split = str.LastIndexOf('-');
+            VersionName = str;
+            if (split != -1)
+            {
+                VersionName = str.Substring(0, split);
+                VersionNumber = str.Substring(split + 1);
+            }
+            DownloadURL = (config.UpdateBaseURL ?? "").TrimEnd('/') + "/client-" + VersionNumber + ".zip";
 
             //Take the auth ticket, establish trust and then create a cookie (reusing JWT)
             this.Get["/app/InitialConnectServlet"] = _ =>
@@ -80,7 +95,12 @@ namespace FSO.Server.Servers.Api.Controllers
                     };
 
                     var token = jwt.CreateToken(session);
-                    return Response.AsXml(new UserAuthorized())
+                    return Response.AsXml(new UserAuthorized()
+                    {
+                        FSOBranch = VersionName,
+                        FSOVersion = VersionNumber,
+                        FSOUpdateUrl = DownloadURL
+                    })
                             .WithCookie("fso", token.Token);
                 }
             };
@@ -218,6 +238,21 @@ namespace FSO.Server.Servers.Api.Controllers
 
                 return Response.AsXml(result);
             };
+        }
+
+        private static string GetServerVersion()
+        {
+            if (File.Exists("version.txt"))
+            {
+                using (StreamReader Reader = new StreamReader(File.Open("version.txt", FileMode.Open, FileAccess.Read, FileShare.Read)))
+                {
+                    return Reader.ReadLine();
+                }
+            }
+            else
+            {
+                return "unknown-0";
+            }
         }
     }
     

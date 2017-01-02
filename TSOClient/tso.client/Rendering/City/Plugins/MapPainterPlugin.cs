@@ -9,6 +9,9 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.Client.UI.Framework;
 using FSO.Common.Utils;
 using Microsoft.Xna.Framework.Input;
+using FSO.Common;
+using System.IO;
+using FSO.Files;
 
 namespace FSO.Client.Rendering.City.Plugins
 {
@@ -110,6 +113,7 @@ namespace FSO.Client.Rendering.City.Plugins
         private int WallLength;
         private int WallDir;
         private bool Erasing;
+        private bool Accelerate;
         public byte[] OriginalData;
 
         private bool MouseDown;
@@ -128,6 +132,22 @@ namespace FSO.Client.Rendering.City.Plugins
             "Rock",
             "Snow",
             "Sand"
+        };
+
+        public byte[] ForestDensities = new byte[] {
+            0,
+            64,
+            128,
+            192,
+            255
+        };
+
+        public Color[] ForestTypes = new Color[] {
+            new Color(0, 0x6A, 0x28),
+            new Color(0, 0xEB, 0x42),
+            new Color(255, 0, 0),
+            new Color(255, 0xFC, 0),
+            new Color(0, 0, 0),
         };
         public int SelectedModifier;
         public int BrushSize;
@@ -160,6 +180,7 @@ namespace FSO.Client.Rendering.City.Plugins
         {
             sb.Begin();
             sb.DrawString(TextStyle.DefaultLabel.Font.GetNearest(12).Font, Mode.ToString(), new Vector2(10, 10), Color.White);
+            var ePos = new Point((int)Math.Round(LastPos.X), (int)Math.Round(LastPos.Y));
 
             switch (Mode)
             {
@@ -175,6 +196,8 @@ namespace FSO.Client.Rendering.City.Plugins
                     City.DrawLine(TextureGenerator.GetPxWhite(sb.GraphicsDevice), onScreen, onScreen + new Vector2(0, -30), sb, 3, 100);
                     break;
                 case PainterMode.TERRAINTYPE:
+                case PainterMode.FORESTDENSITY:
+                case PainterMode.FORESTTYPE:
                     float iScale = (float)(1 / (City.GetIsoScale() * 2));
 
                     Color selColor = Color.White;
@@ -183,6 +206,11 @@ namespace FSO.Client.Rendering.City.Plugins
                     {
                         case PainterMode.TERRAINTYPE:
                             selColor = TerrainTypes[SelectedModifier]; break;
+                        case PainterMode.FORESTDENSITY:
+                            var intensity = ForestDensities[SelectedModifier];
+                            selColor = new Color(intensity, intensity, intensity); break;
+                        case PainterMode.FORESTTYPE:
+                            selColor = ForestTypes[SelectedModifier]; break;
                     }
 
                     BrushFunc(BrushSize, (x, y, strength) =>
@@ -192,12 +220,44 @@ namespace FSO.Client.Rendering.City.Plugins
                     City.Draw2DPoly();
                     break;
                 case PainterMode.ELEVATION_CIRCLE:
-                    var ePos = new Point((int)Math.Round(LastPos.X), (int)Math.Round(LastPos.Y));
+                    
                     BrushFunc(BrushSize, (x, y, strength) =>
                     {
                         //if (strength <= 0) return;
+                        var multiplier = (Accelerate) ? 2 : 1;
                         var eOnScreen = City.Get2DFromTile(ePos.X + x, ePos.Y + y);
-                        City.DrawLine(TextureGenerator.GetPxWhite(sb.GraphicsDevice), eOnScreen, eOnScreen + new Vector2(0, -50) * strength, sb, 3, 100);
+                        City.DrawLine(TextureGenerator.GetPxWhite(sb.GraphicsDevice), eOnScreen, eOnScreen + new Vector2(0, -50) * strength * multiplier, sb, 3, 100);
+                    });
+                    break;
+
+                case PainterMode.ELEVATION_FLAT:
+                    var elevations = new List<byte>();
+                    BrushFunc(BrushSize, (x, y, strength) =>
+                    {
+                        var index = ePos.X + x + (ePos.Y + y) * 512;
+                        if (index < 0 || index > City.MapData.ElevationData.Length) return;
+                        elevations.Add(City.MapData.ElevationData[index]);
+                    });
+
+                    var sorted = elevations.OrderBy(x => x).ToList();
+                    var elevation = sorted[sorted.Count / 2]; //median
+
+                    BrushFunc(BrushSize, (x, y, strength) =>
+                    {
+                        if (strength > 0)
+                        {
+                            var multiplier = (Accelerate) ? 2 : 1;
+                            var index = ePos.X + x + (ePos.Y + y) * 512;
+                            if (index < 0 || index > City.MapData.ElevationData.Length) return;
+                            var elev = City.MapData.ElevationData[index];
+
+                            var change = (elevation - elev) / 50f;
+                            if (change > 0) change = Math.Max(0.02f, change);
+                            else change = Math.Min(-0.02f, change);
+
+                            var eOnScreen = City.Get2DFromTile(ePos.X + x, ePos.Y + y);
+                            City.DrawLine(TextureGenerator.GetPxWhite(sb.GraphicsDevice), eOnScreen, eOnScreen + new Vector2(0, -50) * change * multiplier, sb, 3, 100);
+                        }
                     });
                     break;
             }
@@ -209,6 +269,7 @@ namespace FSO.Client.Rendering.City.Plugins
         {
             if (tile != null && MouseDown) {
                 var wallPos = new Point((int)Math.Round(tile.Value.X), (int)Math.Round(tile.Value.Y));
+                var newPt = tile.Value.ToPoint();
                 switch (Mode)
                 {
                     case PainterMode.ROAD:
@@ -228,7 +289,6 @@ namespace FSO.Client.Rendering.City.Plugins
                         }
                         break;
                     case PainterMode.TERRAINTYPE:
-                        var newPt = tile.Value.ToPoint();
                         if (MouseClicked || newPt != LastPos.ToPoint())
                         {
                             BrushFunc(BrushSize, (x, y, strength) =>
@@ -244,15 +304,79 @@ namespace FSO.Client.Rendering.City.Plugins
                         break;
                     case PainterMode.ELEVATION_CIRCLE:
                         if (OriginalData == null) return;
+                        
                         BrushFunc(BrushSize, (x, y, strength) =>
                         {
+                            var multiplier = (Accelerate) ? 2 : 1;
                             if (strength > 0) {
                                 var loc = new Point(wallPos.X + x, wallPos.Y + y);
-                                if (ElevationMod.ContainsKey(loc)) ElevationMod[loc] += ((Erasing)?-1:1)* strength / 5;
-                                else ElevationMod[loc] = ((Erasing) ? -1 : 1) * strength / 5;
+                                if (ElevationMod.ContainsKey(loc)) ElevationMod[loc] += ((Erasing)?-1:1)* strength * multiplier / 5;
+                                else ElevationMod[loc] = ((Erasing) ? -1 : 1) * strength * multiplier / 5;
                             }
                         });
                         AddChange(new Rectangle(wallPos.X - (1 + BrushSize), wallPos.Y - (1 + BrushSize), 2 + BrushSize * 2, 2 + BrushSize * 2));
+                        break;
+                    case PainterMode.ELEVATION_FLAT:
+                        if (OriginalData == null) return;
+                        var elevations = new List<byte>();
+                        BrushFunc(BrushSize, (x, y, strength) =>
+                        {
+                            var index = wallPos.X + x + (wallPos.Y + y) * 512;
+                            if (index < 0 || index > City.MapData.ElevationData.Length) return;
+                            elevations.Add(City.MapData.ElevationData[index]);
+                        });
+
+                        var sorted = elevations.OrderBy(x => x).ToList();
+                        var elevation = sorted[sorted.Count / 2]; //median
+
+                        BrushFunc(BrushSize, (x, y, strength) =>
+                        {
+                            var multiplier = (Accelerate) ? 2 : 1;
+                            if (strength > 0)
+                            {
+                                var index = wallPos.X + x + (wallPos.Y + y) * 512;
+                                if (index < 0 || index > City.MapData.ElevationData.Length) return;
+                                var elev = City.MapData.ElevationData[index];
+
+                                var loc = new Point(wallPos.X + x, wallPos.Y + y);
+                                var change = (elevation - elev) / 50f * multiplier;
+                                if (change > 0) change = Math.Max(0.02f, change);
+                                else change = Math.Min(-0.02f, change);
+
+                                if (ElevationMod.ContainsKey(loc)) ElevationMod[loc] += change;
+                                else ElevationMod[loc] = change;
+                            }
+                        });
+
+                        AddChange(new Rectangle(wallPos.X - (1 + BrushSize), wallPos.Y - (1 + BrushSize), 2 + BrushSize * 2, 2 + BrushSize * 2));
+                        break;
+                    case PainterMode.FORESTDENSITY:
+                        if (MouseClicked || newPt != LastPos.ToPoint())
+                        {
+                            BrushFunc(BrushSize, (x, y, strength) =>
+                            {
+                                if (strength > 0) City.MapData.ForestDensityData[newPt.X + x + (newPt.Y + y) * 512] = ForestDensities[SelectedModifier];
+                            });
+
+                            AddChange(new Rectangle(newPt.X - (1 + BrushSize), newPt.Y - (1 + BrushSize), 3 + BrushSize * 2, 3 + BrushSize * 2));
+                            City.GenerateCityMesh(GameFacade.GraphicsDevice, ChangeBounds);
+                            MouseClicked = false;
+                            break;
+                        }
+                        break;
+                    case PainterMode.FORESTTYPE:
+                        if (MouseClicked || newPt != LastPos.ToPoint())
+                        {
+                            BrushFunc(BrushSize, (x, y, strength) =>
+                            {
+                                if (strength > 0) City.MapData.ForestTypeData[newPt.X + x + (newPt.Y + y) * 512] = ForestTypes[SelectedModifier];
+                            });
+
+                            AddChange(new Rectangle(newPt.X - (1 + BrushSize), newPt.Y - (1 + BrushSize), 3 + BrushSize * 2, 3 + BrushSize * 2));
+                            City.GenerateCityMesh(GameFacade.GraphicsDevice, ChangeBounds);
+                            MouseClicked = false;
+                            break;
+                        }
                         break;
                 }
             }
@@ -276,6 +400,7 @@ namespace FSO.Client.Rendering.City.Plugins
                     WallDir = 0;
                     break;
                 case PainterMode.ELEVATION_CIRCLE:
+                case PainterMode.ELEVATION_FLAT:
                     OriginalData = new byte[City.MapData.ElevationData.Length];
                     Array.Copy(City.MapData.ElevationData, OriginalData, OriginalData.Length);
 
@@ -303,6 +428,7 @@ namespace FSO.Client.Rendering.City.Plugins
                     }
                     break;
                 case PainterMode.ELEVATION_CIRCLE:
+                case PainterMode.ELEVATION_FLAT:
                     ChangeBounds = null;
                     break;
             }
@@ -318,7 +444,7 @@ namespace FSO.Client.Rendering.City.Plugins
 
         public override void Update(UpdateState state)
         {
-            if (Mode == PainterMode.ELEVATION_CIRCLE && MouseDown && ChangeBounds != null && ElevationFrames-- <= 0)
+            if ((Mode == PainterMode.ELEVATION_CIRCLE || Mode == PainterMode.ELEVATION_FLAT) && MouseDown && ChangeBounds != null && ElevationFrames-- <= 0)
             {
                 Array.Copy(OriginalData, City.MapData.ElevationData, OriginalData.Length);
                 foreach (var mod in ElevationMod)
@@ -330,8 +456,39 @@ namespace FSO.Client.Rendering.City.Plugins
                 City.GenerateCityMesh(GameFacade.GraphicsDevice, ChangeBounds);
                 ElevationFrames = 5;
             }
-
+            
+            var pressed = state.NewKeys;
             Erasing = state.KeyboardState.IsKeyDown(Keys.LeftControl);
+            Accelerate = state.KeyboardState.IsKeyDown(Keys.LeftShift);
+
+
+            for (int i = 2; i<11; i++)
+            {
+                Keys key;
+                if (Enum.TryParse("F"+i, out key))
+                {
+                    var dir = Path.Combine(FSOEnvironment.UserDir, "CityPainterSave" + i + "/");
+                    if (pressed.Contains(key))
+                    {
+                        if (Accelerate)
+                        {
+                            City.MapData.Save(dir);
+                            UIScreen.GlobalShowAlert(new UI.Controls.UIAlertOptions { Title = "Save Success", Message = "Saved city data " + i + "." }, true);
+                        }
+                        else if (Directory.Exists(dir))
+                        {
+                            City.MapData.Load(dir, LoadTex, "png");
+                            City.GenerateCityMesh(GameFacade.GraphicsDevice, null);
+                            //UIScreen.GlobalShowAlert(new UI.Controls.UIAlertOptions { Title = "Load Success", Message = "Loaded city data " + i + "." }, true);
+                        }
+                        else
+                        {
+                            UIScreen.GlobalShowAlert(new UI.Controls.UIAlertOptions { Title = "Load Failed", Message = "Could not find city data " + i + "." }, true);
+                        }
+                    }
+                }
+            }
+
             if (state.MouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released)
             {
                 if (MouseDown) RestoreOld();
@@ -339,8 +496,11 @@ namespace FSO.Client.Rendering.City.Plugins
             }
             var keys = state.KeyboardState;
             if (keys.IsKeyDown(Keys.R)) SwitchMode(PainterMode.ROAD);
-            if (keys.IsKeyDown(Keys.T)) SwitchMode(PainterMode.TERRAINTYPE);
-            if (keys.IsKeyDown(Keys.E)) SwitchMode(PainterMode.ELEVATION_CIRCLE);
+            else if (keys.IsKeyDown(Keys.T)) SwitchMode(PainterMode.TERRAINTYPE);
+            else if (keys.IsKeyDown(Keys.E)) SwitchMode(PainterMode.ELEVATION_CIRCLE);
+            else if (keys.IsKeyDown(Keys.F)) SwitchMode(PainterMode.ELEVATION_FLAT);
+            else if (keys.IsKeyDown(Keys.C)) SwitchMode(PainterMode.FORESTTYPE);
+            else if (keys.IsKeyDown(Keys.D)) SwitchMode(PainterMode.FORESTDENSITY);
 
             var oldS = SelectedModifier;
             if (keys.IsKeyDown(Keys.NumPad0)) SelectedModifier = 0;
@@ -349,11 +509,29 @@ namespace FSO.Client.Rendering.City.Plugins
             if (keys.IsKeyDown(Keys.NumPad3)) SelectedModifier = 3;
             if (keys.IsKeyDown(Keys.NumPad4)) SelectedModifier = 4;
 
-            if (state.KeyboardState.IsKeyDown(Keys.LeftShift))
+            if (pressed.Contains(Keys.Up)) BrushSize += 1;
+            if (pressed.Contains(Keys.Down)) BrushSize = Math.Max(0, BrushSize - 1);    
+        }
+
+        private Texture2D LoadTex(string Path)
+        {
+            using (var strm = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                return LoadTex(strm);
+        }
+
+        private Texture2D LoadTex(Stream stream)
+        {
+            Texture2D result = null;
+            try
             {
-                BrushSize = SelectedModifier;
-                SelectedModifier = oldS;
+                result = ImageLoader.FromStream(GameFacade.GraphicsDevice, stream);
             }
+            catch (Exception)
+            {
+                result = new Texture2D(GameFacade.GraphicsDevice, 1, 1);
+            }
+            stream.Close();
+            return result;
         }
 
         public void BrushFunc(int width, Callback<int, int, float> callback)
@@ -374,7 +552,7 @@ namespace FSO.Client.Rendering.City.Plugins
             if (OriginalData != null)
             {
                 if (Mode == PainterMode.ROAD) City.MapData.RoadData = OriginalData;
-                else if (Mode == PainterMode.ELEVATION_CIRCLE) City.MapData.ElevationData = OriginalData;
+                else if (Mode == PainterMode.ELEVATION_CIRCLE || Mode == PainterMode.ELEVATION_FLAT) City.MapData.ElevationData = OriginalData;
             }
             OriginalData = null;
             City.GenerateCityMesh(GameFacade.GraphicsDevice, ChangeBounds);

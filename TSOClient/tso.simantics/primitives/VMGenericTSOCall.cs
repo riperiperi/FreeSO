@@ -125,7 +125,7 @@ namespace FSO.SimAntics.Primitives
                     if (context.VM.GlobalLink != null)
                     {
                         var server = (VMServerDriver)context.VM.Driver;
-                        server.KickUser(context.VM, context.StackObject.Name);
+                        server.DropAvatar(context.StackObject as VMAvatar);
                     }
                     ((VMAvatar)context.StackObject).UserLeaveLot();
                     return VMPrimitiveExitCode.GOTO_TRUE;

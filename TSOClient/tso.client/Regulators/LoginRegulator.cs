@@ -37,9 +37,11 @@ namespace FSO.Client.Regulators
 
             AddState("AuthLogin").OnlyTransitionFrom("NotLoggedIn");
             AddState("InitialConnect").OnlyTransitionFrom("AuthLogin");
-            AddState("AvatarData").OnlyTransitionFrom("InitialConnect");
+            AddState("AvatarData").OnlyTransitionFrom("InitialConnect", "UpdateRequired");
             AddState("ShardStatus").OnlyTransitionFrom("AvatarData");
             AddState("LoggedIn").OnlyTransitionFrom("ShardStatus");
+
+            AddState("UpdateRequired").OnlyTransitionFrom("InitialConnect");
         }
 
         protected override void OnAfterTransition(RegulatorState oldState, RegulatorState newState, object data)
@@ -74,7 +76,14 @@ namespace FSO.Client.Regulators
 
                         if (connectResult.Status == InitialConnectServletResultType.Authorized)
                         {
-                            AsyncTransition("AvatarData");
+                            if (RequireUpdate(connectResult.UserAuthorized))
+                            {
+                                AsyncTransition("UpdateRequired", connectResult.UserAuthorized);
+                            }
+                            else
+                            {
+                                AsyncTransition("AvatarData");
+                            }
                         }
                         else if (connectResult.Status == InitialConnectServletResultType.Error)
                         {
@@ -84,6 +93,8 @@ namespace FSO.Client.Regulators
                     {
                         base.ThrowErrorAndReset(ex);
                     }
+                    break;
+                case "UpdateRequired":
                     break;
                 case "AvatarData":
                     try {
@@ -110,6 +121,22 @@ namespace FSO.Client.Regulators
                     GameFacade.Controller.ShowPersonSelection();
                     break;
             }
+        }
+
+        public bool RequireUpdate(UserAuthorized auth)
+        {
+            if (auth.FSOVersion == null) return false;
+
+            var str = GlobalSettings.Default.ClientVersion;
+            var authstr = auth.FSOBranch + "-" + auth.FSOVersion;
+
+            return str != authstr;
+
+            /*
+            var split = str.LastIndexOf('-');
+            int verNum = 0;
+            int.TryParse(split.)
+            */
         }
 
         protected override void OnBeforeTransition(RegulatorState oldState, RegulatorState newState, object data)

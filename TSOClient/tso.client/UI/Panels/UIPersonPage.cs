@@ -5,6 +5,7 @@ using FSO.Client.UI.Screens;
 using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
+using FSO.Server.Protocol.Electron.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -165,6 +166,9 @@ namespace FSO.Client.UI.Panels
         private int RelOutLTR = 0;
         private int RelInSTR = 0;
         private int RelInLTR = 0;
+
+        private bool isMyPropertyOwner;
+        private bool IsRoommate;
 
         private static byte[] VMSkillMap = new byte[]
         {
@@ -356,6 +360,9 @@ namespace FSO.Client.UI.Panels
             this.AdmitCheckBox.OnButtonClick += AdmitCheckBox_OnButtonClick;
             this.BanCheckBox.OnButtonClick += BanCheckBox_OnButtonClick;
 
+            InviteButton.OnButtonClick += InviteButton_OnButtonClick;
+            KickOutButton.OnButtonClick += KickOutButton_OnButtonClick;
+
             /** Scroll bars **/
             this.DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
             this.DescriptionText.AttachSlider(this.DescriptionSlider);
@@ -469,6 +476,8 @@ namespace FSO.Client.UI.Panels
         {
             var admit = false;
             var ban = false;
+            isMyPropertyOwner = false;
+            IsRoommate = false;
 
             if (MyLot != null && MyLot.Value != null && CurrentAvatar.Value != null)
             {
@@ -476,6 +485,12 @@ namespace FSO.Client.UI.Panels
                     admit = MyLot.Value.Lot_LotAdmitInfo.LotAdmitInfo_AdmitList.Contains(CurrentAvatar.Value.Avatar_Id);
                 if (MyLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_BanList != null)
                     ban = MyLot.Value.Lot_LotAdmitInfo.LotAdmitInfo_BanList.Contains(CurrentAvatar.Value.Avatar_Id);
+                IsRoommate = MyLot.Value.Lot_RoommateVec?.Contains(CurrentAvatar.Value.Avatar_Id) == true;
+            }
+
+            if (MyAvatar != null && MyAvatar.Value != null && CurrentAvatar.Value != null)
+            {
+                isMyPropertyOwner = MyAvatar.Value.Avatar_Id == MyLot.Value.Lot_LeaderID;
             }
 
             AdmitCheckBox.Selected = admit;
@@ -955,7 +970,7 @@ namespace FSO.Client.UI.Panels
             if (isOptions) AdmitBanChanged();
 
             RelationshipsTabButton.Disabled = isMe;
-            OptionsTabButton.Disabled = isMe;
+            OptionsTabButton.Disabled = isMe && !hasProperty;
             BookmarkButton.Disabled = isMe;
 
             if (isClosed)
@@ -978,11 +993,64 @@ namespace FSO.Client.UI.Panels
 
             /** Options **/
             this.ChildrenWithinIdRange(700, 799).ForEach(x => x.Visible = isOptions);
+            AdmitCheckBox.Disabled = isMe;
+            BanCheckBox.Disabled = isMe;
+            IgnoreButton.Disabled = isMe;
+
+            KickOutButton.Disabled = !(isMe || isMyPropertyOwner);
+            InviteButton.Disabled = !(isMyPropertyOwner) || hasProperty;
+            KickOutButton.Tooltip = GameFacade.Strings.GetString("189", (isMe) ? "95" : "33");
 
             if (isOptions)
             {
-                KickOutButton.Visible = true;
+                KickOutButton.Visible = IsRoommate;
+                InviteButton.Visible = !IsRoommate;
             }
+        }
+
+        private void KickOutButton_OnButtonClick(UIElement button)
+        {
+            //is it me?
+            var isMe = false;
+
+            if (CurrentAvatar != null && CurrentAvatar.Value != null)
+            {
+                isMe = FindController<CoreGameScreenController>().IsMe(CurrentAvatar.Value.Avatar_Id);
+            }
+            UIAlert alert = null;
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                Title = GameFacade.Strings.GetString("208", (isMe)?"7":"1"),
+                Message = GameFacade.Strings.GetString("208", (isMe) ? "8" : "2"),
+                Buttons = new UIAlertButton[] {
+                        new UIAlertButton(UIAlertButtonType.Yes, (btn) => {
+                            if (CurrentAvatar.Value != null) {
+                                FindController<PersonPageController>().ChangeRoommate(ChangeRoommateType.KICK, CurrentAvatar.Value.Avatar_Id, MyAvatar.Value.Avatar_LotGridXY);
+                            }
+                            UIScreen.RemoveDialog(alert);
+                            }),
+                        new UIAlertButton(UIAlertButtonType.No, (btn) => UIScreen.RemoveDialog(alert))
+                        },
+            }, true);
+        }
+
+        private void InviteButton_OnButtonClick(UIElement button)
+        {
+            UIAlert alert = null;
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                Title = GameFacade.Strings.GetString("208", "5"),
+                Message = GameFacade.Strings.GetString("208", "6"),
+                Buttons = new UIAlertButton[] {
+                        new UIAlertButton(UIAlertButtonType.Yes, (btn) => {
+                            if (CurrentAvatar.Value != null) {
+                                FindController<PersonPageController>().ChangeRoommate(ChangeRoommateType.INVITE, CurrentAvatar.Value.Avatar_Id, MyAvatar.Value.Avatar_LotGridXY);
+                            }
+                            UIScreen.RemoveDialog(alert);
+                            }),
+                        new UIAlertButton(UIAlertButtonType.No, (btn) => UIScreen.RemoveDialog(alert))
+                        },
+            }, true);
         }
 
         public void RelationshipChange()

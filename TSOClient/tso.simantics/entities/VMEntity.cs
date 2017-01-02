@@ -214,7 +214,7 @@ namespace FSO.SimAntics
                 TreeTable = SemiGlobal.Get<TTAB>(obj.OBJ.TreeTableID); //tree not in local, try semiglobal
                 TreeTableStrings = SemiGlobal.Get<TTAs>(obj.OBJ.TreeTableID);
             }
-            //no you cannot get global tree tables don't even ask
+            //TODO: global interactions like salvage
 
             this.Attributes = new List<short>(numAttributes);
             SetFlag(VMEntityFlags.ChairFacing, true);
@@ -301,41 +301,26 @@ namespace FSO.SimAntics
                 scrPos -= new Vector2(worldSpace.WorldPxWidth/2, worldSpace.WorldPxHeight/2);
                 for (int i = 0; i < SoundThreads.Count; i++)
                 {
-                    if (SoundThreads[i].Sound.Dead)
+                    var sound = SoundThreads[i].Sound;
+                    if (sound.Dead)
                     {
-                        var old = SoundThreads[i];
                         SoundThreads.RemoveAt(i--);
-                        if (old.Loop && old.Sound is HITThread && ((HITThread)old.Sound).SimpleMode)
-                        {
-                            var thread = HITVM.Get().PlaySoundEvent(old.Name);
-                            if (thread != null)
-                            {
-                                var owner = this;
-                                if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
-
-                                var entry = new VMSoundEntry()
-                                {
-                                    Sound = thread,
-                                    Pan = old.Pan,
-                                    Zoom = old.Zoom,
-                                    Loop = old.Loop,
-                                    Name = old.Name
-                                };
-                                owner.SoundThreads.Add(entry);
-                            }
-                        }
                         continue;
                     }
 
                     float pan = (SoundThreads[i].Pan) ? Math.Max(-1.0f, Math.Min(1.0f, scrPos.X / worldSpace.WorldPxWidth)) : 0;
+                    pan = pan * pan * ((pan > 0)?1:-1);
                     float volume = (SoundThreads[i].Pan) ? 1 - (float)Math.Max(0, Math.Min(1, Math.Sqrt(scrPos.X * scrPos.X + scrPos.Y * scrPos.Y) / worldSpace.WorldPxWidth)) : 1;
+                    volume *= worldState.PreciseZoom;
 
                     if (SoundThreads[i].Zoom) volume /= 4 - (int)worldState.Zoom;
                     if (Position.Level > worldState.Level) volume /= 4;
                     else if (Position.Level != worldState.Level) volume /= 2;
 
-                    SoundThreads[i].Sound.SetVolume(volume, pan);
-
+                    if (sound.SetVolume(volume, pan, ObjectID) && this is VMAvatar && sound is HITThread)
+                    {
+                        ((VMAvatar)this).SubmitHITVars((HITThread)sound);
+                    }
                 }
             }
         }

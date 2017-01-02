@@ -45,9 +45,15 @@ namespace FSO.Server.Database.DA.Roommates
             return (uint)Context.Connection.Execute("DELETE FROM fso_roommates WHERE avatar_id = @avatar_id AND lot_id = @lot_id",
                 new { avatar_id = avatar_id, lot_id = lot_id });
         }
+
+        public bool DeclineRoommateRequest(uint avatar_id, int lot_id)
+        {
+            return Context.Connection.Execute("DELETE FROM fso_roommates WHERE avatar_id = @avatar_id AND lot_id = @lot_id AND is_pending = 1",
+                new { avatar_id = avatar_id, lot_id = lot_id }) > 0;
+        }
         public bool AcceptRoommateRequest(uint avatar_id, int lot_id)
         {
-            return Context.Connection.Execute("UPDATE fso_roommates SET is_pending = 0 WHERE avatar_id = @avatar_id AND lot_id = @lot_id", 
+            return Context.Connection.Execute("UPDATE fso_roommates SET is_pending = 0 WHERE avatar_id = @avatar_id AND lot_id = @lot_id AND is_pending = 1", 
                 new { avatar_id = avatar_id, lot_id = lot_id }) > 0;
         }
         public bool UpdatePermissionsLevel(uint avatar_id, int lot_id, byte level)

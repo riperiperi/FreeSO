@@ -19,6 +19,7 @@ using FSO.Client.Network;
 using FSO.Files;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.CitySelector;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -177,15 +178,21 @@ namespace FSO.Client.UI.Panels
             var city = (ShardStatusItem)selectedItem.Data;
 
             String gamepath = GameFacade.GameFilePath("");
-            string CityStr = gamepath + "cities\\city_" + city.Map;
+
+
+            var fsoMap = int.Parse(city.Map) >= 100;
+
+            var cityThumb = (fsoMap) ?
+            Path.Combine(FSOEnvironment.ContentDir, "Cities/city_" + city.Map + "/thumbnail.png")
+            : GameFacade.GameFilePath("cities/city_" + city.Map + "/thumbnail.bmp");
 
             //Take a copy so we dont change the original when we alpha mask it
             Texture2D cityThumbTex = TextureUtils.Copy(GameFacade.GraphicsDevice, TextureUtils.TextureFromFile(
-               GameFacade.Game.GraphicsDevice, CityStr + "\\Thumbnail.bmp"));
+               GameFacade.Game.GraphicsDevice, cityThumb));
             TextureUtils.CopyAlpha(ref cityThumbTex, thumbnailAlphaImage);
 
             CityThumb.Texture = cityThumbTex;
-            DescriptionText.CurrentText = GameFacade.Strings.GetString("238", int.Parse(city.Map).ToString());
+            DescriptionText.CurrentText = GameFacade.Strings.GetString(fsoMap?"f104":"238", int.Parse(city.Map).ToString());
             DescriptionText.VerticalScrollPosition = 0;
 
             /** Validate **/

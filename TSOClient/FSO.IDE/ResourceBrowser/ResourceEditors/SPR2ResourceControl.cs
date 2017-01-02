@@ -86,7 +86,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         public void SetDisplay()
         {
             int mode = ModeCombo.SelectedIndex;
-            if (mode == -1 || Graphics == null) return;
+            if (mode == -1 || Graphics == null || Graphics[0] == null) return;
             SPRBox1.Image = Graphics[0][mode];
             SPRBox2.Image = Graphics[1][mode];
             SPRBox3.Image = Graphics[2][mode];

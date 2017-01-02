@@ -180,6 +180,7 @@ namespace FSO.LotView.Utils
                     var pxX = (world.WorldSpace.CadgeWidth / 2.0f) + dgrpSprite.SpriteOffset.X;
                     var pxY = (world.WorldSpace.CadgeBaseLine - sprite.Pixel.Height) + dgrpSprite.SpriteOffset.Y;
 
+                    if (dgrpSprite.ObjectOffset != Vector3.Zero) { }
                     var centerRelative = dgrpSprite.ObjectOffset * new Vector3(1f / 16f, 1f / 16f, 1f / 5f);
                     centerRelative = Vector3.Transform(centerRelative, Matrix.CreateRotationZ(RadianDirection));
 
@@ -194,6 +195,9 @@ namespace FSO.LotView.Utils
                     if (sprite.DestRect.Y + sprite.Pixel.Height > maxY) maxY = sprite.DestRect.Y + sprite.Pixel.Height;
 
                     sprite.WorldPosition = centerRelative * 3f;
+                    var y = sprite.WorldPosition.Z;
+                    sprite.WorldPosition.Z = sprite.WorldPosition.Y;
+                    sprite.WorldPosition.Y = y;
                     sprite.Room = ((dgrpSprite.Flags & DGRPSpriteFlags.Luminous) > 0 && Room != 65534 && Room != 65533)?(ushort)65535:Room;
                 }
                 Bounding = new Rectangle(minX, minY, maxX - minX, maxY - minY);

@@ -29,6 +29,7 @@ using FSO.SimAntics.NetPlay.Drivers;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Marshals.Hollow;
 using FSO.SimAntics.Engine.Debug;
+using FSO.Common;
 
 namespace FSO.SimAntics
 {
@@ -129,6 +130,7 @@ namespace FSO.SimAntics
             Driver = driver;
             Headline = headline;
             Scheduler = new VMScheduler(this);
+            GameTickRate = FSOEnvironment.RefreshRate;
         }
 
         private void VM_OnBHAVChange()
@@ -195,22 +197,25 @@ namespace FSO.SimAntics
             }
         }
 
-        private bool AlternateTick;
+        private int GameTickRate = 60;
+        private int GameTickNum = 0;
         public void Update()
         {
-            if (!Ready || AlternateTick)
+            var oldFrame = (GameTickNum * 30) / GameTickRate;
+            GameTickNum++;
+            var newFrame = (GameTickNum * 30) / GameTickRate;
+            if (newFrame > oldFrame)
             {
                 Tick();
             }
-            else
+
+            var fraction = ((GameTickNum * 30) - (newFrame * GameTickRate)) / (float)GameTickRate;
+            //fractional animation for avatars
+            foreach (var obj in Entities)
             {
-                //fractional animation for avatars
-                foreach (var obj in Entities)
-                {
-                    if (obj is VMAvatar) ((VMAvatar)obj).FractionalAnim(0.5f);
-                }
+                if (obj is VMAvatar) ((VMAvatar)obj).FractionalAnim(fraction);
             }
-            AlternateTick = !AlternateTick;
+            if (GameTickNum >= GameTickRate) GameTickNum = 0;
         }
 
         public void SendCommand(VMNetCommandBodyAbstract cmd)

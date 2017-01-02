@@ -45,6 +45,8 @@ namespace FSO.Client
             
             Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
+            TargetElapsedTime = new TimeSpan(10000000 / GlobalSettings.Default.TargetRefreshRate);
+            FSOEnvironment.RefreshRate = GlobalSettings.Default.TargetRefreshRate;
 
             Graphics.HardwareModeSwitch = false;
             Graphics.ApplyChanges();

@@ -37,16 +37,25 @@ namespace FSO.SimAntics.Primitives
                     if (owner == null) return VMPrimitiveExitCode.GOTO_TRUE;
                     if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
 
-                    if (owner is VMAvatar && thread is HITThread) ((VMAvatar)owner).SubmitHITVars((HITThread)thread);
-
                     var entry = new VMSoundEntry()
                     {
                         Sound = thread,
                         Pan = !operand.NoPan,
                         Zoom = !operand.NoZoom,
-                        Loop = operand.Loop,
+                        Loop = operand.Loop || fwav.Name == "piano_play",
                         Name = fwav.Name
                     };
+
+                    if (thread is HITThread)
+                    {
+                        ((HITThread)thread).Loop = entry.Loop;
+                        ((HITThread)thread).HasSetLoop = fwav.Name == "piano_play";
+                        if (owner is VMAvatar)
+                        {
+                            ((VMAvatar)owner).SubmitHITVars((HITThread)thread);
+                        }
+                    }
+
                     owner.SoundThreads.Add(entry);
                     if (owner.Thread != null) owner.TickSounds();
                 }
@@ -89,20 +98,40 @@ namespace FSO.SimAntics.Primitives
 
         public bool NoPan {
             get { return (Flags&8) == 8; }
+            set
+            {
+                if (value) Flags |= 8;
+                else Flags &= unchecked((byte)~8);
+            }
         }
 
         public bool NoZoom {
             get { return (Flags&4) == 4; }
+            set
+            {
+                if (value) Flags |= 4;
+                else Flags &= unchecked((byte)~4);
+            }
         }
 
         public bool Loop
         {
             get { return (Flags & 1) == 1; }
+            set
+            {
+                if (value) Flags |= 1;
+                else Flags &= unchecked((byte)~1);
+            }
         }
 
         public bool StackObjAsSource
         {
             get { return (Flags & 2) == 2; }
+            set
+            {
+                if (value) Flags |= 2;
+                else Flags &= unchecked((byte)~2);
+            }
         }
     }
 }

@@ -33,7 +33,10 @@ namespace FSO.Server.Servers.Lot.Lifecycle
             CpuCounter.CounterName = "% Processor Time";
             CpuCounter.InstanceName = "_Total";
 
-            var firstValue = CpuCounter.NextValue();
+            if (PerformanceCounterCategory.Exists("Processor"))
+            {
+                var firstValue = CpuCounter.NextValue();
+            }
 
             Connections = new Dictionary<LotServerConfigurationCity, CityConnection>();
             foreach(var city in config.Cities)
@@ -75,7 +78,9 @@ namespace FSO.Server.Servers.Lot.Lifecycle
         {
             while (_Running)
             {
-                var cpu = CpuCounter.NextValue();
+                float cpu = 0;
+                if (PerformanceCounterCategory.Exists("Processor"))
+                    cpu = CpuCounter.NextValue();
                 var capacity = new AdvertiseCapacity
                 {
                     CpuPercentAvg = (byte)(cpu * 100),

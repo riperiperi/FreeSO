@@ -72,6 +72,7 @@
     <Compile Include="Controllers\Panels\LotAdmitController.cs" />
     <Compile Include="Controllers\Panels\LotPageController.cs" />
     <Compile Include="Controllers\Panels\PersonPageController.cs" />
+    <Compile Include="Controllers\RoommateRequestController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
     <Compile Include="GameContent\UIFileIDs.cs" />
     <Compile Include="Model\UserReference.cs" />
@@ -138,6 +139,7 @@
     <Compile Include="UI\Panels\UIPropertyLog.cs" />
     <Compile Include="UI\Panels\UIChatDialog.cs" />
     <Compile Include="UI\Panels\UISetupBackground.cs" />
+    <Compile Include="UI\Panels\UIWebDownloaderDialog.cs" />
     <Compile Include="UI\Panels\WorldUI\UIHeadlineRenderer.cs" />
     <Compile Include="UI\UIRelationshipBar.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
@@ -501,6 +503,10 @@
     <ProjectReference Include="..\FSO.Common.Domain\FSO.Common.Domain.csproj">
       <Project>{9848faf5-444a-48cc-a26a-8115d8c4fb52}</Project>
       <Name>FSO.Common.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Patcher\FSO.Patcher.csproj">
+      <Project>{4e43ce64-343f-4c53-a055-bbf0f4986a16}</Project>
+      <Name>FSO.Patcher</Name>
     </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Clients\FSO.Server.Clients.csproj">
       <Project>{329e0aee-7871-40a7-b5af-8c0d0086ef71}</Project>

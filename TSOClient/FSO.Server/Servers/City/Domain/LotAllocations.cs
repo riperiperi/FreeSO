@@ -184,7 +184,10 @@ namespace FSO.Server.Servers.City.Domain
 
                                 var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
                                 var avatars = new List<uint>();
-                                foreach (var roomie in roomies) avatars.Add(roomie.avatar_id);
+                                foreach (var roomie in roomies)
+                                {
+                                    if (roomie.is_pending == 0) avatars.Add(roomie.avatar_id);
+                                }
 
                                 try
                                 {

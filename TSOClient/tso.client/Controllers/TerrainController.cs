@@ -173,7 +173,7 @@ namespace FSO.Client.Controllers
                 var lot = (Lot)x.Result;
                 if (lot == null) return;
                 var thumb = lot.Lot_Thumbnail;
-                if (thumb.Data.Length == 0) return;
+                if (thumb.Data == null || thumb.Data.Length == 0) return;
                 onRetrieved(ImageLoader.FromStream(GameFacade.GraphicsDevice, new MemoryStream(thumb.Data)));
             });
         }

@@ -29,9 +29,11 @@ namespace FSO.HIT
         public int WaitRemain = -1;
 
         public bool SimpleMode; //certain sounds play with no HIT.
+        public bool Loop;
         private bool PlaySimple;
 
         private uint Patch; //sound id
+        public bool HasSetLoop;
 
         private List<HITNoteEntry> Notes;
         private Dictionary<SoundEffectInstance, HITNoteEntry> NotesByChannel;
@@ -73,7 +75,7 @@ namespace FSO.HIT
                 {
                     var inst = Notes[i].instance;
                     inst.Pan = Pan;
-                    inst.Volume = Volume;
+                    inst.Volume = Math.Min(1.0f, Volume);
                 }
             }
 
@@ -404,7 +406,8 @@ namespace FSO.HIT
             }
             else if (location < 0x2737)
             {
-                return ObjectVar[location - 0x271a];
+                var loc = location - 0x271a;
+                return ObjectVar[loc];
             }
             return 0;
         }

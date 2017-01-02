@@ -14,6 +14,7 @@ namespace FSO.Server.Database.DA.AvatarClaims
 
         int? TryCreate(DbAvatarClaim claim);
         bool Claim(int id, string previousOwner, string newOwner, uint location);
+        void RemoveRemaining(string previousOwner, uint location);
 
         void Delete(int id, string owner);
         void DeleteAll(string owner);

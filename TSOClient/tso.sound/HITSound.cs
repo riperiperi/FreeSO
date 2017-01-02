@@ -18,6 +18,7 @@ namespace FSO.HIT
         protected float Pan;
 
         protected bool EverHadOwners; //if we never had owners, don't kill the thread. (ui sounds)
+        public int LastMainOwner = -1;
         protected List<int> Owners;
 
         public bool Dead;
@@ -29,23 +30,28 @@ namespace FSO.HIT
 
         public abstract bool Tick();
 
-        public void SetVolume(float volume, float pan)
+        public bool SetVolume(float volume, float pan, int ownerID)
         {
+            bool ownerChange = false;
             if (VolumeSet)
             {
                 if (volume > Volume)
                 {
+                    if (LastMainOwner != ownerID) { LastMainOwner = ownerID; ownerChange = true; }
                     Volume = volume;
                     Pan = pan;
+                    return true;
                 }
+                return false;
             }
             else
             {
+                VolumeSet = true;
+                if (LastMainOwner != ownerID) { LastMainOwner = ownerID; ownerChange = true; }
                 Volume = volume;
                 Pan = pan;
+                return true;
             }
-
-            VolumeSet = true;
         }
 
         public void AddOwner(int id)

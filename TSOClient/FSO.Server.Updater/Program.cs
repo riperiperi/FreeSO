@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace FSO.Server.Watchdog
 {
@@ -27,6 +28,11 @@ namespace FSO.Server.Watchdog
         static int Main(string[] args)
         {
             var restart = true;
+            if (args.Length > 0 && args.Any(x => x == "--update"))
+            {
+                Update(new string[0]);
+                args = args.Where(x => x != "--update").ToArray();
+            }
             while (restart)
             {
                 var setup = AppDomain.CurrentDomain.SetupInformation;
@@ -64,6 +70,33 @@ namespace FSO.Server.Watchdog
             return 0;
         }
 
+        static string GetTeamcityLatestURL()
+        {
+            var config = Config.Default;
+            Uri url;
+            var baseUri = new Uri(config.TeamCityUrl);
+            if (!Uri.TryCreate(baseUri, "guestAuth/app/rest/builds?locator=buildType:" + config.TeamCityProject + ",status:success,count:1,branch:" + config.Branch, out url))
+                url = null;
+
+            if (url != null)
+            {
+                string contents;
+                using (var wc = new System.Net.WebClient())
+                    contents = wc.DownloadString(url);
+                var doc = new XmlDocument();
+                doc.LoadXml(contents);
+                var builds = doc.GetElementsByTagName("build");
+                foreach (XmlNode build in builds)
+                {
+                    var wholenumber = build.Attributes["number"].Value;
+                    var number = wholenumber.Substring(wholenumber.LastIndexOf('-') + 1);
+                    return config.TeamCityUrl.TrimEnd('/') + "/repository/download/" + config.TeamCityProject + "/" + build.Attributes["id"].Value + ":id/server-" + number + ".zip?guest=1";
+                }
+            }
+
+            return null;
+        }
+
         static void Update(string[] args)
         {
             var config = Config.Default;
@@ -77,48 +110,46 @@ namespace FSO.Server.Watchdog
             else
             {
                 Console.WriteLine("Fetching update from " + config.TeamCityUrl + "/" + config.TeamCityProject + "...");
-                var baseUri = new Uri(config.TeamCityUrl);
-                if (!Uri.TryCreate(baseUri, "guestAuth/downloadArtifacts.html?buildTypeId=" + config.TeamCityProject + "&buildId=lastSuccessful", out url))
-                    url = null;
+                url = new Uri(GetTeamcityLatestURL());
+                Console.WriteLine("(specifically " + url.ToString() + ")");
+                //var baseUri = new Uri(config.TeamCityUrl);
+                //if (!Uri.TryCreate(baseUri, "guestAuth/downloadArtifacts.html?buildTypeId=" + config.TeamCityProject + "&buildId=lastSuccessful", out url))
+                //    url = null;
             }
 
             var wait = new AutoResetEvent(false);
             if (url != null) {
                 if (Directory.Exists("selfUpdate/")) Directory.Delete("selfUpdate/", true);
                 Directory.CreateDirectory("selfUpdate/");
-                Directory.CreateDirectory("selfUpdate/artifacts");
-                Console.WriteLine("Downloading artifacts from teamcity...");
+                Console.WriteLine("Downloading artifacts...");
                 var client = new WebClient();
                 client.DownloadFileCompleted += (sender, evt) =>
                 {
-                    ZipFile.ExtractToDirectory("selfUpdate/artifacts.zip", "selfUpdate/artifacts/");
-                    var files = Directory.GetFiles("selfUpdate/artifacts/");
-                    foreach (var file in files)
+                    var file = "selfUpdate/artifact.zip";
+                    Console.WriteLine("Extracting " + file + "...");
+                    var archive = ZipFile.OpenRead(file);
+                    var entries = archive.Entries;
+                    foreach (var entry in entries)
                     {
-                        Console.WriteLine("Extracting "+file+"...");
-                        var archive = ZipFile.OpenRead(file);
-                        var entries = archive.Entries;
-                        foreach (var entry in entries)
+                        var targPath = Path.Combine("./", entry.FullName);
+                        if (File.Exists(targPath) && IgnoreFiles.Contains(entry.FullName)) continue;
+                        Directory.CreateDirectory(Path.GetDirectoryName(targPath));
+                        try
                         {
-                            if (IgnoreFiles.Contains(entry.FullName)) continue;
-                            var targPath = Path.Combine("./", entry.FullName);
-                            Directory.CreateDirectory(Path.GetDirectoryName(targPath));
-                            try
-                            {
-                                entry.ExtractToFile(targPath, true);
-                            } catch (Exception e)
-                            {
-                                Console.WriteLine("Could not replace " + targPath + "!");
-                            }
+                            entry.ExtractToFile(targPath, true);
                         }
-                        archive.Dispose();
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Could not replace " + targPath + "!");
+                        }
                     }
+                    archive.Dispose();
                     Directory.Delete("selfUpdate/", true);
                     Console.WriteLine("Update Complete!");
                     wait.Set();
                 };
 
-                client.DownloadFileAsync(url, "selfUpdate/artifacts.zip");
+                client.DownloadFileAsync(url, "selfUpdate/artifact.zip");
             }
 
             wait.WaitOne();

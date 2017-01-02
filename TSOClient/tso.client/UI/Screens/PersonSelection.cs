@@ -380,8 +380,9 @@ namespace FSO.Client.UI.Screens
                 HouseThumb.Y -= HouseThumb.Size.Y / 2;
             }
 
-            var cityThumb = GameFacade.GameFilePath(
-                "cities\\city_" + shard.Map + "\\thumbnail.bmp");
+            var cityThumb = (int.Parse(shard.Map) >= 100)?
+                Path.Combine(FSOEnvironment.ContentDir, "Cities/city_" + shard.Map + "/thumbnail.png")
+                : GameFacade.GameFilePath("cities/city_" + shard.Map + "/thumbnail.bmp");
 
             Texture2D cityThumbTex =
                 TextureUtils.Resize(

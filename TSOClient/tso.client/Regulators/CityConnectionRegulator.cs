@@ -12,6 +12,7 @@ using FSO.Server.Clients.Framework;
 using FSO.Server.DataService.Model;
 using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.CitySelector;
+using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Protocol.Voltron.DataService;
 using FSO.Server.Protocol.Voltron.Packets;
 using Ninject;
@@ -313,15 +314,19 @@ namespace FSO.Client.Regulators
 
         public void MessageReceived(AriesClient client, object message)
         {
-            if (message is AnnouncementMsgPDU)
-            {
-                GameThread.InUpdate(() => {
-                    UIScreen.GlobalShowAnnouncement((AnnouncementMsgPDU)message);
-                    });
-            }
+
             if (message is RequestClientSession || 
                 message is HostOnlinePDU){
                 this.AsyncProcessMessage(message);
+            }
+            else if (message is AnnouncementMsgPDU)
+            {
+                GameThread.InUpdate(() => {
+                    UIScreen.GlobalShowAnnouncement((AnnouncementMsgPDU)message);
+                });
+            } else if (message is ChangeRoommateResponse)
+            {
+
             }
         }
 

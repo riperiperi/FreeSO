@@ -849,8 +849,7 @@ namespace FSO.SimAntics.Utils
                             }
                             tempVM.HollowLoad(hollow);
                             RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y]);
-                            tempVM.Update();
-                            tempVM.Update();
+                            tempVM.Tick();
                         } catch (Exception)
                         {
                             hollow = null;
@@ -874,8 +873,7 @@ namespace FSO.SimAntics.Utils
                         RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y]);
                         PopulateBlankTerrain(tempVM);
 
-                        tempVM.Update();
-                        tempVM.Update();
+                        tempVM.Tick();
                     }
 
                     subworld.State.Level = 5;

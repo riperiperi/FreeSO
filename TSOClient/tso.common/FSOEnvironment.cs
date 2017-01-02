@@ -23,5 +23,6 @@ namespace FSO.Common
         public static float UIZoomFactor = 1f;
         public static int DPIScaleFactor = 1;
         public static bool SoftwareKeyboard = false;
+        public static int RefreshRate = 60;
     }
 }

@@ -168,7 +168,7 @@ namespace FSO.Client.UI.Panels
             base.Update(state);
             if (m_BgGrow < 1)
             {
-                m_BgGrow += 1.0 / 30.0;
+                m_BgGrow += 1.0 / 30.0 * (60.0 / FSOEnvironment.RefreshRate);
                 HeadCamera.Zoom = (float)m_BgGrow*5.12f;
 
                 m_Bg.SetSize((float)m_BgGrow * 200, (float)m_BgGrow * 200);

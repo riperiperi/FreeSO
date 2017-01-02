@@ -255,7 +255,7 @@ namespace FSO.LotView.Components
         /// <param name="device"></param>
         /// <param name="world"></param>
         public override void Draw(GraphicsDevice device, WorldState world){
-            if (TerrainDirty) RegenTerrain(device, world, Bp);
+            if (TerrainDirty || VertexBuffer == null) RegenTerrain(device, world, Bp);
             if (VertexBuffer == null) return;
             PPXDepthEngine.RenderPPXDepth(Effect, true, (depthMode) =>
             {

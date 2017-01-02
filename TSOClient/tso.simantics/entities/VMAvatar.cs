@@ -61,7 +61,9 @@ namespace FSO.SimAntics
         }
 
         public int MessageTimeout;
+        public Vector3? VisualPositionStart;
         public Vector3 Velocity; //used for 60 fps walking animation
+        public double TurnVelocity;
 
         private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];
         private VMAvatarMotiveDecay MotiveDecay;
@@ -164,7 +166,19 @@ namespace FSO.SimAntics
         public void SubmitHITVars(HIT.HITThread thread)
         {
             if (thread.ObjectVar == null) return;
-            thread.ObjectVar[12] = GetPersonData(VMPersonDataVariable.Gender);
+            thread.ObjectVar[0] = GetPersonData(VMPersonDataVariable.Gender);
+            thread.ObjectVar[2] = Math.Min(100, GetPersonData(VMPersonDataVariable.CookingSkill)/10);
+            thread.ObjectVar[5] = Math.Min(100, GetPersonData(VMPersonDataVariable.CreativitySkill)/10);
+            //6 unknown
+            thread.ObjectVar[7] = Math.Min(100, GetPersonData(VMPersonDataVariable.MechanicalSkill)/10);
+            thread.ObjectVar[11] = Math.Min(100, GetPersonData(VMPersonDataVariable.BodySkill) / 10);
+
+            thread.ObjectVar[15] = GetPersonData(VMPersonDataVariable.NicePersonality) / 10;
+            thread.ObjectVar[16] = GetPersonData(VMPersonDataVariable.ActivePersonality) / 10;
+            thread.ObjectVar[17] = GetPersonData(VMPersonDataVariable.GenerousPersonality) / 10;
+            thread.ObjectVar[18] = GetPersonData(VMPersonDataVariable.PlayfulPersonality) / 10;
+            thread.ObjectVar[19] = GetPersonData(VMPersonDataVariable.OutgoingPersonality) / 10;
+            thread.ObjectVar[20] = GetPersonData(VMPersonDataVariable.NeatPersonality)/10;
         }
 
         public bool IsPet
@@ -442,6 +456,8 @@ namespace FSO.SimAntics
         public override void Tick()
         {
             Velocity = new Vector3(0, 0, 0);
+            TurnVelocity = 0;
+            VisualPositionStart = null;
             base.Tick();
 
             if (Message != "")
@@ -598,8 +614,8 @@ namespace FSO.SimAntics
                 if (!state.EndReached)
                 {
                     float visualFrame = state.CurrentFrame;
-                    if (state.PlayingBackwards) visualFrame -= state.Speed / 2;
-                    else visualFrame += state.Speed / 2;
+                    if (state.PlayingBackwards) visualFrame -= state.Speed * fraction;
+                    else visualFrame += state.Speed * fraction;
 
                     Animator.RenderFrame(avatar.Avatar, state.Anim, (int)visualFrame, visualFrame % 1, state.Weight / totalWeight);
                 }
@@ -608,7 +624,8 @@ namespace FSO.SimAntics
 
             //TODO: if this gets changed to run at variable framerate need to "remember" visual position
             avatar.Avatar.ReloadSkeleton();
-            VisualPosition += fraction * Velocity;
+            if (VisualPositionStart != null) VisualPosition = VisualPositionStart.Value + fraction * Velocity;
+            if (UseWorld) ((AvatarComponent)WorldUI).RadianDirection = (double)(_RadianDirection - TurnVelocity * fraction);
         }
 
         public virtual short GetPersonData(VMPersonDataVariable variable)

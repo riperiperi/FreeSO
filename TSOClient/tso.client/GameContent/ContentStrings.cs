@@ -19,10 +19,19 @@ namespace FSO.Client.GameContent
         public ContentStrings()
         {
             StringTable = new Dictionary<string, Dictionary<string, Dictionary<string, string>>>();
-            if (Directory.Exists(Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/" + GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir")))
-                Load("UIText", Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/" + GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir"));
+            var langdir = GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir";
+            var tsodir = Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/");
+            var fsodir = "Content/UI/uitext/";
+
+            if (Directory.Exists(Path.Combine(tsodir, langdir)))
+                Load("UIText", Path.Combine(tsodir, langdir));
             else
-                Load("UIText", Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/english.dir"));
+                Load("UIText", Path.Combine(tsodir, "english.dir"));
+
+            if (Directory.Exists(Path.Combine(fsodir, langdir)))
+                Load("UIText", Path.Combine(fsodir, langdir));
+            else
+                Load("UIText", Path.Combine(fsodir, "english.dir"));
         }
 
         public string this[string dir, string table, string id]
@@ -112,8 +121,12 @@ namespace FSO.Client.GameContent
         /// <param name="basePath">Base path of directory.</param>
         public void Load(string dirName, string basePath)
         {
-            var table = new Dictionary<string, Dictionary<string, string>>();
-            StringTable.Add(dirName, table);
+            Dictionary<string, Dictionary<string, string>> table;
+            if (!StringTable.TryGetValue(dirName, out table))
+            {
+                table = new Dictionary<string, Dictionary<string, string>>();
+                StringTable.Add(dirName, table);
+            }
 
             var files = Directory.GetFiles(basePath);
             foreach (var file in files)
@@ -168,7 +181,7 @@ namespace FSO.Client.GameContent
                     index++;
                 }
 
-                table[tableID] = tableData;
+                table[tableID] = tableData; //overwrites previous.
             }
         }
     }

@@ -14,6 +14,7 @@ using FSO.SimAntics.NetPlay.SandboxMode;
 using System.Threading;
 using FSO.SimAntics.Engine.TSOTransaction;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace FSO.SimAntics.NetPlay.Drivers
 {
@@ -353,22 +354,29 @@ namespace FSO.SimAntics.NetPlay.Drivers
             }
         }
 
+        public void DropAvatar(VMAvatar avatar)
+        {
+            if (avatar == null || avatar.PersistID == 0) return;
+            lock (Clients)
+            {
+                if (Clients.ContainsKey(avatar.PersistID))
+                {
+                    
+                    var client = Clients[avatar.PersistID];
+                    Task.Run(() =>
+                    {
+                        DropClient(client);
+                    });
+                }
+            }
+        }
+
         public void KickUser(VM vm, string name)
         {
             var sims = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == name.ToLowerInvariant().Trim(' '));
-            lock (Clients)
+            foreach (var sim in sims)
             {
-                foreach (var sim in sims)
-                {
-                    if (Clients.ContainsKey(sim.PersistID))
-                    {
-                        var client = Clients[sim.PersistID];
-                        new Thread(() =>
-                        {
-                            DropClient(client);
-                        }).Start();
-                    }
-                }
+                DropAvatar((VMAvatar)sim);
             }
         }
 

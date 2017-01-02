@@ -57,6 +57,8 @@ namespace FSO.Client
             { "UseCustomServer", "true" },
             { "GameEntryUrl", "http://api.freeso.org" },
             { "CitySelectorUrl", "http://api.freeso.org" },
+
+            { "TargetRefreshRate", "60" }
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -95,5 +97,7 @@ namespace FSO.Client
         public bool UseCustomServer { get; set; }
         public string GameEntryUrl { get; set; }
         public string CitySelectorUrl { get; set; }
+
+        public int TargetRefreshRate { get; set; }
     }
 }

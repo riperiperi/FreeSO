@@ -18,14 +18,15 @@ using FSO.Client.UI.Model;
 using FSO.HIT;
 using FSO.Files.Utils;
 using Microsoft.Xna.Framework.Graphics;
+using FSO.Common;
 
 namespace FSO.Client.UI.Screens
 {
     public class LoginScreen : GameScreen, IDisposable
     {
         private UISetupBackground Background;
-        private UILoginDialog LoginDialog;
-        private UILoginProgress LoginProgress;
+        public UILoginDialog LoginDialog;
+        public UILoginProgress LoginProgress;
 
         private LoginRegulator Regulator;
 
@@ -35,7 +36,6 @@ namespace FSO.Client.UI.Screens
             regulator.Logout();
 
             HITVM.Get().PlaySoundEvent(UIMusic.None);
-            HITVM.Get().PlaySoundEvent("sting_fire");
 
             Background = new UISetupBackground();
 

@@ -28,8 +28,9 @@ namespace FSO.Server.Watchdog
             { "UseTeamCity", "False" },
             { "TeamCityUrl", "http://servo.freeso.org" },
             { "TeamCityProject", "FreeSO_TsoClient" },
+            { "Branch", "feature/server-rebuild" },
 
-            { "NormalUpdateUrl", "https://dl.dropboxusercontent.com/u/12239448/FreeSO/devserver.zip" }
+            { "NormalUpdateUrl", "https://dl.dropboxusercontent.com/u/12239448/FreeSO/devserver.zip" },
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -40,6 +41,7 @@ namespace FSO.Server.Watchdog
         public bool UseTeamCity { get; set; }
         public string TeamCityUrl { get; set; }
         public string TeamCityProject { get; set; }
+        public string Branch { get; set; }
 
         public string NormalUpdateUrl { get; set; }
     }

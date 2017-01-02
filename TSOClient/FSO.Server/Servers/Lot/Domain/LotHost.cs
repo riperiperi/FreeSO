@@ -540,6 +540,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 foreach (var visitor in _Visitors)
                 {
                     if (!lotClosed) visitor.Value.SetAttribute("returnClaim", false);
+                    ReleaseAvatarClaim(visitor.Value);
                     visitor.Value.Close();
                 }
             }
@@ -562,6 +563,11 @@ namespace FSO.Server.Servers.Lot.Domain
                     EntityId = ((Context.Id&0x40000000)>0)?(int)Context.Id:Context.DbId,
                     FromOwner = Config.Call_Sign
                 });
+            }
+            //if this lot still has any avatar claims, kill them at least so the user's access to the game isn't limited until server restart.
+            using (var da = DAFactory.Get())
+            {
+                da.AvatarClaims.RemoveRemaining(Config.Call_Sign, Context.Id);
             }
         }
 

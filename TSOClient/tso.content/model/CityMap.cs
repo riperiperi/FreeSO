@@ -34,13 +34,18 @@ namespace FSO.Content.Model
         public CityMap(string directory)
         {
             _Directory = directory;
-            Elevation = new FileTextureRef(Path.Combine(directory, "elevation.bmp"));
-            ForestDensity = new FileTextureRef(Path.Combine(directory, "forestdensity.bmp"));
-            ForestType = new FileTextureRef(Path.Combine(directory, "foresttype.bmp"));
-            RoadMap = new FileTextureRef(Path.Combine(directory, "roadmap.bmp"));
-            TerrainTypeTex = new FileTextureRef(Path.Combine(directory, "terraintype.bmp"));
-            VertexColour = new FileTextureRef(Path.Combine(directory, "vertexcolor.bmp"));
-            Thumbnail = new FileTextureRef(Path.Combine(directory, "thumbnail.bmp"));
+            string ext = "bmp";
+            if (!File.Exists(Path.Combine(directory, "elevation.bmp")))
+            {
+                ext = "png"; //fso maps use png
+            }
+            Elevation = new FileTextureRef(Path.Combine(directory, "elevation."+ext));
+            ForestDensity = new FileTextureRef(Path.Combine(directory, "forestdensity." + ext));
+            ForestType = new FileTextureRef(Path.Combine(directory, "foresttype." + ext));
+            RoadMap = new FileTextureRef(Path.Combine(directory, "roadmap." + ext));
+            TerrainTypeTex = new FileTextureRef(Path.Combine(directory, "terraintype." + ext));
+            VertexColour = new FileTextureRef(Path.Combine(directory, "vertexcolor." + ext));
+            Thumbnail = new FileTextureRef(Path.Combine(directory, "thumbnail." + ext));
 
             _TerrainType = new TextureValueMap<Model.TerrainType>(TerrainTypeTex, x =>
             {

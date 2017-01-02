@@ -1,0 +1,22 @@
+﻿1 ^Updating FreeSO^
+2 ^Downloading %s, (%s/%s, %s/%s file(s)) ^
+
+3 ^Update Required^
+4 ^The server you are connecting to requires version %s of the %s branch to be installed (you currently have version %s of the %s branch). The server has provided a location from which you can download this version. Would you like to download and apply this update?
+
+Remember that you should only install updates and content packs from servers you trust! If you do not want to install this update, you will be returned to the login screen.^
+
+5 ^Content Packs Required^
+6 ^The server you are connecting to requires these content packs: %s
+
+These can be downloaded from the server. Do you wish to continue?
+Remember that you should only install updates and content packs from servers you trust! If you do not want to install these content packs, you will be returned to the login screen.^
+
+7 ^Restart Required^
+8 ^You are joining a server with a different set of content packs to the last server you were connected to. The game must be restarted to clear data from the last server.^
+
+9 ^Downloading Files...^
+10 ^Update^
+11 ^Version Warning^
+12 ^You have chosen to ignore version differences. Note that this will not affect gameplay on the server side, but could cause increased desyncs, clientside crashes and unexpected behaviour. You should only do this for development purposes!^
+13 ^The game will now restart. Click OK to begin the update.^
