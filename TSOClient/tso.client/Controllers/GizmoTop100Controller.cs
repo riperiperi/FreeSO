@@ -111,7 +111,7 @@ namespace FSO.Client.Controllers
                         enriched.Add(new Top100ListItem {
                             Top100Entry = new Top100Entry()
                             {
-                                Rank = (byte)enriched.Count
+                                Rank = (byte)(enriched.Count+1)
                             }
                         });
                     }

@@ -167,9 +167,17 @@ namespace FSO.Client.UI.Screens
 
             if (Cache.ContainsKey(thumbKey))
             {
-                var thumbData = Cache.Get<byte[]>(thumbKey).Result;
-                var thumb = ImageLoader.FromStream(GameFacade.GraphicsDevice, new MemoryStream(thumbData));
-                return thumb;
+                try {
+                    var thumbData = Cache.Get<byte[]>(thumbKey).Result;
+                    var thumb = ImageLoader.FromStream(GameFacade.GraphicsDevice, new MemoryStream(thumbData));
+                    return thumb;
+                }catch(Exception ex)
+                {
+                    //Handles cases where the cache file got corrupted
+                    var thumb = TextureUtils.TextureFromFile(GameFacade.GraphicsDevice, GameFacade.GameFilePath("userdata/houses/defaulthouse.bmp"));
+                    TextureUtils.ManualTextureMask(ref thumb, new uint[] { 0xFF000000 });
+                    return thumb;
+                }
             }
             else
             {

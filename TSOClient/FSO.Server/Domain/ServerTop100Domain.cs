@@ -56,7 +56,7 @@ namespace FSO.Server.Domain
                         for(var i=0; i < 100; i++)
                         {
                             results.Add(new Top100Entry {
-                                Rank = (byte)i
+                                Rank = (byte)(i+1)
                             });
                         }
                     }

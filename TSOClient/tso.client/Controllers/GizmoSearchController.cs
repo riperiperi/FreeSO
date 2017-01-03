@@ -57,7 +57,7 @@ namespace FSO.Client.Controllers
                         {
                             var lots = DataService.GetMany<Lot>(ids).Result;
                             foreach(var item in lots){
-                                results.First(f => f.Result.EntityId == item.Lot_Location_Packed);
+                                results.First(f => f.Result.EntityId == item.Id).Lot = item;
                             }
                         }
 

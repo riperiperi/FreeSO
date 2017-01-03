@@ -720,18 +720,23 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
 
                 var visitorType = DbLotVisitorType.visitor;
-                switch (state.Permissions)
+                if (myRoomieLots.Count > 0)
                 {
-                    case VMTSOAvatarPermissions.Owner:
-                    case VMTSOAvatarPermissions.Admin:
-                        visitorType = DbLotVisitorType.owner;
-                        break;
-                    case VMTSOAvatarPermissions.BuildBuyRoommate:
-                    case VMTSOAvatarPermissions.Roommate:
-                        visitorType = DbLotVisitorType.roommate;
-                        break;
+                    var roomieStatus = myRoomieLots.FindAll(x => x.lot_id == Context.DbId).FirstOrDefault();
+                    if (roomieStatus != null && roomieStatus.is_pending == 0)
+                    {
+                        switch (roomieStatus.permissions_level)
+                        {
+                            case 0:
+                            case 1:
+                                visitorType = DbLotVisitorType.roommate;
+                                break;
+                            case 2:
+                                visitorType = DbLotVisitorType.owner;
+                                break;
+                        }
+                    }
                 }
-
                 Host.RecordStartVisit(session, visitorType);
 
                 VMDriver.ConnectClient(client);

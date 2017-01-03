@@ -35,7 +35,7 @@ namespace FSO.Common.Utils
         {
             foreach (XmlElement child in e.ChildNodes)
             {
-                if (child.Name == nodeName)
+                if (child.Name == nodeName && child.FirstChild != null)
                 {
                     return child.FirstChild.Value;
                 }

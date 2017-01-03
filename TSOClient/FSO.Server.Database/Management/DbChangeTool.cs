@@ -70,17 +70,23 @@ namespace FSO.Server.Database.Management
             return changes;
         }
 
-        public void ApplyChange(DbChangeScript change)
+        public void ApplyChange(DbChangeScript change, bool repair)
         {
             var connection = Context.Connection;
             using (var transaction = connection.BeginTransaction(System.Data.IsolationLevel.RepeatableRead))
             {
-                var cmd = transaction.Connection.CreateCommand();
-                cmd.CommandText = change.ScriptData.Replace("@", "\\@");
-                try {
-                    cmd.ExecuteNonQuery();
-                } catch (MySqlException e){
-                    throw new DbMigrateException(e.ToString());
+                if (!repair)
+                {
+                    var cmd = transaction.Connection.CreateCommand();
+                    cmd.CommandText = change.ScriptData;
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch (MySqlException e)
+                    {
+                        throw new DbMigrateException(e.ToString());
+                    }
                 }
 
                 connection.Execute("INSERT INTO fso_db_changes VALUES (@id, @filename, @date, @hash) ON DUPLICATE KEY UPDATE hash=@hash, date = @date, filename = @filename", new DbChange {
