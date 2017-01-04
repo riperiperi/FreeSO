@@ -20,6 +20,8 @@ namespace FSO.Server.Protocol.Gluon
         RequestTask,
         RequestTaskResponse,
 
+        NotifyLotRoommateChange,
+
         Unknown
     }
 

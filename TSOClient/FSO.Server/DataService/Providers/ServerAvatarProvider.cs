@@ -148,7 +148,7 @@ namespace FSO.Server.DataService.Providers
 
                 var myLots = db.Roommates.GetAvatarsLots(avatar.avatar_id);
                 DbLot lot = null;
-                if (myLots.Count > 0) {
+                if (myLots.Count > 0 && myLots.FirstOrDefault()?.is_pending == 0) {
                     lot = db.Lots.Get(myLots.FirstOrDefault().lot_id);
                 }
                 List<DbJobLevel> levels = db.Avatars.GetJobLevels(key);

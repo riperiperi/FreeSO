@@ -345,6 +345,7 @@ namespace FSO.Client.UI.Controls
 
         public override void PreDraw(UISpriteBatch batch)
         {
+            if (!Visible) return;
             base.PreDraw(batch);
 
             if (Mask)

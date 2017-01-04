@@ -116,7 +116,27 @@ namespace FSO.Client.Controllers
                         break;
                     case ChangeRoommateResponseStatus.ROOMIE_ELSEWHERE:
                     case ChangeRoommateResponseStatus.OTHER_INVITE_PENDING:
-                        title = GameFacade.Strings.GetString("208", "94");
+                        title = GameFacade.Strings.GetString("208", "40");
+                        msg = GameFacade.Strings.GetString("208", "43");
+                        break;
+                    case ChangeRoommateResponseStatus.ROOMMATE_LEFT:
+                        DataService.Request(MaskedStruct.SimPage_Main, resp.Extra).ContinueWith(x =>
+                        {
+                            GameThread.InUpdate(() =>
+                            {
+                                if (((Avatar)x.Result)?.Avatar_Name == null) return;
+                                var name = ((Avatar)x.Result).Avatar_Name;
+                                UIScreen.GlobalShowDialog(new UIAlert(new UIAlertOptions()
+                                {
+                                    Title = GameFacade.Strings.GetString("208", "100"),
+                                    Message = GameFacade.Strings.GetString("208", "101", new string[] { name }),
+                                }), true);
+
+                            });
+                        });
+                        return;
+                    case ChangeRoommateResponseStatus.GOT_KICKED:
+                        title = GameFacade.Strings.GetString("208", "90");
                         msg = GameFacade.Strings.GetString("208", "93");
                         break;
                     case ChangeRoommateResponseStatus.UNKNOWN:
@@ -136,6 +156,10 @@ namespace FSO.Client.Controllers
                     Title = title,
                     Message = msg,
                 }), true);
+
+                //got kicked out
+                //title = GameFacade.Strings.GetString("208", "94");
+                //msg = GameFacade.Strings.GetString("208", "93");
             }
         }
     }

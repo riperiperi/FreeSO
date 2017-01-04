@@ -31,6 +31,9 @@ namespace FSO.Server.Protocol.Electron.Model
         KICK_SUCCESS = 11,
         SELFKICK_SUCCESS = 12,
 
+        ROOMMATE_LEFT = 13,
+        GOT_KICKED = 14,
+
         UNKNOWN = 255
     }
 }

@@ -90,6 +90,7 @@ namespace FSO.SimAntics.Engine
                 TickSchedule.Remove(CurrentTickID);
             }
             vm.Context.RandomSeed += (ulong)vm.Entities.Count; // some "entropy" based on the number of entities present. forces a more strict sync
+            CurrentObjectID = short.MaxValue;
         }
 
         public void Reset()

@@ -30,7 +30,6 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     vm.TSOState.Roommates.Add(TargetUID);
                     if (Level > VMTSOAvatarPermissions.Roommate) vm.TSOState.BuildRoommates.Add(TargetUID);
                 }
-                return true;
             }
             else
             {
@@ -66,10 +65,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
                 foreach (var ent in vm.Entities)
                 {
-                    if (ent is VMGameObject && ent.PersistID > 0 && ((VMTSOObjectState)ent.TSOState).OwnerID == obj.PersistID)
+                    if (ent is VMGameObject && ent.PersistID > 0 && ((VMTSOObjectState)ent.TSOState).OwnerID == TargetUID)
                     {
+                        var old = ((VMGameObject)ent).Disabled;
                         if (Level < VMTSOAvatarPermissions.Roommate) ((VMGameObject)ent).Disabled |= VMGameObjectDisableFlags.PendingRoommateDeletion;
                         else ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.PendingRoommateDeletion;
+                        if (old != ((VMGameObject)ent).Disabled) vm.Scheduler.RescheduleInterrupt(ent);
                         ((VMGameObject)ent).RefreshLight();
                     }
                 }

@@ -84,7 +84,7 @@ namespace FSO.Client.Rendering.City
         public static float NEAR_ZOOM_SIZE = 288;
         public float m_LotZoomSize = 72*128; //near zoom, set by world
         public TerrainZoomMode m_Zoomed = TerrainZoomMode.Far;
-        public float m_WheelZoomTarg = 1f;
+        public float m_WheelZoomTarg = 0.5f;
         public float m_WheelZoom = 1f;
         public float m_LotZoomProgress = 0;
 
@@ -1220,7 +1220,7 @@ namespace FSO.Client.Rendering.City
                         Plugin?.TileHover(currentTile);
                         
                         if (m_LastWheelPos != null && Math.Abs(m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) < 1000)
-                            m_WheelZoomTarg = Math.Max((Plugin == null)?0.5f:0.25f, Math.Min(1f, m_WheelZoomTarg - (m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) / 1000f));
+                            m_WheelZoomTarg = Math.Max((Plugin == null)?0.33f:0.25f, Math.Min(1f, m_WheelZoomTarg - (m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) / 1000f));
                     }
 
                     if (m_MouseState.RightButton == ButtonState.Pressed && m_LastMouseState.RightButton == ButtonState.Released)

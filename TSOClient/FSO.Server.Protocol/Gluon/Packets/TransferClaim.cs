@@ -12,6 +12,7 @@ namespace FSO.Server.Protocol.Gluon.Packets
     public class TransferClaim : AbstractGluonPacket
     {
         public ClaimType Type;
+        public ClaimAction Action;
         public int EntityId;
         public uint ClaimId;
         public uint SpecialId; //job lot info
@@ -20,6 +21,7 @@ namespace FSO.Server.Protocol.Gluon.Packets
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             Type = input.GetEnum<ClaimType>();
+            Action = input.GetEnum<ClaimAction>();
             EntityId = input.GetInt32();
             ClaimId = input.GetUInt32();
             SpecialId = input.GetUInt32();
@@ -34,6 +36,7 @@ namespace FSO.Server.Protocol.Gluon.Packets
         public override void Serialize(IoBuffer output, ISerializationContext context)
         {
             output.PutEnum(Type);
+            output.PutEnum(Action);
             output.PutInt32(EntityId);
             output.PutUInt32(ClaimId);
             output.PutUInt32(SpecialId);

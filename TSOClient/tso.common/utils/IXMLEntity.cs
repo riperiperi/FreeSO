@@ -37,7 +37,7 @@ namespace FSO.Common.Utils
             {
                 if (child.Name == nodeName && child.FirstChild != null)
                 {
-                    return child.FirstChild.Value;
+                    return child.FirstChild?.Value;
                 }
             }
             return null;

@@ -13,6 +13,7 @@ using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Servers.City.Domain;
 using FSO.SimAntics;
 using FSO.SimAntics.Engine.TSOTransaction;
@@ -571,7 +572,11 @@ namespace FSO.Server.Servers.Lot.Domain
                     if (noRemainingUsers)
                     {
                         if (TimeToShutdown == -1)
-                            TimeToShutdown = TICKRATE * 20; //lot shuts down 20 seconds after everyone leaves
+                        {
+                            //lot shuts down 20 seconds after everyone leaves
+                            //if we're doing a cleanup action, it closes immediately
+                            TimeToShutdown = (Context.Action == ClaimAction.LOT_CLEANUP) ? 1 : TICKRATE * 20;
+                        }
                         else
                         {
                             if (--TimeToShutdown == 0 || (ShuttingDown && TimeToShutdown < (TICKRATE * 20 - 10)))
@@ -976,6 +981,25 @@ namespace FSO.Server.Servers.Lot.Domain
             state.motive_data = motives;
 
             return state;
+        }
+
+        public void NotifyRoommateChange(uint avatar_id, ChangeType change)
+        {
+            VMTSOAvatarPermissions newLevel = VMTSOAvatarPermissions.Visitor;
+            switch (change)
+            {
+                case ChangeType.ADD_ROOMMATE:
+                    newLevel = VMTSOAvatarPermissions.Roommate; break;
+                case ChangeType.REMOVE_ROOMMATE:
+                    newLevel = VMTSOAvatarPermissions.Visitor; break;
+            }
+
+            VMDriver.SendCommand(new VMChangePermissionsCmd
+            {
+                TargetUID = avatar_id,
+                Level = newLevel,
+                Verified = true,
+            });
         }
 
         public void ForceShutdown()

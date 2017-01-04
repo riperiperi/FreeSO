@@ -9,6 +9,7 @@ using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Gluon;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Protocol.Gluon.Packets;
 using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.Lot.Lifecycle;
@@ -153,6 +154,15 @@ namespace FSO.Server.Servers.Lot.Domain
             return true;
         }
 
+        public bool NotifyRoommateChange(int lot_id, uint avatar_id, ChangeType change)
+        {
+            var lot = GetLot(lot_id);
+            if (lot == null) return false;
+            lot.Container.NotifyRoommateChange(avatar_id, change);
+            return true;
+        }
+
+
         private LotHostEntry GetLot(IVoltronSession session)
         {
             var lotId = (int?)session.GetAttribute("currentLot");
@@ -206,7 +216,7 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
-        public bool TryAcceptClaim(int lotId, uint claimId, uint specialId, string previousOwner)
+        public bool TryAcceptClaim(int lotId, uint claimId, uint specialId, string previousOwner, ClaimAction openAction)
         {
             if (claimId == 0)
             { //job lot
@@ -215,7 +225,8 @@ namespace FSO.Server.Servers.Lot.Domain
                     DbId = (int)specialId, //contains job type/grade
                     Id = (uint)lotId, //lotId contains a "job lot location", not a DbId.
                     ClaimId = claimId,
-                    ShardId = 0
+                    ShardId = 0,
+                    Action = openAction
                 });
                 return true;
             }
@@ -253,7 +264,8 @@ namespace FSO.Server.Servers.Lot.Domain
                             DbId = lot.lot_id,
                             Id = lot.location,
                             ClaimId = claimId,
-                            ShardId = lot.shard_id
+                            ShardId = lot.shard_id,
+                            Action = openAction
                         });
                         LOG.Info("Bootstrapped lot with dbid = " + lotId + "!");
                         return true;

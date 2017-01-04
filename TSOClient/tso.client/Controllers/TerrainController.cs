@@ -197,11 +197,6 @@ namespace FSO.Client.Controllers
 
         public void ClickLot(int x, int y)
         {
-            if (!Realestate.IsPurchasable((ushort)x, (ushort)y))
-            {
-                return;
-            }
-
             var id = MapCoordinates.Pack((ushort)x, (ushort)y);
             var occupied = IsTileOccupied(x, y);
             DataService.Get<Lot>(id).ContinueWith(result =>
@@ -211,6 +206,8 @@ namespace FSO.Client.Controllers
                 {
                     Parent.ShowLotPage(id);
                 }
+                else if (!Realestate.IsPurchasable((ushort)x, (ushort)y))
+                    return;
                 else if (result.Result.Lot_Price == 0)
                 {
                     //We need to request the price

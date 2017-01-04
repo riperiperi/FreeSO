@@ -166,6 +166,16 @@ namespace FSO.Server.Database.DA.Lots
             Context.Connection.Query("UPDATE fso_lots SET description = @desc WHERE lot_id = @id", new { id = lot_id, desc = description });
         }
 
+        public void UpdateOwner(int lot_id, uint avatar_id)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET owner_id = @owner_id WHERE lot_id = @id", new { id = lot_id, owner_id = avatar_id });
+        }
+
+        public void ReassignOwner(int lot_id)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET owner_id = (SELECT avatar_id FROM fso.fso_roommates WHERE is_pending = 0 AND lot_id = @id LIMIT 1) WHERE lot_id = @id", new { id = lot_id });
+        }
+
         public void UpdateLotCategory(int lot_id, LotCategory category)
         {
             Context.Connection.Query("UPDATE fso_lots SET category = @category, category_change_date = @time WHERE lot_id = @id", new { id = lot_id, category = category.ToString(), time = Epoch.Now });

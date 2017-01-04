@@ -154,6 +154,7 @@ namespace FSO.SimAntics
             {
                 _Position = value;
                 if (UseWorld) WorldUI.Level = Position.Level;
+                if (this is VMAvatar) ((VMAvatar)this).VisualPositionStart = null;
                 VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level - 1) * 2.95f);
             }
         }
