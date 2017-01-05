@@ -65,6 +65,12 @@ namespace FSO.Server.Servers.Api.Controllers
                     if (tryIP != null) tryIP = tryIP.Substring(tryIP.LastIndexOf(',') + 1).Trim();
                     var ip = tryIP ?? this.Request.UserHostAddress;
 
+                    var ban = db.Bans.GetByIP(ip);
+                    if (ban != null)
+                    {
+                        return Response.AsText(printError(ERROR_110_CODE, ERROR_110_MSG));
+                    }
+
                     /** Make a ticket **/
                     ticket = new AuthTicket();
                     ticket.ticket_id = Guid.NewGuid().ToString().Replace("-", "");

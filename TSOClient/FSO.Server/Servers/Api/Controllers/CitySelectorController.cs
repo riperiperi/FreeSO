@@ -34,6 +34,9 @@ namespace FSO.Server.Servers.Api.Controllers
         private static String ERROR_AVATAR_NOT_YOURS_CODE = "505";
         private static String ERROR_AVATAR_NOT_YOURS_MSG = "You do not own this avatar!";
 
+        private static String ERROR_BANNED_CODE = "506";
+        private static String ERROR_BANNED_MSG = "Your account has been banned.";
+
         private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         private string VersionNumber = "0";
@@ -184,6 +187,12 @@ namespace FSO.Server.Servers.Api.Controllers
                                 LOG.Info("SECURITY: Invalid avatar login attempt from " + ip + ", user "+user.UserID);
                                 return Response.AsXml(new XMLErrorMessage(ERROR_AVATAR_NOT_YOURS_CODE, ERROR_AVATAR_NOT_YOURS_MSG));
                             }
+                        }
+
+                        var ban = db.Bans.GetByIP(ip);
+                        if (ban != null || db.Users.GetById(user.UserID)?.is_banned != false)
+                        {
+                            return Response.AsXml(new XMLErrorMessage(ERROR_BANNED_CODE, ERROR_BANNED_MSG));
                         }
 
                         /** Make an auth ticket **/

@@ -90,6 +90,7 @@ namespace FSO.Server
             if(Config.Services.Api != null &&
                 Config.Services.Api.Enabled)
             {
+                LOG.Info((Config.Services.Api.Regkey == null)?"null": Config.Services.Api.Regkey);
                 var childKernel = new ChildKernel(
                     Kernel
                 );
