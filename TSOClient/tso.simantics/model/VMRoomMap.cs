@@ -303,6 +303,10 @@ namespace FSO.SimAntics.Model
         public List<VMObstacle> GenerateRoomObs(ushort room, sbyte level, Rectangle bounds, VMContext context)
         {
             var result = new List<VMObstacle>();
+            if (room == 0)
+            {
+                bounds = new Rectangle(1, 1, Width - 2, Height - 2);
+            }
             var x1 = Math.Max(0, bounds.X - 1);
             var x2 = Math.Min(Width, bounds.Right + 1);
             var y1 = Math.Max(0, bounds.Y - 1);

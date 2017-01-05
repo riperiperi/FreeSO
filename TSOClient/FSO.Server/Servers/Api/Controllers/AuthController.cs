@@ -62,6 +62,7 @@ namespace FSO.Server.Servers.Api.Controllers
                     }
 
                     var tryIP = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                    if (tryIP != null) tryIP = tryIP.Substring(tryIP.LastIndexOf(',') + 1).Trim();
                     var ip = tryIP ?? this.Request.UserHostAddress;
 
                     /** Make a ticket **/

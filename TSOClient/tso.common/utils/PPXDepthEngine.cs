@@ -120,8 +120,10 @@ namespace FSO.Common.Utils
                 //draw color then draw depth
                 gd.SetRenderTarget(color);
                 proc(false);
+                effect.Parameters["depthOutMode"].SetValue(true);
                 gd.SetRenderTarget(depth);
                 proc(true);
+                effect.Parameters["depthOutMode"].SetValue(false);
             }
             else
             {

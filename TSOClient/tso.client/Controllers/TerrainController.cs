@@ -294,7 +294,16 @@ namespace FSO.Client.Controllers
                                         AlertOptions.Title = GameFacade.Strings.GetString("215", "10");
                                         AlertOptions.Message = GameFacade.Strings.GetString("215", "20", new string[] { "$" + price.ToString(), "$" + ourCash.ToString() });
                                         AlertOptions.Buttons = new UIAlertButton[] {
-                                    new UIAlertButton(UIAlertButtonType.Yes, new ButtonClickDelegate(BuyPropertyAlert_OnButtonClick)),
+                                    new UIAlertButton(UIAlertButtonType.Yes, (btn) => {
+                                        UIScreen.RemoveDialog(_LotBuyAlert);
+                                        _LotBuyAlert = UIScreen.GlobalShowAlert(new UIAlertOptions() {
+                                            Message = GameFacade.Strings.GetString("211", "57"),
+                                            Buttons = new UIAlertButton[0]
+                                            }, true);
+                                        Parent.MoveMeOut(oldID, (result) => {
+                                            if (result) BuyPropertyAlert_OnButtonClick(btn);
+                                        });
+                                    }),
                                     new UIAlertButton(UIAlertButtonType.No, BuyPropertyAlert_OnCancel)
                                     };
                                     }
@@ -340,8 +349,11 @@ namespace FSO.Client.Controllers
         private UILotPurchaseDialog _LotBuyName;
 
         private void BuyPropertyAlert_OnButtonClick(UIElement button) {
-            UIScreen.RemoveDialog(_LotBuyAlert);
-            _LotBuyAlert = null;
+            if (_LotBuyAlert != null)
+            {
+                UIScreen.RemoveDialog(_LotBuyAlert);
+                _LotBuyAlert = null;
+            }
 
             //User needs to name the property
             _LotBuyName = new UILotPurchaseDialog();

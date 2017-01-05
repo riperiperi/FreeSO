@@ -222,6 +222,17 @@ namespace FSO.Client.Controllers
             }
         }
 
+        public void MoveMeOut(uint target_lot, Callback<bool> onResult)
+        {
+            RoommateProtocol.OnMoveoutResult = onResult;
+            Network.CityClient.Write(new ChangeRoommateRequest()
+            {
+                Type = Server.Protocol.Electron.Model.ChangeRoommateType.KICK,
+                AvatarId = Network.MyCharacter,
+                LotLocation = target_lot
+            });
+        }
+
         public void GetAvatarModel(uint key, Callback<Avatar> callback)
         {
             DataService.Get<Avatar>(key).ContinueWith(x =>

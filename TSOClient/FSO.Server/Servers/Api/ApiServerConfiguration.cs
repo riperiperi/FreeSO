@@ -31,8 +31,8 @@ namespace FSO.Server.Servers.Api
         /// <summary>
         /// If non-null, the user must provide this key to register an account.
         /// </summary>
-        public string registration_key = null;
-    }
+        public string registration_key { get; set; }
+}
 
     public enum ApiServerControllers
     {

@@ -75,6 +75,11 @@ namespace FSO.Server.Database.DA.Lots
             throw new Exception(failReason);
         }
 
+        public bool Delete(int id)
+        {
+            return Context.Connection.Execute("DELETE FROM fso_lots WHERE lot_id = @id", new { id = id }) > 0;
+        }
+
         public DbLot GetByOwner(uint owner_id)
         {
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE owner_id = @id", new { id = owner_id }).FirstOrDefault();

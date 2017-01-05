@@ -21,6 +21,8 @@ namespace FSO.Client.Controllers
         private CoreGameScreenController Game;
         private Network.Network Network;
         private IClientDataService DataService;
+        public Callback<bool> OnMoveoutResult;
+
         public RoommateRequestController(CoreGameScreenController game, Network.Network network, IClientDataService dataService)
         {
             this.Game = game;
@@ -104,6 +106,12 @@ namespace FSO.Client.Controllers
                     case ChangeRoommateResponseStatus.SELFKICK_SUCCESS:
                         title = GameFacade.Strings.GetString("208", "130");
                         msg = GameFacade.Strings.GetString("208", "133");
+                        if (OnMoveoutResult != null)
+                        {
+                            OnMoveoutResult(true);
+                            OnMoveoutResult = null;
+                            return;
+                        }
                         break;
                     case ChangeRoommateResponseStatus.DECLINE_SUCCESS:
                     case ChangeRoommateResponseStatus.INVITE_SUCCESS:
@@ -156,6 +164,12 @@ namespace FSO.Client.Controllers
                     Title = title,
                     Message = msg,
                 }), true);
+
+                if (OnMoveoutResult != null)
+                {
+                    OnMoveoutResult(false);
+                    OnMoveoutResult = null;
+                }
 
                 //got kicked out
                 //title = GameFacade.Strings.GetString("208", "94");

@@ -91,6 +91,9 @@
     <Compile Include="DA\Avatars\DbJobLevel.cs" />
     <Compile Include="DA\Avatars\IAvatars.cs" />
     <Compile Include="DA\Avatars\SqlAvatars.cs" />
+    <Compile Include="DA\Bans\DbBan.cs" />
+    <Compile Include="DA\Bans\IBans.cs" />
+    <Compile Include="DA\Bans\SqlBans.cs" />
     <Compile Include="DA\Bonus\DbBonus.cs" />
     <Compile Include="DA\Bonus\DbBonusMetrics.cs" />
     <Compile Include="DA\Bonus\IBonus.cs" />
@@ -205,6 +208,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\changes\0007_fso_lot_visits.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0012_fso_bans.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\fso_transactions.sql">

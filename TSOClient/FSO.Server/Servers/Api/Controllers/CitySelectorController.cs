@@ -166,6 +166,7 @@ namespace FSO.Server.Servers.Api.Controllers
                     if (shard != null)
                     {
                         var tryIP = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                        if (tryIP != null) tryIP = tryIP.Substring(tryIP.LastIndexOf(',') + 1).Trim();
                         var ip = tryIP ?? this.Request.UserHostAddress;
 
                         uint avatarDBID = uint.Parse(avatarId);
@@ -194,6 +195,8 @@ namespace FSO.Server.Servers.Api.Controllers
                             date = Epoch.Now,
                             ip = ip
                         };
+
+                        db.Users.UpdateConnectIP(ticket.user_id, ip);
                         db.Shards.CreateTicket(ticket);
 
                         var result = new ShardSelectorServletResponse();
