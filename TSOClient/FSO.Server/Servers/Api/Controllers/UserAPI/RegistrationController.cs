@@ -63,7 +63,7 @@ namespace FSO.Server.Servers.Api.Controllers.UserAPI
                 }
 
                 bool isAdmin = false;
-                if (config.registration_key != null && config.registration_key != user.key)
+                if (config.Regkey != null && config.Regkey != user.key)
                 {
                     return Response.AsJson(new RegistrationError()
                     {
