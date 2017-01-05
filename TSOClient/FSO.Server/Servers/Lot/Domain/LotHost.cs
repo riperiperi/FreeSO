@@ -500,7 +500,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         private void SyncNumVisitors()
         {
-            Model.Lot_NumOccupants = (byte)_Visitors.Count;
+            lock (_Visitors) Model.Lot_NumOccupants = (byte)_Visitors.Count;
             Host.Sync(Context, Model);
         }
 
@@ -562,7 +562,8 @@ namespace FSO.Server.Servers.Lot.Domain
             {
                 if (ShuttingDown) return;
                 ShuttingDown = true;
-                foreach (var visitor in _Visitors)
+                var copy = new Dictionary<uint, IVoltronSession>(_Visitors);
+                foreach (var visitor in copy)
                 {
                     if (!lotClosed) visitor.Value.SetAttribute("returnClaim", false);
                     ReleaseAvatarClaim(visitor.Value);

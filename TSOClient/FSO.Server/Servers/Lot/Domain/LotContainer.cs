@@ -468,14 +468,16 @@ namespace FSO.Server.Servers.Lot.Domain
 
             vm.Context.Clock.Hours = tsoTime.Item1;
             vm.Context.Clock.Minutes = tsoTime.Item2;
+            
+            vm.Context.UpdateTSOBuildableArea();
+
+            vm.MyUID = uint.MaxValue - 1;
+            if ((LotPersist.move_flags & 2) > 0) isNew = true;
+            ReturnInvalidObjects();
 
             if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(vm);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(vm);
 
-            vm.Context.UpdateTSOBuildableArea();
-
-            vm.MyUID = uint.MaxValue - 1;
-            ReturnInvalidObjects();
 
             var entClone = new List<VMEntity>(vm.Entities);
             foreach (var ent in entClone)
