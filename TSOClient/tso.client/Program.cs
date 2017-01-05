@@ -48,6 +48,7 @@ namespace FSO.Client
                 gameLocator = new WindowsLocator();
 
             bool useDX = false;
+            bool useMRT = true;
 
             #region User resolution parmeters
 
@@ -87,6 +88,12 @@ namespace FSO.Client
                             case "ogl":
                                 useDX = false;
                                 break;
+                            case "mrt":
+                                useMRT = true;
+                                break;
+                            case "nomrt":
+                                useMRT = false;
+                                break;
                         }
                     }
                 }
@@ -119,6 +126,7 @@ namespace FSO.Client
                 FSOEnvironment.GFXContentDir = "Content/" + (UseDX ? "DX/" : "OGL/");
                 FSOEnvironment.Linux = linux;
                 FSOEnvironment.DirectX = UseDX;
+                FSOEnvironment.UseMRT = useMRT;
                 if (GlobalSettings.Default.LanguageCode == 0) GlobalSettings.Default.LanguageCode = 1;
                 Files.Formats.IFF.Chunks.STR.DefaultLangCode = (Files.Formats.IFF.Chunks.STRLangCode)GlobalSettings.Default.LanguageCode;
 
