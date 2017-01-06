@@ -22,7 +22,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
     {
         private List<VMNetCommand> QueuedCmds;
 
-        private const int TICKS_PER_PACKET = 2;
+        private const int TICKS_PER_PACKET = 4;
         private uint ProblemTick;
         private List<VMNetTick> TickBuffer;
 
@@ -32,6 +32,10 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         private HashSet<VMNetClient> ClientsToDC;
         private HashSet<VMNetClient> ClientsToSync;
+
+        private const int CLIENT_RESYNC_COOLDOWN = 30*30;
+        private int LastResyncCooldown = 0;
+        private HashSet<VMNetClient> ClientsToSyncLater;
 
         public event VMServerBroadcastHandler OnTickBroadcast;
         public delegate void VMServerBroadcastHandler(VMNetMessage msg, HashSet<VMNetClient> ignore);
@@ -56,6 +60,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
             Clients = new Dictionary<uint, VMNetClient>();
             ClientsToDC = new HashSet<VMNetClient>();
             ClientsToSync = new HashSet<VMNetClient>();
+            ClientsToSyncLater = new HashSet<VMNetClient>();
             QueuedCmds = new List<VMNetCommand>();
             TickBuffer = new List<VMNetTick>();
 
@@ -168,6 +173,25 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 InternalTick(vm, tick);
                 
                 TickBuffer.Add(tick);
+
+                lock (ClientsToSyncLater)
+                {
+                    if (LastResyncCooldown > 0)
+                    {
+                        LastResyncCooldown--;
+                    }
+                    else if (ClientsToSyncLater.Count > 0)
+                    {
+                        lock (ClientsToSync)
+                        {
+                            foreach (var client in ClientsToSyncLater)
+                            {
+                                ClientsToSync.Add(client);
+                            }
+                        }
+                        LastResyncCooldown = CLIENT_RESYNC_COOLDOWN;
+                    }
+                }
                 if (TickBuffer.Count >= TICKS_PER_PACKET)
                 {
                     lock (ClientsToSync)
@@ -326,11 +350,11 @@ namespace FSO.SimAntics.NetPlay.Drivers
             }
             else if (cmd.Type == VMCommandType.RequestResync)
             {
-                lock (ClientsToSync)
+                lock (ClientsToSyncLater)
                 {
                     //todo: throttle
                     ProblemTick = ((VMRequestResyncCmd)cmd.Command).TickID;
-                    ClientsToSync.Add(client);
+                    ClientsToSyncLater.Add(client);
                 }
             }
 

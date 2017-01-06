@@ -42,6 +42,7 @@ namespace FSO.Server.Servers.Api
             this.Kernel = kernel;
 
             Kernel.Bind<ApiServer>().ToConstant(this);
+            Kernel.Bind<ApiServerConfiguration>().ToConstant(config);
         }
 
         public override void Start()

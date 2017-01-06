@@ -38,6 +38,7 @@ namespace FSO.Server
         private List<AbstractServer> Servers;
         private List<CityServer> CityServers;
         private ApiServer ActiveApiServer;
+        private TaskServer ActiveTaskServer;
         private RunServerOptions Options;
         private Protocol.Gluon.Model.ShutdownType ShutdownMode;
         
@@ -90,6 +91,7 @@ namespace FSO.Server
             if(Config.Services.Api != null &&
                 Config.Services.Api.Enabled)
             {
+                LOG.Info((Config.Services.Api.Regkey == null)?"null": Config.Services.Api.Regkey);
                 var childKernel = new ChildKernel(
                     Kernel
                 );
@@ -269,11 +271,17 @@ namespace FSO.Server
             }
             await Task.WhenAll(ShutdownTasks.ToArray());
             LOG.Info("Successfully shut down all city servers!");
-            if (ActiveApiServer != null) {
-                lock (Servers)
+            lock (Servers)
+            {
+                if (ActiveApiServer != null)
                 {
                     ActiveApiServer.Shutdown();
                     Servers.Remove(ActiveApiServer);
+                }
+                if (ActiveTaskServer != null)
+                {
+                    ActiveTaskServer.Shutdown();
+                    Servers.Remove(ActiveTaskServer);
                 }
             }
         }

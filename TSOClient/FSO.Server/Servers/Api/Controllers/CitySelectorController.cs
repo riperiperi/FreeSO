@@ -34,6 +34,9 @@ namespace FSO.Server.Servers.Api.Controllers
         private static String ERROR_AVATAR_NOT_YOURS_CODE = "505";
         private static String ERROR_AVATAR_NOT_YOURS_MSG = "You do not own this avatar!";
 
+        private static String ERROR_BANNED_CODE = "506";
+        private static String ERROR_BANNED_MSG = "Your account has been banned.";
+
         private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         private string VersionNumber = "0";
@@ -166,6 +169,7 @@ namespace FSO.Server.Servers.Api.Controllers
                     if (shard != null)
                     {
                         var tryIP = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                        if (tryIP != null) tryIP = tryIP.Substring(tryIP.LastIndexOf(',') + 1).Trim();
                         var ip = tryIP ?? this.Request.UserHostAddress;
 
                         uint avatarDBID = uint.Parse(avatarId);
@@ -185,6 +189,12 @@ namespace FSO.Server.Servers.Api.Controllers
                             }
                         }
 
+                        var ban = db.Bans.GetByIP(ip);
+                        if (ban != null || db.Users.GetById(user.UserID)?.is_banned != false)
+                        {
+                            return Response.AsXml(new XMLErrorMessage(ERROR_BANNED_CODE, ERROR_BANNED_MSG));
+                        }
+
                         /** Make an auth ticket **/
                         var ticket = new ShardTicket
                         {
@@ -194,6 +204,8 @@ namespace FSO.Server.Servers.Api.Controllers
                             date = Epoch.Now,
                             ip = ip
                         };
+
+                        db.Users.UpdateConnectIP(ticket.user_id, ip);
                         db.Shards.CreateTicket(ticket);
 
                         var result = new ShardSelectorServletResponse();

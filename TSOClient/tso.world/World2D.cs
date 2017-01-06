@@ -301,6 +301,7 @@ namespace FSO.LotView
             var oldZoom = state.Zoom;
             var oldRotation = state.Rotation;
             var oldLevel = state.Level;
+            var oldCutaway = Blueprint.Cutaway;
 
             //full invalidation because we must recalculate all object sprites. slow but necessary!
             state.Zoom = WorldZoom.Far;
@@ -315,6 +316,7 @@ namespace FSO.LotView
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             //pxOffset -= 
             state.TempDraw = true;
+            Blueprint.Cutaway = new bool[Blueprint.Cutaway.Length];
 
             var _2d = state._2D;
             _2d.AmbientLight = TextureGenerator.GetPxWhite(gd);
@@ -360,6 +362,7 @@ namespace FSO.LotView
             state.Zoom = oldZoom;
             state.Rotation = oldRotation;
             state.Level = oldLevel;
+            Blueprint.Cutaway = oldCutaway;
 
             var tex = bufferTexture.Get();
             return tex; //TextureUtils.Clip(gd, tex, bounds);

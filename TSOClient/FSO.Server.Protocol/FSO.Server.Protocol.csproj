@@ -113,12 +113,15 @@
     <Compile Include="Gluon\GluonPackets.cs" />
     <Compile Include="Gluon\GluonPacketType.cs" />
     <Compile Include="Gluon\IGluonPacket.cs" />
+    <Compile Include="Gluon\Model\ChangeType.cs" />
+    <Compile Include="Gluon\Model\ClaimAction.cs" />
     <Compile Include="Gluon\Model\ClaimType.cs" />
     <Compile Include="Gluon\Model\ShutdownType.cs" />
     <Compile Include="Gluon\Packets\AdvertiseCapacity.cs" />
     <Compile Include="Gluon\Packets\HealthPing.cs" />
     <Compile Include="Gluon\Packets\HealthPingResponse.cs" />
     <Compile Include="Gluon\Packets\IGluonCall.cs" />
+    <Compile Include="Gluon\Packets\NotifyLotRoommateChange.cs" />
     <Compile Include="Gluon\Packets\RequestLotClientTermination.cs" />
     <Compile Include="Gluon\Packets\RequestTask.cs" />
     <Compile Include="Gluon\Packets\RequestTaskResponse.cs" />

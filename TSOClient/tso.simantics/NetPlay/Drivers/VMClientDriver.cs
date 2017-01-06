@@ -21,7 +21,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         private Queue<VMNetCommandBodyAbstract> OutgoingCommands;
         private Queue<VMNetMessage> ServerMessages;
-        private const int TICKS_PER_PACKET = 2;
+        private const int TICKS_PER_PACKET = 4;
         private const int BUFFER_STABLE_TICKS = 3 * 30; //if buffer does not drop below 2 large for this number of ticks, tighten buffer size
 
         private int BufferSize = TICKS_PER_PACKET * 2;
@@ -51,28 +51,6 @@ namespace FSO.SimAntics.NetPlay.Drivers
             //are passed back to the clients as commands (for the primitive, at least)
 
             TickBuffer = new Queue<VMNetTick>();
-        }
-
-        public void Disconnected()
-        {
-            /*
-#if DEBUG
-            //switch to server mode for debug purposes
-            VMDialogInfo info = new VMDialogInfo
-            {
-                Caller = null,
-                Icon = null,
-                Operand = new VMDialogOperand { },
-                Message = "You have disconnected from the server. Simulation is continuing locally for debug purposes.",
-                Title = "Disconnected!"
-            };
-            VMHook.SignalDialog(info);
-
-            VMHook.ReplaceNet(new VMServerDriver(37564, null));
-#else
-            if (OnStateChange != null) OnStateChange(4, (float)CloseReason);
-#endif
-*/
         }
 
         public void Connected()
@@ -149,7 +127,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
             {
                 TicksSinceCloseCall = 0;
                 BufferSize--;
-                if (BufferSize < 2) BufferSize = 2;
+                if (BufferSize < TICKS_PER_PACKET) BufferSize = TICKS_PER_PACKET;
             }
 
             // === END BUFFER SIZE MANAGEMENT ===

@@ -17,7 +17,7 @@ namespace FSO.Server.Servers.Api.Controllers.UserAPI
     public class RegistrationController : NancyModule
     {
         private IDAFactory DAFactory;
-        private const int REGISTER_THROTTLE_SECS = 10;
+        private const int REGISTER_THROTTLE_SECS = 60;
 
         /// <summary>
         /// Alphanumeric (lowercase), no whitespace or special chars, cannot start with an underscore.
@@ -40,6 +40,7 @@ namespace FSO.Server.Servers.Api.Controllers.UserAPI
             {
                 var user = this.Bind<RegistrationModel>();
                 var tryIP = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                if (tryIP != null) tryIP = tryIP.Substring(tryIP.LastIndexOf(',') + 1).Trim();
                 var ip = tryIP ?? this.Request.UserHostAddress;
 
                 user.username = user.username ?? "";
@@ -62,7 +63,7 @@ namespace FSO.Server.Servers.Api.Controllers.UserAPI
                 }
 
                 bool isAdmin = false;
-                if (config.registration_key != null && config.registration_key != user.key)
+                if (config.Regkey != null && config.Regkey != user.key)
                 {
                     return Response.AsJson(new RegistrationError()
                     {
@@ -75,6 +76,17 @@ namespace FSO.Server.Servers.Api.Controllers.UserAPI
 
                 using (var da = daFactory.Get())
                 {
+                    //has this ip been banned?
+                    var ban = da.Bans.GetByIP(ip);
+                    if (ban != null)
+                    {
+                        return Response.AsJson(new RegistrationError()
+                        {
+                            error = "registration_failed",
+                            error_description = "ip_banned"
+                        });
+                    }
+
                     //has this user registered a new account too soon after their last?
                     var now = Epoch.Now;
                     var prev = da.Users.GetByRegisterIP(ip);

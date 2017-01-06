@@ -75,6 +75,11 @@ namespace FSO.Server.Database.DA.Lots
             throw new Exception(failReason);
         }
 
+        public bool Delete(int id)
+        {
+            return Context.Connection.Execute("DELETE FROM fso_lots WHERE lot_id = @id", new { id = id }) > 0;
+        }
+
         public DbLot GetByOwner(uint owner_id)
         {
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE owner_id = @id", new { id = owner_id }).FirstOrDefault();
@@ -164,6 +169,16 @@ namespace FSO.Server.Database.DA.Lots
         public void UpdateDescription(int lot_id, string description)
         {
             Context.Connection.Query("UPDATE fso_lots SET description = @desc WHERE lot_id = @id", new { id = lot_id, desc = description });
+        }
+
+        public void UpdateOwner(int lot_id, uint avatar_id)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET owner_id = @owner_id WHERE lot_id = @id", new { id = lot_id, owner_id = avatar_id });
+        }
+
+        public void ReassignOwner(int lot_id)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET owner_id = (SELECT avatar_id FROM fso.fso_roommates WHERE is_pending = 0 AND lot_id = @id LIMIT 1) WHERE lot_id = @id", new { id = lot_id });
         }
 
         public void UpdateLotCategory(int lot_id, LotCategory category)

@@ -294,7 +294,7 @@ namespace FSO.Server.Database.DA.Avatars
                          l.location as lot_location
                 FROM fso_avatars a
                     LEFT OUTER JOIN fso_roommates r on r.avatar_id = a.avatar_id
-                    LEFT OUTER JOIN fso_lots l on l.lot_id = r.lot_id
+                    LEFT OUTER JOIN fso_lots l on l.lot_id = r.lot_id AND r.is_pending = 0
                 WHERE a.user_id = @user_id
                 ORDER BY a.date ASC", new { user_id = user_id }).ToList();
         }

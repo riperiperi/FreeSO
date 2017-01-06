@@ -17,6 +17,7 @@ namespace FSO.Server.Database.DA.Lots
         DbLot Get(int id);
         List<DbLot> Get(IEnumerable<int> ids);
         uint Create(DbLot lot);
+        bool Delete(int id);
 
         void RenameLot(int id, string newName);
 
@@ -28,6 +29,8 @@ namespace FSO.Server.Database.DA.Lots
         void UpdateLotCategory(int lot_id, LotCategory category);
         void UpdateLotAdmitMode(int lot_id, byte admit_mode);
         void UpdateLocation(int lot_id, uint location, bool startFresh);
+        void UpdateOwner(int lot_id, uint avatar_id);
+        void ReassignOwner(int lot_id);
 
         void CreateLotServerTicket(DbLotServerTicket ticket);
         void DeleteLotServerTicket(string id);

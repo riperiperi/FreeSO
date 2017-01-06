@@ -1,6 +1,7 @@
 ﻿using FSO.Server.Database.DA.AuthTickets;
 using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Database.DA.Avatars;
+using FSO.Server.Database.DA.Bans;
 using FSO.Server.Database.DA.Bonus;
 using FSO.Server.Database.DA.Bookmarks;
 using FSO.Server.Database.DA.Hosts;
@@ -28,6 +29,7 @@ namespace FSO.Server.Database.DA
     public interface IDA : IDisposable
     {
         IUsers Users { get; }
+        IBans Bans { get; }
         IAuthTickets AuthTickets { get; }
         IShards Shards { get; }
         IAvatars Avatars { get; }
@@ -48,6 +50,7 @@ namespace FSO.Server.Database.DA
         //System tables
         IHosts Hosts { get; }
         ITasks Tasks { get; }
+
 
         void Flush();
     }

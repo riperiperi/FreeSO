@@ -170,6 +170,10 @@ namespace FSO.Client.UI.Framework
 
         public override void PreDraw(UISpriteBatch batch)
         {
+            if (!Visible)
+            {
+                return;
+            }
             lock (Children)
             {
                 foreach (var child in Children)
@@ -181,10 +185,6 @@ namespace FSO.Client.UI.Framework
             /** If we have opacity, draw ourself to a texture so we can blend it later **/
             if (_HasOpacity)
             {
-                if (!Visible)
-                {
-                    return;
-                }
 
                 Promise<Texture2D> bufferTexture = null;
                 using (batch.WithBuffer(ref bufferTexture))

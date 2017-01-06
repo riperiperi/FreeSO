@@ -87,6 +87,7 @@ namespace FSO.LotView.Components
             }
             GrassHeight = LotTypeGrassInfo.Heights[index];
             if (!FSOEnvironment.UseMRT) GrassHeight /= 2;
+            if (GrassHeight == 0) GrassHeight = 1;
             GrassDensityScale = LotTypeGrassInfo.GrassDensity[index];
         }
 

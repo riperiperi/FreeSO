@@ -81,7 +81,7 @@ namespace FSO.Server.Servers.City.Handlers
                     }
 
                     var oldLoc = MapCoordinates.Unpack(ownedLot.location);
-                    var moveCost = Math.Max(0, price - Realestate.GetPurchasePrice(oldLoc.X, oldLoc.Y));
+                    var moveCost = price - Realestate.GetPurchasePrice(oldLoc.X, oldLoc.Y);
                     moveCost += 2000; //flat rate for moving location
 
                     var transactionResult = db.Avatars.Transaction(session.AvatarId, uint.MaxValue, moveCost, 5); //expenses misc... maybe add specific for lot

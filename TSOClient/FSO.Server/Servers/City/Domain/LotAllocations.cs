@@ -3,6 +3,7 @@ using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Framework.Gluon;
 using FSO.Server.Protocol.Electron.Model;
+using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Protocol.Gluon.Packets;
 using Ninject;
 using System;
@@ -127,6 +128,7 @@ namespace FSO.Server.Servers.City.Domain
         /// 
         /// </summary>
         /// <param name="lotId"></param>
+        /// <param name="avatarId">The id of the avatar opening this lot. If 0, we're opening for a scheduled cleanup. (lot start fresh)</param>
         /// <param name="openIfClosed"></param>
         /// <returns></returns>
 
@@ -182,24 +184,27 @@ namespace FSO.Server.Servers.City.Domain
                                     });
                                 }
 
-                                var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
-                                var avatars = new List<uint>();
-                                foreach (var roomie in roomies)
+                                if (avatarId != 0)
                                 {
-                                    if (roomie.is_pending == 0) avatars.Add(roomie.avatar_id);
-                                }
-
-                                try
-                                {
-                                    if (lot.admit_mode < 4) security.DemandAvatars(avatars, AvatarPermissions.WRITE);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Remove(lotId);
-                                    return Immediate(new TryFindLotResult
+                                    var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
+                                    var avatars = new List<uint>();
+                                    foreach (var roomie in roomies)
                                     {
-                                        Status = FindLotResponseStatus.NOT_PERMITTED_TO_OPEN
-                                    });
+                                        if (roomie.is_pending == 0) avatars.Add(roomie.avatar_id);
+                                    }
+
+                                    try
+                                    {
+                                        if (lot.admit_mode < 4) security.DemandAvatars(avatars, AvatarPermissions.WRITE);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Remove(lotId);
+                                        return Immediate(new TryFindLotResult
+                                        {
+                                            Status = FindLotResponseStatus.NOT_PERMITTED_TO_OPEN
+                                        });
+                                    }
                                 }
                             }
 
@@ -211,9 +216,12 @@ namespace FSO.Server.Servers.City.Domain
                                     Status = FindLotResponseStatus.CLAIM_FAILED
                                 });
                             }
+                            allocation.SetLot(lot, 0,
+                                (avatarId == 0) ? ClaimAction.LOT_CLEANUP : ClaimAction.LOT_HOST);
                         }
                         else { 
-                            allocation.SetLot(new DbLot() { lot_id = (int)lotId }, originalId);
+                            allocation.SetLot(new DbLot() { lot_id = (int)lotId }, originalId,
+                                (avatarId == 0)? ClaimAction.LOT_CLEANUP : ClaimAction.LOT_HOST);
                         }
 
                         var pick = PickingEngine.PickServer();
@@ -251,7 +259,7 @@ namespace FSO.Server.Servers.City.Domain
                         break;
 
                     case LotAllocationState.ALLOCATED:
-                        if (!jobLot)
+                        if (!jobLot && avatarId != 0)
                         {
                             //check admit type (might be expensive?)
                             using (var db = DAFactory.Get())
@@ -357,6 +365,7 @@ namespace FSO.Server.Servers.City.Domain
         private Task<LotPickResult> PickingTaskWithTimeout;
         private DbLot Lot;
         private uint SpecialId;
+        private ClaimAction OpenAction;
 
         public LotAllocation(IDAFactory da, CityServerContext context)
         {
@@ -440,10 +449,11 @@ namespace FSO.Server.Servers.City.Domain
             }
         }
 
-        public void SetLot(DbLot lot, uint specialId)
+        public void SetLot(DbLot lot, uint specialId, ClaimAction openAction)
         {
             Lot = lot;
             SpecialId = specialId;
+            OpenAction = openAction;
         }
 
         public void TryUnclaim()
@@ -479,7 +489,8 @@ namespace FSO.Server.Servers.City.Domain
             {
                 attempt.Session.Write(new TransferClaim
                 {
-                    Type = Protocol.Gluon.Model.ClaimType.LOT,
+                    Type = ClaimType.LOT,
+                    Action = OpenAction,
                     //x,y used as id for lots
                     EntityId = Lot.lot_id,
                     SpecialId = SpecialId,

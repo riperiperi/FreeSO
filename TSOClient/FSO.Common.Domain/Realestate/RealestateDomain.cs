@@ -92,6 +92,7 @@ namespace FSO.Common.Domain.Realestate
             var terrain = _Map.GetTerrain(x, y);
             if (terrain == TerrainType.WATER) { return false; }
 
+            x += 1;
             //Check elevation is ok, get all 4 corners and then decide
             var tl = _Map.GetElevation(x, y);
             var trPoint = MapCoordinates.Offset(x, y, 1, 0);

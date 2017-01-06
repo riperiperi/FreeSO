@@ -479,7 +479,7 @@ namespace FSO.Client.UI.Panels
             isMyPropertyOwner = false;
             IsRoommate = false;
 
-            if (MyLot != null && MyLot.Value != null && CurrentAvatar.Value != null)
+            if (MyLot != null && MyLot.Value != null && CurrentAvatar != null && CurrentAvatar.Value != null)
             {
                 if (MyLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_AdmitList != null)
                     admit = MyLot.Value.Lot_LotAdmitInfo.LotAdmitInfo_AdmitList.Contains(CurrentAvatar.Value.Avatar_Id);
@@ -488,7 +488,7 @@ namespace FSO.Client.UI.Panels
                 IsRoommate = MyLot.Value.Lot_RoommateVec?.Contains(CurrentAvatar.Value.Avatar_Id) == true;
             }
 
-            if (MyAvatar != null && MyAvatar.Value != null && CurrentAvatar.Value != null)
+            if (MyAvatar != null && MyAvatar.Value != null && MyLot != null && MyLot.Value != null)
             {
                 isMyPropertyOwner = MyAvatar.Value.Avatar_Id == MyLot.Value.Lot_LeaderID;
             }

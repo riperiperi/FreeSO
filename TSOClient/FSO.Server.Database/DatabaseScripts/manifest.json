@@ -125,13 +125,21 @@
 		"52795d47-a25e-418f-a618-fb89300aab01"
 	  ]
     },
-	{
+    {
       "id": "4838258c-765d-42c9-8439-0505000b372f",
       "script": "changes/0011_fso_bonus.sql",
       "idempotent": false,
-	  "requires":[
-		"bec36bbc-1774-44cb-a7c5-03f4a00e801c"
-	  ]
+      "requires": [
+        "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
+      ]
+    },
+    {
+      "id": "12cd7494-b6a8-4ea7-851f-96f35b22e783",
+      "script": "changes/0012_fso_bans.sql",
+      "idempotent": false,
+      "requires": [
+        "9a48f9fc-5950-4348-9ccf-318a263be4eb"
+      ]
     }
   ]
 }

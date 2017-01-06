@@ -9,6 +9,7 @@ using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Gluon;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Protocol.Gluon.Packets;
 using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.Lot.Lifecycle;
@@ -153,6 +154,15 @@ namespace FSO.Server.Servers.Lot.Domain
             return true;
         }
 
+        public bool NotifyRoommateChange(int lot_id, uint avatar_id, ChangeType change)
+        {
+            var lot = GetLot(lot_id);
+            if (lot == null) return false;
+            lot.Container.NotifyRoommateChange(avatar_id, change);
+            return true;
+        }
+
+
         private LotHostEntry GetLot(IVoltronSession session)
         {
             var lotId = (int?)session.GetAttribute("currentLot");
@@ -206,7 +216,7 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
-        public bool TryAcceptClaim(int lotId, uint claimId, uint specialId, string previousOwner)
+        public bool TryAcceptClaim(int lotId, uint claimId, uint specialId, string previousOwner, ClaimAction openAction)
         {
             if (claimId == 0)
             { //job lot
@@ -215,7 +225,8 @@ namespace FSO.Server.Servers.Lot.Domain
                     DbId = (int)specialId, //contains job type/grade
                     Id = (uint)lotId, //lotId contains a "job lot location", not a DbId.
                     ClaimId = claimId,
-                    ShardId = 0
+                    ShardId = 0,
+                    Action = openAction
                 });
                 return true;
             }
@@ -253,7 +264,9 @@ namespace FSO.Server.Servers.Lot.Domain
                             DbId = lot.lot_id,
                             Id = lot.location,
                             ClaimId = claimId,
-                            ShardId = lot.shard_id
+                            ShardId = lot.shard_id,
+                            Action = openAction,
+                            HighMax = lot.admit_mode == 5
                         });
                         LOG.Info("Bootstrapped lot with dbid = " + lotId + "!");
                         return true;
@@ -470,7 +483,7 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             lock (_Visitors)
             {
-                if (_Visitors.Count >= 64 || ShuttingDown)//|| Container.IsAvatarOnLot(session.AvatarId))
+                if (_Visitors.Count >= ((Context.HighMax)?128:24) || ShuttingDown)//|| Container.IsAvatarOnLot(session.AvatarId))
                 {
                     //cannot join
                     return false;
@@ -488,7 +501,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         private void SyncNumVisitors()
         {
-            Model.Lot_NumOccupants = (byte)_Visitors.Count;
+            lock (_Visitors) Model.Lot_NumOccupants = (byte)_Visitors.Count;
             Host.Sync(Context, Model);
         }
 
@@ -550,7 +563,8 @@ namespace FSO.Server.Servers.Lot.Domain
             {
                 if (ShuttingDown) return;
                 ShuttingDown = true;
-                foreach (var visitor in _Visitors)
+                var copy = new Dictionary<uint, IVoltronSession>(_Visitors);
+                foreach (var visitor in copy)
                 {
                     if (!lotClosed) visitor.Value.SetAttribute("returnClaim", false);
                     ReleaseAvatarClaim(visitor.Value);

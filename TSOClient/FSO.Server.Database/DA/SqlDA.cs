@@ -23,6 +23,7 @@ using FSO.Server.Database.DA.Hosts;
 using FSO.Server.Database.DA.Tasks;
 using FSO.Server.Database.DA.Bonus;
 using FSO.Server.Database.DA.LotVisitTotals;
+using FSO.Server.Database.DA.Bans;
 
 namespace FSO.Server.Database.DA
 {
@@ -45,6 +46,19 @@ namespace FSO.Server.Database.DA
                     _users = new SqlUsers(Context);
                 }
                 return _users;
+            }
+        }
+
+        private IBans _bans;
+        public IBans Bans
+        {
+            get
+            {
+                if (_bans == null)
+                {
+                    _bans = new SqlBans(Context);
+                }
+                return _bans;
             }
         }
 

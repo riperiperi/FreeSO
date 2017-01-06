@@ -13,6 +13,7 @@ using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Servers.City.Domain;
 using FSO.SimAntics;
 using FSO.SimAntics.Engine.TSOTransaction;
@@ -286,13 +287,15 @@ namespace FSO.Server.Servers.Lot.Domain
             var total = 0;
             var complete = 0;
             var ents = new List<VMEntity>(Lot.Entities);
+            var removeAll = (LotPersist.move_flags & 6) > 0;
             foreach (var ent in ents)
             {
                 if (ent.PersistID >= 16777216 && ent is VMGameObject)
                 {
+                    if (LotPersist.admit_mode == 5) ent.PersistID = 0; ((VMTSOObjectState)ent.TSOState).OwnerID = 0;
                     if (ent.MultitileGroup.Objects.Count == 0) continue;
                     objectsOnLot.Add(ent.PersistID);
-                    if (!Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID))
+                    if (removeAll || !Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID))
                     {
                         //we need to send objects in slots back to their owners inventory too, so we don't lose what was on tables etc.
                         var sendback = new List<VMEntity>();
@@ -325,6 +328,12 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     da.Objects.ReturnLostObjects((uint)Context.DbId, objectsOnLot);
                 }
+            }
+
+            if ((LotPersist.move_flags & 2) > 0)
+            {
+                BlueprintReset();
+                LotPersist.move_flags = 0;
             }
         }
 
@@ -368,6 +377,50 @@ namespace FSO.Server.Servers.Lot.Domain
             foreach (var avatar in avatars) avatar.Delete(true, Lot.Context);
         }
 
+        public void BlueprintReset()
+        {
+            var path = "Content/Blueprints/empty_lot_fso.xml";
+
+            var floorClip = Rectangle.Empty;
+            var offset = new Point();
+            var targetSize = 0;
+
+            short jobLevel = -1;
+            if (JobLot)
+            {
+                //non-road tiles start at (8,8), end at (56,56)
+                //offset (7,14)
+
+                floorClip = new Rectangle(8, 8, 56 - 8, 56 - 8);
+                offset = new Point(7, 14);
+                targetSize = 77;
+
+                var jobPacked = Context.DbId - 0x200;
+                jobLevel = (short)((jobPacked - 1) & 0xF);
+                var jobType = (short)((jobPacked - 1) / 0xF);
+                var randomChance = (jobType > 2 && jobLevel > 6) ? 2 : 1;
+                path = Content.Content.Get().GetPath("housedata/blueprints/" + JobMatchmaker.JobXMLName[jobType]
+                    + JobMatchmaker.JobGradeToLotGroup[jobType][jobLevel].ToString().PadLeft(2, '0') + "_"
+                    + (new Random()).Next(randomChance).ToString().PadLeft(2, '0')
+                    + ".xml");
+            }
+            Lot.SendCommand(new VMBlueprintRestoreCmd
+            {
+                JobLevel = jobLevel,
+                XMLData = File.ReadAllBytes(path),
+
+                FloorClipX = floorClip.X,
+                FloorClipY = floorClip.Y,
+                FloorClipWidth = floorClip.Width,
+                FloorClipHeight = floorClip.Height,
+                OffsetX = offset.X,
+                OffsetY = offset.Y,
+                TargetSize = targetSize
+            });
+            Lot.Tick();
+            SaveRing();
+        }
+
 
         public void ResetVM()
         {
@@ -391,48 +444,8 @@ namespace FSO.Server.Servers.Lot.Domain
             }
             else
             {
-                var path = "Content/Blueprints/empty_lot_fso.xml";
-
-                var floorClip = Rectangle.Empty;
-                var offset = new Point();
-                var targetSize = 0;
-
-                short jobLevel = -1;
-                if (JobLot)
-                {
-                    //non-road tiles start at (8,8), end at (56,56)
-                    //offset (7,14)
-
-                    floorClip = new Rectangle(8, 8, 56 - 8, 56 - 8);
-                    offset = new Point(7, 14);
-                    targetSize = 77;
-
-                    var jobPacked = Context.DbId - 0x200;
-                    jobLevel = (short)((jobPacked - 1)&0xF);
-                    var jobType = (short)((jobPacked - 1)/0xF);
-                    var randomChance = (jobType > 2 && jobLevel > 6) ? 2:1;
-                    path = Content.Content.Get().GetPath("housedata/blueprints/" + JobMatchmaker.JobXMLName[jobType]
-                        + JobMatchmaker.JobGradeToLotGroup[jobType][jobLevel].ToString().PadLeft(2, '0') + "_"
-                        + (new Random()).Next(randomChance).ToString().PadLeft(2, '0')
-                        + ".xml");
-                }
-                vm.SendCommand(new VMBlueprintRestoreCmd
-                {
-                    JobLevel = jobLevel,
-                    XMLData = File.ReadAllBytes(path),
-
-                    FloorClipX = floorClip.X,
-                    FloorClipY = floorClip.Y,
-                    FloorClipWidth = floorClip.Width,
-                    FloorClipHeight = floorClip.Height,
-                    OffsetX=offset.X,
-                    OffsetY=offset.Y,
-                    TargetSize=targetSize
-                });
-                vm.Tick();
-
                 isNew = true;
-                SaveRing();
+                BlueprintReset();
             }
 
             vm.TSOState.Terrain = Terrain;
@@ -456,14 +469,16 @@ namespace FSO.Server.Servers.Lot.Domain
 
             vm.Context.Clock.Hours = tsoTime.Item1;
             vm.Context.Clock.Minutes = tsoTime.Item2;
+            
+            vm.Context.UpdateTSOBuildableArea();
+
+            vm.MyUID = uint.MaxValue - 1;
+            if ((LotPersist.move_flags & 2) > 0) isNew = true;
+            ReturnInvalidObjects();
 
             if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(vm);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(vm);
 
-            vm.Context.UpdateTSOBuildableArea();
-
-            vm.MyUID = uint.MaxValue - 1;
-            ReturnInvalidObjects();
 
             var entClone = new List<VMEntity>(vm.Entities);
             foreach (var ent in entClone)
@@ -571,7 +586,11 @@ namespace FSO.Server.Servers.Lot.Domain
                     if (noRemainingUsers)
                     {
                         if (TimeToShutdown == -1)
-                            TimeToShutdown = TICKRATE * 20; //lot shuts down 20 seconds after everyone leaves
+                        {
+                            //lot shuts down 20 seconds after everyone leaves
+                            //if we're doing a cleanup action, it closes immediately
+                            TimeToShutdown = (Context.Action == ClaimAction.LOT_CLEANUP) ? 1 : TICKRATE * 20;
+                        }
                         else
                         {
                             if (--TimeToShutdown == 0 || (ShuttingDown && TimeToShutdown < (TICKRATE * 20 - 10)))
@@ -978,6 +997,25 @@ namespace FSO.Server.Servers.Lot.Domain
             return state;
         }
 
+        public void NotifyRoommateChange(uint avatar_id, ChangeType change)
+        {
+            VMTSOAvatarPermissions newLevel = VMTSOAvatarPermissions.Visitor;
+            switch (change)
+            {
+                case ChangeType.ADD_ROOMMATE:
+                    newLevel = VMTSOAvatarPermissions.Roommate; break;
+                case ChangeType.REMOVE_ROOMMATE:
+                    newLevel = VMTSOAvatarPermissions.Visitor; break;
+            }
+
+            VMDriver.SendCommand(new VMChangePermissionsCmd
+            {
+                TargetUID = avatar_id,
+                Level = newLevel,
+                Verified = true,
+            });
+        }
+
         public void ForceShutdown()
         {
             //this lot needs to be shutdown asap. As soon as all avatars are disconnected/saved, clean lot and shutdown.
@@ -988,6 +1026,16 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             //shut down this lot. Do a final save and close everything down.
             LOG.Info("Lot with dbid = " + Context.DbId + " shutting down.");
+            if ((LotPersist.move_flags & 4) > 0)
+            {
+                //this lot is slated to be deleted from the database.
+                using (var da = DAFactory.Get())
+                {
+                    da.Lots.Delete(Context.DbId);
+                    var lotStr = LotPersist.lot_id.ToString("x8");
+                    Directory.Delete(Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/"), true);
+                }
+            }
             try
             {
                 ReturnInvalidObjects();

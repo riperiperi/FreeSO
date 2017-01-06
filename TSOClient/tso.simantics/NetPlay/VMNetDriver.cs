@@ -40,7 +40,7 @@ namespace FSO.SimAntics.NetPlay
                 {
                     System.Console.WriteLine("DESYNC - Requested state from host");
                     vm.SendCommand(new VMRequestResyncCmd());
-                    DesyncCooldown = 30 * 3;
+                    DesyncCooldown = 30 * 30;
                 } else
                 {
                     System.Console.WriteLine("WARN - DESYNC - Too soon to try again!");

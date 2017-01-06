@@ -34,6 +34,12 @@ namespace FSO.Server.Database.DA.Users
             return Context.Connection.Query<User>("SELECT * FROM fso_users WHERE register_ip = @ip ORDER BY register_date DESC", new { ip = ip }).AsList();
         }
 
+        public void UpdateConnectIP(uint id, string ip)
+        {
+            Context.Connection.Execute("UPDATE fso_users SET last_ip = @ip WHERE user_id = @user_id", new { user_id = id, ip = ip });
+        }
+
+
         public PagedList<User> All(int offset = 1, int limit = 20, string orderBy = "register_date")
         {
             var connection = Context.Connection;
@@ -45,7 +51,7 @@ namespace FSO.Server.Database.DA.Users
         public uint Create(User user)
         {
             return Context.Connection.Query<uint>(
-                "insert into fso_users set username = @username, email = @email, register_date = @register_date, " + 
+                "insert into fso_users set username = @username, email = @email, register_date = @register_date, register_ip = @register_ip, last_ip = @last_ip, " + 
                 "is_admin = @is_admin, is_moderator = @is_moderator, is_banned = @is_banned; select LAST_INSERT_ID();",
                 user
             ).First();

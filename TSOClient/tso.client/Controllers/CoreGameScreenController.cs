@@ -28,6 +28,7 @@ namespace FSO.Client.Controllers
     {
         public CoreGameScreen Screen;
         private MessagingController Chat;
+        private RoommateRequestController RoommateProtocol;
         private Network.Network Network;
         private IClientDataService DataService;
         private LotConnectionRegulator JoinLotRegulator;
@@ -45,6 +46,7 @@ namespace FSO.Client.Controllers
             this.DataService = dataService;
             this.Chat = new MessagingController(this, view.MessageTray, network, dataService);
             this.JoinLotRegulator = joinLotRegulator;
+            this.RoommateProtocol = new RoommateRequestController(this, network, dataService);
 
             joinLotRegulator.OnTransition += JoinLotRegulator_OnTransition;
 
@@ -220,6 +222,17 @@ namespace FSO.Client.Controllers
             }
         }
 
+        public void MoveMeOut(uint target_lot, Callback<bool> onResult)
+        {
+            RoommateProtocol.OnMoveoutResult = onResult;
+            Network.CityClient.Write(new ChangeRoommateRequest()
+            {
+                Type = Server.Protocol.Electron.Model.ChangeRoommateType.KICK,
+                AvatarId = Network.MyCharacter,
+                LotLocation = target_lot
+            });
+        }
+
         public void GetAvatarModel(uint key, Callback<Avatar> callback)
         {
             DataService.Get<Avatar>(key).ContinueWith(x =>
@@ -251,6 +264,7 @@ namespace FSO.Client.Controllers
             GameFacade.Scenes.Clear();
             Terrain.Dispose();
             Chat.Dispose();
+            RoommateProtocol.Dispose();
             Screen.JoinLotProgress.FindController<JoinLotProgressController>()?.Dispose();
             ((PersonPageController)Screen.PersonPage.Controller)?.Dispose();
         }
