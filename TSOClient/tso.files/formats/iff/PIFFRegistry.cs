@@ -25,8 +25,17 @@ namespace FSO.Files.Formats.IFF
                 bool user = entry.Contains("User/");
                 string filename = Path.GetFileName(entry);
 
-                IffFile piffFile = new IffFile(entry);
-                PIFF piff = piffFile.List<PIFF>()[0];
+                PIFF piff;
+                IffFile piffFile;
+                try
+                {
+                    piffFile = new IffFile(entry);
+                    piff = piffFile.List<PIFF>()[0];
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
 
                 if (IsPIFFUser.ContainsKey(piff.SourceIff))
                 {

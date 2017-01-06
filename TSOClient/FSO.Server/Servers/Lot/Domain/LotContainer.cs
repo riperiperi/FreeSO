@@ -295,7 +295,10 @@ namespace FSO.Server.Servers.Lot.Domain
             {
                 if (ent.PersistID >= 16777216 && ent is VMGameObject)
                 {
-                    if (LotPersist.admit_mode == 5) ent.PersistID = 0; ((VMTSOObjectState)ent.TSOState).OwnerID = 0;
+                    if (LotPersist.admit_mode == 5) {
+                        ent.PersistID = 0;
+                        ((VMTSOObjectState)ent.TSOState).OwnerID = 0;
+                    }
                     if (ent.MultitileGroup.Objects.Count == 0) continue;
                     objectsOnLot.Add(ent.PersistID);
                     if (removeAll || !Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID))

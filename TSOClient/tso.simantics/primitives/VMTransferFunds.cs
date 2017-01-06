@@ -22,7 +22,7 @@ namespace FSO.SimAntics.Primitives
     {
         public static Dictionary<VMTransferFundsExpenseType, float> ExpenseTuningMultiplier = new Dictionary<VMTransferFundsExpenseType, float>()
         {
-            { VMTransferFundsExpenseType.IncomeJob, 20f },
+            /*{ VMTransferFundsExpenseType.IncomeJob, 20f },
             { VMTransferFundsExpenseType.IncomeClubJob, 20f },
             { VMTransferFundsExpenseType.IncomeRestaurantJob, 20f },
             { VMTransferFundsExpenseType.IncomeRobotJob, 20f },
@@ -48,7 +48,7 @@ namespace FSO.SimAntics.Primitives
             { VMTransferFundsExpenseType.IncomePinataPlayers, 20f },
 
             { VMTransferFundsExpenseType.IncomeTelemarket, 20f },
-            { VMTransferFundsExpenseType.IncomeTypewriter, 20f },
+            { VMTransferFundsExpenseType.IncomeTypewriter, 20f },*/
         };
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
