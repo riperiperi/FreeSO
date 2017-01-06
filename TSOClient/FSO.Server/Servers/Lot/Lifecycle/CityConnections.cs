@@ -25,6 +25,8 @@ namespace FSO.Server.Servers.Lot.Lifecycle
         private PerformanceCounter CpuCounter;
         private LotServerConfiguration Config;
 
+        public event CityConnectionEvent OnCityDisconnected;
+        
         public CityConnections(LotServerConfiguration config, IKernel kernel)
         {
             Config = config;
@@ -41,7 +43,17 @@ namespace FSO.Server.Servers.Lot.Lifecycle
             Connections = new Dictionary<LotServerConfigurationCity, CityConnection>();
             foreach(var city in config.Cities)
             {
-                Connections.Add(city, new CityConnection(kernel, city, config));
+                var connection = new CityConnection(kernel, city, config);
+                Connections.Add(city, connection);
+                connection.OnDisconnected += Connection_OnDisconnected;
+            }
+        }
+
+        private void Connection_OnDisconnected(CityConnection connection)
+        {
+            if(OnCityDisconnected != null)
+            {
+                OnCityDisconnected(connection);
             }
         }
 
@@ -124,8 +136,12 @@ namespace FSO.Server.Servers.Lot.Lifecycle
         }
 
         private bool _Connecting = false;
+        private DateTime _ConnectingStart;
         private IAriesPacketRouter _Router;
         private LotServerConfiguration LotServerConfig;
+
+        public event CityConnectionEvent OnConnected;
+        public event CityConnectionEvent OnDisconnected;
 
         public CityConnection(IKernel kernel, LotServerConfigurationCity config, LotServerConfiguration lotServerConfig)
         {
@@ -138,9 +154,22 @@ namespace FSO.Server.Servers.Lot.Lifecycle
         
         public void Connect()
         {
-            if (_Connecting || Connected) { return; }
+            if (Connected) {
+                return;
+            }
 
-            _Connecting = true;
+            if (_Connecting)
+            {
+                if(DateTime.UtcNow - _ConnectingStart > TimeSpan.FromSeconds(30)){
+                    _Connecting = false;
+                }
+                return;
+            }
+            else
+            {
+                _ConnectingStart = DateTime.UtcNow;
+                _Connecting = true;
+            }
 
             //TODO: Fix TLS support
             var endpoint = CityConfig.Host.Replace("100", "101");
@@ -155,6 +184,11 @@ namespace FSO.Server.Servers.Lot.Lifecycle
 
             var endpoint = CityConfig.Host.Replace("100", "101");
             LOG.Info("Lot server connected to city server: " + endpoint);
+
+            if(OnConnected != null)
+            {
+                OnConnected(this);
+            }
         }
 
         public void MessageReceived(AriesClient client, object message)
@@ -176,6 +210,11 @@ namespace FSO.Server.Servers.Lot.Lifecycle
             LOG.Info("Lot Server "+LotServerConfig.Call_Sign+" disconnected!");
             Connected = false;
             _Connecting = false;
+
+            if(OnDisconnected != null)
+            {
+                OnDisconnected(this);
+            }
         }
 
         public void SessionIdle(AriesClient client)
@@ -243,4 +282,6 @@ namespace FSO.Server.Servers.Lot.Lifecycle
             }
         }
     }
+
+    public delegate void CityConnectionEvent(CityConnection connection);
 }

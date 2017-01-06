@@ -90,7 +90,14 @@ namespace FSO.Server.Servers.City.Domain
                         Session = session
                     };
                     Servers.Add(state);
-                    ServersByCallsign.Add(session.CallSign, state);
+                    if (ServersByCallsign.ContainsKey(session.CallSign))
+                    {
+                        ServersByCallsign[session.CallSign] = state;
+                    }
+                    else
+                    {
+                        ServersByCallsign.Add(session.CallSign, state);
+                    }
                 }
                 state.Session = session; //can be hot-swapped if we re-establish connection. TODO: verify and look for race conditions
                 state.MaxLots = request.MaxLots;

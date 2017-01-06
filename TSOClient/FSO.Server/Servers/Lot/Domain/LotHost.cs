@@ -52,6 +52,16 @@ namespace FSO.Server.Servers.Lot.Domain
             LotRoomiesSync = ds.Get<FSO.Common.DataService.Model.Lot>("Lot_RoommateVec");
         }
 
+        public void ShutdownByShard(int shardId)
+        {
+            var lots = new Dictionary<int, LotHostEntry>(Lots).Where(x => x.Value.ShardId == shardId);
+            foreach(var lot in lots)
+            {
+                LOG.Info("Forcing shutdown of lot: " + lot.Key);
+                lot.Value.ForceShutdown(false);
+            }
+        }
+
         public async Task<bool> Shutdown()
         {
             bool noWaiting = true;
@@ -317,6 +327,18 @@ namespace FSO.Server.Servers.Lot.Domain
             Model = new FSO.Common.DataService.Model.Lot();
         }
 
+        public int? ShardId
+        {
+            get
+            {
+                if(Context == null)
+                {
+                    return null;
+                }
+                return Context.ShardId;
+            }
+        }
+
         public void Send(uint avatarID, params object[] messages)
         {
             lock (_Visitors)
@@ -425,8 +447,13 @@ namespace FSO.Server.Servers.Lot.Domain
                     else if (++BgTimeoutExpiredCount > BACKGROUND_TIMEOUT_ABANDON_COUNT)
                     {
                         BgTimeoutExpiredCount = int.MinValue;
-                        LOG.Error("Main thread for lot with dbid = " + Context.DbId + " entered an infinite loop and had to be terminated!");
-                        MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
+                        
+                        //Background tasks stop when we shut down
+                        if (!ShuttingDown)
+                        {
+                            LOG.Error("Main thread for lot with dbid = " + Context.DbId + " entered an infinite loop and had to be terminated!");
+                            MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
+                        }
                     }
 
                     foreach (var task in tasks)
@@ -519,7 +546,9 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             if (session.GetAttribute("currentLot") == null) return;
             lock (_Visitors) _Visitors.Remove(session.AvatarId);
-            session.SetAttribute("currentLot", null);
+
+            //We need to keep currentLot because we need to process the Leave action
+            //session.SetAttribute("currentLot", null);
             SyncNumVisitors();
 
             InBackground(() =>
@@ -566,9 +595,14 @@ namespace FSO.Server.Servers.Lot.Domain
                 var copy = new Dictionary<uint, IVoltronSession>(_Visitors);
                 foreach (var visitor in copy)
                 {
-                    if (!lotClosed) visitor.Value.SetAttribute("returnClaim", false);
-                    ReleaseAvatarClaim(visitor.Value);
-                    visitor.Value.Close();
+                    try {
+                        if (!lotClosed) visitor.Value.SetAttribute("returnClaim", false);
+                        ReleaseAvatarClaim(visitor.Value);
+                        visitor.Value.Close();
+                    }catch(Exception ex)
+                    {
+                        LOG.Error(ex, "Error releasing avatar");
+                    }
                 }
             }
             if (!lotClosed)
@@ -583,18 +617,24 @@ namespace FSO.Server.Servers.Lot.Domain
             //tell our city that we're no longer hosting this lot.
             if (CityConnection != null)
             {
-                CityConnection.Write(new TransferClaim()
+                try {
+                    CityConnection.Write(new TransferClaim()
+                    {
+                        Type = Protocol.Gluon.Model.ClaimType.LOT,
+                        ClaimId = Context.ClaimId,
+                        EntityId = ((Context.Id & 0x40000000) > 0) ? (int)Context.Id : Context.DbId,
+                        FromOwner = Config.Call_Sign
+                    });
+                }catch(Exception ex)
                 {
-                    Type = Protocol.Gluon.Model.ClaimType.LOT,
-                    ClaimId = Context.ClaimId,
-                    EntityId = ((Context.Id&0x40000000)>0)?(int)Context.Id:Context.DbId,
-                    FromOwner = Config.Call_Sign
-                });
+                    LOG.Error(ex, "Unable to inform city of lot " + Context.DbId + " claim release");
+                }
             }
             //if this lot still has any avatar claims, kill them at least so the user's access to the game isn't limited until server restart.
             using (var da = DAFactory.Get())
             {
                 da.AvatarClaims.RemoveRemaining(Config.Call_Sign, Context.Id);
+                da.LotClaims.Delete(Context.ClaimId, Config.Call_Sign);
             }
         }
 

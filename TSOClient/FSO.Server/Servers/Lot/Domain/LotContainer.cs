@@ -271,7 +271,10 @@ namespace FSO.Server.Servers.Lot.Domain
 
                 LotPersist.ring_backup_num = newBackup;
                 using (var db = DAFactory.Get())
+                {
                     db.Lots.UpdateRingBackup(LotPersist.lot_id, newBackup);
+                    db.Flush();
+                }
                 return true;
             } catch (Exception e)
             {
