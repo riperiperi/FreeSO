@@ -67,7 +67,14 @@ namespace FSO.Server.Servers.Lot
             }
 
             Connections = Kernel.Get<CityConnections>();
+            Connections.OnCityDisconnected += Connections_OnCityDisconnected;
             Connections.Start();
+        }
+
+        private void Connections_OnCityDisconnected(CityConnection connection)
+        {
+            LOG.Warn("City connection panic, shutting down lots gracefully");
+            Lots.ShutdownByShard(connection.CityConfig.ID);
         }
 
         protected override void HandleVoltronSessionResponse(IAriesSession session, object message)
