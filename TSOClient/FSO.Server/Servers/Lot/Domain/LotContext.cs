@@ -13,6 +13,7 @@ namespace FSO.Server.Servers.Lot.Domain
         public int DbId;
         public int ShardId;
         public uint ClaimId;
-        public ClaimAction Action; 
+        public ClaimAction Action;
+        public bool HighMax; 
     }
 }

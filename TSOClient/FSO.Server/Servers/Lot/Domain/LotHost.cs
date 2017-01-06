@@ -265,7 +265,8 @@ namespace FSO.Server.Servers.Lot.Domain
                             Id = lot.location,
                             ClaimId = claimId,
                             ShardId = lot.shard_id,
-                            Action = openAction
+                            Action = openAction,
+                            HighMax = lot.admit_mode == 5
                         });
                         LOG.Info("Bootstrapped lot with dbid = " + lotId + "!");
                         return true;
@@ -482,7 +483,7 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             lock (_Visitors)
             {
-                if (_Visitors.Count >= 64 || ShuttingDown)//|| Container.IsAvatarOnLot(session.AvatarId))
+                if (_Visitors.Count >= ((Context.HighMax)?128:24) || ShuttingDown)//|| Container.IsAvatarOnLot(session.AvatarId))
                 {
                     //cannot join
                     return false;

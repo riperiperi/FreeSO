@@ -530,7 +530,8 @@ namespace FSO.SimAntics
                         }
                     }
                 }
-                var status = Animator.RenderFrame(avatar.Avatar, state.Anim, (int)state.CurrentFrame, state.CurrentFrame % 1f, state.Weight / totalWeight);
+                var status = (VM.UseWorld) ? Animator.RenderFrame(avatar.Avatar, state.Anim, (int)state.CurrentFrame, state.CurrentFrame % 1f, state.Weight / totalWeight) :
+                                Animator.SilentFrameProgress(avatar.Avatar, state.Anim, (int)state.CurrentFrame);
                 if (status != AnimationStatus.IN_PROGRESS)
                 {
                     if (state.Loop)
@@ -545,7 +546,8 @@ namespace FSO.SimAntics
 
             if (avatar.CarryAnimationState != null)
             {
-                var status = Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame, 0.0f, 1f); //currently don't advance frames... I don't think any of them are animated anyways.
+                var status = (VM.UseWorld) ? Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame, 0.0f, 1f)
+                    : Animator.SilentFrameProgress(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame); //currently don't advance frames... I don't think any of them are animated anyways.
             }
 
             for (int i = 0; i < 16; i++)
@@ -553,7 +555,7 @@ namespace FSO.SimAntics
                 MotiveChanges[i].Tick(this); //tick over motive changes
             }
 
-            avatar.Avatar.ReloadSkeleton();
+            if (VM.UseWorld) avatar.Avatar.ReloadSkeleton();
 
             PersonData[(int)VMPersonDataVariable.TickCounter]++;
             if (KillTimeout > -1)

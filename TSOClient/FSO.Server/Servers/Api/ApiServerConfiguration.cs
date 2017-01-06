@@ -32,7 +32,12 @@ namespace FSO.Server.Servers.Api
         /// If non-null, the user must provide this key to register an account.
         /// </summary>
         public string Regkey { get; set; }
-}
+
+        /// <summary>
+        /// If true, only authentication from moderators and admins will be accepted
+        /// </summary>
+        public bool Maintainance { get; set; }
+    }
 
     public enum ApiServerControllers
     {

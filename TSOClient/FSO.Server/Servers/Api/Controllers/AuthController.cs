@@ -15,7 +15,7 @@ namespace FSO.Server.Servers.Api.Controllers
     public class AuthController : NancyModule
     {
         private const String ERROR_020_CODE = "INV-020";
-        private const String ERROR_020_MSG = "Please enter your EA member name and password. If you forgot your password, you can retrieve it at www.EA.com.";
+        private const String ERROR_020_MSG = "Please enter your member name and password.";
 
         private const String ERROR_110_CODE = "INV-110";
         private const String ERROR_110_MSG = "The member name or password you have entered is incorrect. Please try again.";
@@ -23,11 +23,16 @@ namespace FSO.Server.Servers.Api.Controllers
         private const String ERROR_302_CODE = "INV-302";
         private const String ERROR_302_MSG = "The game has experienced an internal error. Please try again.";
 
-        private IDAFactory DAFactory;
+        private const String ERROR_160_CODE = "INV-160";
+        private const String ERROR_160_MSG = "The server is currently down for maintainance. Please try again later.";
 
-        public AuthController(IDAFactory daFactory)
+        private IDAFactory DAFactory;
+        private ApiServerConfiguration Config;
+
+        public AuthController(IDAFactory daFactory, ApiServerConfiguration config)
         {
             this.DAFactory = daFactory;
+            Config = config;
             this.Get["/AuthLogin"] = _ =>
             {
                 var username = this.Request.Query["username"];
@@ -47,6 +52,11 @@ namespace FSO.Server.Servers.Api.Controllers
                     if (user == null || user.is_banned)
                     {
                         return Response.AsText(printError(ERROR_110_CODE, ERROR_110_MSG));
+                    }
+                    
+                    if (config.Maintainance && !(user.is_admin || user.is_moderator))
+                    {
+                        return Response.AsText(printError(ERROR_160_CODE, ERROR_160_MSG));
                     }
 
                     var authSettings = db.Users.GetAuthenticationSettings(user.user_id);
