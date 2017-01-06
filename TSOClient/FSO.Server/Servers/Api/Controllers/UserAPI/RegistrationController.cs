@@ -17,7 +17,7 @@ namespace FSO.Server.Servers.Api.Controllers.UserAPI
     public class RegistrationController : NancyModule
     {
         private IDAFactory DAFactory;
-        private const int REGISTER_THROTTLE_SECS = 60;
+        private const int REGISTER_THROTTLE_SECS = 60*60*24;
 
         /// <summary>
         /// Alphanumeric (lowercase), no whitespace or special chars, cannot start with an underscore.
