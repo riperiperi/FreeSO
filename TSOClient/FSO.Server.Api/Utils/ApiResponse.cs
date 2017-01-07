@@ -35,11 +35,12 @@ namespace FSO.Server.Api.Utils
             var doc = new XmlDocument();
             var firstChild = xml.Serialize(doc);
             doc.AppendChild(firstChild);
+            var serialized = doc.OuterXml;
 
             return () =>
             {
                 var response = new HttpResponseMessage(code);
-                response.Content = new StringContent(doc.OuterXml, Encoding.UTF8, "text/xml");
+                response.Content = new StringContent(serialized, Encoding.UTF8, "text/xml");
                 return response;
             };
         }

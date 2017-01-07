@@ -38,6 +38,25 @@ namespace FSO.Server.Api
                     controller = "AvatarData"
                 }
             );
+
+            config.Routes.MapHttpRoute(
+                name: "ShardStatus",
+                routeTemplate: "cityselector/shard-status.jsp",
+                defaults: new
+                {
+                    controller = "ShardStatus"
+                },
+                constraints: null
+            );
+
+            config.Routes.MapHttpRoute(
+                name: "ShardSelectorServlet",
+                routeTemplate: "cityselector/app/ShardSelectorServlet",
+                defaults: new
+                {
+                    controller = "ShardSelector"
+                }
+            );
             
         }
     }

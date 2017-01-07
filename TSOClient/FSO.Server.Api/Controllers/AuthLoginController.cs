@@ -65,10 +65,7 @@ namespace FSO.Server.Api.Controllers
                     return ERROR_110();
                 }
 
-                var ip = "127.0.0.1";
-                if (Request.Headers.Contains("X-Forwarded-For")){
-                    ip = Request.Headers.GetValues("X-Forwarded-For").First();
-                }
+                var ip = ApiUtils.GetIP(Request);
 
                 var ban = db.Bans.GetByIP(ip);
                 if (ban != null)

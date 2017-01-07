@@ -1,0 +1,91 @@
+﻿using FSO.Server.Api.Utils;
+using FSO.Server.Common;
+using FSO.Server.Database.DA.Shards;
+using FSO.Server.Protocol.CitySelector;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
+
+namespace FSO.Server.Api.Controllers
+{
+    public class ShardSelectorController : ApiController
+    {
+        private static Func<HttpResponseMessage> ERROR_SHARD_NOT_FOUND = ApiResponse.XmlFuture(HttpStatusCode.OK, new XMLErrorMessage("503", "Shard not found"));
+        private static Func<HttpResponseMessage> ERROR_AVATAR_NOT_FOUND = ApiResponse.XmlFuture(HttpStatusCode.OK, new XMLErrorMessage("504", "Avatar not found"));
+        private static Func<HttpResponseMessage> ERROR_AVATAR_NOT_YOURS = ApiResponse.XmlFuture(HttpStatusCode.OK, new XMLErrorMessage("505", "You do not own this avatar!"));
+        private static Func<HttpResponseMessage> ERROR_BANNED = ApiResponse.XmlFuture(HttpStatusCode.OK, new XMLErrorMessage("506", "Your account has been banned."));
+
+        public HttpResponseMessage Get(string shardName, string avatarId)
+        {
+            var api = Api.INSTANCE;
+
+            var user = api.RequireAuthentication();
+            if (avatarId == null){
+                //Using 0 to mean no avatar for CAS
+                avatarId = "0";
+            }
+
+            using (var db = api.DAFactory.Get())
+            {
+                ShardStatusItem shard = api.Shards.GetByName(shardName);
+                if (shard != null)
+                {
+                    var ip = ApiUtils.GetIP(Request);
+                    uint avatarDBID = uint.Parse(avatarId);
+
+                    if (avatarDBID != 0)
+                    {
+                        var avatar = db.Avatars.Get(avatarDBID);
+                        if (avatar == null)
+                        {
+                            //can't join server with an avatar that doesn't exist
+                            return ERROR_AVATAR_NOT_FOUND();
+                        }
+                        if (avatar.user_id != user.UserID || avatar.shard_id != shard.Id)
+                        {
+                            //make sure we own the avatar we're trying to connect with
+                            return ERROR_AVATAR_NOT_YOURS();
+                        }
+                    }
+
+                    var ban = db.Bans.GetByIP(ip);
+                    if (ban != null || db.Users.GetById(user.UserID)?.is_banned != false)
+                    {
+                        return ERROR_BANNED();
+                    }
+
+                    /** Make an auth ticket **/
+                    var ticket = new ShardTicket
+                    {
+                        ticket_id = Guid.NewGuid().ToString().Replace("-", ""),
+                        user_id = user.UserID,
+                        avatar_id = avatarDBID,
+                        date = Epoch.Now,
+                        ip = ip
+                    };
+
+                    db.Users.UpdateConnectIP(ticket.user_id, ip);
+                    db.Shards.CreateTicket(ticket);
+
+                    var result = new ShardSelectorServletResponse();
+                    result.PreAlpha = false;
+
+                    result.Address = shard.PublicHost;
+                    result.PlayerID = user.UserID;
+                    result.Ticket = ticket.ticket_id;
+                    result.ConnectionID = ticket.ticket_id;
+                    result.AvatarID = avatarId;
+
+                    return ApiResponse.Xml(HttpStatusCode.OK, result);
+                }
+                else
+                {
+                    return ERROR_SHARD_NOT_FOUND();
+                }
+            }
+        }
+    }
+}
