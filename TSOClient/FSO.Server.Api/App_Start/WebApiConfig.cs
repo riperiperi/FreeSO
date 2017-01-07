@@ -25,11 +25,20 @@ namespace FSO.Server.Api
 
             config.Routes.MapHttpRoute(
                 name: "InitialConnectServlet",
-                routeTemplate: "app/InitialConnectServlet",
+                routeTemplate: "cityselector/app/InitialConnectServlet",
                 defaults: new {
                     controller = "InitialConnect"
                 }
             );
+
+            config.Routes.MapHttpRoute(
+                name: "AvatarDataServlet",
+                routeTemplate: "cityselector/app/AvatarDataServlet",
+                defaults: new {
+                    controller = "AvatarData"
+                }
+            );
+            
         }
     }
 }

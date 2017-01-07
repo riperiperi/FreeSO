@@ -4,6 +4,7 @@ using FSO.Server.Servers.Api.JsonWebToken;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Configuration;
@@ -45,6 +46,29 @@ namespace FSO.Server.Api
 
             Shards = new Shards(DAFactory);
             Shards.AutoUpdate();
+        }
+
+        public JWTUser RequireAuthentication()
+        {
+            var http = HttpContext.Current;
+            if (http == null)
+            {
+                throw new SecurityException("Unable to get http context");
+            }
+
+            var cookie = http.Request.Cookies["fso"];
+            if (cookie == null)
+            {
+                throw new SecurityException("Unable to find cookie");
+            }
+
+            var result = JWT.DecodeToken(cookie.Value);
+            if(result == null)
+            {
+                throw new SecurityException("Invalid token");
+            }
+
+            return result;
         }
     }
 }
