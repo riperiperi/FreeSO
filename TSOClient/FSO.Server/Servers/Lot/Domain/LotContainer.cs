@@ -295,7 +295,10 @@ namespace FSO.Server.Servers.Lot.Domain
             {
                 if (ent.PersistID >= 16777216 && ent is VMGameObject)
                 {
-                    if (LotPersist.admit_mode == 5) ent.PersistID = 0; ((VMTSOObjectState)ent.TSOState).OwnerID = 0;
+                    if (LotPersist.admit_mode == 5) {
+                        ent.PersistID = 0;
+                        ((VMTSOObjectState)ent.TSOState).OwnerID = 0;
+                    }
                     if (ent.MultitileGroup.Objects.Count == 0) continue;
                     objectsOnLot.Add(ent.PersistID);
                     if (removeAll || !Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID))
@@ -562,7 +565,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     //sometimes avatars can be killed immediately after their kill timer starts (this frame will run the leave lot interaction)
                     //this works around that possibility. 
                     var preTickAvatars = Lot.Context.ObjectQueries.AvatarsByPersist.Values.Select(x => x).ToList();
-                    var noRoomies = !(preTickAvatars.Any(x => ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor) && LotPersist.admit_mode < 4);
+                    var noRoomies = !(preTickAvatars.Any(x => ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor)) && LotPersist.admit_mode < 4;
 
                     try
                     {

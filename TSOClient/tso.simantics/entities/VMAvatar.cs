@@ -732,7 +732,6 @@ namespace FSO.SimAntics
                     if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
                     {
                         var diff = value - jobInfo.Experience;
-                        if (diff > 0) value = (short)(jobInfo.Experience + diff * 5); //TODO: WIP: NOTE: IMPORTANT: 5x job scaling for testing
                         jobInfo.Experience = value;
                     }
                     return true;
