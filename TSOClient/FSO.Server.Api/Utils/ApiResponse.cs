@@ -19,6 +19,13 @@ namespace FSO.Server.Api.Utils
             return response;
         }
 
+        public static HttpResponseMessage Json(HttpStatusCode code, object obj)
+        {
+            var response = new HttpResponseMessage(code);
+            response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(obj), Encoding.UTF8, "application/json");
+            return response;
+        }
+
         public static HttpResponseMessage Xml(HttpStatusCode code, IXMLEntity xml)
         {
             var doc = new XmlDocument();

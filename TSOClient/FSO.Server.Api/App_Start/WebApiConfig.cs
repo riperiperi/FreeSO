@@ -57,7 +57,15 @@ namespace FSO.Server.Api
                     controller = "ShardSelector"
                 }
             );
-            
+
+            config.Routes.MapHttpRoute(
+                name: "Registration",
+                routeTemplate: "userapi/registration",
+                defaults: new
+                {
+                    controller = "Registration"
+                }
+            );
         }
     }
 }
