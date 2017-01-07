@@ -24,8 +24,8 @@ namespace FSO.Server.Api
             );
 
             config.Routes.MapHttpRoute(
-                name: "InitialServletConnect",
-                routeTemplate: "app/InitialServletConnect",
+                name: "InitialConnectServlet",
+                routeTemplate: "app/InitialConnectServlet",
                 defaults: new {
                     controller = "InitialConnect"
                 }
