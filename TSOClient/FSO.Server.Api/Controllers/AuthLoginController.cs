@@ -1,4 +1,5 @@
-﻿using FSO.Server.Common;
+﻿using FSO.Server.Api.Utils;
+using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.AuthTickets;
 using System;
@@ -13,10 +14,10 @@ namespace FSO.Server.Api.Controllers
 {
     public class AuthLoginController : ApiController
     {
-        private static HttpResponseMessage ERROR_020 = printError("INV-020", "Please enter your member name and password.");
-        private static HttpResponseMessage ERROR_110 = printError("INV-110", "The member name or password you have entered is incorrect. Please try again.");
-        private static HttpResponseMessage ERROR_302 = printError("INV-302", "The game has experienced an internal error. Please try again.");
-        private static HttpResponseMessage ERROR_160 = printError("INV-160", "The server is currently down for maintainance. Please try again later.");
+        private static Func<HttpResponseMessage> ERROR_020 = printError("INV-020", "Please enter your member name and password.");
+        private static Func<HttpResponseMessage> ERROR_110 = printError("INV-110", "The member name or password you have entered is incorrect. Please try again.");
+        private static Func<HttpResponseMessage> ERROR_302 = printError("INV-302", "The game has experienced an internal error. Please try again.");
+        private static Func<HttpResponseMessage> ERROR_160 = printError("INV-160", "The server is currently down for maintainance. Please try again later.");
 
         /// <summary>
         /// If no parameters provided, return error
@@ -24,7 +25,7 @@ namespace FSO.Server.Api.Controllers
         /// <returns></returns>
         public HttpResponseMessage Get()
         {
-            return ERROR_020;
+            return ERROR_020();
         }
 
         // GET api/<controller>
@@ -32,7 +33,7 @@ namespace FSO.Server.Api.Controllers
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
-                return ERROR_020;
+                return ERROR_020();
             }
 
             AuthTicket ticket = null;
@@ -44,12 +45,12 @@ namespace FSO.Server.Api.Controllers
                 var user = db.Users.GetByUsername(username);
                 if (user == null || user.is_banned)
                 {
-                    return ERROR_110;
+                    return ERROR_110();
                 }
 
-                if (api.Maintainance && !(user.is_admin || user.is_moderator))
+                if (api.Config.Maintainance && !(user.is_admin || user.is_moderator))
                 {
-                    return ERROR_160;
+                    return ERROR_160();
                 }
 
                 var authSettings = db.Users.GetAuthenticationSettings(user.user_id);
@@ -61,7 +62,7 @@ namespace FSO.Server.Api.Controllers
 
                 if (!isPasswordCorrect)
                 {
-                    return ERROR_110;
+                    return ERROR_110();
                 }
 
                 var ip = "127.0.0.1";
@@ -72,7 +73,7 @@ namespace FSO.Server.Api.Controllers
                 var ban = db.Bans.GetByIP(ip);
                 if (ban != null)
                 {
-                    return ERROR_110;
+                    return ERROR_110();
                 }
 
                 /** Make a ticket **/
@@ -86,14 +87,11 @@ namespace FSO.Server.Api.Controllers
             }
 
             var content = "Valid=TRUE\r\nTicket=" + ticket.ticket_id.ToString() + "\r\n";
-
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            response.Content = new StringContent(content, Encoding.UTF8, "text/plain");
-            return response;
+            return ApiResponse.Plain(HttpStatusCode.OK, content);
         }
         
 
-        public static HttpResponseMessage printError(String code, String message)
+        public static Func<HttpResponseMessage> printError(String code, String message)
         {
             StringBuilder result = new StringBuilder();
             result.AppendLine("Valid=FALSE");
@@ -101,9 +99,10 @@ namespace FSO.Server.Api.Controllers
             result.AppendLine("reasontext=" + code + ";" + message);
             result.AppendLine("reasonurl=");
 
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            response.Content = new StringContent(result.ToString(), Encoding.UTF8, "text/plain");
-            return  response;
+            return () =>
+            {
+                return ApiResponse.Plain(HttpStatusCode.OK, result.ToString());
+            };
         }
     }
 }

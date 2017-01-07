@@ -14,10 +14,21 @@ namespace FSO.Server.Api
             // Web API routes
             config.MapHttpAttributeRoutes();
 
+
             config.Routes.MapHttpRoute(
-                name: "DefaultApi",
-                routeTemplate: "api/{controller}/{id}",
-                defaults: new { id = RouteParameter.Optional }
+                name: "AuthLogin",
+                routeTemplate: "AuthLogin",
+                defaults: new {
+                    controller = "AuthLogin"
+                }
+            );
+
+            config.Routes.MapHttpRoute(
+                name: "InitialServletConnect",
+                routeTemplate: "app/InitialServletConnect",
+                defaults: new {
+                    controller = "InitialConnect"
+                }
             );
         }
     }

@@ -14,5 +14,6 @@ namespace FSO.Server.Database.DA.Shards
         void DeleteTicket(string ticket_id);
         ShardTicket GetTicket(string ticket_id);
         void PurgeTickets(uint time);
+        void UpdateVersion(int shard_id, string name, string number);
     }
 }

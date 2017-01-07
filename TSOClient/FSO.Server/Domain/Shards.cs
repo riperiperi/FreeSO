@@ -14,6 +14,7 @@ namespace FSO.Server.Domain
     {
         private List<ShardStatusItem> _Shards = new List<ShardStatusItem>();
         private IDAFactory _DbFactory;
+        private DateTime _LastPoll;
 
         public Shards(IDAFactory factory)
         {
@@ -36,8 +37,22 @@ namespace FSO.Server.Domain
             }
         }
 
+        public void AutoUpdate()
+        {
+            Task.Delay(60000).ContinueWith(x =>
+            {
+                try{
+                    Poll();
+                }catch(Exception ex){
+                }
+                AutoUpdate();
+            });
+        }
+
         private void Poll()
         {
+            _LastPoll = DateTime.UtcNow;
+
             using (var db = _DbFactory.Get())
             {
                 _Shards = db.Shards.All().Select(x => new ShardStatusItem()
@@ -48,7 +63,9 @@ namespace FSO.Server.Domain
                     Rank = x.rank,
                     Status = (Server.Protocol.CitySelector.ShardStatus)(byte)x.status,
                     PublicHost = x.public_host,
-                    InternalHost = x.internal_host
+                    InternalHost = x.internal_host,
+                    VersionName = x.version_name,
+                    VersionNumber = x.version_number
                 }).ToList();
             }
         }

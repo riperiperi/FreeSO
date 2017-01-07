@@ -151,6 +151,7 @@
     <Compile Include="Domain\Shards.cs" />
     <Compile Include="Domain\ServerTop100Domain.cs" />
     <Compile Include="Servers\Api\Controllers\Admin\AdminTasksController.cs" />
+    <Compile Include="Servers\Api\JsonWebToken\JWTUserIdentity.cs" />
     <Compile Include="Servers\City\CityServerModule.cs" />
     <Compile Include="Servers\Tasks\Domain\PruneDatabaseTask.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServer.cs" />
@@ -179,14 +180,11 @@
     <Compile Include="Servers\Api\Controllers\StatusCodeHandler.cs" />
     <Compile Include="Servers\Api\Controllers\UserAPI\CityInfoController.cs" />
     <Compile Include="Servers\Api\Controllers\UserAPI\RegistrationController.cs" />
-    <Compile Include="Servers\Api\JsonWebToken\JWTConfiguration.cs" />
-    <Compile Include="Servers\Api\JsonWebToken\JWTokenFactory.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTTokenAuthentication.cs" />
     <Compile Include="Servers\Api\Controllers\Admin\AdminUsersController.cs" />
     <Compile Include="Servers\Api\Controllers\Admin\AdminOAuthController.cs" />
     <Compile Include="Servers\Api\Controllers\AuthController.cs" />
     <Compile Include="Servers\Api\Controllers\CitySelectorController.cs" />
-    <Compile Include="Servers\Api\JsonWebToken\JWTUserIdentity.cs" />
     <Compile Include="Servers\Api\NancyExtensions.cs" />
     <Compile Include="Servers\City\CityServer.cs" />
     <Compile Include="Servers\City\CityServerConfiguration.cs" />
