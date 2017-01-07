@@ -195,13 +195,13 @@
       <Project>{430acd60-e798-43f0-ad61-8b5a35df6ab2}</Project>
       <Name>FSO.Server.Database</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Domain\FSO.Server.Domain.csproj">
+      <Project>{a1d9aba0-0105-436d-8f8c-2418db768080}</Project>
+      <Name>FSO.Server.Domain</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
       <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>
       <Name>FSO.Server.Protocol</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\FSO.Server\FSO.Server.csproj">
-      <Project>{8f125201-fdf0-4a13-886f-19662707d34d}</Project>
-      <Name>FSO.Server</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>

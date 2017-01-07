@@ -10,6 +10,7 @@ using FSO.Server.Servers.Api;
 using FSO.Server.Servers.City;
 using FSO.Server.Servers.Lot;
 using FSO.Server.Servers.Tasks;
+using FSO.Server.Servers.UserApi;
 using FSO.Server.Utils;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
@@ -103,6 +104,12 @@ namespace FSO.Server
                 Servers.Add(
                     api
                 );
+            }
+
+            if (Config.Services.UserApi != null &&
+                Config.Services.UserApi.Enabled)
+            {
+                Servers.Add(new UserApi(Config));
             }
 
             foreach(var cityServer in Config.Services.Cities){

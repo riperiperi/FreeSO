@@ -3,6 +3,7 @@ using FSO.Server.Domain;
 using FSO.Server.Servers.Api.JsonWebToken;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Security;
 using System.Threading.Tasks;
@@ -25,14 +26,14 @@ namespace FSO.Server.Api
             INSTANCE = this;
         }
 
-        public void Init()
+        public void Init(NameValueCollection appSettings)
         {
             Config = new ApiConfig();
-            Config.Maintainance = bool.Parse(WebConfigurationManager.AppSettings["maintainance"]);
-            Config.AuthTicketDuration = int.Parse(WebConfigurationManager.AppSettings["authTicketDuration"]);
-            Config.Regkey = WebConfigurationManager.AppSettings["regkey"];
-            Config.Secret = WebConfigurationManager.AppSettings["secret"];
-            Config.UpdateUrl = WebConfigurationManager.AppSettings["updateUrl"];
+            Config.Maintainance = bool.Parse(appSettings["maintainance"]);
+            Config.AuthTicketDuration = int.Parse(appSettings["authTicketDuration"]);
+            Config.Regkey = appSettings["regkey"];
+            Config.Secret = appSettings["secret"];
+            Config.UpdateUrl = appSettings["updateUrl"];
 
             JWT = new JWTFactory(new JWTConfiguration()
             {
@@ -41,7 +42,7 @@ namespace FSO.Server.Api
 
             DAFactory = new MySqlDAFactory(new Database.DatabaseConfiguration()
             {
-                ConnectionString = WebConfigurationManager.AppSettings["connectionString"]
+                ConnectionString = appSettings["connectionString"]
             });
 
             Shards = new Shards(DAFactory);

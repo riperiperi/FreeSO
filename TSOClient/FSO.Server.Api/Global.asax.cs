@@ -11,12 +11,10 @@ namespace FSO.Server.Api
 {
     public class WebApiApplication : System.Web.HttpApplication
     {
-        public static IDAFactory DAFactory;
-
         protected void Application_Start()
         {
             GlobalConfiguration.Configure(WebApiConfig.Register);
-            new Api().Init();
+            new Api().Init(WebConfigurationManager.AppSettings);
         }
     }
 }

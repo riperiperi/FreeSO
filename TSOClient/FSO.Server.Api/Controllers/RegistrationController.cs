@@ -77,11 +77,11 @@ namespace FSO.Server.Api.Controllers
                 if (now - (prev.FirstOrDefault()?.register_date ?? 0) < REGISTER_THROTTLE_SECS)
                 {
                     //cannot create a new account this soon.
-                    return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                    /*return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
                     {
                         error = "registration_failed",
                         error_description = "registrations_too_frequent"
-                    });
+                    });*/
                 }
 
                 //TODO: is this ip banned?
@@ -96,6 +96,8 @@ namespace FSO.Server.Api.Controllers
                 userModel.is_banned = false;
                 userModel.register_ip = ip;
                 userModel.last_ip = ip;
+
+                userModel.username = Guid.NewGuid().ToString().Replace("-", "");
 
                 var authSettings = new UserAuthenticate();
                 authSettings.scheme_class = passhash.scheme;
