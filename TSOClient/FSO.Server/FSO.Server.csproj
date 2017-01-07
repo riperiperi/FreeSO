@@ -73,6 +73,18 @@
       <HintPath>..\packages\Portable.JWT.1.0.3\lib\4.5\JWT.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.Owin, Version=2.0.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.2.0.2\lib\net45\Microsoft.Owin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.HttpListener, Version=2.0.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Host.HttpListener.2.0.2\lib\net45\Microsoft.Owin.Host.HttpListener.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Hosting, Version=2.0.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Hosting.2.0.2\lib\net45\Microsoft.Owin.Hosting.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Mina.NET, Version=2.0.11.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
       <HintPath>..\packages\Mina.2.0.11\lib\net40\Mina.NET.dll</HintPath>
       <Private>True</Private>
@@ -121,6 +133,10 @@
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Collections.Immutable.1.3.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
@@ -128,7 +144,19 @@
     </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Http.Owin, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Owin.5.2.3\lib\net45\System.Web.Http.Owin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -151,6 +179,7 @@
     <Compile Include="Domain\Shards.cs" />
     <Compile Include="Domain\ServerTop100Domain.cs" />
     <Compile Include="Servers\Api\Controllers\Admin\AdminTasksController.cs" />
+    <Compile Include="Servers\Api\JsonWebToken\JWTUserIdentity.cs" />
     <Compile Include="Servers\City\CityServerModule.cs" />
     <Compile Include="Servers\Tasks\Domain\PruneDatabaseTask.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServer.cs" />
@@ -179,14 +208,11 @@
     <Compile Include="Servers\Api\Controllers\StatusCodeHandler.cs" />
     <Compile Include="Servers\Api\Controllers\UserAPI\CityInfoController.cs" />
     <Compile Include="Servers\Api\Controllers\UserAPI\RegistrationController.cs" />
-    <Compile Include="Servers\Api\JsonWebToken\JWTConfiguration.cs" />
-    <Compile Include="Servers\Api\JsonWebToken\JWTokenFactory.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTTokenAuthentication.cs" />
     <Compile Include="Servers\Api\Controllers\Admin\AdminUsersController.cs" />
     <Compile Include="Servers\Api\Controllers\Admin\AdminOAuthController.cs" />
     <Compile Include="Servers\Api\Controllers\AuthController.cs" />
     <Compile Include="Servers\Api\Controllers\CitySelectorController.cs" />
-    <Compile Include="Servers\Api\JsonWebToken\JWTUserIdentity.cs" />
     <Compile Include="Servers\Api\NancyExtensions.cs" />
     <Compile Include="Servers\City\CityServer.cs" />
     <Compile Include="Servers\City\CityServerConfiguration.cs" />
@@ -224,6 +250,7 @@
     <Compile Include="Servers\Tasks\Domain\BonusTask.cs" />
     <Compile Include="Servers\Tasks\Handlers\TaskEngineHandler.cs" />
     <Compile Include="Servers\Tasks\TaskServer.cs" />
+    <Compile Include="Servers\UserApi\UserApi.cs" />
     <Compile Include="ToolInitDatabase.cs" />
     <Compile Include="ToolRunServer.cs" />
     <Compile Include="Servers\Api\ApiServer.cs" />
@@ -259,6 +286,10 @@
       <Project>{9848faf5-444a-48cc-a26a-8115d8c4fb52}</Project>
       <Name>FSO.Common.Domain</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Api\FSO.Server.Api.csproj">
+      <Project>{19a2e153-246d-4d38-a28e-1e4d36d7e28f}</Project>
+      <Name>FSO.Server.Api</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Clients\FSO.Server.Clients.csproj">
       <Project>{329e0aee-7871-40a7-b5af-8c0d0086ef71}</Project>
       <Name>FSO.Server.Clients</Name>
@@ -278,6 +309,10 @@
     <ProjectReference Include="..\FSO.Server.Debug\FSO.Server.Debug.csproj">
       <Project>{7296ccec-f459-4071-a9d2-9a07dcc29210}</Project>
       <Name>FSO.Server.Debug</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Domain\FSO.Server.Domain.csproj">
+      <Project>{a1d9aba0-0105-436d-8f8c-2418db768080}</Project>
+      <Name>FSO.Server.Domain</Name>
     </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
       <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>

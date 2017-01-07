@@ -140,6 +140,14 @@
       "requires": [
         "9a48f9fc-5950-4348-9ccf-318a263be4eb"
       ]
+    },
+    {
+      "id": "64f80154-3d3b-434a-a516-5c385143dbfc",
+      "script": "changes/0013_shard_version.sql",
+      "idempotent": false,
+      "requires": [
+        "def48038-d0d6-4b10-a129-0b9c736e4d35"
+      ]
     }
   ]
 }

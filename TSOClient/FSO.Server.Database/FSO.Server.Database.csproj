@@ -213,6 +213,7 @@
     <Content Include="DatabaseScripts\changes\0012_fso_bans.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="DatabaseScripts\changes\0013_shard_version.sql" />
     <Content Include="DatabaseScripts\fso_transactions.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

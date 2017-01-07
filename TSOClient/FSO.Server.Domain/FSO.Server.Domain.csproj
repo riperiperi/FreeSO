@@ -4,14 +4,13 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{39B61962-FE43-4B64-8E57-8F793737FFFE}</ProjectGuid>
+    <ProjectGuid>{A1D9ABA0-0105-436D-8F8C-2418DB768080}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FSO.Server.Common</RootNamespace>
-    <AssemblyName>FSO.Server.Common</AssemblyName>
+    <RootNamespace>FSO.Server.Domain</RootNamespace>
+    <AssemblyName>FSO.Server.Domain</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,14 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="JWT, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Portable.JWT.1.0.3\lib\4.5\JWT.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -49,21 +40,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Epoch.cs" />
-    <Compile Include="IPAddress.cs" />
-    <Compile Include="IPEndPointUtils.cs" />
-    <Compile Include="JsonWebToken\JWTConfiguration.cs" />
-    <Compile Include="JsonWebToken\JWTokenFactory.cs" />
-    <Compile Include="JsonWebToken\JWTUser.cs" />
-    <Compile Include="PacketLogger.cs" />
-    <Compile Include="PasswordHasher.cs" />
+    <Compile Include="Class1.cs" />
+    <Compile Include="Domain\Shards.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="IServerDebugger.cs" />
-    <Compile Include="ServerVersion.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="LICENSE" />
-    <None Include="packages.config" />
+    <ProjectReference Include="..\FSO.Common.Domain\FSO.Common.Domain.csproj">
+      <Project>{9848faf5-444a-48cc-a26a-8115d8c4fb52}</Project>
+      <Name>FSO.Common.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Database\FSO.Server.Database.csproj">
+      <Project>{430acd60-e798-43f0-ad61-8b5a35df6ab2}</Project>
+      <Name>FSO.Server.Database</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
+      <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>
+      <Name>FSO.Server.Protocol</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

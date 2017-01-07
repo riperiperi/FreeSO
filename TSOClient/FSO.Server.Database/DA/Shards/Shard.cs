@@ -15,6 +15,8 @@ namespace FSO.Server.Database.DA.Shards
         public ShardStatus status;
         public string internal_host;
         public string public_host;
+        public string version_name;
+        public string version_number;
     }
 
     public enum ShardStatus

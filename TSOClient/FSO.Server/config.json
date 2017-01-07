@@ -57,6 +57,13 @@
       "controllers": [ "auth", "citySelector" ]
     },
 
+    "userApi": {
+      "enabled": true,
+      "bindings": [ "http://localhost:9000/" ],
+      "controllers": [ "auth", "citySelector" ],
+      "updateUrl": "http://some-url"
+    },
+
     "cities": [
       {
 		"call_sign": "ganymede",

@@ -34,6 +34,7 @@ namespace FSO.Server
     public class ServerConfigurationservices
     {
         public ApiServerConfiguration Api;
+        public ApiServerConfiguration UserApi;
         public TaskServerConfiguration Tasks;
         public List<CityServerConfiguration> Cities;
         public List<LotServerConfiguration> Lots;

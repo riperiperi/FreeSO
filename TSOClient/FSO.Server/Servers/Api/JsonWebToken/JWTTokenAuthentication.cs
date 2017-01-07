@@ -49,7 +49,12 @@ namespace FSO.Server.Servers.Api.JsonWebToken
             try {
                 var user = factory.DecodeToken(token);
                 if (user != null) {
-                    context.CurrentUser = user;
+                    var identity = new JWTUserIdentity()
+                    {
+                        UserID = user.UserID,
+                        UserName = user.UserName
+                    };
+                    context.CurrentUser = identity;
                 }
             }catch(Exception ex){
                 //Expired

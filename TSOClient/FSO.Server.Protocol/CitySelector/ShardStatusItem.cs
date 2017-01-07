@@ -15,6 +15,8 @@ namespace FSO.Server.Protocol.CitySelector
         public int Id;
         public string PublicHost;
         public string InternalHost;
+        public string VersionName;
+        public string VersionNumber;
 
         public ShardStatusItem()
         {

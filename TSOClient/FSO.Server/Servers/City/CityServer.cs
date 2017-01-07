@@ -1,4 +1,5 @@
 ﻿using FSO.Common.Domain.Shards;
+using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Database.DA.Hosts;
@@ -63,6 +64,9 @@ namespace FSO.Server.Servers.City
 
             IDAFactory da = Kernel.Get<IDAFactory>();
             using (var db = da.Get()){
+                var version = ServerVersion.Get();
+                db.Shards.UpdateVersion(shard.Id, version.Name, version.Number);
+
                 var oldClaims = db.LotClaims.GetAllByOwner(context.Config.Call_Sign).ToList();
                 if(oldClaims.Count > 0)
                 {

@@ -37,6 +37,8 @@ namespace FSO.Server.Servers.Api
         /// If true, only authentication from moderators and admins will be accepted
         /// </summary>
         public bool Maintainance { get; set; }
+
+        public string UpdateUrl { get; set; }
     }
 
     public enum ApiServerControllers
