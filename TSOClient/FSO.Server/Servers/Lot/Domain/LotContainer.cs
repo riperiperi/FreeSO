@@ -298,6 +298,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     if (LotPersist.admit_mode == 5) {
                         ent.PersistID = 0;
                         ((VMTSOObjectState)ent.TSOState).OwnerID = 0;
+                        ((VMGameObject)ent).Disabled = 0;
                     }
                     if (ent.MultitileGroup.Objects.Count == 0) continue;
                     objectsOnLot.Add(ent.PersistID);

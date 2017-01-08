@@ -284,7 +284,7 @@ namespace FSO.Client.UI.Panels
 
             if(CurrentLot != null && CurrentLot.Value != null)
             {
-                isOnline = CurrentLot.Value.Lot_IsOnline || (CurrentLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_AdmitMode == 4);
+                isOnline = CurrentLot.Value.Lot_IsOnline || (CurrentLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_AdmitMode >= 4);
                 isMyProperty = FindController<CoreGameScreenController>().IsMe(CurrentLot.Value.Lot_LeaderID);
                     
                 var roomies = new List<uint>();
