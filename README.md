@@ -1,4 +1,4 @@
-![image](http://freeso.org/wp-content/uploads/2016/03/freeso-logo.png)
+![image](http://freeso.org/wp-content/uploads/2016/03/freeso-logo.png?1)
 
 A full reimplementation of The Sims Online, using Monogame. FreeSO aims to be faithful to the original game as well as include quality of life changes such as hardware rendering, Hi-res output and >2 floor houses. 
 
