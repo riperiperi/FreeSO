@@ -54,7 +54,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Beta.ico</ApplicationIcon>
+    <ApplicationIcon>fso.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -366,6 +366,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Content Include="Beta.ico" />
+    <Content Include="fso.ico" />
     <Content Include="Game.ico" />
     <EmbeddedResource Include="IconNormal.bmp" />
     <EmbeddedResource Include="Icon.bmp" />
