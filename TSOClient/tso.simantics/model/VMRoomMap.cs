@@ -206,6 +206,7 @@ namespace FSO.SimAntics.Model
         public void MakeOutside(List<VMRoom> rooms, VMRoom room)
         {
             room.IsOutside = true;
+            rooms[room.RoomID] = room;
             var toVisit = new Queue<ushort>(room.AdjRooms);
             while (toVisit.Count > 0)
             {
@@ -214,6 +215,7 @@ namespace FSO.SimAntics.Model
                 var roomElem = rooms[visit];
                 if (roomElem.IsOutside) continue;
                 roomElem.IsOutside = true;
+                rooms[roomElem.RoomID] = roomElem;
                 foreach (var adj in roomElem.AdjRooms)
                     toVisit.Enqueue(adj);
             }

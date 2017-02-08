@@ -140,6 +140,9 @@ namespace FSO.Client.Model
         public AvatarUserReference(Avatar avatar) : this()
         {
             CurrentAvatar.Value = avatar;
+            Name = avatar.Avatar_Name;
+            HeadOutfitId = avatar.Avatar_Appearance?.AvatarAppearance_HeadOutfitID ?? 0;
+            Id = avatar.Avatar_Id;
         }
 
         protected AvatarUserReference()

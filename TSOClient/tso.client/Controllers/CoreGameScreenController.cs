@@ -159,7 +159,8 @@ namespace FSO.Client.Controllers
         public void CallAvatar(uint avatarId){
             DataService.Get<Avatar>(avatarId).ContinueWith(x =>
             {
-                Chat.Call(UserReference.Wrap(x.Result));
+                var msg = Chat.Call(UserReference.Wrap(x.Result));
+                if (msg != null) Chat.ShowWindow(msg);
             });
         }
 

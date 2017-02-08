@@ -13,6 +13,7 @@ namespace FSO.SimAntics.Engine
         private List<VMEntity> TickThisFrame;
         public uint CurrentTickID;
         public short CurrentObjectID;
+        public bool RunningNow;
 
         public VMScheduler(VM vm)
         {
@@ -55,7 +56,7 @@ namespace FSO.SimAntics.Engine
         public void RescheduleInterrupt(VMEntity ent)
         {
             //on interrupt.
-            if (ent.Thread == null || ent.Thread.ScheduleIdleEnd == CurrentTickID) return;
+            if (ent.Thread == null || ent.Thread.ScheduleIdleEnd == CurrentTickID || ent.Thread.ScheduleIdleEnd == 0) return;
             DescheduleTick(ent);
             if (ent.ObjectID > CurrentObjectID && TickThisFrame != null) ScheduleCurrentTick(ent);
             else ScheduleTickIn(ent, 1);
@@ -78,6 +79,7 @@ namespace FSO.SimAntics.Engine
 
         public void RunTick()
         {
+            RunningNow = true;
             if (TickSchedule.TryGetValue(CurrentTickID, out TickThisFrame))
             {
                 //Console.WriteLine(TickThisFrame.Count + " entities ticked out of " + Entities.Count);
@@ -91,6 +93,7 @@ namespace FSO.SimAntics.Engine
             }
             vm.Context.RandomSeed += (ulong)vm.Entities.Count; // some "entropy" based on the number of entities present. forces a more strict sync
             CurrentObjectID = short.MaxValue;
+            RunningNow = false;
         }
 
         public void Reset()

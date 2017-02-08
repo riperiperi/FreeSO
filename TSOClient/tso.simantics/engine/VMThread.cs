@@ -87,10 +87,12 @@ namespace FSO.SimAntics.Engine
         public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMStackFrame initFrame, VMQueuedAction action, List<VMPieMenuInteraction> actionStrings)
         {
             var temp = new VMThread(context, entity, 5);
+            var forceClone = !context.VM.Scheduler.RunningNow;
+            //temps should only persist on check trees running within the vm tick to avoid desyncs.
             if (entity.Thread != null)
             {
-                temp.TempRegisters = (short[])entity.Thread.TempRegisters.Clone();
-                temp.TempXL = (int[])entity.Thread.TempXL.Clone();
+                temp.TempRegisters = forceClone?(short[])entity.Thread.TempRegisters.Clone() : entity.Thread.TempRegisters;
+                temp.TempXL = forceClone ? (int[])entity.Thread.TempXL.Clone() : entity.Thread.TempXL;
             }
             temp.IsCheck = true;
             temp.ActionStrings = actionStrings; //generate and place action strings in here

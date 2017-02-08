@@ -56,6 +56,14 @@ namespace FSO.Client.Controllers
             UpdateTray();
         }
 
+        public void ShowWindow(Message message)
+        {
+            var window = GetWindow(message);
+            window.Visible = true;
+            message.Read = true;
+            UpdateTray();
+        }
+
         public UIMessageWindow GetWindow(Message message){
             return MessageWindows[message];
         }
@@ -95,8 +103,9 @@ namespace FSO.Client.Controllers
             Game.AddWindow(window);
             MessageWindows.Add(message, window);
             ActiveMessages.Add(message);
-            UpdateTray();
+
             Tray.SetItems(ActiveMessages);
+            UpdateTray();
 
             return message;
         }

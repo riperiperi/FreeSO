@@ -178,7 +178,8 @@ namespace FSO.Server.Database.DA.Lots
 
         public void ReassignOwner(int lot_id)
         {
-            Context.Connection.Query("UPDATE fso_lots SET owner_id = (SELECT avatar_id FROM fso.fso_roommates WHERE is_pending = 0 AND lot_id = @id LIMIT 1) WHERE lot_id = @id", new { id = lot_id });
+            Context.Connection.Query("UPDATE fso_lots SET owner_id = (SELECT avatar_id FROM fso_roommates WHERE is_pending = 0 AND lot_id = @id LIMIT 1) WHERE lot_id = @id", new { id = lot_id });
+            Context.Connection.Query("UPDATE fso_roommates SET permissions_level = 2 WHERE avatar_id = (SELECT owner_id FROM fso_lots WHERE lot_id = @id LIMIT 1) AND lot_id = @id", new { id = lot_id });
         }
 
         public void UpdateLotCategory(int lot_id, LotCategory category)
