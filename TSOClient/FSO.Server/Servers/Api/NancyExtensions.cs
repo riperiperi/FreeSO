@@ -8,6 +8,7 @@ using Nancy.Security;
 using FSO.Server.Database.DA.Utils;
 using FSO.Common.Utils;
 using System.Xml;
+using FSO.Server.Servers.Api.JsonWebToken;
 
 namespace FSO.Server.Servers.Api
 {
@@ -16,13 +17,15 @@ namespace FSO.Server.Servers.Api
         public static void DemandModerator(this NancyModule controller)
         {
             controller.RequiresAuthentication();
-            controller.RequiresClaims(new string[] { "moderator" });
+            var user = (JWTUserIdentity)controller.Context.CurrentUser;
+            user.Claims.Contains("moderator");
         }
 
         public static void DemandAdmin(this NancyModule controller)
         {
             controller.RequiresAuthentication();
-            controller.RequiresClaims(new string[] { "admin" });
+            var user = (JWTUserIdentity)controller.Context.CurrentUser;
+            user.Claims.Contains("admin");
         }
 
         public static Response AsPagedList<T>(this IResponseFormatter formatter, PagedList<T> list)

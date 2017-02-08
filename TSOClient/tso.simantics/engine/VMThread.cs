@@ -89,8 +89,8 @@ namespace FSO.SimAntics.Engine
             var temp = new VMThread(context, entity, 5);
             if (entity.Thread != null)
             {
-                temp.TempRegisters = entity.Thread.TempRegisters;
-                temp.TempXL = entity.Thread.TempXL;
+                temp.TempRegisters = (short[])entity.Thread.TempRegisters.Clone();
+                temp.TempXL = (int[])entity.Thread.TempXL.Clone();
             }
             temp.IsCheck = true;
             temp.ActionStrings = actionStrings; //generate and place action strings in here

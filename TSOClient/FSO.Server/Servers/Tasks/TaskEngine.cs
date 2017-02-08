@@ -156,7 +156,7 @@ namespace FSO.Server.Servers.Tasks
                     var endStatus = DbTaskStatus.failed;
                     if (x.IsFaulted)
                     {
-                        LOG.Error(x.Exception, entry.Name + " task failed");
+                        LOG.Error(x.Exception, entry.Name + " task failed: "+x.Exception.ToString());
                     }
                     else
                     {

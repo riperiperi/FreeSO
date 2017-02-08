@@ -26,7 +26,7 @@ namespace FSO.Server.Servers.Api.Controllers.Admin
                     using (var da = daFactory.Get())
                     {
                         var user = da.Users.GetByUsername(username);
-                        if (user == null || user.is_banned || (!user.is_admin || !user.is_moderator))
+                        if (user == null || user.is_banned || !(user.is_admin || user.is_moderator))
                         {
                             return Response.AsJson<OAuthError>(new OAuthError
                             {
@@ -54,7 +54,7 @@ namespace FSO.Server.Servers.Api.Controllers.Admin
                         JWTUserIdentity identity = new JWTUserIdentity();
                         identity.UserName = user.username;
                         var claims = new List<string>();
-                        if (user.is_admin || !user.is_moderator)
+                        if (user.is_admin || user.is_moderator)
                         {
                             claims.Add("moderator");
                         }

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Net.Http;
 using System.Security;
 using System.Threading.Tasks;
 using System.Web;
@@ -49,15 +50,20 @@ namespace FSO.Server.Api
             Shards.AutoUpdate();
         }
 
-        public JWTUser RequireAuthentication()
+        public JWTUser RequireAuthentication(HttpRequestMessage request)
         {
-            var http = HttpContext.Current;
+            /*var http = HttpContext.Current;
             if (http == null)
             {
                 throw new SecurityException("Unable to get http context");
-            }
+            }*/
 
-            var cookie = http.Request.Cookies["fso"];
+            var cookies = request.Headers.GetCookies().FirstOrDefault();
+            if (cookies == null)
+                throw new SecurityException("Unable to find cookie");
+
+
+            var cookie = cookies["fso"];
             if (cookie == null)
             {
                 throw new SecurityException("Unable to find cookie");

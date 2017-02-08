@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Web;
 using System.Web.Http;
 
@@ -66,7 +67,14 @@ namespace FSO.Server.Api.Controllers
                     FSOVersion = shardOne.VersionNumber,
                     FSOUpdateUrl = api.Config.UpdateUrl
                 });
-                HttpContext.Current.Response.SetCookie(new HttpCookie("fso", token.Token));
+
+                var cookie = new CookieHeaderValue("fso", token.Token);
+                cookie.Expires = DateTimeOffset.Now.AddDays(1);
+                cookie.Domain = Request.RequestUri.Host;
+                cookie.Path = "/";
+
+                response.Headers.AddCookies(new CookieHeaderValue[] { cookie });
+                //HttpContext.Current.Response.SetCookie(new HttpCookie("fso", token.Token));
                 return response;
             }
         }

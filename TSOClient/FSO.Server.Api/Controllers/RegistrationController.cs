@@ -21,7 +21,7 @@ namespace FSO.Server.Api.Controllers
         private static Regex USERNAME_VALIDATION = new Regex("^([a-z0-9]){1}([a-z0-9_]){2,23}$");
 
         [HttpPost]
-        public HttpResponseMessage Post([FromBody] RegistrationModel user)
+        public HttpResponseMessage Post(HttpRequestMessage request, [FromBody] RegistrationModel user)
         {
             var api = Api.INSTANCE;
             var ip = ApiUtils.GetIP(Request);
@@ -132,9 +132,9 @@ namespace FSO.Server.Api.Controllers
 
     public class RegistrationModel
     {
-        public string username;
-        public string email;
-        public string password;
-        public string key;
+        public string username { get; set; }
+        public string email { get; set; }
+        public string password { get; set; }
+        public string key { get; set; }
     }
 }

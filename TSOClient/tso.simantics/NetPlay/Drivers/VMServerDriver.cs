@@ -188,6 +188,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                             {
                                 ClientsToSync.Add(client);
                             }
+                            ClientsToSyncLater.Clear();
                         }
                         LastResyncCooldown = CLIENT_RESYNC_COOLDOWN;
                     }

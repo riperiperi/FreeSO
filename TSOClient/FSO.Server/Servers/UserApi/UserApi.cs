@@ -42,7 +42,7 @@ namespace FSO.Server.Servers.UserApi
                 new UserApiStartup().Configuration(x, Config);
             });
 
-            Console.ReadLine();
+            //Console.ReadLine();
         }
     }
 
@@ -63,7 +63,8 @@ namespace FSO.Server.Servers.UserApi
             settings.Add("updateUrl", userApiConfig.UpdateUrl);
             settings.Add("connectionString", config.Database.ConnectionString);
 
-            new FSO.Server.Api.Api().Init(settings);
+            var api = new FSO.Server.Api.Api();
+            api.Init(settings);
 
             builder.UseWebApi(http);
         }

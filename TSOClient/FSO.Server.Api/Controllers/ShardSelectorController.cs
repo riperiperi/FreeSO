@@ -22,7 +22,7 @@ namespace FSO.Server.Api.Controllers
         {
             var api = Api.INSTANCE;
 
-            var user = api.RequireAuthentication();
+            var user = api.RequireAuthentication(Request);
             if (avatarId == null){
                 //Using 0 to mean no avatar for CAS
                 avatarId = "0";

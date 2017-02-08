@@ -145,6 +145,10 @@ namespace FSO.Client.UI.Panels
         private bool Open = true;
 
         /**
+         * Admin Specific UI (hardcode)
+         */
+
+        /**
          * Model
          */
         public Binding<Avatar> CurrentAvatar { get; internal set; }

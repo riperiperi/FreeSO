@@ -16,7 +16,7 @@ namespace FSO.Server.Api.Controllers
         public HttpResponseMessage Get()
         {
             var api = Api.INSTANCE;
-            var user = api.RequireAuthentication();
+            var user = api.RequireAuthentication(Request);
             
             var result = new XMLList<AvatarData>("The-Sims-Online");
 

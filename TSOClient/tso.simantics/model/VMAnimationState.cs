@@ -36,6 +36,12 @@ namespace FSO.SimAntics.Model
                 CurrentFrame = Anim.NumFrames;
             }
 
+            GetTimeProps();
+        }
+        
+        private void GetTimeProps()
+        {
+            var animation = Anim;
             foreach (var motion in animation.Motions)
             {
                 if (motion.TimeProperties == null) { continue; }
@@ -82,6 +88,38 @@ namespace FSO.SimAntics.Model
             Speed = input.Speed;
             Weight = input.Weight;
             Loop = input.Loop;
+            GetTimeProps();
+
+            var currentFrame = CurrentFrame;
+            var currentTime = (currentFrame * 1000) / 30;
+            var timeProps = TimePropertyLists;
+            if (!PlayingBackwards)
+            {
+                for (var i = 0; i < timeProps.Count; i++)
+                {
+                    var tp = timeProps[i];
+                    if (tp.ID > currentTime)
+                    {
+                        break;
+                    }
+
+                    timeProps.RemoveAt(0);
+                    i--;
+                }
+            }
+            else
+            {
+                for (var i = timeProps.Count - 1; i >= 0; i--)
+                {
+                    var tp = timeProps[i];
+                    if (tp.ID < currentTime)
+                    {
+                        break;
+                    }
+
+                    timeProps.RemoveAt(timeProps.Count - 1);
+                }
+            }
         }
 
         public VMAnimationState(VMAnimationStateMarshal input)

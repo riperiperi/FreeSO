@@ -52,7 +52,8 @@ namespace FSO.Server.Servers.Api.JsonWebToken
                     var identity = new JWTUserIdentity()
                     {
                         UserID = user.UserID,
-                        UserName = user.UserName
+                        UserName = user.UserName,
+                        Claims = user.Claims
                     };
                     context.CurrentUser = identity;
                 }
