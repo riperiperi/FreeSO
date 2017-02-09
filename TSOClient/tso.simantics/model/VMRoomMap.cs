@@ -197,6 +197,7 @@ namespace FSO.SimAntics.Model
                         WallObs = wallObs,
                         RoomObs = roomObs,
                         AdjRooms = adjRooms,
+                        RoomID = (ushort)rooms.Count,
                         Area = area
                     });
                     outside = false;
@@ -215,7 +216,7 @@ namespace FSO.SimAntics.Model
                 var roomElem = rooms[visit];
                 if (roomElem.IsOutside) continue;
                 roomElem.IsOutside = true;
-                rooms[roomElem.RoomID] = roomElem;
+                rooms[visit] = roomElem;
                 foreach (var adj in roomElem.AdjRooms)
                     toVisit.Enqueue(adj);
             }
