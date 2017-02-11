@@ -508,9 +508,10 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public bool TryJoin(IVoltronSession session)
         {
+            if (Container.IsAvatarOnLot(session.AvatarId)) return false; //already on the lot.
             lock (_Visitors)
             {
-                if (_Visitors.Count >= ((Context.HighMax)?128:24) || ShuttingDown)//|| Container.IsAvatarOnLot(session.AvatarId))
+                if (_Visitors.Count >= ((Context.HighMax)?128:24) || ShuttingDown)
                 {
                     //cannot join
                     return false;

@@ -568,6 +568,7 @@ namespace FSO.SimAntics
                 else
                 {
                     SetPersonData(VMPersonDataVariable.RenderDisplayFlags, 1);
+                    SetMotiveData(VMMotive.SleepState, 0);
                     SetValue(VMStackObjectVariable.Hidden, (short)((KillTimeout % 30) / 15));
                     if (Thread.BlockingState != null) Thread.BlockingState.WaitTime = Math.Max(Thread.BlockingState.WaitTime, 1000000); //make most things time out
                     UserLeaveLot(); //keep forcing

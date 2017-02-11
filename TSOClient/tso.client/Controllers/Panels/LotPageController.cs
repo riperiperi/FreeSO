@@ -43,6 +43,7 @@ namespace FSO.Client.Controllers.Panels
             DataService.Get<Lot>(lotId).ContinueWith(x =>
             {
                 View.CurrentLot.Value = x.Result;
+                DataService.Request(MaskedStruct.AdmitInfo_Lot, lotId);
             });
             View.Parent.Add(View);
             View.Visible = true;

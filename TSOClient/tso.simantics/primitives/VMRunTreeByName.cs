@@ -52,7 +52,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 }
                 else if (operand.Destination == 0)
                 {
-                    return context.Caller.Thread.RunInMyStack(tree.bhav, context.StackObject.Object, context.Thread.TempRegisters, context.StackObject)
+                    return context.Thread.RunInMyStack(tree.bhav, context.StackObject.Object, context.Thread.TempRegisters, context.StackObject)
                         ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                     //run in my stack
                 }

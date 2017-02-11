@@ -104,7 +104,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 (operand.PassTemp0) ? (context.Thread.TempRegisters[0]) : (operand.PassObjectIds ? context.Caller.ObjectID : (short)0) , false);
 
             if (mobj == null) return VMPrimitiveExitCode.GOTO_FALSE;
-            var obj = mobj.Objects[0];
+            var obj = mobj.BaseObject;
 
             if (operand.Position == VMCreateObjectPosition.InSlot0OfStackObject) context.StackObject.PlaceInSlot(obj, 0, true, context.VM.Context);
             else if (operand.Position == VMCreateObjectPosition.InMyHand) context.Caller.PlaceInSlot(obj, 0, true, context.VM.Context);

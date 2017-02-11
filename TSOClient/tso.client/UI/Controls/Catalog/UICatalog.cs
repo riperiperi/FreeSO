@@ -18,6 +18,8 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels.LotControls;
 using static FSO.Content.WorldObjectCatalog;
 using FSO.Common;
+using FSO.SimAntics;
+using FSO.SimAntics.Model;
 
 namespace FSO.Client.UI.Controls.Catalog
 {
@@ -25,6 +27,7 @@ namespace FSO.Client.UI.Controls.Catalog
     {
         private int Page;
         private int _Budget;
+        public VM ActiveVM;
         public int Budget
         {
             get { return _Budget; }
@@ -256,12 +259,22 @@ namespace FSO.Client.UI.Controls.Catalog
                 var elem = new UICatalogItem(false);
                 elem.Index = index;
                 elem.Info = Selected[index++];
+                elem.Info.CalcPrice = (int)elem.Info.Item.Price;
+
+                if (elem.Info.Item.GUID != 0)
+                {
+                    var price = (int)elem.Info.Item.Price;
+                    var dcPercent = VMBuildableAreaInfo.GetDiscountFor(elem.Info.Item, ActiveVM);
+                    var finalPrice = (price * (100 - dcPercent)) / 100;
+                    elem.Info.CalcPrice = finalPrice;
+                }
+
                 elem.Icon = (elem.Info.Special?.Res != null)?elem.Info.Special.Res.GetIcon(elem.Info.Special.ResID):GetObjIcon(elem.Info.Item.GUID);
-                elem.Tooltip = (elem.Info.Item.Price > 0)?("$"+elem.Info.Item.Price.ToString()):null;
+                elem.Tooltip = (elem.Info.CalcPrice > 0)?("$"+elem.Info.CalcPrice.ToString()):null;
                 elem.X = (i % halfPage) * 45 + 2;
                 elem.Y = (i / halfPage) * 45 + 2;
                 elem.OnMouseEvent += new ButtonClickDelegate(InnerSelect);
-                elem.SetDisabled(elem.Info.Item.Price > Budget);
+                elem.SetDisabled(elem.Info.CalcPrice > Budget);
                 CatalogItems[i] = elem;
                 this.Add(elem);
             }
@@ -308,6 +321,7 @@ namespace FSO.Client.UI.Controls.Catalog
 
     public struct UICatalogElement {
         public ObjectCatalogItem Item;
+        public int CalcPrice;
         public UISpecialCatalogElement Special;
     }
 

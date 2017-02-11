@@ -82,6 +82,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private VMTSOSurroundingTerrain Terrain;
         private bool JobLot;
         private ManualResetEvent LotActive = new ManualResetEvent(false);
+        private bool ActiveYet;
         private Queue<Action> LotThreadActions = new Queue<Action>();
         
         public LotContainer(IDAFactory da, LotContext context, ILotHost host, IKernel kernel, LotServerConfiguration config, IRealestateDomain realestate)
@@ -231,6 +232,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
                 catch (Exception e)
                 {
+                    LOG.Info("Ring load failed with exception: " + e.ToString() + " for lot with dbid = " + Context.DbId);
                     LotPersist.ring_backup_num--;
                     if (LotPersist.ring_backup_num < 0) LotPersist.ring_backup_num += (sbyte)Config.RingBufferSize;
                 }
@@ -505,6 +507,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
             }
             LotActive.Set();
+            ActiveYet = true;
         }
 
         private void DropClient(VMNetClient target)
@@ -697,10 +700,10 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             //we need to check if the avatar's sim is still on the lot. their data + claim might have left, but the avatar could still be here.
             bool result = false;
-            LotActive.WaitOne(); //wait til we're active at least
+            if (!ActiveYet) return false; //we are not on an inactive lot.
             BlockOnLotThread(() =>
             {
-                if (Lot != null) result = Lot.Context.ObjectQueries.AvatarsByPersist.ContainsKey(pid);
+                result = Lot.Context.ObjectQueries.AvatarsByPersist.ContainsKey(pid);
             });
             return result;
         }

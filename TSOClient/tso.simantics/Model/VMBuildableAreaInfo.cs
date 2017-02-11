@@ -1,4 +1,5 @@
-﻿using FSO.SimAntics.Entities;
+﻿using FSO.Content;
+using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.TSOPlatform;
 using System;
 using System.Collections.Generic;
@@ -110,6 +111,18 @@ namespace FSO.SimAntics.Model
             var lotFloors = (lotInfo.Size >> 8) & 255;
             var sizeMode = ObjectLimitPerPerson[lotSize + lotFloors];
             return sizeMode * Math.Max(1, lotInfo.Roommates.Count);
+        }
+
+        public static int GetDiscountFor(ObjectCatalogItem item, VM vm)
+        {
+            if (vm?.TSOState.PropertyCategory != 5) return 0;
+            var guid = item.GUID;
+            var catalog = Content.Content.Get().WorldCatalog;
+            var sameItem = vm.Entities.Count(x => x == x.MultitileGroup.BaseObject && (x.Object.OBJ.GUID == guid || x.MasterDefinition?.GUID == guid));
+            var catItems = vm.Entities.Count(x => x == x.MultitileGroup.BaseObject && item.Category == catalog.GetItemByGUID((x.MasterDefinition == null) ? x.Object.OBJ.GUID : x.MasterDefinition.GUID)?.Category);
+            sameItem = Math.Min(3, sameItem);
+            catItems = Math.Min(10, catItems);
+            return sameItem * 10 + catItems * 3;
         }
 
         public static void UpdateOverbudgetObjects(VM vm)

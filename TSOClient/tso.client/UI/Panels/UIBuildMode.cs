@@ -98,6 +98,7 @@ namespace FSO.Client.UI.Panels
             this.AddAt(2, SubToolBg);
 
             Catalog = new UICatalog(useSmall ? 10 : 20);
+            Catalog.ActiveVM = lotController.vm;
             Catalog.OnSelectionChange += new CatalogSelectionChangeDelegate(Catalog_OnSelectionChange);
             Catalog.Position = new Vector2(364, 7);
             this.Add(Catalog);
@@ -283,7 +284,7 @@ namespace FSO.Client.UI.Panels
             Holder.ClearSelected();
             var item = CurrentCategory[selection];
 
-            if (LotController.ActiveEntity != null && item.Item.Price > LotController.ActiveEntity.TSOState.Budget.Value) {
+            if (LotController.ActiveEntity != null && item.CalcPrice > LotController.ActiveEntity.TSOState.Budget.Value) {
                 HIT.HITVM.Get().PlaySoundEvent(UISounds.Error);
                 return;
             }

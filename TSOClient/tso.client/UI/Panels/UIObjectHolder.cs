@@ -85,7 +85,13 @@ namespace FSO.Client.UI.Panels
             guid = bobj.Object.OBJ.GUID;
             if (bobj.MasterDefinition != null) guid = bobj.MasterDefinition.GUID;
             var catalogItem = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
-            if (catalogItem != null) Holding.Price = (int)catalogItem.Value.Price;
+            if (catalogItem != null)
+            {
+                var price = (int)catalogItem.Value.Price;
+                var dcPercent = VMBuildableAreaInfo.GetDiscountFor(catalogItem.Value, vm);
+                var finalPrice = (price * (100 - dcPercent)) / 100;
+                Holding.Price = finalPrice;
+            }
         }
 
         public void MoveSelected(Vector2 pos, sbyte level)

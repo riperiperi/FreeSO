@@ -54,6 +54,7 @@ namespace FSO.SimAntics.Model
 
         public static int ScaleRate(VM vm, int rate, VMMotive type)
         {
+            if (vm.TSOState.PropertyCategory == 4 && type > 0) rate = (rate * 3) / 2; //1.5x gain multiplier on services lots
             if (VMMotive.Comfort == type) return rate;
             var ind = Array.IndexOf(VMAvatarMotiveDecay.DecrementMotives, type);
             string category = VMAvatarMotiveDecay.CategoryNames[vm.TSOState.PropertyCategory];

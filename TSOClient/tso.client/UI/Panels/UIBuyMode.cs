@@ -123,6 +123,7 @@ namespace FSO.Client.UI.Panels
             this.AddAt(5, InventoryCatalogVisitorIcon);
 
             Catalog = new UICatalog(useSmall ? 14 : 24);
+            Catalog.ActiveVM = lotController.vm;
             Catalog.OnSelectionChange += new CatalogSelectionChangeDelegate(Catalog_OnSelectionChange);
             Catalog.Position = new Microsoft.Xna.Framework.Vector2(275, 7);
             this.Add(Catalog);
@@ -309,7 +310,7 @@ namespace FSO.Client.UI.Panels
         {
             var item = CurrentCategory[selection];
 
-            if (LotController.ActiveEntity != null && item.Item.Price > LotController.ActiveEntity.TSOState.Budget.Value)
+            if (LotController.ActiveEntity != null && item.CalcPrice > LotController.ActiveEntity.TSOState.Budget.Value)
             {
                 HIT.HITVM.Get().PlaySoundEvent(Model.UISounds.Error);
                 return;

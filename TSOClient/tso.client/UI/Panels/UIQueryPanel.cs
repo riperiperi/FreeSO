@@ -21,6 +21,7 @@ using FSO.LotView;
 using FSO.LotView.Components;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Common;
+using FSO.SimAntics.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -416,10 +417,26 @@ namespace FSO.Client.UI.Panels
             LastSalePrice = entity.MultitileGroup.SalePrice;
 
             int price = def.Price;
-            if (item != null) price = (int)item.Value.Price;
+            int finalPrice = price;
+            int dcPercent = 0;
+            if (item != null)
+            {
+                price = (int)item.Value.Price;
+                dcPercent = VMBuildableAreaInfo.GetDiscountFor(item.Value, vm);
+                finalPrice = (price * (100-dcPercent)) / 100;
+            }
 
             StringBuilder motivesString = new StringBuilder();
-            motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", price);
+            if (dcPercent > 0)
+            {
+                motivesString.Append(GameFacade.Strings.GetString("206", "36", new string[] { dcPercent.ToString() + "%" }) + "\r\n");
+                motivesString.AppendFormat(GameFacade.Strings.GetString("206", "37") + "${0}\r\n", finalPrice);
+                motivesString.AppendFormat(GameFacade.Strings.GetString("206", "38") + "${0}\r\n", price);
+            }
+            else
+            {
+                motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", price);
+            }
             if (def.RatingHunger != 0) { motivesString.AppendFormat(AdStrings[0], def.RatingHunger); }
             if (def.RatingComfort != 0) { motivesString.AppendFormat(AdStrings[1], def.RatingComfort); }
             if (def.RatingHygiene != 0) { motivesString.AppendFormat(AdStrings[2], def.RatingHygiene); }

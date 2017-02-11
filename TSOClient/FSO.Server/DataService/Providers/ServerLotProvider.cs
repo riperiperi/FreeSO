@@ -21,6 +21,7 @@ using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.LotAdmit;
 using System.Collections.Immutable;
 using FSO.Common.Enum;
+using FSO.Server.Common;
 
 namespace FSO.Server.DataService.Providers
 {
@@ -266,10 +267,9 @@ namespace FSO.Server.DataService.Providers
                     if (lot.Lot_IsOnline) throw new SecurityException("Lot must be offline to change category!");
 
                     //7 days
-                    /*
-                    if (lot.Lot_HoursSinceLastLotCatChange < 168){
+                    if (((Epoch.Now - lot.Lot_LastCatChange) / (60 * 60)) < 168){
                         throw new SecurityException("You must wait 7 days to change your lot category again");
-                    }*/
+                    }
                     break;
 
                 //roommate only

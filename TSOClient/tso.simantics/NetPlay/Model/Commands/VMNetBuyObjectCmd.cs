@@ -26,6 +26,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public Direction dir;
         public bool Verified;
 
+        private int value = -1;
+
         private static HashSet<int> RoomieWhiteList = new HashSet<int>()
         {
             12, 13, 14, 15, 16, 17, 18, 19, 20
@@ -63,11 +65,24 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         });
                     });
                 }
+
+                //overwrite value
+
+                var objDefinition = CreatedGroup.BaseObject.MasterDefinition ?? CreatedGroup.BaseObject.Object.OBJ;
+                var limit = objDefinition.DepreciationLimit;
+                if (value > limit) //only try to deprecate if we're above the limit. Prevents objects with a limit above their price being money fountains.
+                {
+                    value -= objDefinition.InitialDepreciation;
+                    if (value < limit) value = limit;
+                }
+
+                CreatedGroup.Price = (int)value;
+
                 return true;
             }
             else if (vm.GlobalLink != null && item != null)
             {
-                vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, (int)item.Value.Price,
+                vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, (int)value,
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
                     vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
@@ -118,6 +133,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override bool Verify(VM vm, VMAvatar caller)
         {
             if (Verified) return true; //set internally when transaction succeeds. trust that the verification happened.
+            value = 0; //do not trust value from net
             if (caller == null || //caller must be on lot, have build permissions
                 ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate ||
                 !vm.TSOState.CanPlaceNewUserObject(vm))
@@ -134,11 +150,18 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 if (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Admin) return true;
                 return false; //not purchasable
             }
+            
+            if (item != null)
+            {
+                var price = (int)item.Value.Price;
+                var dcPercent = VMBuildableAreaInfo.GetDiscountFor(item.Value, vm);
+                value = (price * (100 - dcPercent)) / 100;
+            }
 
             //TODO: fine grained purchase control based on user status
 
             //perform the transaction. If it succeeds, requeue the command
-            vm.GlobalLink.PerformTransaction(vm, false, caller.PersistID, uint.MaxValue, (int)item.Value.Price,
+            vm.GlobalLink.PerformTransaction(vm, false, caller.PersistID, uint.MaxValue, value,
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
                     if (success)
@@ -171,6 +194,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             writer.Write(y);
             writer.Write(level);
             writer.Write((byte)dir);
+            writer.Write(value);
         }
 
         public override void Deserialize(BinaryReader reader)
@@ -181,6 +205,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             y = reader.ReadInt16();
             level = reader.ReadSByte();
             dir = (Direction)reader.ReadByte();
+            value = reader.ReadInt32();
         }
 
         #endregion

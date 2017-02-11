@@ -318,6 +318,8 @@ namespace FSO.SimAntics
                     if (Position.Level > worldState.Level) volume /= 4;
                     else if (Position.Level != worldState.Level) volume /= 2;
 
+                    volume = Math.Min(1f, Math.Max(0f, volume));
+
                     if (sound.SetVolume(volume, pan, ObjectID) && this is VMAvatar && sound is HITThread)
                     {
                         ((VMAvatar)this).SubmitHITVars((HITThread)sound);

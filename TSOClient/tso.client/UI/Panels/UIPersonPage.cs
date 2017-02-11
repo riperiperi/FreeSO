@@ -889,6 +889,16 @@ namespace FSO.Client.UI.Panels
                 privacyOn = CurrentAvatar.Value.Avatar_PrivacyMode > 0;
                 UpdateLockCounts();
                 PopulateJobsText(CurrentAvatar.Value);
+
+                var age = CurrentAvatar.Value.Avatar_Age;
+                var startdate = DateTime.UtcNow.Date - TimeSpan.FromDays(age);
+                var format = startdate.ToString("dd-MM-yyyy");
+                if (age < 2)
+                    AgeText.Caption = GameFacade.Strings.GetString("189", "36", new string[] { format });
+                else 
+                    AgeText.Caption = GameFacade.Strings.GetString("189", "35", new string[] { format, age.ToString() });
+                AgeText.CaptionStyle = AgeText.CaptionStyle.Clone();
+                AgeText.CaptionStyle.Shadow = true;
             }
             else PopulateJobsText(new Avatar());
 

@@ -92,13 +92,14 @@ namespace FSO.Content
             else return null;
         }
 
-        public struct ObjectCatalogItem
-        {
-            public uint GUID;
-            public sbyte Category;
-            public uint Price;
-            public string Name;
-            public byte DisableLevel; //1 = only shopping, 2 = rare (unsellable?)
-        }
+
+    }
+    public struct ObjectCatalogItem
+    {
+        public uint GUID;
+        public sbyte Category;
+        public uint Price;
+        public string Name;
+        public byte DisableLevel; //1 = only shopping, 2 = rare (unsellable?)
     }
 }
