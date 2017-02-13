@@ -9,25 +9,25 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 {
     public class VMEODPizzaMakerPlugin : VMEODHandler
     {
-        public VMEODClient ControllerClient;
+        private VMEODClient ControllerClient;
 
-        public int PhoneWaitSeconds = 5;
-        public int ContributionTimeoutSeconds = 120;
-        public int RestartDelaySeconds = 8;
-        public int CardsPerSmallIngredient = 16;
-        public int CardsPerMediumIngredient = 10;
-        public int CardsPerLargeIngredient = 8;
-        public int CardsPerBonusIngredientPerSize = 2;
+        private int PhoneWaitSeconds = 5;
+        private int ContributionTimeoutSeconds = 120;
+        private int RestartDelaySeconds = 8;
+        private int CardsPerSmallIngredient = 16;
+        private int CardsPerMediumIngredient = 10;
+        private int CardsPerLargeIngredient = 8;
+        private int CardsPerBonusIngredientPerSize = 2;
 
-        public VMEODClient[] Players = new VMEODClient[4]; //Body, Cooking1, Charisma, Cooking2
-        public VMEODPizzaPlayer[] PizzaPlayers = new VMEODPizzaPlayer[4];
-        public List<VMEODIngredientCard> Cards; //pool of ingredients
+        private VMEODClient[] Players = new VMEODClient[4]; //Body, Cooking1, Charisma, Cooking2
+        private VMEODPizzaPlayer[] PizzaPlayers = new VMEODPizzaPlayer[4];
+        private List<VMEODIngredientCard> Cards; //pool of ingredients
         private Random CardRandom = new Random();
 
-        public VMEODPizzaState State;
-        public int Timer;
-        public int TimerFrames = 0;
-        public int LastPizzaResult = 0;
+        private VMEODPizzaState State;
+        private int Timer;
+        private int TimerFrames = 0;
+        private int LastPizzaResult = 0;
 
         public VMEODPizzaMakerPlugin(VMEODServer server) : base(server)
         {
@@ -239,6 +239,13 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             if (playerIndex != -1)
             {
                 Players[playerIndex] = null;
+                if (PizzaPlayers[playerIndex] != null)
+                {
+                    foreach (var item in PizzaPlayers[playerIndex].Hand)
+                    {
+                        if (item != null) InsertCard(item); //return this player's cards to deck
+                    }
+                }
                 PizzaPlayers[playerIndex] = null;
                 PlayerRosterUpdate();
             }

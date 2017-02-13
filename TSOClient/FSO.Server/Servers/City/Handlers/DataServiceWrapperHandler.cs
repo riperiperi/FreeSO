@@ -142,8 +142,11 @@ namespace FSO.Server.Servers.City.Handlers
                     List<uint> resultDotPath = new List<uint>();
                     foreach (var item in update.DotPath)
                     {
-                        resultDotPath.Add(item);
-                        if (item == packet.RequestTypeID)
+                        var ires = item;
+                        if (ires == 0x1095C1E1) ires = 0x7EA285CD; //rewrite: filter id -> returns -> result list
+                        resultDotPath.Add(ires);
+
+                        if (ires == packet.RequestTypeID)
                         {
                             break;
                         }

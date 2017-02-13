@@ -18,5 +18,20 @@ namespace FSO.Server.Database.DA.Bans
         {
             return Context.Connection.Query<DbBan>("SELECT * FROM fso_ip_ban WHERE ip_address = @ip", new { ip = ip }).FirstOrDefault();
         }
+
+        public void Add(string ip, uint userid, string reason, int enddate)
+        {
+            Context.Connection.Execute(
+                "REPLACE INTO fso_ip_ban (user_id, ip_address, banreason, end_date) " +
+                "VALUES (@user_id, @ip_address, @banreason, @end_date)",
+                new
+                {
+                    user_id = userid,
+                    ip_address = ip,
+                    banreason = reason,
+                    end_date = enddate
+                }
+            );
+        }
     }
 }

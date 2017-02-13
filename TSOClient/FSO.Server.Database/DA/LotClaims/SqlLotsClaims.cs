@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using FSO.Common.Enum;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -70,6 +71,19 @@ namespace FSO.Server.Database.DA.LotClaims
             "ON a.lot_id = b.lot_id " +
             "JOIN(SELECT location, COUNT(*) as active FROM fso_avatar_claims GROUP BY location) AS c " +
             "ON b.location = c.location WHERE a.shard_id = @shard_id", new { shard_id = shard_id }).ToList();
+        }
+
+        public List<DbLotStatus> Top100Filter(int shard_id, LotCategory category, int limit)
+        {
+            return Context.Connection.Query<DbLotStatus>("SELECT b.location AS location, active " +
+            "FROM fso.fso_lot_claims AS a " +
+            "JOIN fso.fso_lots AS b " +
+            "ON a.lot_id = b.lot_id " +
+            "JOIN(SELECT location, COUNT(*) as active FROM fso_avatar_claims GROUP BY location) AS c " +
+            "ON b.location = c.location WHERE a.shard_id = @shard_id " +
+            "AND category = @category AND active > 0 " +
+            "ORDER BY active DESC " +
+            "LIMIT @limit", new { shard_id = shard_id, category = category.ToString(), limit = limit }).ToList();
         }
     }
 }

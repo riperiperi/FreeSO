@@ -304,7 +304,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                     if (ent.MultitileGroup.Objects.Count == 0) continue;
                     objectsOnLot.Add(ent.PersistID);
-                    if (removeAll || !Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID))
+                    if (false && (removeAll || !Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID)))
                     {
                         //we need to send objects in slots back to their owners inventory too, so we don't lose what was on tables etc.
                         var sendback = new List<VMEntity>();

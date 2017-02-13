@@ -15,7 +15,10 @@ namespace FSO.Server.Api.Utils
             if (Request.Headers.Contains("X-Forwarded-For"))
             {
                 ip = Request.Headers.GetValues("X-Forwarded-For").First();
+                ip = ip.Substring(ip.IndexOf(",")+1);
             }
+            var last = ip.LastIndexOf(":");
+            if (last < ip.Length - 5) ip = ip.Substring(0, last);
             return ip;
         }
     }

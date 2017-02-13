@@ -660,7 +660,7 @@ namespace FSO.SimAntics
                     return (short)((level >= VMTSOAvatarPermissions.BuildBuyRoommate) ? 2 : ((level >= VMTSOAvatarPermissions.Roommate) ? 1 : 0));
                 case VMPersonDataVariable.NumOutgoingFriends:
                 case VMPersonDataVariable.IncomingFriends:
-                    return (short)(MeToPersist.Count(x => x.Key < 16777216 && x.Value.Count > 1 && x.Value[1] >= 60) * 5); //tuning cheats
+                    return (short)(MeToPersist.Count(x => x.Key < 16777216 && x.Value.Count > 1 && x.Value[1] >= 60));
                 case VMPersonDataVariable.SkillLock:
                     return (short)(((GetPersonData(VMPersonDataVariable.SkillLockBody) > 0) ? 1 : 0) |
                         ((GetPersonData(VMPersonDataVariable.SkillLockCharisma) > 0) ? 2 : 0) |

@@ -23,12 +23,28 @@ using FSO.Client.Controllers;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common;
 using FSO.Common.Enum;
+using System.Collections.Immutable;
 
 namespace FSO.Client.UI.Panels
 {
     public class UIGizmoPropertyFilters : UIContainer
     {
         public UIImage Background;
+        public UIButton LastSelected;
+
+        public Dictionary<string, LotCategory> NameToCat = new Dictionary<string, LotCategory>()
+        {
+            { "Welcome", LotCategory.welcome },
+            { "Money", LotCategory.money },
+            { "Skills", LotCategory.skills },
+            { "Services", LotCategory.services },
+            { "Entertainment", LotCategory.entertainment },
+            { "Shopping", LotCategory.shopping },
+            { "Romance", LotCategory.romance },
+            { "Games", LotCategory.games },
+            { "Offbeat", LotCategory.offbeat },
+            { "Residence", LotCategory.residence },
+        };
 
         public UIGizmoPropertyFilters(UIScript script, UIGizmo parent)
         {
@@ -40,7 +56,30 @@ namespace FSO.Client.UI.Panels
             {
                 child.Parent.Remove(child);
                 this.Add(child);
+
+                ((UIButton)child).OnButtonClick += FilterClicked;
             }
+        }
+
+        private void FilterClicked(UIElement button)
+        {
+            LotCategory cat;
+            if (!NameToCat.TryGetValue(button.ID.Substring(button.ID.LastIndexOf("_") + 1), out cat)) return;
+
+            if (LastSelected != null)
+            {
+                LastSelected.Selected = false;
+                if (LastSelected == button)
+                {
+                    FindController<GizmoController>().ClearFilter();
+                    LastSelected = null;
+                    return;
+                }
+            }
+            var btn = (UIButton)button;
+            btn.Selected = true;
+            LastSelected = btn;
+            FindController<GizmoController>().RequestFilter(cat);
         }
     }
 
@@ -401,6 +440,56 @@ namespace FSO.Client.UI.Panels
 
         private UIGizmoPIP PIP;
 
+        private ImmutableList<uint> _FilterList;
+        public ImmutableList<uint> FilterList {
+            get
+            {
+                return _FilterList;
+            }
+            set
+            {
+                _FilterList = value;
+                RegisterFilters();
+            }
+        }
+
+        private List<UILotButton> Btns = new List<UILotButton>();
+        public void RegisterFilters()
+        {
+            ClearFilters();
+            foreach (var item in FilterList)
+            {
+                var btn = new UILotButton();
+                GameFacade.Screens.CurrentUIScreen.AddAt(2, btn);
+                btn.LotId = item;
+                Btns.Add(btn);
+            }
+        }
+
+        private void ClearFilters()
+        {
+            foreach (var btn in Btns)
+            {
+                btn.Dispose();
+                GameFacade.Screens.CurrentUIScreen.Remove(btn);
+            }
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            if (Btns.Count > 0)
+            {
+                var gamescreen = (GameFacade.Screens.CurrentUIScreen as CoreGameScreen);
+                bool visible = true;
+                if (gamescreen != null && gamescreen.ZoomLevel != 5)
+                {
+                    visible = false;
+                }
+                foreach (var btn in Btns) btn.Visible = visible;
+            }
+        }
+
         public Binding<Avatar> CurrentAvatar { get; internal set; }
 
         public UIGizmo()
@@ -473,7 +562,8 @@ namespace FSO.Client.UI.Panels
             CurrentAvatar = new Binding<Avatar>()
                 .WithBinding(PIP, "SimBox.Avatar.BodyOutfitId", "Avatar_Appearance.AvatarAppearance_BodyOutfitID")
                 .WithBinding(PIP, "SimBox.Avatar.HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID")
-                .WithBinding(PIP, "SimBox.Avatar.Appearance", "Avatar_Appearance.AvatarAppearance_SkinTone", (x) => (Vitaboy.AppearanceType)((byte)x));
+                .WithBinding(PIP, "SimBox.Avatar.Appearance", "Avatar_Appearance.AvatarAppearance_SkinTone", (x) => (Vitaboy.AppearanceType)((byte)x))
+                .WithBinding(this, "FilterList", "Avatar_Top100ListFilter.Top100ListFilter_ResultsVec");
 
             Tab = UIGizmoTab.Property;
             View = UIGizmoView.Filters;

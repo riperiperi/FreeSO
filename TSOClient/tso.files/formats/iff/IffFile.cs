@@ -49,7 +49,8 @@ namespace FSO.Files.Formats.IFF
             {"TTAs", typeof(TTAs)},
             {"FWAV", typeof(FWAV)},
             {"BMP_", typeof(BMP)},
-            {"PIFF", typeof(PIFF) }
+            {"PIFF", typeof(PIFF) },
+            {"TRCN", typeof(TRCN) }
         };
 
         public IffRuntimeInfo RuntimeInfo = new IffRuntimeInfo();

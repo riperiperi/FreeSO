@@ -39,6 +39,15 @@ namespace FSO.Client.UI.Controls
                 _WrappedOutput = null; }
         }
 
+        
+        public int NumLines
+        {
+            get
+            {
+                return (Wrapped && _WrappedOutput != null) ? _WrappedOutput.Lines.Count : 1;
+            }
+        }
+
         /// <summary>
         /// If size is set you can make use of alignment settings
         /// </summary>

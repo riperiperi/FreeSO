@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Common.Rendering.Framework.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -73,6 +74,17 @@ namespace FSO.Client.UI.Panels
                 }
             };
             Add(cityPainterBtn);
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.M))
+            {
+                //temporary until data service can inform people they're mod
+                //now i know what you're thinking - but these requests are permission checked server side anyways
+                UIPersonPage.EnableMod = true;
+            }
         }
     }
 }

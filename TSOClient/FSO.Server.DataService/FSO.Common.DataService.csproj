@@ -96,6 +96,7 @@
     <Compile Include="Model\LotAdmitInfo.cs" />
     <Compile Include="Model\MaskedStructs.cs" />
     <Compile Include="Model\Relationship.cs" />
+    <Compile Include="Model\Top100ListFilter.cs" />
     <Compile Include="NullDataService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\Client\ClientAvatarProvider.cs" />

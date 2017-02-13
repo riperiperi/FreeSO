@@ -142,6 +142,16 @@ namespace FSO.Common.DataService.Model
             }
         }
 
+        private Top100ListFilter _Avatar_Top100ListFilter;
+        public Top100ListFilter Avatar_Top100ListFilter
+        {
+            get { return _Avatar_Top100ListFilter; }
+            set
+            {
+                _Avatar_Top100ListFilter = value;
+                NotifyPropertyChanged("Avatar_Top100ListFilter");
+            }
+        }
 
         public bool IsDefaultName
         {

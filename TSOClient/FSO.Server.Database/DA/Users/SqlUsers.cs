@@ -39,6 +39,10 @@ namespace FSO.Server.Database.DA.Users
             Context.Connection.Execute("UPDATE fso_users SET last_ip = @ip WHERE user_id = @user_id", new { user_id = id, ip = ip });
         }
 
+        public void UpdateBanned(uint id, bool banned)
+        {
+            Context.Connection.Execute("UPDATE fso_users SET is_banned = @ban WHERE user_id = @user_id", new { user_id = id, ban = banned });
+        }
 
         public PagedList<User> All(int offset = 1, int limit = 20, string orderBy = "register_date")
         {

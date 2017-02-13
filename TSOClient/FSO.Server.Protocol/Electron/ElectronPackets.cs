@@ -24,7 +24,8 @@ namespace FSO.Server.Protocol.Electron
             typeof(FindAvatarResponse),
             typeof(ChangeRoommateRequest),
             typeof(KeepAlive),
-            typeof(ChangeRoommateResponse)
+            typeof(ChangeRoommateResponse),
+            typeof(ModerationRequest)
         };
 
         static ElectronPackets()

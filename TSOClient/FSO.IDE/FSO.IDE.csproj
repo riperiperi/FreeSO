@@ -362,6 +362,12 @@
     <Compile Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.Designer.cs">
       <DependentUpon>SPR2ResourceControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\BCONResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\BCONResourceControl.Designer.cs">
+      <DependentUpon>BCONResourceControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\ResourceEditors\TTABResourceControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -491,6 +497,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.resx">
       <DependentUpon>SPR2ResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\BCONResourceControl.resx">
+      <DependentUpon>BCONResourceControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\TTABResourceControl.resx">
       <DependentUpon>TTABResourceControl.cs</DependentUpon>

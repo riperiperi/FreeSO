@@ -9,6 +9,7 @@ using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Enum;
 using FSO.Common.Utils;
+using FSO.Server.Protocol.Electron.Model;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.NetPlay.Model;
@@ -245,6 +246,15 @@ namespace FSO.Client.Controllers
                         callback(x.Result);
                     });
                 }
+            });
+        }
+
+        public void ModRequest(uint entityId, ModerationRequestType type)
+        {
+            Network.CityClient.Write(new ModerationRequest()
+            {
+                EntityId = entityId,
+                Type = type
             });
         }
 

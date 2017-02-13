@@ -1,4 +1,5 @@
 ﻿using FSO.Client.Network;
+using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;

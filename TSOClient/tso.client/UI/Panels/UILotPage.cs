@@ -3,6 +3,7 @@ using FSO.Client.Controllers.Panels;
 using FSO.Client.Model;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Client.UI.Screens;
 using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Common.Enum;
@@ -343,6 +344,13 @@ namespace FSO.Client.UI.Panels
                 HouseLinkButton.Disabled = true;
                 LotThumbnail.Disabled = true;
             }
+        }
+        public override void Draw(UISpriteBatch batch)
+        {
+            if (!Visible) return;
+            if (CurrentLot.Value != null)
+                UITerrainHighlight.DrawArrow(batch, ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer, Position + (_Open? Size : BackgroundContractedImage.Size.ToVector2()) / 2, (int)CurrentLot.Value.Id);
+            base.Draw(batch);
         }
     }
 

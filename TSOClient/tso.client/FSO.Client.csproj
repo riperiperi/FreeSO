@@ -90,6 +90,7 @@
     <Compile Include="UI\Controls\Catalog\UICatalogRoofResProvider.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UIDynamicContainers.cs" />
+    <Compile Include="UI\Controls\UILotButton.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />
     <Compile Include="UI\Controls\UICustomTooltip.cs" />
     <Compile Include="UI\Controls\UIRadioButton.cs" />
@@ -113,6 +114,7 @@
     <Compile Include="UI\Panels\UIAsyncPriceDialog.cs" />
     <Compile Include="UI\Panels\UIBonusDialog.cs" />
     <Compile Include="UI\Panels\UIBookmarks.cs" />
+    <Compile Include="UI\Panels\UIModMenu.cs" />
     <Compile Include="UI\Panels\UIDebugMenu.cs" />
     <Compile Include="UI\Panels\UIEnvPanel.cs" />
     <Compile Include="UI\Panels\UIGizmoPIP.cs" />
@@ -141,6 +143,7 @@
     <Compile Include="UI\Panels\UIPropertyLog.cs" />
     <Compile Include="UI\Panels\UIChatDialog.cs" />
     <Compile Include="UI\Panels\UISetupBackground.cs" />
+    <Compile Include="UI\Panels\UITerrainHighlight.cs" />
     <Compile Include="UI\Panels\UIWebDownloaderDialog.cs" />
     <Compile Include="UI\Panels\WorldUI\UIHeadlineRenderer.cs" />
     <Compile Include="UI\UIRelationshipBar.cs" />

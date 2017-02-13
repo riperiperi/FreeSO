@@ -71,6 +71,8 @@ namespace FSO.Client.UI.Panels
 
         public UISkillBar[] SkillBars;
 
+        public static bool EnableMod;
+
         public UILabel LockPointsLabel { get; set; }
 
         /** Jobs **/
@@ -147,6 +149,8 @@ namespace FSO.Client.UI.Panels
         /**
          * Admin Specific UI (hardcode)
          */
+
+        private UIButton ModButton;
 
         /**
          * Model
@@ -337,6 +341,13 @@ namespace FSO.Client.UI.Panels
             SimBox.AutoRotate = true;
             this.Add(SimBox);
 
+            ModButton = new UIButton();
+            ModButton.OnButtonClick += ModButton_OnButtonClick;
+            ModButton.X = 175;
+            ModButton.Y = 205;
+            ModButton.Caption = "Actions";
+            Add(ModButton);
+
             //modify skill page a little to fix its layout for now
             this.ChildrenWithinIdRange(600, 699).ForEach(x => {
                 if (x is UILabel)
@@ -442,6 +453,16 @@ namespace FSO.Client.UI.Panels
 
             Redraw();
             Size = BackgroundExpandedImage.Size.ToVector2();
+        }
+
+        private void ModButton_OnButtonClick(UIElement button)
+        {
+            if (CurrentAvatar.Value != null)
+            {
+                var modMenu = new UIModMenu();
+                modMenu.AvatarID = CurrentAvatar.Value.Avatar_Id;
+                UIScreen.GlobalShowDialog(modMenu, true);
+            }
         }
 
         private void BanCheckBox_OnButtonClick(UIElement button)
@@ -945,6 +966,8 @@ namespace FSO.Client.UI.Panels
             var isOutgoing = _RelationshipsTab == UIRelationshipsTab.Outgoing;
             var isIncoming = _RelationshipsTab == UIRelationshipsTab.Incoming;
             var isOptions = _Tab == UIPersonPageTab.Options;
+
+            ModButton.Visible = EnableMod && isOptions;
 
             FindHouseButton.Disabled = !hasProperty;
 

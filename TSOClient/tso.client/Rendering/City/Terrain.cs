@@ -1027,6 +1027,13 @@ namespace FSO.Client.Rendering.City
             return transformSpr(iScale, new Vector3(x, MapData.ElevationData[(y * 512 + x)] / 12.0f, y));
         }
 
+        public Vector2 GetFar2DFromTile(int x, int y)
+        {
+            float iScale = (float)(1 / (GetFarzoomIsoScale() * 2));
+            if (x < 0 || y < 0) return new Vector2();
+            return transformSprFar(iScale, new Vector3(x, MapData.ElevationData[(y * 512 + x)] / 12.0f, y));
+        }
+
         private void DrawHouses(float HB) //draws house icons in far view
         {
             var spriteBatch = m_Batch;
@@ -1170,6 +1177,14 @@ namespace FSO.Client.Rendering.City
             int width = m_ScrWidth;
             int height = m_ScrHeight;
             return new Vector2((temp.X-m_ViewOffX)*iScale+width/2, (-(temp.Y-m_ViewOffY)*iScale)+height/2);
+        }
+
+        public Vector2 transformSprFar(float iScale, Vector3 pos)
+        { //transform 3d position to view.
+            Vector3 temp = Vector3.Transform(pos, m_MovMatrix);
+            int width = m_ScrWidth;
+            int height = m_ScrHeight;
+            return new Vector2((temp.X) * iScale + width / 2, (-(temp.Y) * iScale) + height / 2);
         }
 
         public void UIMouseEvent(String type)
@@ -1499,6 +1514,13 @@ namespace FSO.Client.Rendering.City
 
             float IsoScale = (1 - m_ZoomProgress) * FisoScale + (m_ZoomProgress) * ZisoScale;
             return (1-m_LotZoomProgress) * IsoScale + m_LotZoomProgress * LisoScale;
+        }
+
+        public float GetFarzoomIsoScale()
+        {
+            float ResScale = 768.0f / m_ScrHeight; //scales up the vertical height to match that of the target resolution (for the far view)
+            float FisoScale = (float)(Math.Sqrt(0.5 * 0.5 * 2) / 5.10f) * ResScale; // is 5.10 on far zoom
+            return FisoScale;
         }
 
         private Matrix m_LightMatrix;

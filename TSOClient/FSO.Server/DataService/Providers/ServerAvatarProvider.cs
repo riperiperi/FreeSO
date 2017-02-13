@@ -1,5 +1,6 @@
 ﻿using FSO.Common.DataService.Framework;
 using FSO.Common.DataService.Model;
+using FSO.Common.Enum;
 using FSO.Common.Security;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
@@ -133,6 +134,17 @@ namespace FSO.Server.DataService.Providers
                     var mode = (byte)value;
                     if (mode > 1) throw new Exception("Invalid privacy mode!");
                     break;
+                case "Avatar_Top100ListFilter.Top100ListFilter_Top100ListID":
+                    context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
+                    var cat = (LotCategory)((uint)value);
+
+                    using (var db = DAFactory.Get())
+                    { //filters baby! YES! about time i get a fucking break in this game
+                        var filter = db.LotClaims.Top100Filter(ShardId, cat, 10);
+                        avatar.Avatar_Top100ListFilter.Top100ListFilter_ResultsVec = ImmutableList.ToImmutableList(filter.Select(x => x.location));
+                    }
+
+                    break;
                 default:
                     throw new SecurityException("Field: " + path + " may not be mutated by users");
             }
@@ -214,6 +226,12 @@ namespace FSO.Server.DataService.Providers
             }
             result.Avatar_JobLevelVec = ImmutableList.ToImmutableList(jobs);
             result.Avatar_CurrentJob = dbAvatar.current_job;
+
+            result.Avatar_Top100ListFilter = new Top100ListFilter()
+            {
+                Top100ListFilter_ResultsVec = ImmutableList.Create<uint>(),
+                Top100ListFilter_Top100ListID = 0,
+            };
 
             var fvec = new Dictionary<Tuple<uint, bool>, Relationship>();
             foreach (var rel in rels)
