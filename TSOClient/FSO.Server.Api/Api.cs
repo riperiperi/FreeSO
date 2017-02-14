@@ -35,6 +35,7 @@ namespace FSO.Server.Api
             Config.Regkey = appSettings["regkey"];
             Config.Secret = appSettings["secret"];
             Config.UpdateUrl = appSettings["updateUrl"];
+            Config.NFSdir = appSettings["nfsdir"];
 
             JWT = new JWTFactory(new JWTConfiguration()
             {

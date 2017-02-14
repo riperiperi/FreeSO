@@ -62,6 +62,7 @@ namespace FSO.Server.Servers.UserApi
             settings.Add("secret", config.Secret);
             settings.Add("updateUrl", userApiConfig.UpdateUrl);
             settings.Add("connectionString", config.Database.ConnectionString);
+            settings.Add("NFSdir", config.SimNFS);
 
             var api = new FSO.Server.Api.Api();
             api.Init(settings);

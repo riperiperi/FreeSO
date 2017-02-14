@@ -168,7 +168,9 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\AuthLoginController.cs" />
     <Compile Include="Controllers\AvatarDataController.cs" />
+    <Compile Include="Controllers\CityJSONController.cs" />
     <Compile Include="Controllers\InitialConnectController.cs" />
+    <Compile Include="Controllers\LotThumbController.cs" />
     <Compile Include="Controllers\RegistrationController.cs" />
     <Compile Include="Controllers\ShardSelectorController.cs" />
     <Compile Include="Controllers\ShardStatusController.cs" />

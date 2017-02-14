@@ -68,6 +68,23 @@ namespace FSO.Server.Api
                     controller = "Registration"
                 }
             );
-        }
+
+            config.Routes.MapHttpRoute(
+                name: "LotThumb",
+                routeTemplate: "userapi/city/{shardid}/{id}.png",
+                defaults: new
+                {
+                    controller = "LotThumb"
+                });
+
+            config.Routes.MapHttpRoute(
+                name: "CityJSON",
+                routeTemplate: "userapi/city/{shardid}/city.json",
+                defaults: new
+                {
+                    controller = "CityJSON"
+                });
+            }
+
     }
 }
