@@ -238,14 +238,20 @@ namespace FSO.Server
         private void BroadcastMessage(string sender, string title, string message)
         {
             //TODO: select which shards to operate on
-            foreach (var city in CityServers)
+            try
             {
-                city.Sessions.All().Broadcast(new Protocol.Voltron.Packets.AnnouncementMsgPDU()
+                foreach (var city in CityServers)
                 {
-                    SenderID = "??" + sender,
-                    Message = "\r\n"+message,
-                    Subject = title
-                });
+                    city.Sessions.Broadcast(new Protocol.Voltron.Packets.AnnouncementMsgPDU()
+                    {
+                        SenderID = "??" + sender,
+                        Message = "\r\n" + message,
+                        Subject = title
+                    });
+                }
+            } catch (Exception)
+            {
+                //don't fail if this somehow screws up
             }
         }
 

@@ -47,6 +47,18 @@ namespace FSO.Server.Framework.Aries
             return newSession;
         }
 
+        public void Broadcast(params object[] messages)
+        {
+            //TODO: Make this more efficient
+            lock (_Sessions)
+            {
+                foreach (var session in _Sessions)
+                {
+                    session.Write(messages);
+                }
+            }
+        }
+
         public ISessionGroup GetOrCreateGroup(object id){
             lock (_Groups)
             {
@@ -108,11 +120,13 @@ namespace FSO.Server.Framework.Aries
         }
         
         public void Enroll(IAriesSession session){
-            _Sessions.Add(session);
+            lock (_Sessions)
+                _Sessions.Add(session);
         }
 
         public void UnEnroll(IAriesSession session){
-            _Sessions.Remove(session);
+            lock (_Sessions)
+                _Sessions.Remove(session);
         }
     }
 

@@ -15,6 +15,8 @@ namespace FSO.Server.Framework.Aries
         ISessionGroup GetOrCreateGroup(object id);
         IVoltronSession GetByAvatarId(uint id);
         ISessionProxy All();
+
+        void Broadcast(params object[] messages);
     }
 
     public interface ISessionProxy {
