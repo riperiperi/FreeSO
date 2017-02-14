@@ -7,7 +7,7 @@ using System.Text;
 
 namespace FSO.Common.Utils
 {
-    public class Binding <T> where T : INotifyPropertyChanged
+    public class Binding <T> : IDisposable where T : INotifyPropertyChanged
     {
         private List<IBinding> Bindings = new List<IBinding>();
         private List<INotifyPropertyChanged> Watching = new List<INotifyPropertyChanged>();
@@ -17,12 +17,19 @@ namespace FSO.Common.Utils
 
         public Binding()
         {
+            Binding.All.Add(this);
         }
 
         ~Binding()
         {
             //i don't think the garbage collector will remove this if there is still a reference to its callback function.
             ClearWatching();
+        }
+
+        public void Dispose()
+        {
+            ClearWatching();
+            Bindings = null;
         }
 
         public T Value
@@ -234,7 +241,7 @@ namespace FSO.Common.Utils
         }
     }
 
-    abstract class Binding : IBinding
+    public abstract class Binding : IBinding
     {
         private object Target;
         private string TargetProperty;
@@ -253,6 +260,19 @@ namespace FSO.Common.Utils
         }
 
         public abstract void Digest(object source);
+
+        public virtual void Dispose() { Target = null; }
+
+        public static List<IDisposable> All = new List<IDisposable>();
+        public static void DisposeAll()
+        {
+            //dispose of all bindings that are left over (city leave return)
+            foreach (var item in All)
+            {
+                item.Dispose();
+            }
+            All.Clear();
+        }
     }
 
     interface IBinding

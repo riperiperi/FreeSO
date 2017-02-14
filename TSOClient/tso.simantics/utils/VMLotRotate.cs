@@ -86,6 +86,8 @@ namespace FSO.SimAntics.Utils
                         (short)(oldPos.x * newXDir.X + oldPos.y * newYDir.X + offset.X),
                         (short)(oldPos.x * newXDir.Y + oldPos.y * newYDir.Y + offset.Y),
                         oldPos.Level);
+
+                    if (Ents[i].Position.x < 0 || Ents[i].Position.y < 0) Ents[i].Position = LotTilePos.OUT_OF_WORLD;
                 }
                 if (Ents[i] is VMGameObjectMarshal)
                 {

@@ -45,6 +45,11 @@ namespace FSO.SimAntics.Utils
             if (size == 0) size = model.Size;
             model.Size = size;
             if (VM.UseWorld) this.Blueprint = new Blueprint(size, size);
+            VM.Entities = new List<VMEntity>();
+            VM.Scheduler = new Engine.VMScheduler(VM);
+            VM.Context = new VMContext(null);
+            VM.Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
+            VM.Context.VM = VM;
             VM.Context.Blueprint = Blueprint;
             VM.Context.Architecture = new VMArchitecture(size, size, Blueprint, VM.Context);
 

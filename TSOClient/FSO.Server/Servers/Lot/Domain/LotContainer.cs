@@ -238,7 +238,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
             }
             
-            LOG.Error("FAILED to load all backups for lot with dbid = " + Context.DbId + "! Reverting to empty lot, backing up failed buffers");
+            LOG.Error("FAILED to load all backups for lot with dbid = " + Context.DbId + "! Forcing lot close");
             var backupPath = Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/failedRestore" + (DateTime.Now.ToBinary().ToString()) + "/");
             Directory.CreateDirectory(backupPath);
             foreach (var file in Directory.EnumerateFiles(Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/")))
@@ -246,6 +246,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 File.Copy(file, backupPath + Path.GetFileName(file));
             }
 
+            throw new Exception("failed to load lot!");
             return false;
         }
 
@@ -395,6 +396,7 @@ namespace FSO.Server.Servers.Lot.Domain
             var targetSize = 0;
 
             short jobLevel = -1;
+
             if (JobLot)
             {
                 //non-road tiles start at (8,8), end at (56,56)
@@ -440,9 +442,8 @@ namespace FSO.Server.Servers.Lot.Domain
             VMDriver.OnDirectMessage += DirectMessage;
             VMDriver.OnDropClient += DropClient;
 
-            var vm = new VM(new VMContext(null), VMDriver, new VMNullHeadlineProvider());
-            Lot = vm;
-            vm.Init();
+            Lot = new VM(new VMContext(null), VMDriver, new VMNullHeadlineProvider());
+            Lot.Init();
 
             bool isNew = false;
             bool isMoved = (LotPersist.move_flags > 0);
@@ -457,52 +458,53 @@ namespace FSO.Server.Servers.Lot.Domain
                 BlueprintReset();
             }
 
-            vm.TSOState.Terrain = Terrain;
-            vm.TSOState.Name = LotPersist.name;
-            vm.TSOState.OwnerID = LotPersist.owner_id;
-            vm.TSOState.Roommates = new HashSet<uint>();
-            vm.TSOState.BuildRoommates = new HashSet<uint>();
-            vm.TSOState.PropertyCategory = (byte)LotPersist.category;
+            Lot.TSOState.Terrain = Terrain;
+            Lot.TSOState.Name = LotPersist.name;
+            Lot.TSOState.OwnerID = LotPersist.owner_id;
+            Lot.TSOState.Roommates = new HashSet<uint>();
+            Lot.TSOState.BuildRoommates = new HashSet<uint>();
+            Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
             foreach (var roomie in LotRoommates)
             {
                 if (roomie.is_pending > 0) continue;
-                vm.TSOState.Roommates.Add(roomie.avatar_id);
+                Lot.TSOState.Roommates.Add(roomie.avatar_id);
                 if (roomie.permissions_level > 0)
-                    vm.TSOState.BuildRoommates.Add(roomie.avatar_id);
+                    Lot.TSOState.BuildRoommates.Add(roomie.avatar_id);
                 if (roomie.permissions_level > 1)
-                    vm.TSOState.OwnerID = roomie.avatar_id;
+                    Lot.TSOState.OwnerID = roomie.avatar_id;
             }
 
             var time = DateTime.UtcNow;
             var tsoTime = TSOTime.FromUTC(time);
 
-            vm.Context.Clock.Hours = tsoTime.Item1;
-            vm.Context.Clock.Minutes = tsoTime.Item2;
-            
-            vm.Context.UpdateTSOBuildableArea();
+            Lot.Context.UpdateTSOBuildableArea();
 
-            vm.MyUID = uint.MaxValue - 1;
+            Lot.MyUID = uint.MaxValue - 1;
             if ((LotPersist.move_flags & 2) > 0) isNew = true;
             ReturnInvalidObjects();
 
-            if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(vm);
-            if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(vm);
+            if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(Lot);
+            if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(Lot);
 
+            Lot.Context.Clock.Hours = tsoTime.Item1;
+            Lot.Context.Clock.Minutes = tsoTime.Item2;
 
-            var entClone = new List<VMEntity>(vm.Entities);
+            Lot.Context.UpdateTSOBuildableArea();
+
+            var entClone = new List<VMEntity>(Lot.Entities);
             foreach (var ent in entClone)
             {
                 if (ent is VMGameObject)
                 {
                     ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.TransactionIncomplete;
-                    ((VMGameObject)ent).DisableIfTSOCategoryWrong(vm.Context);
+                    ((VMGameObject)ent).DisableIfTSOCategoryWrong(Lot.Context);
                     if (ent.GetFlag(VMEntityFlags.Occupied))
                     {
                         ent.ResetData();
-                        ent.Init(vm.Context); //objects should not be occupied when we join the lot...
+                        ent.Init(Lot.Context); //objects should not be occupied when we join the lot...
                     }
                     {
-                        ent.ExecuteEntryPoint(2, vm.Context, true);
+                        ent.ExecuteEntryPoint(2, Lot.Context, true);
                     }
                 }
             }

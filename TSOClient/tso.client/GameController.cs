@@ -201,6 +201,7 @@ namespace FSO.Client
 
         private void ChangeState<TView, TController>(Callback<TView, TController> onCreated) where TView : UIScreen
         {
+            Binding.DisposeAll();
             GameThread.InUpdate(() =>
             {
                 GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Normal); //reset cursor

@@ -43,6 +43,11 @@ namespace FSO.SimAntics.Engine
 
             for (int i = stack.Count-1; i>=0; i--)
             {
+                if (i == 9 && i <= stack.Count - 8) {
+                    output.Append("...");
+                    output.AppendLine();
+                }
+                if (i > 8 && i <= stack.Count - 8) continue;
                 var frame = stack[i];
                 //run in tree:76
 
