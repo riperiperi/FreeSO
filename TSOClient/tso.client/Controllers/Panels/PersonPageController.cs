@@ -84,6 +84,14 @@ namespace FSO.Client.Controllers
                 }
             }
 
+            //if we're due a relationship poll on our own avatar, perform it.
+            if (MyRelDirty)
+            {
+                MyRelDirty = false;
+                DataService.Request(MaskedStruct.FriendshipWeb_Avatar, Network.MyCharacter);
+                MyRelPollTimeout = GameThread.SetTimeout(() => { MyRelDirty = true; }, 60000);
+            }
+
             View.CurrentTab = UIPersonPageTab.Description;
             View.SetOpen(false);
             View.Parent.Add(View);

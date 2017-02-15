@@ -34,7 +34,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             if(bhav != null){
                 //There might be param names
                 var labels = scope.GetLabels(bhav.ChunkID);
-                if(labels.ParamNames != null){
+                if(labels?.ParamNames != null){
                     for(var i=0; i < 4; i++){
                         if(i < labels.ParamNames.Length){
                             paramNames[i] = labels.ParamNames[i];

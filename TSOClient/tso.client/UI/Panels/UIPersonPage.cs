@@ -419,6 +419,31 @@ namespace FSO.Client.UI.Panels
                 FindController<PersonPageController>().Close();
             };
 
+            FriendshipWebButton.OnButtonClick += (UIElement e) =>
+            {
+                int friends = 0;
+                int enemies = 0;
+
+                if (MyAvatar != null && MyAvatar.Value != null && MyAvatar.Value.Avatar_FriendshipVec != null && CurrentAvatar.Value != null)
+                {
+                    var rels = new List<Relationship>(MyAvatar.Value.Avatar_FriendshipVec);
+                    foreach (var rel in rels)
+                    {
+                        if (rel.Relationship_IsOutgoing)
+                        {
+                            if (rel.Relationship_LTR >= 60) friends++;
+                            else if (rel.Relationship_LTR <= -60) enemies--;
+                        }
+                    }
+                }
+
+
+                UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Message = GameFacade.Strings.GetString("f105", "1", new string[] { friends.ToString(), enemies.ToString() })
+                }, true);
+            };
+
             JobsHelpButton.OnButtonClick += ShowJobInfo;
 
             /** Default state **/

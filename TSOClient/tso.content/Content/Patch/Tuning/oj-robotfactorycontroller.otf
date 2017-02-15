@@ -1,0 +1,182 @@
+<OTF>
+
+   <!--
+    - ROBOT FACTORY CHANGES -
+
+    MONEY PER ROBOT:
+      (10/15/20/25/25/30/30/35/40/45/50)
+    - increased roughly 2.5x, gradual scaling
+      (30/40/50/60/70/80/90/100/110/120/130)
+   -->
+
+   <T i="4096" n="Tuning - grade 0">
+      <K i="0" l="TicksPerTileArrowMove" v="20"></K>
+      <K i="1" l="PrimeSkill(0-1099)" v="0"></K>
+      <K i="2" l="SecondsPerRobotSpawn" v="30"></K>
+      <K i="3" l="IncomingFriends" v="0"></K>
+      <K i="4" l="JobXP" v="0"></K>
+      <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
+      <K i="6" l="SecondsPerBreakCheck" v="120"></K>
+      <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="30"></K>
+      <K i="9" l="XPIncAtRoundEnd" v="2"></K>
+   </T>
+
+   <T i="4097" n="Tuning - grade 1">
+      <K i="0" l="TicksPerTileArrowMove" v="20"></K>
+      <K i="1" l="PrimeSkill(0-1099)" v="100"></K>
+      <K i="2" l="SecondsPerRobotSpawn" v="29"></K>
+      <K i="3" l="IncomingFriends" v="1"></K>
+      <K i="4" l="JobXP" v="10"></K>
+      <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
+      <K i="6" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
+      <K i="7" l="SecondsPerBreakCheck" v="115"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="40"></K>
+      <K i="9" l="XPIncAtRoundEnd" v="2"></K>
+   </T>
+
+   <T i="4098" n="Tuning - grade 2">
+      <K i="0" l="TicksPerTileArrowMove" v="20"></K>
+      <K i="1" l="PrimeSkill(0-1099)" v="200"></K>
+      <K i="2" l="SecondsPerRobotSpawn" v="28"></K>
+      <K i="3" l="IncomingFriends" v="2"></K>
+      <K i="4" l="JobXP" v="40"></K>
+      <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
+      <K i="6" l="SecondsPerBreakCheck" v="110"></K>
+      <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="50"></K>
+      <K i="9" l="XPIncAtRoundEnd" v="2"></K>
+   </T>
+
+   <T i="4099" n="Tuning - grade 3">
+      <K i="0" l="TicksPerTileArrowMove" v="20"></K>
+      <K i="1" l="PrimeSkill(0-1099)" v="300"></K>
+      <K i="2" l="SecondsPerRobotSpawn" v="27"></K>
+      <K i="3" l="IncomingFriends" v="3"></K>
+      <K i="4" l="JobXP" v="90"></K>
+      <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
+      <K i="6" l="SecondsPerBreakCheck" v="100"></K>
+      <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="60"></K>
+      <K i="9" l="XPIncAtRoundEnd" v="2"></K>
+   </T>
+
+   <T i="4100" n="Tuning - grade 4">
+      <K i="0" l="TicksPerTileArrowMove" v="20"></K>
+      <K i="1" l="PrimeSkill(0-1099)" v="400"></K>
+      <K i="2" l="SecondsPerRobotSpawn" v="26"></K>
+      <K i="3" l="IncomingFriends" v="4"></K>
+      <K i="4" l="JobXP" v="160"></K>
+      <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
+      <K i="6" l="SecondsPerBreakCheck" v="95"></K>
+      <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="70"></K>
+      <K i="9" l="XPIncAtRoundEnd" v="2"></K>
+   </T>
+
+   <T i="4101" n="Tuning - grade 5">
+      <K i="0" l="TicksPerTileArrowMove" v="20"></K>
+      <K i="1" l="PrimeSkill(0-1099)" v="500"></K>
+      <K i="2" l="SecondsPerRobotSpawn" v="25"></K>
+      <K i="3" l="IncomingFriends" v="5"></K>
+      <K i="4" l="JobXP" v="250"></K>
+      <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
+      <K i="6" l="SecondsPerBreakCheck" v="90"></K>
+      <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="80"></K>
+      <K i="9" l="XPIncAtRoundEnd" v="2"></K>
+   </T>
+
+   <T i="4102" n="Tuning - grade 6">
+      <K i="0" l="TicksPerTileArrowMove" v="20"></K>
+      <K i="1" l="PrimeSkill(0-1099)" v="600"></K>
+      <K i="2" l="SecondsPerRobotSpawn" v="24"></K>
+      <K i="3" l="IncomingFriends" v="7"></K>
+      <K i="4" l="JobXP" v="360"></K>
+      <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
+      <K i="6" l="SecondsPerBreakCheck" v="85"></K>
+      <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="90"></K>
+      <K i="9" l="XPIncAtRoundEnd" v="2"></K>
+   </T>
+
+   <T i="4103" n="Tuning - grade 7">
+      <K i="0" l="TicksPerTileArrowMove" v="20"></K>
+      <K i="1" l="PrimeSkill(0-1099)" v="700"></K>
+      <K i="2" l="SecondsPerRobotSpawn" v="23"></K>
+      <K i="3" l="IncomingFriends" v="9"></K>
+      <K i="4" l="JobXP" v="490"></K>
+      <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
+      <K i="6" l="SecondsPerBreakCheck" v="80"></K>
+      <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="100"></K>
+      <K i="9" l="XPIncAtRoundEnd" v="2"></K>
+   </T>
+
+   <T i="4104" n="Tuning - grade 8">
+      <K i="0" l="TicksPerTileArrowMove" v="20"></K>
+      <K i="1" l="PrimeSkill" v="800"></K>
+      <K i="2" l="SecondsPerRobotSpawn" v="22"></K>
+      <K i="3" l="IncomingFriends" v="11"></K>
+      <K i="4" l="JobXP" v="640"></K>
+      <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
+      <K i="6" l="SecondsPerBreakCheck" v="75"></K>
+      <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="110"></K>
+      <K i="9" l="XPIncAtRoundEnd" v="2"></K>
+   </T>
+
+   <T i="4105" n="Tuning - grade 9">
+      <K i="0" l="TicksPerTileArrowMove" v="20"></K>
+      <K i="1" l="PrimeSkill(0-1099)" v="900"></K>
+      <K i="2" l="SecondsPerRobotSpawn" v="21"></K>
+      <K i="3" l="IncomingFriends" v="13"></K>
+      <K i="4" l="JobXP" v="810"></K>
+      <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
+      <K i="6" l="SecondsPerBreakCheck" v="70"></K>
+      <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="120"></K>
+      <K i="9" l="XPIncAtRoundEnd" v="2"></K>
+   </T>
+
+   <T i="4106" n="Tuning - grade 10">
+      <K i="0" l="TicksPerTileArrowMove" v="20"></K>
+      <K i="1" l="PrimeSkill(0-1099)" v="1000"></K>
+      <K i="2" l="SecondsPerRobotSpawn" v="20"></K>
+      <K i="3" l="IncomingFriends" v="15"></K>
+      <K i="4" l="JobXP" v="1000"></K>
+      <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
+      <K i="6" l="SecondsPerBreakCheck" v="60"></K>
+      <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="130"></K>
+      <K i="9" l="XPIncAtRoundEnd" v="2"></K>
+   </T>
+
+   <T i="4107" n="Tuning - All">
+      <K i="0" l="BeforeWorkMsgIDSemiFirst" v="21"></K>
+      <K i="1" l="SkillPointsIncAtRoundEnd (0-1099)" v="1"></K>
+      <K i="2" l="BeforeWorkMsgIDSemiLast" v="29"></K>
+      <K i="3" l="kMaxNumberOfRobotWorkers" v="6"></K>
+      <K i="4" l="Round Length (secs)" v="600"></K>
+      <K i="5" l="Intermission Length (secs)" v="60"></K>
+      <K i="6" l="RoundMsgIDSemiFirst" v="1"></K>
+      <K i="7" l="RoundMsgIDSemiLast" v="2"></K>
+      <K i="8" l="RoundMsgIDPriFirst" v="1"></K>
+      <K i="9" l="RoundMsgIDPriLast" v="16"></K>
+      <K i="10" l="IntermissionMsgIDSemiFirst" v="11"></K>
+      <K i="11" l="IntermissionMsgIDSemiLast" v="17"></K>
+      <K i="12" l="IntermissionMsgIDPriFirst" v="21"></K>
+      <K i="13" l="IntermissionMsgIDPriLast" v="28"></K>
+      <K i="14" l="DisableConveyorAnims" v="0"></K>
+      <K i="15" l="kTilesInCycle" v="3"></K>
+      <K i="16" l="kSpritesPerTile" v="4"></K>
+      <K i="17" l="MaxPromotionGrade(0-10)" v="10"></K>
+      <K i="18" l="BeforeWorkMsgIDPriFirst" v="31"></K>
+      <K i="19" l="BeforeWorkMsgIDPriLast" v="39"></K>
+      <K i="20" l="AfterWorkMsgIDSemiFirst" v="31"></K>
+      <K i="21" l="AfterWorkMsgIDSemiLast" v="42"></K>
+      <K i="22" l="AfterWorkMsgIDPriFirst" v="0"></K>
+      <K i="23" l="AfterWorkMsgIDPriLast" v="0"></K>
+   </T>
+
+</OTF>

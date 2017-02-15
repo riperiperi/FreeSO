@@ -1,0 +1,75 @@
+<OTF>
+
+   <!--
+    - RESTAURANT CHANGES -
+
+    BASE MONEY PER MEAL:
+      (10/20/30)
+    - increased 3x
+      (30/60/90)
+   -->
+
+
+   <T i="4098" n="Tuning: Wait Motives">
+      <K i="0" l="tMaxWaitMoodHit" v="2"></K>
+      <K i="1" l="tMaxWaitEnergyHit" v="5"></K>
+      <K i="2" l="tMaxWaitComfortHit" v="2"></K>
+      <K i="3" l="tMaxWaitHungerHit" v="4"></K>
+      <K i="4" l="tMaxWaitHygieneHit" v="5"></K>
+      <K i="5" l="tMaxWaitSocialHit" v="5"></K>
+      <K i="6" l="tMaxWaitFunHit" v="7"></K>
+      <K i="7" l="tWaitMotiveHit%" v="20"></K>
+   </T>
+
+   <T i="4099" n="Tuning: All">
+      <K i="0" l="tIdleAnim%" v="20"></K>
+      <K i="1" l="tPlayUpsetAnimBelow%" v="40"></K>
+      <K i="2" l="tPlayHappyAnimAbove%" v="70"></K>
+      <K i="3" l="tMotiveFailBubbleBelow%" v="20"></K>
+      <K i="4" l="tCryAgain%" v="20"></K>
+      <K i="5" l="tPatronMainWait" v="21"></K>
+   </T>
+
+   <T i="4096" n="Tuning: Diner">
+      <K i="0" l="tEarlyCheckFunPenalty" v="20"></K>
+      <K i="1" l="tSocialComfortPenalty" v="12"></K>
+      <K i="2" l="tMotiveRangeMin" v="40"></K>
+      <K i="4" l="tPatronMotiveBailLevel" v="-90"></K>
+      <K i="5" l="tEatSeconds" v="20"></K>
+      <K i="6" l="tMotiveRangeMax" v="60"></K>
+      <K i="7" l="tNumCourses" v="1"></K>
+      <K i="8" l="tMealPrice" v="30"></K>
+      <K i="9" l="tWrongFoodComfortPenalty" v="50"></K>
+      <K i="10" l="tWrongFoodFunPenalty" v="50"></K>
+      <K i="11" l="tWrongFoodMoodPenalty" v="50"></K>
+   </T>
+
+   <T i="4100" n="Tuning: Casual">
+      <K i="0" l="tEarlyCheckFunPenalty" v="20"></K>
+      <K i="1" l="tSocialComfortPenalty" v="12"></K>
+      <K i="2" l="tMotiveRangeMin" v="40"></K>
+      <K i="4" l="tPatronMotiveBailLevel" v="-60"></K>
+      <K i="5" l="tEatSeconds" v="20"></K>
+      <K i="6" l="tMotiveRangeMax" v="60"></K>
+      <K i="7" l="tNumCourses" v="1"></K>
+      <K i="8" l="tMealPrice" v="60"></K>
+      <K i="9" l="tWrongFoodComfortPenalty" v="70"></K>
+      <K i="10" l="tWrongFoodFunPenalty" v="70"></K>
+      <K i="11" l="tWrongFoodMoodPenalty" v="70"></K>
+   </T>
+
+   <T i="4101" n="Tuning: Swanky">
+      <K i="0" l="tEarlyCheckFunPenalty" v="20"></K>
+      <K i="1" l="tSocialComfortPenalty" v="12"></K>
+      <K i="2" l="tMotiveRangeMin" v="30"></K>
+      <K i="4" l="tPatronMotiveBailLevel" v="-30"></K>
+      <K i="5" l="tEatSeconds" v="20"></K>
+      <K i="6" l="tMotiveRangeMax" v="50"></K>
+      <K i="7" l="tNumCourses" v="1"></K>
+      <K i="8" l="tMealPrice" v="90"></K>
+      <K i="9" l="tWrongFoodComfortPenalty" v="90"></K>
+      <K i="10" l="tWrongFoodFunPenalty" v="90"></K>
+      <K i="11" l="tWrongFoodMoodPenalty" v="90"></K>
+   </T>
+
+</OTF>

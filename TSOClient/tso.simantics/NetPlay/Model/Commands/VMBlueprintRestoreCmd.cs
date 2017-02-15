@@ -36,6 +36,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 lotInfo = XmlHouseData.Parse(stream);
             }
 
+            vm.SetGlobalValue(11, JobLevel); //set job level before hand 
+
             var activator = new VMWorldActivator(vm, vm.Context.World);
             activator.FloorClip = new Microsoft.Xna.Framework.Rectangle(FloorClipX, FloorClipY, FloorClipWidth, FloorClipHeight);
             activator.Offset = new Microsoft.Xna.Framework.Point(OffsetX, OffsetY);
@@ -47,7 +49,6 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 vm.Context.World.InitBlueprint(blueprint);
                 vm.Context.Blueprint = blueprint;
             }
-            vm.SetGlobalValue(11, JobLevel);
 
             return true;
         }

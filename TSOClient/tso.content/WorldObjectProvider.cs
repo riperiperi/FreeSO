@@ -155,7 +155,14 @@ namespace FSO.Content
                         iff = this.Iffs.Get(reference.FileName + ".iff");
                         iff.RuntimeInfo.Path = reference.FileName;
                         if (WithSprites) sprites = this.Sprites.Get(reference.FileName + ".spf");
-                        tuning = this.TuningTables.Get(reference.FileName + ".otf");
+                        var rewrite = PIFFRegistry.GetOTFRewrite(reference.FileName + ".otf");
+                        try
+                        {
+                            tuning = (rewrite != null) ? new OTFFile(rewrite) : this.TuningTables.Get(reference.FileName + ".otf");
+                        } catch (Exception)
+                        {
+                            //if any issues occur loading an otf, just silently ignore it.
+                        }
                     }
                     else
                     {
