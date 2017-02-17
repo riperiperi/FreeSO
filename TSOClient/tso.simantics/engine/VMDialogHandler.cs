@@ -54,6 +54,12 @@ namespace FSO.SimAntics.Engine
 
         public static string ParseDialogString(VMStackFrame context, string input, STR source)
         {
+            return ParseDialogString(context, input, source, 0);
+        }
+
+        public static string ParseDialogString(VMStackFrame context, string input, STR source, int depth)
+        {
+            if (depth > 10) return input;
             int state = 0;
             StringBuilder command = new StringBuilder();
             StringBuilder output = new StringBuilder();
@@ -177,7 +183,7 @@ namespace FSO.SimAntics.Engine
                                     if (res != null)
                                     {
                                         var str = res.GetString(index);
-                                        output.Append(ParseDialogString(context, str, res)); // recursive command parsing!
+                                        output.Append(ParseDialogString(context, str, res, depth++)); // recursive command parsing!
                                         // this is needed for the crafting table.
                                         // though it is also, completely insane?
                                     }

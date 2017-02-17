@@ -310,7 +310,7 @@ namespace FSO.Server.Servers.Lot.Domain
                         //we need to send objects in slots back to their owners inventory too, so we don't lose what was on tables etc.
                         var sendback = new List<VMEntity>();
                         sendback.Add(ent);
-                        ObjListAllContained(sendback, ent);
+                        ObjListAllContained(sendback, ent, 0);
 
                         foreach (var delE in sendback)
                         {
@@ -347,15 +347,16 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
-        private void ObjListAllContained(List<VMEntity> ents, VMEntity ent)
+        private void ObjListAllContained(List<VMEntity> ents, VMEntity ent, int depth)
         {
+            if (depth > 50) throw new Exception("slot depth too high!");
             for (int i=0; i<ent.TotalSlots(); i++)
             {
                 var slotE = ent.GetSlot(i);
                 if (slotE != null)
                 {
                     ents.Add(slotE);
-                    ObjListAllContained(ents, slotE); //recursive
+                    ObjListAllContained(ents, slotE, depth++); //recursive
                 }
             }
         }

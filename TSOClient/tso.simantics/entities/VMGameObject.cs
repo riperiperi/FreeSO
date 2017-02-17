@@ -140,7 +140,7 @@ namespace FSO.SimAntics
             {
                 //can we be deleted and moved back to inventory? maybe some stuff on us needs to be first.
                 var context = Thread.Context;
-                var current = DeepestObjInSlot(this);
+                var current = DeepestObjInSlot(this, 0);
                 if (current is VMGameObject && !current.IsInUse(context, true))
                 {
                     if (current.PersistID > 0)
@@ -176,14 +176,15 @@ namespace FSO.SimAntics
             return false;
         }
 
-        private VMEntity DeepestObjInSlot(VMEntity pt)
+        private VMEntity DeepestObjInSlot(VMEntity pt, int depth)
         {
-            //todo: make sure nobody can create cyclic slots
+            //todo: make sure nobody can create cyclic slots, and limit slot depth
+            if (depth > 50) throw new Exception("slot depth too high!");
             var slots = pt.TotalSlots();
             for (int i=0; i<slots; i++)
             {
                 var ent = pt.GetSlot(i);
-                if (ent != null) return DeepestObjInSlot(ent);
+                if (ent != null) return DeepestObjInSlot(ent, depth++);
             }
             return this;
         }
