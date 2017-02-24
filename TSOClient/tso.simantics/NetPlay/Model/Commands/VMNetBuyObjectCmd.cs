@@ -69,12 +69,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 //overwrite value
 
                 var objDefinition = CreatedGroup.BaseObject.MasterDefinition ?? CreatedGroup.BaseObject.Object.OBJ;
-                var limit = objDefinition.DepreciationLimit;
-                if (value > limit) //only try to deprecate if we're above the limit. Prevents objects with a limit above their price being money fountains.
-                {
-                    value -= objDefinition.InitialDepreciation;
-                    if (value < limit) value = limit;
-                }
+                value = Math.Max(0, Math.Min(value, (value * (100-objDefinition.InitialDepreciation)) / 100));
 
                 CreatedGroup.Price = (int)value;
 

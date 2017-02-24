@@ -965,12 +965,7 @@ namespace FSO.SimAntics
 
             int salePrice = 0;
             if (item != null) salePrice = (int)item.Value.Price;
-            var limit = objDefinition.OBJ.DepreciationLimit;
-            if (salePrice > limit) //only try to deprecate if we're above the limit. Prevents objects with a limit above their price being money fountains.
-            {
-                salePrice -= objDefinition.OBJ.InitialDepreciation;
-                if (salePrice < limit) salePrice = limit;
-            }
+            salePrice = Math.Max(0, Math.Min(salePrice, (salePrice * (100 - objDefinition.OBJ.InitialDepreciation)) / 100));
 
             group.Price = (int)salePrice;
 

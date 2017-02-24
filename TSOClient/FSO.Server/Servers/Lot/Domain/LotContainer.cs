@@ -101,7 +101,10 @@ namespace FSO.Server.Servers.Lot.Domain
             0x1BD9E8F3, //conveyor belt - fx (might actually be a controller)
             0x6271EFF3, //dance floor - controller
             0x50907E06, //flies - controller
-            0x3161BB5B //job controller
+            0x3161BB5B, //job controller
+
+            0x5157DDF2, //cat carrier
+            0x3278BD34, //dog carrier
         };
         
         public LotContainer(IDAFactory da, LotContext context, ILotHost host, IKernel kernel, LotServerConfiguration config, IRealestateDomain realestate)
