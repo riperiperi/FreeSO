@@ -782,6 +782,7 @@ namespace FSO.SimAntics
             }
 
             var objs = RoomInfo[room].Entities;
+            var meAllowAvatars = target.GetFlag(VMEntityFlags.AllowPersonIntersection);
             foreach (var obj in objs)
             {
                 if (obj.MultitileGroup == target.MultitileGroup) continue;
@@ -793,7 +794,8 @@ namespace FSO.SimAntics
                     )
                 {
                     var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
-                    bool allowAvatars = ((flags & VMEntityFlags.DisallowPersonIntersection) == 0) && ((flags & VMEntityFlags.AllowPersonIntersection) > 0);
+                    bool allowAvatars = (obj is VMAvatar && meAllowAvatars) || 
+                        (((flags & VMEntityFlags.DisallowPersonIntersection) == 0) && ((flags & VMEntityFlags.AllowPersonIntersection) > 0));
                     if (!allowAvatars)
                     {
                         status = VMPlacementError.CantIntersectOtherObjects;

@@ -79,8 +79,11 @@ namespace FSO.SimAntics.Engine.Primitives
             var entry = VMFindBestObjectForFunction.FunctionToEntryPoint[operand.Function];
             for (int i=0; i<entities.Count; i++) {
                 var ent = entities[i];
+
                 if (ent.GetValue(VMStackObjectVariable.LockoutCount) > 0
-                    || (ent is VMGameObject && ((VMGameObject)ent).Disabled > 0)) continue; //this object is not important!!!
+                    || (ent is VMGameObject && ((VMGameObject)ent).Disabled > 0)
+                    || ent.Position == LotTilePos.OUT_OF_WORLD) continue; //this object is not important!!!
+
                 if (ent.EntryPoints[entry].ActionFunction != 0) {
                     bool Execute;
                     if (ent.EntryPoints[entry].ConditionFunction != 0) {

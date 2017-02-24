@@ -26,6 +26,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     .OnFailedToJoinDisconnect();
 
             PlaintextHandlers["close"] = Lobby.Close;
+            server.CanBeActionCancelled = true;
         }
 
         protected virtual void GetOutfits(VM vm, Callback<VMGLOutfit[]> callback)

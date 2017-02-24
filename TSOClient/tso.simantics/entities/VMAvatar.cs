@@ -777,7 +777,7 @@ namespace FSO.SimAntics
 
         public override VMObstacle GetObstacle(LotTilePos pos, Direction dir)
         {
-            return (KillTimeout > -1) ? null :
+            return (KillTimeout > -1 && !GetFlag(VMEntityFlags.HasZeroExtent)) ? null :
                 new VMObstacle(
                 (pos.x - 3),
                 (pos.y - 3),

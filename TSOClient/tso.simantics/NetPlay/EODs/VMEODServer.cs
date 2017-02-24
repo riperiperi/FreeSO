@@ -45,6 +45,7 @@ namespace FSO.SimAntics.NetPlay.EODs
         public bool Joinable;
         public VM vm;
         public uint PluginID;
+        public bool CanBeActionCancelled = false; //set true if the object does not deal with interaction cancelling itself
 
         public VMEODServer(uint UID, VMEntity obj, bool joinable, VM vm)
         {

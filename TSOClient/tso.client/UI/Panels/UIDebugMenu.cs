@@ -74,6 +74,14 @@ namespace FSO.Client.UI.Panels
                 }
             };
             Add(cityPainterBtn);
+
+            var serverNameBox = new UITextBox();
+            serverNameBox.X = 50;
+            serverNameBox.Y = 300 - 54;
+            serverNameBox.SetSize(500 - 100, 25);
+            serverNameBox.CurrentText = GlobalSettings.Default.GameEntryUrl;
+
+            Add(serverNameBox);
         }
 
         public override void Update(UpdateState state)

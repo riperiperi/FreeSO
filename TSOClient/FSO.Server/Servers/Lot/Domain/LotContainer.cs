@@ -84,6 +84,25 @@ namespace FSO.Server.Servers.Lot.Domain
         private ManualResetEvent LotActive = new ManualResetEvent(false);
         private bool ActiveYet;
         private Queue<Action> LotThreadActions = new Queue<Action>();
+
+        private static HashSet<uint> ValidOOWGUIDs = new HashSet<uint>()
+        {
+            0x37EB32F3, //skill controller
+            0x534564D5, //skill degrade
+            0x6371EFF3, //dance floor controller
+            0x3184835C, //skill tracker - type
+            0x9419ADFD, //skill tracker - progress
+            0x4A0C562F, //stereo speakers - music controller
+            0x38E2E75B, //death - controller
+            0x70F69082, //npc controller
+            0x32649B09, //pest - controller
+            0x55246EA3, //hat rack - handler
+            0x17803AFC, //conveyor belt - controller
+            0x1BD9E8F3, //conveyor belt - fx (might actually be a controller)
+            0x6271EFF3, //dance floor - controller
+            0x50907E06, //flies - controller
+            0x3161BB5B //job controller
+        };
         
         public LotContainer(IDAFactory da, LotContext context, ILotHost host, IKernel kernel, LotServerConfiguration config, IRealestateDomain realestate)
         {
@@ -287,6 +306,18 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
+        private void ReturnOOWObjects()
+        {
+            //we can delete these without respecting slot rules because of how SLOTs work (deleting table under us will move us to OOW)
+
+            var ents = Lot.Entities.Where(x => x.Position == LotView.Model.LotTilePos.OUT_OF_WORLD && !ValidOOWGUIDs.Contains(x.Object.OBJ.GUID)).ToList();
+
+            foreach (var ent in ents)
+            {
+                ent.Delete(false, Lot.Context);
+            }
+        }
+
         private void ReturnInvalidObjects()
         {
             var objectsOnLot = new List<uint>();
@@ -483,6 +514,7 @@ namespace FSO.Server.Servers.Lot.Domain
             Lot.MyUID = uint.MaxValue - 1;
             if ((LotPersist.move_flags & 2) > 0) isNew = true;
             ReturnInvalidObjects();
+            if (!JobLot) ReturnOOWObjects();
 
             if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(Lot);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(Lot);

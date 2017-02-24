@@ -478,9 +478,15 @@ namespace FSO.SimAntics.Engine
                     break;
                 case VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK:
                     MoveToInstruction(frame, instruction.TruePointer, false);
+                    ScheduleIdleStart = Context.VM.Scheduler.CurrentTickID;
+                    Context.VM.Scheduler.ScheduleTickIn(Entity, 1);
+                    ContinueExecution = false;
                     break;
                 case VMPrimitiveExitCode.GOTO_FALSE_NEXT_TICK:
                     MoveToInstruction(frame, instruction.FalsePointer, false);
+                    ScheduleIdleStart = Context.VM.Scheduler.CurrentTickID;
+                    Context.VM.Scheduler.ScheduleTickIn(Entity, 1);
+                    ContinueExecution = false;
                     break;
                 case VMPrimitiveExitCode.CONTINUE:
                     ContinueExecution = true;
@@ -666,6 +672,7 @@ namespace FSO.SimAntics.Engine
             var interaction = Queue.FirstOrDefault(x => x.UID == actionUID);
             if (interaction != null)
             {
+                if (Entity is VMAvatar && interaction == Queue[0] && Context.VM.EODHost != null) Context.VM.EODHost.ForceDisconnect((VMAvatar)Entity);
                 QueueDirty = true;
                 interaction.Cancelled = true;
                 //cancel any idle parents after this interaction

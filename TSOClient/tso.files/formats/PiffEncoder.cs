@@ -35,6 +35,7 @@ namespace FSO.Files.Formats
                 }
             }
 
+            bool anyAdded = false;
             foreach (var c in chunks)
             {
                 lock (c)
@@ -46,6 +47,7 @@ namespace FSO.Files.Formats
                         {
                             //this chunk has been newly added.
                             var oldParent = c.ChunkParent;
+                            anyAdded = true;
                             piffFile.AddChunk(c);
                             c.ChunkParent = oldParent;
                         }
@@ -61,7 +63,7 @@ namespace FSO.Files.Formats
                     }
                 }
             }
-            if (entries.Count == 0) return null; //no patch data...
+            if (entries.Count == 0 && !anyAdded) return null; //no patch data...
             piff.Entries = entries.ToArray();
             piff.ChunkID = 256;
             piff.ChunkLabel = (piff.SourceIff + " patch");

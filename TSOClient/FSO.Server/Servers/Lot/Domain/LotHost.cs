@@ -152,6 +152,12 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             lock (Lots)
             {
+                LotHostEntry entry;
+                if (Lots.TryGetValue(id, out entry))
+                {
+                    entry.Dispose();
+                    Kernel.Release(entry);
+                }
                 Lots.Remove(id);
             }
         }
@@ -220,6 +226,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
 
                 var ctnr = Kernel.Get<LotHostEntry>();
+                var bind = Kernel.GetBindings(typeof(LotHostEntry));
                 ctnr.CityConnection = cityConnection;
                 Lots.Add(id, ctnr);
                 return ctnr;
@@ -246,7 +253,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 var didClaim = da.LotClaims.Claim(claimId, previousOwner, Config.Call_Sign);
                 if (!didClaim)
                 {
-                    lock (Lots) Lots.Remove(lotId);
+                    RemoveLot(lotId);
                     return false;
                 }
                 else
@@ -257,14 +264,14 @@ namespace FSO.Server.Servers.Lot.Domain
                         var claim = da.LotClaims.Get(claimId);
                         if (claim == null)
                         {
-                            lock (Lots) Lots.Remove(lotId);
+                            RemoveLot(lotId);
                             return false;
                         }
 
                         var lot = da.Lots.Get(claim.lot_id);
                         if (lot == null)
                         {
-                            lock (Lots) Lots.Remove(lotId);
+                            RemoveLot(lotId);
                             return false;
                         }
 
@@ -395,6 +402,11 @@ namespace FSO.Server.Servers.Lot.Domain
                 BackgroundTasks.Add(cb);
                 BackgroundNotify.Set();
             }
+        }
+
+        public void Dispose()
+        {
+            Kernel?.Dispose();
         }
 
         public void Bootstrap(LotContext context)

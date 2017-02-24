@@ -58,7 +58,7 @@ namespace FSO.SimAntics.Engine
 
         //each within-room route gets these allowances separately.
         private static int WAIT_TIMEOUT = 10 * 30; //10 seconds
-        private static int MAX_RETRIES = 10;
+        private static int MAX_RETRIES = 5;
 
         private Stack<VMRoomPortal> Rooms = new Stack<VMRoomPortal>();
         private VMRoomPortal CurrentPortal;
@@ -339,13 +339,15 @@ namespace FSO.SimAntics.Engine
             obstacles.Add(new VMObstacle(bx-16, by-16, bx, by+height+16));
             obstacles.Add(new VMObstacle(bx+width, by-16, bx+width+16, by+height+16));
 
+            var considerAvatars = !Caller.GetFlag(VMEntityFlags.AllowPersonIntersection);
+
             foreach (var obj in roomInfo.Entities)
             {
                 var ft = obj.Footprint;
 
                 var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
                 if (obj != Caller && ft != null &&
-                    (obj is VMGameObject || AvatarsToConsider.Contains(obj)) &&
+                    (obj is VMGameObject || (considerAvatars && AvatarsToConsider.Contains(obj))) &&
                     ((flags & VMEntityFlags.DisallowPersonIntersection) > 0 || (flags & VMEntityFlags.AllowPersonIntersection) == 0)
                     && (!(Caller.ExecuteEntryPoint(5, VM.Context, true, obj, new short[] { obj.ObjectID, 0, 0, 0 })
                         || obj.ExecuteEntryPoint(5, VM.Context, true, Caller, new short[] { Caller.ObjectID, 0, 0, 0 }))))
@@ -585,7 +587,11 @@ namespace FSO.SimAntics.Engine
                         }
                         else
                         {
-                            if (Thread.LastStackExitCode == VMPrimitiveExitCode.RETURN_TRUE) return VMPrimitiveExitCode.RETURN_TRUE;
+                            if (Thread.LastStackExitCode == VMPrimitiveExitCode.RETURN_TRUE)
+                            {
+                                PreExit();
+                                return VMPrimitiveExitCode.RETURN_TRUE;
+                            }
                             else
                             {
                                 SoftFail(VMRouteFailCode.CantSit, null);
@@ -623,9 +629,17 @@ namespace FSO.SimAntics.Engine
 
                     return VMPrimitiveExitCode.CONTINUE;
                 case VMRoutingFrameState.FAILED:
+                    PreExit();
                     return VMPrimitiveExitCode.RETURN_FALSE;
                 case VMRoutingFrameState.TURN_ONLY:
-                    return (EndWalk()) ? VMPrimitiveExitCode.RETURN_TRUE : VMPrimitiveExitCode.CONTINUE;
+                    if (EndWalk())
+                    {
+                        PreExit();
+                        return VMPrimitiveExitCode.RETURN_TRUE;
+                    } else
+                    {
+                        return VMPrimitiveExitCode.CONTINUE;
+                    }
                 case VMRoutingFrameState.SHOOED:
                     StartWalkAnimation();
                     State = VMRoutingFrameState.WALKING;
@@ -656,6 +670,7 @@ namespace FSO.SimAntics.Engine
                             state.Loop = true;
                             avatar.Animations.Add(state);
 
+                            PreExit();
                             return VMPrimitiveExitCode.RETURN_TRUE; //we are here!
                         }
                     }
@@ -737,11 +752,20 @@ namespace FSO.SimAntics.Engine
                                 SoftFail(VMRouteFailCode.NoPath, avatar);
                                 return VMPrimitiveExitCode.CONTINUE;
                             }
+                            bool jobLot = VM.GetGlobalValue(11) > -1;
+                            if (Retries <= MAX_RETRIES - 3 && jobLot)
+                            {
+                                Caller.SetFlag(VMEntityFlags.AllowPersonIntersection, true);
+                                routeAround = true;
+                            }
 
                             if (colTopFrame != null && colTopFrame is VMRoutingFrame)
                             {
                                 colRoute = (VMRoutingFrame)colTopFrame;
                                 routeAround = (colRoute.WaitTime > 0);
+                            } else
+                            {
+                                --Retries;
                             }
                             if (routeAround) AvatarsToConsider.Add(colAvatar);
                         }
@@ -839,13 +863,32 @@ namespace FSO.SimAntics.Engine
                             if (!remains)
                             {
                                 MoveTotalFrames = -1;
-                                if (EndWalk()) return VMPrimitiveExitCode.RETURN_TRUE;
+                                if (EndWalk())
+                                {
+                                    PreExit();
+                                    return VMPrimitiveExitCode.RETURN_TRUE;
+                                }
                             }
                         }
                     }
                 return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
             }
             return VMPrimitiveExitCode.GOTO_FALSE; //???
+        }
+
+        private void PreExit()
+        {
+            //about to exit the routing frame
+            if (ParentRoute == null && Caller.GetFlag(VMEntityFlags.AllowPersonIntersection))
+            {
+                //reset person intersection if we set it
+                Caller.SetFlag(VMEntityFlags.AllowPersonIntersection, false);
+                if (Caller.SetPosition(Caller.Position, Direction.NORTH, VM.Context).Status != VMPlacementError.Success)
+                {
+                    //we can't become solid right now
+                    Caller.SetFlag(VMEntityFlags.AllowPersonIntersection, true);
+                }
+            }
         }
 
         private bool CanShooAvatar(VMAvatar avatar)
