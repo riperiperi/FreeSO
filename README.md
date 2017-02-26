@@ -16,7 +16,7 @@ You can contribute to FreeSO by testing cutting edge features in the latest rele
 * [Development Forums](http://forum.freeso.org)
 * [Development Blog](http://freeso.org)
 
-Looking for something to do? Check out the issues tagged as [help needed](https://github.com/RHY3756547/FreeSO/labels/help%20needed) to get started.
+Looking for something to do? Check out the issues tagged as [help wanted](https://github.com/RHY3756547/FreeSO/labels/help%20wanted) to get started.
 
 Regarding translations, full object and UI translations should currently be released on the forums. An improved system for distribution and organisation will be set up in a month or two. Stay tuned!
 
