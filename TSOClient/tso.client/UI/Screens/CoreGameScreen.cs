@@ -270,6 +270,19 @@ namespace FSO.Client.UI.Screens
             WindowContainer.Add(Bookmarks);
         }
 
+        public override void GameResized()
+        {
+            base.GameResized();
+            Title.SetTitle(Title.Label.Caption);
+            ucp.Y = ScreenHeight - 210;
+            gizmo.X = ScreenWidth - 430;
+            gizmo.Y = ScreenHeight - 230;
+            MessageTray.X = ScreenWidth - 70;
+            World?.GameResized();
+            var oldPanel = ucp.CurrentPanel;
+            ucp.SetPanel(-1);
+            ucp.SetPanel(oldPanel);
+        }
 
         public void Initialize(string cityName, int cityMap, TerrainController terrainController)
         {

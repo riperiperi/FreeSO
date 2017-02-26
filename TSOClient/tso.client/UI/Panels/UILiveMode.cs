@@ -112,15 +112,16 @@ namespace FSO.Client.UI.Panels
         public UIButton EODButton;
         public UIImage EODImage;
         public Texture2D DefaultBGImage;
+        private bool Small800;
 
         public UILiveMode (UILotControl lotController) {
-            var small800 = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
-            var script = this.RenderScript("livepanel"+(small800?"":"1024")+".uis");
+            Small800 = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
+            var script = this.RenderScript("livepanel"+(Small800?"":"1024")+".uis");
             EODLayout = new UIEODLayout(script);
             Script = script;
             LotController = lotController;
 
-            DefaultBGImage = GetTexture(small800 ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002);
+            DefaultBGImage = GetTexture(Small800 ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002);
             Background = new UIImage(DefaultBGImage);
             Background.Y = 35;
             this.AddAt(0, Background);
@@ -154,7 +155,7 @@ namespace FSO.Client.UI.Panels
             PersonGrid = new UIPersonGrid(LotController.vm);
             Add(PersonGrid);
             PersonGrid.Position = new Vector2(409, 51);
-            if (small800) {
+            if (Small800) {
                 PersonGrid.Columns = 4;
                 PersonGrid.DrawPage();
             }
@@ -434,13 +435,12 @@ namespace FSO.Client.UI.Panels
             NextPageButton.Visible = !inEOD;
             Background.Visible = !inEOD;
 
-            PersonGrid.Columns = (eodPresent || (GlobalSettings.Default.GraphicsWidth < 1024)) ?4:9;
+            PersonGrid.Columns = (eodPresent || Small800) ?4:9;
             PersonGrid.DrawPage();
             PeopleListBg.Texture = (eodPresent && PeopleListEODBackgroundImg != null) ? PeopleListEODBackgroundImg : PeopleListBackgroundImg;
             PeopleListBg.SetSize(PeopleListBg.Texture.Width, PeopleListBg.Texture.Height);
 
-            var small800 = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
-            NextPageButton.Position = (eodPresent && !small800) ? (Vector2)Script.GetControlProperty("NextPageEODButton") : DefaultNextPagePos;
+            NextPageButton.Position = (eodPresent && !Small800) ? (Vector2)Script.GetControlProperty("NextPageEODButton") : DefaultNextPagePos;
             Background.Texture = (eodPresent) ? BackgroundEODImg : DefaultBGImage;
             Background.SetSize(Background.Texture.Width, Background.Texture.Height);
 

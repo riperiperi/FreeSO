@@ -104,6 +104,7 @@
     <Compile Include="UI\Panels\EODs\UIDresserEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIPaperChaseEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIAbstractRackEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIPermissionDoorEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIRackEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIRackOwnerEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIScoreboardEOD.cs" />

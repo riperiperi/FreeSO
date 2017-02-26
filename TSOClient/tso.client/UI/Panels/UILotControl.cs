@@ -124,15 +124,8 @@ namespace FSO.Client.UI.Panels
             this.Add(Queue);
 
             ObjectHolder = new UIObjectHolder(vm, World, this);
-            QueryPanel = new UIQueryPanel(World);
-            QueryPanel.OnSellBackClicked += ObjectHolder.SellBack;
-            QueryPanel.OnInventoryClicked += ObjectHolder.MoveToInventory;
-            QueryPanel.OnAsyncBuyClicked += ObjectHolder.AsyncBuy;
-            QueryPanel.OnAsyncSaleClicked += ObjectHolder.AsyncSale;
-            QueryPanel.OnAsyncPriceClicked += ObjectHolder.AsyncSale;
-            QueryPanel.OnAsyncSaleCancelClicked += ObjectHolder.AsyncCancelSale;
-            QueryPanel.X = 0;
-            QueryPanel.Y = -114;
+
+            SetupQuery();
 
             ChatPanel = new UIChatPanel(vm, this);
             this.Add(ChatPanel);
@@ -146,6 +139,36 @@ namespace FSO.Client.UI.Panels
             Cheats = new UICheatHandler(this);
             AvatarDS = new UIAvatarDataServiceUpdater(this);
             EODs = new UIEODController(this);
+        }
+
+        public void SetupQuery()
+        {
+            UIContainer parent = null;
+            if (QueryPanel?.Parent?.Parent != null)
+            {
+                parent = QueryPanel.Parent;
+            }
+
+            QueryPanel = new UIQueryPanel(World);
+            QueryPanel.OnSellBackClicked += ObjectHolder.SellBack;
+            QueryPanel.OnInventoryClicked += ObjectHolder.MoveToInventory;
+            QueryPanel.OnAsyncBuyClicked += ObjectHolder.AsyncBuy;
+            QueryPanel.OnAsyncSaleClicked += ObjectHolder.AsyncSale;
+            QueryPanel.OnAsyncPriceClicked += ObjectHolder.AsyncSale;
+            QueryPanel.OnAsyncSaleCancelClicked += ObjectHolder.AsyncCancelSale;
+            QueryPanel.X = 0;
+            QueryPanel.Y = -114;
+
+            if (parent != null) parent.Add(QueryPanel);
+        }
+
+        public override void GameResized()
+        {
+            base.GameResized();
+            MouseEvt.Region.Width = GlobalSettings.Default.GraphicsWidth;
+            MouseEvt.Region.Height = GlobalSettings.Default.GraphicsHeight;
+
+            SetupQuery();
         }
 
         private void Vm_OnChatEvent(VMChatEvent evt)

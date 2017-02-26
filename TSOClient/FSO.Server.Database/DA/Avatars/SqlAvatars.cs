@@ -156,28 +156,35 @@ namespace FSO.Server.Database.DA.Avatars
             var success = true;
             try {
                 int srcRes, dstRes;
-                if (srcObj)
+                if (source_id != uint.MaxValue)
                 {
-                    srcRes = Context.Connection.Execute("UPDATE fso_objects SET budget = budget - @amount WHERE object_id = @source_id;",
-                        new { source_id = source_id, amount = amount});
+                    if (srcObj)
+                    {
+                        srcRes = Context.Connection.Execute("UPDATE fso_objects SET budget = budget - @amount WHERE object_id = @source_id;",
+                            new { source_id = source_id, amount = amount });
+                    }
+                    else
+                    {
+                        srcRes = Context.Connection.Execute("UPDATE fso_avatars SET budget = budget - @amount WHERE avatar_id = @source_id;",
+                            new { source_id = source_id, amount = amount });
+                    }
+                    if (srcRes == 0) throw new Exception("Source avatar/object does not exist!");
                 }
-                else
+
+                if (dest_id != uint.MaxValue)
                 {
-                    srcRes = Context.Connection.Execute("UPDATE fso_avatars SET budget = budget - @amount WHERE avatar_id = @source_id;",
-                        new { source_id = source_id, amount = amount });
+                    if (dstObj)
+                    {
+                        dstRes = Context.Connection.Execute("UPDATE fso_objects SET budget = budget + @amount WHERE object_id = @dest_id;",
+                            new { dest_id = dest_id, amount = amount });
+                    }
+                    else
+                    {
+                        dstRes = Context.Connection.Execute("UPDATE fso_avatars SET budget = budget + @amount WHERE avatar_id = @dest_id;",
+                            new { dest_id = dest_id, amount = amount });
+                    }
+                    if (dstRes == 0) throw new Exception("Dest avatar/object does not exist!");
                 }
-                if (source_id != uint.MaxValue && srcRes == 0) throw new Exception("Source avatar/object does not exist!");
-                if (dstObj)
-                {
-                    dstRes = Context.Connection.Execute("UPDATE fso_objects SET budget = budget + @amount WHERE object_id = @dest_id;",
-                        new { dest_id = dest_id, amount = amount });
-                } else
-                {
-                    dstRes = Context.Connection.Execute("UPDATE fso_avatars SET budget = budget + @amount WHERE avatar_id = @dest_id;",
-                        new { dest_id = dest_id, amount = amount });
-                }
-                
-                if (dest_id != uint.MaxValue && dstRes == 0) throw new Exception("Dest avatar/object does not exist!");
                 t.Commit();
             } catch (Exception)
             {

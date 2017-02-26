@@ -106,6 +106,7 @@ namespace FSO.Client.UI.Framework
             lock (Children)
             {
                 Children.Remove(child);
+                //if (child?.Parent == this) child.Parent = null;
             }
         }
 
@@ -251,6 +252,18 @@ namespace FSO.Client.UI.Framework
                 //also find a cleaner way to allow modification of an element's children by its own children.
                 foreach (var child in chCopy)
                     child.Update(state);
+            }
+        }
+
+        public override void GameResized()
+        {
+            base.GameResized();
+            lock (Children)
+            {
+                var chCopy = new List<UIElement>(Children);
+                //
+                foreach (var child in chCopy)
+                    child.GameResized();
             }
         }
 

@@ -83,12 +83,22 @@ namespace FSO.LotView
             State._2D.AmbientLight = State.AmbientLight;
 
             PPXDepthEngine.InitGD(layer.Device);
-            PPXDepthEngine.InitScreenTargets(layer.Device);
+            PPXDepthEngine.InitScreenTargets();
 
             base.Camera = State.Camera;
 
             HasInitGPU = true;
             HasInit = HasInitGPU & HasInitBlueprint;
+        }
+
+        public void GameResized()
+        {
+            PPXDepthEngine.InitScreenTargets();
+            var newSize = PPXDepthEngine.GetWidthHeight();
+            State._2D.GenBuffers(newSize.X, newSize.Y);
+            State.SetDimensions(newSize.ToVector2());
+
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ZOOM));
         }
 
         public virtual void InitBlueprint(Blueprint blueprint)

@@ -121,6 +121,18 @@ namespace FSO.Client.UI.Panels
             this.Add(PropertyLog);
         }
 
+        public override void GameResized()
+        {
+            base.GameResized();
+            InvalidAreas = new List<Rectangle>();
+            InvalidAreas.Add(new Rectangle(-100000, -100000, 100020, 200000 + GlobalSettings.Default.GraphicsHeight)); //left
+            InvalidAreas.Add(new Rectangle(-100000, -100000, 200000 + GlobalSettings.Default.GraphicsWidth, 100020)); //top
+            InvalidAreas.Add(new Rectangle(GlobalSettings.Default.GraphicsWidth - 20, -100000, 100020, 200000 + GlobalSettings.Default.GraphicsHeight)); //right
+            InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 20, 200000 + GlobalSettings.Default.GraphicsWidth, 100020)); //bottom
+            InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 230, 100230, 100230)); //ucp
+            TextBox.SetSize(GlobalSettings.Default.GraphicsWidth - 50, 25);
+        }
+
         private void SendMessage(string message)
         {
             message = message.Replace("\r\n", "");
@@ -183,13 +195,13 @@ namespace FSO.Client.UI.Panels
                 }
             }
 
-            if (state.NewKeys.Contains(Keys.H) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
+            if (state.NewKeys.Contains(Keys.H) && state.CtrlDown)
             {
                 state.InputManager.SetFocus(null);
                 HistoryDialog.Visible = !HistoryDialog.Visible;
             }
 
-            if (state.NewKeys.Contains(Keys.P) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
+            if (state.NewKeys.Contains(Keys.P) && state.CtrlDown)
             {
                 PropertyLog.Visible = !PropertyLog.Visible;
             }

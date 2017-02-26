@@ -107,6 +107,7 @@ namespace FSO.SimAntics.Primitives
                 case VMTransferFundsType.FromStackObjectToMaxis:
                     source = context.StackObject.PersistID; break;
                 case VMTransferFundsType.FromStackObjectToStackObjectOwner:
+                case VMTransferFundsType.FromStackObjectToLotRoommates:
                     source = context.StackObject.PersistID;
                     if (context.StackObject is VMGameObject) target = ((VMTSOObjectState)context.StackObject.TSOState).OwnerID;
                     break;
@@ -118,6 +119,10 @@ namespace FSO.SimAntics.Primitives
                     break;
                 case VMTransferFundsType.FromMaxisToLotOwner:
                     target = context.VM.TSOState.OwnerID;
+                    break;
+                case VMTransferFundsType.MeToLotRoommates:
+                    //give to object owner for now (doors)
+                    if (context.StackObject is VMGameObject) target = ((VMTSOObjectState)context.StackObject.TSOState).OwnerID; 
                     break;
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;

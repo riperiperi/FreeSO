@@ -25,13 +25,13 @@ namespace FSO.Common.Utils
             GD = gd;
             SB = new SpriteBatch(gd);
         }
-        public static void InitScreenTargets(GraphicsDevice gd)
+        public static void InitScreenTargets()
         {
             if (BackbufferDepth != null) BackbufferDepth.Dispose();
             if (Backbuffer != null) Backbuffer.Dispose();
             var scale = FSOEnvironment.DPIScaleFactor;
-            BackbufferDepth = CreateRenderTarget(gd, 1, 0, SurfaceFormat.Color, gd.Viewport.Width/scale, gd.Viewport.Height / scale, DepthFormat.None);
-            Backbuffer = CreateRenderTarget(gd, 1, 0, SurfaceFormat.Color, gd.Viewport.Width / scale, gd.Viewport.Height / scale, DepthFormat.Depth24Stencil8);
+            BackbufferDepth = CreateRenderTarget(GD, 1, 0, SurfaceFormat.Color, GD.Viewport.Width/scale, GD.Viewport.Height / scale, DepthFormat.None);
+            Backbuffer = CreateRenderTarget(GD, 1, 0, SurfaceFormat.Color, GD.Viewport.Width / scale, GD.Viewport.Height / scale, DepthFormat.Depth24Stencil8);
         }
 
         private static RenderTarget2D ActiveColor;
@@ -139,6 +139,11 @@ namespace FSO.Common.Utils
             SB.Draw(Backbuffer, new Vector2(), null, Color.White*opacity, 0f, new Vector2(), new Vector2(FSOEnvironment.DPIScaleFactor, FSOEnvironment.DPIScaleFactor),
                 SpriteEffects.None, 0);
             SB.End();
+        }
+
+        public static Point GetWidthHeight()
+        {
+            return new Point(Backbuffer.Width, Backbuffer.Height);
         }
 
         public static RenderTarget2D CreateRenderTarget(GraphicsDevice device, int numberLevels, int multisample, SurfaceFormat surface, int width, int height, DepthFormat dformat)

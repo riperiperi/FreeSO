@@ -55,6 +55,11 @@ namespace FSO.HIT
             Volume = volume;
         }
 
+        public void RecalculateVolume()
+        {
+
+        }
+
         public void Tick(float time) {
             for (int i = 0; i < SoundEffects.Count; i++) //dispose and remove sound effect instances that are finished
             {
@@ -117,7 +122,7 @@ namespace FSO.HIT
 
                     if (play)
                     {
-                        float volume = (note.Volume / 1024.0f) * (fsc.MasterVolume / 1024.0f) * Volume;
+                        float volume = (note.Volume / 1024.0f) * (fsc.MasterVolume / 1024.0f) * Volume * HITVM.Get().GetMasterVolume(Model.HITVolumeGroup.AMBIENCE);
                         var sound = LoadSound(note.Filename);
 
                         if (sound != null)

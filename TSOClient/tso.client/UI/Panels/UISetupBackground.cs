@@ -47,14 +47,36 @@ namespace FSO.Client.UI.Panels
             using (var logostrm = File.Open("Content/Textures/splashSeg.png", FileMode.Open, FileAccess.Read, FileShare.Read))
                 splashSeg = ImageLoader.FromStream(GameFacade.GraphicsDevice, logostrm);
 
-            var bgEdge = new UIImage(splashSeg).With9Slice(64, 64, 1, 1);
-            BackgroundCtnr.AddAt(0, bgEdge);
-            bgEdge.Y = -1;
-            bgEdge.X = Background.X - 64;
-            bgEdge.SetSize(Background.Width + 64 * 2, ScreenHeight + 2);
+            BgEdge = new UIImage(splashSeg).With9Slice(64, 64, 1, 1);
+            BackgroundCtnr.AddAt(0, BgEdge);
+            BgEdge.Y = -1;
+            BgEdge.X = Background.X - 64;
+            BgEdge.SetSize(Background.Width + 64 * 2, ScreenHeight + 2);
 
             Add(BackgroundCtnr);
         }
+
+        private UIImage BgEdge;
+
+        public override void GameResized()
+        {
+            base.GameResized();
+
+            var ScreenWidth = GlobalSettings.Default.GraphicsWidth;
+            var ScreenHeight = GlobalSettings.Default.GraphicsHeight;
+
+            var scale = ScreenHeight / 600.0f;
+            var setupTex = Background.Texture;
+            BackgroundCtnr.ScaleX = BackgroundCtnr.ScaleY = scale;
+            var bgScale = 600f / setupTex.Height;
+            Background.SetSize(setupTex.Width * bgScale, 600);
+            Background.X = (800 - bgScale * setupTex.Width) / 2;
+            BackgroundCtnr.X = (ScreenWidth - (800 * scale)) / 2;
+
+            BgEdge.X = Background.X - 64;
+            BgEdge.SetSize(Background.Width + 64 * 2, ScreenHeight + 2);
+        }
+
         public override void Draw(UISpriteBatch batch)
         {
             var ScreenWidth = GlobalSettings.Default.GraphicsWidth;

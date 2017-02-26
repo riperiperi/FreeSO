@@ -18,7 +18,6 @@ namespace FSO.HIT
     {
         public uint PC; //program counter
         public HITFile Src;
-        public HITVM VM;
         private Hitlist Hitlist;
         private int[] Registers; //includes args, vars, whatever "h" is up to 0xf
         private int[] LocalVar; //the sims online set, 0x10 "argstyle" up to 0x45 orientz. are half of these even used? no. but even in the test files? no
@@ -149,8 +148,9 @@ namespace FSO.HIT
             audContent = Content.Content.Get().Audio;
         }
 
-        public HITThread(uint TrackID)
+        public HITThread(uint TrackID, HITVM VM)
         {
+            this.VM = VM;
             Owners = new List<int>();
             Notes = new List<HITNoteEntry>();
             NotesByChannel = new Dictionary<SoundEffectInstance, HITNoteEntry>();
@@ -265,6 +265,17 @@ namespace FSO.HIT
 
             if (sound != null)
             {
+                switch (sound.Name)
+                {
+                    case "FX":
+                        VolGroup = Model.HITVolumeGroup.FX; break;
+                    case "MUSIC":
+                        VolGroup = Model.HITVolumeGroup.MUSIC; break;
+                    case "VOX":
+                        VolGroup = Model.HITVolumeGroup.VOX; break;
+                }
+                RecalculateVolume();   
+
                 var instance = sound.CreateInstance();
                 instance.Volume = Volume;
                 instance.Pan = Pan;

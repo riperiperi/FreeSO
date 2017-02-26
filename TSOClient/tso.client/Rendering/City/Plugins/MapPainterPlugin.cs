@@ -458,8 +458,8 @@ namespace FSO.Client.Rendering.City.Plugins
             }
             
             var pressed = state.NewKeys;
-            Erasing = state.KeyboardState.IsKeyDown(Keys.LeftControl);
-            Accelerate = state.KeyboardState.IsKeyDown(Keys.LeftShift);
+            Erasing = state.CtrlDown;
+            Accelerate = state.ShiftDown;
 
 
             for (int i = 2; i<11; i++)

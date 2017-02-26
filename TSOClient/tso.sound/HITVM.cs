@@ -13,6 +13,7 @@ using FSO.Files.HIT;
 using FSO.Content;
 using System.IO;
 using FSO.HIT.Events;
+using Microsoft.Xna.Framework.Audio;
 
 namespace FSO.HIT
 {
@@ -47,8 +48,13 @@ namespace FSO.HIT
         private HITTVOn NextMusic;
 
         private List<FSCPlayer> FSCPlayers;
+        public List<SoundEffectInstance> AmbLoops;
 
         private Dictionary<string, HITEventRegistration> Events;
+        private float[] GroupMasterVolumes = new float[]
+        {
+            1.0f, 1.0f, 1.0f, 1.0f
+        };
 
         public HITVM()
         {
@@ -73,6 +79,26 @@ namespace FSO.HIT
             Sounds = new List<HITSound>();
             ActiveEvents = new Dictionary<string, HITSound>();
             FSCPlayers = new List<FSCPlayer>();
+            AmbLoops = new List<SoundEffectInstance>();
+        }
+
+        public void SetMasterVolume(HITVolumeGroup group, float volume)
+        {
+            GroupMasterVolumes[(int)group] = volume;
+            foreach (var sound in Sounds)
+            {
+                if (sound.VolGroup == group) sound.RecalculateVolume();
+            }
+
+            foreach (var amb in AmbLoops)
+            {
+                amb.Volume = GetMasterVolume(HITVolumeGroup.AMBIENCE);
+            }
+        }
+
+        public float GetMasterVolume(HITVolumeGroup group)
+        {
+            return GroupMasterVolumes[(int)group];
         }
 
         public void WriteGlobal(int num, int value)
@@ -203,14 +229,16 @@ namespace FSO.HIT
 
                 if (evtent.EventType == HITEvents.kTurnOnTV)
                 {
-                    var thread = new HITTVOn(evtent.TrackID);
+                    var thread = new HITTVOn(evtent.TrackID, this);
+                    thread.VolGroup = HITVolumeGroup.FX;
                     Sounds.Add(thread);
                     ActiveEvents.Add(evt, thread);
                     return thread;
                 }
                 else if (evtent.EventType == HITEvents.kSetMusicMode)
                 {
-                    var thread = new HITTVOn(evtent.TrackID, true);
+                    var thread = new HITTVOn(evtent.TrackID, this, true);
+                    thread.VolGroup = HITVolumeGroup.MUSIC;
                     ActiveEvents.Add(evt, thread);
                     if (NextMusic != null) NextMusic.Kill();
                     if (MusicEvent != null) MusicEvent.Fade();
@@ -229,7 +257,7 @@ namespace FSO.HIT
                 }
                 else if (TrackID != 0 && content.Audio.TracksById.ContainsKey(TrackID))
                 {
-                    var thread = new HITThread(TrackID);
+                    var thread = new HITThread(TrackID, this);
                     Sounds.Add(thread);
                     ActiveEvents.Add(evt, thread);
                     return thread;

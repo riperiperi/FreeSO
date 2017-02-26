@@ -107,7 +107,7 @@ namespace FSO.Client.UI.Panels.LotControls
             {
                 var cmds = new List<VMArchitectureCommand>();
 
-                if (state.KeyboardState.IsKeyDown(Keys.LeftShift))
+                if (state.ShiftDown)
                 {
                     if (StartPosition != EndPosition)
                     {
@@ -132,7 +132,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 else
                 {
                     if (DrawLength > 0) cmds.Add(new VMArchitectureCommand {
-                        Type = (state.KeyboardState.IsKeyDown(Keys.LeftControl))?
+                        Type = (state.CtrlDown) ?
                             VMArchitectureCommandType.WALL_DELETE:VMArchitectureCommandType.WALL_LINE,
                         level = World.State.Level, pattern = Pattern, style = Style, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
                 }
@@ -164,7 +164,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 DrawDir = (int)DirectionUtils.PosMod(Math.Round(Math.Atan2(diff.Y, diff.X) / (Math.PI / 4)), 8);
                 
 
-                if (state.KeyboardState.IsKeyDown(Keys.LeftShift))
+                if (state.ShiftDown)
                 {
                     EndPosition = cursor;
                     int smallX = Math.Min(StartPosition.X, EndPosition.X);
@@ -179,7 +179,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 else
                 {
                     cursor = StartPosition + new Point(DirUnits[DrawDir].X * DrawLength, DirUnits[DrawDir].Y * DrawLength);
-                    cmds.Add(new VMArchitectureCommand { Type = (state.KeyboardState.IsKeyDown(Keys.LeftControl)) ?
+                    cmds.Add(new VMArchitectureCommand { Type = (state.CtrlDown) ?
                             VMArchitectureCommandType.WALL_DELETE : VMArchitectureCommandType.WALL_LINE,
                         level = World.State.Level, pattern = DrawPattern, style = DrawStyle, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
                 }
@@ -227,8 +227,8 @@ namespace FSO.Client.UI.Panels.LotControls
 
             WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, (World.State.Level-1)*2.95f), Direction.NORTH, vm.Context);
 
-            if (state.KeyboardState.IsKeyDown(Keys.LeftShift)) SetCursorGraphic(3);
-            else if (state.KeyboardState.IsKeyDown(Keys.LeftControl)) SetCursorGraphic(1);
+            if (state.ShiftDown) SetCursorGraphic(3);
+            else if (state.CtrlDown) SetCursorGraphic(1);
             else SetCursorGraphic(0);
         }
 

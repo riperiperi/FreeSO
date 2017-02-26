@@ -136,6 +136,7 @@ namespace FSO.Client.UI.Screens
             this.AddAt(0, bg);
             bg.SetSize(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
             bg.Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / -2, (GlobalSettings.Default.GraphicsHeight - 768) / -2);
+            Background = bg;
 
             if (BackgroundImageDialog != null)
             {
@@ -157,6 +158,18 @@ namespace FSO.Client.UI.Screens
              */
 
             HITVM.Get().PlaySoundEvent(UIMusic.SAS);
+        }
+
+        private UIImage Background;
+
+        public override void GameResized()
+        {
+            base.GameResized();
+            Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / 2, (GlobalSettings.Default.GraphicsHeight - 768) / 2) * FSOEnvironment.DPIScaleFactor;
+            Background.SetSize(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
+            Background.Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / -2, (GlobalSettings.Default.GraphicsHeight - 768) / -2);
+            InvalidateMatrix();
+            Parent.InvalidateMatrix();
         }
 
         public Texture2D GetLotThumbnail(string shardName, uint lotId)

@@ -97,6 +97,7 @@
     <Compile Include="HITVM.cs" />
     <Compile Include="Model\HITEventRegistration.cs" />
     <Compile Include="Model\HITResourceGroup.cs" />
+    <Compile Include="Model\HITVolumeGroup.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

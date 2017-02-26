@@ -145,6 +145,7 @@ namespace FSO.Client.UI.Screens
             this.AddAt(0, bg);
             bg.SetSize(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
             bg.Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / -2, (GlobalSettings.Default.GraphicsHeight - 768) / -2);
+            Background = bg;
 
             var offset = new Vector2(0, 0);
             if (BackgroundImageDialog != null)
@@ -206,6 +207,17 @@ namespace FSO.Client.UI.Screens
 
             SearchCollectionForInitID(GlobalSettings.Default.DebugHead, GlobalSettings.Default.DebugBody);
         }
+
+        private UIImage Background;
+        public override void GameResized()
+        {
+            base.GameResized();
+            Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / 2, (GlobalSettings.Default.GraphicsHeight - 768) / 2) * FSOEnvironment.DPIScaleFactor;
+            Background.SetSize(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
+            Background.Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / -2, (GlobalSettings.Default.GraphicsHeight - 768) / -2);
+        }
+
+
 
         private UIAlert _ProgressAlert;
 

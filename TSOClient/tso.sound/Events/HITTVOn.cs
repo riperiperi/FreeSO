@@ -95,13 +95,13 @@ namespace FSO.HIT.Events
             if (Instance != null)
             {
                 if (!IsMusic && Pan != Instance.Pan) Instance.Pan = Pan;
-                Instance.Volume = Volume;
+                Instance.Volume = InstVolume * GetVolFactor();
             }
 
             if (FadeOut > 0)
             {
                 FadeOut--;
-                if (Instance != null) Instance.Volume = Math.Max(0f, ((FadeOut - 60) / 120f));
+                if (Instance != null) Instance.Volume = Math.Max(0f, ((FadeOut - 60) / 120f)) * GetVolFactor();
                 if (FadeOut == 0)
                 {
                     Kill();
@@ -122,14 +122,16 @@ namespace FSO.HIT.Events
             return true;
         }
 
-        public HITTVOn(uint TrackID)
+        public HITTVOn(uint TrackID, HITVM vm)
         {
+            this.VM = vm;
             Station = new string(new char[] { (char)(TrackID & 0xFF), (char)((TrackID>>8) & 0xFF), (char)((TrackID>>16) & 0xFF), (char)((TrackID>>24) & 0xFF) });
             if (StationPaths.ContainsKey(Station)) LoadStation(StationPaths[Station].ToLowerInvariant());
         }
 
-        public HITTVOn(uint id, bool IDMode)
+        public HITTVOn(uint id, HITVM vm, bool IDMode)
         {
+            this.VM = vm;
             Station = "";
 
             if (id == 5)
@@ -138,6 +140,7 @@ namespace FSO.HIT.Events
                 var sfx = Content.Content.Get().Audio.GetSFX(0x00004f85);
                 SFXCache.Add("loadloop", sfx);
                 Instance = sfx.CreateInstance();
+                Instance.Volume = GetVolFactor();
                 Instance.IsLooped = true;
                 Instance.Play();
             }
@@ -212,7 +215,7 @@ namespace FSO.HIT.Events
 
                 Instance = sfx.CreateInstance();
             }
-            Instance.Volume = Volume;
+            Instance.Volume = InstVolume * GetVolFactor();
             if (!IsMusic && Pan != 0) Instance.Pan = Pan;
             Instance.Play();
             return true;

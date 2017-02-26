@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Server.Clients;
+using Ninject;
 
 namespace FSO.Client.UI.Panels
 {
@@ -75,7 +77,7 @@ namespace FSO.Client.UI.Panels
             };
             Add(cityPainterBtn);
 
-            var serverNameBox = new UITextBox();
+            serverNameBox = new UITextBox();
             serverNameBox.X = 50;
             serverNameBox.Y = 300 - 54;
             serverNameBox.SetSize(500 - 100, 25);
@@ -83,6 +85,7 @@ namespace FSO.Client.UI.Panels
 
             Add(serverNameBox);
         }
+        private UITextBox serverNameBox;
 
         public override void Update(UpdateState state)
         {
@@ -92,6 +95,17 @@ namespace FSO.Client.UI.Panels
                 //temporary until data service can inform people they're mod
                 //now i know what you're thinking - but these requests are permission checked server side anyways
                 UIPersonPage.EnableMod = true;
+            }
+
+            if (serverNameBox.CurrentText != GlobalSettings.Default.GameEntryUrl)
+            {
+                GlobalSettings.Default.GameEntryUrl = serverNameBox.CurrentText;
+                GlobalSettings.Default.CitySelectorUrl = serverNameBox.CurrentText;
+                var auth = GameFacade.Kernel.Get<AuthClient>();
+                auth.SetBaseUrl(serverNameBox.CurrentText);
+                var city = GameFacade.Kernel.Get<CityClient>();
+                city.SetBaseUrl(serverNameBox.CurrentText);
+                GlobalSettings.Default.Save();
             }
         }
     }

@@ -68,6 +68,8 @@ namespace FSO.LotView
         public Color OutsideColor; //temporary to give this to terrain component. in future it will use ambient light texture
         public bool DynamicCutaway;
 
+        public bool ThisFrameImmediate;
+
         public AvatarComponent ScrollAnchor;
 
         private int _WorldSize;

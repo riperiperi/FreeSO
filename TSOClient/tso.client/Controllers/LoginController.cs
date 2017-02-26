@@ -90,7 +90,7 @@ namespace FSO.Client.Controllers
                     GameThread.NextUpdate(state =>
                     {
                         UIScreen.RemoveDialog(_UpdaterAlert);
-                        if (state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
+                        if (state.ShiftDown)
                         {
                             _UpdaterAlert = UIScreen.GlobalShowAlert(new UIAlertOptions
                             {

@@ -81,6 +81,9 @@ namespace FSO.LotView.Utils
             this.ObjectID = obj;
         }
 
+        private int NumBuffers;
+        private SurfaceFormat[] SurfaceFormats;
+        private bool[] AlwaysDS;
         public _2DWorldBatch(GraphicsDevice device, int numBuffers, SurfaceFormat[] surfaceFormats, bool[] alwaysDS, int scrollBuffer)
         {
             this.Device = device;
@@ -89,18 +92,33 @@ namespace FSO.LotView.Utils
             Sprites = new List<_2DSpriteGroup>();
 
             ScrollBuffer = scrollBuffer;
+            NumBuffers = numBuffers;
+            SurfaceFormats = surfaceFormats;
+            AlwaysDS = alwaysDS;
 
-            ResetMatrices(device.Viewport.Width, device.Viewport.Height);
+            GenBuffers(device.Viewport.Width, device.Viewport.Height);
+        }
 
-            ScreenWidth = device.Viewport.Width;
-            ScreenHeight = device.Viewport.Height;
-
-            for (var i = 0; i < numBuffers; i++)
+        public void GenBuffers(int bwidth, int bheight)
+        {
+            foreach (var buffer in Buffers)
             {
-                int width = device.Viewport.Width + scrollBuffer;
-                int height = device.Viewport.Height + scrollBuffer;
+                buffer.Dispose();
+            }
+            Buffers.Clear();
 
-                switch (i) {
+            ResetMatrices(bwidth, bheight);
+
+            ScreenWidth = bwidth;
+            ScreenHeight = bheight;
+
+            for (var i = 0; i < NumBuffers; i++)
+            {
+                int width = bwidth + ScrollBuffer;
+                int height = bheight + ScrollBuffer;
+
+                switch (i)
+                {
                     case 4: //World2D.BUFFER_OBJID
                         width = 1;
                         height = 1;
@@ -115,10 +133,10 @@ namespace FSO.LotView.Utils
                         height = 2304;
                         break;
                 }
-                if (numBuffers == 2 && i == 1) width = height = 1024; //special case, thumb only. 
+                if (NumBuffers == 2 && i == 1) width = height = 1024; //special case, thumb only. 
                 Buffers.Add(
-                    PPXDepthEngine.CreateRenderTarget(device, 1, 0, surfaceFormats[i], width, height,
-                    (alwaysDS[i] || (!FSOEnvironment.UseMRT && !FSOEnvironment.SoftwareDepth))?DepthFormat.Depth24Stencil8:DepthFormat.None)
+                    PPXDepthEngine.CreateRenderTarget(Device, 1, 0, SurfaceFormats[i], width, height,
+                    (AlwaysDS[i] || (!FSOEnvironment.UseMRT && !FSOEnvironment.SoftwareDepth)) ? DepthFormat.Depth24Stencil8 : DepthFormat.None)
                 );
             }
         }

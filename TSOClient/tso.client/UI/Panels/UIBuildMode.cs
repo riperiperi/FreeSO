@@ -63,7 +63,7 @@ namespace FSO.Client.UI.Panels
 
         public UICatalog Catalog;
         public UIObjectHolder Holder;
-        public UIQueryPanel QueryPanel;
+        public UIQueryPanel QueryPanel { get { return LotController.QueryPanel; } }
         public UILotControl LotController;
         private VMMultitileGroup BuyItem;
 
@@ -79,7 +79,6 @@ namespace FSO.Client.UI.Panels
         {
             LotController = lotController;
             Holder = LotController.ObjectHolder;
-            QueryPanel = LotController.QueryPanel;
 
             var useSmall = (FSOEnvironment.UIZoomFactor>1f || GlobalSettings.Default.GraphicsWidth < 1024);
             var script = this.RenderScript("buildpanel" + (useSmall ? "" : "1024") + ".uis");
@@ -358,7 +357,7 @@ namespace FSO.Client.UI.Panels
         {
             if (OldSelection != -1)
             {
-                if (!holding.IsBought && (state.KeyboardState.IsKeyDown(Keys.LeftShift) || state.KeyboardState.IsKeyDown(Keys.RightShift)))
+                if (!holding.IsBought && (state.ShiftDown))
                 {
                     //place another
                     var prevDir = holding.Dir;

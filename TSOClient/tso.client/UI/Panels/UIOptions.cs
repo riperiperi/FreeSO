@@ -12,6 +12,8 @@ using FSO.Client.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.UI.Controls;
 using FSO.Common;
+using FSO.HIT;
+using FSO.HIT.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -167,6 +169,11 @@ namespace FSO.Client.UI.Panels
             MusicSlider.OnChange += new ChangeDelegate(ChangeVolume);
             VoxSlider.OnChange += new ChangeDelegate(ChangeVolume);
             AmbienceSlider.OnChange += new ChangeDelegate(ChangeVolume);
+
+            FXSlider.Value = GlobalSettings.Default.FXVolume;
+            MusicSlider.Value = GlobalSettings.Default.MusicVolume;
+            VoxSlider.Value = GlobalSettings.Default.VoxVolume;
+            AmbienceSlider.Value = GlobalSettings.Default.AmbienceVolume;
         }
 
         void ChangeVolume(UIElement slider)
@@ -177,6 +184,12 @@ namespace FSO.Client.UI.Panels
             else if (elm == MusicSlider) GlobalSettings.Default.MusicVolume = (byte)elm.Value;
             else if (elm == VoxSlider) GlobalSettings.Default.VoxVolume = (byte)elm.Value;
             else if (elm == AmbienceSlider) GlobalSettings.Default.AmbienceVolume = (byte)elm.Value;
+
+            var hit = HITVM.Get();
+            hit.SetMasterVolume(HITVolumeGroup.FX, GlobalSettings.Default.FXVolume / 10f);
+            hit.SetMasterVolume(HITVolumeGroup.MUSIC, GlobalSettings.Default.MusicVolume / 10f);
+            hit.SetMasterVolume(HITVolumeGroup.VOX, GlobalSettings.Default.VoxVolume / 10f);
+            hit.SetMasterVolume(HITVolumeGroup.AMBIENCE, GlobalSettings.Default.AmbienceVolume / 10f);
 
             GlobalSettings.Default.Save();
         }

@@ -24,6 +24,7 @@ using FSO.Common.Domain;
 using FSO.Common.Utils;
 using FSO.Common;
 using Microsoft.Xna.Framework.Audio;
+using FSO.HIT.Model;
 //using System.Windows.Forms;
 
 namespace FSO.Client
@@ -51,10 +52,35 @@ namespace FSO.Client
             Graphics.HardwareModeSwitch = false;
             Graphics.ApplyChanges();
 
+            this.Window.AllowUserResizing = true;
+            this.Window.ClientSizeChanged += new EventHandler<EventArgs>(Window_ClientSizeChanged);
+            
             //might want to disable for linux
-            Log.UseSensibleDefaults();
+                        Log.UseSensibleDefaults();
 
             Thread.CurrentThread.Name = "Game";
+        }
+
+        bool newChange = false;
+        void Window_ClientSizeChanged(object sender, EventArgs e)
+        {
+            if (newChange) return;
+            if (Window.ClientBounds.Width == 0 || Window.ClientBounds.Height == 0) return;
+            newChange = true;
+            var width = Math.Max(1, Window.ClientBounds.Width);
+            var height = Math.Max(1, Window.ClientBounds.Height);
+            Graphics.PreferredBackBufferWidth = width;
+            Graphics.PreferredBackBufferHeight = height;
+            Graphics.ApplyChanges();
+
+            GlobalSettings.Default.GraphicsWidth = width;
+            GlobalSettings.Default.GraphicsHeight = height;
+
+            newChange = false;
+            if (uiLayer == null) return;
+
+            uiLayer.SpriteBatch.ResizeBuffer(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
+            uiLayer.CurrentUIScreen.GameResized();
         }
 
         /// <summary>
@@ -103,6 +129,11 @@ namespace FSO.Client
 
             //init audio now
             HITVM.Init();
+            var hit = HITVM.Get();
+            hit.SetMasterVolume(HITVolumeGroup.FX, GlobalSettings.Default.FXVolume / 10f);
+            hit.SetMasterVolume(HITVolumeGroup.MUSIC, GlobalSettings.Default.MusicVolume / 10f);
+            hit.SetMasterVolume(HITVolumeGroup.VOX, GlobalSettings.Default.VoxVolume / 10f);
+            hit.SetMasterVolume(HITVolumeGroup.AMBIENCE, GlobalSettings.Default.AmbienceVolume / 10f);
 
             GameFacade.Strings = new ContentStrings();
             GameFacade.Controller.StartLoading();

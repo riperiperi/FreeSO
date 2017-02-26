@@ -33,6 +33,7 @@ namespace FSO.Server.Servers.Tasks.Domain
 
                 db.LotVisitTotals.Purge(retentionDate);
                 db.Bonus.Purge(retentionDate);
+                db.LotVisits.PurgeByDate(retentionDate);
             }
         }
 

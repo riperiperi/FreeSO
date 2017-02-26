@@ -176,7 +176,7 @@ namespace FSO.Client.UI.Panels
                 m_Bg.Y = (float)m_BgGrow * (-100);
             }
             RotateHeadCam(GlobalPoint(new Vector2(state.MouseState.X, state.MouseState.Y)));
-            ShiftDown = state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift);
+            ShiftDown = state.ShiftDown;
         }
 
         public void RenderMenu()

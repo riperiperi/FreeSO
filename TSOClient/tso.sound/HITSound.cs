@@ -4,6 +4,7 @@
  * http://mozilla.org/MPL/2.0/. 
  */
 
+using FSO.HIT.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,7 @@ namespace FSO.HIT
     {
         protected bool VolumeSet;
         protected float Volume = 1;
+        protected float InstVolume = 1;
         protected float Pan;
 
         protected bool EverHadOwners; //if we never had owners, don't kill the thread. (ui sounds)
@@ -22,6 +24,8 @@ namespace FSO.HIT
         protected List<int> Owners;
 
         public bool Dead;
+        public HITVM VM;
+        public HITVolumeGroup VolGroup;
 
         public HITSound()
         {
@@ -35,10 +39,11 @@ namespace FSO.HIT
             bool ownerChange = false;
             if (VolumeSet)
             {
-                if (volume > Volume)
+                if (volume > InstVolume)
                 {
                     if (LastMainOwner != ownerID) { LastMainOwner = ownerID; ownerChange = true; }
-                    Volume = volume;
+                    InstVolume = volume;
+                    RecalculateVolume();
                     Pan = pan;
                     return true;
                 }
@@ -46,12 +51,23 @@ namespace FSO.HIT
             }
             else
             {
-                VolumeSet = true;
                 if (LastMainOwner != ownerID) { LastMainOwner = ownerID; ownerChange = true; }
-                Volume = volume;
+                InstVolume = volume;
+                RecalculateVolume();
                 Pan = pan;
                 return true;
             }
+        }
+
+        public void RecalculateVolume()
+        {
+            VolumeSet = true;
+            Volume = InstVolume * GetVolFactor();
+        }
+
+        public float GetVolFactor()
+        {
+            return VM?.GetMasterVolume(VolGroup) ?? 1f;
         }
 
         public void AddOwner(int id)

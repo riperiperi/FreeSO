@@ -97,6 +97,16 @@ namespace FSO.Client.UI.Screens
             Regulator.OnTransition += AuthRegulator_OnTransition;
         }
 
+        public override void GameResized()
+        {
+            base.GameResized();
+            LoginProgress.X = (ScreenWidth - (LoginProgress.Width + 20));
+            LoginProgress.Y = (ScreenHeight - (LoginProgress.Height + 20));
+
+            LoginDialog.X = (ScreenWidth - LoginDialog.Width) / 2;
+            LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;
+        }
+
         public void Dispose()
         {
             Regulator.OnError -= AuthRegulator_OnError;

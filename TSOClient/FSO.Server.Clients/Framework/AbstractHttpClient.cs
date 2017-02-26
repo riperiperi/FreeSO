@@ -18,6 +18,11 @@ namespace FSO.Server.Clients.Framework
             this.BaseUrl = baseUrl;
         }
 
+        public void SetBaseUrl(string url)
+        {
+            BaseUrl = url;
+        }
+
         protected RestClient Client()
         {
             var client = new RestClient(BaseUrl);

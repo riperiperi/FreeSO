@@ -156,6 +156,7 @@
     <Compile Include="NetPlay\EODs\Handlers\Data\VMEODSignsData.cs" />
     <Compile Include="NetPlay\EODs\Archetypes\VMBasicEOD.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDresserPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODPermissionDoorPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODRackOwnerPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDanceFloorPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODHandler.cs" />

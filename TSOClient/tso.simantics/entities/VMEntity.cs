@@ -661,6 +661,18 @@ namespace FSO.SimAntics
             PositionChange(context, noEntryPoint);
         }
 
+        public bool WillLoopSlot(VMEntity test)
+        {
+            if (test == this) return true;
+            if (Container != null)
+            {
+                return Container.WillLoopSlot(test);
+            } else
+            {
+                return false;
+            }
+        }
+
         // End Container SLOTs interface
 
         public virtual void SetRoom(ushort room)
@@ -1001,7 +1013,8 @@ namespace FSO.SimAntics
                     {
                         this.Position = obj.Position;
                         obj.SetPosition(LotTilePos.OUT_OF_WORLD, obj.Direction, context);
-                        VMFindLocationFor.FindLocationFor(obj, this, context, VMPlaceRequestFlags.AcceptSlots);
+                        //this was causing really stupid behaviour
+                        //VMFindLocationFor.FindLocationFor(obj, this, context, VMPlaceRequestFlags.AcceptSlots);
                     }
                 }
 

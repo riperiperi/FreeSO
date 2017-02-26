@@ -389,14 +389,16 @@ namespace FSO.LotView
              *  If wall visibility has changed, redraw wall layer (should think about how this works with breakthrough wall mode
              */
 
-            var redrawStaticObjects = false;
-            var redrawFloor = false;
-            var redrawWall = false;
+            var im = state.ThisFrameImmediate;
+            var redrawStaticObjects = im;
+            var redrawFloor = im;
+            var redrawWall = im;
 
             var recacheWalls = false;
             var recacheFloors = false;
             var recacheTerrain = false;
             var recacheObjects = false;
+            var drawImmediate = false;
 
             if (TicksSinceLight++ > 60 * 4) damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
 
@@ -421,6 +423,7 @@ namespace FSO.LotView
                         }
                         break;
                     case BlueprintDamageType.PRECISE_ZOOM:
+                        drawImmediate = true;
                         redrawFloor = redrawWall = redrawStaticObjects = true;
                         break;
                     case BlueprintDamageType.LIGHTING_CHANGED:
@@ -477,12 +480,12 @@ namespace FSO.LotView
                         Blueprint.RoofComp.ShapeDirty = true;
                         break;
                 }
-                if (recacheFloors || recacheTerrain) redrawFloor = true;
-                if (recacheWalls) redrawWall = true;
-                if (recacheObjects) redrawStaticObjects = true;
             }
+            if (recacheFloors || recacheTerrain) redrawFloor = true;
+            if (recacheWalls) redrawWall = true;
+            if (recacheObjects) redrawStaticObjects = true;
             damage.Clear();
-            
+
             //scroll buffer loads in increments of SCROLL_BUFFER
             var newOff = GetScrollIncrement(pxOffset, state);
             var oldCenter = state.CenterTile;
@@ -534,58 +537,82 @@ namespace FSO.LotView
                 _2d.End(StaticObjectsCache, true);
             }
 
-            if (redrawFloor)
+            if (!drawImmediate)
             {
-                /** Draw archetecture to a texture **/
-                Promise<Texture2D> bufferTexture = null;
-                Promise<Texture2D> depthTexture = null;
-                using (var buffer = state._2D.WithBuffer(BUFFER_FLOOR_PIXEL, ref bufferTexture, BUFFER_FLOOR_DEPTH, ref depthTexture))
+                if (redrawFloor)
                 {
-                    _2d.SetScroll(pxOffset);
-                    while (buffer.NextPass())
+                    /** Draw archetecture to a texture **/
+                    Promise<Texture2D> bufferTexture = null;
+                    Promise<Texture2D> depthTexture = null;
+                    using (var buffer = state._2D.WithBuffer(BUFFER_FLOOR_PIXEL, ref bufferTexture, BUFFER_FLOOR_DEPTH, ref depthTexture))
                     {
-                        Blueprint.Terrain.DepthMode = _2d.OutputDepth;
-                        Blueprint.Terrain.Draw(gd, state);
-                        _2d.RenderCache(StaticFloorCache);
-                        foreach (var sub in Blueprint.SubWorlds) sub.DrawArch(gd, state);
+                        while (buffer.NextPass())
+                        {
+                            DrawFloorBuf(gd, state, pxOffset);
+                        }
                     }
+                    StaticFloor = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
                 }
-                StaticFloor = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
-            }
 
-            if (redrawWall)
-            {
-                Promise<Texture2D> bufferTexture = null;
-                Promise<Texture2D> depthTexture = null;
-                using (var buffer = state._2D.WithBuffer(BUFFER_WALL_PIXEL, ref bufferTexture, BUFFER_WALL_DEPTH, ref depthTexture))
+                if (redrawWall)
                 {
-                    _2d.SetScroll(pxOffset);
-                    while (buffer.NextPass())
+                    Promise<Texture2D> bufferTexture = null;
+                    Promise<Texture2D> depthTexture = null;
+                    using (var buffer = state._2D.WithBuffer(BUFFER_WALL_PIXEL, ref bufferTexture, BUFFER_WALL_DEPTH, ref depthTexture))
                     {
-                        _2d.RenderCache(StaticWallCache);
+                        while (buffer.NextPass())
+                        {
+                            DrawWallBuf(gd, state, pxOffset);
+                        }
                     }
+                    StaticWall = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
                 }
-                StaticWall = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
-            }
 
-            if (redrawStaticObjects){
-                /** Draw static objects to a texture **/
-                Promise<Texture2D> bufferTexture = null;
-                Promise<Texture2D> depthTexture = null;
-                using (var buffer = state._2D.WithBuffer(BUFFER_STATIC_OBJECTS_PIXEL, ref bufferTexture, BUFFER_STATIC_OBJECTS_DEPTH, ref depthTexture))
+                if (redrawStaticObjects)
                 {
-                    
-                    while (buffer.NextPass())
+                    /** Draw static objects to a texture **/
+                    Promise<Texture2D> bufferTexture = null;
+                    Promise<Texture2D> depthTexture = null;
+                    using (var buffer = state._2D.WithBuffer(BUFFER_STATIC_OBJECTS_PIXEL, ref bufferTexture, BUFFER_STATIC_OBJECTS_DEPTH, ref depthTexture))
                     {
-                        foreach (var sub in Blueprint.SubWorlds) sub.DrawObjects(gd, state);
-                        _2d.SetScroll(pxOffset);
-                        _2d.RenderCache(StaticObjectsCache);
+
+                        while (buffer.NextPass())
+                        {
+                            DrawObjBuf(gd, state, pxOffset);
+                        }
                     }
+                    StaticObjects = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
                 }
-                StaticObjects = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
             }
             //state._2D.PreciseZoom = state.PreciseZoom;
             state.CenterTile = oldCenter; //revert to our real scroll position
+
+            state.ThisFrameImmediate = drawImmediate;
+        }
+
+        private void DrawFloorBuf(GraphicsDevice gd, WorldState state, Vector2 pxOffset)
+        {
+            var _2d = state._2D;
+            _2d.SetScroll(pxOffset);
+            Blueprint.Terrain.DepthMode = _2d.OutputDepth;
+            Blueprint.Terrain.Draw(gd, state);
+            _2d.RenderCache(StaticFloorCache);
+            foreach (var sub in Blueprint.SubWorlds) sub.DrawArch(gd, state);
+        }
+
+        private void DrawWallBuf(GraphicsDevice gd, WorldState state, Vector2 pxOffset)
+        {
+            var _2d = state._2D;
+            _2d.SetScroll(pxOffset);
+            _2d.RenderCache(StaticWallCache);
+        }
+
+        private void DrawObjBuf(GraphicsDevice gd, WorldState state, Vector2 pxOffset)
+        {
+            var _2d = state._2D;
+            foreach (var sub in Blueprint.SubWorlds) sub.DrawObjects(gd, state);
+            _2d.SetScroll(pxOffset);
+            _2d.RenderCache(StaticObjectsCache);
         }
 
         public Vector2 GetScrollIncrement(Vector2 pxOffset, WorldState state)
@@ -611,30 +638,39 @@ namespace FSO.LotView
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             var tileOffset = state.CenterTile;
 
-            state._2D.PreciseZoom = 1f;
-            _2d.SetScroll(new Vector2());
-
-            _2d.Begin(state.Camera);
-            if (StaticFloor != null)
+            if (state.ThisFrameImmediate)
             {
-                _2d.DrawScrollBuffer(StaticFloor, pxOffset, new Vector3(tileOffset, 0), state);
-                _2d.Pause();
-                _2d.Resume();
+                _2d.SetScroll(pxOffset);
+                _2d.Begin(state.Camera);
+                DrawFloorBuf(gd, state, pxOffset);
+                DrawWallBuf(gd, state, pxOffset);
+                DrawObjBuf(gd, state, pxOffset);
             }
-            if (StaticWall != null)
+            else
             {
-                _2d.DrawScrollBuffer(StaticWall, pxOffset, new Vector3(tileOffset, 0), state);
-                _2d.Pause();
-                _2d.Resume();
+                _2d.SetScroll(new Vector2());
+                _2d.Begin(state.Camera);
+                state._2D.PreciseZoom = 1f;
+                if (StaticFloor != null)
+                {
+                    _2d.DrawScrollBuffer(StaticFloor, pxOffset, new Vector3(tileOffset, 0), state);
+                    _2d.Pause();
+                    _2d.Resume();
+                }
+                if (StaticWall != null)
+                {
+                    _2d.DrawScrollBuffer(StaticWall, pxOffset, new Vector3(tileOffset, 0), state);
+                    _2d.Pause();
+                    _2d.Resume();
+                }
+                if (StaticObjects != null)
+                {
+                    _2d.DrawScrollBuffer(StaticObjects, pxOffset, new Vector3(tileOffset, 0), state);
+                    _2d.Pause();
+                    _2d.Resume();
+                }
+                state._2D.PreciseZoom = state.PreciseZoom;
             }
-            if (StaticObjects != null)
-            {
-                _2d.DrawScrollBuffer(StaticObjects, pxOffset, new Vector3(tileOffset, 0), state);
-                _2d.Pause();
-                _2d.Resume();
-            }
-
-            state._2D.PreciseZoom = state.PreciseZoom;
             _2d.SetScroll(pxOffset);
 
             _2d.End();

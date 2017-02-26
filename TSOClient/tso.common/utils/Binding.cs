@@ -117,6 +117,7 @@ namespace FSO.Common.Utils
         {
             lock (this)
             {
+                if (Bindings == null) return;
                 foreach (var binding in Bindings)
                 {
                     binding.Digest(_Value);

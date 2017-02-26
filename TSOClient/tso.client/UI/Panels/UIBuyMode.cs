@@ -76,7 +76,7 @@ namespace FSO.Client.UI.Panels
 
         public UICatalog Catalog;
         public UIObjectHolder Holder;
-        public UIQueryPanel QueryPanel;
+        public UIQueryPanel QueryPanel { get { return LotController.QueryPanel; } }
         public UILotControl LotController;
         private VMMultitileGroup BuyItem;
 
@@ -92,14 +92,15 @@ namespace FSO.Client.UI.Panels
         private bool Roommate = true; //if false, shows visitor inventory only.
         private int Mode = 0;
         private int OldSelection = -1;
+        private bool UseSmall;
 
         public UIBuyMode(UILotControl lotController) {
 
             LotController = lotController;
             Holder = LotController.ObjectHolder;
-            QueryPanel = LotController.QueryPanel;
 
             var useSmall = (FSOEnvironment.UIZoomFactor > 1f || GlobalSettings.Default.GraphicsWidth < 1024);
+            UseSmall = useSmall;
             var script = this.RenderScript("buypanel"+(useSmall?"":"1024")+".uis");
 
             Background = new UIImage(GetTexture(useSmall ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
@@ -217,7 +218,7 @@ namespace FSO.Client.UI.Panels
         {
             if (OldSelection != -1)
             {
-                if (!holding.IsBought && holding.InventoryPID == 0 && (state.KeyboardState.IsKeyDown(Keys.LeftShift) || state.KeyboardState.IsKeyDown(Keys.RightShift))) {
+                if (!holding.IsBought && holding.InventoryPID == 0 && (state.ShiftDown)) {
                     //place another
                     var prevDir = holding.Dir;
                     Catalog_OnSelectionChange(OldSelection);
@@ -443,7 +444,7 @@ namespace FSO.Client.UI.Panels
             InventoryCatalogVisitorNextPageButton.Visible = (mode == 2 && !Roommate);
             InventoryCatalogVisitorPreviousPageButton.Visible = (mode == 2 && !Roommate);
 
-            var useSmall = (FSOEnvironment.UIZoomFactor > 1f || GlobalSettings.Default.GraphicsWidth < 1024);
+            var useSmall = UseSmall;
 
             if (mode == 1) { Catalog.X = 275; Catalog.PageSize = (useSmall)?14:24; }
             else if (mode == 2 && Roommate) { Catalog.X = 272; Catalog.PageSize = (useSmall) ? 14 : 24; }

@@ -444,6 +444,11 @@ namespace FSO.Client.UI.Framework
             }
         }
 
+        public virtual void GameResized()
+        {
+
+        }
+
         /// <summary>
         /// Scans through parents to determine if this element will be drawn.
         /// </summary>

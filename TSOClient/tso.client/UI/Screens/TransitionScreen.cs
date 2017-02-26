@@ -50,6 +50,13 @@ namespace FSO.Client.UI.Screens
             this.Add(m_LoginProgress);
         }
 
+        public override void GameResized()
+        {
+            base.GameResized();
+            m_LoginProgress.X = (ScreenWidth - (m_LoginProgress.Width + 20));
+            m_LoginProgress.Y = (ScreenHeight - (m_LoginProgress.Height + 20));
+        }
+
         public bool ShowProgress
         {
             get

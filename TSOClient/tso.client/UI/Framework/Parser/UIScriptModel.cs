@@ -108,7 +108,9 @@ namespace FSO.Client.UI.Framework.Parser
         {
             get
             {
-                return Attributes[name];
+                string result = null;
+                Attributes.TryGetValue(name, out result);
+                return result;
             }
             set
             {

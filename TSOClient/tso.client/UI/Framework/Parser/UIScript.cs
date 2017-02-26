@@ -421,7 +421,7 @@ namespace FSO.Client.UI.Framework.Parser
         /// <param name="node"></param>
         public void DefineString(UINode node)
         {
-            var stringValue = GameFacade.Strings[node["stringDir"], node["stringTable"], node["stringIndex"]];
+            var stringValue = GameFacade.Strings[node["stringDir"], node["stringTable"], node["stringIndex"] ?? node["StringIndex"]];
             Strings.Add(node.ID.ToLowerInvariant(), stringValue);
             WireUp(node.ID, stringValue);
         }
