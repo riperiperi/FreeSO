@@ -1013,8 +1013,7 @@ namespace FSO.SimAntics
                     {
                         this.Position = obj.Position;
                         obj.SetPosition(LotTilePos.OUT_OF_WORLD, obj.Direction, context);
-                        //this was causing really stupid behaviour
-                        //VMFindLocationFor.FindLocationFor(obj, this, context, VMPlaceRequestFlags.AcceptSlots);
+                        if (this.Position != LotTilePos.OUT_OF_WORLD) VMFindLocationFor.FindLocationFor(obj, this, context, VMPlaceRequestFlags.Default);
                     }
                 }
 

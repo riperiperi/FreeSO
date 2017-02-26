@@ -171,6 +171,7 @@ namespace FSO.Common.Rendering.Framework.IO
                             }
                             else
                             {
+                                cursorIndex = Math.Min(m_SBuilder.Length, cursorIndex);
                                 m_SBuilder.Insert(cursorIndex, "\r\n");
                                 cursorIndex += 2;
                             }

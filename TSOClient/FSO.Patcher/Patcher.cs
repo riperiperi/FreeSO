@@ -18,7 +18,7 @@ namespace FSO.Patcher
         private int RENAME_MAX_ATTEMPTS = 8;
         static HashSet<string> IgnoreFiles = new HashSet<string>()
         {
-            "updater.exe",
+            //"updater.exe",
             "Content/config.ini",
             "Ninject.dll", //til I add dynamic linking for these
             "Ninject.xml",
@@ -42,7 +42,39 @@ namespace FSO.Patcher
                 return;
             }
 
-            AttemptRename();
+            Task.Run(() =>
+            {
+                AttemptRename();
+            });
+        }
+
+        public async Task<bool> ExtractEntry(ZipArchiveEntry entry, int tryNum)
+        {
+            var name = (entry.FullName == "update.exe") ? "update2.exe" : entry.FullName;
+            var targPath = Path.Combine("./", name);
+            Directory.CreateDirectory(Path.GetDirectoryName(targPath));
+            try
+            {
+                entry.ExtractToFile(targPath, true);
+                StatusLabel.Text = name + " Extracted...";
+                return true;
+            }
+            catch (Exception e)
+            {
+                if (e is DirectoryNotFoundException) return true;
+                if (tryNum++ > 3)
+                {
+                    Console.WriteLine("Could not replace " + targPath + "!");
+                    return false;
+                }
+                else
+                {
+                    StatusLabel.Text = "Waiting for "+name+"..." + e.ToString();
+                    await Task.Delay(3000);
+                    return await ExtractEntry(entry, tryNum);
+                }
+                
+            }
         }
 
         public async void Extract()
@@ -59,15 +91,12 @@ namespace FSO.Patcher
             foreach (var entry in entries)
             {
                 if (IgnoreFiles.Contains(entry.FullName)) continue;
-                var targPath = Path.Combine("./", entry.FullName);
-                Directory.CreateDirectory(Path.GetDirectoryName(targPath));
-                try
+                var result = await ExtractEntry(entry, 0);
+                if (!result)
                 {
-                    entry.ExtractToFile(targPath, true);
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("Could not replace " + targPath + "!");
+                    MessageBox.Show("Couldn't replace a file. Make sure you are not running an instance of FreeSO!");
+                    Application.Exit();
+                    return;
                 }
             }
             archive.Dispose();

@@ -32,6 +32,17 @@ namespace FSO.Client.UI.Screens
 
         public LoginScreen(LoginRegulator regulator)
         {
+            try
+            {
+                if (File.Exists("update2.exe"))
+                {
+                    File.Delete("update.exe");
+                    File.Move("update2.exe", "update.exe");
+                }
+            } catch (Exception) { 
+                //maybe signal to user that the updater update failed
+            }
+
             this.Regulator = regulator;
             regulator.Logout();
 

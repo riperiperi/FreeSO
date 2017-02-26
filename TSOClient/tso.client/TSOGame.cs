@@ -64,7 +64,7 @@ namespace FSO.Client
         bool newChange = false;
         void Window_ClientSizeChanged(object sender, EventArgs e)
         {
-            if (newChange) return;
+            if (newChange || !GlobalSettings.Default.Windowed) return;
             if (Window.ClientBounds.Width == 0 || Window.ClientBounds.Height == 0) return;
             newChange = true;
             var width = Math.Max(1, Window.ClientBounds.Width);
@@ -77,7 +77,7 @@ namespace FSO.Client
             GlobalSettings.Default.GraphicsHeight = height;
 
             newChange = false;
-            if (uiLayer == null) return;
+            if (uiLayer?.CurrentUIScreen == null) return;
 
             uiLayer.SpriteBatch.ResizeBuffer(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
             uiLayer.CurrentUIScreen.GameResized();
