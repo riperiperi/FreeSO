@@ -1,6 +1,7 @@
 ﻿using FSO.Common.DataService;
 using FSO.Common.Serialization.Primitives;
 using FSO.Common.Utils;
+using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.LotVisitors;
@@ -125,6 +126,21 @@ namespace FSO.Server.Servers.Lot.Domain
             if (lot != null)
             {
                 lot.Message(session, message);
+            }
+        }
+
+        public void CheckLiveness()
+        {
+            lock (Lots)
+            {
+                var now = Epoch.Now;
+                foreach (var lot in Lots.Values)
+                {
+                    if (now - lot.LastActivity > 90)
+                    {
+                        lot.Abort();
+                    }
+                }
             }
         }
 
@@ -409,6 +425,15 @@ namespace FSO.Server.Servers.Lot.Domain
             Kernel?.Dispose();
         }
 
+        /// <summary>
+        /// Something went really wrong and we should just roll with it.
+        /// </summary>
+        public void Abort()
+        {
+            BgKilled = true;
+            BackgroundThread?.Abort();
+        }
+
         public void Bootstrap(LotContext context)
         {
             this.Context = context;
@@ -439,6 +464,8 @@ namespace FSO.Server.Servers.Lot.Domain
         //the number of times recieving no background tasks after which we assume the main thread is stuck in an infinite loop.
         private static readonly int BACKGROUND_TIMEOUT_ABANDON_COUNT = 4;
         private int BgTimeoutExpiredCount = 0;
+        public uint LastActivity = Epoch.Now;
+        private bool BgKilled;
         private void _DigestBackground()
         {
             try
@@ -473,15 +500,30 @@ namespace FSO.Server.Servers.Lot.Domain
                         try
                         {
                             task?.Invoke();
+                            if (task == null) LastActivity = Epoch.Now;
+                        }
+                        catch (ThreadAbortException ex)
+                        {
+                            LOG.Error("Background thread locked for lot with dbid = " + Context.DbId + "! TERMINATING! "+ex.ToString());
+                            MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
+                            return;
                         }
                         catch (Exception ex)
                         {
+                            LOG.Info("Background task failed on lot with dbid = " + Context.DbId + "! (continuing)" + ex.ToString());
                         }
                     }
                 }
             }
-            catch (ThreadAbortException) {
+            catch (ThreadAbortException ex2) {
+                if (BgKilled)
+                {
+                    LOG.Error("Background thread locked for lot with dbid = " + Context.DbId + "! TERMINATING! " + ex2.ToString());
+                    MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
+                    return;
+                }
                 //complete remaining tasks
+                LastActivity = Epoch.Now;
                 List<Callback> tasks = new List<Callback>();
                 lock (BackgroundTasks)
                 {
@@ -497,6 +539,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                     catch (Exception ex)
                     {
+                        LOG.Info("Background task failed on lot " + Context.DbId + "! (when ending)" + ex.ToString());
                     }
                 }
             }

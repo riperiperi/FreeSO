@@ -323,6 +323,11 @@ namespace FSO.Client.UI
             Content.Content.Get().Changes.RunResModifications();
             mainUI.Update(state);
 
+            if (state.AltDown && state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Enter))
+            {
+                GameFacade.GraphicsDeviceManager.ToggleFullScreen();
+            }
+
             lock (m_ExtContainers)
             {
                 var extCopy = new List<UIExternalContainer>(m_ExtContainers);

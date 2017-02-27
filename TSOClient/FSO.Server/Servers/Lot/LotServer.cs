@@ -23,6 +23,7 @@ namespace FSO.Server.Servers.Lot
         private static Logger LOG = LogManager.GetCurrentClassLogger();
         private LotServerConfiguration Config;
         private CityConnections Connections;
+        private System.Timers.Timer LotLivenessTimer = new System.Timers.Timer(60000);
 
         private LotHost Lots;
 
@@ -35,12 +36,21 @@ namespace FSO.Server.Servers.Lot
             Kernel.Bind<CityConnections>().To<CityConnections>().InSingletonScope();
             Kernel.Bind<LotServer>().ToConstant(this);
 
+            LotLivenessTimer.AutoReset = true;
+            LotLivenessTimer.Elapsed += LivenessCheck;
+
             Lots = Kernel.Get<LotHost>();
+        }
+
+        private void LivenessCheck(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            Lots.CheckLiveness();
         }
 
         public override void Start()
         {
             LOG.Info("Starting lot hosting server");
+            LotLivenessTimer.Start();
             base.Start();
         }
 
@@ -168,6 +178,7 @@ namespace FSO.Server.Servers.Lot
         {
             var task = Lots.Shutdown();
             task.Wait();
+            LotLivenessTimer.Stop();
             base.Shutdown();
         }
 

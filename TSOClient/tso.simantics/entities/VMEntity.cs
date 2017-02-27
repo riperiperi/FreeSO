@@ -988,6 +988,15 @@ namespace FSO.SimAntics
                 }
                 threads.Clear();
 
+                if (Container != null && Container is VMAvatar)
+                {
+                    //must reset our container, and any object they are using. (restaurant, TS1 behaves similarly)
+                    var stack = Container.Thread.Stack;
+                    var stacklast = (stack.Count == 0) ? null : stack[stack.Count - 1];
+                    if (stacklast != null && stacklast.Callee != Container && stacklast.Callee != this) stacklast.Callee.Reset(context);
+                    Container.Reset(context);
+                }
+
                 PrePositionChange(context);
                 //if we're the last object in a multitile group, and db persisted, remove us from the db.
                 //this deletes all plugin data for this object too.
@@ -995,15 +1004,6 @@ namespace FSO.SimAntics
                     context.VM.GlobalLink.DeleteObject(context.VM, PersistID, (result) => { });
                 context.RemoveObjectInstance(this);
                 MultitileGroup.RemoveObject(this); //we're no longer part of the multitile group
-
-                if (Container != null && Container is VMAvatar)
-                {
-                    //must reset our container, and any object they are using. (restaurant, TS1 behaves similarly)
-                    var stack = Container.Thread.Stack;
-                    var stacklast = (stack.Count == 0)?null:stack[stack.Count-1];
-                    if (stacklast != null && stacklast.Callee != Container && stacklast.Callee != this) stacklast.Callee.Reset(context);
-                    Container.Reset(context);
-                }
 
                 int slots = TotalSlots();
                 for (int i = 0; i < slots; i++)
