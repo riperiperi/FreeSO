@@ -420,21 +420,31 @@ namespace FSO.SimAntics
             }
         }
 
+        private bool InReset = false;
         public virtual void Reset(VMContext context)
         {
-            if (this.Thread == null) return;
-            this.Thread.Stack.Clear();
-            this.Thread.Queue.Clear();
-            Thread.QueueDirty = true;
-            this.Thread.ActiveQueueBlock = 0;
-            this.Thread.BlockingState = null;
-            this.Thread.EODConnection = null;
+            if (InReset) return;
+            InReset = true;
+            try
+            {
+                if (this.Thread == null) return;
+                this.Thread.Stack.Clear();
+                this.Thread.Queue.Clear();
+                Thread.QueueDirty = true;
+                this.Thread.ActiveQueueBlock = 0;
+                this.Thread.BlockingState = null;
+                this.Thread.EODConnection = null;
 
-            if (EntryPoints[3].ActionFunction != 0) ExecuteEntryPoint(3, context, true); //Reset
-            if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
+                if (EntryPoints[3].ActionFunction != 0) ExecuteEntryPoint(3, context, true); //Reset
+                if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
 
-            context.VM.Scheduler.DescheduleTick(this);
-            context.VM.Scheduler.ScheduleTickIn(this, 1);
+                context.VM.Scheduler.DescheduleTick(this);
+                context.VM.Scheduler.ScheduleTickIn(this, 1);
+            }
+            catch (Exception) {
+                //should not happen, but past this point we're not too sure what will
+            }
+            InReset = false;
         }
 
         public void FetchTreeByName(VMContext context)
@@ -980,6 +990,8 @@ namespace FSO.SimAntics
             if (cleanupAll) MultitileGroup.Delete(context);
             else
             {
+                if (Dead) return;
+                Dead = true; //if a reset tries to delete this object it is wasting its time
                 var threads = SoundThreads;
 
                 for (int i = 0; i < threads.Count; i++)
