@@ -504,9 +504,11 @@ namespace FSO.Server.Servers.Lot.Domain
                         }
                         catch (ThreadAbortException ex)
                         {
-                            LOG.Error("Background thread locked for lot with dbid = " + Context.DbId + "! TERMINATING! "+ex.ToString());
-                            MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
-                            return;
+                            if (BgKilled) { 
+                                LOG.Error("Background thread locked for lot with dbid = " + Context.DbId + "! TERMINATING! " + ex.ToString());
+                                MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
+                                return;
+                            }
                         }
                         catch (Exception ex)
                         {

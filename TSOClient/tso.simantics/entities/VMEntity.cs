@@ -1000,6 +1000,8 @@ namespace FSO.SimAntics
                 }
                 threads.Clear();
 
+                /*
+                 * disable til ts1 behaviour reversed
                 if (Container != null && Container is VMAvatar)
                 {
                     //must reset our container, and any object they are using. (restaurant, TS1 behaves similarly)
@@ -1008,6 +1010,7 @@ namespace FSO.SimAntics
                     if (stacklast != null && stacklast.Callee != Container && stacklast.Callee != this) stacklast.Callee.Reset(context);
                     Container.Reset(context);
                 }
+                */
 
                 PrePositionChange(context);
                 //if we're the last object in a multitile group, and db persisted, remove us from the db.
