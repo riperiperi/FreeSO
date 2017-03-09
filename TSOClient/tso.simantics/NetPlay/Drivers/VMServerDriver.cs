@@ -157,49 +157,55 @@ namespace FSO.SimAntics.NetPlay.Drivers
         {
             HandleClients(vm);
 
-            lock (QueuedCmds) {
-                //verify the queued commands. Remove ones which fail (or defer til later)
-                for (int i=0; i<QueuedCmds.Count; i++)
-                {
-                    var caller = vm.GetAvatarByPersist(QueuedCmds[i].Command.ActorUID);
-                    if (!QueuedCmds[i].Command.Verify(vm, caller)) QueuedCmds.RemoveAt(i--);
-                }
-
-                var tick = new VMNetTick();
-                tick.Commands = new List<VMNetCommand>(QueuedCmds);
-                tick.TickID = TickID++;
-                tick.RandomSeed = vm.Context.RandomSeed;
+            //copy the queue when we can acquire a lock
+            List<VMNetCommand> cmdQueue;
+            lock (QueuedCmds)
+            {
+                cmdQueue = new List<VMNetCommand>(QueuedCmds);
                 QueuedCmds.Clear();
-                InternalTick(vm, tick);
-                
-                TickBuffer.Add(tick);
+            }
 
-                lock (ClientsToSyncLater)
+            //verify the queued commands. Remove ones which fail (or defer til later)
+            for (int i = 0; i < cmdQueue.Count; i++)
+            {
+                var caller = vm.GetAvatarByPersist(cmdQueue[i].Command.ActorUID);
+                if (!cmdQueue[i].Command.Verify(vm, caller)) cmdQueue.RemoveAt(i--);
+            }
+
+            var tick = new VMNetTick();
+            tick.Commands = new List<VMNetCommand>(cmdQueue);
+            tick.TickID = TickID++;
+            tick.RandomSeed = vm.Context.RandomSeed;
+            cmdQueue.Clear();
+            InternalTick(vm, tick);
+
+            TickBuffer.Add(tick);
+
+            lock (ClientsToSyncLater)
+            {
+                if (LastResyncCooldown > 0)
                 {
-                    if (LastResyncCooldown > 0)
-                    {
-                        LastResyncCooldown--;
-                    }
-                    else if (ClientsToSyncLater.Count > 0)
-                    {
-                        lock (ClientsToSync)
-                        {
-                            foreach (var client in ClientsToSyncLater)
-                            {
-                                ClientsToSync.Add(client);
-                            }
-                            ClientsToSyncLater.Clear();
-                        }
-                        LastResyncCooldown = CLIENT_RESYNC_COOLDOWN;
-                    }
+                    LastResyncCooldown--;
                 }
-                if (TickBuffer.Count >= TICKS_PER_PACKET)
+                else if (ClientsToSyncLater.Count > 0)
                 {
                     lock (ClientsToSync)
                     {
-                        SendTickBuffer();
-                        SendState(vm);
+                        foreach (var client in ClientsToSyncLater)
+                        {
+                            ClientsToSync.Add(client);
+                        }
+                        ClientsToSyncLater.Clear();
                     }
+                    LastResyncCooldown = CLIENT_RESYNC_COOLDOWN;
+                }
+            }
+            if (TickBuffer.Count >= TICKS_PER_PACKET)
+            {
+                lock (ClientsToSync)
+                {
+                    SendTickBuffer();
+                    SendState(vm);
                 }
             }
 
