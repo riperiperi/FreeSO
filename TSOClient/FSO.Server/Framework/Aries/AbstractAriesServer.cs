@@ -102,19 +102,22 @@ namespace FSO.Server.Framework.Aries
             Acceptor = new AsyncSocketAcceptor();
 
             try {
-                var ssl = new SslFilter(new System.Security.Cryptography.X509Certificates.X509Certificate2(Config.Certificate));
-                ssl.SslProtocol = SslProtocols.Tls;
-                Acceptor.FilterChain.AddLast("ssl", ssl);
-                if(Debugger != null)
+                if (Config.Certificate != null)
                 {
-                    Acceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger(), Kernel.Get<ISerializationContext>()));
-                    Debugger.AddSocketServer(this);
-                }
-                Acceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
-                Acceptor.Handler = this;
+                    var ssl = new SslFilter(new System.Security.Cryptography.X509Certificates.X509Certificate2(Config.Certificate));
+                    ssl.SslProtocol = SslProtocols.Tls;
+                    Acceptor.FilterChain.AddLast("ssl", ssl);
+                    if (Debugger != null)
+                    {
+                        Acceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger(), Kernel.Get<ISerializationContext>()));
+                        Debugger.AddSocketServer(this);
+                    }
+                    Acceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
+                    Acceptor.Handler = this;
 
-                Acceptor.Bind(IPEndPointUtils.CreateIPEndPoint(Config.Binding));
-                LOG.Info("Listening on " + Acceptor.LocalEndPoint + " with TLS");
+                    Acceptor.Bind(IPEndPointUtils.CreateIPEndPoint(Config.Binding));
+                    LOG.Info("Listening on " + Acceptor.LocalEndPoint + " with TLS");
+                }
 
                 //Bind in the plain too as a workaround until we can get Mina.NET to work nice for TLS in the AriesClient
                 var plainAcceptor = new AsyncSocketAcceptor();

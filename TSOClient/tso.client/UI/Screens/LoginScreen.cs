@@ -19,6 +19,8 @@ using FSO.HIT;
 using FSO.Files.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Common;
+using FSO.Server.Clients;
+using Ninject;
 
 namespace FSO.Client.UI.Screens
 {
@@ -186,14 +188,16 @@ namespace FSO.Client.UI.Screens
 
         private void SetProgress(int stage)
         {
-            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 3).ToString());
+            var auth = GameFacade.Kernel.Get<AuthClient>();
+            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 3).ToString())
+                .Replace("EA.COM", auth.BaseUrl.Substring(7).TrimEnd('/'));
             LoginProgress.Progress = 25 * (stage - 1);
         }
 
         void gameplayButton_OnButtonClick(UIElement button)
         {
             UIAlertOptions Options = new UIAlertOptions();
-            Options.Message = GameFacade.Strings.GetString("210", "36 301");
+            Options.Message = "Sandbox Mode will be implemented in a future version.";
             Options.Title = GameFacade.Strings.GetString("210", "40");
             UI.Framework.UIScreen.GlobalShowAlert(Options, true);
         }

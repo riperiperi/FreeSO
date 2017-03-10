@@ -642,6 +642,15 @@ namespace FSO.SimAntics
                 case VMStackObjectVariable.LockoutCount:
                     if (Thread != null) TimestampLockoutCount = Thread.Context.VM.Scheduler.CurrentTickID;
                     break;
+                case VMStackObjectVariable.FSOEngineQuery:
+                    //write a query to this variable and a result will be written to it.
+                    switch (value)
+                    {
+                        case 1: //safe to delete
+                            value = (short)((IsInUse(Thread.Context, true) || (Container != null && Container is VMAvatar)) ? 0 : 1);
+                            break;
+                    }
+                    break;
             }
 
             if ((short)var > 79) throw new Exception("Object Data out of range!");

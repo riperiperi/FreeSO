@@ -23,6 +23,7 @@ namespace FSO.Server.Protocol.Electron
         KeepAlive,
         ChangeRoommateResponse,
         ModerationRequest,
+        FSOVMProtocolMessage,
         Unknown
     }
 
@@ -62,6 +63,8 @@ namespace FSO.Server.Protocol.Electron
                     return ElectronPacketType.ChangeRoommateResponse;
                 case 0x000F:
                     return ElectronPacketType.ModerationRequest;
+                case 0x0010:
+                    return ElectronPacketType.FSOVMProtocolMessage;
                 default:
                     return ElectronPacketType.Unknown;
             }
@@ -101,6 +104,8 @@ namespace FSO.Server.Protocol.Electron
                     return 0x000E;
                 case ElectronPacketType.ModerationRequest:
                     return 0x000F;
+                case ElectronPacketType.FSOVMProtocolMessage:
+                    return 0x0010;
             }
 
             return 0xFFFF;

@@ -54,9 +54,19 @@ namespace FSO.Client.Regulators
 
                     if (result == null || !result.Valid)
                     {
-                        if (result.ReasonText != null){
+                        if (result.ReasonText != null)
+                        {
                             base.ThrowErrorAndReset(ErrorMessage.FromLiteral(result.ReasonText));
-                        }else{
+                        }
+                        else if (result.ReasonCode != null)
+                        {
+                            base.ThrowErrorAndReset(ErrorMessage.FromLiteral(
+                                (GameFacade.Strings.GetString("210", result.ReasonCode) ?? "Unknown Error")
+                                .Replace("EA.com", AuthClient.BaseUrl.Substring(7).TrimEnd('/'))
+                                ));
+                        }
+                        else
+                        {
                             base.ThrowErrorAndReset(new Exception("Unknown error"));
                         }
                     }

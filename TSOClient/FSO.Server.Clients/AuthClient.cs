@@ -59,6 +59,9 @@ namespace FSO.Server.Clients
                             break;
                     }
                 }
+            } else
+            {
+                result.ReasonCode = "36 301";
             }
 
             return result;

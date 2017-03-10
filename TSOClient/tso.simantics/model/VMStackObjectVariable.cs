@@ -93,6 +93,6 @@ namespace FSO.SimAntics.Model
         Reserved76 = 76,
         Reserved77 = 77,
         Reserved78 = 78,
-        Reserved79 = 79
+        FSOEngineQuery = 79
     }
 }
