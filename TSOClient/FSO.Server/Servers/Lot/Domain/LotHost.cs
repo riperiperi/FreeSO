@@ -20,6 +20,7 @@ using NLog;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -491,6 +492,15 @@ namespace FSO.Server.Servers.Lot.Domain
                         if (!ShuttingDown)
                         {
                             LOG.Error("Main thread for lot with dbid = " + Context.DbId + " entered an infinite loop and had to be terminated!");
+
+                            //suspend and resume are deprecated, but we need to use them to analyse the stack of stuck main threads
+                            //sorry microsoft
+                            MainThread.Suspend();
+                            var trace = new StackTrace(MainThread, false);
+                            MainThread.Resume();
+
+                            LOG.Error("Trace (immediately when aborting): " + trace.ToString());
+
                             MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
                         }
                     }
