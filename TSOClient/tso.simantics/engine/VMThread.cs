@@ -285,7 +285,7 @@ namespace FSO.SimAntics.Engine
             }
             catch (Exception e)
             {
-                if (Stack.Count == 0) return; //???
+                if (Stack.Count == 0) return;
                 var context = Stack[Stack.Count - 1];
                 bool Delete = ((Entity is VMGameObject) && (DialogCooldown > 30 * 20 - 10));
                 if (DialogCooldown == 0)
@@ -305,10 +305,12 @@ namespace FSO.SimAntics.Engine
                     DialogCooldown = 30 * 20;
                 }
 
-                context.Callee.Reset(context.VM.Context);
-                context.Caller.Reset(context.VM.Context);
-
-                if (Delete) Entity.Delete(true, context.VM.Context);
+                if (!IsCheck)
+                {
+                    context.Callee.Reset(context.VM.Context);
+                    context.Caller.Reset(context.VM.Context);
+                    if (Delete) Entity.Delete(true, context.VM.Context);
+                }
             }
 #endif
         }

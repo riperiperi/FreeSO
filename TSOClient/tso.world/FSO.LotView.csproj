@@ -44,6 +44,7 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Components\3DFloorGeometry.cs" />
     <Compile Include="Components\AvatarComponent.cs" />
     <Compile Include="Components\EntityComponent.cs" />
     <Compile Include="Components\FloorComponent.cs" />

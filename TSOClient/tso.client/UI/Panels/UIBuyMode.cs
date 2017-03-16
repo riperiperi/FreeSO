@@ -20,6 +20,7 @@ using Microsoft.Xna.Framework.Input;
 using FSO.SimAntics.Model;
 using FSO.Common;
 using Microsoft.Xna.Framework;
+using FSO.Content;
 
 namespace FSO.Client.UI.Panels
 {
@@ -287,7 +288,7 @@ namespace FSO.Client.UI.Panels
                     foreach (var item in inventory)
                     {
                         var catItem = Content.Content.Get().WorldCatalog.GetItemByGUID(item.GUID);
-                        if (catItem == null) { continue; }
+                        if (catItem == null) { catItem = GenCatItem(item.GUID); }
 
                         var obj = catItem.Value;
                         //note that catalog items are structs, so we can modify their properties freely without affecting the permanant store.
@@ -300,11 +301,32 @@ namespace FSO.Client.UI.Panels
                     if (Mode == 2)
                     {
                         ChangeCategory(InventoryButton); //refresh display
-                        Catalog.SetPage(Math.Min(Catalog.TotalPages()-1, lastCatPage));
+                        SetPage(Math.Min(Catalog.TotalPages()-1, lastCatPage));
                     }
                 }
             }
             base.Update(state);
+        }
+
+        private ObjectCatalogItem GenCatItem(uint GUID)
+        {
+            var obj = Content.Content.Get().WorldObjects.Get(GUID);
+            if (obj == null)
+            {
+                return new ObjectCatalogItem()
+                {
+                    Name = "Unknown Object",
+                    GUID = GUID
+                };
+            } else
+            {
+                //todo: get ctss?
+                return new ObjectCatalogItem()
+                {
+                    Name = obj.OBJ.ChunkLabel,
+                    GUID = GUID
+                };
+            }
         }
 
         void Catalog_OnSelectionChange(int selection)

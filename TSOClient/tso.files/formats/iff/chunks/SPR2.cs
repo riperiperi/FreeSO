@@ -27,6 +27,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public uint DefaultPaletteID;
         public bool SpritePreprocessed;
         public bool ZAsAlpha;
+        public bool FloorCopy;
 
         /// <summary>
         /// Reads a SPR2 chunk from a stream.
@@ -397,6 +398,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 y++;
             }
             if (Parent.ZAsAlpha) CopyZToAlpha();
+            //if (Parent.FloorCopy) FloorCopy();
         }
 
         /// <summary>
@@ -429,6 +431,27 @@ namespace FSO.Files.Formats.IFF.Chunks
             {
                 PixelData[i].A = (ZBufferData[i] < 32)?(byte)0:ZBufferData[i];
             }
+        }
+
+        public void FloorCopy()
+        {
+            var ndat = new Color[PixelData.Length];
+            int hw = (Width+1) / 2;
+            int hh = (Height) / 2;
+            int idx = 0;
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    var xp = (((x>hw)?(x-1):x) + hw) % Width;
+                    var yp = (y + hh) % Height;
+                    var rep = PixelData[xp + yp * Width];
+                    if (rep.A > 0) ndat[idx] = rep;
+                    else ndat[idx] = PixelData[idx];
+                    idx++;
+                }
+            }
+            PixelData = ndat;
         }
 
         /// <summary>

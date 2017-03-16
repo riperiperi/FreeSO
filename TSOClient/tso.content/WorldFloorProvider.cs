@@ -66,6 +66,10 @@ namespace FSO.Content
                 var medium = floorGlobals.Get<SPR2>((ushort)(i + 256));
                 var near = floorGlobals.Get<SPR2>((ushort)(i + 512)); //2048 is water tile
 
+                far.FloorCopy = true;
+                medium.FloorCopy = true;
+                near.FloorCopy = true;
+
                 this.AddFloor(new Floor
                 {
                     ID = floorID,
@@ -176,6 +180,7 @@ namespace FSO.Content
             } else if (id == 65534)
             {
                 var spr = FloorGlobals.Get<SPR2>(0x800);
+                spr.FloorCopy = true;
                 if (!spr.SpritePreprocessed)
                 {
                     spr.ZAsAlpha = true;
@@ -194,6 +199,7 @@ namespace FSO.Content
                 spr.ZAsAlpha = true;
                 spr.SpritePreprocessed = true;
             }
+            spr.FloorCopy = true;
             return spr;
         }
 
@@ -215,6 +221,10 @@ namespace FSO.Content
                 var far = iff.Get<SPR2>(1);
                 var medium = iff.Get<SPR2>(257);
                 var near = iff.Get<SPR2>(513);
+
+                far.FloorCopy = true;
+                medium.FloorCopy = true;
+                near.FloorCopy = true;
 
                 ById[(ushort)id] = new Floor
                 {
