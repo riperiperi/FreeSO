@@ -18,6 +18,7 @@ using FSO.SimAntics.Model;
 using FSO.SimAntics.Marshals.Threads;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.EODs.Model;
+using System.Threading;
 
 namespace FSO.SimAntics.Engine
 {
@@ -103,8 +104,7 @@ namespace FSO.SimAntics.Engine
                 temp.Tick();
                 temp.ThreadBreak = VMThreadBreakMode.Active; //cannot breakpoint in check trees
             }
-            if (temp.DialogCooldown > 0) { }
-            return (temp.DialogCooldown > 0) ? VMPrimitiveExitCode.ERROR : temp.LastStackExitCode;
+            return (temp.DialogCooldown > 0) ? VMPrimitiveExitCode.RETURN_FALSE : temp.LastStackExitCode;
         }
 
         public bool RunInMyStack(BHAV bhav, GameObject CodeOwner, short[] passVars, VMEntity stackObj)
@@ -149,8 +149,9 @@ namespace FSO.SimAntics.Engine
                     NextInstruction();
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                if (e is ThreadAbortException) throw e;
                 //we need to catch these so that the parent can be restored.
             }
 
@@ -285,6 +286,7 @@ namespace FSO.SimAntics.Engine
             }
             catch (Exception e)
             {
+                if (e is ThreadAbortException) throw e;
                 if (Stack.Count == 0) return;
                 var context = Stack[Stack.Count - 1];
                 bool Delete = ((Entity is VMGameObject) && (DialogCooldown > 30 * 20 - 10));
@@ -310,6 +312,9 @@ namespace FSO.SimAntics.Engine
                     context.Callee.Reset(context.VM.Context);
                     context.Caller.Reset(context.VM.Context);
                     if (Delete) Entity.Delete(true, context.VM.Context);
+                } else
+                {
+                    Stack.Clear();
                 }
             }
 #endif

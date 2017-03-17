@@ -425,25 +425,23 @@ namespace FSO.SimAntics
         {
             if (InReset) return;
             InReset = true;
-            try
-            {
-                if (this.Thread == null) return;
-                this.Thread.Stack.Clear();
-                this.Thread.Queue.Clear();
-                Thread.QueueDirty = true;
-                this.Thread.ActiveQueueBlock = 0;
-                this.Thread.BlockingState = null;
-                this.Thread.EODConnection = null;
 
-                if (EntryPoints[3].ActionFunction != 0) ExecuteEntryPoint(3, context, true); //Reset
-                if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
+            //if an exception happens here, it will have to be fatal.
 
-                context.VM.Scheduler.DescheduleTick(this);
-                context.VM.Scheduler.ScheduleTickIn(this, 1);
-            }
-            catch (Exception) {
-                //should not happen, but past this point we're not too sure what will
-            }
+            if (this.Thread == null) return;
+            this.Thread.Stack.Clear();
+            this.Thread.Queue.Clear();
+            Thread.QueueDirty = true;
+            this.Thread.ActiveQueueBlock = 0;
+            this.Thread.BlockingState = null;
+            this.Thread.EODConnection = null;
+
+            if (EntryPoints[3].ActionFunction != 0 && (!(this is VMAvatar) || PersistID > 0)) ExecuteEntryPoint(3, context, true); //Reset
+            if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
+
+            context.VM.Scheduler.DescheduleTick(this);
+            context.VM.Scheduler.ScheduleTickIn(this, 1);
+
             InReset = false;
         }
 
