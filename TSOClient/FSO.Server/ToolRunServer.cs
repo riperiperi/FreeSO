@@ -153,6 +153,7 @@ namespace FSO.Server
 
                 var tasks = childKernel.Get<TaskServer>(new ConstructorArgument("config", Config.Services.Tasks));
                 Servers.Add(tasks);
+                ActiveTaskServer = tasks;
             }
 
             foreach (var server in Servers)
@@ -204,6 +205,8 @@ namespace FSO.Server
                         if (Servers.Count == 0)
                         {
                             LOG.Info("All servers shut down, shutting down program...");
+
+                            Kernel.Get<IGluonHostPool>().Stop();
 
                             /*var domain = AppDomain.CreateDomain("RebootApp");
 

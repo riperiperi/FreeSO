@@ -26,7 +26,7 @@ namespace FSO.Server.Servers.City.Domain
             lock (Servers)
             {
                 var best = Servers.OrderByDescending(x => x.Rank).FirstOrDefault();
-                if(best == null || best.Rank == 0)
+                if(best == null || best.Rank <= 0)
                 {
                     return new LotPickerAttempt (null) { Success = false };
                 }

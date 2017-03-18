@@ -21,6 +21,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
         private Dictionary<LotServerConfigurationCity, CityConnection> Connections;
         private Thread ConnectionWatcher;
         private bool _Running;
+        public short LotCount;
 
         private PerformanceCounter CpuCounter;
         private LotServerConfiguration Config;
@@ -90,14 +91,14 @@ namespace FSO.Server.Servers.Lot.Lifecycle
         {
             while (_Running)
             {
-                float cpu = 0;
+                float cpu = 1;
                 if (PerformanceCounterCategory.Exists("Processor"))
                     cpu = CpuCounter.NextValue();
                 var capacity = new AdvertiseCapacity
                 {
                     CpuPercentAvg = (byte)(cpu * 100),
-                    CurrentLots = 0,
-                    MaxLots = 10,
+                    CurrentLots = LotCount,
+                    MaxLots = (short)Config.Max_Lots,
                     RamAvaliable = 0,
                     RamUsed = 0
                 };

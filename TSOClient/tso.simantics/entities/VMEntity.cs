@@ -436,7 +436,7 @@ namespace FSO.SimAntics
             this.Thread.BlockingState = null;
             this.Thread.EODConnection = null;
 
-            if (EntryPoints[3].ActionFunction != 0 && (!(this is VMAvatar) || PersistID > 0)) ExecuteEntryPoint(3, context, true); //Reset
+            if (EntryPoints[3].ActionFunction != 0 && ((this is VMGameObject) || ((VMAvatar)this).IsPet)) ExecuteEntryPoint(3, context, true); //Reset
             if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
 
             context.VM.Scheduler.DescheduleTick(this);

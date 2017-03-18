@@ -176,6 +176,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     Kernel.Release(entry);
                 }
                 Lots.Remove(id);
+                CityConnections.LotCount = (short)Lots.Count;
             }
         }
 
@@ -246,6 +247,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 var bind = Kernel.GetBindings(typeof(LotHostEntry));
                 ctnr.CityConnection = cityConnection;
                 Lots.Add(id, ctnr);
+                CityConnections.LotCount = (short)Lots.Count;
                 return ctnr;
             }
         }
