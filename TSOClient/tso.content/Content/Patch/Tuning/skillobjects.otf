@@ -1,0 +1,155 @@
+<OTF>
+
+   <T i="8194" n="Tuning - Skill Mood and Motives">
+      <K i="0" l="Min MOOD [-100,100]" v="0"></K>
+      <K i="1" l="Min FUN [-100,100]" v="-100"></K>
+      <K i="2" l="Min HUNGER [-100,100]" v="-80"></K>
+      <K i="3" l="Min BLADDER [-100,100]" v="-85"></K>
+      <K i="4" l="Min ENERGY [-100,100]" v="-80"></K>
+      <K i="5" l="Min COMFORT [-100,100]" v="-90"></K>
+   </T>
+
+   <T i="8201" n="Tuning - Skill Bonus Multi-Object">
+      <K i="0" l="1 Bonus Object [%x100]" v="300"></K>
+      <K i="1" l="2 Bonus Objects [%x100]" v="600"></K>
+      <K i="2" l="3 Bonus Objects [%x100]" v="900"></K>
+      <K i="3" l="4 Bonus Objects [%x100]" v="1200"></K>
+      <K i="4" l="5 Bonus Objects [%x100]" v="1500"></K>
+      <K i="5" l="6 Bonus Objects [%x100]" v="1500"></K>
+      <K i="6" l="7 Bonus Objects [%x100]" v="1500"></K>
+      <K i="7" l="8 Bonus Objects [%x100]" v="1500"></K>
+      <K i="8" l="9 Bonus Objects [%x100]" v="1500"></K>
+      <K i="9" l="10 Bonus Objects [%x100]" v="1500"></K>
+   </T>
+
+   <T i="8202" n="Tuning - Skill Bonus NonFriends">
+      <K i="0" l="1 Bonus NonFriend [%x100]" v="800"></K>
+      <K i="1" l="2 Bonus NonFriends [%x100]" v="1600"></K>
+      <K i="2" l="3 Bonus NonFriends [%x100]" v="2900"></K>
+      <K i="3" l="4 Bonus NonFriends [%x100]" v="5200"></K>
+      <K i="4" l="5 Bonus NonFriends [%x100]" v="6500"></K>
+      <K i="5" l="6 Bonus NonFriends [%x100]" v="6500"></K>
+      <K i="6" l="7 Bonus NonFriends [%x100]" v="6500"></K>
+      <K i="7" l="8 Bonus NonFriends [%x100]" v="6500"></K>
+      <K i="8" l="9 Bonus NonFriends [%x100]" v="6500"></K>
+      <K i="9" l="10 Bonus NonFriends [%x100]" v="6500"></K>
+   </T>
+
+   <T i="8200" n="Tuning - Skill Levels Timing">
+      <K i="0" l="Level 1 [secs]" v="400"></K>
+      <K i="1" l="Level 2 [secs]" v="800"></K>
+      <K i="2" l="Level 3 [secs]" v="1200"></K>
+      <K i="3" l="Level 4 [secs]" v="1600"></K>
+      <K i="4" l="Level 5 [secs]" v="2000"></K>
+      <K i="5" l="Level 6 [secs]" v="2400"></K>
+      <K i="6" l="Level 7 [secs]" v="2800"></K>
+      <K i="7" l="Level 8 [secs]" v="3200"></K>
+      <K i="8" l="Level 9 [secs]" v="3600"></K>
+      <K i="9" l="Level 10 [secs]" v="4000"></K>
+      <K i="10" l="Level 10.99 [secs]" v="7800"></K>
+   </T>
+
+   <T i="8192" n="Tuning - Skill Speed">
+      <K i="0" l="Base Speed [%]" v="10"></K>
+      <K i="1" l="Payout Object Penalty [%x100]" v="-8000"></K>
+      <K i="2" l="Maximum Total Bonus [%]" v="99"></K>
+      <K i="3" l="Payout Object Base [%]" v="0"></K>
+      <K i="4" l="Skill Lot Multiplier (%x100)" v="120"></K>
+   </T>
+
+   <T i="8204" n="Tuning - Skill Motive Deltas">
+      <K i="0" l="Hunger Inc" v="-3"></K>
+      <K i="1" l="Hunger Max" v="-100"></K>
+      <K i="2" l="Energy Inc" v="-3"></K>
+      <K i="3" l="Energy Max" v="-100"></K>
+      <K i="4" l="Comfort Inc" v="-2"></K>
+      <K i="5" l="Comfort Max" v="-100"></K>
+      <K i="6" l="Fun Inc" v="0"></K>
+      <K i="7" l="Fun Max" v="0"></K>
+      <K i="8" l="Hygiene Inc" v="-2"></K>
+      <K i="9" l="Hygiene Max" v="-100"></K>
+      <K i="10" l="Social Inc" v="0"></K>
+      <K i="11" l="Social Max" v="0"></K>
+      <K i="12" l="Bladder Inc" v="0"></K>
+      <K i="13" l="Bladder Max" v="0"></K>
+   </T>
+
+   <T i="8207" n="Tuning - solo job bonus">
+      <K i="0" l="Gnome" v="0"></K>
+      <K i="1" l="Chalkboard" v="0"></K>
+      <K i="2" l="Chemistry" v="0"></K>
+      <K i="3" l="Easel" v="0"></K>
+      <K i="4" l="Canning" v="0"></K> <!-- lower bonus for canning 10 to 0 -->
+      <K i="5" l="Telemarketing" v="10"></K>
+      <K i="6" l="Typewriter" v="20"></K>
+      <K i="7" l="Pinata" v="20"></K>
+   </T>
+
+   <T i="8206" n="Tuning - Skill Add Station Eff - payout">
+      <K i="0" l="0 add stations" v="0"></K>
+      <K i="1" l="1 add stations" v="0"></K>
+      <K i="2" l="2 add stations" v="0"></K>
+      <K i="3" l="3 add stations" v="0"></K>
+      <K i="4" l="4 add stations" v="0"></K>
+      <K i="5" l="5 add stations" v="0"></K>
+      <K i="6" l="NonMoneyCatOtherStationsCap" v="3"></K>
+   </T>
+
+   <T i="8203" n="Tuning - Skill Bonus Friends">
+      <K i="0" l="1 Bonus Friend [%x100]" v="3000"></K>
+      <K i="1" l="2 Bonus Friends [%x100]" v="4500"></K>
+      <K i="2" l="3 Bonus Friends [%x100]" v="5500"></K>
+      <K i="3" l="4 Bonus Friends [%x100]" v="5900"></K>
+      <K i="4" l="5 Bonus Friends [%x100]" v="6100"></K>
+      <K i="5" l="6 Bonus Friends [%x100]" v="6100"></K>
+      <K i="6" l="7 Bonus Friends [%x100]" v="6100"></K>
+      <K i="7" l="8 Bonus Friends [%x100]" v="6100"></K>
+      <K i="8" l="9 Bonus Friends [%x100]" v="6100"></K>
+      <K i="9" l="10 Bonus Friends [%x100]" v="6100"></K>
+   </T>
+
+   <T i="8205" n="Tuning - Skill Add Pal Eff - payout">
+      <K i="0" l="0 pals" v="0"></K>
+      <K i="1" l="1 pals" v="0"></K>
+      <K i="2" l="2 pals" v="0"></K>
+      <K i="3" l="3 pals" v="0"></K>
+      <K i="4" l="4 pals" v="0"></K>
+      <K i="5" l="5 pals" v="0"></K>
+      <K i="6" l="max pal" v="5"></K>
+      <K i="7" l="max eff" v="6"></K>
+      <K i="8" l="NonMoneyCatOtherPalsCap" v="3"></K>
+   </T>
+
+   <T i="8197" n="Tuning - Skill Add Station Eff - non-payout">
+      <K i="0" l="1 add stations" v="3"></K>
+      <K i="1" l="2 add stations" v="3"></K>
+      <K i="2" l="3 add stations" v="3"></K>
+      <K i="3" l="4 add stations" v="3"></K>
+      <K i="4" l="5 add stations" v="3"></K>
+      <K i="5" l="NonSkillCatOtherStationsCap" v="3"></K>
+      <K i="6" l="0 add stations" v="0"></K>
+   </T>
+
+   <T i="8198" n="Tuning - Skill Add Pal Eff - non-payout">
+      <K i="0" l="0 pals" v="0"></K>
+      <K i="1" l="1 pals" v="12"></K>
+      <K i="2" l="2 pals" v="12"></K>
+      <K i="3" l="3 pals" v="22"></K>
+      <K i="4" l="4 pals" v="22"></K>
+      <K i="5" l="5 pals" v="7"></K>
+      <K i="6" l="max pal" v="5"></K>
+      <K i="7" l="max eff" v="6"></K>
+      <K i="8" l="NonSkillCatOtherPalsCap" v="3"></K>
+   </T>
+
+   <T i="8196" n="Tuning - Payout">
+      <K i="0" l="Owner bonus in $" v="1"></K>
+      <K i="1" l="Base pay" v="30"></K>
+      <K i="2" l="Multiplier for Skill 10 * 10" v="30"></K>
+      <K i="3" l="Max group size" v="16"></K> <!-- solo job nerf: 16 sims for max bonus instead of 12 -->
+      <K i="4" l="Multiplier for Max group" v="25"></K> <!-- solo job nerf: 3.5x to 2.5x -->
+      <K i="5" l="seller time sec" v="60"></K>
+      <K i="6" l="Money Lot Multiplier (%x100)" v="100"></K>
+   </T>
+
+</OTF>

@@ -662,12 +662,17 @@ namespace FSO.SimAntics
                 case VMPersonDataVariable.IncomingFriends:
                     return (short)(MeToPersist.Count(x => x.Key < 16777216 && x.Value.Count > 1 && x.Value[1] >= 60));
                 case VMPersonDataVariable.SkillLock:
+                    // this variable returns the skills that are completely locked. since the skill degrade object checks the skill lock 
+                    // value anyways, this seems irrelevant. perhaps was used in special event/lot type situations.
+                    return 0;
+                    /* fully locks any skills that are locked by even one point
                     return (short)(((GetPersonData(VMPersonDataVariable.SkillLockBody) > 0) ? 1 : 0) |
                         ((GetPersonData(VMPersonDataVariable.SkillLockCharisma) > 0) ? 2 : 0) |
                         ((GetPersonData(VMPersonDataVariable.SkillLockCooking) > 0) ? 4 : 0) |
                         ((GetPersonData(VMPersonDataVariable.SkillLockCreativity) > 0) ? 8 : 0) |
                         ((GetPersonData(VMPersonDataVariable.SkillLockLogic) > 0) ? 16 : 0) |
                         ((GetPersonData(VMPersonDataVariable.SkillLockMechanical) > 0) ? 32 : 0));
+                        */
             }
             return PersonData[(ushort)variable];
         }
