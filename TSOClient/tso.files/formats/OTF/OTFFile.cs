@@ -45,7 +45,7 @@ namespace FSO.Files.Formats.OTF
         /// <returns>An OTFTable instance.</returns>
         public OTFTable GetTable(int ID)
         {
-            return Tables.FirstOrDefault(x => x.ID == ID);
+            return Tables.FirstOrDefault(x => x?.ID == ID);
         }
 
         /// <summary>
@@ -89,8 +89,6 @@ namespace FSO.Files.Formats.OTF
         }
     }
 
-    //BELOW CLASSES NEEDS DOCUMENTATION - THANKS DARREN!!
-
     public class OTFTable
     {
         public int ID;
@@ -99,7 +97,7 @@ namespace FSO.Files.Formats.OTF
 
         public OTFTableKey GetKey(int id)
         {
-            return Keys.FirstOrDefault(x => x.ID == id);
+            return Keys.FirstOrDefault(x => x?.ID == id);
         }
     }
 
