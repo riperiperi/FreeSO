@@ -72,6 +72,7 @@ namespace FSO.SimAntics.Primitives
                                 vm.ForwardCommand(new VMNetSendToInventoryCmd()
                                 {
                                     Verified = true,
+                                    Success = true,
                                     ObjectPID = pid,
                                     ActorUID = mypid
                                 });

@@ -737,6 +737,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void RecordStartVisit(IVoltronSession session, DbLotVisitorType visitorType)
         {
+            if (Context.JobLot) return;
             using (var da = DAFactory.Get())
             {
                 var id = da.LotVisits.Visit(session.AvatarId, visitorType, Context.DbId);
@@ -748,13 +749,18 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void UpdateActiveVisitRecords()
         {
+            if (Context.JobLot) return;
+
             var visitIds = new List<int>();
-            foreach (var visitor in _Visitors.Values)
+            lock (_Visitors)
             {
-                var id = visitor.GetAttribute("visitId");
-                if (id != null)
+                foreach (var visitor in _Visitors.Values)
                 {
-                    visitIds.Add((int)id);
+                    var id = visitor.GetAttribute("visitId");
+                    if (id != null)
+                    {
+                        visitIds.Add((int)id);
+                    }
                 }
             }
 

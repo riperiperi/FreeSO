@@ -15,5 +15,13 @@ namespace FSO.Server.Servers.Lot.Domain
         public uint ClaimId;
         public ClaimAction Action;
         public bool HighMax; 
+
+        public bool JobLot
+        {
+            get
+            {
+                return (Id & 0x40000000) > 0;
+            }
+        }
     }
 }
