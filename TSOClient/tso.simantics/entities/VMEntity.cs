@@ -998,6 +998,12 @@ namespace FSO.SimAntics
             else
             {
                 if (Dead) return;
+                if (context.VM.Scheduler.RunningNow)
+                {
+                    //queue this object to be deleted at the end of the frame
+                    context.VM.Scheduler.Delete(this);
+                    return;
+                }
                 Dead = true; //if a reset tries to delete this object it is wasting its time
                 var threads = SoundThreads;
 

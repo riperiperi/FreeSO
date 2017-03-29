@@ -11,5 +11,6 @@ namespace FSO.Server.Protocol.Authorization
         public string Password;
         public string ServiceID;
         public string Version;
+        public string ClientID;
     }
 }

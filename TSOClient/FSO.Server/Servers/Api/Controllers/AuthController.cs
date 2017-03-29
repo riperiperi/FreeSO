@@ -38,6 +38,7 @@ namespace FSO.Server.Servers.Api.Controllers
                 var username = this.Request.Query["username"];
                 var password = this.Request.Query["password"];
                 var version = this.Request.Query["version"];
+                var clientid = (string)this.Request.Query["clientid"];
 
                 if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 {
@@ -80,6 +81,8 @@ namespace FSO.Server.Servers.Api.Controllers
                     {
                         return Response.AsText(printError(ERROR_110_CODE, ERROR_110_MSG));
                     }
+
+                    db.Users.UpdateClientID(user.user_id, clientid ?? "0");
 
                     /** Make a ticket **/
                     ticket = new AuthTicket();

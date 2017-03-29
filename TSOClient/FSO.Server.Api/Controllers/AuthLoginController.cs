@@ -29,7 +29,7 @@ namespace FSO.Server.Api.Controllers
         }
 
         // GET api/<controller>
-        public HttpResponseMessage Get(string username, string password, string version)
+        public HttpResponseMessage Get(string username, string password, string version, string clientid)
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
@@ -72,6 +72,8 @@ namespace FSO.Server.Api.Controllers
                 {
                     return ERROR_110();
                 }
+
+                db.Users.UpdateClientID(user.user_id, clientid ?? "0");
 
                 /** Make a ticket **/
                 ticket = new AuthTicket();

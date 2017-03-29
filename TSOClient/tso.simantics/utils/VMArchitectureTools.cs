@@ -788,6 +788,7 @@ namespace FSO.SimAntics.Utils
 
         private static int GetFloorPrice(ushort id)
         {
+            if (id == 1) return 0;
             var fref = GetFloorRef(id);
             return (fref == null) ? 0 : fref.Price;
         }

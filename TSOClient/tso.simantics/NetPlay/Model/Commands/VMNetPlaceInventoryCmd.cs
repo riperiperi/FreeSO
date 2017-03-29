@@ -40,9 +40,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             if (caller == null) return false;
 
-            //careful here! if the object can't be placed, we have to give the user their money back.
+            //careful here! if the object can't be placed, we have to put their object back
             if (!vm.Context.ObjectQueries.MultitileByPersist.ContainsKey(GUID) && TryPlace(vm, caller))
             {
+                if (CreatedGroup.BaseObject is VMGameObject)
+                {
+                    foreach (var o in CreatedGroup.Objects) ((VMGameObject)o).Disabled &= ~VMGameObjectDisableFlags.ForSale;
+                }
+                CreatedGroup.SalePrice = -1;
                 return true;
             }
             else

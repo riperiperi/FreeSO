@@ -21,6 +21,10 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Common;
 using FSO.Server.Clients;
 using Ninject;
+using System.Net.NetworkInformation;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace FSO.Client.UI.Screens
 {
@@ -182,8 +186,32 @@ namespace FSO.Client.UI.Screens
                 Username = LoginDialog.Username,
                 Password = LoginDialog.Password,
                 ServiceID = "2147",
-                Version = "2.5"
+                Version = "2.5",
+                ClientID = GetUID()
             });
+        }
+
+        private string GetUID()
+        {
+            var id =
+            (
+                from nic in NetworkInterface.GetAllNetworkInterfaces()
+                where nic.OperationalStatus == OperationalStatus.Up
+                select nic.GetPhysicalAddress().ToString()
+            ).FirstOrDefault();
+
+            return GetHashString(id ?? "");
+        }
+
+        public static string GetHashString(string input)
+        {
+            HashAlgorithm algorithm = SHA1.Create();
+            StringBuilder sb = new StringBuilder();
+            var hash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(input));
+            foreach (byte b in hash)
+                sb.Append(b.ToString("X2"));
+
+            return sb.ToString();
         }
 
         private void SetProgress(int stage)

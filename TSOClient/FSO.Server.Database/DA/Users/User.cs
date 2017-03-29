@@ -18,6 +18,7 @@ namespace FSO.Server.Database.DA.Users
         public bool is_banned { get; set; }
         public string register_ip { get; set; }
         public string last_ip { get; set; }
+        public string client_id { get; set; }
     }
 
     public enum UserState

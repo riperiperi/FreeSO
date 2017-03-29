@@ -217,6 +217,9 @@
     <Content Include="DatabaseScripts\changes\0013_shard_version.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="DatabaseScripts\changes\0014_client_id.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="DatabaseScripts\fso_transactions.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

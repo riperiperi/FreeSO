@@ -148,6 +148,14 @@
       "requires": [
         "def48038-d0d6-4b10-a129-0b9c736e4d35"
       ]
+    },
+    {
+      "id": "2b01bdbe-0c93-4ee1-afb8-43b6b2db840c",
+      "script": "changes/0014_client_id.sql",
+      "idempotent": false,
+      "requires": [
+        "9a48f9fc-5950-4348-9ccf-318a263be4eb"
+      ]
     }
   ]
 }

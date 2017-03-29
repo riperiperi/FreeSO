@@ -51,7 +51,7 @@ namespace FSO.Server.Servers.City.Handlers
                                     da.Users.UpdateBanned(theiruser.user_id, true);
                                     if (packet.Type == ModerationRequestType.IPBAN_USER && theiruser.last_ip != "127.0.0.1" && theiruser.last_ip != "::1")
                                     {
-                                        da.Bans.Add(theiruser.last_ip, theiruser.user_id, "Banned from ingame", 0);
+                                        da.Bans.Add(theiruser.last_ip, theiruser.user_id, "Banned from ingame", 0, theiruser.client_id);
                                     }
                                 } else
                                 {

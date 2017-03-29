@@ -240,9 +240,9 @@ namespace FSO.SimAntics.Entities
 
         public void Delete(VMContext context)
         {
-            while (Objects.Count > 0)
+            var clone = new List<VMEntity>(Objects);
+            foreach (var obj in clone)
             {
-                var obj = Objects[0];
                 obj.Delete(false, context);
             }
         }

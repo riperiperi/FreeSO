@@ -11,6 +11,7 @@ namespace FSO.SimAntics.Engine
         private VM vm;
         private Dictionary<uint, List<VMEntity>> TickSchedule = new Dictionary<uint, List<VMEntity>>();
         private List<VMEntity> TickThisFrame;
+        public HashSet<VMEntity> PendingDeletion = new HashSet<VMEntity>();
         public uint CurrentTickID;
         public short CurrentObjectID;
         public bool RunningNow;
@@ -91,9 +92,22 @@ namespace FSO.SimAntics.Engine
                 }
                 TickSchedule.Remove(CurrentTickID);
             }
+
             vm.Context.RandomSeed += (ulong)vm.Entities.Count; // some "entropy" based on the number of entities present. forces a more strict sync
             CurrentObjectID = short.MaxValue;
             RunningNow = false;
+
+            //delete all objets that were pending deletion
+            foreach (var obj in PendingDeletion)
+            {
+                obj.Delete(false, vm.Context);
+            }
+            PendingDeletion.Clear();
+        }
+
+        public void Delete(VMEntity obj)
+        {
+            PendingDeletion.Add(obj);
         }
 
         public void Reset()

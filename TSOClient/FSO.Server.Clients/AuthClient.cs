@@ -25,7 +25,8 @@ namespace FSO.Server.Clients
                             .AddQueryParameter("username", input.Username)
                             .AddQueryParameter("password", input.Password)
                             .AddQueryParameter("serviceID", input.ServiceID)
-                            .AddQueryParameter("version", input.Version);
+                            .AddQueryParameter("version", input.Version)
+                            .AddQueryParameter("clientid", input.ClientID);
 
 
             var response = client.Execute(request);
