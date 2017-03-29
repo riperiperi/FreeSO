@@ -28,6 +28,11 @@ namespace FSO.Server.Api.Controllers
             return ERROR_020();
         }
 
+        public HttpResponseMessage Get(string username, string password, string version)
+        {
+            return Get(username, password, version, null);
+        }
+
         // GET api/<controller>
         public HttpResponseMessage Get(string username, string password, string version, string clientid)
         {
