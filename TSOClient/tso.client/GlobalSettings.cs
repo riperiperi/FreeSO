@@ -58,7 +58,9 @@ namespace FSO.Client
             { "GameEntryUrl", "http://api.freeso.org" },
             { "CitySelectorUrl", "http://api.freeso.org" },
 
-            { "TargetRefreshRate", "60" }
+            { "TargetRefreshRate", "60" },
+
+            { "EnableTTS", "false" }
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -99,5 +101,6 @@ namespace FSO.Client
         public string CitySelectorUrl { get; set; }
 
         public int TargetRefreshRate { get; set; }
+        public bool EnableTTS { get; set; }
     }
 }

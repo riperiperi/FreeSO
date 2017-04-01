@@ -177,7 +177,7 @@ namespace FSO.Client.GameContent
                         id = index.ToString();
                     }
 
-                    tableData[id] = strValue.Replace("Sim", "MyLander");
+                    tableData[id] = strValue;
                     index++;
                 }
 

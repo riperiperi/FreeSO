@@ -166,7 +166,7 @@ namespace FSO.Client
             var ds = kernel.Get<DataService>();
             ds.AddProvider(new ClientAvatarProvider());
 
-            this.Window.Title = "MyLand (100% COPYRIGHT NOT FREESO DO NOT STEAL I EVEN RELICENSED IT)";
+            this.Window.Title = "FreeSO";
 
             if (!GlobalSettings.Default.Windowed && !GameFacade.GraphicsDeviceManager.IsFullScreen)
             {

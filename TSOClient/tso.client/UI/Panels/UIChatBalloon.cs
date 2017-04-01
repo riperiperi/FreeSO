@@ -71,7 +71,7 @@ namespace FSO.Client.UI.Panels
             ShadowStyle = BodyTextStyle.Clone();
             ShadowStyle.Color = Color.Black;
 
-            if (!GameFacade.Linux) TTSContext = new UITTSContext();
+            if (!GameFacade.Linux && GlobalSettings.Default.EnableTTS) TTSContext = new UITTSContext();
         }
 
         public void SetNameMessage(string name, string message, bool gender)
