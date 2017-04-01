@@ -22,7 +22,7 @@ namespace FSO.SimAntics.Marshals
 
         public void Deserialize(BinaryReader reader)
         {
-            Clock = new VMClockMarshal();
+            Clock = new VMClockMarshal(Version);
             Clock.Deserialize(reader);
 
             Architecture = new VMArchitectureMarshal(Version);
@@ -50,6 +50,11 @@ namespace FSO.SimAntics.Marshals
         public int TicksPerMinute;
         public int Minutes;
         public int Hours;
+        public int FirePercent = 20000;
+
+        private int Version;
+        public VMClockMarshal() { }
+        public VMClockMarshal(int version) { Version = version; }
 
         public void Deserialize(BinaryReader reader)
         {
@@ -58,6 +63,7 @@ namespace FSO.SimAntics.Marshals
             TicksPerMinute = reader.ReadInt32();
             Minutes = reader.ReadInt32();
             Hours = reader.ReadInt32();
+            if (Version > 17) FirePercent = reader.ReadInt32();
         }
 
         public void SerializeInto(BinaryWriter writer)
@@ -67,6 +73,7 @@ namespace FSO.SimAntics.Marshals
             writer.Write(TicksPerMinute);
             writer.Write(Minutes);
             writer.Write(Hours);
+            writer.Write(FirePercent);
         }
     }
 

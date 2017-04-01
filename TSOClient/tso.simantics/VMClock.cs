@@ -20,6 +20,7 @@ namespace FSO.SimAntics
         public int TicksPerMinute;
         public int Minutes;
         public int Hours;
+        public int FirePercent;
         public int TimeOfDay
         {
             get
@@ -38,6 +39,7 @@ namespace FSO.SimAntics
 
         public void Tick()
         {
+            if (FirePercent < 20000) FirePercent++;
             TicksPerMinute = 30 * 5; //30 * 5;
             if (++MinuteFractions >= TicksPerMinute)
             {
@@ -64,7 +66,8 @@ namespace FSO.SimAntics
                 MinuteFractions = MinuteFractions,
                 TicksPerMinute = TicksPerMinute,
                 Minutes = Minutes,
-                Hours = Hours
+                Hours = Hours,
+                FirePercent = FirePercent
             };
         }
 
@@ -75,6 +78,7 @@ namespace FSO.SimAntics
             TicksPerMinute = input.TicksPerMinute;
             Minutes = input.Minutes;
             Hours = input.Hours;
+            FirePercent = input.FirePercent;
         }
 
         public VMClock(VMClockMarshal input)

@@ -7,10 +7,11 @@ using System.Linq;
 using System.Text;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Client.UI.Controls;
+using System.Speech.Synthesis;
 
 namespace FSO.Client.UI.Panels
 {
-    public class UIChatBalloon : UIContainer
+    public class UIChatBalloon : UIContainer, IDisposable
     {
         private Texture2D BPointerBottom;
         private Texture2D BPointerSide;
@@ -32,6 +33,7 @@ namespace FSO.Client.UI.Panels
         public string Name;
         public string Message;
         public float Alpha;
+        public bool Gender;
 
         public Vector2 TargetLocation;
 
@@ -41,6 +43,8 @@ namespace FSO.Client.UI.Panels
         public Point DesiredRectPos;
         private bool Offscreen;
         public int ClosestDir = 3; //left, up, right, down, N/A
+
+        public ITTSContext TTSContext;
 
         public UIChatBalloon(UIChatPanel owner)
         {
@@ -66,12 +70,16 @@ namespace FSO.Client.UI.Panels
 
             ShadowStyle = BodyTextStyle.Clone();
             ShadowStyle.Color = Color.Black;
+
+            if (!GameFacade.Linux) TTSContext = new UITTSContext();
         }
 
-        public void SetNameMessage(string name, string message)
+        public void SetNameMessage(string name, string message, bool gender)
         {
             Name = name;
             Message = message;
+            TTSContext?.Speak(message, gender);
+            Gender = gender;
             Offscreen = false;
             if (message == "") name = "";
             TextChanged();
@@ -296,5 +304,38 @@ namespace FSO.Client.UI.Panels
 
             this.Position = new Vector2();
         }
+
+        public void Dispose()
+        {
+            TTSContext?.Dispose();
+        }
+    }
+
+    public class UITTSContext : ITTSContext
+    {
+        private SpeechSynthesizer Synth;
+
+        public UITTSContext()
+        {
+            Synth = new SpeechSynthesizer();
+            Synth.SetOutputToDefaultAudioDevice();
+        }
+
+        public void Dispose()
+        {
+            Synth.Dispose();
+        }
+
+        public void Speak(string text, bool gender)
+        {
+            Synth.SelectVoiceByHints((gender) ? VoiceGender.Female : VoiceGender.Male);
+            Synth.SpeakAsync(text);
+        }
+    }
+
+    public interface ITTSContext
+    {
+        void Dispose();
+        void Speak(string text, bool gender);
     }
 }

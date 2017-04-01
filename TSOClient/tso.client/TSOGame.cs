@@ -54,7 +54,7 @@ namespace FSO.Client
 
             this.Window.AllowUserResizing = true;
             this.Window.ClientSizeChanged += new EventHandler<EventArgs>(Window_ClientSizeChanged);
-            
+
             //might want to disable for linux
                         Log.UseSensibleDefaults();
 
@@ -166,7 +166,7 @@ namespace FSO.Client
             var ds = kernel.Get<DataService>();
             ds.AddProvider(new ClientAvatarProvider());
 
-            this.Window.Title = "FreeSO";
+            this.Window.Title = "MyLand (100% COPYRIGHT NOT FREESO DO NOT STEAL I EVEN RELICENSED IT)";
 
             if (!GlobalSettings.Default.Windowed && !GameFacade.GraphicsDeviceManager.IsFullScreen)
             {

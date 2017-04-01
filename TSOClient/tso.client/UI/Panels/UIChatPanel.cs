@@ -210,6 +210,7 @@ namespace FSO.Client.UI.Panels
             while (avatars.Count < Labels.Count)
             {
                 Remove(Labels[Labels.Count - 1]);
+                Labels[Labels.Count - 1].Dispose();
                 Labels.RemoveAt(Labels.Count - 1);
             }
             while (avatars.Count > Labels.Count)
@@ -229,7 +230,7 @@ namespace FSO.Client.UI.Panels
                 var avatar = (VMAvatar)avatars[i];
 
                 if (label.Message != avatar.Message)
-                    label.SetNameMessage(avatar.Name, avatar.Message);
+                    label.SetNameMessage(avatar.Name, avatar.Message, avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender)>0);
                 if (myIgnoring.Contains(avatar.PersistID))
                 {
                     label.Alpha = 0;

@@ -219,6 +219,7 @@
     <Compile Include="NetPlay\Model\VMSerializable.cs" />
     <Compile Include="NetPlay\SandboxMode\BanList.cs" />
     <Compile Include="NetPlay\VMNetDriver.cs" />
+    <Compile Include="Primitives\VMBurn.cs" />
     <Compile Include="Primitives\VMDialogGlobalStrings.cs" />
     <Compile Include="Primitives\VMDialogSemiGlobalStrings.cs" />
     <Compile Include="Primitives\VMBreakPoint.cs" />

@@ -137,7 +137,12 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMRandomNumberOperand)
             });
 
-            //TODO: burn
+            AddPrimitive(new VMPrimitiveRegistration(new VMBurn())
+            {
+                Opcode = 9,
+                Name = "burn",
+                OperandModel = typeof(VMBurnOperand)
+            });
 
             //Sims 1.0 tutorial
 

@@ -439,8 +439,11 @@ namespace FSO.SimAntics
             if (EntryPoints[3].ActionFunction != 0 && ((this is VMGameObject) || ((VMAvatar)this).IsPet)) ExecuteEntryPoint(3, context, true); //Reset
             if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
 
-            context.VM.Scheduler.DescheduleTick(this);
-            context.VM.Scheduler.ScheduleTickIn(this, 1);
+            if (this is VMGameObject)
+            {
+                context.VM.Scheduler.DescheduleTick(this);
+                context.VM.Scheduler.ScheduleTickIn(this, 1);
+            }
 
             InReset = false;
         }
@@ -629,6 +632,8 @@ namespace FSO.SimAntics
                 case VMStackObjectVariable.Flags:
                     if (((value ^ ObjectData[(short)var]) & (int)VMEntityFlags.HasZeroExtent) > 0)
                         Footprint = GetObstacle(Position, Direction);
+                    if (this is VMAvatar && ((value ^ ObjectData[(short)var]) & (int)VMEntityFlags.Burning) > 0)
+                        this.Reset(Thread.Context);
                     break;
                 case VMStackObjectVariable.Direction:
                     value = (short)(((int)value + 65536) % 8);
