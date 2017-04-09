@@ -535,6 +535,9 @@
     <None Include="Content\Patch\pondduck_fixref.piff">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Patch\slotmachine.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\Patch\soccerball.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

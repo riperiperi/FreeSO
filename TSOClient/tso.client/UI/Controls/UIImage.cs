@@ -29,6 +29,12 @@ namespace FSO.Client.UI.Controls
 
         private bool NineSlice;
         private NineSliceMargins NineSliceMargins;
+        private bool tripleTexture;
+        private TripleDrawMargins TripleDrawMargins;
+        private bool doubleTexture;
+        private DoubleDrawMargins DoubleDrawMargins;
+        private bool hasSpecialBounds;
+        private Rectangle specialBounds;
 
         private float m_Width;
         private float m_Height;
@@ -99,7 +105,8 @@ namespace FSO.Client.UI.Controls
         public UIImage With9Slice(int marginLeft, int marginRight, int marginTop, int marginBottom)
         {
             NineSlice = true;
-            NineSliceMargins = new NineSliceMargins {
+            NineSliceMargins = new NineSliceMargins
+            {
                 Left = marginLeft,
                 Right = marginRight,
                 Top = marginTop,
@@ -109,7 +116,47 @@ namespace FSO.Client.UI.Controls
 
             return this;
         }
-        
+        public UIImage DoubleTextureDraw(int firstDrawX, int firstDrawY, int firstDrawWidth, int firstDrawHeight,
+            int secondDrawX, int secondDrawY, int secondDrawWidth, int secondDrawHeight, bool repeatX, bool repeatY)
+        {
+            doubleTexture = true;
+            DoubleDrawMargins = new DoubleDrawMargins
+            {
+                FirstX = firstDrawX,
+                FirstY = firstDrawY,
+                FirstWidth = firstDrawWidth,
+                FirstHeight = firstDrawHeight,
+                SecondX = secondDrawX,
+                SecondY = secondDrawY,
+                SecondWidth = secondDrawWidth,
+                SecondHeight = secondDrawHeight
+            };
+            DoubleDrawMargins.CalculateOrigins(repeatX, repeatY);
+            return this;
+        }
+        public UIImage TripleTextureDraw(int firstDrawX, int firstDrawY, int firstDrawWidth, int firstDrawHeight, int secondDrawX,
+            int secondDrawY, int secondDrawWidth, int secondDrawHeight, int thirdDrawX, int thirdDrawY, int thirdDrawWidth,
+            int thirdDrawHeight, bool repeatX, bool repeatY)
+        {
+            tripleTexture = true;
+            TripleDrawMargins = new TripleDrawMargins
+            {
+                FirstX = firstDrawX,
+                FirstY = firstDrawY,
+                FirstWidth = firstDrawWidth,
+                FirstHeight = firstDrawHeight,
+                SecondX = secondDrawX,
+                SecondY = secondDrawY,
+                SecondWidth = secondDrawWidth,
+                SecondHeight = secondDrawHeight,
+                ThirdX = thirdDrawX,
+                ThirdY = thirdDrawY,
+                ThirdWidth = thirdDrawWidth,
+                ThirdHeight = thirdDrawHeight
+            };
+            TripleDrawMargins.CalculateOrigins(repeatX, repeatY);
+            return this;
+        }
         public float Width
         {
             get { return m_Width; }
@@ -159,6 +206,14 @@ namespace FSO.Client.UI.Controls
             return new Rectangle(0, 0, (int)m_Width, (int)m_Height);
         }
 
+        public void SetBounds(int x, int y, int width, int height)
+        {
+            m_Width = width;
+            m_Height = height;
+            hasSpecialBounds = true;
+            specialBounds = new Rectangle(x, y, (int)m_Width, (int)m_Height);
+        }
+
         public override void Draw(UISpriteBatch SBatch)
         {
             if (!Visible) { return; }
@@ -186,7 +241,7 @@ namespace FSO.Client.UI.Controls
 
                 /** MC **/
                 DrawLocalTexture(SBatch, m_Texture, NineSliceMargins.MC, new Vector2(NineSliceMargins.Left, NineSliceMargins.Top), NineSliceMargins.MC_Scale);
-                
+
                 /** MR **/
                 DrawLocalTexture(SBatch, m_Texture, NineSliceMargins.MR, new Vector2(Width - NineSliceMargins.Right, NineSliceMargins.Top), NineSliceMargins.MR_Scale);
 
@@ -202,16 +257,36 @@ namespace FSO.Client.UI.Controls
 
 
             }
+            else if (doubleTexture)
+            {
+                if (m_Texture == null) { return; }
+
+                // draw both pieces
+                DrawLocalTexture(SBatch, m_Texture, DoubleDrawMargins.firstDrawSource, DoubleDrawMargins.FirstTarget);
+                DrawLocalTexture(SBatch, m_Texture, DoubleDrawMargins.secondDrawSource, DoubleDrawMargins.SecondTarget);
+            }
+            else if (tripleTexture)
+            {
+                if (m_Texture == null) { return; }
+
+                // draw all three pieces
+                DrawLocalTexture(SBatch, m_Texture, TripleDrawMargins.firstDrawSource, TripleDrawMargins.FirstTarget);
+                DrawLocalTexture(SBatch, m_Texture, TripleDrawMargins.secondDrawSource, TripleDrawMargins.SecondTarget);
+                DrawLocalTexture(SBatch, m_Texture, TripleDrawMargins.thirdDrawSource, TripleDrawMargins.ThirdTarget);
+            }
             else if (m_TextureRef != null)
             {
                 m_TextureRef.Draw(SBatch, this, 0, 0, m_Width, m_Height);
             }
             else
             {
-
                 if (m_Texture == null) { return; }
 
-                if (m_Width != 0 && m_Height != 0)
+                if (hasSpecialBounds)
+                {
+                    DrawLocalTexture(SBatch, m_Texture, specialBounds, Vector2.Zero);
+                }
+                else if (m_Width != 0 && m_Height != 0)
                 {
                     DrawLocalTexture(SBatch, m_Texture, null, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height));
                 }
@@ -271,7 +346,7 @@ namespace FSO.Client.UI.Controls
         {
             TC_Scale = new Vector2((width - (Left + Right)) / (TC.Width), 1);
             MC_Scale = new Vector2(
-                            (width - (Left + Right)) / (MC.Width), 
+                            (width - (Left + Right)) / (MC.Width),
                             (height - (Top + Bottom)) / (MC.Height)
                        );
             BC_Scale = new Vector2((width - (Left + Right)) / (BC.Width), 1);
@@ -342,6 +417,96 @@ namespace FSO.Client.UI.Controls
 
             /** BR **/
             element.DrawLocalTexture(SBatch, m_Texture, this.BR, position + new Vector2(width - this.Right, bottomY));
+        }
+    }
+    class DoubleDrawMargins
+    {
+        public int FirstX;
+        public int FirstY;
+        public int FirstWidth;
+        public int FirstHeight;
+        public int SecondX;
+        public int SecondY;
+        public int SecondWidth;
+        public int SecondHeight;
+
+        public Rectangle firstDrawSource;
+        public Rectangle secondDrawSource;
+
+        public Vector2 FirstTarget;
+        public Vector2 SecondTarget;
+
+        public void CalculateOrigins(bool repeatX, bool repeatY)
+        {
+            firstDrawSource = new Rectangle(FirstX, FirstY, FirstWidth, FirstHeight);
+            secondDrawSource = new Rectangle(SecondX, SecondY, SecondWidth, SecondHeight);
+
+            FirstTarget = Vector2.Zero;
+
+            if (repeatX == true)
+            {
+                if (repeatY == true)
+                { // repeat both X and Y
+                    SecondTarget = new Vector2(FirstWidth, FirstHeight);
+                }
+                else // only repeat X
+                    SecondTarget = new Vector2(FirstWidth, 0);
+            }
+            else // only repeat Y
+            {
+                SecondTarget = new Vector2(0, FirstHeight);
+            }
+        }
+    }
+    class TripleDrawMargins
+    {
+        public int FirstX;
+        public int FirstY;
+        public int FirstWidth;
+        public int FirstHeight;
+        public int SecondX;
+        public int SecondY;
+        public int SecondWidth;
+        public int SecondHeight;
+        public int ThirdX;
+        public int ThirdY;
+        public int ThirdWidth;
+        public int ThirdHeight;
+
+        public Rectangle firstDrawSource;
+        public Rectangle secondDrawSource;
+        public Rectangle thirdDrawSource;
+
+        public Vector2 FirstTarget;
+        public Vector2 SecondTarget;
+        public Vector2 ThirdTarget;
+
+        public void CalculateOrigins(bool repeatX, bool repeatY)
+        {
+            firstDrawSource = new Rectangle(FirstX, FirstY, FirstWidth, FirstHeight);
+            secondDrawSource = new Rectangle(SecondX, SecondY, SecondWidth, SecondHeight);
+            thirdDrawSource = new Rectangle(ThirdX, ThirdY, ThirdWidth, ThirdHeight);
+
+            FirstTarget = Vector2.Zero;
+
+            if (repeatX == true)
+            {
+                if (repeatY == true)
+                { // repeat both X and Y
+                    SecondTarget = new Vector2(FirstWidth, FirstHeight);
+                    ThirdTarget = new Vector2(FirstWidth + SecondWidth, FirstHeight + SecondHeight);
+                }
+                else // only repeat X
+                {
+                    SecondTarget = new Vector2(FirstWidth, 0);
+                    ThirdTarget = new Vector2(FirstWidth + SecondWidth, 0);
+                }
+            }
+            else // only repeat Y
+            {
+                SecondTarget = new Vector2(0, FirstHeight);
+                ThirdTarget = new Vector2(0, FirstHeight + SecondHeight);
+            }
         }
     }
 }

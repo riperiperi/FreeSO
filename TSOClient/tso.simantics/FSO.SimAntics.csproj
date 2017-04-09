@@ -166,6 +166,7 @@
     <Compile Include="NetPlay\EODs\Handlers\VMEODRackPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODScoreboardPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODSignsPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODSlotsPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODStubPlugin.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODEvent.cs" />
     <Compile Include="NetPlay\EODs\Utils\EODLobby.cs" />
