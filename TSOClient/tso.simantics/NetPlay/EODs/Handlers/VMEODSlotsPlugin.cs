@@ -131,7 +131,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 UserClient.Send("slots_player_init", new byte[] { MachineBetDenomination, MachineType });
             }
             // UserClient is owner
-            else if ((isOwner == true) && (args != null) && (args.Length > 4) && (args[1] > 79)) // HAS to be 80 > args[1] < 100
+            else if ((isOwner) && (args != null) && (args.Length > 4) && (args[1] > 79)) // HAS to be 80 > args[1] < 100
             { // args[1] = StackObject's Payback, args[2] = StackObject's (Balance % 16384), args[3] = StackObject's (Balance / 16384), args[4] = 0 for "Off" or 1 for "On"
                 var AlledgedMachineBalance = Convert.ToInt16((16384 * args[3]) + args[2]);
                 UserClient.Send("slots_owner_init", new byte[5] { Convert.ToByte(args[1]), Convert.ToByte(AlledgedMachineBalance % 255),
@@ -176,7 +176,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private void GameOverHandler(short eventID, VMEODClient player)
         {
             // check if object has enough money or too much money, then start new game or send offline message to the player
-            if (IsObjectBalanceInBounds() == true)
+            if (IsObjectBalanceInBounds())
             {
                 player.Send("slots_new_game", "");
             }
@@ -233,7 +233,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             }
             bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == UserClient.Avatar.PersistID);
             // if the client is the owner of the object AND there were no failures detected
-            if ((isOwner == true) && (failureReason.Length == 0))
+            if ((isOwner) && (failureReason.Length == 0))
             {
 
                 // atempt to credit the owner by debiting the machine
@@ -297,7 +297,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             }
             bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == UserClient.Avatar.PersistID);
             // if the client is the owner of the object AND there were no failures detected
-            if ((isOwner == true) && (failureReason.Length == 0))
+            if ((isOwner) && (failureReason.Length == 0))
             {
                 // atempt to credit the machine by debiting the owner
                 var VM = client.vm;
@@ -353,11 +353,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 }
             }
 
-            if (betIsValid == true)
+            if (betIsValid)
             {
-                // roll the slots rng and get result, send to UI and send to SlotResultHandler() to determine amount of CurrentWinnings, CurrentWinnings = 0 is a loss
+                // roll the slots rng and get result, send to UI and send to SlotResultHandler() to determine amount of winnings, winnings = 0 is a loss
                 var thisGameBetAndResults = RollNewGame(betAmount);
-                CurrentWinnings = SlotResultHandler(thisGameBetAndResults);
+                var winnings = SlotResultHandler(thisGameBetAndResults);
 
                 // attempt to debit player the bet amount
                 var VM = client.vm;
@@ -381,7 +381,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     {
                     // update the balance of the machine
                     MachineBalance = Convert.ToInt16(budget2);
-
+                        CurrentWinnings = winnings;
                         if (CurrentWinnings > 0)
                         {
                         // dispatch event to tell object the winning amount
@@ -510,14 +510,16 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         }
         private void WheelsStoppedHandler(string evt, string uselessString, VMEODClient client)
         {
-            if (CurrentWinnings > 0)
+            var winnings = CurrentWinnings;
+            CurrentWinnings = 0;
+            if (winnings > 0)
             {
                 // send win event with random number for message displayed
-                client.Send("slots_display_win", "" + SlotsRandom.Next(25, 30) + "%" + CurrentWinnings);
+                client.Send("slots_display_win", "" + SlotsRandom.Next(25, 30) + "%" + winnings);
 
                 // pay the player
                 var VM = client.vm;
-                VM.GlobalLink.PerformTransaction(VM, false, Server.Object.PersistID, client.Avatar.PersistID, Convert.ToInt32(CurrentWinnings),
+                VM.GlobalLink.PerformTransaction(VM, false, Server.Object.PersistID, client.Avatar.PersistID, Convert.ToInt32(winnings),
 
                 // debit the balance of the machine
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
