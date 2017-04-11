@@ -5,6 +5,7 @@ using FSO.SimAntics.NetPlay.EODs;
 using FSO.SimAntics.NetPlay.EODs.Handlers;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Timers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,26 +16,21 @@ namespace FSO.Client.UI.Panels.EODs
     public class UISlotsEOD : UIEOD
     {
         public UIScript Script;
-
-        // EOD State
-        public VMEODSlotsStates State;
-
+        
         private byte MachineOdds { get; set; }
-        private int eachBet;
-        private int currentBet;
-        private int displayedBet;
-        private short machineBalance;
-        private int currentPayout = 0;
-        private bool targetsSet = false;
-        private int onOffState;
-        private int wheelSpinTickCounter = 0;
-        private short machineMinimumBalance;
-        private short machineMaximumBalance;
-        private WheelStopsList wheelListOne;
-        private WheelStopsList wheelListTwo;
-        private WheelStopsList wheelListThree;
-        private UILabel activePayoutTable;
-        private Texture2D activeWheelTexture;
+        private int EachBet;
+        private int CurrentBet;
+        private int DisplayedBet;
+        private short MachineBalance;
+        private int OnOffState;
+        private int WheelSpinTickCounter = 0;
+        private short MachineMinimumBalance;
+        private short MachineMaximumBalance;
+        private WheelStopsList WheelListOne;
+        private WheelStopsList WheelListTwo;
+        private WheelStopsList WheelListThree;
+        private UILabel ActivePayoutTable;
+        private Texture2D ActiveWheelTexture;
 
         // Owner UI Images
         public UIImage ButtonSeat { get; set; }
@@ -54,25 +50,25 @@ namespace FSO.Client.UI.Panels.EODs
         public UILabel OnOff { get; set; } // starts at opaque=0
 
         // Player UI Images
-        public UIImage Wheel1;
-        public UIImage Wheel2;
-        public UIImage Wheel3;
+        public UISlotsImage Wheel1;
+        public UISlotsImage Wheel2;
+        public UISlotsImage Wheel3;
         public UIImage WinningLine { get; set; }
 
         public UIImage LightsFrame1 { get; set; }
         public UIImage LightsFrame2 { get; set; }
         public UIImage BetIndents { get; set; }
         public UIImage Wheelsback { get; set; }
-        public UIImage Chips { get; set; }
+        public UISlotsImage Chips { get; set; }
 
-        public UIImage PayoutTableColumn1Row1 { get; set; }
-        public UIImage PayoutTableColumn1Row2 { get; set; }
-        public UIImage PayoutTableColumn1Row3 { get; set; }
-        public UIImage PayoutTableColumn1Row4 { get; set; }
-        public UIImage PayoutTableColumn2Row1 { get; set; }
-        public UIImage PayoutTableColumn2Row2 { get; set; }
-        public UIImage PayoutTableColumn2Row3 { get; set; }
-        public UIImage PayoutTableColumn2Row4 { get; set; }
+        public UISlotsImage PayoutTableColumn1Row1 { get; set; }
+        public UISlotsImage PayoutTableColumn1Row2 { get; set; }
+        public UISlotsImage PayoutTableColumn1Row3 { get; set; }
+        public UISlotsImage PayoutTableColumn1Row4 { get; set; }
+        public UISlotsImage PayoutTableColumn2Row1 { get; set; }
+        public UISlotsImage PayoutTableColumn2Row2 { get; set; }
+        public UISlotsImage PayoutTableColumn2Row3 { get; set; }
+        public UISlotsImage PayoutTableColumn2Row4 { get; set; }
 
         // Player UI Buttons
         public UIButton ArmButton { get; set; }
@@ -99,6 +95,7 @@ namespace FSO.Client.UI.Panels.EODs
         public Texture2D Wheel1Image { get; set; }
         public Texture2D Wheel2Image { get; set; }
         public Texture2D Wheel3Image { get; set; }
+        public Texture2D MoneyChipsImage { get; set; }
         public Texture2D LightsFrame1Image { get; set; }
         public Texture2D LightsFrame2Image { get; set; }
         public Texture2D Wheel1LegendImage { get; set; }
@@ -109,30 +106,35 @@ namespace FSO.Client.UI.Panels.EODs
         public const int WHEEL_TEXTURE_WIDTH_AND_HEIGHT = 58;
         public const int WHEEL_TEXTURE_HALF_DRAW_HEIGHT = 29;
 
+        public const int WHEEL_FRAME_CONSTANT = 5;
+
+        // timers for animations
+        private Timer OfflineMessageTimer;
+        private Timer LightsTimer;
+        private Timer WheelsSpinTimer;
 
         public UISlotsEOD(UIEODController controller) : base(controller)
         {
             Script = this.RenderScript("slotseod.uis");
-            PlaintextHandlers["slots_animate_lights"] = LightsHandlers;
             PlaintextHandlers["slots_new_game"] = NewGameHandler;
-            PlaintextHandlers["slots_animate_wheels"] = AnimateWheelsHandler;
             PlaintextHandlers["slots_display_win"] = DisplayWinHandler;
             PlaintextHandlers["slots_display_loss"] = DisplayLossHandler;
-            PlaintextHandlers["slots_toggle_offline_message"] = OfflineMessageHandler;
+            PlaintextHandlers["slots_close_machine"] = CloseMachineHandler;
             PlaintextHandlers["slots_resume_manage"] = ResumeManageHandler;
-            PlaintextHandlers["slots_deposit_fail"] = DepositFailHandler;
+            PlaintextHandlers["slots_deposit_NSF"] = DepositFailHandler;
+            PlaintextHandlers["slots_withdraw_fail"] = InputFailHandler;
+            PlaintextHandlers["slots_deposit_fail"] = InputFailHandler;
             BinaryHandlers["slots_owner_init"] = OwnerInitHandler;
             BinaryHandlers["slots_player_init"] = PlayerInitHandler;
-            BinaryHandlers["slots_off_init"] = PlayerInitHandler;
             BinaryHandlers["slots_spin"] = SlotsSpinHandler;
 
             // Add message text
             Loading.Alignment = TextAlignment.Left;
-            Loading.Caption = GameFacade.Strings["UIText", "259", "18"];
+            Loading.Caption = GameFacade.Strings["UIText", "259", "6"];
         }
         public override void OnExpand()
         {
-            activePayoutTable.Visible = true;
+            ActivePayoutTable.Visible = true;
             PayoutText1.Visible = true;
             PayoutText2.Visible = true;
             PayoutText3.Visible = true;
@@ -154,7 +156,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         public override void OnContract()
         {
-            activePayoutTable.Visible = false;
+            ActivePayoutTable.Visible = false;
             PayoutText1.Visible = false;
             PayoutText2.Visible = false;
             PayoutText3.Visible = false;
@@ -214,30 +216,48 @@ namespace FSO.Client.UI.Panels.EODs
             AddAt(2,LightsFrame2);
             BetIndents = Script.Create<UIImage>("BetIndents");
             AddAt(3,BetIndents);
-            Chips = Script.Create<UIImage>("Chips");
+            Chips = new UISlotsImage(MoneyChipsImage);
+            Chips.X = 110;
+            Chips.Y = 285;
             Add(Chips);
 
-            // Customise and place payout table
-            PayoutTableColumn1Row1 = Script.Create<UIImage>("PayoutTableColumn1").TripleTextureDraw(0, 0, 15, 21, 0, 0, 15, 21, 0, 0, 15, 21, true, false);
+            // Customize and place payout table
+            PayoutTableColumn1Row1 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(0, 0, 15, 21, 0, 0, 15, 21, 0, 0, 15, 21, true, false);
+            PayoutTableColumn1Row1.X = 125;
+            PayoutTableColumn1Row1.Y = 120;
             Add(PayoutTableColumn1Row1);
-            PayoutTableColumn1Row2 = Script.Create<UIImage>("PayoutTableColumn1").TripleTextureDraw(15, 0, 15, 21, 15, 0, 15, 21, 15, 0, 15, 21, true, false);
+            PayoutTableColumn1Row2 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(15, 0, 15, 21, 15, 0, 15, 21, 15, 0, 15, 21, true, false);
+            PayoutTableColumn1Row2.X = 125;
+            PayoutTableColumn1Row2.Y = 120;
             PayoutTableColumn1Row2.Y += 21;
             Add(PayoutTableColumn1Row2);
-            PayoutTableColumn1Row3 = Script.Create<UIImage>("PayoutTableColumn1").TripleTextureDraw(30, 0, 15, 21, 30, 0, 15, 21, 30, 0, 15, 21, true, false);
+            PayoutTableColumn1Row3 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(30, 0, 15, 21, 30, 0, 15, 21, 30, 0, 15, 21, true, false);
+            PayoutTableColumn1Row3.X = 125;
+            PayoutTableColumn1Row3.Y = 120;
             PayoutTableColumn1Row3.Y += 42;
             Add(PayoutTableColumn1Row3);
-            PayoutTableColumn1Row4 = Script.Create<UIImage>("PayoutTableColumn1").TripleTextureDraw(45, 0, 15, 21, 45, 0, 15, 21, 45, 0, 15, 21, true, false);
+            PayoutTableColumn1Row4 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(45, 0, 15, 21, 45, 0, 15, 21, 45, 0, 15, 21, true, false);
+            PayoutTableColumn1Row4.X = 125;
+            PayoutTableColumn1Row4.Y = 120;
             PayoutTableColumn1Row4.Y += 63;
             Add(PayoutTableColumn1Row4);
-            PayoutTableColumn2Row1 = Script.Create<UIImage>("PayoutTableColumn2").TripleTextureDraw(60, 0, 15, 21, 60, 0, 15, 21, 60, 0, 15, 21, true, false);
+            PayoutTableColumn2Row1 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(60, 0, 15, 21, 60, 0, 15, 21, 60, 0, 15, 21, true, false);
+            PayoutTableColumn2Row1.X = 275;
+            PayoutTableColumn2Row1.Y = 120;
             Add(PayoutTableColumn2Row1);
-            PayoutTableColumn2Row2 = Script.Create<UIImage>("PayoutTableColumn2").TripleTextureDraw(45, 0, 15, 21, 60, 0, 15, 21, 75, 0, 15, 21, true, false);
+            PayoutTableColumn2Row2 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(45, 0, 15, 21, 60, 0, 15, 21, 75, 0, 15, 21, true, false);
+            PayoutTableColumn2Row2.X = 275;
+            PayoutTableColumn2Row2.Y = 120;
             PayoutTableColumn2Row2.Y += 21;
             Add(PayoutTableColumn2Row2);
-            PayoutTableColumn2Row3 = Script.Create<UIImage>("PayoutTableColumn2").DoubleTextureDraw(75, 0, 15, 21, 75, 0, 15, 21, true, false);
+            PayoutTableColumn2Row3 = new UISlotsImage(Wheel1LegendImage).DoubleTextureDraw(75, 0, 15, 21, 75, 0, 15, 21, true, false);
+            PayoutTableColumn2Row3.X = 275;
+            PayoutTableColumn2Row3.Y = 120;
             PayoutTableColumn2Row3.Y += 42;
             Add(PayoutTableColumn2Row3);
-            PayoutTableColumn2Row4 = Script.Create<UIImage>("PayoutTableColumn2");
+            PayoutTableColumn2Row4 = new UISlotsImage(Wheel1LegendImage);
+            PayoutTableColumn2Row4.X = 275;
+            PayoutTableColumn2Row4.Y = 120;
             PayoutTableColumn2Row4.SetBounds(75, 0, 15, 21);
             PayoutTableColumn2Row4.Y += 63;
             Add(PayoutTableColumn2Row4);
@@ -300,20 +320,26 @@ namespace FSO.Client.UI.Panels.EODs
             Add(PayoutText8);
 
             // create the wheel lists for the spinning
-            wheelListOne = new WheelStopsList();
-            wheelListTwo = new WheelStopsList();
-            wheelListThree = new WheelStopsList();
+            WheelListOne = new WheelStopsList();
+            WheelListTwo = new WheelStopsList();
+            WheelListThree = new WheelStopsList();
 
-            // the wheel textures are customized at a later time, but draw the initial pre-gameplay stops (sixth sixth sixth)
-            Wheel1 = Script.Create<UIImage>("Wheel1").DoubleTextureDraw(0, wheelListOne.current.myStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT,
-                WHEEL_TEXTURE_HALF_DRAW_HEIGHT, 0, wheelListOne.current.myStartingY + WHEEL_TEXTURE_HALF_DRAW_HEIGHT,
+            // the wheel textures are customised at a later time, but draw the initial pre-gameplay stops (sixth sixth sixth)
+            Wheel1 = new UISlotsImage(Wheel1LegendImage).DoubleTextureDraw(0, WheelListOne.Current.MyStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT,
+                WHEEL_TEXTURE_HALF_DRAW_HEIGHT, 0, WheelListOne.Current.MyStartingY + WHEEL_TEXTURE_HALF_DRAW_HEIGHT,
                 WHEEL_TEXTURE_WIDTH_AND_HEIGHT, WHEEL_TEXTURE_HALF_DRAW_HEIGHT, false, true);
-            Wheel2 = Script.Create<UIImage>("Wheel2").DoubleTextureDraw(0, wheelListTwo.current.myStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT,
-                WHEEL_TEXTURE_HALF_DRAW_HEIGHT, 0, wheelListTwo.current.myStartingY + WHEEL_TEXTURE_HALF_DRAW_HEIGHT,
+            Wheel1.X = 167;
+            Wheel1.Y = 265;
+            Wheel2 = new UISlotsImage(Wheel1LegendImage).DoubleTextureDraw(0, WheelListTwo.Current.MyStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT,
+                WHEEL_TEXTURE_HALF_DRAW_HEIGHT, 0, WheelListTwo.Current.MyStartingY + WHEEL_TEXTURE_HALF_DRAW_HEIGHT,
                 WHEEL_TEXTURE_WIDTH_AND_HEIGHT, WHEEL_TEXTURE_HALF_DRAW_HEIGHT, false, true);
-            Wheel3 = Script.Create<UIImage>("Wheel3").DoubleTextureDraw(0, wheelListThree.current.myStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT,
-                WHEEL_TEXTURE_HALF_DRAW_HEIGHT, 0, wheelListThree.current.myStartingY + WHEEL_TEXTURE_HALF_DRAW_HEIGHT,
+            Wheel2.X = 236;
+            Wheel2.Y = 265;
+            Wheel3 = new UISlotsImage(Wheel1LegendImage).DoubleTextureDraw(0, WheelListThree.Current.MyStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT,
+                WHEEL_TEXTURE_HALF_DRAW_HEIGHT, 0, WheelListThree.Current.MyStartingY + WHEEL_TEXTURE_HALF_DRAW_HEIGHT,
                 WHEEL_TEXTURE_WIDTH_AND_HEIGHT, WHEEL_TEXTURE_HALF_DRAW_HEIGHT, false, true);
+            Wheel3.X = 305;
+            Wheel3.Y = 265;
 
             Add(Wheel1);
             Add(Wheel2);
@@ -321,13 +347,22 @@ namespace FSO.Client.UI.Panels.EODs
             WinningLine = Script.Create<UIImage>("WinningLine");
             Add(WinningLine);
 
-            MachineTypeInit(args[1]);
+            if ((args != null) && (args.Length > 1))
+                MachineTypeInit(args[1]);
+            else
+                MachineTypeInit(0);
 
-            if (args[2] == 1)
-            {
-                // add button listeners if the machine is on, args[2] == 0 if it's off
-                AddPlayerListeners();
-            }
+            // create a timer to animate the lights, milliseconds
+            LightsTimer = new System.Timers.Timer(666 + (2 / 3));
+            LightsTimer.Elapsed += new ElapsedEventHandler(LightsHandler);
+
+            // create a timer to change offline messages
+            OfflineMessageTimer = new System.Timers.Timer(3000);
+            OfflineMessageTimer.Elapsed += new ElapsedEventHandler(OfflineMessageHandler);
+
+            // create a timer to handle the spinning of the wheels
+            WheelsSpinTimer = new System.Timers.Timer(25);
+            WheelsSpinTimer.Elapsed += new ElapsedEventHandler(AnimateWheelsHandler);
         }
 
         private void OwnerInitHandler(string evt, byte[] args)
@@ -379,11 +414,16 @@ namespace FSO.Client.UI.Panels.EODs
             OddsSlider.X += 25;
 
             // Set the Odds slider
-            MachineOdds = args[0];
+            if ((args == null) || (args.Length < 1) || (args[0] < 80))
+                MachineOdds = 80;
+            else if (args[0] > 110)
+                MachineOdds = 110;
+            else
+                MachineOdds = args[0];
             OddsSlider.Tooltip = MachineOdds + "%";
             OddsSlider.MinValue = 80;
             OddsSlider.MaxValue = 110;
-            OddsSlider.Value = MachineOdds = args[0];
+            OddsSlider.Value = MachineOdds;
             CurrentOdds = new UITextEdit();
             CurrentOdds.Size = new Microsoft.Xna.Framework.Vector2(45, 20);
             CurrentOdds.Y = House.Y;
@@ -395,22 +435,30 @@ namespace FSO.Client.UI.Panels.EODs
             OddsSlider.Y += 18;
 
             // initiate OnOffButton
-            OnOffButton.ForceState = onOffState = args[3];
-            OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "14"];
-            if (args[3] == 0)
+            if ((args != null) && (args.Length > 3))
             {
-                OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "13"];
+                OnOffButton.ForceState = OnOffState = args[3];
+                if (args[3] == 1)
+                {
+                    OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "14"];
+                }
+                else
+                    OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "13"];
             }
             else
             {
-                OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "14"];
+                OnOffButton.ForceState = OnOffState = 0;
+                OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "13"];
             }
 
             // calculate the money in the machine from the two shorts and populate textField
-            machineBalance = Convert.ToInt16((255 * args[2]) + args[1]);
+            if ((args != null) && (args.Length > 2))
+                MachineBalance = Convert.ToInt16((255 * args[2]) + args[1]);
+            else
+                MachineBalance = 0;
             CashText.Alignment = TextAlignment.Center;
             CashText.Mode = UITextEditMode.ReadOnly;
-            CashText.CurrentText = "$" + machineBalance;
+            CashText.CurrentText = "$" + MachineBalance;
 
             // add click listeners
             OnOffButton.OnButtonClick += OnOffHandler;
@@ -418,20 +466,23 @@ namespace FSO.Client.UI.Panels.EODs
             CashOutButton.OnButtonClick += CashoutButtonHandler;
 
             // get the minimum and maximum balances based on the machine type
-            switch (args[4])
+            if ((args != null) && (args.Length > 3))
             {
-                case 0:
-                    machineMinimumBalance = (short)VMEODSlotMachineMinimumBalances.Viva_PGT;
-                    machineMaximumBalance = (short)VMEODSlotMachineMaximumBalances.Viva_PGT;
-                    break;
-                case 1:
-                    machineMinimumBalance = (short)VMEODSlotMachineMinimumBalances.Gypsy_Queen;
-                    machineMaximumBalance = (short)VMEODSlotMachineMaximumBalances.Gypsy_Queen;
-                    break;
-                default:
-                    machineMinimumBalance = (short)VMEODSlotMachineMinimumBalances.Jack_of_Hearts;
-                    machineMaximumBalance = (short)VMEODSlotMachineMaximumBalances.Jack_of_Hearts;
-                    break;
+                switch (args[4])
+                {
+                    case 0:
+                        MachineMinimumBalance = (short)VMEODSlotMachineMinimumBalances.Viva_PGT;
+                        MachineMaximumBalance = (short)VMEODSlotMachineMaximumBalances.Viva_PGT;
+                        break;
+                    case 1:
+                        MachineMinimumBalance = (short)VMEODSlotMachineMinimumBalances.Gypsy_Queen;
+                        MachineMaximumBalance = (short)VMEODSlotMachineMaximumBalances.Gypsy_Queen;
+                        break;
+                    default:
+                        MachineMinimumBalance = (short)VMEODSlotMachineMinimumBalances.Jack_of_Hearts;
+                        MachineMaximumBalance = (short)VMEODSlotMachineMaximumBalances.Jack_of_Hearts;
+                        break;
+                }
             }
         }
         private void CashoutButtonHandler(UIElement targetButton)
@@ -469,10 +520,10 @@ namespace FSO.Client.UI.Panels.EODs
             {
                 TextSize = 12,
                 Title = "Deposit Simoleons",
-                Message = "This machine is currently stocked with: $" + machineBalance + System.Environment.NewLine +
-                System.Environment.NewLine + "For players to use this machine you must maintain a minimum balance of: $" + machineMinimumBalance +
+                Message = "This machine is currently stocked with: $" + MachineBalance + System.Environment.NewLine +
+                System.Environment.NewLine + "For players to use this machine you must maintain a minimum balance of: $" + MachineMinimumBalance +
                 System.Environment.NewLine + System.Environment.NewLine + "How much would you like to deposit?" +
-                System.Environment.NewLine + System.Environment.NewLine + "(This machine cannot hold more than: $" + machineMaximumBalance + ")",
+                System.Environment.NewLine + System.Environment.NewLine + "(This machine cannot hold more than: $" + MachineMaximumBalance + ")",
                 Alignment = TextAlignment.Left,
                 TextEntry = true,
                 Buttons = UIAlertButton.Ok((btn) =>
@@ -491,8 +542,8 @@ namespace FSO.Client.UI.Panels.EODs
             {
                 TextSize = 12,
                 Title = "Withdraw Simoleons",
-                Message = "This machine is currently stocked with: $" + machineBalance + System.Environment.NewLine +
-                System.Environment.NewLine + "For players to use this machine you must maintain a minimum balance of: $" + machineMinimumBalance +
+                Message = "This machine is currently stocked with: $" + MachineBalance + System.Environment.NewLine +
+                System.Environment.NewLine + "For players to use this machine you must maintain a minimum balance of: $" + MachineMinimumBalance +
                 System.Environment.NewLine + System.Environment.NewLine + "How much would you like to withdraw?",
                 Alignment = TextAlignment.Left,
                 TextEntry = true,
@@ -514,17 +565,17 @@ namespace FSO.Client.UI.Panels.EODs
             try
             {
                 amount = Int16.Parse(userInput);
-                // input is valid, now check it against machineBalance
+                // input is valid, now check it against MachineBalance
                 if (amount == 0)
                 {
                     eventName = null;
-                    eventMessage = "null";
+                    eventMessage = VMEODSlotsInputErrorTypes.Null.ToString();
                 }
                 else if (type.Equals("w")) { // withdrawing
-                    if (amount > machineBalance)
+                    if (amount > MachineBalance)
                     {
                         eventName = null;
-                        eventMessage = "overflow";
+                        eventMessage = VMEODSlotsInputErrorTypes.Overflow.ToString();
                     }
                     else
                     {
@@ -534,10 +585,10 @@ namespace FSO.Client.UI.Panels.EODs
                 }
                 else // depositing
                 {
-                    if ((amount + machineBalance) > machineMaximumBalance)
+                    if ((amount + MachineBalance) > MachineMaximumBalance)
                     {
                         eventName = null;
-                        eventMessage = "overflow";
+                        eventMessage = VMEODSlotsInputErrorTypes.Overflow.ToString();
                     }
                     else
                     {
@@ -549,45 +600,50 @@ namespace FSO.Client.UI.Panels.EODs
             catch (ArgumentNullException nullException)
             {
                 eventName = null;
-                eventMessage = "null";
+                eventMessage = VMEODSlotsInputErrorTypes.Null.ToString();
             }
             catch (FormatException formatException)
             {
                 eventName = null;
                 if (userInput.Length == 0)
-                    eventMessage = "null";
+                    eventMessage = VMEODSlotsInputErrorTypes.Null.ToString();
                 else
-                    eventMessage = "invalid";
+                    eventMessage = VMEODSlotsInputErrorTypes.Invalid.ToString();
             }
             catch (OverflowException overFlowException)
             {
                 eventName = null;
-                eventMessage = "overflow";
+                eventMessage = VMEODSlotsInputErrorTypes.Overflow.ToString();
             }
             finally
             {
                 if (eventName != null)
                     Send(eventName, eventMessage);
                 else
-                    InputFailHandler(type, eventMessage);
+                {
+                    if (type.Equals("w"))
+                        InputFailHandler("slots_withdraw_fail", eventMessage);
+                    else
+                        InputFailHandler("slots_deposit_fail", eventMessage);
+                }
             }
         }
         private void InputFailHandler(string transactionType, string failureReason)
         {
             string message = "";
-            if (failureReason.Equals("null"))
+            if (failureReason.Equals(VMEODSlotsInputErrorTypes.Null.ToString()))
             {
-                ResumeManageHandler("slots_resume_manage", "0");
+                ResumeManageHandler("slots_resume_manage", "" + MachineBalance);
                 return;
             }
-            else if (failureReason.Equals("invalid"))
+            else if (failureReason.Equals(VMEODSlotsInputErrorTypes.Invalid.ToString()))
                 message = "That is not a valid number!";
-            else if (failureReason.Equals("overflow"))
+            else if (failureReason.Equals(VMEODSlotsInputErrorTypes.Overflow.ToString()))
             {
-                if (transactionType.Equals("w"))
+                if (transactionType.Equals("slots_withdraw_fail"))
                     message = "You cannot withdraw more than the balance of the machine!";
                 else
-                    message = "You cannot deposit that many simoleons because the machine can only hold: $" + machineMaximumBalance;
+                    message = "You cannot deposit that many simoleons because the machine can only hold: $" + MachineMaximumBalance;
             }
             else
                 message = "An unknown error occured.";
@@ -601,7 +657,7 @@ namespace FSO.Client.UI.Panels.EODs
                 TextEntry = false,
                 Buttons = UIAlertButton.Ok((btn) =>
                 {
-                    ResumeManageHandler("slots_resume_manage", "0");
+                    ResumeManageHandler("slots_resume_manage", "" + MachineBalance);
                     UIScreen.RemoveDialog(alert);
                 }),
 
@@ -620,7 +676,7 @@ namespace FSO.Client.UI.Panels.EODs
                 TextEntry = false,
                 Buttons = UIAlertButton.Ok((btn) =>
                 {
-                    ResumeManageHandler("slots_resume_manage", "0");
+                    ResumeManageHandler("slots_resume_manage", "" + MachineBalance);
                     UIScreen.RemoveDialog(alert);
                 }),
 
@@ -628,9 +684,10 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void ResumeManageHandler(string evt, string balance)
         {
-            short debitedAmount = Int16.Parse(balance);
-            machineBalance -= debitedAmount;
-            CashText.CurrentText = "$" + machineBalance;
+            var result = Int16.TryParse(balance, out short newBalance);
+            if (result)
+                MachineBalance = newBalance;
+            CashText.CurrentText = "$" + MachineBalance;
             CashOutButton.OnButtonClick += CashoutButtonHandler;
         }
         private void OddsChangeHandler(UIElement targetSlider)
@@ -645,212 +702,152 @@ namespace FSO.Client.UI.Panels.EODs
         private void OnOffHandler(UIElement targetButton)
         {
             OnOffButton.Disabled = true;
-            if (onOffState == 0)
+            if (OnOffState == 0)
             {
-                OnOffButton.ForceState = onOffState = 1;
+                OnOffButton.ForceState = OnOffState = 1;
                 OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "14"];
             }
             else
             {
-                OnOffButton.ForceState = onOffState = 0;
+                OnOffButton.ForceState = OnOffState = 0;
                 OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "13"];
             }
-            Send("slots_toggle_onOff", "" + onOffState);
+            Send("slots_toggle_onOff", "" + OnOffState);
             OnOffButton.Disabled = false;
         }
         private void NewGameHandler(String evt, String message)
         {
-            currentPayout = 0;
-            wheelSpinTickCounter = 0;
+            WheelSpinTickCounter = 0;
+            LightsTimer.Stop();
+            LightsTimer.Interval = 666 + (2 / 3);
+            LightsTimer.Start();
             AddPlayerListeners();
-            wheelListOne.Reset();
-            wheelListTwo.Reset();
-            wheelListThree.Reset();
+            WheelListOne.Reset();
+            WheelListTwo.Reset();
+            WheelListThree.Reset();
+
+            if (Loading.Caption == GameFacade.Strings["UIText", "259", "6"])
+                Loading.Caption = GameFacade.Strings["UIText", "259", "18"];
         }
-        private void BetIncreaseHandler(UIElement targetButton)
+        private void BetIncreaseButtonPressedHandler(UIElement targetButton)
         {
             RemovePlayerListeners();
-            if (currentBet == 5)
+            if (CurrentBet == 5)
             {
                 // do nothing, cannot bet more than 5 coins
             }
             else
             {
-                currentBet++;
-                displayedBet = currentBet * eachBet;
+                CurrentBet++;
+                DisplayedBet = CurrentBet * EachBet;
                 UpdateBetText();
             }
             AddPlayerListeners();
         }
-        private void BetDecreaseHandler(UIElement targetButton)
+        private void BetDecreaseButtonPressedHandler(UIElement targetButton)
         {
             RemovePlayerListeners();
-            if (currentBet == 1)
+            if (CurrentBet == 1)
             {
                 // do nothing, cannot bet less than 1 coin
             }
             else
             {
-                currentBet--;
-                displayedBet = currentBet * eachBet;
+                CurrentBet--;
+                DisplayedBet = CurrentBet * EachBet;
                 UpdateBetText();
             }
             AddPlayerListeners();
         }
-        private void SpinHandler(UIElement targetButton)
+        private void SpinButtonPressedHandler(UIElement targetButton)
         {
             RemovePlayerListeners();
-            Send("slots_execute_bet", "" + displayedBet);
+            Send("slots_execute_bet", "" + DisplayedBet);
         }
-        private void SlotsSpinHandler(string evt, Byte [] WinningsandTargetStops)
+        private void SlotsSpinHandler(string evt, Byte [] TargetStops)
         {
-            // get currentPayout despite Byte constraints
-            currentPayout = Convert.ToInt32((WinningsandTargetStops[0] * 255) + WinningsandTargetStops[1]);
+            LightsTimer.Interval = 500;
 
-            // update text field
+            // update text field to mention bet amount
             Loading.Caption = GameFacade.Strings["UIText", "259", "21"];
-            Loading.Caption = Loading.Caption.Replace("%i", "" + displayedBet);
+            Loading.Caption = Loading.Caption.Replace("%i", "" + DisplayedBet);
 
             // get the three target stops, recast them as type EMOEODSlotsStops
-            /*wheelListOne.targetStop = (EMOEDSlotsStops)Enum.Parse(typeof(EMOEDSlotsStops), (Enum.GetName(typeof(EMOEDSlotsStops),
+            /*WheelListOne.TargetStop = (EMOEDSlotsStops)Enum.Parse(typeof(EMOEDSlotsStops), (Enum.GetName(typeof(EMOEDSlotsStops),
                 WinningsandTargetStops[2]))); depricated approach */
-            wheelListOne.targetStop = (VMEODSlotsStops)Enum.ToObject(typeof(VMEODSlotsStops), WinningsandTargetStops[2]);
-            wheelListTwo.targetStop = (VMEODSlotsStops)Enum.ToObject(typeof(VMEODSlotsStops), WinningsandTargetStops[3]);
-            wheelListThree.targetStop = (VMEODSlotsStops)Enum.ToObject(typeof(VMEODSlotsStops), WinningsandTargetStops[4]);
-
-            targetsSet = true;
+            WheelListOne.TargetStop = (VMEODSlotsStops)Enum.ToObject(typeof(VMEODSlotsStops), TargetStops[0]);
+            WheelListTwo.TargetStop = (VMEODSlotsStops)Enum.ToObject(typeof(VMEODSlotsStops), TargetStops[1]);
+            WheelListThree.TargetStop = (VMEODSlotsStops)Enum.ToObject(typeof(VMEODSlotsStops), TargetStops[2]);
+            WheelsSpinTimer.Start();
         }
         private void DisplayLossHandler(string evt, string stringNumber)
         {
+            LightsTimer.Interval = 666 + (2 / 3);
             Loading.Caption = GameFacade.Strings["UIText", "259", stringNumber];
         }
         private void DisplayWinHandler(string evt, string stringNumber)
         {
+            LightsTimer.Interval = 100;
             var data = stringNumber.Split('%');
             Loading.Caption = GameFacade.Strings["UIText", "259", data[0]];
             Loading.Caption = Loading.Caption.Replace("%i", data[1]);
         }
-        private void AnimateWheelsHandler(string evt, string message)
+        private void AnimateWheelsHandler(object source, ElapsedEventArgs args)
         {
-            if (targetsSet == false)
-                return;
+            WheelSpinTickCounter++;
 
-            wheelSpinTickCounter++;
-
-            if (wheelSpinTickCounter >= 150)
+            if (WheelSpinTickCounter >= 160)
             {
-                if (wheelSpinTickCounter == 150)
+                if (WheelSpinTickCounter == 160)
                 {
-                    // start spinning wheel1
-                    wheelListOne.IncrementOffsetY(7);
+                    WheelListOne.Start();
                 }
-                else if (wheelSpinTickCounter == 151)
+                else if (WheelSpinTickCounter == 162)
                 {
-                    wheelListOne.IncrementOffsetY(7);
+                    WheelListTwo.Start();
                 }
-                else if (wheelSpinTickCounter == 152)
+                else if (WheelSpinTickCounter == 164)
                 {
-                    // start spinning wheel2
-                    wheelListTwo.IncrementOffsetY(7);
-                    wheelListOne.IncrementOffsetY(12);
+                    WheelListThree.Start();
                 }
-                else if (wheelSpinTickCounter == 153)
+                else if (WheelSpinTickCounter == 184)
                 {
-                    wheelListTwo.IncrementOffsetY(7);
-                    wheelListOne.IncrementOffsetY(12);
+                    WheelListOne.SlowDown();
                 }
-                else if (wheelSpinTickCounter == 154)
+                else if (WheelSpinTickCounter == 214)
                 {
-                    // start spinning wheel3
-                    wheelListThree.IncrementOffsetY(7);
-                    wheelListTwo.IncrementOffsetY(12);
-                    wheelListOne.IncrementOffsetY(17);
+                    WheelListTwo.SlowDown();
                 }
-                else if (wheelSpinTickCounter == 155)
+                else if (WheelSpinTickCounter == 244)
                 {
-                    wheelListThree.IncrementOffsetY(7);
-                    wheelListTwo.IncrementOffsetY(12);
-                    wheelListOne.IncrementOffsetY(17);
+                    WheelListThree.SlowDown();
                 }
-                else if (wheelSpinTickCounter == 156)
-                {
-                    wheelListThree.IncrementOffsetY(12);
-                    wheelListTwo.IncrementOffsetY(17);
-                    wheelListOne.IncrementOffsetY(22);
-                }
-                else if (wheelSpinTickCounter == 157)
-                {
-                    wheelListThree.IncrementOffsetY(12);
-                    wheelListTwo.IncrementOffsetY(17);
-                    wheelListOne.IncrementOffsetY(22);
-                }
-                else if (wheelSpinTickCounter == 158)
-                {
-                    wheelListThree.IncrementOffsetY(17);
-                    wheelListTwo.IncrementOffsetY(22);
-                    wheelListOne.IncrementOffsetY(29);
-                }
-                else if (wheelSpinTickCounter == 159)
-                {
-                    wheelListThree.IncrementOffsetY(17);
-                    wheelListTwo.IncrementOffsetY(22);
-                    wheelListOne.IncrementOffsetY(29);
-                }
-                else if (wheelSpinTickCounter == 160)
-                {
-                    wheelListThree.IncrementOffsetY(22);
-                    wheelListTwo.IncrementOffsetY(29);
-                    wheelListOne.IncrementOffsetY(29);
-                }
-                else if (wheelSpinTickCounter == 161)
-                {
-                    wheelListThree.IncrementOffsetY(22);
-                    wheelListTwo.IncrementOffsetY(29);
-                    wheelListOne.IncrementOffsetY(29);
-                }
-                else if (wheelSpinTickCounter == 186)
-                {
-                    // start slowing wheel1
-                    wheelListOne.SlowDown();
-                    wheelListThree.IncrementOffsetY(29);
-                    wheelListTwo.IncrementOffsetY(29);
-                    wheelListOne.IncrementOffsetY(29);
-                }
-                else if (wheelSpinTickCounter == 211)
-                {
-                    // start slowing wheel2
-                    wheelListTwo.SlowDown();
-                    wheelListThree.IncrementOffsetY(29);
-                    wheelListTwo.IncrementOffsetY(29);
-                    wheelListOne.IncrementOffsetY(29);
-                }
-                else if (wheelSpinTickCounter == 236)
-                {
-                    // start slowing wheel3
-                    wheelListThree.SlowDown();
-                    wheelListThree.IncrementOffsetY(29);
-                    wheelListTwo.IncrementOffsetY(29);
-                    wheelListOne.IncrementOffsetY(29);
-                }
-                // 30 ticks times 9 seconds = 270
-                else if (wheelSpinTickCounter == 261)
+                // 40 ticks times 7 seconds = 280
+                else if (WheelSpinTickCounter == 280)
                 {
                     // tell the plugin that the wheels have stopped spinning
-                    Send("slots_wheels_stopped", "" + currentPayout);
+                    WheelsSpinTimer.Stop();
+                    Send("slots_wheels_stopped", "");
                 }
-                else // 150 < wheelSpinTickCounter > 260
+                else
                 {
-                    wheelListThree.IncrementOffsetY(29);
-                    wheelListTwo.IncrementOffsetY(29);
-                    wheelListOne.IncrementOffsetY(29);
+
                 }
-                DrawWheelStops();
+                WheelListOne.Spin();
+                WheelListTwo.Spin();
+                WheelListThree.Spin();
+                // draw the wheel stops based on updated positions
+                DrawWheelStops(WheelListOne.IsSpinFinished, WheelListTwo.IsSpinFinished, WheelListThree.IsSpinFinished);
             }
         }
-        /*
-         * The EOD calls this on tick or a timer based on ticks to simulate the flashing of the lights
-         */
-        private void LightsHandlers(string evt, string str)
+        private void CloseMachineHandler(string evt, string msg)
+        {
+            LightsTimer.Stop();
+            OfflineMessageTimer.Start();
+            BetText.Visible = false;
+            Loading.Caption = GameFacade.Strings["UIText", "259", "22"];
+        }
+        private void LightsHandler(object source, ElapsedEventArgs args)
         {
             if (LightsFrame2 == null) { return; }
             else if (LightsFrame2.Visible == true)
@@ -858,9 +855,8 @@ namespace FSO.Client.UI.Panels.EODs
             else
                 LightsFrame2.Visible = true;
         }
-        private void OfflineMessageHandler(string evt, string str)
+        private void OfflineMessageHandler(object source, ElapsedEventArgs args)
         {
-            BetText.Visible = false;
             if (Loading.Caption.Equals(GameFacade.Strings["UIText", "259", "22"]))
             {
                 Loading.Caption = GameFacade.Strings["UIText", "259", "23"];
@@ -870,62 +866,41 @@ namespace FSO.Client.UI.Panels.EODs
                 Loading.Caption = GameFacade.Strings["UIText", "259", "22"];
             }
         }
-        private void DrawWheelStops()
+        private void DrawWheelStops(bool wheelOneAlreadyDone, bool wheelTwoAlreadyDone, bool wheelThreeAlreadyDone)
         {
-            var oldWheel1 = Wheel1;
-            var oldWheel2 = Wheel2;
-            var oldWheel3 = Wheel3;
-
-            // remove old wheels from behind new ones to avoid the 'flickering' effect
-            Remove(oldWheel1);
-            Remove(oldWheel2);
-            Remove(oldWheel3);
-
-            if (wheelListOne.OffsetY >= 0)
+            if (wheelOneAlreadyDone == false)  // do not redraw if wheel hasn't moved
             {
-                Wheel1 = Script.Create<UIImage>("Wheel1").DoubleTextureDraw(0, wheelListOne.next.myStartingY +
-                    (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - wheelListOne.OffsetY), WHEEL_TEXTURE_WIDTH_AND_HEIGHT, wheelListOne.OffsetY,
-                    0, wheelListOne.current.myStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT, (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - wheelListOne.OffsetY),
+                Remove(Wheel1);
+                Wheel1 = new UISlotsImage(ActiveWheelTexture).DoubleTextureDraw(0, WheelListOne.Next.MyStartingY +
+                    (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - WheelListOne.OffsetY), WHEEL_TEXTURE_WIDTH_AND_HEIGHT, WheelListOne.OffsetY,
+                    0, WheelListOne.Current.MyStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT, (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - WheelListOne.OffsetY),
                     false, true);
+                Wheel1.X = 167;
+                Wheel1.Y = 265;
+                AddBefore(Wheel1, WinningLine);
             }
-            else // wheel is spinning backwards as it stops
+            if (wheelTwoAlreadyDone == false) // do not redraw if wheel hasn't moved
             {
-                Wheel1 = Script.Create<UIImage>("Wheel1").DoubleTextureDraw(0, wheelListOne.current.myStartingY + (-1 * wheelListOne.OffsetY),
-                    WHEEL_TEXTURE_WIDTH_AND_HEIGHT, (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - (-1 * wheelListOne.OffsetY)),
-                    0, wheelListOne.previous.myStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT, (-1 * wheelListOne.OffsetY), false, true);
-            }
-            Wheel1.Texture = activeWheelTexture;
-            AddBefore(Wheel1, WinningLine);
-            if (wheelListTwo.OffsetY >= 0)
-            {
-                Wheel2 = Script.Create<UIImage>("Wheel2").DoubleTextureDraw(0, wheelListTwo.next.myStartingY +
-                (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - wheelListTwo.OffsetY), WHEEL_TEXTURE_WIDTH_AND_HEIGHT, wheelListTwo.OffsetY,
-                0, wheelListTwo.current.myStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT, (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - wheelListTwo.OffsetY),
+                Remove(Wheel2);
+                Wheel2 = new UISlotsImage(ActiveWheelTexture).DoubleTextureDraw(0, WheelListTwo.Next.MyStartingY +
+                (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - WheelListTwo.OffsetY), WHEEL_TEXTURE_WIDTH_AND_HEIGHT, WheelListTwo.OffsetY,
+                0, WheelListTwo.Current.MyStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT, (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - WheelListTwo.OffsetY),
                 false, true);
+                Wheel2.X = 236;
+                Wheel2.Y = 265;
+                AddBefore(Wheel2, WinningLine);
             }
-            else // wheel is spinning backwards as it stops
+            if (wheelThreeAlreadyDone == false) // do not redraw if wheel hasn't moved
             {
-                Wheel2 = Script.Create<UIImage>("Wheel1").DoubleTextureDraw(0, wheelListTwo.current.myStartingY + (-1 * wheelListTwo.OffsetY),
-                    WHEEL_TEXTURE_WIDTH_AND_HEIGHT, (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - (-1 * wheelListTwo.OffsetY)),
-                    0, wheelListTwo.previous.myStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT, (-1 * wheelListTwo.OffsetY), false, true);
-            }
-            Wheel2.Texture = activeWheelTexture;
-            AddBefore(Wheel2, WinningLine);
-            if (wheelListThree.OffsetY >= 0)
-            {
-                Wheel3 = Script.Create<UIImage>("Wheel3").DoubleTextureDraw(0, wheelListThree.next.myStartingY +
-                 (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - wheelListThree.OffsetY), WHEEL_TEXTURE_WIDTH_AND_HEIGHT, wheelListThree.OffsetY,
-                 0, wheelListThree.current.myStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT, (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - wheelListThree.OffsetY),
+                Remove(Wheel3);
+                Wheel3 = new UISlotsImage(ActiveWheelTexture).DoubleTextureDraw(0, WheelListThree.Next.MyStartingY +
+                 (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - WheelListThree.OffsetY), WHEEL_TEXTURE_WIDTH_AND_HEIGHT, WheelListThree.OffsetY,
+                 0, WheelListThree.Current.MyStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT, (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - WheelListThree.OffsetY),
                  false, true);
+                Wheel3.X = 305;
+                Wheel3.Y = 265;
+                AddBefore(Wheel3, WinningLine);
             }
-            else // wheel is spinning backwards as it stops
-            {
-                Wheel3 = Script.Create<UIImage>("Wheel1").DoubleTextureDraw(0, wheelListThree.current.myStartingY + (-1 * wheelListThree.OffsetY),
-                    WHEEL_TEXTURE_WIDTH_AND_HEIGHT, (WHEEL_TEXTURE_WIDTH_AND_HEIGHT - (-1 * wheelListThree.OffsetY)),
-                    0, wheelListThree.previous.myStartingY, WHEEL_TEXTURE_WIDTH_AND_HEIGHT, (-1 * wheelListThree.OffsetY), false, true);
-            }
-            Wheel3.Texture = activeWheelTexture;
-            AddBefore(Wheel3, WinningLine);
         }
         /*
          * @param machineGrade: '0' is $1 slot machine, '1' is $5, '2' is $10
@@ -939,7 +914,7 @@ namespace FSO.Client.UI.Panels.EODs
                     Wheel1.Texture = Wheel1Image;
                     Wheel2.Texture = Wheel1Image;
                     Wheel3.Texture = Wheel1Image;
-                    activeWheelTexture = Wheel1Image;
+                    ActiveWheelTexture = Wheel1Image;
                     PayoutTableColumn1Row1.Texture = Wheel1LegendImage;
                     PayoutTableColumn1Row2.Texture = Wheel1LegendImage;
                     PayoutTableColumn1Row3.Texture = Wheel1LegendImage;
@@ -952,14 +927,14 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTable1.Y -= 5;
                     PayoutTable2.Visible = false;
                     PayoutTable3.Visible = false;
-                    activePayoutTable = PayoutTable1;
-                    eachBet = 1;
+                    ActivePayoutTable = PayoutTable1;
+                    EachBet = 1;
                     break;
                 case 1:
                     Wheel1.Texture = Wheel2Image;
                     Wheel2.Texture = Wheel2Image;
                     Wheel3.Texture = Wheel2Image;
-                    activeWheelTexture = Wheel2Image;
+                    ActiveWheelTexture = Wheel2Image;
                     PayoutTableColumn1Row1.Texture = Wheel2LegendImage;
                     PayoutTableColumn1Row2.Texture = Wheel2LegendImage;
                     PayoutTableColumn1Row3.Texture = Wheel2LegendImage;
@@ -972,14 +947,14 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTable2.Y -= 5;
                     PayoutTable1.Visible = false;
                     PayoutTable3.Visible = false;
-                    activePayoutTable = PayoutTable2;
-                    eachBet = 5;
+                    ActivePayoutTable = PayoutTable2;
+                    EachBet = 5;
                     break;
                 case 2:
                     Wheel1.Texture = Wheel3Image;
                     Wheel2.Texture = Wheel3Image;
                     Wheel3.Texture = Wheel3Image;
-                    activeWheelTexture = Wheel3Image;
+                    ActiveWheelTexture = Wheel3Image;
                     PayoutTableColumn1Row1.Texture = Wheel3LegendImage;
                     PayoutTableColumn1Row2.Texture = Wheel3LegendImage;
                     PayoutTableColumn1Row3.Texture = Wheel3LegendImage;
@@ -992,8 +967,8 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTable3.Y -= 5;
                     PayoutTable1.Visible = false;
                     PayoutTable2.Visible = false;
-                    activePayoutTable = PayoutTable3;
-                    eachBet = 10;
+                    ActivePayoutTable = PayoutTable3;
+                    EachBet = 10;
                     break;
                 default:
                     break;
@@ -1004,22 +979,22 @@ namespace FSO.Client.UI.Panels.EODs
             BetText.Alignment = TextAlignment.Center;
             BetText.Mode = UITextEditMode.ReadOnly;
             Add(BetText);
-            currentBet = 1;
-            displayedBet = currentBet * eachBet;
+            CurrentBet = 1;
+            DisplayedBet = CurrentBet * EachBet;
             UpdateBetText();
         }
         private void UpdateBetText()
         {
-            BetText.CurrentText = "$" + displayedBet;
+            BetText.CurrentText = "$" + DisplayedBet;
         }
         private void RemovePlayerListeners()
         {
             try
             {
-                ArmButton.OnButtonClick -= SpinHandler;
-                SpinButton.OnButtonClick -= SpinHandler;
-                SpinnerIncreaseBet.OnButtonClick -= BetIncreaseHandler;
-                SpinnerDecreaseBet.OnButtonClick -= BetDecreaseHandler;
+                ArmButton.OnButtonClick -= SpinButtonPressedHandler;
+                SpinButton.OnButtonClick -= SpinButtonPressedHandler;
+                SpinnerIncreaseBet.OnButtonClick -= BetIncreaseButtonPressedHandler;
+                SpinnerDecreaseBet.OnButtonClick -= BetDecreaseButtonPressedHandler;
             }
             catch (Exception error)
             {
@@ -1031,10 +1006,10 @@ namespace FSO.Client.UI.Panels.EODs
             }
         }
         private void AddPlayerListeners() {
-            ArmButton.OnButtonClick += SpinHandler;
-            SpinButton.OnButtonClick += SpinHandler;
-            SpinnerIncreaseBet.OnButtonClick += BetIncreaseHandler;
-            SpinnerDecreaseBet.OnButtonClick += BetDecreaseHandler;
+            ArmButton.OnButtonClick += SpinButtonPressedHandler;
+            SpinButton.OnButtonClick += SpinButtonPressedHandler;
+            SpinnerIncreaseBet.OnButtonClick += BetIncreaseButtonPressedHandler;
+            SpinnerDecreaseBet.OnButtonClick += BetDecreaseButtonPressedHandler;
             ArmButton.Disabled = false;
             SpinButton.Disabled = false;
             SpinnerIncreaseBet.Disabled = false;
@@ -1043,282 +1018,227 @@ namespace FSO.Client.UI.Panels.EODs
     }
     class WheelStopsList
     {
-        public WheelStopNode current;
-        public WheelStopNode next;
-        public WheelStopNode previous;
-        private int myOffsetY = 0;
-        private bool isSlowing;
-        private int ticksToStop = 25;
-        private int targetStopsAway = 0;
-        private int distanceToTarget = -1;
-        private Random randomLeftover = new Random();
-        private int leftoverY = 0;
-        private bool isStopping;
-        public bool isStopped;
-        public VMEODSlotsStops targetStop;
+        public WheelStopNode Current;
+        public WheelStopNode Next;
+        public WheelStopNode Previous;
+        private int MyOffsetY = 0;
+        private int CurrentSpeedCounter = 0;
+        private int CurrentSpeed = 0;
+        private int TicksToStop = 36;
+        private int TargetStopsAway = 0;
+        private int DistanceToTarget = -1;
+        private Random RandomLeftover = new Random();
+        private int LeftoverY = 0;
+        public VMEODSlotsStops TargetStop;
+        public UISlotsEODSlotWheelStates State;
+        private bool HasStarted;
+        public bool IsSpinFinished;
 
         public WheelStopsList()
         {
             // make a node for each possible stop in the correct order
             foreach (VMEODSlotsStops stop in Enum.GetValues(typeof(VMEODSlotsStops)))
             {
-                if (previous != null)
+                if (Previous != null)
                 {
-                    current = new WheelStopNode(stop);
-                    previous.Next = current;
+                    Current = new WheelStopNode(stop);
+                    Previous.Next = Current;
                 }
                 else
                 {
-                    next = current = new WheelStopNode(stop);
+                    Next = Current = new WheelStopNode(stop);
                 }
-                previous = current;
+                Previous = Current;
             }
-            // close the loop by settings top-most's (the jackspot/sixth stop) next to bottom-most, the first one made (blankOne)
-            current.Next = next; 
+            // close the loop by settings top-most's (the jackspot/sixth stop) Next to bottom-most, the first one made (blankOne)
+            Current.Next = Next; 
 
-            // previous is not used during gameplay, so setting it to be a BLANK stop will serve a purpose when the wheel stops
-            previous = next;
+            // Previous is not used during gameplay, so setting it to be a BLANK stop will serve a purpose when the wheel stops
+            Previous = Next;
+
+            // begin stopped
+            State = UISlotsEODSlotWheelStates.Stopped;
         }
         public int OffsetY
         {
-            get { return myOffsetY; }
+            get { return MyOffsetY; }
         }
-        public void IncrementOffsetY(int value)
+        public void Spin()
         {
-            if (isSlowing)
+            switch (State)
             {
-                int modifiedValue = 0;
-                if (distanceToTarget == -1)
-                {
-                    distanceToTarget = ((targetStopsAway * UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT) -
-                        myOffsetY);
-                }
-                switch (distanceToTarget)
-                {
-                    case 116:
+                case UISlotsEODSlotWheelStates.Stopped:
+                    {
+                        IsSpinFinished = true;
+                        break;
+                    }
+                case UISlotsEODSlotWheelStates.Spinning:
+                    {
+                        MyOffsetY += CurrentSpeed;
+                        break;
+                    }
+                case UISlotsEODSlotWheelStates.Starting:
+                    {
+                        if (CurrentSpeedCounter == 2)
                         {
-                            modifiedValue = 22;
-                            break;
-                        }
-                    case 94:
-                        {
-                            modifiedValue = 22;
-                            break;
-                        }
-                    case 87: // special case
-                        {
-                            modifiedValue = 16;
-                            break;
-                        }
-                    case 72:
-                        {
-                            modifiedValue = 17;
-                            break;
-                        }
-                    case 71: // special case
-                        {
-                            modifiedValue = 16;
-                            break;
-                        }
-                    case 55:
-                        {
-                            modifiedValue = 17;
-                            break;
-                        }
-                    case 38:
-                        {
-                            modifiedValue = 12;
-                            break;
-                        }
-                    case 29: // special case
-                        {
-                            modifiedValue = 15;
-                            break;
-                        }
-                    case 26:
-                        {
-                            modifiedValue = 12;
-                            break;
-                        }
-                    case 14:
-                        {
-                            modifiedValue = 7;
-                            break;
-                        }
-                    case 7:
-                        {
-                            modifiedValue = 7;
-                            break;
-                        }
-                    case 0:
-                        {
-                            modifiedValue = 0;
-                            ticksToStop = 5;
-                            isSlowing = false;
-                            isStopping = true;
-                            myOffsetY = leftoverY = randomLeftover.Next(0, 3);
-                            break;
-                        }
-                    default:
-                        {
-                            modifiedValue = value; // 29, always
-                            break;
-                        }
-                }
-                distanceToTarget -= modifiedValue;
-                myOffsetY += modifiedValue;
-                ticksToStop--;
-            }
-            else if (isStopping)
-            {
-                switch (ticksToStop)
-                {
-                    case 4:
-                        {
-                            if (leftoverY == 2)
+                            // if at the penultimate speed, skip to ultimate
+                            if (CurrentSpeed == 22)
                             {
-                                myOffsetY = leftoverY = 1;
+                                CurrentSpeed = 29;
+                                CurrentSpeedCounter = 0;
+                                State = UISlotsEODSlotWheelStates.Spinning;
                             }
-                            else if(leftoverY == 1)
-                            {
-                                myOffsetY = leftoverY = 1;
-                            }
+                            // increase the speed
                             else
                             {
-                                myOffsetY = leftoverY = 0;
+                                CurrentSpeed += UISlotsEOD.WHEEL_FRAME_CONSTANT;
+                                CurrentSpeedCounter = 0;
                             }
-                            break;
                         }
-                    case 2:
+                        MyOffsetY += CurrentSpeed;
+                        CurrentSpeedCounter++;
+                        break;
+                    }
+                case UISlotsEODSlotWheelStates.Slowing:
+                    {
+                        // still move at full speak since target is far away
+                        if (DistanceToTarget > 116)
                         {
-                            if (leftoverY == 1)
+                            CurrentSpeed = 29;
+                        }
+                        // start to slow down
+                        else if (DistanceToTarget == 116)
+                        {
+                            CurrentSpeed = 22;
+                            CurrentSpeedCounter = 0;
+                        }
+                        // 0 > DistanceToTarget < 116
+                        else
+                        {
+                            // check if this is first or second time at CurrentSpeed
+                            if (CurrentSpeedCounter == 2)
                             {
-                                myOffsetY = leftoverY = 0;
+                                // if Current speed is slowest, make it stop
+                                if (CurrentSpeed == 7)
+                                {
+                                    CurrentSpeed = 0;
+                                    if (TicksToStop > 5) // stopped early
+                                        TicksToStop = 5;
+
+                                    MyOffsetY = LeftoverY = RandomLeftover.Next(0, TicksToStop);
+                                    State = UISlotsEODSlotWheelStates.Stopping;
+                                }
+                                // otherwise, go even slower
+                                else
+                                {
+                                    CurrentSpeed -= UISlotsEOD.WHEEL_FRAME_CONSTANT;
+                                    CurrentSpeedCounter = 0;
+                                }
                             }
-                            else
-                            {
-                                myOffsetY = leftoverY = 0;
-                            }
-                            break;
                         }
-                    case 0:
+                        TicksToStop--;
+                        CurrentSpeedCounter++;
+                        DistanceToTarget -= CurrentSpeed;
+                        MyOffsetY += CurrentSpeed;
+                        break;
+                    }
+                case UISlotsEODSlotWheelStates.Stopping:
+                    {
+                        if ((TicksToStop == 0))
                         {
-                            myOffsetY = leftoverY = 0;
-                            isStopping = false;
-                            isStopped = true;
+                            MyOffsetY = LeftoverY = 0;
+                            State = UISlotsEODSlotWheelStates.Stopped;
                             break;
                         }
-                    default:
+                        else if (TicksToStop % 2 == 1)
                         {
-                            break;
+                            MyOffsetY = LeftoverY = (LeftoverY / 2);
                         }
-                }
-                ticksToStop--;
-                return;
+                        TicksToStop--;
+                        break;
+                    }
             }
-            else if (isStopped)
+            // checking if list needs to update
+            if (MyOffsetY >= UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT)
             {
-                return;
+                MyOffsetY -= UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT;
+                Previous = Current;
+                Current = Next;
+                Next = Next.Next;
             }
-            else {
-                myOffsetY += value;
-            }
-            if (myOffsetY >= UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT)
-            {
-                myOffsetY -= UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT;
-                previous = current;
-                current = next;
-                next = next.Next;
-            }
+        }
+        public void Start()
+        {
+            CurrentSpeed = UISlotsEOD.WHEEL_FRAME_CONSTANT + 2;
+            CurrentSpeedCounter = 0;
+            HasStarted = true;
+            IsSpinFinished = false;
+            State = UISlotsEODSlotWheelStates.Starting;
         }
         public void SlowDown()
         {
-            targetStopsAway = 0;
-            isSlowing = true;
-            var tempNode = new WheelStopNode(current.myStop, current);
-            while (!tempNode.Next.myStop.Equals(targetStop))
+            TargetStopsAway = 0;
+            var tempNode = new WheelStopNode(Current.MyStop, Current);
+            while (!tempNode.Next.MyStop.Equals(TargetStop))
             {
-                targetStopsAway++;
+                TargetStopsAway++;
                 tempNode = tempNode.Next;
             }
-            if (targetStopsAway == 0) // targetStop is the very next stop
+            if (TargetStopsAway < 3) // TargetStop is too close to make animation fun
             {
-                targetStopsAway = 12;
+                TargetStopsAway += 12;
             }
+            // calculate distance away
+            DistanceToTarget = ((TargetStopsAway * UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT) - MyOffsetY);
+            State = UISlotsEODSlotWheelStates.Slowing;
         }
         public void Reset()
         {
-            leftoverY = 0;
-            ticksToStop = 25;
-            distanceToTarget = -1;
-            isSlowing = false;
-            isStopping = false;
-            isStopped = false;
+            State = UISlotsEODSlotWheelStates.Stopped;
+            CurrentSpeedCounter = 0;
+            CurrentSpeed = 0;
+            LeftoverY = 0;
+            TicksToStop = 36;
+            DistanceToTarget = -1;
+            HasStarted = false;
         }
     }
     class WheelStopNode
     {
         public WheelStopNode Next { get; set; }
-        public VMEODSlotsStops myStop;
-        public int myStartingY;
+        public VMEODSlotsStops MyStop;
+        public int MyStartingY;
 
         public WheelStopNode(VMEODSlotsStops stop)
         {
-            myStop = stop;
+            MyStop = stop;
             CalculateStartingY();
         }
         public WheelStopNode(VMEODSlotsStops stop, WheelStopNode next)
         {
-            myStop = stop;
+            MyStop = stop;
             Next = next;
             CalculateStartingY();
         }
         public void CalculateStartingY()
         {
-            if ((byte)myStop % 2 == 0) // a blank stop
+            if ((byte)MyStop % 2 == 0) // a blank stop
             {
-                myStartingY = 6 * UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT;
+                MyStartingY = 6 * UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT;
             }
             else
             {
-                switch ((byte)myStop)
-                {
-                    case 1:
-                        {
-                            myStartingY = 5 * UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT;
-                            break;
-                        }
-                    case 3:
-                        {
-                            myStartingY = 4 * UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT;
-                            break;
-                        }
-                    case 5:
-                        {
-                            myStartingY = 3 * UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT;
-                            break;
-                        }
-                    case 7:
-                        {
-                            myStartingY = 2 * UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT;
-                            break;
-                        }
-                    case 9:
-                        {
-                            myStartingY = 1 * UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT;
-                            break;
-                        }
-                    case 11:
-                        {
-                            myStartingY = 0 * UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT;
-                            break;
-                        }
-                    default:
-                        {
-                            break;
-                        }
-                }
+                var stopVal = (byte)MyStop;
+                MyStartingY = (5 - ((stopVal - 1) / 2)) * UISlotsEOD.WHEEL_TEXTURE_WIDTH_AND_HEIGHT;
             }
         }
+    }
+    public enum UISlotsEODSlotWheelStates : byte
+    {
+        Stopped = 0,
+        Starting = 1,
+        Spinning = 2,
+        Slowing = 3,
+        Stopping = 4
     }
 }
