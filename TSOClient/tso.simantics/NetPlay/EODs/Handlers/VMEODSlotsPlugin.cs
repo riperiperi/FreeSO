@@ -213,7 +213,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             string failureReason = "";
 
             // try to parse the withdraw amount
-            var result = Int16.TryParse(amountString.Trim(), out short withdrawAmount);
+            short withdrawAmount;
+            var result = Int16.TryParse(amountString.Trim(), out withdrawAmount);
             if (result)
             {
                 // check the successfully parsed amount to make sure it's non-negative and against the MachineBalance to determine if valid amount
@@ -277,7 +278,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             string failureReason = "";
 
             // try to parse the deposit amount
-            var result = Int16.TryParse(amountString.Trim(), out short depositAmount);
+            short depositAmount;
+            var result = Int16.TryParse(amountString.Trim(), out depositAmount);
             if (result)
             {
                 // check the successfully parsed amount to make sure it's non-negative and against the MachineBalanceMax to determine if valid amount
@@ -338,7 +340,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private void BetHandler(string evt, string betAmountString, VMEODClient client)
         {
             bool betIsValid = false;
-            bool inputIsValid = Int16.TryParse(betAmountString, out short betAmount);
+            short betAmount;
+            bool inputIsValid = Int16.TryParse(betAmountString, out betAmount);
 
             // Check to make sure the valid input is actually a valid bet by testing MachineBetDenomination and betAmount
             if (inputIsValid)

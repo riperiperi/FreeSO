@@ -684,7 +684,8 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void ResumeManageHandler(string evt, string balance)
         {
-            var result = Int16.TryParse(balance, out short newBalance);
+            short newBalance;
+            var result = Int16.TryParse(balance, out newBalance);
             if (result)
                 MachineBalance = newBalance;
             CashText.CurrentText = "$" + MachineBalance;
