@@ -374,6 +374,8 @@ namespace FSO.Client.UI.Screens
         {
             var oldHeadIndex = m_HeadSkinBrowser.SelectedIndex;
             var oldBodyIndex = m_BodySkinBrowser.SelectedIndex;
+            var oldHeadPage = m_HeadSkinBrowser.SelectedPage;
+            var oldBodyPage = m_BodySkinBrowser.SelectedPage;
 
             if (Gender == Gender.Male)
             {
@@ -385,9 +387,12 @@ namespace FSO.Client.UI.Screens
                 m_HeadSkinBrowser.DataProvider = CollectionToDataProvider(FemaleHeads);
                 m_BodySkinBrowser.DataProvider = CollectionToDataProvider(FemaleOutfits);
             }
+            // the choices for male heads and bodys are fewer than for females, so if changing to male, make sure the current page/index isn't out of bounds
+            m_HeadSkinBrowser.SelectedIndex = Math.Min(oldHeadIndex, m_HeadSkinBrowser.DataProvider.Count - 1);
+            m_BodySkinBrowser.SelectedIndex = Math.Min(oldBodyIndex, m_BodySkinBrowser.DataProvider.Count - 1);
+            m_HeadSkinBrowser.SelectedPage = Math.Min(oldHeadPage, m_HeadSkinBrowser.DataProvider.Count / m_HeadSkinBrowser.ItemsPerPage);
+            m_BodySkinBrowser.SelectedPage = Math.Min(oldBodyPage, m_BodySkinBrowser.DataProvider.Count / m_BodySkinBrowser.ItemsPerPage);
 
-            m_HeadSkinBrowser.SelectedIndex = Math.Min(oldHeadIndex, m_HeadSkinBrowser.DataProvider.Count);
-            m_BodySkinBrowser.SelectedIndex = Math.Min(oldBodyIndex, m_BodySkinBrowser.DataProvider.Count);
             RefreshSim();
         }
 

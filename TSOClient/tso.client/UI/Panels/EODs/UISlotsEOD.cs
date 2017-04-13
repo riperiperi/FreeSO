@@ -16,16 +16,16 @@ namespace FSO.Client.UI.Panels.EODs
     public class UISlotsEOD : UIEOD
     {
         public UIScript Script;
-        
+
         private byte MachineOdds { get; set; }
         private int EachBet;
         private int CurrentBet;
         private int DisplayedBet;
-        private short MachineBalance;
+        private int MachineBalance;
         private int OnOffState;
         private int WheelSpinTickCounter = 0;
-        private short MachineMinimumBalance;
-        private short MachineMaximumBalance;
+        private int MachineMinimumBalance;
+        private int MachineMaximumBalance;
         private WheelStopsList WheelListOne;
         private WheelStopsList WheelListTwo;
         private WheelStopsList WheelListThree;
@@ -181,7 +181,7 @@ namespace FSO.Client.UI.Panels.EODs
             Send("slots_close_UI", "");
             base.OnClose();
         }
-        private void PlayerInitHandler(string evt, byte [] args)
+        private void PlayerInitHandler(string evt, byte[] args)
         {
             Controller.ShowEODMode(new EODLiveModeOpt
             {
@@ -211,11 +211,11 @@ namespace FSO.Client.UI.Panels.EODs
             Wheelsback = Script.Create<UIImage>("WheelsBack");
             AddAt(0, Wheelsback);
             LightsFrame1 = Script.Create<UIImage>("LightsFrame1");
-            AddAt(1,LightsFrame1);
+            AddAt(1, LightsFrame1);
             LightsFrame2 = Script.Create<UIImage>("LightsFrame2");
-            AddAt(2,LightsFrame2);
+            AddAt(2, LightsFrame2);
             BetIndents = Script.Create<UIImage>("BetIndents");
-            AddAt(3,BetIndents);
+            AddAt(3, BetIndents);
             Chips = new UISlotsImage(MoneyChipsImage);
             Chips.X = 110;
             Chips.Y = 285;
@@ -265,7 +265,7 @@ namespace FSO.Client.UI.Panels.EODs
             // initialize payout textfields, which are currently ubiquitous across all slot machines
             PayoutText1.Y = PayoutTableColumn1Row1.Y - 1;
             PayoutText1.X = PayoutTableColumn1Row1.X + 55;
-            PayoutText1.CurrentText = GameFacade.Strings["UIText","259", "36"];
+            PayoutText1.CurrentText = GameFacade.Strings["UIText", "259", "36"];
             PayoutText1.CurrentText = PayoutText1.CurrentText.Replace("%i", "" + VMEODSlotsPlugin.SIX_SIX_SIX_PAYOUT_MULTIPLIER);
             PayoutText1.Mode = UITextEditMode.ReadOnly;
             Add(PayoutText1);
@@ -453,7 +453,7 @@ namespace FSO.Client.UI.Panels.EODs
 
             // calculate the money in the machine from the two shorts and populate textField
             if ((args != null) && (args.Length > 2))
-                MachineBalance = Convert.ToInt16((255 * args[2]) + args[1]);
+                MachineBalance = (255 * args[2]) + args[1];
             else
                 MachineBalance = 0;
             CashText.Alignment = TextAlignment.Center;
@@ -471,16 +471,16 @@ namespace FSO.Client.UI.Panels.EODs
                 switch (args[4])
                 {
                     case 0:
-                        MachineMinimumBalance = (short)VMEODSlotMachineMinimumBalances.Viva_PGT;
-                        MachineMaximumBalance = (short)VMEODSlotMachineMaximumBalances.Viva_PGT;
+                        MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Viva_PGT;
+                        MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Viva_PGT;
                         break;
                     case 1:
-                        MachineMinimumBalance = (short)VMEODSlotMachineMinimumBalances.Gypsy_Queen;
-                        MachineMaximumBalance = (short)VMEODSlotMachineMaximumBalances.Gypsy_Queen;
+                        MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Gypsy_Queen;
+                        MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Gypsy_Queen;
                         break;
                     default:
-                        MachineMinimumBalance = (short)VMEODSlotMachineMinimumBalances.Jack_of_Hearts;
-                        MachineMaximumBalance = (short)VMEODSlotMachineMaximumBalances.Jack_of_Hearts;
+                        MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Jack_of_Hearts;
+                        MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Jack_of_Hearts;
                         break;
                 }
             }
@@ -557,21 +557,22 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void InputHandler(string type, string userInput)
         {
-            short amount;
+            int amount;
             userInput.Replace("-", ""); // in case any jokesters try to input a negative number
             string eventName = "";
             string eventMessage = "";
             // try to parse the user's input
             try
             {
-                amount = Int16.Parse(userInput);
+                amount = Int32.Parse(userInput);
                 // input is valid, now check it against MachineBalance
                 if (amount == 0)
                 {
                     eventName = null;
                     eventMessage = VMEODSlotsInputErrorTypes.Null.ToString();
                 }
-                else if (type.Equals("w")) { // withdrawing
+                else if (type.Equals("w"))
+                { // withdrawing
                     if (amount > MachineBalance)
                     {
                         eventName = null;
@@ -684,8 +685,8 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void ResumeManageHandler(string evt, string balance)
         {
-            short newBalance;
-            var result = Int16.TryParse(balance, out newBalance);
+            int newBalance;
+            var result = Int32.TryParse(balance, out newBalance);
             if (result)
                 MachineBalance = newBalance;
             CashText.CurrentText = "$" + MachineBalance;
@@ -765,7 +766,7 @@ namespace FSO.Client.UI.Panels.EODs
             RemovePlayerListeners();
             Send("slots_execute_bet", "" + DisplayedBet);
         }
-        private void SlotsSpinHandler(string evt, Byte [] TargetStops)
+        private void SlotsSpinHandler(string evt, Byte[] TargetStops)
         {
             LightsTimer.Interval = 500;
 
@@ -1006,7 +1007,8 @@ namespace FSO.Client.UI.Panels.EODs
                 SpinnerDecreaseBet.Disabled = true;
             }
         }
-        private void AddPlayerListeners() {
+        private void AddPlayerListeners()
+        {
             ArmButton.OnButtonClick += SpinButtonPressedHandler;
             SpinButton.OnButtonClick += SpinButtonPressedHandler;
             SpinnerIncreaseBet.OnButtonClick += BetIncreaseButtonPressedHandler;
@@ -1052,7 +1054,7 @@ namespace FSO.Client.UI.Panels.EODs
                 Previous = Current;
             }
             // close the loop by settings top-most's (the jackspot/sixth stop) Next to bottom-most, the first one made (blankOne)
-            Current.Next = Next; 
+            Current.Next = Next;
 
             // Previous is not used during gameplay, so setting it to be a BLANK stop will serve a purpose when the wheel stops
             Previous = Next;

@@ -22,7 +22,7 @@ namespace FSO.Client.UI.Panels.EODs
         protected UIScript Script;
         protected RackType RackType { get; set; }
         protected UICollectionViewer OutfitBrowser;
-
+        public UITextEdit RackName { get; set; }
         /**
          * Data
          */

@@ -65,6 +65,9 @@ namespace FSO.Client.UI.Panels.EODs
         {
             base.UpdateUIState();
 
+            // customers need not edit the rack name
+            RackName.Mode = UITextEditMode.ReadOnly;
+
             var selected = GetSelectedOutfit();
             if (selected == null)
             {
@@ -72,6 +75,16 @@ namespace FSO.Client.UI.Panels.EODs
                 SetTip(GameFacade.Strings.GetString("264", "7"));
                 btnTryOn.Disabled = true;
                 btnPurchase.Disabled = true;
+
+                for (var i = 0; i < 8; i++)
+                {
+                    var priceField = OutfitPrices[i];
+                    // customers need not edit the displayed prices in their own UI
+                    if (priceField != null)
+                    {
+                        priceField.Mode = UITextEditMode.ReadOnly;
+                    }
+                }
             }
             else
             {
@@ -113,6 +126,8 @@ namespace FSO.Client.UI.Panels.EODs
                 }else{
                     SetTip(GameFacade.Strings.GetString("264", "7"));
                 }
+
+                RackName.Mode = UITextEditMode.ReadOnly;
             }
         }
 
