@@ -79,7 +79,3 @@ UpgradeLog*.htm
 # Visual Studio Code
 .settings
 TSOClient/tso.client/GlobalSettings1.Designer.cs
-TSOClient/.vs/config/applicationhost.config
-TSOClient/tso.simantics/FSO.SimAntics.csproj
-TSOClient/FSO.Server/config.json
-TSOClient/FreeSO.sln
