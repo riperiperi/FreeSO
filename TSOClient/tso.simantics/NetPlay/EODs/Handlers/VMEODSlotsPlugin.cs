@@ -19,9 +19,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private byte MachineType;
         private byte MachineBetDenomination;
         private short MachinePaybackPercent;
-        private short MachineBalance = 0;
-        private short MachineBalanceMax = 0;
-        private short MachineBalanceMin = 0;
+        private int MachineBalance = 0;
+        private int MachineBalanceMax = 0;
+        private int MachineBalanceMin = 0;
         private int CurrentWinnings = 0;
         // wheel stops possibilities
         private int TotalStops = 0;
@@ -73,52 +73,42 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             //Console.WriteLine("I received this event and don't know what to do: " + eventID);
         }
-        /*
-         * This override of Tick is to be used to animate the UI lights and simulate the spinning of the slot wheels.
-         */
-        public override void Tick()
-        {
-
-        }
         public override void OnConnection(VMEODClient client)
         {
             UserClient = client;
 
             var args = client.Invoker.Thread.TempRegisters;
-            
-            var name = Server.Object.Name;
-            if ((name != null) && (name.Length > 1))
+            // check machine type buy object GUID
+            var guid = Server.Object.Object.GUID;
+            switch (guid)
             {
-                switch (name[1])
-                {
-                    // "Jack of Hearts" Slot Machine
-                    case 'J':
-                        {
-                            MachineType = 2;
-                            MachineBetDenomination = 10;
-                            MachineBalanceMin = (short)VMEODSlotMachineMinimumBalances.Jack_of_Hearts;
-                            MachineBalanceMax = (short)VMEODSlotMachineMaximumBalances.Jack_of_Hearts; // 32767 is max value of a short data type
-                            break;
-                        }
-                    // "Gypsy Queen" Slot Machine
-                    case 'G':
-                        {
-                            MachineType = 1;
-                            MachineBetDenomination = 5;
-                            MachineBalanceMin = (short)VMEODSlotMachineMinimumBalances.Gypsy_Queen;
-                            MachineBalanceMax = (short)VMEODSlotMachineMaximumBalances.Gypsy_Queen;
-                            break;
-                        }
-                    // Viva PGT Home Casino - note lack of quote marks
-                    default:
-                        {
-                            MachineType = 0;
-                            MachineBetDenomination = 1;
-                            MachineBalanceMin = (short)VMEODSlotMachineMinimumBalances.Viva_PGT;
-                            MachineBalanceMax = (short)VMEODSlotMachineMaximumBalances.Viva_PGT;
-                            break;
-                        }
-                }
+                // Viva PGT Home Casino - $1
+                case 2448255364:
+                    {
+                        MachineType = 0;
+                        MachineBetDenomination = 1;
+                        MachineBalanceMin = (int)VMEODSlotMachineMinimumBalances.Viva_PGT;
+                        MachineBalanceMax = (int)VMEODSlotMachineMaximumBalances.Viva_PGT;
+                        break;
+                    }
+                // "Gypsy Queen" Slot Machine - $5
+                case 3106786481:
+                    {
+                        MachineType = 1;
+                        MachineBetDenomination = 5;
+                        MachineBalanceMin = (int)VMEODSlotMachineMinimumBalances.Gypsy_Queen;
+                        MachineBalanceMax = (int)VMEODSlotMachineMaximumBalances.Gypsy_Queen;
+                        break;
+                    }
+                // "Jack of Hearts" Slot Machine - $10
+                case 2906162829:
+                    {
+                        MachineType = 2;
+                        MachineBetDenomination = 10;
+                        MachineBalanceMin = (int)VMEODSlotMachineMinimumBalances.Jack_of_Hearts;
+                        MachineBalanceMax = (int)VMEODSlotMachineMaximumBalances.Jack_of_Hearts;
+                        break;
+                    }
             }
             // is the cilent the owner of the object?
             bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == UserClient.Avatar.PersistID);
@@ -133,9 +123,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             // UserClient is owner
             else if ((isOwner) && (args != null) && (args.Length > 4) && (args[1] > 79)) // HAS to be 80 > args[1] < 100
             { // args[1] = StackObject's Payback, args[2] = StackObject's (Balance % 16384), args[3] = StackObject's (Balance / 16384), args[4] = 0 for "Off" or 1 for "On"
-                var AlledgedMachineBalance = Convert.ToInt16((16384 * args[3]) + args[2]);
-                UserClient.Send("slots_owner_init", new byte[5] { Convert.ToByte(args[1]), Convert.ToByte(AlledgedMachineBalance % 255),
-                    Convert.ToByte(AlledgedMachineBalance / 255), Convert.ToByte(args[4]), MachineType });
+                var AlledgedMachineBalance = (short)((16384 * args[3]) + args[2]);
+                UserClient.Send("slots_owner_init", new byte[5] { (byte)(args[1]), (byte)(AlledgedMachineBalance % 255),
+                    (byte)(AlledgedMachineBalance / 255), (byte)(args[4]), MachineType });
             }
             // get the amount of money in the machine by sending a testOnly transaction for $1 from maxis to machine
             var VM = UserClient.vm;
@@ -158,7 +148,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 if (success)
                 {
                     // amount of money currently in the machine
-                    MachineBalance = Convert.ToInt16(budget2);
+                    MachineBalance = (int)(budget2);
                     if ((args != null) && (args.Length > 3) && (args[1] < 79))
                         UserClient.Send("slots_new_game", "");
                 }
@@ -213,8 +203,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             string failureReason = "";
 
             // try to parse the withdraw amount
-            short withdrawAmount;
-            var result = Int16.TryParse(amountString.Trim(), out withdrawAmount);
+            int withdrawAmount;
+            var result = Int32.TryParse(amountString.Trim(), out withdrawAmount);
             if (result)
             {
                 // check the successfully parsed amount to make sure it's non-negative and against the MachineBalance to determine if valid amount
@@ -239,7 +229,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                 // atempt to credit the owner by debiting the machine
                 var VM = client.vm;
-                VM.GlobalLink.PerformTransaction(VM, false, Server.Object.PersistID, client.Avatar.PersistID, Convert.ToInt32(withdrawAmount),
+                VM.GlobalLink.PerformTransaction(VM, false, Server.Object.PersistID, client.Avatar.PersistID, withdrawAmount,
 
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
@@ -256,7 +246,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }));
                     if (success)
                     {
-                        MachineBalance = Convert.ToInt16(budget1);
+                        MachineBalance = (int)(budget1);
                         client.Send("slots_resume_manage", budget1 + "");
                     }
                     else
@@ -278,8 +268,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             string failureReason = "";
 
             // try to parse the deposit amount
-            short depositAmount;
-            var result = Int16.TryParse(amountString.Trim(), out depositAmount);
+            int depositAmount;
+            var result = Int32.TryParse(amountString.Trim(), out depositAmount);
             if (result)
             {
                 // check the successfully parsed amount to make sure it's non-negative and against the MachineBalanceMax to determine if valid amount
@@ -303,7 +293,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             {
                 // atempt to credit the machine by debiting the owner
                 var VM = client.vm;
-                VM.GlobalLink.PerformTransaction(VM, false, client.Avatar.PersistID, Server.Object.PersistID, Convert.ToInt32(depositAmount),
+                VM.GlobalLink.PerformTransaction(VM, false, client.Avatar.PersistID, Server.Object.PersistID, depositAmount,
 
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
@@ -320,7 +310,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }));
                     if (success)
                     {
-                        MachineBalance = Convert.ToInt16(budget2);
+                        MachineBalance = (int)(budget2);
                         client.Send("slots_resume_manage", budget2 + "");
                     }
                     else
@@ -365,7 +355,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 // attempt to debit player the bet amount
                 var VM = client.vm;
 
-                VM.GlobalLink.PerformTransaction(VM, false, client.Avatar.PersistID, Server.Object.PersistID, Convert.ToInt32(betAmount),
+                VM.GlobalLink.PerformTransaction(VM, false, client.Avatar.PersistID, Server.Object.PersistID, (int)(betAmount),
 
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
@@ -383,12 +373,12 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     if (success)
                     {
                     // update the balance of the machine
-                    MachineBalance = Convert.ToInt16(budget2);
+                    MachineBalance = (int)(budget2);
                         CurrentWinnings = winnings;
                         if (CurrentWinnings > 0)
                         {
                         // dispatch event to tell object the winning amount
-                        UserClient.SendOBJEvent(new VMEODEvent((short)VMOEDSlotsObjectEvents.SetWinAmount, new short[1] { Convert.ToInt16(CurrentWinnings) }));
+                        UserClient.SendOBJEvent(new VMEODEvent((short)VMOEDSlotsObjectEvents.SetWinAmount, new short[1] { (short)(CurrentWinnings) }));
                         // dispatch event to tell the object that the user has won
                         UserClient.SendOBJEvent(new VMEODEvent((short)VMOEDSlotsObjectEvents.ExecuteWin, new short[1] { betAmount }));
                         }
@@ -417,7 +407,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private int SlotResultHandler(int[] betAndSlotResults)
         {
             // the bet argument here has already been checked for validity and authenticity
-            short betAmount = Convert.ToInt16(betAndSlotResults[0]);
+            short betAmount = (short)(betAndSlotResults[0]);
 
             int winnings = 0;
             
@@ -522,7 +512,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                 // pay the player
                 var VM = client.vm;
-                VM.GlobalLink.PerformTransaction(VM, false, Server.Object.PersistID, client.Avatar.PersistID, Convert.ToInt32(winnings),
+                VM.GlobalLink.PerformTransaction(VM, false, Server.Object.PersistID, client.Avatar.PersistID, winnings,
 
                 // debit the balance of the machine
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
@@ -540,7 +530,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }));
                     if (success)
                     {
-                        MachineBalance = Convert.ToInt16(budget1);
+                        MachineBalance = (int)(budget1);
                         CurrentWinnings = 0; // winning payout cannot be duplicated
                     }
                     else
@@ -569,25 +559,25 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             float paybackDecimal = 1F - (paybackPercent / 100F);
 
             // increase or decrease each type of non-blank stop except for First by the rtp %
-            TotalSecondStops = TotalSecondStops - Convert.ToInt32(Math.Round(TotalSecondStops * paybackDecimal, 0));
-            TotalThirdStops = TotalThirdStops - Convert.ToInt32(Math.Round(TotalThirdStops * paybackDecimal, 0));
-            TotalFourthStops = TotalFourthStops - Convert.ToInt32(Math.Round(TotalFourthStops * paybackDecimal, 0));
-            TotalFifthStops = TotalFifthStops - Convert.ToInt32(Math.Round(TotalFifthStops * paybackDecimal, 0));
-            TotalSixthStops = TotalSixthStops - Convert.ToInt32(Math.Round(TotalSixthStops * paybackDecimal, 0));
+            TotalSecondStops = TotalSecondStops - (int)(Math.Round(TotalSecondStops * paybackDecimal, 0));
+            TotalThirdStops = TotalThirdStops - (int)(Math.Round(TotalThirdStops * paybackDecimal, 0));
+            TotalFourthStops = TotalFourthStops - (int)(Math.Round(TotalFourthStops * paybackDecimal, 0));
+            TotalFifthStops = TotalFifthStops - (int)(Math.Round(TotalFifthStops * paybackDecimal, 0));
+            TotalSixthStops = TotalSixthStops - (int)(Math.Round(TotalSixthStops * paybackDecimal, 0));
             
             // First stops have special cases to tweak the RTP to be perfect, all math in a separate spreadsheet to prove accuracy
             if (paybackPercent < 100) // if less than 100%, remove firstStops
             {
-                TotalFirstStops = Convert.ToInt32(Math.Round(TotalFirstStops - ((TotalFirstStops * paybackDecimal) / 3), 0));
+                TotalFirstStops = (int)(Math.Round(TotalFirstStops - ((TotalFirstStops * paybackDecimal) / 3), 0));
                 if ((paybackPercent < 83) || (paybackPercent > 85 && paybackPercent < 97) || (paybackPercent == 98))
                     TotalFirstStops += 1; // these special cases need 1 more firstStop
             }
             else // if 100% or above, add firstStops
-                TotalFirstStops = Convert.ToInt32(Math.Round(TotalFirstStops + ((TotalFirstStops * paybackDecimal) / 3), 0));
+                TotalFirstStops = (int)(Math.Round(TotalFirstStops + ((TotalFirstStops * paybackDecimal) / 3), 0));
 
             // next calculate the total blank stops *note if paybackPercent is > 100, additionalBlankStops will be negative
             var additionalBlankStops = InitialBlankStops * paybackDecimal;
-            TotalBlankStops = Convert.ToInt32(Math.Round(InitialBlankStops + additionalBlankStops,0));
+            TotalBlankStops = (int)(Math.Round(InitialBlankStops + additionalBlankStops,0));
 
             // stupid floating point number fix
             if (paybackPercent == 110 && InitialBlankStops == 75)
@@ -714,11 +704,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         Gypsy_Queen = 12500,
         Jack_of_Hearts = 25000
     }
-    public enum VMEODSlotMachineMaximumBalances : short
+    public enum VMEODSlotMachineMaximumBalances : int
     {
-        Viva_PGT = 7500,
-        Gypsy_Queen = 17500,
-        Jack_of_Hearts = 32500
+        Viva_PGT = 15000,
+        Gypsy_Queen = 35000,
+        Jack_of_Hearts = 65000
     }
     [Flags]
     public enum VMEODSlotsInputErrorTypes : byte

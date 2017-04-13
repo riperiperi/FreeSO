@@ -21,11 +21,11 @@ namespace FSO.Client.UI.Panels.EODs
         private int EachBet;
         private int CurrentBet;
         private int DisplayedBet;
-        private short MachineBalance;
+        private int MachineBalance;
         private int OnOffState;
         private int WheelSpinTickCounter = 0;
-        private short MachineMinimumBalance;
-        private short MachineMaximumBalance;
+        private int MachineMinimumBalance;
+        private int MachineMaximumBalance;
         private WheelStopsList WheelListOne;
         private WheelStopsList WheelListTwo;
         private WheelStopsList WheelListThree;
@@ -453,7 +453,7 @@ namespace FSO.Client.UI.Panels.EODs
 
             // calculate the money in the machine from the two shorts and populate textField
             if ((args != null) && (args.Length > 2))
-                MachineBalance = Convert.ToInt16((255 * args[2]) + args[1]);
+                MachineBalance = (255 * args[2]) + args[1];
             else
                 MachineBalance = 0;
             CashText.Alignment = TextAlignment.Center;
@@ -471,16 +471,16 @@ namespace FSO.Client.UI.Panels.EODs
                 switch (args[4])
                 {
                     case 0:
-                        MachineMinimumBalance = (short)VMEODSlotMachineMinimumBalances.Viva_PGT;
-                        MachineMaximumBalance = (short)VMEODSlotMachineMaximumBalances.Viva_PGT;
+                        MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Viva_PGT;
+                        MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Viva_PGT;
                         break;
                     case 1:
-                        MachineMinimumBalance = (short)VMEODSlotMachineMinimumBalances.Gypsy_Queen;
-                        MachineMaximumBalance = (short)VMEODSlotMachineMaximumBalances.Gypsy_Queen;
+                        MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Gypsy_Queen;
+                        MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Gypsy_Queen;
                         break;
                     default:
-                        MachineMinimumBalance = (short)VMEODSlotMachineMinimumBalances.Jack_of_Hearts;
-                        MachineMaximumBalance = (short)VMEODSlotMachineMaximumBalances.Jack_of_Hearts;
+                        MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Jack_of_Hearts;
+                        MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Jack_of_Hearts;
                         break;
                 }
             }
@@ -557,14 +557,14 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void InputHandler(string type, string userInput)
         {
-            short amount;
+            int amount;
             userInput.Replace("-", ""); // in case any jokesters try to input a negative number
             string eventName = "";
             string eventMessage = "";
             // try to parse the user's input
             try
             {
-                amount = Int16.Parse(userInput);
+                amount = Int32.Parse(userInput);
                 // input is valid, now check it against MachineBalance
                 if (amount == 0)
                 {
@@ -684,8 +684,8 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void ResumeManageHandler(string evt, string balance)
         {
-            short newBalance;
-            var result = Int16.TryParse(balance, out newBalance);
+            int newBalance;
+            var result = Int32.TryParse(balance, out newBalance);
             if (result)
                 MachineBalance = newBalance;
             CashText.CurrentText = "$" + MachineBalance;
