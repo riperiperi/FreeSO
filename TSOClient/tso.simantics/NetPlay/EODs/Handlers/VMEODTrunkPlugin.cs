@@ -59,7 +59,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         }
         private void WearCostumeHandler(string evt, string costumeID, VMEODClient client)
         {
-            Console.WriteLine("I hear: " + costumeID);
             // make sure the requested item is valid and is found in the collection
             ulong parsedID;
             ulong assetID;

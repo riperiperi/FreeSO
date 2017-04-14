@@ -110,6 +110,7 @@
     <Compile Include="UI\Panels\EODs\UIRackOwnerEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIScoreboardEOD.cs" />
     <Compile Include="UI\Panels\EODs\UISlotsEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UITrunkEOD.cs" />
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobby.cs" />
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobbyController.cs" />
     <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
