@@ -15,6 +15,7 @@ namespace FSO.IDE.EditorComponent
             {2, typeof(ExpressionDescriptor) },
             {4, typeof(GrabDescriptor) },
             {5, typeof(DropDescriptor) },
+            {6, typeof(ChangeSuitDescriptor) },
             {7, typeof(RefreshDescriptor) },
             {8, typeof(RandomNumberDescriptor) },
             {11, typeof(GetDistanceToDescriptor) },
