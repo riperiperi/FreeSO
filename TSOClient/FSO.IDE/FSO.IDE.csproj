@@ -200,6 +200,7 @@
     <Compile Include="EditorComponent\OperandForms\OpUnknownControl.Designer.cs">
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditorComponent\Primitives\ChangeSuitDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SnapDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\TestObjectTypeDescriptor.cs" />

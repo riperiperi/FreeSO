@@ -26,7 +26,7 @@ namespace FSO.SimAntics.Primitives
 
             var outfitType = GetOutfitType(operand);
 
-            if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Update) == VMChangeSuitOrAccessoryFlags.Update)
+            if (operand.SuitScope == VMSuitScope.Object && (operand.Flags & VMChangeSuitOrAccessoryFlags.Update) == VMChangeSuitOrAccessoryFlags.Update)
             { //update default outfit with outfit in stringset 304 with index in temp 0
                 avatar.DefaultSuits.Daywear = Convert.ToUInt64(context.Callee.Object.Resource.Get<STR>(304).GetString((context.Thread.TempRegisters[0])), 16);
                 avatar.BodyOutfit = avatar.DefaultSuits.Daywear;
@@ -163,9 +163,9 @@ namespace FSO.SimAntics.Primitives
 
     public class VMChangeSuitOrAccessoryOperand : VMPrimitiveOperand {
 
-        public byte SuitData;
-        public VMSuitScope SuitScope;
-        public VMChangeSuitOrAccessoryFlags Flags;
+        public byte SuitData { get; set; }
+        public VMSuitScope SuitScope { get; set; }
+        public VMChangeSuitOrAccessoryFlags Flags { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
