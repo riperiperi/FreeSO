@@ -241,12 +241,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 Players[playerIndex] = null;
                 if (PizzaPlayers[playerIndex] != null)
                 {
-                    foreach (var item in PizzaPlayers[playerIndex].Hand)
-                    {
-                        if (item != null) InsertCard(item); //return this player's cards to deck
-                    }
+                    PizzaPlayers[playerIndex].Contrib = null;
+                    //next player in this index will inherit the hand.
+                    //but the contribution is reset.
                 }
-                PizzaPlayers[playerIndex] = null;
                 PlayerRosterUpdate();
             }
         }
@@ -353,7 +351,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 {
                     client.Send("pizza_show", "");
                     Players[station] = client;
-                    PizzaPlayers[station] = new VMEODPizzaPlayer();
+                    //if not initialized, set up this player with an empty hand
+                    //otherwise inherit the last hand.
+                    if (PizzaPlayers[station] == null) PizzaPlayers[station] = new VMEODPizzaPlayer();
                     PlayerRosterUpdate();
                 }
             }
