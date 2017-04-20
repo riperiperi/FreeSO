@@ -197,7 +197,7 @@ namespace FSO.Vitaboy
                         BlendVertexCount = io.ReadInt32()
                     };
 
-                    BoneBindings[i].BoneName = boneNames[BoneBindings[i].BoneIndex];
+                    BoneBindings[i].BoneName = boneNames[Math.Min(boneNames.Length-1, BoneBindings[i].BoneIndex)];
                 }
 
 
