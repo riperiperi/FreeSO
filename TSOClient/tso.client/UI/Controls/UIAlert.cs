@@ -103,6 +103,7 @@ namespace FSO.Client.UI.Controls
             if (options.TextEntry)
             {
                 TextBox = new UITextBox();
+                TextBox.MaxChars = options.MaxChars;
                 this.Add(TextBox);
             }
 
@@ -262,7 +263,7 @@ namespace FSO.Client.UI.Controls
         public int Width = 340;
         public int Height = -1;
         public TextAlignment Alignment = TextAlignment.Center;
-
+        public int MaxChars = int.MaxValue;
         public int TextSize = 10;
         public bool ProgressBar;
 

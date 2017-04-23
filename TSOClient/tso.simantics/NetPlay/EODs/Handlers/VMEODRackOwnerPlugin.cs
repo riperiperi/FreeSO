@@ -13,6 +13,7 @@ using Mina.Core.Buffer;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.Engine.Utils;
+using FSO.SimAntics.Model.TSOPlatform;
 using System.Text.RegularExpressions;
 using FSO.SimAntics.Engine.Scopes;
 
@@ -27,14 +28,29 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         public VMEODRackOwnerPlugin(VMEODServer server) : base(server)
         {
+            PlaintextHandlers["rackowner_update_name"] = UpdateNameHandler;
             PlaintextHandlers["rackowner_stock"] = Stock;
             PlaintextHandlers["rackowner_delete"] = DeleteStock;
             PlaintextHandlers["rackowner_update_price"] = UpdatePrice;
         }
 
+        private void UpdateNameHandler(string evt, string proposedNewName, VMEODClient client)
+        {
+            // validate the proposedNewName, if valid store to be sent to server upon disconnection
+            // should there be other methods of validating in case of illegal characters?
+            bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
+            if ((proposedNewName.Length > 0) && (proposedNewName.Length < 33) && (isOwner))
+            {
+                HasRackNameChanged = true;
+                ProposedNewRackName = proposedNewName;
+            }
+        }
+
         private void UpdatePrice(string evt, string data, VMEODClient client)
         {
-            if (Lobby.GetPlayerSlot(client) != 0){
+            bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
+            if ((Lobby.GetPlayerSlot(client) != 0) || (!isOwner))
+            {
                 return;
             }
 
@@ -60,12 +76,18 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         private void DeleteStock(string evt, string data, VMEODClient client)
         {
-            if (Lobby.GetPlayerSlot(client) != 0)
+            bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
+            if ((Lobby.GetPlayerSlot(client) != 0) || (!isOwner))
             {
                 return;
             }
 
-            var outfitId = uint.Parse(data);
+            uint outfitId;
+            var valid = uint.TryParse(data, out outfitId);
+
+            if (!valid)
+                return;
+
             var VM = client.vm;
 
             //TODO: Some kind of refund?
@@ -75,11 +97,18 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         }
 
         private void Stock(string evt, string data, VMEODClient client){
-            if (Lobby.GetPlayerSlot(client) != 0){
+            bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
+            if ((Lobby.GetPlayerSlot(client) != 0) || (!isOwner))
+            {
                 return;
             }
 
-            var outfitAssetId = ulong.Parse(data);
+            ulong outfitAssetId;
+            var valid = ulong.TryParse(data, out outfitAssetId);
+
+            if (!valid)
+                return;
+
             var outfit = Content.Content.Get().RackOutfits.GetByRackType(RackType).Outfits.FirstOrDefault(x => x.AssetID == outfitAssetId);
             if (outfit == null) { return; }
 

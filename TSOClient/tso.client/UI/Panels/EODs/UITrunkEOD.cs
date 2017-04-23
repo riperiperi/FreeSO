@@ -42,10 +42,10 @@ namespace FSO.Client.UI.Panels.EODs
         {
             Controller.ShowEODMode(new EODLiveModeOpt
             {
-                Buttons = 0,
+                Buttons = 1,
                 Height = EODHeight.Tall,
                 Length = EODLength.Full,
-                Tips = EODTextTips.Short,
+                Tips = EODTextTips.None,
                 Timer = EODTimer.None,
                 Expandable = false
             });

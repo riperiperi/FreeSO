@@ -61,11 +61,15 @@ namespace FSO.Client.UI.Panels.EODs
             OutfitBrowser.OnChange += x => UpdateUIState();
             Add(OutfitBrowser);
 
+            RackName.CurrentText = "Loading rack name...";
+            RackName.Mode = UITextEditMode.ReadOnly;
+
             OutfitPrices = new UITextEdit[] { Outfit1Price, Outfit2Price, Outfit3Price, Outfit4Price, Outfit5Price, Outfit6Price, Outfit7Price, Outfit8Price };
         }
 
         protected virtual void InitEOD()
         {
+            PlaintextHandlers["rack_initialize_name"] = RackNameHandler;
             PlaintextHandlers["rack_show"] = ShowEOD;
             BinaryHandlers["set_outfits"] = ShowStock;
         }
@@ -122,6 +126,11 @@ namespace FSO.Client.UI.Panels.EODs
             var options = GetEODOptions();
             UpdateUIState();
             Controller.ShowEODMode(options);
+        }
+
+        protected virtual void RackNameHandler(string evt, string rackName)
+        {
+            RackName.CurrentText = rackName;
         }
 
         public override void OnClose()
