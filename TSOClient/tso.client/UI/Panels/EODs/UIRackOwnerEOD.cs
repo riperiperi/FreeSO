@@ -57,9 +57,17 @@ namespace FSO.Client.UI.Panels.EODs
             btnStock.OnButtonClick += BtnStock_OnButtonClick;
             btnDelete.OnButtonClick += BtnDelete_OnButtonClick;
 
+            RackName.OnChange += Name_OnChange;
+
             foreach (var price in OutfitPrices){
                 price.OnChange += Price_OnChange;
             }
+        }
+
+        protected override void RackNameHandler(string evt, string rackName)
+        {
+            base.RackNameHandler(evt, rackName);
+            RackName.Mode = UITextEditMode.Editor;
         }
 
         private void Price_OnChange(UIElement element)
@@ -109,6 +117,14 @@ namespace FSO.Client.UI.Panels.EODs
             }
 
             DirtyTimeout = GameThread.SetTimeout(() => FlushDirtyPrices(), 2000);
+        }
+
+        private void Name_OnChange(UIElement elemnt)
+        {
+            // change the name of the rack by verifying the data then sending a message to the server
+            var validatedRackName = RackName.CurrentText;
+            if ((validatedRackName.Length > 0) && (validatedRackName.Length < 33))
+                Send("rackowner_update_name", validatedRackName);
         }
 
         private void FlushDirtyPrices()
