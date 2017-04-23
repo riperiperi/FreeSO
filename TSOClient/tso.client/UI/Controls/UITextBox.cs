@@ -268,9 +268,13 @@ namespace FSO.Client.UI.Controls
                     m_cursorBlink = !m_cursorBlink;
                 }
 
-                var inputResult = state.InputManager.ApplyKeyboardInput(m_SBuilder, state, SelectionStart, SelectionEnd, true);
+                var allowInput = m_SBuilder.Length < MaxChars;
+
+                var inputResult = state.InputManager.ApplyKeyboardInput(m_SBuilder, state, SelectionStart, SelectionEnd, allowInput);
                 if (inputResult != null)
                 {
+                    Control_ValidateText();
+
                     if (inputResult.ContentChanged)
                     {
                         m_cursorBlink = true;
@@ -558,6 +562,14 @@ namespace FSO.Client.UI.Controls
 
         #region ITextControl Members
 
+        private int m_MaxChars = int.MaxValue;
+
+        public int MaxChars
+        {
+            get { return m_MaxChars; }
+            set { m_MaxChars = value; }
+        }
+
         bool ITextControl.DrawCursor
         {
             get
@@ -565,7 +577,16 @@ namespace FSO.Client.UI.Controls
                 return IsFocused && m_cursorBlink;
             }
         }
-
+        /*
+         * As seen in FSO.Client.UI.Controls.UITextEdit.cs
+         */
+        private void Control_ValidateText()
+        {
+            if (m_SBuilder.Length > MaxChars)
+            {
+                m_SBuilder.Remove(MaxChars, m_SBuilder.Length - MaxChars);
+            }
+        }
         #endregion
     }
 

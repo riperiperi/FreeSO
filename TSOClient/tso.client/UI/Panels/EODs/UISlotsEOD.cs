@@ -526,6 +526,7 @@ namespace FSO.Client.UI.Panels.EODs
                 System.Environment.NewLine + System.Environment.NewLine + "(This machine cannot hold more than: $" + MachineMaximumBalance + ")",
                 Alignment = TextAlignment.Left,
                 TextEntry = true,
+                MaxChars = 5,
                 Buttons = UIAlertButton.Ok((btn) =>
                 {
                     InputHandler("d", alert.ResponseText.Trim());
@@ -547,6 +548,7 @@ namespace FSO.Client.UI.Panels.EODs
                 System.Environment.NewLine + System.Environment.NewLine + "How much would you like to withdraw?",
                 Alignment = TextAlignment.Left,
                 TextEntry = true,
+                MaxChars = 5,
                 Buttons = UIAlertButton.Ok((btn) =>
                 {
                     InputHandler("w", alert.ResponseText.Trim());
