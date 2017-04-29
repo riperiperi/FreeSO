@@ -106,7 +106,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         
         private void StateChangeHandler(string evt, byte[] newState, VMEODClient client)
         {
-            if ((newState == null) || (newState.Length > 1) || (newState[0] > 1))
+            if ((newState == null) || (newState.Length < 1) || (newState[0] > 1))
                 return;
 
             switch (State)
@@ -136,7 +136,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         private void IsRunningChangeHandler(string evt, byte[] newRunningState, VMEODClient client)
         {
-            if ((newRunningState == null) || (newRunningState.Length > 1) || (newRunningState[0] > 1))
+            if ((newRunningState == null) || (newRunningState.Length < 1) || (newRunningState[0] > 1))
                 return;
 
             switch (IsRunning)
@@ -165,7 +165,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         private void SetTimerHandler(string evt, byte[] newTime, VMEODClient client)
         {
-            if ((newTime == null) || (newTime.Length > 2) || (newTime[0] > 99) || (newTime[1] > 59))
+            if ((newTime == null) || (newTime.Length < 2) || (newTime[0] > 99) || (newTime[1] > 59))
                 return;
             
             CurrentDisplayedMinutes = (short)(newTime[0] * 256);
