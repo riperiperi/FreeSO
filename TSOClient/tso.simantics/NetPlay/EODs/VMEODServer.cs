@@ -39,7 +39,8 @@ namespace FSO.SimAntics.NetPlay.EODs
             { 0x0949E698, typeof(VMEODScoreboardPlugin) },
             { 0x0A69F29F, typeof(VMEODPermissionDoorPlugin) },
             { 0xCB2819CB, typeof(VMEODSlotsPlugin) },
-            { 0xAA5E36DC, typeof(VMEODTrunkPlugin) }
+            { 0xAA5E36DC, typeof(VMEODTrunkPlugin) },
+            { 0x2D642D39, typeof(VMEODWarGamePlugin) }
         };
 
         public List<VMEODClient> Clients;
