@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace FSO.SimAntics.NetPlay.EODs.Handlers
 {
-    class VMEODTrunkPlugin : VMEODHandler
+    public class VMEODTrunkPlugin : VMEODHandler
     {
         Collection TrunkOutfits { get; set; }
 

@@ -7,7 +7,7 @@ using FSO.SimAntics.NetPlay.EODs.Model;
 
 namespace FSO.SimAntics.NetPlay.EODs.Handlers
 {
-    class VMEODTimerPlugin : VMEODHandler
+    public class VMEODTimerPlugin : VMEODHandler
     {
         private VMEODClient PlayerClient;
 
