@@ -1178,6 +1178,11 @@ namespace FSO.Client.UI.Controls
         [UIAttribute("scrollbarGutter")]
         public int ScrollbarGutter { get; set; }
 
+        public UISlider Slider
+        {
+            get { return m_Slider; }
+        }
+
         private UISlider m_Slider;
 
         public void AttachSlider(UISlider slider)
