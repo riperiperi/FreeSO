@@ -25,7 +25,8 @@ namespace FSO.Client.UI.Panels.EODs
             { 0xCB2819CB, typeof(UISlotsEOD) },
             { 0xAA5E36DC, typeof(UITrunkEOD) },
             { 0x2D642D39, typeof(UIWarGameEOD) },
-            { 0xAA65FE9E, typeof(UITimerPluginEOD) }
+            { 0xAA65FE9E, typeof(UITimerPluginEOD) },
+            { 0x895C1CEB, typeof(UIGameCompDrawACardPluginEOD) }
         };
 
         //this class is a container so that it can hold EODs without them being active in Live Mode.

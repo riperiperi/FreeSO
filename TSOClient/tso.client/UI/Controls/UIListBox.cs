@@ -188,18 +188,46 @@ namespace FSO.Client.UI.Controls
 
         #endregion
 
+        #region Scrollbar
 
         private bool m_MouseOver = false;
 
         private int m_SelectedRow = -1;
         private int m_HoverRow = -1;
+
+        [UIAttribute("scrollbarImage")]
+        public Texture2D ScrollbarImage { get; set; }
+
+        [UIAttribute("scrollbarGutter")]
+        public int ScrollbarGutter { get; set; }
+
         private UISlider m_Slider;
+
+        public UISlider Slider
+        {
+            get { return m_Slider; }
+        }
 
         public void AttachSlider(UISlider slider)
         {
             this.m_Slider = slider;
             m_Slider.OnChange += new ChangeDelegate(m_Slider_OnChange);
             CalculateScroll();
+        }
+
+        public void InitDefaultSlider()
+        {
+            m_Slider = new UISlider();
+            m_Slider.Texture = ScrollbarImage;
+            AttachSlider(m_Slider);
+            PositionChildSlider();
+            Parent.Add(m_Slider);
+        }
+
+        public void PositionChildSlider()
+        {
+            m_Slider.Position = this.Position + new Vector2(this.Width + ScrollbarGutter, 0);
+            m_Slider.SetSize(1, this.Height);
         }
 
         private void CalculateScroll()
@@ -220,6 +248,8 @@ namespace FSO.Client.UI.Controls
         {
             ScrollOffset = (int)m_Slider.Value;
         }
+
+        #endregion
 
         public override void Update(UpdateState state)
         {

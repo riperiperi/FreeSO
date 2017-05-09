@@ -221,7 +221,7 @@ namespace FSO.Client.UI.Panels.EODs
         private void MinUpButtonClickedHandler(UIElement target)
         {
             DisableMinutesTextEdit();
-            if (CurrentMinutes < 100)
+            if (CurrentMinutes < 99)
             {
                 CurrentMinutes++;
                 UpdateTime();
@@ -235,7 +235,7 @@ namespace FSO.Client.UI.Panels.EODs
             if (CurrentSeconds == 59)
             {
                 CurrentSeconds = 0;
-                if (CurrentMinutes < 100)
+                if (CurrentMinutes < 99)
                     CurrentMinutes++;
             }
             else
