@@ -37,6 +37,11 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             return this;
         }
 
+        public UIVMPersonButton GetPlayerButton(int playerIndex)
+        {
+            return PlayerUI[playerIndex].PersonButton;
+        }
+
         public void UpdatePlayers(string evt, string msg)
         {
             var players = EODLobby.ParsePlayers(msg);

@@ -3,6 +3,7 @@ using FSO.Common.Utils;
 using FSO.Content.Model;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
+using FSO.SimAntics.NetPlay.EODs.Handlers.Data;
 using FSO.SimAntics.NetPlay.EODs.Model;
 using FSO.SimAntics.NetPlay.EODs.Utils;
 using Mina.Core.Buffer;
@@ -18,15 +19,47 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
     {
         protected EODLobby<VMEODPaperChaseSlot> Lobby;
         protected RackType RackType;
-
+        public VMEODRackData Data;
+        public bool HasRackNameChanged;
+        public string ProposedNewRackName;
+        protected bool IsRackNameInitialized;
+        protected VMEODClient Client;
 
         public VMAbstractEODRackPlugin(VMEODServer server) : base(server)
         {
+            // Get the data from the global server containing the rack name
+            server.vm.GlobalLink.LoadPluginPersist(server.vm, server.Object.PersistID, server.PluginID, (byte[] data) =>
+            {
+                lock (this)
+                {
+                    if (data == null)
+                    {
+                        Data = new VMEODRackData();
+                        Data.RackName = "Name your rack";
+                    }
+                    else
+                    {
+                        Data = new VMEODRackData(data);
+                    }
+                }
+            });
+
             Lobby = new EODLobby<VMEODPaperChaseSlot>(server, 1)
                     .OnFailedToJoinDisconnect();
 
             PlaintextHandlers["close"] = Lobby.Close;
             server.CanBeActionCancelled = true;
+        }
+
+        public override void Tick()
+        {
+            base.Tick();
+            if ((Data != null) && (!IsRackNameInitialized) && (Client != null))
+            {
+                // send event to initialize rack name along with the name
+                Client.Send("rack_initialize_name", Data.RackName);
+                IsRackNameInitialized = true;
+            }
         }
 
         protected virtual void GetOutfits(VM vm, Callback<VMGLOutfit[]> callback)
@@ -74,6 +107,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         public override void OnConnection(VMEODClient client)
         {
+            Client = client;
             var param = client.Invoker.Thread.TempRegisters;
             if (client.Avatar != null)
             {
@@ -89,6 +123,14 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         public override void OnDisconnection(VMEODClient client)
         {
+            // check to see if the rack name was changed by owner, if so save the new name on the server
+            if (HasRackNameChanged)
+            {
+                Data.RackName = ProposedNewRackName;
+                var newData = new VMEODRackData(Data.Save());
+                Server.vm.GlobalLink.SavePluginPersist(Server.vm, Server.Object.PersistID, (uint)VMEODRackPluginIDs.RackOwnerPlugin, newData.Save());
+                Server.vm.GlobalLink.SavePluginPersist(Server.vm, Server.Object.PersistID, (uint)VMEODRackPluginIDs.RackCustomerPlugin, newData.Save());
+            }
             Lobby.Leave(client);
         }
 
@@ -142,6 +184,12 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         }
     }
 
+
+    public enum VMEODRackPluginIDs : uint
+    {
+        RackOwnerPlugin = 0x2b58020b,
+        RackCustomerPlugin = 0xcb492685
+    }
 
     public enum VMEODRackEvent : short
     {

@@ -82,6 +82,8 @@ namespace FSO.Client.UI.Panels.EODs
             FriendsCheckButton.OnButtonClick += (btn) => { TriggerFlag(VMEODPermissionDoorFlags.MoneyExemptFriend); };
             EmployeesCheckButton.OnButtonClick += (btn) => { TriggerFlag(VMEODPermissionDoorFlags.MoneyExemptEmployee); };
 
+            CodeTextEntry.MaxChars = 9;
+            CodeTextEntry.X -= 14;
             CodeTextEntry.OnChange += CodeTextEntry_OnChange;
             CodeTextEntry.Alignment = Framework.TextAlignment.Center;
             CodeDoorDirections.Wrapped = true;
@@ -217,6 +219,7 @@ namespace FSO.Client.UI.Panels.EODs
                         UIScreen.RemoveDialog(alert);
                     }),
                     TextEntry = true,
+                    MaxChars = 9,
                 }, true);
             }
             else
