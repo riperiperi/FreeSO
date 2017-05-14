@@ -157,6 +157,7 @@
     <Compile Include="NetPlay\EODs\Handlers\Data\VMEODRackData.cs" />
     <Compile Include="NetPlay\EODs\Handlers\Data\VMEODSignsData.cs" />
     <Compile Include="NetPlay\EODs\Archetypes\VMBasicEOD.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODBandPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDresserPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODGameCompDrawACardPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODPermissionDoorPlugin.cs" />
