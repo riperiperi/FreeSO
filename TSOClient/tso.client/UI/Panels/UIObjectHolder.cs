@@ -459,11 +459,12 @@ namespace FSO.Client.UI.Panels
                     var objGroup = vm.GetObjectById(newHover).MultitileGroup;
                     var objBasePos = objGroup.BaseObject.Position;
                     var success = (Roommate || objGroup.SalePrice > -1)?objGroup.BaseObject.IsUserMovable(vm.Context, false): VMPlacementError.ObjectNotOwnedByYou;
+                    if (GameFacade.EnableMod) success = VMPlacementError.Success;
                     if (objBasePos.Level != World.State.Level) success = VMPlacementError.CantEffectFirstLevelFromSecondLevel;
                     if (success == VMPlacementError.Success)
                     {
                         var ghostGroup = vm.Context.GhostCopyGroup(objGroup);
-                        var canDelete = (objGroup.BaseObject.IsUserMovable(vm.Context, true)) == VMPlacementError.Success;
+                        var canDelete = GameFacade.EnableMod || (objGroup.BaseObject.IsUserMovable(vm.Context, true)) == VMPlacementError.Success;
                         SetSelected(ghostGroup);
 
                         Holding.RealEnt = objGroup.BaseObject;

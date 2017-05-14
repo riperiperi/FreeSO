@@ -13,6 +13,9 @@ using Microsoft.Xna.Framework;
 using FSO.LotView.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.LotView.Components;
+using FSO.LotView.LMap;
+using FSO.Common.Utils;
+using FSO.Vitaboy;
 
 namespace FSO.LotView
 {
@@ -64,6 +67,7 @@ namespace FSO.LotView
         public WorldSpace WorldSpace;
         public _2DWorldBatch _2D;
         public _3DWorldBatch _3D;
+        public LMapBatch Light;
         public Texture2D AmbientLight;
         public Color OutsideColor; //temporary to give this to terrain component. in future it will use ambient light texture
         public bool DynamicCutaway;
@@ -238,6 +242,38 @@ namespace FSO.LotView
             WorldCamera.Zoom = Zoom;
             WorldCamera.Rotation = Rotation;
             WorldCamera.PreciseZoom = PreciseZoom;
+        }
+
+        public void PrepareLighting()
+        {
+            var adv = (Light?.LightMap) ?? TextureGenerator.GetDefaultAdv(Device);
+            var amb = AmbientLight ?? TextureGenerator.GetPxWhite(Device);
+
+            WorldContent._2DWorldBatchEffect.Parameters["advancedLight"].SetValue(adv);
+            WorldContent.GrassEffect.Parameters["advancedLight"].SetValue(adv);
+            WorldContent._2DWorldBatchEffect.Parameters["ambientLight"].SetValue(amb);
+            Avatar.Effect.Parameters["advancedLight"].SetValue(adv);
+
+            var frontDir = WorldCamera.FrontDirection();
+            var lightOffset = new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));
+            if (Light != null) lightOffset *= Light.InvMapLayout;
+            WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(lightOffset);
+            WorldContent.GrassEffect.Parameters["LightOffset"].SetValue(lightOffset);
+            Avatar.Effect.Parameters["LightOffset"].SetValue(lightOffset);
+
+            WorldContent._2DWorldBatchEffect.Parameters["MaxFloor"].SetValue((float)Level-1);
+        }
+
+        public void ClearLighting(bool indoors)
+        {
+            var adv = TextureGenerator.GetDefaultAdv(Device);
+            var amb = TextureGenerator.GetPxWhite(Device);
+            if (indoors) adv = amb;
+
+            WorldContent._2DWorldBatchEffect.Parameters["advancedLight"].SetValue(adv);
+            WorldContent.GrassEffect.Parameters["advancedLight"].SetValue(adv);
+            WorldContent._2DWorldBatchEffect.Parameters["ambientLight"].SetValue(amb);
+            Avatar.Effect.Parameters["advancedLight"].SetValue(adv);
         }
     }
 

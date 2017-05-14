@@ -90,7 +90,7 @@ namespace FSO.IDE.Common
                 blueprint.OutsideColor = Color.White;
                 blueprint.GenerateRoomLights();
                 blueprint.RoomColors[2].A /= 2;
-                world.State._2D.AmbientLight.SetData(blueprint.RoomColors);
+                world.State.AmbientLight.SetData(blueprint.RoomColors);
 
                 world.InitBlueprint(blueprint);
                 context.Blueprint = blueprint;

@@ -59,7 +59,8 @@ namespace FSO.LotView.Components
             }
             set
             {
-                dgrp.Room = value;
+                dgrp.Room = (value>65532 || value == 0)?value:blueprint.Rooms[value].Base;
+                dgrp.Level = Level;
             }
         }
 

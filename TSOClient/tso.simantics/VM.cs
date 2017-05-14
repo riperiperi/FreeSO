@@ -767,6 +767,7 @@ namespace FSO.SimAntics
 
     public enum VMEventType
     {
-        TSOUnignore
+        TSOUnignore,
+        TSOTimeout
     }
 }

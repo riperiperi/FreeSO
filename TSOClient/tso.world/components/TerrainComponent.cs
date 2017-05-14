@@ -264,6 +264,7 @@ namespace FSO.LotView.Components
             Effect.Parameters["DarkGreen"].SetValue(DarkGreen.ToVector4());
             Effect.Parameters["DarkBrown"].SetValue(DarkBrown.ToVector4());
             Effect.Parameters["LightBrown"].SetValue(LightBrown.ToVector4());
+            Effect.Parameters["Level"].SetValue((float)0);
             Effect.Parameters["UseTexture"].SetValue(false);
             Effect.Parameters["ScreenSize"].SetValue(new Vector2(device.Viewport.Width, device.Viewport.Height) / world.PreciseZoom);
             //Effect.Parameters["depthOutMode"].SetValue(DepthMode && (!FSOEnvironment.UseMRT));
@@ -283,11 +284,9 @@ namespace FSO.LotView.Components
             device.Indices = IndexBuffer;
 
             Effect.CurrentTechnique = Effect.Techniques["DrawBase"];
-            foreach (var pass in Effect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, NumPrimitives);
-            }
+            var pass = Effect.CurrentTechnique.Passes[WorldConfig.Current.PassOffset];
+            pass.Apply();
+            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, NumPrimitives);
 
             int grassScale;
             float grassDensity;
@@ -336,11 +335,9 @@ namespace FSO.LotView.Components
 
                         Effect.Parameters["ScreenOffset"].SetValue(offset - off2);
 
-                        foreach (var pass in Effect.CurrentTechnique.Passes)
-                        {
-                            pass.Apply();
-                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, BladePrimitives);
-                        }
+                        pass = Effect.CurrentTechnique.Passes[WorldConfig.Current.PassOffset];
+                        pass.Apply();
+                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, BladePrimitives);
                     }
                     if (FSOEnvironment.UseMRT)
                     {
@@ -370,20 +367,16 @@ namespace FSO.LotView.Components
                         //draw target size in red, below old size
                         device.Indices = TGridIndexBuffer;
                         Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0.5f, 1f, 0.5f, 1.0f));
-                        foreach (var pass in Effect.CurrentTechnique.Passes)
-                        {
-                            pass.Apply();
-                            device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, TGridPrimitives);
-                        }
+                        pass = Effect.CurrentTechnique.Passes[0];
+                        pass.Apply();
+                        device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, TGridPrimitives);
                     }
 
                     Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0, 0, 0, 1.0f));
                     device.Indices = GridIndexBuffer;
-                    foreach (var pass in Effect.CurrentTechnique.Passes)
-                    {
-                        pass.Apply();
-                        device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, GridPrimitives);
-                    }
+                    pass = Effect.CurrentTechnique.Passes[0];
+                    pass.Apply();
+                    device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, GridPrimitives);
 
 
                     device.DepthStencilState = depth;

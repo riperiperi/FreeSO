@@ -106,7 +106,17 @@ namespace FSO.Client.UI.Framework
             lock (Children)
             {
                 Children.Remove(child);
+                child?.Removed();
                 //if (child?.Parent == this) child.Parent = null;
+            }
+        }
+
+        public override void Removed()
+        {
+            base.Removed();
+            foreach (var child in Children)
+            {
+                child.Removed();
             }
         }
 

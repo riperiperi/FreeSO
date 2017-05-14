@@ -71,8 +71,6 @@ namespace FSO.Client.UI.Panels
 
         public UISkillBar[] SkillBars;
 
-        public static bool EnableMod;
-
         public UILabel LockPointsLabel { get; set; }
 
         /** Jobs **/
@@ -421,6 +419,9 @@ namespace FSO.Client.UI.Panels
 
             FriendshipWebButton.OnButtonClick += (UIElement e) =>
             {
+
+                FindController<CoreGameScreenController>()?.ShowRelationshipDialog(CurrentAvatar.Value.Avatar_Id);
+                return;
                 int friends = 0;
                 int enemies = 0;
 
@@ -992,7 +993,7 @@ namespace FSO.Client.UI.Panels
             var isIncoming = _RelationshipsTab == UIRelationshipsTab.Incoming;
             var isOptions = _Tab == UIPersonPageTab.Options;
 
-            ModButton.Visible = EnableMod && isOptions;
+            ModButton.Visible = GameFacade.EnableMod && isOptions;
 
             FindHouseButton.Disabled = !hasProperty;
 

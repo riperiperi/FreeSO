@@ -98,11 +98,19 @@ namespace FSO.Client
             );
             GameFacade.Kernel = kernel;
 
+            var settings = GlobalSettings.Default;
             if (FSOEnvironment.DPIScaleFactor != 1 || FSOEnvironment.SoftwareDepth)
             {
-                GlobalSettings.Default.GraphicsWidth = GraphicsDevice.Viewport.Width / FSOEnvironment.DPIScaleFactor;
-                GlobalSettings.Default.GraphicsHeight = GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor;
+                settings.GraphicsWidth = GraphicsDevice.Viewport.Width / FSOEnvironment.DPIScaleFactor;
+                settings.GraphicsHeight = GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor;
             }
+
+            LotView.WorldConfig.Current = new LotView.WorldConfig()
+            {
+                AdvancedLighting = settings.Lighting,
+                SmoothZoom = settings.SmoothZoom,
+                SurroundingLots = settings.SurroundingLotMode
+            };
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;

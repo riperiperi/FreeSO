@@ -717,7 +717,7 @@ namespace FSO.SimAntics.Engine
                     if (TurnFrames > 0)
                     {
                         var newDir = (float)(TargetDirection + DirectionUtils.Difference(TargetDirection, WalkDirection) * (TurnFrames / 10.0));
-                        avatar.TurnVelocity = newDir - avatar.RadianDirection;
+                        avatar.TurnVelocity = DirectionUtils.Difference(newDir, avatar.RadianDirection);
                         avatar.RadianDirection = newDir;
                         TurnFrames--;
                     }

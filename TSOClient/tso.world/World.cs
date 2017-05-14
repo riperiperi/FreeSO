@@ -17,6 +17,7 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.LotView.Components;
 using FSO.Common.Utils;
 using FSO.Common;
+using FSO.LotView.LMap;
 
 namespace FSO.LotView
 {
@@ -52,6 +53,7 @@ namespace FSO.LotView
 
         private World2D _2DWorld = new World2D();
         private World3D _3DWorld = new World3D();
+        private LMapBatch Light;
         protected Blueprint Blueprint;
 
         public sbyte Stories
@@ -76,11 +78,12 @@ namespace FSO.LotView
              * state settings for the world and helper functions
              */
             State = new WorldState(layer.Device, layer.Device.Viewport.Width/FSOEnvironment.DPIScaleFactor, layer.Device.Viewport.Height/FSOEnvironment.DPIScaleFactor, this);
-            State.AmbientLight = new Texture2D(layer.Device, 256, 256);
+
             State._3D = new FSO.LotView.Utils._3DWorldBatch(State);
             State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, World2D.NUM_2D_BUFFERS, 
                 World2D.BUFFER_SURFACE_FORMATS, World2D.FORMAT_ALWAYS_DEPTHSTENCIL, World2D.SCROLL_BUFFER);
-            State._2D.AmbientLight = State.AmbientLight;
+
+            ChangedWorldConfig(layer.Device);
 
             PPXDepthEngine.InitGD(layer.Device);
             PPXDepthEngine.InitScreenTargets();
@@ -98,7 +101,7 @@ namespace FSO.LotView
             State._2D.GenBuffers(newSize.X, newSize.Y);
             State.SetDimensions(newSize.ToVector2());
 
-            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ZOOM));
+            Blueprint?.Damage.Add(new BlueprintDamage(BlueprintDamageType.ZOOM));
         }
 
         public virtual void InitBlueprint(Blueprint blueprint)
@@ -106,6 +109,7 @@ namespace FSO.LotView
             this.Blueprint = blueprint;
             _2DWorld.Init(blueprint);
             _3DWorld.Init(blueprint);
+            Light?.Init(blueprint);
 
             HasInitBlueprint = true;
             HasInit = HasInitGPU & HasInitBlueprint;
@@ -337,6 +341,10 @@ namespace FSO.LotView
 
         public void InitiateSmoothZoom(WorldZoom zoom)
         {
+            if (!WorldConfig.Current.SmoothZoom)
+            {
+                return;
+            }
             SmoothZoomTimer = 0;
             var curScale = (1 << (3 - (int)State.Zoom));
             var zoomScale = (1 << (3 - (int)zoom));
@@ -410,6 +418,7 @@ namespace FSO.LotView
 
             //For all the tiles in the dirty list, re-render them
             //PPXDepthEngine.SetPPXTarget(null, null, true);
+            State.PrepareLighting();
             State._2D.Begin(this.State.Camera);
             _2DWorld.PreDraw(device, State);
             device.SetRenderTarget(null);
@@ -451,6 +460,7 @@ namespace FSO.LotView
 
         private void InternalDraw(GraphicsDevice device)
         {
+            State.PrepareLighting();
             State._2D.OutputDepth = true;
 
             State._3D.Begin(device);
@@ -505,10 +515,42 @@ namespace FSO.LotView
             return _2DWorld.GetLotThumb(gd, State);
         }
 
+        public void ChangedWorldConfig(GraphicsDevice gd)
+        {
+            //destroy any features that are no longer enabled.
+
+            var config = WorldConfig.Current;
+            if (config.AdvancedLighting)
+            {
+                State.AmbientLight?.Dispose();
+                State.AmbientLight = null;
+                if (Light == null)
+                {
+                    Light = new LMapBatch(gd, 8);
+                    if (Blueprint != null)
+                    {
+                        Light?.Init(Blueprint);
+                        Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ROOM_CHANGED));
+                        Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+                    }
+                    State.Light = Light;
+                }
+            } else
+            {
+                Light?.Dispose();
+                Light = null;
+                State.Light = null;
+                if (State.AmbientLight == null)
+                    State.AmbientLight = new Texture2D(gd, 256, 256);
+                if (Blueprint != null) Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+            }
+        }
+
         public override void Dispose()
         {
             base.Dispose();
-            State.AmbientLight.Dispose();
+            State.AmbientLight?.Dispose();
+            Light?.Dispose();
             if (State._2D != null) State._2D.Dispose();
             if (_2DWorld != null) _2DWorld.Dispose();
             if (Blueprint != null)

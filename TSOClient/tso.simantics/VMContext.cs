@@ -23,6 +23,7 @@ using FSO.SimAntics.Model;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.Routing;
 using FSO.SimAntics.Marshals;
+using FSO.LotView.LMap;
 
 namespace FSO.SimAntics
 {
@@ -485,6 +486,7 @@ namespace FSO.SimAntics
             {
                 RoomInfo[i].Entities = new List<VMEntity>();
                 RoomInfo[i].Portals = new List<VMRoomPortal>();
+                RoomInfo[i].WindowPortals = new List<VMRoomPortal>();
                 RoomInfo[i].Room = Architecture.RoomData[i];
                 RoomInfo[i].Light = new RoomLighting();
             }
@@ -496,6 +498,9 @@ namespace FSO.SimAntics
                 if (obj.EntryPoints[15].ActionFunction != 0)
                 { //portal object
                     AddRoomPortal(obj, room);
+                } else if (((VMEntityFlags2)obj.GetValue(VMStackObjectVariable.FlagField2)).HasFlag(VMEntityFlags2.ArchitectualWindow))
+                {
+                    AddWindowPortal(obj, room);
                 }
                 obj.SetRoom(room);
             }
@@ -508,79 +513,136 @@ namespace FSO.SimAntics
             if (VM.UseWorld) World.InvalidateZoom();
         }
 
+        public void RefreshRoomScore(ushort room)
+        {
+            if (RoomInfo == null || room == 0) return;
+            var info = RoomInfo[room];
+            room = info.Room.LightBaseRoom;
+            info = RoomInfo[room];
+
+            if (info.Light == null) info.Light = new RoomLighting();
+            else info.Light.RoomScore = 0;
+            var light = info.Light;
+
+            var area = 0;
+            var roomScore = 0;
+            foreach (var rm in info.Room.SupportRooms)
+            {
+                info = RoomInfo[rm];
+                if (info.Light == null) info.Light = light; //adjacent rooms share a light object.
+                area += info.Room.Area;
+                foreach (var ent in info.Entities)
+                {
+                    var roomImpact = ent.GetValue(VMStackObjectVariable.RoomImpact);
+                    if (roomImpact != 0) roomScore += roomImpact;
+                }
+            }
+
+            float areaRScale = Math.Max(1, area / 12f);
+            if (info.Room.IsOutside) areaRScale = 30;
+            roomScore = (short)(roomScore / areaRScale);
+            roomScore -= (info.Room.IsOutside) ? 15 : 10;
+
+            light.RoomScore = (short)Math.Min(100, Math.Max(-100, roomScore));
+        }
+
         public void RefreshLighting(ushort room, bool commit, HashSet<ushort> visited)
         {
-            if (RoomInfo == null || visited.Contains(room)) return;
-            visited.Add(room);
+            if (RoomInfo == null || room == 0) return;
             var info = RoomInfo[room];
+            var isoutside = info.Room.IsOutside;
+            room = info.Room.LightBaseRoom;
+            if (visited.Contains(room)) return;
+            visited.Add(room);
+            info = RoomInfo[room];
             var light = new RoomLighting();
             RoomInfo[room].Light = light;
+            light.Bounds = info.Room.Bounds;
             light.AmbientLight = 0;
+            var affected = new HashSet<ushort>();
+
+            var area = 0;
+            var outside = 0;
+            var inside = 0;
+            var roomScore = 0;
+            var useWorld = UseWorld;
+            foreach (var rm in info.Room.SupportRooms)
+            {
+                info = RoomInfo[rm];
+                light.Bounds = Rectangle.Union(light.Bounds, info.Room.Bounds);
+                RoomInfo[room].Light = light; //adjacent rooms share a light object.
+                area += info.Room.Area;
+                foreach (var ent in info.Entities)
+                {
+                    var mainSource = ent == ent.MultitileGroup.Objects[0];
+                    var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
+                    
+                    var cont = ent.GetValue(VMStackObjectVariable.LightingContribution);
+                    if (cont > 0)
+                    {
+                        if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
+                        {
+                            if (true) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), true, 160));
+                            outside += (ushort)cont;
+                        }
+                        else
+                        {
+                            if (mainSource) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 160));
+                            inside += (ushort)cont;
+                        }
+                    }
+                    else if (mainSource && useWorld)
+                    {
+                        var bound = ent.MultitileGroup.LightBounds();
+                        if (bound != null) light.ObjectFootprints.Add(bound.Value);
+                    }
+                    var roomImpact = ent.GetValue(VMStackObjectVariable.RoomImpact);
+                    if (roomImpact != 0) roomScore += roomImpact;
+                }
+
+                foreach (var portal in info.WindowPortals)
+                {
+                    var ent = VM.GetObjectById(portal.ObjectID);
+                    var wlight = new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 100);
+                    wlight.WindowRoom = portal.TargetRoom;
+                    var bRoom = RoomInfo[portal.TargetRoom].Room.LightBaseRoom;
+                    affected.Add(bRoom);
+                    light.Lights.Add(wlight);
+                }
+
+            }
+
+            float areaScale = Math.Max(1, area / 100f);
+            LightData.Cluster(light.Lights);
+            light.OutsideLight = Math.Min((ushort)100, (ushort)(outside / areaScale));
+            light.AmbientLight = Math.Min((ushort)100, (ushort)(inside / areaScale));
+
             if (info.Room.IsOutside)
             {
+                light.AmbientLight = 0;
                 light.OutsideLight = 100;
             }
-            else
+
+            float areaRScale = Math.Max(1, area / 12f);
+            if (info.Room.IsOutside) areaRScale = 30;
+            roomScore = (short)(roomScore / areaRScale);
+            roomScore -= (info.Room.IsOutside) ? 15 : 10;
+
+            light.RoomScore = (short)Math.Min(100, Math.Max(-100, roomScore));
+
+            if (commit && useWorld)
             {
-                var queue = new Queue<ushort>();
-                queue.Enqueue(room);
-                var area = 0;
-                var outside = 0;
-                var inside = 0;
-
-                var roomScore = 0;
-                while (queue.Count > 0)
-                {
-                    var rm = queue.Dequeue();
-                    info = RoomInfo[rm];
-                    RoomInfo[rm].Light = light; //adjacent rooms share a light object. same for room score when we get to that.
-                    area += info.Room.Area;
-                    foreach (var ent in info.Entities)
-                    {
-                        var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
-                        var cont = ent.GetValue(VMStackObjectVariable.LightingContribution);
-                        if (cont > 0)
-                        {
-                            if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
-                                outside += (ushort)cont;
-                            else
-                                inside += (ushort)cont;
-                        }
-                        var roomImpact = ent.GetValue(VMStackObjectVariable.RoomImpact);
-                        if (roomImpact > 0) roomScore += roomImpact;
-                    }
-
-                    if (info.Room.AdjRooms != null)
-                    {
-                        foreach (var child in info.Room.AdjRooms)
-                        {
-                            if (!visited.Contains(child))
-                            {
-                                visited.Add(child);
-                                queue.Enqueue(child);
-                            }
-                        }
-                    }
-                }
-                float areaScale = Math.Max(1, area / 100f);
-                light.OutsideLight = Math.Min((ushort)100, (ushort)(outside / areaScale));
-                light.AmbientLight = Math.Min((ushort)100, (ushort)(inside / areaScale));
-
-                float areaRScale = Math.Max(1, area / 12f);
-                roomScore = (short)(roomScore / areaRScale);
-                roomScore -= (info.Room.IsOutside) ? 15 : 10;
-
-                light.RoomScore = (short)Math.Min(100, Math.Max(-100, roomScore));
-            }
-
-            if (commit && UseWorld) { 
                 Blueprint.Light = new RoomLighting[RoomInfo.Length];
                 for (int i = 0; i < RoomInfo.Length; i++)
                 {
                     Blueprint.Light[i] = RoomInfo[i].Light;
                 }
-                Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
-            } 
+                Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED, (short)room, 0, 0));
+                foreach (var a in affected)
+                {
+                    Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED, (short)a, 0, 0));
+                }
+            }
         }
 
         public void AddRoomPortal(VMEntity obj, ushort room)
@@ -593,6 +655,20 @@ namespace FSO.SimAntics
                 if (obj != obj2 && room2 != room && obj2.EntryPoints[15].ActionFunction != 0)
                 {
                     RoomInfo[room].Portals.Add(new VMRoomPortal(obj.ObjectID, room2));
+                    break;
+                }
+            }
+        }
+        public void AddWindowPortal(VMEntity obj, ushort room)
+        {
+            if (obj.MultitileGroup == null) return;
+            //find other portal part, must be in other room to count...
+            foreach (var obj2 in obj.MultitileGroup.Objects)
+            {
+                var room2 = GetObjectRoom(obj2);
+                if (obj != obj2 && room2 != room)
+                {
+                    RoomInfo[room].WindowPortals.Add(new VMRoomPortal(obj.ObjectID, room2));
                     break;
                 }
             }
@@ -610,6 +686,20 @@ namespace FSO.SimAntics
                 }
             }
             if (target != null) RoomInfo[room].Portals.Remove(target);
+        }
+
+        public void RemoveWindowPortal(VMEntity obj, ushort room)
+        {
+            VMRoomPortal target = null;
+            foreach (var port in RoomInfo[room].WindowPortals)
+            {
+                if (port.ObjectID == obj.ObjectID)
+                {
+                    target = port;
+                    break;
+                }
+            }
+            if (target != null) RoomInfo[room].WindowPortals.Remove(target);
         }
 
         /// <summary>
@@ -636,10 +726,15 @@ namespace FSO.SimAntics
             { //portal
                 AddRoomPortal(obj, room);
                 RegenRoomObs(room, obj.Position.Level); //the other portal side will call this on the other room, which is what we really affect.
+            } else if (((VMEntityFlags2)obj.GetValue(VMStackObjectVariable.FlagField2)).HasFlag(VMEntityFlags2.ArchitectualWindow))
+            {
+                AddWindowPortal(obj, room);
             }
             obj.SetRoom(room);
-            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
+            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0)
                 RefreshLighting(room, true, new HashSet<ushort>());
+            else if (obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
+                RefreshRoomScore(room);
 
             ObjectQueries.RegisterObjectPos(obj);
         }
@@ -657,8 +752,12 @@ namespace FSO.SimAntics
                 RemoveRoomPortal(obj, room);
                 RegenRoomObs(room, obj.Position.Level); //the other portal side will call this on the other room, which is what we really affect.
             }
-            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
+            else if (((VMEntityFlags2)obj.GetValue(VMStackObjectVariable.FlagField2)).HasFlag(VMEntityFlags2.ArchitectualWindow))
+                RemoveWindowPortal(obj, room);
+            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0)
                 RefreshLighting(room, true, new HashSet<ushort>());
+            else if (obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
+                RefreshRoomScore(room);
 
             ObjectQueries.UnregisterObjectPos(obj);
         }
@@ -895,7 +994,8 @@ namespace FSO.SimAntics
             else
             {
                 uint tileRoom = Architecture.Rooms[pos.Level - 1].Map[pos.TileX + pos.TileY * _Arch.Width];
-                if ((tileRoom & 0xFFFF) != (tileRoom >> 16))
+                var room2 = ((tileRoom >> 16) & 0x7FFF);
+                if ((tileRoom & 0xFFFF) != room2)
                 {
                     var walls = _Arch.GetWall(pos.TileX, pos.TileY, pos.Level);
 
@@ -904,12 +1004,12 @@ namespace FSO.SimAntics
                         if ((pos.x % 16) - (pos.y % 16) > 0)
                             return (ushort)tileRoom;
                         else
-                            return (ushort)(tileRoom >> 16);
+                            return (ushort)room2;
                     }
                     else if ((walls.Segments & WallSegments.HorizontalDiag) > 0)
                     {
                         if ((pos.x % 16) + (pos.y % 16) > 15)
-                            return (ushort)(tileRoom >> 16);
+                            return (ushort)room2;
                         else
                             return (ushort)tileRoom;
                     }

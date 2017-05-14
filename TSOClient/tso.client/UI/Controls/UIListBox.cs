@@ -224,6 +224,29 @@ namespace FSO.Client.UI.Controls
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            var i = 0;
+            foreach (var item in Items)
+            {
+                foreach (var col in item.Columns)
+                {
+                    if (col is UIContainer)
+                    {
+                        var container = ((UIContainer)col);
+                        container.Visible = i >= ScrollOffset && i < ScrollOffset + NumVisibleRows;
+                        if (container.Visible)
+                        {
+                            container.Parent = this.Parent;
+                            container.InvalidateMatrix();
+                            container.Update(state);
+                            container.Parent = null;
+                        } else
+                        {
+                            container.Update(state);
+                        }
+                    }
+                }
+                i++;
+            }
             if (m_MouseOver)
             {
                 var overRow = GetRowUnderMouse(state);
@@ -514,6 +537,16 @@ namespace FSO.Client.UI.Controls
                         }
 
                         DrawLocalTexture(batch, (Texture2D)columnValue, from, to, new Vector2((float)destWidth / (float)texWidthDiv4, (float)destHeight / (float)tex.Height));
+                    }
+                    else if (columnValue is UIContainer)
+                    {
+                        var container = (UIContainer)columnValue;
+                        container.Position = this.Position + new Vector2(columnX, rowY);
+                        container.Parent = this.Parent;
+                        container.InvalidateMatrix();
+                        container.PreDraw(batch);
+                        container.Draw(batch);
+                        container.Parent = null;
                     }
                     else if (columnValue != null)
                     {

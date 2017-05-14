@@ -144,11 +144,15 @@ namespace FSO.SimAntics
 
         public void SetTimeOfDay(double time)
         {
-            Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
-            Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1)) + 1]; //second colour
-            double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
-
-            if (VM.UseWorld) WorldUI.OutsideColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
+            if (VM.UseWorld)
+            {
+                Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
+                Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1)) + 1]; //second colour
+                double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
+                WorldUI.OutsideColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
+                WorldUI.OutsideTime = time;
+                Context.World.State?.Light?.BuildOutdoorsLight(time);
+            }
         }
 
         public void UpdateBuildableArea(Rectangle area, int floors)
@@ -254,7 +258,29 @@ namespace FSO.SimAntics
             for (int i=0; i<Stories; i++)
             {
                 Rooms[i].GenerateMap(Walls[i], Floors[i], Width, Height, RoomData, (sbyte)i, Context);
-                if (VM.UseWorld) WorldUI.RoomMap[i] = Rooms[i].Map;
+                if (VM.UseWorld)
+                {
+                    //map translate to light map
+                    WorldUI.RoomMap[i] = Rooms[i].Map.Select(x =>
+                        {
+                            var room1 = x & 0xFFFF;
+                            var room2 = x >> 16 & 0x7FFF;
+
+                            if (room1 == room2)
+                            {
+                                var roomn = RoomData[(int)room1].LightBaseRoom;
+                                return (uint)(roomn | (roomn << 16));
+                            } else
+                            {
+                                if ((x & 0x80000000) > 0 && room2 == 1) { }
+                                var roomn1 = RoomData[(int)room1].LightBaseRoom;
+                                var roomn2 = RoomData[(int)room2].LightBaseRoom;
+                                return (uint)(roomn1 | (roomn2 << 16)) | (x & 0x80000000);
+                            }
+                        }
+                    ).ToArray();
+                    //WorldUI.RoomMap[i] = Rooms[i].Map;
+                }
                 RegenerateSupported(i + 1);
             }
 
@@ -266,7 +292,10 @@ namespace FSO.SimAntics
                     Bounds = x.Bounds,
                     IsOutside = x.IsOutside,
                     IsPool = x.IsPool,
-                    RoomID = x.RoomID
+                    WallLines = x.WallLines,
+                    RoomID = x.RoomID,
+                    Floor = x.Floor,
+                    Base = x.LightBaseRoom
                 });
             }
         }

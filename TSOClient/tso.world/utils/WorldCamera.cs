@@ -151,6 +151,23 @@ namespace FSO.LotView.Utils
             }
         }
 
+        public Vector3 FrontDirection()
+        {
+            var rot = Rotation;
+            switch (rot)
+            {
+                case WorldRotation.TopLeft:
+                    return new Vector3(1, 0, 1);
+                case WorldRotation.TopRight:
+                    return new Vector3(1, 0, -1);
+                case WorldRotation.BottomRight:
+                    return new Vector3(-1, 0, -1);
+                case WorldRotation.BottomLeft:
+                    return new Vector3(-1, 0, 1);
+            }
+            return new Vector3(1, 0, 1);
+        }
+
         /// <summary>
         /// Creates a new WorldCamera instance.
         /// </summary>

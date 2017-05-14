@@ -1,4 +1,5 @@
 ﻿using FSO.Content.Model;
+using FSO.LotView;
 using FSO.LotView.Components;
 using FSO.LotView.Model;
 using FSO.SimAntics.Engine.TSOTransaction;
@@ -299,7 +300,7 @@ namespace FSO.SimAntics.Utils
                 0x8C7F5607, //trees - mulberry
                 0x8BA56284, //trees - fir
                 0x374B44F3, //trees - birch
-                0x658E9089, //trees - crape myrtle
+                //0x658E9089, //trees - crape myrtle
                 0x2B83B971, //trees - apple
                 0x154522AF, //shrub - juniper bush
                 0xD5CA5425, //shrub - rose bush
@@ -825,6 +826,13 @@ namespace FSO.SimAntics.Utils
             var myArch = vm.Context.Architecture;
             var terrain = vm.TSOState.Terrain;
             var size = myArch.Width;
+            var lotsMode = WorldConfig.Current.SurroundingLots;
+            foreach (var world in vm.Context.Blueprint.SubWorlds)
+            {
+                world.Dispose();
+            }
+            vm.Context.Blueprint.SubWorlds.Clear();
+            if (lotsMode == 0) return;
             for (int y=0; y<3; y++)
             {
                 for (int x=0; x<3; x++)
@@ -837,6 +845,7 @@ namespace FSO.SimAntics.Utils
                     tempVM.Init();
 
                     var state = (hollowAdj == null)? null : hollowAdj[y * 3 + x];
+                    if (lotsMode == 1) state = null;
 
                     VMHollowMarshal hollow = null;
                     if (state != null)

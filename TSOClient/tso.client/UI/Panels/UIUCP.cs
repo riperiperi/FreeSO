@@ -90,6 +90,7 @@ namespace FSO.Client.UI.Panels
         /// Bookmarks
         /// </summary>
         public UIButton BookmarkButton { get; set; }
+        public UIButton FriendshipWebButton { get; set; }
 
         /// <summary>
         /// Labels
@@ -163,6 +164,7 @@ namespace FSO.Client.UI.Panels
             SecondFloorButton.OnButtonClick += SecondFloor;
 
             BookmarkButton.OnButtonClick += BookmarkButton_OnButtonClick;
+            FriendshipWebButton.OnButtonClick += FriendshipWebButton_OnButtonClick;
 
             SecondFloorButton.Selected = (Game.Level == Game.Stories);
             FirstFloorButton.Selected = (Game.Level == 1);
@@ -183,6 +185,11 @@ namespace FSO.Client.UI.Panels
             SetMode(UCPMode.CityMode);
             Focus = UCPFocusMode.UCP;
             SetFocus(UCPFocusMode.Game);
+        }
+
+        private void FriendshipWebButton_OnButtonClick(UIElement button)
+        {
+            FindController<CoreGameScreenController>().ToggleRelationshipDialog();
         }
 
         private void BookmarkButton_OnButtonClick(UIElement button)

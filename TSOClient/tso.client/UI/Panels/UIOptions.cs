@@ -14,6 +14,7 @@ using FSO.Client.UI.Controls;
 using FSO.Common;
 using FSO.HIT;
 using FSO.HIT.Model;
+using FSO.Client.UI.Screens;
 
 namespace FSO.Client.UI.Panels
 {
@@ -216,13 +217,21 @@ namespace FSO.Client.UI.Panels
 
         public UILabel UIEffectsLabel { get; set; }
         public UILabel CharacterDetailLabel { get; set; }
+        public UILabel ShadowsLabel { get; set; }
+        public UILabel LightingLabel { get; set; }
+
+        public UILabel TerrainDetailLabel { get; set; }
 
         public UIGraphicOptions()
         {
             var script = this.RenderScript("graphicspanel.uis");
-            UIEffectsLabel.Caption = "City Shadows";
+            
+            UIEffectsLabel.Caption = GameFacade.Strings.GetString("f103", "2");
             UIEffectsLabel.Alignment = TextAlignment.Middle;
-            CharacterDetailLabel.Caption = "Shadow Detail";
+            CharacterDetailLabel.Caption = GameFacade.Strings.GetString("f103", "4");
+            TerrainDetailLabel.Caption = GameFacade.Strings.GetString("f103", "1");
+            ShadowsLabel.Caption = GameFacade.Strings.GetString("f103", "6");
+            LightingLabel.Caption = GameFacade.Strings.GetString("f103", "3");
 
             AntiAliasCheckButton.OnButtonClick += new ButtonClickDelegate(FlipSetting);
             ShadowsCheckButton.OnButtonClick += new ButtonClickDelegate(FlipSetting);
@@ -230,9 +239,21 @@ namespace FSO.Client.UI.Panels
             UIEffectsCheckButton.OnButtonClick += new ButtonClickDelegate(FlipSetting);
             EdgeScrollingCheckButton.OnButtonClick += new ButtonClickDelegate(FlipSetting);
 
+            ShadowsCheckButton.Tooltip = ShadowsLabel.Caption;
+            LightingCheckButton.Tooltip = LightingLabel.Caption;
+            UIEffectsCheckButton.Tooltip = UIEffectsLabel.Caption;
+
             CharacterDetailLowButton.OnButtonClick += new ButtonClickDelegate(ChangeShadowDetail);
             CharacterDetailMedButton.OnButtonClick += new ButtonClickDelegate(ChangeShadowDetail);
             CharacterDetailHighButton.OnButtonClick += new ButtonClickDelegate(ChangeShadowDetail);
+
+            TerrainDetailLowButton.OnButtonClick += new ButtonClickDelegate(ChangeSurroundingDetail);
+            TerrainDetailMedButton.OnButtonClick += new ButtonClickDelegate(ChangeSurroundingDetail);
+            TerrainDetailHighButton.OnButtonClick += new ButtonClickDelegate(ChangeSurroundingDetail);
+
+            TerrainDetailLowButton.Tooltip = GameFacade.Strings.GetString("f103", "8");
+            TerrainDetailMedButton.Tooltip = GameFacade.Strings.GetString("f103", "9");
+            TerrainDetailHighButton.Tooltip = GameFacade.Strings.GetString("f103", "10");
 
             SettingsChanged();
         }
@@ -241,7 +262,7 @@ namespace FSO.Client.UI.Panels
         {
             var settings = GlobalSettings.Default;
             if (button == AntiAliasCheckButton && !GameFacade.DirectX) settings.AntiAlias = !(settings.AntiAlias);
-            else if (button == ShadowsCheckButton) settings.SimulationShadows = !(settings.SimulationShadows);
+            else if (button == ShadowsCheckButton) settings.SmoothZoom = !(settings.SmoothZoom);
             else if (button == LightingCheckButton) settings.Lighting = !(settings.Lighting);
             else if (button == UIEffectsCheckButton) settings.CityShadows = !(settings.CityShadows);
             else if (button == EdgeScrollingCheckButton) settings.EdgeScroll = !(settings.EdgeScroll);
@@ -259,11 +280,21 @@ namespace FSO.Client.UI.Panels
             SettingsChanged();
         }
 
+        private void ChangeSurroundingDetail(UIElement button)
+        {
+            var settings = GlobalSettings.Default;
+            if (button == TerrainDetailLowButton) settings.SurroundingLotMode = 0;
+            else if (button == TerrainDetailMedButton) settings.SurroundingLotMode = 1;
+            else if (button == TerrainDetailHighButton) settings.SurroundingLotMode = 2;
+            GlobalSettings.Default.Save();
+            SettingsChanged();
+        }
+
         private void SettingsChanged()
         {
             var settings = GlobalSettings.Default;
             AntiAliasCheckButton.Selected = settings.AntiAlias; //antialias for render targets
-            ShadowsCheckButton.Selected = settings.SimulationShadows;
+            ShadowsCheckButton.Selected = settings.SmoothZoom;
             LightingCheckButton.Selected = settings.Lighting;
             UIEffectsCheckButton.Selected = settings.CityShadows; //instead of being able to disable UI transparency, you can toggle City Shadows.
             EdgeScrollingCheckButton.Selected = settings.EdgeScroll;
@@ -274,9 +305,24 @@ namespace FSO.Client.UI.Panels
             CharacterDetailHighButton.Selected = (settings.ShadowQuality > 1024);
 
             //not used right now! We need to determine if this should be ingame or not... It affects the density of grass blades on the simulation terrain.
-            TerrainDetailLowButton.Disabled = true;
-            TerrainDetailMedButton.Disabled = true;
-            TerrainDetailHighButton.Disabled = true;
+            TerrainDetailLowButton.Selected = (settings.SurroundingLotMode == 0);
+            TerrainDetailMedButton.Selected = (settings.SurroundingLotMode == 1);
+            TerrainDetailHighButton.Selected = (settings.SurroundingLotMode == 2);
+
+            var oldSurrounding = LotView.WorldConfig.Current.SurroundingLots;
+            LotView.WorldConfig.Current = new LotView.WorldConfig()
+            {
+                AdvancedLighting = settings.Lighting,
+                SmoothZoom = settings.SmoothZoom,
+                SurroundingLots = settings.SurroundingLotMode
+            };
+
+            var vm = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;
+            if (vm != null)
+            {
+                vm.Context.World.ChangedWorldConfig(GameFacade.GraphicsDevice);
+                if (oldSurrounding != settings.SurroundingLotMode) SimAntics.Utils.VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+            }
         }
     }
 }

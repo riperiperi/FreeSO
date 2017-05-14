@@ -83,6 +83,29 @@ namespace FSO.SimAntics.Entities
             }
             return positions;
         }
+        
+        public Rectangle? LightBounds()
+        {
+            var bObj = Objects[0];
+            if (bObj.Container != null || bObj is VMAvatar) return null;
+
+            Rectangle? result = null;
+            foreach (var obj in Objects)
+            {
+                var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
+                if ((flags & VMEntityFlags.DisallowPersonIntersection) > 0 || (flags & VMEntityFlags.AllowPersonIntersection) == 0)
+                {
+                    var footprint = obj.Footprint;
+                    if (footprint != null)
+                    {
+                        var combR = new Rectangle(footprint.x1, footprint.y1, footprint.x2 - footprint.x1, footprint.y2 - footprint.y1);
+                        if (result == null) result = combR;
+                        else result = Rectangle.Union(result.Value, combR);
+                    } 
+                }
+            }
+            return result;
+        }
 
         public VMEntity GetInteractionGroupLeader(VMEntity obj)
         {

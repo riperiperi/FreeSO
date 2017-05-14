@@ -34,6 +34,7 @@ namespace FSO.LotView.Utils
         public ushort NumDynamicSprites;
 
         public ushort Room;
+        public sbyte Level;
 
         public DGRPRenderer(DGRP group)
         {
@@ -199,6 +200,7 @@ namespace FSO.LotView.Utils
                     sprite.WorldPosition.Z = sprite.WorldPosition.Y;
                     sprite.WorldPosition.Y = y;
                     sprite.Room = ((dgrpSprite.Flags & DGRPSpriteFlags.Luminous) > 0 && Room != 65534 && Room != 65533)?(ushort)65535:Room;
+                    sprite.Floor = Level;
                 }
                 Bounding = new Rectangle(minX, minY, maxX - minX, maxY - minY);
 

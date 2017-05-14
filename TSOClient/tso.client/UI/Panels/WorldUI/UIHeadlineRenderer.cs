@@ -186,7 +186,7 @@ namespace FSO.Client.UI.Panels.WorldUI
     {
         public VMHeadlineRenderer Get(VMRuntimeHeadline headline)
         {
-            return new UIHeadlineRenderer(headline);
+            return (headline.Operand.Group == VMSetBalloonHeadlineOperandGroup.Money)? new UIMoneyHeadline(headline) : ((VMHeadlineRenderer)new UIHeadlineRenderer(headline));
         }
     }
 }

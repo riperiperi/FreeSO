@@ -187,7 +187,7 @@ namespace FSO.Client.Controllers
 
         public void ShowPersonPage(UserReference user)
         {
-            if(user.Type == UserReferenceType.AVATAR)
+            if(user?.Type == UserReferenceType.AVATAR)
             {
                 ShowPersonPage(user.Id);
             }
@@ -205,6 +205,16 @@ namespace FSO.Client.Controllers
 
         public void ShowPersonPage(uint avatarId){
             ((PersonPageController)Screen.PersonPage.Controller).Show(avatarId);
+        }
+
+        public void ToggleRelationshipDialog()
+        {
+            ((RelationshipDialogController)Screen.Relationships.Controller).Toggle(Network.MyCharacter);
+        }
+
+        public void ShowRelationshipDialog(uint avatarID)
+        {
+            ((RelationshipDialogController)Screen.Relationships.Controller).Show(avatarID);
         }
 
         public void ShowMyPersonPage(){

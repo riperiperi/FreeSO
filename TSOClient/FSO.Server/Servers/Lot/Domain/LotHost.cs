@@ -580,10 +580,18 @@ namespace FSO.Server.Servers.Lot.Domain
             if (Container.IsAvatarOnLot(session.AvatarId)) return false; //already on the lot.
             lock (_Visitors)
             {
-                if (_Visitors.Count >= ((Context.HighMax)?128:24) || ShuttingDown)
+                if (ShuttingDown || (_Visitors.Count >= ((Context.HighMax)?128:24)))
                 {
-                    //cannot join
-                    return false;
+                    if (ShuttingDown) return false; //cannot join
+
+                    //check if this user has special permissions. should only happen when a lot is full
+                    //let them in anyways if they do
+                    var avatar = DAFactory.Get().Avatars.Get(session.AvatarId);
+                    if (avatar.moderation_level == 0 && !Context.JobLot)
+                    {
+                        if (DAFactory.Get().Roommates.Get(session.AvatarId, Context.DbId) == null)
+                            return false; //not a roommate
+                    }
                 }
 
                 session.SetAttribute("currentLot", ((Context.Id & 0x40000000) > 0)?(int)Context.Id:Context.DbId);

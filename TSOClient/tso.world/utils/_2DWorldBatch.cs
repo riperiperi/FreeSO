@@ -27,6 +27,7 @@ namespace FSO.LotView.Utils
         protected Matrix World;
         protected Matrix View;
         protected Matrix Projection;
+        protected Matrix ViewProjection;
 
         public GraphicsDevice Device;
         protected Effect Effect;
@@ -47,6 +48,7 @@ namespace FSO.LotView.Utils
         public bool OutputDepth = false;
         public bool OBJIDMode = false;
         public Texture2D AmbientLight;
+        public Texture2D AdvLight;
 
         private Vector2 Scroll;
         private int LastWidth;
@@ -88,6 +90,10 @@ namespace FSO.LotView.Utils
         {
             this.Device = device;
             this.Effect = WorldContent._2DWorldBatchEffect;
+            Effect.Parameters["OutsideLight"].SetValue(Color.White.ToVector4());
+            Effect.Parameters["OutsideDark"].SetValue(new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
+            Effect.Parameters["MaxLight"].SetValue(Color.White.ToVector4());
+            Effect.Parameters["WorldToLightFactor"].SetValue(new Vector3(1f / (3 * 75), 1f / (3 * 2.95f), 1f / (3 * 75)));
             //TODO: World size
             Sprites = new List<_2DSpriteGroup>();
 
@@ -279,13 +285,16 @@ namespace FSO.LotView.Utils
             {
                 Device.BlendState = BlendState.AlphaBlend;
                 //  set the only parameter this effect takes.
-                effect.Parameters["dirToFront"].SetValue(FrontDirForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation));
+                var frontDir = FrontDirForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation);
+                effect.Parameters["dirToFront"].SetValue(frontDir);
                 effect.Parameters["offToBack"].SetValue(BackOffForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation));
-                effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
+                //frontDir /= 3;
+                //WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75)));
                 var mat = this.WorldCamera.View * this.WorldCamera.Projection;
-                effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
+                effect.Parameters["worldViewProjection"].SetValue(mat);
+                var inv = Matrix.Invert(mat);
+                effect.Parameters["iWVP"].SetValue(inv);
                 effect.Parameters["rotProjection"].SetValue(((WorldCamera)this.WorldCamera).GetRotationMatrix() * this.WorldCamera.Projection);
-                effect.Parameters["ambientLight"].SetValue(AmbientLight);
                 //effect.Parameters["depthOutMode"].SetValue(outputDepth && (!FSOEnvironment.UseMRT));
             }
 
@@ -356,12 +365,14 @@ namespace FSO.LotView.Utils
             var effect = this.Effect;
             Device.BlendState = BlendState.AlphaBlend;
             //  set the only parameter this effect takes.
-            effect.Parameters["dirToFront"].SetValue(FrontDirForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation));
+            var frontDir = FrontDirForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation);
+            effect.Parameters["dirToFront"].SetValue(frontDir);
             effect.Parameters["offToBack"].SetValue(BackOffForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation));
-            effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
+            //frontDir /= 3;
+            //WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75)));
             var mat = this.WorldCamera.View * this.WorldCamera.Projection;
-            effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
-            effect.Parameters["ambientLight"].SetValue(AmbientLight);
+            effect.Parameters["worldViewProjection"].SetValue(mat);
+            effect.Parameters["iWVP"].SetValue(Matrix.Invert(mat));
             //effect.Parameters["depthOutMode"].SetValue(OutputDepth && (!FSOEnvironment.UseMRT));
 
             foreach (var buffer in cache)
@@ -471,22 +482,20 @@ namespace FSO.LotView.Utils
 
             effect.CurrentTechnique = group.Technique;
             EffectPassCollection passes = group.Technique.Passes;
-            for (int i = 0; i < passes.Count; i++)
+            
+            EffectPass pass = (passes.Count == 1)?passes[0]:passes[WorldConfig.Current.PassOffset];
+            pass.Apply();
+            if (group.VertBuf != null)
             {
-                EffectPass pass = passes[i];
-                pass.Apply();
-                if (group.VertBuf != null)
-                {
-                    Device.SetVertexBuffer(group.VertBuf);
-                    Device.Indices = group.IndexBuf;
-                    Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, group.Primitives);
-                }
-                else
-                {
-                    Device.DrawUserIndexedPrimitives<_2DSpriteVertex>(
-                        PrimitiveType.TriangleList, group.Vertices, 0, group.Vertices.Length,
-                        group.Indices, 0, group.Indices.Length / 3);
-                }
+                Device.SetVertexBuffer(group.VertBuf);
+                Device.Indices = group.IndexBuf;
+                Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, group.Primitives);
+            }
+            else
+            {
+                Device.DrawUserIndexedPrimitives<_2DSpriteVertex>(
+                    PrimitiveType.TriangleList, group.Vertices, 0, group.Vertices.Length,
+                    group.Indices, 0, group.Indices.Length / 3);
             }
         }
 
@@ -530,16 +539,16 @@ namespace FSO.LotView.Utils
 
                     vertices[vertexCount++] = new _2DSpriteVertex(
                         new Vector3(dstRectangle.Left, dstRectangle.Top, 0)
-                        , GetUV(texture, left, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room);
+                        , GetUV(texture, left, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room, sprite.Floor);
                     vertices[vertexCount++] = new _2DSpriteVertex(
                         new Vector3(dstRectangle.Right, dstRectangle.Top, 0)
-                        , GetUV(texture, right, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room);
+                        , GetUV(texture, right, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room, sprite.Floor);
                     vertices[vertexCount++] = new _2DSpriteVertex(
                         new Vector3(dstRectangle.Right, dstRectangle.Bottom, 0)
-                        , GetUV(texture, right, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room);
+                        , GetUV(texture, right, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room, sprite.Floor);
                     vertices[vertexCount++] = new _2DSpriteVertex(
                         new Vector3(dstRectangle.Left, dstRectangle.Bottom, 0)
-                        , GetUV(texture, left, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room);
+                        , GetUV(texture, left, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room, sprite.Floor);
                 }
 
                 VertexBuffer vb = null;
@@ -614,6 +623,9 @@ namespace FSO.LotView.Utils
                     transX - 1.5f, transX + width - 1.5f, transY - height - 0.5f, transY - 0.5f, 0, 1);
             }
             //offset pixels by a little bit so that the center of them lies on the sample area. Avoids graphical bugs.
+
+            ViewProjection = View * Projection;
+            Effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
         }
 
         private Dictionary<ITextureProvider, Texture2D> _TextureCache = new Dictionary<ITextureProvider, Texture2D>();

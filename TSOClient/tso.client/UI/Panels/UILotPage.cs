@@ -307,7 +307,7 @@ namespace FSO.Client.UI.Panels
                 }
             }
 
-            var canJoin = isMyProperty || isRoommate || isOnline;
+            var canJoin = isMyProperty || isRoommate || isOnline || GameFacade.EnableMod;
 
             HouseNameButton.Disabled = !isMyProperty;
 

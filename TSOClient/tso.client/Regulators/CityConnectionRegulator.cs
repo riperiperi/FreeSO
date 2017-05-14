@@ -118,7 +118,7 @@ namespace FSO.Client.Regulators
                 {
                     Client.Write(new Server.Protocol.Electron.Packets.KeepAlive());
                 }
-            }, 20000); //keep alive every 20 seconds. prevents disconnection by aggressive NAT.
+            }, 10000); //keep alive every 10 seconds. prevents disconnection by aggressive NAT.
         }
 
         public void Connect(CityConnectionMode mode, ShardSelectorServletRequest shard)

@@ -50,7 +50,7 @@ namespace FSO.Client.GameContent
         /// <returns>The retrieved string, or null if not found.</returns>
         public string GetString(string table, string id)
         {
-            return GetString("UIText", table, id);
+            return GetString("UIText", table, id) ?? "";
         }
 
         /// <summary>

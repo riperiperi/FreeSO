@@ -103,8 +103,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             if (Verified) return true;
             ObjectPID = 0;
-            if (caller == null || ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate) return false;
+            var permissions = ((VMTSOAvatarState)caller.TSOState).Permissions;
+            if (caller == null || permissions < VMTSOAvatarPermissions.Roommate) return false;
             VMEntity obj = vm.GetObjectById(ObjectID);
+            if (obj != null && permissions == VMTSOAvatarPermissions.Admin)
+            {
+                VMNetLockCmd.LockObj(vm, obj);
+                return true; //admins can always deete
+            }
             if (obj == null || (obj is VMAvatar) || obj.IsUserMovable(vm.Context, true) != VMPlacementError.Success) return false;
             if ((((VMGameObject)obj).Disabled & VMGameObjectDisableFlags.TransactionIncomplete) > 0) return false; //can't delete objects mid trasaction...
             VMNetLockCmd.LockObj(vm, obj);

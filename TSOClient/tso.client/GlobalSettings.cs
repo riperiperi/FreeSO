@@ -33,7 +33,7 @@ namespace FSO.Client
             { "ScaleUI", "false"},
             { "CityShadows", "false"},
             { "ShadowQuality", "2048"},
-            { "SimulationShadows", "true"},
+            { "SmoothZoom", "true"},
             { "AntiAlias", "false"},
             { "EdgeScroll", "true"},
             { "Lighting", "true"},
@@ -53,6 +53,7 @@ namespace FSO.Client
             { "DebugGender", "true"},
             { "DebugSkin", "0"},
             { "LanguageCode", "1"},
+            { "SurroundingLotMode", "2" },
 
             { "UseCustomServer", "true" },
             { "GameEntryUrl", "http://api.freeso.org" },
@@ -68,14 +69,11 @@ namespace FSO.Client
             set { _DefaultValues = value; }
         }
 
-        public bool ShowHints { get; set; }
         public string CurrentLang { get; set; }
         public string ClientVersion { get; set; }
-        public bool DebugEnabled { get; set; }
-        public bool ScaleUI { get; set; }
         public bool CityShadows { get; set; }
         public int ShadowQuality { get; set; }
-        public bool SimulationShadows { get; set; }
+        public bool SmoothZoom { get; set; }
         public bool AntiAlias { get; set; }
         public bool EdgeScroll { get; set; }
         public bool Lighting { get; set; }
@@ -102,5 +100,6 @@ namespace FSO.Client
 
         public int TargetRefreshRate { get; set; }
         public bool EnableTTS { get; set; }
+        public int SurroundingLotMode { get; set; }
     }
 }

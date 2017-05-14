@@ -128,6 +128,7 @@ namespace FSO.LotView.Components
                                 _Sprite.Pixel = world._2D.GetTexture(sprite.Frames[frameNum]);
                                 _Sprite.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, _Sprite.Pixel.Width, _Sprite.Pixel.Height);
                                 _Sprite.Room = room;
+                                _Sprite.Floor = level;
                                 world._2D.Draw(_Sprite);
 
                                 //draw any corners on top
@@ -153,6 +154,7 @@ namespace FSO.LotView.Components
                                     tcS.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, tcS.Pixel.Width, tcS.Pixel.Height);
                                     tcS.Depth = ArchZBuffers[21 + (3 - (int)world.Zoom)];
                                     tcS.Room = room;
+                                    tcS.Floor = level;
                                     world._2D.Draw(tcS);
                                 }
 
@@ -167,6 +169,7 @@ namespace FSO.LotView.Components
                                     tcS.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, tcS.Pixel.Width, tcS.Pixel.Height);
                                     tcS.Depth = ArchZBuffers[24 + (3 - (int)world.Zoom)];
                                     tcS.Room = room;
+                                    tcS.Floor = level;
                                     world._2D.Draw(tcS);
                                 }
 
@@ -181,6 +184,7 @@ namespace FSO.LotView.Components
                                     tcS.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, tcS.Pixel.Width, tcS.Pixel.Height);
                                     tcS.Depth = ArchZBuffers[27 + (3 - (int)world.Zoom)];
                                     tcS.Room = room;
+                                    tcS.Floor = level;
                                     world._2D.Draw(tcS);
                                 }
 
@@ -195,6 +199,7 @@ namespace FSO.LotView.Components
                                     tcS.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, tcS.Pixel.Width, tcS.Pixel.Height);
                                     tcS.Depth = ArchZBuffers[24 + (3 - (int)world.Zoom)];
                                     tcS.Room = room;
+                                    tcS.Floor = level;
                                     world._2D.Draw(tcS);
                                 }
                                 }
@@ -203,6 +208,7 @@ namespace FSO.LotView.Components
                             {
                                 var floor = GetFloorSprite(floorContent.Get(comp.Pattern), 0, world);
                                 floor.Room = room;
+                                floor.Floor = level;
                                 if (floor.Pixel != null) world._2D.Draw(floor);
                             }
                         }
@@ -214,6 +220,7 @@ namespace FSO.LotView.Components
 
                             var floor = GetAirSprite(world);
                             floor.Room = 65535;
+                            floor.Floor = level;
                             if (floor.Pixel != null) world._2D.Draw(floor);
                         }
                     }

@@ -12,6 +12,7 @@ namespace FSO.Server.Database.DA.Avatars
 
         DbAvatar Get(uint id);
         int GetPrivacyMode(uint id);
+        int GetModerationLevel(uint id);
         DbJobLevel GetCurrentJobLevel(uint avatar_id);
         List<DbJobLevel> GetJobLevels(uint avatar_id);
         IEnumerable<DbAvatar> All(int shard_id);

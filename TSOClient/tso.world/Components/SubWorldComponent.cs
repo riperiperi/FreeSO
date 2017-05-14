@@ -1,4 +1,5 @@
 ﻿using FSO.Common.Rendering.Framework;
+using FSO.Common.Utils;
 using FSO.LotView.Model;
 using FSO.LotView.Utils;
 using Microsoft.Xna.Framework;
@@ -77,7 +78,7 @@ namespace FSO.LotView.Components
             var recacheWalls = false;
             var recacheObjects = false;
 
-            if (TicksSinceLight++ > 60 * 4) damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
+            if (TicksSinceLight++ > 60 * 4) damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
 
             foreach (var item in damage)
             {
@@ -148,13 +149,12 @@ namespace FSO.LotView.Components
 
         public void DrawArch(GraphicsDevice gd, WorldState parentState)
         {
-            var parentLight = parentState._2D.AmbientLight;
-            parentState._2D.AmbientLight = State.AmbientLight;
-
             var parentScroll = parentState.CenterTile;
             parentState.CenterTile += GlobalPosition; //TODO: vertical offset
-            
+
             var pxOffset = -parentState.WorldSpace.GetScreenOffset();
+
+            State.PrepareLighting();
 
             parentState._2D.SetScroll(pxOffset);
             Blueprint.Terrain.Draw(gd, parentState);
@@ -166,24 +166,22 @@ namespace FSO.LotView.Components
             parentState.SilentLevel = level;
 
             parentState.CenterTile = parentScroll;
-            parentState._2D.AmbientLight = parentLight;
+            parentState.PrepareLighting();
         }
 
         public void DrawObjects(GraphicsDevice gd, WorldState parentState)
         {
-            var parentLight = parentState._2D.AmbientLight;
-            parentState._2D.AmbientLight = State.AmbientLight;
-
             var parentScroll = parentState.CenterTile;
             parentState.CenterTile += GlobalPosition; //TODO: vertical offset
 
+            State.PrepareLighting();
             var pxOffset = -parentState.WorldSpace.GetScreenOffset();
 
             parentState._2D.SetScroll(pxOffset);
             parentState._2D.RenderCache(StaticObjectsCache);
 
             parentState.CenterTile = parentScroll;
-            parentState._2D.AmbientLight = parentLight;
+            parentState.PrepareLighting();
         }
 
         public override void Dispose()

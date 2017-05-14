@@ -53,6 +53,10 @@
     <Compile Include="Components\SubWorldComponent.cs" />
     <Compile Include="Components\TerrainComponent.cs" />
     <Compile Include="Components\WallComponent.cs" />
+    <Compile Include="LMap\GradVertex.cs" />
+    <Compile Include="LMap\LightData.cs" />
+    <Compile Include="LMap\LMapBatch.cs" />
+    <Compile Include="LMap\ShadowGeometry.cs" />
     <Compile Include="Model\AvatarDisplayFlags.cs" />
     <Compile Include="Model\Blueprint.cs" />
     <Compile Include="Model\Direction.cs" />
@@ -83,6 +87,7 @@
     <Compile Include="World2D.cs" />
     <Compile Include="World3D.cs" />
     <Compile Include="WorldComponent.cs" />
+    <Compile Include="WorldConfig.cs" />
     <Compile Include="WorldContent.cs" />
     <Compile Include="WorldState.cs" />
   </ItemGroup>
@@ -94,6 +99,7 @@
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="Tao.Sdl">
       <HintPath>$(MSBuildExtensionsPath)\..\MonoGame\v3.0\Assemblies\WindowsGL\Tao.Sdl.dll</HintPath>
     </Reference>

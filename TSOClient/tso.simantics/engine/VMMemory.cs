@@ -757,6 +757,9 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMVariableScope.TempXL:
                     context.Thread.TempXL[data] = value;
                     return true;
+                case VMVariableScope.MoneyOverHead32Bit:
+                    ((VMAvatar)context.Caller).ShowMoneyHeadline(value);
+                    return true;
                 default:
                     return SetVariable(context, scope, data, (short)value); //truncate value and set the relevant 16 bit var to it.
             }

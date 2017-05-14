@@ -241,6 +241,7 @@ namespace FSO.Server.DataService.Providers
             var lot = entity as Lot;
             if (lot.DbId == 0) { throw new SecurityException("Unclaimed lots cannot be mutated"); }
 
+            var roomies = lot.Lot_RoommateVec;
             switch (path)
             {
                 //Owner only
@@ -274,7 +275,6 @@ namespace FSO.Server.DataService.Providers
 
                 //roommate only
                 case "Lot_Thumbnail":
-                    var roomies = lot.Lot_RoommateVec;
                     context.DemandAvatars(roomies, AvatarPermissions.WRITE);
                     //TODO: needs to be generic data, png, size 288x288, less than 1MB
                     break;
@@ -286,7 +286,7 @@ namespace FSO.Server.DataService.Providers
                     break;
                 case "Lot_LotAdmitInfo.LotAdmitInfo_AdmitList":
                 case "Lot_LotAdmitInfo.LotAdmitInfo_BanList":
-                    context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                    context.DemandAvatars(roomies, AvatarPermissions.WRITE);
                     int atype = (path == "Lot_LotAdmitInfo.LotAdmitInfo_AdmitList") ? 0 : 1;
                     using (var db = DAFactory.Get())
                     { //need to check db constraints
@@ -316,7 +316,7 @@ namespace FSO.Server.DataService.Providers
                     }
                     break;
                 case "Lot_LotAdmitInfo.LotAdmitInfo_AdmitMode":
-                    context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                    context.DemandAvatars(roomies, AvatarPermissions.WRITE);
                     //can only set valid values
                     var mode = (byte)value;
                     if (mode < 0 || mode > 3) 

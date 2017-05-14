@@ -23,6 +23,8 @@ namespace FSO.SimAntics.NetPlay.Drivers
         private List<VMNetCommand> QueuedCmds;
 
         private const int TICKS_PER_PACKET = 4;
+        private const int INACTIVITY_TICKS_WARN = 15 * 60 * 30;
+        private const int INACTIVITY_TICKS_KICK = 20 * 60 * 30;
         private uint ProblemTick;
         private List<VMNetTick> TickBuffer;
 
@@ -287,7 +289,12 @@ namespace FSO.SimAntics.NetPlay.Drivers
                         ClientsToDC.Add(client.Value);
                         continue;
                     }
-
+                    if (++client.Value.InactivityTicks >= INACTIVITY_TICKS_WARN)
+                    {
+                        if (client.Value.InactivityTicks >= INACTIVITY_TICKS_KICK) ClientsToDC.Add(client.Value);
+                        else if (client.Value.InactivityTicks == INACTIVITY_TICKS_WARN) SendDirectCommand(client.Value,
+                            new VMNetTimeoutNotifyCmd() { TimeRemaining = (INACTIVITY_TICKS_KICK - INACTIVITY_TICKS_WARN) / 30 });
+                    }
                     var packets = client.Value.GetMessages();
                     while (packets.Count > 0)
                     {
@@ -363,6 +370,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     ProblemTick = ((VMRequestResyncCmd)cmd.Command).TickID;
                     ClientsToSyncLater.Add(client);
                 }
+            } else
+            {
+                client.InactivityTicks = 0;
             }
 
             cmd.Command.ActorUID = client.PersistID;

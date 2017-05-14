@@ -47,6 +47,8 @@ namespace FSO.Content
             Files[0x1B00856DDBAC] = "uigraphics/chat/balloonpointersadside.bmp";
             Files[0x1B10856DDBAC] = "uigraphics/chat/balloontilessad.bmp";
 
+            Files[0x1972454856DDBAC] = "uigraphics/friendshipweb/f_web_inbtn.bmp";
+            Files[0x3D3AEF0856DDBAC] = "uigraphics/friendshipweb/f_web_outbtn.bmp";
             //./uigraphics/eods/costumetrunk/eod_costumetrunkbodySkinBtn.bmp
             Pointers[0x0000028800000001] = 0x0000094600000001;
         }

@@ -73,6 +73,7 @@
     <Compile Include="Controllers\Panels\LotAdmitController.cs" />
     <Compile Include="Controllers\Panels\LotPageController.cs" />
     <Compile Include="Controllers\Panels\PersonPageController.cs" />
+    <Compile Include="Controllers\Panels\RelationshipDialogController.cs" />
     <Compile Include="Controllers\RoommateRequestController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
     <Compile Include="GameContent\UIFileIDs.cs" />
@@ -115,6 +116,7 @@
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobbyController.cs" />
     <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
     <Compile Include="UI\Panels\LotControls\UIRoofer.cs" />
+    <Compile Include="UI\Panels\UITimeOutDialog.cs" />
     <Compile Include="UI\Panels\UIAsyncPriceDialog.cs" />
     <Compile Include="UI\Panels\UIBonusDialog.cs" />
     <Compile Include="UI\Panels\UIBookmarks.cs" />
@@ -146,10 +148,12 @@
     <Compile Include="UI\Panels\UIPersonGrid.cs" />
     <Compile Include="UI\Panels\UIPropertyLog.cs" />
     <Compile Include="UI\Panels\UIChatDialog.cs" />
+    <Compile Include="UI\Panels\UIRelationshipDialog.cs" />
     <Compile Include="UI\Panels\UISetupBackground.cs" />
     <Compile Include="UI\Panels\UITerrainHighlight.cs" />
     <Compile Include="UI\Panels\UIWebDownloaderDialog.cs" />
     <Compile Include="UI\Panels\WorldUI\UIHeadlineRenderer.cs" />
+    <Compile Include="UI\Panels\WorldUI\UIMoneyHeadline.cs" />
     <Compile Include="UI\UIRelationshipBar.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
     <Compile Include="Utils\Endian.cs" />
@@ -485,11 +489,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Linux.csproj">
-      <Project>{35253ce1-c864-4cd3-8249-4d1319748e8f}</Project>
-      <Name>MonoGame.Framework.Linux</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Net.WindowsGL.csproj">
       <Project>{6d6009f4-0afb-4806-89d7-7945f20270f5}</Project>
       <Name>MonoGame.Framework.Net.WindowsGL</Name>

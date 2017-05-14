@@ -94,7 +94,7 @@ namespace FSO.Client.UI.Panels
             {
                 //temporary until data service can inform people they're mod
                 //now i know what you're thinking - but these requests are permission checked server side anyways
-                UIPersonPage.EnableMod = true;
+                GameFacade.EnableMod = true;
             }
 
             if (serverNameBox.CurrentText != GlobalSettings.Default.GameEntryUrl)

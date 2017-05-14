@@ -235,6 +235,7 @@ namespace FSO.LotView
             Promise<Texture2D> depthTexture = null;
             state._2D.OBJIDMode = false;
             Rectangle bounds = new Rectangle();
+            state.ClearLighting(true);
             using (var buffer = state._2D.WithBuffer(BUFFER_THUMB, ref bufferTexture, BUFFER_THUMB_DEPTH, ref depthTexture))
             {
                 _2d.SetScroll(new Vector2());
@@ -319,7 +320,7 @@ namespace FSO.LotView
             Blueprint.Cutaway = new bool[Blueprint.Cutaway.Length];
 
             var _2d = state._2D;
-            _2d.AmbientLight = TextureGenerator.GetPxWhite(gd);
+            state.ClearLighting(false);
             Promise<Texture2D> bufferTexture = null;
             var lastLight = state.OutsideColor;
             state.OutsideColor = Color.White;
@@ -352,7 +353,7 @@ namespace FSO.LotView
             }
 
             //return things to normal
-            _2d.AmbientLight = state.AmbientLight;
+            //state.PrepareLighting();
             state.OutsideColor = lastLight;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
@@ -400,7 +401,9 @@ namespace FSO.LotView
             var recacheObjects = false;
             var drawImmediate = false;
 
-            if (TicksSinceLight++ > 60 * 4) damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
+            var lightChangeType = 0;
+
+            if (TicksSinceLight++ > 60 * 4) damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
 
             WorldObjectRenderInfo info = null;
 
@@ -427,14 +430,39 @@ namespace FSO.LotView
                         redrawFloor = redrawWall = redrawStaticObjects = true;
                         break;
                     case BlueprintDamageType.LIGHTING_CHANGED:
+                        if (lightChangeType >= 2) break;
+                        var room = (ushort)item.TileX;
                         redrawFloor = true;
                         redrawWall = true;
                         redrawStaticObjects = true;
 
+                        state.Light?.InvalidateRoom(room);
                         Blueprint.GenerateRoomLights();
                         state.OutsideColor = Blueprint.RoomColors[1];
                         state._3D.RoomLights = Blueprint.RoomColors;
-                        state._2D.AmbientLight.SetData(Blueprint.RoomColors);
+
+                        if (state.AmbientLight != null)
+                        {
+                            state.AmbientLight.SetData(Blueprint.RoomColors);
+                        }
+                        TicksSinceLight = 0;
+                        break;
+                    case BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED:
+                        if (lightChangeType >= 1) break;
+                        lightChangeType = 1;
+                        redrawFloor = true;
+                        redrawWall = true;
+                        redrawStaticObjects = true;
+
+                        state.Light?.InvalidateOutdoors();
+                        Blueprint.GenerateRoomLights();
+                        state.OutsideColor = Blueprint.RoomColors[1];
+                        state._3D.RoomLights = Blueprint.RoomColors;
+
+                        if (state.AmbientLight != null)
+                        {
+                            state.AmbientLight.SetData(Blueprint.RoomColors);
+                        }
                         TicksSinceLight = 0;
                         break;
                     case BlueprintDamageType.OBJECT_MOVE:
@@ -470,6 +498,18 @@ namespace FSO.LotView
                         Blueprint.RoofComp.StyleDirty = true;
                         break;
                     case BlueprintDamageType.ROOM_CHANGED:
+                        if (state.Light != null)
+                        {
+                            for (sbyte i = 0; i < Blueprint.RoomMap.Length; i++)
+                            {
+                                state.Light.SetRoomMap(i, Blueprint.RoomMap[i]);
+                            }
+                            if (lightChangeType < 2)
+                            {
+                                lightChangeType = 2;
+                                state.Light.InvalidateAll();
+                            }
+                        }
                         Blueprint.RoofComp.ShapeDirty = true;
                         break;
                     case BlueprintDamageType.FLOOR_CHANGED:
@@ -485,6 +525,7 @@ namespace FSO.LotView
             if (recacheWalls) redrawWall = true;
             if (recacheObjects) redrawStaticObjects = true;
             damage.Clear();
+            state.Light?.ParseInvalidated((sbyte)(state.Level + ((state.DrawRoofs)?1:0)));
 
             //scroll buffer loads in increments of SCROLL_BUFFER
             var newOff = GetScrollIncrement(pxOffset, state);
@@ -503,6 +544,7 @@ namespace FSO.LotView
                 _2d.Resume(); //clear the sprite buffer before we begin drawing what we're going to cache
                 Blueprint.WallComp.Draw(gd, state);
                 ClearDrawBuffer(StaticWallCache);
+                state.PrepareLighting();
                 _2d.End(StaticWallCache, true);
             }
 
@@ -539,6 +581,7 @@ namespace FSO.LotView
 
             if (!drawImmediate)
             {
+                state.PrepareLighting();
                 if (redrawFloor)
                 {
                     /** Draw archetecture to a texture **/
@@ -548,7 +591,9 @@ namespace FSO.LotView
                     {
                         while (buffer.NextPass())
                         {
+                            WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(true);
                             DrawFloorBuf(gd, state, pxOffset);
+                            WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(false);
                         }
                     }
                     StaticFloor = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
@@ -642,7 +687,9 @@ namespace FSO.LotView
             {
                 _2d.SetScroll(pxOffset);
                 _2d.Begin(state.Camera);
+                WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(true);
                 DrawFloorBuf(gd, state, pxOffset);
+                WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(false);
                 DrawWallBuf(gd, state, pxOffset);
                 DrawObjBuf(gd, state, pxOffset);
             }

@@ -137,6 +137,7 @@ namespace FSO.Client.UI.Panels
             vm.OnBreakpoint += Vm_OnBreakpoint;
 
             Cheats = new UICheatHandler(this);
+            this.Add(Cheats);
             AvatarDS = new UIAvatarDataServiceUpdater(this);
             EODs = new UIEODController(this);
         }
@@ -327,40 +328,43 @@ namespace FSO.Client.UI.Panels
                         {
                             obj = GotoObject;
                         }
-                        obj = obj.MultitileGroup.GetInteractionGroupLeader(obj);
-                        if (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)
+                        if (obj != null)
                         {
-                            var flags = ((VMGameObject)obj).Disabled;
+                            obj = obj.MultitileGroup.GetInteractionGroupLeader(obj);
+                            if (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)
+                            {
+                                var flags = ((VMGameObject)obj).Disabled;
 
-                            if ((flags & VMGameObjectDisableFlags.ForSale) > 0)
-                            {
-                                //for sale
-                                var retailPrice = obj.MultitileGroup.Price; //wrong... should get this from catalog
-                                var salePrice = obj.MultitileGroup.SalePrice;
-                                ShowErrorTooltip(state, 22, true, "$"+retailPrice.ToString("##,#0"), "$"+salePrice.ToString("##,#0"));
+                                if ((flags & VMGameObjectDisableFlags.ForSale) > 0)
+                                {
+                                    //for sale
+                                    var retailPrice = obj.MultitileGroup.Price; //wrong... should get this from catalog
+                                    var salePrice = obj.MultitileGroup.SalePrice;
+                                    ShowErrorTooltip(state, 22, true, "$" + retailPrice.ToString("##,#0"), "$" + salePrice.ToString("##,#0"));
+                                }
+                                else if ((flags & VMGameObjectDisableFlags.LotCategoryWrong) > 0)
+                                    ShowErrorTooltip(state, 21, true); //category wrong
+                                else if ((flags & VMGameObjectDisableFlags.TransactionIncomplete) > 0)
+                                    ShowErrorTooltip(state, 27, true); //transaction not yet complete
+                                else if ((flags & VMGameObjectDisableFlags.ObjectLimitExceeded) > 0)
+                                    ShowErrorTooltip(state, 24, true); //object is temporarily disabled... todo: something more helpful
+                                else if ((flags & VMGameObjectDisableFlags.PendingRoommateDeletion) > 0)
+                                    ShowErrorTooltip(state, 16, true); //pending roommate deletion
                             }
-                            else if ((flags & VMGameObjectDisableFlags.LotCategoryWrong) > 0)
-                                ShowErrorTooltip(state, 21, true); //category wrong
-                            else if ((flags & VMGameObjectDisableFlags.TransactionIncomplete) > 0)
-                                ShowErrorTooltip(state, 27, true); //transaction not yet complete
-                            else if ((flags & VMGameObjectDisableFlags.ObjectLimitExceeded) > 0)
-                                ShowErrorTooltip(state, 24, true); //object is temporarily disabled... todo: something more helpful
-                            else if ((flags & VMGameObjectDisableFlags.PendingRoommateDeletion) > 0)
-                                ShowErrorTooltip(state, 16, true); //pending roommate deletion
-                        } else
-                        {
-                            HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
-                            var menu = obj.GetPieMenu(vm, ActiveEntity, false);
-                            if (menu.Count != 0)
+                            else
                             {
-                                PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
-                                this.Add(PieMenu);
-                                PieMenu.X = state.MouseState.X / FSOEnvironment.DPIScaleFactor;
-                                PieMenu.Y = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
-                                PieMenu.UpdateHeadPosition(state.MouseState.X, state.MouseState.Y);
+                                HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
+                                var menu = obj.GetPieMenu(vm, ActiveEntity, false);
+                                if (menu.Count != 0)
+                                {
+                                    PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
+                                    this.Add(PieMenu);
+                                    PieMenu.X = state.MouseState.X / FSOEnvironment.DPIScaleFactor;
+                                    PieMenu.Y = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
+                                    PieMenu.UpdateHeadPosition(state.MouseState.X, state.MouseState.Y);
+                                }
                             }
                         }
-
 
                     }
                     else

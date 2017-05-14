@@ -365,7 +365,11 @@ namespace FSO.SimAntics
 
         public override void Init(VMContext context)
         {
-            if (UseWorld) WorldUI.ObjectID = ObjectID;
+            if (UseWorld)
+            {
+                WorldUI.ObjectID = ObjectID;
+                ((AvatarComponent)WorldUI).blueprint = context.Blueprint;
+            }
             base.Init(context);
 
             Animations = new List<VMAnimationState>();
@@ -389,7 +393,7 @@ namespace FSO.SimAntics
             if (Animations != null) Animations.Clear();
             if (Headline != null)
             {
-                HeadlineRenderer.Dispose();
+                HeadlineRenderer?.Dispose();
                 Headline = null;
                 HeadlineRenderer = null;
             }
@@ -748,6 +752,9 @@ namespace FSO.SimAntics
                         Thread.QueueDirty = true;
                     }
                     return true;
+                case VMPersonDataVariable.MoneyAmmountOverHead:
+                    if (value != -32768) ShowMoneyHeadline(value);
+                    break;
                 case VMPersonDataVariable.RenderDisplayFlags:
                     if (WorldUI != null) ((AvatarComponent)WorldUI).DisplayFlags = (AvatarDisplayFlags)value;
                     return true;
@@ -788,6 +795,22 @@ namespace FSO.SimAntics
                 (pos.y - 3),
                 (pos.x + 3),
                 (pos.y + 3));
+        }
+
+        public void ShowMoneyHeadline(int value)
+        {
+            if (HeadlineRenderer != null) HeadlineRenderer.Dispose();
+
+            //(int)(headline.Operand.Flags2 | (ushort)(headline.Operand.Duration << 16));
+            uint uval = (uint)value;
+            Headline = new VMRuntimeHeadline(new VMSetBalloonHeadlineOperand
+            {
+                Group = VMSetBalloonHeadlineOperandGroup.Money,
+                Flags2 = (ushort)(uval),
+                Duration = (short)(uval >> 16)
+            }, this, null, 0);
+            Headline.Duration = 60;
+            HeadlineRenderer = Thread?.Context.VM.Headline.Get(Headline);
         }
 
         public override void PositionChange(VMContext context, bool noEntryPoint)
@@ -921,7 +944,7 @@ namespace FSO.SimAntics
             var ico = FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
 
             //todo: better dispose handling for these icons
-            return (store > 0)?TextureUtils.Decimate(ico, gd, 1<<(2-store)):ico;
+            return (store > 0 && ico != null)?TextureUtils.Decimate(ico, gd, 1<<(2-store)):ico;
         }
 
         #region VM Marshalling Functions
@@ -1000,7 +1023,10 @@ namespace FSO.SimAntics
 
             SkinTone = input.SkinTone;
 
-            if (UseWorld) WorldUI.ObjectID = ObjectID;
+            if (UseWorld)
+            {
+                WorldUI.ObjectID = ObjectID;
+            }
         }
 
         public virtual void LoadCrossRef(VMAvatarMarshal input, VMContext context)
@@ -1015,6 +1041,7 @@ namespace FSO.SimAntics
             SetPersonData(VMPersonDataVariable.RenderDisplayFlags, GetPersonData(VMPersonDataVariable.RenderDisplayFlags));
             BodyOutfit = input.BodyOutfit;
             HeadOutfit = input.HeadOutfit;
+            if (UseWorld) ((AvatarComponent)WorldUI).blueprint = context.Blueprint;
         }
         #endregion
     }

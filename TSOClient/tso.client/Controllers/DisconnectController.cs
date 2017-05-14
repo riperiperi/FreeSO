@@ -17,11 +17,13 @@ namespace FSO.Client.Controllers
 
         private Callback onDisconnected;
 
-        public DisconnectController(TransitionScreen view, CityConnectionRegulator cityRegulator, LotConnectionRegulator lotRegulator)
+        public DisconnectController(TransitionScreen view, CityConnectionRegulator cityRegulator, LotConnectionRegulator lotRegulator, Network.Network network)
         {
             View = view;
             View.ShowProgress = false;
 
+            network.LotClient.Disconnect();
+            network.CityClient.Disconnect();
             CityConnectionRegulator = cityRegulator;
             CityConnectionRegulator.OnTransition += CityConnectionRegulator_OnTransition;
             LotConnectionRegulator = lotRegulator;

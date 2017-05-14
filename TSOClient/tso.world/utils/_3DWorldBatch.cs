@@ -67,10 +67,11 @@ namespace FSO.LotView.Utils
             //Device.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;
 
             var character = Sprites.Where(x => x.Effect == _3DSpriteEffect.CHARACTER).ToList();
+            var pass = WorldConfig.Current.PassOffset*2;
 
             PPXDepthEngine.RenderPPXDepth(Avatar.Effect, true, (depth) =>
             {
-                RenderSpriteList(character, Avatar.Effect, Avatar.Effect.Techniques[OBJIDMode ? 1 : 0]);
+                RenderSpriteList(character, Avatar.Effect, Avatar.Effect.Techniques[OBJIDMode ? 1 : pass]);
             });
 
             /*

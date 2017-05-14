@@ -240,6 +240,7 @@ namespace FSO.Client.UI.Panels.EODs
 
         private void UpdateDataProvider()
         {
+            if (Outfits == null) return;
             var dataProvider = new List<object>();
             var outfitsInCategory = Outfits.Where(x => x.outfit_type == (byte)SelectedTab).ToList();
             var appearanceType = GetAppearanceType();

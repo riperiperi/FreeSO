@@ -619,6 +619,7 @@ namespace FSO.SimAntics
                     return (short)((Thread == null)?0:GetUsers(Thread.Context, null).Count);
                 case VMStackObjectVariable.LockoutCount:
                     var count = ObjectData[(short)var];
+                    if (TimestampLockoutCount > Thread.Context.VM.Scheduler.CurrentTickID) TimestampLockoutCount = 0; //lockout counts in the future are invalid.
                     return (short)((Thread == null) ? count : Math.Max((long)count - (Thread.Context.VM.Scheduler.CurrentTickID - TimestampLockoutCount), 0));
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");

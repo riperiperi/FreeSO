@@ -13,6 +13,7 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Content;
 using Microsoft.Xna.Framework;
 using FSO.Content.Model;
+using FSO.Vitaboy.Model;
 
 namespace FSO.Vitaboy
 {
@@ -25,6 +26,7 @@ namespace FSO.Vitaboy
         public static Effect Effect;
         public Skeleton Skeleton { get; internal set; }
         public Skeleton BaseSkeleton { get; internal set; }
+        public List<Vector2> LightPositions;
         private Matrix[] SkelBones;
 
         public static void setVitaboyEffect(Effect e) {
@@ -259,7 +261,50 @@ namespace FSO.Vitaboy
                     }
                 }
             }
+
+            if (LightPositions == null) return;
+
+            if (ShadBuf == null)
+            {
+                var shadVerts = new ShadowVertex[]
+                {
+                new ShadowVertex(new Vector3(-1, 0, -1), 25),
+                new ShadowVertex(new Vector3(-1, 0, 1), 25),
+                new ShadowVertex(new Vector3(1, 0, 1), 25),
+                new ShadowVertex(new Vector3(1, 0, -1), 25),
+
+                new ShadowVertex(new Vector3(-1, 0, -1), 19),
+                new ShadowVertex(new Vector3(-1, 0, 1), 19),
+                new ShadowVertex(new Vector3(1, 0, 1), 19),
+                new ShadowVertex(new Vector3(1, 0, -1), 19)
+                };
+                for (int i = 0; i < shadVerts.Length; i++) shadVerts[i].Position *= 1f;
+                int[] shadInd = new int[] { 2, 1, 0, 2, 0, 3, 6, 5, 4, 6, 4, 7 };
+
+                ShadBuf = new VertexBuffer(device, typeof(ShadowVertex), shadVerts.Length, BufferUsage.None);
+                ShadBuf.SetData(shadVerts);
+                ShadIBuf = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, shadInd.Length, BufferUsage.None);
+                ShadIBuf.SetData(shadInd);
+            }
+
+            foreach (var light in LightPositions)
+            {
+                //effect.Parameters["FloorHeight"].SetValue((float)(Math.Floor(Position.Y/2.95)*2.95 + 0.05));
+                effect.Parameters["LightPosition"].SetValue(light);
+                var oldTech = effect.CurrentTechnique;
+                effect.CurrentTechnique = Avatar.Effect.Techniques[3];
+                effect.CurrentTechnique.Passes[0].Apply();
+                device.DepthStencilState = DepthStencilState.DepthRead;
+                device.SetVertexBuffer(ShadBuf);
+                device.Indices = ShadIBuf;
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 4);
+                effect.CurrentTechnique = oldTech;
+                device.DepthStencilState = DepthStencilState.Default;
+            }
         }
+
+        private static VertexBuffer ShadBuf;
+        private static IndexBuffer ShadIBuf;
 
         public override void DeviceReset(GraphicsDevice Device)
         {

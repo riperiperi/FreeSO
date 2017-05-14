@@ -12,6 +12,8 @@ using FSO.LotView.Components;
 using FSO.LotView.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using FSO.Vitaboy;
+using FSO.LotView.LMap;
 
 namespace FSO.LotView.Model
 {
@@ -53,6 +55,7 @@ namespace FSO.LotView.Model
         public bool[] Cutaway;
 
         public Color OutsideColor = Color.White;
+        public double OutsideTime;
         public RoomLighting[] Light = new RoomLighting[0];
         public uint[][] RoomMap;
         public List<Room> Rooms = new List<Room>();
@@ -60,6 +63,7 @@ namespace FSO.LotView.Model
         public Color[] RoomColors;
         public Rectangle BuildableArea;
         public Rectangle TargetBuildableArea;
+        public LightData OutdoorsLight;
 
         public Blueprint(int width, int height){
             this.Width = width;
@@ -89,9 +93,22 @@ namespace FSO.LotView.Model
             this.Cutaway = new bool[numTiles];
         }
 
+        public void SetLightColor(Effect effect, Color outside, Color minOut)
+        {
+            //return;
+            effect.Parameters["OutsideLight"].SetValue(outside.ToVector4());
+            effect.Parameters["OutsideDark"].SetValue(minOut.ToVector4());
+            effect.Parameters["MaxLight"].SetValue(Color.White.ToVector4());
+        }
+
         public void GenerateRoomLights()
         {
             var minOut = OutsideColor * (float)(150 / Math.Sqrt(OutsideColor.R * OutsideColor.R + OutsideColor.G * OutsideColor.G + OutsideColor.B * OutsideColor.B));
+            minOut.A = 255;
+
+            SetLightColor(WorldContent._2DWorldBatchEffect, OutsideColor, minOut);
+            SetLightColor(WorldContent.GrassEffect, OutsideColor, minOut);
+            SetLightColor(Avatar.Effect, OutsideColor, minOut);
 
             for (int i=0; i<Light.Length; i++)
             {
@@ -234,8 +251,10 @@ namespace FSO.LotView.Model
         WALL_CUT_CHANGED,
         LEVEL_CHANGED,
         LIGHTING_CHANGED,
+        OUTDOORS_LIGHTING_CHANGED,
         ROOM_CHANGED,
-        ROOF_STYLE_CHANGED
+        ROOF_STYLE_CHANGED,
+        ROOM_MAP_CHANGED
     }
 
     public class BlueprintObjectList {

@@ -56,6 +56,11 @@ namespace FSO.Client.UI.Controls
             Add(_Button);
         }
 
+        public override void Removed()
+        {
+            User.Dispose();
+        }
+
         private uint _AvatarId;
         public uint AvatarId
         {
@@ -84,7 +89,7 @@ namespace FSO.Client.UI.Controls
 
         private void _Button_OnButtonClick(UIElement button)
         {
-            FindController<CoreGameScreenController>().ShowPersonPage(User.Value);
+            FindController<CoreGameScreenController>()?.ShowPersonPage(User.Value);
         }
 
         private ITextureRef _FrameTexture;

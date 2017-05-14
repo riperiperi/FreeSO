@@ -71,6 +71,7 @@ namespace FSO.SimAntics.Model
                         {
                             validSpread = WallSegments.TopLeft | WallSegments.TopRight;
                             ExpectedTile = wall.TopLeftStyle;
+                            Map[i] |= 0x80000000;
                         }
                         else
                         {
@@ -82,7 +83,7 @@ namespace FSO.SimAntics.Model
                         spread.Push(new SpreadItem(new Point(i % width, i / width), validSpread));
                         break;
                     }
-                    else if ((Map[i] & 0xFFFF0000) == 0)
+                    else if ((Map[i] & 0x7FFF0000) == 0)
                     {
                         //start spreading the other side
                         WallSegments validSpread;
@@ -90,13 +91,14 @@ namespace FSO.SimAntics.Model
                         {
                             validSpread = WallSegments.BottomLeft | WallSegments.BottomRight;
                             ExpectedTile = wall.TopLeftPattern;
+                            Map[i] |= 0x80000000;
                         }
                         else
                         {
                             validSpread = WallSegments.TopLeft | WallSegments.BottomLeft;
                             ExpectedTile = wall.TopLeftStyle;
                         }
-                        Map[i] |= room << 16;
+                        Map[i] |= (room << 16);
                         spread.Push(new SpreadItem(new Point(i % width, i / width), validSpread));
                         i++;
                         break;
@@ -112,6 +114,8 @@ namespace FSO.SimAntics.Model
                     int rminY = spread.Peek().Pt.Y;
                     int rmaxY = rminY;
                     var wallObs = new List<VMObstacle>();
+                    var wallLines = (VM.UseWorld)?new VMWallLineBuilder():null;
+                    var wallDict = new Dictionary<uint, Vector2[]>();
                     var adjRooms = new HashSet<ushort>();
                     ushort area = 0;
                     while (spread.Count > 0)
@@ -141,6 +145,7 @@ namespace FSO.SimAntics.Model
                             wallObs.Add(new VMObstacle(obsX + 7, obsY + 3, obsX + 13, obsY + 9));
                             wallObs.Add(new VMObstacle(obsX + 3, obsY + 7, obsX + 9, obsY + 13));
                             wallObs.Add(new VMObstacle(obsX - 1, obsY + 11, obsX + 5, obsY + 17));
+                            if (mainWalls.TopRightStyle == 1) wallLines?.AddLine(obsX + 16, obsY, 2);
                         }
 
                         if ((mainWalls.Segments & WallSegments.VerticalDiag) > 0)
@@ -149,15 +154,32 @@ namespace FSO.SimAntics.Model
                             wallObs.Add(new VMObstacle(obsX + 3, obsY + 3, obsX + 9, obsY + 9));
                             wallObs.Add(new VMObstacle(obsX + 7, obsY + 7, obsX + 13, obsY + 13));
                             wallObs.Add(new VMObstacle(obsX + 11, obsY + 11, obsX + 17, obsY + 17));
+                            if (mainWalls.TopRightStyle == 1) wallLines?.AddLine(obsX, obsY, 3);
                         }
 
                         var PXWalls = Walls[plusX + item.Y * width];
                         var PYWalls = Walls[item.X + plusY * width];
 
-                        if ((mainWalls.Segments & WallSegments.TopLeft) > 0 && !mainWalls.TopLeftDoor) wallObs.Add(new VMObstacle(obsX - 3, obsY - 3, obsX + 6, obsY + 19));
-                        if ((mainWalls.Segments & WallSegments.TopRight) > 0 && !mainWalls.TopRightDoor) wallObs.Add(new VMObstacle(obsX - 3, obsY - 3, obsX + 19, obsY + 6)); 
-                        if ((mainWalls.Segments & WallSegments.BottomLeft) > 0 && !PYWalls.TopRightDoor) wallObs.Add(new VMObstacle(obsX - 3, obsY + 13, obsX + 19, obsY + 19)); 
-                        if ((mainWalls.Segments & WallSegments.BottomRight) > 0 && !PXWalls.TopLeftDoor) wallObs.Add(new VMObstacle(obsX + 13, obsY - 3, obsX + 19, obsY + 19));
+                        if ((mainWalls.Segments & WallSegments.TopLeft) > 0)
+                        {
+                            if (!mainWalls.TopLeftDoor) wallObs.Add(new VMObstacle(obsX - 3, obsY - 3, obsX + 6, obsY + 19));
+                            if (mainWalls.TopLeftThick) wallLines?.AddLine(obsX, obsY, 0);
+                        }
+                        if ((mainWalls.Segments & WallSegments.TopRight) > 0)
+                        {
+                            if (!mainWalls.TopRightDoor) wallObs.Add(new VMObstacle(obsX - 3, obsY - 3, obsX + 19, obsY + 6));
+                            if (mainWalls.TopRightThick) wallLines?.AddLine(obsX, obsY, 1);
+                        }
+                        if ((mainWalls.Segments & WallSegments.BottomLeft) > 0)
+                        {
+                            if (!PYWalls.TopRightDoor) wallObs.Add(new VMObstacle(obsX - 3, obsY + 13, obsX + 19, obsY + 19));
+                            if (PYWalls.TopRightThick) wallLines?.AddLine(obsX, obsY+16, 1);
+                        }
+                        if ((mainWalls.Segments & WallSegments.BottomRight) > 0)
+                        {
+                            if (!PXWalls.TopLeftDoor) wallObs.Add(new VMObstacle(obsX + 13, obsY - 3, obsX + 19, obsY + 19));
+                            if (PXWalls.TopLeftThick) wallLines?.AddLine(obsX + 16, obsY, 0);
+                        }
 
                         bool segAllow = ((PXWalls.Segments & WallSegments.TopLeft) == 0);
                         if ((segAllow || PXWalls.TopLeftStyle != 1) && ((itemT.Dir & WallSegments.BottomRight) > 0))
@@ -180,13 +202,33 @@ namespace FSO.SimAntics.Model
                     var roomObs = GenerateRoomObs((ushort)rooms.Count, (sbyte)(floor+1), bounds, context);
                     OptimizeObstacles(wallObs);
                     OptimizeObstacles(roomObs);
+                    var supportRooms = new List<ushort>();
 
+                    ushort myRoom = (ushort)rooms.Count;
+                    ushort minRoom = myRoom;
+                    bool deferredLit = false;
                     foreach (var roomN in adjRooms)
                     {
                         var room = rooms[roomN];
-                        room.AdjRooms.Add((ushort)rooms.Count);
+                        if (minRoom > room.LightBaseRoom)
+                        {
+                            deferredLit = true;
+                            minRoom = room.LightBaseRoom;
+                        }
+                        room.AdjRooms.Add(myRoom);
                         if (outside) MakeOutside(rooms, room);
                         else if (room.IsOutside) outside = true;
+                    }
+
+                    if (deferredLit)
+                    {
+                        rooms[minRoom].SupportRooms.Add(myRoom);
+                    }
+                    else supportRooms.Add(myRoom);
+
+                    if (VM.UseWorld && minRoom != rooms.Count)
+                    {
+                        rooms[minRoom].WallLines.AddRange(wallLines.Lines);
                     }
 
                     rooms.Add(new VMRoom
@@ -196,14 +238,51 @@ namespace FSO.SimAntics.Model
                         Bounds = bounds,
                         WallObs = wallObs,
                         RoomObs = roomObs,
+                        WallLines = (deferredLit) ? null : wallLines?.Lines,
                         AdjRooms = adjRooms,
-                        RoomID = (ushort)rooms.Count,
-                        Area = area
+                        RoomID = myRoom,
+                        LightBaseRoom = minRoom,
+                        Area = area,
+                        Floor = floor,
+                        SupportRooms = supportRooms
                     });
+
+                    foreach (var roomN in adjRooms)
+                    {
+                        var room = rooms[roomN];
+                        TrySwitchBaseRoom(rooms, room, minRoom);
+                    }
+
                     outside = false;
                 }
             }
         }
+
+        public void TrySwitchBaseRoom(List<VMRoom> rooms, VMRoom room, ushort newBase)
+        {
+            var newBaseR = rooms[newBase];
+            if (room.LightBaseRoom != newBase)
+            {
+                //we joined in a new minimum room. cascade changes.
+                var oldBaseR = rooms[room.LightBaseRoom];
+                //move all rooms that think this is their base room to the new base
+                foreach (var oRoom in oldBaseR.SupportRooms)
+                {
+                    newBaseR.SupportRooms.Add(oRoom);
+                    var roomChange = rooms[oRoom];
+                    roomChange.LightBaseRoom = newBase;
+                    rooms[oRoom] = roomChange;
+                }
+                oldBaseR.SupportRooms.Clear();
+                //and move all the wall lines (for advanced lighting)
+                newBaseR.WallLines.AddRange(oldBaseR.WallLines);
+                oldBaseR.WallLines = null;
+                //note there's a small bug here where wall lines can be on the same location
+                //if both sides of the wall are found on adjacent rooms
+                //...so a wall may have double the shadow strength. (most important for outdoors shadows)
+            }
+        }
+
         public void MakeOutside(List<VMRoom> rooms, VMRoom room)
         {
             room.IsOutside = true;
@@ -243,15 +322,15 @@ namespace FSO.SimAntics.Model
                     validSpread = WallSegments.TopLeft | WallSegments.TopRight;
                     targFloor = wall.TopLeftStyle;
                     targRoom = (ushort)map[index];
-                    roomApply = room;
+                    roomApply = (room) | 0x80000000;
                 }
                 else
                 {
                     //bottom (bottom left pattern)
                     validSpread = WallSegments.BottomLeft | WallSegments.BottomRight;
                     targFloor = wall.TopLeftPattern;
-                    targRoom = (ushort)(map[index] >> 16);
-                    roomApply = (uint)room<<16;
+                    targRoom = (ushort)((map[index] >> 16) & 0x7FFF);
+                    roomApply = (uint)(room<< 16) | 0x80000000;
                 }
             }
             else if ((wall.Segments & WallSegments.VerticalDiag) > 0)
@@ -269,8 +348,8 @@ namespace FSO.SimAntics.Model
                     //left
                     validSpread = WallSegments.TopLeft | WallSegments.BottomLeft;
                     targFloor = wall.TopLeftStyle;
-                    targRoom = (ushort)(map[index] >> 16);
-                    roomApply = (uint)room << 16;
+                    targRoom = (ushort)((map[index] >> 16)&0x7FFF);
+                    roomApply = (uint)(room << 16);
                 }
             }
             else
@@ -321,7 +400,7 @@ namespace FSO.SimAntics.Model
                 for (int x = x1; x < x2; x++)
                 {
                     uint tRoom = Map[x + y * Width];
-                    if ((ushort)tRoom != room && (tRoom>>16) != room)
+                    if ((ushort)tRoom != room && ((tRoom>>16)&0x7FFF) != room)
                     {
                         //is there a door on this tile?
                         var door = (context.ObjectQueries.GetObjectsAt(LotTilePos.FromBigTile((short)x, (short)y, level))?.FirstOrDefault(

@@ -187,6 +187,7 @@ namespace FSO.Server.Servers.City.Domain
                                 if (avatarId != 0)
                                 {
                                     var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
+                                    var modState = db.Avatars.GetModerationLevel(avatarId);
                                     var avatars = new List<uint>();
                                     foreach (var roomie in roomies)
                                     {
@@ -195,7 +196,7 @@ namespace FSO.Server.Servers.City.Domain
 
                                     try
                                     {
-                                        if (lot.admit_mode < 4) security.DemandAvatars(avatars, AvatarPermissions.WRITE);
+                                        if (lot.admit_mode < 4 && modState == 0) security.DemandAvatars(avatars, AvatarPermissions.WRITE);
                                     }
                                     catch (Exception ex)
                                     {
@@ -272,12 +273,14 @@ namespace FSO.Server.Servers.City.Domain
                                         //special admit mode
 
                                         var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
+                                        var modState = db.Avatars.GetModerationLevel(avatarId);
                                         var avatars = new List<uint>();
                                         foreach (var roomie in roomies) avatars.Add(roomie.avatar_id);
 
                                         try
                                         {
-                                            security.DemandAvatars(avatars, AvatarPermissions.WRITE);
+                                            if (modState == 0)
+                                                security.DemandAvatars(avatars, AvatarPermissions.WRITE);
                                         }
                                         catch (Exception ex)
                                         {

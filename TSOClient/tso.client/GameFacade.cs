@@ -50,6 +50,7 @@ namespace FSO.Client
 
         public static bool Linux;
         public static bool DirectX;
+        public static bool EnableMod;
 
         public static CursorManager Cursor;
         public static UIMessageController MessageController = new UIMessageController();

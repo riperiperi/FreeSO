@@ -444,6 +444,11 @@ namespace FSO.Client.UI.Framework
             }
         }
 
+        public virtual void Removed()
+        {
+
+        }
+
         public virtual void GameResized()
         {
 

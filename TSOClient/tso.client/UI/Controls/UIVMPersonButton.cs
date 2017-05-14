@@ -88,7 +88,7 @@ namespace FSO.Client.UI.Controls
                 case VMTSOAvatarPermissions.Visitor: bgID = 0x25400000001; break; //personbuttontemplate_visitorlarge
                 case VMTSOAvatarPermissions.Roommate:
                 case VMTSOAvatarPermissions.BuildBuyRoommate: bgID = 0x25200000001; overlayID = 0xB7F00000001; break; //personbuttontemplate_roommatelarge, personbuttonoverlay_roommatelarge
-                case VMTSOAvatarPermissions.Admin:
+                case VMTSOAvatarPermissions.Admin: bgID = 0x25200000001; overlayID = 0x8B000000001; break;
                 case VMTSOAvatarPermissions.Owner: bgID = 0x25200000001; overlayID = 0x7A000000001; break; //..., personbuttonoverlay_houseleaderlarge
             }
 
@@ -147,7 +147,10 @@ namespace FSO.Client.UI.Controls
                 }
                 else DrawLocalTexture(SBatch, Icon, new Rectangle(0, 0, Icon.Width / 2, Icon.Height), pos, targetSize / new Vector2((Icon.Width/2), Icon.Height));
             }
-            if (Overlay != null) DrawLocalTexture(SBatch, Overlay, new Vector2());
+            if (Overlay != null)
+            {
+                DrawLocalTexture(SBatch, Overlay, new Vector2(34-Overlay.Width, 34-Overlay.Height));
+            }
 
             if (Icon != null && vm.Context.World.State.ScrollAnchor == Avatar?.WorldUI)
             {

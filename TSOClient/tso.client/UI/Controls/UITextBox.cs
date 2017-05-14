@@ -383,6 +383,13 @@ namespace FSO.Client.UI.Controls
                                 break;
                         }
                     }
+
+                    var index = m_SBuilder.Length;
+                    if (index > 1 && m_SBuilder[index - 1] == '\n' && m_SBuilder[index - 2] == '\r')
+                    {
+                        m_SBuilder.Remove(index - 2, 2);
+                    }
+                    
                     if (inputResult.EnterPressed && OnEnterPress != null) OnEnterPress(this);
                     if (inputResult.TabPressed && OnTabPress != null) OnTabPress(this);
                 }

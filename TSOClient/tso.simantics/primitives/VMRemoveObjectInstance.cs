@@ -25,7 +25,7 @@ namespace FSO.SimAntics.Engine.Primitives
             if (operand.Target == 0) obj = context.Caller;
             else obj = context.StackObject;
 
-            obj.Delete(operand.CleanupAll, context.VM.Context);
+            obj?.Delete(operand.CleanupAll, context.VM.Context);
 
             //if (obj == context.StackObject) context.StackObject = null;
 

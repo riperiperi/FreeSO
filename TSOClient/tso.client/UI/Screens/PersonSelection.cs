@@ -59,15 +59,7 @@ namespace FSO.Client.UI.Screens
             this.Cache = cache;
             
             UIScript ui = null;
-            if (GlobalSettings.Default.ScaleUI)
-            {
-                ui = this.RenderScript("personselection.uis");
-                this.Scale800x600 = true;
-            }
-            else
-            {
-                ui = this.RenderScript("personselection1024.uis");
-            }
+            ui = this.RenderScript("personselection1024.uis");
 
             Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / 2, (GlobalSettings.Default.GraphicsHeight - 768) / 2) * FSOEnvironment.DPIScaleFactor;
 

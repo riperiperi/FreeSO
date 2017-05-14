@@ -11,6 +11,17 @@ float4 DiffuseColor;
 float2 ScreenOffset;
 float GrassProb;
 
+//LIGHTING
+float4 OutsideLight;
+float4 OutsideDark;
+float4 MaxLight;
+float3 WorldToLightFactor;
+float2 LightOffset;
+float2 MapLayout;
+//END LIGHTING
+
+float Level;
+
 bool depthOutMode;
 
 bool UseTexture;
@@ -22,6 +33,13 @@ sampler TexSampler = sampler_state {
 	MipFilter = Linear;
 	AddressU = Wrap;
 	AddressV = Wrap;
+};
+
+texture advancedLight : Diffuse;
+sampler advLightSampler = sampler_state {
+	texture = <advancedLight>;
+	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
+	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
 };
 
 struct GrassVTX
@@ -36,6 +54,7 @@ struct GrassPSVTX {
     float4 Color : COLOR0;
     float4 GrassInfo : TEXCOORD0; //x is liveness, yz is position
     float2 ScreenPos : TEXCOORD1;
+	float4 ModelPos : TEXCOORD2;
 };
 
 // from shadertoy.
@@ -71,12 +90,35 @@ float unpackDepth(float4 d) {
     return dot(d, float4(1.0, 1 / 255.0, 1 / 65025.0, 0)); //d.r + (d.g / 256.0) + (d.b / 65536.0);
 }
 
+float4 lightColor(float4 intensities) {
+	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
+	float lightFactor = (intensities.x == 0) ? 0 : (intensities.x * (intensities.z / intensities.x));
+	float outlightFactor = (intensities.y == 0) ? 0 : (intensities.y * (intensities.w / intensities.y));
+
+	float4 col = lerp(lerp(OutsideDark, OutsideLight, outlightFactor), MaxLight, lightFactor);
+	//float4 col = lerp(lerp(float4(0.5,0.5,0.5,1), float4(1,1,1,1), outlightFactor), float4(1, 1, 1, 1), lightFactor);
+
+	return col;
+}
+
+float4 lightProcess(float4 inPosition) {
+	float2 orig = inPosition.x;
+	inPosition.xyz *= WorldToLightFactor;
+	inPosition.xz += LightOffset;
+
+	inPosition.xz += 1 / MapLayout * float2(Level % MapLayout.x, floor(Level / MapLayout.x));
+
+	float4 lTex = tex2D(advLightSampler, inPosition.xz);
+	return lightColor(lTex);
+}
+
 GrassPSVTX GrassVS(GrassVTX input)
 {
     GrassPSVTX output = (GrassPSVTX)0;
     float4x4 Temp4x4 = mul(World, mul(View, Projection));
     float4 position = mul(input.Position, Temp4x4);
     output.Position = position;
+	output.ModelPos = mul(input.Position, World);
     output.Color = input.Color;
     output.GrassInfo = input.GrassInfo;
     output.GrassInfo.w = position.z / position.w;
@@ -102,9 +144,27 @@ void BladesPS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB:COLOR
         float bladeCol = rand.x*0.6;
         float4 green = lerp(LightGreen, DarkGreen, bladeCol);
         float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-        color = lerp(green, brown, input.GrassInfo.x) * DiffuseColor;
+		color = lerp(green, brown, input.GrassInfo.x) * lightProcess(input.ModelPos);//DiffuseColor;
     }
+}
 
+void BladesPSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR1)
+{
+	float2 rand = iterhash22(floor(input.ScreenPos.xy + ScreenOffset)); //nearest neighbour effect
+	if (rand.y > GrassProb*((2.0 - input.GrassInfo.x) / 2)) discard;
+	//grass blade here
+
+	float d = input.GrassInfo.w;
+	depthB = packDepth(d);
+	if (depthOutMode == true) {
+		color = depthB;
+	}
+	else {
+		float bladeCol = rand.x*0.6;
+		float4 green = lerp(LightGreen, DarkGreen, bladeCol);
+		float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
+		color = lerp(green, brown, input.GrassInfo.x) * DiffuseColor;
+	}
 }
 
 void GridPS(GrassPSVTX input, out float4 color:COLOR0)
@@ -120,7 +180,7 @@ void GridPS(GrassPSVTX input, out float4 color:COLOR0)
 }
 
 
-void BasePS(GrassVTX input, out float4 color:COLOR0, out float4 depthB:COLOR1)
+void BasePS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB:COLOR1)
 {
     
     float d = input.GrassInfo.w;
@@ -129,27 +189,56 @@ void BasePS(GrassVTX input, out float4 color:COLOR0, out float4 depthB:COLOR1)
         color = depthB;
     }
     else {
-        color = input.Color*DiffuseColor;
+        color = input.Color * lightProcess(input.ModelPos);//*DiffuseColor;
 		if (UseTexture == true) {
 			color *= tex2D(TexSampler, input.GrassInfo.yz);
 		}
     }
 }
 
+void BasePSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR1)
+{
+
+	float d = input.GrassInfo.w;
+	depthB = packDepth(d);
+	if (depthOutMode == true) {
+		color = depthB;
+	}
+	else {
+		color = input.Color * DiffuseColor;
+		if (UseTexture == true) {
+			color *= tex2D(TexSampler, input.GrassInfo.yz);
+		}
+	}
+}
+
 technique DrawBase
 {
-    pass MainPass
+    pass MainPassSimple
     {
 
 #if SM4
         VertexShader = compile vs_4_0_level_9_1 GrassVS();
-        PixelShader = compile ps_4_0_level_9_1 BasePS();
+        PixelShader = compile ps_4_0_level_9_1 BasePSSimple();
 #else
         VertexShader = compile vs_3_0 GrassVS();
-        PixelShader = compile ps_3_0 BasePS();
+        PixelShader = compile ps_3_0 BasePSSimple();
 #endif;
 
     }
+
+	pass MainPass
+	{
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 GrassVS();
+		PixelShader = compile ps_4_0_level_9_1 BasePS();
+#else
+		VertexShader = compile vs_3_0 GrassVS();
+		PixelShader = compile ps_3_0 BasePS();
+#endif;
+
+	}
 }
 
 technique DrawGrid
@@ -170,11 +259,22 @@ technique DrawGrid
 
 technique DrawBlades
 {
+	pass MainBladesSimple
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 GrassVS();
+		PixelShader = compile ps_4_0_level_9_1 BladesPSSimple();
+#else
+		VertexShader = compile vs_3_0 GrassVS();
+		PixelShader = compile ps_3_0 BladesPSSimple();
+#endif;
+	}
+
     pass MainBlades
     {
 #if SM4
-        VertexShader = compile vs_4_0_level_9_1 GrassVS();
-        PixelShader = compile ps_4_0_level_9_1 BladesPS();
+        VertexShader = compile vs_4_0_level_9_3 GrassVS();
+        PixelShader = compile ps_4_0_level_9_3 BladesPS(); 
 #else
         VertexShader = compile vs_3_0 GrassVS();
         PixelShader = compile ps_3_0 BladesPS();

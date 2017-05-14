@@ -26,6 +26,11 @@ namespace FSO.Server.Database.DA.Avatars
             return Context.Connection.Query<int>("SELECT privacy_mode FROM fso_avatars WHERE avatar_id = @id", new { id = id }).FirstOrDefault();
         }
 
+        public int GetModerationLevel(uint id)
+        {
+            return Context.Connection.Query<int>("SELECT moderation_level FROM fso_avatars WHERE avatar_id = @id", new { id = id }).FirstOrDefault();
+        }
+
         public uint Create(DbAvatar avatar)
         {
             return (uint)Context.Connection.Query<int>("INSERT INTO fso_avatars (shard_id, user_id, name, " +

@@ -16,6 +16,7 @@ namespace FSO.Common.Utils
     public class TextureGenerator //a fun class for cpu generating textures
     {
         private static Texture2D PxWhite;
+        private static Texture2D DefaultAdvLight;
         private static Texture2D PieButtonImg;
 
         private static Texture2D InteractionInactive;
@@ -32,6 +33,12 @@ namespace FSO.Common.Utils
         {
             if (PxWhite == null) PxWhite = TextureUtils.TextureFromColor(gd, Color.White);
             return PxWhite;
+        }
+
+        public static Texture2D GetDefaultAdv(GraphicsDevice gd)
+        {
+            if (DefaultAdvLight == null) DefaultAdvLight = TextureUtils.TextureFromColor(gd, new Color(0, 255, 0, 255)); //outdoors color max
+            return DefaultAdvLight;
         }
 
         public static Texture2D GetPieButtonImg(GraphicsDevice gd)

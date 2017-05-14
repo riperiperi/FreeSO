@@ -30,6 +30,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm)
         {
+            //the client should ignore these. Can be sent before state sync when joining job lots (by accident)
+            if (VM.UseWorld) return true;
+
             XmlHouseData lotInfo;
             using (var stream = new MemoryStream(XMLData))
             {

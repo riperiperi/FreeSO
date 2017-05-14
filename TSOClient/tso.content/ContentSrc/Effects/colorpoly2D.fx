@@ -32,7 +32,7 @@ technique Draw2D
 {
     pass MainPass
     {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
+		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA; 
 
 #if SM4
         VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();

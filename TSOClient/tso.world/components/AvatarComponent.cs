@@ -21,6 +21,7 @@ namespace FSO.LotView.Components
     {
         public Avatar Avatar;
         public bool IsPet;
+        public Blueprint blueprint;
 
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -105,8 +106,32 @@ namespace FSO.LotView.Components
             return world.WorldSpace.GetScreenFromTile(transhead) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
         }
 
+        private List<Vector2> CloseLightPositions(Vector3 Position)
+        {
+            if (blueprint == null) return null;
+            var room = blueprint.Rooms[Room].Base;
+            var lights = blueprint.Light[room].Lights;
+            var xy = new Vector2(Position.X, Position.Y);
+            var result = new List<Vector2>();
+
+            foreach (var light in lights)
+            {
+                if (light.LightIntensity > 0.2f && (xy*16 - light.LightPos).Length() < light.LightSize)
+                {
+                    result.Add((light.LightPos / 16f) * 3f);
+                }
+            }
+
+            if (blueprint.Rooms[room].IsOutside && blueprint.OutdoorsLight != null)
+            {
+                result.Add(new Vector2(Position.X*3, Position.Y*3)+(-blueprint.OutdoorsLight.LightDir*3f * blueprint.OutdoorsLight.FalloffMultiplier));
+            }
+            return result;
+        }
+
         public override void Draw(GraphicsDevice device, WorldState world)
         {
+            Avatar.Position = WorldSpace.GetWorldFromTile(Position);
             var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition / 3.0f;
             var transhead = Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
 
@@ -118,8 +143,8 @@ namespace FSO.LotView.Components
                 if ((DisplayFlags & AvatarDisplayFlags.ShowAsGhost) > 0) col = new Color(32, 255, 96) * 0.66f;
                 else if ((DisplayFlags & AvatarDisplayFlags.TSOGhost) != 0) col = new Color(255, 255, 255, 64);
 
-
-                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, Room, col); 
+                Avatar.LightPositions = (WorldConfig.Current.AdvancedLighting)?CloseLightPositions(Position):null;
+                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, (Room>65532)?Room:blueprint.Rooms[Room].Base, col); 
             }
 
             if (Headline != null && !Headline.IsDisposed)

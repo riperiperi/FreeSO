@@ -52,6 +52,7 @@ namespace FSO.Client.UI.Screens
         public UIPersonPage PersonPage;
         public UILotPage LotPage;
         public UIBookmarks Bookmarks;
+        public UIRelationshipDialog Relationships;
 
         private Queue<SimConnectStateChange> StateChanges;
 
@@ -270,6 +271,11 @@ namespace FSO.Client.UI.Screens
             Bookmarks.Visible = false;
             Bookmarks.BindController<BookmarksController>();
             WindowContainer.Add(Bookmarks);
+
+            Relationships = new UIRelationshipDialog();
+            Relationships.Visible = false;
+            Relationships.BindController<RelationshipDialogController>();
+            WindowContainer.Add(Relationships);
         }
 
         public override void GameResized()
@@ -555,6 +561,12 @@ namespace FSO.Client.UI.Screens
             {
                 case VMEventType.TSOUnignore:
                     PersonPage.ToggleBookmark(Common.DataService.Model.BookmarkType.IGNORE_AVATAR, null, (uint)data);
+                    break;
+                case VMEventType.TSOTimeout:
+                    var dialog = new UITimeOutDialog(vm, (int)data);
+                    UIScreen.GlobalShowDialog(dialog, true);
+                    var rnd = new Random();
+                    dialog.Position = new Vector2(rnd.Next(ScreenWidth - 500), rnd.Next(ScreenHeight - 500));
                     break;
             }
         }

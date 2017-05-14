@@ -475,6 +475,7 @@ namespace FSO.LotView.Components
             for (int i=0; i<Drawgroups.Length; i++)
             {
                 if (i > world.Level - 1) return;
+                Effect.Parameters["Level"].SetValue((float)i+1);
                 if (Drawgroups[i] != null)
                 {
                     var dg = Drawgroups[i];

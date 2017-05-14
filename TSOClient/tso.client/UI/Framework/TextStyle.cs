@@ -73,6 +73,22 @@ namespace FSO.Client.UI.Framework
             return result * Scale;
         }
 
+        public string TruncateToWidth(string text, int width)
+        {
+            return TruncateToWidth(text, width, "...");
+        }
+
+        public string TruncateToWidth(string text, int width, string truncator)
+        {
+            if (MeasureString(text).X <= width) return text;
+            while (text.Length > 0)
+            {
+                text = text.Substring(0, text.Length - 1);
+                if (MeasureString(text+truncator).X <= width) return text + truncator;
+            }
+            return text;
+        }
+
         /// <summary>
         /// PX size
         /// </summary>

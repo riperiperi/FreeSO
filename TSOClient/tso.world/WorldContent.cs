@@ -40,19 +40,27 @@ namespace FSO.LotView
             }
         }
 
+        public static Effect Grad2DEffect
+        {
+            get
+            {
+                return ContentManager.Load<Effect>("Effects/gradpoly2D");
+            }
+        }
+
+        public static Effect Light2DEffect
+        {
+            get
+            {
+                return ContentManager.Load<Effect>("Effects/LightMap2D");
+            }
+        }
+
         public static Effect GrassEffect
         {
             get
             {
                 return ContentManager.Load<Effect>("Effects/GrassShader"+EffectSuffix);
-            }
-        }
-
-        public static Texture2D GridTexture
-        {
-            get
-            {
-                return ContentManager.Load<Texture2D>("Textures/gridTexture");
             }
         }
     }
