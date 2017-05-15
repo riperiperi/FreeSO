@@ -24,6 +24,7 @@ namespace FSO.Client.UI.Panels.EODs
         //private VMEODBandStates State;
         private UIEODLobby Lobby;
         private Timer SequenceNoteTimer;
+        private Timer SyncTimer;
         private byte[] CurrentSequence;
         private int CurrentNote;
 
@@ -42,6 +43,7 @@ namespace FSO.Client.UI.Panels.EODs
         public UIButton MyFirstButton;
         public UIButton MySecondButton;
         public UIButton LastNote;
+        public UIButton SyncButton;
         private UIButton[] NoteButtonArray;
         private UIButton[] MiscButtonArray;
 
@@ -88,9 +90,23 @@ namespace FSO.Client.UI.Panels.EODs
             // render script
             Script = RenderScript("jobobjband.uis");
             SetTip(GameFacade.Strings["UIText", "253", "19"]);
+            
+            Remove(DOH);
+            Remove(RE);
+            Remove(MI);
+            Remove(FA);
+            Remove(SO);
+            Remove(LA);
+            Remove(TI);
+            Remove(DOH2);
+            Remove(BUZZ);
+            Remove(CONTINUE);
+            Remove(CASHOUT);
 
             SequenceNoteTimer = new Timer(VMEODBandPlugin.MILLISECONDS_PER_NOTE_IN_SEQUENCE);
             SequenceNoteTimer.Elapsed += NextNoteHandler;
+            SyncTimer = new Timer(VMEODBandPlugin.MILLISECONDS_PER_NOTE_IN_SEQUENCE);
+            SyncTimer.Elapsed += SyncTimerElapsedHandler;
 
             // get the buttons and put into array in order to recover their references when the client connects
             NoteButtonArray = new UIButton[] { BUZZ, DOH, RE, MI, FA, SO, LA, TI, DOH2}; // matches order of VMEODBandPlugin.VMEODBandNoteTypes
@@ -166,11 +182,13 @@ namespace FSO.Client.UI.Panels.EODs
             // listeners
             BinaryHandlers["Band_Sequence"] = SequenceHandler;
             BinaryHandlers["Band_UI_Init"] = UIInitHandler;
+            BinaryHandlers["Band_Note_Sync"] = NoteSyncHandler;
             PlaintextHandlers["Band_Buzz"] = BuzzNoteHandler;
             PlaintextHandlers["Band_Fail"] = NoteFailHandler;
             PlaintextHandlers["Band_Game_Reset"] = ResetHandler;
             PlaintextHandlers["Band_Intermission"] = IntermissionHandler;
             PlaintextHandlers["Band_Performance"] = InitPerformanceHandler;
+            PlaintextHandlers["Band_Continue_Performance"] = PerformanceHandler;
             PlaintextHandlers["Band_Players"] = PlayerRosterHandler;
             PlaintextHandlers["Band_RockOn"] = ForceRockOnHandler;
             PlaintextHandlers["Band_Show"] = ShowGameHandler;
@@ -232,6 +250,20 @@ namespace FSO.Client.UI.Panels.EODs
             if (ButtonBack != null)
                 GotoWaitForPlayerPhase();
         }
+        private void NoteSyncHandler(string evt, byte[] noteArray)
+        {
+            var note = noteArray[0];
+            if (Enum.IsDefined(typeof(UIBANDEODSoundNames),note))
+            {
+                // if this note does not belong to my 1st or 2nd button
+                if (!NoteButtonArray[note].Equals(MyFirstButton) && !NoteButtonArray[note].Equals(MySecondButton)) {
+                    SyncButton = NoteButtonArray[note];
+                    ForceNoteButtonState(SyncButton, (int)UIElementState.Highlighted);
+                    PlaySound(note);
+                    SyncTimer.Start();
+                }
+            }
+        }
         private void ShowGameHandler(string evt, string msg)
         {
             GotoBandGame();
@@ -272,6 +304,15 @@ namespace FSO.Client.UI.Panels.EODs
             UnForceNoteButtonState(BUZZ);
             AddMyListeners();
         }
+        private void PerformanceHandler(string evt, string msg)
+        {
+            NoteSent = false;
+            // allow my buttons
+            UnForceNoteButtonState(MyFirstButton);
+            UnForceNoteButtonState(MySecondButton);
+            UnForceNoteButtonState(BUZZ);
+            AddMyListeners();
+        }
         private void ResetHandler(string evt, string newSkillString)
         {
             CurrentPayoutString = "0";
@@ -280,6 +321,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void SequenceHandler(string evt, byte[] sequence)
         {
+            SyncButton = null;
             DisableIntermissionButtons();
             CurrentSequence = sequence;
             InitSequencePhase();
@@ -301,6 +343,14 @@ namespace FSO.Client.UI.Panels.EODs
             CurrentPayoutString = newPayout;
             UpdateEarningString();
             EnableIntermissionButtons();
+        }
+        private void SyncTimerElapsedHandler(object source, ElapsedEventArgs args)
+        {
+            SyncTimer.Stop();
+            if (SyncButton != null)
+            {
+                SyncButton.ForceState = -1;
+            }
         }
         private void NextNoteHandler(object source, ElapsedEventArgs args)
         {
@@ -325,7 +375,7 @@ namespace FSO.Client.UI.Panels.EODs
                     if (LastNote.Equals(MyFirstButton) || LastNote.Equals(MySecondButton))
                         UnForceNoteButtonState(LastNote);
                     else
-                        LastNote.ForceState = -1; // leave it disabled
+                        ForceNoteButtonState(LastNote, (int)UIElementState.Normal);
                 }
             }
         }
@@ -465,21 +515,6 @@ namespace FSO.Client.UI.Panels.EODs
             }
             EarningString.Visible = false;
 
-            /*// show lobby-related elements
-            UIVMPersonButton button = null;
-            for (var index = 0; index < 4; index++)
-            {
-                button = Lobby.GetPlayerButton(index);
-                if (button != null)
-                {
-                    try
-                    {
-                        Lobby.Remove(button);
-                    }
-                    catch (Exception) { }
-                    Lobby.Add(button);
-                }
-            }*/
             try
             {
                 Remove(Lobby);
@@ -527,20 +562,6 @@ namespace FSO.Client.UI.Panels.EODs
             EarningString.Visible = true;
             UpdateEarningString();
 
-            // hide lobby-related elements
-            /*UIVMPersonButton button = null;
-            for (var index = 0; index < 4; index++)
-            {
-                button = Lobby.GetPlayerButton(index);
-                if (button != null)
-                {
-                    try
-                    {
-                        Lobby.Remove(button);
-                    }
-                    catch (Exception) { }
-                }
-            }*/
             try
             {
                 Remove(Lobby);
@@ -573,22 +594,6 @@ namespace FSO.Client.UI.Panels.EODs
             ForceNotesButtonsState((int)UIElementState.Normal);
             CurrentNote = -1;
             SequenceNoteTimer.Start();
-        }
-        /*
-         * After players attempted to repeat the pattern displayed by the sequence, before any result is displayed
-         */
-        private void EndPerformancePhase()
-        {
-            DisableNoteButtons();
-            RemoveListeners();
-
-            // disable but show the color of my buttons
-            MyFirstButton.Disabled = true;
-            ForceNoteButtonState(MyFirstButton, (int)UIElementState.Normal);
-            MySecondButton.Disabled = true;
-            ForceNoteButtonState(MySecondButton, (int)UIElementState.Normal);
-            BUZZ.Disabled = true;
-            ForceNoteButtonState(BUZZ, (int)UIElementState.Normal);
         }
 
         private void PlayNextNote()
