@@ -275,7 +275,7 @@ namespace FSO.SimAntics.Model
                 }
                 oldBaseR.SupportRooms.Clear();
                 //and move all the wall lines (for advanced lighting)
-                newBaseR.WallLines.AddRange(oldBaseR.WallLines);
+                newBaseR.WallLines?.AddRange(oldBaseR.WallLines);
                 oldBaseR.WallLines = null;
                 //note there's a small bug here where wall lines can be on the same location
                 //if both sides of the wall are found on adjacent rooms
