@@ -480,7 +480,7 @@ namespace FSO.LotView.Components
                                 int roomSide = 16-((((int)world.Rotation+1)/2)%2) * 16;
                                 var _Sprite = GetWallSprite(trPattern, trStyle, 2, down, world);
 
-                                _Sprite.Room = (ushort)(TileRoom>>roomSide);
+                                _Sprite.Room = (ushort)((TileRoom>>roomSide)&0x7FFF);
                                 _Sprite.Floor = level;
                                 if (_Sprite.Pixel != null)
                                 {
@@ -498,14 +498,14 @@ namespace FSO.LotView.Components
                                     if (comp.TopLeftPattern != 0)
                                     {
                                         var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 3);
-                                        floor.Room = (ushort)(TileRoom >> roomSide);
+                                        floor.Room = (ushort)((TileRoom >> roomSide) & 0x7FFF);
                                         floor.Floor = level;
                                         if (floor.Pixel != null) world._2D.Draw(floor);
                                     }
                                     if (comp.TopLeftStyle != 0)
                                     {
                                         var floor = GetFloorSprite(floorContent.Get(comp.TopLeftStyle), 0, world, 2);
-                                        floor.Room = (ushort)(TileRoom >> (16-roomSide));
+                                        floor.Room = (ushort)((TileRoom >> (16-roomSide)) & 0x7FFF);
                                         floor.Floor = level;
                                         if (floor.Pixel != null) world._2D.Draw(floor);
                                     }

@@ -25,6 +25,7 @@ using System.Net.NetworkInformation;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using FSO.Common.Utils;
 
 namespace FSO.Client.UI.Screens
 {
@@ -112,6 +113,29 @@ namespace FSO.Client.UI.Screens
             
             Regulator.OnError += AuthRegulator_OnError;
             Regulator.OnTransition += AuthRegulator_OnTransition;
+
+            var compat = GlobalSettings.Default.CompatState;
+            if (compat != -1 && compat < GlobalSettings.TARGET_COMPAT_STATE)
+            {
+                GameThread.NextUpdate(x =>
+                {
+                    GlobalShowAlert(new UIAlertOptions() { Message = GameFacade.Strings.GetString("f105", "2") }, true);
+                    var settings = GlobalSettings.Default;
+                    settings.CompatState = 0;
+                    settings.Lighting = false;
+                    settings.SurroundingLotMode = 0;
+                    settings.CityShadows = false;
+                    settings.AntiAlias = false;
+                    settings.Save();
+
+                    LotView.WorldConfig.Current = new LotView.WorldConfig()
+                    {
+                        AdvancedLighting = settings.Lighting,
+                        SmoothZoom = settings.SmoothZoom,
+                        SurroundingLots = settings.SurroundingLotMode
+                    };
+                });
+            }
         }
 
         public override void GameResized()
@@ -177,7 +201,7 @@ namespace FSO.Client.UI.Screens
         /// </summary>
         public void Login()
         {
-            if(LoginDialog.Username.Length == 0 || LoginDialog.Password.Length == 0){
+            if (LoginDialog.Username.Length == 0 || LoginDialog.Password.Length == 0){
                 return;
             }
 

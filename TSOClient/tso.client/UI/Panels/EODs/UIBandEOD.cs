@@ -180,6 +180,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         public override void OnClose()
         {
+            CloseInteraction();
             base.OnClose();
         }
 

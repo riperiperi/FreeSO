@@ -6,14 +6,14 @@
     BASE PIZZA PAYOUT (small, med, large):
       (60/120/170)
     - generally lower, rescaled
-      (50/85/150)
+      (55/95/155)
 	
     BONUS PIZZA PAYOUT:
       (120/240/380)
     - 2x rescaled base, with extra for large
-      (100/170/350)
+      (110/190/365)
 	
-    SKILL BONUS FACTOR: 20 -> 15 (max skill bonus 400 -> 300)
+    SKILL BONUS FACTOR: 20 -> 17 (max skill bonus 400 -> 340)
    -->
 
    <T i="4101" n="Tuning - Motives">
@@ -41,13 +41,13 @@
       <K i="4" l="tCardsPerMediumIngredient" v="10"></K>
       <K i="5" l="tCardsPerLargeIngredient" v="8"></K>
       <K i="6" l="tCardsPerBonusIngredientPerSize" v="2"></K>
-      <K i="7" l="tPayBaseSmall" v="50"></K>
-      <K i="8" l="tPayBaseMedium" v="85"></K>
-      <K i="9" l="tPayBaseLarge" v="150"></K>
-      <K i="10" l="tPayBaseSmallBonus" v="100"></K>
-      <K i="11" l="tPayBaseMediumBonus" v="170"></K>
-      <K i="12" l="tPayBaseLargeBonus" v="350"></K>
-      <K i="13" l="tPaySkillFactor" v="15"></K>
+      <K i="7" l="tPayBaseSmall" v="55"></K>
+      <K i="8" l="tPayBaseMedium" v="95"></K>
+      <K i="9" l="tPayBaseLarge" v="155"></K>
+      <K i="10" l="tPayBaseSmallBonus" v="110"></K>
+      <K i="11" l="tPayBaseMediumBonus" v="190"></K>
+      <K i="12" l="tPayBaseLargeBonus" v="365"></K>
+      <K i="13" l="tPaySkillFactor" v="17"></K>
       <K i="14" l="tOwnerPercent" v="10"></K>
       <K i="15" l="tMinimumPay" v="10"></K>
       <K i="16" l="tMaxPayout" v="700"></K>

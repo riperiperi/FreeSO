@@ -221,13 +221,15 @@ namespace FSO.Vitaboy
         {
         }
 
+        public static int DefaultTechnique = 0;
+
         /// <summary>
         /// Draws the meshes making up this Avatar instance.
         /// </summary>
         /// <param name="device">A GraphicsDevice instance.</param>
         public override void Draw(Microsoft.Xna.Framework.Graphics.GraphicsDevice device)
         {
-            Effect.CurrentTechnique = Effect.Techniques[0];
+            Effect.CurrentTechnique = Effect.Techniques[DefaultTechnique];
             Effect.Parameters["View"].SetValue(View);
             Effect.Parameters["Projection"].SetValue(Projection);
             Effect.Parameters["World"].SetValue(World);
@@ -292,7 +294,7 @@ namespace FSO.Vitaboy
                 //effect.Parameters["FloorHeight"].SetValue((float)(Math.Floor(Position.Y/2.95)*2.95 + 0.05));
                 effect.Parameters["LightPosition"].SetValue(light);
                 var oldTech = effect.CurrentTechnique;
-                effect.CurrentTechnique = Avatar.Effect.Techniques[3];
+                effect.CurrentTechnique = Avatar.Effect.Techniques[4];
                 effect.CurrentTechnique.Passes[0].Apply();
                 device.DepthStencilState = DepthStencilState.DepthRead;
                 device.SetVertexBuffer(ShadBuf);

@@ -108,6 +108,7 @@ namespace FSO.Client.UI.Panels.EODs
                 Players[1] = null;
             }
             Send("WarGame_Close_UI", "");
+            CloseInteraction();
             base.OnClose();
         }
         private void InitHandler(string evt, string data)

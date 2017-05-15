@@ -61,7 +61,8 @@ namespace FSO.Client
 
             { "TargetRefreshRate", "60" },
 
-            { "EnableTTS", "false" }
+            { "EnableTTS", "false" },
+            { "CompatState", "-1" }
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -101,5 +102,8 @@ namespace FSO.Client
         public int TargetRefreshRate { get; set; }
         public bool EnableTTS { get; set; }
         public int SurroundingLotMode { get; set; }
+        public int CompatState { get; set; }
+
+        public static int TARGET_COMPAT_STATE = 2;
     }
 }

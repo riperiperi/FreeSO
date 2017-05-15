@@ -114,7 +114,8 @@ namespace FSO.Client.UI.Framework
         public override void Removed()
         {
             base.Removed();
-            foreach (var child in Children)
+            var childCopy = new List<UIElement>(Children);
+            foreach (var child in childCopy)
             {
                 child.Removed();
             }

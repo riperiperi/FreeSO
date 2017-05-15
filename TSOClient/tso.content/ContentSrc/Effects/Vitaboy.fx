@@ -144,7 +144,21 @@ float4 psVitaboy(VitaVertexOut v) : COLOR0
 		color.rgb *= pow((dot(normalize(v.normal), float3(0, 1, 0)) + 1) / 2, 0.5)*0.5 + 0.5f;
         return color;
     }
+}
 
+float4 psVitaboyNoSSAA(VitaVertexOut v) : COLOR0
+{
+	float depth = v.screenPos.z / v.screenPos.w;
+	if (depthOutMode == true) {
+		return packObjID(depth);
+	}
+	else {
+		//SOFTWARE DEPTH
+		if (SoftwareDepth == true && depthOutMode == false && unpackDepth(tex2D(depthMapSampler, v.screenPos.xy)) < depth) discard;
+		float4 color = tex2D(TexSampler, v.texCoord) * AmbientLight;
+		color.rgb *= pow((dot(normalize(v.normal), float3(0, 1, 0)) + 1) / 2, 0.5)*0.5 + 0.5f;
+		return color;
+	}
 }
 
 float4 psVitaboyAdv(VitaVertexOut v) : COLOR0
@@ -167,16 +181,16 @@ float4 psObjID(VitaVertexOut v) : COLOR0
     return packObjID(ObjectID);
 }
 
-technique Technique1
+technique NoSSAA
 {
     pass Pass1
     {
 #if SM4
         VertexShader = compile vs_4_0_level_9_1 vsVitaboy();
-        PixelShader = compile ps_4_0_level_9_3 psVitaboy();
+        PixelShader = compile ps_4_0_level_9_1 psVitaboyNoSSAA();
 #else
         VertexShader = compile vs_3_0 vsVitaboy();
-        PixelShader = compile ps_3_0 psVitaboy();
+        PixelShader = compile ps_3_0 psVitaboyNoSSAA();
 #endif;
     }
 }
@@ -206,6 +220,20 @@ technique AdvancedLighting
 #else
 		VertexShader = compile vs_3_0 vsVitaboy();
 		PixelShader = compile ps_3_0 psVitaboyAdv();
+#endif;
+	}
+}
+
+technique SSAA
+{
+	pass Pass1
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 vsVitaboy();
+		PixelShader = compile ps_4_0_level_9_3 psVitaboy();
+#else
+		VertexShader = compile vs_3_0 vsVitaboy();
+		PixelShader = compile ps_3_0 psVitaboy();
 #endif;
 	}
 }

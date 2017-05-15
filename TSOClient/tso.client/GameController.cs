@@ -76,6 +76,11 @@ namespace FSO.Client
         /// </summary>
         public void ShowPersonSelection()
         {
+            if (GlobalSettings.Default.CompatState == -1)
+            {
+                GlobalSettings.Default.CompatState = 0;
+                GlobalSettings.Default.Save();
+            }
             ChangeState<PersonSelection, PersonSelectionController>((view, controller) =>
             {
             });

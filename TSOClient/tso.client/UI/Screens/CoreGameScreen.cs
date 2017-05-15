@@ -359,6 +359,11 @@ namespace FSO.Client.UI.Screens
                             World.Visible = true;
                             World.Opacity = 0;
                         }
+                        else if (World.FrameCounter == 5 && GlobalSettings.Default.CompatState < GlobalSettings.TARGET_COMPAT_STATE)
+                        {
+                            GlobalSettings.Default.CompatState = GlobalSettings.TARGET_COMPAT_STATE;
+                            GlobalSettings.Default.Save();
+                        }
                         else
                             CityRenderer.InheritPosition(World, FindController<CoreGameScreenController>());
                     }

@@ -57,6 +57,7 @@ namespace FSO.Client.UI.Controls
         
         private void UISimInit()
         {
+            Vitaboy.Avatar.DefaultTechnique = (GlobalSettings.Default.Lighting) ? 3 : 0;
             Camera = new WorldCamera(GameFacade.GraphicsDevice);
             Camera.Zoom = Zoom;
             Camera.CenterTile = new Vector2(-1, -1)*FSOEnvironment.DPIScaleFactor;

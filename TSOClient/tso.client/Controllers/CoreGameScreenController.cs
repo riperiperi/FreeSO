@@ -173,7 +173,9 @@ namespace FSO.Client.Controllers
             var bigThumb = Screen.vm.Context.World.GetLotThumb(GameFacade.GraphicsDevice);
             byte[] data;
             using (var stream = new MemoryStream()) {
-                TextureUtils.Decimate(bigThumb, GameFacade.GraphicsDevice, 8).SaveAsPng(stream, bigThumb.Width / 8, bigThumb.Height / 8);
+                var tex = TextureUtils.Decimate(bigThumb, GameFacade.GraphicsDevice, 8);
+                tex.SaveAsPng(stream, bigThumb.Width / 8, bigThumb.Height / 8);
+                tex.Dispose();
                 data = stream.ToArray();
             }
             DataService.Get<Lot>(lotID).ContinueWith(x =>
