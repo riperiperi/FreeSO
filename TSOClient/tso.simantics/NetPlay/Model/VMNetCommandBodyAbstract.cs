@@ -17,6 +17,11 @@ namespace FSO.SimAntics.NetPlay.Model
         public uint ActorUID;
         public bool FromNet = false;
 
+        public virtual bool AcceptFromClient
+        {
+            get { return true; }
+        }
+
         public virtual bool Execute(VM vm) { return true; }
 
         public virtual bool Execute(VM vm, VMAvatar caller) { return Execute(vm); }

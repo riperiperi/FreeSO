@@ -44,5 +44,7 @@
 	</array>
 	<key>UIPrerenderedIcon</key>
 	<false/>
+	<key>UIMainStoryboardFile</key>
+	<string>Installer</string>
 </dict>
 </plist>

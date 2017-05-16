@@ -67,10 +67,6 @@ namespace FSO.Client.UI.Panels
                 MessageAuthor Author = new MessageAuthor();
                 Author.Author = (string)Dropdown.MenuListBox.SelectedItem.Columns[0];
                 Author.GUID = (string)Dropdown.MenuListBox.SelectedItem.Data.ToString();
-
-                //TODO: UIMessageType should be changed to Compose when later on to send letters
-                //      instead of IMs.
-                GameFacade.MessageController.PassMessage(Author, null);
             }
         }
 
@@ -134,12 +130,12 @@ namespace FSO.Client.UI.Panels
                 UIListBoxTextStyle Style = Script.Create<UIListBoxTextStyle>("SimMessageColors", MenuListBox.FontStyle);
 
                 //TODO: This should eventually be made to show only a player's friends.
-                foreach (UISim Avatar in Network.NetworkFacade.AvatarsInSession)
+                /*foreach (UISim Avatar in Network.NetworkFacade.AvatarsInSession)
                 {
                     UIListBoxItem AvatarItem = new UIListBoxItem(Avatar.GUID, Avatar.Name);
                     AvatarItem.CustomStyle = Style;
                     MenuListBox.Items.Add(AvatarItem);
-                }
+                }*/
             }
 
             open = !open;

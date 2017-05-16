@@ -13,20 +13,36 @@ using FSO.Files.FAR3;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Content;
 using FSO.Files;
+using FSO.Files.Formats.tsodata;
 using FSO.Files.Formats.IFF;
 using System.Threading;
 using FSO.Common;
+using FSO.Content.Model;
 
 namespace FSO.Content
 {
+    public enum ContentMode
+    {
+        SERVER,
+        CLIENT
+    }
+
     /// <summary>
     /// Content is a singleton responsible for loading data.
     /// </summary>
     public class Content
     {
         public static void Init(string basepath, GraphicsDevice device){
-            INSTANCE = new Content(basepath, device);
+            if (INSTANCE != null) return;
+            INSTANCE = new Content(basepath, ContentMode.CLIENT, device);
         }
+
+        public static void Init(string basepath, ContentMode mode)
+        {
+            if (INSTANCE != null) return;
+            INSTANCE = new Content(basepath, mode, null);
+        }
+
         private static Content INSTANCE;
         public static Content Get()
         {
@@ -39,6 +55,7 @@ namespace FSO.Content
         public string BasePath;
         public string[] AllFiles;
         private GraphicsDevice Device;
+        public ContentMode Mode;
 
         public ChangeManager Changes;
 
@@ -47,35 +64,44 @@ namespace FSO.Content
         /// </summary>
         /// <param name="basePath">Path to client directory.</param>
         /// <param name="device">A GraphicsDevice instance.</param>
-        private Content(string basePath, GraphicsDevice device)
+        private Content(string basePath, ContentMode mode, GraphicsDevice device)
         {
             this.BasePath = basePath;
             this.Device = device;
+            this.Mode = mode;
 
+            if(device != null)
+            {
+                UIGraphics = new UIGraphicsProvider(this);
+                AvatarTextures = new AvatarTextureProvider(this);
+                AvatarMeshes = new AvatarMeshProvider(this, Device);
+                AvatarHandgroups = new HandgroupProvider(this);
+                AbstractTextureRef.FetchDevice = device;
+                AbstractTextureRef.ImageFetchFunction = AbstractTextureRef.ImageFetchWithDevice;
+            }
             Changes = new ChangeManager();
-
-            UIGraphics = new UIGraphicsProvider(this);
-            AvatarMeshes = new AvatarMeshProvider(this, Device);
             AvatarBindings = new AvatarBindingProvider(this);
-            AvatarTextures = new AvatarTextureProvider(this, Device);
             AvatarSkeletons = new AvatarSkeletonProvider(this);
             AvatarAppearances = new AvatarAppearanceProvider(this);
             AvatarOutfits = new AvatarOutfitProvider(this);
             AvatarAnimations = new AvatarAnimationProvider(this);
             AvatarPurchasables = new AvatarPurchasables(this);
-            AvatarHandgroups = new HandgroupProvider(this, Device);
             AvatarCollections = new AvatarCollectionsProvider(this);
-            AvatarThumbnails = new AvatarThumbnailProvider(this, Device);
-
+            AvatarThumbnails = new AvatarThumbnailProvider(this);
 
             WorldObjects = new WorldObjectProvider(this);
             WorldFloors = new WorldFloorProvider(this);
             WorldWalls = new WorldWallProvider(this);
             WorldObjectGlobals = new WorldGlobalProvider(this);
             WorldCatalog = new WorldObjectCatalog();
+            WorldRoofs = new WorldRoofProvider(this);
 
             Audio = new Audio(this);
             GlobalTuning = new Tuning(Path.Combine(basePath, "tuning.dat"));
+            Ini = new IniProvider(this);
+            CityMaps = new CityMapsProvider(this);
+
+            RackOutfits = new RackOutfitsProvider(this);
 
             Init();
         }
@@ -89,6 +115,7 @@ namespace FSO.Content
             WorldObjectGlobals.Init();
             WorldWalls.Init();
             WorldFloors.Init();
+            WorldRoofs.Init();
             WorldCatalog.Init(this);
         }
 
@@ -104,10 +131,15 @@ namespace FSO.Content
 
             PIFFRegistry.Init(Path.Combine(FSOEnvironment.ContentDir, "Patch/"));
             Archives = new Dictionary<string, FAR3Archive>();
-            UIGraphics.Init();
-            AvatarMeshes.Init();
+            if (Mode == ContentMode.CLIENT)
+            {
+                UIGraphics.Init();
+                AvatarTextures.Init();
+                AvatarMeshes.Init();
+                AvatarHandgroups.Init();
+            }
+
             AvatarBindings.Init();
-            AvatarTextures.Init();
             AvatarSkeletons.Init();
             AvatarAppearances.Init();
             AvatarOutfits.Init();
@@ -115,7 +147,16 @@ namespace FSO.Content
             Audio.Init();
             AvatarPurchasables.Init();
             AvatarCollections.Init();
-            AvatarHandgroups.Init();
+            Ini.Init();
+            CityMaps.Init();
+            RackOutfits.Init();
+
+            DataDefinition = new TSODataDefinition();
+            using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
+            {
+                DataDefinition.Read(stream);
+            }
+                
             AvatarThumbnails.Init();
 
             InitWorld();
@@ -187,6 +228,7 @@ namespace FSO.Content
         public WorldFloorProvider WorldFloors;
         public WorldWallProvider WorldWalls;
         public WorldObjectCatalog WorldCatalog;
+        public WorldRoofProvider WorldRoofs;
 
         public UIGraphicsProvider UIGraphics;
         
@@ -208,5 +250,17 @@ namespace FSO.Content
 
         /** GlobalTuning **/
         public Tuning GlobalTuning;
+
+        /** Parsing **/
+        public TSODataDefinition DataDefinition;
+
+        /** Config **/
+        public IniProvider Ini;
+
+        /** Maps **/
+        public CityMapsProvider CityMaps;
+
+        /** Rack Outfits **/
+        public RackOutfitsProvider RackOutfits;
     }
 }

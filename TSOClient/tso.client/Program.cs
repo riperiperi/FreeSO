@@ -11,6 +11,9 @@ using FSO.Client.Utils.GameLocator;
 using FSO.Client.Utils;
 using System.Reflection;
 using FSO.Common;
+using FSO.Client.Debug;
+using System.Windows.Forms;
+using FSO.Common.Rendering.Framework.IO;
 
 namespace FSO.Client
 {
@@ -34,6 +37,7 @@ namespace FSO.Client
             AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
             //Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+            ClipboardHandler.Default = new WinFormsClipboard();
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
@@ -74,6 +78,7 @@ namespace FSO.Client
                     {
                         GlobalSettings.Default.LanguageCode = byte.Parse(cmd.Substring(4));
                     }
+                    else if (cmd.StartsWith("hz")) GlobalSettings.Default.TargetRefreshRate = int.Parse(cmd.Substring(2));
                     else
                     {
                         //normal style param
@@ -119,6 +124,7 @@ namespace FSO.Client
                 FSOEnvironment.GFXContentDir = "Content/" + (UseDX ? "DX/" : "OGL/");
                 FSOEnvironment.Linux = linux;
                 FSOEnvironment.DirectX = UseDX;
+                FSOEnvironment.GameThread = Thread.CurrentThread;
                 if (GlobalSettings.Default.LanguageCode == 0) GlobalSettings.Default.LanguageCode = 1;
                 Files.Formats.IFF.Chunks.STR.DefaultLangCode = (Files.Formats.IFF.Chunks.STRLangCode)GlobalSettings.Default.LanguageCode;
 
@@ -150,37 +156,29 @@ namespace FSO.Client
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            System.Windows.Forms.MessageBox.Show("Exception: \r\n" + e.ExceptionObject.ToString());
+            MessageBox.Show("Exception: \r\n" + e.ExceptionObject.ToString());
         }
 
         private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
             LogThis.Log.LogThis("Exception: " + e.Exception.ToString(), LogThis.eloglevel.error);
-            System.Windows.Forms.MessageBox.Show("Exception: \r\n" + e.Exception.ToString());
+            MessageBox.Show("Exception: \r\n" + e.Exception.ToString());
         }
 
-        /// <summary>
-        /// Loads the client's version from "Client.manifest".
-        /// This is here because it should be one of the first
-        /// things the client does when it starts.
-        /// </summary>
-        /// <returns>The version.</returns>
         private static string GetClientVersion()
         {
             string ExeDir = GlobalSettings.Default.StartupPath;
 
-            //Never make an assumption that a file exists.
-            if (File.Exists(ExeDir + "\\Client.manifest"))
+            if (File.Exists("version.txt"))
             {
-                using (BinaryReader Reader = new BinaryReader(File.Open(ExeDir + "\\Client.manifest", FileMode.Open, FileAccess.Read, FileShare.Read)))
+                using (StreamReader Reader = new StreamReader(File.Open("version.txt", FileMode.Open, FileAccess.Read, FileShare.Read)))
                 {
-                    return Reader.ReadString() + ".0"; //Last version number is unused.
+                    return Reader.ReadLine();
                 }
             }
             else
             {
-                //Version as of writing this method.
-                return "0.1.26.0";
+                return "(?)";
             }
         }
     }

@@ -75,6 +75,14 @@ namespace FSO.LotView.Utils
             }
         }
 
+        private float _PreciseZoom = 1f;
+
+        public float PreciseZoom
+        {
+            get { return _PreciseZoom; }
+            set { _PreciseZoom = value; m_ProjectionDirty = true; }
+        }
+
         private WorldZoom _Zoom;
 
         /// <summary>
@@ -143,6 +151,23 @@ namespace FSO.LotView.Utils
             }
         }
 
+        public Vector3 FrontDirection()
+        {
+            var rot = Rotation;
+            switch (rot)
+            {
+                case WorldRotation.TopLeft:
+                    return new Vector3(1, 0, 1);
+                case WorldRotation.TopRight:
+                    return new Vector3(1, 0, -1);
+                case WorldRotation.BottomRight:
+                    return new Vector3(-1, 0, -1);
+                case WorldRotation.BottomLeft:
+                    return new Vector3(-1, 0, 1);
+            }
+            return new Vector3(1, 0, 1);
+        }
+
         /// <summary>
         /// Creates a new WorldCamera instance.
         /// </summary>
@@ -166,6 +191,9 @@ namespace FSO.LotView.Utils
                 diagnal = 256.0f;
                 depthRange = 64.0f;
             }
+            diagnal *= PreciseZoom;
+            depthRange /= PreciseZoom;
+
             var isoScale = Math.Sqrt(WorldSpace.WorldUnitsPerTile * WorldSpace.WorldUnitsPerTile * 2.0f) / diagnal;
             var hb = (float)(m_Device.Viewport.Width * isoScale);
             var vb = (float)(m_Device.Viewport.Height * isoScale);

@@ -1,4 +1,4 @@
-﻿/*
+/*
 This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 If a copy of the MPL was not distributed with this file, You can obtain one at
 http://mozilla.org/MPL/2.0/.
@@ -47,6 +47,11 @@ namespace FSO.Client.UI.Controls
             this.m_TextureRef = Texture;
         }
 
+        public void Reset()
+        {
+            m_Width = 0;
+            m_Height = 0;
+        }
 
         private UIMouseEventRef m_MouseEvent;
         /// <summary>
@@ -94,7 +99,8 @@ namespace FSO.Client.UI.Controls
         public UIImage With9Slice(int marginLeft, int marginRight, int marginTop, int marginBottom)
         {
             NineSlice = true;
-            NineSliceMargins = new NineSliceMargins {
+            NineSliceMargins = new NineSliceMargins
+            {
                 Left = marginLeft,
                 Right = marginRight,
                 Top = marginTop,
@@ -104,7 +110,7 @@ namespace FSO.Client.UI.Controls
 
             return this;
         }
-        
+
         public float Width
         {
             get { return m_Width; }
@@ -181,7 +187,7 @@ namespace FSO.Client.UI.Controls
 
                 /** MC **/
                 DrawLocalTexture(SBatch, m_Texture, NineSliceMargins.MC, new Vector2(NineSliceMargins.Left, NineSliceMargins.Top), NineSliceMargins.MC_Scale);
-                
+
                 /** MR **/
                 DrawLocalTexture(SBatch, m_Texture, NineSliceMargins.MR, new Vector2(Width - NineSliceMargins.Right, NineSliceMargins.Top), NineSliceMargins.MR_Scale);
 
@@ -266,7 +272,7 @@ namespace FSO.Client.UI.Controls
         {
             TC_Scale = new Vector2((width - (Left + Right)) / (TC.Width), 1);
             MC_Scale = new Vector2(
-                            (width - (Left + Right)) / (MC.Width), 
+                            (width - (Left + Right)) / (MC.Width),
                             (height - (Top + Bottom)) / (MC.Height)
                        );
             BC_Scale = new Vector2((width - (Left + Right)) / (BC.Width), 1);

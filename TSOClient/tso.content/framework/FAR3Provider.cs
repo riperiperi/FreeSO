@@ -13,6 +13,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using FSO.Common.Content;
 using FSO.Files.Utils;
+using FSO.Common.Utils;
 
 namespace FSO.Content.Framework
 {
@@ -27,7 +28,7 @@ namespace FSO.Content.Framework
         protected Dictionary<string, Far3ProviderEntry<T>> EntriesByName;
 
         protected IContentCodec<T> Codec;
-        protected Dictionary<ulong, T> Cache;
+        protected TimedReferenceCache<ulong, T> Cache;
         private string[] m_FarFiles;
         private Regex FarFilePattern;
 
@@ -107,18 +108,14 @@ namespace FSO.Content.Framework
         /// <returns>A FAR3 archive.</returns>
         public T Get(string Filename)
         {
-            lock (Cache)
+            Far3ProviderEntry<T> entry;
+
+            if (EntriesByName.TryGetValue(Filename.ToLowerInvariant(), out entry))
             {
-
-                Far3ProviderEntry<T> entry;
-
-                if (EntriesByName.TryGetValue(Filename.ToLowerInvariant(), out entry))
-                {
-                    return Get(entry);
-                }
-
-                return default(T);
+                return Get(entry);
             }
+
+            return default(T);
         }
 
         /// <summary>
@@ -128,29 +125,24 @@ namespace FSO.Content.Framework
         /// <returns>A FAR3 archive.</returns>
         public T Get(Far3ProviderEntry<T> Entry)
         {
-            lock (Cache)
+            //thread safe.
+            return Cache.GetOrAdd(Entry.ID, (id) =>
             {
-                if (this.Cache.ContainsKey(Entry.ID))
-                {
-                    return this.Cache[Entry.ID];
-                }
-
                 byte[] data = Entry.Archive.GetEntry(Entry.FarEntry);
                 using (var stream = new MemoryStream(data, false))
                 {
                     T result = this.Codec.Decode(stream);
                     if (result is IFileInfoUtilizer) ((IFileInfoUtilizer)result).SetFilename(Entry.FarEntry.Filename);
-                    this.Cache.Add(Entry.ID, result);
                     return result;
                 }
-            }
+            });
         }
 
         #region IContentProvider<T> Members
 
         public void Init()
         {
-            Cache = new Dictionary<ulong, T>();
+            Cache = new TimedReferenceCache<ulong, T>();
             lock (Cache)
             {
                 EntriesById = new Dictionary<ulong, Far3ProviderEntry<T>>();
@@ -189,7 +181,7 @@ namespace FSO.Content.Framework
                         EntriesById.Add(referenceItem.ID, referenceItem);
                         if (entry.Filename != null)
                         {
-                            EntriesByName.Add(entry.Filename.ToLowerInvariant(), referenceItem);
+                            EntriesByName[entry.Filename.ToLowerInvariant()] = referenceItem;
                         }
                     }
                 }
@@ -229,6 +221,11 @@ namespace FSO.Content.Framework
         public T Get()
         {
             return this.Provider.Get(this);
+        }
+
+        public object GetGeneric()
+        {
+            return Get();
         }
 
         #endregion

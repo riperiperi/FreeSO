@@ -167,7 +167,6 @@ namespace FSO.Files.XA
         /// <param name="InputBuffer">The data containing the stereo sample.</param>
         private void DecompressStereo(byte[] InputBuffer)
         {
-            //if (InputBuffer.Length != 0x1E) return; //todo, deal with this correctly. Right now stereo audio is kind of totally fucked!
             byte bInput;
             uint i;
             int c1left, c2left, c1right, c2right, left, right;

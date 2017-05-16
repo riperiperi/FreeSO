@@ -8,6 +8,8 @@ using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.Engine.TSOGlobalLink;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.Entities;
+using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 
 namespace FSO.SimAntics.Engine.TSOTransaction
 {
@@ -126,13 +128,13 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             vm.Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Leave, avatar.Name));
         }
 
-        public void RequestRoommate(VM vm, VMAvatar avatar)
+        public void RequestRoommate(VM vm, uint pid, int mode, byte permissions)
         {
             //in final game: signal to city server persistant roommate request state.
             //right now: immedaiately add as roommate
             vm.ForwardCommand(new VMChangePermissionsCmd()
             {
-                TargetUID = avatar.PersistID,
+                TargetUID = pid,
                 Level = VMTSOAvatarPermissions.Roommate,
                 Verified = true
             });
@@ -182,6 +184,69 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         public void SavePluginPersist(VM vm, uint objectPID, uint pluginID, byte[] data)
         {
             Database.SavePluginPersist(objectPID, pluginID, data);
+        }
+
+        public void RegisterNewObject(VM vm, VMEntity obj, VMAsyncPersistIDCallback callback)
+        {
+            //todo: sandbox servers should give things an "id"
+        }
+
+        public void MoveToInventory(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback)
+        {
+            //todo: nice stub for this using database?
+        }
+
+        public void PurchaseFromOwner(VM vm, VMMultitileGroup obj, uint purchaserPID, VMAsyncInventorySaveCallback callback, VMAsyncTransactionCallback tcallback)
+        {
+            //todo: nice stub for this using database?
+        }
+
+        public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, VMAsyncInventoryRetrieveCallback callback)
+        {
+            //todo: nice stub for this using database?
+        }
+
+        public void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback)
+        {
+            //todo: nice stub for this using database?
+        }
+
+        public void DeleteObject(VM vm, uint objectPID, VMAsyncDeleteObjectCallback callback)
+        {
+            //todo: delete local data
+        }
+
+        public void ConsumeInventory(VM vm, uint ownerPID, uint guid, int mode, short num, VMAsyncInventoryConsumeCallback callback)
+        {
+            //todo: nice stub for this using database?
+        }
+
+        public void SetSpotlightStatus(VM vm, bool on)
+        {
+
+        }
+
+        public void StockOutfit(VM vm, VMGLOutfit outfit, VMAsyncStockOutfitCallback callback)
+        {
+            //todo: local stub?
+        }
+
+        public void GetOutfits(VM vm, VMGLOutfitOwner owner, uint ownerPID, VMAsyncGetOutfitsCallback callback)
+        {
+            callback(new VMGLOutfit[0]);
+        }
+
+        public void DeleteOutfit(VM vm, uint outfitPID, VMGLOutfitOwner owner, uint ownerPID, VMAsyncDeleteOutfitCallback callback)
+        {
+        }
+
+        public void UpdateOutfitSalePrice(VM vm, uint outfitPID, uint objectPID, int newSalePrice, VMAsyncUpdateOutfitSalePriceCallback callback)
+        {
+
+        }
+
+        public void PurchaseOutfit(VM vm, uint outfitPID, uint objectPID, uint avatarPID, VMAsyncPurchaseOutfitCallback callback)
+        {
         }
     }
 }

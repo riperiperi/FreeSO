@@ -18,6 +18,7 @@ using FSO.Client.UI.Framework.Parser;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Utils;
+using FSO.Common.Rendering.Framework;
 using FSO.Common;
 using Microsoft.Xna.Framework.GamerServices;
 using System.Threading;
@@ -115,9 +116,22 @@ namespace FSO.Client.UI.Controls
             get { return m_SBuilder.ToString(); }
             set
             {
+                if (value == null) value = "";
                 m_SBuilder = new StringBuilder(value);
                 SelectionStart = Math.Max(0, Math.Min(SelectionStart, value.Length - 1));
                 SelectionEnd = -1; //todo: move along maybe?
+                m_DrawDirty = true;
+            }
+        }
+
+
+        private bool m_Password = false;
+        public bool Password
+        {
+            get { return m_Password; }
+            set
+            {
+                m_Password = value;
                 m_DrawDirty = true;
             }
         }
@@ -147,7 +161,7 @@ namespace FSO.Client.UI.Controls
         public bool FlashOnEmpty { get; set; }
 
         private Color m_FrameColor;
-        private Texture2D m_FrameTexture;
+        private Texture2D m_FrameTexture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, new Color(255, 249, 157));
 
         [UIAttribute("frameColor")]
         public Color FrameColor
@@ -285,9 +299,11 @@ namespace FSO.Client.UI.Controls
                     break;
 
                 case UIMouseEventType.MouseOver:
+                    GameFacade.Cursor.SetCursor(CursorType.IBeam);
                     break;
 
                 case UIMouseEventType.MouseOut:
+                    GameFacade.Cursor.SetCursor(CursorType.Normal);
                     break;
 
                 case UIMouseEventType.MouseUp:
@@ -385,6 +401,10 @@ namespace FSO.Client.UI.Controls
                 {
                     m_frameBlinkOn = false;
                 }
+            }
+            else
+            {
+                m_frameBlinkOn = false;
             }
 
             if (IsFocused)
@@ -646,7 +666,6 @@ namespace FSO.Client.UI.Controls
                 val = -1;
             }
             SelectionStart = val;
-            System.Diagnostics.Debug.WriteLine("Start Index = " + SelectionStart);
         }
 
         private void Control_SetSelectionEnd(int val)
@@ -662,7 +681,6 @@ namespace FSO.Client.UI.Controls
                 val = -1;
             }
             SelectionEnd = val;
-            System.Diagnostics.Debug.WriteLine("End Index = " + SelectionEnd);
         }
 
         /// <summary>
@@ -736,7 +754,20 @@ namespace FSO.Client.UI.Controls
              * Split the text into lines using manual lines
              * breaks and word wrap
              */
-            var txt = m_SBuilder.ToString();
+            string txt = null;
+
+            if (m_Password){
+                /** Use * instead **/
+                txt = "";
+                for(int i=0; i < m_SBuilder.Length; i++){
+                    txt += "*";
+                }
+            }
+            else
+            {
+                txt = m_SBuilder.ToString();
+            }
+
             var lineWidth = m_Width - (TextMargin.Left + TextMargin.Height);
             m_LineHeight = TextStyle.MeasureString("W").Y;
 
@@ -755,8 +786,8 @@ namespace FSO.Client.UI.Controls
             var topLeft = new Vector2(TextMargin.Left, TextMargin.Top);
             var position = topLeft;
             var txtScale = TextStyle.Scale * _Scale;
-            
-            m_NumVisibleLines = (int)Math.Floor(m_Height / m_LineHeight);
+
+            m_NumVisibleLines = Math.Max(1, (int)Math.Floor(m_Height / m_LineHeight));
             /** Make sure the current vscroll is valid **/
             VerticalScrollPosition = m_VScroll;
 
@@ -845,6 +876,7 @@ namespace FSO.Client.UI.Controls
                         cursorPosition.X += TextStyle.MeasureString(cursorLine.Text.Substring(0, prefix)).X;
                     }
                 }
+
 
                 m_DrawCmds.Add(new TextDrawCmd_Cursor
                 {
@@ -1145,6 +1177,11 @@ namespace FSO.Client.UI.Controls
 
         [UIAttribute("scrollbarGutter")]
         public int ScrollbarGutter { get; set; }
+
+        public UISlider Slider
+        {
+            get { return m_Slider; }
+        }
 
         private UISlider m_Slider;
 

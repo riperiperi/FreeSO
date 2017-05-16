@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using GonzoNet;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Engine.TSOTransaction;
@@ -17,14 +16,21 @@ namespace FSO.SimAntics.NetPlay
 {
     public abstract class VMNetDriver
     {
-        public bool ExceptionOnDesync;
         public IVMTSOGlobalLink GlobalLink;
         public abstract void SendCommand(VMNetCommandBodyAbstract cmd);
+        public abstract void SendDirectCommand(uint pid, VMNetCommandBodyAbstract cmd);
         public abstract bool Tick(VM vm);
         public abstract string GetUserIP(uint uid);
         public VMCloseNetReason CloseReason;
 
+        /// <summary>
+        /// Indicates a VM inspired total connection shutdown. 
+        /// </summary>
+        public event VMNetClosedHandler OnShutdown;
+        public delegate void VMNetClosedHandler(VMCloseNetReason reason);
+
         private int DesyncCooldown = 0;
+        public uint LastTick = 0;
 
         protected void InternalTick(VM vm, VMNetTick tick)
         {
@@ -34,31 +40,44 @@ namespace FSO.SimAntics.NetPlay
                 {
                     System.Console.WriteLine("DESYNC - Requested state from host");
                     vm.SendCommand(new VMRequestResyncCmd());
-                    DesyncCooldown = 30 * 3;
+                    DesyncCooldown = 30 * 30;
                 } else
                 {
                     System.Console.WriteLine("WARN - DESYNC - Too soon to try again!");
                 }
-                ExceptionOnDesync = true;
             }
+
             vm.Context.RandomSeed = tick.RandomSeed;
             bool doTick = !tick.ImmediateMode;
             foreach(var cmd in tick.Commands)
             {
-                if (cmd.Command is VMStateSyncCmd) doTick = false;
+                if (cmd.Command is VMStateSyncCmd)
+                {
+                    if (LastTick + 1 != tick.TickID) System.Console.WriteLine("Jump to tick " + tick.TickID);
+                    doTick = false;
+                }
 
-                var caller = vm.GetObjectByPersist(cmd.Command.ActorUID);
-                if (!(caller is VMAvatar)) caller = null;
-                cmd.Command.Execute(vm, (VMAvatar)caller);
+                var caller = vm.GetAvatarByPersist(cmd.Command.ActorUID);
+                cmd.Command.Execute(vm, caller);
             }
-            if (doTick && vm.Context.Ready)
+            if (tick.TickID < LastTick) System.Console.WriteLine("Tick wrong! Got " + tick.TickID + ", Missed " + ((int)tick.TickID - (LastTick + 1)));
+            else if (doTick && vm.Context.Ready)
             {
-                vm.InternalTick();
+                if (tick.TickID > LastTick + 1) System.Console.WriteLine("Tick wrong! Got " + tick.TickID + ", Missed " + ((int)tick.TickID - (LastTick + 1)));
+#if VM_DESYNC_DEBUG
+                vm.Trace.NewTick(tick.TickID);
+#endif
+                vm.InternalTick(tick.TickID);
                 if (DesyncCooldown > 0) DesyncCooldown--;
             }
+            LastTick = tick.TickID;
         }
-        public abstract void CloseNet();
-        public abstract void OnPacket(NetworkClient client, ProcessedPacket packet);
+        public virtual void Shutdown()
+        {
+            if (OnShutdown != null) OnShutdown(CloseReason);
+        }
+
+        public delegate void VMNetMessageHandler(VMNetMessageType type, byte[] data);
     }
 
     public enum VMCloseNetReason

@@ -353,6 +353,11 @@ namespace FSO.Content
             return Provider.Get(ID);
         }
 
+        public object GetGeneric()
+        {
+            return Get();
+        }
+
         #endregion
     }
 }

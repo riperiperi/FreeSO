@@ -10,12 +10,14 @@ namespace FSO.Files.Formats.IFF
     public static class PIFFRegistry
     {
         private static Dictionary<string, List<IffFile>> PIFFsByName;
+        private static Dictionary<string, string> OtfRewrite;
         private static Dictionary<string, bool> IsPIFFUser; //if a piff is User, all other piffs for that file are ignored.
 
         public static void Init(string basePath)
         {
             PIFFsByName = new Dictionary<string, List<IffFile>>();
             IsPIFFUser = new Dictionary<string, bool>();
+            OtfRewrite = new Dictionary<string, string>();
 
             //Directory.CreateDirectory(basePath);
             string[] paths = Directory.GetFiles(basePath, "*.piff", SearchOption.AllDirectories);
@@ -25,8 +27,17 @@ namespace FSO.Files.Formats.IFF
                 bool user = entry.Contains("User/");
                 string filename = Path.GetFileName(entry);
 
-                IffFile piffFile = new IffFile(entry);
-                PIFF piff = piffFile.List<PIFF>()[0];
+                PIFF piff;
+                IffFile piffFile;
+                try
+                {
+                    piffFile = new IffFile(entry);
+                    piff = piffFile.List<PIFF>()[0];
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
 
                 if (IsPIFFUser.ContainsKey(piff.SourceIff))
                 {
@@ -47,6 +58,21 @@ namespace FSO.Files.Formats.IFF
                 if (!PIFFsByName.ContainsKey(piff.SourceIff)) PIFFsByName.Add(piff.SourceIff, new List<IffFile>());
                 PIFFsByName[piff.SourceIff].Add(piffFile);
             }
+
+            string[] otfs = Directory.GetFiles(basePath, "*.otf", SearchOption.AllDirectories);
+
+            foreach (var otf in otfs)
+            {
+                string entry = otf.Replace('\\', '/');
+                OtfRewrite[Path.GetFileName(entry)] = entry;
+            }
+        }
+
+        public static string GetOTFRewrite(string srcFile)
+        {
+            string result = null;
+            OtfRewrite.TryGetValue(srcFile, out result);
+            return result;
         }
 
         public static List<IffFile> GetPIFFs(string srcFile)

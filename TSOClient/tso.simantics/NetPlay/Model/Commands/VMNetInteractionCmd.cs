@@ -4,6 +4,7 @@
  * http://mozilla.org/MPL/2.0/. 
  */
 
+using FSO.SimAntics.Engine;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,11 +19,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public short CalleeID;
         public short Param0;
 
-        public override bool Execute(VM vm)
+        public override bool Execute(VM vm, VMAvatar caller)
         {
             VMEntity callee = vm.GetObjectById(CalleeID);
-            VMEntity caller = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
             if (callee == null || caller == null) return false;
+            if (callee is VMGameObject && ((VMGameObject)callee).Disabled > 0) return false;
+            if (caller.Thread.Queue.Count >= VMThread.MAX_USER_ACTIONS) return false;
             callee.PushUserInteraction(Interaction, caller, vm.Context, new short[] { Param0, 0, 0, 0 });
 
             return true;

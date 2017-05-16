@@ -12,21 +12,17 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Content.Framework;
 using FSO.Content.Codecs;
 using FSO.Vitaboy;
+using System.Text.RegularExpressions;
 
 namespace FSO.Content
 {
     /// <summary>
     /// Provides access to handgroup (*.hag) data in FAR3 archives.
     /// </summary>
-    public class HandgroupProvider : PackingslipProvider<HandGroup>
+    public class HandgroupProvider : FAR3Provider<HandGroup>
     {
-        /// <summary>
-        /// Creates a new instance of HandgroupProvider.
-        /// </summary>
-        /// <param name="contentManager">A Content instance.</param>
-        /// <param name="device">A GraphicsDevice instance.</param>
-        public HandgroupProvider(Content contentManager, GraphicsDevice device)
-            : base(contentManager, "packingslips/handgroups.xml", new HandgroupCodec())
+        public HandgroupProvider(Content contentManager)
+            : base(contentManager, new HandgroupCodec(), new Regex(".*/hands/groups/.*\\.dat"))
         {
         }
     }

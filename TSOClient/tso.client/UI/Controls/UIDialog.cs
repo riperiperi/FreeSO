@@ -28,6 +28,14 @@ namespace FSO.Client.UI.Controls
         Close = 4
     }
 
+    [Flags]
+    public enum UIDialogExtras
+    {
+        None,
+        CloseButton,
+        AcceptButton
+    }
+
     /// <summary>
     /// Generic dialog component
     /// </summary>
@@ -46,8 +54,13 @@ namespace FSO.Client.UI.Controls
 
         //Tolerance for how far out of the screen controls can be dragged.
         protected static int m_DragTolerance = 20;
+        protected UIButton AcceptButton;
 
-        public UIDialog(UIDialogStyle style, bool draggable)
+        public UIDialog(UIDialogStyle style, bool draggable) : this(style, UIDialogExtras.None, draggable)
+        {
+        }
+
+        public UIDialog(UIDialogStyle style, UIDialogExtras extras, bool draggable)
         {
             if ((style & UIDialogStyle.Tall) > 0)
             {
@@ -73,8 +86,8 @@ namespace FSO.Client.UI.Controls
 
             if ((style & UIDialogStyle.OK) > 0)
             {
-                OKBg = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.dialog_dwnrightcorner_wbtn));
-                OKButton = new UIButton(GetTexture((ulong)FileIDs.UIFileIDs.dialog_okcheckbtn));
+                OKBg = new UIImage(GetTexture((ulong)1670742278146));
+                OKButton = new UIButton(GetTexture((ulong)9423158247425));
                 Add(OKBg);
                 Add(OKButton);
             }
@@ -82,10 +95,10 @@ namespace FSO.Client.UI.Controls
             if ((style & UIDialogStyle.Close) > 0)
             {
                 CloseBg = new UIImage(GetTexture(((style & UIDialogStyle.Tall) > 0) ?
-                    ((ulong)FileIDs.UIFileIDs.dialog_closebtnbackgroundtall) :
-                    ((ulong)FileIDs.UIFileIDs.dialog_closebtnbackground)
+                    ((ulong)1481763717122L) :
+                    ((ulong)1477468749826L)
                     ));
-                CloseButton = new UIButton(GetTexture((ulong)FileIDs.UIFileIDs.dialog_closebtn));
+                CloseButton = new UIButton(GetTexture((ulong)8697308774401L));
                 Add(CloseBg);
                 Add(CloseButton);
             }
@@ -184,6 +197,23 @@ namespace FSO.Client.UI.Controls
             }
 
             m_Bounds = new Rectangle(0, 0, width, height);
+
+            /*
+            if(CloseButtonBackground != null)
+            {
+                CloseButtonBackground.X = width - CloseButtonBackground.Width;
+                CloseButton.X = width - 25;
+                CloseButton.Y = 10;
+            }
+
+            if(BottomRightButtonBackground != null)
+            {
+                BottomRightButtonBackground.X = (width - BottomRightButtonBackground.Width) + 2;
+                BottomRightButtonBackground.Y = (height - BottomRightButtonBackground.Height) + 3;
+
+                AcceptButton.X = (width - 44);
+                AcceptButton.Y = (height - 42);
+            }*/
         }
 
         private Rectangle m_Bounds;

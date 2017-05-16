@@ -7,6 +7,7 @@ namespace FSO.LotView.Model
 {
     public enum AvatarDisplayFlags
     {
-        ShowAsGhost = 1
+        ShowAsGhost = 1,
+        TSOGhost = -1
     }
 }

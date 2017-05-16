@@ -12,6 +12,8 @@ using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.Entities;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -23,6 +25,20 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public sbyte level;
         public Direction dir;
         public bool Verified;
+
+        private int value = -1;
+
+        private static HashSet<int> RoomieWhiteList = new HashSet<int>()
+        {
+            12, 13, 14, 15, 16, 17, 18, 19, 20
+        };
+        private static HashSet<int> BuilderWhiteList = new HashSet<int>()
+        {
+            12, 13, 14, 15, 16, 17, 18, 19, 20,
+            0, 1, 2, 3, 4, 5, 7, 8, 9 //29 is terrain tool
+        };
+
+        private VMMultitileGroup CreatedGroup;
 
         private List<uint> Blacklist = new List<uint>
         {
@@ -36,10 +52,32 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Blacklist.Contains(GUID) || caller == null) return false;
 
             //careful here! if the object can't be placed, we have to give the user their money back.
-            if (TryPlace(vm, caller)) return true;
+            if (TryPlace(vm, caller))
+            {
+                if (vm.GlobalLink != null)
+                {
+                    vm.GlobalLink.RegisterNewObject(vm, CreatedGroup.BaseObject, (short objID, uint pid) =>
+                    {
+                        vm.SendCommand(new VMNetUpdatePersistStateCmd()
+                        {
+                            ObjectID = objID,
+                            PersistID = pid
+                        });
+                    });
+                }
+
+                //overwrite value
+
+                var objDefinition = CreatedGroup.BaseObject.MasterDefinition ?? CreatedGroup.BaseObject.Object.OBJ;
+                value = Math.Max(0, Math.Min(value, (value * (100-objDefinition.InitialDepreciation)) / 100));
+
+                CreatedGroup.Price = (int)value;
+
+                return true;
+            }
             else if (vm.GlobalLink != null && item != null)
-            { 
-                vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, (int)item.Price,
+            {
+                vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, (int)value,
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
                     vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
@@ -59,11 +97,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         private bool TryPlace(VM vm, VMAvatar caller)
         {
+            if (!vm.TSOState.CanPlaceNewUserObject(vm)) return false;
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
 
-            var group = vm.Context.CreateObjectInstance(GUID, new LotTilePos(x, y, level), dir);
+            var group = vm.Context.CreateObjectInstance(GUID, LotTilePos.OUT_OF_WORLD, dir);
             if (group == null) return false;
+            group.ChangePosition(new LotTilePos(x, y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
             group.ExecuteEntryPoint(11, vm.Context); //User Placement
             if (group.Objects.Count == 0) return false;
             if (group.BaseObject.Position == LotTilePos.OUT_OF_WORLD)
@@ -72,21 +112,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 return false;
             }
 
-            int salePrice = 0;
-            if (item != null) salePrice = (int)item.Price;
-            var def = group.BaseObject.MasterDefinition;
-            if (def == null) def = group.BaseObject.Object.OBJ;
-            var limit = def.DepreciationLimit;
-            if (salePrice > limit) //only try to deprecate if we're above the limit. Prevents objects with a limit above their price being money fountains.
-            {
-                salePrice -= def.InitialDepreciation;
-                if (salePrice < limit) salePrice = limit;
-            }
-
-            group.Price = (int)salePrice;
             foreach (var obj in group.Objects) {
                 if (obj is VMGameObject) ((VMTSOObjectState)obj.TSOState).OwnerID = caller.PersistID;
             }
+            CreatedGroup = group;
 
             vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
                 caller.Name,
@@ -99,25 +128,35 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override bool Verify(VM vm, VMAvatar caller)
         {
             if (Verified) return true; //set internally when transaction succeeds. trust that the verification happened.
+            value = 0; //do not trust value from net
             if (caller == null || //caller must be on lot, have build permissions
-                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate)
+                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate ||
+                !vm.TSOState.CanPlaceNewUserObject(vm))
                 return false;
 
             //get entry in catalog. first verify if it can be bought at all. (if not, error out)
             //TODO: error feedback for client
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
+            var whitelist = (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Roommate) ? RoomieWhiteList : BuilderWhiteList;
 
-            if (item == null || item.Category == -1)
+            if (item == null || !whitelist.Contains(item.Value.Category))
             {
                 if (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Admin) return true;
                 return false; //not purchasable
+            }
+            
+            if (item != null)
+            {
+                var price = (int)item.Value.Price;
+                var dcPercent = VMBuildableAreaInfo.GetDiscountFor(item.Value, vm);
+                value = (price * (100 - dcPercent)) / 100;
             }
 
             //TODO: fine grained purchase control based on user status
 
             //perform the transaction. If it succeeds, requeue the command
-            vm.GlobalLink.PerformTransaction(vm, false, caller.PersistID, uint.MaxValue, (int)item.Price,
+            vm.GlobalLink.PerformTransaction(vm, false, caller.PersistID, uint.MaxValue, value,
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
                     if (success)
@@ -150,6 +189,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             writer.Write(y);
             writer.Write(level);
             writer.Write((byte)dir);
+            writer.Write(value);
         }
 
         public override void Deserialize(BinaryReader reader)
@@ -160,6 +200,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             y = reader.ReadInt16();
             level = reader.ReadSByte();
             dir = (Direction)reader.ReadByte();
+            value = reader.ReadInt32();
         }
 
         #endregion

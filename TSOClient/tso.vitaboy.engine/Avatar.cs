@@ -13,6 +13,7 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Content;
 using Microsoft.Xna.Framework;
 using FSO.Content.Model;
+using FSO.Vitaboy.Model;
 
 namespace FSO.Vitaboy
 {
@@ -25,6 +26,7 @@ namespace FSO.Vitaboy
         public static Effect Effect;
         public Skeleton Skeleton { get; internal set; }
         public Skeleton BaseSkeleton { get; internal set; }
+        public List<Vector2> LightPositions;
         private Matrix[] SkelBones;
 
         public static void setVitaboyEffect(Effect e) {
@@ -96,10 +98,13 @@ namespace FSO.Vitaboy
         {
             GPUMode = true;
             GPUDevice = device;
-            foreach (var binding in Bindings)
+            lock (Bindings)
             {
-                binding.Mesh.StoreOnGPU(device);
-                binding.Texture.Get(device);
+                foreach (var binding in Bindings)
+                {
+                    binding.Mesh.StoreOnGPU(device);
+                    binding.Texture.Get(device);
+                }
             }
         }
 
@@ -130,9 +135,12 @@ namespace FSO.Vitaboy
         /// <param name="dispose">Should the appearance be disposed?</param>
         public void RemoveAppearance(AvatarAppearanceInstance appearance, bool dispose)
         {
-            foreach (var binding in appearance.Bindings)
+            lock (Bindings)
             {
-                RemoveBinding(binding, dispose);
+                foreach (var binding in appearance.Bindings)
+                {
+                    RemoveBinding(binding, dispose);
+                }
             }
         }
 
@@ -146,6 +154,7 @@ namespace FSO.Vitaboy
             var content = FSO.Content.Content.Get();
             var instance = new AvatarBindingInstance();
             instance.Mesh = content.AvatarMeshes.Get(binding.MeshTypeID, binding.MeshFileID);
+            instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID);
 
             /*if (instance.Mesh != null)
             {
@@ -155,18 +164,17 @@ namespace FSO.Vitaboy
                 instance.Mesh = instance.Mesh.Clone();
             }*/
 
-            if (binding.TextureFileID > 0 && binding.TextureFileID != 4992)
-            {
-                instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID);
-            }
-
             instance.Mesh.Prepare(Skeleton.RootBone);
 
             if (GPUMode)
             {
                 instance.Mesh.StoreOnGPU(GPUDevice);
+                instance.Texture.Get(GPUDevice);
             }
-            Bindings.Add(instance);
+            lock (Bindings)
+            {
+                Bindings.Add(instance);
+            }
             return instance;
         }
 
@@ -177,7 +185,10 @@ namespace FSO.Vitaboy
         /// <param name="dispose">Should the binding be disposed?</param>
         protected void RemoveBinding(AvatarBindingInstance instance, bool dispose)
         {
-            Bindings.Remove(instance);
+            lock (Bindings)
+            {
+                Bindings.Remove(instance);
+            }
         }
 
         /// <summary>
@@ -210,13 +221,15 @@ namespace FSO.Vitaboy
         {
         }
 
+        public static int DefaultTechnique = 0;
+
         /// <summary>
         /// Draws the meshes making up this Avatar instance.
         /// </summary>
         /// <param name="device">A GraphicsDevice instance.</param>
         public override void Draw(Microsoft.Xna.Framework.Graphics.GraphicsDevice device)
         {
-            Effect.CurrentTechnique = Effect.Techniques[0];
+            Effect.CurrentTechnique = Effect.Techniques[DefaultTechnique];
             Effect.Parameters["View"].SetValue(View);
             Effect.Parameters["Projection"].SetValue(Projection);
             Effect.Parameters["World"].SetValue(World);
@@ -231,16 +244,69 @@ namespace FSO.Vitaboy
             if (SkelBones == null) ReloadSkeleton();
             effect.Parameters["SkelBindings"].SetValue(SkelBones);
 
-            foreach (var pass in effect.CurrentTechnique.Passes)
+            lock (Bindings)
             {
-                foreach (var binding in Bindings)
+                foreach (var pass in effect.CurrentTechnique.Passes)
                 {
-                    effect.Parameters["MeshTex"].SetValue(binding.Texture.Get(device));
-                    pass.Apply();
-                    binding.Mesh.Draw(device);
+                    foreach (var binding in Bindings)
+                    {
+                        if (binding.Texture != null)
+                        {
+                            effect.Parameters["MeshTex"].SetValue(binding.Texture.Get(device));
+                        }
+                        else
+                        {
+                            effect.Parameters["MeshTex"].SetValue((Texture2D)null);
+                        }
+                        pass.Apply();
+                        binding.Mesh.Draw(device);
+                    }
                 }
             }
+
+            if (LightPositions == null) return;
+
+            if (ShadBuf == null)
+            {
+                var shadVerts = new ShadowVertex[]
+                {
+                new ShadowVertex(new Vector3(-1, 0, -1), 25),
+                new ShadowVertex(new Vector3(-1, 0, 1), 25),
+                new ShadowVertex(new Vector3(1, 0, 1), 25),
+                new ShadowVertex(new Vector3(1, 0, -1), 25),
+
+                new ShadowVertex(new Vector3(-1, 0, -1), 19),
+                new ShadowVertex(new Vector3(-1, 0, 1), 19),
+                new ShadowVertex(new Vector3(1, 0, 1), 19),
+                new ShadowVertex(new Vector3(1, 0, -1), 19)
+                };
+                for (int i = 0; i < shadVerts.Length; i++) shadVerts[i].Position *= 1f;
+                int[] shadInd = new int[] { 2, 1, 0, 2, 0, 3, 6, 5, 4, 6, 4, 7 };
+
+                ShadBuf = new VertexBuffer(device, typeof(ShadowVertex), shadVerts.Length, BufferUsage.None);
+                ShadBuf.SetData(shadVerts);
+                ShadIBuf = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, shadInd.Length, BufferUsage.None);
+                ShadIBuf.SetData(shadInd);
+            }
+
+            foreach (var light in LightPositions)
+            {
+                //effect.Parameters["FloorHeight"].SetValue((float)(Math.Floor(Position.Y/2.95)*2.95 + 0.05));
+                effect.Parameters["LightPosition"].SetValue(light);
+                var oldTech = effect.CurrentTechnique;
+                effect.CurrentTechnique = Avatar.Effect.Techniques[4];
+                effect.CurrentTechnique.Passes[0].Apply();
+                device.DepthStencilState = DepthStencilState.DepthRead;
+                device.SetVertexBuffer(ShadBuf);
+                device.Indices = ShadIBuf;
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 4);
+                effect.CurrentTechnique = oldTech;
+                device.DepthStencilState = DepthStencilState.Default;
+            }
         }
+
+        private static VertexBuffer ShadBuf;
+        private static IndexBuffer ShadIBuf;
 
         public override void DeviceReset(GraphicsDevice Device)
         {

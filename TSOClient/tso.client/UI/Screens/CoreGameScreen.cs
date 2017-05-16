@@ -31,10 +31,13 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using System.IO;
 using FSO.SimAntics.NetPlay;
 using FSO.Client.UI.Controls;
+using FSO.Client.Controllers;
+using FSO.Client.Controllers.Panels;
 using FSO.Client.Debug;
 using FSO.Client.UI.Panels.WorldUI;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.Common;
+using FSO.Common.Utils;
 
 namespace FSO.Client.UI.Screens
 {
@@ -44,19 +47,30 @@ namespace FSO.Client.UI.Screens
         public UIGizmo gizmo;
         public UIInbox Inbox;
         public UIGameTitle Title;
-        private UIButton SaveHouseButton;
-        private string[] CityMusic;
-        private String city;
 
-        private bool Connecting;
-        private UILoginProgress ConnectingDialog;
+        public UIContainer WindowContainer;
+        public UIPersonPage PersonPage;
+        public UILotPage LotPage;
+        public UIBookmarks Bookmarks;
+        public UIRelationshipDialog Relationships;
+
         private Queue<SimConnectStateChange> StateChanges;
 
-        private Terrain CityRenderer; //city view
+        public Terrain CityRenderer; //city view
+        public UICustomTooltip CityTooltip;
+        public UICustomTooltipContainer CityTooltipHitArea;
+        public UIMessageTray MessageTray;
+        public UIJoinLotProgress JoinLotProgress;
+        private UIAlert SwitchLotDialog;
 
-        public UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.
+        public UILotControl LotControl; //world, lotcontrol and vm will be null if we aren't in a lot.
         private LotView.World World;
         public FSO.SimAntics.VM vm;
+        public VMClientDriver Driver;
+        public uint VisualBudget;
+
+        private UIMouseEventRef MouseHitAreaEventRef = null;
+
         public bool InLot
         {
             get
@@ -75,53 +89,66 @@ namespace FSO.Client.UI.Screens
             set
             {
                 value = Math.Max(1, Math.Min(5, value));
+
+                if(value == 5)
+                {
+                    var controller = FindController<CoreGameScreenController>();
+
+                    if (controller != null)
+                    {
+                        controller.Terrain.ZoomOut();
+                    }
+                }
+
                 if (value < 4)
                 {
                     if (vm == null) ZoomLevel = 4; //call this again but set minimum cityrenderer view
                     else
                     {
-                        Title.SetTitle(LotController.GetLotTitle());
+                        Title.SetTitle(LotControl.GetLotTitle());
+                        var targ = (WorldZoom)(4 - value); //near is 3 for some reason... will probably revise
                         if (m_ZoomLevel > 3)
                         {
                             HITVM.Get().PlaySoundEvent(UIMusic.None);
-                            if (CityRenderer != null) CityRenderer.Visible = false;
+                            if (CityRenderer != null) CityRenderer.m_Zoomed = TerrainZoomMode.Lot;
                             gizmo.Visible = false;
-                            LotController.Visible = true;
+                            LotControl.Visible = true;
                             World.Visible = true;
                             ucp.SetMode(UIUCP.UCPMode.LotMode);
+                        } else
+                        {
+                            if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
                         }
+                        vm.Context.World.State.Zoom = targ;
                         m_ZoomLevel = value;
-                        vm.Context.World.State.Zoom = (WorldZoom)(4 - ZoomLevel); //near is 3 for some reason... will probably revise
                     }
                 }
                 else //cityrenderer! we'll need to recreate this if it doesn't exist...
                 {
-                    Title.SetTitle(city);
+                    CityTooltipHitArea.HideTooltip();
                     if (CityRenderer == null) m_ZoomLevel = value; //set to far zoom... again, we should eventually create this.
                     else
                     {
-
-
                         if (m_ZoomLevel < 4)
                         { //coming from lot view... snap zoom % to 0 or 1
-                            CityRenderer.m_ZoomProgress = (value == 4) ? 1 : 0;
+                            Title.SetTitle(GameFacade.CurrentCityName);
+                            CityRenderer.m_ZoomProgress = 1;
                             HITVM.Get().PlaySoundEvent(UIMusic.Map); //play the city music as well
                             CityRenderer.Visible = true;
                             gizmo.Visible = true;
                             if (World != null)
                             {
-                                World.Visible = false;
-                                LotController.Visible = false;
+                                LotControl.Visible = false;
                             }
                             ucp.SetMode(UIUCP.UCPMode.CityMode);
                         }
                         m_ZoomLevel = value;
-                        CityRenderer.m_Zoomed = (value == 4);
+                        CityRenderer.m_Zoomed = (value == 4)?TerrainZoomMode.Near:TerrainZoomMode.Far;
                     }
                 }
                 ucp.UpdateZoomButton();
             }
-        } //in future, merge LotDebugScreen and CoreGameScreen so that we can store the City+Lot combo information and controls in there.
+        }
 
         private int _Rotation = 0;
         public int Rotation
@@ -177,34 +204,10 @@ namespace FSO.Client.UI.Screens
 
         public CoreGameScreen() : base()
         {
-            /** City Scene **/
-            ListenForMouse(new Rectangle(0, 0, ScreenWidth, ScreenHeight), new UIMouseEvent(MouseHandler));
-
-            CityRenderer = new Terrain(GameFacade.Game.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
-
-            city = "Queen Margaret's";
-            if (PlayerAccount.CurrentlyActiveSim != null)
-                city = PlayerAccount.CurrentlyActiveSim.ResidingCity.Name;
-
-            CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
-
-            CityRenderer.Initialize(city, GameFacade.CDataRetriever);
-            CityRenderer.LoadContent(GameFacade.GraphicsDevice);
-            CityRenderer.RegenData = true;
-
-            CityRenderer.SetTimeOfDay(0.5);
             StateChanges = new Queue<SimConnectStateChange>();
-
             /**
             * Music
             */
-            CityMusic = new string[]{
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild1.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild3.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap2_v2.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap3.mp3",
-                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap4_v1.mp3"
-            };
             HITVM.Get().PlaySoundEvent(UIMusic.Map);
 
             /*VMDebug = new UIButton()
@@ -217,7 +220,7 @@ namespace FSO.Client.UI.Screens
             VMDebug.OnButtonClick += new ButtonClickDelegate(VMDebug_OnButtonClick);
             this.Add(VMDebug);*/
 
-            SaveHouseButton = new UIButton()
+            /*SaveHouseButton = new UIButton()
             {
                 Caption = "Save House",
                 Y = 10,
@@ -225,97 +228,112 @@ namespace FSO.Client.UI.Screens
                 X = GlobalSettings.Default.GraphicsWidth - 110
             };
             SaveHouseButton.OnButtonClick += new ButtonClickDelegate(SaveHouseButton_OnButtonClick);
-            this.Add(SaveHouseButton);
+            this.Add(SaveHouseButton);*/
 
             ucp = new UIUCP(this);
             ucp.Y = ScreenHeight - 210;
             ucp.SetInLot(false);
             ucp.UpdateZoomButton();
-            ucp.MoneyText.Caption = PlayerAccount.Money.ToString();
+            ucp.MoneyText.Caption = "0";// PlayerAccount.Money.ToString();
             this.Add(ucp);
 
             gizmo = new UIGizmo();
-            gizmo.X = ScreenWidth - 500;
-            gizmo.Y = ScreenHeight - 300;
+            gizmo.BindController<GizmoController>();
+            gizmo.X = ScreenWidth - 430;
+            gizmo.Y = ScreenHeight - 230;
             this.Add(gizmo);
 
             Title = new UIGameTitle();
-            Title.SetTitle(city);
+            Title.SetTitle("");
             this.Add(Title);
-
-            //OpenInbox();
-
+            
             this.Add(GameFacade.MessageController);
-            GameFacade.MessageController.OnSendLetter += new LetterSendDelegate(MessageController_OnSendLetter);
-            GameFacade.MessageController.OnSendMessage += new MessageSendDelegate(MessageController_OnSendMessage);
 
-            NetworkFacade.Controller.OnNewTimeOfDay += new OnNewTimeOfDayDelegate(Controller_OnNewTimeOfDay);
-            NetworkFacade.Controller.OnPlayerJoined += new OnPlayerJoinedDelegate(Controller_OnPlayerJoined);
+            MessageTray = new UIMessageTray();
+            MessageTray.X = ScreenWidth - 70;
+            MessageTray.Y = 12;
+            this.Add(MessageTray);
 
-            //THIS IS KEPT HERE AS A DOCUMENTATION OF THE MESSAGE PASSING API FOR NOW.
-            /*
-            MessageAuthor Author = new MessageAuthor();
-            Author.Author = "Whats His Face";
-            Author.GUID = Guid.NewGuid().ToString();
+            WindowContainer = new UIContainer();
+            Add(WindowContainer);
 
-            GameFacade.MessageController.PassMessage(Author, "you suck");
-            GameFacade.MessageController.PassMessage(Author, "no rly");
-            GameFacade.MessageController.PassMessage(Author, "jk im just testing message recieving please love me");
+            PersonPage = new UIPersonPage();
+            PersonPage.Visible = false;
+            PersonPage.BindController<PersonPageController>();
+            WindowContainer.Add(PersonPage);
 
-            Author.Author = "yer maw";
-            Author.GUID = Guid.NewGuid().ToString();
+            LotPage = new UILotPage();
+            LotPage.Visible = false;
+            LotPage.BindController<LotPageController>();
+            WindowContainer.Add(LotPage);
 
-            GameFacade.MessageController.PassMessage(Author, "dont let whats his face get to you");
-            GameFacade.MessageController.PassMessage(Author, "i will always love you");
+            Bookmarks = new UIBookmarks();
+            Bookmarks.Visible = false;
+            Bookmarks.BindController<BookmarksController>();
+            WindowContainer.Add(Bookmarks);
 
-            Author.Author = "M.O.M.I";
-            Author.GUID = Guid.NewGuid().ToString();
+            Relationships = new UIRelationshipDialog();
+            Relationships.Visible = false;
+            Relationships.BindController<RelationshipDialogController>();
+            WindowContainer.Add(Relationships);
+        }
 
-            GameFacade.MessageController.PassEmail(Author, "Ban Notice", "You have been banned for playing too well. \r\n\r\nWe don't know why you still have access to the game, but it's probably related to you playing the game pretty well. \r\n\r\nPlease stop immediately.\r\n\r\n - M.O.M.I. (this is just a test message btw, you're not actually banned)");
-            */
+        public override void GameResized()
+        {
+            base.GameResized();
+            Title.SetTitle(Title.Label.Caption);
+            ucp.Y = ScreenHeight - 210;
+            gizmo.X = ScreenWidth - 430;
+            gizmo.Y = ScreenHeight - 230;
+            MessageTray.X = ScreenWidth - 70;
+            World?.GameResized();
+            var oldPanel = ucp.CurrentPanel;
+            ucp.SetPanel(-1);
+            ucp.SetPanel(oldPanel);
+            if (MouseHitAreaEventRef != null)
+            {
+                MouseHitAreaEventRef.Region = new Rectangle(0, 0, ScreenWidth, ScreenHeight);
+            }
+        }
 
+        public void Initialize(string cityName, int cityMap, TerrainController terrainController)
+        {
+            Title.SetTitle(cityName);
+            GameFacade.CurrentCityName = cityName;
+            InitializeMap(cityMap);
+            InitializeMouse();
+            ZoomLevel = 5; //screen always starts at far zoom, city visible.
+            CityRenderer.m_ZoomProgress = 0;
+
+            JoinLotProgress = new UIJoinLotProgress();
+            JoinLotProgress.BindController<JoinLotProgressController>();
+
+            terrainController.Init(CityRenderer);
+            CityRenderer.SetController(terrainController);
+        }
+
+        private void InitializeMap(int cityMap)
+        {
+            CityRenderer = new Terrain(GameFacade.Game.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
+            CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
+            CityRenderer.Initialize(cityMap);
+            CityRenderer.LoadContent(GameFacade.GraphicsDevice);
+            CityRenderer.RegenData = true;
+            CityRenderer.SetTimeOfDay(0.5);
             GameFacade.Scenes.Add(CityRenderer);
 
-            ZoomLevel = 5; //screen always starts at far zoom, city visible.
+            CityTooltip = new UICustomTooltip();
+            Add(CityTooltip);
+            CityTooltipHitArea = new UICustomTooltipContainer(CityTooltip);
+            CityTooltipHitArea.SetSize(ScreenWidth, ScreenHeight);
+            AddAt(0, CityTooltipHitArea);
         }
 
-        #region Network handlers
-
-        private void Controller_OnNewTimeOfDay(DateTime TimeOfDay)
-        {
-            if (TimeOfDay.Hour <= 12)
-                ucp.TimeText.Caption = TimeOfDay.Hour + ":" + TimeOfDay.Minute + "am";
-            else ucp.TimeText.Caption = TimeOfDay.Hour + ":" + TimeOfDay.Minute + "pm";
-
-            double time = TimeOfDay.Hour / 24.0 + TimeOfDay.Minute / (1440.0) + TimeOfDay.Second / (86400.0);
-        }
-
-        private void Controller_OnPlayerJoined(LotTileEntry TileEntry)
-        {
-            LotTileEntry[] TileEntries = new LotTileEntry[GameFacade.CDataRetriever.LotTileData.Length + 1];
-            TileEntries[0] = TileEntry;
-            GameFacade.CDataRetriever.LotTileData.CopyTo(TileEntries, 1);
-            CityRenderer.populateCityLookup(TileEntries);
-        }
-
-        #endregion
-
-        private void MessageController_OnSendMessage(string message, string GUID)
-        {
-            //TODO: Implement special packet for message (as opposed to letter)?
-            //Don't send empty strings!!
-            Network.UIPacketSenders.SendLetter(Network.NetworkFacade.Client, message, "Empty", GUID);
-        }
-
-        /// <summary>
-        /// Message was sent by player to another player.
-        /// </summary>
-        /// <param name="message">Message to send.</param>
-        /// <param name="subject">Subject of message.</param>
-        /// <param name="destinationUser">GUID of destination user.</param>
-        private void MessageController_OnSendLetter(string message, string subject, string destinationUser)
-        {
-            Network.UIPacketSenders.SendLetter(Network.NetworkFacade.Client, message, subject, destinationUser);
+        private void InitializeMouse(){
+            /** City Scene **/
+            UIContainer mouseHitArea = new UIContainer();
+            MouseHitAreaEventRef = mouseHitArea.ListenForMouse(new Rectangle(0, 0, ScreenWidth, ScreenHeight), new UIMouseEvent(MouseHandler));
+            AddAt(0, mouseHitArea);
         }
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
@@ -326,10 +344,64 @@ namespace FSO.Client.UI.Screens
 
             if (CityRenderer != null)
             {
-                if (ZoomLevel > 3 && CityRenderer.m_Zoomed != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed) ? 4 : 5;
+                if (ZoomLevel > 3 && (CityRenderer.m_Zoomed == TerrainZoomMode.Near) != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed == TerrainZoomMode.Near) ? 4 : 5;
+
+                if (World != null) {
+                    if (CityRenderer.m_Zoomed == TerrainZoomMode.Lot)
+                    {
+                        if (World.FrameCounter < 3)
+                        {
+                            //wait until the draw stage has stabalized a bit. tends to be like this
+                            // 1. heavy singular draw
+                            // 2. update * 30
+                            // 3. normal draws
+                            CityRenderer.m_LotZoomProgress = 0;
+                            World.Visible = true;
+                            World.Opacity = 0;
+                        }
+                        else if (World.FrameCounter == 5 && GlobalSettings.Default.CompatState < GlobalSettings.TARGET_COMPAT_STATE)
+                        {
+                            GlobalSettings.Default.CompatState = GlobalSettings.TARGET_COMPAT_STATE;
+                            GlobalSettings.Default.Save();
+                        }
+                        else
+                            CityRenderer.InheritPosition(World, FindController<CoreGameScreenController>());
+                    }
+                    if (CityRenderer.m_LotZoomProgress > 0f && CityRenderer.m_LotZoomProgress < 1f)
+                    {
+                        if (CityRenderer.m_Zoomed == TerrainZoomMode.Lot)
+                        {
+                            if (CityRenderer.m_LotZoomProgress > 0.9995f)
+                            {
+                                CityRenderer.m_LotZoomProgress = 1f;
+                                CityRenderer.Visible = false;
+                            }
+                        } else
+                        {
+                            if (CityRenderer.m_LotZoomProgress < 0.001f)
+                            {
+                                CityRenderer.m_LotZoomProgress = 0f;
+                                World.Visible = false;
+                            }
+                        }
+                        World.Opacity = Math.Max(0, (CityRenderer.m_LotZoomProgress - 0.5f) * 2);
+
+                        var scale =
+                            1/((CityRenderer.m_LotZoomProgress * (1/CityRenderer.m_LotZoomSize) + (1 - CityRenderer.m_LotZoomProgress) * (1/(Terrain.NEAR_ZOOM_SIZE*CityRenderer.m_WheelZoom))))
+                            / CityRenderer.m_LotZoomSize;
+
+                        World.State.PreciseZoom = scale;
+                    }
+                }
 
                 if (InLot) //if we're in a lot, use the VM's more accurate time!
                     CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));
+                else
+                {
+                    var time = DateTime.UtcNow;
+                    var tsoTime = TSOTime.FromUTC(time);
+                    CityRenderer.SetTimeOfDay((tsoTime.Item1 / 24.0) + (tsoTime.Item2 / 1440.0) + (tsoTime.Item3 / 86400.0));
+                }
             }
 
             lock (StateChanges)
@@ -346,6 +418,13 @@ namespace FSO.Client.UI.Screens
 
         public void CleanupLastWorld()
         {
+            if (vm == null) return;
+
+            //clear our cache too, if the setting lets us do that
+            TimedReferenceController.Clear();
+            TimedReferenceController.Clear();
+            VM.ClearAssembled();
+
             if (ZoomLevel < 4) ZoomLevel = 5;
             vm.Context.Ambience.Kill();
             foreach (var ent in vm.Entities) { //stop object sounds
@@ -357,10 +436,66 @@ namespace FSO.Client.UI.Screens
                 threads.Clear();
             }
             vm.CloseNet(VMCloseNetReason.LeaveLot);
+            Driver.OnClientCommand -= VMSendCommand;
             GameFacade.Scenes.Remove(World);
-            this.Remove(LotController);
+            World.Dispose();
+            LotControl.Dispose();
+            this.Remove(LotControl);
             ucp.SetPanel(-1);
             ucp.SetInLot(false);
+            vm.SuppressBHAVChanges();
+            vm = null;
+            World = null;
+            Driver = null;
+            LotControl = null;
+        }
+
+        public void InitiateLotSwitch()
+        {
+            vm?.SendCommand(new VMNetSimLeaveCmd());
+        }
+
+        public void ShowReconnectDialog(uint id)
+        {
+            var controller = FindController<CoreGameScreenController>();
+            if (controller != null && SwitchLotDialog == null)
+            {
+                SwitchLotDialog = new UIAlert(new UIAlertOptions()
+                {
+                    Title = GameFacade.Strings.GetString("215", "1"),
+                    Message = GameFacade.Strings.GetString("215", "2"),
+                    Buttons = new UIAlertButton[]
+                    {
+                    new UIAlertButton(UIAlertButtonType.Yes, (btn) => {
+                        controller.ReconnectLotID = id;
+                        vm?.SendCommand(new VMNetSimLeaveCmd());
+                        RemoveDialog(SwitchLotDialog); SwitchLotDialog = null; }),
+                    new UIAlertButton(UIAlertButtonType.No, (btn) => { RemoveDialog(SwitchLotDialog); SwitchLotDialog = null; })
+                    },
+                });
+                ShowDialog(SwitchLotDialog, true);
+            }
+        }
+
+        private void VMSendCommand(byte[] data)
+        {
+            var controller = FindController<CoreGameScreenController>();
+
+            if (controller != null)
+            {
+                controller.SendVMMessage(data);
+            }
+            //TODO: alternate controller for sandbox/standalone mode?
+        }
+
+        private void VMShutdown(VMCloseNetReason reason)
+        {
+            var controller = FindController<CoreGameScreenController>();
+
+            if (controller != null)
+            {
+                controller.HandleVMShutdown(reason);
+            }
         }
 
         public void ClientStateChange(int state, float progress)
@@ -369,181 +504,96 @@ namespace FSO.Client.UI.Screens
         }
 
         public void ClientStateChangeProcess(int state, float progress)
-        {
-            //TODO: queue these up and try and sift through them in an update loop to avoid UI issues. (on main thread)
-            if (state == 4) //disconnected
-            {
-                var reason = (VMCloseNetReason)progress;
-                if (reason == VMCloseNetReason.Unspecified)
-                {
-                    var alert = UIScreen.ShowAlert(new UIAlertOptions
-                    {
-                        Title = GameFacade.Strings.GetString("222", "3"),
-                        Message = GameFacade.Strings.GetString("222", "2", new string[] { "0" }),
-                    }, true);
-
-                    if (Connecting)
-                    {
-                        UIScreen.RemoveDialog(ConnectingDialog);
-                        ConnectingDialog = null;
-                        Connecting = false;
-                    }
-
-                    alert.ButtonMap[UIAlertButtonType.OK].OnButtonClick += DisconnectedOKClick;
-                } else
-                {
-                    DisconnectedOKClick(null);
-                }
-            }
-
-            if (ConnectingDialog == null) return;
+        {     
             switch (state)
             {
-                case 1:
-                    ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "26");
-                    ConnectingDialog.Progress = 25f;
-                    break;
                 case 2:
-                    ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "27");
-                    ConnectingDialog.Progress = 100f*(0.5f+progress*0.5f);
+                    JoinLotProgress.ProgressCaption = GameFacade.Strings.GetString("211", "27");
+                    JoinLotProgress.Progress = 100f*(0.5f+progress*0.5f);
                     break;
                 case 3:
-                    UIScreen.RemoveDialog(ConnectingDialog);
-                    ConnectingDialog = null;
-                    Connecting = false;
+                    GameFacade.Cursor.SetCursor(CursorType.Normal);
+                    UIScreen.RemoveDialog(JoinLotProgress);
                     ZoomLevel = 1;
                     ucp.SetInLot(true);
                     break;
             }
         }
 
-        private void DisconnectedOKClick(UIElement button)
+        public void InitializeLot()
         {
-            if (vm != null) CleanupLastWorld();
-            Connecting = false;
-        }
-
-        public void InitTestLot(string path, bool host)
-        {
-            if (Connecting) return;
-
-            if (vm != null) CleanupLastWorld();
+            CleanupLastWorld();
 
             World = new LotView.World(GameFacade.Game.GraphicsDevice);
+            World.Opacity = 0;
             GameFacade.Scenes.Add(World);
+            Driver = new VMClientDriver(ClientStateChange);
+            Driver.OnClientCommand += VMSendCommand;
+            Driver.OnShutdown += VMShutdown;
 
-            VMNetDriver driver;
-            if (host)
-            {
-                driver = new VMServerDriver(37564, null);
-            }
-            else
-            {
-                Connecting = true;
-                ConnectingDialog = new UILoginProgress();
-
-                ConnectingDialog.Caption = GameFacade.Strings.GetString("211", "1");
-                ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "24");
-                //this.Add(ConnectingDialog);
-
-                UIScreen.ShowDialog(ConnectingDialog, true);
-
-                driver = new VMClientDriver(path, 37564, ClientStateChange);
-            }
-
-            vm = new VM(new VMContext(World), driver, new UIHeadlineRendererProvider());
+            vm = new VM(new VMContext(World), Driver, new UIHeadlineRendererProvider());
+            vm.ListenBHAVChanges();
             vm.Init();
-            vm.LotName = (path == null) ? "localhost" : path.Split('/').LastOrDefault(); //quick hack just so we can remember where we are
 
-            if (host)
-            {
-                //check: do we have an fsov to try loading from?
+            LotControl = new UILotControl(vm, World);
+            this.AddAt(1, LotControl);
 
-                string filename = Path.GetFileName(path);
-                try
-                {
-                    using (var file = new BinaryReader(File.OpenRead(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/")+filename.Substring(0, filename.Length-4)+".fsov")))
-                    {
-                        var marshal = new SimAntics.Marshals.VMMarshal();
-                        marshal.Deserialize(file);
-                        vm.Load(marshal);
-                        vm.Reset();
-                    }
-                }
-                catch (Exception) {
-                    short jobLevel = -1;
+            var time = DateTime.UtcNow;
+            var tsoTime = TSOTime.FromUTC(time);
 
-                    //quick hack to find the job level from the chosen blueprint
-                    //the final server will know this from the fact that it wants to create a job lot in the first place...
-
-                    try
-                    {
-                        if (filename.StartsWith("nightclub") || filename.StartsWith("restaurant") || filename.StartsWith("robotfactory"))
-                            jobLevel = Convert.ToInt16(filename.Substring(filename.Length - 9, 2));
-                    }
-                    catch (Exception) { }
-
-                    vm.SendCommand(new VMBlueprintRestoreCmd
-                    {
-                        JobLevel = jobLevel,
-                        XMLData = File.ReadAllBytes(path)
-                    });
-                }
-            }
-
-            uint simID = (uint)(new Random()).Next();
-            vm.MyUID = simID;
-
-            vm.SendCommand(new VMNetSimJoinCmd
-            {
-                ActorUID = simID,
-                HeadID = GlobalSettings.Default.DebugHead,
-                BodyID = GlobalSettings.Default.DebugBody,
-                SkinTone = (byte)GlobalSettings.Default.DebugSkin,
-                Gender = !GlobalSettings.Default.DebugGender,
-                Name = GlobalSettings.Default.LastUser
-            });
-
-            LotController = new UILotControl(vm, World);
-            this.AddAt(0, LotController);
-
-            vm.Context.Clock.Hours = 10;
+            vm.Context.Clock.Hours = tsoTime.Item1;
+            vm.Context.Clock.Minutes = tsoTime.Item2;
             if (m_ZoomLevel > 3)
             {
                 World.Visible = false;
-                LotController.Visible = false;
+                LotControl.Visible = false;
             }
 
-            if (host)
-            {
-                ZoomLevel = 1;
-                ucp.SetInLot(true);
-            } else
-            {
-                ZoomLevel = Math.Max(ZoomLevel, 4);
-            }
+            ZoomLevel = Math.Max(ZoomLevel, 4);
 
             if (IDEHook.IDE != null) IDEHook.IDE.StartIDE(vm);
 
             vm.OnFullRefresh += VMRefreshed;
             vm.OnChatEvent += Vm_OnChatEvent;
-            vm.OnEODMessage += LotController.EODs.OnEODMessage;
+            vm.OnEODMessage += LotControl.EODs.OnEODMessage;
+            vm.OnRequestLotSwitch += VMLotSwitch;
+            vm.OnGenericVMEvent += Vm_OnGenericVMEvent;
+        }
 
+        private void Vm_OnGenericVMEvent(VMEventType type, object data)
+        {
+            switch (type)
+            {
+                case VMEventType.TSOUnignore:
+                    PersonPage.ToggleBookmark(Common.DataService.Model.BookmarkType.IGNORE_AVATAR, null, (uint)data);
+                    break;
+                case VMEventType.TSOTimeout:
+                    var dialog = new UITimeOutDialog(vm, (int)data);
+                    UIScreen.GlobalShowDialog(dialog, true);
+                    var rnd = new Random();
+                    dialog.Position = new Vector2(rnd.Next(ScreenWidth - 500), rnd.Next(ScreenHeight - 500));
+                    break;
+            }
+        }
+
+        private void VMLotSwitch(uint lotId)
+        {
+            FindController<CoreGameScreenController>()?.SwitchLot(lotId);
         }
 
         private void Vm_OnChatEvent(SimAntics.NetPlay.Model.VMChatEvent evt)
         {
             if (ZoomLevel < 4)
             {
-                Title.SetTitle(LotController.GetLotTitle());
+                Title.SetTitle(LotControl.GetLotTitle());
             }
         }
 
         private void VMRefreshed()
         {
             if (vm == null) return;
-            LotController.ActiveEntity = null;
-            LotController.RefreshCut();
+            LotControl.ActiveEntity = null;
+            LotControl.RefreshCut();
         }
 
         private void VMDebug_OnButtonClick(UIElement button)
@@ -596,7 +646,6 @@ namespace FSO.Client.UI.Screens
 
         private void MouseHandler(UIMouseEventType type, UpdateState state)
         {
-
             if (CityRenderer != null) CityRenderer.UIMouseEvent(type.ToString()); //all the city renderer needs are events telling it if the mouse is over it or not.
             //if the mouse is over it, the city renderer will handle the rest.
         }

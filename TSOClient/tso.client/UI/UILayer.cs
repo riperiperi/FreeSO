@@ -58,6 +58,11 @@ namespace FSO.Client.UI
             get { return m_G; }
         }
 
+        public UIContainer Root
+        {
+            get { return mainUI; }
+        }
+
         /// <summary>
         /// A worldmatrix, used to display 3D objects (sims).
         /// Initialized in the ScreenManager's constructor.
@@ -187,8 +192,7 @@ namespace FSO.Client.UI
 
             // Create a new SpriteBatch, which can be used to draw textures.
             SpriteBatch = new UISpriteBatch(GraphicsDevice, 3);
-
-            GameFacade.OnContentLoaderReady += new BasicEventHandler(GameFacade_OnContentLoaderReady);
+            //GameFacade.OnContentLoaderReady += new BasicEventHandler(GameFacade_OnContentLoaderReady);
             m_G.GraphicsDevice.DeviceReset += new EventHandler<EventArgs>(GraphicsDevice_DeviceReset);
         }
 
@@ -196,30 +200,6 @@ namespace FSO.Client.UI
         {
             for (int i = 0; i < m_Screens.Count; i++)
                 m_Screens[i].DeviceReset(m_G.GraphicsDevice);
-        }
-
-        private void GameFacade_OnContentLoaderReady()
-        {
-            /**
-             * Add a debug button once the content loader is ready so we can load textures
-             */
-            
-            /*
-            debugButton = new UIButton()
-            {
-                Caption = "Debug",
-                Y = 10,
-                Width = 100,
-                X = GlobalSettings.Default.GraphicsWidth - 110
-            };
-            debugButton.OnButtonClick += new ButtonClickDelegate(debugButton_OnButtonClick);
-            mainUI.Add(debugButton);
-            */
-        }
-
-        void debugButton_OnButtonClick(UIElement button)
-        {
-            GameFacade.Controller.StartDebugTools();
         }
 
         public void AddProcess(IUIProcess Proc)
@@ -308,8 +288,24 @@ namespace FSO.Client.UI
             }
         }
 
+        private bool _F1KeyDown = false;
+
         public void Update(UpdateState state)
         {
+            GameThread.DigestUpdate(state);
+
+            var mousePosition = state.MouseState.Position;
+            var bounds = GameFacade.Game.Window.ClientBounds;
+            state.MouseOverWindow = mousePosition.X > 0 && mousePosition.Y > 0 &&
+                                    mousePosition.X < bounds.Width && mousePosition.Y < bounds.Height;
+            state.WindowFocused = GameFacade.Game.IsActive;
+
+            var f1Down = state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.F1);
+            if(_F1KeyDown && !f1Down){
+                GameFacade.Controller.ToggleDebugMenu();
+            }
+
+            _F1KeyDown = f1Down;
 
             /** 
              * Handle the mouse events from the previous frame
@@ -318,13 +314,19 @@ namespace FSO.Client.UI
              * we want the Matrix's to be recalculated before the draw
              * method and that is done in the update method.
              */
-
-            inputManager.HandleMouseEvents(state);
+            if (state.ProcessMouseEvents){
+                inputManager.HandleMouseEvents(state);
+            }
             state.MouseEvents.Clear();
 
             state.InputManager = inputManager;
             Content.Content.Get().Changes.RunResModifications();
             mainUI.Update(state);
+
+            if (state.AltDown && state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Enter))
+            {
+                GameFacade.GraphicsDeviceManager.ToggleFullScreen();
+            }
 
             lock (m_ExtContainers)
             {
@@ -408,6 +410,13 @@ namespace FSO.Client.UI
         {
             //dialogContainer.Add(dialog.Dialog);
             CurrentUIScreen.Add(dialog.Dialog);
+            if(dialog.Controller != null){
+                dialog.Dialog.Controller = dialog.Controller;
+            }
+            if(dialog.LogicalParent != null){
+                dialog.Dialog.LogicalParent = dialog.LogicalParent;
+            }
+
             Dialogs.Add(dialog);
             AdjustModal();
         }
@@ -504,5 +513,7 @@ namespace FSO.Client.UI
     {
         public UIElement Dialog;
         public bool Modal;
+        public object Controller;
+        public UIContainer LogicalParent;
     }
 }

@@ -10,15 +10,32 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using System.IO;
 
 namespace FSO.Common.Utils
 {
     public class TextureUtils
     {
+        public static Texture2D TextureFromFile(GraphicsDevice gd, string filePath)
+        {
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                return Texture2D.FromStream(gd, stream);
+            }
+        }
+
+        private static Dictionary<uint, Texture2D> _TextureColors = new Dictionary<uint, Texture2D>();
+
         public static Texture2D TextureFromColor(GraphicsDevice gd, Color color)
         {
+            if (_TextureColors.ContainsKey(color.PackedValue))
+            {
+                return _TextureColors[color.PackedValue];
+            }
+
             var tex = new Texture2D(gd, 1, 1);
             tex.SetData(new[] { color });
+            _TextureColors[color.PackedValue] = tex;
             return tex;
         }
 
@@ -138,9 +155,21 @@ namespace FSO.Common.Utils
 
         public static void CopyAlpha(ref Texture2D TextureTo, Texture2D TextureFrom)
         {
+            CopyAlpha(ref TextureTo, TextureFrom, false);
+        }
+
+        public static void CopyAlpha(ref Texture2D TextureTo, Texture2D TextureFrom, bool scale)
+        {
             if (TextureTo.Width != TextureFrom.Width || TextureTo.Height != TextureFrom.Height)
             {
-                return;
+                if (scale == false)
+                {
+                    return;
+                }
+                else
+                {
+                    TextureFrom = Scale(TextureFrom.GraphicsDevice, TextureFrom, (float)TextureTo.Width / (float)TextureFrom.Width, (float)TextureTo.Height / (float)TextureFrom.Height);
+                }
             }
 
 
@@ -155,7 +184,15 @@ namespace FSO.Common.Utils
             for (int i = 0; i < size; i++)
             {
                 //ARGB
-                buffer[i] = (buffer[i] & 0x00FFFFFF) | (bufferFrom[i] & 0xFF000000);
+                if (bufferFrom[i] >> 24 == 0)
+                {
+                    //This is a hack, not sure why monogame is not multiplying alpha correctly.
+                    buffer[i] = 0x00000000;
+                }
+                else
+                {
+                    buffer[i] = (buffer[i] & 0x00FFFFFF) | (bufferFrom[i] & 0xFF000000);
+                }
             }
 
             TextureTo.SetData(buffer, 0, size);
@@ -227,6 +264,48 @@ namespace FSO.Common.Utils
             else return;
         }
 
+        public static Texture2D Decimate(Texture2D Texture, GraphicsDevice gd, int factor)
+        {
+            var size = Texture.Width * Texture.Height*4;
+            byte[] buffer = new byte[size];
+
+            Texture.GetData(buffer);
+
+            var newWidth = Texture.Width / factor;
+            var newHeight = Texture.Height / factor;
+            var target = new byte[newWidth * newHeight * 4];
+
+            for (int y=0; y<Texture.Height; y += factor)
+            {
+                for (int x = 0; x < Texture.Width; x += factor)
+                {
+                    for (int c = 0; c < 4; c++)
+                    {
+                        var targy = (y / factor);
+                        var targx = (x / factor);
+                        if (targy >= newHeight || targx >= newWidth) continue;
+                        int avg = 0;
+                        int total = 0;
+                        for (int yo = y; yo < y+factor && yo < Texture.Height; yo++)
+                        {
+                            for (int xo = x; xo < x+factor && xo < Texture.Width; xo++)
+                            {
+                                avg += (int)buffer[(yo * Texture.Width + xo)*4 + c];
+                                total++;
+                            }
+                        }
+
+                        avg /= total;
+                        target[(targy * newWidth + targx)*4 + c] = (byte)avg;
+                    }
+                }
+            }
+
+            var outTex = new Texture2D(gd, newWidth, newHeight);
+            outTex.SetData(target);
+            return outTex;
+        }
+
         /// <summary>
         /// Combines multiple textures into a single texture
         /// </summary>
@@ -288,9 +367,7 @@ namespace FSO.Common.Utils
 
         public static Texture2D Resize(GraphicsDevice gd, Texture2D texture, int newWidth, int newHeight)
         {
-            return texture; //todo: why is this broken (framebuffer incomplete when we try to bind it)
-
-            /*RenderTarget2D renderTarget = new RenderTarget2D(
+            RenderTarget2D renderTarget = new RenderTarget2D(
                 gd,
                 newWidth, newHeight, false,
                 SurfaceFormat.Color, DepthFormat.None);
@@ -306,13 +383,13 @@ namespace FSO.Common.Utils
                 gd.SetRenderTarget(null);
             }
             var newTexture = renderTarget;
-            return newTexture; */
+            return newTexture;
         }
 
         public static Texture2D Scale(GraphicsDevice gd, Texture2D texture, float scaleX, float scaleY)
         {
-            var newWidth = (int)(texture.Width * scaleX);
-            var newHeight = (int)(texture.Height * scaleY);
+            var newWidth = (int)(Math.Round(texture.Width * scaleX));
+            var newHeight = (int)(Math.Round(texture.Height * scaleY));
 
             RenderTarget2D renderTarget = new RenderTarget2D(
                 gd,

@@ -12,6 +12,7 @@ using System.IO;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Utils;
 using System.Reflection;
+using FSO.Common.Utils;
 
 namespace FSO.Files.Formats.IFF
 {
@@ -19,7 +20,7 @@ namespace FSO.Files.Formats.IFF
     /// Interchange File Format (IFF) is a chunk-based file format for binary resource data 
     /// intended to promote a common model for store and use by an executable.
     /// </summary>
-    public class IffFile : IFileInfoUtilizer
+    public class IffFile : IFileInfoUtilizer, ITimedCachable
     {
         /// <summary>
         /// Set to true to force the game to retain a copy of all chunk data at time of loading (used to generate piffs)
@@ -48,7 +49,8 @@ namespace FSO.Files.Formats.IFF
             {"TTAs", typeof(TTAs)},
             {"FWAV", typeof(FWAV)},
             {"BMP_", typeof(BMP)},
-            {"PIFF", typeof(PIFF) }
+            {"PIFF", typeof(PIFF) },
+            {"TRCN", typeof(TRCN) }
         };
 
         public IffRuntimeInfo RuntimeInfo = new IffRuntimeInfo();
@@ -71,11 +73,33 @@ namespace FSO.Files.Formats.IFF
         /// <param name="filepath">Path to the IFF.</param>
         public IffFile(string filepath) : this()
         {
-            using (var stream = File.OpenRead(filepath))
+            using (var stream = File.Open(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 this.Read(stream);
                 SetFilename(Path.GetFileName(filepath));
             }
+        }
+
+        private bool WasReferenced = true;
+        ~IffFile()
+        {
+            if (WasReferenced)
+            {
+                TimedReferenceController.KeepAlive(this, KeepAliveType.DEREFERENCED);
+                WasReferenced = false;
+                GC.ReRegisterForFinalize(this);
+            } else
+            {
+                var all = SilentListAll();
+                foreach (var chunk in all)
+                {
+                    chunk.Dispose();
+                }
+            }
+        }
+        public void Rereferenced(bool saved)
+        {
+            WasReferenced = saved;
         }
 
         /// <summary>

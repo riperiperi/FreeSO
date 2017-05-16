@@ -1,0 +1,26 @@
+﻿<md-dialog>
+    <md-content class="md-padding">
+        <form name="shutForm">
+            <label>WARNING: This will shut down all specified shards! Make sure you give enough warning before doing this, unless the server needs to be closed immediately. Right now, doing this will also make the API go offline, so be careful!</label>
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Warning Period (seconds)</label> <input md-maxlength="50"  ng-model="sd.timeout" required placeholder="60"> </md-input-container>
+            </div>
+            <label>Shutdown Mode</label>
+            <div layout layout-sm="column">
+                <md-input-container flex>
+                    <md-checkbox ng-model="sd.restart">
+                        Restart
+                    </md-checkbox>
+                    <md-checkbox ng-model="sd.update">
+                        Update (if configured)
+                    </md-checkbox>
+                </md-input-container>
+            </div>
+        </form>
+    </md-content>
+    <div class="md-actions" layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel();"> Cancel </md-button>
+        <md-button ng-click="ok()" ng-disabled="shutForm.$invalid" class="md-primary"> Shutdown Shards </md-button>
+    </div>
+</md-dialog>

@@ -44,6 +44,7 @@ namespace FSO.Content
         public DBPFFile Hitlists; //HitListsTemp.dat
 
         public Dictionary<uint, Track> TracksById;
+        public Dictionary<uint, Track> TracksByBackupId;
         private Dictionary<uint, Hitlist> HitlistsById;
 
 
@@ -89,6 +90,7 @@ namespace FSO.Content
 
             SFXCache = new Dictionary<uint, SoundEffect>();
             TracksById = new Dictionary<uint, Track>();
+            TracksByBackupId = new Dictionary<uint, Track>();
             HitlistsById = new Dictionary<uint, Hitlist>();
 
             AddTracksFrom(TSOAudio);
@@ -103,7 +105,10 @@ namespace FSO.Content
             var tracks = dbpf.GetItemsByType(DBPFTypeID.TRK);
             for (var i=0; i<tracks.Count; i++) 
             {
-                TracksById.Add(tracks[i].Key, new Track(tracks[i].Value));
+                var track = new Track(tracks[i].Value);
+                var realid = tracks[i].Key;
+                TracksById.Add(realid, track);
+                TracksByBackupId[track.TrackID] = track;
             }
         }
 
@@ -113,8 +118,9 @@ namespace FSO.Content
         /// <param name="InstanceID">The InstanceID of the audio.</param>
         /// <param name="dbpf">The DBPF to search.</param>
         /// <returns>The audio as a stream of bytes.</returns>
-        private byte[] GetAudioFrom(uint InstanceID, DBPFFile dbpf) 
+        private byte[] GetAudioFrom(uint InstanceID, DBPFFile dbpf, out byte filetype) 
         {
+            filetype = 0;
             if (InstanceID == 0)
                 return null;
 
@@ -125,15 +131,22 @@ namespace FSO.Content
             {
                 string head = new string(new char[] { (char)dat[0], (char)dat[1], (char)dat[2], (char)dat[3] });
                 if (head.StartsWith("XA"))
+                {
+                    filetype = 1;
                     return new XAFile(dat).DecompressedData;
+                }
                 else if (head.StartsWith("UTM0"))
                 {
+                    filetype = 2;
                     var utk = new UTKFile2(dat);
                     utk.UTKDecode();
                     return utk.DecompressedWav;
                 }
                 else
+                {
+                    filetype = 3;
                     return dat; //either wav or mp3.
+                }
             }
             else
                 Debug.WriteLine("Couldn't find sound!");
@@ -187,22 +200,34 @@ namespace FSO.Content
         public SoundEffect GetSFX(uint InstanceID)
         {
             if (SFXCache.ContainsKey(InstanceID)) return SFXCache[InstanceID];
+            byte filetype = 0;
 
-            byte[] data = GetAudioFrom(InstanceID, TSOAudio);
-            if (data == null) data = GetAudioFrom(InstanceID, tsov2);
-            if (data == null) data = GetAudioFrom(InstanceID, Stings);
-            if (data == null) data = GetAudioFrom(InstanceID, EP5Samps);
-            if (data == null) data = GetAudioFrom(InstanceID, EP2);
+            byte[] data = GetAudioFrom(InstanceID, TSOAudio, out filetype);
+            if (data == null) data = GetAudioFrom(InstanceID, tsov2, out filetype);
+            if (data == null) data = GetAudioFrom(InstanceID, Stings, out filetype);
+            if (data == null) data = GetAudioFrom(InstanceID, EP5Samps, out filetype);
+            if (data == null) data = GetAudioFrom(InstanceID, EP2, out filetype);
 
             if (data != null)
             {
                 var stream = new MemoryStream(data);
 
-                    var sfx = SoundEffect.FromStream(stream);
-                    stream.Close();
-                    SFXCache.Add(InstanceID, sfx);
-                    return sfx; //remember to clear the sfx cache between lots!
-
+                var sfx = SoundEffect.FromStream(stream);
+                stream.Close();
+                SFXCache.Add(InstanceID, sfx);
+                switch (filetype)
+                {
+                    case 2:
+                        sfx.Name = "VOX";
+                        break;
+                    case 3:
+                        sfx.Name = "MUSIC";
+                        break;
+                    default:
+                        sfx.Name = "FX";
+                        break;
+                }
+                return sfx; //remember to clear the sfx cache between lots!
             }
             else
             {

@@ -32,6 +32,10 @@ namespace FSO.Content
         private Dictionary<ulong, string> Files = new Dictionary<ulong, string>();
         private Dictionary<ulong, ITextureRef> FilesCache = new Dictionary<ulong, ITextureRef>();
 
+        //For some reason, the rack eod has a graphic id that we don't, but the file does exist under another iD.
+        //Can't see any problem with file parser so putting in a mapping for now
+        private Dictionary<ulong, ulong> Pointers = new Dictionary<ulong, ulong>();
+
 
         public UIGraphicsProvider(Content contentManager)
             : base(contentManager, new TextureCodec(MASK_COLORS), new Regex("uigraphics/.*\\.dat"))
@@ -42,17 +46,24 @@ namespace FSO.Content
             Files[0x1AF0856DDBAC] = "uigraphics/chat/balloonpointersadbottom.bmp";
             Files[0x1B00856DDBAC] = "uigraphics/chat/balloonpointersadside.bmp";
             Files[0x1B10856DDBAC] = "uigraphics/chat/balloontilessad.bmp";
+
+            Files[0x1972454856DDBAC] = "uigraphics/friendshipweb/f_web_inbtn.bmp";
+            Files[0x3D3AEF0856DDBAC] = "uigraphics/friendshipweb/f_web_outbtn.bmp";
+            //./uigraphics/eods/costumetrunk/eod_costumetrunkbodySkinBtn.bmp
+            Pointers[0x0000028800000001] = 0x0000094600000001;
         }
 
         protected override ITextureRef ResolveById(ulong id)
         {
+            if (Pointers.ContainsKey(id)){
+                id = Pointers[id];
+            }
             if (Files.ContainsKey(id))
             {
                 //Non far3 file
                 if (FilesCache.ContainsKey(id)) { return FilesCache[id]; }
                 var path = this.ContentManager.GetPath(Files[id]);
-                using (var stream = File.OpenRead(path))
-                {
+                using (var stream = File.OpenRead(path)) {
                     FilesCache.Add(id, Codec.Decode(stream));
                     return FilesCache[id];
                 }

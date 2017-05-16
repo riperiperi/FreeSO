@@ -22,6 +22,8 @@ using FSO.Common.Content;
 using FSO.Files;
 using FSO.Client.GameContent;
 using FSO.Client.Utils;
+using Ninject;
+using Ninject.Parameters;
 
 namespace FSO.Client.UI.Framework
 {
@@ -101,6 +103,12 @@ namespace FSO.Client.UI.Framework
         /// UIContainer sets this in its Add method. Helps describe the UI Tree.
         /// </summary>
         protected UIContainer _Parent;
+
+        /// <summary>
+        /// Used for dialogs where their UI is top most but logically they belong
+        /// to a specific screen
+        /// </summary>
+        public UIContainer LogicalParent;
         
         /// <summary>
         /// Matrix object which represents the position & scale of this UIElement.
@@ -153,6 +161,9 @@ namespace FSO.Client.UI.Framework
             get { return m_StringID; }
             set { m_StringID = value; }
         }
+
+        [UIAttribute("id")]
+        public Int32 NumericId { get; set; }
 
         /// <summary>
         /// X Coordinate of the UIElement relative to its UIContainer.
@@ -433,6 +444,16 @@ namespace FSO.Client.UI.Framework
             }
         }
 
+        public virtual void Removed()
+        {
+
+        }
+
+        public virtual void GameResized()
+        {
+
+        }
+
         /// <summary>
         /// Scans through parents to determine if this element will be drawn.
         /// </summary>
@@ -590,6 +611,7 @@ namespace FSO.Client.UI.Framework
             //to.Y += style.BaselineOffset;
             to.X = (float)Math.Floor(to.X);
             to.Y = (float)Math.Floor(to.Y);
+            if (style.Shadow) batch.DrawString(style.SpriteFont, text, LocalPoint(to) + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
             batch.DrawString(style.SpriteFont, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
         }
 
@@ -813,6 +835,10 @@ namespace FSO.Client.UI.Framework
             else
             {
                 var globalPosition = LocalRect(area.X, area.Y, area.Width, area.Height);
+                globalLeft = globalPosition.X;
+                globalTop = globalPosition.Y;
+                globalRight = globalPosition.Right;
+                globalBottom = globalPosition.Bottom;
 
                 if (cache)
                 {
@@ -887,47 +913,12 @@ namespace FSO.Client.UI.Framework
             new Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
-        
-        public static Texture2D StoreTexture(ulong id, ContentResource assetData)
-        {
-            return StoreTexture(id, assetData, true, false);
-        }
-
-        public static Texture2D StoreTexture(ulong id, ContentResource assetData, bool mask, bool cacheOnDisk)
-        {
-            /**
-             * This may not be the right way to get the texture to load as ARGB but it works :S
-             */
-            Texture2D texture = null;
-            using (var stream = new MemoryStream(assetData.Data, false))
-            {
-                var isCached = assetData.FromCache;
-
-                if (mask && !isCached)
-                {
-                    //var textureParams = Texture2D.GetCreationParameters(GameFacade.GraphicsDevice, stream);
-                    //textureParams.Format = SurfaceFormat.Color;
-
-                    stream.Seek(0, SeekOrigin.Begin);
-                    texture = ImageLoader.FromStream(GameFacade.GraphicsDevice, stream); //, textureParams);
-
-                    //TextureUtils.ManualTextureMaskSingleThreaded(ref texture, MASK_COLORS);
-                }
-                else
-                {
-                    texture = ImageLoader.FromStream(GameFacade.GraphicsDevice, stream);
-                }
-                UI_TEXTURE_CACHE.Add(id, texture);
-
-                return texture;
-            }
-        }
-
         public static Texture2D GetTexture(ContentID id)
         {
             return GetTexture(id.Shift());
         }
-
+        
+        private static List<ulong> UI_TEMP_CACHE = new List<ulong>();
         public static Texture2D GetTexture(ulong id)
         {
             try
@@ -941,29 +932,6 @@ namespace FSO.Client.UI.Framework
             return new Texture2D(GameFacade.GraphicsDevice, 1, 1);
         }
 
-        private static Dictionary<ulong, Texture2D> UI_TEXTURE_CACHE = new Dictionary<ulong, Texture2D>();
-        private static List<ulong> UI_TEMP_CACHE = new List<ulong>();
-        /*
-        public static Texture2D GetTexture(ulong id)
-        {
-            try
-            {
-                if (UI_TEXTURE_CACHE.ContainsKey(id))
-                {
-                    return UI_TEXTURE_CACHE[id];
-                }
-
-                var assetData = ContentManager.GetResourceInfo(id);
-                
-                return StoreTexture(id, assetData);
-            }
-            catch (Exception e)
-            {
-                var test = e;
-            }
-            return new Texture2D(GameFacade.GraphicsDevice, 1, 1); //TODO: use cache for empty textures, so we don't accidentally create a ton
-        }
-        */
         //These do not seem to be neccessary when maximizing and minimizing.
         //Commenting out until further testing has been done.
         /*public static void InvalidateEverything()
@@ -1080,7 +1048,81 @@ namespace FSO.Client.UI.Framework
         }
 
         public delegate void AsyncHandler();
-    
+
+
+
+        public object Controller { get; internal set; }
+
+
+        public T BindController<T>()
+        {
+            var controllerInstance = 
+                GameFacade.Kernel.Get<T>(new ConstructorArgument("view", this));
+            this.Controller = controllerInstance;
+            return controllerInstance;
+        }
+
+        public void SetController(object controller)
+        {
+            this.Controller = controller;
+        }
+
+        public T FindController<T>()
+        {
+            var target = this;
+            while(target != null)
+            {
+                if(target.Controller is T)
+                {
+                    return (T)target.Controller;
+                }
+                target = target.Parent;
+            }
+
+            if(LogicalParent != null){
+                return LogicalParent.FindController<T>();
+            }
+            return default(T);
+        }
+
+        public T FindParent<T>() where T : UIElement
+        {
+            var target = this;
+            while (target != null)
+            {
+                if (target is T)
+                {
+                    return (T)target;
+                }
+                target = target.Parent;
+            }
+
+            if (LogicalParent != null)
+            {
+                return LogicalParent.FindParent<T>();
+            }
+            return default(T);
+        }
+
+
+        private Dictionary<string, UIDebounce> _Debounces;
+
+        public void Debounce(string id, Callback callback)
+        {
+            Debounce(id, UIDebounce.DEFAULT_TIMEOUT, callback);
+        }
+
+        public void Debounce(string id, int timeout, Callback callback)
+        {
+            if (_Debounces == null) { _Debounces = new Dictionary<string, UIDebounce>(); }
+
+            if (!_Debounces.ContainsKey(id)){
+                _Debounces.Add(id, new UIDebounce(timeout));
+            }
+
+            _Debounces[id].Invoke(callback);
+        }
+
     }
 
 }

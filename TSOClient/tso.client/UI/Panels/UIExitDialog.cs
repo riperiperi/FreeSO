@@ -45,7 +45,7 @@ namespace FSO.Client.UI.Panels
 
         private void ReLoginButton_OnButtonClick(UIElement button)
         {
-            var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = "Not Implemented", Message = "This feature is not implemented yet!" }, true);
+            GameFacade.Controller.Disconnect(true);
         }
     }
 }

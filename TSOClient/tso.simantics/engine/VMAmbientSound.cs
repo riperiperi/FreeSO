@@ -106,6 +106,8 @@ namespace FSO.SimAntics.Engine
         };
 
         public Dictionary<byte, AmbiencePlayer> ActiveSounds;
+        public ulong ActiveBits;
+        public VMCategorisedAmb? ActiveLoop;
 
         /// <summary>
         /// Handles ambient sound in lots.
@@ -130,23 +132,39 @@ namespace FSO.SimAntics.Engine
             return 0;
         }
 
+        public VMCategorisedAmb? GetAmbienceFromName(string name)
+        {
+            for (byte i = 0; i < SoundByBitField.Count; i++)
+            {
+                if (SoundByBitField[i].Name == name) return SoundByBitField[i];
+            }
+            return null;
+        }
+
         public void SetAmbience(byte id, bool active)
         {
+            if (id > SoundByBitField.Count) return;
             if (active)
             {
+                ActiveBits |= ((ulong)1 << id);
                 if (!ActiveSounds.ContainsKey(id))
                 {
                     var cat = SoundByBitField[id];
                     var amb = AmbienceByGUID[cat.GUID];
-                    ActiveSounds.Add(id, new AmbiencePlayer(amb));
+                    if (cat.Category == 4 && ActiveLoop != null) SetAmbience(GetAmbienceFromGUID(ActiveLoop.Value.GUID), false); //cancel previous loop
+                    if (VM.UseWorld) ActiveSounds.Add(id, new AmbiencePlayer(amb));
+                    if (cat.Category == 4) ActiveLoop = cat;
                 }
             }
             else
             {
+                ActiveBits &= ~(((ulong)1 << id));
                 if (ActiveSounds.ContainsKey(id))
                 {
+                    var cat = SoundByBitField[id];
                     ActiveSounds[id].Kill();
                     ActiveSounds.Remove(id);
+                    if (cat.Category == 4) ActiveLoop = null;
                 }
             }
         }

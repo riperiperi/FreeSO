@@ -25,6 +25,7 @@ using FSO.SimAntics.Marshals;
 using FSO.Common.Utils;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model.Sound;
+using FSO.SimAntics.Primitives;
 
 namespace FSO.SimAntics
 {
@@ -43,7 +44,7 @@ namespace FSO.SimAntics
 
         public VMEntityRTTI RTTI;
         public bool GhostImage;
-        public VMMultitileGroup GhostOriginal; //Ignore collisions/slots from any of these objects.
+        public VMMultitileGroup IgnoreIntersection; //Ignore collisions/slots from any of these objects.
 
         //own properties (for instance)
         public short ObjectID;
@@ -95,7 +96,10 @@ namespace FSO.SimAntics
 
         /** Relationship variables **/
         public Dictionary<ushort, List<short>> MeToObject;
-        //todo, special system for server persistent avatars and pets
+        public Dictionary<uint, List<short>> MeToPersist;
+        //signals which relationships have changed since the last time this was reset
+        //used to partial update relationships when doing an avatar save to db
+        public HashSet<uint> ChangedRels = new HashSet<uint>(); 
 
         public ulong DynamicSpriteFlags; /** Used to show/hide dynamic sprites **/
         public ulong DynamicSpriteFlags2;
@@ -103,6 +107,8 @@ namespace FSO.SimAntics
 
         private LotTilePos _Position = new LotTilePos(LotTilePos.OUT_OF_WORLD);
         public EntityComponent WorldUI;
+
+        public uint TimestampLockoutCount = 0;
 
         //inferred properties (from object resource)
         public GameGlobalResource SemiGlobal;
@@ -128,6 +134,19 @@ namespace FSO.SimAntics
         }
 
         //positioning properties
+
+        protected static Direction[] DirectionNotches = new Direction[]
+        {
+            Direction.NORTH,
+            Direction.NORTHEAST,
+            Direction.EAST,
+            Direction.SOUTHEAST,
+            Direction.SOUTH,
+            Direction.SOUTHWEST,
+            Direction.WEST,
+            Direction.NORTHWEST
+        };
+
         public LotTilePos Position
         {
             get { return _Position; }
@@ -135,6 +154,7 @@ namespace FSO.SimAntics
             {
                 _Position = value;
                 if (UseWorld) WorldUI.Level = Position.Level;
+                if (this is VMAvatar) ((VMAvatar)this).VisualPositionStart = null;
                 VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level - 1) * 2.95f);
             }
         }
@@ -156,6 +176,7 @@ namespace FSO.SimAntics
              */
             ObjectData = new short[80];
             MeToObject = new Dictionary<ushort, List<short>>();
+            MeToPersist = new Dictionary<uint, List<short>>();
             SoundThreads = new List<VMSoundEntry>();
 
             RTTI = new VMEntityRTTI();
@@ -194,10 +215,16 @@ namespace FSO.SimAntics
                 TreeTable = SemiGlobal.Get<TTAB>(obj.OBJ.TreeTableID); //tree not in local, try semiglobal
                 TreeTableStrings = SemiGlobal.Get<TTAs>(obj.OBJ.TreeTableID);
             }
-            //no you cannot get global tree tables don't even ask
+            //TODO: global interactions like salvage
 
             this.Attributes = new List<short>(numAttributes);
             SetFlag(VMEntityFlags.ChairFacing, true);
+        }
+
+        public void ResetData()
+        {
+            ObjectData = new short[80];
+            this.Attributes = new List<short>(Object.OBJ.NumAttributes);
         }
 
         /// <summary>
@@ -233,12 +260,15 @@ namespace FSO.SimAntics
 
         public virtual void Tick()
         {
-            //decrement lockout count
-
             if (Thread != null)
             {
+                Thread.ScheduleIdleEnd = 0;
                 Thread.TicksThisFrame = 0;
                 Thread.Tick();
+                if (Thread.ScheduleIdleEnd == 0 && !Dead)
+                {
+                    Thread.Context.VM.Scheduler.ScheduleTickIn(this, 1);
+                }
                 if (SoundThreads.Count > 0) TickSounds();
             }
             if (Headline != null)
@@ -259,7 +289,6 @@ namespace FSO.SimAntics
             {
                 WorldUI.Headline = null;
             }
-            if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
         }
 
         public void TickSounds()
@@ -273,41 +302,28 @@ namespace FSO.SimAntics
                 scrPos -= new Vector2(worldSpace.WorldPxWidth/2, worldSpace.WorldPxHeight/2);
                 for (int i = 0; i < SoundThreads.Count; i++)
                 {
-                    if (SoundThreads[i].Sound.Dead)
+                    var sound = SoundThreads[i].Sound;
+                    if (sound.Dead)
                     {
-                        var old = SoundThreads[i];
                         SoundThreads.RemoveAt(i--);
-                        if (old.Loop)
-                        {
-                            var thread = HITVM.Get().PlaySoundEvent(old.Name);
-                            if (thread != null)
-                            {
-                                var owner = this;
-                                if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
-
-                                var entry = new VMSoundEntry()
-                                {
-                                    Sound = thread,
-                                    Pan = old.Pan,
-                                    Zoom = old.Zoom,
-                                    Loop = old.Loop,
-                                    Name = old.Name
-                                };
-                                owner.SoundThreads.Add(entry);
-                            }
-                        }
                         continue;
                     }
 
                     float pan = (SoundThreads[i].Pan) ? Math.Max(-1.0f, Math.Min(1.0f, scrPos.X / worldSpace.WorldPxWidth)) : 0;
+                    pan = pan * pan * ((pan > 0)?1:-1);
                     float volume = (SoundThreads[i].Pan) ? 1 - (float)Math.Max(0, Math.Min(1, Math.Sqrt(scrPos.X * scrPos.X + scrPos.Y * scrPos.Y) / worldSpace.WorldPxWidth)) : 1;
+                    volume *= worldState.PreciseZoom;
 
                     if (SoundThreads[i].Zoom) volume /= 4 - (int)worldState.Zoom;
                     if (Position.Level > worldState.Level) volume /= 4;
                     else if (Position.Level != worldState.Level) volume /= 2;
 
-                    SoundThreads[i].Sound.SetVolume(volume, pan);
+                    volume = Math.Min(1f, Math.Max(0f, volume));
 
+                    if (sound.SetVolume(volume, pan, ObjectID) && this is VMAvatar && sound is HITThread)
+                    {
+                        ((VMAvatar)this).SubmitHITVars((HITThread)sound);
+                    }
                 }
             }
         }
@@ -320,6 +336,11 @@ namespace FSO.SimAntics
                 result.Add(new VMSoundTransfer(ObjectID, Object.OBJ.GUID, snd));
             }
             return result;
+        }
+
+        public bool RunEveryFrame()
+        {
+            return (this is VMAvatar || (Headline != null) || (SoundThreads.Count > 0) || ((VMGameObject)this).Disabled > 0);
         }
 
         public OBJfFunctionEntry[] GenerateFunctionTable(OBJD obj)
@@ -365,8 +386,12 @@ namespace FSO.SimAntics
 
         public virtual void Init(VMContext context)
         {
-            GenerateTreeByName(context);
-            if (!GhostImage) this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
+            FetchTreeByName(context);
+            if (!GhostImage)
+            {
+                this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
+                context.VM.Scheduler.ScheduleTickIn(this, 1);
+            }
 
             ExecuteEntryPoint(0, context, true); //Init
 
@@ -395,8 +420,14 @@ namespace FSO.SimAntics
             }
         }
 
+        private bool InReset = false;
         public virtual void Reset(VMContext context)
         {
+            if (InReset) return;
+            InReset = true;
+
+            //if an exception happens here, it will have to be fatal.
+
             if (this.Thread == null) return;
             this.Thread.Stack.Clear();
             this.Thread.Queue.Clear();
@@ -405,14 +436,21 @@ namespace FSO.SimAntics
             this.Thread.BlockingState = null;
             this.Thread.EODConnection = null;
 
-            if (EntryPoints[3].ActionFunction != 0) ExecuteEntryPoint(3, context, true); //Reset
+            if (EntryPoints[3].ActionFunction != 0 && ((this is VMGameObject) || ((VMAvatar)this).IsPet)) ExecuteEntryPoint(3, context, true); //Reset
             if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
+
+            if (this is VMGameObject)
+            {
+                context.VM.Scheduler.DescheduleTick(this);
+                context.VM.Scheduler.ScheduleTickIn(this, 1);
+            }
+
+            InReset = false;
         }
 
-        public void GenerateTreeByName(VMContext context)
+        public void FetchTreeByName(VMContext context)
         {
             TreeByName = Object.Resource.TreeByName;
-                new Dictionary<string, VMTreeByNameTableEntry>();
         }
 
         public bool ExecuteEntryPoint(int entry, VMContext context, bool runImmediately)
@@ -569,19 +607,7 @@ namespace FSO.SimAntics
                 case VMStackObjectVariable.ObjectId:
                     return ObjectID;
                 case VMStackObjectVariable.Direction:
-                    switch (this.Direction)
-                    {
-                        case FSO.LotView.Model.Direction.WEST:
-                            return 6;
-                        case FSO.LotView.Model.Direction.SOUTH:
-                            return 4;
-                        case FSO.LotView.Model.Direction.EAST:
-                            return 2;
-                        case FSO.LotView.Model.Direction.NORTH:
-                            return 0;
-                        default:
-                            return 0;
-                    }
+                    return (short)((Math.Round((RadianDirection / Math.PI) * 4) + 8) % 8);
                 case VMStackObjectVariable.ContainerId:
                 case VMStackObjectVariable.ParentId: //TODO: different?
                     return (Container == null) ? (short)0 : Container.ObjectID;
@@ -589,6 +615,12 @@ namespace FSO.SimAntics
                     return (Container == null) ? (short)-1 : ContainerSlot;
                 case VMStackObjectVariable.SlotCount:
                     return (short)TotalSlots();
+                case VMStackObjectVariable.UseCount:
+                    return (short)((Thread == null)?0:GetUsers(Thread.Context, null).Count);
+                case VMStackObjectVariable.LockoutCount:
+                    var count = ObjectData[(short)var];
+                    if (TimestampLockoutCount > Thread.Context.VM.Scheduler.CurrentTickID) TimestampLockoutCount = 0; //lockout counts in the future are invalid.
+                    return (short)((Thread == null) ? count : Math.Max((long)count - (Thread.Context.VM.Scheduler.CurrentTickID - TimestampLockoutCount), 0));
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
@@ -598,27 +630,30 @@ namespace FSO.SimAntics
         {
             switch (var) //special cases
             {
+                case VMStackObjectVariable.Flags:
+                    if (((value ^ ObjectData[(short)var]) & (int)VMEntityFlags.HasZeroExtent) > 0)
+                        Footprint = GetObstacle(Position, Direction);
+                    if (this is VMAvatar && ((value ^ ObjectData[(short)var]) & (int)VMEntityFlags.Burning) > 0)
+                        this.Reset(Thread.Context);
+                    break;
                 case VMStackObjectVariable.Direction:
                     value = (short)(((int)value + 65536) % 8);
-                    switch (value) {
-                        case 6:
-                            Direction = FSO.LotView.Model.Direction.WEST;
-                            return true;
-                        case 4:
-                            Direction = FSO.LotView.Model.Direction.SOUTH;
-                            return true;
-                        case 2:
-                            Direction = FSO.LotView.Model.Direction.EAST;
-                            return true;
-                        case 0:
-                            Direction = FSO.LotView.Model.Direction.NORTH;
-                            return true;
-                        default:
-                            return true;
-                            //throw new Exception("Diagonal Set Not Implemented!");
-                    }
+                    Direction = DirectionNotches[value];
+                    break;
                 case VMStackObjectVariable.Hidden:
                     if (UseWorld) WorldUI.Visible = value == 0;
+                    break;
+                case VMStackObjectVariable.LockoutCount:
+                    if (Thread != null) TimestampLockoutCount = Thread.Context.VM.Scheduler.CurrentTickID;
+                    break;
+                case VMStackObjectVariable.FSOEngineQuery:
+                    //write a query to this variable and a result will be written to it.
+                    switch (value)
+                    {
+                        case 1: //safe to delete
+                            value = (short)((IsInUse(Thread.Context, true) || (Container != null && Container is VMAvatar)) ? 0 : 1);
+                            break;
+                    }
                     break;
             }
 
@@ -647,6 +682,18 @@ namespace FSO.SimAntics
             }
             Position = Position;
             PositionChange(context, noEntryPoint);
+        }
+
+        public bool WillLoopSlot(VMEntity test)
+        {
+            if (test == this) return true;
+            if (Container != null)
+            {
+                return Container.WillLoopSlot(test);
+            } else
+            {
+                return false;
+            }
         }
 
         // End Container SLOTs interface
@@ -750,10 +797,88 @@ namespace FSO.SimAntics
             if (action != null) caller.Thread.EnqueueAction(action);
         }
 
-        public VMPlacementResult PositionValid(LotTilePos pos, Direction direction, VMContext context)
+        private VMPlacementError IndividualUserMovable(VMContext context, bool deleting)
+        {
+            if (this is VMAvatar) return VMPlacementError.CantBePickedup;
+            var movementFlags = (VMMovementFlags)GetValue(VMStackObjectVariable.MovementFlags);
+            if ((movementFlags & VMMovementFlags.PlayersCanMove) == 0) return VMPlacementError.CantBePickedup;
+            if (deleting && (movementFlags & VMMovementFlags.PlayersCanDelete) == 0) return VMPlacementError.ObjectNotOwnedByYou;
+            if (context.IsUserOutOfBounds(Position)) return VMPlacementError.CantBePickedupOutOfBounds;
+            if (IsInUse(context, true)) return VMPlacementError.InUse;
+            var total = TotalSlots();
+            for (int i = 0; i < TotalSlots(); i++)
+            {
+                var item = GetSlot(i);
+                if (item != null &&
+                    (deleting || item is VMAvatar || item.IsUserMovable(context, deleting) != VMPlacementError.Success)) return VMPlacementError.CantBePickedup;
+            }
+            return VMPlacementError.Success;
+        }
+
+        public VMPlacementError IsUserMovable(VMContext context, bool deleting)
+        {
+            foreach (var obj in MultitileGroup.Objects)
+            {
+                var result = obj.IndividualUserMovable(context, deleting);
+                if (result != VMPlacementError.Success) return result;
+            }
+            return VMPlacementError.Success;
+        }
+
+        public HashSet<VMEntity> GetUsers(VMContext context, HashSet<VMEntity> users)
+        {
+            if (users == null)
+            {
+                users = new HashSet<VMEntity>();
+                foreach (var obj in MultitileGroup.Objects)
+                {
+                    obj.GetUsers(context, users);
+                }
+            }
+            else
+            {
+                foreach (var ava in context.ObjectQueries.Avatars)
+                {
+                    foreach (var item in ava.Thread.Stack)
+                    {
+                        if (item.Callee == this) {
+                            users.Add(ava);
+                            break;
+                         }
+                    }
+                }
+            }
+            return users;
+        }
+
+        public bool IsInUse(VMContext context, bool multitile)
+        {
+            if (multitile)
+            {
+                foreach (var obj in MultitileGroup.Objects)
+                {
+                    if (obj.IsInUse(context, false)) return true;
+                }
+            }
+            else
+            {
+                if (GetFlag(VMEntityFlags.Occupied)) return true;
+                foreach (var ava in context.ObjectQueries.Avatars)
+                {
+                    foreach (var item in ava.Thread.Stack)
+                    {
+                        if (item.Callee == this) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public VMPlacementResult PositionValid(LotTilePos pos, Direction direction, VMContext context, VMPlaceRequestFlags flags)
         {
             if (pos == LotTilePos.OUT_OF_WORLD) return new VMPlacementResult();
-            else if (context.IsOutOfBounds(pos)) return new VMPlacementResult { Status = VMPlacementError.LocationOutOfBounds };
+            if ((((flags & VMPlaceRequestFlags.UserBuildableLimit) > 0) && context.IsUserOutOfBounds(pos)) || context.IsOutOfBounds(pos))
+                return new VMPlacementResult(VMPlacementError.LocationOutOfBounds);
 
             //TODO: speedup with exit early checks
             //TODO: corner checks (wtf uses this)
@@ -764,36 +889,39 @@ namespace FSO.SimAntics
             if (this is VMGameObject) //needs special handling for avatar eventually
             {
                 VMPlacementError wallValid = WallChangeValid(wall, direction, true);
-                if (wallValid != VMPlacementError.Success) return new VMPlacementResult { Status = wallValid };
+                if (wallValid != VMPlacementError.Success) return new VMPlacementResult(wallValid);
             }
 
-            var floor = arch.GetFloor(pos.TileX, pos.TileY, pos.Level);
+            var floor = arch.GetPreciseFloor(pos);
             VMPlacementError floorValid = FloorChangeValid(floor, pos.Level);
-            if (floorValid != VMPlacementError.Success) return new VMPlacementResult { Status = floorValid };
+            if (floorValid != VMPlacementError.Success) return new VMPlacementResult(floorValid);
 
             //we've passed the wall test, now check if we intersect any objects.
+            if ((flags & VMPlaceRequestFlags.AllowIntersection) > 0) return new VMPlacementResult(VMPlacementError.Success);
             var valid = (this is VMAvatar)? context.GetAvatarPlace(this, pos, direction) : context.GetObjPlace(this, pos, direction);
+            if (valid.Object != null && ((flags & VMPlaceRequestFlags.AcceptSlots) == 0))
+                valid.Status = VMPlacementError.CantIntersectOtherObjects;
             return valid;
         }
 
-        public VMPlacementError FloorChangeValid(FloorTile floor, sbyte level)
+        public VMPlacementError FloorChangeValid(ushort floor, sbyte level)
         {
             var placeFlags = (VMPlacementFlags)ObjectData[(int)VMStackObjectVariable.PlacementFlags];
 
-            if (floor.Pattern == 65535)
+            if (floor == 65535)
             {
                 if ((placeFlags & (VMPlacementFlags.AllowOnPool | VMPlacementFlags.RequirePool)) == 0) return VMPlacementError.CantPlaceOnWater;
             }
             else
             {
                 if ((placeFlags & VMPlacementFlags.RequirePool) > 0) return VMPlacementError.MustPlaceOnPool;
-                if (floor.Pattern == 63354)
+                if (floor == 65534)
                 {
                     if ((placeFlags & (VMPlacementFlags.OnWater | VMPlacementFlags.RequireWater)) == 0) return VMPlacementError.CantPlaceOnWater;
                 } else
                 {
                     if ((placeFlags & VMPlacementFlags.RequireWater) > 0) return VMPlacementError.MustPlaceOnWater;
-                    if (floor.Pattern == 0)
+                    if (floor == 0)
                     {
                         if (level == 1)
                         {
@@ -850,7 +978,15 @@ namespace FSO.SimAntics
             var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
             int rotate = (8-(DirectionToWallOff(Direction) + 1)) % 4;
             byte rotPart = (byte)RotateWallSegs((WallSegments)((int)placeFlags%15), rotate);
-            SetValue(VMStackObjectVariable.WallAdjacencyFlags, (short)RotateWallSegs(wall.Segments, rotate));
+
+            var mainSegs = (WallSegments)RotateWallSegs(wall.Segments, (4-rotate)%4);
+            var wallAdj = (VMWallAdjacencyFlags)0; //wall adjacency uses a weird bit order. TODO: Wall in front of left/right (used by stairs)
+            if ((mainSegs & WallSegments.TopLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnLeft;
+            if ((mainSegs & WallSegments.TopRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallInFront;
+            if ((mainSegs & WallSegments.BottomRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnRight;
+            if ((mainSegs & WallSegments.BottomLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallBehind;
+
+            SetValue(VMStackObjectVariable.WallAdjacencyFlags, (short)wallAdj);
 
             if (rotPart == 0) return;
 
@@ -867,6 +1003,14 @@ namespace FSO.SimAntics
             if (cleanupAll) MultitileGroup.Delete(context);
             else
             {
+                if (Dead) return;
+                if (context.VM.Scheduler.RunningNow)
+                {
+                    //queue this object to be deleted at the end of the frame
+                    context.VM.Scheduler.Delete(this);
+                    return;
+                }
+                Dead = true; //if a reset tries to delete this object it is wasting its time
                 var threads = SoundThreads;
 
                 for (int i = 0; i < threads.Count; i++)
@@ -875,7 +1019,23 @@ namespace FSO.SimAntics
                 }
                 threads.Clear();
 
+                /*
+                 * disable til ts1 behaviour reversed
+                if (Container != null && Container is VMAvatar)
+                {
+                    //must reset our container, and any object they are using. (restaurant, TS1 behaves similarly)
+                    var stack = Container.Thread.Stack;
+                    var stacklast = (stack.Count == 0) ? null : stack[stack.Count - 1];
+                    if (stacklast != null && stacklast.Callee != Container && stacklast.Callee != this) stacklast.Callee.Reset(context);
+                    Container.Reset(context);
+                }
+                */
+
                 PrePositionChange(context);
+                //if we're the last object in a multitile group, and db persisted, remove us from the db.
+                //this deletes all plugin data for this object too.
+                if (context.VM.GlobalLink != null && PersistID > 0 && MultitileGroup.Objects.Count == 1)
+                    context.VM.GlobalLink.DeleteObject(context.VM, PersistID, (result) => { });
                 context.RemoveObjectInstance(this);
                 MultitileGroup.RemoveObject(this); //we're no longer part of the multitile group
 
@@ -885,7 +1045,9 @@ namespace FSO.SimAntics
                     var obj = GetSlot(i);
                     if (obj != null)
                     {
-                        obj.SetPosition(Position, obj.Direction, context);
+                        this.Position = obj.Position;
+                        obj.SetPosition(LotTilePos.OUT_OF_WORLD, obj.Direction, context);
+                        if (this.Position != LotTilePos.OUT_OF_WORLD) VMFindLocationFor.FindLocationFor(obj, this, context, VMPlaceRequestFlags.Default);
                     }
                 }
 
@@ -904,10 +1066,15 @@ namespace FSO.SimAntics
             Footprint = GetObstacle(Position, Direction);
             if (!(GhostImage || noEntryPoint)) ExecuteEntryPoint(9, context, true); //Placement
         }
-
-        public virtual VMPlacementResult SetPosition(LotTilePos pos, Direction direction, VMContext context)
+        
+        public VMPlacementResult SetPosition(LotTilePos pos, Direction direction, VMContext context)
         {
-            return MultitileGroup.ChangePosition(pos, direction, context);
+            return MultitileGroup.ChangePosition(pos, direction, context, VMPlaceRequestFlags.Default);
+        }
+
+        public VMPlacementResult SetPosition(LotTilePos pos, Direction direction, VMContext context, VMPlaceRequestFlags flags)
+        {
+            return MultitileGroup.ChangePosition(pos, direction, context, flags);
         }
 
         public virtual void SetIndivPosition(LotTilePos pos, Direction direction, VMContext context, VMPlacementResult info)
@@ -1007,6 +1174,10 @@ namespace FSO.SimAntics
             i = 0;
             foreach (var item in MeToObject) relArry[i++] = new VMEntityRelationshipMarshal { Target = item.Key, Values = item.Value.ToArray() };
 
+            var prelArry = new VMEntityPersistRelationshipMarshal[MeToPersist.Count];
+            i = 0;
+            foreach (var item in MeToPersist) prelArry[i++] = new VMEntityPersistRelationshipMarshal { Target = item.Key, Values = item.Value.ToArray() };
+
             target.ObjectID = ObjectID;
             target.PersistID = PersistID;
             target.PlatformState = PlatformState;
@@ -1027,10 +1198,12 @@ namespace FSO.SimAntics
 
             target.Attributes = Attributes.ToArray();
             target.MeToObject = relArry;
+            target.MeToPersist = prelArry;
 
             target.DynamicSpriteFlags = DynamicSpriteFlags;
             target.DynamicSpriteFlags2 = DynamicSpriteFlags2;
             target.Position = _Position;
+            target.TimestampLockoutCount = TimestampLockoutCount;
         }
 
         public virtual void Load(VMEntityMarshal input)
@@ -1057,11 +1230,15 @@ namespace FSO.SimAntics
 
             Attributes = new List<short>(input.Attributes);
             MeToObject = new Dictionary<ushort, List<short>>();
-            foreach (var obj in input.MeToObject)  MeToObject[obj.Target] = new List<short>(obj.Values);
+            MeToPersist = new Dictionary<uint, List<short>>();
+            foreach (var obj in input.MeToObject) MeToObject[obj.Target] = new List<short>(obj.Values);
+            foreach (var obj in input.MeToPersist) MeToPersist[obj.Target] = new List<short>(obj.Values);
 
             DynamicSpriteFlags = input.DynamicSpriteFlags;
             DynamicSpriteFlags2 = input.DynamicSpriteFlags2;
             Position = input.Position;
+
+            TimestampLockoutCount = input.TimestampLockoutCount;
 
             if (UseWorld) WorldUI.Visible = GetValue(VMStackObjectVariable.Hidden) == 0;
         }
@@ -1105,7 +1282,7 @@ namespace FSO.SimAntics
         FireProof = 1 << 11,
         TurnedOff = 1 << 12,
         NeedsMaintinance = 1 << 13,
-        ShowDynObjNameInTooltip = 1 << 14
+        ShowDynObjNameInTooltip = 1 << 14,
     }
 
 
@@ -1164,6 +1341,40 @@ namespace FSO.SimAntics
         unused14 = 1 << 13,
         ArchitectualWindow = 1 << 14,
         ArchitectualDoor = 1 << 15
+    }
+
+    [Flags]
+    public enum VMMovementFlags
+    {
+        SimsCanMove = 1, //only cleared by payphone...
+        PlayersCanMove = 1 << 1,
+        SelfPropelled = 1 << 2, //unused
+        PlayersCanDelete = 1 << 3,
+        StaysAfterEvict = 1 << 4
+    }
+
+    [Flags]
+    public enum VMCensorshipFlags
+    {
+        Pelvis = 1,
+        SpineIfFemale = 1 << 1,
+        Head = 1 << 2,
+        LeftHand = 1 << 3,
+        RightHand = 1 << 4,
+        LeftFoot = 1 << 5,
+        RightFoot = 1 << 6,
+        FullBody = 1 << 7
+    }
+
+    [Flags]
+    public enum VMWallAdjacencyFlags
+    {
+        WallOnLeft = 1,
+        WallOnRight = 1<<1,
+        WallInFront = 1<<2,
+        WallBehind = 1<<3,
+        WallAboveLeft = 1<<4,
+        WallAboveRight = 1<<5
     }
     public class VMPieMenuInteraction
     {

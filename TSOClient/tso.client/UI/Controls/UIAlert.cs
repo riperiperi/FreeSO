@@ -11,6 +11,7 @@ using System.Text;
 using FSO.Client.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using FSO.Common.Utils;
 
 namespace FSO.Client.UI.Controls
 {
@@ -22,6 +23,8 @@ namespace FSO.Client.UI.Controls
         private UIAlertOptions m_Options;
         private TextRendererResult m_MessageText;
         private TextStyle m_TextStyle;
+        
+        private UIProgressBar _ProgressBar;
 
         private UIImage Icon;
         private Vector2 IconSpace;
@@ -58,6 +61,15 @@ namespace FSO.Client.UI.Controls
             /** Determine the size **/
             ComputeText();
 
+            if (options.ProgressBar)
+            {
+                _ProgressBar = new UIProgressBar();
+                _ProgressBar.Mode = ProgressBarMode.Animated;
+                _ProgressBar.Position = new Microsoft.Xna.Framework.Vector2(32, 0);
+                _ProgressBar.SetSize(options.Width - 64, 26);
+                this.Add(_ProgressBar);
+            }
+
             /** Add buttons **/
             Buttons = new List<UIButton>();
 
@@ -91,6 +103,7 @@ namespace FSO.Client.UI.Controls
             if (options.TextEntry)
             {
                 TextBox = new UITextBox();
+                TextBox.MaxChars = options.MaxChars;
                 this.Add(TextBox);
             }
 
@@ -102,7 +115,22 @@ namespace FSO.Client.UI.Controls
         {
             var w = m_Options.Width;
             var h = m_Options.Height;
-            h = Math.Max(h, Math.Max((int)IconSpace.Y, m_MessageText.BoundingBox.Height) + 95);
+
+            h = Math.Max(h, Math.Max((int)IconSpace.Y, m_MessageText == null ? 0 : m_MessageText.BoundingBox.Height) + 32);
+
+            if(_ProgressBar != null){
+                _ProgressBar.Position = new Vector2(_ProgressBar.Position.X, h + 12);
+                h += 47;
+            }
+
+            if(Buttons.Count > 0)
+            {
+                h += 58;
+            }
+            else
+            {
+                h += 32;
+            }
 
             if (m_Options.TextEntry)
             {
@@ -176,15 +204,18 @@ namespace FSO.Client.UI.Controls
             btn.Width = 100;
 
             if(InternalHandler)
-                btn.OnButtonClick += new ButtonClickDelegate(btn_OnButtonClick);
+                btn.OnButtonClick += new ButtonClickDelegate(x =>
+                {
+                    HandleClose();
+                });
 
             ButtonMap.Add(type, btn);
 
             this.Add(btn);
             return btn;
         }
-
-        private void btn_OnButtonClick(UIElement button)
+        
+        private void HandleClose()
         {
             UIScreen.RemoveDialog(this);
         }
@@ -232,8 +263,9 @@ namespace FSO.Client.UI.Controls
         public int Width = 340;
         public int Height = -1;
         public TextAlignment Alignment = TextAlignment.Center;
-
+        public int MaxChars = int.MaxValue;
         public int TextSize = 10;
+        public bool ProgressBar;
 
         public bool TextEntry = false;
         public UIAlertButton[] Buttons = new UIAlertButton[] { new UIAlertButton() };
@@ -241,6 +273,26 @@ namespace FSO.Client.UI.Controls
 
     public class UIAlertButton
     {
+        public static UIAlertButton[] Ok()
+        {
+            return Ok(null);
+        }
+
+        public static UIAlertButton[] Ok(ButtonClickDelegate callback)
+        {
+            return new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, callback) };
+        }
+
+        public static UIAlertButton[] YesNo(ButtonClickDelegate yesCallback, ButtonClickDelegate noCallback)
+        {
+            return new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.Yes, yesCallback), new UIAlertButton(UIAlertButtonType.No, noCallback) };
+        }
+
+        public static UIAlertButton[] YesNoCancel(ButtonClickDelegate yesCallback, ButtonClickDelegate noCallback, ButtonClickDelegate cancel)
+        {
+            return new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.Yes, yesCallback), new UIAlertButton(UIAlertButtonType.No, noCallback), new UIAlertButton(UIAlertButtonType.Cancel, cancel) };
+        }
+
         public UIAlertButtonType Type = UIAlertButtonType.OK;
         public ButtonClickDelegate Handler = null; //if null, just use default (exit UIAlert)
         public string Text = null; //custom text, if null then we just use cst.
@@ -253,6 +305,7 @@ namespace FSO.Client.UI.Controls
 
     public enum UIAlertButtonType
     {
+        None,
         OK,
         Yes,
         No,

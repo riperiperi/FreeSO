@@ -15,6 +15,7 @@ using FSO.SimAntics.Model;
 using FSO.LotView.Model;
 using FSO.LotView.Components;
 using Microsoft.Xna.Framework;
+using FSO.SimAntics.Engine.TSOTransaction;
 
 namespace FSO.IDE.Common
 {
@@ -76,10 +77,21 @@ namespace FSO.IDE.Common
                 world.Initialize(GameFacade.Scenes);
                 var context = new VMContext(world);
 
-                TempVM = new VM(context, new VMServerDriver(37565, null), new VMNullHeadlineProvider());
+                TempVM = new VM(context, new VMServerDriver(new VMTSOGlobalLinkStub()), new VMNullHeadlineProvider());
                 TempVM.Init();
 
                 var blueprint = new Blueprint(1, 1);
+                blueprint.Light = new RoomLighting[]
+{
+                    new RoomLighting() { OutsideLight = 100 },
+                    new RoomLighting() { OutsideLight = 100 },
+                    new RoomLighting() { OutsideLight = 100 },
+};
+                blueprint.OutsideColor = Color.White;
+                blueprint.GenerateRoomLights();
+                blueprint.RoomColors[2].A /= 2;
+                world.State.AmbientLight.SetData(blueprint.RoomColors);
+
                 world.InitBlueprint(blueprint);
                 context.Blueprint = blueprint;
                 context.Architecture = new VMArchitecture(1, 1, blueprint, TempVM.Context);

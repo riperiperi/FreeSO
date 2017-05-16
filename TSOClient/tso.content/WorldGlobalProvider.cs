@@ -62,7 +62,8 @@ namespace FSO.Content
                 OTFFile otf = null;
                 try
                 {
-                    otf = new OTFFile(Path.Combine(Content.Get().BasePath, "objectdata/globals/" + filename + ".otf"));
+                    var rewrite = PIFFRegistry.GetOTFRewrite(filename + ".otf");
+                    otf = new OTFFile(rewrite ?? Path.Combine(Content.Get().BasePath, ("objectdata/globals/" + filename + ".otf")));
                 }
                 catch (IOException)
                 {

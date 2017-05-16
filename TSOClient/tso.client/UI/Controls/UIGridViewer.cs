@@ -18,6 +18,7 @@ namespace FSO.Client.UI.Controls
     public class UIGridViewer : UIContainer
     {
         public event ChangeDelegate OnChange;
+        public event ChangeDelegate OnSelectedPageChanged;
 
         /// <summary>
         /// Class to use as the item renderer for each cell in the grid
@@ -95,9 +96,9 @@ namespace FSO.Client.UI.Controls
         }
 
 
-        public virtual Vector2 GetGridArea()
+        public virtual Rectangle GetGridArea()
         {
-            return new Vector2(Size.X, Size.Y);
+            return new Rectangle(0, 0, (int)Size.X, (int)Size.Y);
         }
 
         /// <summary>
@@ -126,8 +127,8 @@ namespace FSO.Client.UI.Controls
 
             var gridArea = GetGridArea();
 
-            myColumns = (int)Math.Floor(gridArea.X / spanX);
-            myRows = (int)Math.Floor(gridArea.Y / spanY);
+            myColumns = (int)Math.Floor(gridArea.Width / spanX);
+            myRows = (int)Math.Floor(gridArea.Height / spanY);
 
             Renders = new UIGridViewerRender[myRows, myColumns];
             for (var y = 0; y < myRows; y++)
@@ -135,14 +136,28 @@ namespace FSO.Client.UI.Controls
                 for (var x = 0; x < myColumns; x++)
                 {
                     var newUIControl = (UIGridViewerRender)Activator.CreateInstance(ItemRender, new object[] { this });
-                    newUIControl.X = ThumbMargins.X + (spanX * x);
-                    newUIControl.Y = ThumbMargins.Y + (spanY * y);
+                    newUIControl.X = gridArea.X + ThumbMargins.X + (spanX * x);
+                    newUIControl.Y = gridArea.Y + ThumbMargins.Y + (spanY * y);
                     this.Add(newUIControl);
                     Renders[y, x] = newUIControl;
                 }
             }
         }
 
+
+        public int NumPages
+        {
+            get
+            {
+                if (m_DataProvider == null) { return 0; }
+
+                var maxPage = Math.Ceiling((double)m_DataProvider.Count / (double)ItemsPerPage);
+                if(maxPage == 0){
+                    return 1;
+                }
+                return (int)maxPage;
+            }
+        }
 
         private int m_SelectedPage;
         public int SelectedPage
@@ -153,17 +168,21 @@ namespace FSO.Client.UI.Controls
             }
             set
             {
-                var maxPage = Math.Ceiling((double)m_DataProvider.Count / (double)ItemsPerPage);
                 m_SelectedPage = value;
-                m_SelectedPage = (int)Math.Min(m_SelectedPage, maxPage);
+                m_SelectedPage = (int)Math.Min(m_SelectedPage, NumPages-1);
                 m_SelectedPage = (int)Math.Max(m_SelectedPage, 0);
 
                 Render();
+
+                if(OnSelectedPageChanged != null)
+                {
+                    OnSelectedPageChanged(this);
+                }
             }
         }
 
 
-        private int m_SelectedIndex;
+        private int m_SelectedIndex = -1;
         public object SelectedItem
         {
             get

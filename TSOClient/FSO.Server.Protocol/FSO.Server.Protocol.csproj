@@ -1,0 +1,204 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A08ADE32-27E2-44F4-BC52-11A16C56BAA8}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>FSO.Server.Protocol</RootNamespace>
+    <AssemblyName>FSO.Server.Protocol</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Common.Logging, Version=3.3.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.3.3.1\lib\net40\Common.Logging.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Common.Logging.Core, Version=3.3.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.Core.3.3.1\lib\net40\Common.Logging.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mina.NET, Version=2.0.11.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mina.2.0.11\lib\net40\Mina.NET.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ninject.3.2.2.0\lib\net45-full\Ninject.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.3.11\lib\net45\NLog.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Aries\AriesPackets.cs" />
+    <Compile Include="Aries\AriesProtocol.cs" />
+    <Compile Include="Aries\AriesProtocolDecoder.cs" />
+    <Compile Include="Aries\AriesProtocolEncoder.cs" />
+    <Compile Include="Aries\AriesProtocolLogger.cs" />
+    <Compile Include="Aries\AriesPacketType.cs" />
+    <Compile Include="Aries\IAriesPacket.cs" />
+    <Compile Include="Aries\Packets\AnswerAccepted.cs" />
+    <Compile Include="Aries\Packets\AnswerChallenge.cs" />
+    <Compile Include="Aries\Packets\RequestChallenge.cs" />
+    <Compile Include="Aries\Packets\RequestChallengeResponse.cs" />
+    <Compile Include="Aries\Packets\RequestClientSession.cs" />
+    <Compile Include="Aries\Packets\RequestClientSessionResponse.cs" />
+    <Compile Include="Authorization\AuthRequest.cs" />
+    <Compile Include="Authorization\AuthResult.cs" />
+    <Compile Include="CitySelector\AvatarAppearanceType.cs" />
+    <Compile Include="CitySelector\AvatarData.cs" />
+    <Compile Include="CitySelector\AvatarGender.cs" />
+    <Compile Include="CitySelector\InitialConnectServletRequest.cs" />
+    <Compile Include="CitySelector\InitialConnectServletResult.cs" />
+    <Compile Include="CitySelector\ShardSelectorServletRequest.cs" />
+    <Compile Include="CitySelector\ShardSelectorServletResponse.cs" />
+    <Compile Include="CitySelector\ShardStatus.cs" />
+    <Compile Include="CitySelector\ShardStatusItem.cs" />
+    <Compile Include="CitySelector\UserAuthorized.cs" />
+    <Compile Include="CitySelector\XMLErrorMessage.cs" />
+    <Compile Include="Electron\AbstractElectronPacket.cs" />
+    <Compile Include="Electron\ElectronPackets.cs" />
+    <Compile Include="Electron\ElectronPacketType.cs" />
+    <Compile Include="Electron\IElectronPacket.cs" />
+    <Compile Include="Electron\Model\ChangeRoommateResponseStatus.cs" />
+    <Compile Include="Electron\Model\ChangeRoommateType.cs" />
+    <Compile Include="Electron\Model\FindAvatarResponseStatus.cs" />
+    <Compile Include="Electron\Model\FindLotResponseStatus.cs" />
+    <Compile Include="Electron\Model\ModerationRequestType.cs" />
+    <Compile Include="Electron\Packets\ChangeRoommateRequest.cs" />
+    <Compile Include="Electron\Packets\ChangeRoommateResponse.cs" />
+    <Compile Include="Electron\Packets\FSOVMProtocolMessage.cs" />
+    <Compile Include="Electron\Packets\ModerationRequest.cs" />
+    <Compile Include="Electron\Packets\FindAvatarResponse.cs" />
+    <Compile Include="Electron\Packets\FindLotResponse.cs" />
+    <Compile Include="Electron\Packets\CreateASimResponse.cs" />
+    <Compile Include="Electron\Packets\FindAvatarRequest.cs" />
+    <Compile Include="Electron\Packets\FSOVMDirectToClient.cs" />
+    <Compile Include="Electron\Packets\FSOVMCommand.cs" />
+    <Compile Include="Electron\Packets\FSOVMTickBroadcast.cs" />
+    <Compile Include="Electron\Packets\InstantMessage.cs" />
+    <Compile Include="Electron\Packets\FindLotRequest.cs" />
+    <Compile Include="Electron\Packets\KeepAlive.cs" />
+    <Compile Include="Electron\Packets\PurchaseLotRequest.cs" />
+    <Compile Include="Electron\Packets\PurchaseLotResponse.cs" />
+    <Compile Include="Gluon\AbstractElectronPacket.cs" />
+    <Compile Include="Gluon\GluonPackets.cs" />
+    <Compile Include="Gluon\GluonPacketType.cs" />
+    <Compile Include="Gluon\IGluonPacket.cs" />
+    <Compile Include="Gluon\Model\ChangeType.cs" />
+    <Compile Include="Gluon\Model\ClaimAction.cs" />
+    <Compile Include="Gluon\Model\ClaimType.cs" />
+    <Compile Include="Gluon\Model\ShutdownType.cs" />
+    <Compile Include="Gluon\Packets\AdvertiseCapacity.cs" />
+    <Compile Include="Gluon\Packets\HealthPing.cs" />
+    <Compile Include="Gluon\Packets\HealthPingResponse.cs" />
+    <Compile Include="Gluon\Packets\IGluonCall.cs" />
+    <Compile Include="Gluon\Packets\NotifyLotRoommateChange.cs" />
+    <Compile Include="Gluon\Packets\RequestLotClientTermination.cs" />
+    <Compile Include="Gluon\Packets\RequestTask.cs" />
+    <Compile Include="Gluon\Packets\RequestTaskResponse.cs" />
+    <Compile Include="Gluon\Packets\ShardShutdownCompleteResponse.cs" />
+    <Compile Include="Gluon\Packets\ShardShutdownRequest.cs" />
+    <Compile Include="Gluon\Packets\TransferClaim.cs" />
+    <Compile Include="Gluon\Packets\TransferClaimResponse.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\ChallengeResponse.cs" />
+    <Compile Include="Utils\SslClientFilter.cs" />
+    <Compile Include="Utils\CustomCumulativeProtocolDecoder.cs" />
+    <Compile Include="Voltron\AbstractVoltronPacket.cs" />
+    <Compile Include="Voltron\cTSONetMessageParameter.cs" />
+    <Compile Include="Voltron\DataService\AvatarSkills.cs" />
+    <Compile Include="Voltron\DataService\Bookmark.cs" />
+    <Compile Include="Voltron\DataService\Avatar.cs" />
+    <Compile Include="Voltron\DataService\AvatarAppearance.cs" />
+    <Compile Include="Voltron\DataService\cITSOProperty.cs" />
+    <Compile Include="Voltron\DataService\clsid.cs" />
+    <Compile Include="Voltron\DataService\cTSOSerializer.cs" />
+    <Compile Include="Voltron\DataService\cTSOValue.cs" />
+    <Compile Include="Voltron\DataService\Location.cs" />
+    <Compile Include="Voltron\DataService\Lot.cs" />
+    <Compile Include="Voltron\Model\Gender.cs" />
+    <Compile Include="Voltron\Model\RPCRequest.cs" />
+    <Compile Include="Voltron\IVoltronPacket.cs" />
+    <Compile Include="Voltron\Model\MagicNumberEnum.cs" />
+    <Compile Include="Voltron\Model\Sender.cs" />
+    <Compile Include="Voltron\Model\SkinTone.cs" />
+    <Compile Include="Voltron\Packets\AnnouncementMsgPDU.cs" />
+    <Compile Include="Voltron\Packets\ChatMsgPDU.cs" />
+    <Compile Include="Voltron\Packets\ServerByePDU.cs" />
+    <Compile Include="Voltron\Packets\ClientByePDU.cs" />
+    <Compile Include="Voltron\Packets\ClientOnlinePDU.cs" />
+    <Compile Include="Voltron\Packets\DataServiceWrapperPDU.cs" />
+    <Compile Include="Voltron\Packets\DBRequestWrapperPDU.cs" />
+    <Compile Include="Voltron\Packets\FindPlayerPDU.cs" />
+    <Compile Include="Voltron\Packets\FindPlayerResponsePDU.cs" />
+    <Compile Include="Voltron\Packets\HostOnlinePDU.cs" />
+    <Compile Include="Voltron\Packets\OccupantArrivedPDU.cs" />
+    <Compile Include="Voltron\Packets\RSGZWrapperPDU.cs" />
+    <Compile Include="Voltron\Packets\SetIgnoreListPDU.cs" />
+    <Compile Include="Voltron\Packets\SetIgnoreListResponsePDU.cs" />
+    <Compile Include="Voltron\Packets\SetInvinciblePDU.cs" />
+    <Compile Include="Voltron\Packets\TransmitCreateAvatarNotificationPDU.cs" />
+    <Compile Include="Voltron\Packets\VariableVoltronPacket.cs" />
+    <Compile Include="Voltron\VoltronPackets.cs" />
+    <Compile Include="Voltron\VoltronPacketType.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
+      <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
+      <Name>FSO.Server.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
+      <Name>FSO.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.files\FSO.Files.csproj">
+      <Project>{18583453-a970-4ac5-83b1-2d6bfdf94c24}</Project>
+      <Name>FSO.Files</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

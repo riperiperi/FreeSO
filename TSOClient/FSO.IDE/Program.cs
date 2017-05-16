@@ -1,6 +1,7 @@
 ﻿#define IDE_COMPAT
 
 using FSO.Client;
+using FSO.Common.Utils;
 using FSO.IDE.Common;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace FSO.IDE
         /// </summary>
         static void Main(string[] args)
         {
+            TimedReferenceController.SetMode(CacheType.PERMANENT);
             if (!FSO.Client.Program.InitWithArguments(args)) return;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

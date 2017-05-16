@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using FSO.Files;
+using FSO.SimAntics.Entities;
 
 namespace FSO.SimAntics.Model
 {
@@ -20,6 +22,8 @@ namespace FSO.SimAntics.Model
         public VMMotive Motive;
         private double fractional;
         public bool Ticked;
+
+        public static TuningEntry LotMotives = Content.Content.Get().GlobalTuning.EntriesByName["lotmotives"];
 
         public void Clear()
         {
@@ -47,6 +51,27 @@ namespace FSO.SimAntics.Model
                 }
             }
         }
+
+        public static int ScaleRate(VM vm, int rate, VMMotive type)
+        {
+            if (vm.TSOState.PropertyCategory == 4 && type > 0) rate = (rate * 3) / 2; //1.5x gain multiplier on services lots
+            if (VMMotive.Comfort == type) return rate;
+            var ind = Array.IndexOf(VMAvatarMotiveDecay.DecrementMotives, type);
+            string category = VMAvatarMotiveDecay.CategoryNames[vm.TSOState.PropertyCategory];
+            var weight = ToFixed1000(LotMotives.GetNum(category + "_" + VMAvatarMotiveDecay.LotMotiveNames[ind] + "Weight"));
+            return (rate * 1000) / weight;
+        }
+
+        private static int ToFixed1000(float input)
+        {
+            return (int)(input * 1000);
+        }
+
+        private static int FracMul(int input, int frac)
+        {
+            return (int)((long)input * frac) / 1000;
+        }
+
 
         public void SerializeInto(BinaryWriter writer)
         {

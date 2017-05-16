@@ -25,7 +25,7 @@ namespace FSO.Client.UI.Framework.Parser
         /// <summary>
         /// Nodes which represent functions
         /// </summary>
-        private static string[] FUNCTIONS = new string[] { "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText", "AddTextEdit", "AddSlider", "AddListBox", "AddFormatedText" };
+        private static string[] FUNCTIONS = new string[] { "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText", "AddTextEdit", "AddSlider", "AddListBox", "AddFormatedText", "AddProgressBar" };
 
         private Dictionary<string, string> Strings;
         private Dictionary<string, Texture2D> Textures;
@@ -84,12 +84,26 @@ namespace FSO.Client.UI.Framework.Parser
             }
         }
 
+        public void ApplyControlProperties(object instance, string id)
+        {
+            if (ControlSettings.ContainsKey(id))
+            {
+                DoSetControlProperties(instance, ControlSettings[id]);
+            }
+            else if (NodesByID.ContainsKey(id))
+            {
+                DoSetControlProperties(instance, NodesByID[id]);
+            }
+        }
+
         public T Create<T>(string id)
         {
             var instance = Activator.CreateInstance<T>();
             if (ControlSettings.ContainsKey(id))
             {
                 DoSetControlProperties(instance, ControlSettings[id]);
+            } else if (NodesByID.ContainsKey(id)) {
+                DoSetControlProperties(instance, NodesByID[id]);
             }
             return instance;
         }
@@ -104,6 +118,16 @@ namespace FSO.Client.UI.Framework.Parser
             return (T)instance;
         }
 
+        public object GetControlProperty(string id, string field)
+        {
+            var result = GetControlProperty(target, id);
+            if (result is Dictionary<string, object>)
+            {
+                return ((Dictionary<string, object>)result)[field];
+            }
+            return result;
+        }
+
         public object GetControlProperty(string id)
         {
             return GetControlProperty(target, id);
@@ -114,6 +138,15 @@ namespace FSO.Client.UI.Framework.Parser
             if (ControlSettings.ContainsKey(id))
             {
                 var props = DoGetControlProperties(target, ControlSettings[id]);
+                if (props.Keys.Count == 1)
+                {
+                    return props[props.Keys.First()];
+                }
+                return props;
+            }else if (NodesByID.ContainsKey(id))
+            {
+                var node = NodesByID[id];
+                var props = DoGetControlProperties(target, node);
                 if (props.Keys.Count == 1)
                 {
                     return props[props.Keys.First()];
@@ -141,6 +174,16 @@ namespace FSO.Client.UI.Framework.Parser
             WireUp(node.ID, label);
         }
 
+        private Type GetPropertyType(string id, Type defaultType)
+        {
+            var prop = targetType.GetProperty(id);
+            if (prop != null)
+            {
+                return prop.PropertyType;
+            }
+
+            return defaultType;
+        }
 
         /// <summary>
         /// Handles AddButton nodes in a UIScript.
@@ -153,22 +196,24 @@ namespace FSO.Client.UI.Framework.Parser
         /// <param name="node"></param>
         public void AddButton(UINode node)
         {
+            var type = GetPropertyType(node.ID, typeof(UIButton));
+
             UIButton btn = null;
             if (node.Attributes.ContainsKey("image"))
             {
                 var txKey = node.Attributes["image"];
                 if (Textures.ContainsKey(txKey))
                 {
-                    btn = new UIButton(Textures[txKey.ToLowerInvariant()]);
+                    btn = (UIButton)Activator.CreateInstance(type, new object[] { Textures[txKey.ToLowerInvariant()] });
                 }
                 else
                 {
-                    btn = new UIButton();
+                    btn = (UIButton)Activator.CreateInstance(type);
                 }
             }
             else
             {
-                btn = new UIButton();
+                btn = (UIButton)Activator.CreateInstance(type);
             }
             Components.Add(node.ID, btn);
             btn.ID = node.ID;
@@ -228,6 +273,18 @@ namespace FSO.Client.UI.Framework.Parser
             WireUp(node.ID, textEdit);
         }
 
+        public void AddProgressBar(UINode node)
+        {
+            UIProgressBar pb = new UIProgressBar();
+            Components.Add(node.ID, pb);
+            pb.ID = node.ID;
+
+            DoSetControlProperties(pb, node);
+
+            target.Add(pb);
+            WireUp(node.ID, pb);
+        }
+
 
 
 
@@ -277,9 +334,11 @@ namespace FSO.Client.UI.Framework.Parser
             
             foreach (var att in node.Attributes)
             {
-                if (atts.ContainsKey(att.Key))
+                var controlField = atts.Keys.FirstOrDefault(x => string.Equals(x, att.Key, StringComparison.CurrentCultureIgnoreCase));
+
+                if (controlField != null)
                 {
-                    var uiAtt = atts[att.Key];
+                    var uiAtt = atts[controlField];
                     var value = GetAtt(node, att.Key, uiAtt);
                     if (value != null) uiAtt.Field.SetValue(control, value, new object[] { });
                 }
@@ -362,7 +421,7 @@ namespace FSO.Client.UI.Framework.Parser
         /// <param name="node"></param>
         public void DefineString(UINode node)
         {
-            var stringValue = GameFacade.Strings[node["stringDir"], node["stringTable"], node["stringIndex"]];
+            var stringValue = GameFacade.Strings[node["stringDir"], node["stringTable"], node["stringIndex"] ?? node["StringIndex"]];
             Strings.Add(node.ID.ToLowerInvariant(), stringValue);
             WireUp(node.ID, stringValue);
         }

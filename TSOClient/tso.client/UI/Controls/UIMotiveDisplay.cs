@@ -25,16 +25,7 @@ namespace FSO.Client.UI.Controls
     public class UIMotiveDisplay : UIElement
     {
         public short[] MotiveValues;
-        public string[] MotiveNames = {
-        "Hunger",
-        "Comfort",
-        "Hygiene",
-        "Bladder",
-        "Energy",
-        "Fun",
-        "Social",
-        "Room"
-        };
+        public string[] MotiveNames;
         private Texture2D Filler;
 
         private int[] OldMotives = new int[8];
@@ -45,6 +36,11 @@ namespace FSO.Client.UI.Controls
 
         public UIMotiveDisplay()
         {
+            MotiveNames = new string[8];
+            for (int i=1; i<9; i++)
+            {
+                MotiveNames[i - 1] = GameFacade.Strings.GetString("f102", i.ToString());
+            }
             MotiveValues = new short[8];
             Filler = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
             for (int i = 0; i < 8; i++) ChangeBuffer[i] = new Queue<int>();

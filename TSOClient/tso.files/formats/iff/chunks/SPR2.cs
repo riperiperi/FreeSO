@@ -13,6 +13,8 @@ using FSO.Files.Utils;
 using System.IO;
 using Microsoft.Xna.Framework;
 using System.Runtime.InteropServices;
+using FSO.Common.Utils;
+using FSO.Common.Rendering;
 
 namespace FSO.Files.Formats.IFF.Chunks
 {
@@ -23,6 +25,9 @@ namespace FSO.Files.Formats.IFF.Chunks
     {
         public SPR2Frame[] Frames = new SPR2Frame[0];
         public uint DefaultPaletteID;
+        public bool SpritePreprocessed;
+        public bool ZAsAlpha;
+        public bool FloorCopy;
 
         /// <summary>
         /// Reads a SPR2 chunk from a stream.
@@ -93,6 +98,14 @@ namespace FSO.Files.Formats.IFF.Chunks
             }
         }
 
+        public void CopyZToAlpha()
+        {
+            foreach (var frame in Frames)
+            {
+                frame.CopyZToAlpha();
+            }
+        }
+
         public override void Dispose()
         {
             if (Frames == null) return;
@@ -110,12 +123,13 @@ namespace FSO.Files.Formats.IFF.Chunks
     public class SPR2Frame : ITextureProvider, IWorldTextureProvider
     {
         public Color[] PixelData;
-        private byte[] AlphaData;
         public byte[] ZBufferData;
         public byte[] PalData;
 
-        private Texture2D ZCache;
-        private Texture2D PixelCache;
+        private WeakReference<Texture2D> ZCache = new WeakReference<Texture2D>(null);
+        private WeakReference<Texture2D> PixelCache = new WeakReference<Texture2D>(null);
+        private Texture2D PermaRefZ;
+        private Texture2D PermaRefP;
 
         public int Width { get; internal set; }
         public int Height { get; internal set; }
@@ -127,6 +141,8 @@ namespace FSO.Files.Formats.IFF.Chunks
         private SPR2 Parent;
         private uint Version;
         private byte[] ToDecode;
+        public bool ContainsNothing = false;
+        public bool ContainsNoZ = false;
 
         public SPR2Frame(SPR2 parent)
         {
@@ -175,16 +191,16 @@ namespace FSO.Files.Formats.IFF.Chunks
             this.Decode(io);
         }
 
-        public void DecodeIfRequired()
+        public void DecodeIfRequired(bool z)
         {
-            if (ToDecode != null)
+            if (ToDecode != null && ((this.Flags & 0x02) == 0x02 && z && ZBufferData == null) || (!z && PixelData == null))
             {
                 using (IoBuffer buf = IoBuffer.FromStream(new MemoryStream(ToDecode), ByteOrder.LITTLE_ENDIAN))
                 {
                     ReadDeferred(Version, buf);
                 }
 
-                ToDecode = null;
+                if (TimedReferenceController.CurrentType == CacheType.PERMANENT) ToDecode = null;
             }
         }
 
@@ -229,9 +245,6 @@ namespace FSO.Files.Formats.IFF.Chunks
             }
             if (hasZBuffer){
                 this.ZBufferData = new byte[numPixels];
-            }
-            if (hasAlpha){
-                this.AlphaData = new byte[numPixels];
             }
 
             var palette = Parent.ChunkParent.Get<PALT>(this.PaletteID);
@@ -384,6 +397,8 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
                 y++;
             }
+            if (Parent.ZAsAlpha) CopyZToAlpha();
+            //if (Parent.FloorCopy) FloorCopy();
         }
 
         /// <summary>
@@ -408,24 +423,71 @@ namespace FSO.Files.Formats.IFF.Chunks
         }
 
         /// <summary>
+        /// Copies the Z buffer into the current sprite's alpha channel. Used by water tile.
+        /// </summary>
+        public void CopyZToAlpha()
+        {
+            for (int i=0; i<PixelData.Length; i++)
+            {
+                PixelData[i].A = (ZBufferData[i] < 32)?(byte)0:ZBufferData[i];
+            }
+        }
+
+        public void FloorCopy()
+        {
+            var ndat = new Color[PixelData.Length];
+            int hw = (Width+1) / 2;
+            int hh = (Height) / 2;
+            int idx = 0;
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    var xp = (((x>hw)?(x-1):x) + hw) % Width;
+                    var yp = (y + hh) % Height;
+                    var rep = PixelData[xp + yp * Width];
+                    if (rep.A > 0) ndat[idx] = rep;
+                    else ndat[idx] = PixelData[idx];
+                    idx++;
+                }
+            }
+            PixelData = ndat;
+        }
+
+        /// <summary>
         /// Gets a texture representing this SPR2Frame.
         /// </summary>
         /// <param name="device">GraphicsDevice instance used for drawing.</param>
         /// <returns>A Texture2D instance holding the texture data.</returns>
         public Texture2D GetTexture(GraphicsDevice device)
         {
-            DecodeIfRequired();
-            if (PixelCache == null)
+            return GetTexture(device, true);
+        }
+
+        private Texture2D GetTexture(GraphicsDevice device, bool onlyThis)
+        {
+            if (ContainsNothing) return null;
+            Texture2D result = null;
+            if (!PixelCache.TryGetTarget(out result) || ((CachableTexture2D)result).BeingDisposed || result.IsDisposed)
             {
+                DecodeIfRequired(false);
                 if (this.Width == 0 || this.Height == 0)
                 {
+                    ContainsNothing = true;
                     return null;
                 }
-                PixelCache = new Texture2D(device, this.Width, this.Height);
-                PixelCache.SetData<Color>(this.PixelData);
-                if (!IffFile.RETAIN_CHUNK_DATA) PixelData = null;
+                result = new CachableTexture2D(device, this.Width, this.Height);
+                result.SetData<Color>(this.PixelData);
+                PixelCache = new WeakReference<Texture2D>(result);
+                if (TimedReferenceController.CurrentType == CacheType.PERMANENT) PermaRefP = result;
+                if (!IffFile.RETAIN_CHUNK_DATA)
+                {
+                    PixelData = null;
+                    if (onlyThis) ZBufferData = null;
+                }
             }
-            return PixelCache;
+            if (TimedReferenceController.CurrentType != CacheType.PERMANENT) TimedReferenceController.KeepAlive(result, KeepAliveType.ACCESS);
+            return result;
         }
 
         /// <summary>
@@ -435,18 +497,38 @@ namespace FSO.Files.Formats.IFF.Chunks
         /// <returns>A Texture2D instance holding the texture data.</returns>
         public Texture2D GetZTexture(GraphicsDevice device)
         {
-            DecodeIfRequired();
-            if (ZCache == null)
+            return GetZTexture(device, true);
+        }
+
+        private Texture2D GetZTexture(GraphicsDevice device, bool onlyThis)
+        {
+            Texture2D result = null;
+            if (ContainsNothing || ContainsNoZ) return null;
+            if (!ZCache.TryGetTarget(out result) || ((CachableTexture2D)result).BeingDisposed || result.IsDisposed)
             {
-                if (ZBufferData == null || this.Width == 0 || this.Height == 0)
+                DecodeIfRequired(true);
+                if (this.Width == 0 || this.Height == 0)
                 {
+                    ContainsNothing = true;
                     return null;
                 }
-                ZCache = new Texture2D(device, this.Width, this.Height, false, SurfaceFormat.Alpha8);
-                ZCache.SetData<byte>(this.ZBufferData);
-                if (!IffFile.RETAIN_CHUNK_DATA) ZBufferData = null;
+                if (ZBufferData == null)
+                {
+                    ContainsNoZ = true;
+                    return null;
+                }
+                result = new CachableTexture2D(device, this.Width, this.Height, false, SurfaceFormat.Alpha8);
+                result.SetData<byte>(this.ZBufferData);
+                ZCache = new WeakReference<Texture2D>(result);
+                if (TimedReferenceController.CurrentType == CacheType.PERMANENT) PermaRefZ = result;
+                if (!IffFile.RETAIN_CHUNK_DATA)
+                {
+                    ZBufferData = null;
+                    if (onlyThis) PixelData = null;
+                }
             }
-            return ZCache;
+            if (TimedReferenceController.CurrentType != CacheType.PERMANENT) TimedReferenceController.KeepAlive(result, KeepAliveType.ACCESS);
+            return result;
         }
 
         #region IWorldTextureProvider Members
@@ -455,9 +537,14 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             var result = new WorldTexture
             {
-                Pixel = this.GetTexture(device)
+                Pixel = this.GetTexture(device, false)
             };
-            result.ZBuffer = this.GetZTexture(device);
+            result.ZBuffer = this.GetZTexture(device, false);
+            if (!IffFile.RETAIN_CHUNK_DATA)
+            {
+                PixelData = null;
+                ZBufferData = null;
+            }
             return result;
         }
 

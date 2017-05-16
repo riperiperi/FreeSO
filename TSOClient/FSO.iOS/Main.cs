@@ -40,6 +40,8 @@ namespace FSOiOS
             FSOEnvironment.DPIScaleFactor = iPad ? 2 : 1;
             FSO.Files.ImageLoader.UseSoftLoad = false;
 
+            GlobalSettings.Default.CityShadows = false;
+
             if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "The Sims Online.zip")))
                 File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "The Sims Online.zip"));
 

@@ -42,7 +42,7 @@ namespace FSO.SimAntics.Primitives
             {
                 int j = (i % 2 == 1) ? ((Positions.Length - 1) - i / 2) : i / 2;
 
-                var posChange = drop.MultitileGroup.ChangePosition(basePos + Positions[(j + intDir) % 8], obj.Direction, context.VM.Context);
+                var posChange = drop.MultitileGroup.ChangePosition(basePos + Positions[(j + intDir) % 8], obj.Direction, context.VM.Context, VMPlaceRequestFlags.Default);
                 if (posChange.Status == VMPlacementError.Success)
                 {
                     return VMPrimitiveExitCode.GOTO_TRUE;

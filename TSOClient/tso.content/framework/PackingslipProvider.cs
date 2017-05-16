@@ -133,5 +133,10 @@ namespace FSO.Content.Framework
         {
             return Provider.Get(ID);
         }
+
+        public object GetGeneric()
+        {
+            return Get();
+        }
     }
 }

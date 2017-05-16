@@ -1,0 +1,260 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{430ACD60-E798-43F0-AD61-8B5A35DF6AB2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>FSO.Server.Database</RootNamespace>
+    <AssemblyName>FSO.Server.Database</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Castle.DynamicProxy, Version=1.1.5.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libs\MyBatis\Castle.DynamicProxy.dll</HintPath>
+    </Reference>
+    <Reference Include="Dapper, Version=1.40.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Dapper.1.42\lib\net45\Dapper.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="IBatisNet.Common, Version=1.6.2.0, Culture=neutral, PublicKeyToken=ed781d9fc396c6ca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libs\MyBatis\IBatisNet.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="IBatisNet.Common.Logging.Log4Net, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libs\MyBatis\IBatisNet.Common.Logging.Log4Net.dll</HintPath>
+    </Reference>
+    <Reference Include="IBatisNet.DataAccess, Version=1.9.2.0, Culture=neutral, PublicKeyToken=ed781d9fc396c6ca, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libs\MyBatis\IBatisNet.DataAccess.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libs\MyBatis\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data, Version=6.9.7.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\packages\MySql.Data.6.9.7\lib\net45\MySql.Data.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ninject.3.2.2.0\lib\net45-full\Ninject.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DatabaseConfiguration.cs" />
+    <Compile Include="DatabaseModule.cs" />
+    <Compile Include="DA\AbstractSqlDA.cs" />
+    <Compile Include="DA\AuthTickets\AuthTicket.cs" />
+    <Compile Include="DA\AuthTickets\IAuthTickets.cs" />
+    <Compile Include="DA\AuthTickets\SqlAuthTickets.cs" />
+    <Compile Include="DA\AvatarClaims\DbAvatarClaim.cs" />
+    <Compile Include="DA\AvatarClaims\IAvatarClaims.cs" />
+    <Compile Include="DA\AvatarClaims\SqlAvatarClaims.cs" />
+    <Compile Include="DA\Avatars\DbAvatar.cs" />
+    <Compile Include="DA\Avatars\DbAvatarSummary.cs" />
+    <Compile Include="DA\Avatars\DbJobLevel.cs" />
+    <Compile Include="DA\Avatars\IAvatars.cs" />
+    <Compile Include="DA\Avatars\SqlAvatars.cs" />
+    <Compile Include="DA\Bans\DbBan.cs" />
+    <Compile Include="DA\Bans\IBans.cs" />
+    <Compile Include="DA\Bans\SqlBans.cs" />
+    <Compile Include="DA\Bonus\DbBonus.cs" />
+    <Compile Include="DA\Bonus\DbBonusMetrics.cs" />
+    <Compile Include="DA\Bonus\IBonus.cs" />
+    <Compile Include="DA\Bonus\SqlBonus.cs" />
+    <Compile Include="DA\Bookmarks\DbBookmark.cs" />
+    <Compile Include="DA\Bookmarks\IBookmarks.cs" />
+    <Compile Include="DA\Bookmarks\SqlBookmarks.cs" />
+    <Compile Include="DA\DbChanges\DbChange.cs" />
+    <Compile Include="DA\Hosts\DbHost.cs" />
+    <Compile Include="DA\Hosts\IHosts.cs" />
+    <Compile Include="DA\Hosts\SqlHosts.cs" />
+    <Compile Include="DA\IDA.cs" />
+    <Compile Include="DA\IDAFactory.cs" />
+    <Compile Include="DA\ISqlContext.cs" />
+    <Compile Include="DA\LotAdmit\DbLotAdmit.cs" />
+    <Compile Include="DA\LotAdmit\ILotAdmit.cs" />
+    <Compile Include="DA\LotAdmit\SqlLotAdmit.cs" />
+    <Compile Include="DA\LotClaims\DbLotClaim.cs" />
+    <Compile Include="DA\LotClaims\ILotClaims.cs" />
+    <Compile Include="DA\LotClaims\SqlLotsClaims.cs" />
+    <Compile Include="DA\Lots\DbLot.cs" />
+    <Compile Include="DA\Lots\DbLotServerTicket.cs" />
+    <Compile Include="DA\Lots\ILots.cs" />
+    <Compile Include="DA\Lots\SqlLots.cs" />
+    <Compile Include="DA\LotTop100\ILotTop100.cs" />
+    <Compile Include="DA\LotTop100\DbLotTop100.cs" />
+    <Compile Include="DA\LotTop100\SqlLotTop100.cs" />
+    <Compile Include="DA\LotVisitTotals\DbLotVisitTotal.cs" />
+    <Compile Include="DA\LotVisitTotals\ILotVisitTotals.cs" />
+    <Compile Include="DA\LotVisits\DbLotVisit.cs" />
+    <Compile Include="DA\LotVisits\ILotVisits.cs" />
+    <Compile Include="DA\LotVisits\SqlLotVisits.cs" />
+    <Compile Include="DA\LotVisitTotals\SqlLotVisitTotals.cs" />
+    <Compile Include="DA\MySqlContext.cs" />
+    <Compile Include="DA\Objects\DbObject.cs" />
+    <Compile Include="DA\Objects\IObjects.cs" />
+    <Compile Include="DA\Objects\SqlObjects.cs" />
+    <Compile Include="DA\Outfits\DbOutfit.cs" />
+    <Compile Include="DA\Outfits\IOutfits.cs" />
+    <Compile Include="DA\Outfits\SqlOutfits.cs" />
+    <Compile Include="DA\Relationships\DbRelationship.cs" />
+    <Compile Include="DA\Relationships\IRelationships.cs" />
+    <Compile Include="DA\Relationships\SqlRelationships.cs" />
+    <Compile Include="DA\Roommates\DbRoommate.cs" />
+    <Compile Include="DA\Roommates\IRoommates.cs" />
+    <Compile Include="DA\Roommates\SqlRoommates.cs" />
+    <Compile Include="DA\Shards\IShards.cs" />
+    <Compile Include="DA\Shards\Shard.cs" />
+    <Compile Include="DA\Shards\ShardTicket.cs" />
+    <Compile Include="DA\Shards\SqlShards.cs" />
+    <Compile Include="DA\SqlDA.cs" />
+    <Compile Include="DA\MySqlDAFactory.cs" />
+    <Compile Include="DA\Tasks\DbTask.cs" />
+    <Compile Include="DA\Tasks\ITasks.cs" />
+    <Compile Include="DA\Tasks\SqlTasks.cs" />
+    <Compile Include="DA\Users\IUsers.cs" />
+    <Compile Include="DA\Users\SqlUsers.cs" />
+    <Compile Include="DA\Users\User.cs" />
+    <Compile Include="DA\Users\UserAuthenticate.cs" />
+    <Compile Include="DA\Utils\BufferedInsert.cs" />
+    <Compile Include="DA\Utils\FilterOptions.cs" />
+    <Compile Include="DA\Utils\PagedList.cs" />
+    <Compile Include="Management\DbChangeTool.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+    <None Include="DatabaseScripts\manifest.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
+      <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
+      <Name>FSO.Server.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
+      <Name>FSO.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="DatabaseScripts\changes\0003_max_roomates.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0002_budget_cant_be_negative.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0001_3_max_avatars.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0004_bookmarks.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0005_lotadmit_primarykey.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0006_outfits.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0011_fso_bonus.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0010_fso_top100.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0009_fso_tasks.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0008_fso_hosts.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0007_fso_lot_visits.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0012_fso_bans.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0013_shard_version.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0014_client_id.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\fso_transactions.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\fso_auth_tickets.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\fso_avatars.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\fso_db_changes.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\fso_lots.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\fso_objects.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\fso_shards.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\fso_users.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="dao.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

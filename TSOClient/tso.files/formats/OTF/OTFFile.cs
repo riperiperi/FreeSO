@@ -45,7 +45,7 @@ namespace FSO.Files.Formats.OTF
         /// <returns>An OTFTable instance.</returns>
         public OTFTable GetTable(int ID)
         {
-            return Tables.FirstOrDefault(x => x.ID == ID);
+            return Tables.FirstOrDefault(x => x?.ID == ID);
         }
 
         /// <summary>
@@ -63,6 +63,7 @@ namespace FSO.Files.Formats.OTF
             for (var i = 0; i < tables.Count; i++)
             {
                 var table = tables.Item(i);
+                if (table.NodeType == XmlNodeType.Comment) continue;
                 var tableEntry = new OTFTable();
                 tableEntry.ID = int.Parse(table.Attributes["i"].Value);
                 tableEntry.Name = table.Attributes["n"].Value;
@@ -73,6 +74,9 @@ namespace FSO.Files.Formats.OTF
                 for (var x = 0; x < numKeys; x++)
                 {
                     var key = table.ChildNodes[x];
+
+                    if (key.NodeType == XmlNodeType.Comment) continue;
+
                     var keyEntry = new OTFTableKey();
                     keyEntry.ID = int.Parse(key.Attributes["i"].Value);
                     keyEntry.Label = key.Attributes["l"].Value;
@@ -85,8 +89,6 @@ namespace FSO.Files.Formats.OTF
         }
     }
 
-    //BELOW CLASSES NEEDS DOCUMENTATION - THANKS DARREN!!
-
     public class OTFTable
     {
         public int ID;
@@ -95,7 +97,7 @@ namespace FSO.Files.Formats.OTF
 
         public OTFTableKey GetKey(int id)
         {
-            return Keys.FirstOrDefault(x => x.ID == id);
+            return Keys.FirstOrDefault(x => x?.ID == id);
         }
     }
 

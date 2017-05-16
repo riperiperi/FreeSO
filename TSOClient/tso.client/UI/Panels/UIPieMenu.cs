@@ -82,9 +82,9 @@ namespace FSO.Client.UI.Panels
                 var category = m_PieTree; //set category to root
                 for (int j = 0; j < depth.Length-1; j++) //iterate through categories
                 {
-                    if (category.Children.ContainsKey(depth[j]))
+                    if (category.ChildrenByName.ContainsKey(depth[j]))
                     {
-                        category = category.Children[depth[j]];
+                        category = category.ChildrenByName[depth[j]];
                     }
                     else
                     {
@@ -94,7 +94,8 @@ namespace FSO.Client.UI.Panels
                             Name = depth[j],
                             Parent = category
                         };
-                        category.Children.Add(depth[j], newCat);
+                        category.Children.Add(newCat);
+                        category.ChildrenByName[depth[j]] = newCat;
                         category = newCat;
                     }
                 }
@@ -107,7 +108,8 @@ namespace FSO.Client.UI.Panels
                     ID = pie[i].ID,
                     Param0 = pie[i].Param0
                 };
-                if (!category.Children.ContainsKey(item.Name)) category.Children.Add(item.Name, item);
+                category.Children.Add(item);
+                category.ChildrenByName[item.Name] = item;
             }
 
             m_CurrentItem = m_PieTree;
@@ -166,7 +168,7 @@ namespace FSO.Client.UI.Panels
             base.Update(state);
             if (m_BgGrow < 1)
             {
-                m_BgGrow += 1.0 / 30.0;
+                m_BgGrow += 1.0 / 30.0 * (60.0 / FSOEnvironment.RefreshRate);
                 HeadCamera.Zoom = (float)m_BgGrow*5.12f;
 
                 m_Bg.SetSize((float)m_BgGrow * 200, (float)m_BgGrow * 200);
@@ -174,7 +176,7 @@ namespace FSO.Client.UI.Panels
                 m_Bg.Y = (float)m_BgGrow * (-100);
             }
             RotateHeadCam(GlobalPoint(new Vector2(state.MouseState.X, state.MouseState.Y)));
-            ShiftDown = state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift);
+            ShiftDown = state.ShiftDown;
         }
 
         public void RenderMenu()
@@ -197,7 +199,7 @@ namespace FSO.Client.UI.Panels
                 var elem = elems.ElementAt(i);
                 var but = new UIButton()
                 {
-                    Caption = elem.Value.Name+((elem.Value.Category)?"...":""),
+                    Caption = elem.Name+((elem.Category)?"...":""),
                     CaptionStyle = ButtonStyle,
                     ImageStates = 1,
                     Texture = TextureGenerator.GetPieButtonImg(GameFacade.GraphicsDevice)
@@ -236,7 +238,7 @@ namespace FSO.Client.UI.Panels
                 var elem = elems.ElementAt(i);
                 var but = new UIButton()
                 {
-                    Caption = elem.Value.Name+((elem.Value.Category)?"...":""),
+                    Caption = elem.Name+((elem.Category)?"...":""),
                     CaptionStyle = ButtonStyle,
                     ImageStates = 1,
                     Texture = TextureGenerator.GetPieButtonImg(GameFacade.GraphicsDevice)
@@ -299,7 +301,7 @@ namespace FSO.Client.UI.Panels
         {
             int index = m_PieButtons.IndexOf((UIButton)button);
             if (index == -1) return; //bail! this isn't meant to happen!
-            var action = m_CurrentItem.Children.ElementAt(index).Value;
+            var action = m_CurrentItem.Children.ElementAt(index);
             HITVM.Get().PlaySoundEvent(UISounds.PieMenuSelect);
 
             if (action.Category) {
@@ -373,7 +375,8 @@ namespace FSO.Client.UI.Panels
         public byte ID;
         public short Param0;
         public string Name;
-        public Dictionary<string, UIPieMenuItem> Children = new Dictionary<string, UIPieMenuItem>();
+        public List<UIPieMenuItem> Children = new List<UIPieMenuItem>();
+        public Dictionary<string, UIPieMenuItem> ChildrenByName = new Dictionary<string, UIPieMenuItem>();
         public UIPieMenuItem Parent;
     }
 }

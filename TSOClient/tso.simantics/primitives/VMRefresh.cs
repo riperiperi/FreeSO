@@ -41,8 +41,9 @@ namespace FSO.SimAntics.Primitives
                         TargObj.RefreshGraphic();
                     }
                     break;
-                case 1:
-                    context.VM.Context.RefreshLighting(context.VM.Context.GetObjectRoom(target), true);
+                case 1: //light
+                case 2: //area contribution
+                    context.VM.Context.RefreshLighting(context.VM.Context.GetObjectRoom(target), true, new HashSet<ushort>());
                     if (target is VMGameObject) ((VMGameObject)target).RefreshLight();
                     break;
             }

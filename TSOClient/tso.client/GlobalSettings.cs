@@ -27,14 +27,13 @@ namespace FSO.Client
         private Dictionary<string, string> _DefaultValues = new Dictionary<string, string>()
         {
             { "ShowHints", "true"},
-            { "CurrentLang", "0" },
-            { "LoginServerPort", "2106"},
+            { "CurrentLang", "english" },
             { "ClientVersion", "0"},
             { "DebugEnabled", "false"},
             { "ScaleUI", "false"},
             { "CityShadows", "false"},
             { "ShadowQuality", "2048"},
-            { "SimulationShadows", "true"},
+            { "SmoothZoom", "true"},
             { "AntiAlias", "false"},
             { "EdgeScroll", "true"},
             { "Lighting", "true"},
@@ -44,7 +43,6 @@ namespace FSO.Client
             { "AmbienceVolume", "1"},
             { "StartupPath", ""},
             { "DocumentsPath", ""},
-            { "LoginServerIP", ""},
             { "Windowed", "true"},
             { "GraphicsWidth", "1024"},
             { "GraphicsHeight", "768"},
@@ -55,6 +53,16 @@ namespace FSO.Client
             { "DebugGender", "true"},
             { "DebugSkin", "0"},
             { "LanguageCode", "1"},
+            { "SurroundingLotMode", "2" },
+
+            { "UseCustomServer", "true" },
+            { "GameEntryUrl", "http://api.freeso.org" },
+            { "CitySelectorUrl", "http://api.freeso.org" },
+
+            { "TargetRefreshRate", "60" },
+
+            { "EnableTTS", "false" },
+            { "CompatState", "-1" }
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -62,15 +70,11 @@ namespace FSO.Client
             set { _DefaultValues = value; }
         }
 
-        public bool ShowHints { get; set; }
         public string CurrentLang { get; set; }
-        public int LoginServerPort { get; set; }
         public string ClientVersion { get; set; }
-        public bool DebugEnabled { get; set; }
-        public bool ScaleUI { get; set; }
         public bool CityShadows { get; set; }
         public int ShadowQuality { get; set; }
-        public bool SimulationShadows { get; set; }
+        public bool SmoothZoom { get; set; }
         public bool AntiAlias { get; set; }
         public bool EdgeScroll { get; set; }
         public bool Lighting { get; set; }
@@ -80,7 +84,6 @@ namespace FSO.Client
         public byte AmbienceVolume { get; set; }
         public string StartupPath { get; set; }
         public string DocumentsPath { get; set; }
-        public string LoginServerIP { get; set; }
         public bool Windowed { get; set; }
         public int GraphicsWidth { get; set; }
         public int GraphicsHeight { get; set; }
@@ -91,5 +94,16 @@ namespace FSO.Client
         public bool DebugGender { get; set; }
         public int DebugSkin { get; set; }
         public byte LanguageCode { get; set; }
+
+        public bool UseCustomServer { get; set; }
+        public string GameEntryUrl { get; set; }
+        public string CitySelectorUrl { get; set; }
+
+        public int TargetRefreshRate { get; set; }
+        public bool EnableTTS { get; set; }
+        public int SurroundingLotMode { get; set; }
+        public int CompatState { get; set; }
+
+        public static int TARGET_COMPAT_STATE = 2;
     }
 }

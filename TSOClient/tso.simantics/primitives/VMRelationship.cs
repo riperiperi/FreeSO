@@ -47,37 +47,58 @@ namespace FSO.SimAntics.Primitives
                     throw new VMSimanticsException("Invalid relationship type!", context);
             }
 
-            var rels = obj1.MeToObject;
-            var targId = (ushort)obj2.ObjectID;
-
-            //check if exists
-            if (!rels.ContainsKey(targId))
+            
+            List<short> relToTarg;
+            if (obj2.PersistID > 0)
             {
-                if (operand.FailIfTooSmall) return VMPrimitiveExitCode.GOTO_FALSE;
-                else rels.Add(targId, new List<short>());
+                //use persist matrix whenever possible.
+                //ignores use neighbour flag so we can use str/ltr.
+                var rels = obj1.MeToPersist;
+                var targId = obj2.PersistID;
+                if (!rels.ContainsKey(targId))
+                {
+                    if (operand.FailIfTooSmall) return VMPrimitiveExitCode.GOTO_FALSE;
+                    else rels.Add(targId, new List<short>());
+                }
+                if (operand.SetMode > 0) obj1.ChangedRels.Add(targId);
+                relToTarg = rels[targId];
             }
-            if (rels[targId].Count <= operand.RelVar)
+            else
+            {
+                var rels = obj1.MeToObject;
+                var targId = (ushort)obj2.ObjectID;
+                //check if exists
+                if (!rels.ContainsKey(targId))
+                {
+                    if (operand.FailIfTooSmall) return VMPrimitiveExitCode.GOTO_FALSE;
+                    else rels.Add(targId, new List<short>());
+                }
+                relToTarg = rels[targId];
+            }
+
+            if (relToTarg.Count <= operand.RelVar)
             {
                 if (operand.FailIfTooSmall) return VMPrimitiveExitCode.GOTO_FALSE;
-                else {
-                    while (rels[targId].Count <= operand.RelVar) rels[targId].Add(0);
+                else
+                {
+                    while (relToTarg.Count <= operand.RelVar) relToTarg.Add(0);
                 }
             }
 
-
             if (operand.SetMode == 0)
             {
-                VMMemory.SetVariable(context, operand.VarScope, operand.VarData, rels[targId][operand.RelVar]);
+                VMMemory.SetVariable(context, operand.VarScope, operand.VarData, relToTarg[operand.RelVar]);
             }
             else if (operand.SetMode == 1)
             { //todo, special system for server persistent avatars and pets
                 var value = VMMemory.GetVariable(context, operand.VarScope, operand.VarData);
-                rels[targId][operand.RelVar] = value;
+                relToTarg[operand.RelVar] = Math.Max((short)-100, Math.Min((short)100, value));
             }
             else if (operand.SetMode == 2)
             {
                 var value = VMMemory.GetVariable(context, operand.VarScope, operand.VarData);
-                rels[targId][operand.RelVar] += value;
+                relToTarg[operand.RelVar] += value;
+                relToTarg[operand.RelVar] = Math.Max((short)-100, Math.Min((short)100, relToTarg[operand.RelVar]));
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;

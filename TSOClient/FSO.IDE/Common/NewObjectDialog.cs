@@ -77,7 +77,8 @@ namespace FSO.IDE.Common
                         ChunkProcessed = true,
                         ChunkType = "OBJD",
                         ChunkParent = TargetIff,
-                        AnimationTableID = 128
+                        AnimationTableID = 128,
+                        AddedByPatch = true
                     };
 
                     Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>

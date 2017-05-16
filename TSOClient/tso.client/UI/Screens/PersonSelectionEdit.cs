@@ -13,14 +13,13 @@ using System.Globalization;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
-using FSO.Client.Network;
 using FSO.Client.UI.Framework.Parser;
-using FSO.Client.Network.Events;
 using Microsoft.Xna.Framework;
-using ProtocolAbstractionLibraryD;
 using FSO.Common.Utils;
 using FSO.Vitaboy;
 using FSO.Content;
+using FSO.Client.Controllers;
+using System.Text.RegularExpressions;
 using FSO.Client.GameContent;
 using FSO.Client.UI.Model;
 using FSO.Common;
@@ -29,6 +28,21 @@ namespace FSO.Client.UI.Screens
 {
     public class PersonSelectionEdit : GameScreen
     {
+        /// <summary>
+        /// Must not start with whitespace
+        /// May not contain numbers or special characters
+        /// At least 3 characters
+        /// No more than 24 characters
+        /// </summary>
+        private static Regex NAME_VALIDATION = new Regex("^([a-zA-Z]){1}([a-zA-Z ]){2,23}$");
+
+        /// <summary>
+        /// Only printable ascii characters
+        /// Minimum 0 characters
+        /// Maximum 499 characters
+        /// </summary>
+        private static Regex DESC_VALIDATION = new Regex("^([a-zA-Z0-9\\s\\x20-\\x7F]){0,499}$");
+
         /** UI created by script **/
         public Texture2D BackgroundImage { get; set; }
         public Texture2D BackgroundImageDialog { get; set; }
@@ -57,12 +71,16 @@ namespace FSO.Client.UI.Screens
         private Collection FemaleOutfits;
 
         /** State **/
-        private AppearanceType AppearanceType = AppearanceType.Light;
+        public AppearanceType AppearanceType { get; internal set; } = AppearanceType.Light;
         private UIButton SelectedAppearanceButton;
-        private Gender Gender = Gender.Female;
-
-        public CityInfo SelectedCity;
+        public Gender Gender { get; internal set; } = Gender.Female;
+        
         public UISim SimBox;
+
+        /** Strings **/
+        public string ProgressDialogTitle { get; set; }
+        public string ProgressDialogMessage { get; set; }
+        public string DefaultAvatarDescription { get; set; }
 
         public PersonSelectionEdit() : base()
         {
@@ -83,18 +101,20 @@ namespace FSO.Client.UI.Screens
             UIScript ui = this.RenderScript("personselectionedit1024.uis");
 
             Position = new Vector2((GlobalSettings.Default.GraphicsWidth-1024)/2, (GlobalSettings.Default.GraphicsHeight-768)/2) * FSOEnvironment.DPIScaleFactor;
-            Console.WriteLine(Position.ToString());
 
             m_ExitButton = (UIButton)ui["ExitButton"];
             m_ExitButton.OnButtonClick += new ButtonClickDelegate(m_ExitButton_OnButtonClick);
 
             CancelButton = (UIButton)ui["CancelButton"];
             CancelButton.OnButtonClick += new ButtonClickDelegate(CancelButton_OnButtonClick);
-            CancelButton.Disabled = true;
+            //CancelButton.Disabled = true;
 
             DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription");
             DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
             DescriptionTextEdit.AttachSlider(DescriptionSlider);
+            DescriptionTextEdit.CurrentText = DefaultAvatarDescription;
+            DescriptionTextEdit.OnChange += DescriptionTextEdit_OnChange;
+
             NameTextEdit.OnChange += new ChangeDelegate(NameTextEdit_OnChange);
             NameTextEdit.CurrentText = GlobalSettings.Default.LastUser;
 
@@ -125,6 +145,7 @@ namespace FSO.Client.UI.Screens
             this.AddAt(0, bg);
             bg.SetSize(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
             bg.Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / -2, (GlobalSettings.Default.GraphicsHeight - 768) / -2);
+            Background = bg;
 
             var offset = new Vector2(0, 0);
             if (BackgroundImageDialog != null)
@@ -142,16 +163,10 @@ namespace FSO.Client.UI.Screens
              * Music
              */
             HIT.HITVM.Get().PlaySoundEvent(UIMusic.CAS);
-            /*
-            PlayBackgroundMusic(
-                new string[] { GlobalSettings.Default.StartupPath + "\\music\\modes\\create\\tsocas1_v2.mp3" }
-            );*/
 
-            SimBox = new UISim(Guid.NewGuid().ToString());
-
-            SimBox.SimScale = 0.5f;
-            SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 70, offset.Y + 88);
-
+            SimBox = new UISim();
+            SimBox.Position = new Vector2(offset.X + 70, offset.Y + 88);
+            SimBox.Size = new Vector2(140,200);
             SimBox.AutoRotate = true;
             this.Add(SimBox);
 
@@ -191,9 +206,44 @@ namespace FSO.Client.UI.Screens
             RefreshCollections();
 
             SearchCollectionForInitID(GlobalSettings.Default.DebugHead, GlobalSettings.Default.DebugBody);
-            
+        }
 
-            NetworkFacade.Controller.OnCharacterCreationProgress += new OnCharacterCreationProgressDelegate(Controller_OnCharacterCreationStatus);
+        private UIImage Background;
+        public override void GameResized()
+        {
+            base.GameResized();
+            Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / 2, (GlobalSettings.Default.GraphicsHeight - 768) / 2) * FSOEnvironment.DPIScaleFactor;
+            Background.SetSize(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
+            Background.Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / -2, (GlobalSettings.Default.GraphicsHeight - 768) / -2);
+        }
+
+
+
+        private UIAlert _ProgressAlert;
+
+        public void ShowCreationProgressBar(bool show)
+        {
+            if (show)
+            {
+                if (_ProgressAlert == null)
+                {
+                    _ProgressAlert = GlobalShowAlert(new UIAlertOptions
+                    {
+                        Message = ProgressDialogMessage,
+                        Title = ProgressDialogTitle,
+                        ProgressBar = true,
+                        Width = 300
+                    }, true);
+                }
+            }
+            else
+            {
+                if (_ProgressAlert != null)
+                {
+                    UIScreen.RemoveDialog(_ProgressAlert);
+                    _ProgressAlert = null;
+                }
+            }
         }
 
         public override void DeviceReset(GraphicsDevice Device)
@@ -201,33 +251,34 @@ namespace FSO.Client.UI.Screens
             CalculateMatrix();
         }
 
-        /// <summary>
-        /// Received status of character creation from LoginServer.
-        /// </summary>
-        private void Controller_OnCharacterCreationStatus(CharacterCreationStatus CCStatus)
-        {
-            UIAlertOptions Options = new UIAlertOptions();
 
-            switch (CCStatus)
+        public string Name
+        {
+            get { return NameTextEdit.CurrentText; }
+        }
+
+        public string Description
+        {
+            get { return DescriptionTextEdit.CurrentText; }
+        }
+
+        public ulong HeadOutfitId
+        {
+            get
             {
-                case CharacterCreationStatus.Success:
-                    GameFacade.Controller.ShowCityTransition(SelectedCity, true);
-                    break;
-                case CharacterCreationStatus.NameAlreadyExisted:
-                    Options.Message = "Character's name already existed!";
-                    Options.Title = "Name Already Existed";
-                    UI.Framework.UIScreen.ShowAlert(Options, true);
-                    break;
-                case CharacterCreationStatus.NameTooLong:
-                    Options.Message = "Character's name was too long!";
-                    Options.Title = "Name Too Long";
-                    UI.Framework.UIScreen.ShowAlert(Options, true);
-                    break;
-                case CharacterCreationStatus.ExceededCharacterLimit:
-                    Options.Message = "You've already created three characters!";
-                    Options.Title = "Too Many Avatars";
-                    UI.Framework.UIScreen.ShowAlert(Options, true);
-                    break;
+                var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
+                var headPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
+                return headPurchasable.OutfitID;
+            }
+        }
+
+        public ulong BodyOutfitId
+        {
+            get
+            {
+                var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
+                var bodyPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedBody.PurchasableOutfitId);
+                return bodyPurchasable.OutfitID;
             }
         }
 
@@ -238,64 +289,12 @@ namespace FSO.Client.UI.Screens
 
         private void CancelButton_OnButtonClick(UIElement button)
         {
-            //GameFacade.Controller.ShowPersonSelection();
+            ((PersonSelectionEditController)Controller).Cancel();
         }
 
         private void AcceptButton_OnButtonClick(UIElement button)
         {
-            var sim = new UISim(Guid.NewGuid(), false);
-
-            sim.Name = NameTextEdit.CurrentText;
-            sim.Sex = System.Enum.GetName(typeof(Gender), Gender);
-            sim.Description = DescriptionTextEdit.CurrentText;
-            sim.Timestamp = DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture);
-            sim.ResidingCity = SelectedCity;
-
-            var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
-            var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
-            var headPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
-            var bodyPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedBody.PurchasableOutfitId);
-
-            sim.Head = Content.Content.Get().AvatarOutfits.Get(headPurchasable.OutfitID);
-            sim.HeadOutfitID = headPurchasable.OutfitID;
-            sim.Body = Content.Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
-            sim.BodyOutfitID = bodyPurchasable.OutfitID;
-            sim.Handgroup = Content.Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
-            sim.Avatar.Appearance = this.AppearanceType;
-
-            GlobalSettings.Default.DebugBody = sim.BodyOutfitID;
-            GlobalSettings.Default.DebugHead = sim.HeadOutfitID;
-            GlobalSettings.Default.LastUser = sim.Name;
-            GlobalSettings.Default.DebugGender = (Gender == Gender.Male);
-            GlobalSettings.Default.DebugSkin = (int)this.AppearanceType;
-
-            GlobalSettings.Default.Save();
-
-            GameFacade.Controller.ShowLotDebug();
-
-            /*
-            PlayerAccount.CurrentlyActiveSim = sim;
-
-            if (NetworkFacade.Avatars.Count <= 3)
-            {
-                lock(NetworkFacade.Avatars)
-                    NetworkFacade.Avatars.Add(sim);
-            }
-            else
-            {
-                UIAlertOptions Options = new UIAlertOptions();
-                Options.Message = "You've already created three characters!";
-                Options.Title = "Too Many Avatars";
-                Options.Buttons = UIAlertButtons.OK;
-                UI.Framework.UIScreen.ShowAlert(Options, true);
-
-                return;
-            }
-
-            //DateTime.Now.ToString() requires extremely specific formatting.
-            UIPacketSenders.SendCharacterCreate(sim, DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", 
-                CultureInfo.InvariantCulture));
-                */
+            ((PersonSelectionEditController)Controller).Create();
         }
 
         private void HeadSkinBrowser_OnChange(UIElement element)
@@ -310,15 +309,15 @@ namespace FSO.Client.UI.Screens
 
         private void RefreshSim()
         {
+            if(m_HeadSkinBrowser.SelectedItem == null || m_BodySkinBrowser.SelectedItem == null){
+                return;
+            }
             var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
             var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
 
             var headPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
             var bodyPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedBody.PurchasableOutfitId);
-
-            System.Diagnostics.Debug.WriteLine("Head = " + selectedHead.PurchasableOutfitId);
-            System.Diagnostics.Debug.WriteLine("Body = " + selectedHead.PurchasableOutfitId);
-
+            
             var headOutfit = Content.Content.Get().AvatarOutfits.Get(headPurchasable.OutfitID);
             var bodyOutfit = Content.Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
 
@@ -330,7 +329,28 @@ namespace FSO.Client.UI.Screens
 
         private void NameTextEdit_OnChange(UIElement element)
         {
-            AcceptButton.Disabled = NameTextEdit.CurrentText.Length == 0;
+            UpdateAcceptButtonState();
+        }
+
+        private void DescriptionTextEdit_OnChange(UIElement element)
+        {
+            UpdateAcceptButtonState();
+        }
+
+        private void UpdateAcceptButtonState()
+        {
+            var enabled = true;
+            if (!NAME_VALIDATION.IsMatch(NameTextEdit.CurrentText))
+            {
+                enabled = false;
+            }
+
+            if (!DESC_VALIDATION.IsMatch(DescriptionTextEdit.CurrentText))
+            {
+                enabled = false;
+            }
+
+            AcceptButton.Disabled = !enabled;
         }
 
         private void GenderButton_OnButtonClick(UIElement button)
@@ -354,6 +374,8 @@ namespace FSO.Client.UI.Screens
         {
             var oldHeadIndex = m_HeadSkinBrowser.SelectedIndex;
             var oldBodyIndex = m_BodySkinBrowser.SelectedIndex;
+            var oldHeadPage = m_HeadSkinBrowser.SelectedPage;
+            var oldBodyPage = m_BodySkinBrowser.SelectedPage;
 
             if (Gender == Gender.Male)
             {
@@ -365,9 +387,12 @@ namespace FSO.Client.UI.Screens
                 m_HeadSkinBrowser.DataProvider = CollectionToDataProvider(FemaleHeads);
                 m_BodySkinBrowser.DataProvider = CollectionToDataProvider(FemaleOutfits);
             }
+            // the choices for male heads and bodys are fewer than for females, so if changing to male, make sure the current page/index isn't out of bounds
+            m_HeadSkinBrowser.SelectedIndex = Math.Min(oldHeadIndex, m_HeadSkinBrowser.DataProvider.Count - 1);
+            m_BodySkinBrowser.SelectedIndex = Math.Min(oldBodyIndex, m_BodySkinBrowser.DataProvider.Count - 1);
+            m_HeadSkinBrowser.SelectedPage = Math.Min(oldHeadPage, m_HeadSkinBrowser.DataProvider.Count / m_HeadSkinBrowser.ItemsPerPage);
+            m_BodySkinBrowser.SelectedPage = Math.Min(oldBodyPage, m_BodySkinBrowser.DataProvider.Count / m_BodySkinBrowser.ItemsPerPage);
 
-            m_HeadSkinBrowser.SelectedIndex = Math.Min(oldHeadIndex, m_HeadSkinBrowser.DataProvider.Count);
-            m_BodySkinBrowser.SelectedIndex = Math.Min(oldBodyIndex, m_BodySkinBrowser.DataProvider.Count);
             RefreshSim();
         }
 
@@ -408,7 +433,7 @@ namespace FSO.Client.UI.Screens
 
                 dataProvider.Add(new UIGridViewerItem {
                     Data = outfit,
-                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID.TypeID, thumbID.FileID).Get(GameFacade.GraphicsDevice))
+                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID).Get(GameFacade.GraphicsDevice))
                 });
             }
             return dataProvider;

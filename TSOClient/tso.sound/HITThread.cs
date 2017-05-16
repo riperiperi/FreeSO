@@ -18,7 +18,6 @@ namespace FSO.HIT
     {
         public uint PC; //program counter
         public HITFile Src;
-        public HITVM VM;
         private Hitlist Hitlist;
         private int[] Registers; //includes args, vars, whatever "h" is up to 0xf
         private int[] LocalVar; //the sims online set, 0x10 "argstyle" up to 0x45 orientz. are half of these even used? no. but even in the test files? no
@@ -28,10 +27,12 @@ namespace FSO.HIT
         public int LoopPointer = -1;
         public int WaitRemain = -1;
 
-        private bool SimpleMode; //certain sounds play with no HIT.
+        public bool SimpleMode; //certain sounds play with no HIT.
+        public bool Loop;
         private bool PlaySimple;
 
         private uint Patch; //sound id
+        public bool HasSetLoop;
 
         private List<HITNoteEntry> Notes;
         private Dictionary<SoundEffectInstance, HITNoteEntry> NotesByChannel;
@@ -73,7 +74,7 @@ namespace FSO.HIT
                 {
                     var inst = Notes[i].instance;
                     inst.Pan = Pan;
-                    inst.Volume = Volume;
+                    inst.Volume = Math.Min(1.0f, Volume);
                 }
             }
 
@@ -147,8 +148,9 @@ namespace FSO.HIT
             audContent = Content.Content.Get().Audio;
         }
 
-        public HITThread(uint TrackID)
+        public HITThread(uint TrackID, HITVM VM)
         {
+            this.VM = VM;
             Owners = new List<int>();
             Notes = new List<HITNoteEntry>();
             NotesByChannel = new Dictionary<SoundEffectInstance, HITNoteEntry>();
@@ -222,7 +224,23 @@ namespace FSO.HIT
                 }
                 else
                 {
-                    Debug.WriteLine("Couldn't find track: " + value +", with alternative "+fallback);
+                    if (audContent.TracksByBackupId.ContainsKey(value))
+                    {
+                        ActiveTrack = audContent.TracksByBackupId[value];
+                        Patch = ActiveTrack.SoundID;
+                    }
+                    else
+                    {
+                        if (audContent.TracksByBackupId.ContainsKey(fallback))
+                        {
+                            ActiveTrack = audContent.TracksByBackupId[fallback];
+                            Patch = ActiveTrack.SoundID;
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Couldn't find track: " + value + ", with alternative " + fallback);
+                        }
+                    }
                 }
             }
         }
@@ -247,6 +265,17 @@ namespace FSO.HIT
 
             if (sound != null)
             {
+                switch (sound.Name)
+                {
+                    case "FX":
+                        VolGroup = Model.HITVolumeGroup.FX; break;
+                    case "MUSIC":
+                        VolGroup = Model.HITVolumeGroup.MUSIC; break;
+                    case "VOX":
+                        VolGroup = Model.HITVolumeGroup.VOX; break;
+                }
+                RecalculateVolume();   
+
                 var instance = sound.CreateInstance();
                 instance.Volume = Volume;
                 instance.Pan = Pan;
@@ -388,7 +417,8 @@ namespace FSO.HIT
             }
             else if (location < 0x2737)
             {
-                return ObjectVar[location - 0x271a];
+                var loc = location - 0x271a;
+                return ObjectVar[loc];
             }
             return 0;
         }

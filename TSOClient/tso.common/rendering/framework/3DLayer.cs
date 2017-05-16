@@ -75,6 +75,15 @@ namespace FSO.Common.Rendering.Framework
             Scenes.Remove(scene);
         }
 
+        public void Clear()
+        {
+            foreach (var scene in Scenes)
+            {
+                if (scene is IDisposable) ((IDisposable)scene).Dispose();
+            }
+            Scenes.Clear();
+        }
+
         /// <summary>
         /// Adds a scene to the draw stack. The system will not call
         /// Draw on the scene but it will be initialized and given updates

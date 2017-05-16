@@ -18,6 +18,7 @@ using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using FSO.Client.GameContent;
+using FSO.Client.UI.Framework.Parser;
 using Microsoft.Xna.Framework.GamerServices;
 using FSO.Common;
 using System.Threading;
@@ -141,7 +142,7 @@ namespace FSO.Client.UI.Controls
         /// </summary>
         public float Width
         {
-            get { return m_Height; }
+            get { return m_Width; }
         }
 
         /// <summary>
@@ -152,13 +153,25 @@ namespace FSO.Client.UI.Controls
             get { return m_Height; }
         }
 
+        [UIAttribute("size")]
+        public new virtual Vector2 Size
+        {
+            get
+            {
+                return new Vector2(m_Width, m_Height);
+            }
+            set
+            {
+                SetSize(value.X, value.Y);
+            }
+        }
 
         public void SetSize(float width, float height)
         {
             m_Width = width;
             m_Height = height;
             
-            NineSliceMargins.CalculateScales(m_Width, m_Height);
+            if (NineSliceMargins != null) NineSliceMargins.CalculateScales(m_Width, m_Height);
             m_Bounds = new Rectangle(0, 0, (int)m_Width, (int)m_Height);
             
             if (m_MouseEvent != null)
@@ -255,9 +268,13 @@ namespace FSO.Client.UI.Controls
                     m_cursorBlink = !m_cursorBlink;
                 }
 
-                var inputResult = state.InputManager.ApplyKeyboardInput(m_SBuilder, state, SelectionStart, SelectionEnd, true);
+                var allowInput = m_SBuilder.Length < MaxChars;
+
+                var inputResult = state.InputManager.ApplyKeyboardInput(m_SBuilder, state, SelectionStart, SelectionEnd, allowInput);
                 if (inputResult != null)
                 {
+                    Control_ValidateText();
+
                     if (inputResult.ContentChanged)
                     {
                         m_cursorBlink = true;
@@ -370,6 +387,13 @@ namespace FSO.Client.UI.Controls
                                 break;
                         }
                     }
+
+                    var index = m_SBuilder.Length;
+                    if (index > 1 && m_SBuilder[index - 1] == '\n' && m_SBuilder[index - 2] == '\r')
+                    {
+                        m_SBuilder.Remove(index - 2, 2);
+                    }
+                    
                     if (inputResult.EnterPressed && OnEnterPress != null) OnEnterPress(this);
                     if (inputResult.TabPressed && OnTabPress != null) OnTabPress(this);
                 }
@@ -545,6 +569,14 @@ namespace FSO.Client.UI.Controls
 
         #region ITextControl Members
 
+        private int m_MaxChars = int.MaxValue;
+
+        public int MaxChars
+        {
+            get { return m_MaxChars; }
+            set { m_MaxChars = value; }
+        }
+
         bool ITextControl.DrawCursor
         {
             get
@@ -552,7 +584,16 @@ namespace FSO.Client.UI.Controls
                 return IsFocused && m_cursorBlink;
             }
         }
-
+        /*
+         * As seen in FSO.Client.UI.Controls.UITextEdit.cs
+         */
+        private void Control_ValidateText()
+        {
+            if (m_SBuilder.Length > MaxChars)
+            {
+                m_SBuilder.Remove(MaxChars, m_SBuilder.Length - MaxChars);
+            }
+        }
         #endregion
     }
 

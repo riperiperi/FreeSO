@@ -123,6 +123,20 @@ namespace FSO.SimAntics.NetPlay.EODs
             }
         }
 
+        public void ActionCancelDisconnect(VMAvatar avatar)
+        {
+            VMEODServer server = null;
+            if (AvatarToEOD.TryGetValue(avatar.PersistID, out server))
+            {
+                if (!server.CanBeActionCancelled) return;
+                var avatarClient = server.Clients.FirstOrDefault(x => x.Avatar == avatar);
+                if (avatarClient != null)
+                {
+                    server.Disconnect(avatarClient);
+                }
+            }
+        }
+
         public void RegisterAvatar(VMAvatar avatar, VMEODServer server)
         {
             if (avatar == null) return;

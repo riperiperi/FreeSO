@@ -54,7 +54,7 @@ namespace FSO.Common
                 foreach (var line in lines)
                 {
                     var clean = line.Trim();
-                    if (clean[0] == '#' || clean[0] == '[') continue;
+                    if (clean.Length == 0 || clean[0] == '#' || clean[0] == '[') continue;
                     var split = clean.IndexOf('=');
                     if (split == -1) continue; //?
                     var prop = clean.Substring(0, split).Trim();

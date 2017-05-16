@@ -15,7 +15,19 @@ namespace FSO.Client.UI.Panels.EODs
         {
             { 0x2a6356a0, typeof(UISignsEOD) },
             { 0x4a5be8ab, typeof(UIDanceFloorEOD) },
-            { 0xea47ae39, typeof(UIPizzaMakerEOD) }
+            { 0xea47ae39, typeof(UIPizzaMakerEOD) },
+            { 0xca418206, typeof(UIPaperChaseEOD) },
+            { 0x2b58020b, typeof(UIRackOwnerEOD) },
+            { 0xcb492685, typeof(UIRackEOD) },
+            { 0x8b300068, typeof(UIDresserEOD) },
+            { 0x0949E698, typeof(UIScoreboardEOD) },
+            { 0x0A69F29F, typeof(UIPermissionDoorEOD) },
+            { 0xCB2819CB, typeof(UISlotsEOD) },
+            { 0xAA5E36DC, typeof(UITrunkEOD) },
+            { 0x2D642D39, typeof(UIWarGameEOD) },
+            { 0xAA65FE9E, typeof(UITimerPluginEOD) },
+            { 0x895C1CEB, typeof(UIGameCompDrawACardPluginEOD) },
+            { 0x8ADFC7A2, typeof(UIBandEOD) }
         };
 
         //this class is a container so that it can hold EODs without them being active in Live Mode.

@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<sqlMapConfig xmlns="http://ibatis.apache.org/dataMapper"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" >
+
+  <!-- Optional -->
+  <properties resource="properties.config"/>
+
+  <settings>
+    <setting useStatementNamespaces="false"/>
+    <setting cacheModelsEnabled="true"/>
+    <setting validateSqlMap="false"/>
+  </settings>
+
+  <!-- Not required if providers.config is located in default location -->
+  <providers embedded="resources.providers.config, IBatisNet.Test"/>
+
+  <database>
+    <provider name="sqlServer1.1"/>
+    <dataSource name="NPetshop"
+                connectionString="user id=${username};
+                password=${password};
+                data source=${datasource};
+                database=${database};"/>
+  </database>
+
+  <alias>
+  </alias>
+
+  <typeHandlers>
+  </typeHandlers>
+
+  <sqlMaps>
+  </sqlMaps>
+</sqlMapConfig>

@@ -27,6 +27,8 @@ namespace FSO.SimAntics.Marshals.Threads
         public ushort ActionUID;
         public int DialogCooldown;
 
+        public uint ScheduleIdleStart;
+
         public int Version;
 
         public VMThreadMarshal() { }
@@ -57,15 +59,18 @@ namespace FSO.SimAntics.Marshals.Threads
 
             writer.Write(ActionUID);
             writer.Write(DialogCooldown);
+
+            writer.Write(ScheduleIdleStart);
         }
 
         public void Deserialize(BinaryReader reader)
         {
             var stackN = reader.ReadInt32();
             Stack = new VMStackFrameMarshal[stackN];
-            for (int i = 0; i < stackN; i++) {
+            for (int i = 0; i < stackN; i++)
+            {
                 var type = reader.ReadByte();
-                Stack[i] = (type==1)?new VMRoutingFrameMarshal(Version):new VMStackFrameMarshal(Version);
+                Stack[i] = (type == 1) ? new VMRoutingFrameMarshal(Version) : new VMStackFrameMarshal(Version);
                 Stack[i].Deserialize(reader);
             }
 
@@ -73,7 +78,7 @@ namespace FSO.SimAntics.Marshals.Threads
             Queue = new VMQueuedActionMarshal[queueN];
             for (int i = 0; i < queueN; i++)
             {
-                Queue[i] = new VMQueuedActionMarshal();
+                Queue[i] = new VMQueuedActionMarshal(Version);
                 Queue[i].Deserialize(reader);
             }
             if (Version > 4) ActiveQueueBlock = reader.ReadByte();
@@ -96,6 +101,7 @@ namespace FSO.SimAntics.Marshals.Threads
 
             ActionUID = reader.ReadUInt16();
             DialogCooldown = reader.ReadInt32();
+            if (Version > 15) ScheduleIdleStart = reader.ReadUInt32();
         }
     }
 }

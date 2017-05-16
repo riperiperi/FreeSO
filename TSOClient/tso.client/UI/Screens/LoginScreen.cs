@@ -5,52 +5,66 @@ http://mozilla.org/MPL/2.0/.
 */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Net.Sockets;
 using System.IO;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels;
-using FSO.Client.Network;
-using FSO.Client.Network.Events;
-
-using GonzoNet;
 using FSO.Client.GameContent;
+using FSO.Server.Protocol.Authorization;
+using FSO.Files;
+using FSO.Client.Utils;
+using FSO.Client.Regulators;
 using FSO.Client.UI.Model;
 using FSO.HIT;
+using FSO.Files.Utils;
+using Microsoft.Xna.Framework.Graphics;
+using FSO.Common;
+using FSO.Server.Clients;
+using Ninject;
+using System.Net.NetworkInformation;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using FSO.Common.Utils;
 
 namespace FSO.Client.UI.Screens
 {
-    public class LoginScreen : GameScreen
+    public class LoginScreen : GameScreen, IDisposable
     {
-        private UIContainer BackgroundCtnr;
-        private UIImage Background;
-        private UILoginDialog LoginDialog;
-        private UILoginProgress LoginProgress;
+        private UISetupBackground Background;
+        public UILoginDialog LoginDialog;
+        public UILoginProgress LoginProgress;
 
-        public LoginScreen()
+        private LoginRegulator Regulator;
+
+        public LoginScreen(LoginRegulator regulator)
         {
+            try
+            {
+                if (File.Exists("update2.exe"))
+                {
+                    File.Delete("update.exe");
+                    File.Move("update2.exe", "update.exe");
+                }
+            } catch (Exception) { 
+                //maybe signal to user that the updater update failed
+            }
+
+            this.Regulator = regulator;
+            regulator.Logout();
+
             HITVM.Get().PlaySoundEvent(UIMusic.None);
+            GlobalSettings.Default.Save();
 
-            /**
-             * Scale the whole screen to 1024
-             */
-            BackgroundCtnr = new UIContainer();
-            BackgroundCtnr.ScaleX = BackgroundCtnr.ScaleY = ScreenWidth / 800.0f;
-
-            /** Background image **/
-            Background = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.setup));
-            Background.ID = "Background";
-            BackgroundCtnr.Add(Background);
+            Background = new UISetupBackground();
 
             /** Client version **/
             var lbl = new UILabel();
             lbl.Caption = "Version " + GlobalSettings.Default.ClientVersion;
             lbl.X = 20;
             lbl.Y = 558;
-            BackgroundCtnr.Add(lbl);
-            this.Add(BackgroundCtnr);
+            Background.BackgroundCtnr.Add(lbl);
+            this.Add(Background);
 
             /** Progress bar **/
             LoginProgress = new UILoginProgress();
@@ -67,128 +81,182 @@ namespace FSO.Client.UI.Screens
             LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;
             this.Add(LoginDialog);
 
-            NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
-            NetworkFacade.Controller.OnLoginProgress += new OnProgressDelegate(Controller_OnLoginProgress);
-            NetworkFacade.Controller.OnLoginStatus += new OnLoginStatusDelegate(Controller_OnLoginStatus);
+            bool usernamePopulated = false;
+
+            var loginIniFile = GameFacade.GameFilePath("login.ini");
+            if (File.Exists(loginIniFile)){
+                var iniFile = IniFile.Read(loginIniFile);
+                if (iniFile.ContainsKey("LastSession")){
+                    LoginDialog.Username = iniFile["LastSession"]["UserName"];
+                    usernamePopulated = true;
+                }
+            }
+
+            if (usernamePopulated)
+            {
+                LoginDialog.FocusPassword();
+            }
+            else
+            {
+                LoginDialog.FocusUsername();
+            }
+
             var gameplayButton = new UIButton()
             {
-                Caption = "Simantics & Lot Debug",
+                Caption = "Sandbox Mode",
                 Y = 10,
-                Width = 200,
+                Width = 125,
                 X = 10
             };
             this.Add(gameplayButton);
             gameplayButton.OnButtonClick += new ButtonClickDelegate(gameplayButton_OnButtonClick);
-        }
- 
-        void gameplayButton_OnButtonClick(UIElement button)
-        {
-            GameFacade.Controller.ShowLotDebug();
-        }
+            
+            Regulator.OnError += AuthRegulator_OnError;
+            Regulator.OnTransition += AuthRegulator_OnTransition;
 
-        ~LoginScreen()
-        {
-            NetworkFacade.Controller.OnNetworkError -= new NetworkErrorDelegate(Controller_OnNetworkError);
-            NetworkFacade.Controller.OnLoginProgress -= new OnProgressDelegate(Controller_OnLoginProgress);
-            NetworkFacade.Controller.OnLoginStatus -= new OnLoginStatusDelegate(Controller_OnLoginStatus);
-        }
-
-        private void Controller_OnLoginProgress(ProgressEvent e)
-        {
-            var stage = e.Done;
-
-            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 3).ToString());
-            LoginProgress.Progress = 25 * stage;
-        }
-
-        private void Controller_OnLoginStatus(LoginEvent e)
-        {
-            m_InLogin = false;
-            if (e.Success)
+            var compat = GlobalSettings.Default.CompatState;
+            if (compat != -1 && compat < GlobalSettings.TARGET_COMPAT_STATE)
             {
-                /** Save the username **/
-                GlobalSettings.Default.LastUser = LoginDialog.Username;
-                GlobalSettings.Default.Save();
-                /** Go to the select a sim page, make sure we do this in the UIThread **/
-                GameFacade.Controller.ShowPersonSelection();
-            }
-            else
-            {
-                if (e.VersionOK)
+                GameThread.NextUpdate(x =>
                 {
-                    //EventQueue is static, so shouldn't need to be locked.
-                    if (EventSink.EventQueue[0].ECode == EventCodes.BAD_USERNAME || 
-                        EventSink.EventQueue[0].ECode == EventCodes.BAD_PASSWORD)
+                    GlobalShowAlert(new UIAlertOptions() { Message = GameFacade.Strings.GetString("f105", "2") }, true);
+                    var settings = GlobalSettings.Default;
+                    settings.CompatState = 0;
+                    settings.Lighting = false;
+                    settings.SurroundingLotMode = 0;
+                    settings.CityShadows = false;
+                    settings.AntiAlias = false;
+                    settings.Save();
+
+                    LotView.WorldConfig.Current = new LotView.WorldConfig()
                     {
-                        UIAlertOptions Options = new UIAlertOptions();
-                        Options.Message = GameFacade.Strings.GetString("210", "26 110");
-                        Options.Title = GameFacade.Strings.GetString("210", "21");
-                        UI.Framework.UIScreen.ShowAlert(Options, true);
-
-                        //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
-                        //events that may have been added to the end.
-                        EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
-                    }
-                    else if (EventSink.EventQueue[0].ECode == EventCodes.AUTHENTICATION_FAILURE)
-                    {
-                        //Restart authentication procedure.
-                        NetworkFacade.Controller.InitialConnect(LoginDialog.Username.ToUpper(), LoginDialog.Password.ToUpper());
-
-                        //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
-                        //events that may have been added to the end.
-                        EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
-                    }
-
-                    /** Reset **/
-                    LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
-                    LoginProgress.Progress = 0;
-                    m_InLogin = false;
-                }
-                else
-                {
-                    UIAlertOptions Options = new UIAlertOptions();
-                    Options.Message = "Your client was not up to date!";
-                    Options.Title = "Invalid version";
-                    UI.Framework.UIScreen.ShowAlert(Options, true);
-
-                    /** Reset **/
-                    LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
-                    LoginProgress.Progress = 0;
-                    m_InLogin = false;
-                }
+                        AdvancedLighting = settings.Lighting,
+                        SmoothZoom = settings.SmoothZoom,
+                        SurroundingLots = settings.SurroundingLotMode
+                    };
+                });
             }
         }
 
-        private bool m_InLogin = false;
+        public override void GameResized()
+        {
+            base.GameResized();
+            LoginProgress.X = (ScreenWidth - (LoginProgress.Width + 20));
+            LoginProgress.Y = (ScreenHeight - (LoginProgress.Height + 20));
+
+            LoginDialog.X = (ScreenWidth - LoginDialog.Width) / 2;
+            LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;
+        }
+
+        public void Dispose()
+        {
+            Regulator.OnError -= AuthRegulator_OnError;
+            Regulator.OnTransition -= AuthRegulator_OnTransition;
+        }
+
+        private void AuthRegulator_OnTransition(string state, object data)
+        {
+            switch (state)
+            {
+                case "NotLoggedIn":
+                    SetProgress(1);
+                    break;
+                case "AuthLogin":
+                    SetProgress(2);
+                    break;
+                case "InitialConnect":
+                    SetProgress(3);
+                    break;
+                case "AvatarData":
+                    SetProgress(4);
+                    break;
+                case "ShardStatus":
+                    SetProgress(5);
+                    break;
+            }
+        }
+
+        private void AuthRegulator_OnError(object error)
+        {
+            if (error is Exception)
+            {
+                error = ErrorMessage.FromLiteral(GameFacade.Strings.GetString("210", "17"));
+            }
+
+            if (error is ErrorMessage)
+            {
+                ErrorMessage errorMsg = (ErrorMessage)error;
+
+                /** Error message intended for the user **/
+                UIAlertOptions Options = new UIAlertOptions();
+                Options.Message = errorMsg.Message;
+                Options.Title = errorMsg.Title;
+                Options.Buttons = errorMsg.Buttons;
+                GlobalShowAlert(Options, true);
+            }
+        }
+
         /// <summary>
         /// Called by login button click in UILoginDialog
         /// </summary>
         public void Login()
         {
-            if (m_InLogin) { return; }
-            m_InLogin = true;
+            if (LoginDialog.Username.Length == 0 || LoginDialog.Password.Length == 0){
+                return;
+            }
 
-            PlayerAccount.Username = LoginDialog.Username;
-            Controller_OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 1 });
-            NetworkFacade.Controller.InitialConnect(LoginDialog.Username.ToUpper(), LoginDialog.Password.ToUpper());
+            Regulator.Login(new AuthRequest
+            {
+                Username = LoginDialog.Username,
+                Password = LoginDialog.Password,
+                ServiceID = "2147",
+                Version = "2.5",
+                ClientID = GetUID()
+            });
         }
 
-        /// <summary>
-        /// A network error occured - 95% of the time, this will be because
-        /// a connection could not be established.
-        /// </summary>
-        /// <param name="Exception">The exception that occured.</param>
-        private void Controller_OnNetworkError(SocketException Exception)
+        private string GetUID()
+        {
+            var id =
+            (
+                from nic in NetworkInterface.GetAllNetworkInterfaces()
+                where nic.OperationalStatus == OperationalStatus.Up
+                select nic.GetPhysicalAddress().ToString()
+            ).FirstOrDefault();
+
+            return GetHashString(id ?? "");
+        }
+
+        public static string GetHashString(string input)
+        {
+            HashAlgorithm algorithm = SHA1.Create();
+            StringBuilder sb = new StringBuilder();
+            var hash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(input));
+            foreach (byte b in hash)
+                sb.Append(b.ToString("X2"));
+
+            return sb.ToString();
+        }
+
+        private void SetProgress(int stage)
+        {
+            var auth = GameFacade.Kernel.Get<AuthClient>();
+            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 3).ToString())
+                .Replace("EA.COM", auth.BaseUrl.Substring(7).TrimEnd('/'));
+            LoginProgress.Progress = 25 * (stage - 1);
+        }
+
+        void gameplayButton_OnButtonClick(UIElement button)
         {
             UIAlertOptions Options = new UIAlertOptions();
-            Options.Message = GameFacade.Strings.GetString("210", "36 301");
+            Options.Message = "Sandbox Mode will be implemented in a future version.";
             Options.Title = GameFacade.Strings.GetString("210", "40");
-            UI.Framework.UIScreen.ShowAlert(Options, true);
+            UI.Framework.UIScreen.GlobalShowAlert(Options, true);
+        }
 
-            /** Reset **/
-            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
-            LoginProgress.Progress = 0;
-            m_InLogin = false;
+        public override void Draw(UISpriteBatch batch)
+        {
+            base.Draw(batch);
         }
     }
 }

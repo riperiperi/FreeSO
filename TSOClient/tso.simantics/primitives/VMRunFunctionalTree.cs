@@ -25,9 +25,11 @@ namespace FSO.SimAntics.Engine.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMRunFunctionalTreeOperand)args;
+            if (operand.Function == 65535) return VMPrimitiveExitCode.GOTO_FALSE; //wedding cake: invalid primitive operand
 
             var entry = VMFindBestObjectForFunction.FunctionToEntryPoint[operand.Function];
             var ent = context.StackObject;
+            if (ent == null || ent.Dead) return VMPrimitiveExitCode.GOTO_FALSE;
             if (ent.EntryPoints[entry].ActionFunction != 0)
             {
                 bool Execute;

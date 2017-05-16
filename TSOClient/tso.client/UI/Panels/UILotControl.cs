@@ -42,10 +42,10 @@ namespace FSO.Client.UI.Panels
     /// <summary>
     /// Generates pie menus when the player clicks on objects.
     /// </summary>
-    public class UILotControl : UIContainer
+    public class UILotControl : UIContainer, IDisposable
     {
         private UIMouseEventRef MouseEvt;
-        private bool MouseIsOn;
+        public bool MouseIsOn;
 
         private UIPieMenu PieMenu;
         private UIChatPanel ChatPanel;
@@ -81,11 +81,12 @@ namespace FSO.Client.UI.Panels
         private int OldMY;
         private bool FoundMe; //if false and avatar changes, center. Should center on join lot.
 
-        private bool RMBScroll;
+        public bool RMBScroll;
         private int RMBScrollX;
         private int RMBScrollY;
 
         public UICheatHandler Cheats;
+        public UIAvatarDataServiceUpdater AvatarDS;
 
         // NOTE: Blocking dialog system assumes that nothing goes wrong with data transmission (which it shouldn't, because we're using TCP)
         // and that the code actually blocks further dialogs from appearing while waiting for a response.
@@ -123,11 +124,8 @@ namespace FSO.Client.UI.Panels
             this.Add(Queue);
 
             ObjectHolder = new UIObjectHolder(vm, World, this);
-            QueryPanel = new UIQueryPanel(World);
-            QueryPanel.OnSellBackClicked += ObjectHolder.SellBack;
-            QueryPanel.X = 0;
-            QueryPanel.Y = -114;
-            //this.Add(QueryPanel);
+
+            SetupQuery();
 
             ChatPanel = new UIChatPanel(vm, this);
             this.Add(ChatPanel);
@@ -139,7 +137,39 @@ namespace FSO.Client.UI.Panels
             vm.OnBreakpoint += Vm_OnBreakpoint;
 
             Cheats = new UICheatHandler(this);
+            this.Add(Cheats);
+            AvatarDS = new UIAvatarDataServiceUpdater(this);
             EODs = new UIEODController(this);
+        }
+
+        public void SetupQuery()
+        {
+            UIContainer parent = null;
+            if (QueryPanel?.Parent?.Parent != null)
+            {
+                parent = QueryPanel.Parent;
+            }
+
+            QueryPanel = new UIQueryPanel(World);
+            QueryPanel.OnSellBackClicked += ObjectHolder.SellBack;
+            QueryPanel.OnInventoryClicked += ObjectHolder.MoveToInventory;
+            QueryPanel.OnAsyncBuyClicked += ObjectHolder.AsyncBuy;
+            QueryPanel.OnAsyncSaleClicked += ObjectHolder.AsyncSale;
+            QueryPanel.OnAsyncPriceClicked += ObjectHolder.AsyncSale;
+            QueryPanel.OnAsyncSaleCancelClicked += ObjectHolder.AsyncCancelSale;
+            QueryPanel.X = 0;
+            QueryPanel.Y = -114;
+
+            if (parent != null) parent.Add(QueryPanel);
+        }
+
+        public override void GameResized()
+        {
+            base.GameResized();
+            MouseEvt.Region.Width = GlobalSettings.Default.GraphicsWidth;
+            MouseEvt.Region.Height = GlobalSettings.Default.GraphicsHeight;
+
+            SetupQuery();
         }
 
         private void Vm_OnChatEvent(VMChatEvent evt)
@@ -215,7 +245,7 @@ namespace FSO.Client.UI.Panels
                     break;
             }
 
-            var alert = UIScreen.ShowAlert(options, true);
+            var alert = UIScreen.GlobalShowAlert(options, true);
 
             if (info.Block)
             {
@@ -243,7 +273,7 @@ namespace FSO.Client.UI.Panels
 
         private void DialogResponse(byte code)
         {
-            if (BlockingDialog == null) return;
+            if (BlockingDialog == null || ActiveEntity == null) return;
             UIScreen.RemoveDialog(BlockingDialog);
             LastDialogID = 0;
             vm.SendCommand(new VMNetDialogResponseCmd {
@@ -266,6 +296,7 @@ namespace FSO.Client.UI.Panels
             else if (type == UIMouseEventType.MouseOut)
             {
                 MouseIsOn = false;
+                GameFacade.Cursor.SetCursor(CursorType.Normal);
                 Tooltip = null;
             }
             else if (type == UIMouseEventType.MouseDown)
@@ -290,7 +321,6 @@ namespace FSO.Client.UI.Panels
                     bool objSelected = ObjectHover > 0 && InteractionsAvailable;
                     if (objSelected || (GotoObject.Position != LotTilePos.OUT_OF_WORLD && ObjectHover <= 0))
                     {
-                        HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
                         if (objSelected)
                         {
                             obj = vm.GetObjectById(ObjectHover);
@@ -298,30 +328,48 @@ namespace FSO.Client.UI.Panels
                         {
                             obj = GotoObject;
                         }
-                        obj = obj.MultitileGroup.GetInteractionGroupLeader(obj);
-
-                        var menu = obj.GetPieMenu(vm, ActiveEntity, false);
-                        if (menu.Count != 0)
+                        if (obj != null)
                         {
-                            PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
-                            this.Add(PieMenu);
-                            PieMenu.X = state.MouseState.X / FSOEnvironment.DPIScaleFactor;
-                            PieMenu.Y = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
-                            PieMenu.UpdateHeadPosition(state.MouseState.X, state.MouseState.Y);
+                            obj = obj.MultitileGroup.GetInteractionGroupLeader(obj);
+                            if (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)
+                            {
+                                var flags = ((VMGameObject)obj).Disabled;
+
+                                if ((flags & VMGameObjectDisableFlags.ForSale) > 0)
+                                {
+                                    //for sale
+                                    var retailPrice = obj.MultitileGroup.Price; //wrong... should get this from catalog
+                                    var salePrice = obj.MultitileGroup.SalePrice;
+                                    ShowErrorTooltip(state, 22, true, "$" + retailPrice.ToString("##,#0"), "$" + salePrice.ToString("##,#0"));
+                                }
+                                else if ((flags & VMGameObjectDisableFlags.LotCategoryWrong) > 0)
+                                    ShowErrorTooltip(state, 21, true); //category wrong
+                                else if ((flags & VMGameObjectDisableFlags.TransactionIncomplete) > 0)
+                                    ShowErrorTooltip(state, 27, true); //transaction not yet complete
+                                else if ((flags & VMGameObjectDisableFlags.ObjectLimitExceeded) > 0)
+                                    ShowErrorTooltip(state, 24, true); //object is temporarily disabled... todo: something more helpful
+                                else if ((flags & VMGameObjectDisableFlags.PendingRoommateDeletion) > 0)
+                                    ShowErrorTooltip(state, 16, true); //pending roommate deletion
+                            }
+                            else
+                            {
+                                HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
+                                var menu = obj.GetPieMenu(vm, ActiveEntity, false);
+                                if (menu.Count != 0)
+                                {
+                                    PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
+                                    this.Add(PieMenu);
+                                    PieMenu.X = state.MouseState.X / FSOEnvironment.DPIScaleFactor;
+                                    PieMenu.Y = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
+                                    PieMenu.UpdateHeadPosition(state.MouseState.X, state.MouseState.Y);
+                                }
+                            }
                         }
+
                     }
                     else
                     {
-                        HITVM.Get().PlaySoundEvent(UISounds.Error);
-                        state.UIState.TooltipProperties.Show = true;
-                        state.UIState.TooltipProperties.Color = Color.Black;
-                        state.UIState.TooltipProperties.Opacity = 1;
-                        state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
-                            state.MouseState.Y);
-                        state.UIState.Tooltip = GameFacade.Strings.GetString("159", "0");
-                        state.UIState.TooltipProperties.UpdateDead = false;
-                        ShowTooltip = true;
-                        TipIsError = true;
+                        ShowErrorTooltip(state, 0, true);
                     }
                 }
                 else
@@ -346,6 +394,20 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        private void ShowErrorTooltip(UpdateState state, uint id, bool playSound, params string[] args)
+        {
+            if (playSound) HITVM.Get().PlaySoundEvent(UISounds.Error);
+            state.UIState.TooltipProperties.Show = true;
+            state.UIState.TooltipProperties.Color = Color.Black;
+            state.UIState.TooltipProperties.Opacity = 1;
+            state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
+                state.MouseState.Y);
+            state.UIState.Tooltip = GameFacade.Strings.GetString("159", id.ToString(), args);
+            state.UIState.TooltipProperties.UpdateDead = false;
+            ShowTooltip = true;
+            TipIsError = true;
+        }
+
         public void ClosePie() 
         {
             if (PieMenu != null) 
@@ -364,7 +426,6 @@ namespace FSO.Client.UI.Panels
 
         public void LiveModeUpdate(UpdateState state, bool scrolled)
         {
-
             if (MouseIsOn && ActiveEntity != null)
             {
 
@@ -394,16 +455,32 @@ namespace FSO.Client.UI.Panels
                     if (ObjectHover > 0)
                     {
                         var obj = vm.GetObjectById(ObjectHover);
-                        if (obj is VMAvatar && !TipIsError)
+                        if (!TipIsError && obj != null)
                         {
-                            state.UIState.TooltipProperties.Show = true;
-                            state.UIState.TooltipProperties.Color = Color.Black;
-                            state.UIState.TooltipProperties.Opacity = 1;
-                            state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
-                                state.MouseState.Y);
-                            state.UIState.Tooltip = GetAvatarString(obj as VMAvatar);
-                            state.UIState.TooltipProperties.UpdateDead = false;
-                            ShowTooltip = true;
+                            if (obj is VMAvatar)
+                            {
+                                state.UIState.TooltipProperties.Show = true;
+                                state.UIState.TooltipProperties.Color = Color.Black;
+                                state.UIState.TooltipProperties.Opacity = 1;
+                                state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
+                                    state.MouseState.Y);
+                                state.UIState.Tooltip = GetAvatarString(obj as VMAvatar);
+                                state.UIState.TooltipProperties.UpdateDead = false;
+                                ShowTooltip = true;
+                            }
+                            else if (((VMGameObject)obj).Disabled > 0)
+                            {
+                                var flags = ((VMGameObject)obj).Disabled;
+                                if ((flags & VMGameObjectDisableFlags.ForSale) > 0)
+                                {
+                                    //for sale
+                                    var retailPrice = obj.MultitileGroup.Price; //wrong... should get this from catalog
+                                    var salePrice = obj.MultitileGroup.SalePrice;
+                                    ShowErrorTooltip(state, 22, false, "$" + retailPrice.ToString("##,#0"), "$" + salePrice.ToString("##,#0"));
+                                    TipIsError = false;
+                                }
+                            }
+
                         }
                     }
                     if (!ShowTooltip)
@@ -442,8 +519,9 @@ namespace FSO.Client.UI.Panels
                     }
                 } else
                 {
+
                     cursor = CursorType.Normal;
-                }
+                } 
 
                 CursorManager.INSTANCE.SetCursor(cursor);
             }
@@ -454,7 +532,7 @@ namespace FSO.Client.UI.Panels
         {
             int prefixNum = 3;
             if (ava.IsPet) prefixNum = 5;
-            else if (ava.PersistID < 65536) prefixNum = 4;
+            else if (ava.PersistID == 0) prefixNum = 4;
             else
             {
                 var permissionsLevel = ((VMTSOAvatarState)ava.TSOState).Permissions;
@@ -474,7 +552,14 @@ namespace FSO.Client.UI.Panels
         {
             LastFloor = -1;
             LastWallMode = -1;
-            MouseCutRect = new Rectangle(0,0,0,0);
+
+            if (vm.Context.Blueprint != null && LastCuts != null)
+            {
+                vm.Context.Blueprint.Cutaway = LastCuts;
+                vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+            }
+
+            //MouseCutRect = new Rectangle(0,0,0,0);
         }
 
         public override void Draw(UISpriteBatch batch)
@@ -489,10 +574,11 @@ namespace FSO.Client.UI.Panels
         public override void Update(UpdateState state)
         {
             base.Update(state);
-            Cheats.Update(state);
 
             if (!vm.Ready) return;
 
+            Cheats.Update(state);
+            AvatarDS.Update();
             if (ActiveEntity == null || ActiveEntity.Dead || ActiveEntity.PersistID != SelectedSimID)
             {
                 ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SelectedSimID); //try and hook onto a sim if we have none selected.
@@ -540,8 +626,26 @@ namespace FSO.Client.UI.Panels
                     {
                         scrollBy = new Vector2(state.MouseState.X - RMBScrollX, state.MouseState.Y - RMBScrollY);
                         scrollBy *= 0.0005f;
+
+                        var angle = (Math.Atan2(state.MouseState.X - RMBScrollX, (RMBScrollY - state.MouseState.Y)*2) / Math.PI) * 4;
+                        angle += 8;
+                        angle %= 8;
+
+                        CursorType type = CursorType.ArrowUp;
+                        switch ((int)Math.Round(angle))
+                        {
+                            case 0: type = CursorType.ArrowUp; break;
+                            case 1: type = CursorType.ArrowUpRight; break;
+                            case 2: type = CursorType.ArrowRight; break;
+                            case 3: type = CursorType.ArrowDownRight; break;
+                            case 4: type = CursorType.ArrowDown; break;
+                            case 5: type = CursorType.ArrowDownLeft; break;
+                            case 6: type = CursorType.ArrowLeft; break;
+                            case 7: type = CursorType.ArrowUpLeft; break;
+                        }
+                        GameFacade.Cursor.SetCursor(type);
                     }
-                    World.Scroll(scrollBy);
+                    World.Scroll(scrollBy * (60f / FSOEnvironment.RefreshRate));
                     scrolled = true;
                 }
                 if (MouseIsOn)
@@ -557,10 +661,14 @@ namespace FSO.Client.UI.Panels
                     }
                     else
                     {
-                        RMBScroll = false;
                         if (!scrolled && GlobalSettings.Default.EdgeScroll && !state.TouchMode) scrolled = World.TestScroll(state);
                     }
+                }
 
+                if (state.MouseState.RightButton != ButtonState.Pressed)
+                {
+                    if (RMBScroll) GameFacade.Cursor.SetCursor(CursorType.Normal);
+                    RMBScroll = false;
                 }
 
                 if (LiveMode) LiveModeUpdate(state, scrolled);
@@ -568,79 +676,88 @@ namespace FSO.Client.UI.Panels
                 else ObjectHolder.Update(state, scrolled);
 
                 //set cutaway around mouse
+                UpdateCutaway(state);
+            }
+        }
 
-                if (vm.Context.Blueprint != null)
+        private void UpdateCutaway(UpdateState state)
+        {
+            if (vm.Context.Blueprint != null)
+            {
+                World.State.DynamicCutaway = (WallsMode == 1);
+                //first we need to cycle the rooms that are being cutaway. Keep this up even if we're in all-cut mode.
+                var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+                var roomHover = vm.Context.GetRoomAt(LotTilePos.FromBigTile((short)(mouseTilePos.X), (short)(mouseTilePos.Y), World.State.Level));
+                var outside = (vm.Context.RoomInfo[roomHover].Room.IsOutside);
+                if (!outside && !CutRooms.Contains(roomHover))
+                    CutRooms.Add(roomHover); //outside hover should not persist like with other rooms.
+                while (CutRooms.Count > 3) CutRooms.Remove(CutRooms.ElementAt(0));
+
+                if (LastWallMode != WallsMode)
                 {
-                    World.State.DynamicCutaway = (WallsMode == 1);
-                    //first we need to cycle the rooms that are being cutaway. Keep this up even if we're in all-cut mode.
-                    var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
-                    var roomHover = vm.Context.GetRoomAt(LotTilePos.FromBigTile((short)(mouseTilePos.X), (short)(mouseTilePos.Y), World.State.Level));
-                    var outside = (vm.Context.RoomInfo[roomHover].Room.IsOutside);
-                    if (!outside && !CutRooms.Contains(roomHover))
-                        CutRooms.Add(roomHover); //outside hover should not persist like with other rooms.
-                    while (CutRooms.Count > 3) CutRooms.Remove(CutRooms.ElementAt(0));
-
-                    if (LastWallMode != WallsMode)
+                    if (WallsMode == 0) //walls down
                     {
-                        if (WallsMode == 0) //walls down
-                        {
-                            LastCuts = new bool[vm.Context.Architecture.Width * vm.Context.Architecture.Height];
-                            vm.Context.Blueprint.Cutaway = LastCuts;
-                            vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
-                            for (int i = 0; i < LastCuts.Length; i++) LastCuts[i] = true;
-                        }
-                        else if (WallsMode == 1)
-                        {
-                            MouseCutRect = new Rectangle();
-                            LastCutRooms = new HashSet<uint>() { uint.MaxValue }; //must regenerate cuts
-                        }
-                        else //walls up or roof
-                        {
-                            LastCuts = new bool[vm.Context.Architecture.Width * vm.Context.Architecture.Height];
-                            vm.Context.Blueprint.Cutaway = LastCuts;
-                            vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
-                        }
-                        LastWallMode = WallsMode;
+                        LastCuts = new bool[vm.Context.Architecture.Width * vm.Context.Architecture.Height];
+                        vm.Context.Blueprint.Cutaway = LastCuts;
+                        vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                        for (int i = 0; i < LastCuts.Length; i++) LastCuts[i] = true;
+                    }
+                    else if (WallsMode == 1)
+                    {
+                        MouseCutRect = new Rectangle();
+                        LastCutRooms = new HashSet<uint>() { uint.MaxValue }; //must regenerate cuts
+                    }
+                    else //walls up or roof
+                    {
+                        LastCuts = new bool[vm.Context.Architecture.Width * vm.Context.Architecture.Height];
+                        vm.Context.Blueprint.Cutaway = LastCuts;
+                        vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                    }
+                    LastWallMode = WallsMode;
+                }
+
+                if (WallsMode == 1)
+                {
+                    int recut = 0;
+                    var finalRooms = new HashSet<uint>(CutRooms);
+
+                    var newCut = new Rectangle((int)(mouseTilePos.X - 2.5), (int)(mouseTilePos.Y - 2.5), 5, 5);
+                    newCut.X -= VMArchitectureTools.CutCheckDir[(int)World.State.Rotation][0] * 2;
+                    newCut.Y -= VMArchitectureTools.CutCheckDir[(int)World.State.Rotation][1] * 2;
+                    if (newCut != MouseCutRect)
+                    {
+                        MouseCutRect = newCut;
+                        recut = 1;
                     }
 
-                    if (WallsMode == 1)
+                    if (LastFloor != World.State.Level || LastRotation != World.State.Rotation || !finalRooms.SetEquals(LastCutRooms))
                     {
-                        int recut = 0;
-                        var finalRooms = new HashSet<uint>(CutRooms);
+                        LastCuts = VMArchitectureTools.GenerateRoomCut(vm.Context.Architecture, World.State.Level, World.State.Rotation, finalRooms);
+                        recut = 2;
+                        LastFloor = World.State.Level;
+                        LastRotation = World.State.Rotation;
+                    }
+                    LastCutRooms = finalRooms;
 
-                        var newCut = new Rectangle((int)(mouseTilePos.X - 2.5), (int)(mouseTilePos.Y - 2.5), 5, 5);
-                        newCut.X -= VMArchitectureTools.CutCheckDir[(int)World.State.Rotation][0]*2;
-                        newCut.Y -= VMArchitectureTools.CutCheckDir[(int)World.State.Rotation][1]*2;
-                        if (newCut != MouseCutRect)
+                    if (recut > 0)
+                    {
+                        var finalCut = new bool[LastCuts.Length];
+                        Array.Copy(LastCuts, finalCut, LastCuts.Length);
+                        var notableChange = VMArchitectureTools.ApplyCutRectangle(vm.Context.Architecture, World.State.Level, finalCut, MouseCutRect);
+                        if (recut > 1 || notableChange || LastRectCutNotable)
                         {
-                            MouseCutRect = newCut;
-                            recut = 1;
+                            vm.Context.Blueprint.Cutaway = finalCut;
+                            vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
                         }
-
-                        if (LastFloor != World.State.Level || LastRotation != World.State.Rotation || !finalRooms.SetEquals(LastCutRooms))
-                        {
-                            LastCuts = VMArchitectureTools.GenerateRoomCut(vm.Context.Architecture, World.State.Level, World.State.Rotation, finalRooms);
-                            recut = 2;
-                            LastFloor = World.State.Level;
-                            LastRotation = World.State.Rotation;
-                        }
-                        LastCutRooms = finalRooms;
-
-                        if (recut > 0)
-                        {
-                            var finalCut = new bool[LastCuts.Length];
-                            Array.Copy(LastCuts, finalCut, LastCuts.Length);
-                            var notableChange = VMArchitectureTools.ApplyCutRectangle(vm.Context.Architecture, World.State.Level, finalCut, MouseCutRect);
-                            if (recut > 1 || notableChange || LastRectCutNotable)
-                            {
-                                vm.Context.Blueprint.Cutaway = finalCut;
-                                vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
-                            }
-                            LastRectCutNotable = notableChange;
-                        }
+                        LastRectCutNotable = notableChange;
                     }
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            AvatarDS.ReleaseAvatars();
         }
     }
 }

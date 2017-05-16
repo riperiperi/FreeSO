@@ -1,0 +1,18 @@
+{
+  "name": "admin",
+  "version": "0.0.0",
+  "dependencies": {
+    "angular-material-data-table": "^0.10.10",
+    "angular": "^1.6.1",
+    "angular-material": "^1.1.1",
+    "jquery": "^3.1.1",
+    "angular-sanitize": "^1.6.1",
+    "angular-ui-router": "^0.3.2",
+    "angular-material-icons": "^0.7.1",
+    "angular-moment": "^1.0.1",
+    "restangular": "^1.6.0"
+  },
+  "devDependencies": {
+    "angular-mocks": "~1.3.4"
+  }
+}

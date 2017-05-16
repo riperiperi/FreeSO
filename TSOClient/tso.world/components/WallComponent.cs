@@ -139,6 +139,7 @@ namespace FSO.LotView.Components
             for (sbyte level = 1; level <= world.Level; level++)
             {
                 int off = 0;
+                Level = level;
                 bool canCut = !(level < world.Level);
                 GenerateWallData(blueprint.Walls[level-1], blueprint.WallsAt[level-1], canCut);
                 var rMap = blueprint.RoomMap[level - 1];
@@ -202,7 +203,13 @@ namespace FSO.LotView.Components
 
                                     //draw overlay if exists
 
-                                    if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 0, down, world));
+                                    if (overlayID != 0)
+                                    {
+                                        var spr = GetWallSprite(GetPattern(overlayID), null, 0, down, world);
+                                        spr.Room = 1;
+                                        spr.Floor = level;
+                                        world._2D.Draw(spr);
+                                    }
 
                                     var contOff = tilePosition + RotateOffset(world.Rotation, new Vector3(0, -1, 0));
 
@@ -336,7 +343,13 @@ namespace FSO.LotView.Components
                                 {
                                     world._2D.Draw(_Sprite);
 
-                                    if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 1, down, world));
+                                    if (overlayID != 0)
+                                    {
+                                        var spr = GetWallSprite(GetPattern(overlayID), null, 1, down, world);
+                                        spr.Room = 1;
+                                        spr.Floor = level;
+                                        world._2D.Draw(spr);
+                                    }
                                     var contOff = tilePosition + RotateOffset(world.Rotation, new Vector3(-1, 0, 0));
                                     if (comp.TopRightThick)
                                     {
@@ -467,24 +480,33 @@ namespace FSO.LotView.Components
                                 int roomSide = 16-((((int)world.Rotation+1)/2)%2) * 16;
                                 var _Sprite = GetWallSprite(trPattern, trStyle, 2, down, world);
 
-                                _Sprite.Room = (ushort)(TileRoom>>roomSide);
+                                _Sprite.Room = (ushort)((TileRoom>>roomSide)&0x7FFF);
+                                _Sprite.Floor = level;
                                 if (_Sprite.Pixel != null)
                                 {
                                     world._2D.Draw(_Sprite);
 
-                                    if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 2, down, world));
+                                    if (overlayID != 0)
+                                    {
+                                        var spr = GetWallSprite(GetPattern(overlayID), null, 2, down, world);
+                                        spr.Room = 1;
+                                        spr.Floor = level;
+                                        world._2D.Draw(spr);
+                                    }
 
                                     //draw diagonally cut floors
                                     if (comp.TopLeftPattern != 0)
                                     {
                                         var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 3);
-                                        floor.Room = (ushort)(TileRoom >> roomSide);
+                                        floor.Room = (ushort)((TileRoom >> roomSide) & 0x7FFF);
+                                        floor.Floor = level;
                                         if (floor.Pixel != null) world._2D.Draw(floor);
                                     }
                                     if (comp.TopLeftStyle != 0)
                                     {
                                         var floor = GetFloorSprite(floorContent.Get(comp.TopLeftStyle), 0, world, 2);
-                                        floor.Room = (ushort)(TileRoom >> (16-roomSide));
+                                        floor.Room = (ushort)((TileRoom >> (16-roomSide)) & 0x7FFF);
+                                        floor.Floor = level;
                                         if (floor.Pixel != null) world._2D.Draw(floor);
                                     }
                                 }
@@ -522,23 +544,31 @@ namespace FSO.LotView.Components
                                 int roomSide = ((int)world.Rotation / 2) * 16;
                                 var _Sprite = GetWallSprite(trPattern, trStyle, 3, down, world);
                                 _Sprite.Room = (ushort)(TileRoom>>roomSide);
+                                _Sprite.Floor = level;
                                 if (_Sprite.Pixel != null)
                                 {
                                     world._2D.Draw(_Sprite);
 
-                                    if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 3, down, world));
-
+                                    if (overlayID != 0)
+                                    {
+                                        var spr = GetWallSprite(GetPattern(overlayID), null, 3, down, world);
+                                        spr.Room = 1;
+                                        spr.Floor = level;
+                                        world._2D.Draw(spr);
+                                    }
                                     //draw diagonally cut floors
                                     if (comp.TopLeftPattern != 0)
                                     {
                                         var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 1);
                                         floor.Room = (ushort)(TileRoom >> roomSide);
+                                        floor.Floor = level;
                                         if (floor.Pixel != null) world._2D.Draw(floor);
                                     }
                                     if (comp.TopLeftStyle != 0)
                                     {
                                         var floor = GetFloorSprite(floorContent.Get(comp.TopLeftStyle), 0, world, 0);
                                         floor.Room = (ushort)(TileRoom >> (16-roomSide));
+                                        floor.Floor = level;
                                         if (floor.Pixel != null) world._2D.Draw(floor);
                                     }
                                 }
@@ -594,6 +624,7 @@ namespace FSO.LotView.Components
                             _Sprite.Pixel = world._2D.GetTexture(sprite.Frames[JunctionMap[flags]]);
                             _Sprite.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, _Sprite.Pixel.Width, _Sprite.Pixel.Height);
                             _Sprite.Room = 1;
+                            _Sprite.Floor = level;
                             world._2D.Draw(_Sprite);
                         }
 
@@ -869,6 +900,7 @@ namespace FSO.LotView.Components
             }
 
             _Sprite.Room = (ushort)TileRoom;
+            _Sprite.Floor = Level;
 
             return _Sprite;
         }
@@ -929,6 +961,7 @@ namespace FSO.LotView.Components
             }
 
             _Sprite.Room = (ushort)TileRoom;
+            _Sprite.Floor = Level;
 
             return _Sprite;
         }
@@ -1137,6 +1170,7 @@ namespace FSO.LotView.Components
             spr.Pixel = _Sprite.Pixel;
             spr.Depth = _Sprite.Depth;
             spr.Room = _Sprite.Room;
+            spr.Floor = _Sprite.Floor;
             return spr;
         }
     }

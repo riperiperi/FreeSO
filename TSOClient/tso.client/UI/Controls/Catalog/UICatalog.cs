@@ -16,7 +16,10 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels.LotControls;
+using static FSO.Content.WorldObjectCatalog;
 using FSO.Common;
+using FSO.SimAntics;
+using FSO.SimAntics.Model;
 
 namespace FSO.Client.UI.Controls.Catalog
 {
@@ -24,6 +27,7 @@ namespace FSO.Client.UI.Controls.Catalog
     {
         private int Page;
         private int _Budget;
+        public VM ActiveVM;
         public int Budget
         {
             get { return _Budget; }
@@ -34,7 +38,7 @@ namespace FSO.Client.UI.Controls.Catalog
                     {
                         for (int i = 0; i < CatalogItems.Length; i++)
                         {
-                            CatalogItems[i].SetDisabled(CatalogItems[i].Info.Price > value);
+                            CatalogItems[i].SetDisabled(CatalogItems[i].Info.Item.Price > value);
                         }
                     }
                     _Budget = value;
@@ -54,45 +58,12 @@ namespace FSO.Client.UI.Controls.Catalog
                     _Catalog = new List<UICatalogElement>[30];
                     for (int i = 0; i < 30; i++) _Catalog[i] = new List<UICatalogElement>();
 
-                    var packingslip = new XmlDocument();
-                    
-                    packingslip.Load(Path.Combine(GlobalSettings.Default.StartupPath, "packingslips/catalog.xml"));
-                    var objectInfos = packingslip.GetElementsByTagName("P");
-
-                    foreach (XmlNode objectInfo in objectInfos)
+                    foreach (var obj in Content.Content.Get().WorldCatalog.All())
                     {
-                        sbyte Category = Convert.ToSByte(objectInfo.Attributes["s"].Value);
-                        if (Category < 0) continue;
-                        _Catalog[Category].Add(new UICatalogElement()
+                        _Catalog[obj.Category].Add(new UICatalogElement()
                         {
-                            GUID = Convert.ToUInt32(objectInfo.Attributes["g"].Value, 16),
-                            Category = Category,
-                            Price = Convert.ToUInt32(objectInfo.Attributes["p"].Value),
-                            Name = objectInfo.Attributes["n"].Value
+                            Item = obj
                         });
-                    }
-
-                    //load and build Content Objects into catalog
-                    var path = Path.Combine(FSOEnvironment.ContentDir, "catalog_downloads.xml");
-                    if (File.Exists(path))
-                    {
-                        var dpackingslip = new XmlDocument();
-
-                        dpackingslip.Load(path);
-                        var downloadInfos = dpackingslip.GetElementsByTagName("P");
-
-                        foreach (XmlNode objectInfo in downloadInfos)
-                        {
-                            sbyte Category = Convert.ToSByte(objectInfo.Attributes["s"].Value);
-                            if (Category < 0) continue;
-                            _Catalog[Category].Add(new UICatalogElement()
-                            {
-                                GUID = Convert.ToUInt32(objectInfo.Attributes["g"].Value, 16),
-                                Category = Category,
-                                Price = Convert.ToUInt32(objectInfo.Attributes["p"].Value),
-                                Name = objectInfo.Attributes["n"].Value
-                            });
-                        }
                     }
 
                     AddWallpapers();
@@ -101,6 +72,7 @@ namespace FSO.Client.UI.Controls.Catalog
                     for (int i = 0; i < 30; i++) _Catalog[i].Sort(new CatalogSorter());
 
                     AddWallStyles();
+                    AddRoofs();
 
                     return _Catalog;
                 }
@@ -118,9 +90,12 @@ namespace FSO.Client.UI.Controls.Catalog
                 var wall = (WallReference)walls[i];
                 _Catalog[8].Insert(0, new UICatalogElement
                 {
-                    Name = wall.Name,
-                    Category = 8,
-                    Price = (uint)wall.Price,
+                    Item = new ObjectCatalogItem()
+                    {
+                        Name = wall.Name,
+                        Category = 8,
+                        Price = (uint)wall.Price,
+                    },
                     Special = new UISpecialCatalogElement
                     {
                         Control = typeof(UIWallPainter),
@@ -144,15 +119,46 @@ namespace FSO.Client.UI.Controls.Catalog
                 sbyte category = (sbyte)((floor.ID >= 65534)?5:9);
                 _Catalog[category].Insert(0, new UICatalogElement
                 {
-                    Name = floor.Name,
-                    Category = category,
-                    Price = (uint)floor.Price,
+                    Item = new ObjectCatalogItem()
+                    {
+                        Name = floor.Name,
+                        Category = category,
+                        Price = (uint)floor.Price,
+                    },
                     Special = new UISpecialCatalogElement
                     {
                         Control = typeof(UIFloorPainter),
                         ResID = floor.ID,
                         Res = res,
                         Parameters = new List<int> { (int)floor.ID } //pattern
+                    }
+                });
+            }
+        }
+
+        private static void AddRoofs()
+        {
+            var res = new UICatalogRoofResProvider();
+
+            var total = Content.Content.Get().WorldRoofs.Count;
+
+            for (int i = 0; i < total; i++)
+            {
+                sbyte category = 6;
+                _Catalog[category].Insert(0, new UICatalogElement
+                {
+                    Item = new ObjectCatalogItem()
+                    {
+                        Name = "",
+                        Category = category,
+                        Price = 0,
+                    },
+                    Special = new UISpecialCatalogElement
+                    {
+                        Control = typeof(UIRoofer),
+                        ResID = (uint)i,
+                        Res = res,
+                        Parameters = new List<int> { i } //pattern
                     }
                 });
             }
@@ -168,9 +174,12 @@ namespace FSO.Client.UI.Controls.Catalog
                 var style = walls.GetWallStyle((ulong)WallStyleIDs[i]);
                 _Catalog[7].Insert(0, new UICatalogElement
                 {
-                    Name = style.Name,
-                    Category = 7,
-                    Price = (uint)style.Price,
+                    Item = new ObjectCatalogItem()
+                    {
+                        Name = style.Name,
+                        Category = 7,
+                        Price = (uint)style.Price,
+                    },
                     Special = new UISpecialCatalogElement
                     {
                         Control = typeof(UIWallPlacer),
@@ -200,7 +209,7 @@ namespace FSO.Client.UI.Controls.Catalog
             251, //banisters
         };
 
-        private int PageSize;
+        public int PageSize { get; set; }
         private List<UICatalogElement> Selected;
         private UICatalogItem[] CatalogItems;
         private Dictionary<uint, Texture2D> IconCache;
@@ -242,6 +251,7 @@ namespace FSO.Client.UI.Controls.Catalog
             }
 
             int index = page*PageSize;
+            if (Selected == null) return;
             CatalogItems = new UICatalogItem[Math.Min(PageSize, Math.Max(Selected.Count-index, 0))];
             int halfPage = PageSize / 2;
             
@@ -249,12 +259,22 @@ namespace FSO.Client.UI.Controls.Catalog
                 var elem = new UICatalogItem(false);
                 elem.Index = index;
                 elem.Info = Selected[index++];
-                elem.Icon = (elem.Info.Special != null)?elem.Info.Special.Res.GetIcon(elem.Info.Special.ResID):GetObjIcon(elem.Info.GUID);
-                elem.Tooltip = "$"+elem.Info.Price.ToString();
+                elem.Info.CalcPrice = (int)elem.Info.Item.Price;
+
+                if (elem.Info.Item.GUID != 0)
+                {
+                    var price = (int)elem.Info.Item.Price;
+                    var dcPercent = VMBuildableAreaInfo.GetDiscountFor(elem.Info.Item, ActiveVM);
+                    var finalPrice = (price * (100 - dcPercent)) / 100;
+                    elem.Info.CalcPrice = finalPrice;
+                }
+
+                elem.Icon = (elem.Info.Special?.Res != null)?elem.Info.Special.Res.GetIcon(elem.Info.Special.ResID):GetObjIcon(elem.Info.Item.GUID);
+                elem.Tooltip = (elem.Info.CalcPrice > 0)?("$"+elem.Info.CalcPrice.ToString()):null;
                 elem.X = (i % halfPage) * 45 + 2;
                 elem.Y = (i / halfPage) * 45 + 2;
                 elem.OnMouseEvent += new ButtonClickDelegate(InnerSelect);
-                elem.SetDisabled(elem.Info.Price > Budget);
+                elem.SetDisabled(elem.Info.CalcPrice > Budget);
                 CatalogItems[i] = elem;
                 this.Add(elem);
             }
@@ -288,8 +308,8 @@ namespace FSO.Client.UI.Controls.Catalog
 
             public int Compare(UICatalogElement x, UICatalogElement y)
             {
-                if (x.Price > y.Price) return 1;
-                else if (x.Price < y.Price) return -1;
+                if (x.Item.Price > y.Item.Price) return 1;
+                else if (x.Item.Price < y.Item.Price) return -1;
                 else return 0;
             }
 
@@ -300,11 +320,8 @@ namespace FSO.Client.UI.Controls.Catalog
     public delegate void CatalogSelectionChangeDelegate(int selection);
 
     public struct UICatalogElement {
-        public uint GUID;
-        public sbyte Category;
-        public uint Price;
-        public string Name;
-        public byte DisableLevel; //1 = only shopping, 2 = rare (unsellable?)
+        public ObjectCatalogItem Item;
+        public int CalcPrice;
         public UISpecialCatalogElement Special;
     }
 

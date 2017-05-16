@@ -13,13 +13,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public byte ResponseCode;
         public string ResponseText;
 
-        public override bool Execute(VM vm)
+        public override bool Execute(VM vm, VMAvatar caller)
         {
             if (ResponseText.Length > 32) ResponseText = ResponseText.Substring(0, 32);
-
-            VMEntity caller = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
             //TODO: check if net user owns caller!
-            if (caller == null || caller is VMGameObject || 
+            if (caller == null || 
                 caller.Thread.BlockingState == null || !(caller.Thread.BlockingState is VMDialogResult)) return false;
             var state = (VMDialogResult)caller.Thread.BlockingState;
             state.Responded = true;

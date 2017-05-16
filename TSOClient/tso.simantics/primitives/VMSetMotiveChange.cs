@@ -24,15 +24,13 @@ namespace FSO.SimAntics.Primitives
             var operand = (VMSetMotiveChangeOperand)args;
             var avatar = ((VMAvatar)context.Caller);
 
-            if (operand.Once) { }
-
             if (operand.ClearAll)
             {
                 avatar.ClearMotiveChanges();
             }
             else
             {
-                var rate = VMMemory.GetVariable(context, (VMVariableScope)operand.DeltaOwner, operand.DeltaData);
+                var rate = (short)VMMotiveChange.ScaleRate(context.VM, VMMemory.GetVariable(context, (VMVariableScope)operand.DeltaOwner, operand.DeltaData), operand.Motive);
                 var MaxValue = VMMemory.GetVariable(context, (VMVariableScope)operand.MaxOwner, operand.MaxData);
                 if (operand.Once) {
                     var motive = avatar.GetMotiveData(operand.Motive);

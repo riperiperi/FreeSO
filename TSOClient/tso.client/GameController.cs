@@ -10,9 +10,16 @@ using System.Linq;
 using System.Text;
 using FSO.Client.UI.Screens;
 using FSO.Client.Network;
-using ProtocolAbstractionLibraryD;
 using FSO.Client.UI.Framework;
 using FSO.Client.GameContent;
+using Ninject;
+using FSO.Server.Protocol.CitySelector;
+using FSO.Client.Controllers;
+using FSO.Common.Utils;
+using FSO.Client.UI.Controls;
+using FSO.Client.UI.Panels;
+using FSO.Client.UI;
+using FSO.Common.DatabaseService.Model;
 
 namespace FSO.Client
 {
@@ -21,6 +28,15 @@ namespace FSO.Client
     /// </summary>
     public class GameController
     {
+        private object CurrentController;
+        private UIScreen CurrentView;
+        private IKernel Kernel;
+
+        public GameController(IKernel kernel)
+        {
+            this.Kernel = kernel;
+        }
+
         public void DebugShowTypeFaceScreen()
         {
             var screen = new DebugTypeFaceScreen();
@@ -34,12 +50,10 @@ namespace FSO.Client
         /// </summary>
         public void StartLoading()
         {
-            UIScreen screen;
-            if (GlobalSettings.Default.SkipIntro) screen = new LoadingScreen();
-            else screen = new EALogo();
-
-            GameFacade.Screens.AddScreen(screen);
-            ContentManager.InitLoading();
+            ChangeState<LoadingScreen, LoadingScreenController>((view, controller) =>
+            {
+                controller.Preload();
+            });
         }
 
         /// <summary>
@@ -47,11 +61,14 @@ namespace FSO.Client
         /// </summary>
         public void ShowLogin()
         {
-            var screen = new LoginScreen();
-
-            /** Remove preload screen **/
+            ChangeState<LoginScreen, LoginController>((view, controller) =>
+            {
+            });
+            /*
+            var screen = Kernel.Get<LoginScreen>();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
+            */
         }
 
         /// <summary>
@@ -59,46 +76,165 @@ namespace FSO.Client
         /// </summary>
         public void ShowPersonSelection()
         {
-            var screen = new PersonSelection();
+            if (GlobalSettings.Default.CompatState == -1)
+            {
+                GlobalSettings.Default.CompatState = 0;
+                GlobalSettings.Default.Save();
+            }
+            ChangeState<PersonSelection, PersonSelectionController>((view, controller) =>
+            {
+            });
+        }
+
+        public void ShowPersonCreation(ShardStatusItem selectedCity)
+        {
+            var screen = Kernel.Get<PersonSelectionEdit>();
+            //screen.SelectedCity = selectedCity;
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
         }
 
-        public void ShowPersonCreation(CityInfo selectedCity)
+
+        public void ConnectToCity(string cityName, uint avatarId, uint? lotId)
         {
-            var screen = new PersonSelectionEdit();
-            screen.SelectedCity = selectedCity;
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(screen);
+            ChangeState<TransitionScreen, ConnectCityController>((view, controller) =>
+            {
+                controller.Connect(cityName, avatarId, () => { GotoCity(controller.AvatarData, lotId); }, new Common.Utils.Callback(Disconnect));
+            });
         }
 
-        public void ShowCityTransition(CityInfo selectedCity, bool CharacterCreated)
+        public void ConnectToCAS(string cityName)
         {
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(new CityTransitionScreen(selectedCity, CharacterCreated));
+            /**
+             * Steps:
+             *  1) Show transition screen and open a connectino to the server
+             *  2) If connection succeeds, go to CAS
+             *  3) If connection fails, go back to SAS
+             */
+            ChangeState<TransitionScreen, ConnectCASController>((view, controller) =>
+            {
+                controller.Connect(cityName, new Common.Utils.Callback(GotoCAS), new Common.Utils.Callback(Disconnect));
+            });
         }
 
-        public void ShowCity()
+        public void GotoCAS(){
+            ChangeState<PersonSelectionEdit, PersonSelectionEditController>((view, controller) => {
+            });
+        }
+
+        public void GotoCity(LoadAvatarByIDResponse dbAvatar, uint? lotId)
         {
-            var screen = new CoreGameScreen();
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(screen);
+            ChangeState<CoreGameScreen, CoreGameScreenController>((view, controller) =>{
+                view.VisualBudget = dbAvatar.Cash;
+
+                if(dbAvatar.Bonus != null && dbAvatar.Bonus.Count > 0)
+                {
+                    UIScreen.ShowDialog(new UIBonusDialog(dbAvatar.Bonus), true);
+                }
+
+                if (lotId.HasValue){
+                    controller.JoinLot(lotId.Value);
+                }
+            });
+        }
+
+        public void Disconnect()
+        {
+            Disconnect(false);
+        }
+
+        public void Disconnect(bool toLogin){
+            ChangeState<TransitionScreen, DisconnectController>((view, controller) =>
+            {
+                controller.Disconnect(() => HandleDisconnect(toLogin));
+            });
+        }
+
+
+        private void HandleDisconnect(bool forceLogin){
+            //Depending on how long is left on the session take user
+            //to SAS or login screen
+            if (forceLogin)
+                ShowLogin();
+            else 
+                ShowPersonSelection();
+        }
+
+        public void FatalNetworkError(int code)
+        {
+            var title = GameFacade.Strings.GetString("222", "1");
+            var desc = GameFacade.Strings.GetString("222", "2").Replace("%d", code.ToString());
+            FatalError(title, desc);
+        }
+
+        /// <summary>
+        /// When something goes very wrong, e.g. the server connection drops
+        /// This method should be used. The game controller will tell the user
+        /// and then work to clean everything up
+        /// </summary>
+        public void FatalError(string errorTitle, string errorMessage){
+            var alert = UIScreen.GlobalShowAlert(new UI.Controls.UIAlertOptions {
+                Message = errorMessage,
+                Title = errorTitle,
+                Buttons = UIAlertButton.Ok(x => Disconnect())
+            }, true);
+        }
+
+        private UIDebugMenu _DebugMenu;
+        private bool _DebugVisible = false;
+        private DialogReference _DebugDialog;
+
+        public void ToggleDebugMenu()
+        {
+            if(_DebugMenu == null){
+                _DebugMenu = new UIDebugMenu();
+                _DebugDialog = new UI.DialogReference()
+                {
+                    Dialog = _DebugMenu,
+                    Modal = true
+                };
+            }
+
+            if (_DebugVisible){
+                _DebugVisible = false;
+                GameFacade.Screens.AddDialog(_DebugDialog);
+            }else{
+                _DebugVisible = true;
+                GameFacade.Screens.RemoveDialog(_DebugDialog);
+            }
+        }
+
+        private void ChangeState<TView, TController>(Callback<TView, TController> onCreated) where TView : UIScreen
+        {
+            Binding.DisposeAll();
+            GameThread.InUpdate(() =>
+            {
+                GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Normal); //reset cursor
+                if (CurrentController != null)
+                {
+                    if (CurrentController is IDisposable)
+                    {
+                        ((IDisposable)CurrentController).Dispose();
+                    }
+                }
+
+                var view = (UIScreen)Kernel.Get<TView>();
+                var controller = view.BindController<TController>();
+                GameFacade.Screens.RemoveCurrent();
+                GameFacade.Screens.AddScreen(view);
+
+                CurrentController = controller;
+                CurrentView = view;
+
+                onCreated((TView)view, controller);
+            });
         }
 
         public void ShowCredits()
         {
-            var screen = new Credits();
+            var screen = Kernel.Get<Credits>();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
-        }
-
-        public void ShowLotDebug()
-        {
-            var screen = new CoreGameScreen(); //new LotDebugScreen();
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(screen);
-            //screen.InitTestLot();
-            //screen.ZoomLevel = 1;
         }
 
         public void StartDebugTools()
@@ -125,4 +261,5 @@ namespace FSO.Client
             //debugWindow.PositionAroundGame(GameFacade.Game.Window);
         }
     }
+
 }

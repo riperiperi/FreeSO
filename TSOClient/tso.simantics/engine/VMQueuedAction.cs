@@ -51,6 +51,9 @@ namespace FSO.SimAntics.Engine
 
         public VMActionCallback Callback;
 
+        public sbyte InteractionResult = -1; //when this becomes 0, the interaction is expecting an interaction result.
+        public ushort ResultCheckCounter = 0; //how many times the interaction result has been checked. used for timeout.
+
         public VMStackFrame ToStackFrame(VMEntity caller)
         {
             var frame = new VMStackFrame
@@ -87,7 +90,9 @@ namespace FSO.SimAntics.Engine
                 Flags = Flags,
                 Flags2 = Flags2,
                 UID = UID,
-                Callback = (Callback == null)?null:Callback.Save()
+                Callback = (Callback == null)?null:Callback.Save(),
+                InteractionResult = InteractionResult,
+                ResultCheckCounter = ResultCheckCounter
             };
         }
 
@@ -122,6 +127,9 @@ namespace FSO.SimAntics.Engine
             Flags2 = input.Flags2;
             UID = input.UID;
             Callback = (input.Callback == null)?null:new VMActionCallback(input.Callback, context);
+
+            InteractionResult = input.InteractionResult;
+            ResultCheckCounter = input.ResultCheckCounter;
         }
 
         public VMQueuedAction(VMQueuedActionMarshal input, VMContext context)
@@ -136,8 +144,8 @@ namespace FSO.SimAntics.Engine
         Maximum = 100,
         Autonomous = 2,
         UserDriven = 50,
-        ParentIdle = 25,
-        ParentExit = 24,
+        ParentIdle = 40,
+        ParentExit = 30,
         Idle = 0
     }
 

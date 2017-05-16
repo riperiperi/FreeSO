@@ -22,10 +22,11 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMChangeSuitOrAccessoryOperand)args;
-
             var avatar = (VMAvatar)context.Caller;
 
-            if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Update) == VMChangeSuitOrAccessoryFlags.Update)
+            var outfitType = GetOutfitType(operand);
+
+            if (operand.SuitScope == VMSuitScope.Object && (operand.Flags & VMChangeSuitOrAccessoryFlags.Update) == VMChangeSuitOrAccessoryFlags.Update)
             { //update default outfit with outfit in stringset 304 with index in temp 0
                 avatar.DefaultSuits.Daywear = Convert.ToUInt64(context.Callee.Object.Resource.Get<STR>(304).GetString((context.Thread.TempRegisters[0])), 16);
                 avatar.BodyOutfit = avatar.DefaultSuits.Daywear;
@@ -33,42 +34,138 @@ namespace FSO.SimAntics.Primitives
             else 
             {
                 var suit = VMSuitProvider.GetSuit(context, operand.SuitScope, operand.SuitData);
-                if (suit == null)
-                {
+                if (suit == null){
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
 
                 if (suit is string)
                 {
                     var suitFile = (string)suit;
-                    var apr = FSO.Content.Content.Get().AvatarAppearances.Get(suitFile);
+                    var apr = (VM.UseWorld)?FSO.Content.Content.Get().AvatarAppearances.Get(suitFile):null;
                     if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)
                     {
                         avatar.BoundAppearances.Remove(suitFile);
-                        avatar.Avatar.RemoveAccessory(apr); 
+                        if (VM.UseWorld && apr != null) avatar.Avatar.RemoveAccessory(apr); 
                     }
                     else
                     {
                         avatar.BoundAppearances.Add(suitFile);
-                        avatar.Avatar.AddAccessory(apr);
+                        if (VM.UseWorld && apr != null) avatar.Avatar.AddAccessory(apr);
                     }
                 } else if (suit is ulong)
                 {
-                    var oft = (ulong)suit;
-                    avatar.SetPersonData(Model.VMPersonDataVariable.CurrentOutfit, operand.SuitData);
-                    avatar.BodyOutfit = oft;
+                    if (outfitType == OutfitType.BODY)
+                    {
+                        avatar.SetPersonData(Model.VMPersonDataVariable.CurrentOutfit, operand.SuitData);
+                        avatar.BodyOutfit = (ulong)suit;
+                    }else if(outfitType == OutfitType.ACCESSORY){
+                        if (VM.UseWorld){
+                            var outfit = Content.Content.Get().AvatarOutfits.Get((ulong)suit);
+
+                            if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)
+                            {
+                                avatar.Avatar.RemoveAccessory(outfit);
+                            }
+                            else
+                            {
+                                //The clothing rack does not seem to have any way to remove accessories so I have implemented as a toggle
+                                //until we know better
+                                switch ((VMPersonSuits)operand.SuitData)
+                                {
+                                    case VMPersonSuits.DecorationHead:
+                                        if(avatar.Avatar.DecorationHead == outfit){
+                                            //Remove it
+                                            avatar.Avatar.DecorationHead = null;
+                                        }else{
+                                            //Add it
+                                            avatar.Avatar.DecorationHead = outfit;
+                                        }
+                                        break;
+                                    case VMPersonSuits.DecorationBack:
+                                        if (avatar.Avatar.DecorationBack == outfit){
+                                            //Remove it
+                                            avatar.Avatar.DecorationBack = null;
+                                        }else{
+                                            //Add it
+                                            avatar.Avatar.DecorationBack = outfit;
+                                        }
+                                        break;
+                                    case VMPersonSuits.DecorationShoes:
+                                        if (avatar.Avatar.DecorationShoes == outfit){
+                                            //Remove it
+                                            avatar.Avatar.DecorationShoes = null;
+                                        }else{
+                                            //Add it
+                                            avatar.Avatar.DecorationShoes = outfit;
+                                        }
+                                        break;
+                                    case VMPersonSuits.DecorationTail:
+                                        if (avatar.Avatar.DecorationTail == outfit){
+                                            //Remove it
+                                            avatar.Avatar.DecorationTail = null;
+                                        }else{
+                                            //Add it
+                                            avatar.Avatar.DecorationTail = outfit;
+                                        }
+                                        break;
+                                }
+                                
+                            }
+                        }
+                    }
                 }
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
+
+
+        private OutfitType GetOutfitType(VMChangeSuitOrAccessoryOperand operand)
+        {
+            switch (operand.SuitScope)
+            {
+                case VMSuitScope.Global:
+                case VMSuitScope.Object:
+                    return OutfitType.ACCESSORY;
+                case VMSuitScope.Person:
+                    switch ((VMPersonSuits)operand.SuitData)
+                    {
+                        case VMPersonSuits.DefaultDaywear:
+                        case VMPersonSuits.DefaultSleepwear:
+                        case VMPersonSuits.DefaultSwimwear:
+                        case VMPersonSuits.DynamicCostume:
+                        case VMPersonSuits.DynamicDaywear:
+                        case VMPersonSuits.DynamicSleepwear:
+                        case VMPersonSuits.DynamicSwimwear:
+                        case VMPersonSuits.JobOutfit:
+                        case VMPersonSuits.Naked:
+                        case VMPersonSuits.SkeletonMinus:
+                        case VMPersonSuits.SkeletonPlus:
+                        case VMPersonSuits.TeleporterMishap:
+                            return OutfitType.BODY;
+
+                        default:
+                            return OutfitType.ACCESSORY;
+                    }
+                default:
+                    return OutfitType.ACCESSORY;
+            }
+        }
+        
+    }
+
+    public enum OutfitType
+    {
+        HEAD,
+        BODY,
+        ACCESSORY
     }
 
     public class VMChangeSuitOrAccessoryOperand : VMPrimitiveOperand {
 
-        public byte SuitData;
-        public VMSuitScope SuitScope;
-        public VMChangeSuitOrAccessoryFlags Flags;
+        public byte SuitData { get; set; }
+        public VMSuitScope SuitScope { get; set; }
+        public VMChangeSuitOrAccessoryFlags Flags { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

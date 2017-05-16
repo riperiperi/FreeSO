@@ -30,6 +30,22 @@ namespace FSO.Client.UI.Framework
             Children = new List<UIElement>();
         }
 
+        public List<UIElement> ChildrenWithinIdRange(int min, int max)
+        {
+            var result = new List<UIElement>();
+            foreach (var child in Children)
+            {
+                if (child.NumericId != null)
+                {
+                    if (child.NumericId >= min && child.NumericId <= max)
+                    {
+                        result.Add(child);
+                    }
+                }
+            }
+            return result;
+        }
+
         /// <summary>
         /// Adds a UIElement at the top most position in the container
         /// </summary>
@@ -90,6 +106,18 @@ namespace FSO.Client.UI.Framework
             lock (Children)
             {
                 Children.Remove(child);
+                child?.Removed();
+                //if (child?.Parent == this) child.Parent = null;
+            }
+        }
+
+        public override void Removed()
+        {
+            base.Removed();
+            var childCopy = new List<UIElement>(Children);
+            foreach (var child in childCopy)
+            {
+                child.Removed();
             }
         }
 
@@ -154,6 +182,10 @@ namespace FSO.Client.UI.Framework
 
         public override void PreDraw(UISpriteBatch batch)
         {
+            if (!Visible)
+            {
+                return;
+            }
             lock (Children)
             {
                 foreach (var child in Children)
@@ -165,10 +197,6 @@ namespace FSO.Client.UI.Framework
             /** If we have opacity, draw ourself to a texture so we can blend it later **/
             if (_HasOpacity)
             {
-                if (!Visible)
-                {
-                    return;
-                }
 
                 Promise<Texture2D> bufferTexture = null;
                 using (batch.WithBuffer(ref bufferTexture))
@@ -235,6 +263,18 @@ namespace FSO.Client.UI.Framework
                 //also find a cleaner way to allow modification of an element's children by its own children.
                 foreach (var child in chCopy)
                     child.Update(state);
+            }
+        }
+
+        public override void GameResized()
+        {
+            base.GameResized();
+            lock (Children)
+            {
+                var chCopy = new List<UIElement>(Children);
+                //
+                foreach (var child in chCopy)
+                    child.GameResized();
             }
         }
 

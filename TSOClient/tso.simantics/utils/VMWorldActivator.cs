@@ -27,6 +27,10 @@ namespace FSO.SimAntics.Utils
         private LotView.World World;
         private Blueprint Blueprint;
 
+        public Rectangle FloorClip;
+        public Point Offset;
+        public int TargetSize;
+
         public VMWorldActivator(VM vm, LotView.World world){
             this.VM = vm;
             this.World = world;
@@ -37,24 +41,33 @@ namespace FSO.SimAntics.Utils
         /// </summary>
         /// <param name="model"></param>
         public Blueprint LoadFromXML(XmlHouseData model){
-            this.Blueprint = new Blueprint(model.Size, model.Size);
+            var size = TargetSize;
+            if (size == 0) size = model.Size;
+            model.Size = size;
+            if (VM.UseWorld) this.Blueprint = new Blueprint(size, size);
+            VM.Entities = new List<VMEntity>();
+            VM.Scheduler = new Engine.VMScheduler(VM);
+            VM.Context = new VMContext(null);
+            VM.Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
+            VM.Context.VM = VM;
             VM.Context.Blueprint = Blueprint;
-            VM.Context.Architecture = new VMArchitecture(model.Size, model.Size, Blueprint, VM.Context);
+            VM.Context.Architecture = new VMArchitecture(size, size, Blueprint, VM.Context);
 
             var arch = VM.Context.Architecture;
 
             foreach (var floor in model.World.Floors){
-                arch.SetFloor(floor.X, floor.Y, (sbyte)(floor.Level+1), new FloorTile { Pattern = (ushort)floor.Value }, true);
+                if (FloorClip != Rectangle.Empty && !FloorClip.Contains(floor.X, floor.Y)) continue;
+                arch.SetFloor((short)(floor.X + Offset.X), (short)(floor.Y + Offset.Y), (sbyte)(floor.Level+1), new FloorTile { Pattern = (ushort)floor.Value }, true);
             }
 
             foreach (var pool in model.World.Pools)
             {
-                arch.SetFloor(pool.X, pool.Y, 1, new FloorTile { Pattern = 65535 }, true);
+                arch.SetFloor((short)(pool.X + Offset.X), (short)(pool.Y + Offset.Y), 1, new FloorTile { Pattern = 65535 }, true);
             }
 
             foreach (var wall in model.World.Walls)
             {
-                arch.SetWall((short)wall.X, (short)wall.Y, (sbyte)(wall.Level+1), new WallTile() //todo: these should read out in their intended formats - a cast shouldn't be necessary
+                arch.SetWall((short)(wall.X+Offset.X), (short)(wall.Y+Offset.Y), (sbyte)(wall.Level+1), new WallTile() //todo: these should read out in their intended formats - a cast shouldn't be necessary
                 {
                     Segments = wall.Segments,
                     TopLeftPattern = (ushort)wall.TopLeftPattern,
@@ -70,9 +83,6 @@ namespace FSO.SimAntics.Utils
 
             foreach (var obj in model.Objects)
             {
-                //if (obj.Level == 0) continue;
-                //if (obj.GUID == "0xE9CEB12F") obj.GUID = "0x01A0FD79"; //replace onlinejobs door with a normal one
-                //if (obj.GUID == "0x346FE2BC") obj.GUID = "0x98E0F8BD"; //replace kitchen door with a normal one
                 CreateObject(obj);
             }
 
@@ -81,27 +91,20 @@ namespace FSO.SimAntics.Utils
                 foreach (var obj in model.Sounds)
                 {
                     VM.Context.Ambience.SetAmbience(VM.Context.Ambience.GetAmbienceFromGUID(obj.ID), (obj.On == 1));
-                    World.State.WorldSize = model.Size;
+                    World.State.WorldSize = size;
                     
                 }
                 Blueprint.Terrain = CreateTerrain(model);
             }
 
-            var testObject = new XmlHouseDataObject(); //test npc controller, not normally present on a job lot.
-            testObject.GUID = "0x70F69082";
-            testObject.X = 0;
-            testObject.Y = 0;
-            testObject.Level = 1;
-            testObject.Dir = 0;
-            CreateObject(testObject);
-
+            arch.SignalTerrainRedraw();
             arch.Tick();
             return this.Blueprint;
         }
 
         private TerrainComponent CreateTerrain(XmlHouseData model)
         {
-            var terrain = new TerrainComponent(new Rectangle(1, 1, model.Size - 2, model.Size - 2));
+            var terrain = new TerrainComponent(new Rectangle(1, 1, model.Size - 2, model.Size - 2), Blueprint);
             this.InitWorldComponent(terrain);
             return terrain;
         }
@@ -112,8 +115,10 @@ namespace FSO.SimAntics.Utils
         }
 
         public VMEntity CreateObject(XmlHouseDataObject obj){
-            LotTilePos pos = (obj.Level == 0) ? LotTilePos.OUT_OF_WORLD : LotTilePos.FromBigTile((short)obj.X, (short)obj.Y, (sbyte)obj.Level);
+            LotTilePos pos = LotTilePos.OUT_OF_WORLD;
             var nobj = VM.Context.CreateObjectInstance(obj.GUIDInt, pos, obj.Direction).Objects[0];
+            if (obj.Level != 0)
+                nobj.SetPosition(LotTilePos.FromBigTile((short)(obj.X + Offset.X), (short)(obj.Y + Offset.Y), (sbyte)obj.Level), obj.Direction, VM.Context, VMPlaceRequestFlags.AcceptSlots);
 
             if (obj.Group != 0)
             {
@@ -126,7 +131,6 @@ namespace FSO.SimAntics.Utils
             for (int i = 0; i < nobj.MultitileGroup.Objects.Count; i++) nobj.MultitileGroup.Objects[i].ExecuteEntryPoint(11, VM.Context, true);
 
             return nobj;
-            
         }
 
 

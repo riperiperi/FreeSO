@@ -66,7 +66,18 @@ namespace FSO.SimAntics.Primitives
                 // 15. My Routing Footprint equals Temp0
                 // 16. Change Normal Output
                 case VMGenericTSOCallMode.GetInteractionResult: //17
-                    context.Thread.TempRegisters[0] = 2; //0=none, 1=reject, 2=accept, 3=pet
+                    //if our current interaction result is -1, then we need to start the process.
+                    if (context.ActionTree && context.Caller is VMAvatar && ((VMAvatar)context.Caller).PersistID != 0)
+                    {
+                        var interaction = context.Thread.Queue[0];
+                        if (interaction.InteractionResult == -1) interaction.InteractionResult = 0;
+                        else interaction.ResultCheckCounter++;
+
+                        if (interaction.InteractionResult > 0 || interaction.ResultCheckCounter < 30 * 10)
+                            context.Thread.TempRegisters[0] = interaction.InteractionResult; //0=waiting, 1=reject, 2=accept, 3=timeout
+                        else context.Thread.TempRegisters[0] = 3;
+                    } else
+                        context.Thread.TempRegisters[0] = 2;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.SetInteractionResult: //18
                     //todo: set interaction result to value of temp 0. UNUSED.
@@ -82,13 +93,14 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTSOCallMode.MakeMeStackObjectsOwner: //21
                     if (context.StackObject is VMAvatar) return VMPrimitiveExitCode.GOTO_TRUE;
                     ((VMTSOObjectState)context.StackObject.TSOState).OwnerID = context.Caller.PersistID;
+                    //TODO: immediately persist? what to do when new owner has hit their object limit?
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 //TODO: may need to update in global server
                 // 22. Get Permissions (TODO)
                 // 23. Set Permissions (TODO)
                 case VMGenericTSOCallMode.AskStackObjectToBeRoommate: //24
                     //0 = initiate. 1 = accept. 2 = reject.
-                    if (context.Thread.TempRegisters[0] == 1 && context.VM.GlobalLink != null) context.VM.GlobalLink.RequestRoommate(context.VM, (VMAvatar)context.StackObject);
+                    if (context.VM.GlobalLink != null) context.VM.GlobalLink.RequestRoommate(context.VM, context.StackObject.PersistID, context.Thread.TempRegisters[0], 0);
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
                 case VMGenericTSOCallMode.LeaveLot: //25
@@ -113,7 +125,7 @@ namespace FSO.SimAntics.Primitives
                     if (context.VM.GlobalLink != null)
                     {
                         var server = (VMServerDriver)context.VM.Driver;
-                        server.KickUser(context.VM, context.StackObject.Name);
+                        server.DropAvatar(context.StackObject as VMAvatar);
                     }
                     ((VMAvatar)context.StackObject).UserLeaveLot();
                     return VMPrimitiveExitCode.GOTO_TRUE;
@@ -130,10 +142,17 @@ namespace FSO.SimAntics.Primitives
 
                 //30. Create Cheat Neighbour
                 case VMGenericTSOCallMode.IsTemp0AvatarIgnoringTemp1Avatar: //31
-                    context.Thread.TempRegisters[0] = 0;
+                    context.Thread.TempRegisters[0] = (short)(((VMTSOAvatarState)(context.VM.GetObjectById(context.Thread.TempRegisters[0]).TSOState))
+                        .IgnoredAvatars.Contains(context.VM.GetObjectById(context.Thread.TempRegisters[1]).PersistID) ? 1 : 0);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 //32. Play Next Song on Radio Station in Temp 0 (TODO)
-                //33. Temp0 Avatar Unignore Temp1 Avatar
+                case VMGenericTSOCallMode.Temp0AvatarUnignoreTemp1Avatar:
+                    var avatar = context.VM.GetObjectById(context.Thread.TempRegisters[0]);
+                    if (avatar.PersistID == context.VM.MyUID)
+                    {
+                        context.VM.SignalGenericVMEvt(VMEventType.TSOUnignore, (uint)context.VM.GetObjectById(context.Thread.TempRegisters[1]).PersistID);
+                    }
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.GlobalRepairCostInTempXL0: //34
                     context.Thread.TempXL[0] = 0; //TODO
                     return VMPrimitiveExitCode.GOTO_TRUE;
@@ -142,14 +161,26 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_FALSE; //TODO
                 // 37. UNUSED
                 case VMGenericTSOCallMode.MayAddRoommate: //38
-                    // TODO: Make only lot owner able to do this
-                    // for testing purposes, build roommates are kind of "global moderators"
-                    // also, can't add roommate if we have 8 roommates.
-                    context.Thread.TempRegisters[0] = 2;
+                    // CONDITIONS, where stack object is desired roommate: (TODO: support extensions)
+                    // - Avatar we're asking must be resident of less lots than the maximum (currently 1)
+                    // - This lot must have less than (MAX_ROOMIES) roommates. (currently 8)
+                    // - Caller must be lot owner.
+                    short result = 0;
+                    if (context.Caller is VMAvatar && context.Callee is VMAvatar)
+                    {
+                        var caller = (VMAvatar)context.Caller;
+                        var callee = (VMAvatar)context.Callee;
+                        if (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Owner && context.VM.TSOState.Roommates.Count < 8
+                            && (((VMTSOAvatarState)callee.TSOState).Flags & VMTSOAvatarFlags.CanBeRoommate) > 0)
+                        {
+                            result = 2;
+                        }
+                    }
+                    context.Thread.TempRegisters[0] = result;
                     // 2 is "true". not sure what 1 is. (interaction shows up, but fails on trying to run it. likely "guessed" state for client)
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.ReturnLotCategory: //39
-                    context.Thread.TempRegisters[0] = 6; //skills lot. see #Lot Types in global.iff
+                    context.Thread.TempRegisters[0] = context.VM.TSOState.PropertyCategory; //skills lot. see #Lot Types in global.iff
                     //TODO: set based on lot state
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.TestStackObject: //40
@@ -162,7 +193,9 @@ namespace FSO.SimAntics.Primitives
                     //is temp0 radius (in full tiles) around stack object empty?
                     //used for resurrect. TODO.
                     return VMPrimitiveExitCode.GOTO_TRUE;
-                //43. Set Spotlight Status (TODO: GLOBAL SERVER)
+                case VMGenericTSOCallMode.SetSpotlightStatus:
+                    if (context.VM.GlobalLink != null) context.VM.GlobalLink.SetSpotlightStatus(context.VM, context.Thread.TempRegisters[0] == 1);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 //44. Is Full Refund (TODO: small grace period after purchase/until user exits buy mode)
                 //45. Refresh buy/build (TODO? we probably don't need this)
                 case VMGenericTSOCallMode.GetLotOwner: //46
@@ -185,7 +218,9 @@ namespace FSO.SimAntics.Primitives
                     var obj = context.VM.GetObjectById(context.Thread.TempRegisters[0]); 
                     if (context.StackObject is VMAvatar || obj == null) return VMPrimitiveExitCode.GOTO_TRUE;
 
-                    ((VMTSOObjectState)context.StackObject.TSOState).OwnerID = obj.PersistID;
+                    foreach (var owned in context.StackObject.MultitileGroup.Objects)
+                        ((VMTSOObjectState)owned.TSOState).OwnerID = obj.PersistID;
+                    //TODO: immediately persist? what to do when new owner has hit their object limit?
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 //53. Is On Editable Tile
                 //54. Set Stack Object's Crafter Name To Avatar in Temp 0

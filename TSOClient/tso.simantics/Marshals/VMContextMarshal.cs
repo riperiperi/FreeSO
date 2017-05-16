@@ -16,15 +16,19 @@ namespace FSO.SimAntics.Marshals
         public VMAmbientSoundMarshal Ambience;
         public ulong RandomSeed;
 
+        public int Version;
+        public VMContextMarshal() { }
+        public VMContextMarshal(int version) { Version = version; }
+
         public void Deserialize(BinaryReader reader)
         {
-            Clock = new VMClockMarshal();
+            Clock = new VMClockMarshal(Version);
             Clock.Deserialize(reader);
 
-            Architecture = new VMArchitectureMarshal();
+            Architecture = new VMArchitectureMarshal(Version);
             Architecture.Deserialize(reader);
 
-            Ambience = new VMAmbientSoundMarshal();
+            Ambience = new VMAmbientSoundMarshal(Version);
             Ambience.Deserialize(reader);
 
             RandomSeed = reader.ReadUInt64();
@@ -46,6 +50,11 @@ namespace FSO.SimAntics.Marshals
         public int TicksPerMinute;
         public int Minutes;
         public int Hours;
+        public int FirePercent = 20000;
+
+        private int Version;
+        public VMClockMarshal() { }
+        public VMClockMarshal(int version) { Version = version; }
 
         public void Deserialize(BinaryReader reader)
         {
@@ -54,6 +63,7 @@ namespace FSO.SimAntics.Marshals
             TicksPerMinute = reader.ReadInt32();
             Minutes = reader.ReadInt32();
             Hours = reader.ReadInt32();
+            if (Version > 17) FirePercent = reader.ReadInt32();
         }
 
         public void SerializeInto(BinaryWriter writer)
@@ -63,21 +73,30 @@ namespace FSO.SimAntics.Marshals
             writer.Write(TicksPerMinute);
             writer.Write(Minutes);
             writer.Write(Hours);
+            writer.Write(FirePercent);
         }
     }
 
     public class VMAmbientSoundMarshal : VMSerializable
     {
-        public byte[] ActiveSounds;
+        public ulong ActiveBits;
+        int Version;
+        public VMAmbientSoundMarshal() { }
+        public VMAmbientSoundMarshal(int version) { Version = version; }
+
         public void Deserialize(BinaryReader reader)
         {
-            ActiveSounds = reader.ReadBytes(reader.ReadByte());
+            if (Version > 8)
+            {
+                ActiveBits = reader.ReadUInt64();
+            }
+            else
+                reader.ReadBytes(reader.ReadByte()); //super-legacy
         }
 
         public void SerializeInto(BinaryWriter writer)
         {
-            writer.Write((byte)ActiveSounds.Length);
-            writer.Write(ActiveSounds);
+            writer.Write(ActiveBits);
         }
     }
 }

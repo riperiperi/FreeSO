@@ -1,0 +1,12 @@
+<OTF>
+
+   <T i="4096" n="Tuning">
+      <K i="0" l="Ticks Between Degrades" v="715"></K> <!-- 500 to 715, due to tick length being 30 instead of 21 -->
+      <K i="1" l="Max Total Skill Pts" v="5000"></K> <!-- 4000 to 5000, to relax time before hard tuning begins -->
+      <K i="2" l="Degrade % at Max Total" v="10"></K> <!-- 15 to 10, due to tick length rescale plus slight relaxation -->
+      <K i="3" l="Degrade Non Linearity [0-50-100]" v="50"></K>
+      <K i="6" l="Min Total Skill Pts to Degrade" v="1000"></K>
+      <K i="7" l="degrade amplifier when dead * 100%" v="200"></K>
+   </T>
+
+</OTF>

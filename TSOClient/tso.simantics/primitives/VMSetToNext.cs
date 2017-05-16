@@ -93,7 +93,7 @@ namespace FSO.SimAntics.Primitives
                 for (int i=ptrDir+1; i<4; i++)
                 {
                     var off = AdjStep[i];
-                    var adj = context.VM.Context.SetToNextCache.GetObjectsAt(LotTilePos.FromBigTile(
+                    var adj = context.VM.Context.ObjectQueries.GetObjectsAt(LotTilePos.FromBigTile(
                         (short)(anchor.Position.TileX + off.X),
                         (short)(anchor.Position.TileY + off.Y),
                         anchor.Position.Level));
@@ -113,11 +113,11 @@ namespace FSO.SimAntics.Primitives
                 switch (operand.SearchType)
                 {
                     case VMSetToNextSearchType.ObjectOnSameTile:
-                        entities = context.VM.Context.SetToNextCache.GetObjectsAt(Pointer.Position); break;
+                        entities = context.VM.Context.ObjectQueries.GetObjectsAt(Pointer.Position); break;
                     case VMSetToNextSearchType.Person:
-                        entities = context.VM.Context.SetToNextCache.Avatars; break;
+                        entities = context.VM.Context.ObjectQueries.Avatars; break;
                     case VMSetToNextSearchType.ObjectOfType:
-                        entities = context.VM.Context.SetToNextCache.GetObjectsByGUID(operand.GUID); break;
+                        entities = context.VM.Context.ObjectQueries.GetObjectsByGUID(operand.GUID); break;
                 }
                 if (entities == null) return VMPrimitiveExitCode.GOTO_FALSE;
 

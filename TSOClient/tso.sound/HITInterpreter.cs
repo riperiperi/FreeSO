@@ -177,7 +177,10 @@ namespace FSO.HIT
             }
             else
             {
-                return HITResult.KILL;
+                if (thread.Loop && thread.HasSetLoop)
+                {
+                    return Loop(thread);
+                } else return HITResult.KILL;
             }
         }
 
@@ -377,6 +380,7 @@ namespace FSO.HIT
         public static HITResult SetLoop(HITThread thread)
         {
             thread.LoopPointer = (int)thread.PC;
+            thread.HasSetLoop = true;
             return HITResult.CONTINUE;
         }
 
@@ -676,8 +680,10 @@ namespace FSO.HIT
             var src = thread.ReadByte();
             var field = thread.ReadByte();
 
-            int ObjectVar = thread.ReadVar(src);
-            ObjectVar = thread.ReadVar(10010 + ObjectVar);
+            int ObjectVar = thread.ReadVar(src); //always 12?
+            int FieldVar = thread.ReadVar(field);
+
+            ObjectVar = thread.ReadVar(10010 + FieldVar);
             thread.WriteVar(dest, ObjectVar);
             thread.SetFlags(ObjectVar);
 

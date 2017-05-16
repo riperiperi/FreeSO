@@ -9,6 +9,10 @@ namespace FSO.SimAntics.Model.TSOPlatform
     public class VMTSOEntityState : VMPlatformState
     {
         public VMBudget Budget = new VMBudget();
+
+        public VMTSOEntityState() { }
+        public VMTSOEntityState(int version) : base(version) { }
+
         public override void Deserialize(BinaryReader reader)
         {
             Budget.Deserialize(reader);

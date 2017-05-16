@@ -16,6 +16,7 @@ using FSO.SimAntics.Model.Routing;
 using FSO.SimAntics.NetPlay.Model;
 using System.IO;
 using FSO.SimAntics.Marshals.Threads;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.Engine
 {
@@ -144,31 +145,54 @@ namespace FSO.SimAntics.Engine
                 var maxScore = Math.Max(DesiredProximity - MinProximity, MaxProximity - DesiredProximity) + (LotTilePos.Distance(obj.Position, caller.Position)+MaxProximity)/3 + 2;
                 var ignoreRooms = (Flags & SLOTFlags.IgnoreRooms) > 0;
 
-                var resolutionBound = (MaxProximity / Slot.Resolution) * Slot.Resolution;
-
-                for (int x = -resolutionBound; x <= resolutionBound; x += Slot.Resolution)
+                SLOTEnumerationFunction((x, y, distance) =>
                 {
-                    for (int y = -resolutionBound; y <= resolutionBound; y += Slot.Resolution)
+                    var pos = new Vector2(circleCtr.X + x / 16.0f, circleCtr.Y + y / 16.0f);
+                    if (distance >= MinProximity - 0.5 && distance <= MaxProximity + 0.5 && (ignoreRooms || context.VM.Context.GetRoomAt(new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level)) == room)) //slot is within proximity
                     {
-                        var pos = new Vector2(circleCtr.X + x / 16.0f, circleCtr.Y + y / 16.0f);
-                        double distance = Math.Sqrt(x * x + y * y);
-                        if (distance >= MinProximity - 0.01 && distance <= MaxProximity + 0.01 && (ignoreRooms || context.VM.Context.GetRoomAt(new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level)) == room)) //slot is within proximity
+                        var routeEntryFlags = (GetSearchDirection(circleCtr, pos, obj.RadianDirection) & Flags); //the route needs to know what conditions it fulfilled
+                        if (routeEntryFlags > 0) //within search location
                         {
-                            var routeEntryFlags = (GetSearchDirection(circleCtr, pos, obj.RadianDirection) & Flags); //the route needs to know what conditions it fulfilled
-                            if (routeEntryFlags > 0) //within search location
-                            {
-                                double baseScore = ((maxScore - Math.Abs(DesiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f);
-                                VerifyAndAddLocation(obj, pos, center, routeEntryFlags, baseScore, context, caller, float.NaN);
-                            }
+                            double baseScore = ((maxScore - Math.Abs(DesiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f);
+                            VerifyAndAddLocation(obj, pos, center, routeEntryFlags, baseScore, context, caller, float.NaN);
                         }
                     }
-                }
+                });
             }
             /** Sort by how close they are to desired proximity **/
             
             if (Results.Count > 1) Results = Results.OrderBy(x => -x.Score).ToList(); //avoid sort because it acts incredibly unusually
             if (Results.Count > 0) FailCode = VMRouteFailCode.Success;
             return Results;
+        }
+
+        private void SLOTEnumerationFunction (Callback<int, int, double> outputFunc)
+        {
+            if (Slot.MaxProximity == Slot.MinProximity)
+            {
+                //circle. pick points in the 8 directions to check.
+                for (int i = 0; i < 8; i++)
+                {
+                    var angle = (i * Math.PI) / 4.0;
+                    var x = (int)Math.Round(Math.Sin(angle) * Slot.MinProximity); //most directions shouldn't cause floating point issues here.
+                    var y = (int)Math.Round(Math.Cos(angle) * Slot.MinProximity);
+                    outputFunc(x, y, Slot.MinProximity);
+                }
+            }
+            else
+            {
+                //range. use the resolution settings.
+                var resolutionBound = (MaxProximity / Slot.Resolution) * Slot.Resolution;
+
+                for (int x = -resolutionBound; x <= resolutionBound; x += Slot.Resolution)
+                {
+                    for (int y = -resolutionBound; y <= resolutionBound; y += Slot.Resolution)
+                    {
+                        double distance = Math.Sqrt(x * x + y * y);
+                        outputFunc(x, y, distance);
+                    }
+                }
+            }
         }
 
         private void VerifyAndAddLocation(VMEntity obj, Vector2 pos, Vector2 center, SLOTFlags entryFlags, double score, VMContext context, VMEntity caller, float facingDir)
@@ -207,40 +231,71 @@ namespace FSO.SimAntics.Engine
                 }
             }
 
-            VMEntity chair = null;
+            VMFindLocationResult result = new VMFindLocationResult
+            {
+                Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level),
+                RadianDirection = facingDir,
+                FaceAnywhere = faceAnywhere,
+                RouteEntryFlags = entryFlags
+            };
+            var avatarInWay = false;
             if (Slot.SnapTargetSlot < 0)
             {
-                var solid = caller.PositionValid(tpos, Direction.NORTH, context);
+                var solid = caller.PositionValid(tpos, Direction.NORTH, context, VMPlaceRequestFlags.AcceptSlots);
                 if (solid.Status != Model.VMPlacementError.Success)
                 {
-                    if (solid.Object != null && solid.Object is VMGameObject)
+                    if (solid.Object != null)
                     {
-                        if (Slot.Sitting > 0 && solid.Object.EntryPoints[26].ActionFunction != 0)
+                        if (solid.Object is VMGameObject)
                         {
-                            chair = solid.Object;
+                            if (Slot.Sitting > 0 && solid.Object.EntryPoints[26].ActionFunction != 0)
+                            {
+                                result.Chair = solid.Object;
+                            }
+                            else
+                            {
+                                SetFail(VMRouteFailCode.DestTileOccupied, solid.Object);
+                                return;
+                            }
+                        } else
+                        {
+                            avatarInWay = true;
                         }
-                        else
+                    } 
+                }
+
+                if (context.ObjectQueries.GetObjectsAt(tpos)?.Any(
+                    x => ((VMEntityFlags2)x.GetValue(VMStackObjectVariable.FlagField2) & VMEntityFlags2.ArchitectualDoor) > 0) ?? false)
+                    avatarInWay = true; //prefer not standing in front of a door. (todo: merge with above check?)
+
+                if (result.Chair != null && (Math.Abs(DirectionUtils.Difference(result.Chair.RadianDirection, facingDir)) > Math.PI / 4))
+                    return; //not a valid goal.
+                if (result.Chair == null && OnlySit) return;
+
+                score = score * ((result.Chair != null) ? Slot.Sitting : Slot.Standing);
+                //if an avatar is in or going to our destination positon, we this spot becomes low priority as getting into it will require a shoo.
+                if (!avatarInWay)
+                {
+                    foreach (var avatar in context.ObjectQueries.Avatars)
+                    {
+                        if (avatar == caller) continue;
+                        //search for routing frame. is its destination the same as ours?
+                        if (avatar.Thread != null)
                         {
-                            SetFail(VMRouteFailCode.DestTileOccupied, solid.Object);
-                            return;
+                            var intersects = avatar.Thread.Stack.Any(x => x is VMRoutingFrame && ((VMRoutingFrame)x).IntersectsOurDestination(result));
+                            if (intersects)
+                            {
+                                score = Math.Max(double.Epsilon, score);
+                                break;
+                            }
                         }
                     }
                 }
-
-                if (chair != null && (Math.Abs(DirectionUtils.Difference(chair.RadianDirection, facingDir)) > Math.PI / 4))
-                    return; //not a valid goal.
-                if (chair == null && OnlySit) return;
+                else score = Math.Max(double.Epsilon, score);
             }
+            result.Score = score;
 
-            Results.Add(new VMFindLocationResult
-            {
-                Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level),
-                Score = score * ((chair != null) ? Slot.Sitting : Slot.Standing), //todo: prefer closer?
-                RadianDirection = facingDir,
-                Chair = chair,
-                FaceAnywhere = faceAnywhere,
-                RouteEntryFlags = entryFlags
-            });
+            Results.Add(result);
         }
 
         private void SetFail(VMRouteFailCode code, VMEntity blocker)
@@ -276,7 +331,7 @@ namespace FSO.SimAntics.Engine
             if (dir >= 45.0 - ANGLE_ERROR && dir <= 135.0 + ANGLE_ERROR) result |= SLOTFlags.EAST;
             if ((dir >= 90.0 - ANGLE_ERROR && dir <= 180.0 + ANGLE_ERROR) || (dir <= -180.0 + ANGLE_ERROR)) result |= SLOTFlags.SOUTH_EAST;
             if (dir >= 135.0 - ANGLE_ERROR || dir <= -135.0 + ANGLE_ERROR) result |= SLOTFlags.SOUTH;
-            if ((dir >= -180.0 - ANGLE_ERROR && dir <= -135.0 + ANGLE_ERROR) || (dir >= 180.0 - ANGLE_ERROR)) result |= SLOTFlags.SOUTH_WEST;
+            if ((dir >= -180.0 - ANGLE_ERROR && dir <= -90.0 + ANGLE_ERROR) || (dir >= 180.0 - ANGLE_ERROR)) result |= SLOTFlags.SOUTH_WEST;
             if (dir >= -135.0 - ANGLE_ERROR && dir <= -45.0 + ANGLE_ERROR) result |= SLOTFlags.WEST;
             if (dir >= -90.0 - ANGLE_ERROR && dir <= 0.0 + ANGLE_ERROR) result |= SLOTFlags.NORTH_WEST; 
 

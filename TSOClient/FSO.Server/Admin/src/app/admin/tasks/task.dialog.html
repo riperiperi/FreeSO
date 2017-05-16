@@ -1,0 +1,36 @@
+﻿<md-dialog>
+    <md-content class="md-padding">
+        <form name="taskForm">
+            <label>Task</label>
+            <p>
+                Request an asynchronous task. A task server must be running.
+            </p>
+
+            <div layout layout-sm="column">
+                <md-input-container flex> 
+                    <label>Type</label> 
+                    <md-select required ng-model="task.task_type">
+                        <md-option value="prune_database">Prune Database</md-option>
+                        <md-option value="bonus">Bonus &amp; Top 100</md-option>
+                    </md-select>
+                </md-input-container>
+            </div>
+
+            
+            <div layout layout-sm="column">
+                <md-input-container flex> 
+                    <label>Shard</label> 
+                    <md-select required ng-model="task.shard_id" ng-required="task.task_type == 'bonus'" ng-show="task.task_type == 'bonus'">
+                        <md-option ng-repeat="shard in shards" value="{{shard.shard_id}}">{{shard.name}}</md-option>
+                    </md-select>
+                </md-input-container>
+            </div>
+
+        </form>
+    </md-content>
+    <div class="md-actions" layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel();"> Cancel </md-button>
+        <md-button ng-click="ok()" ng-disabled="taskForm.$invalid" class="md-primary"> Request Task </md-button>
+    </div>
+</md-dialog>

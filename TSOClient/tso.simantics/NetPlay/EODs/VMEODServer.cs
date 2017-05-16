@@ -1,8 +1,10 @@
 ﻿using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.SimAntics.NetPlay.EODs.Model;
+using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,7 +31,19 @@ namespace FSO.SimAntics.NetPlay.EODs
         {
             { 0x2a6356a0, typeof(VMEODSignsPlugin) },
             { 0x4a5be8ab, typeof(VMEODDanceFloorPlugin) },
-            { 0xea47ae39, typeof(VMEODPizzaMakerPlugin) }
+            { 0xea47ae39, typeof(VMEODPizzaMakerPlugin) },
+            { 0xca418206, typeof(VMEODPaperChasePlugin) },
+            { 0x2b58020b, typeof(VMEODRackOwnerPlugin) },
+            { 0xcb492685, typeof(VMEODRackPlugin) },
+            { 0x8b300068, typeof(VMEODDresserPlugin) },
+            { 0x0949E698, typeof(VMEODScoreboardPlugin) },
+            { 0x0A69F29F, typeof(VMEODPermissionDoorPlugin) },
+            { 0xCB2819CB, typeof(VMEODSlotsPlugin) },
+            { 0xAA5E36DC, typeof(VMEODTrunkPlugin) },
+            { 0x2D642D39, typeof(VMEODWarGamePlugin) },
+            { 0xAA65FE9E, typeof(VMEODTimerPlugin) },
+            { 0x895C1CEB, typeof(VMEODGameCompDrawACardPlugin) },
+            { 0x8ADFC7A2, typeof(VMEODBandPlugin) }
         };
 
         public List<VMEODClient> Clients;
@@ -38,6 +52,7 @@ namespace FSO.SimAntics.NetPlay.EODs
         public bool Joinable;
         public VM vm;
         public uint PluginID;
+        public bool CanBeActionCancelled = false; //set true if the object does not deal with interaction cancelling itself
 
         public VMEODServer(uint UID, VMEntity obj, bool joinable, VM vm)
         {
@@ -169,6 +184,17 @@ namespace FSO.SimAntics.NetPlay.EODs
                 Verified = true
             };
             vm.ForwardCommand(cmd);
+        }
+
+        public void Send(string evt, VMSerializable body)
+        {
+            using(var stream = new MemoryStream())
+            {
+                var writer = new BinaryWriter(stream);
+                body.SerializeInto(writer);
+                stream.Seek(0, SeekOrigin.Begin);
+                Send(evt, stream.ToArray()); 
+            }
         }
     }
 }

@@ -20,13 +20,14 @@ using FSO.Content.Model;
 using FSO.SimAntics.Model.Routing;
 using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.Marshals.Hollow;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.SimAntics
 {
     public class VMGameObject : VMEntity
     {
-
-        /** Definition **/
+        public VMGameObjectDisableFlags Disabled;
 
         public VMGameObject(GameObject def, ObjectComponent worldUI) : base(def)
         {
@@ -99,16 +100,30 @@ namespace FSO.SimAntics
             if (UseWorld)
             {
                 var flags = (VMEntityFlags2)GetValue(VMStackObjectVariable.FlagField2);
-                WorldUI.Room = ((flags & VMEntityFlags2.GeneratesLight) > 0 && 
-                    GetValue(VMStackObjectVariable.LightingContribution)>0 && 
-                    (flags & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) == 0) 
-                    ? (ushort)65535 : (ushort)GetValue(VMStackObjectVariable.Room);
+                if (Disabled >= VMGameObjectDisableFlags.LotCategoryWrong) WorldUI.Room = 65533; //grayscale
+                else
+                {
+                    WorldUI.Room = ((flags & VMEntityFlags2.GeneratesLight) > 0 &&
+                        GetValue(VMStackObjectVariable.LightingContribution) > 0 &&
+                        (flags & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) == 0)
+                        ? (ushort)65535 : (ushort)GetValue(VMStackObjectVariable.Room);
+                }
             }
+        }
+
+        public void DisableIfTSOCategoryWrong(VMContext context)
+        {
+            OBJD obj = Object.OBJ;
+            if (MasterDefinition != null) obj = MasterDefinition;
+            var category = context.VM.TSOState.PropertyCategory;
+            if (obj.LotCategories > 0 && (obj.LotCategories & (1 << category)) == 0)
+                Disabled |= VMGameObjectDisableFlags.LotCategoryWrong;
+            else
+                Disabled &= ~VMGameObjectDisableFlags.LotCategoryWrong; 
         }
 
         public override void Init(FSO.SimAntics.VMContext context){
             if (UseWorld) WorldUI.ObjectID = ObjectID;
-            PersistID = (uint)ObjectID; //temporary til theres a system to manage these
             if (Slots != null && Slots.Slots.ContainsKey(0))
             {
                 Contained = new VMEntity[Slots.Slots[0].Count];
@@ -116,6 +131,62 @@ namespace FSO.SimAntics
             }
 
             base.Init(context);
+            DisableIfTSOCategoryWrong(context);
+        }
+
+        public override void Tick()
+        {
+            if ((Disabled & VMGameObjectDisableFlags.PendingRoommateDeletion) > 0)
+            {
+                //can we be deleted and moved back to inventory? maybe some stuff on us needs to be first.
+                var context = Thread.Context;
+                var current = DeepestObjInSlot(this, 0);
+                if (current is VMGameObject && !current.IsInUse(context, true))
+                {
+                    if (current.PersistID > 0)
+                    {
+                        if (context.VM.IsServer && (Disabled & VMGameObjectDisableFlags.TransactionIncomplete) == 0)
+                        {
+                            context.VM.ForwardCommand(new VMNetSendToInventoryCmd()
+                            {
+                                InternalDispatch = true,
+                                ObjectPID = current.PersistID,
+                            });
+                        }
+                    }
+                }
+            }
+
+            if ((Disabled & VMGameObjectDisableFlags.ObjectLimitExceeded) > 0) { 
+                if ((Disabled & VMGameObjectDisableFlags.ObjectLimitThreadDisable) > 0) return;
+                else if (!IsInUse(Thread.Context, true) && !PartOfPortal())
+                {
+                    Disabled |= VMGameObjectDisableFlags.ObjectLimitThreadDisable;
+                }
+            }
+            base.Tick();
+        }
+
+        public bool PartOfPortal()
+        {
+            foreach (var obj in MultitileGroup.Objects)
+            {
+                if (obj.EntryPoints[15].ActionFunction != 0) return true;
+            }
+            return false;
+        }
+
+        private VMEntity DeepestObjInSlot(VMEntity pt, int depth)
+        {
+            //todo: make sure nobody can create cyclic slots, and limit slot depth
+            if (depth > 50) throw new Exception("slot depth too high!");
+            var slots = pt.TotalSlots();
+            for (int i=0; i<slots; i++)
+            {
+                var ent = pt.GetSlot(i);
+                if (ent != null) return DeepestObjInSlot(ent, depth++);
+            }
+            return this;
         }
 
         public override float RadianDirection
@@ -136,8 +207,16 @@ namespace FSO.SimAntics
         public override Direction Direction { 
             get { return _Direction; }
             set {
-                _Direction = value;
-                if (UseWorld) WorldUI.Direction = value;
+                var notches = GetValue(VMStackObjectVariable.RotationNotches);
+                if (notches > 1)
+                {
+                    var index = Array.IndexOf(DirectionNotches, value);
+                    if (index != -1)
+                        _Direction = DirectionNotches[index - (index % notches)];
+                }
+                else _Direction = value;
+
+                if (UseWorld) WorldUI.Direction = _Direction;
             }
         }
 
@@ -172,7 +251,7 @@ namespace FSO.SimAntics
         public override bool PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context)
         {
             if (GetSlot(slot) == obj) return true; //already in slot
-            if (GetSlot(slot) != null) return false;
+            if (GetSlot(slot) != null || WillLoopSlot(obj)) return false; //would recursively loop slot..
             if (cleanOld) obj.PrePositionChange(context);
 
             if (Contained != null)
@@ -366,7 +445,7 @@ namespace FSO.SimAntics
         #region VM Marshalling Functions
         public VMGameObjectMarshal Save()
         {
-            var gameObj = new VMGameObjectMarshal { Direction = Direction };
+            var gameObj = new VMGameObjectMarshal { Direction = Direction, Disabled = Disabled };
             SaveEnt(gameObj);
             return gameObj;
         }
@@ -376,6 +455,7 @@ namespace FSO.SimAntics
             base.Load(input);
             Position = Position;
             Direction = input.Direction;
+            Disabled = input.Disabled;
             if (UseWorld)
             {
                 ((ObjectComponent)this.WorldUI).DynamicSpriteFlags = this.DynamicSpriteFlags;
@@ -385,6 +465,100 @@ namespace FSO.SimAntics
                 RefreshGraphic();
             }
         }
+
+        public VMHollowGameObjectMarshal HollowSave()
+        {
+            var cont = new short[Contained.Length];
+            for (int i = 0; i < Contained.Length; i++)
+            {
+                cont[i] = (Contained[i] == null) ? (short)0 : Contained[i].ObjectID;
+            }
+
+            var gameObj = new VMHollowGameObjectMarshal
+            {
+                ObjectID = ObjectID,
+                GUID = Object.OBJ.GUID,
+                MasterGUID = (MasterDefinition == null) ? 0 : MasterDefinition.GUID,
+                Position = Position,
+                Direction = Direction,
+                Graphic = GetValue(VMStackObjectVariable.Graphic),
+                DynamicSpriteFlags = DynamicSpriteFlags,
+                DynamicSpriteFlags2 = DynamicSpriteFlags2,
+
+                Contained = cont,
+                Container = (Container == null) ? (short)0 : Container.ObjectID,
+                ContainerSlot = ContainerSlot,
+
+                Flags = GetValue(VMStackObjectVariable.Flags),
+                Flags2 = GetValue(VMStackObjectVariable.FlagField2),
+                PlacementFlags = GetValue(VMStackObjectVariable.PlacementFlags),
+                WallPlacementFlags = GetValue(VMStackObjectVariable.WallPlacementFlags),
+                AllowedHeightFlags = GetValue(VMStackObjectVariable.AllowedHeightFlags)
+            };
+            return gameObj;
+        }
+
+        public void HollowLoad(VMHollowGameObjectMarshal input)
+        {
+            ObjectID = input.ObjectID;
+
+            if (input.MasterGUID != 0)
+            {
+                var masterDef = FSO.Content.Content.Get().WorldObjects.Get(input.MasterGUID);
+                MasterDefinition = masterDef.OBJ;
+                UseTreeTableOf(masterDef);
+            }
+
+            else MasterDefinition = null;
+
+            ContainerSlot = input.ContainerSlot;
+
+            DynamicSpriteFlags = input.DynamicSpriteFlags;
+            DynamicSpriteFlags2 = input.DynamicSpriteFlags2;
+            SetValue(VMStackObjectVariable.Graphic, input.Graphic);
+            SetValue(VMStackObjectVariable.Flags, input.Flags);
+            SetValue(VMStackObjectVariable.FlagField2, input.Flags2);
+            SetValue(VMStackObjectVariable.PlacementFlags, input.PlacementFlags);
+            SetValue(VMStackObjectVariable.WallPlacementFlags, input.WallPlacementFlags);
+            SetValue(VMStackObjectVariable.AllowedHeightFlags, input.AllowedHeightFlags);
+            Position = input.Position;
+            Direction = input.Direction;
+
+            if (UseWorld)
+            {
+                ((ObjectComponent)this.WorldUI).DynamicSpriteFlags = this.DynamicSpriteFlags;
+                ((ObjectComponent)this.WorldUI).DynamicSpriteFlags2 = this.DynamicSpriteFlags2;
+                WorldUI.ObjectID = ObjectID;
+                if (Slots != null && Slots.Slots.ContainsKey(0)) ((ObjectComponent)WorldUI).ContainerSlots = Slots.Slots[0];
+                RefreshGraphic();
+            }
+        }
+
+        public void LoadHollowCrossRef(VMHollowGameObjectMarshal input, VMContext context)
+        {
+            Contained = new VMEntity[input.Contained.Length];
+            int i = 0;
+            foreach (var item in input.Contained) Contained[i++] = context.VM.GetObjectById(item);
+
+            Container = context.VM.GetObjectById(input.Container);
+            if (UseWorld && Container != null)
+            {
+                WorldUI.Container = Container.WorldUI;
+                WorldUI.ContainerSlot = ContainerSlot;
+            }
+        }
         #endregion
+    }
+
+    [Flags]
+    public enum VMGameObjectDisableFlags
+    {
+        TransactionIncomplete = 1 << 0,
+        ForSale = 1 << 1,
+        //past this point disabled objects appear in grayscale.
+        LotCategoryWrong = 1 << 2,
+        ObjectLimitExceeded = 1 << 3, //when too many objects are on a lot and the object lot is lowered, the last few objects are disabled.
+        PendingRoommateDeletion = 1 << 4,
+        ObjectLimitThreadDisable = 1 << 5 //activated when object limit exceeded and object is no longer in use.
     }
 }

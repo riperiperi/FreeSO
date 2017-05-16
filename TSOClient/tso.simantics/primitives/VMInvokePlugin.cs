@@ -22,7 +22,12 @@ namespace FSO.SimAntics.Primitives
         {
             0x2a6356a0,
             0x4a5be8ab,
-            0xea47ae39
+            0xea47ae39,
+
+            0x2b58020b, //rack owner
+            0xcb492685, //rack
+            0x8b300068, //dresser
+            0x0949E698, //scoreboard
         };
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
@@ -117,12 +122,16 @@ namespace FSO.SimAntics.Primitives
             }
 
             context.Locals[operand.EventLocal] = 0;
+
+            context.Thread.TempRegisters[0] = 0;
+            return VMPrimitiveExitCode.GOTO_FALSE_NEXT_TICK;
+            /*
             if (IdleEvents.Contains(operand.PluginID))
             {
-                context.Thread.TempRegisters[0] = 0;
-                return VMPrimitiveExitCode.GOTO_FALSE;
+
             }
             else return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+            */
         }
     }
 

@@ -39,8 +39,9 @@ namespace FSO.Client.UI.Framework
                     PPXDepthEngine.CreateRenderTarget(gd, 1, multisample, SurfaceFormat.Color, width, height, DepthFormat.None)
                 );
             }
+            AllBuffers = new List<RenderTarget2D>(Buffers);
 
-            base.GraphicsDevice.DeviceReset += new EventHandler<EventArgs>(gd_DeviceReset);
+            //base.GraphicsDevice.DeviceReset += new EventHandler<EventArgs>(gd_DeviceReset);
         }
 
         public UISpriteBatch(GraphicsDevice gd, int numBuffers) : this(gd, numBuffers, gd.Viewport.Width, gd.Viewport.Height, 0) { }
@@ -66,6 +67,30 @@ namespace FSO.Client.UI.Framework
             }
         }
 
+        public void ResizeBuffer(int width, int height)
+        {
+            _Width = width;
+            _Height = height;
+
+            var numBuffers = AllBuffers.Count;
+            foreach (var buf in AllBuffers)
+            {
+                buf.Dispose();
+            }
+
+            Buffers.Clear();
+            AllBuffers.Clear();
+            for (var i = 0; i < numBuffers; i++)
+            {
+                Buffers.Add(
+                    PPXDepthEngine.CreateRenderTarget(base.GraphicsDevice, 1, 0, SurfaceFormat.Color,
+                    Width, Height, DepthFormat.None)
+                );
+            }
+            AllBuffers = new List<RenderTarget2D>(Buffers);
+        }
+
+        /*
         private void gd_DeviceReset(object sender, EventArgs e)
         {
             Invalidated = true;
@@ -80,7 +105,7 @@ namespace FSO.Client.UI.Framework
             }
 
             Invalidated = false;
-        }
+        }*/
 
         private BlendState _BlendMode;
         private SpriteSortMode _SortMode;
@@ -91,6 +116,7 @@ namespace FSO.Client.UI.Framework
          * being added to the main batch. E.g. to do alpha blending
          */
         private List<RenderTarget2D> Buffers = new List<RenderTarget2D>();
+        private List<RenderTarget2D> AllBuffers = new List<RenderTarget2D>();
 
         public void UIBegin(BlendState blendMode, SpriteSortMode sortMode)
         {

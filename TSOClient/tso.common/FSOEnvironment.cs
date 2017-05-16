@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace FSO.Common
 {
     public static class FSOEnvironment
     {
+        public static Thread GameThread;
+
         public static string ContentDir = "Content/";
         public static string UserDir = "Content/";
         public static string GFXContentDir = "Content/OGL";
@@ -20,5 +23,6 @@ namespace FSO.Common
         public static float UIZoomFactor = 1f;
         public static int DPIScaleFactor = 1;
         public static bool SoftwareKeyboard = false;
+        public static int RefreshRate = 60;
     }
 }

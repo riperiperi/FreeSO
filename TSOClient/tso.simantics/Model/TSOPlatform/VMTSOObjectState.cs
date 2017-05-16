@@ -11,6 +11,10 @@ namespace FSO.SimAntics.Model.TSOPlatform
         //TODO: repair
         public uint OwnerID;
 
+        public VMTSOObjectState() { }
+
+        public VMTSOObjectState(int version) : base(version) { }
+
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);

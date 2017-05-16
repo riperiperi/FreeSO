@@ -1,0 +1,25 @@
+﻿<div layout="column">
+    <md-whiteframe class="md-whiteframe-z1 login-box" style="padding:20px;" >
+
+        <div class="login-logo">
+        </div>
+
+        <form name="loginForm" ng-disabled="loginLocked">
+            <md-input-container>
+                <label>Username</label>
+                <input md-maxlength="50" required name="username" ng-model="username">
+            </md-input-container>
+            <md-input-container>
+                <label>Password</label>
+                <input required type="password" name="password" ng-model="password">
+            </md-input-container>
+            <md-input-container>
+                <label>API Url</label>
+                <input required name="password" ng-model="apiUrl">
+            </md-input-container>
+
+            <md-button ng-click="login()" class="md-primary btn btn-primary">Login</md-button>
+        </form>
+
+    </md-whiteframe>
+</div>

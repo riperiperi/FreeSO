@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -54,16 +54,91 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>FreeSO.ico</ApplicationIcon>
+    <ApplicationIcon>fso.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Controllers\GizmoTop100Controller.cs" />
+    <Compile Include="Controllers\JoinLotProgressController.cs" />
+    <Compile Include="Controllers\LoginController.cs" />
+    <Compile Include="Controllers\MessagingController.cs" />
+    <Compile Include="Controllers\MessagingWindowController.cs" />
+    <Compile Include="Controllers\CoreGameScreenController.cs" />
+    <Compile Include="Controllers\GizmoController.cs" />
+    <Compile Include="Controllers\GizmoSearchController.cs" />
+    <Compile Include="Controllers\LoadingScreenController.cs" />
+    <Compile Include="Controllers\Panels\BookmarksController.cs" />
+    <Compile Include="Controllers\Panels\LotAdmitController.cs" />
+    <Compile Include="Controllers\Panels\LotPageController.cs" />
+    <Compile Include="Controllers\Panels\PersonPageController.cs" />
+    <Compile Include="Controllers\Panels\RelationshipDialogController.cs" />
+    <Compile Include="Controllers\RoommateRequestController.cs" />
+    <Compile Include="Controllers\TerrainController.cs" />
+    <Compile Include="GameContent\UIFileIDs.cs" />
+    <Compile Include="Model\UserReference.cs" />
+    <Compile Include="GameContent\CacheModule.cs" />
+    <Compile Include="Network\ClientDataService.cs" />
+    <Compile Include="Network\IClientDataService.cs" />
+    <Compile Include="Network\Topics.cs" />
+    <Compile Include="Network\TopicSubscription.cs" />
+    <Compile Include="Regulators\LotConnectionRegulator.cs" />
+    <Compile Include="Regulators\PurchaseLotRegulator.cs" />
+    <Compile Include="Rendering\City\CityMapData.cs" />
+    <Compile Include="Rendering\City\Plugins\AbstractCityPlugin.cs" />
+    <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
+    <Compile Include="UI\Controls\Catalog\UICatalogRoofResProvider.cs" />
+    <Compile Include="UI\Controls\UISlotsImage.cs" />
+    <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
+    <Compile Include="UI\Controls\UIDynamicContainers.cs" />
+    <Compile Include="UI\Controls\UILotButton.cs" />
+    <Compile Include="UI\Controls\UIPersonButton.cs" />
+    <Compile Include="UI\Controls\UICustomTooltip.cs" />
+    <Compile Include="UI\Controls\UIRadioButton.cs" />
+    <Compile Include="UI\Controls\UISkillBar.cs" />
+    <Compile Include="UI\Controls\UIValidationMessages.cs" />
+    <Compile Include="UI\Framework\DoubleClick.cs" />
+    <Compile Include="UI\Framework\IUIAutoSize.cs" />
+    <Compile Include="UI\Framework\UIDebounce.cs" />
+    <Compile Include="UI\Panels\EODs\Archetypes\UIBasicEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIBandEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIGameCompDrawACardPluginEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIDebugEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIDresserEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIPaperChaseEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIAbstractRackEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIPermissionDoorEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIRackEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIRackOwnerEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIScoreboardEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UISlotsEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UITimerPluginEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UITrunkEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIWarGameEOD.cs" />
+    <Compile Include="UI\Panels\EODs\Utils\UIEODLobby.cs" />
+    <Compile Include="UI\Panels\EODs\Utils\UIEODLobbyController.cs" />
+    <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
+    <Compile Include="UI\Panels\LotControls\UIRoofer.cs" />
+    <Compile Include="UI\Panels\UITimeOutDialog.cs" />
+    <Compile Include="UI\Panels\UIAsyncPriceDialog.cs" />
+    <Compile Include="UI\Panels\UIBonusDialog.cs" />
+    <Compile Include="UI\Panels\UIBookmarks.cs" />
+    <Compile Include="UI\Panels\UIModMenu.cs" />
+    <Compile Include="UI\Panels\UIDebugMenu.cs" />
+    <Compile Include="UI\Panels\UIEnvPanel.cs" />
+    <Compile Include="UI\Panels\UIGizmoPIP.cs" />
+    <Compile Include="UI\Panels\UIHouseMode.cs" />
+    <Compile Include="UI\Panels\UIJoinLotProgress.cs" />
+    <Compile Include="UI\Panels\UILotCategoryDialog.cs" />
+    <Compile Include="UI\Panels\UILotPage.cs" />
+    <Compile Include="UI\Panels\UILotPurchaseDialog.cs" />
+    <Compile Include="UI\Panels\UIMessageTray.cs" />
+    <Compile Include="UI\Panels\UIPersonPage.cs" />
     <Compile Include="Debug\IDEHook.cs" />
     <Compile Include="GameStartProxy.cs" />
     <Compile Include="GlobalSettings.cs" />
-    <Compile Include="UI\Controls\UIPersonIcon.cs" />
+    <Compile Include="UI\Controls\UIVMPersonButton.cs" />
     <Compile Include="UI\Framework\UIExternalContainer.cs" />
     <Compile Include="UI\Model\UIMusic.cs" />
     <Compile Include="UI\Panels\EODs\EODLiveModeOpt.cs" />
@@ -77,8 +152,13 @@
     <Compile Include="UI\Panels\UIPersonGrid.cs" />
     <Compile Include="UI\Panels\UIPropertyLog.cs" />
     <Compile Include="UI\Panels\UIChatDialog.cs" />
+    <Compile Include="UI\Panels\UIRelationshipDialog.cs" />
+    <Compile Include="UI\Panels\UISetupBackground.cs" />
+    <Compile Include="UI\Panels\UITerrainHighlight.cs" />
+    <Compile Include="UI\Panels\UIWebDownloaderDialog.cs" />
     <Compile Include="UI\Panels\WorldUI\UIHeadlineRenderer.cs" />
-    <Compile Include="Utils\CollectionUtils.cs" />
+    <Compile Include="UI\Panels\WorldUI\UIMoneyHeadline.cs" />
+    <Compile Include="UI\UIRelationshipBar.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
     <Compile Include="Utils\Endian.cs" />
     <Compile Include="Utils\GameLocator\ILocator.cs" />
@@ -89,6 +169,7 @@
     <Compile Include="Utils\MonogameLinker.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
     <Compile Include="Utils\UIUtils.cs" />
+    <Compile Include="Utils\WinFormsClipboard.cs" />
     <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll">
       <Link>Monogame\Linux\MonoGame.Framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -189,37 +270,20 @@
       <Link>Monogame\Windows\SharpDX.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="ContentSrc\Effects\2DWorldBatch.fx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ContentSrc\Effects\colorpoly2D.fx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ContentSrc\Effects\PixShader.fx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ContentSrc\Effects\VerShader.fx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ContentSrc\Effects\Vitaboy.fx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ContentSrc\Textures\gridTexture.png" />
-    <Content Include="Content\Blueprints\empty_lot.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Objects\catalog_downloads.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Globals\readme.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Objects\readme.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Compile Include="Network\Cache.cs" />
+    <Compile Include="Controllers\AbstractController.cs" />
+    <Compile Include="Controllers\ConnectCASController.cs" />
+    <Compile Include="Controllers\ConnectCityController.cs" />
+    <Compile Include="Controllers\DisconnectController.cs" />
+    <Compile Include="Controllers\PersonSelectionController.cs" />
+    <Compile Include="Controllers\PersonSelectionEditController.cs" />
     <Compile Include="GameController.cs" />
     <Compile Include="GameFacade.cs" />
+    <Compile Include="Network\Network.cs" />
+    <Compile Include="Network\NetworkModule.cs" />
+    <Compile Include="Regulators\CreateASimRegulator.cs" />
+    <Compile Include="Regulators\CityConnectionRegulator.cs" />
+    <Compile Include="Regulators\LoginRegulator.cs" />
+    <Compile Include="Regulators\RegulatorsModule.cs" />
     <Compile Include="Rendering\City\Blend.cs" />
     <Compile Include="Rendering\City\CityDataRetriever.cs" />
     <Compile Include="Rendering\City\LotTileEntry.cs" />
@@ -288,14 +352,14 @@
     <Compile Include="UI\Panels\UILoginDialog.cs" />
     <Compile Include="UI\Panels\UILoginProgress.cs" />
     <Compile Include="UI\Panels\UILotControl.cs" />
-    <Compile Include="UI\Panels\UIMessage.cs" />
+    <Compile Include="UI\Panels\UIMessageWindow.cs" />
     <Compile Include="UI\Panels\UIMessageController.cs" />
     <Compile Include="UI\Panels\UIObjectHolder.cs" />
     <Compile Include="UI\Panels\UIOptions.cs" />
     <Compile Include="UI\Panels\UIPieMenu.cs" />
     <Compile Include="UI\Panels\UISelectHouseView.cs" />
     <Compile Include="UI\Panels\UIUCP.cs" />
-    <Compile Include="UI\Screens\CityTransitionScreen.cs" />
+    <Compile Include="UI\Screens\TransitionScreen.cs" />
     <Compile Include="UI\Screens\CoreGameScreen.cs" />
     <Compile Include="UI\Screens\Credits.cs" />
     <Compile Include="UI\Screens\DebugTypeFaceScreen.cs" />
@@ -306,35 +370,9 @@
     <Compile Include="UI\Screens\PersonSelection.cs" />
     <Compile Include="UI\Screens\PersonSelectionEdit.cs" />
     <Compile Include="UI\UILayer.cs" />
-    <Compile Include="GameContent\AppearancesFileIDs.cs" />
-    <Compile Include="GameContent\BindingFileIDs.cs" />
-    <Compile Include="GameContent\CitiesFileIDs.cs" />
-    <Compile Include="GameContent\CollectionsFileIDs.cs" />
-    <Compile Include="GameContent\ContentManager.cs" />
-    <Compile Include="GameContent\ContentPreloadThread.cs" />
+    <Compile Include="Utils\ErrorMessage.cs" />
     <Compile Include="GameContent\ContentStrings.cs" />
-    <Compile Include="GameContent\FNV.cs" />
-    <Compile Include="GameContent\HandgroupsFileIDs.cs" />
-    <Compile Include="GameContent\MeshFileIDs.cs" />
-    <Compile Include="GameContent\OutfitsFileIDs.cs" />
-    <Compile Include="GameContent\PurchasablesFileIDs.cs" />
-    <Compile Include="GameContent\TextureFileIDs.cs" />
-    <Compile Include="GameContent\ThumbnailsFileIDs.cs" />
-    <Compile Include="GameContent\UIFileIDs.cs" />
-    <Compile Include="Network\Events\EventObject.cs" />
-    <Compile Include="Network\Events\EventSink.cs" />
-    <Compile Include="Network\Events\NetworkEvent.cs" />
-    <Compile Include="Network\Events\CityViewEvent.cs" />
     <Compile Include="TSOGame.cs" />
-    <Compile Include="Network\Events\CityTransitionEvent.cs" />
-    <Compile Include="Network\Events\LoginEvent.cs" />
-    <Compile Include="Network\Events\PacketError.cs" />
-    <Compile Include="Network\Events\ProgressEvent.cs" />
-    <Compile Include="Network\NetworkController.cs" />
-    <Compile Include="Network\NetworkFacade.cs" />
-    <Compile Include="Network\UIPacketHandlers.cs" />
-    <Compile Include="Network\UIPacketSenders.cs" />
-    <Compile Include="Network\PlayerAccount.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -342,93 +380,14 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Content Include="Content\Textures\splashSeg.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Game.ico" />
+    <Content Include="fso.ico" />
+    <EmbeddedResource Include="IconNormal.bmp" />
+    <EmbeddedResource Include="Icon.bmp" />
     <Content Include="soft_oal.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="Icon.bmp" />
-    <Content Include="Content\OGL\Fonts\FreeSO_10px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Fonts\FreeSO_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Fonts\FreeSO_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Fonts\FreeSO_16px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Fonts\FreeSO_10px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Fonts\FreeSO_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Fonts\FreeSO_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Fonts\FreeSO_16px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Patch\pizzamaker_animfix.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <None Include="Content\iOS\Effects\2DWorldBatch.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Content Include="Content\iOS\Effects\2DWorldBatchiOS.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="Content\iOS\Effects\colorpoly2D.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\iOS\Effects\GrassShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Content Include="Content\iOS\Effects\GrassShaderiOS.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="Content\iOS\Effects\PixShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\iOS\Effects\VerShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\iOS\Effects\Vitaboy.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\iOS\Fonts\FreeSO_10px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\iOS\Fonts\FreeSO_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\iOS\Fonts\FreeSO_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\iOS\Fonts\FreeSO_16px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\iOS\Fonts\Trebuchet_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\iOS\Fonts\Trebuchet_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\iOS\Textures\gridTexture.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Content Include="Content\OGL\Effects\2DWorldBatchiOS.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\GrassShaderiOS.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="Resources\Icon.bmp" />
+    <None Include="Resources\ico256.fw.png" />
     <Content Include="sdl2.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -438,12 +397,33 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="Mina.NET, Version=2.0.11.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Mina.2.0.11\lib\net40\Mina.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ninject.3.2.2.0\lib\net40\Ninject.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.3.11\lib\net45\NLog.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.3.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System" />
+    <Reference Include="System.Speech" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="GOLDEngine">
@@ -451,15 +431,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="GameContent\readme.txt" />
-    <Content Include="Content\Blueprints\empty_lot.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Dependencies\GOLDEngine.dll" />
     <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />
     <Content Include="Dependencies\nunit.framework.dll" />
     <Content Include="Dependencies\TargaImage.dll" />
-    <Content Include="FreeSO.ico" />
     <Content Include="Monogame\MacOS\Lidgren.Network.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -489,10 +464,7 @@
     <Content Include="Resources\folder-horizontal.png" />
     <Content Include="Resources\magnifier-left.png" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Content\DX\Textures\" />
-    <Folder Include="Content\OGL\Textures\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\OpenTK.dll.config">
       <Link>OpenTK.dll.config</Link>
@@ -501,111 +473,14 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <Content Include="Content\Patch\koipond.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Patch\poolslide.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Patch\WORKAROUND_poolladder.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Effects\2DWorldBatch.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Effects\colorpoly2D.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Effects\GrassShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Effects\PixShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Effects\VerShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Effects\Vitaboy.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Fonts\Trebuchet_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DX\Fonts\Trebuchet_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\2DWorldBatch.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\colorpoly2D.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\GrassShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\PixShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\VerShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Effects\Vitaboy.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Fonts\Trebuchet_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\OGL\Fonts\Trebuchet_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Monogame\MacOS\OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Monogame\MacOS\Tao.Sdl.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Patch\foodcounter_ea.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Patch\trees3_objf.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Patch\craftingworkbench_nodebug.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Patch\dfcontroller_optimise.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <None Include="UI\Framework\Parser\UIScript.egt" />
     <None Include="UI\Framework\Parser\UIScript.grm" />
-    <None Include="ContentSrc\ComicSans.spritefont" />
-    <None Include="ContentSrc\ComicSansSmall.spritefont" />
-    <None Include="ContentSrc\Effects\2dWorldBatch.mgfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="ContentSrc\Effects\colorpoly2D.mgfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="ContentSrc\Effects\compileForMono.bat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="ContentSrc\Effects\PixShader.mgfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="ContentSrc\Effects\VerShader.mgfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="ContentSrc\Fonts\ProjectDollhouse.otf" />
-    <None Include="ContentSrc\Fonts\ProjectDollhouse_10px.spritefont" />
-    <None Include="ContentSrc\Fonts\ProjectDollhouse_12px.spritefont">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="ContentSrc\Fonts\ProjectDollhouse_14px.spritefont" />
-    <None Include="ContentSrc\Fonts\ProjectDollhouse_16px.spritefont">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="ContentSrc\Textures\Thumbs.db" />
-    <Content Include="ContentSrc\TSOClientContent.mgcb" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -616,11 +491,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Linux.csproj">
-      <Project>{35253ce1-c864-4cd3-8249-4d1319748e8f}</Project>
-      <Name>MonoGame.Framework.Linux</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Net.WindowsGL.csproj">
       <Project>{6d6009f4-0afb-4806-89d7-7945f20270f5}</Project>
       <Name>MonoGame.Framework.Net.WindowsGL</Name>
@@ -635,14 +505,29 @@
       <Name>MonoGame.Framework.WindowsGL</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
-      <Project>{25A5DA9E-88E8-4BC2-AE80-45935276790E}</Project>
-      <Name>GonzoNet</Name>
-      <Private>True</Private>
+    <ProjectReference Include="..\FSO.Common.DatabaseService\FSO.Common.DatabaseService.csproj">
+      <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>
+      <Name>FSO.Common.DatabaseService</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
-      <Project>{07F742C5-C66A-4D1E-A761-458E08D4E302}</Project>
-      <Name>ProtocolAbstractionLibraryD</Name>
+    <ProjectReference Include="..\FSO.Common.Domain\FSO.Common.Domain.csproj">
+      <Project>{9848faf5-444a-48cc-a26a-8115d8c4fb52}</Project>
+      <Name>FSO.Common.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Patcher\FSO.Patcher.csproj">
+      <Project>{4e43ce64-343f-4c53-a055-bbf0f4986a16}</Project>
+      <Name>FSO.Patcher</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Clients\FSO.Server.Clients.csproj">
+      <Project>{329e0aee-7871-40a7-b5af-8c0d0086ef71}</Project>
+      <Name>FSO.Server.Clients</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.DataService\FSO.Common.DataService.csproj">
+      <Project>{88c69e02-78d4-4d71-9c26-43a9b118285a}</Project>
+      <Name>FSO.Common.DataService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
+      <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>
+      <Name>FSO.Server.Protocol</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>

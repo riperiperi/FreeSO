@@ -21,10 +21,11 @@ namespace FSO.Client.UI.Controls
     public class UIRectangle : UIElement
     {
         private Color color = Color.White;
+        private UIMouseEventRef _Mouse;
 
         public UIRectangle()
         {
-            ListenForMouse(new Microsoft.Xna.Framework.Rectangle(0, 0, 50, 50), new UIMouseEvent(OnMouse));
+            _Mouse = ListenForMouse(new Microsoft.Xna.Framework.Rectangle(0, 0, 50, 50), new UIMouseEvent(OnMouse));
         }
 
         private bool isDown = false;
@@ -53,6 +54,10 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+        public void SetSize(int width, int height)
+        {
+            _Mouse.Region = new Rectangle(0, 0, width, height);
+        }
 
         //public override void Update(TSOClient.Code.UI.Model.UpdateState state)
         //{
@@ -74,7 +79,7 @@ namespace FSO.Client.UI.Controls
             var whiteRectangle = new Texture2D(batch.GraphicsDevice, 1, 1);
             whiteRectangle.SetData(new[] { color });
 
-            var pos = LocalRect(0, 0, 50, 50);
+            var pos = LocalRect(_Mouse.Region.X, _Mouse.Region.Y, _Mouse.Region.Width, _Mouse.Region.Height);
             batch.Draw(whiteRectangle, pos, Color.White);
         }
     }

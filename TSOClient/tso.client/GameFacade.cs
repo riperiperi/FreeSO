@@ -21,6 +21,8 @@ using FSO.Client.UI.Panels;
 using FSO.Client.Rendering.City;
 using FSO.Client.GameContent;
 using FSO.Client.UI;
+using Ninject;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 
 namespace FSO.Client
@@ -30,6 +32,7 @@ namespace FSO.Client
     /// </summary>
     public class GameFacade
     {
+        public static KernelBase Kernel;
         public static ContentStrings Strings;
         public static GameController Controller;
         public static UILayer Screens;
@@ -43,31 +46,20 @@ namespace FSO.Client
         public static UpdateState LastUpdateState;
         public static Thread GameThread;
         public static bool Focus = true;
+        public static string CurrentCityName = "";
 
         public static bool Linux;
         public static bool DirectX;
+        public static bool EnableMod;
 
         public static CursorManager Cursor;
         public static UIMessageController MessageController = new UIMessageController();
 
         //Entries received from city server, see UIPacketHandlers.OnCityTokenResponse()
-        public static CityDataRetriever CDataRetriever = new CityDataRetriever();
-
-        /// <summary>
-        /// Place where the game can store cached values, e.g. pre modified textures to improve
-        /// 2nd load speed, etc.
-        /// </summary>
-        public static string CacheDirectory;
-        public static string CacheRoot = @"TSOCache/";
 
         public static void Init()
         {
         }
-
-        /**
-         * Important top level events
-         */
-        public static event BasicEventHandler OnContentLoaderReady;
 
         public static string GameFilePath(string relativePath)
         {
@@ -156,16 +148,9 @@ namespace FSO.Client
         {
             //TODO: Add any needed deconstruction here.
             Game.Exit();
+            Process.GetCurrentProcess().Kill();
         }
-
-        public static void TriggerContentLoaderReady()
-        {
-            if (OnContentLoaderReady != null)
-            {
-                OnContentLoaderReady();
-            }
-        }
-
+        
         public static TimeSpan GameRunTime
         {
             get

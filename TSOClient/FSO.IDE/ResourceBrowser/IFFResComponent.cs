@@ -28,7 +28,8 @@ namespace FSO.IDE.ResourceBrowser
             { typeof(STR), typeof(STRResourceControl) },
             { typeof(CTSS), typeof(STRResourceControl) },
             { typeof(TTAB), typeof(TTABResourceControl) },
-            { typeof(SPR2), typeof(SPR2ResourceControl) }
+            { typeof(SPR2), typeof(SPR2ResourceControl) },
+            { typeof(BCON), typeof(BCONResourceControl) }
         };
 
         public Type[] ChunkTypes = new Type[]

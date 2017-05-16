@@ -8,10 +8,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Runtime.InteropServices;	
+using System.Runtime.InteropServices;
 using FSO.Files.XA;
 using Microsoft.Xna.Framework.Audio;
 using System.IO;
+using FSO.HIT.Model;
 
 namespace FSO.HIT
 {
@@ -33,7 +34,10 @@ namespace FSO.HIT
 
                 inst = sfx.CreateInstance();
                 inst.IsLooped = true;
+                inst.Volume = HITVM.Get().GetMasterVolume(HITVolumeGroup.AMBIENCE);
                 inst.Play();
+                HITVM.Get().AmbLoops.Add(inst);
+
                 fscMode = false;
             }
             else
@@ -51,6 +55,7 @@ namespace FSO.HIT
             {
                 inst.Stop();
                 inst.Dispose();
+                HITVM.Get().AmbLoops.Remove(inst);
                 sfx.Dispose();
             }
         }

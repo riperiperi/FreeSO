@@ -20,6 +20,37 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMTransferFunds : VMPrimitiveHandler
     {
+        public static Dictionary<VMTransferFundsExpenseType, float> ExpenseTuningMultiplier = new Dictionary<VMTransferFundsExpenseType, float>()
+        {
+            /*{ VMTransferFundsExpenseType.IncomeJob, 20f },
+            { VMTransferFundsExpenseType.IncomeClubJob, 20f },
+            { VMTransferFundsExpenseType.IncomeRestaurantJob, 20f },
+            { VMTransferFundsExpenseType.IncomeRobotJob, 20f },
+
+            //{ VMTransferFundsExpenseType.IncomeMisc, 20f },
+            { VMTransferFundsExpenseType.IncomeCanning, 20f },
+            { VMTransferFundsExpenseType.IncomeChalkboard, 20f },
+            { VMTransferFundsExpenseType.IncomeChemistry, 20f },
+
+            { VMTransferFundsExpenseType.IncomeEasel, 20f },
+            { VMTransferFundsExpenseType.IncomeEaselPlayers, 20f },
+            { VMTransferFundsExpenseType.IncomeFoodCounterPlayers, 20f },
+            { VMTransferFundsExpenseType.IncomeGGWorkbench, 20f },
+            { VMTransferFundsExpenseType.IncomeObjectsBlackjack, 20f },
+            { VMTransferFundsExpenseType.IncomeObjectsMaze, 20f },
+            { VMTransferFundsExpenseType.IncomeObjectsPaperC, 20f },
+            { VMTransferFundsExpenseType.IncomeObjectsPizza, 20f },
+            { VMTransferFundsExpenseType.IncomeObjectsPoker, 20f },
+            { VMTransferFundsExpenseType.IncomeObjectsRoulette, 20f },
+            { VMTransferFundsExpenseType.IncomeObjectsSkill, 20f },
+            { VMTransferFundsExpenseType.IncomeObjectsSlots, 20f },
+            { VMTransferFundsExpenseType.IncomePinata, 20f },
+            { VMTransferFundsExpenseType.IncomePinataPlayers, 20f },
+
+            { VMTransferFundsExpenseType.IncomeTelemarket, 20f },
+            { VMTransferFundsExpenseType.IncomeTypewriter, 20f },*/
+        };
+
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMTransferFundsOperand)args;
@@ -46,6 +77,11 @@ namespace FSO.SimAntics.Primitives
             }
 
             var amount = VMMemory.GetBigVariable(context, operand.GetAmountOwner(), (short)operand.AmountData);
+            float scale = 1f;
+            if (ExpenseTuningMultiplier.TryGetValue(operand.ExpenseType, out scale))
+            {
+                amount = (int)(amount * scale);
+            }
 
             uint source = uint.MaxValue;
             uint target = uint.MaxValue;
@@ -71,6 +107,7 @@ namespace FSO.SimAntics.Primitives
                 case VMTransferFundsType.FromStackObjectToMaxis:
                     source = context.StackObject.PersistID; break;
                 case VMTransferFundsType.FromStackObjectToStackObjectOwner:
+                case VMTransferFundsType.FromStackObjectToLotRoommates:
                     source = context.StackObject.PersistID;
                     if (context.StackObject is VMGameObject) target = ((VMTSOObjectState)context.StackObject.TSOState).OwnerID;
                     break;
@@ -82,6 +119,10 @@ namespace FSO.SimAntics.Primitives
                     break;
                 case VMTransferFundsType.FromMaxisToLotOwner:
                     target = context.VM.TSOState.OwnerID;
+                    break;
+                case VMTransferFundsType.MeToLotRoommates:
+                    //give to object owner for now (doors)
+                    if (context.StackObject is VMGameObject) target = ((VMTSOObjectState)context.StackObject.TSOState).OwnerID; 
                     break;
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;

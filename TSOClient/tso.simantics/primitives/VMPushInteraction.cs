@@ -56,6 +56,7 @@ namespace FSO.SimAntics.Engine.Primitives
             action.Mode = mode;
             action.Priority = priority;
             action.Flags |= TTABFlags.MustRun;
+            if (operand.PushTailContinuation) action.Flags |= TTABFlags.FSOPushTail;
             if (operand.PushHeadContinuation) action.Flags |= TTABFlags.Leapfrog;
 
             context.StackObject.Thread.EnqueueAction(action);
@@ -75,6 +76,11 @@ namespace FSO.SimAntics.Engine.Primitives
         public bool UseCustomIcon
         {
             get { return (Flags & 1) > 0; }
+        }
+
+        public bool PushTailContinuation
+        {
+            get { return (Flags & 2) > 0; }
         }
 
         public bool PushHeadContinuation

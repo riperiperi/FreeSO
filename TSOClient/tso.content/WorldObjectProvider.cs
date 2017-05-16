@@ -19,6 +19,7 @@ using FSO.Files.Formats.OTF;
 using System.Collections.Concurrent;
 using System.IO;
 using FSO.Common;
+using FSO.Common.Utils;
 
 namespace FSO.Content
 {
@@ -27,7 +28,7 @@ namespace FSO.Content
     /// </summary>
     public class WorldObjectProvider : IContentProvider<GameObject>
     {
-        private ConcurrentDictionary<ulong, GameObject> Cache = new ConcurrentDictionary<ulong, GameObject>();
+        private TimedReferenceCache<ulong, GameObject> Cache = new TimedReferenceCache<ulong, GameObject>();
         private FAR1Provider<IffFile> Iffs;
         private FAR1Provider<IffFile> Sprites;
         private FAR1Provider<OTFFile> TuningTables;
@@ -63,7 +64,7 @@ namespace FSO.Content
 
             /** Load packingslip **/
             Entries = new Dictionary<ulong, GameObjectReference>();
-            Cache = new ConcurrentDictionary<ulong, GameObject>();
+            Cache = new TimedReferenceCache<ulong, GameObject>();
 
             var packingslip = new XmlDocument();
             packingslip.Load(ContentManager.GetPath("packingslips/objecttable.xml"));
@@ -109,7 +110,7 @@ namespace FSO.Content
             }
         }
 
-        private Dictionary<string, GameObjectResource> ProcessedFiles = new Dictionary<string, GameObjectResource>();
+        private TimedReferenceCache<string, GameObjectResource> ProcessedFiles = new TimedReferenceCache<string, GameObjectResource>();
 
         #region IContentProvider<GameObject> Members
 
@@ -120,72 +121,71 @@ namespace FSO.Content
 
         public GameObject Get(ulong id)
         {
-            if (Cache.ContainsKey(id))
+            return Cache.GetOrAdd(id, (_) =>
             {
-                return Cache[id];
-            }
+                GameObjectReference reference;
+                GameObjectResource resource = null;
 
-            lock (Cache)
-            {
-                if (!Cache.ContainsKey(id))
+                lock (Entries)
                 {
-                    GameObjectReference reference;
-                    GameObjectResource resource = null;
-
-                    lock (Entries)
+                    Entries.TryGetValue(id, out reference);
+                    if (reference == null)
                     {
-                        Entries.TryGetValue(id, out reference);
-                        if (reference == null)
+                        Console.WriteLine("Failed to get Object ID: " + id.ToString() + " (no resource)");
+                        return null;
+                    }
+                    /*
+                    lock (ProcessedFiles)
+                    {
+                        //if a file is processed but an object in it is not in the cache, it may have changed.
+                        //check for it again!
+                        ProcessedFiles.TryGetValue(reference.FileName, out resource);
+                    }
+                    */
+                }
+
+                resource = ProcessedFiles.GetOrAdd(reference.FileName, (fname) =>
+                {
+                    /** Better set this up! **/
+                    IffFile sprites = null, iff = null;
+                    OTFFile tuning = null;
+
+                    if (reference.Source == GameObjectSource.Far)
+                    {
+                        iff = this.Iffs.Get(reference.FileName + ".iff");
+                        iff.RuntimeInfo.Path = reference.FileName;
+                        if (WithSprites) sprites = this.Sprites.Get(reference.FileName + ".spf");
+                        var rewrite = PIFFRegistry.GetOTFRewrite(reference.FileName + ".otf");
+                        try
                         {
-                            Console.WriteLine("Failed to get Object ID: " + id.ToString() + " (no resource)");
-                            return null;
-                        }
-                        lock (ProcessedFiles)
+                            tuning = (rewrite != null) ? new OTFFile(rewrite) : this.TuningTables.Get(reference.FileName + ".otf");
+                        } catch (Exception)
                         {
-                            //if a file is processed but an object in it is not in the cache, it may have changed.
-                            //check for it again!
-                            ProcessedFiles.TryGetValue(reference.FileName, out resource);
+                            //if any issues occur loading an otf, just silently ignore it.
                         }
                     }
-
-                    if (resource == null)
+                    else
                     {
-                        /** Better set this up! **/
-                        IffFile sprites = null, iff = null;
-                        OTFFile tuning = null;
-
-                        if (reference.Source == GameObjectSource.Far)
-                        {
-                            iff = this.Iffs.Get(reference.FileName + ".iff");
-                            iff.RuntimeInfo.Path = reference.FileName;
-                            if (WithSprites) sprites = this.Sprites.Get(reference.FileName + ".spf");
-                            tuning = this.TuningTables.Get(reference.FileName + ".otf");
-                        }
-                        else
-                        {
-                            iff = new IffFile(reference.FileName);
-                            iff.RuntimeInfo.Path = reference.FileName;
-                            iff.RuntimeInfo.State = IffRuntimeState.Standalone;
-                        }
-
-                        if (iff.RuntimeInfo.State == IffRuntimeState.PIFFPatch)
-                        {
-                            //OBJDs may have changed due to patch. Remove all file references
-                            ResetFile(iff);
-                        }
-
-                        iff.RuntimeInfo.UseCase = IffUseCase.Object;
-                        if (sprites != null) sprites.RuntimeInfo.UseCase = IffUseCase.ObjectSprites;
-
-                        resource = new GameObjectResource(iff, sprites, tuning, reference.FileName);
-
-                        lock (ProcessedFiles)
-                        {
-                            ProcessedFiles.Add(reference.FileName, resource);
-                        }
+                        iff = new IffFile(reference.FileName);
+                        iff.RuntimeInfo.Path = reference.FileName;
+                        iff.RuntimeInfo.State = IffRuntimeState.Standalone;
                     }
 
-                    foreach (var objd in resource.MainIff.List<OBJD>())
+                    if (iff.RuntimeInfo.State == IffRuntimeState.PIFFPatch)
+                    {
+                        //OBJDs may have changed due to patch. Remove all file references
+                        ResetFile(iff);
+                    }
+
+                    iff.RuntimeInfo.UseCase = IffUseCase.Object;
+                    if (sprites != null) sprites.RuntimeInfo.UseCase = IffUseCase.ObjectSprites;
+
+                    return new GameObjectResource(iff, sprites, tuning, reference.FileName);
+                });
+
+                foreach (var objd in resource.MainIff.List<OBJD>())
+                {
+                    if (objd.GUID == id)
                     {
                         var item = new GameObject
                         {
@@ -193,18 +193,12 @@ namespace FSO.Content
                             OBJ = objd,
                             Resource = resource
                         };
-                        Cache.GetOrAdd(item.GUID, item);
+                        return item; //found it!
                     }
-                    //0x3BAA9787
-                    if (!Cache.ContainsKey(id))
-                    {
-                        Console.WriteLine("Failed to get Object ID: " + id.ToString() + " from resource " + resource.Name);
-                        return null;
-                    }
-                    return Cache[id];
                 }
-                return Cache[id];
-            }
+                Console.WriteLine("Failed to get Object ID: " + id.ToString() + " from resource " + resource.Name);
+                return null;
+            });
         }
 
         public GameObject Get(uint type, uint fileID)
@@ -332,6 +326,12 @@ namespace FSO.Content
         public GameObject Get()
         {
             return Provider.Get(ID);
+        }
+
+
+        public object GetGeneric()
+        {
+            return Get();
         }
 
         #endregion

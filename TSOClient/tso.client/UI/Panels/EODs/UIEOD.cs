@@ -1,4 +1,5 @@
 ﻿using FSO.Client.UI.Framework;
+using FSO.Client.UI.Screens;
 using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
@@ -23,6 +24,27 @@ namespace FSO.Client.UI.Panels.EODs
             Controller = controller;
         }
 
+        public UILotControl LotController
+        {
+            get
+            {
+                var screen = UIScreen.Current as CoreGameScreen;
+                if (screen == null){
+                    return null;
+                }
+
+                return screen.LotControl;
+            }
+        }
+
+        public virtual void OnExpand()
+        {
+        }
+
+        public virtual void OnContract()
+        {
+        }
+
         public virtual void OnClose()
         {
             Controller.CloseEOD();
@@ -36,6 +58,20 @@ namespace FSO.Client.UI.Panels.EODs
         public void SetTime(int time)
         {
             Controller.EODTime = " "+((time<0)?"":((time/60)+":"+((time%60).ToString().PadLeft(2, '0'))));
+        }
+
+        public void CloseInteraction()
+        {
+            var me = Controller.Lot.ActiveEntity;
+            if (me != null) {
+                var action = me.Thread.Queue.First(x => x.Mode != SimAntics.Engine.VMQueueMode.Idle);
+                if (action != null) {
+                    Controller.Lot.vm.SendCommand(new VMNetInteractionCancelCmd
+                    {
+                        ActionUID = action.UID
+                    });
+                }
+            }
         }
 
         public void Send(string evt, string data)

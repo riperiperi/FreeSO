@@ -24,6 +24,7 @@ namespace FSO.SimAntics.Entities
         public bool MultiTile;
         public string Name = "";
         public int Price;
+        public int SalePrice = -1;
         public List<VMEntity> Objects = new List<VMEntity>();
         public List<LotTilePos> Offsets = new List<LotTilePos>();
 
@@ -82,6 +83,29 @@ namespace FSO.SimAntics.Entities
             }
             return positions;
         }
+        
+        public Rectangle? LightBounds()
+        {
+            var bObj = Objects[0];
+            if (bObj.Container != null || bObj is VMAvatar) return null;
+
+            Rectangle? result = null;
+            foreach (var obj in Objects)
+            {
+                var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
+                if ((flags & VMEntityFlags.DisallowPersonIntersection) > 0 || (flags & VMEntityFlags.AllowPersonIntersection) == 0)
+                {
+                    var footprint = obj.Footprint;
+                    if (footprint != null)
+                    {
+                        var combR = new Rectangle(footprint.x1, footprint.y1, footprint.x2 - footprint.x1, footprint.y2 - footprint.y1);
+                        if (result == null) result = combR;
+                        else result = Rectangle.Union(result.Value, combR);
+                    } 
+                }
+            }
+            return result;
+        }
 
         public VMEntity GetInteractionGroupLeader(VMEntity obj)
         {
@@ -95,7 +119,7 @@ namespace FSO.SimAntics.Entities
             }
         }
 
-        public VMPlacementResult ChangePosition(LotTilePos pos, Direction direction, VMContext context)
+        public VMPlacementResult ChangePosition(LotTilePos pos, Direction direction, VMContext context, VMPlaceRequestFlags flags)
         {
             if (pos.Level > context.Architecture.Stories) return new VMPlacementResult(VMPlacementError.NotAllowedOnFloor);
 
@@ -138,7 +162,7 @@ namespace FSO.SimAntics.Entities
                     off = Vector3.Transform(off-leadOff, rotMat);
 
                     var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), (sbyte)(pos.Level + Offsets[i].Level));
-                    places[i] = sub.PositionValid(offPos, direction, context);
+                    places[i] = sub.PositionValid(offPos, direction, context, flags);
                     if (places[i].Status != VMPlacementError.Success)
                     {
                         //go back to where we started: we're no longer out of world.
@@ -239,9 +263,9 @@ namespace FSO.SimAntics.Entities
 
         public void Delete(VMContext context)
         {
-            while (Objects.Count > 0)
+            var clone = new List<VMEntity>(Objects);
+            foreach (var obj in clone)
             {
-                var obj = Objects[0];
                 obj.Delete(false, context);
             }
         }
@@ -266,6 +290,7 @@ namespace FSO.SimAntics.Entities
                 MultiTile = MultiTile,
                 Name = Name,
                 Price = Price,
+                SalePrice = SalePrice,
                 Objects = objs,
                 Offsets = Offsets.ToArray()
             };
@@ -276,16 +301,17 @@ namespace FSO.SimAntics.Entities
             MultiTile = input.MultiTile;
             Name = input.Name;
             Price = input.Price;
+            SalePrice = input.SalePrice;
+            if (SalePrice == 0) SalePrice = -1;
             Objects = new List<VMEntity>();
-            foreach (var id in input.Objects)
+            for (int i= 0; i<input.Objects.Length; i++)
             {
+                var id = input.Objects[i];
                 var obj = context.VM.GetObjectById(id);
+                if (obj == null) continue;
                 Objects.Add(obj);
+                Offsets.Add(input.Offsets[i]);
                 obj.MultitileGroup = this;
-            }
-            foreach (var pos in input.Offsets)
-            {
-                Offsets.Add(pos);
             }
         }
 

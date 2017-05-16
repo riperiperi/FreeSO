@@ -26,6 +26,10 @@ namespace FSO.SimAntics
 
         public int LastTestCost;
 
+        public bool DisableClip;
+        public Rectangle BuildableArea;
+        public int BuildableFloors;
+
         //public for quick access and iteration. 
         //Make sure that on modifications you signal so that the render updates.
         public WallTile[][] Walls;
@@ -34,6 +38,10 @@ namespace FSO.SimAntics
 
         public FloorTile[][] Floors;
         public FloorTile[][] VisFloors;
+
+        public VMArchitectureTerrain Terrain;
+        public uint RoofStyle = 16;
+        public float RoofPitch = 0.66f;
 
         public bool[][] ObjectSupport;
         public bool[][] Supported;
@@ -54,24 +62,37 @@ namespace FSO.SimAntics
 
         private bool WallsDirty;
         private bool FloorsDirty;
+        private bool TerrainDirty;
 
         private bool Redraw;
 
         private Color[] m_TimeColors = new Color[]
         {
-            new Color(50, 70, 122)*1.5f,
-            new Color(50, 70, 122)*1.5f,
-            new Color(60, 80, 132)*1.5f,
-            new Color(60, 80, 132)*1.5f,
-            new Color(217, 109, 0),
+            new Color(50, 70, 122)*1.25f,
+            new Color(50, 70, 122)*1.25f,
+            new Color(55, 75, 111)*1.25f,
+            new Color(70, 70, 70)*1.25f,
+            new Color(217, 109, 50), //sunrise
+            new Color(255, 255, 255),
+            new Color(255, 255, 255), //peak
+            new Color(255, 255, 255), //peak
             new Color(255, 255, 255),
             new Color(255, 255, 255),
-            new Color(255, 255, 255),
-            new Color(255, 255, 255),
-            new Color(217, 109, 0),
-            new Color(60, 80, 80)*1.5f,
-            new Color(60, 80, 132)*1.5f,     
+            new Color(217, 109, 50), //sunset
+            new Color(70, 70, 70)*1.25f,
+            new Color(55, 75, 111)*1.25f,
+            new Color(50, 70, 122)*1.25f,
         };
+
+        public void SetRoof(float pitch, uint style)
+        {
+            RoofPitch = pitch;
+            RoofStyle = style;
+            if (VM.UseWorld)
+            {
+                WorldUI.RoofComp.SetStylePitch(style, pitch);
+            }
+        }
 
         public VMArchitecture(int width, int height, Blueprint blueprint, VMContext context)
         {
@@ -92,6 +113,7 @@ namespace FSO.SimAntics
             if (blueprint != null) blueprint.Supported = Supported;
 
             this.Rooms = new VMRoomMap[Stories];
+            this.Terrain = new VMArchitectureTerrain(width, height);
 
             for (int i = 0; i < Stories; i++)
             {
@@ -107,7 +129,6 @@ namespace FSO.SimAntics
 
                 this.Rooms[i] = new VMRoomMap();
             }
-
             
             this.RoomData = new List<VMRoom>();
             this.WorldUI = blueprint;
@@ -123,11 +144,27 @@ namespace FSO.SimAntics
 
         public void SetTimeOfDay(double time)
         {
-            Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
-            Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1)) + 1]; //second colour
-            double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
+            if (VM.UseWorld)
+            {
+                Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
+                Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1)) + 1]; //second colour
+                double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
+                WorldUI.OutsideColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
+                WorldUI.OutsideTime = time;
+                Context.World.State?.Light?.BuildOutdoorsLight(time);
+            }
+        }
 
-            WorldUI.OutsideColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
+        public void UpdateBuildableArea(Rectangle area, int floors)
+        {
+            //notify the lotview this has changed too, so it can be drawn.
+            BuildableArea = area;
+            BuildableFloors = floors;
+            if (VM.UseWorld)
+            {
+                WorldUI.BuildableArea = BuildableArea;
+                WorldUI.Terrain.TerrainDirty = true;
+            }
         }
 
         public void SetObjectSupported(short x, short y, sbyte level, bool support)
@@ -209,15 +246,57 @@ namespace FSO.SimAntics
             Redraw = true;
         }
 
+        public void SignalTerrainRedraw()
+        {
+            TerrainDirty = true;
+        }
+
         public void RegenRoomMap()
         {
             RoomData = new List<VMRoom>();
             RoomData.Add(new VMRoom()); //dummy at index 0
             for (int i=0; i<Stories; i++)
             {
-                Rooms[i].GenerateMap(Walls[i], Floors[i], Width, Height, RoomData);
-                if (VM.UseWorld) WorldUI.RoomMap[i] = Rooms[i].Map;
+                Rooms[i].GenerateMap(Walls[i], Floors[i], Width, Height, RoomData, (sbyte)i, Context);
+                if (VM.UseWorld)
+                {
+                    //map translate to light map
+                    WorldUI.RoomMap[i] = Rooms[i].Map.Select(x =>
+                        {
+                            var room1 = x & 0xFFFF;
+                            var room2 = x >> 16 & 0x7FFF;
+
+                            if (room1 == room2)
+                            {
+                                var roomn = RoomData[(int)room1].LightBaseRoom;
+                                return (uint)(roomn | (roomn << 16));
+                            } else
+                            {
+                                if ((x & 0x80000000) > 0 && room2 == 1) { }
+                                var roomn1 = RoomData[(int)room1].LightBaseRoom;
+                                var roomn2 = RoomData[(int)room2].LightBaseRoom;
+                                return (uint)(roomn1 | (roomn2 << 16)) | (x & 0x80000000);
+                            }
+                        }
+                    ).ToArray();
+                    //WorldUI.RoomMap[i] = Rooms[i].Map;
+                }
                 RegenerateSupported(i + 1);
+            }
+
+            if (VM.UseWorld)
+            {
+                WorldUI.Rooms = RoomData.ConvertAll(x => new Room
+                {
+                    Area = x.Area,
+                    Bounds = x.Bounds,
+                    IsOutside = x.IsOutside,
+                    IsPool = x.IsPool,
+                    WallLines = x.WallLines,
+                    RoomID = x.RoomID,
+                    Floor = x.Floor,
+                    Base = x.LightBaseRoom
+                });
             }
         }
 
@@ -226,6 +305,11 @@ namespace FSO.SimAntics
             if (WallsDirty || FloorsDirty)
             {
                 RegenRoomMap();
+                if (VM.UseWorld)
+                {
+                    WorldUI.SignalRoomChange();
+                    WorldUI.RoofComp.SetStylePitch(RoofStyle, RoofPitch);
+                }
                 if (WallsChanged != null) WallsChanged(this);
             }
 
@@ -239,6 +323,12 @@ namespace FSO.SimAntics
                 LastTestCost = SimulateCommands(Commands, true);
                 WorldUI.SignalWallChange();
                 WorldUI.SignalFloorChange();
+            }
+
+            if (TerrainDirty && VM.UseWorld)
+            {
+                WorldUI.Terrain.UpdateTerrain(Terrain.LightType, Terrain.DarkType, Terrain.Heights, Terrain.GrassState);
+                TerrainDirty = false;
             }
 
             var clock = Context.Clock;
@@ -590,10 +680,39 @@ namespace FSO.SimAntics
             return Walls[level-1][GetOffset(tileX, tileY)];
         }
 
+        public ushort GetPreciseFloor(LotTilePos pos)
+        {
+            var wall = GetWall(pos.TileX, pos.TileY, pos.Level);
+            if ((wall.Segments & WallSegments.VerticalDiag) > 0)
+            {
+                if ((pos.x % 16) - (pos.y % 16) > 0)
+                    return wall.TopLeftPattern;
+                else
+                    return wall.TopLeftStyle;
+            }
+            else if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
+            {
+                if ((pos.x % 16) + (pos.y % 16) > 15)
+                    return wall.TopLeftPattern;
+                else
+                    return wall.TopLeftStyle;
+            }
+            return GetFloor(pos.TileX, pos.TileY, pos.Level).Pattern;
+        }
+
         public FloorTile GetFloor(short tileX, short tileY, sbyte level)
         {
             var offset = GetOffset(tileX, tileY);
             return Floors[level-1][offset];
+        }
+
+        public bool OutsideClip(short tileX, short tileY, sbyte level)
+        {
+            var area = BuildableArea;
+            if (DisableClip)
+                return (tileX < 0 || tileY < 0 || level < 1 || tileX >= Width || tileY >= Height || level > Stories);
+            else
+                return (tileX < area.X || tileY < area.Y || level < 1 || tileX >= area.Right || tileY >= area.Bottom || level > BuildableFloors);
         }
 
         public bool SetFloor(short tileX, short tileY, sbyte level, FloorTile floor, bool force)
@@ -631,12 +750,16 @@ namespace FSO.SimAntics
                 Width = Width,
                 Height = Height,
                 Stories = Stories,
+                Terrain = Terrain,
         
                 Walls = Walls,
                 Floors = Floors,
 
                 WallsDirty = WallsDirty,
-                FloorsDirty = FloorsDirty
+                FloorsDirty = FloorsDirty,
+
+                RoofPitch = RoofPitch,
+                RoofStyle = RoofStyle
             };
         }
 
@@ -645,11 +768,23 @@ namespace FSO.SimAntics
             Width = input.Width;
             Height = input.Height;
             Stories = input.Stories;
+            Terrain = input.Terrain;
 
             Walls = input.Walls;
             Floors = input.Floors;
 
+            RoofPitch = input.RoofPitch;
+            RoofStyle = input.RoofStyle;
+
             RegenWallsAt();
+            SignalTerrainRedraw();
+        }
+
+        public void SignalAllDirty()
+        {
+            WallsDirty = true;
+            FloorsDirty = true;
+            Redraw = true;
         }
 
         public void WallDirtyState(VMArchitectureMarshal input)

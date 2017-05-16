@@ -21,6 +21,7 @@ using FSO.Client.Utils;
 using FSO.Common.Utils;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.Common;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -85,6 +86,7 @@ namespace FSO.Client.UI.Panels
             Labels = new List<UIChatBalloon>();
 
             TextBox = new UITextBox();
+            TextBox.SetBackgroundTexture(null, 0, 0, 0, 0);
             TextBox.Visible = false;
             Add(TextBox);
             TextBox.Position = new Vector2(25, 25);
@@ -119,6 +121,18 @@ namespace FSO.Client.UI.Panels
             this.Add(PropertyLog);
         }
 
+        public override void GameResized()
+        {
+            base.GameResized();
+            InvalidAreas = new List<Rectangle>();
+            InvalidAreas.Add(new Rectangle(-100000, -100000, 100020, 200000 + GlobalSettings.Default.GraphicsHeight)); //left
+            InvalidAreas.Add(new Rectangle(-100000, -100000, 200000 + GlobalSettings.Default.GraphicsWidth, 100020)); //top
+            InvalidAreas.Add(new Rectangle(GlobalSettings.Default.GraphicsWidth - 20, -100000, 100020, 200000 + GlobalSettings.Default.GraphicsHeight)); //right
+            InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 20, 200000 + GlobalSettings.Default.GraphicsWidth, 100020)); //bottom
+            InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 230, 100230, 100230)); //ucp
+            TextBox.SetSize(GlobalSettings.Default.GraphicsWidth - 50, 25);
+        }
+
         private void SendMessage(string message)
         {
             message = message.Replace("\r\n", "");
@@ -146,6 +160,17 @@ namespace FSO.Client.UI.Panels
             TextBox.Clear();
         }
 
+        public List<Rectangle> GetInvalid(UIChatBalloon label)
+        {
+            var to = Labels.IndexOf(label);
+            var copy = new List<Rectangle>(InvalidAreas);
+            for (int i=0; i<to; i++)
+            {
+                if (Labels[i].Visible && Labels[i].Alpha > 0) copy.Add(Labels[i].DisplayRect);
+            }
+            return copy;
+        }
+
         public override void Update(UpdateState state)
         {
             if (!VM.UseWorld) return;
@@ -170,13 +195,13 @@ namespace FSO.Client.UI.Panels
                 }
             }
 
-            if (state.NewKeys.Contains(Keys.H) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
+            if (state.NewKeys.Contains(Keys.H) && state.CtrlDown)
             {
                 state.InputManager.SetFocus(null);
                 HistoryDialog.Visible = !HistoryDialog.Visible;
             }
 
-            if (state.NewKeys.Contains(Keys.P) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
+            if (state.NewKeys.Contains(Keys.P) && state.CtrlDown)
             {
                 PropertyLog.Visible = !PropertyLog.Visible;
             }
@@ -185,6 +210,7 @@ namespace FSO.Client.UI.Panels
             while (avatars.Count < Labels.Count)
             {
                 Remove(Labels[Labels.Count - 1]);
+                Labels[Labels.Count - 1].Dispose();
                 Labels.RemoveAt(Labels.Count - 1);
             }
             while (avatars.Count > Labels.Count)
@@ -195,26 +221,40 @@ namespace FSO.Client.UI.Panels
                 Labels.Add(balloon);
             }
 
+            var myAvatar = vm.GetAvatarByPersist(vm.MyUID);
+            var myIgnoring = ((VMTSOAvatarState)myAvatar?.TSOState)?.IgnoredAvatars ?? new HashSet<uint>();
+
             for (int i=0; i<Labels.Count; i++)
             {
                 var label = Labels[i];
                 var avatar = (VMAvatar)avatars[i];
 
                 if (label.Message != avatar.Message)
-                    label.SetNameMessage(avatar.Name, avatar.Message);
-
-                if (avatar.MessageTimeout < 30)
+                    label.SetNameMessage(avatar.Name, avatar.Message, avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender)>0);
+                if (myIgnoring.Contains(avatar.PersistID))
                 {
-                    label.FadeTime = avatar.MessageTimeout / 3;
-                    label.Alpha = avatar.MessageTimeout / 30f;
+                    label.Alpha = 0;
                 }
                 else
                 {
-                    if (label.FadeTime < 10) label.FadeTime++;
-                    label.Alpha = label.FadeTime / 10f;
+                    if (avatar.MessageTimeout < 30)
+                    {
+                        label.FadeTime = avatar.MessageTimeout / 3;
+                        label.Alpha = avatar.MessageTimeout / 30f;
+                    }
+                    else
+                    {
+                        if (label.FadeTime < 10) label.FadeTime++;
+                        label.Alpha = label.FadeTime / 10f;
+                    }
                 }
 
-                label.TargetPt = avatar.WorldUI.GetScreenPos(vm.Context.World.State) + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom));
+                var world = vm.Context.World.State;
+                var off2 = new Vector2(world.WorldSpace.WorldPxWidth, world.WorldSpace.WorldPxHeight);
+                off2 = (off2 / world.PreciseZoom - off2) / 2;
+
+                label.TargetPt = ((avatar.WorldUI.GetScreenPos(vm.Context.World.State) + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom)))
+                   + off2) * world.PreciseZoom ;
 
             }
             base.Update(state);
@@ -222,13 +262,23 @@ namespace FSO.Client.UI.Panels
 
         public override void Draw(UISpriteBatch batch)
         {
+            var whitePx = TextureGenerator.GetPxWhite(batch.GraphicsDevice);
+            if (TextBox.Visible) DrawLocalTexture(batch, whitePx, null, TextBox.Position, TextBox.Size, new Color(0x00, 0x33, 0x66) * 0.75f);
             base.Draw(batch);
         }
 
         public void ReceiveEvent(VMChatEvent evt)
         {
             if (evt.Type == VMChatEventType.Arch) PropertyLog.ReceiveEvent(evt);
-            else HistoryDialog.ReceiveEvent(evt);
+            else
+            {
+                var myAvatar = vm.GetAvatarByPersist(vm.MyUID);
+                var myIgnoring = ((VMTSOAvatarState)myAvatar?.TSOState)?.IgnoredAvatars ?? new HashSet<uint>();
+                if (!myIgnoring.Contains(evt.SenderUID))
+                {
+                    HistoryDialog.ReceiveEvent(evt);
+                }
+            }
         }
 
         public void SetLotName(string name)

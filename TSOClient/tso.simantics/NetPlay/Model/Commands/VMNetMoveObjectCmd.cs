@@ -26,9 +26,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override bool Execute(VM vm, VMAvatar caller)
         {
             VMEntity obj = vm.GetObjectById(ObjectID);
-            if (obj == null || caller == null || (obj is VMAvatar)) return false;
+            if (obj == null || caller == null || (obj is VMAvatar) || 
+                (((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Admin 
+                && obj.IsUserMovable(vm.Context, false) != VMPlacementError.Success))
+                return false;
             if (((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate) return false;
-            var result = obj.SetPosition(new LotTilePos(x, y, level), dir, vm.Context);
+            var result = obj.SetPosition(new LotTilePos(x, y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
             if (result.Status == VMPlacementError.Success)
             {
                 obj.MultitileGroup.ExecuteEntryPoint(11, vm.Context); //User Placement

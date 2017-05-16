@@ -22,29 +22,62 @@ namespace FSO.Client.UI.Controls
 {
     public class UIListBox : UIElement
     {
-        [UIAttribute("rowHeight")]
-        public int RowHeight { get; set; }
         private UIMouseEventRef MouseHandler;
-
-
-
         public event ChangeDelegate OnChange;
+        public event ButtonClickDelegate OnDoubleClick;
+
+        public int NumVisibleRows { get; internal set; }
+        public int ScrollOffset { get; set; }
+
+        public bool AllowDisabledSelection = false;
+        public bool Mask = false;
 
         public UIListBox()
         {
-            RowHeight = 15;
             MouseHandler = this.ListenForMouse(new Rectangle(0, 0, 10, 10), OnMouseEvent);
+            RowHeight = 16;
         }
 
 
 
 
-#region Fields
+        #region Fields
+
+        private int _RowHeight;
+
+        [UIAttribute("rowHeight")]
+        public int RowHeight
+        {
+            get { return _RowHeight; }
+            set
+            {
+                _RowHeight = value;
+                CalculateHitArea();
+            }
+        }
+
+        private int m_VisibleRows = -1;
+
+        [UIAttribute("visibleRows")]
+        public int VisibleRows
+        {
+            get
+            {
+                return m_VisibleRows;
+            }
+            set
+            {
+                m_VisibleRows = value;
+                CalculateScroll();
+                CalculateHitArea();
+            }
+        }
 
         private TextStyle m_FontStyle;
 
         [UIAttribute("font", typeof(TextStyle))]
-        public TextStyle FontStyle {
+        public TextStyle FontStyle
+        {
             get
             {
                 return m_FontStyle;
@@ -53,7 +86,8 @@ namespace FSO.Client.UI.Controls
             {
                 m_FontStyle = value;
 
-                TextStyle = new UIListBoxTextStyle {
+                TextStyle = new UIListBoxTextStyle
+                {
                     Normal = value,
                     Highlighted = value,
                     Selected = value,
@@ -95,10 +129,6 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        [UIAttribute("visibleRows")]
-        public int VisibleRows { get; set; }
-
-        public int VerticalScrollPosition;
 
         /// <summary>
         /// Set the content of the list
@@ -112,12 +142,10 @@ namespace FSO.Client.UI.Controls
             }
             set
             {
-                if (m_Slider != null)
-                {
-                    m_Slider.MaxValue = Math.Max(0, Math.Max(0,value.Count-VisibleRows));
-                    m_Slider.Value = VerticalScrollPosition;
-                }
+                var previousSelection = SelectedItem;
                 m_Items = value;
+                SelectedItem = previousSelection;
+                CalculateScroll();
             }
         }
 
@@ -132,7 +160,7 @@ namespace FSO.Client.UI.Controls
         /// </summary>
         public float Width
         {
-            get { return m_Width; }
+            get { return m_Height; }
         }
 
         /// <summary>
@@ -156,42 +184,122 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        public event ButtonClickDelegate OnDoubleClick;
 
-#endregion
 
+        #endregion
+
+        #region Scrollbar
 
         private bool m_MouseOver = false;
 
         private int m_SelectedRow = -1;
         private int m_HoverRow = -1;
 
-        private int m_DoubleClickTime = 0;
+        [UIAttribute("scrollbarImage")]
+        public Texture2D ScrollbarImage { get; set; }
+
+        [UIAttribute("scrollbarGutter")]
+        public int ScrollbarGutter { get; set; }
+
+        private UISlider m_Slider;
+
+        public UISlider Slider
+        {
+            get { return m_Slider; }
+        }
+
+        public void AttachSlider(UISlider slider)
+        {
+            this.m_Slider = slider;
+            m_Slider.OnChange += new ChangeDelegate(m_Slider_OnChange);
+            CalculateScroll();
+        }
+
+        public void InitDefaultSlider()
+        {
+            m_Slider = new UISlider();
+            m_Slider.Texture = ScrollbarImage;
+            AttachSlider(m_Slider);
+            PositionChildSlider();
+            Parent.Add(m_Slider);
+        }
+
+        public void PositionChildSlider()
+        {
+            m_Slider.Position = this.Position + new Vector2(this.Width + ScrollbarGutter, 0);
+            m_Slider.SetSize(1, this.Height);
+        }
+
+        private void CalculateScroll()
+        {
+            var bounds = this.GetBounds();
+            NumVisibleRows = m_VisibleRows != -1 ? m_VisibleRows : (int)Math.Floor((double)bounds.Height / (double)RowHeight);
+            var numRows = this.Items.Count;
+
+            if (m_Slider != null)
+            {
+                m_Slider.MaxValue = (int)Math.Max(0, numRows - NumVisibleRows);
+                m_Slider.MinValue = 0;
+                m_Slider.Value = (float)ScrollOffset;
+            }
+        }
+
+        void m_Slider_OnChange(UIElement element)
+        {
+            ScrollOffset = (int)m_Slider.Value;
+        }
+
+        #endregion
 
         public override void Update(UpdateState state)
         {
             base.Update(state);
-            if (Height < VisibleRows * RowHeight) SetSize(Width, VisibleRows * RowHeight);
+            var i = 0;
+            foreach (var item in Items)
+            {
+                foreach (var col in item.Columns)
+                {
+                    if (col is UIContainer)
+                    {
+                        var container = ((UIContainer)col);
+                        container.Visible = i >= ScrollOffset && i < ScrollOffset + NumVisibleRows;
+                        if (container.Visible)
+                        {
+                            container.Parent = this.Parent;
+                            container.InvalidateMatrix();
+                            container.Update(state);
+                            container.Parent = null;
+                        } else
+                        {
+                            container.Update(state);
+                        }
+                    }
+                }
+                i++;
+            }
             if (m_MouseOver)
             {
                 var overRow = GetRowUnderMouse(state);
                 m_HoverRow = overRow;
             }
-            if (m_DoubleClickTime > 0) m_DoubleClickTime--;
+            else
+            {
+                m_HoverRow = -1;
+            }
         }
+
+        private DoubleClick DoubleClicker = new DoubleClick();
 
         private void OnMouseEvent(UIMouseEventType type, UpdateState update)
         {
+            if(OnDoubleClick != null && DoubleClicker.TryDoubleClick(type, update))
+            {
+                OnDoubleClick(null);
+                return;
+            }
+
             switch (type)
             {
-                case UIMouseEventType.MouseDown:
-                    if (m_DoubleClickTime > 0)
-                    {
-                        if (OnDoubleClick != null) OnDoubleClick(this);
-                        m_DoubleClickTime = 0;
-                    }
-                    else m_DoubleClickTime = 20;
-                    break;
                 case UIMouseEventType.MouseOver:
                     m_MouseOver = true;
                     break;
@@ -225,11 +333,16 @@ namespace FSO.Client.UI.Controls
         {
             get
             {
-                if (m_SelectedRow >= 0 && m_SelectedRow < Items.Count)
+                if (Items != null && m_SelectedRow >= 0 && m_SelectedRow < Items.Count)
                 {
                     return Items[m_SelectedRow];
                 }
                 return null;
+            }
+            set
+            {
+                var index = Items.IndexOf(value);
+                SelectedIndex = index;
             }
         }
 
@@ -246,47 +359,96 @@ namespace FSO.Client.UI.Controls
         private int GetRowUnderMouse(UpdateState update)
         {
             var mouse = this.GetMousePosition(update.MouseState);
-            var estRow = (int)Math.Floor(mouse.Y / RowHeight);
-            if (estRow >= 0 && estRow < VisibleRows)
+            var estRow = (int)Math.Floor(mouse.Y / RowHeight) + ScrollOffset;
+            if (estRow >= 0 && estRow < Items.Count)
             {
-                estRow += VerticalScrollPosition;
-                if (estRow < m_Items.Count)
-                {
-                    /** Is this row enabled? **/
-                    var row = Items[estRow];
-                    if (row.Disabled) { return -1; }
+                /** Is this row enabled? **/
+                var row = Items[estRow];
+                if (ValuePointer.Get<Boolean>(row.Disabled) && AllowDisabledSelection == false) { return -1; }
 
-                    return estRow;
-                }
+                return estRow;
             }
             return -1;
         }
-
 
         public void SetSize(float width, float height)
         {
             m_Width = width;
             m_Height = height;
 
-            MouseHandler.Region.Width = (int)width;
-            MouseHandler.Region.Height = (int)height;
+            CalculateHitArea();
+            CalculateScroll();
         }
 
+        private void CalculateHitArea()
+        {
+            MouseHandler.Region.Width = (int)m_Width;
 
+            if (Mask)
+            {
+                MouseHandler.Region.Height = (int)m_Height;
+            }
+            else
+            {
+                MouseHandler.Region.Height = RowHeight * NumVisibleRows;
+            }
+        }
+
+        private Texture2D ListScene;
+
+        public override void PreDraw(UISpriteBatch batch)
+        {
+            if (!Visible) return;
+            base.PreDraw(batch);
+
+            if (Mask)
+            {
+                Promise<Texture2D> bufferTexture = null;
+                using (batch.WithBuffer(ref bufferTexture))
+                {
+                    _Draw(batch);
+                }
+
+                ListScene = bufferTexture.Get();
+            }
+        }
 
         public override void Draw(UISpriteBatch batch)
         {
             if (!Visible) return;
-            for (var i = 0; i < VisibleRows; i++)
+
+            //Mask
+            if (Mask)
             {
-                int j = i + VerticalScrollPosition;
-                if (j >= m_Items.Count) break;
-                var row = m_Items[j];
+                if (ListScene != null)
+                {
+                    var globalEdge = LocalPoint(Size);
+                    batch.Draw(ListScene, Vector2.Zero, new Rectangle(0, 0, (int)globalEdge.X, (int)globalEdge.Y), _BlendColor);
+                }
+            }
+            else
+            {
+                _Draw(batch);
+            }         
+        }
+
+        private void _Draw(UISpriteBatch batch)
+        {
+            for (var i = 0; i < NumVisibleRows; i++)
+            {
+                var rowIndex = i + ScrollOffset;
+                if (!(rowIndex < m_Items.Count))
+                {
+                    /** Out of bounds **/
+                    continue;
+                }
+
+                var row = m_Items[rowIndex];
                 var rowY = i * RowHeight;
                 var columnX = 0;
 
-                var selected = j == m_SelectedRow;
-                var hover = j == m_HoverRow;
+                var selected = rowIndex == m_SelectedRow;
+                var hover = rowIndex == m_HoverRow;
                 if (selected)
                 {
                     /** Draw selection background **/
@@ -299,18 +461,28 @@ namespace FSO.Client.UI.Controls
                 {
                     ts = row.CustomStyle;
                 }
-                var style = ts.Normal;
-                if (selected)
+                TextStyle style = null;
+                var isDisabled = ValuePointer.Get<Boolean>(row.Disabled);
+
+                if (ts != null)
                 {
-                    style = ts.Selected;
-                }
-                else if (hover)
-                {
-                    style = ts.Highlighted;
-                }
-                else if (row.Disabled)
-                {
-                    style = ts.Disabled;
+                    style = ts.Normal;
+                    if (ValuePointer.Get<Boolean>(row.UseDisabledStyleByDefault))
+                    {
+                        style = ts.Disabled;
+                    }
+                    if (selected)
+                    {
+                        style = ts.Selected;
+                    }
+                    else if (hover)
+                    {
+                        style = ts.Highlighted;
+                    }
+                    else if (isDisabled)
+                    {
+                        style = ts.Disabled;
+                    }
                 }
 
                 for (var x = 0; x < row.Columns.Length; x++)
@@ -319,9 +491,97 @@ namespace FSO.Client.UI.Controls
                     var columnSpec = m_Columns[x];
                     var columnBounds = new Rectangle(0, 0, columnSpec.Width, RowHeight);
 
+                    if(columnValue is FSO.Content.Model.ITextureRef){
+                        columnValue = ((FSO.Content.Model.ITextureRef)columnValue).Get(batch.GraphicsDevice);
+                    }
+
                     if (columnValue is string)
                     {
                         DrawLocalString(batch, (string)columnValue, new Vector2(columnX, rowY), style, columnBounds, columnSpec.Alignment);
+                    }
+                    else if (columnValue is Texture2D)
+                    {
+                        var tex = (Texture2D)columnValue;
+                        var texWidthDiv4 = tex.Width / 4;
+                        /** We assume its a 4 state button **/
+                        Rectangle from = new Rectangle(texWidthDiv4 * columnSpec.TextureDefaultFrame, 0, texWidthDiv4, tex.Height);
+                        if (selected)
+                        {
+                            from.X = texWidthDiv4 * columnSpec.TextureSelectedFrame;
+                        }
+                        else if (hover)
+                        {
+                            from.X = texWidthDiv4 * columnSpec.TextureHoverFrame;
+                        }
+                        else if (isDisabled)
+                        {
+                            from.X = texWidthDiv4 * columnSpec.TextureDisabledFrame;
+                        }
+
+                        var destWidth = texWidthDiv4;
+                        var destHeight = tex.Height;
+
+
+                        if(columnSpec.TextureBounds != null && columnSpec.TextureBounds.HasValue)
+                        {
+                            var boundsX = columnSpec.TextureBounds.Value.X;
+                            var boundsY = columnSpec.TextureBounds.Value.Y;
+
+                            if (!columnSpec.TextureMaintainAspectRatio)
+                            {
+                                destWidth = (int)boundsX;
+                                destHeight = (int)boundsY;
+                            }
+                            else
+                            {
+                                if(destWidth > destHeight)
+                                {
+                                    destWidth = (int)boundsX;
+                                    destHeight = (int)(((float)tex.Height / (float)texWidthDiv4) * destWidth);
+                                }
+                                else
+                                {
+                                    destHeight = (int)boundsY;
+                                    destWidth = (int)(((float)texWidthDiv4 / (float)tex.Height) * destHeight);
+                                }
+                            }
+                        }
+
+                        var to = new Vector2(columnX, rowY);
+                        if ((columnSpec.Alignment & TextAlignment.Middle) == TextAlignment.Middle)
+                        {
+                            to.Y = rowY + ((RowHeight - destHeight) / 2);
+                        }
+                        else if ((columnSpec.Alignment & TextAlignment.Bottom) == TextAlignment.Bottom)
+                        {
+                            to.Y = rowY + ((RowHeight - destHeight));
+                        }
+
+                        if ((columnSpec.Alignment & TextAlignment.Center) == TextAlignment.Center)
+                        {
+                            to.X = columnX + ((columnBounds.Width - destWidth) / 2);
+                        }
+                        else if ((columnSpec.Alignment & TextAlignment.Right) == TextAlignment.Right)
+                        {
+                            to.X = columnX + (columnBounds.Width - destWidth);
+                        }
+
+                        DrawLocalTexture(batch, (Texture2D)columnValue, from, to, new Vector2((float)destWidth / (float)texWidthDiv4, (float)destHeight / (float)tex.Height));
+                    }
+                    else if (columnValue is UIContainer)
+                    {
+                        var container = (UIContainer)columnValue;
+                        container.Position = this.Position + new Vector2(columnX, rowY);
+                        container.Parent = this.Parent;
+                        container.InvalidateMatrix();
+                        container.PreDraw(batch);
+                        container.Draw(batch);
+                        container.Parent = null;
+                    }
+                    else if (columnValue != null)
+                    {
+                        //Convert it to a string
+                        DrawLocalString(batch, (string)columnValue.ToString(), new Vector2(columnX, rowY), style, columnBounds, columnSpec.Alignment);
                     }
 
                     columnX += columnSpec.Width;
@@ -329,28 +589,10 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-
         public override Rectangle GetBounds()
         {
             return new Rectangle(0, 0, (int)m_Width, (int)m_Height);
         }
-
-        #region Scrollbar
-
-        private UISlider m_Slider;
-
-        public void AttachSlider(UISlider slider)
-        {
-            m_Slider = slider;
-            m_Slider.OnChange += new ChangeDelegate(m_Slider_OnChange);
-        }
-
-        void m_Slider_OnChange(UIElement element)
-        {
-            VerticalScrollPosition = (int)((UISlider)element).Value;
-        }
-
-        #endregion
 
     }
 
@@ -358,6 +600,14 @@ namespace FSO.Client.UI.Controls
     {
         public int Width = 50;
         public TextAlignment Alignment = TextAlignment.Left;
+
+        public Vector2? TextureBounds;
+        public bool TextureMaintainAspectRatio = true;
+
+        public int TextureDefaultFrame = 0;
+        public int TextureHoverFrame = 1;
+        public int TextureSelectedFrame = 2;
+        public int TextureDisabledFrame = 3;
     }
 
     public class UIListBoxColumnCollection : List<UIListBoxColumn>, UIAttributeParser
@@ -369,11 +619,13 @@ namespace FSO.Client.UI.Controls
         {
             var columns = node["columns"].Split(new char[] { '|' });
             var alignments = new string[columns.Length];
-            for (var i = 0; i < alignments.Length; i++){
+            for (var i = 0; i < alignments.Length; i++)
+            {
                 alignments[i] = "1";
             }
 
-            if (node.Attributes.ContainsKey("alignments")){
+            if (node.Attributes.ContainsKey("alignments"))
+            {
                 alignments = node.Attributes["alignments"].Split(new char[] { '|' });
             }
 
@@ -383,11 +635,12 @@ namespace FSO.Client.UI.Controls
                 switch (alignments[i])
                 {
                     case "2":
-                        align = TextAlignment.Center;
+                        align = TextAlignment.Center | TextAlignment.Middle;
                         break;
                 }
 
-                this.Add(new UIListBoxColumn {
+                this.Add(new UIListBoxColumn
+                {
                     Width = int.Parse(columns[i]),
                     Alignment = align
                 });
@@ -404,12 +657,14 @@ namespace FSO.Client.UI.Controls
     }
 
 
-    public class UIListBoxItem {
+    public class UIListBoxItem
+    {
 
         public object Data;
         public object[] Columns;
-        public bool Disabled = false;
+        public object Disabled = false;
         public UIListBoxTextStyle CustomStyle;
+        public object UseDisabledStyleByDefault = false; //Offline avatars and properties use the disabled style without the row being disabled
 
         public UIListBoxItem(object data, params object[] columns)
         {
@@ -428,13 +683,7 @@ namespace FSO.Client.UI.Controls
 
         public UIListBoxTextStyle(TextStyle baseStyle)
         {
-            Normal = baseStyle.Clone();
-            Selected = baseStyle.Clone();
-            Selected.Color = new Color(0, 243, 247);
-            Highlighted = baseStyle.Clone();
-            Highlighted.Color = new Color(255, 255, 255);
-            Disabled = baseStyle.Clone();
-            Disabled.Color = new Color(100, 100, 100);
+            Normal = Selected = Highlighted = Disabled = baseStyle;
         }
 
         public UIListBoxTextStyle()

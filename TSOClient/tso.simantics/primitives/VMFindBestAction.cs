@@ -31,7 +31,7 @@ namespace FSO.SimAntics.Primitives
             foreach (var iobj in ents)
             {
                 var obj = iobj.MultitileGroup.GetInteractionGroupLeader(iobj);
-                if (processed.Contains(obj.ObjectID)) continue;
+                if (processed.Contains(obj.ObjectID) || (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)) continue;
                 processed.Add(obj.ObjectID);
 
                 var pos2 = obj.Position;

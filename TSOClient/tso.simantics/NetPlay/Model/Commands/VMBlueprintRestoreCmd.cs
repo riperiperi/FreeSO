@@ -18,16 +18,33 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public byte[] XMLData;
         public short JobLevel = -1;
+        public int FloorClipX;
+        public int FloorClipY;
+        public int FloorClipWidth;
+        public int FloorClipHeight;
+        public int OffsetX;
+        public int OffsetY;
+        public int TargetSize;
+
+        public override bool AcceptFromClient { get { return false; } }
 
         public override bool Execute(VM vm)
         {
+            //the client should ignore these. Can be sent before state sync when joining job lots (by accident)
+            if (VM.UseWorld) return true;
+
             XmlHouseData lotInfo;
             using (var stream = new MemoryStream(XMLData))
             {
                 lotInfo = XmlHouseData.Parse(stream);
             }
 
+            vm.SetGlobalValue(11, JobLevel); //set job level before hand 
+
             var activator = new VMWorldActivator(vm, vm.Context.World);
+            activator.FloorClip = new Microsoft.Xna.Framework.Rectangle(FloorClipX, FloorClipY, FloorClipWidth, FloorClipHeight);
+            activator.Offset = new Microsoft.Xna.Framework.Point(OffsetX, OffsetY);
+            activator.TargetSize = TargetSize;
             var blueprint = activator.LoadFromXML(lotInfo);
 
             if (VM.UseWorld)
@@ -35,9 +52,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 vm.Context.World.InitBlueprint(blueprint);
                 vm.Context.Blueprint = blueprint;
             }
-            vm.SetGlobalValue(11, JobLevel);
 
             return true;
+        }
+
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            return !FromNet;
         }
 
         #region VMSerializable Members
@@ -50,6 +71,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 writer.Write(XMLData.Length);
                 writer.Write(XMLData);
                 writer.Write(JobLevel);
+
+                writer.Write(FloorClipX);
+                writer.Write(FloorClipY);
+                writer.Write(FloorClipWidth);
+                writer.Write(FloorClipHeight);
+                writer.Write(OffsetX);
+                writer.Write(OffsetY);
+                writer.Write(TargetSize);
             }
         }
 
@@ -58,6 +87,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             int length = reader.ReadInt32();
             XMLData = reader.ReadBytes(length);
             JobLevel = reader.ReadInt16();
+
+            FloorClipX = reader.ReadInt32();
+            FloorClipY = reader.ReadInt32();
+            FloorClipWidth = reader.ReadInt32();
+            FloorClipHeight = reader.ReadInt32();
+            OffsetX = reader.ReadInt32();
+            OffsetY = reader.ReadInt32();
+            TargetSize = reader.ReadInt32();
         }
 
         #endregion

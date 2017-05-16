@@ -22,6 +22,8 @@ using Microsoft.Xna.Framework.Input;
 using FSO.Client.UI.Framework;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Common;
+using FSO.Client.UI.Controls;
+using FSO.Common.Rendering.Framework;
 
 namespace FSO.Client.UI.Panels
 {
@@ -40,8 +42,10 @@ namespace FSO.Client.UI.Panels
 
         private int OldMX;
         private int OldMY;
+        private UpdateState LastState; //state for access from Sellback and friends.
         public bool DirChanged;
         public bool ShowTooltip;
+        public bool Roommate;
 
         public event HolderEventHandler OnPickup;
         public event HolderEventHandler OnDelete;
@@ -81,7 +85,13 @@ namespace FSO.Client.UI.Panels
             guid = bobj.Object.OBJ.GUID;
             if (bobj.MasterDefinition != null) guid = bobj.MasterDefinition.GUID;
             var catalogItem = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
-            if (catalogItem != null) Holding.Price = (int)catalogItem.Price;
+            if (catalogItem != null)
+            {
+                var price = (int)catalogItem.Value.Price;
+                var dcPercent = VMBuildableAreaInfo.GetDiscountFor(catalogItem.Value, vm);
+                var finalPrice = (price * (100 - dcPercent)) / 100;
+                Holding.Price = finalPrice;
+            }
         }
 
         public void MoveSelected(Vector2 pos, sbyte level)
@@ -102,17 +112,21 @@ namespace FSO.Client.UI.Panels
             //rotate through to try all configurations
             var dir = Holding.Dir;
             VMPlacementError status = VMPlacementError.Success;
-            for (int i = 0; i < 4; i++)
+            if (!Holding.IsBought && !vm.TSOState.CanPlaceNewUserObject(vm)) status = VMPlacementError.TooManyObjectsOnTheLot;
+            else
             {
-                status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, World.State.Level), dir, vm.Context).Status;
-                if (status != VMPlacementError.MustBeAgainstWall) break;
-                dir = (Direction)((((int)dir << 6) & 255) | ((int)dir >> 2));
+                for (int i = 0; i < 4; i++)
+                {
+                    status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, World.State.Level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement).Status;
+                    if (status != VMPlacementError.MustBeAgainstWall) break;
+                    dir = (Direction)((((int)dir << 6) & 255) | ((int)dir >> 2));
+                }
+                if (Holding.Dir != dir) Holding.Dir = dir;
             }
-            if (Holding.Dir != dir) Holding.Dir = dir;
 
             if (status != VMPlacementError.Success) 
             {
-                Holding.Group.ChangePosition(LotTilePos.OUT_OF_WORLD, Holding.Dir, vm.Context);
+                Holding.Group.ChangePosition(LotTilePos.OUT_OF_WORLD, Holding.Dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
 
                 Holding.Group.SetVisualPosition(new Vector3(pos,
                 (((Holding.Group.Objects[0].GetValue(VMStackObjectVariable.AllowedHeightFlags) & 1) == 1) ? 0 : 4f / 5f) + (World.State.Level-1)*2.95f),
@@ -169,9 +183,9 @@ namespace FSO.Client.UI.Panels
                     HITVM.Get().PlaySoundEvent((Holding.IsBought) ? UISounds.ObjectMovePlace : UISounds.ObjectPlace);
                     //ExecuteEntryPoint(11); //User Placement
                     var putDown = Holding;
+                    var pos = Holding.Group.BaseObject.Position;
                     if (Holding.IsBought)
                     {
-                        var pos = Holding.Group.BaseObject.Position;
                         vm.SendCommand(new VMNetMoveObjectCmd
                         {
                             ObjectID = Holding.MoveTarget,
@@ -180,9 +194,20 @@ namespace FSO.Client.UI.Panels
                             x = pos.x,
                             y = pos.y
                         });
-                    } else
+                    }
+                    else if (Holding.InventoryPID > 0)
                     {
-                        var pos = Holding.Group.BaseObject.Position;
+                        vm.SendCommand(new VMNetPlaceInventoryCmd
+                        {
+                            ObjectPID = Holding.InventoryPID,
+                            dir = Holding.Dir,
+                            level = pos.Level,
+                            x = pos.x,
+                            y = pos.y
+                        });
+                    }
+                    else
+                    {
                         var GUID = (Holding.Group.MultiTile)? Holding.Group.BaseObject.MasterDefinition.GUID : Holding.Group.BaseObject.Object.OBJ.GUID;
                         vm.SendCommand(new VMNetBuyObjectCmd
                         {
@@ -214,27 +239,140 @@ namespace FSO.Client.UI.Panels
 
         public void SellBack(UIElement button)
         {
+            if (Holding == null || !Roommate) return;
+            if (Holding.IsBought)
+            {
+                if (Holding.CanDelete)
+                {
+                    vm.SendCommand(new VMNetDeleteObjectCmd
+                    {
+                        ObjectID = Holding.MoveTarget,
+                        CleanupAll = true
+                    });
+                    HITVM.Get().PlaySoundEvent(UISounds.MoneyBack);
+                } else
+                {
+                    ShowErrorAtMouse(LastState, VMPlacementError.CannotDeleteObject);
+                    return;
+                }
+            }
+            OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate.
+            ClearSelected();
+        }
+
+        public void MoveToInventory(UIElement button)
+        {
             if (Holding == null) return;
             if (Holding.IsBought)
             {
-                vm.SendCommand(new VMNetDeleteObjectCmd
+                if (Holding.CanDelete)
                 {
-                    ObjectID = Holding.MoveTarget,
-                    CleanupAll = true
-                });
-                HITVM.Get().PlaySoundEvent(UISounds.MoneyBack);
+                    var obj = vm.GetObjectById(Holding.MoveTarget);
+                    if (obj != null)
+                    {
+                        vm.SendCommand(new VMNetSendToInventoryCmd
+                        {
+                            ObjectPID = obj.PersistID,
+                        });
+                    }
+                } else
+                {
+                    ShowErrorAtMouse(LastState, VMPlacementError.CannotDeleteObject);
+                    return;
+                }
             }
-            OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate. will do when refactoring for online
+            OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate.
             ClearSelected();
+        }
+
+        public void AsyncBuy(UIElement button)
+        {
+            if (Holding == null || !Holding.IsBought) return;
+            var obj = vm.GetObjectById(Holding.MoveTarget);
+            if (obj != null)
+            {
+                if (obj is VMAvatar || (((VMGameObject)obj).Disabled & VMGameObjectDisableFlags.ForSale) == 0)
+                {
+                    ShowErrorAtMouse(LastState, VMPlacementError.InUse);
+                } else
+                {
+                    UIAlert alert = null;
+                    alert = UIScreen.GlobalShowAlert(new UIAlertOptions
+                    {
+                        Title = GameFacade.Strings.GetString("206", "40"),
+                        Message = GameFacade.Strings.GetString("206", "41") + obj.ToString() + "\r\n"
+                        + GameFacade.Strings.GetString("206", "42", new string[] { "0" }) + "\r\n"
+                        + GameFacade.Strings.GetString("206", "43") + "$" + obj.MultitileGroup.Price.ToString("##,#0") + "\r\n"
+                        + GameFacade.Strings.GetString("206", "44") + "$" + obj.MultitileGroup.BaseObject.TSOState.Budget.Value.ToString("##,#0") + "\r\n"
+                        + GameFacade.Strings.GetString("206", "46") + "$" + obj.MultitileGroup.SalePrice.ToString("##,#0") + "\r\n"
+                        + GameFacade.Strings.GetString("206", "47"),
+                        Buttons = new UIAlertButton[]
+                        {
+                            new UIAlertButton(UIAlertButtonType.Yes, (btn) => {
+                                vm.SendCommand(new VMNetAsyncSaleCmd
+                                {
+                                    ObjectPID = obj.PersistID,
+                                });
+                                UIScreen.RemoveDialog(alert);
+                            }),
+                            new UIAlertButton(UIAlertButtonType.No),
+                        }
+                    }, true);
+                }
+            }
+
+            OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate.
+            ClearSelected();
+        }
+
+        public void AsyncSale(UIElement button)
+        {
+            if (Holding == null || !Holding.IsBought) return;
+            var obj = vm.GetObjectById(Holding.MoveTarget);
+            if (obj != null)
+            {
+                var movable = obj.IsUserMovable(vm.Context, true);
+                if (movable == VMPlacementError.Success)
+                {
+                    var dialog = new UIAsyncPriceDialog(obj.ToString(), (obj.MultitileGroup.Price<0)?0:(uint)obj.MultitileGroup.Price);
+                    dialog.OnPriceChange += (uint salePrice) =>
+                    {
+                        vm.SendCommand(new VMNetAsyncPriceCmd
+                        {
+                            NewPrice = (int)Math.Min(int.MaxValue, salePrice),
+                            ObjectPID = obj.PersistID
+                        });
+                    };
+                    UIScreen.GlobalShowDialog(dialog, true);
+                }
+                else ShowErrorAtMouse(LastState, movable);
+            }
+        }
+
+        public void AsyncCancelSale(UIElement button)
+        {
+            if (Holding == null || !Holding.IsBought) return;
+            var obj = vm.GetObjectById(Holding.MoveTarget);
+            if (obj != null)
+            {
+                vm.SendCommand(new VMNetAsyncPriceCmd
+                {
+                    NewPrice = -1,
+                    ObjectPID = obj.PersistID
+                });
+            }
         }
 
         public void Update(UpdateState state, bool scrolled)
         {
+            LastState = state;
             if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
             MouseClicked = (MouseIsDown && (!MouseWasDown));
 
+            CursorType cur = CursorType.SimsMove;
             if (Holding != null)
             {
+                if (Roommate) cur = CursorType.SimsPlace;
                 if (state.KeyboardState.IsKeyDown(Keys.Delete))
                 {
                     SellBack(null);
@@ -244,7 +382,7 @@ namespace FSO.Client.UI.Panels
                     ClearSelected();
                 }
             }
-            if (Holding != null)
+            if (Holding != null && Roommate)
             {
                 if (MouseClicked) Holding.Clicked = true;
                 if (MouseIsDown && Holding.Clicked)
@@ -252,6 +390,7 @@ namespace FSO.Client.UI.Panels
                     bool updatePos = MouseClicked;
                     int xDiff = state.MouseState.X - MouseDownX;
                     int yDiff = state.MouseState.Y - MouseDownY;
+                    cur = CursorType.SimsRotate;
                     if (Math.Sqrt(xDiff * xDiff + yDiff * yDiff) > 64)
                     {
                         int dir;
@@ -265,6 +404,9 @@ namespace FSO.Client.UI.Panels
                             if (yDiff > 0) dir = 2;
                             else dir = 3;
                         }
+
+                        cur = (CursorType)(dir + (int)CursorType.SimsRotateNE);
+
                         var newDir = (Direction)(1 << (((dir + 4 - (int)World.State.Rotation) % 4) * 2));
                         if (newDir != Holding.Dir || MouseClicked)
                         {
@@ -316,12 +458,17 @@ namespace FSO.Client.UI.Panels
                 {
                     var objGroup = vm.GetObjectById(newHover).MultitileGroup;
                     var objBasePos = objGroup.BaseObject.Position;
-                    if (objBasePos.Level == World.State.Level)
+                    var success = (Roommate || objGroup.SalePrice > -1)?objGroup.BaseObject.IsUserMovable(vm.Context, false): VMPlacementError.ObjectNotOwnedByYou;
+                    if (GameFacade.EnableMod) success = VMPlacementError.Success;
+                    if (objBasePos.Level != World.State.Level) success = VMPlacementError.CantEffectFirstLevelFromSecondLevel;
+                    if (success == VMPlacementError.Success)
                     {
-
                         var ghostGroup = vm.Context.GhostCopyGroup(objGroup);
+                        var canDelete = GameFacade.EnableMod || (objGroup.BaseObject.IsUserMovable(vm.Context, true)) == VMPlacementError.Success;
                         SetSelected(ghostGroup);
 
+                        Holding.RealEnt = objGroup.BaseObject;
+                        Holding.CanDelete = canDelete;
                         Holding.MoveTarget = newHover;
                         Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
                         if (OnPickup != null) OnPickup(Holding, state);
@@ -329,20 +476,30 @@ namespace FSO.Client.UI.Panels
                     }
                     else
                     {
-                        state.UIState.TooltipProperties.Show = true;
-                        state.UIState.TooltipProperties.Color = Color.Black;
-                        state.UIState.TooltipProperties.Opacity = 1;
-                        state.UIState.TooltipProperties.Position = new Vector2(MouseDownX,
-                            MouseDownY);
-                        state.UIState.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + VMPlacementError.CantEffectFirstLevelFromSecondLevel.ToString());
-                        state.UIState.TooltipProperties.UpdateDead = false;
-                        ShowTooltip = true;
-                        HITVM.Get().PlaySoundEvent(UISounds.Error);
+                        ShowErrorAtMouse(state, success);
                     }
                 }
             }
 
+            if (ParentControl.MouseIsOn && !ParentControl.RMBScroll)
+            {
+                GameFacade.Cursor.SetCursor(cur);
+            }
+
             MouseWasDown = MouseIsDown;
+        }
+
+        private void ShowErrorAtMouse(UpdateState state, VMPlacementError error)
+        {
+            state.UIState.TooltipProperties.Show = true;
+            state.UIState.TooltipProperties.Color = Color.Black;
+            state.UIState.TooltipProperties.Opacity = 1;
+            state.UIState.TooltipProperties.Position = new Vector2(MouseDownX,
+                MouseDownY);
+            state.UIState.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + error.ToString());
+            state.UIState.TooltipProperties.UpdateDead = false;
+            ShowTooltip = true;
+            HITVM.Get().PlaySoundEvent(UISounds.Error);
         }
 
         public delegate void HolderEventHandler(UIObjectSelection holding, UpdateState state);
@@ -362,6 +519,9 @@ namespace FSO.Client.UI.Panels
         public VMPlacementError CanPlace;
         public sbyte Level;
         public int Price;
+        public uint InventoryPID = 0;
+        public bool CanDelete;
+        public VMEntity RealEnt;
 
         public bool IsBought
         {

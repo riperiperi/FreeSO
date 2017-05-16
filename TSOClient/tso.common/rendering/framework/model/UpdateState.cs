@@ -22,6 +22,19 @@ namespace FSO.Common.Rendering.Framework.Model
         public GameTime Time;
         public MouseState MouseState;
         public KeyboardState KeyboardState;
+        public bool ShiftDown
+        {
+            get { return KeyboardState.IsKeyDown(Keys.LeftShift) || KeyboardState.IsKeyDown(Keys.RightShift); }
+        }
+        public bool CtrlDown
+        {
+            get { return KeyboardState.IsKeyDown(Keys.LeftControl) || KeyboardState.IsKeyDown(Keys.RightControl); }
+        }
+        public bool AltDown
+        {
+            get { return KeyboardState.IsKeyDown(Keys.LeftAlt) || KeyboardState.IsKeyDown(Keys.RightAlt); }
+        }
+
         public UIState UIState = new UIState();
         public InputManager InputManager;
         public bool TouchMode;
@@ -38,6 +51,17 @@ namespace FSO.Common.Rendering.Framework.Model
 
         public List<Keys> NewKeys = new List<Keys>();
         public int Depth;
+
+        public bool WindowFocused;
+        public bool MouseOverWindow;
+
+        public bool ProcessMouseEvents
+        {
+            get
+            {
+                return WindowFocused && MouseOverWindow;
+            }
+        }
 
         public void Update()
         {

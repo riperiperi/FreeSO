@@ -20,7 +20,7 @@ namespace FSO.SimAntics.Engine
     {
         //should use a Trie for this in future, for performance reasons
         private static string[] valid = {
-            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "NameLocal:", "DynamicObjectName", "MoneyXL:", "Param", "\r\n"
+            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:", "FixedLocal:", "DynamicObjectName", "MoneyXL:", "Param", "\r\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -54,6 +54,12 @@ namespace FSO.SimAntics.Engine
 
         public static string ParseDialogString(VMStackFrame context, string input, STR source)
         {
+            return ParseDialogString(context, input, source, 0);
+        }
+
+        public static string ParseDialogString(VMStackFrame context, string input, STR source, int depth)
+        {
+            if (depth > 10) return input;
             int state = 0;
             StringBuilder command = new StringBuilder();
             StringBuilder output = new StringBuilder();
@@ -89,7 +95,7 @@ namespace FSO.SimAntics.Engine
                         {
                             try
                             {
-                                if (cmdString == "DynamicStringLocal:")
+                                if (cmdString == "DynamicStringLocal:" || cmdString == "TimeLocal:")
                                 {
                                     values[1] = -1;
                                     values[2] = -1;
@@ -177,17 +183,29 @@ namespace FSO.SimAntics.Engine
                                     if (res != null)
                                     {
                                         var str = res.GetString(index);
-                                        output.Append(ParseDialogString(context, str, res)); // recursive command parsing!
+                                        output.Append(ParseDialogString(context, str, res, depth++)); // recursive command parsing!
                                         // this is needed for the crafting table.
                                         // though it is also, completely insane?
                                     }
                                     break;
                                 case "Local:":
                                     output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]).ToString()); break;
+                                case "FixedLocal:":
+                                    output.Append((VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0])/100f).ToString("F2")); break;
+                                case "TimeLocal:":
+                                    var hours = VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]);
+                                    var mins = VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[1]);
+                                    var suffix = (hours > 11) ? "pm" : "am";
+                                    if (hours > 12) hours -= 12;
+                                    output.Append(hours.ToString());
+                                    output.Append(":");
+                                    output.Append(mins.ToString().PadLeft(2, '0'));
+                                    output.Append(suffix);
+                                    break;
                                 case "Param:":
                                     output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Parameters, values[0]).ToString()); break;
                                 case "NameLocal:":
-                                    output.Append("(NameLocal)"); break;
+                                    output.Append(context.VM.GetObjectById(VMMemory.GetVariable(context, Scopes.VMVariableScope.Local, values[0])).ToString()); break;
                                 default:
                                     output.Append(cmdString);
                                     break;

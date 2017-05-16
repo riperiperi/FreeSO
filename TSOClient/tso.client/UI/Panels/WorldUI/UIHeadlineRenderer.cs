@@ -67,7 +67,7 @@ namespace FSO.Client.UI.Panels.WorldUI
                 Sprite = Sprites.Get<SPR>((ushort)(GroupOffsets[(int)Headline.Operand.Group] + Headline.Index));
 
             if (Headline.Operand.Type != 255 && Headline.Operand.Type != 3)
-                BGSprite = Sprites.Get<SPR>((ushort)(GroupOffsets[(int)VMSetBalloonHeadlineOperandGroup.Balloon] + Headline.Operand.Type));
+                BGSprite = Sprites.Get<SPR>((ushort)(GroupOffsets[(int)VMSetBalloonHeadlineOperandGroup.Balloon]+Headline.Operand.Type));
 
             LastZoom = WorldZoom.Near;
             RecalculateTarget();
@@ -93,21 +93,21 @@ namespace FSO.Client.UI.Panels.WorldUI
             {
                 var bigFrame = (BGSprite != null) ? BGSprite.Frames[ZoomFrame].GetTexture(GameFacade.GraphicsDevice) : Sprite.Frames[ZoomFrame].GetTexture(GameFacade.GraphicsDevice);
                 if (bigFrame.Width == 0) return;
-                Texture = new RenderTarget2D(GameFacade.GraphicsDevice, Math.Max(1, bigFrame.Width), Math.Max(1, bigFrame.Height));
+                Texture = new RenderTarget2D(GameFacade.GraphicsDevice, Math.Max(1,bigFrame.Width), Math.Max(1,bigFrame.Height));
             }
             else if (Headline.Operand.Group == VMSetBalloonHeadlineOperandGroup.Algorithmic && LastZoom != WorldZoom.Far)
             {
-                AlgTex = (Headline.IconTarget == null) ? WhitePx : Headline.IconTarget.GetIcon(GameFacade.GraphicsDevice, (int)LastZoom - 1);
-                Point bigFrame = (BGSprite != null) ? new Point(BGSprite.Frames[ZoomFrame].Width, BGSprite.Frames[ZoomFrame].Height) : new Point(AlgTex.Width, AlgTex.Height);
-                if (bigFrame.X == 0) return;
-                Texture = new RenderTarget2D(GameFacade.GraphicsDevice, bigFrame.X, bigFrame.Y);
+                AlgTex = (Headline.IconTarget == null)?WhitePx:Headline.IconTarget.GetIcon(GameFacade.GraphicsDevice, (int)LastZoom - 1);
+                var bigFrame = (BGSprite != null) ? BGSprite.Frames[ZoomFrame].GetTexture(GameFacade.GraphicsDevice) : AlgTex;
+                if (bigFrame.Width == 0) return;
+                Texture = new RenderTarget2D(GameFacade.GraphicsDevice, bigFrame.Width, bigFrame.Height);
             }
             else AlgTex = null;
             Invalidated = true;
         }
 
         public override Texture2D DrawFrame(World world)
-        {
+        { 
             if (LastZoom != world.State.Zoom || Texture == null)
             {
                 Invalidated = true;
@@ -186,7 +186,7 @@ namespace FSO.Client.UI.Panels.WorldUI
     {
         public VMHeadlineRenderer Get(VMRuntimeHeadline headline)
         {
-            return new UIHeadlineRenderer(headline);
+            return (headline.Operand.Group == VMSetBalloonHeadlineOperandGroup.Money)? new UIMoneyHeadline(headline) : ((VMHeadlineRenderer)new UIHeadlineRenderer(headline));
         }
     }
 }

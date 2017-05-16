@@ -149,5 +149,6 @@ namespace FSO.SimAntics.Primitives
         RouteFailure = 8,
         Progress = 9,
 
+        Money = 255
     }
 }

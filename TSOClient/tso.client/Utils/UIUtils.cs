@@ -23,6 +23,13 @@ namespace FSO.Client.Utils
             return handler;
         }
 
+        public static UIDragHandler MakeDraggable(UIElement mouseTarget, UIElement dragControl, bool bringToFront)
+        {
+            var handler = new UIDragHandler(mouseTarget, dragControl);
+            handler.BringToFront = bringToFront;
+            return handler;
+        }
+
         public static UITooltipHandler GiveTooltip(UIElement target)
         {
             var handler = new UITooltipHandler(target);
@@ -33,7 +40,7 @@ namespace FSO.Client.Utils
         {
             var result = new UIWordWrapOutput();
             result.Lines = new List<string>();
-		    var textLines = new string[] {text}; //only support single line for now, since we're only using this utility function for captions
+            var textLines = text.Split('\n');// new string[] {text}; //only support single line for now, since we're only using this utility function for captions
 		    int maxWidth = 0;
 		    int curpos = 0;
 		    var positions = new List<int>();
@@ -77,6 +84,7 @@ namespace FSO.Client.Utils
 		    }
             result.Positions = positions;
             result.MaxWidth = maxWidth;
+            result.Height = result.Lines.Count * style.LineHeight;
 		    return result;
         }
 
@@ -96,6 +104,7 @@ namespace FSO.Client.Utils
         public UIElement MouseTarget;
         public UIElement DragControl;
         public UIMouseEventRef MouseEvent;
+        public bool BringToFront = false;
 
         private UpdateHookDelegate UpdateHook;
 
@@ -121,6 +130,10 @@ namespace FSO.Client.Utils
             switch (evt)
             {
                 case UIMouseEventType.MouseDown:
+                    if (BringToFront)
+                    {
+                        DragControl.Parent.Add(DragControl);
+                    }
                     /** Start drag **/
                     m_doDrag = true;
                     DragControl.AddUpdateHook(UpdateHook);
@@ -153,7 +166,6 @@ namespace FSO.Client.Utils
     public class UITooltipHandler
     {
         public UIElement Target;
-
         private UpdateHookDelegate UpdateHook;
 
         public UITooltipHandler(UIElement target)
@@ -210,9 +222,10 @@ namespace FSO.Client.Utils
         }
     }
 
-    public struct UIWordWrapOutput {
+    public class UIWordWrapOutput {
         public int MaxWidth;
         public List<string> Lines;
         public List<int> Positions;
+        public int Height;
     }
 }

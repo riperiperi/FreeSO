@@ -21,13 +21,15 @@ namespace FSO.SimAntics.Marshals
         
         public VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];
         public VMAvatarMotiveDecay MotiveDecay;
-        public short[] PersonData = new short[100];
+        public short[] PersonData = new short[101];
         public short[] MotiveData = new short[16];
         public short HandObject;
         public float RadianDirection;
         public int KillTimeout = -1; //version 2
 
         public VMAvatarDefaultSuits DefaultSuits;
+        public VMAvatarDynamicSuits DynamicSuits;
+        public VMAvatarDecoration Decoration;
         public string[] BoundAppearances;
 
         public ulong BodyOutfit;
@@ -62,7 +64,7 @@ namespace FSO.SimAntics.Marshals
             MotiveDecay.Deserialize(reader);
 
             var pdats = reader.ReadInt32();
-            PersonData = new short[pdats];
+            PersonData = new short[Math.Max(101,pdats)];
             for (int i = 0; i < pdats; i++) PersonData[i] = reader.ReadInt16();
 
             var mdats = reader.ReadInt32();
@@ -75,6 +77,12 @@ namespace FSO.SimAntics.Marshals
             if (Version > 1) KillTimeout = reader.ReadInt32();
 
             DefaultSuits = new VMAvatarDefaultSuits(reader);
+
+            if(Version >= 15)
+            {
+                DynamicSuits = new VMAvatarDynamicSuits(reader);
+                Decoration = new VMAvatarDecoration(reader);
+            }
 
             var aprs = reader.ReadInt32();
             BoundAppearances = new string[aprs];
@@ -112,6 +120,9 @@ namespace FSO.SimAntics.Marshals
             writer.Write(KillTimeout);
 
             DefaultSuits.SerializeInto(writer);
+            DynamicSuits.SerializeInto(writer);
+            Decoration.SerializeInto(writer);
+
             writer.Write(BoundAppearances.Length);
             foreach (var item in BoundAppearances) { writer.Write(item); }
 

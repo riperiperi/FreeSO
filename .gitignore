@@ -17,6 +17,7 @@ obj/
 [Rr]elease*/
 TSOClient/TSOClient/Content/obj/x86/Debug/ContentPipeline.xml
 pdclient/
+TSOClient/FSO.Benchmark/*
 
 # User-specific files
 *.suo

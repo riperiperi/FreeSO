@@ -106,7 +106,7 @@ namespace FSO.Client.UI.Controls
         {
             get
             {
-                return new Vector2(m_WidthDiv3, m_Height);
+                return new Vector2(Width == 0 ? m_Width : Width, m_Height);
             }
             set
             {
@@ -114,7 +114,7 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        [UIAttribute("ImageStates")]
+        [UIAttribute("imageStates")]
         public int ImageStates
         {
             get
@@ -275,6 +275,8 @@ namespace FSO.Client.UI.Controls
             set { m_Disabled = value; CalculateState(); }
         }
 
+        public int ForceState = -1;
+
         /// <summary>
         /// Gets or sets the current frame for this button.
         /// </summary>
@@ -297,6 +299,11 @@ namespace FSO.Client.UI.Controls
                     CalculateState();
                 }
             }
+        }
+
+        public int CurrentFrameIndex
+        {
+            get { return m_CurrentFrame; }
         }
 
         private bool m_isOver;
@@ -361,14 +368,15 @@ namespace FSO.Client.UI.Controls
 
             /** Draw the button as a 3 slice **/
             var frame = m_CurrentFrame;
-            if (Selected)
-            {
-                frame = 1;
-            }
             if (m_Disabled)
             {
                 frame = 3;
             }
+            if (Selected)
+            {
+                frame = 1;
+            }
+            if (ForceState > -1) frame = ForceState;
             frame = Math.Min(m_ImageStates - 1, frame);
             int offset = frame * m_Width;
             int vOffset = m_ButtonFrame * m_Height;

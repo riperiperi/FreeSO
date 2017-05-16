@@ -17,7 +17,11 @@ namespace FSO.SimAntics.Primitives
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            context.StackObject.Thread.Interrupt = true;
+            if (context.StackObject?.Thread != null)
+            {
+                context.VM.Scheduler.RescheduleInterrupt(context.StackObject);
+                context.StackObject.Thread.Interrupt = true;
+            }
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

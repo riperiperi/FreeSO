@@ -32,19 +32,6 @@ namespace FSO.Client.Debug
         private void DoSearch(object queryObj)
         {
             var query = (string)queryObj;
-            var resources = ContentManager.GetResources();
-
-            foreach (var item in resources)
-            {
-                /*var fileName = ContentManager.GetResourceName(item.Key);
-                System.Diagnostics.Debug.WriteLine(fileName);
-                if (fileName.IndexOf(query) != -1)
-                {
-                    System.Diagnostics.Debug.WriteLine(fileName);
-                }*/
-            }
-
-            //DoSearch
         }
     }
 }

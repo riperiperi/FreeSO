@@ -19,8 +19,11 @@ using FSO.LotView;
 using FSO.Client.Network;
 using Microsoft.Xna.Framework;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.Client.Controllers;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.IO;
+using FSO.Common.Utils;
+using FSO.Common.Rendering.Framework;
 
 namespace FSO.Client.UI.Panels
 {
@@ -84,13 +87,19 @@ namespace FSO.Client.UI.Panels
         private UIImage Background;
 
         /// <summary>
+        /// Bookmarks
+        /// </summary>
+        public UIButton BookmarkButton { get; set; }
+        public UIButton FriendshipWebButton { get; set; }
+
+        /// <summary>
         /// Labels
         /// </summary>
         public UILabel TimeText { get; set; }
         public UILabel MoneyText { get; set; }
 
         private UIDestroyablePanel Panel;
-        private int CurrentPanel;
+        public int CurrentPanel;
 
         private uint OldMoney;
         private int MoneyHighlightFrames;
@@ -99,6 +108,7 @@ namespace FSO.Client.UI.Panels
         private UIBlocker SelfBlocker;
         private UIBlocker PanelBlocker;
         private UIBlocker GameBlocker;
+        private UILabel FloorNumLabel;
 
         public UIUCP(UIScreen owner)
         {
@@ -129,6 +139,7 @@ namespace FSO.Client.UI.Panels
             LiveModeButton.OnButtonClick += new ButtonClickDelegate(LiveModeButton_OnButtonClick);
             BuyModeButton.OnButtonClick += new ButtonClickDelegate(BuyModeButton_OnButtonClick);
             BuildModeButton.OnButtonClick += BuildModeButton_OnButtonClick;
+            HouseModeButton.OnButtonClick += (btn) => { SetPanel(4); };
 
             ZoomOutButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
             ZoomInButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
@@ -152,10 +163,23 @@ namespace FSO.Client.UI.Panels
             FirstFloorButton.OnButtonClick += FirstFloor;
             SecondFloorButton.OnButtonClick += SecondFloor;
 
+            BookmarkButton.OnButtonClick += BookmarkButton_OnButtonClick;
+            FriendshipWebButton.OnButtonClick += FriendshipWebButton_OnButtonClick;
+
             SecondFloorButton.Selected = (Game.Level == Game.Stories);
             FirstFloorButton.Selected = (Game.Level == 1);
 
             MoneyText.CaptionStyle = MoneyText.CaptionStyle.Clone();
+
+            var temp = new UILabel();
+            temp.X = SecondFloorButton.X + 7;
+            temp.Y = SecondFloorButton.Y - 14;
+            temp.Caption = "1";
+            temp.CaptionStyle = temp.CaptionStyle.Clone();
+            temp.CaptionStyle.Size = 7;
+            temp.CaptionStyle.Shadow = true;
+            Add(temp);
+            FloorNumLabel = temp;
 
             SetInLot(false);
             SetMode(UCPMode.CityMode);
@@ -163,9 +187,19 @@ namespace FSO.Client.UI.Panels
             SetFocus(UCPFocusMode.Game);
         }
 
+        private void FriendshipWebButton_OnButtonClick(UIElement button)
+        {
+            FindController<CoreGameScreenController>().ToggleRelationshipDialog();
+        }
+
+        private void BookmarkButton_OnButtonClick(UIElement button)
+        {
+            FindController<CoreGameScreenController>().ToggleBookmarks();
+        }
+
         private void SecondFloor(UIElement button)
         {
-            Game.vm.Context.World.State.ScrollAnchor = null; //stop following a sim on a manual adjustment
+            Game.LotControl.World.State.ScrollAnchor = null; //stop following a sim on a manual adjustment
             Game.Level = Math.Min((sbyte)(Game.Level + 1), Game.Stories);
             SecondFloorButton.Selected = (Game.Level == Game.Stories);
             FirstFloorButton.Selected = (Game.Level == 1);
@@ -245,7 +279,7 @@ namespace FSO.Client.UI.Panels
 
         private void FirstFloor(UIElement button)
         {
-            Game.vm.Context.World.State.ScrollAnchor = null; //stop following a sim on a manual adjustment
+            Game.LotControl.World.State.ScrollAnchor = null; //stop following a sim on a manual adjustment
             Game.Level = Math.Max((sbyte)(Game.Level - 1), (sbyte)1);
             SecondFloorButton.Selected = (Game.Level == Game.Stories);
             FirstFloorButton.Selected = (Game.Level == 1);
@@ -279,22 +313,23 @@ namespace FSO.Client.UI.Panels
         {
             Remove(SelWallsPanel);
             SelWallsPanel = null;
-            Game.LotController.WallsMode = mode;
+            Game.LotControl.WallsMode = mode;
             UpdateWallsMode();
         }
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
-            //ScaleX = ScaleY = 1;
+            var time = DateTime.UtcNow;
+            var tsoTime = TSOTime.FromUTC(time);
+            int min = tsoTime.Item2;
+            int hour = tsoTime.Item1;
+
             if (MoneyHighlightFrames > 0)
             {
                 if (--MoneyHighlightFrames == 0) MoneyText.CaptionStyle.Color = TextStyle.DefaultLabel.Color;
             }
-
-            int min = NetworkFacade.ServerTime.Minute;
-            int hour = NetworkFacade.ServerTime.Hour;
             uint budget = 0;
-            if (Game.InLot) 
+            if (Game.InLot)
             {
                 // if ingame, use time from ingame clock 
                 // (should be very close to server time anyways, if we set the game pacing up right...)
@@ -302,7 +337,7 @@ namespace FSO.Client.UI.Panels
                 hour = Game.vm.Context.Clock.Hours;
 
                 // update with ingame budget.
-                var cont = Game.LotController;
+                var cont = Game.LotControl;
                 if (cont.ActiveEntity != null && cont.ActiveEntity is VMAvatar)
                 {
                     var avatar = (VMAvatar)cont.ActiveEntity;
@@ -310,21 +345,32 @@ namespace FSO.Client.UI.Panels
 
                     //check if we have build/buy permissions
                     //TODO: global build/buy enable/disable (via the global calls)
-                    BuyModeButton.Disabled = ((VMTSOAvatarState)(avatar.TSOState)).Permissions
-                        < VMTSOAvatarPermissions.Roommate;
                     BuildModeButton.Disabled = ((VMTSOAvatarState)(avatar.TSOState)).Permissions
                         < VMTSOAvatarPermissions.BuildBuyRoommate;
                     HouseModeButton.Disabled = BuyModeButton.Disabled;
-                }
 
-                if (CurrentPanel == 2 && BuyModeButton.Disabled || CurrentPanel == 3 && BuildModeButton.Disabled) SetPanel(-1);
+                    if (CurrentPanel == 2)
+                    {
+                        var panel = (UIBuyMode)Panel;
+                        var isRoomie = ((VMTSOAvatarState)(avatar.TSOState)).Permissions
+                            >= VMTSOAvatarPermissions.Roommate;
+                        panel.SetRoommate(isRoomie);
+                    }
+                }
+                var level = Game.LotControl.World.State.Level.ToString();
+                if (FloorNumLabel.Caption != level) FloorNumLabel.Caption = level;
+
+                if (CurrentPanel == 3 && BuildModeButton.Disabled) SetPanel(-1);
+
             }
+            else budget = OldMoney;
 
             if (budget != OldMoney)
             {
                 OldMoney = budget;
                 MoneyText.CaptionStyle.Color = Color.White;
                 MoneyHighlightFrames = 45;
+                Game.VisualBudget = budget;
             }
 
             string suffix = (hour > 11) ? "pm" : "am";
@@ -332,8 +378,7 @@ namespace FSO.Client.UI.Panels
             if (hour == 0) hour = 12;
 
             TimeText.Caption = hour.ToString() + ":" + ZeroPad(min.ToString(), 2) + " " + suffix;
-
-            MoneyText.Caption = "$" + budget.ToString("##,#0");
+            MoneyText.Caption = "$" + Game.VisualBudget.ToString("##,#0");
 
             base.Update(state);
         }
@@ -389,29 +434,40 @@ namespace FSO.Client.UI.Panels
         }
 
         public void SetPanel(int newPanel) {
+            GameFacade.Cursor.SetCursor(CursorType.Hourglass);
+
             OptionsModeButton.Selected = false;
             BuyModeButton.Selected = false;
             BuildModeButton.Selected = false;
             LiveModeButton.Selected = false;
+            HouseModeButton.Selected = false;
             
             if (Game.InLot)
             {
-                Game.LotController.QueryPanel.Active = false;
-                Game.LotController.QueryPanel.Visible = false;
-                Game.LotController.LiveMode = true;
-                Game.vm.Context.World.State.BuildMode = false;
+                Game.LotControl.QueryPanel.Active = false;
+                Game.LotControl.QueryPanel.Visible = false;
+                Game.LotControl.LiveMode = true;
+                Game.LotControl.World.State.BuildMode = 0;
             }
 
             if (CurrentPanel != -1)
             {
+                switch (CurrentPanel)
+                {
+                    case 3:
+                    case 2:
+                        if (Game.InLot && Game.vm.TSOState.Roommates.Contains(Game.vm.MyUID)) FindController<CoreGameScreenController>().UploadLotThumbnail();
+                        break;
+                }
                 this.Remove(Panel);
                 Panel.Destroy();
+                Panel = null;
 
-                if (Game.InLot) Game.LotController.PanelActive = false;
+                if (Game.InLot) Game.LotControl.PanelActive = false;
             }
             if (newPanel != CurrentPanel)
             {
-                if (Game.InLot) Game.LotController.PanelActive = true;
+                if (Game.InLot) Game.LotControl.PanelActive = true;
                 switch (newPanel)
                 {
                     case 5:
@@ -424,41 +480,56 @@ namespace FSO.Client.UI.Panels
                         break;
                     case 2:
                         if (!Game.InLot) break; //not ingame
-                        Panel = new UIBuyMode(Game.LotController);
-                        Game.LotController.LiveMode = false;
+                        Panel = new UIBuyMode(Game.LotControl);
+
+                        //enable grid
+                        Game.LotControl.World.State.BuildMode = 1;
+
+                        Game.LotControl.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
-                        ((UIBuyMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuyModeButton.Selected = true;
                         SetFocus(UCPFocusMode.ActiveTab);
                         break;
                     case 3:
                         if (!Game.InLot) break; //not ingame
-                        Panel = new UIBuildMode(Game.LotController);
+                        Panel = new UIBuildMode(Game.LotControl);
 
-                        //enable air tile graphics
-                        Game.vm.Context.World.State.BuildMode = true;
+                        //enable air tile graphics + grid
+                        Game.LotControl.World.State.BuildMode = 2;
 
-                        Game.LotController.LiveMode = false;
+                        Game.LotControl.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
-                        ((UIBuildMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuildModeButton.Selected = true;
                         SetFocus(UCPFocusMode.ActiveTab);
                         break;
+                    case 4:
+                        if (!Game.InLot) break; //not ingame
+                        Panel = new UIHouseMode(Game.LotControl);
+
+                        //enable grid
+                        Game.LotControl.World.State.BuildMode = 1;
+
+                        Panel.X = 177;
+                        Panel.Y = 87;
+                        this.Add(Panel);
+                        HouseModeButton.Selected = true;
+                        SetFocus(UCPFocusMode.ActiveTab);
+                        break;
                     case 1:
                         if (!Game.InLot) break; //not ingame
-                        Panel = new UILiveMode(Game.LotController);
+                        Panel = new UILiveMode(Game.LotControl);
                         Panel.X = 177;
-                        Panel.Y = 63;
+                        Panel.Y = 61;
                         this.Add(Panel);
                         LiveModeButton.Selected = true;
                         SetFocus(UCPFocusMode.ActiveTab);
                         break;
                     default:
-                        if (Game.InLot) Game.LotController.PanelActive = false;
+                        if (Game.InLot) Game.LotControl.PanelActive = false;
                         break;
                 }
                 CurrentPanel = newPanel;
@@ -469,18 +540,19 @@ namespace FSO.Client.UI.Panels
                 PanelBlocker = null;
                 CurrentPanel = -1;
             }
-            
+            GameFacade.Cursor.SetCursor(CursorType.Normal);
         }
 
         public void UpdateWallsMode()
         {
             if (Background.Visible && Game.InLot)
             {
-                var mode = Game.LotController.WallsMode;
+                var mode = Game.LotControl.WallsMode;
                 WallsDownButton.Visible = (mode == 0);
                 WallsCutawayButton.Visible = (mode == 1);
                 WallsUpButton.Visible = (mode == 2);
                 RoofButton.Visible = (mode == 3);
+                Game.LotControl.World.State.DrawRoofs = (mode == 3);
             } else {
                 WallsDownButton.Visible = false;
                 WallsCutawayButton.Visible = false;
@@ -507,6 +579,7 @@ namespace FSO.Client.UI.Panels
 
             BackgroundMatchmaker.Visible = isCityMode;
             Background.Visible = isLotMode;
+            FloorNumLabel.Visible = isLotMode;
 
             UpdateWallsMode();
 

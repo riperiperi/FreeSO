@@ -1,0 +1,24 @@
+﻿<md-dialog>
+    <md-content class="md-padding">
+        <form name="annForm">
+            <label>Specify an announcement to be broadcasted to the selected shards.</label>
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Sender</label> <input md-maxlength="50"  ng-model="ann.sender" required placeholder="Sender"> </md-input-container>
+            </div>
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Subject</label> <input md-maxlength="50" ng-model="ann.subject" required placeholder="Subject"> </md-input-container>
+            </div>
+            <div layout layout-sm="column">
+                <md-input-container flex> 
+                    <label>Message</label> 
+                    <textarea required ng-model="ann.message" placeholder="Message" md-select-on-focus></textarea>
+                </md-input-container>
+            </div>
+        </form>
+    </md-content>
+    <div class="md-actions" layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel();"> Cancel </md-button>
+        <md-button ng-click="ok()" ng-disabled="annForm.$invalid" class="md-primary"> Broadcast </md-button>
+    </div>
+</md-dialog>

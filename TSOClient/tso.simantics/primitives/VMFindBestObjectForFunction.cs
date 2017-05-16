@@ -47,17 +47,24 @@ namespace FSO.SimAntics.Engine.Primitives
             VMStackObjectVariable.CookValue,
             VMStackObjectVariable.SurfaceValue,
             VMStackObjectVariable.DisposeValue,
-            VMStackObjectVariable.Invalid,
+            VMStackObjectVariable.Invalid, //hunger  value?
             VMStackObjectVariable.Invalid,
             VMStackObjectVariable.WashDishValue,
             VMStackObjectVariable.EatingSurfaceValue,
             VMStackObjectVariable.Invalid, //sit, may score using comfort value?
             VMStackObjectVariable.Invalid,
             VMStackObjectVariable.ServingSurfaceValue,
-            VMStackObjectVariable.Invalid,
+            VMStackObjectVariable.DirtyLevel,
             VMStackObjectVariable.GardeningValue,
             VMStackObjectVariable.WashHandsValue,
-            VMStackObjectVariable.Invalid
+            VMStackObjectVariable.RepairState
+        };
+
+        public static Dictionary<VMStackObjectVariable, short> Thresholds = new Dictionary<VMStackObjectVariable, short>()
+        {
+            { VMStackObjectVariable.DirtyLevel, 800 },
+            { VMStackObjectVariable.RepairState, 600 },
+            { VMStackObjectVariable.GardeningValue, 25 }
         };
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
@@ -72,7 +79,11 @@ namespace FSO.SimAntics.Engine.Primitives
             var entry = VMFindBestObjectForFunction.FunctionToEntryPoint[operand.Function];
             for (int i=0; i<entities.Count; i++) {
                 var ent = entities[i];
-                if (ent.ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) continue; //this object is not important!!!
+
+                if (ent.GetValue(VMStackObjectVariable.LockoutCount) > 0
+                    || (ent is VMGameObject && ((VMGameObject)ent).Disabled > 0)
+                    || ent.Position == LotTilePos.OUT_OF_WORLD) continue; //this object is not important!!!
+
                 if (ent.EntryPoints[entry].ActionFunction != 0) {
                     bool Execute;
                     if (ent.EntryPoints[entry].ConditionFunction != 0) {
@@ -99,11 +110,14 @@ namespace FSO.SimAntics.Engine.Primitives
 
                     if (Execute)
                     {
+                        if (ent.IsInUse(context.VM.Context, true)) continue; //this object is in use. this check is more expensive than check trees, so do it last.
                         //calculate the score for this object.
                         int score = 0;
                         if (ScoreVar[operand.Function] != VMStackObjectVariable.Invalid) {
-                            score = ent.GetValue(ScoreVar[operand.Function]);
-                            if (ScoreVar[operand.Function] == VMStackObjectVariable.DirtyLevel && score < 800) continue; //only clean "dirty" things.
+                            var funcVar = ScoreVar[operand.Function];
+                            score = ent.GetValue(funcVar);
+                            short threshold;
+                            if (Thresholds.TryGetValue(funcVar, out threshold) && score < threshold) continue;
                         }
 
                         LotTilePos posDiff = ent.Position - context.Caller.Position;

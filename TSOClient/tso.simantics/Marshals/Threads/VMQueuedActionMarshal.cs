@@ -33,6 +33,13 @@ namespace FSO.SimAntics.Marshals.Threads
 
         public VMActionCallbackMarshal Callback; //NULLable
 
+        public sbyte InteractionResult = -1;
+        public ushort ResultCheckCounter = 0;
+
+        private int Version;
+        public VMQueuedActionMarshal() { }
+        public VMQueuedActionMarshal(int version) { Version = version; }
+
         public void SerializeInto(BinaryWriter writer)
         {
             writer.Write(RoutineID);
@@ -59,6 +66,9 @@ namespace FSO.SimAntics.Marshals.Threads
 
             writer.Write(Callback != null);
             if (Callback != null) Callback.SerializeInto(writer);
+
+            writer.Write(InteractionResult);
+            writer.Write(ResultCheckCounter);
         }
 
         public void Deserialize(BinaryReader reader)
@@ -93,6 +103,12 @@ namespace FSO.SimAntics.Marshals.Threads
             {
                 Callback = new VMActionCallbackMarshal();
                 Callback.Deserialize(reader);
+            }
+
+            if (Version > 11)
+            {
+                InteractionResult = reader.ReadSByte();
+                ResultCheckCounter = reader.ReadUInt16();
             }
         }
     }

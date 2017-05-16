@@ -36,6 +36,7 @@ namespace FSO.SimAntics.Primitives
         public short Arg1 { get { return Arguments[1]; } set { Arguments[1] = value; } }
         public short Arg2 { get { return Arguments[2]; } set { Arguments[2] = value; } }
         public short Arg3 { get { return Arguments[3]; } set { Arguments[3] = value; } }
+        public bool UseTemp0; //TODO: make IDE set this when the special case arises.
 
 
         #region VMPrimitiveOperand Members
@@ -46,6 +47,7 @@ namespace FSO.SimAntics.Primitives
                 Arguments[1] = io.ReadInt16();
                 Arguments[2] = io.ReadInt16();
                 Arguments[3] = io.ReadInt16();
+                UseTemp0 = !(Arg1 == 0 && Arg2 == 0 && Arg3 == 0);
             }
         }
 

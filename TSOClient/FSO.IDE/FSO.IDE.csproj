@@ -61,6 +61,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <WarningLevel>3</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -199,6 +200,7 @@
     <Compile Include="EditorComponent\OperandForms\OpUnknownControl.Designer.cs">
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditorComponent\Primitives\ChangeSuitDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SnapDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\TestObjectTypeDescriptor.cs" />
@@ -361,6 +363,12 @@
     <Compile Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.Designer.cs">
       <DependentUpon>SPR2ResourceControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\BCONResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\BCONResourceControl.Designer.cs">
+      <DependentUpon>BCONResourceControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\ResourceEditors\TTABResourceControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -491,6 +499,9 @@
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.resx">
       <DependentUpon>SPR2ResourceControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\BCONResourceControl.resx">
+      <DependentUpon>BCONResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\TTABResourceControl.resx">
       <DependentUpon>TTABResourceControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -530,14 +541,6 @@
       <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
       <Name>MonoGame.Framework.Windows</Name>
       <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
-      <Project>{25a5da9e-88e8-4bc2-ae80-45935276790e}</Project>
-      <Name>GonzoNet</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
-      <Project>{07f742c5-c66a-4d1e-a761-458e08d4e302}</Project>
-      <Name>ProtocolAbstractionLibraryD</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
       <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>
@@ -602,6 +605,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Icon.bmp" />
     <Content Include="IDE.ico" />
     <Content Include="IDERes\arrowBG.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

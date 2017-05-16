@@ -15,8 +15,16 @@ using FSO.HIT;
 using FSO.Client.Network;
 using FSO.Client.UI;
 using FSO.Client.GameContent;
+using Ninject;
+using FSO.Client.Regulators;
+using FSO.Server.Protocol.Voltron.DataService;
+using FSO.Common.DataService;
+using FSO.Server.DataService.Providers.Client;
+using FSO.Common.Domain;
+using FSO.Common.Utils;
 using FSO.Common;
 using Microsoft.Xna.Framework.Audio;
+using FSO.HIT.Model;
 //using System.Windows.Forms;
 
 namespace FSO.Client
@@ -32,19 +40,47 @@ namespace FSO.Client
 		public TSOGame() : base()
         {
             GameFacade.Game = this;
+            if (GameFacade.DirectX) TimedReferenceController.SetMode(CacheType.PERMANENT);
             Content.RootDirectory = FSOEnvironment.GFXContentDir;
             Graphics.SynchronizeWithVerticalRetrace = true;
             
             Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
+            TargetElapsedTime = new TimeSpan(10000000 / GlobalSettings.Default.TargetRefreshRate);
+            FSOEnvironment.RefreshRate = GlobalSettings.Default.TargetRefreshRate;
 
             Graphics.HardwareModeSwitch = false;
             Graphics.ApplyChanges();
 
-			Console.WriteLine(IsActive);
+            this.Window.AllowUserResizing = true;
+            this.Window.ClientSizeChanged += new EventHandler<EventArgs>(Window_ClientSizeChanged);
 
-            //disabled for now. It's a hilarious mess and is causing linux to freak out.
-            //Log.UseSensibleDefaults();
+            //might want to disable for linux
+                        Log.UseSensibleDefaults();
+
+            Thread.CurrentThread.Name = "Game";
+        }
+
+        bool newChange = false;
+        void Window_ClientSizeChanged(object sender, EventArgs e)
+        {
+            if (newChange || !GlobalSettings.Default.Windowed) return;
+            if (Window.ClientBounds.Width == 0 || Window.ClientBounds.Height == 0) return;
+            newChange = true;
+            var width = Math.Max(1, Window.ClientBounds.Width);
+            var height = Math.Max(1, Window.ClientBounds.Height);
+            Graphics.PreferredBackBufferWidth = width;
+            Graphics.PreferredBackBufferHeight = height;
+            Graphics.ApplyChanges();
+
+            GlobalSettings.Default.GraphicsWidth = width;
+            GlobalSettings.Default.GraphicsHeight = height;
+
+            newChange = false;
+            if (uiLayer?.CurrentUIScreen == null) return;
+
+            uiLayer.SpriteBatch.ResizeBuffer(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
+            uiLayer.CurrentUIScreen.GameResized();
         }
 
         /// <summary>
@@ -55,11 +91,26 @@ namespace FSO.Client
         /// </summary>
         protected override void Initialize()
         {
+            var kernel = new StandardKernel(
+                new RegulatorsModule(),
+                new NetworkModule(),
+                new CacheModule()
+            );
+            GameFacade.Kernel = kernel;
+
+            var settings = GlobalSettings.Default;
             if (FSOEnvironment.DPIScaleFactor != 1 || FSOEnvironment.SoftwareDepth)
             {
-                GlobalSettings.Default.GraphicsWidth = GraphicsDevice.Viewport.Width / FSOEnvironment.DPIScaleFactor;
-                GlobalSettings.Default.GraphicsHeight = GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor;
+                settings.GraphicsWidth = GraphicsDevice.Viewport.Width / FSOEnvironment.DPIScaleFactor;
+                settings.GraphicsHeight = GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor;
             }
+
+            LotView.WorldConfig.Current = new LotView.WorldConfig()
+            {
+                AdvancedLighting = settings.Lighting,
+                SmoothZoom = settings.SmoothZoom,
+                SurroundingLots = settings.SurroundingLotMode
+            };
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
@@ -73,12 +124,12 @@ namespace FSO.Client
             SceneMgr = new _3DLayer();
             SceneMgr.Initialize(GraphicsDevice);
 
-            GameFacade.Controller = new GameController();
+            GameFacade.Controller = kernel.Get<GameController>();
             GameFacade.Screens = uiLayer;
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
             GameFacade.GraphicsDeviceManager = Graphics;
-            GameFacade.Cursor = new CursorManager(this.Window);
+            GameFacade.Cursor = new CursorManager(GraphicsDevice);
             if (!GameFacade.Linux) GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""));
 
             /** Init any computed values **/
@@ -86,6 +137,11 @@ namespace FSO.Client
 
             //init audio now
             HITVM.Init();
+            var hit = HITVM.Get();
+            hit.SetMasterVolume(HITVolumeGroup.FX, GlobalSettings.Default.FXVolume / 10f);
+            hit.SetMasterVolume(HITVolumeGroup.MUSIC, GlobalSettings.Default.MusicVolume / 10f);
+            hit.SetMasterVolume(HITVolumeGroup.VOX, GlobalSettings.Default.VoxVolume / 10f);
+            hit.SetMasterVolume(HITVolumeGroup.AMBIENCE, GlobalSettings.Default.AmbienceVolume / 10f);
 
             GameFacade.Strings = new ContentStrings();
             GameFacade.Controller.StartLoading();
@@ -108,6 +164,15 @@ namespace FSO.Client
             base.Screen.Layers.Add(SceneMgr);
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
+            //Bind ninject objects
+            kernel.Bind<FSO.Content.Content>().ToConstant(FSO.Content.Content.Get());
+            kernel.Load(new ClientDomainModule());
+
+            //Have to be eager with this, it sets a singleton instance on itself to avoid packets having
+            //to be created using Ninject for performance reasons
+            kernel.Get<cTSOSerializer>();
+            var ds = kernel.Get<DataService>();
+            ds.AddProvider(new ClientAvatarProvider());
 
             this.Window.Title = "FreeSO";
 
@@ -191,10 +256,12 @@ namespace FSO.Client
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            NetworkFacade.Client.ProcessPackets();
+            GameThread.UpdateExecuting = true;
+
             if (HITVM.Get() != null) HITVM.Get().Tick();
 
             base.Update(gameTime);
+            GameThread.UpdateExecuting = false;
         }
     }
 }

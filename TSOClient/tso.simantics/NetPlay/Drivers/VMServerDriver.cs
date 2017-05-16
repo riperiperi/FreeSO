@@ -7,18 +7,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using FSO.SimAntics.NetPlay.Model;
 using System.IO;
-using GonzoNet;
-using GonzoNet.Encryption;
-using System.Net;
-using ProtocolAbstractionLibraryD;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.NetPlay.SandboxMode;
 using System.Threading;
 using FSO.SimAntics.Engine.TSOTransaction;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace FSO.SimAntics.NetPlay.Drivers
 {
@@ -26,79 +22,105 @@ namespace FSO.SimAntics.NetPlay.Drivers
     {
         private List<VMNetCommand> QueuedCmds;
 
-        private const int TICKS_PER_PACKET = 2;
+        private const int TICKS_PER_PACKET = 4;
+        private const int INACTIVITY_TICKS_WARN = 15 * 60 * 30;
+        private const int INACTIVITY_TICKS_KICK = 20 * 60 * 30;
+        private uint ProblemTick;
         private List<VMNetTick> TickBuffer;
 
-        private Dictionary<NetworkClient, uint> ClientToUID;
-        private Dictionary<uint, NetworkClient> UIDtoClient;
+        // Networking Abstractions
 
-        private Listener listener;
-        private HashSet<NetworkClient> ClientsToDC;
-        private HashSet<NetworkClient> ClientsToSync;
-        private event VMServerClosedHandler OnShutdown;
-        public delegate void VMServerClosedHandler(VMCloseNetReason reason);
+        private Dictionary<uint, VMNetClient> Clients;
+
+        private HashSet<VMNetClient> ClientsToDC;
+        private HashSet<VMNetClient> ClientsToSync;
+
+        private const int CLIENT_RESYNC_COOLDOWN = 30*30;
+        private int LastResyncCooldown = 0;
+        private HashSet<VMNetClient> ClientsToSyncLater;
+
+        public event VMServerBroadcastHandler OnTickBroadcast;
+        public delegate void VMServerBroadcastHandler(VMNetMessage msg, HashSet<VMNetClient> ignore);
+
+        public event VMServerDirectHandler OnDirectMessage;
+        public delegate void VMServerDirectHandler(VMNetClient target, VMNetMessage msg);
+
+        /// <summary>
+        /// Fired when the VM wishes to drop a specific client.
+        /// </summary>
+        public event VMServerRemoveClientHandler OnDropClient;
+        public delegate void VMServerRemoveClientHandler(VMNetClient target);
 
         public BanList SandboxBans;
 
-        private uint TickID = 0;
+        private uint TickID = 1;
 
-        public VMServerDriver(int port, VMServerClosedHandler onShutdown)
+        public VMServerDriver(IVMTSOGlobalLink globalLink)
         {
-            listener = new Listener(EncryptionMode.NoEncryption);
-            listener.Initialize(new IPEndPoint(IPAddress.Any, port));
-            listener.OnConnected += SendLotState;
-            listener.OnDisconnected += LotDC;
+            GlobalLink = globalLink;
 
-            GlobalLink = new VMTSOGlobalLinkStub(); //final server will use DB hooked class
-
-            ClientsToDC = new HashSet<NetworkClient>();
-            ClientsToSync = new HashSet<NetworkClient>();
+            Clients = new Dictionary<uint, VMNetClient>();
+            ClientsToDC = new HashSet<VMNetClient>();
+            ClientsToSync = new HashSet<VMNetClient>();
+            ClientsToSyncLater = new HashSet<VMNetClient>();
             QueuedCmds = new List<VMNetCommand>();
             TickBuffer = new List<VMNetTick>();
-            ClientToUID = new Dictionary<NetworkClient, uint>();
-            UIDtoClient = new Dictionary<uint, NetworkClient>();
-            if (onShutdown != null) OnShutdown += onShutdown;
 
             SandboxBans = new BanList();
         }
 
-        private void LotDC(NetworkClient Client)
+        public void ConnectClient(VMNetClient client)
         {
-            lock (ClientToUID) {
-                if (ClientToUID.ContainsKey(Client)) {
-                    uint UID = ClientToUID[Client];
-                    ClientToUID.Remove(Client);
-                    UIDtoClient.Remove(UID);
-
-                    SendCommand(new VMNetSimLeaveCmd
-                    {
-                        ActorUID = UID
-                    });
-                }
+            lock (Clients)
+            {
+                Clients.Add(client.PersistID, client);
+                SendCommand(new VMNetSimJoinCmd
+                {
+                    ActorUID = client.PersistID,
+                    AvatarState = client.AvatarState,
+                });
             }
-        }
-
-        private void SendLotState(NetworkClient client)
-        {
             lock (ClientsToSync)
             {
                 ClientsToSync.Add(client);
             }
         }
 
+        public void DisconnectClient(uint id)
+        {
+            lock (Clients)
+            {
+                VMNetClient client = null;
+                if (Clients.TryGetValue(id, out client)) DisconnectClient(client);
+            }
+        }
+
+        public void DisconnectClient(VMNetClient Client)
+        {
+            lock (Clients) {
+                Clients.Remove(Client.PersistID);
+                SendCommand(new VMNetSimLeaveCmd
+                {
+                    ActorUID = Client.PersistID
+                });
+            }
+        }
+
         private void SendState(VM vm)
         {
             if (ClientsToSync.Count == 0) return;
-            //Console.WriteLine("== SERIAL: Sending State to Client... ==");
 
             var watch = new Stopwatch();
             watch.Start();
 
             var state = vm.Save();
-            //Console.WriteLine("== STATE: Intermediate - after save... " + watch.ElapsedMilliseconds + " ms. ==");
-            var cmd = new VMNetCommand(new VMStateSyncCmd { State = state });
+            var statecmd = new VMStateSyncCmd { State = state };
+#if VM_DESYNC_DEBUG
+            statecmd.Trace = vm.Trace.GetTick(ProblemTick);
+#endif
+            var cmd = new VMNetCommand(statecmd);
 
-            //currently just hack this on the tick system. will change when we switch to not gonzonet
+            //currently just hack this on the tick system. might switch later
             var ticks = new VMNetTickList { Ticks = new List<VMNetTick> {
                 new VMNetTick {
                     Commands = new List<VMNetCommand> { cmd },
@@ -110,32 +132,19 @@ namespace FSO.SimAntics.NetPlay.Drivers
             byte[] data;
             using (var stream = new MemoryStream())
             {
-                //Console.WriteLine("== STATE: Intermediate - before serialize... " + watch.ElapsedMilliseconds + " ms. ==");
                 using (var writer = new BinaryWriter(stream))
                 {
                     ticks.SerializeInto(writer);
                 }
-
-                //Console.WriteLine("== STATE: Intermediate - before toArray... " + watch.ElapsedMilliseconds + " ms. ==");
                 data = stream.ToArray();
             }
-            //Console.WriteLine("== STATE: Intermediate - before send... " + watch.ElapsedMilliseconds + " ms. ==");
 
-            byte[] packet;
+            foreach (var client in ClientsToSync)
+                Send(client, new VMNetMessage(VMNetMessageType.BroadcastTick, data));
 
-            using (var stream = new PacketStream((byte)PacketType.VM_PACKET, 0))
-            {
-                stream.WriteHeader();
-                stream.WriteInt32(data.Length + (int)PacketHeaders.UNENCRYPTED);
-                stream.WriteBytes(data);
-
-                packet = stream.ToArray();
-            }
-            foreach (var client in ClientsToSync) client.Send(packet);
             ClientsToSync.Clear();
 
             watch.Stop();
-            //Console.WriteLine("== SERIAL: DONE! State send took "+watch.ElapsedMilliseconds+" ms. ==");
         }
 
         public override void SendCommand(VMNetCommandBodyAbstract cmd)
@@ -148,44 +157,57 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public override bool Tick(VM vm)
         {
-            HandleClients();
+            HandleClients(vm);
 
-            lock (QueuedCmds) {
-                //verify the queued commands. Remove ones which fail (or defer til later)
-                for (int i=0; i<QueuedCmds.Count; i++)
-                {
-                    var caller = vm.GetObjectByPersist(QueuedCmds[i].Command.ActorUID);
-                    if (!(caller is VMAvatar)) caller = null;
-                    if (!QueuedCmds[i].Command.Verify(vm, (VMAvatar)caller)) QueuedCmds.RemoveAt(i--);
-                    else if (QueuedCmds[i].Type == VMCommandType.SimJoin)
-                    {
-                        var cmd = (VMNetSimJoinCmd)QueuedCmds[i].Command;
-                        if (cmd.Client != null)
-                        {
-                            lock (ClientToUID)
-                            {
-                                ClientToUID.Add(cmd.Client, cmd.ActorUID);
-                                UIDtoClient.Add(cmd.ActorUID, cmd.Client);
-                            }
-                        }
-                    }
-                }
-
-                var tick = new VMNetTick();
-                tick.Commands = new List<VMNetCommand>(QueuedCmds);
-                tick.TickID = TickID++;
-                tick.RandomSeed = vm.Context.RandomSeed;
+            //copy the queue when we can acquire a lock
+            List<VMNetCommand> cmdQueue;
+            lock (QueuedCmds)
+            {
+                cmdQueue = new List<VMNetCommand>(QueuedCmds);
                 QueuedCmds.Clear();
-                InternalTick(vm, tick);
-                
-                TickBuffer.Add(tick);
-                if (TickBuffer.Count >= TICKS_PER_PACKET)
+            }
+
+            //verify the queued commands. Remove ones which fail (or defer til later)
+            for (int i = 0; i < cmdQueue.Count; i++)
+            {
+                var caller = vm.GetAvatarByPersist(cmdQueue[i].Command.ActorUID);
+                if (!cmdQueue[i].Command.Verify(vm, caller)) cmdQueue.RemoveAt(i--);
+            }
+
+            var tick = new VMNetTick();
+            tick.Commands = new List<VMNetCommand>(cmdQueue);
+            tick.TickID = TickID++;
+            tick.RandomSeed = vm.Context.RandomSeed;
+            cmdQueue.Clear();
+            InternalTick(vm, tick);
+
+            TickBuffer.Add(tick);
+
+            lock (ClientsToSyncLater)
+            {
+                if (LastResyncCooldown > 0)
+                {
+                    LastResyncCooldown--;
+                }
+                else if (ClientsToSyncLater.Count > 0)
                 {
                     lock (ClientsToSync)
                     {
-                        SendTickBuffer();
-                        SendState(vm);
+                        foreach (var client in ClientsToSyncLater)
+                        {
+                            ClientsToSync.Add(client);
+                        }
+                        ClientsToSyncLater.Clear();
                     }
+                    LastResyncCooldown = CLIENT_RESYNC_COOLDOWN;
+                }
+            }
+            if (TickBuffer.Count >= TICKS_PER_PACKET)
+            {
+                lock (ClientsToSync)
+                {
+                    SendTickBuffer();
+                    SendState(vm);
                 }
             }
 
@@ -206,103 +228,125 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 data = stream.ToArray();
             }
 
-            using (var stream = new PacketStream((byte)PacketType.VM_PACKET, 0))
-            {
-                stream.WriteHeader();
-                stream.WriteInt32(data.Length + (int)PacketHeaders.UNENCRYPTED);
-                stream.WriteBytes(data);
-                Broadcast(stream.ToArray(), ClientsToSync);
-            }
-
+            Broadcast(new VMNetMessage(VMNetMessageType.BroadcastTick, data), ClientsToSync);
             TickBuffer.Clear();
         }
 
-        private void SendOneOff(NetworkClient client, VMNetTick tick) //uh, this is a little silly.
+        public override void SendDirectCommand(uint pid, VMNetCommandBodyAbstract acmd)
         {
-            var ticks = new VMNetTickList { Ticks = new List<VMNetTick>() { tick }, ImmediateMode = true };
+            VMNetClient cli = null;
+            lock (Clients)
+            {
+                Clients.TryGetValue(pid, out cli);
+            }
+            if (cli != null) SendDirectCommand(cli, acmd);
+        }
+
+        public void SendDirectCommand(VMNetClient client, VMNetCommandBodyAbstract acmd) 
+        {
+            var cmd = new VMNetCommand(acmd);
             byte[] data;
             using (var stream = new MemoryStream())
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    ticks.SerializeInto(writer);
+                    cmd.SerializeInto(writer);
                 }
 
                 data = stream.ToArray();
             }
 
-            using (var stream = new PacketStream((byte)PacketType.VM_PACKET, 0))
-            {
-                stream.WriteHeader();
-                stream.WriteInt32(data.Length + (int)PacketHeaders.UNENCRYPTED);
-                stream.WriteBytes(data);
-                client.Send(stream.ToArray());
-            }
+            Send(client, new VMNetMessage(VMNetMessageType.Direct, data));
         }
 
-        private void Broadcast(byte[] packet, HashSet<NetworkClient> ignore)
+        private void Send(VMNetClient client, VMNetMessage message)
         {
-            lock (listener.Clients)
-            {
-                var clients = new List<NetworkClient>(listener.Clients);
-                foreach (var client in clients)
-                {
-                    if (ignore.Contains(client)) continue;
-                    client.Send(packet);
-                }
-            }
+            if (OnDirectMessage != null) OnDirectMessage(client, message);
         }
 
-        private void HandleClients()
+        private void Broadcast(VMNetMessage message, HashSet<VMNetClient> ignore)
         {
-            lock (listener.Clients)
+            if (OnTickBroadcast != null) OnTickBroadcast(message, ignore);
+        }
+
+        private void DropClient(VMNetClient client)
+        {
+            if (OnDropClient != null) OnDropClient(client);
+        }
+
+        private void HandleClients(VM vm)
+        {
+            lock (Clients)
             {
                 ClientsToDC.Clear();
-                foreach (var client in listener.Clients)
+                foreach (var client in Clients)
                 {
-                    var packets = client.GetPackets();
+                    //does client have an avatar? did they have one before?
+                    if (vm.GetAvatarByPersist(client.Key) != null) { client.Value.HadAvatar = true; }
+                    else if (client.Value.HadAvatar)
+                    {
+                        //something removed this avatar. They have disconnected.
+                        ClientsToDC.Add(client.Value);
+                        continue;
+                    }
+                    if (++client.Value.InactivityTicks >= INACTIVITY_TICKS_WARN)
+                    {
+                        if (client.Value.InactivityTicks >= INACTIVITY_TICKS_KICK) ClientsToDC.Add(client.Value);
+                        else if (client.Value.InactivityTicks == INACTIVITY_TICKS_WARN) SendDirectCommand(client.Value,
+                            new VMNetTimeoutNotifyCmd() { TimeRemaining = (INACTIVITY_TICKS_KICK - INACTIVITY_TICKS_WARN) / 30 });
+                    }
+                    var packets = client.Value.GetMessages();
                     while (packets.Count > 0)
                     {
-                        OnPacket(client, packets.Dequeue());
+                        HandleMessage(client.Value, packets.Dequeue());
                     }
                 }
                 foreach (var client in ClientsToDC)
                 {
-                    client.Disconnect();
+                    DropClient(client);
                 }
             }
         }
 
-        private void SendGenericMessage(NetworkClient client, string title, string msg)
+        public void SubmitMessage(uint id, VMNetMessage msg)
         {
-            SendOneOff(client, new VMNetTick()
+            lock (Clients)
             {
-                Commands = new List<VMNetCommand>()
-                    {
-                        new VMNetCommand(new VMGenericDialogCommand
-                        {
-                            Title = title,
-                            Message = msg
-                        })
-                    }
+                VMNetClient cli = null;
+                if (Clients.TryGetValue(id, out cli))
+                {
+                    cli.SubmitMessage(msg);
+                }
+            }
+        }
+
+        private void SendGenericMessage(VMNetClient client, string title, string msg)
+        {
+            SendDirectCommand(client, new VMGenericDialogCommand
+            {
+                Title = title,
+                Message = msg
             });
         }
 
-        public override void OnPacket(NetworkClient client, ProcessedPacket packet)
+        public void HandleMessage(VMNetClient client, VMNetMessage message)
         {
             var cmd = new VMNetCommand();
             try {
-                using (var reader = new BinaryReader(packet)) {
-                    cmd.Deserialize(reader);
+                using (var reader = new BinaryReader(new MemoryStream(message.Data))) {
+                    if (!cmd.TryDeserialize(reader, false)) return; //ignore things that should never be sent to the server
                 }
-            } catch (Exception)
+            }
+            catch (Exception)
             {
+                //corrupt commands are currently a death sentence for the client. nothing should be corrupt over TCP except in rare cases.
                 ClientsToDC.Add(client);
                 return;
             }
 
             if (cmd.Type == VMCommandType.SimJoin)
             {
+                //note: currently avatars no longer send sim join commands, the server does when it gets the database info.
                 if (SandboxBans.Contains(client.RemoteIP))
                 {
                     SendGenericMessage(client, "Banned", "You have been banned from this sandbox server!");
@@ -315,44 +359,35 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     ClientsToDC.Add(client);
                     return;
                 }
-
-                ((VMNetSimJoinCmd)cmd.Command).Ticket = client.RemoteIP+":"+((VMNetSimJoinCmd)cmd.Command).Name;
-                ((VMNetSimJoinCmd)cmd.Command).Client = client; //remember client so we can bind it to persist id later
                 SendCommand(cmd.Command); //just go for it. will start the avatar retrieval process.
                 return;
             }
             else if (cmd.Type == VMCommandType.RequestResync)
             {
-                lock (ClientsToSync)
+                lock (ClientsToSyncLater)
                 {
                     //todo: throttle
-                    ClientsToSync.Add(client);
+                    ProblemTick = ((VMRequestResyncCmd)cmd.Command).TickID;
+                    ClientsToSyncLater.Add(client);
                 }
-            }
-
-            lock (ClientToUID)
+            } else
             {
-                if (!ClientToUID.ContainsKey(client)) return; //client hasn't registered yet
-                cmd.Command.ActorUID = ClientToUID[client];
+                client.InactivityTicks = 0;
             }
-            SendCommand(cmd.Command);
-        }
 
-        public override void CloseNet()
-        {
-            listener.Close();
-            if (OnShutdown != null) OnShutdown(CloseReason);
+            cmd.Command.ActorUID = client.PersistID;
+            SendCommand(cmd.Command);
         }
 
         public void BanUser(VM vm, string name)
         {
             var sims = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == name.ToLowerInvariant().Trim(' '));
-            lock (ClientToUID) {
+            lock (Clients) {
                 foreach (var sim in sims)
                 {
-                    if (UIDtoClient.ContainsKey(sim.PersistID))
+                    if (Clients.ContainsKey(sim.PersistID))
                     {
-                        var client = UIDtoClient[sim.PersistID];
+                        var client = Clients[sim.PersistID];
                         vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Found and banned " + name + ", with IP " + client.RemoteIP + "."));
                         BanIP(client.RemoteIP);
                     }
@@ -360,32 +395,39 @@ namespace FSO.SimAntics.NetPlay.Drivers
             }
         }
 
+        public void DropAvatar(VMAvatar avatar)
+        {
+            if (avatar == null || avatar.PersistID == 0) return;
+            lock (Clients)
+            {
+                if (Clients.ContainsKey(avatar.PersistID))
+                {
+                    
+                    var client = Clients[avatar.PersistID];
+                    Task.Run(() =>
+                    {
+                        DropClient(client);
+                    });
+                }
+            }
+        }
+
         public void KickUser(VM vm, string name)
         {
             var sims = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == name.ToLowerInvariant().Trim(' '));
-            lock (ClientToUID)
+            foreach (var sim in sims)
             {
-                foreach (var sim in sims)
-                {
-                    if (UIDtoClient.ContainsKey(sim.PersistID))
-                    {
-                        var client = UIDtoClient[sim.PersistID];
-                        new Thread(() =>
-                        {
-                            client.Disconnect();
-                        }).Start();
-                    }
-                }
+                DropAvatar((VMAvatar)sim);
             }
         }
 
         public void BanIP(string ip)
         {
             var cleanIP = ip.Trim(' ').ToLowerInvariant();
-            var badClients = new List<NetworkClient>();
-            lock (listener.Clients)
+            var badClients = new List<VMNetClient>();
+            lock (Clients)
             {
-                foreach (var client in listener.Clients)
+                foreach (var client in Clients.Values)
                 {
                     if (client.RemoteIP.ToLowerInvariant() == cleanIP) {
                         SendGenericMessage(client, "Yikes", "You have just been banned from this sandbox server!");
@@ -396,7 +438,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
             foreach (var client in badClients) {
                 new Thread(() =>
                 {
-                    client.Disconnect();
+                    DropClient(client);
                 }).Start();
             }
             SandboxBans.Add(cleanIP);
@@ -404,10 +446,10 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public override string GetUserIP(uint uid)
         {
-            lock (UIDtoClient)
+            lock (Clients)
             {
-                NetworkClient client = null;
-                UIDtoClient.TryGetValue(uid, out client);
+                VMNetClient client = null;
+                Clients.TryGetValue(uid, out client);
                 if (client == null) return "unknown";
                 return client.RemoteIP;
             }

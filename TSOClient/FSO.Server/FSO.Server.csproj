@@ -1,0 +1,432 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8F125201-FDF0-4A13-886F-19662707D34D}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>FSO.Server</RootNamespace>
+    <AssemblyName>server</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>FreeSO.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CommandLine, Version=1.9.71.2, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
+      <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Common.Logging, Version=3.3.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.3.3.1\lib\net40\Common.Logging.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Common.Logging.Core, Version=3.3.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.Core.3.3.1\lib\net40\Common.Logging.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="crypto, Version=1.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Portable.BouncyCastle.1.7.0.2\lib\portable-net4+sl5+wp8+win8+wpa81+MonoTouch10+MonoAndroid10+xamarinmac20+xamarinios10\crypto.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="JWT, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Portable.JWT.1.0.3\lib\4.5\JWT.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Cors, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Cors.3.0.1\lib\net45\Microsoft.Owin.Cors.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.HttpListener, Version=2.0.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Host.HttpListener.2.0.2\lib\net45\Microsoft.Owin.Host.HttpListener.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Hosting, Version=2.0.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Hosting.2.0.2\lib\net45\Microsoft.Owin.Hosting.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mina.NET, Version=2.0.11.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mina.2.0.11\lib\net40\Mina.NET.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MonoGame.Framework, Version=3.4.0.459, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nancy, Version=1.4.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.1.4.3\lib\net40\Nancy.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nancy.Authentication.Stateless, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.Authentication.Stateless.1.4.1\lib\net40\Nancy.Authentication.Stateless.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nancy.Authentication.Token, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.Authentication.Token.1.4.1\lib\net40\Nancy.Authentication.Token.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nancy.Bootstrappers.Ninject, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.Bootstrappers.Ninject.1.4.1\lib\net40\Nancy.Bootstrappers.Ninject.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nancy.Hosting.Self, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.Hosting.Self.1.4.1\lib\net40\Nancy.Hosting.Self.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ninject.3.2.2.0\lib\net45-full\Ninject.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Ninject.Extensions.ChildKernel, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ninject.Extensions.ChildKernel.3.2.0.0\lib\net45-full\Ninject.Extensions.ChildKernel.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.3.11\lib\net45\NLog.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.3.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Web.Cors, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Cors.5.2.3\lib\net45\System.Web.Cors.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Http.Cors, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Cors.5.2.3\lib\net45\System.Web.Http.Cors.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Http.Owin, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Owin.5.2.3\lib\net45\System.Web.Http.Owin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DataService\DataServiceSyncFactory.cs" />
+    <Compile Include="DataService\GlobalDataServiceModule.cs" />
+    <Compile Include="DataService\IDataServiceSyncFactory.cs" />
+    <Compile Include="DataService\Providers\ServerAvatarProvider.cs" />
+    <Compile Include="DataService\Providers\ServerCityProvider.cs" />
+    <Compile Include="DataService\Providers\ServerLotProvider.cs" />
+    <Compile Include="DataService\ServerDataService.cs" />
+    <Compile Include="DataService\ServerNFSProvider.cs" />
+    <Compile Include="DataService\ShardDataServiceModule.cs" />
+    <Compile Include="Domain\ServerDomainModule.cs" />
+    <Compile Include="Domain\Shards.cs" />
+    <Compile Include="Domain\ServerTop100Domain.cs" />
+    <Compile Include="Servers\Api\Controllers\Admin\AdminTasksController.cs" />
+    <Compile Include="Servers\Api\JsonWebToken\JWTUserIdentity.cs" />
+    <Compile Include="Servers\City\CityServerModule.cs" />
+    <Compile Include="Servers\City\Handlers\ModerationHandler.cs" />
+    <Compile Include="Servers\Tasks\Domain\PruneDatabaseTask.cs" />
+    <Compile Include="Framework\Aries\AbstractAriesServer.cs" />
+    <Compile Include="Framework\Aries\AbstractAriesServerConfig.cs" />
+    <Compile Include="Framework\Aries\AriesPacketRouter.cs" />
+    <Compile Include="Framework\Aries\AriesSession.cs" />
+    <Compile Include="Framework\Aries\AriesHandler.cs" />
+    <Compile Include="Framework\Aries\IAriesPacketRouter.cs" />
+    <Compile Include="Framework\Aries\IAriesSession.cs" />
+    <Compile Include="Framework\Aries\IAriesSessionInterceptor.cs" />
+    <Compile Include="Framework\Aries\ISessions.cs" />
+    <Compile Include="Framework\Aries\Sessions.cs" />
+    <Compile Include="Framework\Gluon\GluonSession.cs" />
+    <Compile Include="Framework\Gluon\IGluonSession.cs" />
+    <Compile Include="Framework\Groups.cs" />
+    <Compile Include="Framework\Voltron\IVoltronSession.cs" />
+    <Compile Include="Framework\Voltron\VoltronSession.cs" />
+    <Compile Include="ITool.cs" />
+    <Compile Include="ProgramOptions.cs" />
+    <Compile Include="ServerConfiguration.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Servers\Api\Controllers\Admin\AdminHostsController.cs" />
+    <Compile Include="Servers\Api\Controllers\Admin\AdminShardOpController.cs" />
+    <Compile Include="Servers\Api\Controllers\Admin\AdminShardsController.cs" />
+    <Compile Include="Servers\Api\Controllers\StatusCodeHandler.cs" />
+    <Compile Include="Servers\Api\Controllers\UserAPI\CityInfoController.cs" />
+    <Compile Include="Servers\Api\Controllers\UserAPI\RegistrationController.cs" />
+    <Compile Include="Servers\Api\JsonWebToken\JWTTokenAuthentication.cs" />
+    <Compile Include="Servers\Api\Controllers\Admin\AdminUsersController.cs" />
+    <Compile Include="Servers\Api\Controllers\Admin\AdminOAuthController.cs" />
+    <Compile Include="Servers\Api\Controllers\AuthController.cs" />
+    <Compile Include="Servers\Api\Controllers\CitySelectorController.cs" />
+    <Compile Include="Servers\Api\NancyExtensions.cs" />
+    <Compile Include="Servers\City\CityServer.cs" />
+    <Compile Include="Servers\City\CityServerConfiguration.cs" />
+    <Compile Include="Servers\City\CityServerContext.cs" />
+    <Compile Include="Servers\City\Domain\JobMatchmaker.cs" />
+    <Compile Include="Servers\City\Domain\LotAllocations.cs" />
+    <Compile Include="Servers\City\Domain\LotServerPicker.cs" />
+    <Compile Include="Servers\City\Handlers\ChangeRoommateHandler.cs" />
+    <Compile Include="Servers\City\Handlers\ElectronFindPlayerHandler.cs" />
+    <Compile Include="Servers\City\Handlers\FindPlayerHandler.cs" />
+    <Compile Include="Servers\City\Handlers\JoinLotHandler.cs" />
+    <Compile Include="Servers\Shared\Handlers\GluonAuthenticationHandler.cs" />
+    <Compile Include="Servers\City\Handlers\LotServerClosedownHandler.cs" />
+    <Compile Include="Servers\City\Handlers\LotServerLifecycleHandler.cs" />
+    <Compile Include="Servers\City\Handlers\LotServerShutdownResponseHandler.cs" />
+    <Compile Include="Servers\City\Handlers\MessagingHandler.cs" />
+    <Compile Include="Servers\City\Handlers\PurchaseLotHandler.cs" />
+    <Compile Include="Servers\City\Handlers\VoltronConnectionLifecycleHandler.cs" />
+    <Compile Include="Servers\City\Handlers\DataServiceWrapperHandler.cs" />
+    <Compile Include="Servers\City\Handlers\DBRequestWrapperHandler.cs" />
+    <Compile Include="Servers\City\Handlers\RegistrationHandler.cs" />
+    <Compile Include="Servers\City\Handlers\SetPreferencesHandler.cs" />
+    <Compile Include="Servers\Lot\Domain\LotHost.cs" />
+    <Compile Include="Servers\Lot\Domain\LotServerGlobalLink.cs" />
+    <Compile Include="Servers\Lot\Handlers\CityServerAuthenticationHandler.cs" />
+    <Compile Include="Servers\Lot\Handlers\LotNegotiationHandler.cs" />
+    <Compile Include="Servers\Lot\Domain\LotContainer.cs" />
+    <Compile Include="Servers\Lot\Domain\LotContext.cs" />
+    <Compile Include="Servers\Lot\Handlers\ShardShutdownHandler.cs" />
+    <Compile Include="Servers\Lot\Handlers\VoltronConnectionLifecycleHandler.cs" />
+    <Compile Include="Servers\Lot\Lifecycle\CityConnections.cs" />
+    <Compile Include="Servers\Lot\LotServer.cs" />
+    <Compile Include="Servers\Lot\LotServerConfiguration.cs" />
+    <Compile Include="Servers\Lot\LotServerModule.cs" />
+    <Compile Include="Servers\Tasks\Domain\BonusTask.cs" />
+    <Compile Include="Servers\Tasks\Handlers\TaskEngineHandler.cs" />
+    <Compile Include="Servers\Tasks\TaskServer.cs" />
+    <Compile Include="Servers\UserApi\UserApi.cs" />
+    <Compile Include="ToolInitDatabase.cs" />
+    <Compile Include="ToolRunServer.cs" />
+    <Compile Include="Servers\Api\ApiServer.cs" />
+    <Compile Include="Servers\AbstractServer.cs" />
+    <Compile Include="Servers\Api\ApiServerConfiguration.cs" />
+    <Compile Include="Utils\GluonHostPool.cs" />
+    <Compile Include="Utils\SoftwareImageLoader.cs" />
+    <Compile Include="Servers\Tasks\TaskEngine.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Admin\bower.json" />
+    <None Include="Admin\package.json" />
+    <None Include="Admin\src\app\index.scss" />
+    <None Include="Admin\src\app\login\login.scss" />
+    <None Include="Admin\src\app\vendor.scss" />
+    <None Include="App.config" />
+    <None Include="config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="packages.config" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
+      <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>
+      <Name>TargaImage</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Common.DatabaseService\FSO.Common.DatabaseService.csproj">
+      <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>
+      <Name>FSO.Common.DatabaseService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Common.Domain\FSO.Common.Domain.csproj">
+      <Project>{9848faf5-444a-48cc-a26a-8115d8c4fb52}</Project>
+      <Name>FSO.Common.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Api\FSO.Server.Api.csproj">
+      <Project>{19a2e153-246d-4d38-a28e-1e4d36d7e28f}</Project>
+      <Name>FSO.Server.Api</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Clients\FSO.Server.Clients.csproj">
+      <Project>{329e0aee-7871-40a7-b5af-8c0d0086ef71}</Project>
+      <Name>FSO.Server.Clients</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
+      <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
+      <Name>FSO.Server.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Database\FSO.Server.Database.csproj">
+      <Project>{430acd60-e798-43f0-ad61-8b5a35df6ab2}</Project>
+      <Name>FSO.Server.Database</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.DataService\FSO.Common.DataService.csproj">
+      <Project>{88c69e02-78d4-4d71-9c26-43a9b118285a}</Project>
+      <Name>FSO.Common.DataService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Debug\FSO.Server.Debug.csproj">
+      <Project>{7296ccec-f459-4071-a9d2-9a07dcc29210}</Project>
+      <Name>FSO.Server.Debug</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Domain\FSO.Server.Domain.csproj">
+      <Project>{a1d9aba0-0105-436d-8f8c-2418db768080}</Project>
+      <Name>FSO.Server.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
+      <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>
+      <Name>FSO.Server.Protocol</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Updater\FSO.Server.Watchdog.csproj">
+      <Project>{bedcdf02-3349-4e64-9bfd-38c499303822}</Project>
+      <Name>FSO.Server.Watchdog</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
+      <Name>FSO.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.content\FSO.Content.csproj">
+      <Project>{c0068df7-f2e8-4399-846d-556bf9a35c00}</Project>
+      <Name>FSO.Content</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.files\FSO.Files.csproj">
+      <Project>{18583453-a970-4ac5-83b1-2d6bfdf94c24}</Project>
+      <Name>FSO.Files</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.simantics\FSO.SimAntics.csproj">
+      <Project>{5eddefd2-c850-49c1-812d-ddeff09125ef}</Project>
+      <Name>FSO.SimAntics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.model\FSO.Vitaboy.csproj">
+      <Project>{9d9558a9-755e-43f9-8bb6-b26f365f5042}</Project>
+      <Name>FSO.Vitaboy</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.world\FSO.LotView.csproj">
+      <Project>{b1a6e4c2-e080-4c34-a604-d11b5296a9b8}</Project>
+      <Name>FSO.LotView</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="NLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Admin\gulpfile.js" />
+    <Content Include="Admin\src\app\admin\hosts\hosts.html" />
+    <Content Include="Admin\src\app\admin\hosts\hosts.controller.js" />
+    <Content Include="Admin\src\app\admin\shards\sharda.dialog.controller.js" />
+    <Content Include="Admin\src\app\admin\shards\sharda.dialog.html" />
+    <Content Include="Admin\src\app\admin\shards\shards.controller.js" />
+    <Content Include="Admin\src\app\admin\shards\shards.html" />
+    <Content Include="Admin\src\app\admin\shards\shardx.dialog.controller.js" />
+    <Content Include="Admin\src\app\admin\shards\shardx.dialog.html" />
+    <Content Include="Admin\src\app\admin\tasks\tasks.controller.js" />
+    <Content Include="Admin\src\app\admin\tasks\task.dialog.controller.js" />
+    <Content Include="Admin\src\app\admin\tasks\task.dialog.html" />
+    <Content Include="Admin\src\app\admin\tasks\tasks.html" />
+    <Content Include="Admin\src\app\admin\users\users.controller.js" />
+    <Content Include="Admin\src\app\admin\users\users.dialog.controller.js" />
+    <Content Include="Admin\src\app\admin\users\users.dialog.html" />
+    <Content Include="Admin\src\app\admin\users\users.html" />
+    <Content Include="Admin\src\app\components\navbar\navbar.controller.js" />
+    <Content Include="Admin\src\app\components\navbar\navbar.html" />
+    <Content Include="Admin\src\app\directives\passwordVerify.js" />
+    <Content Include="Admin\src\app\index.js" />
+    <Content Include="Admin\src\app\login\login.controller.js" />
+    <Content Include="Admin\src\app\login\login.html" />
+    <Content Include="Admin\src\app\admin\main.controller.js" />
+    <Content Include="Admin\src\app\admin\main.html" />
+    <Content Include="Admin\src\app\factories\api.js" />
+    <Content Include="Admin\src\app\services\auth.js" />
+    <Content Include="Admin\src\app\services\token.js" />
+    <Content Include="Admin\src\assets\images\angular-material.png" />
+    <Content Include="Admin\src\assets\images\angular.png" />
+    <Content Include="Admin\src\assets\images\browsersync.png" />
+    <Content Include="Admin\src\assets\images\gulp.png" />
+    <Content Include="Admin\src\assets\images\jasmine.png" />
+    <Content Include="Admin\src\assets\images\karma.png" />
+    <Content Include="Admin\src\assets\images\node-sass.png" />
+    <Content Include="Admin\src\assets\images\protractor.png" />
+    <Content Include="Admin\src\assets\images\yeoman.png" />
+    <Content Include="Admin\src\favicon.ico" />
+    <Content Include="Admin\src\index.html" />
+    <Content Include="FreeSO.ico" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

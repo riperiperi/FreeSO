@@ -14,6 +14,7 @@ using FSO.SimAntics.Engine.Utils;
 using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 using System.IO;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -23,7 +24,7 @@ namespace FSO.SimAntics.Engine.Primitives
         {
             var operand = (VMCreateObjectInstanceOperand)args;
             LotTilePos tpos = new LotTilePos(LotTilePos.OUT_OF_WORLD);
-            Direction dir;
+            Direction dir = Direction.NORTH; //FaceStackObjDir? not used afaik
 
             switch (operand.Position)
             {
@@ -103,17 +104,23 @@ namespace FSO.SimAntics.Engine.Primitives
                 (operand.PassTemp0) ? (context.Thread.TempRegisters[0]) : (operand.PassObjectIds ? context.Caller.ObjectID : (short)0) , false);
 
             if (mobj == null) return VMPrimitiveExitCode.GOTO_FALSE;
-            var obj = mobj.Objects[0];
+            var obj = mobj.BaseObject;
 
             if (operand.Position == VMCreateObjectPosition.InSlot0OfStackObject) context.StackObject.PlaceInSlot(obj, 0, true, context.VM.Context);
             else if (operand.Position == VMCreateObjectPosition.InMyHand) context.Caller.PlaceInSlot(obj, 0, true, context.VM.Context);
+            else if (operand.Position == VMCreateObjectPosition.UnderneathMe && obj.Position == LotTilePos.OUT_OF_WORLD)
+            {
+                foreach (var iobj in mobj.Objects) iobj.IgnoreIntersection = context.Caller.MultitileGroup;
+                mobj.ChangePosition(context.Caller.Position, dir, context.VM.Context, Model.VMPlaceRequestFlags.Default);
+                foreach (var iobj in mobj.Objects) iobj.IgnoreIntersection = null;
+            }
 
             if (operand.Position != VMCreateObjectPosition.OutOfWorld && obj.Position == LotTilePos.OUT_OF_WORLD && obj.Container == null)
             {
                 obj.Delete(true, context.VM.Context);
                 return VMPrimitiveExitCode.GOTO_FALSE;
             }
-            if ((operand.Flags & (1 << 6)) > 0)
+            if (operand.ReturnImmediately)
             {
                 short interaction = operand.InteractionCallback;
                 if (interaction == 254 && context.ActionTree)
@@ -130,6 +137,23 @@ namespace FSO.SimAntics.Engine.Primitives
                 callback.Run(obj);
             }
             else context.StackObject = obj;
+
+            if (operand.PersistInDB)
+            {
+                var vm = context.VM;
+                if (vm.GlobalLink != null)
+                {
+                    vm.GlobalLink.RegisterNewObject(vm, obj, (short objID, uint pid) =>
+                    {
+                        vm.SendCommand(new VMNetUpdatePersistStateCmd()
+                        {
+                            ObjectID = objID,
+                            PersistID = pid
+                        });
+                    });
+                }
+            }
+            if (operand.UseNeighbor) { }
 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
@@ -180,6 +204,32 @@ namespace FSO.SimAntics.Engine.Primitives
             }
         }
 
+        public bool UseNeighbor
+        {
+            get
+            {
+                return (Flags & 4) == 4;
+            }
+            set
+            {
+                if (value) Flags |= 4;
+                else Flags &= unchecked((byte)~4);
+            }
+        }
+
+        public bool FailIfNonEmpty
+        {
+            get
+            {
+                return (Flags & 8) == 8;
+            }
+            set
+            {
+                if (value) Flags |= 8;
+                else Flags &= unchecked((byte)~8);
+            }
+        }
+
         public bool PassTemp0
         {
             get
@@ -190,6 +240,45 @@ namespace FSO.SimAntics.Engine.Primitives
             {
                 if (value) Flags |= 16;
                 else Flags &= unchecked((byte)~16);
+            }
+        }
+
+        public bool FaceStackObjDir
+        {
+            get
+            {
+                return (Flags & 32) == 32;
+            }
+            set
+            {
+                if (value) Flags |= 32;
+                else Flags &= unchecked((byte)~32);
+            }
+        }
+
+        public bool ReturnImmediately
+        {
+            get
+            {
+                return (Flags & 64) == 64;
+            }
+            set
+            {
+                if (value) Flags |= 64;
+                else Flags &= unchecked((byte)~64);
+            }
+        }
+
+        public bool PersistInDB
+        {
+            get
+            {
+                return (Flags & 128) == 128;
+            }
+            set
+            {
+                if (value) Flags |= 128;
+                else Flags &= unchecked((byte)~128);
             }
         }
     }

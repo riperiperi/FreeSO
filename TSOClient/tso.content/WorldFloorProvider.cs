@@ -66,6 +66,10 @@ namespace FSO.Content
                 var medium = floorGlobals.Get<SPR2>((ushort)(i + 256));
                 var near = floorGlobals.Get<SPR2>((ushort)(i + 512)); //2048 is water tile
 
+                far.FloorCopy = true;
+                medium.FloorCopy = true;
+                near.FloorCopy = true;
+
                 this.AddFloor(new Floor
                 {
                     ID = floorID,
@@ -98,6 +102,17 @@ namespace FSO.Content
                 Name = waterStrs.GetString(1),
                 Description = waterStrs.GetString(2)
             });
+
+            Entries.Add(65534, new FloorReference(this)
+            {
+                ID = 65534,
+                FileName = "global",
+
+                Price = int.Parse(waterStrs.GetString(3)),
+                Name = waterStrs.GetString(4),
+                Description = waterStrs.GetString(5)
+            });
+
 
             floorID = 256;
 
@@ -162,13 +177,30 @@ namespace FSO.Content
             {
                 
                 return TextureUtils.Copy(device, FloorGlobals.Get<SPR2>(0x420).Frames[0].GetTexture(device));
+            } else if (id == 65534)
+            {
+                var spr = FloorGlobals.Get<SPR2>(0x800);
+                spr.FloorCopy = true;
+                if (!spr.SpritePreprocessed)
+                {
+                    spr.ZAsAlpha = true;
+                    spr.SpritePreprocessed = true;
+                }
+                return TextureUtils.Copy(device, spr.Frames[0].GetTexture(device));
             }
             else return this.Floors.ThrowawayGet(Entries[(ushort)id].FileName).Get<SPR2>(513).Frames[0].GetTexture(device);
         }
 
         public SPR2 GetGlobalSPR(ushort id)
         {
-            return FloorGlobals.Get<SPR2>(id);
+            var spr = FloorGlobals.Get<SPR2>(id);
+            if (id > 0x800 && id < 0x810 && !spr.SpritePreprocessed)
+            {
+                spr.ZAsAlpha = true;
+                spr.SpritePreprocessed = true;
+            }
+            spr.FloorCopy = true;
+            return spr;
         }
 
         #region IContentProvider<Floor> Members
@@ -189,6 +221,10 @@ namespace FSO.Content
                 var far = iff.Get<SPR2>(1);
                 var medium = iff.Get<SPR2>(257);
                 var near = iff.Get<SPR2>(513);
+
+                far.FloorCopy = true;
+                medium.FloorCopy = true;
+                near.FloorCopy = true;
 
                 ById[(ushort)id] = new Floor
                 {
@@ -235,6 +271,11 @@ namespace FSO.Content
         public Floor Get()
         {
             return Provider.Get(ID);
+        }
+
+        public object GetGeneric()
+        {
+            return Get();
         }
 
         #endregion

@@ -22,6 +22,10 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args) //TODO: Behaviour for being notified out of idle and interaction canceling
         {
             var operand = (VMIdleForInputOperand)args;
+            var idleStart = context.Thread.ScheduleIdleStart;
+            context.Thread.ScheduleIdleStart = 0;
+
+            context.Args[operand.StackVarToDec] -= (short)((idleStart != 0 && idleStart < context.VM.Scheduler.CurrentTickID) ? (context.VM.Scheduler.CurrentTickID - idleStart) : 1);
 
             //if we're main, attempt to run a queued interaction. We just idle if this fails.
             if (operand.AllowPush == 1 && !context.ActionTree && context.Thread.AttemptPush())
@@ -42,17 +46,19 @@ namespace FSO.SimAntics.Primitives
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
-            var ticks = VMMemory.GetVariable(context, FSO.SimAntics.Engine.Scopes.VMVariableScope.Parameters, operand.StackVarToDec);
-            ticks--;
-
-            if (ticks < 0)
+            if (context.Args[operand.StackVarToDec] < 0)
             {
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
             else
             {
-                VMMemory.SetVariable(context, FSO.SimAntics.Engine.Scopes.VMVariableScope.Parameters, operand.StackVarToDec, ticks);
-                return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                if (operand.AllowPush == 1) return VMPrimitiveExitCode.CONTINUE_NEXT_TICK; //interactions must be checked every tick
+                else
+                {
+                    context.Thread.ScheduleIdleStart = context.VM.Scheduler.CurrentTickID;
+                    context.VM.Scheduler.ScheduleTickIn(context.Caller, (uint)context.Args[operand.StackVarToDec] + 1);
+                    return VMPrimitiveExitCode.CONTINUE_FUTURE_TICK;
+                }
             }
         }
     }

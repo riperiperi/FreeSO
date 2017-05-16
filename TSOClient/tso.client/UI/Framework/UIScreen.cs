@@ -11,7 +11,9 @@ using System.Text;
 using FSO.Client.UI.Controls;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using FSO.Common.Utils;
 using FSO.Common;
+using FSO.Server.Protocol.Voltron.Packets;
 
 namespace FSO.Client.UI.Framework
 {
@@ -39,12 +41,50 @@ namespace FSO.Client.UI.Framework
             }
         }
 
-        public static UIAlert ShowAlert(UIAlertOptions options, bool modal)
+        public static UIAlert GlobalShowAnnouncement(AnnouncementMsgPDU msg)
+        {
+            UIAlert alert = null;
+            alert = GlobalShowAlert(new UIAlertOptions()
+            {
+                Title = GameFacade.Strings.GetString("195", "30") + GameFacade.CurrentCityName,
+                Message = GameFacade.Strings.GetString("195", "28") + msg.SenderID.Substring(2) + "\r\n"
+                + GameFacade.Strings.GetString("195", "29") + msg.Subject + "\r\n"
+                + msg.Message,
+                Buttons = UIAlertButton.Ok((btn) => RemoveDialog(alert)),
+                Alignment = TextAlignment.Left
+            }, true);
+            return alert;
+        }
+
+        public static UIAlert GlobalShowAlert(UIAlertOptions options, bool modal)
         {
             var alert = new UIAlert(options);
-            ShowDialog(alert, modal);
-            alert.CenterAround(UIScreen.Current);
+            GlobalShowDialog(alert, modal);
+            alert.CenterAround(UIScreen.Current, -(int)UIScreen.Current.X * 2, -(int)UIScreen.Current.Y * 2);
             return alert;
+        }
+
+        /// <summary>
+        /// Adds a popup dialog
+        /// </summary>
+        /// <param name="dialog"></param>
+        public static void GlobalShowDialog(UIElement dialog, bool modal)
+        {
+            GlobalShowDialog(new DialogReference
+            {
+                Dialog = dialog,
+                Modal = modal
+            });
+        }
+
+        public static void GlobalShowDialog(DialogReference dialog)
+        {
+            GameFacade.Screens.AddDialog(dialog);
+
+            if (dialog.Dialog is UIDialog)
+            {
+                ((UIDialog)dialog.Dialog).CenterAround(UIScreen.Current, -(int)UIScreen.Current.X * 2, -(int)UIScreen.Current.Y * 2);
+            }
         }
 
         /// <summary>
@@ -61,7 +101,7 @@ namespace FSO.Client.UI.Framework
 
             if (dialog is UIDialog)
             {
-                ((UIDialog)dialog).CenterAround(UIScreen.Current);
+                ((UIDialog)dialog).CenterAround(UIScreen.Current, -(int)UIScreen.Current.X*2, -(int)UIScreen.Current.Y * 2);
             }
         }
 

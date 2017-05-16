@@ -602,7 +602,6 @@ namespace FSO.SimAntics.Engine.Utils
                     return true;
 
                 case VMVariableScope.Parameters: //9
-                    /** Not too sure if this is illegal **/
                     context.Args[data] = value;
                     return true;
 
@@ -758,6 +757,9 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMVariableScope.TempXL:
                     context.Thread.TempXL[data] = value;
                     return true;
+                case VMVariableScope.MoneyOverHead32Bit:
+                    ((VMAvatar)context.Caller).ShowMoneyHeadline(value);
+                    return true;
                 default:
                     return SetVariable(context, scope, data, (short)value); //truncate value and set the relevant 16 bit var to it.
             }
@@ -824,12 +826,16 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMSlotScope.Global:
                     var slots = context.Global.Resource.Get<SLOT>(100);
                     if (slots != null && slots.Slots.ContainsKey(3) && data < slots.Slots[3].Count){
-                        return slots.Slots[3][data];
+                        if (data >= slots.Slots[3].Count) return null;
+                        var slot = slots.Slots[3][data];
+                        return slot;
                     }
                     return null;
                 case VMSlotScope.Literal:
+                    if (data >= context.StackObject.Slots.Slots[3].Count) return null;
                     return context.StackObject.Slots.Slots[3][data];
                 case VMSlotScope.StackVariable:
+                    if (context.Args[data] >= context.StackObject.Slots.Slots[3].Count) return null;
                     return context.StackObject.Slots.Slots[3][context.Args[data]];
             }
             return null;

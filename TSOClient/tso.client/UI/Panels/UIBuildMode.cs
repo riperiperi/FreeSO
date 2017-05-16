@@ -22,6 +22,7 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels.LotControls;
 using FSO.Client.UI.Model;
 using FSO.Common;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -29,9 +30,6 @@ namespace FSO.Client.UI.Panels
 
     public class UIBuildMode : UIDestroyablePanel
     {
-        public VM vm;
-        public VMAvatar SelectedAvatar;
-
         public UIButton TerrainButton { get; set; }
         public UIButton WaterButton { get; set; }
         public UIButton WallButton { get; set; }
@@ -60,19 +58,27 @@ namespace FSO.Client.UI.Panels
         private Dictionary<UIButton, int> CategoryMap;
         private List<UICatalogElement> CurrentCategory;
 
+        private UILabel ObjLimitLabel;
+        private int LastObjCount = -1;
+
         public UICatalog Catalog;
         public UIObjectHolder Holder;
-        public UIQueryPanel QueryPanel;
+        public UIQueryPanel QueryPanel { get { return LotController.QueryPanel; } }
         public UILotControl LotController;
         private VMMultitileGroup BuyItem;
 
         private int OldSelection = -1;
 
+        private UISlider RoofSlider;
+        private UIButton RoofSteepBtn;
+        private UIButton RoofShallowBtn;
+        private uint TicksSinceRoof = 0;
+        private bool SendRoofValue = false;
+
         public UIBuildMode(UILotControl lotController)
         {
             LotController = lotController;
             Holder = LotController.ObjectHolder;
-            QueryPanel = LotController.QueryPanel;
 
             var useSmall = (FSOEnvironment.UIZoomFactor>1f || GlobalSettings.Default.GraphicsWidth < 1024);
             var script = this.RenderScript("buildpanel" + (useSmall ? "" : "1024") + ".uis");
@@ -91,6 +97,7 @@ namespace FSO.Client.UI.Panels
             this.AddAt(2, SubToolBg);
 
             Catalog = new UICatalog(useSmall ? 10 : 20);
+            Catalog.ActiveVM = lotController.vm;
             Catalog.OnSelectionChange += new CatalogSelectionChangeDelegate(Catalog_OnSelectionChange);
             Catalog.Position = new Vector2(364, 7);
             this.Add(Catalog);
@@ -108,10 +115,11 @@ namespace FSO.Client.UI.Panels
                 { FloorButton, 9 },
                 { DoorButton, 0 },
                 { WindowButton, 1 },
-                { RoofButton, 28 },
+                { RoofButton, 6 },
                 { HandButton, 28 },
             };
 
+            TerrainButton.Disabled = (LotController?.ActiveEntity?.TSOState as VMTSOAvatarState)?.Permissions < VMTSOAvatarPermissions.Admin;
             TerrainButton.OnButtonClick += ChangeCategory;
             WaterButton.OnButtonClick += ChangeCategory;
             WallButton.OnButtonClick += ChangeCategory;
@@ -135,7 +143,59 @@ namespace FSO.Client.UI.Panels
             Holder.OnDelete += HolderDelete;
             Holder.OnPutDown += HolderPutDown;
             Add(QueryPanel);
+
+            LotController.ObjectHolder.Roommate = true;
+            LotController.QueryPanel.Roommate = true;
+
+            ObjLimitLabel = new UILabel();
+            ObjLimitLabel.CaptionStyle = ObjLimitLabel.CaptionStyle.Clone();
+            ObjLimitLabel.CaptionStyle.Shadow = true;
+            ObjLimitLabel.CaptionStyle.Color = Microsoft.Xna.Framework.Color.White;
+            ObjLimitLabel.Caption = "127/250 Objects";
+            ObjLimitLabel.Y = -20;
+            ObjLimitLabel.X = Background.Width / 2 - 100;
+            ObjLimitLabel.Size = new Microsoft.Xna.Framework.Vector2(200, 0);
+            ObjLimitLabel.Alignment = TextAlignment.Center;
+            Add(ObjLimitLabel);
+
+            RoofSteepBtn = new UIButton(GetTexture(0x4C200000001));
+            RoofSteepBtn.X = 46;
+            RoofSteepBtn.Y = 6;
+            Add(RoofSteepBtn);
+            RoofShallowBtn = new UIButton(GetTexture(0x4C700000001));
+            RoofShallowBtn.X = 46;
+            RoofShallowBtn.Y = 92;
+            Add(RoofShallowBtn);
+
+
+            RoofSlider = new UISlider();
+            RoofSlider.Orientation = 1;
+            RoofSlider.Texture = GetTexture(0x4AB00000001);
+            RoofSlider.MinValue = 0f;
+            RoofSlider.MaxValue = 1.25f;
+            RoofSlider.AllowDecimals = true;
+            RoofSlider.AttachButtons(RoofSteepBtn, RoofShallowBtn, 0.25f);
+            RoofSlider.X = 48;
+            RoofSlider.Y = 24;
+            RoofSlider.OnChange += (elem) =>
+            {
+                if (RoofSlider.Value != (1.25f - LotController.vm.Context.Architecture.RoofPitch))
+                {
+                    LotController.vm.Context.Blueprint.RoofComp.SetStylePitch(
+                        LotController.vm.Context.Architecture.RoofStyle,
+                        (1.25f - RoofSlider.Value)
+                        );
+                    SendRoofValue = true;
+                }
+            };
+            RoofSlider.SetSize(0, 64f);
+            Add(RoofSlider);
+
+            RoofSteepBtn.Visible = false;
+            RoofShallowBtn.Visible = false;
+            RoofSlider.Visible = false;
         }
+    
 
         public void PageSlider(UIElement element)
         {
@@ -194,6 +254,12 @@ namespace FSO.Client.UI.Panels
             CurrentCategory = UICatalog.Catalog[CategoryMap[button]];
             Catalog.SetCategory(CurrentCategory);
 
+            var isRoof = CategoryMap[button] == 6;
+            RoofShallowBtn.Visible = isRoof;
+            RoofSteepBtn.Visible = isRoof;
+            RoofSlider.Visible = isRoof;
+            RoofSlider.Value = 1.25f - LotController.vm.Context.Architecture.RoofPitch;
+
             int total = Catalog.TotalPages();
             OldSelection = -1;
 
@@ -217,7 +283,7 @@ namespace FSO.Client.UI.Panels
             Holder.ClearSelected();
             var item = CurrentCategory[selection];
 
-            if (LotController.ActiveEntity != null && item.Price > LotController.ActiveEntity.TSOState.Budget.Value) {
+            if (LotController.ActiveEntity != null && item.CalcPrice > LotController.ActiveEntity.TSOState.Budget.Value) {
                 HIT.HITVM.Get().PlaySoundEvent(UISounds.Error);
                 return;
             }
@@ -235,15 +301,18 @@ namespace FSO.Client.UI.Panels
             {
                 var res = item.Special.Res;
                 var resID = item.Special.ResID;
-                QueryPanel.SetInfo(res.GetIcon(resID), res.GetName(resID), res.GetDescription(resID), res.GetPrice(resID));
-                QueryPanel.Mode = 1;
-                QueryPanel.Tab = 0;
-                QueryPanel.Active = true;
-                LotController.CustomControl = (UICustomLotControl)Activator.CreateInstance(item.Special.Control, vm, LotController.World, LotController, item.Special.Parameters);
+                if (res.GetName(resID) != "")
+                {
+                    QueryPanel.SetInfo(res.GetIcon(resID), res.GetName(resID), res.GetDescription(resID), res.GetPrice(resID));
+                    QueryPanel.Mode = 1;
+                    QueryPanel.Tab = 0;
+                    QueryPanel.Active = true;
+                }
+                LotController.CustomControl = (UICustomLotControl)Activator.CreateInstance(item.Special.Control, LotController.vm, LotController.World, LotController, item.Special.Parameters);
             }
             else
             {
-                BuyItem = vm.Context.CreateObjectInstance(item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
+                BuyItem = LotController.vm.Context.CreateObjectInstance(item.Item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
                 QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
                 QueryPanel.Mode = 1;
                 QueryPanel.Tab = 0;
@@ -281,14 +350,14 @@ namespace FSO.Client.UI.Panels
         {
             QueryPanel.Mode = 0;
             QueryPanel.Active = true;
+            QueryPanel.SetInfo(LotController.vm, holding.RealEnt ?? holding.Group.BaseObject, holding.IsBought);
             QueryPanel.Tab = 1;
-            QueryPanel.SetInfo(LotController.vm, holding.Group.BaseObject, holding.IsBought);
         }
         private void HolderPutDown(UIObjectSelection holding, UpdateState state)
         {
             if (OldSelection != -1)
             {
-                if (!holding.IsBought && (state.KeyboardState.IsKeyDown(Keys.LeftShift) || state.KeyboardState.IsKeyDown(Keys.RightShift)))
+                if (!holding.IsBought && (state.ShiftDown))
                 {
                     //place another
                     var prevDir = holding.Dir;
@@ -316,7 +385,33 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
+            var objCount = LotController.vm.Context.ObjectQueries.NumUserObjects;
+            if (LastObjCount != objCount)
+            {
+                var limit = LotController.vm.TSOState.ObjectLimit;
+                ObjLimitLabel.Caption = objCount + "/" + limit + " Objects";
+                var lerp = objCount / (float)limit;
+                if (lerp < 0.5)
+                    ObjLimitLabel.CaptionStyle.Color = Color.White;
+                if (lerp < 0.75)
+                    ObjLimitLabel.CaptionStyle.Color = Color.Lerp(Color.White, new Color(255, 201, 38), lerp * 4 - 2);
+                else
+                    ObjLimitLabel.CaptionStyle.Color = Color.Lerp(new Color(255, 201, 38), Color.Red, lerp * 4 - 3);
+                LastObjCount = objCount;
+            }
+
             if (LotController.ActiveEntity != null) Catalog.Budget = (int)LotController.ActiveEntity.TSOState.Budget.Value;
+            TicksSinceRoof++;
+            if (TicksSinceRoof > 30 && SendRoofValue)
+            {
+                LotController.vm.SendCommand(new SimAntics.NetPlay.Model.Commands.VMNetSetRoofCmd()
+                {
+                    Pitch = 1.25f - RoofSlider.Value,
+                    Style = LotController.vm.Context.Architecture.RoofStyle
+                });
+                SendRoofValue = false;
+                TicksSinceRoof = 0;
+            }
             base.Update(state);
         }
     }

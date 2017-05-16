@@ -73,6 +73,15 @@ namespace FSO.Vitaboy
         {
         }
 
+        public static AnimationStatus SilentFrameProgress(Avatar avatar, Animation animation, int frame)
+        {
+            bool completed = (frame < 0 || frame > animation.NumFrames);
+            frame = Math.Max(Math.Min(frame, animation.NumFrames), 0);
+
+            if (completed || frame + 1 > animation.NumFrames) return AnimationStatus.COMPLETED;
+            return AnimationStatus.IN_PROGRESS;
+        }
+
         /// <summary>
         /// Renders an animation's frame.
         /// </summary>

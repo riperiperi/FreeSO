@@ -19,9 +19,9 @@ namespace FSO.Content
     /// <summary>
     /// Provides access to texture (*.jpg) data in FAR3 archives.
     /// </summary>
-    public class AvatarTextureProvider : PackingslipProvider<ITextureRef> {
-        public AvatarTextureProvider(Content contentManager, GraphicsDevice device)
-            : base(contentManager, "packingslips/textures.xml", new TextureCodec())
+    public class AvatarTextureProvider : FAR3Provider<ITextureRef> {
+        public AvatarTextureProvider(Content contentManager)
+            : base(contentManager, new TextureCodec(), new Regex(".*/textures/.*\\.dat"))
         {
         }
     }

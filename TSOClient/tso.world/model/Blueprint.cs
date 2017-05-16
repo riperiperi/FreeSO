@@ -12,6 +12,8 @@ using FSO.LotView.Components;
 using FSO.LotView.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using FSO.Vitaboy;
+using FSO.LotView.LMap;
 
 namespace FSO.LotView.Model
 {
@@ -37,10 +39,13 @@ namespace FSO.LotView.Model
         public FloorTile[][] Floors;
         public FloorComponent FloorComp;
 
+        public RoofComponent RoofComp;
+
         public bool[][] Supported; //directly the VM's copy at all times. DO NOT MODIFY.
 
         public List<ObjectComponent> Objects = new List<ObjectComponent>();
         public List<AvatarComponent> Avatars = new List<AvatarComponent>();
+        public List<SubWorldComponent> SubWorlds = new List<SubWorldComponent>();
         public TerrainComponent Terrain;
 
         /// <summary>
@@ -50,10 +55,15 @@ namespace FSO.LotView.Model
         public bool[] Cutaway;
 
         public Color OutsideColor = Color.White;
+        public double OutsideTime;
         public RoomLighting[] Light = new RoomLighting[0];
         public uint[][] RoomMap;
+        public List<Room> Rooms = new List<Room>();
 
         public Color[] RoomColors;
+        public Rectangle BuildableArea;
+        public Rectangle TargetBuildableArea;
+        public LightData OutdoorsLight;
 
         public Blueprint(int width, int height){
             this.Width = width;
@@ -64,6 +74,7 @@ namespace FSO.LotView.Model
             WallComp.blueprint = this;
             this.FloorComp = new FloorComponent();
             FloorComp.blueprint = this;
+            this.RoofComp = new RoofComponent(this);
         
             RoomColors = new Color[65536];
             this.WallsAt = new List<int>[Stories];
@@ -82,9 +93,22 @@ namespace FSO.LotView.Model
             this.Cutaway = new bool[numTiles];
         }
 
+        public void SetLightColor(Effect effect, Color outside, Color minOut)
+        {
+            //return;
+            effect.Parameters["OutsideLight"].SetValue(outside.ToVector4());
+            effect.Parameters["OutsideDark"].SetValue(minOut.ToVector4());
+            effect.Parameters["MaxLight"].SetValue(Color.White.ToVector4());
+        }
+
         public void GenerateRoomLights()
         {
             var minOut = OutsideColor * (float)(150 / Math.Sqrt(OutsideColor.R * OutsideColor.R + OutsideColor.G * OutsideColor.G + OutsideColor.B * OutsideColor.B));
+            minOut.A = 255;
+
+            SetLightColor(WorldContent._2DWorldBatchEffect, OutsideColor, minOut);
+            SetLightColor(WorldContent.GrassEffect, OutsideColor, minOut);
+            SetLightColor(Avatar.Effect, OutsideColor, minOut);
 
             for (int i=0; i<Light.Length; i++)
             {
@@ -116,6 +140,13 @@ namespace FSO.LotView.Model
         public void SignalWallChange()
         {
             Damage.Add(new BlueprintDamage(BlueprintDamageType.WALL_CHANGED, 0, 0, 1)); 
+            //todo: should this even have a position? we're rerendering the whole thing atm
+            //should eventually consider level
+        }
+
+        public void SignalRoomChange()
+        {
+            Damage.Add(new BlueprintDamage(BlueprintDamageType.ROOM_CHANGED, 0, 0, 1));
             //todo: should this even have a position? we're rerendering the whole thing atm
             //should eventually consider level
         }
@@ -216,9 +247,14 @@ namespace FSO.LotView.Model
         SCROLL,
         ROTATE,
         ZOOM,
+        PRECISE_ZOOM,
         WALL_CUT_CHANGED,
         LEVEL_CHANGED,
-        LIGHTING_CHANGED
+        LIGHTING_CHANGED,
+        OUTDOORS_LIGHTING_CHANGED,
+        ROOM_CHANGED,
+        ROOF_STYLE_CHANGED,
+        ROOM_MAP_CHANGED
     }
 
     public class BlueprintObjectList {

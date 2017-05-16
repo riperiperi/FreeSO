@@ -7,23 +7,26 @@ http://mozilla.org/MPL/2.0/.
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO;
 using FSO.Client.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.UI.Controls;
-using FSO.Client.Utils;
 using FSO.Client.UI.Panels;
 using FSO.Client.UI.Framework.Parser;
-using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
-using FSO.Content;
-using FSO.Vitaboy;
 using FSO.Files;
 using FSO.Client.Network;
 using FSO.Common.Utils;
+using FSO.Server.Protocol.CitySelector;
+using FSO.Vitaboy;
+using FSO.Client.Regulators;
+using Ninject;
+using FSO.Client.Controllers;
 using FSO.HIT;
 using FSO.Client.UI.Model;
+using FSO.Common;
+using FSO.Common.Utils.Cache;
+using FSO.Common.Domain.Shards;
 
 namespace FSO.Client.UI.Screens
 {
@@ -45,20 +48,20 @@ namespace FSO.Client.UI.Screens
         private List<PersonSlot> m_PersonSlots { get; set; }
         private UIButton m_ExitButton;
 
-        private List<UISim> m_UISims = new List<UISim>();
+        public LoginRegulator LoginRegulator;
 
-        public PersonSelection() : base()
+        private ICache Cache;
+
+        public PersonSelection(LoginRegulator loginRegulator, ICache cache) : base()
         {
+            //Arrange UI
+            this.LoginRegulator = loginRegulator;
+            this.Cache = cache;
+            
             UIScript ui = null;
-            if (GlobalSettings.Default.ScaleUI)
-            {
-                ui = this.RenderScript("personselection.uis");
-                this.Scale800x600 = true;
-            }
-            else
-            {
-                ui = this.RenderScript("personselection" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
-            }
+            ui = this.RenderScript("personselection1024.uis");
+
+            Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / 2, (GlobalSettings.Default.GraphicsHeight - 768) / 2) * FSOEnvironment.DPIScaleFactor;
 
             m_ExitButton = (UIButton)ui["ExitButton"];
 
@@ -112,33 +115,21 @@ namespace FSO.Client.UI.Screens
                 personSlot.Init();
                 personSlot.SetSlotAvailable(true);
                 m_PersonSlots.Add(personSlot);
-
-                lock (NetworkFacade.Avatars)
+                
+                if(i < loginRegulator.Avatars.Count)
                 {
-                    if (i < NetworkFacade.Avatars.Count)
-                    {
-                        personSlot.DisplayAvatar(NetworkFacade.Avatars[i]);
-                        personSlot.AvatarButton.OnButtonClick += new ButtonClickDelegate(AvatarButton_OnButtonClick);
-
-                        var SimBox = new UISim(NetworkFacade.Avatars[i].GUID);
-
-                        SimBox.Avatar.Body = NetworkFacade.Avatars[i].Body;
-                        SimBox.Avatar.Head = NetworkFacade.Avatars[i].Head;
-                        SimBox.Avatar.Handgroup = NetworkFacade.Avatars[i].Body;
-                        SimBox.Avatar.Appearance = NetworkFacade.Avatars[i].Avatar.Appearance;
-
-                        SimBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));
-                        SimBox.Size = m_PersonSlots[i].AvatarButton.Size;
-
-                        SimBox.Name = NetworkFacade.Avatars[i].Name;
-
-                        m_UISims.Add(SimBox);
-                        this.Add(SimBox);
-                    }
+                    var avatar = loginRegulator.Avatars[i];
+                    personSlot.DisplayAvatar(avatar);
                 }
             }
 
-            this.AddAt(0, new UIImage(BackgroundImage));
+            /** Backgrounds **/
+            var bg = new UIImage(BackgroundImage).With9Slice(128, 128, 84, 84);
+            this.AddAt(0, bg);
+            bg.SetSize(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
+            bg.Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / -2, (GlobalSettings.Default.GraphicsHeight - 768) / -2);
+            Background = bg;
+
             if (BackgroundImageDialog != null)
             {
                 this.AddAt(1, new UIImage(BackgroundImageDialog)
@@ -157,11 +148,48 @@ namespace FSO.Client.UI.Screens
             /**
              * Music
              */
-            HITVM.Get().PlaySoundEvent(UIMusic.SAS);
 
-            NetworkFacade.Controller.OnCityToken += new OnCityTokenDelegate(Controller_OnCityToken);
-            NetworkFacade.Controller.OnPlayerAlreadyOnline += new OnPlayerAlreadyOnlineDelegate(Controller_OnPlayerAlreadyOnline);
-            NetworkFacade.Controller.OnCharacterRetirement += new OnCharacterRetirementDelegate(Controller_OnCharacterRetirement);
+            HITVM.Get().PlaySoundEvent(UIMusic.SAS);
+        }
+
+        private UIImage Background;
+
+        public override void GameResized()
+        {
+            base.GameResized();
+            Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / 2, (GlobalSettings.Default.GraphicsHeight - 768) / 2) * FSOEnvironment.DPIScaleFactor;
+            Background.SetSize(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
+            Background.Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / -2, (GlobalSettings.Default.GraphicsHeight - 768) / -2);
+            InvalidateMatrix();
+            Parent.InvalidateMatrix();
+        }
+
+        public Texture2D GetLotThumbnail(string shardName, uint lotId)
+        {
+            var shard = LoginRegulator.Shards.GetByName(shardName);
+            var shardKey = CacheKey.For("shards", shard.Id);
+            var thumbKey = CacheKey.Combine(shardKey, "lot_thumbs", lotId);
+
+            if (Cache.ContainsKey(thumbKey))
+            {
+                try {
+                    var thumbData = Cache.Get<byte[]>(thumbKey).Result;
+                    var thumb = ImageLoader.FromStream(GameFacade.GraphicsDevice, new MemoryStream(thumbData));
+                    return thumb;
+                }catch(Exception ex)
+                {
+                    //Handles cases where the cache file got corrupted
+                    var thumb = TextureUtils.TextureFromFile(GameFacade.GraphicsDevice, GameFacade.GameFilePath("userdata/houses/defaulthouse.bmp"));
+                    TextureUtils.ManualTextureMask(ref thumb, new uint[] { 0xFF000000 });
+                    return thumb;
+                }
+            }
+            else
+            {
+                var thumb = TextureUtils.TextureFromFile(GameFacade.GraphicsDevice, GameFacade.GameFilePath("userdata/houses/defaulthouse.bmp"));
+                TextureUtils.ManualTextureMask(ref thumb, new uint[] { 0xFF000000 });
+                return thumb;
+            }
         }
 
         /// <summary>
@@ -170,97 +198,16 @@ namespace FSO.Client.UI.Screens
         /// <param name="Device">The device.</param>
         public override void DeviceReset(GraphicsDevice Device)
         {
-            lock (NetworkFacade.Avatars)
+            foreach(var slot in m_PersonSlots)
             {
-                for (var i = 0; i < 3; i++)
-                {
-                    if (i < NetworkFacade.Avatars.Count)
-                        m_PersonSlots[i].DisplayAvatar(NetworkFacade.Avatars[i]);
-                }
+                slot.DeviceReset(Device);
             }
-
             CalculateMatrix();
         }
-
-        /// <summary>
-        /// Player wished to log into a city!
-        /// </summary>
-        /// <param name="button">The avatar button that was clicked.</param>
-        public void AvatarButton_OnButtonClick(UIElement button)
-        {
-            PersonSlot PSlot = m_PersonSlots.First(x => x.AvatarButton.ID.Equals(button.ID, StringComparison.InvariantCultureIgnoreCase));
-            UISim Avatar = NetworkFacade.Avatars.First(x => x.Name == PSlot.PersonNameText.Caption);
-            //This is important, the avatar contains ResidingCity, which is neccessary to
-            //continue to CityTransitionScreen.
-            PlayerAccount.CurrentlyActiveSim = Avatar;
-
-            UIPacketSenders.RequestCityToken(NetworkFacade.Client, Avatar);
-        }
-
-        #region Network handlers
-
-        /// <summary>
-        /// Received character retirement status from LoginServer.
-        /// </summary>
-        /// <param name="CharacterName">Name of character that was retired.</param>
-        private void Controller_OnCharacterRetirement(string GUID)
-        {
-            foreach (PersonSlot Slot in m_PersonSlots)
-            {
-                if (new Guid(GUID).CompareTo(Slot.Avatar.GUID) == 0)
-                {
-                    Slot.SetSlotAvailable(true);
-                    Slot.AvatarButton.OnButtonClick -= new ButtonClickDelegate(AvatarButton_OnButtonClick);
-                    break;
-                }
-            }
-
-            lock (NetworkFacade.Avatars)
-            {
-                for (int i = 0; i < NetworkFacade.Avatars.Count; i++)
-                {
-                    if (NetworkFacade.Avatars[i].GUID.CompareTo(new Guid(GUID)) == 0)
-                    {
-                        NetworkFacade.Avatars.Remove(NetworkFacade.Avatars[i]);
-                        break;
-                    }
-                }
-            }
-
-            Cache.DeleteCache();
-
-            //Removes actual sims from this screen.
-            for (int i = 0; i < m_UISims.Count; i++)
-            {
-                if (m_UISims[i].Name.Equals(m_PersonSlots[i].PersonNameText.Caption, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    this.Remove(m_UISims[i]);
-                    m_UISims.Remove(m_UISims[i]);
-                    break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Received token from LoginServer - proceed to CityServer!
-        /// </summary>
-        private void Controller_OnCityToken(CityInfo SelectedCity)
-        {
-            GameFacade.Controller.ShowCityTransition(SelectedCity, false);
-        }
-
-        private void Controller_OnPlayerAlreadyOnline()
-        {
-            UIAlertOptions AlertOptions = new UIAlertOptions();
-            //These should be imported as strings for localization.
-            AlertOptions.Title = "Character Already Online";
-            AlertOptions.Message = "You cannot play this character now, as it is already online.";
-
-            UIScreen.ShowAlert(AlertOptions, false);
-        }
-
-        #endregion
-
+        
+        
+        
+        
         private void m_ExitButton_OnButtonClick(UIElement button)
         {
             UIScreen.ShowDialog(new UIExitDialog(), true);
@@ -272,13 +219,14 @@ namespace FSO.Client.UI.Screens
             GameFacade.Controller.ShowCredits();
         }
 
-        /// <summary>
-        /// Called when create new avatar is requested
-        /// </summary>
-        public void CreateAvatar()
+        public void ShowCitySelector(List<ShardStatusItem> shards, Callback<ShardStatusItem> onOk)
         {
-            var cityPicker = new UICitySelector();
-            UIScreen.ShowDialog(cityPicker, true);
+            var cityPicker = new UICitySelector(shards);
+            cityPicker.OkButton.OnButtonClick += (UIElement btn) =>
+            {
+                onOk(cityPicker.SelectedShard);
+            };
+            ShowDialog(cityPicker, true);
         }
     }
 
@@ -308,11 +256,11 @@ namespace FSO.Client.UI.Screens
         public UIImage DescriptionTabBackgroundImage { get; set; }
 
         private PersonSelection Screen { get; set; }
-        public UISim Avatar;
+        public AvatarData Avatar;
         private UIImage CityThumb { get; set; }
+        private UIImage HouseThumb { get; set; }
 
-        //This is shown to ask the user if he wants to retire the char in this slot.
-        private UIAlert RetireCharAlert;
+        private UISim Sim;
 
         public PersonSlot(PersonSelection screen)
         {
@@ -336,7 +284,7 @@ namespace FSO.Client.UI.Screens
             EnterTabButton.OnButtonClick += new ButtonClickDelegate(EnterTabButton_OnButtonClick);
             DescTabButton.OnButtonClick += new ButtonClickDelegate(DescTabButton_OnButtonClick);
 
-            NewAvatarButton.OnButtonClick += new ButtonClickDelegate(NewAvatarButton_OnButtonClick);
+            NewAvatarButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
             DeleteAvatarButton.OnButtonClick += new ButtonClickDelegate(DeleteAvatarButton_OnButtonClick);
 
             PersonDescriptionSlider.AttachButtons(PersonDescriptionScrollUpButton, PersonDescriptionScrollDownButton, 1);
@@ -350,7 +298,38 @@ namespace FSO.Client.UI.Screens
             CityThumb.SetSize(78, 58);
             Screen.Add(CityThumb);
 
+
+            HouseThumb = new UIImage
+            {
+                X = HouseButton.X + 6,
+                Y = HouseButton.Y + 6
+            };
+            HouseThumb.SetSize(78, 58);
+            Screen.Add(HouseThumb);
+
+            Sim = new UISim();
+            Sim.Visible = false;
+            Sim.Position = AvatarButton.Position + new Vector2(1, 10);
+            Sim.Size = new Vector2(140, 200);
+
+            Screen.Add(Sim);
             SetTab(PersonSlotTab.EnterTab);
+
+            AvatarButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
+            CityButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
+            HouseButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
+        }
+
+        void OnSelect(UIElement button)
+        {
+            if (this.Avatar != null)
+            {
+                ((PersonSelectionController)Screen.Controller).ConnectToAvatar(Avatar, button == HouseButton);
+            }
+            else
+            {
+                ((PersonSelectionController)Screen.Controller).CreateAvatar();
+            }
         }
 
         /// <summary>
@@ -358,16 +337,21 @@ namespace FSO.Client.UI.Screens
         /// </summary>
         private void DeleteAvatarButton_OnButtonClick(UIElement button)
         {
+            if (Avatar == null)
+            {
+                return;
+            }
+
             UIAlertOptions AlertOptions = new UIAlertOptions();
-            //These should be imported as strings for localization.
-            AlertOptions.Title = "Are you sure?";
-            AlertOptions.Message = "Do you want to retire this Sim?";
+
+            AlertOptions.Title = GameFacade.Strings.GetString("169", "9");
+            AlertOptions.Message = GameFacade.Strings.GetString("169", "10");
             AlertOptions.Buttons = new UIAlertButton[] {
                 new UIAlertButton(UIAlertButtonType.OK, new ButtonClickDelegate(PersonSlot_OnButtonClick)),
                 new UIAlertButton(UIAlertButtonType.Cancel)
             };
 
-            RetireCharAlert = UIScreen.ShowAlert(AlertOptions, true);
+            UIScreen.GlobalShowAlert(AlertOptions, true);
         }
 
         /// <summary>
@@ -375,53 +359,73 @@ namespace FSO.Client.UI.Screens
         /// </summary>
         private void PersonSlot_OnButtonClick(UIElement button)
         {
-            UIPacketSenders.SendCharacterRetirement(Avatar);
-            UIScreen.RemoveDialog(RetireCharAlert);
+            //UIPacketSenders.SendCharacterRetirement(Avatar);
+            //UIScreen.RemoveDialog(RetireCharAlert);
         }
 
         /// <summary>
         /// Display an avatar
         /// </summary>
         /// <param name="avatar"></param>
-        public void DisplayAvatar(UISim avatar)
+        public void DisplayAvatar(AvatarData avatar)
         {
             this.Avatar = avatar;
-            SetSlotAvailable(false);
+            var isUsed = avatar != null;
+
+            SetSlotAvailable(!isUsed);
+
+            if(avatar == null){
+                return;
+            }
 
             PersonNameText.Caption = avatar.Name;
-            PersonDescriptionText.CurrentText = avatar.Description;
+            //PersonDescriptionText.CurrentText = avatar.Description;
             AvatarButton.Texture = Screen.SimSelectButtonImage;
 
-            CityNameText.Caption = avatar.ResidingCity.Name;
+            var shard = Screen.LoginRegulator.Shards.All.First(x => x.Name == avatar.ShardName);
+            CityNameText.Caption = shard.Name;
 
-            String gamepath = GameFacade.GameFilePath("");
-            int CityNum = GameFacade.GetCityNumber(avatar.ResidingCity.Name);
-            string CityStr = gamepath + "cities\\" + ((CityNum >= 10) ? "city_00" + CityNum.ToString() : "city_000" + CityNum.ToString());
+            if (avatar.LotId.HasValue && avatar.LotName != null) {
+                HouseNameText.Caption = avatar.LotName;
+                HouseThumb.Texture = Screen.GetLotThumbnail(avatar.ShardName, avatar.LotLocation.Value);
+                HouseThumb.Y += HouseThumb.Size.Y / 2;
+                HouseThumb.SetSize(HouseThumb.Size.X, (int)(HouseThumb.Size.X * ((double)HouseThumb.Texture.Height / HouseThumb.Texture.Width)));
+                HouseThumb.Y -= HouseThumb.Size.Y / 2;
+            }
 
-            var stream = new FileStream(CityStr + "\\Thumbnail.bmp", FileMode.Open, FileAccess.Read, FileShare.Read);
+            var cityThumb = (int.Parse(shard.Map) >= 100)?
+                Path.Combine(FSOEnvironment.ContentDir, "Cities/city_" + shard.Map + "/thumbnail.png")
+                : GameFacade.GameFilePath("cities/city_" + shard.Map + "/thumbnail.bmp");
 
-            Texture2D cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, ImageLoader.FromStream(
-                GameFacade.Game.GraphicsDevice, stream), 78, 58);
-
-            stream.Close();
-
+            Texture2D cityThumbTex =
+                TextureUtils.Resize(
+                    GameFacade.GraphicsDevice,
+                    TextureUtils.TextureFromFile(GameFacade.GraphicsDevice, cityThumb),
+                    78,
+                    58);
             TextureUtils.CopyAlpha(ref cityThumbTex, Screen.CityHouseButtonAlpha);
             CityThumb.Texture = cityThumbTex;
 
             SetTab(PersonSlotTab.EnterTab);
-        }
 
-        /// <summary>
-        /// Player wanted to create a sim.
-        /// </summary>
-        private void NewAvatarButton_OnButtonClick(UIElement button)
-        {
-            Screen.CreateAvatar();
+            Sim.Avatar.Appearance = (AppearanceType)Enum.Parse(typeof(AppearanceType), avatar.AppearanceType.ToString());
+            Sim.Avatar.BodyOutfitId = avatar.BodyOutfitID;
+            Sim.Avatar.HeadOutfitId = avatar.HeadOutfitID;
+
+            Sim.Visible = true;
+
+            PersonDescriptionText.CurrentText = avatar.Description;
         }
 
         public void SetSlotAvailable(bool isAvailable)
         {
+            if (isAvailable)
+            {
+                this.Avatar = null;
+            }
+
             EnterTabButton.Disabled = isAvailable;
+            if (isAvailable) EnterTabButton.Selected = false;
             DescTabButton.Disabled = isAvailable;
 
             NewAvatarButton.Visible = isAvailable;
@@ -442,6 +446,11 @@ namespace FSO.Client.UI.Screens
                 EnterTabBackgroundImage.Visible = false;
                 PersonDescriptionSlider.Visible = false;
                 PersonDescriptionText.Visible = false;
+
+                /*EnterTabButton.OnButtonClick -= new ButtonClickDelegate(EnterTabButton_OnButtonClick);
+                DescTabButton.OnButtonClick -= new ButtonClickDelegate(DescTabButton_OnButtonClick);
+
+                DeleteAvatarButton.OnButtonClick -= new ButtonClickDelegate(DeleteAvatarButton_OnButtonClick);*/
             }
             else
                 TabBackground.Visible = true;
@@ -460,6 +469,7 @@ namespace FSO.Client.UI.Screens
             CityButton.Visible = isEnter;
             EnterTabBackgroundImage.Visible = isEnter;
             CityThumb.Visible = isEnter;
+            HouseThumb.Visible = isEnter;
 
             PersonDescriptionScrollUpButton.Visible = !isEnter;
             PersonDescriptionScrollDownButton.Visible = !isEnter;
@@ -468,6 +478,11 @@ namespace FSO.Client.UI.Screens
             DeleteAvatarButton.Visible = !isEnter;
             PersonDescriptionText.Visible = !isEnter;
             DescriptionTabBackgroundImage.Visible = !isEnter;
+
+            var hasLot = Avatar != null && Avatar.LotId.HasValue;
+
+            HouseNameText.Visible = isEnter && hasLot;
+            HouseButton.Visible = isEnter && hasLot;
         }
 
         private void DescTabButton_OnButtonClick(UIElement button)
@@ -478,6 +493,10 @@ namespace FSO.Client.UI.Screens
         private void EnterTabButton_OnButtonClick(UIElement button)
         {
             SetTab(PersonSlotTab.EnterTab);
+        }
+
+        public void DeviceReset(GraphicsDevice device){
+            DisplayAvatar(this.Avatar);
         }
     }
 

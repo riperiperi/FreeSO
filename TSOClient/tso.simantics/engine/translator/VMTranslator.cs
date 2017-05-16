@@ -24,7 +24,6 @@ namespace FSO.SimAntics.Engine
             routine.Type = bhav.Type;
             routine.ID = bhav.ChunkID;
             routine.Chunk = bhav;
-            routine.VM = vm;
             routine.Rti = new VMFunctionRTI {
                 Name = bhav.ChunkLabel
             };

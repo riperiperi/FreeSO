@@ -81,17 +81,17 @@ namespace FSO.Client.UI.Panels.LotControls
 
         public void Update(UpdateState state, bool scrolled)
         {
-            ushort pattern = (state.KeyboardState.IsKeyDown(Keys.LeftControl)) ? (ushort)0 : Pattern;
+            ushort pattern = (state.CtrlDown) ? (ushort)0 : Pattern;
 
             var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
             Point cursor = new Point((int)tilePos.X, (int)tilePos.Y);
 
-            if (!Drawing && Commands.Count > 0)
+            /*if (!Drawing && Commands.Count > 0)
             {
                 vm.Context.Architecture.SignalRedraw();
                 Commands.Clear();
-            }
-            if (state.KeyboardState.IsKeyDown(Keys.LeftShift) && pattern < 65534)
+            }*/
+            if (state.ShiftDown && pattern < 65534)
             {
                 if (Commands.Count == 0 || Commands[0].Type != VMArchitectureCommandType.FLOOR_FILL)
                 {

@@ -21,6 +21,7 @@ using FSO.LotView;
 using FSO.LotView.Components;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Common;
+using FSO.SimAntics.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -30,6 +31,7 @@ namespace FSO.Client.UI.Panels
         public Texture2D BackgroundImageCatalog { get; set; }
         public Texture2D BackgroundImageTrade { get; set; }
         public Texture2D BackgroundImagePanel { get; set; }
+        public Texture2D ImageWearBack { get; set; }
         public UIImage QuerybackPanel;
         public UIImage QuerybackCatalog;
         public UIImage QuerybackTrade;
@@ -78,21 +80,32 @@ namespace FSO.Client.UI.Panels
         public UILabel ObjectValueText { get; set; }
         public UILabel ObjectCrafterText { get; set; }
 
-        //async sale stuff, as in "once I know what this actually does I'll care"
-
         public UIButton AsyncSaleButton { get; set; }
         public UIButton AsyncCancelSaleButton { get; set; }
         public UIButton AsyncEditPriceButton { get; set; }
         public UIButton AsyncBuyButton { get; set; }
+        public UIImage AsyncCancelSaleButtonBG { get; set; }
 
         public Texture2D GeneralOwnerPriceBack { get; set; }
         public UIImage OwnerPriceBack;
+        public UIImage BuyerPriceBack;
+        private List<UIImage> SpecificBtnBGs;
 
         public event ButtonClickDelegate OnSellBackClicked;
+        public event ButtonClickDelegate OnInventoryClicked;
+        public event ButtonClickDelegate OnAsyncSaleClicked;
+        public event ButtonClickDelegate OnAsyncBuyClicked;
+        public event ButtonClickDelegate OnAsyncPriceClicked;
+        public event ButtonClickDelegate OnAsyncSaleCancelClicked;
 
         //world required for drawing thumbnails
         public LotView.World World;
         public UIImage Thumbnail;
+        public bool Roommate = true;
+
+        private VMEntity ActiveEntity;
+        private int LastSalePrice;
+        private bool IAmOwner;
 
         private bool _Active;
         public bool Active
@@ -141,31 +154,55 @@ namespace FSO.Client.UI.Panels
                 SpecificTabButton.Selected = (value == 1);
 
                 //null for some reason?
-                //WearProgressBar.Visible = (value == 1);
                 WearValueText.Visible = (value == 1);
                 WearLabelText.Visible = (value == 1);
 
                 ForSalePrice.Visible = (value == 1);
 
                 SellBackButton.Visible = (value == 1);
+                SellBackButton.Disabled = !Roommate;
                 InventoryButton.Visible = (value == 1);
+                InventoryButton.Disabled = !IAmOwner;
 
                 ObjectNameText.Visible = (value == 1);
                 ObjectOwnerText.Visible = (value == 1);
                 ObjectValueText.Visible = (value == 1);
                 ObjectCrafterText.Visible = (value == 1);
 
+                WearProgressBar.Visible = (value == 1);
+                WearProgressBar.Value = 75;
+
                 //async sale stuff, as in "once I know what this actually does I'll care"
 
-                AsyncSaleButton.Visible = false;
-                AsyncCancelSaleButton.Visible = false;
-                AsyncEditPriceButton.Visible = false;
-                AsyncBuyButton.Visible = false;
+                AsyncSaleButton.Visible = (value == 1) && LastSalePrice < 0;
+                AsyncCancelSaleButton.Visible = (value == 1) && IAmOwner && LastSalePrice > -1;
+                AsyncCancelSaleButtonBG.Visible = AsyncCancelSaleButton.Visible;
+                AsyncEditPriceButton.Visible = (value == 1) && IAmOwner && LastSalePrice > -1;
+                AsyncBuyButton.Visible = (value == 1) && (!IAmOwner) && LastSalePrice > -1;
+
+                foreach (var bg in SpecificBtnBGs)
+                {
+                    bg.Visible = (value == 1);
+                }
 
                 //uh..
-                OwnerPriceBack.Visible = false;
+                OwnerPriceBack.Visible = (value == 1) && IAmOwner && LastSalePrice > -1;
+                BuyerPriceBack.Visible = (value == 1) && (!IAmOwner) && LastSalePrice > -1;
                 _Tab = value;
                 UpdateImagePosition();
+
+                foreach (var elem in Children)
+                {
+                    var label = elem as UILabel;
+                    if (label != null)
+                    {
+                        label.CaptionStyle = label.CaptionStyle.Clone();
+                        label.CaptionStyle.Shadow = true;
+                    }
+                }
+
+                ForSalePrice.TextStyle = ForSalePrice.TextStyle.Clone();
+                ForSalePrice.TextStyle.Shadow = true;
             }
             get
             {
@@ -244,9 +281,16 @@ namespace FSO.Client.UI.Panels
             SpecificTabImage.Position = new Microsoft.Xna.Framework.Vector2(useSmall ? 563 : 787, 0);
             this.AddAt(3, SpecificTabImage);
 
-            OwnerPriceBack = new UIImage(GeneralOwnerPriceBack);
-            OwnerPriceBack.Position = new Microsoft.Xna.Framework.Vector2(useSmall ? 501 : 725, 80);
+            OwnerPriceBack = script.Create<UIImage>("OwnerPriceBack");
             this.AddAt(3, OwnerPriceBack);
+
+            BuyerPriceBack = script.Create<UIImage>("BuyerPriceBack");
+            this.AddAt(3, BuyerPriceBack);
+
+            OwnerPriceBack.X = ForSalePrice.X;
+            BuyerPriceBack.X = ForSalePrice.X;
+            ForSalePrice.Y += 2;
+            ForSalePrice.SetSize(OwnerPriceBack.Width, ForSalePrice.Height);
 
             Thumbnail = new UIImage();
             Thumbnail.Position = new Vector2(24, 11);
@@ -265,8 +309,43 @@ namespace FSO.Client.UI.Panels
             SpecificTabButton.OnButtonClick += new ButtonClickDelegate(SpecificTabButton_OnButtonClick);
             SellBackButton.OnButtonClick += new ButtonClickDelegate(SellBackButton_OnButtonClick);
 
+            AsyncBuyButton.OnButtonClick += (btn) => { OnAsyncBuyClicked?.Invoke(btn); };
+            AsyncSaleButton.OnButtonClick += (btn) => { OnAsyncSaleClicked?.Invoke(btn); };
+            AsyncEditPriceButton.OnButtonClick += (btn) => { OnAsyncPriceClicked?.Invoke(btn); };
+            AsyncCancelSaleButton.OnButtonClick += (btn) => { OnAsyncSaleCancelClicked?.Invoke(btn); };
+
+            InventoryButton.OnButtonClick += InventoryButton_OnButtonClick;
+
+            WearProgressBar.CaptionStyle = TextStyle.DefaultLabel.Clone();
+            WearProgressBar.CaptionStyle.Shadow = true;
+
+            var btnBg = GetTexture(0x8A700000001); //buybuild_query_generalbuy_sellasyncback = 0x8A700000001
+            SpecificBtnBGs = new List<UIImage>();
+            SpecificBtnBGs.Add(AddButtonBackground(SellBackButton, btnBg));
+            SpecificBtnBGs.Add(AddButtonBackground(InventoryButton, btnBg));
+            SpecificBtnBGs.Add(AddButtonBackground(AsyncSaleButton, btnBg));
+            AsyncCancelSaleButtonBG = AddButtonBackground(AsyncCancelSaleButton, btnBg);
+
+            var progressBG = new UIImage(ImageWearBack);
+            progressBG.Position = WearProgressBar.Position - new Vector2(3, 2);
+            AddAt(3, progressBG);
+            SpecificBtnBGs.Add(progressBG);
+
             Mode = 1;
             Tab = 0;
+        }
+
+        private UIImage AddButtonBackground(UIElement button, Texture2D img)
+        {
+            var bg = new UIImage(img);
+            bg.Position = button.Position - new Vector2(3, 3);
+            this.AddAt(3, bg);
+            return bg;
+        }
+
+        private void InventoryButton_OnButtonClick(UIElement button)
+        {
+            if (OnInventoryClicked != null) OnInventoryClicked(button);
         }
 
         void SellBackButton_OnButtonClick(UIElement button)
@@ -286,37 +365,36 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
-            if (true)
+            if (Active)
             {
-                if (Active)
-                {
-                    Visible = true;
-                    if (Opacity < 1f) Opacity += 1f / 20f;
-                    else
-                    {
-                        Opacity = 1;
-                    }
-                }
+                Visible = true;
+                if (Opacity < 1f) Opacity += 1f / 20f;
                 else
                 {
-                    if (Opacity > 0f) Opacity -= 1f / 20f;
-                    else
-                    {
-                        Visible = false;
-                        Opacity = 0f;
-                    }
+                    Opacity = 1;
+                }
+                if (ActiveEntity != null && LastSalePrice != ActiveEntity.MultitileGroup.SalePrice && ActiveEntity.Thread != null)
+                {
+                    var lastTab = Tab;
+                    SetInfo(ActiveEntity.Thread.Context.VM, ActiveEntity, true);
+                    Tab = lastTab;
                 }
             }
             else
             {
-                Opacity = 1;
-                if (Active) Visible = true;
+                if (Opacity > 0f) Opacity -= 1f / 20f;
+                else
+                {
+                    Visible = false;
+                    Opacity = 0f;
+                }
             }
             base.Update(state);
         }
 
         public void SetInfo(VM vm, VMEntity entity, bool bought)
         {
+            ActiveEntity = entity;
             var obj = entity.Object;
             var def = entity.MasterDefinition;
             if (def == null) def = entity.Object.OBJ;
@@ -335,11 +413,30 @@ namespace FSO.Client.UI.Panels
                 ObjectNameText.Caption = entity.ToString();
             }
 
+            IAmOwner = ((entity.TSOState as VMTSOObjectState)?.OwnerID ?? 0) == vm.MyUID;
+            LastSalePrice = entity.MultitileGroup.SalePrice;
+
             int price = def.Price;
-            if (item != null) price = (int)item.Price;
+            int finalPrice = price;
+            int dcPercent = 0;
+            if (item != null)
+            {
+                price = (int)item.Value.Price;
+                dcPercent = VMBuildableAreaInfo.GetDiscountFor(item.Value, vm);
+                finalPrice = (price * (100-dcPercent)) / 100;
+            }
 
             StringBuilder motivesString = new StringBuilder();
-            motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", price);
+            if (dcPercent > 0)
+            {
+                motivesString.Append(GameFacade.Strings.GetString("206", "36", new string[] { dcPercent.ToString() + "%" }) + "\r\n");
+                motivesString.AppendFormat(GameFacade.Strings.GetString("206", "37") + "${0}\r\n", finalPrice);
+                motivesString.AppendFormat(GameFacade.Strings.GetString("206", "38") + "${0}\r\n", price);
+            }
+            else
+            {
+                motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", price);
+            }
             if (def.RatingHunger != 0) { motivesString.AppendFormat(AdStrings[0], def.RatingHunger); }
             if (def.RatingComfort != 0) { motivesString.AppendFormat(AdStrings[1], def.RatingComfort); }
             if (def.RatingHygiene != 0) { motivesString.AppendFormat(AdStrings[2], def.RatingHygiene); }
@@ -360,7 +457,7 @@ namespace FSO.Client.UI.Panels
             if (entity is VMGameObject && ((VMTSOObjectState)entity.TSOState).OwnerID > 0)
             {
                 var ownerID = ((VMTSOObjectState)entity.TSOState).OwnerID;
-                var ownerEnt = vm.GetObjectByPersist(ownerID);
+                var ownerEnt = vm.GetAvatarByPersist(ownerID);
                 owner = (ownerEnt != null) ? owner = ownerEnt.Name : "(offline user)";
             }
 
@@ -370,8 +467,21 @@ namespace FSO.Client.UI.Panels
 
             if (bought)
             {
-                ForSalePrice.CurrentText = GameFacade.Strings.GetString("206", "25", new string[] { " $" + entity.MultitileGroup.Price });
-                ForSalePrice.SetSize(250, ForSalePrice.Height);
+                ObjectValueText.Caption = GameFacade.Strings.GetString("206", "25", new string[] { " $" + entity.MultitileGroup.Price });
+                ObjectValueText.Alignment = TextAlignment.Center;
+                ObjectValueText.X = ObjectNameText.X;
+                ObjectValueText.Size = new Vector2(260, 1);
+            }
+
+            if (LastSalePrice > -1)
+            {
+                ForSalePrice.CurrentText = "$" + entity.MultitileGroup.SalePrice;
+                ForSalePrice.Alignment = TextAlignment.Center;
+                //ForSalePrice.SetSize(250, ForSalePrice.Height);
+                SellBackButton.Disabled = (entity.PersistID == 0);
+            } else
+            {
+                ForSalePrice.CurrentText = "";
             }
 
             if (entity is VMGameObject) {
@@ -393,6 +503,7 @@ namespace FSO.Client.UI.Panels
 
         public void SetInfo(Texture2D thumb, string name, string description, int price)
         {
+            ActiveEntity = null;
             DescriptionText.CurrentText = name + "\r\n" + description;
             ObjectNameText.Caption = name;
 
@@ -401,6 +512,7 @@ namespace FSO.Client.UI.Panels
             MotivesText.CurrentText = motivesString.ToString();
 
             SpecificTabButton.Disabled = true;
+            SellBackButton.Disabled = true;
 
             if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
             Thumbnail.Texture = thumb;

@@ -63,34 +63,7 @@ namespace FSO.Client.UI.Panels
             HITVM.Get().PlaySoundEvent(UISounds.LetterSend);
             if (OnSendLetter != null) OnSendLetter(message, subject, destinationUser);
         }
-
-        /// <summary>
-        /// Display an IM message in its currently open window. If there is no window, this will create a new one.
-        /// </summary>
-        public void PassMessage(MessageAuthor Sender, string Message) 
-        {
-            UIMessageGroup group = GetMessageGroup(Sender.Author, UIMessageType.IM);
-            if (group == null)
-            {
-                group = new UIMessageGroup(UIMessageType.IM, Sender, this);
-                MessageWindows.Add(group);
-                this.Add(group);
-                ReorderIcons();
-                group.Show(null);
-
-                if (Message != null)
-                {
-                    HITVM.Get().PlaySoundEvent(UISounds.CallRecieveFirst);
-                }
-            }
-            else
-            {
-                HITVM.Get().PlaySoundEvent((soundAlt) ? UISounds.CallRecieve : UISounds.CallRecieveNext);
-                soundAlt = !soundAlt;
-            }
-
-            if (Message != null) group.AddMessage(Message);
-        }
+        
 
         /// <summary>
         /// Brings up a "You've got mail!" dialog and upon confirming that you want to see it, opens the message.
@@ -116,7 +89,7 @@ namespace FSO.Client.UI.Panels
                 if (MessageWindows[i].name.Equals(sender.Author, StringComparison.InvariantCultureIgnoreCase))
                 {
                     GroupExisted = true;
-                    MessageWindows[i].AddMessage(message);
+                    //MessageWindows[i].AddMessage(message);
                     break;
                 }
             }

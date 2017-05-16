@@ -27,8 +27,9 @@ namespace FSO.Client.Rendering.City
         public Vector2 UVBCoord;
         public Vector2 RoadCoord;
         public Vector2 RoadCCoord;
+        public Vector3 Normal;
 
-        public static int SizeInBytes = sizeof(float) * 15;
+        public static int SizeInBytes = sizeof(float) * 18;
 
         public static readonly VertexDeclaration VertexElements = new VertexDeclaration( 
         
@@ -45,7 +46,9 @@ namespace FSO.Client.Rendering.City
             new VertexElement( sizeof(float)*(3+8), VertexElementFormat.Vector2, 
                 VertexElementUsage.TextureCoordinate, 4),
             new VertexElement( sizeof(float)*(3+10), VertexElementFormat.Vector2, 
-                VertexElementUsage.TextureCoordinate, 5)
+                VertexElementUsage.TextureCoordinate, 5),
+            new VertexElement( sizeof(float)*(3+12), VertexElementFormat.Vector3,
+                VertexElementUsage.TextureCoordinate, 6)
         );
 
         VertexDeclaration IVertexType.VertexDeclaration

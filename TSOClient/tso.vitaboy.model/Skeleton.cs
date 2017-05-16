@@ -12,6 +12,7 @@ using System.IO;
 using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
 using FSO.Files.Utils;
+using FSO.Vitaboy.Model;
 
 namespace FSO.Vitaboy
 {

@@ -25,6 +25,7 @@ namespace FSO.SimAntics.Engine.Primitives
             if (context.Thread.IsCheck) return VMPrimitiveExitCode.GOTO_FALSE;
 
             var slot = VMMemory.GetSlot(context, operand.Type, operand.Data);
+            if (slot == null) return VMPrimitiveExitCode.GOTO_FALSE;
             var obj = context.StackObject;
             var avatar = context.Caller;
 

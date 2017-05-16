@@ -11,19 +11,31 @@ namespace FSO.SimAntics.Model.TSOPlatform
     {
         public string Name = "Lot";
         public uint LotID;
-        public byte TerrainType;
+        public VMTSOSurroundingTerrain Terrain = new VMTSOSurroundingTerrain();
         public byte PropertyCategory;
-        public int Size = 8;
+        public int Size = 0; // (size | (floors << 8) | (dir << 16)
 
         public uint OwnerID;
         public HashSet<uint> Roommates = new HashSet<uint>();
         public HashSet<uint> BuildRoommates = new HashSet<uint>();
+        public int ObjectLimit;
+        public bool LimitExceeded;
+
+        public VMTSOJobUI JobUI;
+
+        public VMTSOLotState() { }
+        public VMTSOLotState(int version) : base(version) { }
 
         public override void Deserialize(BinaryReader reader)
         {
             Name = reader.ReadString();
             LotID = reader.ReadUInt32();
-            TerrainType = reader.ReadByte();
+            if (Version > 6) {
+                Terrain = new VMTSOSurroundingTerrain();
+                Terrain.Deserialize(reader);
+            } else {
+                reader.ReadByte(); //old Terrain Type
+            }
             PropertyCategory = reader.ReadByte();
             Size = reader.ReadInt32();
 
@@ -34,13 +46,22 @@ namespace FSO.SimAntics.Model.TSOPlatform
             BuildRoommates = new HashSet<uint>();
             var broomCount = reader.ReadInt16();
             for (int i = 0; i < broomCount; i++) BuildRoommates.Add(reader.ReadUInt32());
+
+            if (Version > 10)
+            {
+                if (reader.ReadBoolean())
+                {
+                    JobUI = new VMTSOJobUI();
+                    JobUI.Deserialize(reader);
+                }
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
         {
             writer.Write(Name);
             writer.Write(LotID);
-            writer.Write(TerrainType);
+            Terrain.SerializeInto(writer);
             writer.Write(PropertyCategory);
             writer.Write(Size);
 
@@ -49,6 +70,14 @@ namespace FSO.SimAntics.Model.TSOPlatform
             foreach (var roomie in Roommates) writer.Write(roomie);
             writer.Write((short)BuildRoommates.Count);
             foreach (var roomie in BuildRoommates) writer.Write(roomie);
+
+            writer.Write(JobUI != null);
+            if (JobUI != null) JobUI.SerializeInto(writer);
+        }
+
+        public bool CanPlaceNewUserObject(VM vm)
+        {
+            return (vm.Context.ObjectQueries.NumUserObjects < ObjectLimit);
         }
 
         public override void Tick(VM vm, object owner)

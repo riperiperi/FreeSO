@@ -35,10 +35,20 @@ namespace FSO.SimAntics.Primitives
             var slot = new SLOTItem { Type = 3, Standing = 1 };
 
             if (operand.Location != VMGotoRelativeLocation.OnTopOf) { //default slot is on top of
-                slot.MinProximity = 16;
-                slot.MaxProximity = 24;
-                if (operand.Location == VMGotoRelativeLocation.AnywhereNear) slot.Rsflags |= (SLOTFlags)255;
-                else slot.Rsflags |= (SLOTFlags)(1 << (((int)operand.Location) % 8));
+
+                if (operand.Location == VMGotoRelativeLocation.AnywhereNear) {
+                    slot.MinProximity = 16;
+                    slot.MaxProximity = 32; //diamond shaped
+                    slot.OptimalProximity = 16;
+                    slot.Rsflags |= (SLOTFlags)255;
+                }
+                else
+                {
+                    slot.MinProximity = 16;
+                    slot.MaxProximity = 24;
+                    slot.Rsflags |= (SLOTFlags)(1 << (((int)operand.Location) % 8));
+                }
+
             }
 
             if (operand.Direction == VMGotoRelativeDirection.AnyDirection) slot.Facing = SLOTFacing.FaceAnywhere; //TODO: verify. not sure where this came from?

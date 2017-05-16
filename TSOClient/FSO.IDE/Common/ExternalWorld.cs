@@ -1,5 +1,6 @@
 ﻿using FSO.Common;
 using FSO.Common.Rendering.Framework;
+using FSO.Common.Utils;
 using FSO.LotView;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -30,7 +31,9 @@ namespace FSO.IDE.Common
             State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, 2, new SurfaceFormat[] {
                 World2D.BUFFER_SURFACE_FORMATS[0],
                 World2D.BUFFER_SURFACE_FORMATS[World2D.BUFFER_THUMB_DEPTH] }, new bool[] { true, false }, World2D.SCROLL_BUFFER);
-            State._2D.AmbientLight = State.AmbientLight;
+            State._2D.AdvLight = TextureGenerator.GetDefaultAdv(layer.Device);
+            State.DrawOOB = true;
+            UseBackbuffer = false;
 
             base.Camera = State.Camera;
 

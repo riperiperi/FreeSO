@@ -10,7 +10,6 @@ using System.Collections;
 using System.IO;
 using System.Timers;
 using System.Text;
-using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -23,12 +22,14 @@ using FSO.Client.Utils;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Common.Utils;
-using FSO.Client.Network.Events;
-using FSO.Client.Network;
+using FSO.Client.Controllers;
+using FSO.LotView;
+using FSO.Client.Rendering.City.Plugins;
+using FSO.Common;
 
 namespace FSO.Client.Rendering.City
 {
-    public class Terrain : _3DAbstract
+    public class Terrain : _3DAbstract, IDisposable
     {
         public override List<_3DComponent> GetElements()
         {
@@ -45,22 +46,24 @@ namespace FSO.Client.Rendering.City
         public int ShadowRes = 2048;
         public bool RegenData = false;
 
+        public LotTileEntry[] LotTileData = new LotTileEntry[0];
+        public Dictionary<Vector2, LotTileEntry> LotTileLookup = new Dictionary<Vector2, LotTileEntry>();
+
         private bool m_HandleMouse = false;
-        private CityDataRetriever m_CityData;
-        private Dictionary<Vector2, LotTileEntry> m_CityLookup;
         private Dictionary<int, Texture2D> m_HouseGraphics;
-        private Texture2D m_Elevation, m_VertexColor, m_TerrainType, m_ForestType, m_ForestDensity, m_RoadMap;
+        public CityMapData MapData;
+        private Texture2D m_VertexColor;
         private Color m_TintColor;
 
         public Texture2D Atlas, TransAtlas, RoadAtlas, RoadCAtlas;
         public Texture2D[] m_Roads = new Texture2D[16], m_RoadCorners = new Texture2D[16];
         public Effect Shader2D, PixelShader, VertexShader;
-        private Color[] m_TerrainTypeColorData;
         private Texture2D[] m_TransA = new Texture2D[30], TransB = new Texture2D[30];
         private Texture2D m_Ground, m_Rock, m_Snow, m_Water, m_Sand, m_Forest, m_DefaultHouse, m_LotOnline, m_LotOffline;
         private Vector3 m_LightPosition;
 
         private MeshVertex[] m_Verts;
+        private int[] m_StartIndices; //used for partial map update
         private int m_MeshTris, m_CityNumber;
         private ArrayList m_2DVerts;
 
@@ -72,19 +75,24 @@ namespace FSO.Client.Rendering.City
         private Dictionary<string, int> m_CityNames = new Dictionary<string, int>();
         private double[][] m_AtlasOffPrio = new double[5][];
 
-        private byte[] m_ElevationData, m_ForestDensityData;
-            
-        private Color[] m_ForestTypeData;
-
         public static uint[] MASK_COLORS = new uint[]{
             new Color(0xFF, 0x00, 0xFF, 0xFF).PackedValue,
             new Color(0xFE, 0x02, 0xFE, 0xFF).PackedValue,
             new Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
+        public static float NEAR_ZOOM_SIZE = 288;
+        public float m_LotZoomSize = 72*128; //near zoom, set by world
+        public TerrainZoomMode m_Zoomed = TerrainZoomMode.Far;
+        public float m_WheelZoomTarg = 0.5f;
+        public float m_WheelZoom = 1f;
+        public float m_LotZoomProgress = 0;
+
+        private DateTime LastCityUpdate = DateTime.Now;
+
         private MouseState m_MouseState, m_LastMouseState;
         private bool m_MouseMove = false;
-        public bool m_Zoomed = false;
+        private int? m_LastWheelPos; //null if invalid, increments in 120 it seems.
         private Vector2 m_MouseStart;
         private int m_ScrHeight, m_ScrWidth;
         private float m_ScrollSpeed;
@@ -94,7 +102,7 @@ namespace FSO.Client.Rendering.City
         private float m_ShadowMult = 1;
         //private double m_DayNightCycle = 0.0;
         private int[] m_SelTile = new int[] { -1, -1 };
-        private int[] m_SelTileTmp = new int[] { -1, -1 }; //For storing value of SelTile to use when clicking dialogs.
+        private Vector2? m_VecSelTile;
         private Matrix m_MovMatrix;
         private Texture2D m_WhiteLine;
         private Texture2D m_stpWhiteLine;
@@ -111,38 +119,40 @@ namespace FSO.Client.Rendering.City
             new int[] {-1, -1},
         };
 
+        private float DayOffset = 0.25f;
+        private float DayDuration = 0.60f;
         private Color[] m_TimeColors = new Color[]
         {
-            new Color(50, 70, 122)*1.5f,
-            new Color(50, 70, 122)*1.5f,
-            new Color(60, 80, 132)*1.5f,
-            new Color(60, 80, 132)*1.5f,
-            new Color(217, 109, 0),
+            new Color(50, 70, 122)*1.25f,
+            new Color(50, 70, 122)*1.25f,
+            new Color(55, 75, 111)*1.25f,
+            new Color(70, 70, 70)*1.25f,
+            new Color(217, 109, 50), //sunrise
+            new Color(255, 255, 255),
+            new Color(255, 255, 255), //peak
+            new Color(255, 255, 255), //peak
             new Color(255, 255, 255),
             new Color(255, 255, 255),
-            new Color(255, 255, 255),
-            new Color(255, 255, 255),
-            new Color(217, 109, 0),
-            new Color(60, 80, 80)*1.5f,
-            new Color(60, 80, 132)*1.5f,
+            new Color(217, 109, 50), //sunset
+            new Color(70, 70, 70)*1.25f,
+            new Color(55, 75, 111)*1.25f,
+            new Color(50, 70, 122)*1.25f,
         };
 
         private int m_Width, m_Height;
 
-        //Network related stuff.
-        private int m_LotCost = 0;
-        private static LotTileEntry m_CurrentLot; //Current lot received by server.
-        private UIAlert m_BuyPropertyAlert;
-        private UIAlert m_LotUnbuildableAlert;
-        private Timer m_PacketTimer = new Timer(1000); //Timer for regulating packet interval.
-        private static bool m_CanSend = false;
-
+        private SpriteBatch m_Batch;
         private RenderTarget2D ShadowTarget;
         private int OldShadowRes;
+        private int ShadowRegenTimer = 1;
+        private float m_LastIsoScale;
+
+        public AbstractCityPlugin Plugin;
 
         private Texture2D LoadTex(string Path)
         {
-            return LoadTex(new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read));
+            using (var strm = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                return LoadTex(strm);
         }
 
         private Texture2D LoadTex(Stream stream)
@@ -169,13 +179,25 @@ namespace FSO.Client.Rendering.City
 
             String gamepath = GameFacade.GameFilePath("");
 
-            string CityStr = gamepath + "cities/" + ((m_CityNumber >= 10) ? "city_00" + m_CityNumber.ToString() : "city_000" + m_CityNumber.ToString());
-            m_Elevation = LoadTex(CityStr + "/elevation.bmp");
-            m_VertexColor = LoadTex(CityStr + "/vertexcolor.bmp");
-            m_TerrainType = LoadTex(CityStr + "/terraintype.bmp");
-            m_ForestType = LoadTex(CityStr + "/foresttype.bmp");
-            m_ForestDensity = LoadTex(CityStr + "/forestdensity.bmp");
-            m_RoadMap = LoadTex(CityStr + "/roadmap.bmp");
+            string CityStr = "city_" + m_CityNumber.ToString("0000");
+            string ext = "bmp";
+            if (m_CityNumber >= 100)
+            {
+                //start FSO cities
+                //the first few will be client included
+                //probably after 200 will be inherited from content packs, when they are implemented
+                ext = "png";
+                CityStr = Path.Combine(FSOEnvironment.ContentDir, "Cities/", CityStr);
+            } else
+            {
+                CityStr = gamepath + "cities/" + CityStr;
+            }
+            m_VertexColor = LoadTex(CityStr + "/vertexcolor."+ext);
+
+            MapData = new CityMapData();
+            MapData.Load(CityStr, LoadTex, ext);
+            m_Width = MapData.Width;
+            m_Height = MapData.Height;
 
             m_Ground = LoadTex(gamepath + "gamedata/terrain/newformat/gr.tga");
             m_Rock = LoadTex(gamepath + "gamedata/terrain/newformat/rk.tga");
@@ -185,18 +207,15 @@ namespace FSO.Client.Rendering.City
             m_Forest = LoadTex(gamepath + "gamedata/farzoom/forest00a.tga");
             m_DefaultHouse = LoadTex(gamepath + "userdata/houses/defaulthouse.bmp");//, new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
             //Can crash on some setups on dx11?
-            //TextureUtils.ManualTextureMaskSingleThreaded(ref m_DefaultHouse, new uint[] { new Color(0x00, 0x00, 0x00, 0xFF).PackedValue });
+            TextureUtils.ManualTextureMaskSingleThreaded(ref m_DefaultHouse, new uint[] { new Color(0x00, 0x00, 0x00, 0xFF).PackedValue });
 
             m_LotOnline = UIElement.GetTexture(0x0000032F00000001);
             m_LotOffline = UIElement.GetTexture(0x0000033100000001);
 
             //fills used for line drawing
 
-            m_WhiteLine = new Texture2D(m_GraphicsDevice, 1, 1);
-            m_WhiteLine.SetData<Color>(new Color[] { Color.White });
-
-            m_stpWhiteLine = new Texture2D(m_GraphicsDevice, 1, 1);
-            m_stpWhiteLine.SetData<Color>(new Color[] { new Color(255, 255, 255, 128) });
+            m_WhiteLine = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, Color.White);
+            m_stpWhiteLine = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, new Color(255, 255, 255, 128));
 
             string Num;
 
@@ -214,20 +233,21 @@ namespace FSO.Client.Rendering.City
                 TransB[x + 1] = LoadTex(gamepath + "gamedata/terrain/newformat/transb" + Num + "b.tga");
             }
 
+            var terrainpath = "Content/Textures/terrain/"; //gamepath + "gamedata/terrain/";
+            //TODO: optionally load non-freeso textures
+
             for (int x = 0; x < 16; x++)
             {
                 Num = ZeroPad((x).ToString(), 2);
-                m_Roads[x] = LoadTex(gamepath + "gamedata/terrain/road" + Num + ".tga");
+                m_Roads[x] = LoadTex(terrainpath+"road" + Num + ".png");
             }
 
             for (int x = 0; x < 16; x++)
             {
                 Num = ZeroPad((x).ToString(), 2);
-                m_RoadCorners[x] = LoadTex(gamepath + "gamedata/terrain/roadcorner" + Num + ".tga");
+                m_RoadCorners[x] = LoadTex(terrainpath + "roadcorner" + Num + ".png");
             }
-
-            m_Width = m_Elevation.Width;
-            m_Height = m_Elevation.Height;
+            m_Batch = new SpriteBatch(GameFacade.GraphicsDevice);
         }
 
         public Terrain(GraphicsDevice Device) : base(Device)
@@ -245,15 +265,13 @@ namespace FSO.Client.Rendering.City
 
         public override void DeviceReset(GraphicsDevice Device)
         {
-            UnloadEverything();
+            Dispose();
             LoadContent(m_GraphicsDevice);
             RegenData = true;
         }
 
-        public void Initialize(String CityName, CityDataRetriever cityData)
+        public void Initialize(int mapId)
         {
-            m_CityData = cityData;
-
             m_ToBlendPrio.Add(new Color(0, 255, 0), 0);     //grass
             m_ToBlendPrio.Add(new Color(12, 0, 255), 4);    //water
             m_ToBlendPrio.Add(new Color(255, 255, 255), 3); //snow
@@ -268,8 +286,7 @@ namespace FSO.Client.Rendering.City
             m_AtlasOff.Add(new Color(255, 255, 0), new double[] {0.0, 0.5});   //sand
             m_AtlasOff.Add(new Color(0, 0, 0), new double[] {0.0, 0.0});      //nothing, don't blend into this
 
-            //I rewrote this. Please change back if appropriate/annoying. - Afr0
-            m_CityNumber = GameFacade.GetCityNumber(CityName);
+            m_CityNumber = mapId;
 
             m_Prio2Map.Add(0, 0);
             m_Prio2Map.Add(1, 0.5);
@@ -312,93 +329,22 @@ namespace FSO.Client.Rendering.City
             m_ForestTypes.Add(new Color(0, 0, 0), -1);  //nothing; no forest
 
             m_HouseGraphics = new Dictionary<int,Texture2D>();
-            populateCityLookup();
-
-            Network.NetworkFacade.Controller.OnLotUnbuildable += new Network.OnLotUnbuildableDelegate(Controller_OnLotUnbuildable);
-            Network.NetworkFacade.Controller.OnLotCost += new Network.OnLotCostDelegate(Controller_OnLotCost);
-            Network.NetworkFacade.Controller.OnLotPurchaseFailed += Controller_OnLotPurchaseFailed;
-            Network.NetworkFacade.Controller.OnLotPurchaseSuccessful += Controller_OnLotPurchaseSuccessful;
-
-            m_PacketTimer.Elapsed += new ElapsedEventHandler(m_PacketTimer_Elapsed);
-            m_PacketTimer.AutoReset = true;
-            m_PacketTimer.Start();
-        }
-
-        private void Controller_OnLotPurchaseSuccessful(int Money)
-        {
-            CoreGameScreen CurrentUIScr = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
-
-            PlayerAccount.Money = Money;
-            CurrentUIScr.ucp.MoneyText.Caption = Money.ToString();
-
-            //TODO: Add popup dialog.
-        }
-
-        #region Network handlers
-
-        private void Controller_OnLotUnbuildable()
-        {
-            UIAlertOptions AlertOptions = new UIAlertOptions();
-            AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
-            //This isn't exported as a string. WTF Maxis??
-            AlertOptions.Message = "This property cannot be purchased!\r\n";
-            m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
-        }
-
-        private void Controller_OnLotPurchaseFailed(Network.Events.TransactionEvent e)
-        {
-            UIAlertOptions AlertOptions = new UIAlertOptions();
-            AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
-
-            if (EventSink.EventQueue[0].ECode == EventCodes.TRANSACTION_PLAYER_OUT_OF_MONEY)
-            {
-                //For now this says "Error! Transaction refused by server", because I couldn't find the right string.
-                AlertOptions.Message = GameFacade.Strings.GetString("224", "16");
-
-                //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
-                //events that may have been added to the end.
-                EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
-            }
-            else
-            {
-                AlertOptions.Message = "General Error";
-                //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
-                //events that may have been added to the end.
-                EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
-            }
-            m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
-        }
-
-        private void Controller_OnLotCost(LotTileEntry Entry)
-        {
-            m_CurrentLot = Entry;
-            m_LotCost = Entry.cost;
-        }
-
-        private void m_PacketTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            m_CanSend = true;
-        }
-
-        #endregion
-
-        private void populateCityLookup()
-        {
-            LotTileEntry[] data = m_CityData.LotTileData; //ideally this should change and we should poll the server for new info every 10 seconds when in city view
-            m_CityLookup = new Dictionary<Vector2, LotTileEntry>();
-            for (int i = 0; i < data.Length; i++)
-            {
-                m_CityLookup[new Vector2 ( data[i].x, data[i].y )] = data[i];
-            }
         }
 
         public void populateCityLookup(LotTileEntry[] TileData)
         {
-            LotTileEntry[] data = TileData;
-            m_CityLookup = new Dictionary<Vector2, LotTileEntry>();
-            for (int i = 0; i < data.Length; i++)
+            LotTileData = TileData;
+            var oldLookup = new HashSet<Vector2>(LotTileLookup.Keys);
+            LotTileLookup = new Dictionary<Vector2, LotTileEntry>();
+            for (int i = 0; i < TileData.Length; i++)
             {
-                m_CityLookup[new Vector2(data[i].x, data[i].y)] = data[i];
+                LotTileLookup[new Vector2(TileData[i].x, TileData[i].y)] = TileData[i];
+            }
+            oldLookup.ExceptWith(new HashSet<Vector2>(LotTileLookup.Keys));
+            foreach (var deleted in oldLookup)
+            {
+                //remove these from the cache.
+                m_HouseGraphics.Remove(((int)deleted.X << 16) | (int)deleted.Y);
             }
         }
 
@@ -415,7 +361,7 @@ namespace FSO.Client.Rendering.City
         {
             SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
             ClearOldData();
-            GenerateCityMesh(m_GraphicsDevice); //generates the city mesh
+            GenerateCityMesh(m_GraphicsDevice, null); //generates the city mesh
             CreateTextureAtlas(spriteBatch); //generates the many atlases used when rendering the city.
             CreateTransparencyAtlas(spriteBatch);
             RoadAtlas = CreateRoadAtlas(m_Roads, spriteBatch);
@@ -424,15 +370,10 @@ namespace FSO.Client.Rendering.City
             RegenData = false; //don't do this again next frame...
         }
 
-        public void UnloadEverything()
+        public override void Dispose()
         {
             ClearOldData();
-            m_Elevation.Dispose(); 
             m_VertexColor.Dispose(); 
-            m_TerrainType.Dispose(); 
-            m_ForestType.Dispose(); 
-            m_ForestDensity.Dispose(); 
-            m_RoadMap.Dispose();
             m_Ground.Dispose(); 
             m_Rock.Dispose();
             m_Snow.Dispose(); 
@@ -440,10 +381,10 @@ namespace FSO.Client.Rendering.City
             m_Sand.Dispose(); 
             m_Forest.Dispose();
             m_DefaultHouse.Dispose(); 
-            m_LotOnline.Dispose(); 
-            m_LotOffline.Dispose();
-            m_WhiteLine.Dispose();
-            m_stpWhiteLine.Dispose();
+            //m_LotOnline.Dispose(); these are handled by the UI engine
+            //m_LotOffline.Dispose();
+            //m_WhiteLine.Dispose();
+            //m_stpWhiteLine.Dispose();
 
             for (int x = 0; x < 30; x++) m_TransA[x].Dispose();
             for (int x = 0; x < 30; x++) TransB[x].Dispose();
@@ -457,7 +398,7 @@ namespace FSO.Client.Rendering.City
             m_HouseGraphics.Clear();
         }
 
-        private void DrawLine(Texture2D Fill, Vector2 Start, Vector2 End, SpriteBatch spriteBatch, int lineWidth, float opacity) //draws a line from Start to End.
+        internal void DrawLine(Texture2D Fill, Vector2 Start, Vector2 End, SpriteBatch spriteBatch, int lineWidth, float opacity) //draws a line from Start to End.
         {
             double length = Math.Sqrt(Math.Pow(End.X - Start.X, 2) + Math.Pow(End.Y - Start.Y, 2));
             float direction = (float)Math.Atan2(End.Y - Start.Y, End.X - Start.X);
@@ -602,31 +543,25 @@ namespace FSO.Client.Rendering.City
             return StrBuilder.ToString();
         }
 
-        public void GenerateCityMesh(GraphicsDevice GfxDevice)
+        public void RegenMeshVerts(Rectangle? range)
         {
-            m_Verts = new MeshVertex[m_Width * m_Height * 3]; //6 verts per pixel, but only half the pixels in the image are used, so multiplier is 3!
+            bool full = range == null || m_StartIndices == null;
+
+            if (full)
+            {
+                m_Verts = new MeshVertex[m_Width * m_Height * 3];
+                m_StartIndices = new int[512];
+            }
             int xStart, xEnd;
 
-            Color[] ColorData = new Color[m_Width * m_Height];
-            m_TerrainTypeColorData = new Color[m_TerrainType.Width * m_TerrainType.Height];
-            Color[] ForestDensityData = new Color[m_ForestDensity.Width * m_ForestDensity.Height];
-            m_ForestTypeData = new Color[m_ForestType.Width * m_ForestType.Height];
-
-            Color[] RoadMapData = new Color[m_RoadMap.Width * m_RoadMap.Height];
-
-            m_Elevation.GetData(ColorData);
-            m_TerrainType.GetData(m_TerrainTypeColorData);
-            m_ForestDensity.GetData(ForestDensityData);
-            m_ForestType.GetData(m_ForestTypeData);
-            m_RoadMap.GetData(RoadMapData);
-
-            byte[] RoadData = ConvertToBinaryArray(RoadMapData); //we need binary arrays for these as the values are accessed directly instead of being compared.
-            m_ElevationData = ConvertToBinaryArray(ColorData);
-            m_ForestDensityData = ConvertToBinaryArray(ForestDensityData);
-
             int index = 0;
+            int yStart = 0, yEnd = 512;
+            if (!full)
+            {
+                yStart = range.Value.Top; yEnd = range.Value.Bottom;
+            }
 
-            for (int i = 0; i < 512; i++)
+            for (int i = yStart; i < yEnd; i++)
             {
                 if (i < 306)
                     xStart = 306 - i;
@@ -636,12 +571,20 @@ namespace FSO.Client.Rendering.City
                     xEnd = 307 + i;
                 else
                     xEnd = 512 - (i - 205);
+
+                if (!full) {
+                    var newStart = Math.Min(range.Value.Right - 1, Math.Max(range.Value.Left, xStart));
+                    index = m_StartIndices[i-1] + ((newStart - xStart) + 1) * 6;
+                    xStart = newStart;
+                    xEnd = Math.Min(range.Value.Right, Math.Max(range.Value.Left + 1, xEnd));
+                }
                 for (int j = xStart; j < xEnd; j++)
                 { //where the magic happens
-                    var blendData = GetBlend(m_TerrainTypeColorData, i, j); //gets information on what this tile blends into and what blend image to use for the alpha.
+                    if (full) m_StartIndices[i] = index;
+                    var blendData = GetBlend(MapData.TerrainTypeColorData, i, j); //gets information on what this tile blends into and what blend image to use for the alpha.
 
                     var bOff = blendData.AtlasPosition; //texture used for blend alpha
-                    double[] temp = m_AtlasOff[m_TerrainTypeColorData[((i * 512) + j)]];
+                    double[] temp = m_AtlasOff[MapData.TerrainTypeColorData[((i * 512) + j)]];
                     double[] off = new double[] { temp[0], temp[1] }; //texture for this tile (grass, rock etc)
                     off[0] += 0.125 * (j % 4);
                     off[1] += (0.125 / 2.0) * (i % 4); //vertically 2 times as large
@@ -651,17 +594,19 @@ namespace FSO.Client.Rendering.City
                     off2[1] += (0.125 / 2.0) * (i % 4);
 
                     float toX = 0; //vertex colour offset, adjust to try and fix vertexcolor offset.
-				    float toY = 0;
+                    float toY = 0;
 
-                    byte roadByte = RoadData[(i * 512 + j) * 4];
+                    byte roadByte = MapData.RoadData[(i * 512 + j)];
                     double[] off3 = new double[] { ((roadByte & 15) % 4) * 0.25, ((int)((roadByte & 15) / 4)) * 0.25 }; //normal road uv selection
                     double[] off4 = new double[] { ((roadByte >> 4) % 4) * 0.25, ((int)((roadByte >> 4) / 4)) * 0.25 }; //road corners uv selection
 
                     //huge segment of code for generating triangles incoming
+                    var norm1 = GetNormalAt(j, i);
 
                     m_Verts[index].Coord.X = j;
-                    m_Verts[index].Coord.Y = m_ElevationData[(i * 512 + j) * 4] / 12.0f; //elevation
+                    m_Verts[index].Coord.Y = MapData.ElevationData[(i * 512 + j)] / 12.0f; //elevation
                     m_Verts[index].Coord.Z = i;
+                    m_Verts[index].Normal = norm1;
                     m_Verts[index].TextureCoord.X = (j + toX) / 512.0f;
                     m_Verts[index].TextureCoord.Y = (i + toY) / 512.0f;
                     m_Verts[index].Texture2Coord.X = (float)off[0];
@@ -676,10 +621,10 @@ namespace FSO.Client.Rendering.City
                     m_Verts[index].RoadCCoord.Y = (float)off4[1];
 
                     index++;
-
                     m_Verts[index].Coord.X = j + 1;
-                    m_Verts[index].Coord.Y = m_ElevationData[(i * 512 + Math.Min(511, j + 1)) * 4] / 12.0f; //elevation
+                    m_Verts[index].Coord.Y = MapData.ElevationData[(i * 512 + Math.Min(511, j + 1))] / 12.0f; //elevation
                     m_Verts[index].Coord.Z = i;
+                    m_Verts[index].Normal = GetNormalAt(Math.Min(511, j + 1), i);
                     m_Verts[index].TextureCoord.X = (j + toX + 1) / 512.0f;
                     m_Verts[index].TextureCoord.Y = (i + toY) / 512.0f;
                     m_Verts[index].Texture2Coord.X = (float)(off[0] + 0.125);
@@ -694,10 +639,11 @@ namespace FSO.Client.Rendering.City
                     m_Verts[index].RoadCCoord.Y = (float)off4[1];
 
                     index++;
-
+                    var norm2 = GetNormalAt(Math.Min(511, j + 1), Math.Min(511, i + 1));
                     m_Verts[index].Coord.X = j + 1;
-                    m_Verts[index].Coord.Y = m_ElevationData[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1)) * 4] / 12.0f; //elevation
+                    m_Verts[index].Coord.Y = MapData.ElevationData[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1))] / 12.0f; //elevation
                     m_Verts[index].Coord.Z = i + 1;
+                    m_Verts[index].Normal = norm2;
                     m_Verts[index].TextureCoord.X = (j + toX + 1) / 512.0f;
                     m_Verts[index].TextureCoord.Y = (i + toY + 1) / 512.0f;
                     m_Verts[index].Texture2Coord.X = (float)(off[0] + 0.125);
@@ -716,8 +662,9 @@ namespace FSO.Client.Rendering.City
                     //tri 2
 
                     m_Verts[index].Coord.X = j;
-                    m_Verts[index].Coord.Y = m_ElevationData[(i * 512 + j) * 4] / 12.0f; //elevation
+                    m_Verts[index].Coord.Y = MapData.ElevationData[(i * 512 + j)] / 12.0f; //elevation
                     m_Verts[index].Coord.Z = i;
+                    m_Verts[index].Normal = norm1;
                     m_Verts[index].TextureCoord.X = (j + toX) / 512.0f;
                     m_Verts[index].TextureCoord.Y = (i + toY) / 512.0f;
                     m_Verts[index].Texture2Coord.X = (float)(off[0]);
@@ -734,8 +681,9 @@ namespace FSO.Client.Rendering.City
                     index++;
 
                     m_Verts[index].Coord.X = j + 1;
-                    m_Verts[index].Coord.Y = m_ElevationData[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1)) * 4] / 12.0f; //elevation
+                    m_Verts[index].Coord.Y = MapData.ElevationData[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1))] / 12.0f; //elevation
                     m_Verts[index].Coord.Z = i + 1;
+                    m_Verts[index].Normal = norm2;
                     m_Verts[index].TextureCoord.X = (j + toX + 1) / 512.0f;
                     m_Verts[index].TextureCoord.Y = (i + toY + 1) / 512.0f;
                     m_Verts[index].Texture2Coord.X = (float)(off[0] + 0.125);
@@ -752,8 +700,9 @@ namespace FSO.Client.Rendering.City
                     index++;
 
                     m_Verts[index].Coord.X = j;
-                    m_Verts[index].Coord.Y = m_ElevationData[(Math.Min(511, i + 1) * 512 + j) * 4] / 12.0f; //elevation
+                    m_Verts[index].Coord.Y = MapData.ElevationData[(Math.Min(511, i + 1) * 512 + j)] / 12.0f; //elevation
                     m_Verts[index].Coord.Z = i + 1;
+                    m_Verts[index].Normal = GetNormalAt(j, Math.Min(511, i + 1));
                     m_Verts[index].TextureCoord.X = (j + toX) / 512.0f;
                     m_Verts[index].TextureCoord.Y = (i + toY + 1) / 512.0f;
                     m_Verts[index].Texture2Coord.X = (float)(off[0]);
@@ -770,10 +719,65 @@ namespace FSO.Client.Rendering.City
                     index++;
                 }
             }
-            vertBuf = new VertexBuffer(m_GraphicsDevice, typeof(MeshVertex), m_Verts.Length, BufferUsage.WriteOnly);
+        }
+
+        public void GenerateCityMesh(GraphicsDevice GfxDevice, Rectangle? range)
+        {
+            RegenMeshVerts(range);
+            if (vertBuf == null) vertBuf = new VertexBuffer(m_GraphicsDevice, typeof(MeshVertex), m_Verts.Length, BufferUsage.WriteOnly);
             vertBuf.SetData(m_Verts); //use vertex buffer to draw mesh as the data is always the same. we only have to set data once.
             m_MeshTris = m_Verts.Length / 3;
-            m_Verts = null; //clear m_Verts now that it's copied to save some RAM.
+            //m_Verts = null; //clear m_Verts now that it's copied to save some RAM.
+        }
+
+        private Vector3 GetNormalAt(int x, int y)
+        {
+            var sum = new Vector3();
+            var rotToNormalXY = Matrix.CreateRotationZ((float)(Math.PI/2));
+            var rotToNormalZY = Matrix.CreateRotationX(-(float)(Math.PI / 2));
+
+            if (x < 511)
+            {
+                var vec = new Vector3();
+                vec.X = 1;
+                vec.Y = GetElevationPoint(x + 1, y) - GetElevationPoint(x, y);
+                vec = Vector3.Transform(vec, rotToNormalXY);
+                sum += vec;
+            }
+
+            if (x > 1)
+            {
+                var vec = new Vector3();
+                vec.X = 1;
+                vec.Y = GetElevationPoint(x, y) - GetElevationPoint(x-1, y);
+                vec = Vector3.Transform(vec, rotToNormalXY);
+                sum += vec;
+            }
+
+            if (y < 511)
+            {
+                var vec = new Vector3();
+                vec.Z = 1;
+                vec.Y = GetElevationPoint(x, y + 1) - GetElevationPoint(x, y);
+                vec = Vector3.Transform(vec, rotToNormalZY);
+                sum += vec;
+            }
+
+            if (y > 1)
+            {
+                var vec = new Vector3();
+                vec.Z = 1;
+                vec.Y = GetElevationPoint(x, y) - GetElevationPoint(x, y - 1);
+                vec = Vector3.Transform(vec, rotToNormalZY);
+                sum += vec;
+            }
+            if (sum != Vector3.Zero) sum.Normalize();
+            return sum;
+        }
+
+        private float GetElevationPoint(int x, int y)
+        {
+            return MapData.ElevationData[(y * 512 + x)] / 6.0f;
         }
 
         private byte[] ConvertToBinaryArray(Color[] ColorArray)
@@ -791,14 +795,31 @@ namespace FSO.Client.Rendering.City
             return BinArray;
         }
 
-        private int[] GetHoverSquare()
+        private Vector2 GetUVInTri(Vector2 a, Vector2 b, Vector2 c, Vector2 pt)
         {
-            double ResScale = 768.0/m_ScrHeight;
-            double fisoScale = (Math.Sqrt(0.5*0.5*2)/5.10)*ResScale; // is 5.10 on far zoom
-            double zisoScale = Math.Sqrt(0.5*0.5*2)/144.0; // currently set 144 to near zoom
-            double isoScale = (1-m_ZoomProgress)*fisoScale + (m_ZoomProgress)*zisoScale;
+            var ca = c - a;
+            var ba = b - a;
+            var pa = pt - a;
+
+            var ca2 = Vector2.Dot(ca, ca);
+            var ca_ba = Vector2.Dot(ca, ba);
+            var ca_pa = Vector2.Dot(ca, pa);
+            var ba2 = Vector2.Dot(ba, ba);
+            var ba_pa = Vector2.Dot(ba, pa);
+
+            var inv = 1 / (ca2 * ba2 - ca_ba * ca_ba);
+            return new Vector2(
+                (ca2 * ba_pa - ca_ba * ca_pa) * inv, //factor to b
+                (ba2 * ca_pa - ca_ba * ba_pa) * inv //factor to c
+                );
+
+        }
+
+        private Vector2? GetHoverSquare()
+        {
+            var isoScale = GetIsoScale();
             double width = m_ScrWidth;
-            float iScale = (float)(width/(width*isoScale*2));
+            float iScale = (float)(1/(isoScale*2));
             
             Vector2 mid = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
             mid.X -= 6;
@@ -806,21 +827,36 @@ namespace FSO.Client.Rendering.City
             double[] bounds = new double[] {Math.Round(mid.X-19), Math.Round(mid.Y-19), Math.Round(mid.X+19), Math.Round(mid.Y+19)};
             double[] pos = new double[] { m_MouseState.X, m_MouseState.Y };
 
-            for (int y=(int)bounds[1]; y<bounds[3]; y++) 
+            for (int y=(int)bounds[3]; y>bounds[1]; y--) 
             {
                 if (y < 0 || y > 511) continue;
                 for (int x=(int)bounds[0]; x<bounds[2]; x++) 
                 {
                     if (x < 0 || x > 511) continue;
                     //get the 4 points of this tile, and check if the mouse cursor is inside them.
-                    var xy = transformSpr(iScale, new Vector3(x+0, m_ElevationData[(y*512+x)*4]/12.0f, y+0));
-                    var xy2 = transformSpr(iScale, new Vector3(x + 1, m_ElevationData[(y * 512 + Math.Min(x + 1, 511)) * 4] / 12.0f, y + 0));
-                    var xy3 = transformSpr(iScale, new Vector3(x + 1, m_ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511)) * 4] / 12.0f, y + 1));
-                    var xy4 = transformSpr(iScale, new Vector3(x + 0, m_ElevationData[(Math.Min(y + 1, 511) * 512 + x) * 4] / 12.0f, y + 1));
-                    if (IsInsidePoly(new double[] {xy.X, xy.Y, xy2.X, xy2.Y, xy3.X, xy3.Y, xy4.X, xy4.Y}, pos)) return new int[] {x, y}; //we have a match
+                    var xy = transformSpr(iScale, new Vector3(x+0, MapData.ElevationData[(y*512+x)]/12.0f, y+0));
+                    var xy2 = transformSpr(iScale, new Vector3(x + 1, MapData.ElevationData[(y * 512 + Math.Min(x + 1, 511))] / 12.0f, y + 0));
+                    var xy3 = transformSpr(iScale, new Vector3(x + 1, MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511))] / 12.0f, y + 1));
+                    var xy4 = transformSpr(iScale, new Vector3(x + 0, MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + x)] / 12.0f, y + 1));
+                    if (IsInsidePoly(new double[] { xy.X, xy.Y, xy2.X, xy2.Y, xy3.X, xy3.Y, xy4.X, xy4.Y }, pos))
+                    {
+                        //find closest point as well, it can be used by plugins
+                        var vPos = new Vector2((float)pos[0], (float)pos[1]);
+
+                        var uv1 = GetUVInTri(xy, xy2, xy4, vPos);
+                        if (uv1.X + uv1.Y < 1)
+                        {
+                            return new Vector2(x,y) + uv1;
+                        }
+                        else
+                        {
+                            var uv2 = GetUVInTri(xy3, xy4, xy2, vPos);
+                            return new Vector2(x+1, y+1) - uv2;
+                        }
+                    }
                 }
             }
-            return new int[] {-1, -1}; //no match, return invalid mouse selection (-1, -1)
+            return null;
         }
 
         private bool IsInsidePoly(double[] Poly, double[] Pos)
@@ -902,10 +938,10 @@ namespace FSO.Client.Rendering.City
                     {
                         if (y < 0 || y > 511) continue;
                         
-                        Vector2 xy = transformSpr(iScale, new Vector3(x+0, m_ElevationData[(y * 512 + x) * 4] / 12.0f, y + 0)) + offset;
-                        Vector2 xy2 = transformSpr(iScale, new Vector3(x + 1, m_ElevationData[(y * 512 + Math.Min(x + 1, 511)) * 4] / 12.0f, y + 0)) + offset;
-                        Vector2 xy3 = transformSpr(iScale, new Vector3(x + 1, m_ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511)) * 4] / 12.0f, y + 1)) + offset;
-                        Vector2 xy4 = transformSpr(iScale, new Vector3(x + 0, m_ElevationData[(Math.Min(y + 1, 511) * 512 + x) * 4] / 12.0f, y + 1)) + offset;
+                        Vector2 xy = transformSpr(iScale, new Vector3(x+0, MapData.ElevationData[(y * 512 + x)] / 12.0f, y + 0)) + offset;
+                        Vector2 xy2 = transformSpr(iScale, new Vector3(x + 1, MapData.ElevationData[(y * 512 + Math.Min(x + 1, 511))] / 12.0f, y + 0)) + offset;
+                        Vector2 xy3 = transformSpr(iScale, new Vector3(x + 1, MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511))] / 12.0f, y + 1)) + offset;
+                        Vector2 xy4 = transformSpr(iScale, new Vector3(x + 0, MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + x)] / 12.0f, y + 1)) + offset;
 
                         Vector2 mousedist = ((xy + xy2 + xy3 + xy4) / 4.0f - new Vector2(m_MouseState.X, m_MouseState.Y));
 
@@ -956,17 +992,7 @@ namespace FSO.Client.Rendering.City
 
         private bool isLandBuildable(int x, int y) 
         {
-            if (x < 0 || x > 510 || y < 0 || y > 510) return false; //because of +1s, use 510 as bound rather than 511. People won't see those tiles at near view anyways.
-
-            if (m_TerrainTypeColorData[y * 512 + x] == new Color(0x0C, 0, 255)) return false; //if on water, not buildable
-
-            //gets max and min elevation of the 4 verts of this tile, and compares them against a threshold. This threshold should be EXACTLY THE SAME ON THE SERVER! 
-            //This is so that the game and the server have the same ideas on what is buildable and what is not.
-
-            int max = Math.Max(m_ElevationData[(y*512+x)*4], Math.Max(m_ElevationData[(y*512+x+1)*4], Math.Max(m_ElevationData[((y+1)*512+x+1)*4], m_ElevationData[((y+1)*512+x)*4])));
-            int min = Math.Min(m_ElevationData[(y*512+x)*4], Math.Min(m_ElevationData[(y*512+x+1)*4], Math.Min(m_ElevationData[((y+1)*512+x+1)*4], m_ElevationData[((y+1)*512+x)*4])));
-
-            return (max-min < 10); //10 is the threshold for now
+            return FindController<TerrainController>().IsPurchasable(x, y);
         }
 
         private void DrawSpotlights(float HB)
@@ -974,14 +1000,14 @@ namespace FSO.Client.Rendering.City
             float iScale = (float)m_ScrWidth/(HB*2.0f);
 		
             float spotlightScale = (float)(iScale*(2.0*Math.Sqrt(0.5*0.5*2)/5.10));
-            LotTileEntry[] lots = m_CityData.LotTileData;
+            LotTileEntry[] lots = LotTileData;
 
             for (int i = 0; i < lots.Length; i++)
             {
-                if ((lots[i].flags & 2) > 0)
+                if ((lots[i].flags & LotTileFlags.Spotlight) > 0)
                 {
                     Vector2 pos = new Vector2(lots[i].x, lots[i].y);
-                    Vector2 xy = transformSpr(iScale, new Vector3(pos.X + 0.5f, m_ElevationData[((int)pos.Y * 512 + (int)pos.X) * 4] / 12.0f, pos.Y + 0.5f)); //get position to place spotlight
+                    Vector2 xy = transformSpr(iScale, new Vector3(pos.X + 0.5f, MapData.ElevationData[((int)pos.Y * 512 + (int)pos.X)] / 12.0f, pos.Y + 0.5f)); //get position to place spotlight
                     Vector3 xyz = new Vector3(xy.X, xy.Y, 1);
 
                     Matrix trans = Matrix.Identity;
@@ -994,17 +1020,31 @@ namespace FSO.Client.Rendering.City
             }
         }
 
+        public Vector2 Get2DFromTile(int x, int y)
+        {
+            float iScale = (float)(1/(m_LastIsoScale * 2));
+            if (x < 0 || y < 0) return new Vector2();
+            return transformSpr(iScale, new Vector3(x, MapData.ElevationData[(y * 512 + x)] / 12.0f, y));
+        }
+
+        public Vector2 GetFar2DFromTile(int x, int y)
+        {
+            float iScale = (float)(1 / (GetFarzoomIsoScale() * 2));
+            if (x < 0 || y < 0) return new Vector2();
+            return transformSprFar(iScale, new Vector3(x, MapData.ElevationData[(y * 512 + x)] / 12.0f, y));
+        }
+
         private void DrawHouses(float HB) //draws house icons in far view
         {
-            SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
+            var spriteBatch = m_Batch;
             spriteBatch.Begin();
             float iScale = (float)m_ScrWidth / (HB * 2);
-            LotTileEntry[] lots = m_CityData.LotTileData;
+            LotTileEntry[] lots = LotTileData;
             for (int i=0; i<lots.Length; i++) {
 				short x = lots[i].x;
 				short y = lots[i].y;
-				Vector2 xy = transformSpr(iScale, new Vector3(x+0.5f, m_ElevationData[(y*512+x)*4]/12.0f, y+0.5f));
-                bool online = ((lots[i].flags & 1) == 1);
+				Vector2 xy = transformSpr(iScale, new Vector3(x+0.5f, MapData.ElevationData[(y*512+x)]/12.0f, y+0.5f));
+                bool online = ((lots[i].flags & LotTileFlags.Online) > 0);
                 Texture2D img = (online) ? m_LotOnline : m_LotOffline; //if house is online, use red house instead of gray one
 				double alpha = online?(0.5+Math.Sin(4*Math.PI*(m_SpotOsc%1))/2.0):1; //if house is online, flash the opacity using the oscillator variable.
 				spriteBatch.Draw(img, new Rectangle((int)Math.Round(xy.X-1), (int)Math.Round(xy.Y-2), 4, 3), Color.White*(float)alpha);
@@ -1012,75 +1052,27 @@ namespace FSO.Client.Rendering.City
             spriteBatch.End();
         }
 
-        private void PathTile(int x, int y, float iScale, float opacity) { //quick and dirty function to fill a tile with white using the 2DVerts system. Used in near view for online houses.
-            Vector2 xy = transformSpr(iScale, new Vector3(x + 0, m_ElevationData[(y * 512 + x) * 4] / 12.0f, y + 0));
-            Vector2 xy2 = transformSpr(iScale, new Vector3(x + 1, m_ElevationData[(y * 512 + Math.Min(x + 1, 511)) * 4] / 12.0f, y + 0));
-            Vector2 xy3 = transformSpr(iScale, new Vector3(x + 1, m_ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511)) * 4] / 12.0f, y + 1));
-            Vector2 xy4 = transformSpr(iScale, new Vector3(x + 0, m_ElevationData[(Math.Min(y + 1, 511) * 512 + x) * 4] / 12.0f, y + 1));
+        internal void PathTile(int x, int y, float iScale, Color color) { //quick and dirty function to fill a tile with white using the 2DVerts system. Used in near view for online houses.
+            Vector2 xy = transformSpr(iScale, new Vector3(x + 0, MapData.ElevationData[(y * 512 + x)] / 12.0f, y + 0));
+            Vector2 xy2 = transformSpr(iScale, new Vector3(x + 1, MapData.ElevationData[(y * 512 + Math.Min(x + 1, 511))] / 12.0f, y + 0));
+            Vector2 xy3 = transformSpr(iScale, new Vector3(x + 1, MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511))] / 12.0f, y + 1));
+            Vector2 xy4 = transformSpr(iScale, new Vector3(x + 0, MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + x)] / 12.0f, y + 1));
 					
-            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
-            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy2, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
-            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy3, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
+            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy, 1), color));
+            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy2, 1), color));
+            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy3, 1), color));
 
-            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
-            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy3, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
-            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy4, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
+            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy, 1), color));
+            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy3, 1), color));
+            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy4, 1), color));
 	    }
-
-        /// <summary>
-        /// Draws a tooltip at the specified coordinates.
-        /// </summary>
-        /// <param name="batch">A SpriteBatch instance.</param>
-        /// <param name="tooltip">String to be drawn.</param>
-        /// <param name="position">Position of tooltip.</param>
-        /// <param name="opacity">Tooltip's opacity.</param>
-        public void DrawTooltip(SpriteBatch batch, string tooltip, Vector2 position, float opacity)
-        {
-            TextStyle style = TextStyle.DefaultLabel.Clone();
-            style.Color = Color.Black;
-            style.Size = 8;
-
-            var scale = new Vector2(1, 1);
-            if (style.Scale != 1.0f)
-            {
-                scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
-            }
-
-            var wrapped = UIUtils.WordWrap(tooltip, 290, style, scale); //tooltip max width should be 300. There is a 5px margin on each side.
-
-            int width = wrapped.MaxWidth + 10;
-            int height = 13 * wrapped.Lines.Count + 4; //13 per line + 4.
-
-            position.X = Math.Min(position.X, GlobalSettings.Default.GraphicsWidth - width);
-            position.Y = Math.Max(position.Y, height);
-
-            var whiteRectangle = new Texture2D(batch.GraphicsDevice, 1, 1);
-            whiteRectangle.SetData(new[] { Color.White });
-
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, height), Color.White * opacity); //note: in XNA4 colours need to be premultiplied
-
-            //border
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, 1), new Color(0, 0, 0, opacity));
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X + width, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y, width, 1), new Color(0, 0, 0, opacity));
-
-            position.Y -= height;
-
-            for (int i = 0; i < wrapped.Lines.Count; i++)
-            {
-                int thisWidth = (int)(style.SpriteFont.MeasureString(wrapped.Lines[i]).X * scale.X);
-                batch.DrawString(style.SpriteFont, wrapped.Lines[i], position + new Vector2((width - thisWidth) / 2, 0), new Color(0, 0, 0, opacity), 0, Vector2.Zero, scale, SpriteEffects.None, 0);
-                position.Y += 13;
-            }
-        }
 
         private void DrawSprites(float HB, float VB)
         {
-            SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
+            var spriteBatch = m_Batch;
             spriteBatch.Begin();
 
-            if (!m_Zoomed && m_HandleMouse)
+            if (m_Zoomed == TerrainZoomMode.Far && m_HandleMouse)
             {
                 //draw rectangle to indicate zoom position
                 DrawLine(m_WhiteLine, new Vector2(m_MouseState.X - 15, m_MouseState.Y - 11), new Vector2(m_MouseState.X - 15, m_MouseState.Y + 11), spriteBatch, 2, 1);
@@ -1088,34 +1080,10 @@ namespace FSO.Client.Rendering.City
                 DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 15, m_MouseState.Y + 11), new Vector2(m_MouseState.X + 15, m_MouseState.Y - 11), spriteBatch, 2, 1);
                 DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 16, m_MouseState.Y - 10), new Vector2(m_MouseState.X - 16, m_MouseState.Y - 10), spriteBatch, 2, 1);
             }
-            else if (m_Zoomed && m_HandleMouse)
-            {
-                if (m_LotCost != 0)
-                {
-                    float X = GetHoverSquare()[0];
-                    float Y = GetHoverSquare()[1];
-                    //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
-                    DrawTooltip(spriteBatch, m_LotCost.ToString() + "§", new Vector2(X, Y), 0.5f);
-                }
-                else
-                {
-                    if (m_CurrentLot != null)
-                    {
-                        float X = GetHoverSquare()[0];
-                        float Y = GetHoverSquare()[1];
-                        bool Online = ProtoHelpers.GetBit(m_CurrentLot.flags, 0);
-                        string OnlineStr = (Online == true) ? "Online" : "Offline";
-                        //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
-                        DrawTooltip(spriteBatch, GameFacade.Strings.GetString("215", "3", new string[]{m_CurrentLot.name}) + "\n" 
-                            + OnlineStr, new Vector2(X, Y), 0.5f);
-                    }
-                }
-            }
             
             if (m_ZoomProgress < 0.5)
             {
                 spriteBatch.End();
-                spriteBatch.Dispose();
                 return;
             }
 
@@ -1141,9 +1109,7 @@ namespace FSO.Client.Rendering.City
                 {
                     if (x < 0 || x > 511) continue;
 
-                    float elev = (m_ElevationData[(y * 512 + x) * 4] + m_ElevationData[(y * 512 + Math.Min(x + 1, 511)) * 4] + 
-                        m_ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511)) * 4] + 
-                        m_ElevationData[(Math.Min(y + 1, 511) * 512 + x) * 4]) / 4; //elevation of sprite is the average elevation of the 4 vertices of the tile
+                    float elev = GetElevationAt(x, y);
 
                     var xy = transformSpr(iScale, new Vector3((float)(x + 0.5), elev / 12.0f, (float)(y + 0.5)));
 
@@ -1153,9 +1119,9 @@ namespace FSO.Client.Rendering.City
                         Vector2 loc = new Vector2( x, y );
                         LotTileEntry house;
 
-                        if (m_CityLookup.ContainsKey(loc))
+                        if (LotTileLookup.ContainsKey(loc))
                         {
-                            house = m_CityLookup[loc];
+                            house = LotTileLookup[loc];
                         }
                         else
                         {
@@ -1163,23 +1129,33 @@ namespace FSO.Client.Rendering.City
                         }
                         if (house != null) //if there is a house here, draw it
                         {
-                            if ((house.flags & 1) > 0) {
-							    PathTile(x, y, iScale, (float)(0.3+Math.Sin(4*Math.PI*(m_SpotOsc%1))*0.15));
+                            if ((house.flags & LotTileFlags.Online) > 0) {
+							    PathTile(x, y, iScale, new Color(1.0f, 1.0f, 1.0f, (float)(0.3+Math.Sin(4*Math.PI*(m_SpotOsc%1))*0.15)));
 						    }
 
-                            double scale = treeWidth * iScale / 128.0;
-                            if (!m_HouseGraphics.ContainsKey(house.lotid)) {
+                            if (!m_HouseGraphics.ContainsKey(house.packed_pos)) {
 							    //no house graphic found - request one!
-                                m_HouseGraphics[house.lotid] = m_DefaultHouse;
-                                m_CityData.RetrieveHouseGFX(house.lotid, m_HouseGraphics, m_GraphicsDevice);
+                                m_HouseGraphics[house.packed_pos] = m_DefaultHouse;
+                                var controller = FindController<TerrainController>();
+                                if (controller != null) controller.RequestLotThumb((uint)house.packed_pos, loadedThumb =>
+                                {
+                                    m_HouseGraphics[house.packed_pos] = loadedThumb;
+                                });
 						    }
-                            Texture2D lotImg = m_HouseGraphics[house.lotid];
-                            spriteBatch.Draw(lotImg, new Rectangle((int)(xy.X - 64.0 * scale), (int)(xy.Y - 32.0 * scale), (int)(scale * 128), (int)(scale * 64)), m_TintColor);
+                            Texture2D lotImg = m_HouseGraphics[house.packed_pos];
+
+                            var resMultiplier = (lotImg.Width > 144) ? 2 : 1;
+                            var lotImgWidth = lotImg.Width / resMultiplier;
+                            var lotImgHeight = lotImg.Height / resMultiplier;
+
+                            double scale = Math.Round((treeWidth * iScale / 128.0)*1000)/1000;
+
+                            spriteBatch.Draw(lotImg, new Rectangle((int)(xy.X - (lotImgWidth/2) * scale), (int)(xy.Y - (lotImgHeight/2) * scale), (int)(scale * lotImgWidth), (int)(scale * lotImgHeight)), m_TintColor);
                         }
                         else //if there is no house, draw the forest that's meant to be here.
                         {
-                            double fType = m_ForestTypes[m_ForestTypeData[(y * 512 + x)]];
-                            double fDens = Math.Round((double)(m_ForestDensityData[(y * 512 + x) * 4] * 4 / 255));
+                            double fType = m_ForestTypes[MapData.ForestTypeData[(y * 512 + x)]];
+                            double fDens = Math.Round((double)(MapData.ForestDensityData[(y * 512 + x)] * 4 / 255));
                             if (!(fType == -1 || fDens == 0))
                             {
                                 double scale = treeWidth * iScale / 128.0;
@@ -1193,7 +1169,6 @@ namespace FSO.Client.Rendering.City
 
             Draw2DPoly(); //fill the tiles below online houses BEFORE actually drawing the houses and trees!
             spriteBatch.End();
-            spriteBatch.Dispose();
         }
 
         public Vector2 transformSpr(float iScale, Vector3 pos) 
@@ -1204,46 +1179,76 @@ namespace FSO.Client.Rendering.City
             return new Vector2((temp.X-m_ViewOffX)*iScale+width/2, (-(temp.Y-m_ViewOffY)*iScale)+height/2);
         }
 
+        public Vector2 transformSprFar(float iScale, Vector3 pos)
+        { //transform 3d position to view.
+            Vector3 temp = Vector3.Transform(pos, m_MovMatrix);
+            int width = m_ScrWidth;
+            int height = m_ScrHeight;
+            return new Vector2((temp.X) * iScale + width / 2, (-(temp.Y) * iScale) + height / 2);
+        }
+
         public void UIMouseEvent(String type)
         {
             if (type.Equals("MouseOver", StringComparison.InvariantCultureIgnoreCase)) m_HandleMouse = true;
-            if (type.Equals("MouseOut", StringComparison.InvariantCultureIgnoreCase)) m_HandleMouse = false;
+            if (type.Equals("MouseOut", StringComparison.InvariantCultureIgnoreCase))
+            {
+                m_LastWheelPos = null;
+                m_HandleMouse = false;
+            }
         }
 
         public override void Update(UpdateState state)
         {
+            if (!(GameFacade.Screens.CurrentUIScreen is CoreGameScreen)) return;
             CoreGameScreen CurrentUIScr = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
 
             if (Visible)
             { //if we're not visible, do not update CityRenderer state...
+                if (DateTime.Now.Subtract(LastCityUpdate).TotalSeconds > 15)
+                {
+                    FindController<TerrainController>()?.RequestNewCity();
+                    LastCityUpdate = DateTime.Now;
+                }
+
                 m_LastMouseState = m_MouseState;
                 m_MouseState = Mouse.GetState();
 
                 m_MouseMove = (m_MouseState.RightButton == ButtonState.Pressed);
 
-                if (m_HandleMouse)
+                if (m_HandleMouse && state.ProcessMouseEvents)
                 {
-                    if (m_Zoomed)
+                    if (m_Zoomed == TerrainZoomMode.Near)
                     {
-                        m_SelTile = GetHoverSquare();
+                        var currentTile = GetHoverSquare();
+                        var curTileInt = (currentTile == null) ? new int[] { -1, -1 } : new int[] { (int)currentTile.Value.X, (int)currentTile.Value.Y};
 
-                        if (m_CanSend)
+                        if (Plugin == null)
                         {
-                            Network.UIPacketSenders.SendLotCostRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]);
-                            m_CanSend = false;
+                            if (m_SelTile == null || m_SelTile[0] != curTileInt[0] || m_SelTile[1] != curTileInt[1])
+                            {
+                                FindController<TerrainController>().HoverTile(curTileInt[0], curTileInt[1]);
+                            }
                         }
+
+                        m_SelTile = curTileInt;
+                        m_VecSelTile = currentTile;
+                        Plugin?.TileHover(currentTile);
+                        
+                        if (m_LastWheelPos != null && Math.Abs(m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) < 1000)
+                            m_WheelZoomTarg = Math.Max((Plugin == null)?0.33f:0.25f, Math.Min(1f, m_WheelZoomTarg - (m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) / 1000f));
                     }
 
                     if (m_MouseState.RightButton == ButtonState.Pressed && m_LastMouseState.RightButton == ButtonState.Released)
                     {
                         m_MouseStart = new Vector2(m_MouseState.X, m_MouseState.Y); //if middle mouse button activated, record where we started pressing it (to use for panning)
                     }
-
                     else if (m_MouseState.LeftButton == ButtonState.Released && m_LastMouseState.LeftButton == ButtonState.Pressed) //if clicked...
                     {
-                        if (!m_Zoomed)
+                        if (m_Zoomed == TerrainZoomMode.Far)
                         {
-                            m_Zoomed = true;
+                            FindController<TerrainController>().ZoomIn();
+
+                            m_Zoomed = TerrainZoomMode.Near;
                             double ResScale = 768.0 / m_ScrHeight;
                             double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10) * ResScale;
                             double hb = m_ScrWidth * isoScale;
@@ -1254,55 +1259,45 @@ namespace FSO.Client.Rendering.City
                         }
                         else
                         {
-                            /*
-                            if (m_SelTile[0] != -1 && m_SelTile[1] != -1)
+                            Plugin?.TileMouseUp(m_VecSelTile);
+                            if (Plugin == null)
                             {
-                                m_SelTileTmp[0] = m_SelTile[0];
-                                m_SelTileTmp[1] = m_SelTile[1];
-
-                                UIAlertOptions AlertOptions = new UIAlertOptions();
-                                AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
-                                AlertOptions.Message = GameFacade.Strings.GetString("215", "23", new string[] 
-                                { m_LotCost.ToString(), CurrentUIScr.ucp.MoneyText.Caption });
-                                AlertOptions.Buttons = new UIAlertButton[] {
-                                    new UIAlertButton(UIAlertButtonType.Yes, new ButtonClickDelegate(BuyPropertyAlert_OnButtonClick)),
-                                    new UIAlertButton(UIAlertButtonType.No) };
-
-                                m_BuyPropertyAlert = UIScreen.ShowAlert(AlertOptions, true);
+                                if (m_SelTile[0] != -1 && m_SelTile[1] != -1)
+                                {
+                                    FindController<TerrainController>().ClickLot(m_SelTile[0], m_SelTile[1]);
+                                }
                             }
-                            */
                         }
 
                         CurrentUIScr.ucp.UpdateZoomButton();
                     }
+
+                    if (m_VecSelTile != null && m_MouseState.LeftButton == ButtonState.Pressed && m_LastMouseState.LeftButton == ButtonState.Released) //if mousedown...
+                        Plugin?.TileMouseDown(m_VecSelTile.Value);
+
+                    m_LastWheelPos = state.MouseState.ScrollWheelValue;
                 }
                 else
                 {
                     m_SelTile = new int[] { -1, -1 };
+                    m_VecSelTile = null;
                 }
 
                 //m_SecondsBehind += time.ElapsedGameTime.TotalSeconds;
                 //m_SecondsBehind -= 1 / 60;
-                FixedTimeUpdate();
+                FixedTimeUpdate(state);
                 //SetTimeOfDay(m_DayNightCycle % 1); //calculates sun/moon light colour and position
                 //m_DayNightCycle += 0.001; //adjust the cycle speed here. When ingame, set m_DayNightCycle to to the percentage of time passed through the day. (0 to 1)
 
                 m_ViewOffX = (m_TargVOffX) * m_ZoomProgress;
                 m_ViewOffY = (m_TargVOffY) * m_ZoomProgress;
+                Plugin?.Update(state);
             }
-        }
-
-        /// <summary>
-        /// Player selected "yes" to buy a new lot.
-        /// </summary>
-        private void BuyPropertyAlert_OnButtonClick(UIElement Button)
-        {
-            Network.UIPacketSenders.SendLotPurchaseRequest(Network.NetworkFacade.Client, (short)m_SelTileTmp[0], (short)m_SelTileTmp[1]);
-            UIScreen.RemoveDialog(m_BuyPropertyAlert);
         }
 
         public void SetTimeOfDay(double time) 
         {
+            time = Math.Min(0.999999999, time);
             Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
             Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))+1]; //second colour
             double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
@@ -1312,77 +1307,135 @@ namespace FSO.Client.Rendering.City
             m_LightPosition = new Vector3(0, 0, -263);
             Matrix Transform = Matrix.Identity;
 
-            Transform *= Matrix.CreateRotationY((float)((((time+0.25)%0.5)+0.5) * Math.PI * 2.0)); //Controls the rotation of the sun/moon around the city. 
+            double modTime;
+            var offStart = 1 - (DayOffset + DayDuration);
+            if (time < DayOffset)
+            {
+                modTime = (offStart + time) * 0.5 / (1 - DayDuration);
+            } else if (time > DayOffset+DayDuration)
+            {
+                modTime = (time - (1-offStart)) * 0.5 / (1 - DayDuration);
+            } else
+            {
+                modTime = (time - DayOffset) * 0.5 / DayDuration;
+            }
+
+            Transform *= Matrix.CreateRotationY((float)((modTime+0.5) * Math.PI * 2.0)); //Controls the rotation of the sun/moon around the city. 
             Transform *= Matrix.CreateRotationZ((float)(Math.PI*(45.0/180.0))); //Sun is at an angle of 45 degrees to horizon at it's peak. idk why, it's winter maybe? looks nice either way
             Transform *= Matrix.CreateRotationY((float)(Math.PI * 0.3)); //Offset from front-back a little. This might need some adjusting for the nicest sunset/sunrise locations.
             Transform *= Matrix.CreateTranslation(new Vector3(256, 0, 256)); //Move pivot center to center of mesh.
 
             m_LightPosition = Vector3.Transform(m_LightPosition, Transform);
 
-            if (Math.Abs((time % 0.5) - 0.25) < 0.05) //Near the horizon, shadows should gracefully fade out into the opposite shadows (moonlight/sunlight)
+            if (modTime > 0.25) modTime = 0.5 - modTime;
+
+            if (Math.Abs(modTime) < 0.05) //Near the horizon, shadows should gracefully fade out into the opposite shadows (moonlight/sunlight)
             {
-                m_ShadowMult = (float)(1-(Math.Abs((time % 0.5) - 0.25)*20))*0.35f+0.65f;
+                m_ShadowMult = (float)(1-(Math.Abs(modTime)*20))*0.50f+0.50f;
             }
             else
             {
-                m_ShadowMult = 0.65f; //Shadow strength. Remember to change the above if you alter this.
+                m_ShadowMult = 0.50f; //Shadow strength. Remember to change the above if you alter this.
+            }
+        }
+        
+        public void InheritPosition(World lotWorld, CoreGameScreenController controller)
+        {
+            if (controller != null)
+            {
+                var id = controller.GetCurrentLotID();
+                if (id != 0)
+                {
+                    //center on this lot, with the given camera offset
+                    var x = id >> 16;
+                    var y = id & 0xFFFF;
+
+                    if (x >= 512 || y >= 512)
+                    {
+                        x = 255;
+                        y = 255;
+                    }
+
+                    float elev = GetElevationAt((int)x, (int)y);
+
+                    var tile = (lotWorld.State.CenterTile - new Vector2(2,2)) / 72; //72 is the base lot size
+
+                    switch (lotWorld.State.Zoom)
+                    {
+                        case WorldZoom.Near:
+                            m_LotZoomSize = 72 * 128;
+                            break;
+                        case WorldZoom.Medium:
+                            m_LotZoomSize = 72 * 64;
+                            break;
+                        case WorldZoom.Far:
+                            m_LotZoomSize = 72 * 32;
+                            break;
+                    }
+
+                    Vector3 scrollPos = Vector3.Transform(new Vector3((float)(x + 1)-tile.Y, elev / 12.0f, (float)(y + 0)+tile.X), m_MovMatrix);
+                    m_TargVOffX += (scrollPos.X - m_TargVOffX)/3;
+                    m_TargVOffY += (scrollPos.Y - m_TargVOffY)/3;
+                }
             }
         }
 
-        private void FixedTimeUpdate()
+        private float GetElevationAt(int x, int y)
         {
-            m_SpotOsc = (m_SpotOsc + 0.01f) % 1; //spotlight oscillation. Cycles fully every 100 frames.
-            if (m_Zoomed)
+            return(MapData.ElevationData[(y * 512 + x)] + MapData.ElevationData[(y * 512 + Math.Min(x + 1, 511))] +
+                        MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511))] +
+                        MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + x)]) / 4; //elevation of sprite is the average elevation of the 4 vertices of the tile
+        }
+
+        private void FixedTimeUpdate(UpdateState state)
+        {
+            var rScale = 60f / FSOEnvironment.RefreshRate;
+            m_SpotOsc = (m_SpotOsc + 0.01f*rScale) % 1; //spotlight oscillation. Cycles fully every 100 frames.
+            if (m_Zoomed != TerrainZoomMode.Far) m_ZoomProgress += (1.0f - m_ZoomProgress) * (float)(1-Math.Pow(4 / 5.0f, rScale));
+            if (m_Zoomed == TerrainZoomMode.Near)
             {
-                m_ZoomProgress += (1.0f - m_ZoomProgress) / 5.0f;
                 bool Triggered = false;
 
                 if (m_MouseMove)
                 {
-                    m_TargVOffX += (m_MouseState.X - m_MouseStart.X) / 1000; //move by fraction of distance between the mouse and where it started in both axis
-                    m_TargVOffY -= (m_MouseState.Y - m_MouseStart.Y) / 1000;
-                    
+                    m_TargVOffX += (m_MouseState.X - m_MouseStart.X) * (float)(1 - Math.Pow(999 / 1000.0f, rScale)); //move by fraction of distance between the mouse and where it started in both axis
+                    m_TargVOffY -= (m_MouseState.Y - m_MouseStart.Y) * (float)(1 - Math.Pow(999 / 1000.0f, rScale));
 
                     /*var dir = Math.Round((Math.Atan2(m_MouseStart.X - m_MouseState.Y,
                         m_MouseState.X - m_MouseStart.X) / Math.PI) * 4) + 4;
                     ChangeCursor(dir);*/
                 }
-                else //edge scroll check - do this even if mouse events are blocked
+                else if (GlobalSettings.Default.EdgeScroll && state.ProcessMouseEvents) //edge scroll check - do this even if mouse events are blocked
                 {
                     if (m_MouseState.X > m_ScrWidth - 32)
                     {
 					    Triggered = true;
-					    m_TargVOffX += m_ScrollSpeed;
+					    m_TargVOffX += m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowRight);
-					    //changeCursor("right.cur")
 				    }
                     if (m_MouseState.X < 32) 
                     {
 					    Triggered = true;
-					    m_TargVOffX -= m_ScrollSpeed;
+					    m_TargVOffX -= m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowLeft);
-					    //changeCursor("left.cur");
 				    }
                     if (m_MouseState.Y > m_ScrHeight - 32)
                     {
 					    Triggered = true;
-					    m_TargVOffY -= m_ScrollSpeed;
+					    m_TargVOffY -= m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowDown);
-					    //changeCursor("down.cur");
 				    }
                     if (m_MouseState.Y < 32)
                     {
 					    Triggered = true;
-                        m_TargVOffY += m_ScrollSpeed;
+                        m_TargVOffY += m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowUp);
-					    //changeCursor("up.cur");
 				    } 
 
 				    if (!Triggered)
                     {
 					    m_ScrollSpeed = 0.1f; //not scrolling. Reset speed, set default cursor.
                         CursorManager.INSTANCE.SetCursor(CursorType.Normal);
-					    //changeCursor("auto", true); AKA the default cursor.
 				    } 
                     else
 					    m_ScrollSpeed += 0.005f; //if edge scrolling make the speed increase the longer the mouse is at the edge.
@@ -1391,8 +1444,17 @@ namespace FSO.Client.Rendering.City
                 m_TargVOffX = Math.Max(-135, Math.Min(m_TargVOffX, 138)); //maximum offsets for zoomed camera. Need adjusting for other screen sizes...
                 m_TargVOffY = Math.Max(-100, Math.Min(m_TargVOffY, 103));
             }
-            else
-                m_ZoomProgress += (0 - m_ZoomProgress) / 5.0f; //zoom progress interpolation. Isn't very fixed but it's a nice gradiation.
+            else if (m_Zoomed == TerrainZoomMode.Far && m_LotZoomProgress < 0.3)
+                m_ZoomProgress += (0 - m_ZoomProgress) * (float)(1-Math.Pow(4 / 5.0f, rScale)); //zoom progress interpolation. Isn't very fixed but it's a nice gradiation.
+
+            //lot zoom.
+            if (m_Zoomed == TerrainZoomMode.Lot && m_ZoomProgress > 0.995)
+            {
+                m_LotZoomProgress += (1.0f - m_LotZoomProgress) * (float)(1 - Math.Pow(9 / 10.0f, rScale));
+            }
+            else m_LotZoomProgress += (0 - m_LotZoomProgress) * (float)(1 - Math.Pow(9 / 10.0f, rScale));
+
+            m_WheelZoom += (m_WheelZoomTarg - m_WheelZoom) * (float)(1 - Math.Pow(9 / 10.0f, rScale));
         }
 
         private Texture2D DrawDepth(Effect VertexShader, Effect PixelShader)
@@ -1443,6 +1505,25 @@ namespace FSO.Client.Rendering.City
             m_GraphicsDevice.DepthStencilState = DepthStencilState.Default;
         }
 
+        public float GetIsoScale()
+        {
+            float ResScale = 768.0f / m_ScrHeight; //scales up the vertical height to match that of the target resolution (for the far view)
+            float FisoScale = (float)(Math.Sqrt(0.5 * 0.5 * 2) / 5.10f) * ResScale; // is 5.10 on far zoom
+            float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / (NEAR_ZOOM_SIZE*m_WheelZoom);  // currently set 144 to near zoom
+            float LisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / m_LotZoomSize;  // currently set 144 to near zoom
+
+            float IsoScale = (1 - m_ZoomProgress) * FisoScale + (m_ZoomProgress) * ZisoScale;
+            return (1-m_LotZoomProgress) * IsoScale + m_LotZoomProgress * LisoScale;
+        }
+
+        public float GetFarzoomIsoScale()
+        {
+            float ResScale = 768.0f / m_ScrHeight; //scales up the vertical height to match that of the target resolution (for the far view)
+            float FisoScale = (float)(Math.Sqrt(0.5 * 0.5 * 2) / 5.10f) * ResScale; // is 5.10 on far zoom
+            return FisoScale;
+        }
+
+        private Matrix m_LightMatrix;
         public override void Draw(GraphicsDevice gfx)
         {
             m_GraphicsDevice = gfx;
@@ -1460,12 +1541,8 @@ namespace FSO.Client.Rendering.City
 
             if (RegenData) GenerateAssets(); //if assets are flagged as requiring regeneration, regenerate them!
 
-            float ResScale = 768.0f/m_ScrHeight; //scales up the vertical height to match that of the target resolution (for the far view)
-
-            float FisoScale = (float)(Math.Sqrt(0.5 * 0.5 * 2) / 5.10f) * ResScale; // is 5.10 on far zoom
-		    float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 144f;  // currently set 144 to near zoom
-
-            float IsoScale = (1 - m_ZoomProgress) * FisoScale + (m_ZoomProgress) * ZisoScale;
+            float IsoScale = GetIsoScale();
+            m_LastIsoScale = IsoScale;
 
             float HB = m_ScrWidth * IsoScale;
             float VB = m_ScrHeight * IsoScale;
@@ -1474,12 +1551,6 @@ namespace FSO.Client.Rendering.City
             Matrix ViewMatrix = Matrix.Identity;
             Matrix WorldMatrix = Matrix.Identity;
 
-            Matrix LightView = Matrix.CreateLookAt(m_LightPosition, new Vector3(256, 0, 256), new Vector3(0, 1, 0)); //Create light view - looks from light position to center of mesh.
-            Vector2 pos = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
-            Vector3 LightOff = Vector3.Transform(new Vector3(pos.X, 0, pos.Y), LightView); //finds position in light space of approximate center of camera (to be used for only shadowing near the camera in near view)
-
-            float size = (1 - m_ZoomProgress) * 262 + (m_ZoomProgress * 40); //size of draw window to use for shadowing. 40 is good for near view, it could be less but that wouldn't work correctly on higher ground.
-            Matrix LightProject = Matrix.CreateOrthographicOffCenter(-size + LightOff.X, size + LightOff.X, -size + LightOff.Y, size + LightOff.Y, 0.1f, 524); //create light projection using offsets + size.
 
             ViewMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (float)(1.0 - m_ZoomProgress) / 2, 1)); //makes world flatter in near view. This effect is present in the original, 
             //you just can't notice it as there is no zoom in animation. It also renders in true isometric... but that's an awful idea and makes lots look unusual when placed on flat tiles.
@@ -1490,10 +1561,11 @@ namespace FSO.Client.Rendering.City
 
             VertexShader.CurrentTechnique = VertexShader.Techniques[0];
             VertexShader.Parameters["BaseMatrix"].SetValue((WorldMatrix*ViewMatrix)*ProjectionMatrix);
-            VertexShader.Parameters["LightMatrix"].SetValue((WorldMatrix*LightView)*LightProject);
 
             PixelShader.CurrentTechnique = PixelShader.Techniques[0];
-            PixelShader.Parameters["LightCol"].SetValue(new Vector4(m_TintColor.R/255.0f, m_TintColor.G/255.0f, m_TintColor.B/255.0f, 1));
+            PixelShader.Parameters["LightCol"].SetValue(new Vector4(m_TintColor.R / 255.0f, m_TintColor.G / 255.0f, m_TintColor.B / 255.0f, 1)*1.25f);
+            var lightVec = Vector3.Normalize(m_LightPosition - new Vector3(256, 0, 256));
+            PixelShader.Parameters["LightVec"].SetValue(lightVec);
             PixelShader.Parameters["VertexColorTex"].SetValue(m_VertexColor);
             PixelShader.Parameters["TextureAtlasTex"].SetValue(Atlas);
             PixelShader.Parameters["TransAtlasTex"].SetValue(TransAtlas);
@@ -1507,10 +1579,29 @@ namespace FSO.Client.Rendering.City
 
             if (ShadowsEnabled)
             {
-                ShadowMap = DrawDepth(VertexShader, PixelShader);
-                PixelShader.Parameters["ShadowMap"].SetValue(ShadowMap);
-                PixelShader.Parameters["ShadSize"].SetValue(new Vector2(ShadowMap.Width, ShadowMap.Height));
+                if (--ShadowRegenTimer < 0 || (m_ZoomProgress > 0.1f && m_ZoomProgress < 0.9f))
+                {
+                    Matrix LightView = Matrix.CreateLookAt(m_LightPosition, new Vector3(256, 0, 256), new Vector3(0, 1, 0)); //Create light view - looks from light position to center of mesh.
+                    Vector2 pos = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
+                    Vector3 LightOff = Vector3.Transform(new Vector3(pos.X, 0, pos.Y), LightView); //finds position in light space of approximate center of camera (to be used for only shadowing near the camera in near view)
+
+                    float size = (1 - m_ZoomProgress) * 262 + (m_ZoomProgress * 40); //size of draw window to use for shadowing. 40 is good for near view, it could be less but that wouldn't work correctly on higher ground.
+                    Matrix LightProject = Matrix.CreateOrthographicOffCenter(-size + LightOff.X, size + LightOff.X, -size + LightOff.Y, size + LightOff.Y, 0.1f, 524); //create light projection using offsets + size.
+
+                    m_LightMatrix = (WorldMatrix * LightView) * LightProject;
+                    VertexShader.Parameters["LightMatrix"].SetValue(m_LightMatrix);
+                    ShadowMap = DrawDepth(VertexShader, PixelShader);
+
+                    ShadowRegenTimer = 60;
+                }
+                ShadowMap = ShadowTarget;
+                if (ShadowMap != null)
+                {
+                    PixelShader.Parameters["ShadowMap"].SetValue(ShadowMap);
+                    PixelShader.Parameters["ShadSize"].SetValue(new Vector2(ShadowMap.Width, ShadowMap.Height));
+                }
             }
+            VertexShader.Parameters["LightMatrix"].SetValue(m_LightMatrix);
             m_GraphicsDevice.Clear(Color.Black);
 
 
@@ -1525,11 +1616,18 @@ namespace FSO.Client.Rendering.City
                 VertexShader.CurrentTechnique.Passes[2].Apply();
             }
 
+            try
+            {
             m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_MeshTris);
+            }
+            catch (Exception e)
+            {
+
+            }
 
             m_MovMatrix = ViewMatrix;
 
-            if (!m_Zoomed) DrawHouses(HB); //draw far view house icons
+            if (m_Zoomed == TerrainZoomMode.Far) DrawHouses(HB); //draw far view house icons
 
             m_2DVerts = new ArrayList(); //refresh list for tris under houses
             DrawSprites(HB, VB); //draw near view trees and houses
@@ -1537,6 +1635,14 @@ namespace FSO.Client.Rendering.City
             m_2DVerts = new ArrayList(); //refresh list for spotlights
             DrawSpotlights(HB); //draw far view spotlights
             Draw2DPoly(); //draw spotlights using 2DVert shader
+            Plugin?.Draw(m_Batch);
         }
+    }
+
+    public enum TerrainZoomMode
+    {
+        Far,
+        Near,
+        Lot
     }
 }

@@ -319,7 +319,7 @@ namespace FSO.Client.UI.Controls
         /**
          * Utility to add a +/- button to the slider
          */
-        public UISliderButtonHandler AttachButtons(UIButton decrease, UIButton increase, int change)
+        public UISliderButtonHandler AttachButtons(UIButton decrease, UIButton increase, float change)
         {
             return new UISliderButtonHandler(this, increase, decrease, change);
         }
@@ -333,9 +333,9 @@ namespace FSO.Client.UI.Controls
         private UIButton decrease;
         private UISlider slider;
 
-        public int Change;
+        public float Change;
 
-        public UISliderButtonHandler(UISlider slider, UIButton increase, UIButton decrease, int change)
+        public UISliderButtonHandler(UISlider slider, UIButton increase, UIButton decrease, float change)
         {
             this.slider = slider;
             this.increase = increase;
