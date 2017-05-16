@@ -391,6 +391,10 @@
     <Content Include="sdl2.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Compile Include="Utils\GameLocator\MacOSLocator.cs" />
+    <Content Include="Monogame\MacOS\libxammac.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
@@ -446,13 +450,7 @@
     <Content Include="Monogame\MacOS\MonoGame.Framework.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Monogame\MacOS\MonoMac.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Monogame\MacOS\OpenTK.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Monogame\MacOS\OpenTK.dll.mdb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Monogame\MacOS\Tao.Sdl.dll">

@@ -1,4 +1,4 @@
-![image](http://freeso.org/wp-content/uploads/2016/03/freeso-logo.png)
+![image](http://freeso.org/wp-content/uploads/2016/03/freeso-logo.png?1)
 
 A full reimplementation of The Sims Online, using Monogame. FreeSO aims to be faithful to the original game as well as include quality of life changes such as hardware rendering, Hi-res output and >2 floor houses. 
 
@@ -12,15 +12,18 @@ You can contribute to FreeSO by testing cutting edge features in the latest rele
 * [Getting Started](https://github.com/RHY3756547/FreeSO/wiki)
 * [Coding Standards](https://github.com/RHY3756547/FreeSO/wiki/Coding-standards)
 * [Pull Requests](https://github.com/RHY3756547/FreeSO/pulls): [Open](https://github.com/RHY3756547/FreeSO/pulls)/[Closed](https://github.com/RHY3756547/FreeSO/issues?q=is%3Apr+is%3Aclosed)
-* [Translation](https://github.com/ZackCasey/FSOTranslations)
+* [Translation](http://forum.freeso.org/forums/translations.32/)
 * [Development Forums](http://forum.freeso.org)
 * [Development Blog](http://freeso.org)
 
-Looking for something to do? Check out the issues tagged as [good for new contributors](https://github.com/RHY3756547/FreeSO/labels/good%20for%20new%20contributors) to get started.
+Looking for something to do? Check out the issues tagged as [help needed](https://github.com/RHY3756547/FreeSO/labels/help%20needed) to get started.
+
+Regarding translations, full object and UI translations should currently be released on the forums. An improved system for distribution and organisation will be set up in a month or two. Stay tuned!
 
 ## Prerequisites
 * [Visual Studio 2015](https://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs.aspx)
-* [MonoGame](http://www.monogame.net): Stable or Development Builds
+* [MonoGame](http://www.monogame.net): 3.5 for the iOS and Android VS2015 project types. (optional)
+* [Xamarin for Visual Studio](https://www.xamarin.com/visual-studio): For iOS and Android builds. (optional)
 
 # License
 > This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.

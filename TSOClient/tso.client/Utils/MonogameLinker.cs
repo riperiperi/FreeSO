@@ -39,13 +39,14 @@ namespace FSO.Client.Utils
                         monogameDir = "Monogame/Windows/";
                     }
                 }
-                else if (pid == PlatformID.Unix)
-                {
-                    monogameDir = "Monogame/Linux/";
-                }
-                else if (pid == PlatformID.MacOSX)
+                //Check if MacOS by checkking user directory. Because PlatformID.MacOSX is not true on OS X.
+                else if (Directory.Exists("/Users"))
                 {
                     monogameDir = "Monogame/MacOS/";
+                }
+                else
+                {
+                    monogameDir = "Monogame/Linux/";
                 }
 
                 if (File.Exists("Monogame.Framework.dll")) File.Delete("Monogame.Framework.dll");
