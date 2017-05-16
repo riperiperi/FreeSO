@@ -249,6 +249,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             }
             if (note < 9)
             {
+                // play the note back to the other clients
+                Lobby.Broadcast("Band_Note_Sync", new byte[] { note });
+
                 // check the result
                 if (Song[CurrentNote] == note)
                 {
@@ -265,7 +268,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     {
                         // move on to the next note
                         CurrentNote++;
-                        Lobby.Broadcast("Band_Performance", "");
+                        Lobby.Broadcast("Band_Continue_Performance", "");
                         State = VMEODBandStates.Performance;
                         SetTimer(NOTE_TIMER_DEFAULT);
                     }
@@ -349,7 +352,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             CurrentNote = 0;
             State = VMEODBandStates.Rehearsal;
             CurrentSongLength++;
-            SequenceTimer.Interval = MILLISECONDS_PER_NOTE_IN_SEQUENCE * (CurrentSongLength + 1);
+            SequenceTimer.Interval = MILLISECONDS_PER_NOTE_IN_SEQUENCE * (CurrentSongLength + 2);
             Lobby.Broadcast("Band_Sequence", GetCurrentSequence());
             SequenceTimer.Start();
         }
