@@ -14,8 +14,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         VMEODClient RedPlayerClient;
         VMEODClient BluePlayerClient;
         private int NumberOfPlayers;
-        private int BluePlayerVictories;
-        private int RedPlayerVictories;
         private List<VMEODWarGamePlayerPieces> Players;
         private VMEODWarGamePiece ChosenBluePiece;
         private VMEODWarGamePiece ChosenRedPiece;
@@ -120,9 +118,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             byte remainingRedPieces = (byte)Players[(byte)VMEODWarGamePlayers.Red].Pieces.Count;
 
             // the game is over as one of the players has no more available piece choices
-            if ((remainingBluePieces == 0) || (remainingRedPieces == 0))
+            if ((remainingBluePieces == 0) || (remainingRedPieces == 0)) // can not both be zero, fyi
             {
-                GameOver();
+                WinHandler((remainingBluePieces > remainingRedPieces) ? (short)VMEODWarGamePlayers.Blue : (short)VMEODWarGamePlayers.Red);
             }
             // check to make sure the game isn't a stalemate - both players have the same remaining piece
             else if ((remainingBluePieces == 1) && (remainingRedPieces == 1))
@@ -210,7 +208,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             // blue is defeated
             if (defeatedPlayer == 0)
             {
-                RedPlayerVictories++;
                 Players[defeatedPlayer].Pieces.Remove(ChosenBluePiece);
                 RedPlayerClient.Send("WarGame_Victory", new Byte[] { (byte)ChosenBluePiece.PieceType, (byte)ChosenRedPiece.PieceType });
                 BluePlayerClient.Send("WarGame_Defeat", new Byte[] { (byte)ChosenBluePiece.PieceType, (byte)ChosenRedPiece.PieceType });
@@ -219,7 +216,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             // red is defeated
             else if (defeatedPlayer == 1)
             {
-                BluePlayerVictories++;
                 Players[defeatedPlayer].Pieces.Remove(ChosenRedPiece);
                 BluePlayerClient.Send("WarGame_Victory", new Byte[] { (byte)ChosenBluePiece.PieceType, (byte)ChosenRedPiece.PieceType });
                 RedPlayerClient.Send("WarGame_Defeat", new Byte[] { (byte)ChosenBluePiece.PieceType, (byte)ChosenRedPiece.PieceType });
@@ -242,20 +238,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             newPlayers.Add(new VMEODWarGamePlayerPieces());
             return newPlayers;
         }
-        private void GameOver()
+        private void WinHandler(short winner)
         {
-            short winner = -1;
-            // Determine the winner based on the number of wins. The prim has its own record of wins stored internally
-            if (BluePlayerVictories > RedPlayerVictories)
-                winner = (short)VMEODWarGamePlayers.Blue;
-            else
-                winner = (short)VMEODWarGamePlayers.Red;
-            if (winner > -1)
-            {
-                ControllerClient.SendOBJEvent(new VMEODEvent((short)VMEODWarGameEvents.GameOver, winner));
-                // get new pieces now so a duplicate win can't be executed during server event delay
-                Players = NewGame();
-            }
+            ControllerClient.SendOBJEvent(new VMEODEvent((short)VMEODWarGameEvents.GameOver, winner));
+            // get new pieces now so a duplicate win can't be executed during server event delay
+            Players = NewGame();
         }
     }
     class VMEODWarGamePlayerPieces
