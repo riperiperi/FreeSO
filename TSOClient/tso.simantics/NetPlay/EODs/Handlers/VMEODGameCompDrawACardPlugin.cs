@@ -26,7 +26,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         // constants
         public const string DEFAULT_GAME_TITLE = "Tsomania Carducopia Card Game";
-        public const int MAXIMUM_UNIQUE_CARDS = 100;
+        public const int MAXIMUM_UNIQUE_CARDS = 300;
 
         public VMEODGameCompDrawACardPlugin(VMEODServer server) : base(server)
         {
@@ -107,7 +107,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             });
         }
         /*
-         * When the client connects, the value of temp0 found in TempRegisters[0] determines which interaction is being exceuted on the prim
+         * When the client connects, the value of temp0 found in TempRegisters[0] determines which interaction is being executed on the object
          * Only the item's owner should be able to "Manage Deck"; where TempRegisters[0] == 0
          * @param:client — the VMEODClient sending the connect event
          */
