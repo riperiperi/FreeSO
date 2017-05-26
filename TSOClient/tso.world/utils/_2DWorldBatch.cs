@@ -125,24 +125,25 @@ namespace FSO.LotView.Utils
 
                 switch (i)
                 {
-                    case 4: //World2D.BUFFER_OBJID
+                    case 2: //World2D.BUFFER_OBJID
                         width = 1;
                         height = 1;
                         break;
-                    case 0: //World2D.BUFFER_THUMB
-                    case 10:
+                    case 3: //World2D.BUFFER_THUMB
+                    case 4:
                         width = 1024;
                         height = 1024;
                         break;
-                    case 11:
-                        width = 2304;
-                        height = 2304;
+                    case 5:
+                        width = 576;
+                        height = 576;
                         break;
                 }
                 if (NumBuffers == 2 && i == 1) width = height = 1024; //special case, thumb only. 
+                var depthformat = FSOEnvironment.SoftwareDepth ? DepthFormat.Depth24Stencil8 : DepthFormat.Depth24; //stencil is used for software depth
                 Buffers.Add(
                     PPXDepthEngine.CreateRenderTarget(Device, 1, 0, SurfaceFormats[i], width, height,
-                    (AlwaysDS[i] || (!FSOEnvironment.UseMRT && !FSOEnvironment.SoftwareDepth)) ? DepthFormat.Depth24Stencil8 : DepthFormat.None)
+                    (AlwaysDS[i] || (!FSOEnvironment.UseMRT && !FSOEnvironment.SoftwareDepth)) ? depthformat : DepthFormat.None)
                 );
             }
         }

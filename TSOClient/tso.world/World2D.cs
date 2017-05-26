@@ -25,83 +25,44 @@ namespace FSO.LotView
     public class World2D : IDisposable
     {
         public static SurfaceFormat[] BUFFER_SURFACE_FORMATS = new SurfaceFormat[] {
-            /** Thumbnail buffer **/
-            SurfaceFormat.Color,
-
-            /** Static Object Buffers **/
+            /** Static Buffers **/
             SurfaceFormat.Color,
             SurfaceFormat.Color, //depth, using a 24-bit packed format
-
-            /** Terrain Color **/
-            SurfaceFormat.Color,
 
             /** Object ID buffer **/
             SurfaceFormat.Color,
 
-            /** Floor buffers **/
+            /** Obj thumbnail buffers **/
             SurfaceFormat.Color,
-            SurfaceFormat.Color, //depth
-
-            /** Terrain Depth **/
-            SurfaceFormat.Color,
-
-            /** Wall buffers **/
-            SurfaceFormat.Color,
-            SurfaceFormat.Color, //depth
-
-            //Thumbnail depth
-            SurfaceFormat.Color,
+            SurfaceFormat.Color, //depth, using a 24-bit packed format
 
             /** Lot Thumbnail Buffer **/
             SurfaceFormat.Color
         };
 
         public static bool[] FORMAT_ALWAYS_DEPTHSTENCIL = new bool[] {
-            /** Thumbnail buffer **/
-            true,
-
             /** Static Object Buffers **/
             true,
             false, //depth, using a 24-bit packed format
 
-            /** Terrain Color **/
-            true,
-
             /** Object ID buffer **/
             true,
 
-            /** Floor buffers **/
-            true,
-            false, //depth
-
-            /** Terrain Depth **/
-            false,
-
-            /** Wall buffers **/
-            true,
-            false, //depth
-
             //Thumbnail depth
+            true,
             false,
 
             //lot thumb
             true,
-            false,
         };
 
-        public static readonly int NUM_2D_BUFFERS = 12;
-        public static readonly int BUFFER_THUMB = 0; //used for drawing thumbnails
-        public static readonly int BUFFER_STATIC_OBJECTS_PIXEL = 1;
-        public static readonly int BUFFER_STATIC_OBJECTS_DEPTH = 2;
-        public static readonly int BUFFER_STATIC_TERRAIN = 3;
-        public static readonly int BUFFER_OBJID = 4;
-        public static readonly int BUFFER_FLOOR_PIXEL = 5;
-        public static readonly int BUFFER_FLOOR_DEPTH = 6;
-        public static readonly int BUFFER_STATIC_TERRAIN_DEPTH = 7;
-        public static readonly int BUFFER_WALL_PIXEL = 8;
-        public static readonly int BUFFER_WALL_DEPTH = 9;
-        public static readonly int BUFFER_THUMB_DEPTH = 10;
-        public static readonly int BUFFER_LOTTHUMB = 11;
+        public static readonly int NUM_2D_BUFFERS = 6;
+        public static readonly int BUFFER_STATIC = 0;
+        public static readonly int BUFFER_STATIC_DEPTH = 1;
+        public static readonly int BUFFER_OBJID = 2;
+        public static readonly int BUFFER_THUMB = 3; //used for drawing thumbnails
+        public static readonly int BUFFER_THUMB_DEPTH = 4; //used for drawing thumbnails
+        public static readonly int BUFFER_LOTTHUMB = 5;
 
 
         public static readonly int SCROLL_BUFFER = 512; //resolution to add to render size for scroll reasons
@@ -303,19 +264,24 @@ namespace FSO.LotView
             var oldRotation = state.Rotation;
             var oldLevel = state.Level;
             var oldCutaway = Blueprint.Cutaway;
+            var wCam = (WorldCamera)state.Camera;
+            var oldViewDimensions = wCam.ViewDimensions;
+            //wCam.ViewDimensions = new Vector2(-1, -1);
+            var oldPreciseZoom = state.PreciseZoom;
 
             //full invalidation because we must recalculate all object sprites. slow but necessary!
             state.Zoom = WorldZoom.Far;
             state.Rotation = WorldRotation.TopLeft;
             state.Level = Blueprint.Stories;
+            state.PreciseZoom = 1/4f;
+            state._2D.PreciseZoom = state.PreciseZoom;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
 
             var oldCenter = state.CenterTile;
             state.CenterTile = new Vector2(Blueprint.Width/2, Blueprint.Height/2);
-            state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2(2304 - state.WorldSpace.WorldPxWidth, 2304 - state.WorldSpace.WorldPxHeight) / 2);
+            state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((576 - state.WorldSpace.WorldPxWidth)*4, (576 - state.WorldSpace.WorldPxHeight)*4) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
-            //pxOffset -= 
             state.TempDraw = true;
             Blueprint.Cutaway = new bool[Blueprint.Cutaway.Length];
 
@@ -355,8 +321,10 @@ namespace FSO.LotView
             //return things to normal
             //state.PrepareLighting();
             state.OutsideColor = lastLight;
+            state.PreciseZoom = oldPreciseZoom;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
+            wCam.ViewDimensions = oldViewDimensions;
             state.TempDraw = false;
             state.CenterTile = oldCenter;
 
@@ -582,47 +550,21 @@ namespace FSO.LotView
             if (!drawImmediate)
             {
                 state.PrepareLighting();
-                if (redrawFloor)
+
+                if (redrawStaticObjects || redrawFloor || redrawWall)
                 {
-                    /** Draw archetecture to a texture **/
+                    /** Draw static objects to a texture **/
                     Promise<Texture2D> bufferTexture = null;
                     Promise<Texture2D> depthTexture = null;
-                    using (var buffer = state._2D.WithBuffer(BUFFER_FLOOR_PIXEL, ref bufferTexture, BUFFER_FLOOR_DEPTH, ref depthTexture))
+                    using (var buffer = state._2D.WithBuffer(BUFFER_STATIC, ref bufferTexture, BUFFER_STATIC_DEPTH, ref depthTexture))
                     {
+
                         while (buffer.NextPass())
                         {
                             WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(true);
                             DrawFloorBuf(gd, state, pxOffset);
                             WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(false);
-                        }
-                    }
-                    StaticFloor = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
-                }
-
-                if (redrawWall)
-                {
-                    Promise<Texture2D> bufferTexture = null;
-                    Promise<Texture2D> depthTexture = null;
-                    using (var buffer = state._2D.WithBuffer(BUFFER_WALL_PIXEL, ref bufferTexture, BUFFER_WALL_DEPTH, ref depthTexture))
-                    {
-                        while (buffer.NextPass())
-                        {
                             DrawWallBuf(gd, state, pxOffset);
-                        }
-                    }
-                    StaticWall = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
-                }
-
-                if (redrawStaticObjects)
-                {
-                    /** Draw static objects to a texture **/
-                    Promise<Texture2D> bufferTexture = null;
-                    Promise<Texture2D> depthTexture = null;
-                    using (var buffer = state._2D.WithBuffer(BUFFER_STATIC_OBJECTS_PIXEL, ref bufferTexture, BUFFER_STATIC_OBJECTS_DEPTH, ref depthTexture))
-                    {
-
-                        while (buffer.NextPass())
-                        {
                             DrawObjBuf(gd, state, pxOffset);
                         }
                     }
@@ -698,18 +640,6 @@ namespace FSO.LotView
                 _2d.SetScroll(new Vector2());
                 _2d.Begin(state.Camera);
                 state._2D.PreciseZoom = 1f;
-                if (StaticFloor != null)
-                {
-                    _2d.DrawScrollBuffer(StaticFloor, pxOffset, new Vector3(tileOffset, 0), state);
-                    _2d.Pause();
-                    _2d.Resume();
-                }
-                if (StaticWall != null)
-                {
-                    _2d.DrawScrollBuffer(StaticWall, pxOffset, new Vector3(tileOffset, 0), state);
-                    _2d.Pause();
-                    _2d.Resume();
-                }
                 if (StaticObjects != null)
                 {
                     _2d.DrawScrollBuffer(StaticObjects, pxOffset, new Vector3(tileOffset, 0), state);

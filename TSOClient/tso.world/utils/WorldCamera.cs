@@ -36,7 +36,6 @@ namespace FSO.LotView.Utils
                 m_ViewDirty = true;
             }
         }
-
         private Vector2 _ViewDimensions = new Vector2(-1, -1);
         public Vector2 ViewDimensions
         {
