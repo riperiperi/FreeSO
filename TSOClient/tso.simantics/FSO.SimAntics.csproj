@@ -357,7 +357,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <None Include="gamecompdrawacard.piff" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
