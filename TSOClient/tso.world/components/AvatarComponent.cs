@@ -108,7 +108,7 @@ namespace FSO.LotView.Components
 
         private List<Vector2> CloseLightPositions(Vector3 Position)
         {
-            if (blueprint == null) return null;
+            if (blueprint == null || Room > blueprint.Rooms.Count || Room == 0) return null;
             var room = blueprint.Rooms[Room].Base;
             var lights = blueprint.Light[room].Lights;
             var xy = new Vector2(Position.X, Position.Y);
@@ -144,7 +144,7 @@ namespace FSO.LotView.Components
                 else if ((DisplayFlags & AvatarDisplayFlags.TSOGhost) != 0) col = new Color(255, 255, 255, 64);
 
                 Avatar.LightPositions = (WorldConfig.Current.AdvancedLighting)?CloseLightPositions(Position):null;
-                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, (Room>65532)?Room:blueprint.Rooms[Room].Base, col); 
+                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, (Room>65532 || Room == 0)?Room:blueprint.Rooms[Room].Base, col); 
             }
 
             if (Headline != null && !Headline.IsDisposed)

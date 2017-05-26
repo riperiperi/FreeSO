@@ -20,7 +20,7 @@ namespace FSO.Content.Codecs
     {
         #region IContentCodec<OTF> Members
 
-        public OTFFile Decode(System.IO.Stream stream)
+        public override object GenDecode(System.IO.Stream stream)
         {
             var result = new OTFFile();
             result.Read(stream);

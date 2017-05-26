@@ -70,7 +70,8 @@ namespace FSO.SimAntics.Engine.Utils
                     return context.Thread.TempRegisters[context.Thread.TempRegisters[data]];
                     
                 case VMVariableScope.TreeAdRange: //12
-                    throw new VMSimanticsException("Not implemented...", context);
+                    return 0;
+                    //throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.StackObjectTemp: //13
                     throw new VMSimanticsException("Not implemented...", context); //accesses the stack object's thread and gets its temp...
@@ -146,9 +147,11 @@ namespace FSO.SimAntics.Engine.Utils
                     throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.JobData: //33 jobdata(temp0, temp1), used a few times to test if a person is at work but that isn't relevant for tso...
-                    throw new VMSimanticsException("Should not be used, but if this shows implement an empty shell to return ideal values.", context);
+                    if (!context.VM.TS1) throw new VMSimanticsException("Only valid in TS1.", context);
+                    return Content.Content.Get().Jobs.GetJobData((ushort)context.Thread.TempRegisters[0], context.Thread.TempRegisters[1], data);
 
                 case VMVariableScope.NeighborhoodData: //34
+                    return 0;
                     throw new VMSimanticsException("Should not be used, but if this shows implement an empty shell to return ideal values.", context);
 
                 case VMVariableScope.StackObjectFunction: //35
@@ -774,22 +777,29 @@ namespace FSO.SimAntics.Engine.Utils
         public static Animation GetAnimation(VMStackFrame context, VMAnimationScope scope, ushort id){
 
             STR animTable = null;
+            bool child = ((VMAvatar)context.Caller).GetPersonData(VMPersonDataVariable.PersonsAge) < 18;
 
             switch (scope){
                 case VMAnimationScope.Object:
                     var obj = context.CodeOwner;
                     var anitableID = obj.OBJ.AnimationTableID;
                     animTable = obj.Resource.Get<STR>(anitableID);
-                    if (animTable == null) animTable = obj.Resource.Get<STR>(129);
+                    if (animTable == null) animTable = obj.Resource.Get<STR>((ushort)(child?130:129));
                     break;
                 case VMAnimationScope.Misc:
-                    animTable = context.Global.Resource.Get<STR>(156);
+                    animTable = context.Global.Resource.Get<STR>((ushort)(child ? 157 : 156));
                     break;
                 case VMAnimationScope.PersonStock:
                     animTable = context.Global.Resource.Get<STR>(130);
                     break;
                 case VMAnimationScope.Global:
                     animTable = context.Global.Resource.Get<STR>(128);
+                    break;
+                case VMAnimationScope.StackObject:
+                    var obj2 = context.StackObject.Object;
+                    var anitableID2 = obj2.OBJ.AnimationTableID;
+                    animTable = obj2.Resource.Get<STR>(anitableID2);
+                    if (animTable == null) animTable = obj2.Resource.Get<STR>((ushort)(child ? 130 : 129));
                     break;
             }
 

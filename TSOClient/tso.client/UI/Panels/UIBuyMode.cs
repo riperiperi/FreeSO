@@ -21,6 +21,7 @@ using FSO.SimAntics.Model;
 using FSO.Common;
 using Microsoft.Xna.Framework;
 using FSO.Content;
+using FSO.Content.Interfaces;
 
 namespace FSO.Client.UI.Panels
 {
@@ -342,7 +343,11 @@ namespace FSO.Client.UI.Panels
             if (OldSelection != -1) Catalog.SetActive(OldSelection, false);
             Catalog.SetActive(selection, true);
             BuyItem = LotController.vm.Context.CreateObjectInstance(item.Item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
-            if (BuyItem == null) return; //uh
+            if (BuyItem == null || BuyItem.Objects.Count == 0)
+            {
+                BuyItem = null;
+                return; //uh
+            }
             QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
             QueryPanel.Mode = 1;
             QueryPanel.Tab = 0;

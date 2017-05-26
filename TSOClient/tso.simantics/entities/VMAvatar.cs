@@ -84,15 +84,15 @@ namespace FSO.SimAntics
         public VMAvatarDecoration Decoration = new VMAvatarDecoration();
         public HashSet<string> BoundAppearances = new HashSet<string>();
 
-        private ulong _BodyOutfit;
-        public ulong BodyOutfit
+        private VMOutfitReference _BodyOutfit;
+        public VMOutfitReference BodyOutfit
         {
             set
             {
                 _BodyOutfit = value;
                 if (UseWorld)
                 {
-                    Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get(value);
+                    Avatar.Body = value.GetContent();
                     if (AvatarType == VMAvatarType.Adult || AvatarType == VMAvatarType.Child) Avatar.Handgroup = Avatar.Body;
                 }
             }
@@ -102,15 +102,15 @@ namespace FSO.SimAntics
             }
         }
 
-        private ulong _HeadOutfit;
-        public ulong HeadOutfit
+        private VMOutfitReference _HeadOutfit;
+        public VMOutfitReference HeadOutfit
         {
             set
             {
                 _HeadOutfit = value;
                 if (UseWorld)
                 {
-                    Avatar.Head = (_HeadOutfit == 0) ? null : FSO.Content.Content.Get().AvatarOutfits.Get(value);
+                    Avatar.Head = value.GetContent();
                 }
             }
             get
@@ -250,7 +250,7 @@ namespace FSO.SimAntics
                 else if (type == "dog") AvatarType = VMAvatarType.Dog;
             }
 
-            Avatar = new SimAvatar(FSO.Content.Content.Get().AvatarSkeletons.Get("adult.skel"));
+            Avatar = new SimAvatar(FSO.Content.Content.Get().AvatarSkeletons.Get(data.GetString(0)+".skel"));
             if (UseWorld)
             {
                 switch (AvatarType)
@@ -261,13 +261,12 @@ namespace FSO.SimAntics
                         Avatar.Handgroup = Avatar.Body;
                         break;
                     case VMAvatarType.Cat:
-                        var skel = FSO.Content.Content.Get().AvatarSkeletons.Get("cat.skel");
-                        Avatar = new SimAvatar(skel);
                         Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get("uaa002cat_calico.oft");
                         break;
                     case VMAvatarType.Dog:
-                        Avatar = new SimAvatar(FSO.Content.Content.Get().AvatarSkeletons.Get("dog.skel"));
                         Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get("uaa012dog_scottish.oft"); //;)
+                        break;
+                    case VMAvatarType.Child:
                         break;
                 }
             }
@@ -279,32 +278,38 @@ namespace FSO.SimAntics
 
             try
             {
-                var body = data.GetString(1);
-                var randBody = data.GetString(10);
+                if (context.VM.TS1) {
+                    DefaultSuits.Daywear = new VMOutfitReference(data, false);
+                    HeadOutfit = new VMOutfitReference(data, true);
+                    BodyOutfit = DefaultSuits.Daywear;
+                } else { 
+                    var body = data.GetString(1);
+                    var randBody = data.GetString(10);
 
-                if (randBody != "")
-                {
-                    var bodySpl = randBody.Split(';');
-                    DefaultSuits.Daywear = Convert.ToUInt64(bodySpl[context.NextRandom((ulong)bodySpl.Length - 1)], 16);
-                }
-                else if (body != "")
-                {
-                    DefaultSuits.Daywear = Convert.ToUInt64(body, 16);
-                }
+                    if (randBody != "")
+                    {
+                        var bodySpl = randBody.Split(';');
+                        DefaultSuits.Daywear = VMOutfitReference.Parse(bodySpl[context.NextRandom((ulong)bodySpl.Length - 1)], context.VM.TS1);
+                    }
+                    else if (body != "")
+                    {
+                        DefaultSuits.Daywear = VMOutfitReference.Parse(body, context.VM.TS1);
+                    }
 
-                BodyOutfit = DefaultSuits.Daywear;
+                    BodyOutfit = DefaultSuits.Daywear;
 
-                var head = data.GetString(2);
-                var randHead = data.GetString(9);
+                    var head = data.GetString(2);
+                    var randHead = data.GetString(9);
 
-                if (randHead != "")
-                {
-                    var headSpl = randHead.Split(';');
-                    HeadOutfit = Convert.ToUInt64(headSpl[context.NextRandom((ulong)headSpl.Length - 1)], 16);
-                }
-                else if (head != "")
-                {
-                    HeadOutfit = Convert.ToUInt64(head, 16);
+                    if (randHead != "")
+                    {
+                        var headSpl = randHead.Split(';');
+                        HeadOutfit = VMOutfitReference.Parse(headSpl[context.NextRandom((ulong)headSpl.Length - 1)], context.VM.TS1);
+                    }
+                    else if (head != "")
+                    {
+                        HeadOutfit = VMOutfitReference.Parse(head, context.VM.TS1);
+                    }
                 }
             }
             catch
@@ -332,7 +337,7 @@ namespace FSO.SimAntics
             PersonData[(int)VMPersonDataVariable.PersonsAge] = Convert.ToInt16(data.GetString(13));
 
             var skinTone = data.GetString(14);
-            if (skinTone.Equals("lgt", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Light;
+            if (skinTone.Equals("lgt", StringComparison.InvariantCultureIgnoreCase) || context.VM.TS1) SkinTone = AppearanceType.Light;
             else if (skinTone.Equals("med", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Medium;
             else if (skinTone.Equals("drk", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Dark;
         }
@@ -534,7 +539,7 @@ namespace FSO.SimAntics
                         }
                     }
                 }
-                var status = (VM.UseWorld) ? Animator.RenderFrame(avatar.Avatar, state.Anim, (int)state.CurrentFrame, state.CurrentFrame % 1f, state.Weight / totalWeight) :
+                var status = //(VM.UseWorld) ? Animator.RenderFrame(avatar.Avatar, state.Anim, (int)state.CurrentFrame, state.CurrentFrame % 1f, state.Weight / totalWeight) :
                                 Animator.SilentFrameProgress(avatar.Avatar, state.Anim, (int)state.CurrentFrame);
                 if (status != AnimationStatus.IN_PROGRESS)
                 {
@@ -550,8 +555,9 @@ namespace FSO.SimAntics
 
             if (avatar.CarryAnimationState != null)
             {
-                var status = (VM.UseWorld) ? Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame, 0.0f, 1f)
-                    : Animator.SilentFrameProgress(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame); //currently don't advance frames... I don't think any of them are animated anyways.
+                var status = //(VM.UseWorld) ? Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame, 0.0f, 1f)
+                    //: 
+                    Animator.SilentFrameProgress(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame); //currently don't advance frames... I don't think any of them are animated anyways.
             }
 
             for (int i = 0; i < 16; i++)
@@ -941,6 +947,7 @@ namespace FSO.SimAntics
             var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
             var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
 
+            if (Appearance == null) return null;
             var ico = FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
 
             //todo: better dispose handling for these icons
@@ -1056,15 +1063,15 @@ namespace FSO.SimAntics
 
     public class VMAvatarDefaultSuits : VMSerializable
     {
-        public ulong Daywear;
-        public ulong Swimwear;
-        public ulong Sleepwear;
+        public VMOutfitReference Daywear;
+        public VMOutfitReference Swimwear;
+        public VMOutfitReference Sleepwear;
 
         public VMAvatarDefaultSuits(bool female)
         {
-            Daywear = 0x24C0000000D;
-            Swimwear = (ulong)((female) ? 0x620000000D : 0x5470000000D);
-            Sleepwear = (ulong)((female) ? 0x5150000000D : 0x5440000000D);
+            Daywear = new VMOutfitReference(0x24C0000000D);
+            Swimwear = new VMOutfitReference((ulong)((female) ? 0x620000000D : 0x5470000000D));
+            Sleepwear = new VMOutfitReference((ulong)((female) ? 0x5150000000D : 0x5440000000D));
         }
 
         public VMAvatarDefaultSuits(BinaryReader reader)
@@ -1074,16 +1081,16 @@ namespace FSO.SimAntics
 
         public void SerializeInto(BinaryWriter writer)
         {
-            writer.Write(Daywear);
-            writer.Write(Swimwear);
-            writer.Write(Sleepwear);
+            Daywear.SerializeInto(writer);
+            Swimwear.SerializeInto(writer);
+            Sleepwear.SerializeInto(writer);
         }
 
         public void Deserialize(BinaryReader reader)
         {
-            Daywear = reader.ReadUInt64();
-            Swimwear = reader.ReadUInt64();
-            Sleepwear = reader.ReadUInt64();
+            Daywear = new VMOutfitReference(reader);
+            Swimwear = new VMOutfitReference(reader);
+            Sleepwear = new VMOutfitReference(reader);
         }
     }
 

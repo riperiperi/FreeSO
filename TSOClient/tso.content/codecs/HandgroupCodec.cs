@@ -18,7 +18,7 @@ namespace FSO.Content.Codecs
     {
         #region IContentCodec<Binding> Members
 
-        public HandGroup Decode(Stream stream)
+        public override object GenDecode(Stream stream)
         {
             HandGroup Hag = new HandGroup();
             Hag.Read(stream);

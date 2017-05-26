@@ -12,6 +12,7 @@ using System.IO;
 using FSO.Common.Utils;
 using FSO.Common.Content;
 using FSO.Files.Utils;
+using FSO.Files.Formats.IFF.Chunks;
 
 namespace FSO.Vitaboy
 {
@@ -33,6 +34,11 @@ namespace FSO.Vitaboy
         public uint HandGroup;
         public uint Region;
 
+        public string TS1AppearanceID;
+        public string TS1TextureID;
+        public HandGroup LiteralHandgroup;
+
+
         /// <summary>
         /// Gets the ContentID for the appearances referenced by this Outfit.
         /// </summary>
@@ -40,6 +46,7 @@ namespace FSO.Vitaboy
         /// <returns>A ContentID instance.</returns>
         public ContentID GetAppearance(AppearanceType type)
         {
+            if (TS1AppearanceID != null) return new ContentID(TS1AppearanceID);
             switch (type)
             {
                 case AppearanceType.Light:
@@ -87,5 +94,49 @@ namespace FSO.Vitaboy
             }
         }
 
+        public void ReadHead(STR bodyStrings)
+        {
+            TS1AppearanceID = ToApr(bodyStrings.GetString(2));
+            TS1TextureID = ToTex(bodyStrings.GetString(2));
+        }
+
+        public void Read(STR bodyStrings)
+        {
+            TS1AppearanceID = ToApr(bodyStrings.GetString(1));
+            TS1TextureID = ToTex(bodyStrings.GetString(1));
+
+            LiteralHandgroup = new HandGroup()
+            {
+                TS1HandSet = true,
+                LightSkin = new HandSet()
+                {
+                    LeftHand = new Hand()
+                    {
+                        Idle = new Gesture() { Name = ToApr(bodyStrings.GetString(17)), TexName = ToTex(bodyStrings.GetString(17)) },
+                        Pointing = new Gesture() { Name = ToApr(bodyStrings.GetString(19)), TexName = ToTex(bodyStrings.GetString(19)) },
+                        Fist = new Gesture() { Name = ToApr(bodyStrings.GetString(21)), TexName = ToTex(bodyStrings.GetString(21)) }
+                    },
+                    RightHand = new Hand()
+                    {
+                        Idle = new Gesture() { Name = ToApr(bodyStrings.GetString(18)), TexName = ToTex(bodyStrings.GetString(18)) },
+                        Pointing = new Gesture() { Name = ToApr(bodyStrings.GetString(20)), TexName = ToTex(bodyStrings.GetString(20)) },
+                        Fist = new Gesture() { Name = ToApr(bodyStrings.GetString(22)), TexName = ToTex(bodyStrings.GetString(22)) }
+                    }
+                }
+            };
+        }
+
+        private string ToApr(string input)
+        {
+            return new string(input.TakeWhile(x => x != ',').ToArray()) + ".apr";
+        }
+
+        private string ToTex(string input)
+        {
+            //assume there is one texture bound to the appearance
+            var eqIdx = input.IndexOf('=');
+            if (eqIdx == -1) return null;
+            return input.Substring(eqIdx + 1);
+        }
     }
 }

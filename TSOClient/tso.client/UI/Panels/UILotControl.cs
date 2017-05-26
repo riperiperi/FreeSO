@@ -575,7 +575,7 @@ namespace FSO.Client.UI.Panels
         {
             base.Update(state);
 
-            if (!vm.Ready) return;
+            if (!vm.Ready || vm.Context.Architecture == null) return;
 
             Cheats.Update(state);
             AvatarDS.Update();

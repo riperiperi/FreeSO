@@ -21,6 +21,9 @@ namespace FSO.SimAntics.Primitives
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
+            //if we already have some action, do nothing.
+            if (context.Caller.Thread.Queue.Any(x => x.Mode != VMQueueMode.Idle)) return VMPrimitiveExitCode.GOTO_TRUE;
+
             var ents = new List<VMEntity>(context.VM.Entities);
             var processed = new HashSet<short>();
             var pos1 = context.Caller.Position;
@@ -52,10 +55,16 @@ namespace FSO.SimAntics.Primitives
                         //LINEAR INTERPOLATE MIN SCORE TO MAX, using motive data of caller
                         //MAX is when motive is the lowest.
                         //can be in reverse too!
-                        var myMotive = Math.Max((short)0, ((VMAvatar)context.Caller).GetMotiveData((VMMotive)i)); //below mid motives causes max atten right now.
+                        var myMotive = ((VMAvatar)context.Caller).GetMotiveData((VMMotive)i);
 
-                        int interpScore = (myMotive*motiveScore.EffectRangeMinimum + (100-myMotive)*(motiveScore.EffectRangeMinimum+motiveScore.EffectRangeMaximum)) / 100;
-                        if (interpScore > baseScore) baseScore = interpScore;
+                        var rangeScore = motiveScore.EffectRangeMinimum + motiveScore.EffectRangeMaximum - myMotive; //0 at max, EffectRangeMaximum at minimum.
+                        if (motiveScore.EffectRangeMaximum > 0) rangeScore = Math.Max(0, Math.Min(motiveScore.EffectRangeMaximum, rangeScore)); //enforce range
+                        else rangeScore = Math.Max(motiveScore.EffectRangeMaximum, Math.Max(0, rangeScore)); //also for negative
+                        //todo: personality ads add values 0-100 for their given personality. makes things like viewing flamingo much more common.
+                        baseScore += rangeScore;
+
+                        //int interpScore = (myMotive*motiveScore.EffectRangeMinimum + (100-myMotive)*(motiveScore.EffectRangeMinimum+motiveScore.EffectRangeMaximum)) / 100;
+                        //if (interpScore > baseScore) baseScore = interpScore;
                     }
                     float atten = (item.Entry.AttenuationCode == 0) ? item.Entry.AttenuationValue : TTAB.AttenuationValues[item.Entry.AttenuationCode];
                     int attenScore = (int)Math.Max(0, baseScore * (1f - (distance * atten)));
@@ -65,6 +74,10 @@ namespace FSO.SimAntics.Primitives
                         bestMyScore = attenScore;
                         bestMyAction = item;
                     }
+
+                    //TODO: Select from 4 best candidates
+                    //TODO: Lockout interactions that have been used before for a few sim hours (in ts1 ticks. same # of ticks for tso probably)
+                    //TODO: special logic for socials? ts1 has "friendship threshold" as 50
                 }
 
                 if (bestMyAction != null && bestMyScore > bestScore)

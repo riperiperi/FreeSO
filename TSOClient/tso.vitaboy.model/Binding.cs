@@ -24,9 +24,17 @@ namespace FSO.Vitaboy
         public uint MeshFileID;
         public uint MeshTypeID;
 
+        public string MeshName; //bmd
+        public string TextureName;
+
         public uint TextureGroupID;
         public uint TextureFileID;
         public uint TextureTypeID;
+
+        public Binding TS1Copy()
+        {
+            return new Binding() { MeshName = this.MeshName, TextureName = this.TextureName };
+        }
 
         /// <summary>
         /// Reads a binding from a stream.

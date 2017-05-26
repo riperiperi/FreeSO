@@ -26,8 +26,9 @@ namespace FSO.SimAntics.Engine.Primitives
             var avatar = (VMAvatar)context.Caller;
 
             Animation animation = null;
-
-            if (operand.AnimationID == 0)
+            var id = (operand.IDFromParam) ? (ushort)(context.Args[operand.AnimationID]) : operand.AnimationID;
+            
+            if (id == 0)
             { //reset
                 avatar.Animations.Clear();
                 var posture = avatar.GetPersonData(VMPersonDataVariable.Posture);
@@ -48,8 +49,9 @@ namespace FSO.SimAntics.Engine.Primitives
                 else avatar.CarryAnimationState = null;
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
-
-            animation = VMMemory.GetAnimation(context, operand.Source, operand.AnimationID);
+            var source = operand.Source;
+            if (operand.IDFromParam && source == VMAnimationScope.Object) source = VMAnimationScope.StackObject; //fixes MM rollercoaster
+            animation = VMMemory.GetAnimation(context, source, id);
             if (animation == null){
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
@@ -172,6 +174,19 @@ namespace FSO.SimAntics.Engine.Primitives
             {
                 if (value) Flags |= 2;
                 else Flags &= unchecked((byte)~2);
+            }
+        }
+
+        public bool IDFromParam
+        {
+            get
+            {
+                return (Flags & 4) == 4;
+            }
+            set
+            {
+                if (value) Flags |= 4;
+                else Flags &= unchecked((byte)~4);
             }
         }
 

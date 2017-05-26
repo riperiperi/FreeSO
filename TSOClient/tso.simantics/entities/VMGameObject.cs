@@ -352,6 +352,7 @@ namespace FSO.SimAntics
             if (Position == LotTilePos.OUT_OF_WORLD) return;
 
             var arch = context.Architecture;
+            var exclusive = GetValue(VMStackObjectVariable.ExclusivePlacementFlags);
             if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
             { //if wall or door, attempt to place style on wall
                 var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
@@ -361,7 +362,7 @@ namespace FSO.SimAntics
                 if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir + 2) % 4, arch, 0);
                 if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir + 3) % 4, arch, 0);
             }
-            SetWallUse(arch, false);
+            SetWallUse(arch, false, ((exclusive & 2) > 0));
             if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, false);
             base.PrePositionChange(context);
         }
@@ -433,7 +434,8 @@ namespace FSO.SimAntics
                 if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir + 2) % 4, arch, Object.OBJ.WallStyle);
                 if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir + 3) % 4, arch, Object.OBJ.WallStyle);
             }
-            SetWallUse(arch, true);
+            var exclusive = GetValue(VMStackObjectVariable.ExclusivePlacementFlags);
+            SetWallUse(arch, true, ((exclusive & 2) > 0));
             if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, true);
 
             if (EntryPoints[8].ActionFunction != 0) UpdateDynamicMultitile(context);

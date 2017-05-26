@@ -50,7 +50,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 {
                     var compressionCode = io.ReadByte();
                     if (compressionCode != 1) throw new Exception("hey what!!");
-                    iop = new TTABFieldEncode(io); //haven't guaranteed that this works, since none of the objects in the test lot use it.
+                    iop = new IffFieldEncode(io); //haven't guaranteed that this works, since none of the objects in the test lot use it.
                 }
                 for (int i = 0; i < Interactions.Length; i++)
                 {
@@ -138,7 +138,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         }
     }
 
-    abstract class IOProxy
+    public abstract class IOProxy
     {
         public abstract ushort ReadUInt16();
         public abstract short ReadInt16();
@@ -162,96 +162,6 @@ namespace FSO.Files.Formats.IFF.Chunks
         public override float ReadFloat() { return io.ReadFloat(); }
 
         public TTABNormal(IoBuffer io) : base(io) { }
-    }
-
-    /// <summary>
-    /// Used to read values from field encoded stream.
-    /// </summary>
-    class TTABFieldEncode : IOProxy
-    {
-        private byte bitPos = 0;
-        private byte curByte = 0;
-        static byte[] widths = { 5, 8, 13, 16 };
-        static byte[] widths2 = { 6, 11, 21, 32 };
-
-        public void setBytePos(int n)
-        {
-            io.Seek(SeekOrigin.Begin, n);
-            curByte = io.ReadByte();
-            bitPos = 0;
-        }
-
-        public override ushort ReadUInt16() 
-        {
-            return (ushort)ReadField(false);
-        }
-
-        public override short ReadInt16()
-        {
-            return (short)ReadField(false);
-        }
-
-        public override int ReadInt32()
-        {
-            return (int)ReadField(true);
-        }
-
-        public override uint ReadUInt32()
-        {
-            return (uint)ReadField(true);
-        }
-
-        public override float ReadFloat()
-        {
-            return (float)ReadField(true);
-            //this is incredibly wrong
-        }
-
-        private long ReadField(bool big)
-        {
-            if (ReadBit() == 0) return 0;
-
-            uint code = ReadBits(2);
-            byte width = (big)?widths2[code]:widths[code];
-            long value = ReadBits(width);
-            value |= -(value & (1 << (width-1)));
-
-            return value;
-        }
-
-        private uint ReadBits(int n)
-        {
-            uint total = 0;
-            for (int i = 0; i < n; i++)
-            {
-                total += (uint)(ReadBit() << ((n - i)-1));
-            }
-            return total;
-        }
-
-        private byte ReadBit()
-        {
-            byte result = (byte)((curByte & (1 << (7 - bitPos))) >> (7 - bitPos));
-            if (++bitPos > 7)
-            {
-                bitPos = 0;
-                try
-                {
-                    curByte = io.ReadByte();
-                }
-                catch (Exception)
-                {
-                    curByte = 0; //no more data, read 0
-                }
-            }
-            return result;
-        }
-
-        public TTABFieldEncode(IoBuffer io) : base(io) 
-        {
-            curByte = io.ReadByte();
-            bitPos = 0;
-        }
     }
 
     /// <summary>

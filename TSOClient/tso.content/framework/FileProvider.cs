@@ -97,6 +97,20 @@ namespace FSO.Content.Framework
             }
         }
 
+        public T ThrowawayGet(string name)
+        {
+            if (EntriesByName.ContainsKey(name))
+            {
+                var fullPath = ContentManager.GetPath(EntriesByName[name]);
+                using (var reader = File.OpenRead(fullPath))
+                {
+                    var item = Codec.Decode(reader);
+                    return item;
+                }
+            }
+            return default(T);
+        }
+
         #region IContentProvider<T> Members
 
         public T Get(ulong id)
@@ -110,6 +124,11 @@ namespace FSO.Content.Framework
         }
 
         public List<IContentReference<T>> List()
+        {
+            throw new NotImplementedException();
+        }
+
+        public T Get(ContentID id)
         {
             throw new NotImplementedException();
         }
@@ -137,6 +156,10 @@ namespace FSO.Content.Framework
             return this.Provider.Get(Name);
         }
 
+        public object GetThrowawayGeneric()
+        {
+            return this.Provider.ThrowawayGet(Name);
+        }
 
         public object GetGeneric()
         {

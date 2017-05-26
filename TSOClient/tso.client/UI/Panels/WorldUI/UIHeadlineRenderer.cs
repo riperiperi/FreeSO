@@ -106,6 +106,28 @@ namespace FSO.Client.UI.Panels.WorldUI
             Invalidated = true;
         }
 
+        public string SkillString;
+        public string SpeedString;
+
+        public int SkillValue = -1;
+        public int SpeedValue = -1;
+
+        public void ProcessSkill()
+        {
+            var avatar = (VMAvatar)Headline.Target;
+            var skillValue = avatar.GetPersonData((VMPersonDataVariable)(avatar.GetPersonData(VMPersonDataVariable.SkillEfficiency) >> 8));
+            var speedValue = (avatar.GetPersonData(VMPersonDataVariable.SkillEfficiency) & 0xFF);
+
+            if (skillValue != SkillValue || SpeedValue != speedValue)
+            {
+                Invalidated = true;
+                SkillValue = skillValue;
+                SpeedValue = speedValue;
+                SkillString = "Skill: " + (SkillValue / 100.0).ToString("F2");
+                SpeedString = "Speed: " + SpeedValue + "%";
+            }
+        }
+
         public override Texture2D DrawFrame(World world)
         { 
             if (LastZoom != world.State.Zoom || Texture == null)
@@ -118,9 +140,10 @@ namespace FSO.Client.UI.Panels.WorldUI
             var GD = GameFacade.GraphicsDevice;
             var batch = GameFacade.Screens.SpriteBatch;
 
-            if (Headline.Anim % 15 == 0 && Sprite != null && Sprite.Frames.Count > 3) Invalidated = true;
+            if (DrawSkill) ProcessSkill();
+            else if (Headline.Anim % 15 == 0 && Sprite != null && Sprite.Frames.Count > 3) Invalidated = true;
 
-            if (Invalidated || DrawSkill) //todo: logic for drawing skills less often
+            if (Invalidated) //todo: logic for drawing skills less often
             {
                 GD.SetRenderTarget(Texture);
                 GD.Clear(Color.Transparent);
@@ -156,16 +179,11 @@ namespace FSO.Client.UI.Panels.WorldUI
                     batch.Draw(WhitePx, new Rectangle(88, 4, 71, 41), new Color(92, 92, 92));
                     var font = GameFacade.MainFont.GetNearest(14).Font;
 
-                    var avatar = (VMAvatar)Headline.Target;
+                    Vector2 fontOrigin = font.MeasureString(SkillString) / 2;
+                    batch.DrawString(font, SkillString, new Vector2(88 + 35, 15) - fontOrigin * 0.60f, new Color(255, 249, 157), 0, new Vector2(), 0.60f, SpriteEffects.None, 0);
 
-                    string skillString = "Skill: " + (avatar.GetPersonData((VMPersonDataVariable)
-                        (avatar.GetPersonData(VMPersonDataVariable.SkillEfficiency) >> 8)) / 100.0).ToString("F2");
-                    Vector2 fontOrigin = font.MeasureString(skillString) / 2;
-                    batch.DrawString(font, skillString, new Vector2(88 + 35, 15) - fontOrigin * 0.60f, new Color(255, 249, 157), 0, new Vector2(), 0.60f, SpriteEffects.None, 0);
-
-                    skillString = "Speed: " + (avatar.GetPersonData(VMPersonDataVariable.SkillEfficiency) & 0xFF) + "%";
-                    fontOrigin = font.MeasureString(skillString) / 2;
-                    batch.DrawString(font, skillString, new Vector2(88 + 35, 34) - fontOrigin * 0.60f, new Color(255, 249, 157), 0, new Vector2(), 0.60f, SpriteEffects.None, 0);
+                    fontOrigin = font.MeasureString(SpeedString) / 2;
+                    batch.DrawString(font, SpeedString, new Vector2(88 + 35, 34) - fontOrigin * 0.60f, new Color(255, 249, 157), 0, new Vector2(), 0.60f, SpriteEffects.None, 0);
                 }
 
                 batch.End();

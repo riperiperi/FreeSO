@@ -56,6 +56,15 @@ namespace FSO.Client.UI.Screens
             HITVM.Get().PlaySoundEvent(UIMusic.None);
             GlobalSettings.Default.Save();
 
+            if (Content.Content.Get().TS1)
+            {
+                //just load a house immediately for testing purposes.
+                GameThread.NextUpdate(x =>
+                {
+                    GameFacade.Controller.EnterSandboxMode(Path.Combine(Content.Content.Get().TS1BasePath, "UserData/Houses/House77.iff"), false);
+                });
+            }
+
             Background = new UISetupBackground();
 
             /** Client version **/
@@ -248,10 +257,8 @@ namespace FSO.Client.UI.Screens
 
         void gameplayButton_OnButtonClick(UIElement button)
         {
-            UIAlertOptions Options = new UIAlertOptions();
-            Options.Message = "Sandbox Mode will be implemented in a future version.";
-            Options.Title = GameFacade.Strings.GetString("210", "40");
-            UI.Framework.UIScreen.GlobalShowAlert(Options, true);
+            GameFacade.Controller.EnterSandboxMode("Content/Blueprints/empty_lot_fso.xml", false);
+            return;
         }
 
         public override void Draw(UISpriteBatch batch)

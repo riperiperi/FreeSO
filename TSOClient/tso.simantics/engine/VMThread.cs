@@ -575,6 +575,7 @@ namespace FSO.SimAntics.Engine
                 if (interaction.Callback != null) interaction.Callback.Run(Entity);
                 if (Queue.Count > 0) Queue.RemoveAt(0);
                 ContinueExecution = true; //continue where the Allow Push idle left off
+                result = VMPrimitiveExitCode.CONTINUE;
             }
             if (Stack.Count > 0)
             {
@@ -707,7 +708,7 @@ namespace FSO.SimAntics.Engine
                     }
                 }
 
-                if (index > ActiveQueueBlock && interaction.Mode == Engine.VMQueueMode.Normal)
+                if ((index > ActiveQueueBlock || Stack.LastOrDefault()?.ActionTree == false) && interaction.Mode == Engine.VMQueueMode.Normal)
                 {
                     Queue.Remove(interaction);
                 }

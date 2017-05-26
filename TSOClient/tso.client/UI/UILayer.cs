@@ -285,6 +285,7 @@ namespace FSO.Client.UI
             {
                 ((UIScreen)currentScreen).OnHide();
                 mainUI.Remove(currentScreen);
+                m_Screens.Remove(currentScreen);
             }
         }
 

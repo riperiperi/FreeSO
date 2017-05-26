@@ -905,9 +905,9 @@ namespace FSO.Server.Servers.Lot.Domain
             state.Name = avatar.name;
             state.PersistID = avatar.avatar_id;
             state.DefaultSuits = new SimAntics.VMAvatarDefaultSuits(avatar.gender == DbAvatarGender.female);
-            state.DefaultSuits.Daywear = avatar.body;
-            state.DefaultSuits.Swimwear = avatar.body_swimwear;
-            state.DefaultSuits.Sleepwear = avatar.body_sleepwear;
+            state.DefaultSuits.Daywear.ID = avatar.body;
+            state.DefaultSuits.Swimwear.ID = avatar.body_swimwear;
+            state.DefaultSuits.Sleepwear.ID = avatar.body_sleepwear;
             state.BodyOutfit = (avatar.body_current == 0)?avatar.body:avatar.body_current;
             state.HeadOutfit = avatar.head;
             state.Gender = (short)avatar.gender;
@@ -1004,9 +1004,9 @@ namespace FSO.Server.Servers.Lot.Domain
         public DbAvatar StateToDb(VMNetAvatarPersistState avatar)
         {
             var state = new DbAvatar();
-            state.body = avatar.DefaultSuits.Daywear;
-            state.body_sleepwear = avatar.DefaultSuits.Sleepwear;
-            state.body_swimwear = avatar.DefaultSuits.Swimwear;
+            state.body = avatar.DefaultSuits.Daywear.ID;
+            state.body_sleepwear = avatar.DefaultSuits.Sleepwear.ID;
+            state.body_swimwear = avatar.DefaultSuits.Swimwear.ID;
             state.body_current = avatar.BodyOutfit;
 
             state.skilllock = (byte)avatar.SkillLock;

@@ -935,7 +935,7 @@ namespace FSO.SimAntics
                     }
                     else
                     {
-                        if ((placeFlags & VMPlacementFlags.OnFloor) == 0 && 
+                        if (this is VMGameObject && (placeFlags & VMPlacementFlags.OnFloor) == 0 && 
                             ((Object.OBJ.LevelOffset == 0) || (placeFlags & VMPlacementFlags.InAir) == 0)) return VMPlacementError.NotAllowedOnFloor;
                     }
                 }
@@ -958,7 +958,8 @@ namespace FSO.SimAntics
             if (((int)placeFlags & rotPart) != ((int)placeFlags & 15)) return VMPlacementError.MustBeAgainstWall; //walls required are not there in this configuration
 
             //walls that we are attaching to must not be in use!
-            if (checkUnused && ((int)placeFlags & useRotPart) > 0) return VMPlacementError.MustBeAgainstUnusedWall;
+            var exclusive = GetValue(VMStackObjectVariable.ExclusivePlacementFlags);
+            if ((exclusive & 2) > 0 && checkUnused && ((int)placeFlags & useRotPart) > 0) return VMPlacementError.MustBeAgainstUnusedWall;
 
             if (((int)placeFlags & (rotPart << 8)) > 0) return VMPlacementError.CantBeThroughWall; //walls not allowed are there in this configuration
             
@@ -971,15 +972,17 @@ namespace FSO.SimAntics
             return rotPart;
         }
 
-        internal void SetWallUse(VMArchitecture arch, bool set)
+        internal void SetWallUse(VMArchitecture arch, bool set, bool exclusive)
         {
             var wall = arch.GetWall(Position.TileX, Position.TileY, Position.Level);
 
             var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
-            int rotate = (8-(DirectionToWallOff(Direction) + 1)) % 4;
-            byte rotPart = (byte)RotateWallSegs((WallSegments)((int)placeFlags%15), rotate);
+            int rotate = (8 - (DirectionToWallOff(Direction) + 1)) % 4;
+            byte rotPart = (byte)RotateWallSegs((WallSegments)((int)placeFlags % 15), rotate);
 
-            var mainSegs = (WallSegments)RotateWallSegs(wall.Segments, (4-rotate)%4);
+            if (rotPart == 0) return;
+
+            var mainSegs = (WallSegments)RotateWallSegs(wall.Segments, (4 - rotate) % 4);
             var wallAdj = (VMWallAdjacencyFlags)0; //wall adjacency uses a weird bit order. TODO: Wall in front of left/right (used by stairs)
             if ((mainSegs & WallSegments.TopLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnLeft;
             if ((mainSegs & WallSegments.TopRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallInFront;
@@ -988,14 +991,15 @@ namespace FSO.SimAntics
 
             SetValue(VMStackObjectVariable.WallAdjacencyFlags, (short)wallAdj);
 
-            if (rotPart == 0) return;
+            if (exclusive)
+            {
+                if (UseWorld) ((ObjectComponent)WorldUI).AdjacentWall = (WallSegments)rotPart;
 
-            if (UseWorld) ((ObjectComponent)WorldUI).AdjacentWall = (WallSegments)rotPart;
+                if (set) wall.OccupiedWalls |= (WallSegments)rotPart;
+                else wall.OccupiedWalls &= (WallSegments)~rotPart;
 
-            if (set) wall.OccupiedWalls |= (WallSegments)rotPart;
-            else wall.OccupiedWalls &= (WallSegments)~rotPart;
-
-            arch.SetWall(Position.TileX, Position.TileY, Position.Level, wall);
+                arch.SetWall(Position.TileX, Position.TileY, Position.Level, wall);
+            }
         }
 
         public void Delete(bool cleanupAll, VMContext context)

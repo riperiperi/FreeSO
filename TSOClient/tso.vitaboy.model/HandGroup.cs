@@ -20,6 +20,7 @@ namespace FSO.Vitaboy
     public class HandGroup
     {
         private uint m_Version;
+        public bool TS1HandSet;
         public HandSet LightSkin = new HandSet();
         public HandSet MediumSkin = new HandSet();
         public HandSet DarkSkin = new HandSet();
@@ -108,6 +109,8 @@ namespace FSO.Vitaboy
     {
         public uint FileID;
         public uint TypeID;
+        public string Name;
+        public string TexName;
 
         public ContentID ID
         {

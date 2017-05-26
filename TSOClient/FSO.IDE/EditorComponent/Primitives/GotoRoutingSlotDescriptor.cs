@@ -32,7 +32,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             {
                 case VMSlotScope.Global:
                     var gslots = scope.GetResource<STR>(257, ScopeSource.Global);
-                    result.Append(gslots.GetString(op.Data));
+                    result.Append(gslots?.GetString(op.Data) ?? ("Global slot " + op.Data));
                     break;
                 case VMSlotScope.Literal:
                     var slotNs = scope.GetResource<STR>(257, ScopeSource.Private);

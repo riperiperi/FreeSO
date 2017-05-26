@@ -74,10 +74,12 @@
     <Compile Include="Animation.cs" />
     <Compile Include="Appearance.cs" />
     <Compile Include="AppearanceType.cs" />
+    <Compile Include="BCF.cs" />
     <Compile Include="Binding.cs" />
     <Compile Include="BlendData.cs" />
     <Compile Include="Bone.cs" />
     <Compile Include="BoneBinding.cs" />
+    <Compile Include="CFP.cs" />
     <Compile Include="ShadowVertex.cs" />
     <Compile Include="VitaboyVertex.cs" />
     <Compile Include="Collection.cs" />

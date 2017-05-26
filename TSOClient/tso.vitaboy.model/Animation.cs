@@ -21,9 +21,14 @@ namespace FSO.Vitaboy
     public class Animation
     {
         public string Name;
+        public string XSkillName;
         public float Duration;
         public float Distance;
         public byte IsMoving;
+
+        public uint TranslationCount;
+        public uint RotationCount;
+
         public Vector3[] Translations;
         public Quaternion[] Rotations;
         public AnimationMotion[] Motions;
@@ -48,62 +53,87 @@ namespace FSO.Vitaboy
         /// Reads an animation from a stream.
         /// </summary>
         /// <param name="stream">The Stream instance to read from.</param>
-        public void Read(Stream stream)
+        public void Read(Stream stream, bool bcf)
         {
-            using (var io = IoBuffer.FromStream(stream))
+            using (var io = IoBuffer.FromStream(stream, bcf ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN))
             {
-                var version = io.ReadUInt32();
-                Name = io.ReadLongPascalString();
-                Duration = io.ReadFloat();
-                Distance = io.ReadFloat();
-                IsMoving = io.ReadByte();
-
-                var translationCount = io.ReadUInt32();
-                Translations = new Vector3[translationCount];
-                for (var i = 0; i < translationCount; i++){
-                    Translations[i] = new Vector3 {
-                        X = -io.ReadFloat(),
-                        Y = io.ReadFloat(),
-                        Z = io.ReadFloat()
-                    };
+                if (!bcf)
+                {
+                    var version = io.ReadUInt32();
                 }
 
-                var rotationCount = io.ReadUInt32();
-                Rotations = new Quaternion[rotationCount];
-                for (var i = 0; i < rotationCount; i++){
-                    Rotations[i] = new Quaternion {
-                        X = io.ReadFloat(),
-                        Y = -io.ReadFloat(),
-                        Z = -io.ReadFloat(),
-                        W = -io.ReadFloat()
-                    };
+                if (bcf)
+                {
+                    Name = io.ReadPascalString();
+                    XSkillName = io.ReadPascalString();
+                }
+                else
+                {
+                    Name = io.ReadLongPascalString();
+                }
+                Duration = io.ReadFloat();
+                Distance = io.ReadFloat();
+                IsMoving = (bcf)?((byte)io.ReadInt32()):io.ReadByte();
+
+                TranslationCount = io.ReadUInt32();
+                if (!bcf)
+                {
+                    Translations = new Vector3[TranslationCount];
+                    for (var i = 0; i < TranslationCount; i++)
+                    {
+                        Translations[i] = new Vector3
+                        {
+                            X = -io.ReadFloat(),
+                            Y = io.ReadFloat(),
+                            Z = io.ReadFloat()
+                        };
+                    }
+                }
+
+                RotationCount = io.ReadUInt32();
+                if (!bcf)
+                {
+                    Rotations = new Quaternion[RotationCount];
+                    for (var i = 0; i < RotationCount; i++)
+                    {
+                        Rotations[i] = new Quaternion
+                        {
+                            X = io.ReadFloat(),
+                            Y = -io.ReadFloat(),
+                            Z = -io.ReadFloat(),
+                            W = -io.ReadFloat()
+                        };
+                    }
                 }
 
                 var motionCount = io.ReadUInt32();
                 Motions = new AnimationMotion[motionCount];
                 for (var i = 0; i < motionCount; i++){
                     var motion = new AnimationMotion();
-                    var unknown = io.ReadUInt32();
+                    if (!bcf)
+                    {
+                        var unknown = io.ReadUInt32();
+                    }
                     motion.BoneName = io.ReadPascalString();
                     motion.FrameCount = io.ReadUInt32();
                     motion.Duration = io.ReadFloat();
-                    motion.HasTranslation = (io.ReadByte() == 1);
-                    motion.HasRotation = (io.ReadByte() == 1);
+                    motion.HasTranslation = (((bcf) ? io.ReadInt32() : io.ReadByte()) == 1);
+                    motion.HasRotation = (((bcf) ? io.ReadInt32() : io.ReadByte()) == 1);
                     motion.FirstTranslationIndex = io.ReadUInt32();
                     motion.FirstRotationIndex = io.ReadUInt32();
 
-                    var hasPropsList = io.ReadByte() == 1;
+                    var hasPropsList = bcf || io.ReadByte() == 1;
                     if (hasPropsList)
                     {
                         var propListCount = io.ReadUInt32();
                         var props = new PropertyList[propListCount];
                         for (var x = 0; x < propListCount; x++){
-                            props[x] = ReadPropertyList(io);
+                            props[x] = ReadPropertyList(io, bcf);
                         }
                         motion.Properties = props;
                     }
 
-                    var hasTimeProps = io.ReadByte() == 1;
+                    var hasTimeProps = bcf || io.ReadByte() == 1;
                     if (hasTimeProps)
                     {
                         var timePropsListCount = io.ReadUInt32();
@@ -119,7 +149,7 @@ namespace FSO.Vitaboy
                                 var id = io.ReadUInt32();
                                 list.Items[y] = new TimePropertyListItem {
                                     ID = id,
-                                    Properties = ReadPropertyList(io)
+                                    Properties = ReadPropertyList(io, bcf)
                                 };
                             }
                             timePropsList[x] = list;
@@ -137,9 +167,9 @@ namespace FSO.Vitaboy
         /// </summary>
         /// <param name="io">IOBuffer instance used to read an animation.</param>
         /// <returns>A PropertyList instance.</returns>
-        private PropertyList ReadPropertyList(IoBuffer io)
+        private PropertyList ReadPropertyList(IoBuffer io, bool shortPairs)
         {
-            var propsCount = io.ReadUInt32();
+            var propsCount = (shortPairs) ? 1 : io.ReadUInt32();
             var result = new PropertyListItem[propsCount];
 
             for (var y = 0; y < propsCount; y++)

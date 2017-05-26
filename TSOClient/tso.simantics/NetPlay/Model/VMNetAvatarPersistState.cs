@@ -37,7 +37,7 @@ namespace FSO.SimAntics.NetPlay.Model
         private short[] PersonData = new short[27]; //special selection of things which should persist.
 
         //relationships
-        public VMEntityPersistRelationshipMarshal[] Relationships;
+        public VMEntityPersistRelationshipMarshal[] Relationships = new VMEntityPersistRelationshipMarshal[0];
 
         //===== PERSON DATA =====
 
@@ -210,8 +210,8 @@ namespace FSO.SimAntics.NetPlay.Model
                 avatar.SetPersonData((VMPersonDataVariable)PersonDataMap[i], PersonData[i]);
             avatar.SetPersonData(VMPersonDataVariable.SkinColor, SkinTone);
             avatar.DefaultSuits = DefaultSuits;
-            avatar.BodyOutfit = BodyOutfit;
-            avatar.HeadOutfit = HeadOutfit;
+            avatar.BodyOutfit = new VMOutfitReference(BodyOutfit);
+            avatar.HeadOutfit = new VMOutfitReference(HeadOutfit);
             avatar.Name = Name;
             ((VMTSOAvatarState)avatar.TSOState).Permissions = Permissions;
             ((VMTSOAvatarState)avatar.TSOState).Flags = AvatarFlags;
@@ -237,9 +237,9 @@ namespace FSO.SimAntics.NetPlay.Model
             SkinTone = (byte)avatar.SkinTone;
             DefaultSuits = avatar.DefaultSuits; //todo: clone?
             //if naked, save in daywear.
-            BodyOutfit = (avatar.BodyOutfit == 0x24E0000000D || avatar.BodyOutfit == 0x10000000D)?avatar.DefaultSuits.Daywear:avatar.BodyOutfit;
+            BodyOutfit = (avatar.BodyOutfit.ID == 0x24E0000000D || avatar.BodyOutfit.ID == 0x10000000D)?avatar.DefaultSuits.Daywear.ID : avatar.BodyOutfit.ID;
 
-            HeadOutfit = avatar.HeadOutfit;
+            HeadOutfit = avatar.HeadOutfit.ID;
             Name = avatar.Name;
             Permissions = ((VMTSOAvatarState)avatar.TSOState).Permissions;
             AvatarFlags = ((VMTSOAvatarState)avatar.TSOState).Flags;

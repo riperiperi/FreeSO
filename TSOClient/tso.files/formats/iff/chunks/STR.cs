@@ -59,7 +59,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             get
             {
-                return LanguageSets[0].Strings.Length;
+                return LanguageSets[0]?.Strings.Length ?? 0;
             }
         }
 

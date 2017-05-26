@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using FSO.Vitaboy;
 using FSO.Content.Framework;
+using System.IO;
 
 namespace FSO.Content.Codecs
 {
@@ -20,10 +21,10 @@ namespace FSO.Content.Codecs
     {
         #region IContentCodec<Animation> Members
 
-        public Animation Decode(System.IO.Stream stream)
+        public override object GenDecode(System.IO.Stream stream)
         {
             var ani = new Animation();
-            ani.Read(stream);
+            ani.Read(stream, false);
             return ani;
         }
 

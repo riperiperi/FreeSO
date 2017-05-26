@@ -1,4 +1,5 @@
 ﻿using FSO.Common;
+using FSO.Content.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +9,7 @@ using System.Xml;
 
 namespace FSO.Content
 {
-    public class WorldObjectCatalog
+    public class WorldObjectCatalog : IObjectCatalog
     {
         private static List<ObjectCatalogItem>[] ItemsByCategory;
         private static Dictionary<uint, ObjectCatalogItem> ItemsByGUID;
@@ -93,13 +94,5 @@ namespace FSO.Content
         }
 
 
-    }
-    public struct ObjectCatalogItem
-    {
-        public uint GUID;
-        public sbyte Category;
-        public uint Price;
-        public string Name;
-        public byte DisableLevel; //1 = only shopping, 2 = rare (unsellable?)
     }
 }

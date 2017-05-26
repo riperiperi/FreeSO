@@ -32,7 +32,7 @@ namespace FSO.Client.UI.Panels
     /// </summary>
     public class UIUCP : UIContainer
     {
-        private CoreGameScreen Game; //the main screen
+        private IGameScreen Game; //the main screen
         private UISelectHouseView SelWallsPanel; //select view panel that is created when clicking the current walls mode
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace FSO.Client.UI.Panels
         {
             this.RenderScript("ucp.uis");
 
-            Game = (CoreGameScreen)owner;
+            Game = (IGameScreen)owner;
 
             Background = new UIImage(BackgroundGameImage);
             this.AddAt(0, Background);
@@ -189,12 +189,12 @@ namespace FSO.Client.UI.Panels
 
         private void FriendshipWebButton_OnButtonClick(UIElement button)
         {
-            FindController<CoreGameScreenController>().ToggleRelationshipDialog();
+            FindController<CoreGameScreenController>()?.ToggleRelationshipDialog();
         }
 
         private void BookmarkButton_OnButtonClick(UIElement button)
         {
-            FindController<CoreGameScreenController>().ToggleBookmarks();
+            FindController<CoreGameScreenController>()?.ToggleBookmarks();
         }
 
         private void SecondFloor(UIElement button)
@@ -409,8 +409,8 @@ namespace FSO.Client.UI.Panels
 
         void PhoneButton_OnButtonClick(UIElement button)
         {
-            var screen = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
-            screen.OpenInbox();
+            var screen = (GameFacade.Screens.CurrentUIScreen as CoreGameScreen);
+            screen?.OpenInbox();
         }
 
         private void ZoomControl(UIElement button)
@@ -606,8 +606,18 @@ namespace FSO.Client.UI.Panels
             NeighborhoodButton.Selected = (Game.ZoomLevel == 4);
             WorldButton.Selected = (Game.ZoomLevel == 5);
 
-            ZoomInButton.Disabled = (!Game.InLot) ? (Game.ZoomLevel == 4) : (Game.ZoomLevel == 1);
-            ZoomOutButton.Disabled = (Game.ZoomLevel == 5);
+            if (Game is SandboxGameScreen)
+            {
+                NeighborhoodButton.Disabled = true;
+                WorldButton.Disabled = true;
+                ZoomInButton.Disabled = (!Game.InLot) || (Game.ZoomLevel == 1);
+                ZoomOutButton.Disabled = (Game.ZoomLevel == 3);
+            }
+            else
+            {
+                ZoomInButton.Disabled = (!Game.InLot) ? (Game.ZoomLevel == 4) : (Game.ZoomLevel == 1);
+                ZoomOutButton.Disabled = (Game.ZoomLevel == 5);
+            }
         }
 
 

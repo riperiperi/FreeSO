@@ -12,8 +12,18 @@ using System.IO;
 
 namespace FSO.Content.Framework
 {
-    public interface IContentCodec <T>
+    public abstract class IContentCodec <T> : IGenericContentCodec
     {
-        T Decode(Stream stream);
+        public T Decode(Stream stream)
+        {
+            return (T)GenDecode(stream);
+        }
+
+        public abstract object GenDecode(Stream stream);
+    }
+
+    public interface IGenericContentCodec
+    {
+        object GenDecode(Stream stream);
     }
 }

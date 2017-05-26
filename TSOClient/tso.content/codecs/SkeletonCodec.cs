@@ -15,10 +15,10 @@ namespace FSO.Content.Codecs
 
         #region IContentCodec<Skeleton> Members
 
-        public Skeleton Decode(System.IO.Stream stream)
+        public override object GenDecode(System.IO.Stream stream)
         {
             var result = new Skeleton();
-            result.Read(stream);
+            result.Read(stream, false);
             return result;
         }
 

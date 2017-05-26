@@ -115,7 +115,7 @@ namespace FSO.SimAntics.Primitives
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
                 Flags2 = io.ReadUInt16();
                 Index = (sbyte)io.ReadByte();
-                Group = (VMSetBalloonHeadlineOperandGroup)(sbyte)io.ReadByte();
+                Group = (VMSetBalloonHeadlineOperandGroup)io.ReadByte();
                 Duration = io.ReadInt16();
                 Type = io.ReadByte();
                 Flags = io.ReadByte();

@@ -65,11 +65,14 @@ namespace FSO.Vitaboy
         /// Reads a skeleton from a stream.
         /// </summary>
         /// <param name="stream">A Stream instance holding a skeleton.</param>
-        public void Read(Stream stream)
+        public void Read(Stream stream, bool bcf)
         {
-            using (var io = IoBuffer.FromStream(stream))
+            using (var io = IoBuffer.FromStream(stream, bcf ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN))
             {
-                var version = io.ReadUInt32();
+                if (!bcf)
+                {
+                    var version = io.ReadUInt32();
+                }
                 Name = io.ReadPascalString();
 
                 var boneCount = io.ReadInt16();
@@ -77,7 +80,12 @@ namespace FSO.Vitaboy
                 Bones = new Bone[boneCount];
                 for (var i = 0; i < boneCount; i++)
                 {
-                    Bone bone = ReadBone(io);
+                    Bone bone = ReadBone(io, bcf);
+                    if (bone == null)
+                    {
+                        i--;
+                        continue;
+                    }
                     bone.Index = i;
                     Bones[i] = bone;
                 }
@@ -97,14 +105,15 @@ namespace FSO.Vitaboy
         /// </summary>
         /// <param name="reader">An IOBuffer instance used to read from a stream holding a skeleton.</param>
         /// <returns>A Bone instance.</returns>
-        private Bone ReadBone(IoBuffer reader)
+        private Bone ReadBone(IoBuffer reader, bool bcf)
         {
             var bone = new Bone();
-            bone.Unknown = reader.ReadInt32();
+            if (!bcf) bone.Unknown = reader.ReadInt32();
             bone.Name = reader.ReadPascalString();
             bone.ParentName = reader.ReadPascalString();
-            bone.HasProps = reader.ReadByte();
-            if (bone.HasProps != 0)
+            bone.HasProps = bcf || reader.ReadByte() > 0;
+            if (bcf && bone.Name == "") return null;
+            if (bone.HasProps)
             {
                 var propertyCount = reader.ReadInt32();
                 var property = new PropertyListItem();

@@ -47,7 +47,7 @@ namespace FSO.SimAntics.Utils
             if (VM.UseWorld) this.Blueprint = new Blueprint(size, size);
             VM.Entities = new List<VMEntity>();
             VM.Scheduler = new Engine.VMScheduler(VM);
-            VM.Context = new VMContext(null);
+            VM.Context = new VMContext(VM.Context.World);
             VM.Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             VM.Context.VM = VM;
             VM.Context.Blueprint = Blueprint;
@@ -98,6 +98,7 @@ namespace FSO.SimAntics.Utils
             }
 
             arch.SignalTerrainRedraw();
+            VM.Context.World?.InitBlueprint(Blueprint);
             arch.Tick();
             return this.Blueprint;
         }

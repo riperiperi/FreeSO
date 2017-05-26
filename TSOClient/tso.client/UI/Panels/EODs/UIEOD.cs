@@ -28,7 +28,7 @@ namespace FSO.Client.UI.Panels.EODs
         {
             get
             {
-                var screen = UIScreen.Current as CoreGameScreen;
+                var screen = UIScreen.Current as IGameScreen;
                 if (screen == null){
                     return null;
                 }

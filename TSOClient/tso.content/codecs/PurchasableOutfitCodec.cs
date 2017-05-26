@@ -20,7 +20,7 @@ namespace FSO.Content.Codecs
     {
         #region IContentCodec<Outfit> Members
 
-        public PurchasableOutfit Decode(System.IO.Stream stream)
+        public override object GenDecode(System.IO.Stream stream)
         {
             var outfit = new PurchasableOutfit();
             outfit.Read(stream);

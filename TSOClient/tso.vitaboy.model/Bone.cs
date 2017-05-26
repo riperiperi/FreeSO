@@ -21,7 +21,7 @@ namespace FSO.Vitaboy
         public string Name;
         public string ParentName;
 
-        public byte HasProps;
+        public bool HasProps;
         public List<PropertyListItem> Properties = new List<PropertyListItem>();
 
         public Vector3 Translation;

@@ -657,6 +657,25 @@ namespace FSO.SimAntics
             return false;
         }
 
+        public void RebuildWallsAt()
+        {
+            int flr = 0;
+            foreach (var wat in WallsAt)
+            {
+                wat.Clear();
+                int off = 0;
+                foreach (var wall in Walls[flr])
+                {
+                    if (wall.Segments > 0)
+                    {
+                        wat.Add(off);
+                    }
+                    off++;
+                }
+                flr++;
+            }
+        }
+
         public void SetWall(short tileX, short tileY, sbyte level, WallTile wall)
         {
             var off = GetOffset(tileX, tileY);

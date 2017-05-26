@@ -15,7 +15,7 @@ namespace FSO.Content.Codecs
 
         #region IContentCodec<Binding> Members
 
-        public Binding Decode(System.IO.Stream stream)
+        public override object GenDecode(System.IO.Stream stream)
         {
             var binding = new Binding();
             binding.Read(stream);

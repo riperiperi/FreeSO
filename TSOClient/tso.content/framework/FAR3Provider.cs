@@ -66,6 +66,7 @@ namespace FSO.Content.Framework
         public T Get(ContentID ID)
         {
             if (ID == null) return default(T);
+            if (ID.FileName != null) return Get(ID.FileName);
             return Get(ID.TypeID, ID.FileID);
         }
 
@@ -226,6 +227,11 @@ namespace FSO.Content.Framework
         public object GetGeneric()
         {
             return Get();
+        }
+
+        public object GetThrowawayGeneric()
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

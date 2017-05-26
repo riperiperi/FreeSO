@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Utils;
+using FSO.Files.Formats.IFF;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -25,33 +26,48 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public int OffsetX;
         public int OffsetY;
         public int TargetSize;
+        public bool IffData;
 
         public override bool AcceptFromClient { get { return false; } }
 
         public override bool Execute(VM vm)
         {
             //the client should ignore these. Can be sent before state sync when joining job lots (by accident)
-            if (VM.UseWorld) return true;
+            if (!vm.IsServer) return true;
 
-            XmlHouseData lotInfo;
-            using (var stream = new MemoryStream(XMLData))
+            vm.SetGlobalValue(11, JobLevel); //set job level beforehand 
+
+            if (IffData)
             {
-                lotInfo = XmlHouseData.Parse(stream);
+                vm.SetGlobalValue(10, JobLevel); //set house number
+                var iff = new IffFile();
+                using (var stream = new MemoryStream(XMLData))
+                {
+                    iff.Read(stream);
+                }
+                var activator = new VMTS1Activator(vm, vm.Context.World);
+                var blueprint = activator.LoadFromIff(iff);
+            }
+            else
+            {
+                XmlHouseData lotInfo;
+                using (var stream = new MemoryStream(XMLData))
+                {
+                    lotInfo = XmlHouseData.Parse(stream);
+                }
+
+                var activator = new VMWorldActivator(vm, vm.Context.World);
+                activator.FloorClip = new Microsoft.Xna.Framework.Rectangle(FloorClipX, FloorClipY, FloorClipWidth, FloorClipHeight);
+                activator.Offset = new Microsoft.Xna.Framework.Point(OffsetX, OffsetY);
+                activator.TargetSize = TargetSize;
+                var blueprint = activator.LoadFromXML(lotInfo);
             }
 
-            vm.SetGlobalValue(11, JobLevel); //set job level before hand 
-
-            var activator = new VMWorldActivator(vm, vm.Context.World);
-            activator.FloorClip = new Microsoft.Xna.Framework.Rectangle(FloorClipX, FloorClipY, FloorClipWidth, FloorClipHeight);
-            activator.Offset = new Microsoft.Xna.Framework.Point(OffsetX, OffsetY);
-            activator.TargetSize = TargetSize;
-            var blueprint = activator.LoadFromXML(lotInfo);
-
-            if (VM.UseWorld)
-            {
-                vm.Context.World.InitBlueprint(blueprint);
-                vm.Context.Blueprint = blueprint;
-            }
+                /*if (VM.UseWorld)
+                {
+                    vm.Context.World.InitBlueprint(blueprint);
+                    vm.Context.Blueprint = blueprint;
+                }*/
 
             return true;
         }

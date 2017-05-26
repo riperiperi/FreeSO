@@ -19,5 +19,6 @@ namespace FSO.Common.Content
     public interface IContentReference
     {
         object GetGeneric();
+        object GetThrowawayGeneric();
     }
 }

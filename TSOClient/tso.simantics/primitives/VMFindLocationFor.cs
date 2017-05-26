@@ -65,6 +65,9 @@ namespace FSO.SimAntics.Primitives
                     if (operand.Mode == 4) intDir = (intDir + 2) % 8; //lateral to object vector
                     if (FindLocationVector(obj, refObj, context.VM.Context, intDir, flags)) return VMPrimitiveExitCode.GOTO_TRUE;
                     else return VMPrimitiveExitCode.GOTO_FALSE;
+                case 5:
+                    //random
+                    return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
             return VMPrimitiveExitCode.GOTO_FALSE;

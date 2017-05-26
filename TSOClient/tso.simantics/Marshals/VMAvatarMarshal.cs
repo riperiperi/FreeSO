@@ -32,8 +32,8 @@ namespace FSO.SimAntics.Marshals
         public VMAvatarDecoration Decoration;
         public string[] BoundAppearances;
 
-        public ulong BodyOutfit;
-        public ulong HeadOutfit;
+        public VMOutfitReference BodyOutfit;
+        public VMOutfitReference HeadOutfit;
         public AppearanceType SkinTone;
 
         public VMAvatarMarshal() { }
@@ -88,8 +88,8 @@ namespace FSO.SimAntics.Marshals
             BoundAppearances = new string[aprs];
             for (int i = 0; i < aprs; i++) BoundAppearances[i] = reader.ReadString();
 
-            BodyOutfit = reader.ReadUInt64();
-            HeadOutfit = reader.ReadUInt64();
+            BodyOutfit = new VMOutfitReference(reader);
+            HeadOutfit = new VMOutfitReference(reader);
             SkinTone = (AppearanceType)reader.ReadByte();
         }
         public override void SerializeInto(BinaryWriter writer)
@@ -126,8 +126,10 @@ namespace FSO.SimAntics.Marshals
             writer.Write(BoundAppearances.Length);
             foreach (var item in BoundAppearances) { writer.Write(item); }
 
-            writer.Write(BodyOutfit);
-            writer.Write(HeadOutfit);
+            if (BodyOutfit == null) writer.Write((ulong)0);
+            else BodyOutfit.SerializeInto(writer);
+            if (HeadOutfit == null) writer.Write((ulong)0);
+            else HeadOutfit.SerializeInto(writer);
             writer.Write((byte)SkinTone);
         }
     }

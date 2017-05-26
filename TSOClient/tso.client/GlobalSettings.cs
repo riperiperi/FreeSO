@@ -62,7 +62,10 @@ namespace FSO.Client
             { "TargetRefreshRate", "60" },
 
             { "EnableTTS", "false" },
-            { "CompatState", "-1" }
+            { "CompatState", "-1" },
+
+            { "TS1HybridPath", "D:/Games/The Sims/" },
+            { "TS1HybridEnable", "false" }
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -103,6 +106,9 @@ namespace FSO.Client
         public bool EnableTTS { get; set; }
         public int SurroundingLotMode { get; set; }
         public int CompatState { get; set; }
+
+        public string TS1HybridPath { get; set; }
+        public bool TS1HybridEnable { get; set; }
 
         public static int TARGET_COMPAT_STATE = 2;
     }

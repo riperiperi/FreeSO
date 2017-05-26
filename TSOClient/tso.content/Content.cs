@@ -18,6 +18,10 @@ using FSO.Files.Formats.IFF;
 using System.Threading;
 using FSO.Common;
 using FSO.Content.Model;
+using FSO.Content.Interfaces;
+using FSO.Content.TS1;
+using FSO.Content.Framework;
+using FSO.Vitaboy;
 
 namespace FSO.Content
 {
@@ -49,13 +53,22 @@ namespace FSO.Content
             return INSTANCE;
         }
 
+        //for debugging TS1 content system
+        public static bool TS1Hybrid = false;
+        public static string TS1HybridBasePath = "D:/Games/The Sims/";
+
         /**
          * Content Manager
          */
         public string BasePath;
         public string[] AllFiles;
+        public string[] TS1AllFiles;
         private GraphicsDevice Device;
         public ContentMode Mode;
+        public bool TS1 = TS1Hybrid;
+        public TS1Provider TS1Global;
+        public TS1BCFProvider BCFGlobal;
+        public string TS1BasePath = TS1HybridBasePath;
 
         public ChangeManager Changes;
 
@@ -73,27 +86,49 @@ namespace FSO.Content
             if(device != null)
             {
                 UIGraphics = new UIGraphicsProvider(this);
-                AvatarTextures = new AvatarTextureProvider(this);
-                AvatarMeshes = new AvatarMeshProvider(this, Device);
+                if (TS1)
+                {
+                    TS1Global = new TS1Provider(this);
+                    AvatarTextures = new TS1AvatarTextureProvider(TS1Global);
+                    AvatarMeshes = new TS1BMFProvider(TS1Global);
+                }
+                else
+                {
+                    AvatarTextures = new AvatarTextureProvider(this);
+                    AvatarMeshes = new AvatarMeshProvider(this, Device);
+                }
                 AvatarHandgroups = new HandgroupProvider(this);
                 AbstractTextureRef.FetchDevice = device;
                 AbstractTextureRef.ImageFetchFunction = AbstractTextureRef.ImageFetchWithDevice;
             }
             Changes = new ChangeManager();
             AvatarBindings = new AvatarBindingProvider(this);
-            AvatarSkeletons = new AvatarSkeletonProvider(this);
             AvatarAppearances = new AvatarAppearanceProvider(this);
             AvatarOutfits = new AvatarOutfitProvider(this);
-            AvatarAnimations = new AvatarAnimationProvider(this);
+
             AvatarPurchasables = new AvatarPurchasables(this);
             AvatarCollections = new AvatarCollectionsProvider(this);
             AvatarThumbnails = new AvatarThumbnailProvider(this);
 
-            WorldObjects = new WorldObjectProvider(this);
+            if (TS1)
+            {
+                var provider = new TS1ObjectProvider(this, TS1Global);
+                WorldObjects = provider;
+                WorldCatalog = provider;
+                BCFGlobal = new TS1BCFProvider(this, TS1Global);
+                AvatarAnimations = new TS1BCFAnimationProvider(BCFGlobal);
+                AvatarSkeletons = new TS1BCFSkeletonProvider(BCFGlobal);
+                AvatarAppearances = new TS1BCFAppearanceProvider(BCFGlobal);
+            } else
+            {
+                AvatarAnimations = new AvatarAnimationProvider(this);
+                AvatarSkeletons = new AvatarSkeletonProvider(this);
+                WorldObjects = new WorldObjectProvider(this);
+                WorldCatalog = new WorldObjectCatalog();
+            }
             WorldFloors = new WorldFloorProvider(this);
             WorldWalls = new WorldWallProvider(this);
             WorldObjectGlobals = new WorldGlobalProvider(this);
-            WorldCatalog = new WorldObjectCatalog();
             WorldRoofs = new WorldRoofProvider(this);
 
             Audio = new Audio(this);
@@ -111,12 +146,20 @@ namespace FSO.Content
         /// </summary>
         public void InitWorld()
         {
-            WorldObjects.Init((Device != null));
+            if (TS1)
+            {
+                ((TS1ObjectProvider)WorldObjects).Init();
+            }
+            else
+            {
+                ((WorldObjectProvider)WorldObjects).Init((Device != null));
+                ((WorldObjectCatalog)WorldCatalog).Init(this);
+            }
+
             WorldObjectGlobals.Init();
             WorldWalls.Init();
             WorldFloors.Init();
             WorldRoofs.Init();
-            WorldCatalog.Init(this);
         }
 
         /// <summary>
@@ -129,21 +172,43 @@ namespace FSO.Content
             _ScanFiles(BasePath, allFiles);
             AllFiles = allFiles.ToArray();
 
-            PIFFRegistry.Init(Path.Combine(FSOEnvironment.ContentDir, "Patch/"));
+            var ts1AllFiles = new List<string>();
+            var oldBase = BasePath;
+            if (TS1)
+            {
+                BasePath = TS1BasePath;
+                _ScanFiles(TS1BasePath, ts1AllFiles);
+                BasePath = oldBase;
+                TS1AllFiles = ts1AllFiles.ToArray();
+            }
+
+            TS1Global?.Init();
+            BCFGlobal?.Init();
+
+            if (!TS1) PIFFRegistry.Init(Path.Combine(FSOEnvironment.ContentDir, "Patch/"));
             Archives = new Dictionary<string, FAR3Archive>();
             if (Mode == ContentMode.CLIENT)
             {
                 UIGraphics.Init();
-                AvatarTextures.Init();
-                AvatarMeshes.Init();
                 AvatarHandgroups.Init();
             }
 
             AvatarBindings.Init();
-            AvatarSkeletons.Init();
-            AvatarAppearances.Init();
             AvatarOutfits.Init();
-            AvatarAnimations.Init();
+            if (TS1)
+            {
+                ((TS1AvatarTextureProvider)AvatarTextures)?.Init();
+                ((TS1BMFProvider)AvatarMeshes)?.Init();
+                Jobs = new TS1JobProvider(TS1Global);
+            } else
+            {
+                ((AvatarTextureProvider)AvatarTextures)?.Init();
+                ((AvatarAnimationProvider)AvatarAnimations).Init();
+                ((AvatarSkeletonProvider)AvatarSkeletons).Init();
+                ((AvatarAppearanceProvider)AvatarAppearances).Init();
+                ((AvatarMeshProvider)AvatarMeshes)?.Init();
+            }
+            
             Audio.Init();
             AvatarPurchasables.Init();
             AvatarCollections.Init();
@@ -223,23 +288,23 @@ namespace FSO.Content
         }
 
         /** World **/
-        public WorldObjectProvider WorldObjects;
+        public AbstractObjectProvider WorldObjects;
         public WorldGlobalProvider WorldObjectGlobals;
         public WorldFloorProvider WorldFloors;
         public WorldWallProvider WorldWalls;
-        public WorldObjectCatalog WorldCatalog;
+        public IObjectCatalog WorldCatalog;
         public WorldRoofProvider WorldRoofs;
 
         public UIGraphicsProvider UIGraphics;
         
         /** Avatar **/
-        public AvatarMeshProvider AvatarMeshes;
+        public IContentProvider<Mesh> AvatarMeshes;
         public AvatarBindingProvider AvatarBindings;
-        public AvatarTextureProvider AvatarTextures;
-        public AvatarSkeletonProvider AvatarSkeletons;
-        public AvatarAppearanceProvider AvatarAppearances;
+        public IContentProvider<ITextureRef> AvatarTextures;
+        public IContentProvider<Skeleton> AvatarSkeletons;
+        public IContentProvider<Appearance> AvatarAppearances;
         public AvatarOutfitProvider AvatarOutfits;
-        public AvatarAnimationProvider AvatarAnimations;
+        public IContentProvider<Animation> AvatarAnimations;
         public AvatarPurchasables AvatarPurchasables;
         public HandgroupProvider AvatarHandgroups;
         public AvatarCollectionsProvider AvatarCollections;
@@ -262,5 +327,8 @@ namespace FSO.Content
 
         /** Rack Outfits **/
         public RackOutfitsProvider RackOutfits;
+
+        /** TS1 Job Data **/
+        public TS1JobProvider Jobs;
     }
 }

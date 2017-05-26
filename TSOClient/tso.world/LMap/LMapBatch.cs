@@ -72,32 +72,18 @@ namespace FSO.LotView.LMap
             GD = device;
             this.GradEffect = WorldContent.Grad2DEffect;
             this.LightEffect = WorldContent.Light2DEffect;
-            ShadowTarg = new RenderTarget2D(GD, 600, 600, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            ObjShadowTarg = new RenderTarget2D(GD, 600, 600, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            LightMap = new RenderTarget2D(GD, 600*3, 600*2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents); //just ground floor for now.
-            RoomMaps = new List<Texture2D>();
-            for (int i = 0; i < 5; i++) RoomMaps.Add(new Texture2D(GD, 77, 77, false, SurfaceFormat.Color));
-            Projection = Matrix.CreateOrthographicOffCenter(new Rectangle(0, 0, 75 * 16, 75 * 16), -10, 10);
-
-            //initialize lighteffect with default params
-            LightEffect.Parameters["Projection"].SetValue(Projection);
-            LightEffect.Parameters["shadowMap"].SetValue(ShadowTarg);
-            LightEffect.Parameters["floorShadowMap"].SetValue(ObjShadowTarg);
-            LightEffect.Parameters["ShadowPowers"].SetValue(new Vector2(1f, 1f));
-            LightEffect.Parameters["RoomUVOff"].SetValue(new Vector2(-1f / 77, -1f / 77));
-            LightEffect.Parameters["TileSize"].SetValue(new Vector2(resPerTile / (77 * 8f), resPerTile / (77 * 8f)));
-
-            SetMapLayout(3, 2);
 
             InitBasicData();
         }
 
         public void SetMapLayout(int width, int height)
         {
+            var w = Blueprint.Width;
+            var h = Blueprint.Height;
             MapLayout = new Vector2(width, height);
             var invMapLayout = new Vector3(1f / width, 1, 1f / height);
             InvMapLayout = new Vector2(invMapLayout.X, invMapLayout.Z);
-            var factor = new Vector3(1f / (3 * 75), 1 / (3 * 2.95f), 1f / (3 * 75));
+            var factor = new Vector3(1f / (3 * (w-2)), 1 / (3 * 2.95f), 1f / (3 * (h-2)));
             factor *= invMapLayout;
 
             WorldContent.GrassEffect.Parameters["WorldToLightFactor"].SetValue(factor);
@@ -122,12 +108,43 @@ namespace FSO.LotView.LMap
 
             LightEffect.Parameters["UVBase"].SetValue(new Vector2(x, y));
             LightEffect.Parameters["roomMap"].SetValue(RoomMaps[floor]);
-            ScissorBase = new Point(600 * x, 600 * y);
+
+            var res = (Blueprint.Width - 2) * 8;
+            ScissorBase = new Point(res * x, res * y);
         }
 
         public void Init(Blueprint blueprint)
         {
             this.Blueprint = blueprint;
+
+            var w = blueprint.Width;
+            var h = blueprint.Height;
+
+            var wl = 8 * (w-2);
+            var wh = 8 * (h-2);
+
+            Dispose();
+
+            ShadowTarg = new RenderTarget2D(GD, wl, wh, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            ObjShadowTarg = new RenderTarget2D(GD, wl, wh, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            LightMap = new RenderTarget2D(GD, wl * 3, wh * 2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents); //just ground floor for now.
+            RoomMaps = new List<Texture2D>();
+            for (int i = 0; i < 5; i++) RoomMaps.Add(new Texture2D(GD, w, h, false, SurfaceFormat.Color));
+            Projection = Matrix.CreateOrthographicOffCenter(new Rectangle(0, 0, (w-2) * 16, (h-2) * 16), -10, 10);
+
+            //initialize lighteffect with default params
+            LightEffect.Parameters["shadowMap"].SetValue(ShadowTarg);
+            LightEffect.Parameters["floorShadowMap"].SetValue(ObjShadowTarg);
+            LightEffect.Parameters["ShadowPowers"].SetValue(new Vector2(1f, 1f));
+            LightEffect.Parameters["RoomUVOff"].SetValue(new Vector2(-1f / w, -1f / h));
+            LightEffect.Parameters["TileSize"].SetValue(new Vector2(resPerTile / (w * 8f), resPerTile / (h * 8f)));
+
+            LightEffect.Parameters["Projection"].SetValue(Matrix.CreateOrthographicOffCenter(new Rectangle(0, 0, 1, 1), -10, 10));
+            LightEffect.Parameters["LightPower"].SetValue(2.0f);
+            LightEffect.Parameters["RoomUVRescale"].SetValue(new Vector2((w - 2) / (float)w, (h - 2) / (float)h));
+            LightEffect.Parameters["RoomUVOff"].SetValue(new Vector2(0, 0));
+
+            SetMapLayout(3, 2);
         }
 
         public void SetRoomMap(sbyte floor, uint[] map)
@@ -196,6 +213,7 @@ namespace FSO.LotView.LMap
 
         public void ParseInvalidated(sbyte floorLimit)
         {
+            SetMapLayout(3, 2);
             if (floorLimit > RedrawFloor)
             {
                 RedrawAll();
@@ -203,11 +221,6 @@ namespace FSO.LotView.LMap
             }
 
             //initialize lighteffect with default params
-            SetMapLayout(3, 2);
-            LightEffect.Parameters["Projection"].SetValue(Matrix.CreateOrthographicOffCenter(new Rectangle(0, 0, 1, 1), -10, 10));
-            LightEffect.Parameters["LightPower"].SetValue(2.0f);
-            LightEffect.Parameters["RoomUVRescale"].SetValue(new Vector2(75f / 77f, 75f / 77f));
-            LightEffect.Parameters["RoomUVOff"].SetValue(new Vector2(0, 0));
             sbyte floor = 0;
             SetFloor(floor);
 
@@ -239,7 +252,6 @@ namespace FSO.LotView.LMap
         public void RedrawAll()
         {
             DirtyRooms.Clear();
-            SetMapLayout(3, 2);
             sbyte floor = 0;
             SetFloor(floor);
             var rooms = Blueprint.Rooms;
@@ -247,12 +259,6 @@ namespace FSO.LotView.LMap
 
             GD.SetRenderTarget(LightMap);
             GD.Clear(Color.TransparentBlack);
-
-            //initialize lighteffect with default params
-            LightEffect.Parameters["Projection"].SetValue(Matrix.CreateOrthographicOffCenter(new Rectangle(0, 0, 1, 1), -10, 10));
-            LightEffect.Parameters["LightPower"].SetValue(2.0f);
-            LightEffect.Parameters["RoomUVRescale"].SetValue(new Vector2(75f / 77f, 75f / 77f));
-            LightEffect.Parameters["RoomUVOff"].SetValue(new Vector2(0, 0));
 
             for (int i = 0; i < rooms.Count; i++)
             {
@@ -338,9 +344,10 @@ namespace FSO.LotView.LMap
 
         public void DrawRoom(Room room, RoomLighting lighting, bool clear)
         {
+            var size = Blueprint.Width - 2;
             LightEffect.Parameters["TargetRoom"].SetValue((float)room.RoomID);
             var bigBounds = new Rectangle(lighting.Bounds.X * resPerTile, lighting.Bounds.Y * resPerTile, lighting.Bounds.Width * resPerTile, lighting.Bounds.Height * resPerTile);
-            bigBounds = Rectangle.Intersect(bigBounds, new Rectangle(0, 0, 600, 600));
+            bigBounds = Rectangle.Intersect(bigBounds, new Rectangle(0, 0, size*8, size*8));
             GD.RasterizerState = new RasterizerState() { ScissorTestEnable = true, CullMode = CullMode.None };
             if (clear)
             {
@@ -381,8 +388,8 @@ namespace FSO.LotView.LMap
                 GD.ScissorRectangle = DrawRect;
                 LightEffect.Parameters["ShadowPowers"].SetValue(new Vector2(1f, 1f));
 
-                LightEffect.Parameters["LightPosition"].SetValue(light.LightPos / (75*16f)); //in position space (0,1)
-                LightEffect.Parameters["LightSize"].SetValue(light.LightSize / (75*16f)); //in position space (0,1)
+                LightEffect.Parameters["LightPosition"].SetValue(light.LightPos / (size*16f)); //in position space (0,1)
+                LightEffect.Parameters["LightSize"].SetValue(light.LightSize / (size*16f)); //in position space (0,1)
                 LightEffect.Parameters["IsOutdoors"].SetValue(light.OutdoorsColor);
                 LightEffect.Parameters["LightIntensity"].SetValue(light.LightIntensity);
 
@@ -398,7 +405,8 @@ namespace FSO.LotView.LMap
 
             if (room.IsOutside)
             {
-                DrawRect = new Rectangle(0, 0, 600, 600);
+                var res = (Blueprint.Width-2) * 8;
+                DrawRect = new Rectangle(0, 0, res, res);
                 if (OutdoorsLight == null) BuildOutdoorsLight(Blueprint.OutsideTime);
                 var light = OutdoorsLight;
                 //generate shadows
@@ -411,7 +419,7 @@ namespace FSO.LotView.LMap
                 GD.ScissorRectangle = DrawRect;
                 LightEffect.Parameters["ShadowPowers"].SetValue(new Vector2(0.75f, 0.6f) * light.ShadowMultiplier);
 
-                LightEffect.Parameters["LightPosition"].SetValue(light.LightPos / (75 * 16f)); //in position space (0,1)
+                LightEffect.Parameters["LightPosition"].SetValue(light.LightPos / (size * 16f)); //in position space (0,1)
                 LightEffect.Parameters["LightSize"].SetValue(float.MaxValue); //in position space (0,1)
                 LightEffect.Parameters["IsOutdoors"].SetValue(true);
 
@@ -491,12 +499,15 @@ namespace FSO.LotView.LMap
 
         public void Dispose()
         {
-            ShadowTarg.Dispose();
-            ObjShadowTarg.Dispose();
-            LightMap.Dispose();
-            foreach (var map in RoomMaps)
+            ShadowTarg?.Dispose();
+            ObjShadowTarg?.Dispose();
+            LightMap?.Dispose();
+            if (RoomMaps != null)
             {
-                map?.Dispose();
+                foreach (var map in RoomMaps)
+                {
+                    map?.Dispose();
+                }
             }
         }
     }

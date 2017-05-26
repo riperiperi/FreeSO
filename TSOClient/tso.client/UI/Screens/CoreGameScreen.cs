@@ -41,7 +41,7 @@ using FSO.Common.Utils;
 
 namespace FSO.Client.UI.Screens
 {
-    public class CoreGameScreen : FSO.Client.UI.Framework.GameScreen
+    public class CoreGameScreen : FSO.Client.UI.Framework.GameScreen, IGameScreen
     {
         public UIUCP ucp;
         public UIGizmo gizmo;
@@ -63,11 +63,11 @@ namespace FSO.Client.UI.Screens
         public UIJoinLotProgress JoinLotProgress;
         private UIAlert SwitchLotDialog;
 
-        public UILotControl LotControl; //world, lotcontrol and vm will be null if we aren't in a lot.
+        public UILotControl LotControl { get; set; } //world, lotcontrol and vm will be null if we aren't in a lot.
         private LotView.World World;
-        public FSO.SimAntics.VM vm;
+        public FSO.SimAntics.VM vm { get; set; }
         public VMClientDriver Driver;
-        public uint VisualBudget;
+        public uint VisualBudget { get; set; }
 
         private UIMouseEventRef MouseHitAreaEventRef = null;
 

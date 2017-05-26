@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -22,13 +23,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             switch (Scope)
             {
                 case VMPersonSuits.DefaultDaywear:
-                    avatar.DefaultSuits.Daywear = Outfit;
+                    avatar.DefaultSuits.Daywear = new VMOutfitReference(Outfit);
                     break;
                 case VMPersonSuits.DefaultSleepwear:
-                    avatar.DefaultSuits.Sleepwear = Outfit;
+                    avatar.DefaultSuits.Sleepwear = new VMOutfitReference(Outfit);
                     break;
                 case VMPersonSuits.DefaultSwimwear:
-                    avatar.DefaultSuits.Swimwear = Outfit;
+                    avatar.DefaultSuits.Swimwear = new VMOutfitReference(Outfit);
                     break;
                 case VMPersonSuits.DynamicDaywear:
                     avatar.DynamicSuits.Daywear = Outfit;

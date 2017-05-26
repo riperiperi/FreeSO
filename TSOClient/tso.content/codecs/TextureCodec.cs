@@ -45,7 +45,7 @@ namespace FSO.Content.Codecs
 
         #region IContentCodec<Texture2D> Members
 
-        public ITextureRef Decode(System.IO.Stream stream)
+        public override object GenDecode(System.IO.Stream stream)
         {
             byte[] data = new byte[stream.Length];
             stream.Read(data, 0, data.Length);

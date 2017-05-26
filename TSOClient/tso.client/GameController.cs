@@ -230,6 +230,14 @@ namespace FSO.Client
             });
         }
 
+        public void EnterSandboxMode(string lotName, bool external)
+        {
+            var screen = new SandboxGameScreen();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+            screen.Initialize(lotName, external);
+        }
+
         public void ShowCredits()
         {
             var screen = Kernel.Get<Credits>();

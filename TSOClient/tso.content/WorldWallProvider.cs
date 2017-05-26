@@ -32,6 +32,7 @@ namespace FSO.Content
         private List<WallStyle> WallStyles;
         private Dictionary<ushort, Wall> ById;
         private Dictionary<ushort, WallStyle> StyleById;
+        public Dictionary<string, ushort> DynamicWallFromID;
         private IffFile WallGlobals;
 
         public Dictionary<ushort, WallReference> Entries;
@@ -188,16 +189,18 @@ namespace FSO.Content
                 "housedata/walls4/walls4.far"
             };
 
+            DynamicWallFromID = new Dictionary<string, ushort>();
+
             for (var i = 0; i < archives.Length; i++)
             {
                 var archivePath = ContentManager.GetPath(archives[i]);
-                var archive = new FAR1Archive(archivePath);
+                var archive = new FAR1Archive(archivePath, true);
                 var entries = archive.GetAllEntries();
 
                 foreach (var entry in entries)
                 {
-
                     var iff = new IffFile();
+                    DynamicWallFromID[new string(entry.Key.TakeWhile(x => x != '.').ToArray()).ToLowerInvariant()] = wallID;
                     var bytes = archive.GetEntry(entry);
                     using(var stream = new MemoryStream(bytes))
                     {
@@ -299,7 +302,9 @@ namespace FSO.Content
             else
             {
                 //get from iff
-                IffFile iff = this.Walls.Get(Entries[(ushort)id].FileName);
+                WallReference entry = null;
+                if (!Entries.TryGetValue((ushort)id, out entry)) entry = Entries.Values.First(x => x.ID > 255);
+                IffFile iff = this.Walls.Get(entry.FileName);
                 if (iff == null) return null;
 
                 var far = iff.Get<SPR>(1);
@@ -327,6 +332,16 @@ namespace FSO.Content
             return new List<IContentReference<Wall>>(Entries.Values);
         }
 
+        public Wall Get(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Wall Get(ContentID id)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 
@@ -351,6 +366,11 @@ namespace FSO.Content
         public Wall Get()
         {
             return Provider.Get(ID);
+        }
+
+        public object GetThrowawayGeneric()
+        {
+            throw new NotImplementedException();
         }
 
         public object GetGeneric()

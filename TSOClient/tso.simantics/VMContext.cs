@@ -78,7 +78,6 @@ namespace FSO.SimAntics
             }
 
             RandomSeed = (ulong)((new Random()).NextDouble() * UInt64.MaxValue); //when resuming state, this should be set.
-            Clock.TicksPerMinute = 30; //1 minute per irl second
 
             AddPrimitive(new VMPrimitiveRegistration(new VMSleep())
             {
@@ -87,12 +86,8 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMSleepOperand)
             });
 
-            AddPrimitive(new VMPrimitiveRegistration(new VMGenericTSOCall())
-            {
-                Opcode = 1,
-                Name = "generic_sims_online_call",
-                OperandModel = typeof(VMGenericTSOCallOperand)
-            });
+
+            //1 - generic tso call or generic ts1 call
 
             AddPrimitive(new VMPrimitiveRegistration(new VMExpression())
             {
@@ -101,7 +96,7 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMExpressionOperand)
             });
 
-            //TODO: Report Metric
+            //TODO: Report Metric. TS1 - find best interaction
 
             AddPrimitive(new VMPrimitiveRegistration(new VMGrab())
             {
@@ -234,7 +229,8 @@ namespace FSO.SimAntics
                 Name = "old_relationship",
                 OperandModel = typeof(VMOldRelationshipOperand) //same primitive, different operand
             });
-
+            
+            //different in ts1
             AddPrimitive(new VMPrimitiveRegistration(new VMTransferFunds())
             {
                 Opcode = 25,
@@ -270,6 +266,7 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMSetMotiveChangeOperand)
             });
 
+            //TS1 - gosub found action
             AddPrimitive(new VMPrimitiveRegistration(new VMSysLog())
             {
                 Opcode = 30,
@@ -443,6 +440,47 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMInventoryOperationsOperand)
             });
 
+            if (Content.Content.Get().TS1)
+            {
+                AddPrimitive(new VMPrimitiveRegistration(new VMFindBestAction())
+                {
+                    Opcode = 3,
+                    Name = "find_best_interaction",
+                    OperandModel = typeof(VMFindBestActionOperand)
+                });
+
+                AddPrimitive(new VMPrimitiveRegistration(new VMGenericTS1Call())
+                {
+                    Opcode = 1,
+                    Name = "generic_sims_call",
+                    OperandModel = typeof(VMGenericTS1CallOperand)
+                });
+
+                AddPrimitive(new VMPrimitiveRegistration(new VMGosubFoundAction())
+                {
+                    Opcode = 30,
+                    Name = "gosub_found_action",
+                    OperandModel = typeof(VMGosubFoundActionOperand)
+                });
+
+                AddPrimitive(new VMPrimitiveRegistration(new VMTS1InventoryOperations())
+                {
+                    Opcode = 51,
+                    Name = "manage_inventory",
+                    OperandModel = typeof(VMTS1InventoryOperationsOperand)
+                });
+                Clock.TicksPerMinute = 30; //1 minute per irl second
+            }
+            else
+            {
+                Clock.TicksPerMinute = 30*5; //1 minute per 5 irl second
+                AddPrimitive(new VMPrimitiveRegistration(new VMGenericTSOCall())
+                {
+                    Opcode = 1,
+                    Name = "generic_sims_online_call",
+                    OperandModel = typeof(VMGenericTSOCallOperand)
+                });
+            }
         }
 
         /// <summary>

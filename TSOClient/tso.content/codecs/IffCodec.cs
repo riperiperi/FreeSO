@@ -20,7 +20,7 @@ namespace FSO.Content.Codecs
     {
         #region IContentCodec<Iff> Members
 
-        public IffFile Decode(System.IO.Stream stream)
+        public override object GenDecode(System.IO.Stream stream)
         {
             var result = new IffFile();
             result.Read(stream);

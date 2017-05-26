@@ -407,10 +407,10 @@ namespace FSO.Files.Formats.IFF.Chunks
                 this.FootprintMask = io.ReadUInt16();
                 this.BHAV_DynamicMultiTileUpdate = io.ReadUInt16();
                 this.ShadowBrightness = io.ReadUInt16();
-                this.BHAV_Repair = io.ReadUInt16();
 
                 if (numFields > 80)
                 {
+                    this.BHAV_Repair = io.ReadUInt16();
                     this.WallStyleSpriteID = io.ReadUInt16();
                     this.RatingHunger = io.ReadUInt16();
                     this.RatingComfort = io.ReadUInt16();

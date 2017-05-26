@@ -39,6 +39,9 @@ namespace FSO.Vitaboy
         private IndexBuffer GPUIndexBuffer;
         private bool Prepared = false;
 
+        public string SkinName;
+        public string TextureName;
+
         public Mesh()
         {
         }
@@ -160,12 +163,19 @@ namespace FSO.Vitaboy
         /// <summary>
         /// Reads a mesh from a stream.
         /// </summary>
-        /// <param name="stream">A Stream instance holding a mesh.</param>
-        public unsafe void Read(Stream stream)
+        /// <param name="stream">A Stream instance holding a mesh.</param> <param name="bmf">If this stream contains a .bmf file (rather than TSO .mesh).</param>
+        public void Read(Stream stream, bool bmf)
         {
-            using (var io = IoBuffer.FromStream(stream))
+            using (var io = IoBuffer.FromStream(stream, bmf?ByteOrder.LITTLE_ENDIAN:ByteOrder.BIG_ENDIAN))
             {
-                var version = io.ReadInt32();
+                if (bmf)
+                {
+                    SkinName = io.ReadPascalString();
+                    TextureName = io.ReadPascalString();
+                } else
+                {
+                    var version = io.ReadInt32();
+                }
                 var boneCount = io.ReadInt32();
                 var boneNames = new string[boneCount];
                 for (var i = 0; i < boneCount; i++){

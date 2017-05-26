@@ -10,7 +10,7 @@ namespace FSO.Content.Codecs
 {
     public class IniCodec : IContentCodec<IniFile>
     {
-        public IniFile Decode(Stream stream)
+        public override object GenDecode(Stream stream)
         {
             var result = new IniFile();
             result.Decode(stream);

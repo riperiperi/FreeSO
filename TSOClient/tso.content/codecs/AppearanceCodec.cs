@@ -20,7 +20,7 @@ namespace FSO.Content.Codecs
     {
         #region IContentCodec<Appearance> Members
 
-        public Appearance Decode(System.IO.Stream stream)
+        public override object GenDecode(System.IO.Stream stream)
         {
             var result = new Appearance();
             result.Read(stream);

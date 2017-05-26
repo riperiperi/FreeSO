@@ -30,12 +30,34 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm)
         {
+            if (vm.TS1)
+            {
+
+                var control = vm.Entities.FirstOrDefault(x => x is VMAvatar && !((VMAvatar)x).IsPet && ((VMAvatar)x).GetPersonData(VMPersonDataVariable.PersonType) != 2);
+                if (control == null)
+                {
+                    control = vm.Context.CreateObjectInstance(0x32AA2056, LotTilePos.OUT_OF_WORLD, Direction.NORTH)?.BaseObject;
+                    control?.SetPosition(LotTilePos.FromBigTile(1, 1, 1), Direction.NORTH, vm.Context);
+                }
+                if (control != null)
+                {
+                    var ava = (VMAvatar)control;
+                    ava.PersistID = ActorUID;
+                    ((VMTSOAvatarState)(ava.TSOState)).Permissions = VMTSOAvatarPermissions.Admin;
+                    ava.TSOState.Budget.Value = 1000000;
+                    vm.Context.ObjectQueries.RegisterAvatarPersist(ava, ava.PersistID);
+                    vm.SetGlobalValue(3, control.ObjectID);
+                }
+                return true;
+            }
+            
             var name = AvatarState.Name.Substring(0, Math.Min(AvatarState.Name.Length, 64));
             var sim = vm.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, LotTilePos.OUT_OF_WORLD, Direction.NORTH).Objects[0];
             var mailbox = vm.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
 
             if (VM.UseWorld) FSO.HIT.HITVM.Get().PlaySoundEvent("lot_enter");
             if (mailbox != null) VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context, VMPlaceRequestFlags.Default);
+            else sim.SetPosition(LotTilePos.FromBigTile(3, 3, 1), Direction.NORTH, vm.Context);
             sim.PersistID = ActorUID;
 
             VMAvatar avatar = (VMAvatar)sim;

@@ -9,17 +9,12 @@ namespace FSO.Files.Formats.IFF
 {
     public static class PIFFRegistry
     {
-        private static Dictionary<string, List<IffFile>> PIFFsByName;
-        private static Dictionary<string, string> OtfRewrite;
-        private static Dictionary<string, bool> IsPIFFUser; //if a piff is User, all other piffs for that file are ignored.
+        private static Dictionary<string, List<IffFile>> PIFFsByName = new Dictionary<string, List<IffFile>>();
+        private static Dictionary<string, string> OtfRewrite = new Dictionary<string, string>();
+        private static Dictionary<string, bool> IsPIFFUser = new Dictionary<string, bool>(); //if a piff is User, all other piffs for that file are ignored.
 
         public static void Init(string basePath)
         {
-            PIFFsByName = new Dictionary<string, List<IffFile>>();
-            IsPIFFUser = new Dictionary<string, bool>();
-            OtfRewrite = new Dictionary<string, string>();
-
-            //Directory.CreateDirectory(basePath);
             string[] paths = Directory.GetFiles(basePath, "*.piff", SearchOption.AllDirectories);
             for (int i = 0; i < paths.Length; i++)
             {

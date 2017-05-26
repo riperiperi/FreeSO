@@ -32,6 +32,7 @@ namespace FSO.Content
 
         public Dictionary<ushort, FloorReference> Entries;
         public FAR1Provider<IffFile> Floors;
+        public Dictionary<string, ushort> DynamicFloorFromID;
 
         private IffFile FloorGlobals;
         public int NumFloors;
@@ -124,14 +125,17 @@ namespace FSO.Content
                 "housedata/floors4/floors4.far"
             };
 
+            DynamicFloorFromID = new Dictionary<string, ushort>();
+
             for (var i = 0; i < archives.Length; i++)
             {
                 var archivePath = ContentManager.GetPath(archives[i]);
-                var archive = new FAR1Archive(archivePath);
+                var archive = new FAR1Archive(archivePath, true);
                 var entries = archive.GetAllEntries();
 
                 foreach (var entry in entries)
                 {
+                    DynamicFloorFromID[new string(entry.Key.TakeWhile(x => x != '.').ToArray()).ToLowerInvariant()] = floorID;
                     var iff = new IffFile();
                     var bytes = archive.GetEntry(entry);
                     using(var stream = new MemoryStream(bytes))
@@ -247,6 +251,16 @@ namespace FSO.Content
             return new List<IContentReference<Floor>>(Entries.Values);
         }
 
+        public Floor Get(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Floor Get(ContentID id)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 
@@ -271,6 +285,11 @@ namespace FSO.Content
         public Floor Get()
         {
             return Provider.Get(ID);
+        }
+
+        public object GetThrowawayGeneric()
+        {
+            throw new NotImplementedException();
         }
 
         public object GetGeneric()

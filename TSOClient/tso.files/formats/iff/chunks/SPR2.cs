@@ -253,7 +253,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             var transparentPixel = palette.Colors[TransparentColorIndex];
             transparentPixel.A = 0;
 
-            while (!endmarker)
+            while (!endmarker && io.HasMore)
             {
                 var marker = io.ReadUInt16();
                 var command = marker >> 13;

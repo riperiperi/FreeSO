@@ -22,6 +22,7 @@ namespace FSO.Files.FAR1
         private uint m_ManifestOffset;
         private uint m_NumFiles;
         private List<FarEntry> m_Entries = new List<FarEntry>();
+        private bool V1b = true;
 
         /// <summary>
         /// The offset into the archive of the manifest.
@@ -43,7 +44,7 @@ namespace FSO.Files.FAR1
         /// Creates a new FAR1Archive instance from a path.
         /// </summary>
         /// <param name="Path">The path to the archive.</param>
-        public FAR1Archive(string Path)
+        public FAR1Archive(string Path, bool v1b)
         {
             m_Path = Path;
             m_Reader = new BinaryReader(File.Open(Path, FileMode.Open, FileAccess.Read, FileShare.Read));
@@ -71,7 +72,7 @@ namespace FSO.Files.FAR1
                 Entry.DataLength = m_Reader.ReadInt32();
                 Entry.DataLength2 = m_Reader.ReadInt32();
                 Entry.DataOffset = m_Reader.ReadInt32();
-                Entry.FilenameLength = m_Reader.ReadInt16();
+                Entry.FilenameLength = (v1b)?m_Reader.ReadInt16():(short)m_Reader.ReadInt32();
                 Entry.Filename = Encoding.ASCII.GetString(m_Reader.ReadBytes(Entry.FilenameLength));
 
                 m_Entries.Add(Entry);

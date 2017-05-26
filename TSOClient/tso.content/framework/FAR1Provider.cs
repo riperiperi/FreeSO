@@ -15,6 +15,7 @@ using FSO.Common.Content;
 using FSO.Files.FAR1;
 using FSO.Files.Utils;
 using FSO.Common.Utils;
+using FSO.Content.Codecs;
 
 namespace FSO.Content.Framework
 {
@@ -26,6 +27,7 @@ namespace FSO.Content.Framework
     {
         protected Content ContentManager;
         protected Dictionary<string, Far1ProviderEntry<T>> EntriesByName;
+        protected Dictionary<string, List<Far1ProviderEntry<T>>> EntriesOfType; //based on file extension
 
         protected IContentCodec<T> Codec;
         protected TimedReferenceCache<string, T> Cache;
@@ -56,6 +58,13 @@ namespace FSO.Content.Framework
             this.ContentManager = contentManager;
             this.Codec = codec;
             this.FarFilePattern = farFilePattern;
+        }
+
+        private bool TS1; //temporary testing var for hybrid content system
+
+        public FAR1Provider(Content contentManager, IContentCodec<T> codec, Regex farFilePattern, bool ts1) : this(contentManager,codec,farFilePattern)
+        {
+            TS1 = ts1;
         }
 
         /// <summary>
@@ -99,6 +108,11 @@ namespace FSO.Content.Framework
             return default(T);
         }
 
+        public T Get(ContentID id)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Gets an archive based on its filename, but avoids the cache entirely. 
         /// Used for quick accesses to data that will not be reused soon, and will be released manually. (walls, floors)
@@ -127,7 +141,9 @@ namespace FSO.Content.Framework
                 byte[] data = entry.Archive.GetEntry(entry.FarEntry);
                 using (var stream = new MemoryStream(data, false))
                 {
-                    T result = this.Codec.Decode(stream);
+                    T result = default(T);
+                    if (Codec == null) result = (T)SmartCodec.Decode(stream, Path.GetExtension(entry.FarEntry.Filename));
+                    else result = this.Codec.Decode(stream);
                     if (result is IFileInfoUtilizer) ((IFileInfoUtilizer)result).SetFilename(entry.FarEntry.Filename);
                     return result;
                 }
@@ -139,9 +155,17 @@ namespace FSO.Content.Framework
             byte[] data = entry.Archive.GetEntry(entry.FarEntry);
             using (var stream = new MemoryStream(data, false))
             {
+                if (Codec == null) return (T)SmartCodec.Decode(stream, Path.GetExtension(entry.FarEntry.Filename));
                 T result = this.Codec.Decode(stream);
                 return result;
             }
+        }
+
+        public List<Far1ProviderEntry<T>> GetEntriesForExtension(string ext)
+        {
+            List<Far1ProviderEntry<T>> result = null;
+            if (EntriesOfType.TryGetValue(ext, out result)) return result;
+            return null;
         }
 
         #region IContentProvider<T> Members
@@ -150,11 +174,13 @@ namespace FSO.Content.Framework
         {
             Cache = new TimedReferenceCache<string, T>();
             EntriesByName = new Dictionary<string, Far1ProviderEntry<T>>();
+            EntriesOfType = new Dictionary<string, List<Far1ProviderEntry<T>>>();
 
             if (FarFilePattern != null)
             {
                 List<string> farFiles = new List<string>();
-                foreach (var file in ContentManager.AllFiles)
+                string[] allFiles = (TS1) ? ContentManager.TS1AllFiles : ContentManager.AllFiles;
+                foreach (var file in allFiles)
                 {
                     if (FarFilePattern.IsMatch(file.Replace('\\', '/')))
                     {
@@ -165,7 +191,7 @@ namespace FSO.Content.Framework
             }
 
             foreach (var farPath in FarFiles){
-                var archive = new FAR1Archive(ContentManager.GetPath(farPath));
+                var archive = new FAR1Archive((TS1)?Path.Combine(ContentManager.TS1BasePath, farPath):ContentManager.GetPath(farPath), !TS1);
                 var entries = archive.GetAllFarEntries();
 
                 foreach (var entry in entries)
@@ -177,10 +203,15 @@ namespace FSO.Content.Framework
                     };
                     if (entry.Filename != null)
                     {
-                        if (EntriesByName.ContainsKey(entry.Filename))
-                        {
-                        }
                         EntriesByName[entry.Filename] = referenceItem;
+                        var ext = Path.GetExtension(entry.Filename).ToLowerInvariant();
+                        List<Far1ProviderEntry<T>> group = null;
+                        if (!EntriesOfType.TryGetValue(ext, out group))
+                        {
+                            group = new List<Far1ProviderEntry<T>>();
+                            EntriesOfType[ext] = group;
+                        }
+                        group.Add(referenceItem);
                     }
                 }
             }
@@ -214,6 +245,11 @@ namespace FSO.Content.Framework
         public T Get()
         {
             return this.Provider.Get(this);
+        }
+
+        public object GetThrowawayGeneric()
+        {
+            return this.Provider.ThrowawayGet(this);
         }
 
         public object GetGeneric()

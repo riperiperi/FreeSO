@@ -128,61 +128,111 @@ namespace FSO.Vitaboy
 
             if (m_Handgroup != null)
             {
-                var HandgroupID = m_Handgroup.GetHandgroup();
-                if (HandgroupID.FileID == 0) HandgroupID.FileID = (int)(158913789970>>32);
-                var Handgroup = FSO.Content.Content.Get().AvatarHandgroups.Get(HandgroupID.TypeID, HandgroupID.FileID);
-
-                FSO.Common.Content.ContentID LeftID = null;
-                FSO.Common.Content.ContentID RightID = null;
+                var hgroup = m_Handgroup.LiteralHandgroup;
+                if (hgroup == null)
+                {
+                    var HandgroupID = m_Handgroup.GetHandgroup();
+                    if (HandgroupID.FileID == 0) HandgroupID.FileID = (int)(158913789970 >> 32);
+                    hgroup = FSO.Content.Content.Get().AvatarHandgroups.Get(HandgroupID.TypeID, HandgroupID.FileID);
+                }
 
                 FSO.Vitaboy.HandSet HSet = null;
-
-                switch (m_Appearance)
-                {
-                    case AppearanceType.Light:
-                        HSet = Handgroup.LightSkin;
-                        break;
-                    case AppearanceType.Medium:
-                        HSet = Handgroup.MediumSkin;
-                        break;
-                    case AppearanceType.Dark:
-                        HSet = Handgroup.DarkSkin;
-                        break;
+                if (hgroup.TS1HandSet) HSet = hgroup.LightSkin;
+                else {
+                    switch (m_Appearance)
+                    {
+                        case AppearanceType.Light:
+                            HSet = hgroup.LightSkin;
+                            break;
+                        case AppearanceType.Medium:
+                            HSet = hgroup.MediumSkin;
+                            break;
+                        case AppearanceType.Dark:
+                            HSet = hgroup.DarkSkin;
+                            break;
+                    }
                 }
 
-                switch (m_LeftHandGesture)
+                Appearance LeftApr, RightApr;
+                string LeftTex = null, RightTex = null;
+                if (hgroup.TS1HandSet)
                 {
-                    case SimHandGesture.Idle:
-                        LeftID = HSet.LeftHand.Idle.ID;
-                        break;
-                    case SimHandGesture.Fist:
-                        LeftID = HSet.LeftHand.Fist.ID;
-                        break;
-                    case SimHandGesture.Pointing:
-                        LeftID = HSet.LeftHand.Pointing.ID;
-                        break;
-                }
+                    string LeftID = null;
+                    string RightID = null;
+                    switch (m_LeftHandGesture)
+                    {
+                        case SimHandGesture.Idle:
+                            LeftID = HSet.LeftHand.Idle.Name;
+                            LeftTex = HSet.LeftHand.Idle.TexName;
+                            break;
+                        case SimHandGesture.Fist:
+                            LeftID = HSet.LeftHand.Fist.Name;
+                            LeftTex = HSet.LeftHand.Fist.TexName;
+                            break;
+                        case SimHandGesture.Pointing:
+                            LeftID = HSet.LeftHand.Pointing.Name;
+                            LeftTex = HSet.LeftHand.Pointing.TexName;
+                            break;
+                    }
 
-                switch (m_RightHandGesture)
+                    switch (m_RightHandGesture)
+                    {
+                        case SimHandGesture.Idle:
+                            RightID = HSet.RightHand.Idle.Name;
+                            RightTex = HSet.RightHand.Idle.TexName;
+                            break;
+                        case SimHandGesture.Fist:
+                            RightID = HSet.RightHand.Fist.Name;
+                            RightTex = HSet.RightHand.Idle.TexName;
+                            break;
+                        case SimHandGesture.Pointing:
+                            RightID = HSet.RightHand.Pointing.Name;
+                            RightTex = HSet.RightHand.Idle.TexName;
+                            break;
+                    }
+
+                    LeftApr = FSO.Content.Content.Get().AvatarAppearances.Get(LeftID);
+                    RightApr = FSO.Content.Content.Get().AvatarAppearances.Get(RightID);
+                }
+                else
                 {
-                    case SimHandGesture.Idle:
-                        RightID = HSet.RightHand.Idle.ID;
-                        break;
-                    case SimHandGesture.Fist:
-                        RightID = HSet.RightHand.Fist.ID;
-                        break;
-                    case SimHandGesture.Pointing:
-                        RightID = HSet.RightHand.Pointing.ID;
-                        break;
-                }
+                    FSO.Common.Content.ContentID LeftID = null;
+                    FSO.Common.Content.ContentID RightID = null;
 
-                Appearance LeftApr = FSO.Content.Content.Get().AvatarAppearances.Get(LeftID);
-                Appearance RightApr = FSO.Content.Content.Get().AvatarAppearances.Get(RightID);
+                    switch (m_LeftHandGesture)
+                    {
+                        case SimHandGesture.Idle:
+                            LeftID = HSet.LeftHand.Idle.ID;
+                            break;
+                        case SimHandGesture.Fist:
+                            LeftID = HSet.LeftHand.Fist.ID;
+                            break;
+                        case SimHandGesture.Pointing:
+                            LeftID = HSet.LeftHand.Pointing.ID;
+                            break;
+                    }
+
+                    switch (m_RightHandGesture)
+                    {
+                        case SimHandGesture.Idle:
+                            RightID = HSet.RightHand.Idle.ID;
+                            break;
+                        case SimHandGesture.Fist:
+                            RightID = HSet.RightHand.Fist.ID;
+                            break;
+                        case SimHandGesture.Pointing:
+                            RightID = HSet.RightHand.Pointing.ID;
+                            break;
+                    }
+
+                    LeftApr = FSO.Content.Content.Get().AvatarAppearances.Get(LeftID);
+                    RightApr = FSO.Content.Content.Get().AvatarAppearances.Get(RightID);
+                }
 
                 if (LeftApr != null)
-                    m_LeftHandInstance = base.AddAppearance(LeftApr);
-                if(RightApr != null)
-                    m_RightHandInstance = base.AddAppearance(RightApr);
+                    m_LeftHandInstance = base.AddAppearance(LeftApr, LeftTex);
+                if (RightApr != null)
+                    m_RightHandInstance = base.AddAppearance(RightApr, RightTex);
             }
         }
 
@@ -200,7 +250,7 @@ namespace FSO.Vitaboy
                 var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
                 if (Appearance != null)
                 {
-                    m_HeadInstance = base.AddAppearance(Appearance);
+                    m_HeadInstance = base.AddAppearance(Appearance, m_Head.TS1TextureID);
                 }
             }
         }
@@ -323,7 +373,7 @@ namespace FSO.Vitaboy
                 var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
                 if (Appearance != null)
                 {
-                    m_BodyInstance = base.AddAppearance(Appearance);
+                    m_BodyInstance = base.AddAppearance(Appearance, m_Body.TS1TextureID);
                 }
             }
         }

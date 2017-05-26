@@ -75,7 +75,7 @@ namespace FSO.Vitaboy
                 return;
             }
 
-            var add = AddAppearance(apr);
+            var add = AddAppearance(apr, null);
             Accessories.Add(apr, add);
         }
 
@@ -85,6 +85,7 @@ namespace FSO.Vitaboy
         /// <param name="apr">The Appearance of the accessory to remove.</param>
         public void RemoveAccessory(Appearance apr)
         {
+            if (apr == null) return;
             if (Accessories.ContainsKey(apr))
             {
                 RemoveAppearance(Accessories[apr], true);
@@ -113,15 +114,20 @@ namespace FSO.Vitaboy
         /// </summary>
         /// <param name="appearance">The Appearance instance to add.</param>
         /// <returns>An AvatarAppearanceInstance instance.</returns>
-        protected AvatarAppearanceInstance AddAppearance(Appearance appearance)
+        protected AvatarAppearanceInstance AddAppearance(Appearance appearance, string texOverride)
         {
             var result = new AvatarAppearanceInstance();
             result.Bindings = new List<AvatarBindingInstance>();
 
             foreach (var bindingReference in appearance.Bindings)
             {
-                var binding = FSO.Content.Content.Get().AvatarBindings.Get(bindingReference.TypeID, bindingReference.FileID);
+                var binding = bindingReference.RealBinding ?? FSO.Content.Content.Get().AvatarBindings.Get(bindingReference.TypeID, bindingReference.FileID);
                 if (binding == null) { continue; }
+                if (texOverride != null)
+                {
+                    binding = binding.TS1Copy();
+                    binding.TextureName = texOverride;
+                }
                 result.Bindings.Add(AddBinding(binding));
             }
 
@@ -137,6 +143,7 @@ namespace FSO.Vitaboy
         {
             lock (Bindings)
             {
+                if (appearance == null) return;
                 foreach (var binding in appearance.Bindings)
                 {
                     RemoveBinding(binding, dispose);
@@ -153,8 +160,16 @@ namespace FSO.Vitaboy
         {
             var content = FSO.Content.Content.Get();
             var instance = new AvatarBindingInstance();
-            instance.Mesh = content.AvatarMeshes.Get(binding.MeshTypeID, binding.MeshFileID);
-            instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID);
+            if (binding.MeshName != null)
+            {
+                instance.Mesh = content.AvatarMeshes.Get(binding.MeshName);
+                instance.Texture = content.AvatarTextures.Get(binding.TextureName ?? instance.Mesh.TextureName);
+            }
+            else
+            {
+                instance.Mesh = content.AvatarMeshes.Get(binding.MeshTypeID, binding.MeshFileID);
+                instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID);
+            }
 
             /*if (instance.Mesh != null)
             {

@@ -68,5 +68,10 @@ namespace FSO.Content
         {
             throw new NotImplementedException();
         }
+
+        public CityMap Get(ContentID id)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

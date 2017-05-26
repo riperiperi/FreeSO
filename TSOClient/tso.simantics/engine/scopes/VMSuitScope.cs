@@ -60,11 +60,11 @@ namespace FSO.SimAntics.Engine.Scopes
             switch (type)
             {
                 case VMPersonSuits.DefaultDaywear:
-                    return avatar.DefaultSuits.Daywear;
+                    return avatar.DefaultSuits.Daywear.ID;
                 case VMPersonSuits.DefaultSleepwear:
-                    return avatar.DefaultSuits.Sleepwear;
+                    return avatar.DefaultSuits.Sleepwear.ID;
                 case VMPersonSuits.DefaultSwimwear:
-                    return avatar.DefaultSuits.Swimwear;
+                    return avatar.DefaultSuits.Swimwear.ID;
                 case VMPersonSuits.DynamicCostume:
                     return avatar.DynamicSuits.Costume;
                 case VMPersonSuits.DynamicDaywear:

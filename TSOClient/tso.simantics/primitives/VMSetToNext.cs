@@ -90,7 +90,7 @@ namespace FSO.SimAntics.Primitives
                 }
 
                 //iterate through all following dirs til we find an object
-                for (int i=ptrDir+1; i<4; i++)
+                for (int i = ptrDir + 1; i < 4; i++)
                 {
                     var off = AdjStep[i];
                     var adj = context.VM.Context.ObjectQueries.GetObjectsAt(LotTilePos.FromBigTile(
@@ -106,7 +106,12 @@ namespace FSO.SimAntics.Primitives
                     }
                 }
                 return VMPrimitiveExitCode.GOTO_FALSE;
-
+            } else if (operand.SearchType == VMSetToNextSearchType.Career)
+            {
+                var next = Content.Content.Get().Jobs.SetToNext(targetValue);
+                if (next < 0) return VMPrimitiveExitCode.GOTO_FALSE;
+                VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, next);
+                return VMPrimitiveExitCode.GOTO_TRUE;
             } else {
 
                 //if we've cached the search type, use that instead of all objects
@@ -136,15 +141,16 @@ namespace FSO.SimAntics.Primitives
                                 found = (temp.GetType() == typeof(VMGameObject));
                                 break;
                             case VMSetToNextSearchType.NeighborId:
+                                return VMPrimitiveExitCode.GOTO_FALSE;
                                 throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.ObjectWithCategoryEqualToSP0:
-                                found = (temp.Object.OBJ.FunctionFlags == context.Args[0]); //I'm assuming that means "Stack parameter 0", that category means function and that it needs to be exactly the same (no subsets)
+                                found = (temp.GetValue(Model.VMStackObjectVariable.Category) == context.Args[0]); //I'm assuming that means "Stack parameter 0", that category means function and that it needs to be exactly the same (no subsets)
                                 break;
                             case VMSetToNextSearchType.NeighborOfType:
-                                throw new VMSimanticsException("Not implemented!", context);
-                            case VMSetToNextSearchType.Career:
+                                return VMPrimitiveExitCode.GOTO_FALSE;
                                 throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.ClosestHouse:
+                                return VMPrimitiveExitCode.GOTO_FALSE;
                                 throw new VMSimanticsException("Not implemented!", context);
                             default:
                                 //set to next object, or cached search.
@@ -258,6 +264,7 @@ namespace FSO.SimAntics.Primitives
         ObjectOnSameTile = 8,
         ObjectAdjacentToObjectInLocal = 9,
         Career = 10,
-        ClosestHouse = 11
+        ClosestHouse = 11,
+        FamilyMember = 12, //TS1.5 or higher
     }
 }

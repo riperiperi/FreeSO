@@ -43,7 +43,7 @@ namespace FSO.SimAntics.Entities
                     var sub = Objects[i];
                     if (Offsets[i] == new LotTilePos()) return sub;
                 }
-                return Objects[0];
+                return Objects.FirstOrDefault();
             }
         }
 
@@ -122,6 +122,7 @@ namespace FSO.SimAntics.Entities
         public VMPlacementResult ChangePosition(LotTilePos pos, Direction direction, VMContext context, VMPlaceRequestFlags flags)
         {
             if (pos.Level > context.Architecture.Stories) return new VMPlacementResult(VMPlacementError.NotAllowedOnFloor);
+            if (Objects.Count == 0) return new VMPlacementResult(VMPlacementError.Success);
 
             VMEntity[] OldContainers = new VMEntity[Objects.Count];
             short[] OldSlotNum = new short[Objects.Count];

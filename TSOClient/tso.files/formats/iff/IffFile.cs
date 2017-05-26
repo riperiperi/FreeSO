@@ -50,7 +50,14 @@ namespace FSO.Files.Formats.IFF
             {"FWAV", typeof(FWAV)},
             {"BMP_", typeof(BMP)},
             {"PIFF", typeof(PIFF) },
-            {"TRCN", typeof(TRCN) }
+            {"TRCN", typeof(TRCN) },
+
+            {"objt", typeof(OBJT) },
+            {"Arry", typeof(ARRY) },
+            {"ObjM", typeof(OBJM) },
+            {"WALm", typeof(WALm) },
+            {"FLRm", typeof(FLRm) },
+            {"CARR", typeof(CARR) }
         };
 
         public IffRuntimeInfo RuntimeInfo = new IffRuntimeInfo();
@@ -114,7 +121,8 @@ namespace FSO.Files.Formats.IFF
                 var identifier = io.ReadCString(60, false).Replace("\0", "");
                 if (identifier != "IFF FILE 2.5:TYPE FOLLOWED BY SIZE JAMIE DOORNBOS & MAXIS 1")
                 {
-                    throw new Exception("Invalid iff file!");
+                    if (identifier != "IFF FILE 2.0:TYPE FOLLOWED BY SIZE JAMIE DOORNBOS & MAXIS 1") //house11.iff, seems to read fine
+                        throw new Exception("Invalid iff file!");
                 }
 
                 var rsmpOffset = io.ReadUInt32();

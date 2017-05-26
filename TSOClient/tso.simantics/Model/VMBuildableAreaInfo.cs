@@ -1,4 +1,5 @@
 ﻿using FSO.Content;
+using FSO.Content.Interfaces;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.TSOPlatform;
 using System;

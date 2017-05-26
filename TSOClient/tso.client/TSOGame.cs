@@ -116,6 +116,8 @@ namespace FSO.Client
             PlatformID pid = os.Platform;
             GameFacade.Linux = (pid == PlatformID.MacOSX || pid == PlatformID.Unix);
 
+            FSO.Content.Content.TS1Hybrid = GlobalSettings.Default.TS1HybridEnable;
+            FSO.Content.Content.TS1HybridBasePath = GlobalSettings.Default.TS1HybridPath;
             FSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
             base.Initialize();
 

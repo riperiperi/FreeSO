@@ -55,6 +55,7 @@ namespace FSO.SimAntics
         {
             get { return GlobalLink != null; }
         }
+        public bool TS1;
 
         private const long TickInterval = 33 * TimeSpan.TicksPerMillisecond;
         public byte[][] HollowAdj;
@@ -131,6 +132,8 @@ namespace FSO.SimAntics
             Headline = headline;
             Scheduler = new VMScheduler(this);
             GameTickRate = FSOEnvironment.RefreshRate;
+
+            TS1 = Content.Content.Get().TS1;
         }
 
         private void VM_OnBHAVChange()
@@ -171,7 +174,7 @@ namespace FSO.SimAntics
         {
             Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             PlatformState = new VMTSOLotState();
-            GlobalState = new short[33];
+            GlobalState = new short[38];
             GlobalState[20] = 255; //Game Edition. Basically, what "expansion packs" are running. Let's just say all of them.
             GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
@@ -199,17 +202,19 @@ namespace FSO.SimAntics
 
         private int GameTickRate = 60;
         private int GameTickNum = 0;
+        private int SpeedMultiplier = 5;
         public void Update()
         {
-            var oldFrame = (GameTickNum * 30) / GameTickRate;
+            SpeedMultiplier = 1;
+            var oldFrame = (GameTickNum * 30 * SpeedMultiplier) / GameTickRate;
             GameTickNum++;
-            var newFrame = (GameTickNum * 30) / GameTickRate;
-            if (newFrame > oldFrame)
+            var newFrame = (GameTickNum * 30 * SpeedMultiplier) / GameTickRate;
+            for (int i = 0; i < newFrame - oldFrame; i++)
             {
                 Tick();
             }
 
-            var fraction = ((GameTickNum * 30) - (newFrame * GameTickRate)) / (float)GameTickRate;
+            var fraction = ((GameTickNum * 30 * SpeedMultiplier) - (newFrame * GameTickRate)) / (float)GameTickRate;
             //fractional animation for avatars
             foreach (var obj in Entities)
             {
@@ -381,7 +386,7 @@ namespace FSO.SimAntics
         public short GetGlobalValue(ushort var)
         {
             // should this be in VMContext?
-            if (var > 32) throw new Exception("Global Access out of bounds!");
+            if (var >= GlobalState.Length) throw new Exception("Global Access out of bounds!");
             return GlobalState[var];
         }
 
@@ -393,7 +398,7 @@ namespace FSO.SimAntics
         /// <returns>True if successful. WARNING: If index was OOB, exception is thrown.</returns>
         public bool SetGlobalValue(ushort var, short value)
         {
-            if (var > 32) throw new Exception("Global Access out of bounds!");
+            if (var >= GlobalState.Length) throw new Exception("Global Access out of bounds!");
             GlobalState[var] = value;
             return true;
         }

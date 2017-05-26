@@ -15,6 +15,7 @@ using FSO.SimAntics.Engine.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Vitaboy;
 using System.IO;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -28,7 +29,7 @@ namespace FSO.SimAntics.Primitives
 
             if (operand.SuitScope == VMSuitScope.Object && (operand.Flags & VMChangeSuitOrAccessoryFlags.Update) == VMChangeSuitOrAccessoryFlags.Update)
             { //update default outfit with outfit in stringset 304 with index in temp 0
-                avatar.DefaultSuits.Daywear = Convert.ToUInt64(context.Callee.Object.Resource.Get<STR>(304).GetString((context.Thread.TempRegisters[0])), 16);
+                avatar.DefaultSuits.Daywear = VMOutfitReference.Parse(context.Callee.Object.Resource.Get<STR>(304).GetString((context.Thread.TempRegisters[0])), context.VM.TS1);
                 avatar.BodyOutfit = avatar.DefaultSuits.Daywear;
             } 
             else 
@@ -57,7 +58,7 @@ namespace FSO.SimAntics.Primitives
                     if (outfitType == OutfitType.BODY)
                     {
                         avatar.SetPersonData(Model.VMPersonDataVariable.CurrentOutfit, operand.SuitData);
-                        avatar.BodyOutfit = (ulong)suit;
+                        avatar.BodyOutfit = new VMOutfitReference((ulong)suit);
                     }else if(outfitType == OutfitType.ACCESSORY){
                         if (VM.UseWorld){
                             var outfit = Content.Content.Get().AvatarOutfits.Get((ulong)suit);

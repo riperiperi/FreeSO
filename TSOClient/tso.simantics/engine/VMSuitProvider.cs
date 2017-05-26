@@ -105,18 +105,18 @@ namespace FSO.SimAntics.Engine
                         //todo: (tail etc), cockroach head
 
                         case VMPersonSuits.DefaultDaywear:
-                            return avatar.DefaultSuits.Daywear;
+                            return avatar.DefaultSuits.Daywear.ID;
                         case VMPersonSuits.Naked:
                             return (ulong)(male ? 0x24E0000000D : 0x10000000D);
                         case VMPersonSuits.DefaultSwimwear:
-                            return avatar.DefaultSuits.Swimwear;
+                            return avatar.DefaultSuits.Swimwear.ID;
                         case VMPersonSuits.JobOutfit:
                             var job = avatar.GetPersonData(VMPersonDataVariable.OnlineJobID);
                             if (job < 1 || job > 5) return null;
                             var level = Math.Max(0, Math.Min(3, (avatar.GetPersonData(VMPersonDataVariable.OnlineJobGrade) - 1) / 4));
                             return (ulong)(JobOutfits[male?0:1][job-1][level]);
                         case VMPersonSuits.DefaultSleepwear:
-                            return avatar.DefaultSuits.Sleepwear;
+                            return avatar.DefaultSuits.Sleepwear.ID;
                         case VMPersonSuits.SkeletonPlus:
                             return (ulong)(0x5750000000D);
                         case VMPersonSuits.SkeletonMinus:

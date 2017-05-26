@@ -158,6 +158,8 @@
     <Compile Include="UI\Panels\UIWebDownloaderDialog.cs" />
     <Compile Include="UI\Panels\WorldUI\UIHeadlineRenderer.cs" />
     <Compile Include="UI\Panels\WorldUI\UIMoneyHeadline.cs" />
+    <Compile Include="UI\Screens\IGameScreen.cs" />
+    <Compile Include="UI\Screens\SandboxGameScreen.cs" />
     <Compile Include="UI\UIRelationshipBar.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
     <Compile Include="Utils\Endian.cs" />

@@ -40,11 +40,14 @@ namespace FSO.IDE.EditorComponent
             var searchString = new Regex(".*" + SearchBox.Text.ToLowerInvariant() + ".*");
 
             AllList.Items.Clear();
-            var anims = Content.Content.Get().AvatarAnimations.AnimationsByName;
-            foreach (var anim in anims)
+            var anims = (Content.Content.Get().AvatarAnimations as AvatarAnimationProvider)?.AnimationsByName;
+            if (anims != null)
             {
-                var name = anim.Key.Substring(0, anim.Key.Length - 5).ToLowerInvariant();
-                if (searchString.IsMatch(name)) AllList.Items.Add(name); //keys are names
+                foreach (var anim in anims)
+                {
+                    var name = anim.Key.Substring(0, anim.Key.Length - 5).ToLowerInvariant();
+                    if (searchString.IsMatch(name)) AllList.Items.Add(name); //keys are names
+                }
             }
         }
         

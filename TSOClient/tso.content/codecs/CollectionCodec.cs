@@ -10,7 +10,7 @@ namespace FSO.Content.Codecs
 {
     public class CollectionCodec : IContentCodec<Collection>
     {
-        public Collection Decode(Stream stream)
+        public override object GenDecode(Stream stream)
         {
             Collection collection = new Collection();
             collection.Read(stream);

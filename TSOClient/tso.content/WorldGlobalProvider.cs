@@ -17,6 +17,7 @@ using System.IO;
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Formats.OTF;
+using FSO.Files.FAR1;
 
 namespace FSO.Content
 {
@@ -27,6 +28,7 @@ namespace FSO.Content
     {
         private Dictionary<string, GameGlobal> Cache; //indexed by lowercase filename, minus directory and extension.
         private Content ContentManager;
+        private FAR1Archive TS1Provider;
 
         public WorldGlobalProvider(Content contentManager)
         {
@@ -39,6 +41,10 @@ namespace FSO.Content
         public void Init()
         {
             Cache = new Dictionary<string, GameGlobal>();
+            if (ContentManager.TS1)
+            {
+                TS1Provider = new FAR1Archive(Path.Combine(ContentManager.TS1BasePath, "GameData/Global/Global.far"), false);
+            }
         }
 
         /// <summary>
@@ -58,18 +64,40 @@ namespace FSO.Content
 
                 //if we can't load this let it throw an exception...
                 //probably sanity check this when we add user objects.
-                var iff = new IffFile(Path.Combine(Content.Get().BasePath, "objectdata/globals/" + filename + ".iff")); 
-                OTFFile otf = null;
-                try
+
+                GameGlobalResource resource = null;
+
+                if (TS1Provider != null)
                 {
-                    var rewrite = PIFFRegistry.GetOTFRewrite(filename + ".otf");
-                    otf = new OTFFile(rewrite ?? Path.Combine(Content.Get().BasePath, ("objectdata/globals/" + filename + ".otf")));
+                    var data = TS1Provider.GetEntry(
+                        TS1Provider.GetAllEntries().FirstOrDefault(x => x.Key.ToLowerInvariant() == (filename + ".iff").ToLowerInvariant()));
+
+                    if (data != null)
+                    {
+                        using (var stream = new MemoryStream(data))
+                        {
+                            var iff = new IffFile();
+                            iff.Read(stream);
+                            resource = new GameGlobalResource(iff, null);
+                        }
+                    }
+                    
                 }
-                catch (IOException)
-                {
-                    //if we can't load an otf, it probably doesn't exist.
+                else
+                { 
+                    var iff = new IffFile(Path.Combine(Content.Get().BasePath, "objectdata/globals/" + filename + ".iff"));
+                    OTFFile otf = null;
+                    try
+                    {
+                        var rewrite = PIFFRegistry.GetOTFRewrite(filename + ".otf");
+                        otf = new OTFFile(rewrite ?? Path.Combine(Content.Get().BasePath, ("objectdata/globals/" + filename + ".otf")));
+                    }
+                    catch (IOException)
+                    {
+                        //if we can't load an otf, it probably doesn't exist.
+                    }
+                    resource = new GameGlobalResource(iff, otf);
                 }
-                var resource = new GameGlobalResource(iff, otf);
 
                 var item = new GameGlobal
                 {

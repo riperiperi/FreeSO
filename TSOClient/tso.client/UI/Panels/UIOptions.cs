@@ -317,7 +317,7 @@ namespace FSO.Client.UI.Panels
                 SurroundingLots = settings.SurroundingLotMode
             };
 
-            var vm = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;
+            var vm = ((IGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;
             if (vm != null)
             {
                 vm.Context.World.ChangedWorldConfig(GameFacade.GraphicsDevice);

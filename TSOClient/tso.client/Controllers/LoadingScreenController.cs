@@ -53,5 +53,10 @@ namespace FSO.Client.Controllers
             Cache.Init();
             return Cache;
         }
+
+        public object GetThrowawayGeneric()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

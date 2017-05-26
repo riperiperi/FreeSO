@@ -40,7 +40,6 @@ namespace FSO.SimAntics
         public void Tick()
         {
             if (FirePercent < 20000) FirePercent++;
-            TicksPerMinute = 30 * 5; //30 * 5;
             if (++MinuteFractions >= TicksPerMinute)
             {
                 MinuteFractions = 0;

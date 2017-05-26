@@ -298,13 +298,13 @@ namespace FSO.Client.UI.Panels.EODs
                 switch (SelectedTab)
                 {
                     case VMPersonSuits.DefaultDaywear:
-                        outfit = avatar.DefaultSuits.Daywear;
+                        outfit = avatar.DefaultSuits.Daywear.ID;
                         break;
                     case VMPersonSuits.DefaultSleepwear:
-                        outfit = avatar.DefaultSuits.Sleepwear;
+                        outfit = avatar.DefaultSuits.Sleepwear.ID;
                         break;
                     case VMPersonSuits.DefaultSwimwear:
-                        outfit = avatar.DefaultSuits.Swimwear;
+                        outfit = avatar.DefaultSuits.Swimwear.ID;
                         break;
                 }
             }

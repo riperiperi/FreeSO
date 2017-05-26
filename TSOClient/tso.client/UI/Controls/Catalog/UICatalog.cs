@@ -20,6 +20,7 @@ using static FSO.Content.WorldObjectCatalog;
 using FSO.Common;
 using FSO.SimAntics;
 using FSO.SimAntics.Model;
+using FSO.Content.Interfaces;
 
 namespace FSO.Client.UI.Controls.Catalog
 {

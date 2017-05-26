@@ -20,6 +20,8 @@ namespace FSO.Vitaboy
     /// </summary>
     public class Appearance
     {
+        public string Name;
+
         public uint ThumbnailTypeID;
         public uint ThumbnailFileID;
         public AppearanceBinding[] Bindings;
@@ -32,6 +34,34 @@ namespace FSO.Vitaboy
             get
             {
                 return new ContentID(ThumbnailTypeID, ThumbnailFileID);
+            }
+        }
+
+        public void ReadBCF(Stream stream)
+        {
+            using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                Name = io.ReadPascalString();
+                var type = io.ReadInt32();
+                var zero = io.ReadInt32();
+
+                var numBindings = io.ReadUInt32();
+                Bindings = new AppearanceBinding[numBindings];
+
+                for (var i = 0; i < numBindings; i++)
+                {
+                    //bindings are included verbatim here.
+                    var bnd = new Binding();
+                    bnd.Bone = io.ReadPascalString();
+                    bnd.MeshName = io.ReadPascalString();
+                    io.ReadInt32();
+                    io.ReadInt32();
+
+                    Bindings[i] = new AppearanceBinding
+                    {
+                        RealBinding = bnd
+                    };
+                }
             }
         }
 
@@ -70,5 +100,6 @@ namespace FSO.Vitaboy
     {
         public uint TypeID;
         public uint FileID;
+        public Binding RealBinding;
     }
 }
