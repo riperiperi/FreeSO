@@ -1,10 +1,20 @@
 ![image](http://freeso.org/wp-content/uploads/2016/03/freeso-logo.png?1)
 
-A full reimplementation of The Sims Online, using Monogame. FreeSO aims to be faithful to the original game as well as include quality of life changes such as hardware rendering, Hi-res output and >2 floor houses. 
+A full reimplementation of The Sims Online, using Monogame. FreeSO aims to be faithful to the original game as well as include quality of life changes such as hardware rendering, custom dynamic lighting, hi-res output and >2 floor houses. If you simply wish to play, you can install FreeSO and the original TSO files using our installer on http://freeso.org, and it will connect to our official servers.
 
-FreeSO currently depends on the original game files (objects, avatars, ui) to function, which are available for download from EA servers.
+FreeSO currently depends on the original game files (objects, avatars, ui) to function, which are available for download from EA servers. FreeSO is simply a game engine, and does not contain any copyrighted material in and of itself.
 
-![image](https://cloud.githubusercontent.com/assets/6294155/15116003/775020d0-15f9-11e6-87ec-6d5aa071aa37.png)
+![image](http://freeso.org/wp-content/uploads/2017/05/band.png)
+
+# The Sims 1
+
+FreeSO is additionally a base project for an ongoing re-implementation of The Sims 1's engine, targetted mainly at mobile devices. The content system, HIT VM and SimAntics VM included within this repo support both TSO and TS1 game files. A separate repo and UI frontend for this project is forthcoming.
+
+# Volcanic
+
+Volcanic is an extension of FreeSO that allows users to view, modify and save game objects alongside a live instance of the SimAntics VM. It features a vast array of resource editors for objects - the most prominent being the script editor. It allows for easy creation of new objects, and debugging of existing ones. Volcanic also functions when the FSO engine has loaded TS1 objects and other resources.
+
+![image](https://i.gyazo.com/431b8e3cb1547563bb2d64a380fb76e6.gif)
 
 # Contributing
 You can contribute to FreeSO by testing cutting edge features in the latest releases, filing bugs, and joining in the discussion on our forums!
@@ -13,10 +23,11 @@ You can contribute to FreeSO by testing cutting edge features in the latest rele
 * [Coding Standards](https://github.com/RHY3756547/FreeSO/wiki/Coding-standards)
 * [Pull Requests](https://github.com/RHY3756547/FreeSO/pulls): [Open](https://github.com/RHY3756547/FreeSO/pulls)/[Closed](https://github.com/RHY3756547/FreeSO/issues?q=is%3Apr+is%3Aclosed)
 * [Translation](http://forum.freeso.org/forums/translations.32/)
-* [Development Forums](http://forum.freeso.org)
-* [Development Blog](http://freeso.org)
+* [Forums](http://forum.freeso.org)
+* [Blog](http://freeso.org)
+* [Official Discord](https://discordapp.com/invite/xveESFj)
 
-Looking for something to do? Check out the issues tagged as [help needed](https://github.com/RHY3756547/FreeSO/labels/help%20needed) to get started.
+Looking for something to do? Check out the issues tagged as [help wanted](https://github.com/RHY3756547/FreeSO/labels/help%20wanted) to get started.
 
 Regarding translations, full object and UI translations should currently be released on the forums. An improved system for distribution and organisation will be set up in a month or two. Stay tuned!
 
