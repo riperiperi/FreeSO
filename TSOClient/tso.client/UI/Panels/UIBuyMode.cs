@@ -25,7 +25,7 @@ using FSO.Content.Interfaces;
 
 namespace FSO.Client.UI.Panels
 {
-    public class UIBuyMode : UIDestroyablePanel
+    public class UIBuyMode : UICachedContainer
     {
         public UIImage Background;
         public Texture2D catalogBackground { get; set; }
@@ -109,6 +109,7 @@ namespace FSO.Client.UI.Panels
             Background.Y = 0;
             Background.BlockInput();
             this.AddAt(0, Background);
+            Size = Background.Size.ToVector2();
 
             InventoryButtonBackgroundImage = script.Create<UIImage>("InventoryButtonBackgroundImage");
             this.AddAt(1, InventoryButtonBackgroundImage);
@@ -178,7 +179,7 @@ namespace FSO.Client.UI.Panels
             Holder.OnPickup += HolderPickup;
             Holder.OnDelete += HolderDelete;
             Holder.OnPutDown += HolderPutDown;
-            Add(QueryPanel);
+            DynamicOverlay.Add(QueryPanel);
 
             ObjLimitLabel = new UILabel();
             ObjLimitLabel.CaptionStyle = ObjLimitLabel.CaptionStyle.Clone();
@@ -192,7 +193,7 @@ namespace FSO.Client.UI.Panels
             Add(ObjLimitLabel);
         }
 
-        public override void Destroy()
+        public override void Removed()
         {
             //clean up loose ends
             Holder.OnPickup -= HolderPickup;
@@ -207,6 +208,7 @@ namespace FSO.Client.UI.Panels
                 Holder.ClearSelected();
                 QueryPanel.Active = false;
             }
+            base.Removed();
         }
 
         private void HolderPickup(UIObjectSelection holding, UpdateState state)

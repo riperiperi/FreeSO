@@ -372,7 +372,7 @@ namespace FSO.LotView.Components
         {
             var room = blueprint.RoomMap[level - 1][x + y * blueprint.Width];
             var room1 = room & 0xFFFF;
-            var room2 = room >> 16;
+            var room2 = (room >> 16) & 0x7FFF;
             if (room1 < blueprint.Rooms.Count && !blueprint.Rooms[(int)room1].IsOutside) return true;
             if (room2 > 0 && room2 < blueprint.Rooms.Count && !blueprint.Rooms[(int)room2].IsOutside) return true;
             return false;

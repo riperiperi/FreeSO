@@ -25,7 +25,7 @@ using FSO.SimAntics.Model;
 
 namespace FSO.Client.UI.Panels
 {
-    public class UIQueryPanel : UIContainer
+    public class UIQueryPanel : UICachedContainer
     {
 
         public Texture2D BackgroundImageCatalog { get; set; }
@@ -252,6 +252,9 @@ namespace FSO.Client.UI.Panels
             QuerybackPanel.Y = 0;
             QuerybackPanel.BlockInput();
             this.AddAt(0, QuerybackPanel);
+
+            Size = QuerybackPanel.Size.ToVector2() + new Vector2(22, 42);
+            BackOffset = new Point(22, 0);
 
             QuerybackCatalog = new UIImage(BackgroundImageCatalog);
             QuerybackCatalog.Position = new Vector2(-22, 0);

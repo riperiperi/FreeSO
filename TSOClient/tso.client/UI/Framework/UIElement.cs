@@ -109,6 +109,12 @@ namespace FSO.Client.UI.Framework
         /// to a specific screen
         /// </summary>
         public UIContainer LogicalParent;
+
+        /// <summary>
+        /// Set if this UIElement is under a UICachedContainer. When an element calls for its invalidation,
+        /// its immediate invalidation parent recieves the call, and should be redrawn next frame.
+        /// </summary>
+        public UICachedContainer InvalidationParent;
         
         /// <summary>
         /// Matrix object which represents the position & scale of this UIElement.
@@ -361,12 +367,18 @@ namespace FSO.Client.UI.Framework
             _HitTestCache.Clear();
         }
 
+        public void Invalidate()
+        {
+            if (InvalidationParent != null) InvalidationParent.Invalidated = true;
+        }
+
         /// <summary>
         /// Utility to force the component to recalculate its matrix
         /// </summary>
         public void InvalidateMatrix()
         {
             _MtxDirty = true;
+            Invalidate();
         }
 
         /// <summary>
@@ -375,6 +387,7 @@ namespace FSO.Client.UI.Framework
         public void InvalidateOpacity()
         {
             _OpacityDirty = true;
+            Invalidate();
         }
 
         /// <summary>
@@ -932,26 +945,6 @@ namespace FSO.Client.UI.Framework
             return new Texture2D(GameFacade.GraphicsDevice, 1, 1);
         }
 
-        //These do not seem to be neccessary when maximizing and minimizing.
-        //Commenting out until further testing has been done.
-        /*public static void InvalidateEverything()
-        {
-            m_IsInvalidated = true;
-
-            foreach (KeyValuePair<ulong, Texture2D> Asset in UI_TEXTURE_CACHE)
-                UI_TEMP_CACHE.Add(Asset.Key);
-
-            UI_TEXTURE_CACHE.Clear();
-        }
-
-        public static void ReloadEverything()
-        {
-            foreach (ulong ID in UI_TEMP_CACHE)
-                GetTexture(ID);
-
-            m_IsInvalidated = false;
-        }*/
-
         /// <summary>
         /// Manually replaces a specified color in a texture with transparent black,
         /// thereby masking it.
@@ -1048,9 +1041,7 @@ namespace FSO.Client.UI.Framework
         }
 
         public delegate void AsyncHandler();
-
-
-
+        
         public object Controller { get; internal set; }
 
 

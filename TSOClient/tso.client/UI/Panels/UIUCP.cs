@@ -30,7 +30,7 @@ namespace FSO.Client.UI.Panels
     /// <summary>
     /// UCP
     /// </summary>
-    public class UIUCP : UIContainer
+    public class UIUCP : UICachedContainer
     {
         private IGameScreen Game; //the main screen
         private UISelectHouseView SelWallsPanel; //select view panel that is created when clicking the current walls mode
@@ -98,7 +98,7 @@ namespace FSO.Client.UI.Panels
         public UILabel TimeText { get; set; }
         public UILabel MoneyText { get; set; }
 
-        private UIDestroyablePanel Panel;
+        private UIContainer Panel;
         public int CurrentPanel;
 
         private uint OldMoney;
@@ -119,6 +119,7 @@ namespace FSO.Client.UI.Panels
             Background = new UIImage(BackgroundGameImage);
             this.AddAt(0, Background);
             Background.BlockInput();
+            Size = new Vector2(Background.Width, Background.Height); //for caching
 
 
             BackgroundMatchmaker = new UIImage(BackgroundMatchmakerImage);
@@ -459,8 +460,7 @@ namespace FSO.Client.UI.Panels
                         if (Game.InLot && Game.vm.TSOState.Roommates.Contains(Game.vm.MyUID)) FindController<CoreGameScreenController>().UploadLotThumbnail();
                         break;
                 }
-                this.Remove(Panel);
-                Panel.Destroy();
+                DynamicOverlay.Remove(Panel);
                 Panel = null;
 
                 if (Game.InLot) Game.LotControl.PanelActive = false;
@@ -474,7 +474,7 @@ namespace FSO.Client.UI.Panels
                         Panel = new UIOptions();
                         Panel.X = 177;
                         Panel.Y = 96;
-                        this.Add(Panel);
+                        DynamicOverlay.Add(Panel);
                         OptionsModeButton.Selected = true;
                         SetFocus(UCPFocusMode.ActiveTab);
                         break;
@@ -488,7 +488,7 @@ namespace FSO.Client.UI.Panels
                         Game.LotControl.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
-                        this.Add(Panel);
+                        DynamicOverlay.Add(Panel);
                         BuyModeButton.Selected = true;
                         SetFocus(UCPFocusMode.ActiveTab);
                         break;
@@ -502,7 +502,7 @@ namespace FSO.Client.UI.Panels
                         Game.LotControl.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
-                        this.Add(Panel);
+                        DynamicOverlay.Add(Panel);
                         BuildModeButton.Selected = true;
                         SetFocus(UCPFocusMode.ActiveTab);
                         break;
@@ -515,7 +515,7 @@ namespace FSO.Client.UI.Panels
 
                         Panel.X = 177;
                         Panel.Y = 87;
-                        this.Add(Panel);
+                        DynamicOverlay.Add(Panel);
                         HouseModeButton.Selected = true;
                         SetFocus(UCPFocusMode.ActiveTab);
                         break;
@@ -524,7 +524,7 @@ namespace FSO.Client.UI.Panels
                         Panel = new UILiveMode(Game.LotControl);
                         Panel.X = 177;
                         Panel.Y = 61;
-                        this.Add(Panel);
+                        DynamicOverlay.Add(Panel);
                         LiveModeButton.Selected = true;
                         SetFocus(UCPFocusMode.ActiveTab);
                         break;

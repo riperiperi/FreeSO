@@ -54,15 +54,15 @@ namespace FSO.Client.UI.Controls
         /**
          * Text box vars
          */
-        private StringBuilder m_SBuilder = new StringBuilder();
+        protected StringBuilder m_SBuilder = new StringBuilder();
 
         /**
          * Interaction
          */
         private UIMouseEventRef m_MouseEvent;
 
-        private int SelectionStart = -1;
-        private int SelectionEnd = -1;
+        protected int SelectionStart = -1;
+        protected int SelectionEnd = -1;
 
         public event ChangeDelegate OnChange;
         public event KeyPressDelegate OnEnterPress;
@@ -121,6 +121,7 @@ namespace FSO.Client.UI.Controls
                 SelectionStart = Math.Max(0, Math.Min(SelectionStart, value.Length - 1));
                 SelectionEnd = -1; //todo: move along maybe?
                 m_DrawDirty = true;
+                Invalidate();
             }
         }
 
@@ -133,6 +134,7 @@ namespace FSO.Client.UI.Controls
             {
                 m_Password = value;
                 m_DrawDirty = true;
+                Invalidate();
             }
         }
 
@@ -200,6 +202,7 @@ namespace FSO.Client.UI.Controls
 
         public void SetBackgroundTexture(Texture2D texture, int marginLeft, int marginRight, int marginTop, int marginBottom)
         {
+            BackgroundTextureReference = null;
             m_BackgroundTex = texture;
             if (texture != null)
             {
@@ -345,6 +348,7 @@ namespace FSO.Client.UI.Controls
                 SelectionEnd = -1;
                 SelectionStart = -1;
                 m_DrawDirty = true;
+                Invalidate();
             }
         }
 
@@ -414,6 +418,7 @@ namespace FSO.Client.UI.Controls
                 {
                     m_cursorBlinkLastTime = now;
                     m_cursorBlink = !m_cursorBlink;
+                    Invalidate();
                 }
 
                 var allowInput = m_SBuilder.Length < MaxChars && m_Lines.Count <= MaxLines;
@@ -441,6 +446,7 @@ namespace FSO.Client.UI.Controls
 
                         /** We need to recompute the drawing commands **/
                         m_DrawDirty = true;
+                        Invalidate();
                         Control_ScrollTo(Control_GetSelectionStart());
                     }
 
@@ -522,6 +528,7 @@ namespace FSO.Client.UI.Controls
                     );
 
                     m_DrawDirty = true;
+                    Invalidate();
                 }
             }
         }
@@ -594,6 +601,7 @@ namespace FSO.Client.UI.Controls
 
             Control_ScrollTo(SelectionEnd);
             m_DrawDirty = true;
+            Invalidate();
         }
 
         /// <summary>
@@ -624,6 +632,7 @@ namespace FSO.Client.UI.Controls
 
             Control_ScrollTo(Control_GetSelectionStart());
             m_DrawDirty = true;
+            Invalidate();
         }
 
         /// <summary>
@@ -1067,16 +1076,20 @@ namespace FSO.Client.UI.Controls
             }
             set
             {
-                m_VScroll = value;
-                if (m_VScroll < 0)
+                if (m_VScroll != value)
                 {
-                    m_VScroll = 0;
+                    m_VScroll = value;
+                    if (m_VScroll < 0)
+                    {
+                        m_VScroll = 0;
+                    }
+                    if (m_VScroll > VerticalScrollMax)
+                    {
+                        m_VScroll = VerticalScrollMax;
+                    }
+                    m_DrawDirty = true;
+                    Invalidate();
                 }
-                if (m_VScroll > VerticalScrollMax)
-                {
-                    m_VScroll = VerticalScrollMax;
-                }
-                m_DrawDirty = true;
             }
         }
 
@@ -1145,6 +1158,7 @@ namespace FSO.Client.UI.Controls
         {
             base.CalculateMatrix();
             m_DrawDirty = true;
+            Invalidate();
         }
 
         #region ITextControl Members
@@ -1243,5 +1257,83 @@ namespace FSO.Client.UI.Controls
     }
 
     public delegate void KeyPressDelegate(UIElement element);
+
+    public interface ITextDrawCmd
+    {
+        void Draw(UIElement ui, SpriteBatch batch);
+        void Init();
+    }
+
+    public class TextDrawCmd_Text : ITextDrawCmd
+    {
+        public bool Selected;
+        public Vector2 Position;
+        public string Text;
+        public TextStyle Style;
+        public Vector2 Scale;
+
+
+        public void Init()
+        {
+            //Position.Y += Style.BaselineOffset;
+        }
+
+        #region ITextDrawCmd Members
+        public virtual void Draw(UIElement ui, SpriteBatch batch)
+        {
+            if (Selected)
+            {
+                batch.DrawString(Style.SpriteFont, Text, Position, Style.SelectedColor, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+            }
+            else
+            {
+                batch.DrawString(Style.SpriteFont, Text, Position, Style.Color, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+            }
+        }
+        #endregion
+    }
+
+    public interface ITextControl
+    {
+        bool DrawCursor { get; }
+    }
+
+    public class TextDrawCmd_Cursor : ITextDrawCmd
+    {
+        public Vector2 Position;
+        public Texture2D Texture;
+        public Color Color;
+        public Vector2 Scale;
+
+        public void Init()
+        {
+        }
+
+        public void Draw(UIElement ui, SpriteBatch batch)
+        {
+            if (((ITextControl)ui).DrawCursor)
+            {
+                batch.Draw(Texture, Position, null, Color, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+            }
+        }
+    }
+
+
+    public class TextDrawCmd_SelectionBox : ITextDrawCmd
+    {
+        public Texture2D Texture;
+        public Vector2 Position;
+        public Vector2 Scale;
+        public Color BlendColor;
+
+        public void Init()
+        {
+        }
+
+        public void Draw(UIElement ui, SpriteBatch batch)
+        {
+            batch.Draw(Texture, Position, null, BlendColor, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+        }
+    }
 
 }

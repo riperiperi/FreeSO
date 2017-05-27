@@ -47,7 +47,8 @@ namespace FSO.Client.UI.Controls
 
             User = new Binding<UserReference>()
                 .WithBinding(this, "Tooltip", "Name")
-                .WithBinding(this, "Icon", "Icon");
+                .WithBinding(this, "Icon", "Icon")
+                .WithMultiBinding(x => { Invalidate(); }, "Icon", "Name");
 
             m_TooltipHandler = UIUtils.GiveTooltip(this);
 
@@ -80,6 +81,7 @@ namespace FSO.Client.UI.Controls
                     DataService.Get<Avatar>(_AvatarId).ContinueWith(x =>
                     {
                         if (x.Result == null) { return; }
+                        ((AvatarUserReference)(User.Value))?.Dispose();
                         User.Value = UserReference.Wrap(x.Result);
                     });
                     DataService.Request(Server.DataService.Model.MaskedStruct.SimPage_Main, _AvatarId);

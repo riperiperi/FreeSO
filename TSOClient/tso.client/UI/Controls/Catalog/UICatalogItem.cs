@@ -63,6 +63,8 @@ namespace FSO.Client.UI.Controls.Catalog
             if (Disabled) Background = TextureGenerator.GetCatalogDisabled(GameFacade.GraphicsDevice);
             else if (Active || Hovered) Background = TextureGenerator.GetCatalogActive(GameFacade.GraphicsDevice);
             else Background = TextureGenerator.GetCatalogInactive(GameFacade.GraphicsDevice);
+
+            Invalidate();
         }
 
         private void MouseEvt(UIMouseEventType type, UpdateState state)

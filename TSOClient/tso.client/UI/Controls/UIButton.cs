@@ -79,8 +79,6 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        public bool Selected { get; set; }
-
         public UIButton()
             : this(StandardButton)
         {
@@ -272,7 +270,14 @@ namespace FSO.Client.UI.Controls
         public bool Disabled
         {
             get { return m_Disabled; }
-            set { m_Disabled = value; CalculateState(); }
+            set { m_Disabled = value; Invalidate(); CalculateState(); }
+        }
+
+        private bool _Selected;
+        public bool Selected
+        {
+            get { return _Selected; }
+            set { _Selected = value; Invalidate(); }
         }
 
         public int ForceState = -1;
@@ -284,17 +289,15 @@ namespace FSO.Client.UI.Controls
         {
             get
             {
-                if (m_CurrentFrame == 0)
-                    return 0;
-                else
-                    return m_Texture.Width / 4 * m_CurrentFrame;
+                return m_CurrentFrame;
             }
 
             set
             {
                 //Frames go from 0 to 3.
-                if(value < 4)
+                if(value < 4 && m_CurrentFrame != value)
                 {
+                    Invalidate();
                     m_CurrentFrame = value;
                     CalculateState();
                 }
@@ -319,7 +322,7 @@ namespace FSO.Client.UI.Controls
                     m_isOver = true;
                     if (!m_isDown)
                     {
-                        m_CurrentFrame = 2;
+                        CurrentFrame = 2;
                         if (OnButtonHover != null)
                         {
                             OnButtonHover(this);
@@ -331,13 +334,13 @@ namespace FSO.Client.UI.Controls
                     m_isOver = false;
                     if (!m_isDown)
                     {
-                        m_CurrentFrame = 0;
+                        CurrentFrame = 0;
                     }
                     break;
 
                 case UIMouseEventType.MouseDown:
                     m_isDown = true;
-                    m_CurrentFrame = 1;
+                    CurrentFrame = 1;
                     break;
 
                 case UIMouseEventType.MouseUp:
@@ -350,11 +353,9 @@ namespace FSO.Client.UI.Controls
                         }
                     }
                     m_isDown = false;
-                    m_CurrentFrame = m_isOver ? 2 : 0;
+                    CurrentFrame = m_isOver ? 2 : 0;
                     break;
             }
-
-            CalculateState();
         }
 
         public override void Draw(UISpriteBatch SBatch)

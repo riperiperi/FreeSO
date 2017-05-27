@@ -330,6 +330,8 @@ namespace FSO.Client.UI.Panels
                 LastName = TargetIcon.Tooltip;
                 Caption = GameFacade.Strings.GetString("f106", "11", new string[] { LastName });
             }
+
+            Invalidate(); //for now invalidate friendship web every frame, because its listbox is pretty complicated.
             //buttonseat_transparent = 0x19700000002,
         }
 

@@ -39,7 +39,7 @@ namespace FSO.Client.UI.Controls
     /// <summary>
     /// Generic dialog component
     /// </summary>
-    public class UIDialog : UIContainer
+    public class UIDialog : UICachedContainer
     {
         private UIImage Background;
         public string Caption { get; set; }
@@ -197,23 +197,7 @@ namespace FSO.Client.UI.Controls
             }
 
             m_Bounds = new Rectangle(0, 0, width, height);
-
-            /*
-            if(CloseButtonBackground != null)
-            {
-                CloseButtonBackground.X = width - CloseButtonBackground.Width;
-                CloseButton.X = width - 25;
-                CloseButton.Y = 10;
-            }
-
-            if(BottomRightButtonBackground != null)
-            {
-                BottomRightButtonBackground.X = (width - BottomRightButtonBackground.Width) + 2;
-                BottomRightButtonBackground.Y = (height - BottomRightButtonBackground.Height) + 3;
-
-                AcceptButton.X = (width - 44);
-                AcceptButton.Y = (height - 42);
-            }*/
+            Size = new Vector2(width, height);
         }
 
         private Rectangle m_Bounds;

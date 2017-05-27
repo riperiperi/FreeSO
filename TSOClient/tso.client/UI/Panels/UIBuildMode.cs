@@ -28,7 +28,7 @@ namespace FSO.Client.UI.Panels
 {
     //TODO: very similar to buy mode... maybe make a them both subclasses of a single abstract "purchase panel" class.
 
-    public class UIBuildMode : UIDestroyablePanel
+    public class UIBuildMode : UICachedContainer
     {
         public UIButton TerrainButton { get; set; }
         public UIButton WaterButton { get; set; }
@@ -88,6 +88,8 @@ namespace FSO.Client.UI.Panels
             Background.BlockInput();
             this.AddAt(0, Background);
 
+            Size = Background.Size.ToVector2();
+
             Divider = new UIImage(dividerImage);
             Divider.Position = new Vector2(337, 14);
             this.AddAt(1, Divider);
@@ -142,7 +144,7 @@ namespace FSO.Client.UI.Panels
             Holder.OnPickup += HolderPickup;
             Holder.OnDelete += HolderDelete;
             Holder.OnPutDown += HolderPutDown;
-            Add(QueryPanel);
+            DynamicOverlay.Add(QueryPanel);
 
             LotController.ObjectHolder.Roommate = true;
             LotController.QueryPanel.Roommate = true;
@@ -323,7 +325,7 @@ namespace FSO.Client.UI.Panels
             OldSelection = selection;
         }
 
-        public override void Destroy()
+        public override void Removed()
         {
             //clean up loose ends
             Holder.OnPickup -= HolderPickup;
@@ -344,6 +346,7 @@ namespace FSO.Client.UI.Panels
                 Holder.ClearSelected();
                 QueryPanel.Active = false;
             }
+            base.Removed();
         }
 
         private void HolderPickup(UIObjectSelection holding, UpdateState state)

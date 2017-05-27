@@ -191,7 +191,7 @@ namespace FSO.Client.UI
             mainUI.Add(dialogContainer);
 
             // Create a new SpriteBatch, which can be used to draw textures.
-            SpriteBatch = new UISpriteBatch(GraphicsDevice, 3);
+            SpriteBatch = new UISpriteBatch(GraphicsDevice, 0);
             //GameFacade.OnContentLoaderReady += new BasicEventHandler(GameFacade_OnContentLoaderReady);
             m_G.GraphicsDevice.DeviceReset += new EventHandler<EventArgs>(GraphicsDevice_DeviceReset);
         }

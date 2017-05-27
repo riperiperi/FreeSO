@@ -57,6 +57,7 @@ namespace FSO.Client.UI.Panels
             {
                 Page = Math.Min(Page, (Display.Count / (Columns * Rows)));
                 DrawPage();
+                Invalidate();
             }
         }
 

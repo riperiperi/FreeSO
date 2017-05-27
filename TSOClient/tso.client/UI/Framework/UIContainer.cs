@@ -67,7 +67,7 @@ namespace FSO.Client.UI.Framework
         /// Adds a UIElement at the top most position in the container
         /// </summary>
         /// <param name="child"></param>
-        public void Add(UIElement child)
+        public virtual void Add(UIElement child)
         {
             if (child == null) { return; }
 
@@ -78,7 +78,20 @@ namespace FSO.Client.UI.Framework
                     Children.Remove(child);
                 }
                 Children.Add(child);
+                AssignAsInvalidationParent(this);
                 child.Parent = this;
+            }
+        }
+
+        public void AssignAsInvalidationParent(UIContainer cont)
+        {
+            if (InvalidationParent == null) return;
+            foreach (var child in cont.Children)
+            {
+                if (child.InvalidationParent == null) {
+                    child.InvalidationParent = InvalidationParent;
+                    if (child is UIContainer) AssignAsInvalidationParent((UIContainer)child);
+                }
             }
         }
 
@@ -87,7 +100,7 @@ namespace FSO.Client.UI.Framework
         /// </summary>
         /// <param name="index"></param>
         /// <param name="child"></param>
-        public void AddAt(int index, UIElement child)
+        public virtual void AddAt(int index, UIElement child)
         {
             lock (Children)
             {
@@ -97,6 +110,7 @@ namespace FSO.Client.UI.Framework
                 }
 
                 Children.Insert(index, child);
+                AssignAsInvalidationParent(this);
                 child.Parent = this;
             }
         }

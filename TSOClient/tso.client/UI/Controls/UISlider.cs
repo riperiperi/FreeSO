@@ -126,6 +126,7 @@ namespace FSO.Client.UI.Controls
                     {
                         OnChange(this);
                     }
+                    Invalidate();
                 }
 
             }

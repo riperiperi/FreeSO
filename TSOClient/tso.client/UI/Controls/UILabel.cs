@@ -31,7 +31,9 @@ namespace FSO.Client.UI.Controls
         public string Caption
         {
             get { return m_Text; }
-            set { m_Text = value;
+            set {
+                if (value != m_Text) Invalidate();
+                m_Text = value;
                 if (_InDraw)
                 {
                     int y = 22;

@@ -22,7 +22,7 @@ namespace FSO.Client.UI.Panels
     /// <summary>
     /// Options Panel
     /// </summary>
-    public class UIOptions : UIDestroyablePanel
+    public class UIOptions : UICachedContainer
     {
         public UIImage Background;
         public UIImage Divider;
@@ -46,6 +46,7 @@ namespace FSO.Client.UI.Panels
             Background = new UIImage(GetTexture((FSOEnvironment.UIZoomFactor>1f || GlobalSettings.Default.GraphicsWidth < 1024) ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
             this.AddAt(0, Background);
             Background.BlockInput();
+            Size = Background.Size.ToVector2();
 
             Divider = new UIImage(DividerImage);
             Divider.X = 227;
@@ -60,11 +61,6 @@ namespace FSO.Client.UI.Panels
             SoundButton.OnButtonClick += new ButtonClickDelegate(SoundButton_OnButtonClick);
 
             CurrentPanel = -1;
-        }
-
-        public override void Destroy()
-        {
-            //nothing to detach from here
         }
 
         public void SetPanel(int newPanel)

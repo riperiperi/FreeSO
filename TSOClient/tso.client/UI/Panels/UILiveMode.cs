@@ -27,7 +27,7 @@ namespace FSO.Client.UI.Panels
     /// <summary>
     /// Live Mode Panel
     /// </summary>
-    public class UILiveMode : UIDestroyablePanel
+    public class UILiveMode : UICachedContainer
     {
         public UIImage Background;
         public UIImage Divider;
@@ -151,6 +151,7 @@ namespace FSO.Client.UI.Panels
             MotiveDisplay = new UIMotiveDisplay();
             MotiveDisplay.Position = new Vector2(165, 56);
             this.Add(MotiveDisplay);
+            DynamicOverlay.Add(MotiveDisplay);
 
             PersonGrid = new UIPersonGrid(LotController.vm);
             Add(PersonGrid);
@@ -163,6 +164,8 @@ namespace FSO.Client.UI.Panels
             EODPanel = new UIImage(EODPanelImg);
             EODPanelTall = new UIImage(EODPanelTallImg);
             EODDoublePanelTall = new UIImage(EODDoublePanelTallImg);
+
+            Size = new Vector2(Background.Size.X, EODPanelTall.Size.Y);
 
             AddAt(0, EODDoublePanelTall);
             AddAt(0, EODPanel);
@@ -265,9 +268,10 @@ namespace FSO.Client.UI.Panels
 
         public void SetInEOD(EODLiveModeOpt options, UIEOD eod)
         {
+            Invalidate(); //i mean, duh
             bool eodPresent = (options != null);
             bool inEOD = eodPresent && !HideEOD;
-            if (ActiveEOD != null) Remove(ActiveEOD);
+            if (ActiveEOD != null) DynamicOverlay.Remove(ActiveEOD);
 
             LastEODConfig = options;
             ActiveEOD = eod;
@@ -320,7 +324,7 @@ namespace FSO.Client.UI.Panels
              */
             if (inEOD)
             {
-                Add(ActiveEOD);
+                DynamicOverlay.Add(ActiveEOD);
             }
             
             /**
@@ -375,9 +379,13 @@ namespace FSO.Client.UI.Panels
                 EODPanelTall.Position = EODLayout.GetPanelPosition(EODHeight.Tall);
                 EODDoublePanelTall.Position = EODLayout.GetPanelPosition(EODHeight.TallTall);
 
+                Size = new Vector2(Background.Size.X, (options.Height == EODHeight.TallTall)? EODDoublePanelTall.Size.Y:EODPanelTall.Size.Y);
+                BackOffset = new Point();
+
                 //Double tall panel chrome
                 if (options.Height == EODHeight.TallTall)
                 {
+                    BackOffset = new Point(0, -(int)EODDoublePanelTall.Y);
                     EODTopSub.Reset();
                     EODTopButtonLayout.Reset();
 
@@ -422,6 +430,9 @@ namespace FSO.Client.UI.Panels
                 
 
 
+            } else
+            {
+                Size = new Vector2(DefaultBGImage.Width, EODPanelTall.Size.Y);
             }
 
             //this.Y = (inEOD && options.Height == EODHeight.Tall) ? 41: 61;
@@ -445,11 +456,6 @@ namespace FSO.Client.UI.Panels
             Background.SetSize(Background.Texture.Width, Background.Texture.Height);
 
             UpdateThumbPosition();
-        }
-
-        public override void Destroy()
-        {
-            //nothing to detach from here
         }
 
         public void UpdateThumbPosition()

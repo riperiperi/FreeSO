@@ -46,41 +46,49 @@ namespace FSO.Client.UI.Controls
             for (int i = 0; i < 8; i++) ChangeBuffer[i] = new Queue<int>();
         }
 
-        private void DrawMotive(UISpriteBatch batch, int x, int y, int motive)
+        private void DrawMotive(UISpriteBatch batch, int x, int y, int motive, bool inDynamic)
         {
-            double p = (MotiveValues[motive]+100)/200.0;
-            Color barcol = new Color((byte)(57 * (1 - p)), (byte)(213 * p + 97 * (1 - p)), (byte)(49 * p + 90 * (1 - p)));
-            Color bgcol = new Color((byte)(57 * p + 214*(1-p)), (byte)(97 * p), (byte)(90 * p));
-
-            batch.Draw(Filler, LocalRect(x, y, 60, 5), bgcol);
-            batch.Draw(Filler, LocalRect(x, y, (int)(60*p), 5), barcol);
-            batch.Draw(Filler, LocalRect(x+(int)(60 * p), y, 1, 5), Color.Black); 
-            var style = TextStyle.DefaultLabel.Clone();
-            style.Size = 8;
-
-            var temp = style.Color;
-            style.Color = Color.Black;
-            DrawLocalString(batch, MotiveNames[motive], new Vector2(x+1, y - 14), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center); //shadow
-
-            style.Color = temp;
-            DrawLocalString(batch, MotiveNames[motive], new Vector2(x, y - 15), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center);
-
-            var arrowState = ArrowStates[motive];
-            var arrow = TextureGenerator.GetMotiveArrow(batch.GraphicsDevice, Color.White, Color.Transparent);
-            if (arrowState > 0)
+            if (inDynamic)
             {
-                for (int i = 0; i < Math.Ceiling(arrowState / 60f); i++)
-                    DrawLocalTexture(batch, arrow, new Rectangle(2, 0, 3, 5), new Vector2(x + 61 + i*4, y), new Vector2(1, 1), new Color(0x00, 0xCB, 0x39) * Math.Min(1f, arrowState/60f-i));
-            } else if (arrowState < 0)
+                double p = (MotiveValues[motive] + 100) / 200.0;
+                Color barcol = new Color((byte)(57 * (1 - p)), (byte)(213 * p + 97 * (1 - p)), (byte)(49 * p + 90 * (1 - p)));
+                Color bgcol = new Color((byte)(57 * p + 214 * (1 - p)), (byte)(97 * p), (byte)(90 * p));
+
+                batch.Draw(Filler, LocalRect(x, y, 60, 5), bgcol);
+                batch.Draw(Filler, LocalRect(x, y, (int)(60 * p), 5), barcol);
+                batch.Draw(Filler, LocalRect(x + (int)(60 * p), y, 1, 5), Color.Black);
+
+                var arrowState = ArrowStates[motive];
+                var arrow = TextureGenerator.GetMotiveArrow(batch.GraphicsDevice, Color.White, Color.Transparent);
+                if (arrowState > 0)
+                {
+                    for (int i = 0; i < Math.Ceiling(arrowState / 60f); i++)
+                        DrawLocalTexture(batch, arrow, new Rectangle(2, 0, 3, 5), new Vector2(x + 61 + i * 4, y), new Vector2(1, 1), new Color(0x00, 0xCB, 0x39) * Math.Min(1f, arrowState / 60f - i));
+                }
+                else if (arrowState < 0)
+                {
+                    arrowState = -arrowState;
+                    for (int i = 0; i < Math.Ceiling(arrowState / 60f); i++)
+                        DrawLocalTexture(batch, arrow, new Rectangle(0, 0, 3, 5), new Vector2(x - 4 - i * 4, y), new Vector2(1, 1), new Color(0xD6, 0x00, 0x00) * Math.Min(1f, arrowState / 60f - i));
+                }
+            }
+            else
             {
-                arrowState = -arrowState;
-                for (int i = 0; i < Math.Ceiling(arrowState / 60f); i++)
-                    DrawLocalTexture(batch, arrow, new Rectangle(0, 0, 3, 5), new Vector2(x-4 - i * 4, y), new Vector2(1, 1), new Color(0xD6, 0x00, 0x00) * Math.Min(1f, arrowState / 60f - i));
+                var style = TextStyle.DefaultLabel.Clone();
+                style.Size = 8;
+
+                var temp = style.Color;
+                style.Color = Color.Black;
+                DrawLocalString(batch, MotiveNames[motive], new Vector2(x + 1, y - 14), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center); //shadow
+
+                style.Color = temp;
+                DrawLocalString(batch, MotiveNames[motive], new Vector2(x, y - 15), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center);
             }
         }
 
         public override void Update(UpdateState state)
         {
+            if (Parent is UICachedContainer) return;
             base.Update(state);
 
             for (int i = 0; i < 8; i++)
@@ -110,10 +118,11 @@ namespace FSO.Client.UI.Controls
         public override void Draw(UISpriteBatch batch)
         {
             if (!Visible) return;
+            var inDynamic = batch.GraphicsDevice.GetRenderTargets().Length == 0;
             for (int i = 0; i < 4; i++)
             {
-                DrawMotive(batch, 20, 13 + 20 * i, i); //left side
-                DrawMotive(batch, 120, 13 + 20 * i, i+4); //right side
+                DrawMotive(batch, 20, 13 + 20 * i, i, inDynamic); //left side
+                DrawMotive(batch, 120, 13 + 20 * i, i+4, inDynamic); //right side
             }
         }
     }

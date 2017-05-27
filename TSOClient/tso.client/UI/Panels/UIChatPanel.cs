@@ -92,8 +92,6 @@ namespace FSO.Client.UI.Panels
             TextBox.Position = new Vector2(25, 25);
             TextBox.SetSize(GlobalSettings.Default.GraphicsWidth - 50, 25);
 
-            TextBox.OnEnterPress += SendMessageElem;
-
             SelectionFillColor = new Color(0, 25, 70);
 
             //-- populate invalid areas --
@@ -189,6 +187,7 @@ namespace FSO.Client.UI.Panels
                         ))
                 {
                     if (!TextBox.Visible) TextBox.Clear();
+                    else SendMessageElem(TextBox);
                     TextBox.Visible = !TextBox.Visible;
 
                     if (TextBox.Visible) state.InputManager.SetFocus(TextBox);

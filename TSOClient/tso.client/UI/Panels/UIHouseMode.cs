@@ -33,7 +33,7 @@ namespace FSO.Client.UI.Panels
     /// House Panel. Works very similarly to Options Panel in that it uses sub-panels chosen by which button you press in this one.
     /// Requires a LotController for obvious reasons, like build/buy.
     /// </summary>
-    public class UIHouseMode : UIDestroyablePanel
+    public class UIHouseMode : UICachedContainer
     {
         public Texture2D DividerImage { get; set; }
 
@@ -64,6 +64,8 @@ namespace FSO.Client.UI.Panels
             Background.Y = 9;
             Background.BlockInput();
             this.AddAt(0, Background);
+
+            Size = Background.Size.ToVector2()+new Vector2(0, 9);
 
             Divider = script.Create<UIImage>("Divider");
             Divider.Texture = DividerImage;
@@ -164,10 +166,11 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        public override void Destroy()
+        public override void Removed()
         {
             if (Panel is UIBuildableAreaPanel)
                 ((UIBuildableAreaPanel)Panel)?.Dispose();
+            base.Removed();
         }
     }
 

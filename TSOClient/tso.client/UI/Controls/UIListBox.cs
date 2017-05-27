@@ -394,7 +394,7 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        private Texture2D ListScene;
+        private RenderTarget2D Target;
 
         public override void PreDraw(UISpriteBatch batch)
         {
@@ -403,13 +403,23 @@ namespace FSO.Client.UI.Controls
 
             if (Mask)
             {
-                Promise<Texture2D> bufferTexture = null;
-                using (batch.WithBuffer(ref bufferTexture))
+                var gd = batch.GraphicsDevice;
+                var size = Size;
+                if (Target == null || (int)size.X != Target.Width || (int)size.Y != Target.Height)
                 {
-                    _Draw(batch);
+                    Target?.Dispose();
+                    Target = new RenderTarget2D(gd, (int)size.X, (int)size.Y, false, SurfaceFormat.Color, DepthFormat.None);
                 }
+                batch.End();
+                gd.SetRenderTarget(Target);
+                gd.Clear(Color.Transparent);
+                var pos = LocalPoint(0, 0);
 
-                ListScene = bufferTexture.Get();
+                batch.Begin(transformMatrix: Microsoft.Xna.Framework.Matrix.CreateTranslation(-pos.X, -pos.Y, 0), blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
+                batch.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+                _Draw(batch);
+                batch.End();
+                gd.SetRenderTarget(null);
             }
         }
 
@@ -420,10 +430,10 @@ namespace FSO.Client.UI.Controls
             //Mask
             if (Mask)
             {
-                if (ListScene != null)
+
+                if (Target != null)
                 {
-                    var globalEdge = LocalPoint(Size);
-                    batch.Draw(ListScene, Vector2.Zero, new Rectangle(0, 0, (int)globalEdge.X, (int)globalEdge.Y), _BlendColor);
+                    DrawLocalTexture(batch, Target, Vector2.Zero);
                 }
             }
             else
@@ -592,6 +602,13 @@ namespace FSO.Client.UI.Controls
         public override Rectangle GetBounds()
         {
             return new Rectangle(0, 0, (int)m_Width, (int)m_Height);
+        }
+
+        public override void Removed()
+        {
+            Target?.Dispose();
+            Target = null;
+            base.Removed();
         }
 
     }

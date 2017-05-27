@@ -153,6 +153,11 @@ namespace FSO.Client.Model
                 .WithBinding(this, "Id", "Avatar_Id");
         }
 
+        public void Dispose()
+        {
+            CurrentAvatar.Dispose();
+        }
+
         private ulong _HeadOutfitId;
         public ulong HeadOutfitId
         {

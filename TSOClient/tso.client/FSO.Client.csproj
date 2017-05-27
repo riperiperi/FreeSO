@@ -100,6 +100,7 @@
     <Compile Include="UI\Controls\UIValidationMessages.cs" />
     <Compile Include="UI\Framework\DoubleClick.cs" />
     <Compile Include="UI\Framework\IUIAutoSize.cs" />
+    <Compile Include="UI\Framework\UICachedContainer.cs" />
     <Compile Include="UI\Framework\UIDebounce.cs" />
     <Compile Include="UI\Panels\EODs\Archetypes\UIBasicEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIBandEOD.cs" />
@@ -341,7 +342,6 @@
     <Compile Include="UI\Panels\LotControls\UIWallPlacer.cs" />
     <Compile Include="UI\Panels\UIBuildMode.cs" />
     <Compile Include="UI\Panels\UIChatPanel.cs" />
-    <Compile Include="UI\Panels\UIDestroyablePanel.cs" />
     <Compile Include="UI\Panels\UIQueryPanel.cs" />
     <Compile Include="UI\Panels\UIBuyMode.cs" />
     <Compile Include="UI\Panels\UICitySelector.cs" />

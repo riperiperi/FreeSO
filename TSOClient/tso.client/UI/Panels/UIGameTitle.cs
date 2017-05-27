@@ -19,7 +19,7 @@ namespace FSO.Client.UI.Panels
 {
     //in matchmaker displays title of city. in lot displays lot name.
 
-    public class UIGameTitle : UIContainer
+    public class UIGameTitle : UICachedContainer
     {
         public UIImage Background;
         public UILabel Label;
@@ -49,10 +49,12 @@ namespace FSO.Client.UI.Panels
             var width = style.MeasureString(title).X;
             var ScreenWidth = GlobalSettings.Default.GraphicsWidth/2;
 
-            Background.X = ScreenWidth-(width / 2 + 40);
+            X = ScreenWidth - (width / 2 + 40);
+            Background.X = 0;
             Background.SetSize(width + 80, 24);
+            Size = new Vector2(width + 80, 24);
 
-            Label.X = ScreenWidth-width/2;
+            Label.X = 40;
             Label.Size = new Vector2(width, 20);
 
         }
