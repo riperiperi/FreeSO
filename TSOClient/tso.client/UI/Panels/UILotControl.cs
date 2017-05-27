@@ -426,7 +426,7 @@ namespace FSO.Client.UI.Panels
 
         public void LiveModeUpdate(UpdateState state, bool scrolled)
         {
-            if (MouseIsOn && ActiveEntity != null)
+            if (MouseIsOn && !RMBScroll && ActiveEntity != null)
             {
 
                 if (state.MouseState.X != OldMX || state.MouseState.Y != OldMY)
@@ -718,6 +718,7 @@ namespace FSO.Client.UI.Panels
 
                 if (WallsMode == 1)
                 {
+                    if (RMBScroll || !MouseIsOn) return;
                     int recut = 0;
                     var finalRooms = new HashSet<uint>(CutRooms);
 

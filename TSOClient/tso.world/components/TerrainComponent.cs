@@ -312,8 +312,7 @@ namespace FSO.LotView.Components
             {
                 Effect.CurrentTechnique = Effect.Techniques["DrawBlades"];
                 int grassNum = (int)Math.Ceiling(GrassHeight / (float)grassScale);
-
-                //if (depthMode && (!FSOEnvironment.UseMRT)) return;
+                
                 RenderTargetBinding[] rts = null;
                 if (FSOEnvironment.UseMRT)
                 {
@@ -323,6 +322,8 @@ namespace FSO.LotView.Components
                         device.SetRenderTarget((RenderTarget2D)rts[0].RenderTarget);
                     }
                 }
+                var depth = device.DepthStencilState;
+                device.DepthStencilState = DepthStencilState.None;
                 device.Indices = BladeIndexBuffer;
                 for (int i = 0; i < grassNum; i++)
                 {
@@ -343,6 +344,7 @@ namespace FSO.LotView.Components
                     {
                         device.SetRenderTargets(rts);
                     }
+                    device.DepthStencilState = depth;
                 }
 
                 if (GridPrimitives > 0 && world.BuildMode > 0)
