@@ -86,9 +86,11 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+        private bool UpdateFlip;
         public override void Update(UpdateState state)
         {
-            if (Parent is UICachedContainer) return;
+            UpdateFlip = !UpdateFlip;
+            if (UpdateFlip) return;
             base.Update(state);
 
             for (int i = 0; i < 8; i++)

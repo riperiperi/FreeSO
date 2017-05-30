@@ -463,11 +463,8 @@ namespace FSO.Client.UI.Panels
             if (Thumb != null) Thumb.Position = MoodPanelButton.Position + new Vector2(33, 10);
         }
 
-        private bool UpdateFlip;
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
-            UpdateFlip = !UpdateFlip;
-            if (UpdateFlip) return;
             if (SelectedAvatar != null)
             {
                 if (SelectedAvatar != LastSelected)
