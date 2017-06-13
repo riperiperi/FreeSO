@@ -1166,6 +1166,16 @@ namespace FSO.SimAntics
 
                     group.Init(this);
                     vmObject.SetPosition(pos, direction, this);
+
+                    if (VM.TS1)
+                    {
+                        var id = Content.Content.Get().Neighborhood.GetNeighborIDForGUID(GUID);
+                        if (id != null)
+                        {
+                            var neigh = Content.Content.Get().Neighborhood.GetNeighborByID(id.Value);
+                            if (neigh != null) vmObject.InheritNeighbor(neigh);
+                        }
+                    }
                  
                     return group;
                 }

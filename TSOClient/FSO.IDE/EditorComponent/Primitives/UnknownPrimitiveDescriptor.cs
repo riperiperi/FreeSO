@@ -21,7 +21,11 @@ namespace FSO.IDE.EditorComponent.Primitives
 
         public override string GetBody(EditorScope scope)
         {
-            return "Unknown Primitive";
+            var op = (VMSubRoutineOperand)Operand;
+            return (op.Arg0 & 0xFF).ToString("x2") + " " + (op.Arg0 >> 8).ToString("x2") + " " +
+                (op.Arg1 & 0xFF).ToString("x2") + " " + (op.Arg1 >> 8).ToString("x2") + " " +
+                (op.Arg2 & 0xFF).ToString("x2") + " " + (op.Arg2 >> 8).ToString("x2") + " " +
+                (op.Arg3 & 0xFF).ToString("x2") + " " + (op.Arg3 >> 8).ToString("x2") + " ";
         }
 
     }

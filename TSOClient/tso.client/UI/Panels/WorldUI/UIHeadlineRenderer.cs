@@ -115,9 +115,12 @@ namespace FSO.Client.UI.Panels.WorldUI
         public void ProcessSkill()
         {
             var avatar = (VMAvatar)Headline.Target;
-            var skillValue = avatar.GetPersonData((VMPersonDataVariable)(avatar.GetPersonData(VMPersonDataVariable.SkillEfficiency) >> 8));
-            var speedValue = (avatar.GetPersonData(VMPersonDataVariable.SkillEfficiency) & 0xFF);
-
+            var eff = avatar.GetPersonData(VMPersonDataVariable.SkillEfficiency);
+            var e1 = eff >> 8;
+            if (e1 < 0 || e1 > 100) return; //invalid skill
+            var skillValue = avatar.GetPersonData((VMPersonDataVariable)(e1));
+            var speedValue = (eff & 0xFF);
+            
             if (skillValue != SkillValue || SpeedValue != speedValue)
             {
                 Invalidated = true;

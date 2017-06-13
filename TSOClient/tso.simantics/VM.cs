@@ -30,6 +30,7 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Marshals.Hollow;
 using FSO.SimAntics.Engine.Debug;
 using FSO.Common;
+using FSO.SimAntics.Primitives;
 
 namespace FSO.SimAntics
 {
@@ -65,6 +66,7 @@ namespace FSO.SimAntics
         public List<VMEntity> Entities = new List<VMEntity>();
         public short[] GlobalState;
         public VMPlatformState PlatformState;
+        public FAMI CurrentFamily;
 
         public VMScheduler Scheduler;
 
@@ -89,7 +91,7 @@ namespace FSO.SimAntics
         public bool Ready;
         public bool BHAVDirty;
 
-        //attributes for the current VM session. TODO: move to platform specific variants
+        //attributes for the current VM session.
         public uint MyUID; //UID of this client in the VM
         public VMSyncTrace Trace;
         public List<VMInventoryItem> MyInventory = new List<VMInventoryItem>();
@@ -202,10 +204,10 @@ namespace FSO.SimAntics
 
         private int GameTickRate = 60;
         private int GameTickNum = 0;
-        private int SpeedMultiplier = 5;
+        public int SpeedMultiplier = 1;
+        private float Fraction;
         public void Update()
         {
-            SpeedMultiplier = 1;
             var oldFrame = (GameTickNum * 30 * SpeedMultiplier) / GameTickRate;
             GameTickNum++;
             var newFrame = (GameTickNum * 30 * SpeedMultiplier) / GameTickRate;
@@ -214,13 +216,17 @@ namespace FSO.SimAntics
                 Tick();
             }
 
-            var fraction = ((GameTickNum * 30 * SpeedMultiplier) - (newFrame * GameTickRate)) / (float)GameTickRate;
-            //fractional animation for avatars
-            foreach (var obj in Entities)
-            {
-                if (obj is VMAvatar) ((VMAvatar)obj).FractionalAnim(fraction);
-            }
+            Fraction = ((GameTickNum * 30 * SpeedMultiplier) - (newFrame * GameTickRate)) / (float)GameTickRate;
             if (GameTickNum >= GameTickRate) GameTickNum = 0;
+        }
+
+        public void PreDraw()
+        {
+            //fractional animation for avatars
+            foreach (var obj in Context.ObjectQueries.Avatars)
+            {
+                ((VMAvatar)obj).FractionalAnim(Fraction);
+            }
         }
 
         public void SendCommand(VMNetCommandBodyAbstract cmd)
@@ -258,6 +264,37 @@ namespace FSO.SimAntics
             {
                 Driver = driver;
             }
+        }
+
+        public void ActivateFamily(FAMI family)
+        {
+            if (family == null) return;
+            SetGlobalValue(9, (short)family.ChunkID);
+            CurrentFamily = family;
+        }
+
+        /// <summary>
+        /// Ensure all members of the family are present on the lot.
+        /// Spawns missing family members at the mailbox.
+        /// </summary>
+        public void VerifyFamily()
+        {
+            if (CurrentFamily == null) return;
+            SetGlobalValue(9, (short)CurrentFamily.ChunkID);
+            var missingMembers = new HashSet<uint>(CurrentFamily.FamilyGUIDs);
+            foreach (var avatar in Context.ObjectQueries.Avatars)
+            {
+                missingMembers.Remove(avatar.Object.OBJ.GUID);
+            }
+
+            foreach (var member in missingMembers)
+            {
+                var sim = Context.CreateObjectInstance(member, LotView.Model.LotTilePos.OUT_OF_WORLD, LotView.Model.Direction.NORTH).Objects[0];
+                ((VMAvatar)sim).SetPersonData(VMPersonDataVariable.TS1FamilyNumber, (short)CurrentFamily.ChunkID);
+                var mailbox = Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
+                if (mailbox != null) VMFindLocationFor.FindLocationFor(sim, mailbox, Context, VMPlaceRequestFlags.Default);
+            }
+
         }
 
         public void Tick()
@@ -773,6 +810,7 @@ namespace FSO.SimAntics
     public enum VMEventType
     {
         TSOUnignore,
-        TSOTimeout
+        TSOTimeout,
+        TS1LotChange,
     }
 }

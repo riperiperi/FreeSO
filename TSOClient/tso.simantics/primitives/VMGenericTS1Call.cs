@@ -41,8 +41,27 @@ namespace FSO.SimAntics.Primitives
                     context.VM.SetGlobalValue(31, context.Thread.TempRegisters[0]);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTS1CallMode.ReturnZoningTypeOfLotInTemp0:
-                    context.Thread.TempRegisters[0] = 0;
+                    var zones = Content.Content.Get().Neighborhood.ZoningDictionary;
+                    short result = 1;
+                    if (zones.TryGetValue(context.Thread.TempRegisters[0], out result))
+                        context.Thread.TempRegisters[0] = result;
+                    else context.Thread.TempRegisters[0] = 1;
                     return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTS1CallMode.ChangeToLotInTemp0:
+                    context.VM.SignalLotSwitch((uint)context.Thread.TempRegisters[0]);
+                    return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
+                case VMGenericTS1CallMode.SelectDowntownLot:
+                    break;
+                case VMGenericTS1CallMode.BuildTheDowntownSimAndPlaceObjIDInTemp0:
+                    //currently downtown sim is just in selected sim id.
+                    context.Thread.TempRegisters[0] = context.VM.GetGlobalValue(3);
+                    break;
+                case VMGenericTS1CallMode.BuildVacationFamilyPutFamilyNumInTemp0:
+                    //in our implementation, vacation lots build the family in the same way as normal lots.
+                    context.Thread.TempRegisters[0] = context.VM.GetGlobalValue(9);
+                    context.Thread.TempRegisters[1] = 1; //set to 1 if we spawned a whole family.
+                    context.VM.VerifyFamily();
+                    break;
             }
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

@@ -483,7 +483,7 @@ namespace FSO.SimAntics
 
             if (Thread != null && Thread.ThreadBreak == Engine.VMThreadBreakMode.Pause) return;
 
-            if (PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] == 0) PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] = 1;
+            if (PersonData.Length > (int)VMPersonDataVariable.OnlineJobStatusFlags && PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] == 0) PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] = 1;
             if (Thread != null)
             {
                 MotiveDecay.Tick(this, Thread.Context);
@@ -670,6 +670,7 @@ namespace FSO.SimAntics
                     return (short)((level >= VMTSOAvatarPermissions.BuildBuyRoommate) ? 2 : ((level >= VMTSOAvatarPermissions.Roommate) ? 1 : 0));
                 case VMPersonDataVariable.NumOutgoingFriends:
                 case VMPersonDataVariable.IncomingFriends:
+                    if (Thread?.Context?.VM?.TS1 == true) break;
                     return (short)(MeToPersist.Count(x => x.Key < 16777216 && x.Value.Count > 1 && x.Value[1] >= 60));
                 case VMPersonDataVariable.SkillLock:
                     // this variable returns the skills that are completely locked. since the skill degrade object checks the skill lock 
@@ -775,6 +776,12 @@ namespace FSO.SimAntics
             return true;
         }
 
+        public void InheritNeighbor(Neighbour neigh)
+        {
+            if (neigh.PersonData != null) PersonData = neigh.PersonData;
+            SetPersonData(VMPersonDataVariable.NeighborId, neigh.NeighbourID);
+        }
+
         public virtual short GetMotiveData(VMMotive variable) //needs special conditions for ones like Mood.
         {
             if ((ushort)variable > 15) throw new Exception("Motive Data out of bounds!");
@@ -786,11 +793,6 @@ namespace FSO.SimAntics
             if ((ushort)variable > 15) throw new Exception("Motive Data out of bounds!");
             MotiveData[(ushort)variable] = (short)Math.Max(Math.Min((int)value, 100), -100);
             return true;
-        }
-
-        public override string ToString()
-        {
-            return Name;
         }
 
         public override VMObstacle GetObstacle(LotTilePos pos, Direction dir)

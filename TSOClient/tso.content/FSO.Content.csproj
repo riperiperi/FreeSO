@@ -131,6 +131,7 @@
     <Compile Include="TS1\TS1BCFProvider.cs" />
     <Compile Include="TS1\TS1BMFProvider.cs" />
     <Compile Include="TS1\TS1JobProvider.cs" />
+    <Compile Include="TS1\TS1NeighbourProvider.cs" />
     <Compile Include="TS1\TS1ObjectProvider.cs" />
     <Compile Include="WorldFloorProvider.cs" />
     <Compile Include="WorldGlobalProvider.cs" />

@@ -60,6 +60,7 @@ namespace FSO.Content.TS1
 
         public object Get(string name, Type expected)
         {
+            if (name == null) return null;
             if (expected == typeof(Animation))
             {
                 name = name.Substring(0, name.Length - 5).ToLowerInvariant(); //remove .anim

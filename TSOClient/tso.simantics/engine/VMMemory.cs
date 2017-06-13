@@ -60,11 +60,7 @@ namespace FSO.SimAntics.Engine.Utils
                     return context.Args[data];
 
                 case VMVariableScope.StackObjectID: //10
-                    if (context.StackObject != null)
-                    {
-                        return context.StackObject.ObjectID;
-                    }
-                    return 0; //no object = 0, ids have a base of 1
+                    return context.StackObjectID;
 
                 case VMVariableScope.TempByTemp: //11
                     return context.Thread.TempRegisters[context.Thread.TempRegisters[data]];
@@ -120,8 +116,35 @@ namespace FSO.SimAntics.Engine.Utils
                     //throw new VMSimanticsException("Not implemented...");
 
                 case VMVariableScope.NeighborInStackObject: //24
-                    throw new VMSimanticsException("Not implemented...", context);
-
+                    if (!context.VM.TS1) throw new VMSimanticsException("Only valid in TS1.", context);
+                    var neighbor = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
+                    if (neighbor == null) return 0;
+                    switch (data)
+                    {
+                        case 0: //instance id
+                            //find neighbour in the lot
+                            return context.VM.Context.ObjectQueries.Avatars.FirstOrDefault(x => x.Object.GUID == neighbor.GUID)?.ObjectID ?? 0;
+                        case 1: //belongs in house
+                            return 1; //uh, okay.
+                        case 2: //person age
+                            return neighbor.PersonData?.ElementAt((int)VMPersonDataVariable.PersonsAge) ?? 0;
+                        case 3: //relationship raw score
+                                //to this person or from? what
+                            return 0;
+                        case 4: //relationship score
+                            return 0;
+                        case 5: //friend count
+                            return 0;
+                        case 6: //house number (unknown)
+                            return 0;
+                        case 7: //has telephone
+                            return 1;
+                        case 8: //has baby
+                            return 0;
+                        case 9: //family friend count
+                            return 0;
+                    }
+                    throw new VMSimanticsException("Neighbor data out of bounds.", context);
                 case VMVariableScope.Local: //25
                     return (short)context.Locals[data];
 
@@ -144,7 +167,8 @@ namespace FSO.SimAntics.Engine.Utils
                     return ((VMAvatar)context.StackObject).GetPersonData((VMPersonDataVariable)(context.Thread.TempRegisters[data]));
 
                 case VMVariableScope.NeighborPersonData: //32
-                    throw new VMSimanticsException("Not implemented...", context);
+                    if (!context.VM.TS1) throw new VMSimanticsException("Only valid in TS1.", context);
+                    return Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID)?.PersonData?.ElementAt(data) ?? 0;
 
                 case VMVariableScope.JobData: //33 jobdata(temp0, temp1), used a few times to test if a person is at work but that isn't relevant for tso...
                     if (!context.VM.TS1) throw new VMSimanticsException("Only valid in TS1.", context);
@@ -158,13 +182,20 @@ namespace FSO.SimAntics.Engine.Utils
                     return (short)context.StackObject.EntryPoints[data].ActionFunction;
 
                 case VMVariableScope.MyTypeAttr: //36
+                    return 0;
                     throw new VMSimanticsException("Unused", context);
                 
                 case VMVariableScope.StackObjectTypeAttr: //37
+                    return 0;
                     throw new VMSimanticsException("Unused", context);
 
-                case VMVariableScope.ThirtyEight: //38
-                    throw new VMSimanticsException("Really", context);
+                case VMVariableScope.NeighborsObjectDefinition: //38
+                    if (!context.VM.TS1) throw new VMSimanticsException("Only valid in TS1.", context);
+                    var neighbor2 = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
+                    if (neighbor2 == null) return 0;
+                    var objd = Content.Content.Get().WorldObjects.Get(neighbor2.GUID)?.OBJ;
+                    if (objd == null) return 0;
+                    return GetEntityDefinitionVar(objd, (VMOBJDVariable)data, context);
 
                 case VMVariableScope.LocalByTemp: //40
                     return (short)context.Locals[context.Thread.TempRegisters[data]];
@@ -610,7 +641,7 @@ namespace FSO.SimAntics.Engine.Utils
 
                 case VMVariableScope.StackObjectID: //10
                     /** Change the stack object **/
-                    context.StackObject = context.VM.GetObjectById(value);
+                    context.StackObjectID = value;
                     return true;
 
                 case VMVariableScope.TempByTemp: //11
@@ -693,12 +724,14 @@ namespace FSO.SimAntics.Engine.Utils
                     return false; //you can't set this!
 
                 case VMVariableScope.MyTypeAttr: //36
+                    return true;
                     throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.StackObjectTypeAttr: //37
+                    return true;
                     throw new VMSimanticsException("Not implemented...", context);
 
-                case VMVariableScope.ThirtyEight: //38
+                case VMVariableScope.NeighborsObjectDefinition: //38
                     return false; //you can't set this!
 
                 case VMVariableScope.LocalByTemp: //40

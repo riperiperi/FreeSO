@@ -6,6 +6,7 @@ using FSO.Client.UI.Panels.WorldUI;
 using FSO.Common;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Utils;
+using FSO.Files.Formats.IFF.Chunks;
 using FSO.HIT;
 using FSO.LotView;
 using FSO.SimAntics;
@@ -16,6 +17,7 @@ using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Utils;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -41,6 +43,10 @@ namespace FSO.Client.UI.Screens
         public FSO.SimAntics.VM vm { get; set; }
         public VMNetDriver Driver;
         public uint VisualBudget { get; set; }
+
+        //for TS1 hybrid mode
+        public UINeighborhoodSelectionPanel TS1NeighPanel;
+        public FAMI ActiveFamily;
 
         public bool InLot
         {
@@ -166,6 +172,15 @@ namespace FSO.Client.UI.Screens
 
             WindowContainer = new UIContainer();
             Add(WindowContainer);
+
+            TS1NeighPanel = new UINeighborhoodSelectionPanel(4);
+            TS1NeighPanel.OnHouseSelect += (house) =>
+            {
+                ActiveFamily = Content.Content.Get().Neighborhood.GetFamilyForHouse((short)house);
+                InitializeLot(Path.Combine(Content.Content.Get().TS1BasePath, "UserData/Houses/House" + house.ToString().PadLeft(2, '0') + ".iff"), false);// "UserData/Houses/House21.iff"
+                Remove(TS1NeighPanel);
+            };
+            Add(TS1NeighPanel);
         }
 
         public override void GameResized()
@@ -189,16 +204,88 @@ namespace FSO.Client.UI.Screens
             InitializeLot(propertyName, external);
         }
 
+        private int SwitchLot = -1;
+
+        public void ChangeSpeedTo(int speed)
+        {
+            //0 speed is 0x
+            //1 speed is 1x
+            //2 speed is 3x
+            //3 speed is 10x
+
+            if (vm == null) return;
+
+            switch (vm.SpeedMultiplier)
+            {
+                case 0:
+                    switch (speed)
+                    {
+                        case 1:
+                            HITVM.Get().PlaySoundEvent(UISounds.SpeedPTo1); break;
+                        case 2:
+                            HITVM.Get().PlaySoundEvent(UISounds.SpeedPTo2); break;
+                        case 3:
+                            HITVM.Get().PlaySoundEvent(UISounds.SpeedPTo3); break;
+                    }
+                    break;
+                case 1:
+                    switch (speed)
+                    {
+                        case 0:
+                            HITVM.Get().PlaySoundEvent(UISounds.Speed1ToP); break;
+                        case 2:
+                            HITVM.Get().PlaySoundEvent(UISounds.Speed1To2); break;
+                        case 3:
+                            HITVM.Get().PlaySoundEvent(UISounds.Speed1To3); break;
+                    }
+                    break;
+                case 3:
+                    switch (speed)
+                    {
+                        case 0:
+                            HITVM.Get().PlaySoundEvent(UISounds.Speed2ToP); break;
+                        case 1:
+                            HITVM.Get().PlaySoundEvent(UISounds.Speed2To1); break;
+                        case 3:
+                            HITVM.Get().PlaySoundEvent(UISounds.Speed2To3); break;
+                    }
+                    break;
+                case 10:
+                    switch (speed)
+                    {
+                        case 0:
+                            HITVM.Get().PlaySoundEvent(UISounds.Speed3ToP); break;
+                        case 1:
+                            HITVM.Get().PlaySoundEvent(UISounds.Speed3To1); break;
+                        case 2:
+                            HITVM.Get().PlaySoundEvent(UISounds.Speed3To2); break;
+                    }
+                    break;
+            }
+
+            switch (speed)
+            {
+                case 0: vm.SpeedMultiplier = 0; break;
+                case 1: vm.SpeedMultiplier = 1; break;
+                case 2: vm.SpeedMultiplier = 3; break;
+                case 3: vm.SpeedMultiplier = 10; break;
+            }
+        }
+
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
             GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
             base.Update(state);
+            if (state.NewKeys.Contains(Keys.NumPad1)) ChangeSpeedTo(1);
+            if (state.NewKeys.Contains(Keys.NumPad2)) ChangeSpeedTo(2);
+            if (state.NewKeys.Contains(Keys.NumPad3)) ChangeSpeedTo(3);
+            if (state.NewKeys.Contains(Keys.P)) ChangeSpeedTo(0);
 
-                if (World != null)
-                { 
-                    //stub smooth zoom?
-                }
+            if (World != null)
+            { 
+                //stub smooth zoom?
+            }
 
             lock (StateChanges)
             {
@@ -209,7 +296,18 @@ namespace FSO.Client.UI.Screens
                 }
             }
 
+            if (SwitchLot > 0)
+            {
+                InitializeLot(Path.Combine(Content.Content.Get().TS1BasePath, "UserData/Houses/House" + SwitchLot.ToString().PadLeft(2, '0') + ".iff"), false);
+                SwitchLot = -1;
+            }
             if (vm != null) vm.Update();
+        }
+
+        public override void PreDraw(UISpriteBatch batch)
+        {
+            base.PreDraw(batch);
+            vm?.PreDraw();
         }
 
         public void CleanupLastWorld()
@@ -293,6 +391,7 @@ namespace FSO.Client.UI.Screens
 
         public void InitializeLot(string lotName, bool external)
         {
+            if (lotName == "") return;
             CleanupLastWorld();
 
             World = new LotView.World(GameFacade.Game.GraphicsDevice);
@@ -342,9 +441,10 @@ namespace FSO.Client.UI.Screens
 
             if (!external)
             {
+                vm.ActivateFamily(ActiveFamily);
                 BlueprintReset(lotName);
 
-                vm.Context.Clock.Hours = 0;
+                vm.Context.Clock.Hours = 12;
                 vm.TSOState.Size = (10) | (3 << 8);
                 vm.Context.UpdateTSOBuildableArea();
                 vm.MyUID = 1;
@@ -410,7 +510,7 @@ namespace FSO.Client.UI.Screens
 
         private void VMLotSwitch(uint lotId)
         {
-
+            SwitchLot = (int)lotId;
         }
 
         private void Vm_OnChatEvent(SimAntics.NetPlay.Model.VMChatEvent evt)

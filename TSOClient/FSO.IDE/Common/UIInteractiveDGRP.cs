@@ -154,6 +154,12 @@ namespace FSO.IDE.Common
             if (TempVM != null) TempVM.Update();
         }
 
+        public override void PreDraw(UISpriteBatch batch)
+        {
+            base.PreDraw(batch);
+            TempVM.PreDraw();
+        }
+
         public override void Draw(UISpriteBatch batch)
         {
             base.Draw(batch);

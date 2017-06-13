@@ -20,6 +20,13 @@ namespace FSO.SimAntics.Primitives
     public class VMDialogPrivateStrings : VMPrimitiveHandler
     {
         public static readonly int DIALOG_MAX_WAITTIME = 60 * 30;
+        public static Dictionary<VMDialogType, int> TypeToNeighID = new Dictionary<VMDialogType, int>() {
+            {VMDialogType.TS1Neighborhood, 4 },
+            {VMDialogType.TS1Downtown, 2 },
+            {VMDialogType.TS1Vacation, 3 },
+            {VMDialogType.TS1StudioTown, 5 },
+            {VMDialogType.TS1Magictown, 7 },
+        };
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
@@ -71,7 +78,11 @@ namespace FSO.SimAntics.Primitives
                             if ((curDialog.ResponseText ?? "") != "")
                                 ((VMAvatar)context.StackObject).Name = curDialog.ResponseText;
                             return VMPrimitiveExitCode.GOTO_TRUE;
-                        case VMDialogType.NumericEntry:
+                        case VMDialogType.NumericEntry: //also downtown
+                        case VMDialogType.TS1Vacation:
+                        case VMDialogType.TS1Neighborhood:
+                        case VMDialogType.TS1StudioTown:
+                        case VMDialogType.TS1Magictown:
                             int number;
                             if (!int.TryParse(curDialog.ResponseText, out number)) return VMPrimitiveExitCode.GOTO_FALSE;
 
@@ -171,7 +182,19 @@ namespace FSO.SimAntics.Primitives
         NumericEntry = 5,
         ImageMapped = 6, //truncated in edith..
         Custom = 7,
-        UserBitmap = 8
+        UserBitmap = 8,
+
+        TS1Downtown = 5, //house number in temp0
+        TS1Clothes = 6,
+        TS1Vacation = 7,
+        TS1Neighborhood = 8,
+        TS1PetChoice = 9,
+        TS1PhoneBook = 10,
+        TS1StudioTown = 11,
+        TS1Spellbook = 12,
+        TS1Magictown = 13,
+        TS1TransformMe = 14,
+        TS1Cookbook = 15
     }
 
     public class VMDialogResult : VMAsyncState

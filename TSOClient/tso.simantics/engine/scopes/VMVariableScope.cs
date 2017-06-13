@@ -53,7 +53,7 @@ namespace FSO.SimAntics.Engine.Scopes
         StackObjectFunction = 35, //see wiki
         MyTypeAttr = 36,
         StackObjectTypeAttr = 37,
-        ThirtyEight = 38, //really
+        NeighborsObjectDefinition = 38, //really
         Unused = 39,
         LocalByTemp = 40,
         StackObjectAttributeByTemp = 41,

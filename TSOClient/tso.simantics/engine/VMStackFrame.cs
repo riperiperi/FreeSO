@@ -38,7 +38,26 @@ namespace FSO.SimAntics.Engine
         public VMEntity Callee;
 
         /** An object selected by the code to perform operations on. **/
-        public VMEntity StackObject;
+        public VMEntity StackObject
+        {
+            get { return _StackObject; }
+            set {
+                _StackObject = value;
+                _StackObjectID = value?.ObjectID ?? 0;
+            }
+        }
+        public short StackObjectID
+        {
+            get { return _StackObjectID; }
+            set
+            {
+                _StackObjectID = value;
+                _StackObject = VM.GetObjectById(value);
+            }
+        }
+
+        private VMEntity _StackObject;
+        private short _StackObjectID;
 
         /** If true, this stack frame is not a subroutine. Return with a continue. **/
         public bool DiscardResult;
@@ -125,7 +144,7 @@ namespace FSO.SimAntics.Engine
                 InstructionPointer = InstructionPointer,
                 Caller = (Caller == null) ? (short)0 : Caller.ObjectID,
                 Callee = (Callee == null) ? (short)0 : Callee.ObjectID,
-                StackObject = (StackObject == null) ? (short)0 : StackObject.ObjectID,
+                StackObject = StackObjectID,
                 CodeOwnerGUID = CodeOwner.OBJ.GUID,
                 Locals = Locals,
                 Args = Args,
@@ -147,7 +166,7 @@ namespace FSO.SimAntics.Engine
             InstructionPointer = input.InstructionPointer;
             Caller = context.VM.GetObjectById(input.Caller);
             Callee = context.VM.GetObjectById(input.Callee);
-            StackObject = context.VM.GetObjectById(input.StackObject);
+            StackObjectID = input.StackObject;
             Locals = input.Locals;
             Args = input.Args;
             DiscardResult = input.DiscardResult;

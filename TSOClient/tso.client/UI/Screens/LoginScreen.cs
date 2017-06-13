@@ -52,16 +52,16 @@ namespace FSO.Client.UI.Screens
 
             this.Regulator = regulator;
             regulator.Logout();
-
+            
             HITVM.Get().PlaySoundEvent(UIMusic.None);
             GlobalSettings.Default.Save();
 
             if (Content.Content.Get().TS1)
             {
-                //just load a house immediately for testing purposes.
+                //load the sandbox screen in neighbourhood view mode
                 GameThread.NextUpdate(x =>
                 {
-                    GameFacade.Controller.EnterSandboxMode(Path.Combine(Content.Content.Get().TS1BasePath, "UserData/Houses/House77.iff"), false);
+                    GameFacade.Controller.EnterSandboxMode("", false);
                 });
             }
 

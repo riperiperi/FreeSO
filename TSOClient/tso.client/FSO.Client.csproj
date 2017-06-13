@@ -121,6 +121,7 @@
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobbyController.cs" />
     <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
     <Compile Include="UI\Panels\LotControls\UIRoofer.cs" />
+    <Compile Include="UI\Panels\UINeighborhoodSelectionPanel.cs" />
     <Compile Include="UI\Panels\UITimeOutDialog.cs" />
     <Compile Include="UI\Panels\UIAsyncPriceDialog.cs" />
     <Compile Include="UI\Panels\UIBonusDialog.cs" />

@@ -416,6 +416,12 @@ namespace FSO.Client.UI.Screens
             if (vm != null) vm.Update();
         }
 
+        public override void PreDraw(UISpriteBatch batch)
+        {
+            base.PreDraw(batch);
+            vm?.PreDraw();
+        }
+
         public void CleanupLastWorld()
         {
             if (vm == null) return;

@@ -92,6 +92,7 @@ namespace FSO.Client.UI.Panels
         // and that the code actually blocks further dialogs from appearing while waiting for a response.
         // If we are to implement controlling multiple sims, this must be changed.
         private UIAlert BlockingDialog;
+        private UINeighborhoodSelectionPanel TS1NeighSelector;
         private ulong LastDialogID;
 
         private static uint GOTO_GUID = 0x000007C4;
@@ -211,6 +212,7 @@ namespace FSO.Client.UI.Panels
                 Alignment = TextAlignment.Left,
                 TextSize = 12 };
 
+            if (info.Block) vm.SpeedMultiplier = 0;
             var b0Event = (info.Block) ? new ButtonClickDelegate(DialogButton0) : null;
             var b1Event = (info.Block) ? new ButtonClickDelegate(DialogButton1) : null;
             var b2Event = (info.Block) ? new ButtonClickDelegate(DialogButton2) : null;
@@ -239,10 +241,21 @@ namespace FSO.Client.UI.Panels
                     };
                     break;
                 case VMDialogType.TextEntry:
-                case VMDialogType.NumericEntry:
                     options.Buttons = new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, b0Event, info.Yes) };
                     options.TextEntry = true;
                     break;
+                case VMDialogType.NumericEntry:
+                    if (!vm.TS1) goto case VMDialogType.TextEntry;
+                    else goto case VMDialogType.TS1Neighborhood;
+                case VMDialogType.TS1Vacation:
+                case VMDialogType.TS1Neighborhood:
+                case VMDialogType.TS1StudioTown:
+                case VMDialogType.TS1Magictown:
+                    TS1NeighSelector = new UINeighborhoodSelectionPanel((ushort)VMDialogPrivateStrings.TypeToNeighID[type]);
+                    Parent.Add(TS1NeighSelector);
+                    TS1NeighSelector.OnHouseSelect += HouseSelected;
+                    return;
+
             }
 
             var alert = UIScreen.GlobalShowAlert(options, true);
@@ -267,6 +280,20 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        private void HouseSelected(int house)
+        {
+            if (ActiveEntity == null || TS1NeighSelector == null) return;
+            vm.SendCommand(new VMNetDialogResponseCmd
+            {
+                ActorUID = ActiveEntity.PersistID,
+                ResponseCode = (byte)((house > 0) ? 1 : 0),
+                ResponseText = house.ToString()
+            });
+            Parent.Remove(TS1NeighSelector);
+            vm.SpeedMultiplier = 1;
+            TS1NeighSelector = null;
+        }
+
         private void DialogButton0(UIElement button) { DialogResponse(0); }
         private void DialogButton1(UIElement button) { DialogResponse(1); }
         private void DialogButton2(UIElement button) { DialogResponse(2); }
@@ -281,6 +308,7 @@ namespace FSO.Client.UI.Panels
                 ResponseCode = code,
                 ResponseText = (BlockingDialog.ResponseText == null) ? "" : BlockingDialog.ResponseText
             });
+            vm.SpeedMultiplier = 1;
             BlockingDialog = null;
         }
 

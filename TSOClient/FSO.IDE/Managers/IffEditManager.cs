@@ -17,6 +17,7 @@ namespace FSO.IDE.Managers
 
         public IffResWindow OpenResourceWindow(GameObject obj)
         {
+            if (obj == null) return null;
             if (ResourceWindow.ContainsKey(obj.Resource.MainIff))
             {
                 var resWindow = ResourceWindow[obj.Resource.MainIff];

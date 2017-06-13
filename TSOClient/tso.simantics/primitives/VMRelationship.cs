@@ -47,7 +47,7 @@ namespace FSO.SimAntics.Primitives
                     throw new VMSimanticsException("Invalid relationship type!", context);
             }
 
-            
+            if (obj1 == null || obj2 == null) return VMPrimitiveExitCode.GOTO_TRUE;
             List<short> relToTarg;
             if (obj2.PersistID > 0)
             {

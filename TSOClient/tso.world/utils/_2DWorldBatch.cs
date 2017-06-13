@@ -249,6 +249,8 @@ namespace FSO.LotView.Utils
 
             if (depthBufferIndex > Buffers.Count) depthBufferIndex = Buffers.Count - 1;
 
+            if (bufferIndex >= Buffers.Count) bufferIndex = 0;
+
             ResetMatrices(Buffers[bufferIndex].Width, Buffers[bufferIndex].Height);
 
             return new _2DWorldRenderPlaneWithDepth(

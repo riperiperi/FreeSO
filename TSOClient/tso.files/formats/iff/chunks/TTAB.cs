@@ -309,8 +309,16 @@ namespace FSO.Files.Formats.IFF.Chunks
         RunImmediately = 1 << 2, //COVERED
         AllowConsecutive = 1 << 3, //TODO
 
+        TS1NoChild = 1 << 4,
+        TS1NoDemoChild = 1 << 5,
+        TS1NoAdult = 1 << 6,
+
         Debug = 1 << 7, //COVERED: only available to roomies for now
         AutoFirstSelect = 1 << 8, //TODO (autonomus first select?)
+
+        TS1AllowCats = 1 << 9,
+        TS1AllowDogs = 1 << 10,
+
         Leapfrog = 1 << 9, //COVERED
         MustRun = 1 << 10, //TODO (where would this NOT run?)
         AllowDogs = 1 << 11, //COVERED

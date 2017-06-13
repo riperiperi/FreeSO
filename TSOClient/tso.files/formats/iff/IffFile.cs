@@ -57,7 +57,16 @@ namespace FSO.Files.Formats.IFF
             {"ObjM", typeof(OBJM) },
             {"WALm", typeof(WALm) },
             {"FLRm", typeof(FLRm) },
-            {"CARR", typeof(CARR) }
+            {"CARR", typeof(CARR) },
+
+            {"NBRS", typeof(NBRS) },
+            {"FAMI", typeof(FAMI) },
+            {"NGBH", typeof(NGBH) },
+            {"FAMs", typeof(FAMs) },
+            //todo: TATT (type attributes)
+            //todo: FAMh (family motives ("family house"?)) field encoded.
+            //todo: SIMI (simulation constants? time etc)
+            //todo: HOUS (house information)
         };
 
         public IffRuntimeInfo RuntimeInfo = new IffRuntimeInfo();
@@ -107,6 +116,11 @@ namespace FSO.Files.Formats.IFF
         public void Rereferenced(bool saved)
         {
             WasReferenced = saved;
+        }
+
+        public void MarkThrowaway()
+        {
+            WasReferenced = false;
         }
 
         /// <summary>

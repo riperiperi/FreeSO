@@ -15,6 +15,7 @@ using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 using System.IO;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.Files.Formats.IFF.Chunks;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -98,8 +99,15 @@ namespace FSO.SimAntics.Engine.Primitives
                 default:
                     throw new VMSimanticsException("Where do I put this??", context);
             }
+            var guid = operand.GUID;
+            Neighbour neigh = null;
+            if (operand.UseNeighbor && context.VM.TS1) {
+                neigh = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
+                if (neigh == null) return VMPrimitiveExitCode.GOTO_FALSE;
+                guid = neigh.GUID;
+            }
 
-            var mobj = context.VM.Context.CreateObjectInstance(operand.GUID, tpos, dir,
+            var mobj = context.VM.Context.CreateObjectInstance(guid, tpos, dir,
                 (operand.PassObjectIds && context.StackObject != null) ? (context.StackObject.ObjectID) : (short)0,
                 (operand.PassTemp0) ? (context.Thread.TempRegisters[0]) : (operand.PassObjectIds ? context.Caller.ObjectID : (short)0) , false);
 
@@ -153,7 +161,9 @@ namespace FSO.SimAntics.Engine.Primitives
                     });
                 }
             }
-            if (operand.UseNeighbor) { }
+            if (operand.UseNeighbor) {
+                ((VMAvatar)(obj)).InheritNeighbor(neigh);
+            }
 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

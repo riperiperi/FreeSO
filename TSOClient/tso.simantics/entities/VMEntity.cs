@@ -124,13 +124,28 @@ namespace FSO.SimAntics
             get
             {
                 if (MultitileGroup.Name != "") return MultitileGroup.Name;
-                if (this is VMAvatar) return "Sim";
                 else return this.ToString();
             }
             set
             {
                 MultitileGroup.Name = value;
             }
+        }
+
+        public override string ToString()
+        {
+            if (MultitileGroup.Name != "") return MultitileGroup.Name;
+            var strings = Object.Resource.Get<CTSS>(Object.OBJ.CatalogStringsID);
+            if (strings != null)
+            {
+                return strings.GetString(0);
+            }
+            var label = Object.OBJ.ChunkLabel;
+            if (label != null && label.Length > 0)
+            {
+                return label;
+            }
+            return Object.OBJ.GUID.ToString("X");
         }
 
         //positioning properties
@@ -1011,6 +1026,7 @@ namespace FSO.SimAntics
                 if (context.VM.Scheduler.RunningNow)
                 {
                     //queue this object to be deleted at the end of the frame
+                    if (Container != null) PrePositionChange(context);
                     context.VM.Scheduler.Delete(this);
                     return;
                 }
@@ -1386,6 +1402,9 @@ namespace FSO.SimAntics
         public short Param0;
         public byte ID;
         public TTABInteraction Entry;
+
+        public int Score;
+        public VMEntity Callee;
     }
 
 

@@ -28,9 +28,8 @@ namespace FSO.SimAntics.Primitives
             var processed = new HashSet<short>();
             var pos1 = context.Caller.Position;
 
-            VMEntity bestActor = null;
-            VMPieMenuInteraction bestAction = null;
-            int bestScore = 0;
+            List<VMPieMenuInteraction> validActions = new List<VMPieMenuInteraction>();
+            List<VMPieMenuInteraction> betterActions = new List<VMPieMenuInteraction>();
             foreach (var iobj in ents)
             {
                 var obj = iobj.MultitileGroup.GetInteractionGroupLeader(iobj);
@@ -41,17 +40,18 @@ namespace FSO.SimAntics.Primitives
                 var distance = (short)Math.Floor(Math.Sqrt(Math.Pow(pos1.x - pos2.x, 2) + Math.Pow(pos1.y - pos2.y, 2)) / 16.0);
 
                 var pie = obj.GetPieMenu(context.VM, context.Caller, true);
-                int bestMyScore = 0;
-                VMPieMenuInteraction bestMyAction = null;
                 foreach (var item in pie)
                 {
                     //motive scores must be above their threshold.
                     //pick maximum motive score as our base score
                     int baseScore = 0;
+                    int negScore = 0;
+                    bool hasAuto = false;
                     for (int i = 0; i < item.Entry.MotiveEntries.Length; i++)
                     {
                         var motiveScore = item.Entry.MotiveEntries[i];
                         if (motiveScore.EffectRangeMaximum == 0 && motiveScore.EffectRangeMinimum == 0) continue;
+                        hasAuto = true;
                         //LINEAR INTERPOLATE MIN SCORE TO MAX, using motive data of caller
                         //MAX is when motive is the lowest.
                         //can be in reverse too!
@@ -61,40 +61,41 @@ namespace FSO.SimAntics.Primitives
                         if (motiveScore.EffectRangeMaximum > 0) rangeScore = Math.Max(0, Math.Min(motiveScore.EffectRangeMaximum, rangeScore)); //enforce range
                         else rangeScore = Math.Max(motiveScore.EffectRangeMaximum, Math.Max(0, rangeScore)); //also for negative
                         //todo: personality ads add values 0-100 for their given personality. makes things like viewing flamingo much more common.
-                        baseScore += rangeScore;
+                        baseScore = Math.Max(baseScore, rangeScore);
+                        negScore = Math.Min(negScore, rangeScore);
 
                         //int interpScore = (myMotive*motiveScore.EffectRangeMinimum + (100-myMotive)*(motiveScore.EffectRangeMinimum+motiveScore.EffectRangeMaximum)) / 100;
                         //if (interpScore > baseScore) baseScore = interpScore;
                     }
+                    baseScore -= negScore;
                     float atten = (item.Entry.AttenuationCode == 0) ? item.Entry.AttenuationValue : TTAB.AttenuationValues[item.Entry.AttenuationCode];
                     int attenScore = (int)Math.Max(0, baseScore * (1f - (distance * atten)));
                     if (attenScore != 0) attenScore += (int)context.VM.Context.NextRandom(31) - 15;
-                    if (attenScore > item.Entry.AutonomyThreshold && attenScore > bestMyScore)
+
+                    item.Score = attenScore;
+                    item.Callee = obj;
+                    if (hasAuto)
                     {
-                        bestMyScore = attenScore;
-                        bestMyAction = item;
+                        //if (attenScore > item.Entry.AutonomyThreshold)
+                        //    betterActions.Add(item);
+                        //else
+                            validActions.Add(item);
                     }
-
-                    //TODO: Select from 4 best candidates
                     //TODO: Lockout interactions that have been used before for a few sim hours (in ts1 ticks. same # of ticks for tso probably)
-                    //TODO: special logic for socials? ts1 has "friendship threshold" as 50
-                }
-
-                if (bestMyAction != null && bestMyScore > bestScore)
-                {
-                    bestActor = obj;
-                    bestAction = bestMyAction;
-                    bestScore = bestMyScore;
+                    //TODO: special logic for socials?
                 }
             }
 
-            if (bestActor != null)
+            var sorted = validActions.OrderBy(x => -x.Score).ToList();
+            var selection = sorted.FirstOrDefault();
+            if (selection == null) return VMPrimitiveExitCode.GOTO_FALSE;
+            if (!selection.Entry.AutoFirst)
             {
-                bestActor.PushUserInteraction(bestAction.ID, context.Caller, context.VM.Context, new short[] { bestAction.Param0, 0, 0, 0 });
-                return VMPrimitiveExitCode.GOTO_TRUE;
+                selection = sorted[(int)context.VM.Context.NextRandom((ulong)Math.Min(4, sorted.Count))];
             }
 
-            return VMPrimitiveExitCode.GOTO_FALSE; //we couldn't find anything... because we didn't check! TODO!!
+            selection.Callee.PushUserInteraction(selection.ID, context.Caller, context.VM.Context, new short[] { selection.Param0, 0, 0, 0 });
+            return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }
 

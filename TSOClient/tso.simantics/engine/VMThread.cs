@@ -581,12 +581,8 @@ namespace FSO.SimAntics.Engine
             {
                 if (discardResult)
                 {
-                    //TODO: merge this functionality with contextSwitch. Will have to change how Allow Push works.
                     //only used by Run Immediately currently.
-                    QueueDirty = true;
-                    if (Queue.Count > 0) Queue.RemoveAt(0);
                     ActiveQueueBlock--;
-                    result = VMPrimitiveExitCode.CONTINUE;
                 }
                 else if (result == VMPrimitiveExitCode.RETURN_TRUE)
                     result = VMPrimitiveExitCode.GOTO_TRUE;
@@ -726,6 +722,64 @@ namespace FSO.SimAntics.Engine
             Push(frame);
         }
 
+        public List<VMPieMenuInteraction> CheckTS1Action(VMQueuedAction action)
+        {
+            var result = new List<VMPieMenuInteraction>();
+
+            if (Entity is VMAvatar) //just let everyone use the CSR interactions
+            {
+                var avatar = (VMAvatar)Entity;
+
+                if ((action.Flags & (TTABFlags.TS1AllowCats | TTABFlags.TS1AllowDogs)) > 0)
+                {
+                    //interaction can only be performed by cats or dogs
+                    //if (!avatar.IsPet) return null;
+                    //check we're the correct type
+                    if (avatar.IsCat && (action.Flags & TTABFlags.TS1AllowCats) == 0) return null;
+                    if (avatar.IsDog && (action.Flags & TTABFlags.TS1AllowDogs) == 0) return null;
+                }
+                else if (avatar.IsPet) return null; //not allowed
+
+                var isVisitor = avatar.ObjectID != Context.VM.GetGlobalValue(3);
+
+                TTABFlags ts1State =
+                      ((isVisitor) ? TTABFlags.AllowVisitors : 0)
+                    | ((avatar.GetPersonData(VMPersonDataVariable.PersonsAge) < 18) ? TTABFlags.TS1NoChild : 0)
+                    | ((avatar.GetPersonData(VMPersonDataVariable.PersonsAge) >= 18) ? TTABFlags.TS1NoAdult : 0);
+
+                //DEBUG: enable debug interction for all CSRs.
+                if ((action.Flags & TTABFlags.Debug) > 0)
+                {
+                    if (!isVisitor)
+                        return result; //do not bother running check
+                    else
+                        return null; //disable debug for everyone else.
+                }
+
+                //NEGATIVE EFFECTS:
+                var pos = ts1State & TTABFlags.TS1NoChild | TTABFlags.TS1NoAdult;
+                var ts1Compare = action.Flags;
+                if ((pos & ts1Compare) > 0) return null;
+
+                var negMask = (TTABFlags.AllowVisitors);
+
+                var negatedFlags = (~ts1Compare) & negMask;
+                if ((negatedFlags & ts1State) > 0) return null; //we are disallowed
+            }
+            if (action.CheckRoutine != null && EvaluateCheck(Context, Entity, new VMStackFrame()
+                {
+                    Caller = Entity,
+                    Callee = action.Callee,
+                    CodeOwner = action.CodeOwner,
+                    StackObject = action.StackObject,
+                    Routine = action.CheckRoutine,
+                    Args = new short[4]
+                }, null, result) != VMPrimitiveExitCode.RETURN_TRUE)
+                return null;
+
+            return result;
+        }
+
         public List<VMPieMenuInteraction> CheckAction(VMQueuedAction action)
         {
             // 1. check action flags for permissions (if we are avatar)
@@ -741,6 +795,7 @@ namespace FSO.SimAntics.Engine
             // Allow CSRs:positive effect.
 
             if (action == null) return null;
+            if (Context.VM.TS1) return CheckTS1Action(action);
             var result = new List<VMPieMenuInteraction>();
 
             if (((action.Flags & TTABFlags.MustRun) == 0) && Entity is VMAvatar) //just let everyone use the CSR interactions

@@ -200,6 +200,7 @@ namespace FSO.Content
                 ((TS1AvatarTextureProvider)AvatarTextures)?.Init();
                 ((TS1BMFProvider)AvatarMeshes)?.Init();
                 Jobs = new TS1JobProvider(TS1Global);
+                Neighborhood = new TS1NeighborhoodProvider(this);
             } else
             {
                 ((AvatarTextureProvider)AvatarTextures)?.Init();
@@ -330,5 +331,8 @@ namespace FSO.Content
 
         /** TS1 Job Data **/
         public TS1JobProvider Jobs;
+
+        /** TS1 Neighbourhood Data **/
+        public TS1NeighborhoodProvider Neighborhood;
     }
 }

@@ -146,7 +146,7 @@ namespace FSO.Common.Rendering.Framework
         {
             lock (Device)
             {
-                foreach (var layer in Layers)
+                foreach (var layer in Layers.Reverse<IGraphicsLayer>())
                 {
                     layer.PreDraw(Device);
                 }

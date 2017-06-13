@@ -226,20 +226,6 @@ namespace FSO.SimAntics
             set { if (UseWorld) WorldUI.Position = value-new Vector3(0.5f, 0.5f, 0f); }
         }
 
-        public override string ToString()
-        {
-            if (MultitileGroup.Name != "") return MultitileGroup.Name;
-            var strings = Object.Resource.Get<CTSS>(Object.OBJ.CatalogStringsID);
-            if (strings != null){
-                return strings.GetString(0);
-            }
-            var label = Object.OBJ.ChunkLabel;
-            if (label != null && label.Length > 0){
-                return label;
-            }
-            return Object.OBJ.GUID.ToString("X");
-        }
-
         // Begin Container SLOTs interface
 
         public override int TotalSlots()

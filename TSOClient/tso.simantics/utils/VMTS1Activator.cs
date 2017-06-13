@@ -159,7 +159,7 @@ namespace FSO.SimAntics.Utils
                 //objm parent positioning
                 //objects without positions inherit position from the objects in their "parent id".
                 MappedObject src = obj;
-                while (src.ParentID != 0)
+                while (src != null && src.ParentID != 0)
                 {
                     if (objm.ObjectData.TryGetValue(src.ParentID, out src))
                     {

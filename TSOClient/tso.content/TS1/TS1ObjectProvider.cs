@@ -38,6 +38,7 @@ namespace FSO.Content.TS1
             foreach (var iff in allIffs)
             {
                 var file = (IffFile)iff.GetThrowawayGeneric();
+                file.MarkThrowaway();
                 var objects = file.List<OBJD>();
                 if (objects != null)
                 {
@@ -77,6 +78,7 @@ namespace FSO.Content.TS1
             foreach (var filename in files)
             {
                 var file = new IffFile(filename);
+                file.MarkThrowaway();
                 var objects = file.List<OBJD>();
                 if (objects != null)
                 {

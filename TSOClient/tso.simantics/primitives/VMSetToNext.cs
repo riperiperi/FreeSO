@@ -112,6 +112,19 @@ namespace FSO.SimAntics.Primitives
                 if (next < 0) return VMPrimitiveExitCode.GOTO_FALSE;
                 VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, next);
                 return VMPrimitiveExitCode.GOTO_TRUE;
+            } else if (operand.SearchType == VMSetToNextSearchType.NeighborId)
+            {
+                var next = Content.Content.Get().Neighborhood.SetToNext(targetValue);
+                if (next < 0) return VMPrimitiveExitCode.GOTO_FALSE;
+                VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, next);
+                return VMPrimitiveExitCode.GOTO_TRUE;
+            }
+            else if (operand.SearchType == VMSetToNextSearchType.NeighborOfType)
+            {
+                var next = Content.Content.Get().Neighborhood.SetToNext(targetValue, operand.GUID);
+                if (next < 0) return VMPrimitiveExitCode.GOTO_FALSE;
+                VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, next);
+                return VMPrimitiveExitCode.GOTO_TRUE;
             } else {
 
                 //if we've cached the search type, use that instead of all objects
@@ -120,6 +133,7 @@ namespace FSO.SimAntics.Primitives
                     case VMSetToNextSearchType.ObjectOnSameTile:
                         entities = context.VM.Context.ObjectQueries.GetObjectsAt(Pointer.Position); break;
                     case VMSetToNextSearchType.Person:
+                    case VMSetToNextSearchType.FamilyMember:
                         entities = context.VM.Context.ObjectQueries.Avatars; break;
                     case VMSetToNextSearchType.ObjectOfType:
                         entities = context.VM.Context.ObjectQueries.GetObjectsByGUID(operand.GUID); break;
@@ -140,18 +154,15 @@ namespace FSO.SimAntics.Primitives
                             case VMSetToNextSearchType.NonPerson:
                                 found = (temp.GetType() == typeof(VMGameObject));
                                 break;
-                            case VMSetToNextSearchType.NeighborId:
-                                return VMPrimitiveExitCode.GOTO_FALSE;
-                                throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.ObjectWithCategoryEqualToSP0:
                                 found = (temp.GetValue(Model.VMStackObjectVariable.Category) == context.Args[0]); //I'm assuming that means "Stack parameter 0", that category means function and that it needs to be exactly the same (no subsets)
                                 break;
-                            case VMSetToNextSearchType.NeighborOfType:
-                                return VMPrimitiveExitCode.GOTO_FALSE;
-                                throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.ClosestHouse:
                                 return VMPrimitiveExitCode.GOTO_FALSE;
                                 throw new VMSimanticsException("Not implemented!", context);
+                            case VMSetToNextSearchType.FamilyMember:
+                                found = context.VM.CurrentFamily?.FamilyGUIDs?.Contains(((VMAvatar)temp).Object.OBJ.GUID) ?? false;
+                                break;
                             default:
                                 //set to next object, or cached search.
                                 found = true; break;
