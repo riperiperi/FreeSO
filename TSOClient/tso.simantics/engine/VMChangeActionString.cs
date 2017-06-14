@@ -41,7 +41,7 @@ namespace FSO.SimAntics.Primitives
                     context.Thread.ActionStrings.Add(new VMPieMenuInteraction()
                     {
                         Name = newName,
-                        Param0 = (context.StackObject == null) ? (short)0 : context.StackObject.ObjectID
+                        Param0 = context.StackObjectID
                     });
                 } else
                     context.Thread.Queue[0].Name = newName;

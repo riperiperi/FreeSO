@@ -190,7 +190,7 @@ namespace FSO.Client.UI.Panels
             ObjLimitLabel.X = Background.Width/2 - 100;
             ObjLimitLabel.Size = new Microsoft.Xna.Framework.Vector2(200, 0);
             ObjLimitLabel.Alignment = TextAlignment.Center;
-            Add(ObjLimitLabel);
+            DynamicOverlay.Add(ObjLimitLabel);
         }
 
         public override void Removed()

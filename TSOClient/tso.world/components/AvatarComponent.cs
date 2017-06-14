@@ -14,6 +14,7 @@ using FSO.Vitaboy;
 using FSO.LotView.Model;
 using FSO.LotView.Utils;
 using FSO.Common.Utils;
+using FSO.LotView.LMap;
 
 namespace FSO.LotView.Components
 {
@@ -108,9 +109,9 @@ namespace FSO.LotView.Components
 
         private List<Vector2> CloseLightPositions(Vector3 Position)
         {
-            if (blueprint == null || Room > blueprint.Rooms.Count || Room == 0) return null;
+            if (blueprint == null || Room >= blueprint.Rooms.Count || Room == 0) return null;
             var room = blueprint.Rooms[Room].Base;
-            var lights = blueprint.Light[room].Lights;
+            var lights = (room >= blueprint.Light.Length)?new List<LightData>():blueprint.Light[room].Lights;
             var xy = new Vector2(Position.X, Position.Y);
             var result = new List<Vector2>();
 

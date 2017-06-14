@@ -257,7 +257,7 @@ namespace FSO.Client.UI.Screens
 
         void gameplayButton_OnButtonClick(UIElement button)
         {
-            GameFacade.Controller.EnterSandboxMode("Content/Blueprints/empty_lot_fso.xml", false);
+            UIScreen.GlobalShowDialog(new UISandboxSelector(), true);
             return;
         }
 

@@ -72,7 +72,10 @@ namespace FSO.Client.UI.Framework
         public override void Draw(UISpriteBatch batch)
         {
             if (!Visible) return;
-            DrawLocalTexture(batch, Target, -BackOffset.ToVector2());
+            if (Target != null)
+            {
+                DrawLocalTexture(batch, Target, -BackOffset.ToVector2());
+            }
             DynamicOverlay.Draw(batch);
         }
 

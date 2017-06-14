@@ -30,7 +30,7 @@ namespace FSO.SimAntics.Primitives
             //if we're main, attempt to run a queued interaction. We just idle if this fails.
             if (operand.AllowPush == 1 && !context.ActionTree && context.Thread.AttemptPush())
             {
-                return VMPrimitiveExitCode.CONTINUE; //control handover
+                return VMPrimitiveExitCode.CONTINUE_NEXT_TICK; //control handover
                 //TODO: does this forcefully end the rest of the idle? (force a true return, must loop back to run again)
             }
 

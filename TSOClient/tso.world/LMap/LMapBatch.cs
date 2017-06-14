@@ -237,6 +237,7 @@ namespace FSO.LotView.LMap
                     floor = room.Floor;
                     SetFloor(floor);
                 }
+                if (rm >= lightRooms.Length) break;
                 var light = lightRooms[rm];
                 DrawRoom(room, light, true);
                 DirtyRooms.Remove(rm);
@@ -269,6 +270,7 @@ namespace FSO.LotView.LMap
                     floor = room.Floor;
                     SetFloor(floor);
                 }
+                if (i >= lightRooms.Length) break;
                 var light = lightRooms[i];
                 DrawRoom(room, light, false);
             }

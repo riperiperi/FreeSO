@@ -60,6 +60,15 @@ struct GrassPSVTX {
 // from shadertoy.
 // https://www.shadertoy.com/view/4djSRW
 
+
+float nrand(float2 n){
+	return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
+}
+
+float2 nrand2(float2 n) {
+	return float2(nrand(n), nrand(n*float2(4, 3)));
+}
+
 float2 hash22(float2 p)
 {
     float3 p3 = frac(float3(p.xyx) * 0.1031);

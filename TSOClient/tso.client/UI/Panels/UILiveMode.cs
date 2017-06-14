@@ -379,13 +379,14 @@ namespace FSO.Client.UI.Panels
                 EODPanelTall.Position = EODLayout.GetPanelPosition(EODHeight.Tall);
                 EODDoublePanelTall.Position = EODLayout.GetPanelPosition(EODHeight.TallTall);
 
-                Size = new Vector2(Background.Size.X, (options.Height == EODHeight.TallTall)? EODDoublePanelTall.Size.Y:EODPanelTall.Size.Y);
-                BackOffset = new Point();
+                Size = new Vector2(Background.Size.X, ((options.Height == EODHeight.TallTall)? (EODDoublePanelTall.Size.Y + (EODDoublePanelTall.Y-EODMsgWin.Y)) :EODPanelTall.Size.Y) - (int)EODMsgWin.Position.Y);
+                BackOffset = new Point(0, -(int)EODMsgWin.Position.Y);
+                
 
                 //Double tall panel chrome
                 if (options.Height == EODHeight.TallTall)
                 {
-                    BackOffset = new Point(0, -(int)EODDoublePanelTall.Y);
+                    //BackOffset = new Point(0, -(int)EODDoublePanelTall.Y);
                     EODTopSub.Reset();
                     EODTopButtonLayout.Reset();
 
@@ -456,6 +457,10 @@ namespace FSO.Client.UI.Panels
             Background.SetSize(Background.Texture.Width, Background.Texture.Height);
 
             UpdateThumbPosition();
+            Common.Utils.GameThread.NextUpdate(x =>
+            {
+                Invalidate();
+            });
         }
 
         public void UpdateThumbPosition()
