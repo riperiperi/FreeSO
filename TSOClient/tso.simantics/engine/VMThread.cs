@@ -50,7 +50,7 @@ namespace FSO.SimAntics.Engine
         /// </summary>
         public bool QueueDirty;
 
-        public byte ActiveQueueBlock = 0; //cannot reorder items in the queue with index <= this.
+        public sbyte ActiveQueueBlock = -1; //cannot reorder items in the queue with index <= this.
         public short[] TempRegisters = new short[20];
         public int[] TempXL = new int[2];
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
@@ -187,6 +187,7 @@ namespace FSO.SimAntics.Engine
                 if (IsCheck || ((item.Mode != VMQueueMode.ParentIdle || !Entity.GetFlag(VMEntityFlags.InteractionCanceled)) && CheckAction(item) != null))
                 {
                     ExecuteAction(item);
+                    ActiveQueueBlock++;
                     return true;
                 }
                 else
@@ -562,11 +563,10 @@ namespace FSO.SimAntics.Engine
         {
             var discardResult = Stack[Stack.Count - 1].DiscardResult;
             var contextSwitch = (Stack.Count > 1) && Stack.LastOrDefault().ActionTree != Stack[Stack.Count - 2].ActionTree;
-            if (contextSwitch && !Stack.LastOrDefault().ActionTree) { }
             Stack.RemoveAt(Stack.Count - 1);
             LastStackExitCode = result;
 
-            if (contextSwitch) //interaction switching back to main (it cannot be the other way...)
+            if (discardResult) //interaction switching back to main (it cannot be the other way...)
             {
                 QueueDirty = true;
                 var interaction = Queue[0];
@@ -575,16 +575,12 @@ namespace FSO.SimAntics.Engine
                 if (interaction.Callback != null) interaction.Callback.Run(Entity);
                 if (Queue.Count > 0) Queue.RemoveAt(0);
                 ContinueExecution = true; //continue where the Allow Push idle left off
+                ActiveQueueBlock--;
                 result = VMPrimitiveExitCode.CONTINUE;
             }
             if (Stack.Count > 0)
             {
-                if (discardResult)
-                {
-                    //only used by Run Immediately currently.
-                    ActiveQueueBlock--;
-                }
-                else if (result == VMPrimitiveExitCode.RETURN_TRUE)
+                if (result == VMPrimitiveExitCode.RETURN_TRUE)
                     result = VMPrimitiveExitCode.GOTO_TRUE;
                 else if (result == VMPrimitiveExitCode.RETURN_FALSE)
                     result = VMPrimitiveExitCode.GOTO_FALSE;
@@ -719,6 +715,7 @@ namespace FSO.SimAntics.Engine
         private void ExecuteAction(VMQueuedAction action)
         {
             var frame = action.ToStackFrame(Entity);
+            frame.DiscardResult = true;
             Push(frame);
         }
 

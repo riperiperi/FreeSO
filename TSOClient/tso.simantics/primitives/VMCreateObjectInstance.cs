@@ -136,6 +136,7 @@ namespace FSO.SimAntics.Engine.Primitives
                     var temp = context.Thread.Queue[0].InteractionNumber;
                     if (temp == -1) throw new VMSimanticsException("Set callback as 'this interaction' when queue item has no interaction number!", context);
                     interaction = (short)temp;
+                    if (temp < 0) interaction |= unchecked((short)0x8000); //cascade global flag
                 } else if (interaction == 252 || interaction == 253) {
                     interaction = context.Thread.TempRegisters[0];
                 }

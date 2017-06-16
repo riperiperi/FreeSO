@@ -47,6 +47,8 @@ namespace FSO.SimAntics.Engine
                 GameObject CodeOwner = null;
                 ushort ActionID;
                 TTABFlags ActionFlags;
+                var global = Interaction < 0;
+                Interaction &= 0x7FFF;
                 string ActionName = "";
                 if (IsTree)
                 {
@@ -55,25 +57,15 @@ namespace FSO.SimAntics.Engine
                 }
                 else
                 {
-                    var Action = Target.TreeTable.InteractionByIndex[(byte)Interaction];
+                    var tt = global ? vm.Context.GlobalTreeTable : Target.TreeTable;
+                    var ttas = global ? vm.Context.GlobalTTAs : Target.TreeTableStrings;
+                    var Action = tt.InteractionByIndex[(byte)Interaction];
                     ActionID = Action.ActionFunction;
                     ActionFlags = Action.Flags;
-                    ActionName = Target.TreeTableStrings.GetString((int)Action.TTAIndex);
+                    ActionName = ttas.GetString((int)Action.TTAIndex);
                 }
 
-                if (ActionID < 4096)
-                { //global
-                    bhav = null;
-                    //unimp as it has to access the context to get this.
-                }
-                else if (ActionID < 8192)
-                { //local
-                    bhav = Target.Object.Resource.Get<BHAV>(ActionID);
-                }
-                else
-                { //semi-global
-                    bhav = Target.SemiGlobal.Get<BHAV>(ActionID);
-                }
+                bhav = Target.GetBHAVWithOwner(ActionID, vm.Context).bhav;
                 if (bhav == null) return; //???
                 if (IsTree) ActionName = bhav.ChunkLabel;
 

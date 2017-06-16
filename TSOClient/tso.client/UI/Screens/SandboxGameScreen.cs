@@ -447,7 +447,7 @@ namespace FSO.Client.UI.Screens
                 vm.ActivateFamily(ActiveFamily);
                 BlueprintReset(lotName);
 
-                vm.Context.Clock.Hours = 12;
+                vm.Context.Clock.Hours = 0;
                 vm.TSOState.Size = (10) | (3 << 8);
                 vm.Context.UpdateTSOBuildableArea();
                 vm.MyUID = 1;
@@ -481,27 +481,46 @@ namespace FSO.Client.UI.Screens
 
         public void BlueprintReset(string path)
         {
-            var floorClip = Rectangle.Empty;
-            var offset = new Point();
-            var targetSize = 0;
-
-            var isIff = path.EndsWith(".iff");
-            short jobLevel = -1;
-            if (isIff) jobLevel = short.Parse(path.Substring(path.Length - 6, 2));
-            vm.SendCommand(new VMBlueprintRestoreCmd
+            string filename = Path.GetFileName(path);
+            try
             {
-                JobLevel = jobLevel,
-                XMLData = File.ReadAllBytes(path),
-                IffData = isIff,
+                using (var file = new BinaryReader(File.OpenRead(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/") + filename.Substring(0, filename.Length - 4) + ".fsov")))
+                {
+                    var marshal = new SimAntics.Marshals.VMMarshal();
+                    marshal.Deserialize(file);
+                    //vm.SendCommand(new VMStateSyncCmd()
+                    //{
+                    //    State = marshal
+                    //});
 
-                FloorClipX = floorClip.X,
-                FloorClipY = floorClip.Y,
-                FloorClipWidth = floorClip.Width,
-                FloorClipHeight = floorClip.Height,
-                OffsetX = offset.X,
-                OffsetY = offset.Y,
-                TargetSize = targetSize
-            });
+                    vm.Load(marshal);
+                    vm.Reset();
+                }
+            }
+            catch (Exception)
+            {
+                var floorClip = Rectangle.Empty;
+                var offset = new Point();
+                var targetSize = 0;
+
+                var isIff = path.EndsWith(".iff");
+                short jobLevel = -1;
+                if (isIff) jobLevel = short.Parse(path.Substring(path.Length - 6, 2));
+                vm.SendCommand(new VMBlueprintRestoreCmd
+                {
+                    JobLevel = jobLevel,
+                    XMLData = File.ReadAllBytes(path),
+                    IffData = isIff,
+
+                    FloorClipX = floorClip.X,
+                    FloorClipY = floorClip.Y,
+                    FloorClipWidth = floorClip.Width,
+                    FloorClipHeight = floorClip.Height,
+                    OffsetX = offset.X,
+                    OffsetY = offset.Y,
+                    TargetSize = targetSize
+                });
+            }
             vm.Tick();
         }
 

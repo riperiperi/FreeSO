@@ -82,6 +82,10 @@ namespace FSO.SimAntics.Marshals
             {
                 DynamicSuits = new VMAvatarDynamicSuits(reader);
                 Decoration = new VMAvatarDecoration(reader);
+            } else
+            {
+                DynamicSuits = new VMAvatarDynamicSuits(false);
+                Decoration = new VMAvatarDecoration();
             }
 
             var aprs = reader.ReadInt32();

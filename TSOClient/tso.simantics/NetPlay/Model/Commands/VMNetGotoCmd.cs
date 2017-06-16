@@ -31,7 +31,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             VMEntity callee = vm.Context.CreateObjectInstance(GOTO_GUID, new LotTilePos(x, y, level), Direction.NORTH).Objects[0];
             if (callee?.Position == LotTilePos.OUT_OF_WORLD) callee.Delete(true, vm.Context);
             if (callee == null) return false;
-            callee.PushUserInteraction(Interaction, caller, vm.Context);
+            callee.PushUserInteraction(Interaction, caller, vm.Context, false);
 
             return true;
         }

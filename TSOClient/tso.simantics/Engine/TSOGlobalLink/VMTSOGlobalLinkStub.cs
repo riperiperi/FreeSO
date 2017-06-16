@@ -186,24 +186,33 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             Database.SavePluginPersist(objectPID, pluginID, data);
         }
 
+        public uint NextPersist = 0x1000000;
         public void RegisterNewObject(VM vm, VMEntity obj, VMAsyncPersistIDCallback callback)
         {
             //todo: sandbox servers should give things an "id"
+            vm.SendCommand(new VMNetUpdatePersistStateCmd()
+            {
+                ObjectID = obj.ObjectID,
+                PersistID = NextPersist++
+            });
         }
 
         public void MoveToInventory(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback)
         {
+            callback(true, obj.BaseObject.PersistID);
             //todo: nice stub for this using database?
         }
 
         public void PurchaseFromOwner(VM vm, VMMultitileGroup obj, uint purchaserPID, VMAsyncInventorySaveCallback callback, VMAsyncTransactionCallback tcallback)
         {
+            callback(true, obj.BaseObject.PersistID);
             //todo: nice stub for this using database?
         }
 
         public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, VMAsyncInventoryRetrieveCallback callback)
         {
             //todo: nice stub for this using database?
+            callback(0, null); 
         }
 
         public void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback)

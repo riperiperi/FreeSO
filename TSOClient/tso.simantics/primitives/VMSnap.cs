@@ -100,7 +100,7 @@ namespace FSO.SimAntics.Primitives
                     {
                         //push shoo if not already being shooed
                         VMEntity callee = context.VM.Context.CreateObjectInstance(GOTO_GUID, new LotTilePos(posChange.Object.Position), Direction.NORTH).Objects[0];
-                        callee.PushUserInteraction(SHOO_INTERACTION, posChange.Object, context.VM.Context);
+                        callee.PushUserInteraction(SHOO_INTERACTION, posChange.Object, context.VM.Context, false);
                     }
                 }
                 entity.SetValue(VMStackObjectVariable.PrimitiveResultID, (posChange.Object == null) ? (short)0 : posChange.Object.ObjectID);

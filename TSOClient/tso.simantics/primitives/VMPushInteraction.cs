@@ -50,7 +50,7 @@ namespace FSO.SimAntics.Engine.Primitives
                     priority = (short)VMQueuePriority.Idle; mode = VMQueueMode.Idle; break;
             }
 
-            var action = interactionSource.GetAction(operand.Interaction, context.StackObject, context.VM.Context);
+            var action = interactionSource.GetAction(operand.Interaction, context.StackObject, context.VM.Context, false);
             if (action == null) return VMPrimitiveExitCode.GOTO_FALSE;
             if (operand.UseCustomIcon) action.IconOwner = context.VM.GetObjectById((short)context.Locals[operand.IconLocation]);
             action.Mode = mode;

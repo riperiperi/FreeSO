@@ -718,15 +718,31 @@ namespace FSO.SimAntics
             SetValue(VMStackObjectVariable.Room, (short)room);
         }
 
-        public List<VMPieMenuInteraction> GetPieMenu(VM vm, VMEntity caller, bool includeHidden)
+        public List<VMPieMenuInteraction> GetPieMenu(VM vm, VMEntity caller, bool includeHidden, bool includeGlobal)
         {
             var pie = new List<VMPieMenuInteraction>();
             if (TreeTable == null) return pie;
 
-            for (int i = 0; i < TreeTable.Interactions.Length; i++)
+            var myLength = TreeTable.Interactions.Length;
+            var globalLength = vm.Context.GlobalTreeTable.Interactions.Length;
+
+            for (int i = 0; i < myLength+globalLength; i++)
             {
-                var id = TreeTable.Interactions[i].TTAIndex;
-                var action = GetAction((int)id, caller, vm.Context);
+                TTABInteraction ia;
+                TTAs ttas = TreeTableStrings;
+                bool global = false;
+                if (i < myLength)
+                {
+                    ia = TreeTable.Interactions[i];
+                } else
+                {
+                    if (!includeGlobal) break;
+                    ia = vm.Context.GlobalTreeTable.Interactions[i - myLength];
+                    ttas = vm.Context.GlobalTTAs;
+                    global = true;
+                }
+                var id = ia.TTAIndex;
+                var action = GetAction((int)id, caller, vm.Context, global);
 
                 caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] = 0;
                 if (action != null) action.Flags &= ~TTABFlags.MustRun;
@@ -740,19 +756,21 @@ namespace FSO.SimAntics
                         foreach (var actionS in actionStrings)
                         {
                             actionS.ID = (byte)id;
-                            actionS.Entry = TreeTable.Interactions[i];
+                            actionS.Entry = ia;
+                            actionS.Global = global;
                             pie.Add(actionS);
                         }
                     }
                     else
                     {
-                        if (TreeTableStrings != null)
+                        if (ttas != null)
                         {
                             pie.Add(new VMPieMenuInteraction()
                             {
-                                Name = TreeTableStrings.GetString((int)id),
+                                Name = ttas.GetString((int)id),
                                 ID = (byte)id,
-                                Entry = TreeTable.Interactions[i]
+                                Entry = ia,
+                                Global = global
                             });
                         }
                     }
@@ -762,15 +780,17 @@ namespace FSO.SimAntics
             return pie;
         }
         
-        public VMQueuedAction GetAction(int interaction, VMEntity caller, VMContext context)
+        public VMQueuedAction GetAction(int interaction, VMEntity caller, VMContext context, bool global)
         {
-            return GetAction(interaction, caller, context, null);
+            return GetAction(interaction, caller, context, global, null);
         }
 
-        public VMQueuedAction GetAction(int interaction, VMEntity caller, VMContext context, short[] args)
+        public VMQueuedAction GetAction(int interaction, VMEntity caller, VMContext context, bool global, short[] args)
         {
-            if (!TreeTable.InteractionByIndex.ContainsKey((uint)interaction)) return null;
-            var Action = TreeTable.InteractionByIndex[(uint)interaction];
+            var ttab = global ? context.GlobalTreeTable : TreeTable;
+            var ttas = global ? context.GlobalTTAs : TreeTableStrings;
+            if (!ttab.InteractionByIndex.ContainsKey((uint)interaction)) return null;
+            var Action = ttab.InteractionByIndex[(uint)interaction];
 
             ushort actionID = Action.ActionFunction;
             var aTree = GetBHAVWithOwner(actionID, context);
@@ -785,6 +805,8 @@ namespace FSO.SimAntics
                 if (cTree != null) cRoutine = context.VM.Assemble(cTree.bhav);
             }
 
+            if (global) interaction |= unchecked((int)0x80000000);
+
             return new VMQueuedAction
             {
                 Callee = this,
@@ -792,7 +814,7 @@ namespace FSO.SimAntics
                 CodeOwner = aTree.owner,
                 ActionRoutine = aRoutine,
                 CheckRoutine = cRoutine,
-                Name = (TreeTableStrings==null)?"":TreeTableStrings.GetString((int)Action.TTAIndex),
+                Name = (ttas==null)?"":ttas.GetString((int)Action.TTAIndex),
                 StackObject = this,
                 Args = args,
                 InteractionNumber = interaction,
@@ -802,13 +824,13 @@ namespace FSO.SimAntics
             };
         }
 
-        public void PushUserInteraction(int interaction, VMEntity caller, VMContext context)
+        public void PushUserInteraction(int interaction, VMEntity caller, VMContext context, bool global)
         {
-            PushUserInteraction(interaction, caller, context, null);
+            PushUserInteraction(interaction, caller, context, global, null);
         }
-        public void PushUserInteraction(int interaction, VMEntity caller, VMContext context, short[] args)
+        public void PushUserInteraction(int interaction, VMEntity caller, VMContext context, bool global, short[] args)
         {
-            var action = GetAction(interaction, caller, context, args);
+            var action = GetAction(interaction, caller, context, global, args);
             if (action != null) caller.Thread.EnqueueAction(action);
         }
 
@@ -1405,6 +1427,7 @@ namespace FSO.SimAntics
 
         public int Score;
         public VMEntity Callee;
+        public bool Global;
     }
 
 

@@ -39,7 +39,7 @@ namespace FSO.SimAntics.Primitives
                 var pos2 = obj.Position;
                 var distance = (short)Math.Floor(Math.Sqrt(Math.Pow(pos1.x - pos2.x, 2) + Math.Pow(pos1.y - pos2.y, 2)) / 16.0);
 
-                var pie = obj.GetPieMenu(context.VM, context.Caller, true);
+                var pie = obj.GetPieMenu(context.VM, context.Caller, true, false);
                 foreach (var item in pie)
                 {
                     //motive scores must be above their threshold.
@@ -94,7 +94,7 @@ namespace FSO.SimAntics.Primitives
                 selection = sorted[(int)context.VM.Context.NextRandom((ulong)Math.Min(4, sorted.Count))];
             }
 
-            selection.Callee.PushUserInteraction(selection.ID, context.Caller, context.VM.Context, new short[] { selection.Param0, 0, 0, 0 });
+            selection.Callee.PushUserInteraction(selection.ID, context.Caller, context.VM.Context, false, new short[] { selection.Param0, 0, 0, 0 });
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

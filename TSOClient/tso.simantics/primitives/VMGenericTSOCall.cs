@@ -225,13 +225,38 @@ namespace FSO.SimAntics.Primitives
                 //53. Is On Editable Tile
                 //54. Set Stack Object's Crafter Name To Avatar in Temp 0
                 case VMGenericTSOCallMode.CalcHarvestComponents: //55
-                    //TODO: where does this come from?
-                    context.Thread.TempRegisters[0] = 1;
-                    context.Thread.TempRegisters[1] = 1;
-                    context.Thread.TempRegisters[2] = 1;
+                    var table = Content.Content.Get().GlobalTuning.EntriesByName["harvest component table"];
+                    int[] componentTable = new int[] { 0, 0, 0 };
+                    var objb = context.StackObject;
+                    uint guid = objb.Object.OBJ.GUID;
+                    if (objb.MasterDefinition != null) guid = objb.MasterDefinition.GUID;
+                    var catalog = Content.Content.Get().WorldCatalog;
+                    var item = catalog.GetItemByGUID(guid);
+                    if (item != null)
+                    {
+                        string compString = null;
+                        if (table.KeyValues.TryGetValue(item.Value.Category.ToString(), out compString))
+                        {
+                            var commentInd = compString.IndexOf(';');
+                            if (commentInd == -1) commentInd = compString.Length;
+                            var substr = compString.Substring(0, commentInd);
+                            componentTable = substr.Split(',').Select(x => int.Parse(x)).ToArray();
+                        }
+                    }
+                    var value = context.StackObject.MultitileGroup.Price;
+
+                    //TODO: scale with wear, object age?
+                    var ava = (VMAvatar)context.Caller;
+                    float scale = 0.50f + ava.GetPersonData(VMPersonDataVariable.CreativitySkill) / 2000f + ava.GetPersonData(VMPersonDataVariable.MechanicalSkill) / 2000f;
+                    value = (int)(value * scale);
+
+                    context.Thread.TempRegisters[0] = (short)((7500 + context.VM.Context.NextRandom((ulong)(value*componentTable[0])))/10000); //wood
+                    context.Thread.TempRegisters[1] = (short)((7500 + context.VM.Context.NextRandom((ulong)(value * componentTable[1]))) / 10000); //cloth
+                    context.Thread.TempRegisters[2] = (short)((7500 + context.VM.Context.NextRandom((ulong)(value * componentTable[2]))) / 10000); //parts
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.IsStackObjectForSale: //56. TODO
-                    return VMPrimitiveExitCode.GOTO_FALSE;
+                    return (((context.StackObject as VMGameObject)?.Disabled)?.HasFlag(VMGameObjectDisableFlags.ForSale) ?? false) ?
+                        VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
 
                 //TODO: may need to update in global server
                 default:

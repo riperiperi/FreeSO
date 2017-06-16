@@ -212,7 +212,7 @@ namespace FSO.Client.UI.Panels
                 Alignment = TextAlignment.Left,
                 TextSize = 12 };
 
-            if (info.Block) vm.SpeedMultiplier = 0;
+            if (info.Block && vm.TS1) vm.SpeedMultiplier = 0;
             var b0Event = (info.Block) ? new ButtonClickDelegate(DialogButton0) : null;
             var b1Event = (info.Block) ? new ButtonClickDelegate(DialogButton1) : null;
             var b2Event = (info.Block) ? new ButtonClickDelegate(DialogButton2) : null;
@@ -290,7 +290,7 @@ namespace FSO.Client.UI.Panels
                 ResponseText = house.ToString()
             });
             Parent.Remove(TS1NeighSelector);
-            vm.SpeedMultiplier = 1;
+            if (vm.SpeedMultiplier == 0) vm.SpeedMultiplier = 1;
             TS1NeighSelector = null;
         }
 
@@ -308,7 +308,7 @@ namespace FSO.Client.UI.Panels
                 ResponseCode = code,
                 ResponseText = (BlockingDialog.ResponseText == null) ? "" : BlockingDialog.ResponseText
             });
-            vm.SpeedMultiplier = 1;
+            if (vm.SpeedMultiplier == 0) vm.SpeedMultiplier = 1;
             BlockingDialog = null;
         }
 
@@ -382,7 +382,7 @@ namespace FSO.Client.UI.Panels
                             else
                             {
                                 HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
-                                var menu = obj.GetPieMenu(vm, ActiveEntity, false);
+                                var menu = obj.GetPieMenu(vm, ActiveEntity, false, true);
                                 if (menu.Count != 0)
                                 {
                                     PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
@@ -473,7 +473,7 @@ namespace FSO.Client.UI.Panels
                             var obj = vm.GetObjectById(ObjectHover);
                             if (obj != null)
                             {
-                                var menu = obj.GetPieMenu(vm, ActiveEntity, false);
+                                var menu = obj.GetPieMenu(vm, ActiveEntity, false, true);
                                 InteractionsAvailable = (menu.Count > 0);
                             }
                         }

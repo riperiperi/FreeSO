@@ -106,7 +106,8 @@ namespace FSO.Client.UI.Panels
                     Category = false,
                     Name = depth[depth.Length - 1],
                     ID = pie[i].ID,
-                    Param0 = pie[i].Param0
+                    Param0 = pie[i].Param0,
+                    Global = pie[i].Global
                 };
                 category.Children.Add(item);
                 category.ChildrenByName[item.Name] = item;
@@ -342,7 +343,8 @@ namespace FSO.Client.UI.Panels
                             Interaction = action.ID,
                             ActorUID = m_Caller.PersistID,
                             CalleeID = m_Obj.ObjectID,
-                            Param0 = action.Param0
+                            Param0 = action.Param0,
+                            Global = action.Global
                         });
                     }
                 }
@@ -374,6 +376,7 @@ namespace FSO.Client.UI.Panels
         public bool Category;
         public byte ID;
         public short Param0;
+        public bool Global;
         public string Name;
         public List<UIPieMenuItem> Children = new List<UIPieMenuItem>();
         public Dictionary<string, UIPieMenuItem> ChildrenByName = new Dictionary<string, UIPieMenuItem>();

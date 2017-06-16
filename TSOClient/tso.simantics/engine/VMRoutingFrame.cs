@@ -826,7 +826,7 @@ namespace FSO.SimAntics.Engine
                                         }
                                         else
                                         {
-                                            callee.PushUserInteraction(SHOO_INTERACTION, result.Object, VM.Context);
+                                            callee.PushUserInteraction(SHOO_INTERACTION, result.Object, VM.Context, false);
                                             WalkInterrupt(60);
                                         }
                                     }

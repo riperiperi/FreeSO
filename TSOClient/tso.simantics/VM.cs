@@ -174,7 +174,6 @@ namespace FSO.SimAntics
         /// </summary>
         public void Init()
         {
-            Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             PlatformState = new VMTSOLotState();
             GlobalState = new short[38];
             GlobalState[20] = 255; //Game Edition. Basically, what "expansion packs" are running. Let's just say all of them.
@@ -607,7 +606,6 @@ namespace FSO.SimAntics
             var clientJoin = (Context.Architecture == null);
             var oldWorld = Context.World;
             Context = new VMContext(input.Context, Context);
-            Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             Context.VM = this;
             Context.Architecture.RegenRoomMap();
             Context.RegeneratePortalInfo();
@@ -725,7 +723,6 @@ namespace FSO.SimAntics
             var oldWorld = Context.World;
             input.Context.Ambience.ActiveBits = 0;
             Context = new VMContext(input.Context, Context);
-            Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             Context.VM = this;
             Context.Architecture.RegenRoomMap();
             Context.RegeneratePortalInfo();

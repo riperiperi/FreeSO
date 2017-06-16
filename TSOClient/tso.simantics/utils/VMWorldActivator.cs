@@ -48,7 +48,6 @@ namespace FSO.SimAntics.Utils
             VM.Entities = new List<VMEntity>();
             VM.Scheduler = new Engine.VMScheduler(VM);
             VM.Context = new VMContext(VM.Context.World);
-            VM.Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             VM.Context.VM = VM;
             VM.Context.Blueprint = Blueprint;
             VM.Context.Architecture = new VMArchitecture(size, size, Blueprint, VM.Context);
