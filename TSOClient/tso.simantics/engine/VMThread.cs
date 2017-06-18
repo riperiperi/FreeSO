@@ -33,6 +33,7 @@ namespace FSO.SimAntics.Engine
         private VMEntity Entity;
 
         public VMThreadBreakMode ThreadBreak = VMThreadBreakMode.Active;
+        public string ThreadBreakString;
         public int BreakFrame; //frame the last breakpoint was performed on
         public bool RoutineDirty;
 
@@ -219,9 +220,14 @@ namespace FSO.SimAntics.Engine
         public void Tick(){
 #if IDE_COMPAT
             if (ThreadBreak == VMThreadBreakMode.Pause) return;
+            else if (ThreadBreak == VMThreadBreakMode.Reset)
+            {
+                Entity.Reset(Context);
+                ThreadBreak = VMThreadBreakMode.Active;
+            }
             else if (ThreadBreak == VMThreadBreakMode.Immediate)
             {
-                Breakpoint(Stack.LastOrDefault()); return;
+                Breakpoint(Stack.LastOrDefault(), "Paused."); return;
             }
             if (RoutineDirty)
             {
@@ -258,14 +264,14 @@ namespace FSO.SimAntics.Engine
                         {
                             var bf = Stack[BreakFrame];
                             HandleResult(bf, bf.GetCurrentInstruction(), VMPrimitiveExitCode.RETURN_TRUE);
-                            Breakpoint(Stack.LastOrDefault());
+                            Breakpoint(Stack.LastOrDefault(), "Returned True.");
                             return;
                         }
                         if (ThreadBreak == VMThreadBreakMode.ReturnFalse)
                         {
                             var bf = Stack[BreakFrame];
                             HandleResult(bf, bf.GetCurrentInstruction(), VMPrimitiveExitCode.RETURN_TRUE);
-                            Breakpoint(Stack.LastOrDefault());
+                            Breakpoint(Stack.LastOrDefault(), "Returned False.");
                             return;
                         }
 #endif
@@ -287,6 +293,15 @@ namespace FSO.SimAntics.Engine
             }
             catch (Exception e)
             {
+#if IDE_COMPAT
+                if (!IsCheck)
+                {
+                    Breakpoint(Stack.LastOrDefault(), "!"+e.Message+" "+StackTraceSimplify(e.StackTrace.Split('\n').FirstOrDefault(x => x.Contains(".cs")) ?? ""));
+                    ContinueExecution = false;
+                    return;
+                }
+#endif
+
                 if (e is ThreadAbortException) throw e;
                 if (Stack.Count == 0) return;
                 var context = Stack[Stack.Count - 1];
@@ -294,7 +309,7 @@ namespace FSO.SimAntics.Engine
                 if (DialogCooldown == 0)
                 {
 
-                    var simExcept = new VMSimanticsException(e.Message, context);
+                    var simExcept = new VMSimanticsException(e.Message + StackTraceSimplify(e.StackTrace.Split('\n').FirstOrDefault(x => x.Contains(".cs")) ?? ""), context);
                     string exceptionStr = "A SimAntics Exception has occurred, and has been suppressed: \r\n\r\n" + simExcept.ToString() + "\r\n\r\nThe object will be reset. Please report this!";
                     VMDialogInfo info = new VMDialogInfo
                     {
@@ -319,6 +334,13 @@ namespace FSO.SimAntics.Engine
                 }
             }
 #endif
+        }
+
+        private string StackTraceSimplify(string st)
+        {
+            var lastSlash = st.LastIndexOf('\\');
+            if (lastSlash == -1) lastSlash = st.LastIndexOf('/');
+            return (lastSlash == -1) ? st : st.Substring(lastSlash+1);
         }
 
         private void EvaluateQueuePriorities()
@@ -433,7 +455,7 @@ namespace FSO.SimAntics.Engine
 #if IDE_COMPAT
                 if (Stack.LastOrDefault().GetCurrentInstruction().Breakpoint || ThreadBreak == VMThreadBreakMode.StepIn)
                 {
-                    Breakpoint(frame);
+                    Breakpoint(frame, "Stepped in.");
                     ContinueExecution = false;
                 } else
 #endif
@@ -543,7 +565,16 @@ namespace FSO.SimAntics.Engine
                             (ThreadBreak == VMThreadBreakMode.StepOut && Stack.Count <= BreakFrame)
                         )))
                     {
-                        Breakpoint(frame);
+                        string result = "Unknown Break";
+                        switch (ThreadBreak) {
+                            case VMThreadBreakMode.StepIn:
+                                result = "Stepped In."; break;
+                            case VMThreadBreakMode.StepOut:
+                                result = "Stepped Out."; break;
+                            case VMThreadBreakMode.StepOver:
+                                result = "Stepped Over."; break;
+                        }
+                        Breakpoint(frame, result);
                     }
                     break;
             }
@@ -551,10 +582,11 @@ namespace FSO.SimAntics.Engine
             ContinueExecution = (ThreadBreak != VMThreadBreakMode.Pause) && continueExecution;
         }
 
-        public void Breakpoint(VMStackFrame frame)
+        public void Breakpoint(VMStackFrame frame, string description)
         {
             if (IsCheck) return; //can't breakpoint in check trees.
             ThreadBreak = VMThreadBreakMode.Pause;
+            ThreadBreakString = description;
             BreakFrame = Stack.IndexOf(frame);
             Context.VM.BreakpointHit(Entity);
         }
@@ -935,6 +967,7 @@ namespace FSO.SimAntics.Engine
         StepOver = 4,
         ReturnTrue = 5,
         ReturnFalse = 6,
-        Immediate = 7
+        Immediate = 7,
+        Reset = 8
     }
 }

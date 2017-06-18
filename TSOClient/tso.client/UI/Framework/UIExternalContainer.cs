@@ -11,7 +11,7 @@ using System.Text;
 
 namespace FSO.Client.UI.Framework
 {
-    public class UIExternalContainer : UIContainer
+    public class UIExternalContainer : UICachedContainer
     {
         UISpriteBatch Batch;
 
@@ -35,11 +35,11 @@ namespace FSO.Client.UI.Framework
         {
             get
             {
-                return _Width;
+                return (int)Size.X;
             }
             set
             {
-                _Width = value;
+                Size = new Vector2(value, Size.Y);
                 BatchDirty = true;
             }
         }
@@ -48,24 +48,24 @@ namespace FSO.Client.UI.Framework
         {
             get
             {
-                return _Height;
+                return (int)Size.Y;
             }
             set
             {
-                _Height = value;
+                Size = new Vector2(Size.X, value);
                 BatchDirty = true;
             }
         }
 
-        public UIExternalContainer(int width, int height)
+        public UIExternalContainer(int width, int height) : base()
         {
-            _Width = width;
-            _Height = height;
+            Size = new Vector2(width, height);
             inputManager = new InputManager();
             State = new UpdateState();
             mouse = new MouseState();
+            ClearColor = Color.White;
 
-            WidthHeightChange(width, height);
+            //WidthHeightChange(width, height);
         }
 
         public void WidthHeightChange(int width, int height)
@@ -83,7 +83,26 @@ namespace FSO.Client.UI.Framework
 
         public override void PreDraw(UISpriteBatch batch)
         {
-            if (BatchDirty) WidthHeightChange(Width, Height);
+            var invalid = Invalidated;
+            base.PreDraw(batch);
+            if (invalid && Target != null)
+            {
+                var expectedSize = Target.Width * Target.Height * 4;
+                if (RawImage == null || RawImage.Length != expectedSize)
+                {
+                    RawImage = new byte[expectedSize];
+                }
+                Target.GetData(RawImage, 0, (GameFacade.DirectX) ? RawImage.Length : RawImage.Length / 4);
+
+                for (int i = 0; i < RawImage.Length; i += 4)
+                {
+                    var swap = RawImage[i];
+                    RawImage[i] = RawImage[i + 2];
+                    RawImage[i + 2] = swap;
+                }
+                if (OnFrame != null) OnFrame();
+            }
+            //    if (BatchDirty) WidthHeightChange(Width, Height);
         }
 
         /// <summary>
@@ -93,6 +112,8 @@ namespace FSO.Client.UI.Framework
         /// <param name="mtx"></param>
         public override void Draw(UISpriteBatch batch)
         {
+            //base.Draw(batch);
+            /*
             if (Width == 0 || Height == 0 || !DoRedraw) return;
             DoRedraw = false;
             batch = Batch;
@@ -117,16 +138,7 @@ namespace FSO.Client.UI.Framework
 
             var tex = bufferTexture.Get();
             batch.End();
-
-            tex.GetData(RawImage, 0, (GameFacade.DirectX) ? RawImage.Length : RawImage.Length/4);
-
-            for (int i=0; i<RawImage.Length; i+=4)
-            {
-                var swap = RawImage[i];
-                RawImage[i] = RawImage[i + 2];
-                RawImage[i + 2] = swap;
-            }
-            if (OnFrame != null) OnFrame();
+            */
             //batch.Draw(tex, Vector2.Zero, _BlendColor);
         }
 
@@ -154,7 +166,7 @@ namespace FSO.Client.UI.Framework
             State.MouseEvents.Clear();
             base.Update(State);
 
-            if ((bool)State.SharedData["ExternalDraw"]) DoRedraw = true;
+            if ((bool)State.SharedData["ExternalDraw"]) Invalidate();// DoRedraw = true;
         }
     }
 

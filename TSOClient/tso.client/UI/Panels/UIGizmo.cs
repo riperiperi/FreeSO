@@ -122,6 +122,7 @@ namespace FSO.Client.UI.Panels
             SearchResult.OnDoubleClick += SearchResult_OnDoubleClick;
             SearchResult.Size = new Microsoft.Xna.Framework.Vector2(188, 108);
             SearchResult.Mask = true;
+            SearchText.OnEnterPress += (elem) => { SendSearch(WideSearchUpButton); };
 
             ListBoxColors = script.Create<UIListBoxTextStyle>("ListBoxColors", SearchResult.FontStyle);
         }

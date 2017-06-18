@@ -15,6 +15,8 @@ using Microsoft.Xna.Framework.Input;
 using FSO.SimAntics;
 using FSO.SimAntics.Engine;
 using FSO.IDE.EditorComponent.DataView;
+using FSO.Client;
+using FSO.Common.Utils;
 
 namespace FSO.IDE.EditorComponent.UI
 {
@@ -56,6 +58,8 @@ namespace FSO.IDE.EditorComponent.UI
         private UIButton DebugStepOut;
         private UIButton DebugTrue;
         private UIButton DebugFalse;
+        private UIButton DebugReset;
+        private UILabel DebugLabel;
 
         private Dictionary<ushort, BHAVContainer> ContainerByID;
 
@@ -71,6 +75,12 @@ namespace FSO.IDE.EditorComponent.UI
             BHAVView = new BHAVContainer(target, scope);
             ContainerByID.Add(target.ChunkID, BHAVView);
             this.Add(BHAVView);
+
+            GameThread.NextUpdate(x =>
+            {
+                var basePrim = BHAVView.RealPrim.FirstOrDefault();
+                if (basePrim != null) BHAVView.Position = GetCentralLocation(basePrim);
+            });
 
             PlacingName = new UILabel();
             PlacingName.Alignment = TextAlignment.Center;
@@ -97,43 +107,68 @@ namespace FSO.IDE.EditorComponent.UI
 
             if (DebugMode)
             {
+                this.Add(new UITracerBar());
+
+                var resource = EditorResource.Get().Indexed;
                 DebugFrame = debugEnt.Thread.Stack.LastOrDefault();
                 UpdateDebugPointer(DebugFrame);
                 DebugGo = new UIButton();
-                DebugGo.Caption = "Go";
-                DebugGo.Position = new Vector2(15, 15);
+                DebugGo.Texture = resource[0];
+                DebugGo.Tooltip = "Go";
+                DebugGo.Position = new Vector2(10, 5);
                 Add(DebugGo);
                 DebugGo.OnButtonClick += DebugButtonClick;
 
-                DebugStepOver = new UIButton();
-                DebugStepOver.Caption = "Step Over";
-                DebugStepOver.Position = new Vector2(83, 15);
-                Add(DebugStepOver);
-                DebugStepOver.OnButtonClick += DebugButtonClick;
-
                 DebugStepIn = new UIButton();
-                DebugStepIn.Caption = "Step In";
-                DebugStepIn.Position = new Vector2(193, 15);
+                DebugStepIn.Tooltip = "Step In";
+                DebugStepIn.Texture = resource[1];
+                DebugStepIn.Position = new Vector2(35, 5);
                 Add(DebugStepIn);
                 DebugStepIn.OnButtonClick += DebugButtonClick;
 
+                DebugStepOver = new UIButton();
+                DebugStepOver.Tooltip = "Step Over";
+                DebugStepOver.Texture = resource[2];
+                DebugStepOver.Position = new Vector2(60, 5);
+                Add(DebugStepOver);
+                DebugStepOver.OnButtonClick += DebugButtonClick;
+
                 DebugStepOut = new UIButton();
-                DebugStepOut.Caption = "Step Out";
-                DebugStepOut.Position = new Vector2(293, 15);
+                DebugStepOut.Tooltip = "Step Out";
+                DebugStepOut.Texture = resource[3];
+                DebugStepOut.Position = new Vector2(85, 5);
                 Add(DebugStepOut);
                 DebugStepOut.OnButtonClick += DebugButtonClick;
 
                 DebugTrue = new UIButton();
-                DebugTrue.Caption = "Return True";
-                DebugTrue.Position = new Vector2(402, 15);
+                DebugTrue.Tooltip = "Return True";
+                DebugTrue.Texture = resource[4];
+                DebugTrue.Position = new Vector2(LastWidth - 80, 5);
                 Add(DebugTrue);
                 DebugTrue.OnButtonClick += DebugButtonClick;
 
                 DebugFalse = new UIButton();
-                DebugFalse.Caption = "Return False";
-                DebugFalse.Position = new Vector2(522, 15);
+                DebugFalse.Tooltip = "Return False";
+                DebugFalse.Texture = resource[5];
+                DebugFalse.Position = new Vector2(LastWidth - 55, 5);
                 Add(DebugFalse);
                 DebugFalse.OnButtonClick += DebugButtonClick;
+
+                DebugReset = new UIButton();
+                DebugReset.Tooltip = "Reset Object";
+                DebugReset.Texture = resource[6];
+                DebugReset.Position = new Vector2(LastWidth-30, 5);
+                Add(DebugReset);
+                DebugReset.OnButtonClick += DebugButtonClick;
+
+                DebugLabel = new UILabel();
+                DebugLabel.CaptionStyle = TextStyle.DefaultLabel.Clone();
+                DebugLabel.CaptionStyle.Font = FSO.Client.GameFacade.EdithFont;
+                DebugLabel.CaptionStyle.Size = 12;
+                DebugLabel.CaptionStyle.Color = Color.White;
+                DebugLabel.Caption = "Breakpoint Hit.";
+                DebugLabel.Position = new Vector2(115, 9);
+                Add(DebugLabel);
             }
         }
 
@@ -154,32 +189,56 @@ namespace FSO.IDE.EditorComponent.UI
                 DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.ReturnTrue;
             else if (button == DebugFalse)
                 DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.ReturnFalse;
+            else if (button == DebugReset)
+                DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.Reset;
             else return;
+
+            Resume();
         }
 
         public void Resume()
         {
-            DebugGo.Caption = "Pause";
+            DebugGo.Tooltip = "Pause";
+            DebugGo.Texture = EditorResource.Get().Indexed[7];
             DebugStepIn.Disabled = true;
             DebugStepOut.Disabled = true;
             DebugStepOver.Disabled = true;
             DebugTrue.Disabled = true;
             DebugFalse.Disabled = true;
+            DebugLabel.Caption = "Running...";
+            RedrawNext = true;
             if (DisableDebugger != null) DisableDebugger();
             BHAVView.DebugPointer = null;
         }
 
         public void NewBreak(VMStackFrame frame)
         {
-            DebugGo.Caption = "Go";
+            DebugGo.Tooltip = "Go";
+            DebugGo.Texture = EditorResource.Get().Indexed[0];
             DebugStepIn.Disabled = false;
             DebugStepOut.Disabled = false;
             DebugStepOver.Disabled = false;
             DebugTrue.Disabled = false;
             DebugFalse.Disabled = false;
+            var breakStr = frame.Thread.ThreadBreakString ?? "Stopped.";
+            bool isException = breakStr[0] == '!';
+            if (isException)
+            {
+                DebugLabel.CaptionStyle.Color = new Color(255, 255, 155, 255);
+                breakStr = breakStr.Substring(1);
+            } else
+            {
+                DebugLabel.CaptionStyle.Color = Color.White;
+            }
+            DebugLabel.Caption = breakStr;
             RedrawNext = true;
             DebugFrame = frame;
             UpdateDebugPointer(DebugFrame);
+        }
+
+        public Vector2 GetCentralLocation(PrimitiveBox box)
+        {
+            return new Vector2(((UIExternalContainer)Parent).Width / 2 - (box.X + box.Width / 2), ((UIExternalContainer)Parent).Height / 2 - (box.Y + box.Height / 2));
         }
 
         public void UpdateDebugPointer(VMStackFrame frame)
@@ -187,6 +246,17 @@ namespace FSO.IDE.EditorComponent.UI
             if (frame != null && BHAVView.EditTarget.ChunkID == frame.Routine.ID)
             {
                 BHAVView.DebugPointer = BHAVView.RealPrim[frame.InstructionPointer];
+
+                GameThread.NextUpdate(x =>
+                {
+                    var location = GetCentralLocation(BHAVView.DebugPointer);
+
+                    GameFacade.Screens.Tween.To(BHAVView, 0.5f, new Dictionary<string, float>() {
+                    { "AnimScrollX", location.X },
+                    { "AnimScrollY", location.Y },
+                },
+                    TweenQuad.EaseOut);
+                });
             }
             else
             {
@@ -360,6 +430,11 @@ namespace FSO.IDE.EditorComponent.UI
 
         public override void Draw(UISpriteBatch batch)
         {
+            var width = batch.GraphicsDevice.Viewport.Width;
+            var height = batch.GraphicsDevice.Viewport.Height;
+            BHAVView.Width = width;
+            BHAVView.Height = height;
+
             base.Draw(batch);
             if (Placement != null)
             {
@@ -367,8 +442,19 @@ namespace FSO.IDE.EditorComponent.UI
                 Placement.Draw(batch);
             }
             var res = EditorResource.Get();
-            DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(), new Vector2(4, batch.Height), Color.Black * 0.2f);
-            DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(4, 0), new Vector2(batch.Width, 4), Color.Black * 0.2f);
+            DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(), new Vector2(4, height), Color.Black * 0.2f);
+            DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(4, 0), new Vector2(width, 4), Color.Black * 0.2f);
+
+            if (DebugMode)
+            {
+                if (width != LastWidth)
+                {
+                    DebugTrue.Position = new Vector2(width - 80, 5);
+                    DebugFalse.Position = new Vector2(width - 55, 5);
+                    DebugReset.Position = new Vector2(width - 30, 5);
+                    GameThread.NextUpdate(x => Invalidate());
+                }
+            }
 
             if (Placement != null)
             {
@@ -376,17 +462,19 @@ namespace FSO.IDE.EditorComponent.UI
                 DrawCutoutLines(CutoutPhase, 0, new Color(0, 102, 26), batch);
             }
 
-            LastWidth = batch.Width;
-            LastHeight = batch.Height;
+            LastWidth = width;
+            LastHeight = height;
         }
 
         public void DrawCutoutLines(int phase, int offset, Color color, UISpriteBatch batch)
         {
+            var width = batch.GraphicsDevice.Viewport.Width;
+            var height = batch.GraphicsDevice.Viewport.Height;
             var res = EditorResource.Get();
             int margin = 24;
 
-            int boxWidth = batch.Width - margin * 2;
-            int boxHeight = batch.Height - margin * 2;
+            int boxWidth = width - margin * 2;
+            int boxHeight = height - margin * 2;
 
             int i = phase%32;
             bool draw = ((phase/32)%2) == 1;
@@ -397,7 +485,7 @@ namespace FSO.IDE.EditorComponent.UI
                 {
                     DrawLine(res.WhiteTex,
                     new Vector2(Math.Max(margin, margin+i) + offset, margin + offset),
-                    new Vector2(Math.Min(batch.Width - margin, margin + i + 32) + offset, margin + offset),
+                    new Vector2(Math.Min(width - margin, margin + i + 32) + offset, margin + offset),
                     batch, 4, color);
                 }
 
@@ -411,8 +499,8 @@ namespace FSO.IDE.EditorComponent.UI
                 if (draw)
                 {
                     DrawLine(res.WhiteTex,
-                    new Vector2(offset + batch.Width - margin, Math.Max(margin, margin + i) + offset),
-                    new Vector2(offset + batch.Width - margin, Math.Min(batch.Height - margin, margin + i + 32) + offset),
+                    new Vector2(offset + width - margin, Math.Max(margin, margin + i) + offset),
+                    new Vector2(offset + width - margin, Math.Min(height - margin, margin + i + 32) + offset),
                     batch, 4, color);
                 }
 
@@ -426,8 +514,8 @@ namespace FSO.IDE.EditorComponent.UI
                 if (draw)
                 {
                     DrawLine(res.WhiteTex,
-                    new Vector2(batch.Width-Math.Max(margin, margin + i) + offset, (batch.Height-margin) + offset),
-                    new Vector2(batch.Width-Math.Min(batch.Width - margin, margin + i + 32) + offset, (batch.Height - margin) + offset),
+                    new Vector2(width-Math.Max(margin, margin + i) + offset, (height-margin) + offset),
+                    new Vector2(width-Math.Min(width - margin, margin + i + 32) + offset, (height - margin) + offset),
                     batch, 4, color);
                 }
 
@@ -441,8 +529,8 @@ namespace FSO.IDE.EditorComponent.UI
                 if (draw)
                 {
                     DrawLine(res.WhiteTex,
-                    new Vector2(offset + margin, batch.Height-Math.Max(margin, margin + i) + offset),
-                    new Vector2(offset + margin, batch.Height-Math.Min(batch.Height - margin, margin + i + 32) + offset),
+                    new Vector2(offset + margin, height-Math.Max(margin, margin + i) + offset),
+                    new Vector2(offset + margin, height-Math.Min(height - margin, margin + i + 32) + offset),
                     batch, 4, color);
                 }
 
@@ -462,5 +550,15 @@ namespace FSO.IDE.EditorComponent.UI
             spriteBatch.Draw(Fill, new Rectangle((int)Start.X, (int)Start.Y - (int)(lineWidth / 2), (int)length, lineWidth), null, tint, direction, new Vector2(0, 0.5f), SpriteEffects.None, 0); //
         }
 
+    }
+
+    public class UITracerBar : UIElement
+    {
+        public override void Draw(UISpriteBatch batch)
+        {
+            var res = EditorResource.Get();
+            DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(), new Vector2(batch.GraphicsDevice.Viewport.Width, 30), new Color(12, 61, 112) * 0.80f);
+            DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(0, 30), new Vector2(batch.GraphicsDevice.Viewport.Width, 4), new Color(12, 61, 112) * 0.30f);
+        }
     }
 }

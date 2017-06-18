@@ -82,7 +82,9 @@ namespace FSO.IDE
         public void ChangeActiveObject(ObjectRegistryEntry obj)
         {
             ActiveObjTable = obj;
-            SetTargetObject(Content.Content.Get().WorldObjects.Get(obj.GUID));
+            var objd = Content.Content.Get().WorldObjects.Get(obj.GUID);
+            if (objd == null) return;
+            SetTargetObject(objd);
         }
 
         public void SetTargetObject(GameObject obj)

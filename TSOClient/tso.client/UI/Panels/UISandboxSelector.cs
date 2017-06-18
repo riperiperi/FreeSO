@@ -83,6 +83,7 @@ namespace FSO.Client.UI.Panels
                 xmlHouses.Add(new UIXMLLotEntry { Filename = filename, Path = entry });
             }
 
+            BookmarkListBox.Columns[0].Alignment = TextAlignment.Left | TextAlignment.Top;
             BookmarkListBox.Items = xmlHouses.Select(x => new UIListBoxItem(x, x.Filename)).ToList();
         }
 

@@ -33,7 +33,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (vm.TS1)
             {
 
-                var control = vm.Entities.FirstOrDefault(x => x is VMAvatar && !((VMAvatar)x).IsPet && ((VMAvatar)x).GetPersonData(VMPersonDataVariable.PersonType) != 2);
+                var control = vm.Entities.FirstOrDefault(x => x is VMAvatar && !((VMAvatar)x).IsPet && ((VMAvatar)x).GetPersonData(VMPersonDataVariable.TS1FamilyNumber) == vm.CurrentFamily?.ChunkID);
                 if (control == null)
                 {
                     control = vm.Context.CreateObjectInstance(0x32AA2056, LotTilePos.OUT_OF_WORLD, Direction.NORTH)?.BaseObject;

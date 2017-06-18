@@ -502,7 +502,11 @@ namespace FSO.Client.UI.Panels
                                 if ((flags & VMGameObjectDisableFlags.ForSale) > 0)
                                 {
                                     //for sale
-                                    var retailPrice = obj.MultitileGroup.Price; //wrong... should get this from catalog
+                                    //try to get catalog price
+                                    var guid = obj.MasterDefinition?.GUID ?? obj.Object.OBJ.GUID;
+                                    var item = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
+
+                                    var retailPrice = (int?)(item?.Price) ?? obj.MultitileGroup.Price;
                                     var salePrice = obj.MultitileGroup.SalePrice;
                                     ShowErrorTooltip(state, 22, false, "$" + retailPrice.ToString("##,#0"), "$" + salePrice.ToString("##,#0"));
                                     TipIsError = false;

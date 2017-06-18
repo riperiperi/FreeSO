@@ -120,6 +120,7 @@ namespace FSO.LotView.Utils
 
             for (var i = 0; i < NumBuffers; i++)
             {
+
                 int width = bwidth + ScrollBuffer;
                 int height = bheight + ScrollBuffer;
 
@@ -139,7 +140,8 @@ namespace FSO.LotView.Utils
                         height = 576;
                         break;
                 }
-                if (NumBuffers == 2 && i == 1) width = height = 1024; //special case, thumb only. 
+
+                if (NumBuffers == 2) width = height = 1024; //special case, thumb only. 
                 var depthformat = FSOEnvironment.SoftwareDepth ? DepthFormat.Depth24Stencil8 : DepthFormat.Depth24; //stencil is used for software depth
                 Buffers.Add(
                     PPXDepthEngine.CreateRenderTarget(Device, 1, 0, SurfaceFormats[i], width, height,
@@ -246,6 +248,8 @@ namespace FSO.LotView.Utils
             output = promise;
 
             depthOutput = new Promise<Texture2D>(x => null);
+
+            if (Buffers.Count == 2) { bufferIndex = 0; depthBufferIndex = 1; }
 
             if (depthBufferIndex > Buffers.Count) depthBufferIndex = Buffers.Count - 1;
 

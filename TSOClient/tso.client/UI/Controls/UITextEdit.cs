@@ -538,7 +538,7 @@ namespace FSO.Client.UI.Controls
         private int m_MaxLines = int.MaxValue;
         private int m_MaxChars = int.MaxValue;
 
-        //[UIAttribute("lines")]
+        [UIAttribute("lines")]
         public int MaxLines
         {
             get{ return m_MaxLines; }

@@ -48,6 +48,7 @@ namespace FSO.IDE.Common
                 objComps[i] = (ObjectComponent)objects[i].WorldUI;
             }
             Thumb = TempVM.Context.World.GetObjectThumb(objComps, TargetOBJ.GetBasePositions(), GameFacade.GraphicsDevice);
+            Invalidate();
         }
 
         public void SetGUIDLocal(uint id)

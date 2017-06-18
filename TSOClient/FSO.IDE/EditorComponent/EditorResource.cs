@@ -42,6 +42,22 @@ namespace FSO.IDE.EditorComponent
 
         public Texture2D ViewBG;
 
+        public string[] IndexedLoad = new string[]
+        {
+            "btns/play.png",
+            "btns/stepin.png",
+            "btns/stepover.png",
+            "btns/stepout.png",
+
+            "btns/returntrue.png",
+            "btns/returnfalse.png",
+            "btns/reset.png",
+
+            "btns/pause.png",
+        };
+
+        public Texture2D[] Indexed;
+
         public bool Ready;
 
         public EditorResource()
@@ -70,6 +86,12 @@ namespace FSO.IDE.EditorComponent
             CurrentArrow = LoadFile(gd, "IDERes/current.png");
 
             ViewBG = LoadFile(gd, "IDERes/viewBG.png");
+
+            Indexed = new Texture2D[IndexedLoad.Length];
+            for (int i=0; i<IndexedLoad.Length; i++)
+            {
+                Indexed[i] = LoadFile(gd, "IDERes/"+IndexedLoad[i]);
+            }
 
             WhiteTex = TextureUtils.TextureFromColor(gd, Color.White);
             Ready = true;

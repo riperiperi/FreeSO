@@ -102,7 +102,10 @@ namespace FSO.IDE.EditorComponent.DataView
                 case VMExtDataType.ObjectData:
                     return (int)Object.GetValue((VMStackObjectVariable)ID);
                 case VMExtDataType.PersonData:
-                    return (int)((VMAvatar)Object).GetPersonData((VMPersonDataVariable)ID);
+                    try
+                    {
+                        return (int)((VMAvatar)Object).GetPersonData((VMPersonDataVariable)ID);
+                    } catch (IndexOutOfRangeException) { return 0; }
                 case VMExtDataType.Motives:
                     return (int)((VMAvatar)Object).GetMotiveData((VMMotive)ID);
                 case VMExtDataType.Globals:

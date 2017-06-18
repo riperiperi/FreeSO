@@ -208,6 +208,7 @@ namespace FSO.SimAntics.Primitives
                     obj2.Name = obj1.Name;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.GetIsPendingDeletion: //48
+                    if (context.StackObject == null || context.StackObject.Dead) return VMPrimitiveExitCode.GOTO_TRUE;
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 //49. Pet Ran Away
                 //50. Set Original Purchase Price (TODO: parrot, snowman. should set to temp0)

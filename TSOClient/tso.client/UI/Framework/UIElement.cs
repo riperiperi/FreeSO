@@ -413,12 +413,6 @@ namespace FSO.Client.UI.Framework
             //Set our absolute depth value
             this.Depth = state.Depth++;
 
-            //If our matrix is dirty, recalculate it
-            if (_MtxDirty)
-            {
-                CalculateMatrix();
-            }
-
             //If our blend is dirty, recalculate it
             if (_OpacityDirty)
             {
@@ -521,6 +515,11 @@ namespace FSO.Client.UI.Framework
         /// <param name="batch"></param>
         public virtual void PreDraw(UISpriteBatch batch)
         {
+            //If our matrix is dirty, recalculate it
+            if (_MtxDirty)
+            {
+                CalculateMatrix();
+            }
         }
 
         /// <summary>
@@ -995,6 +994,7 @@ namespace FSO.Client.UI.Framework
         {
             set
             {
+                if (_X == value.X && _Y == value.Y) return;
                 _X = value.X;
                 _Y = value.Y;
                 InvalidateMatrix();

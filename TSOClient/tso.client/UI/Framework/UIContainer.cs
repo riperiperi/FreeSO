@@ -196,6 +196,7 @@ namespace FSO.Client.UI.Framework
 
         public override void PreDraw(UISpriteBatch batch)
         {
+            base.PreDraw(batch);
             if (!Visible)
             {
                 return;
@@ -278,6 +279,11 @@ namespace FSO.Client.UI.Framework
                 foreach (var child in chCopy)
                     child.Update(state);
             }
+        }
+
+        protected void BaseUpdate(UpdateState state)
+        {
+            base.Update(state);
         }
 
         public override void GameResized()

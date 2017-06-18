@@ -131,6 +131,7 @@ namespace FSO.Client.UI.Controls
 
         public override void PreDraw(UISpriteBatch batch)
         {
+            base.PreDraw(batch);
             if (!UISpriteBatch.Invalidated)
             {
                 if (!_3DScene.IsInvalidated)
@@ -141,7 +142,6 @@ namespace FSO.Client.UI.Controls
                     DrawLocalTexture(batch, Scene.Target, new Vector2());
                 }
             }
-            base.PreDraw(batch);
         }
 
         public override void Draw(UISpriteBatch batch)

@@ -447,7 +447,7 @@ namespace FSO.SimAntics
             this.Thread.Stack.Clear();
             this.Thread.Queue.Clear();
             Thread.QueueDirty = true;
-            this.Thread.ActiveQueueBlock = 0;
+            this.Thread.ActiveQueueBlock = -1;
             this.Thread.BlockingState = null;
             this.Thread.EODConnection = null;
 
@@ -724,7 +724,7 @@ namespace FSO.SimAntics
             if (TreeTable == null) return pie;
 
             var myLength = TreeTable.Interactions.Length;
-            var globalLength = vm.Context.GlobalTreeTable.Interactions.Length;
+            var globalLength = vm.Context.GlobalTreeTable?.Interactions.Length ?? 0;
 
             for (int i = 0; i < myLength+globalLength; i++)
             {

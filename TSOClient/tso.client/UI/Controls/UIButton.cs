@@ -270,14 +270,14 @@ namespace FSO.Client.UI.Controls
         public bool Disabled
         {
             get { return m_Disabled; }
-            set { m_Disabled = value; Invalidate(); CalculateState(); }
+            set { if (m_Disabled == value) { return; } m_Disabled = value; Invalidate(); CalculateState(); }
         }
 
         private bool _Selected;
         public bool Selected
         {
             get { return _Selected; }
-            set { _Selected = value; Invalidate(); }
+            set { if (_Selected == value) { return; } _Selected = value; Invalidate(); }
         }
 
         public int ForceState = -1;

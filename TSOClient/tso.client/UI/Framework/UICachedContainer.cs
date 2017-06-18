@@ -5,15 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using FSO.Common.Rendering.Framework.Model;
 
 namespace FSO.Client.UI.Framework
 {
     public class UICachedContainer : UIContainer
     {
         public bool Invalidated;
-        private RenderTarget2D Target;
+        protected RenderTarget2D Target;
         public UIContainer DynamicOverlay = new UIContainer();
         public Point BackOffset;
+        public Color ClearColor = Color.TransparentBlack;
+        public bool UseZ;
 
         public UICachedContainer()
         {
@@ -23,6 +26,12 @@ namespace FSO.Client.UI.Framework
 
         public override void PreDraw(UISpriteBatch batch)
         {
+            //If our matrix is dirty, recalculate it
+            if (_MtxDirty)
+            {
+                CalculateMatrix();
+            }
+
             if (!Visible)
             {
                 return;
@@ -35,7 +44,7 @@ namespace FSO.Client.UI.Framework
                 if (Target == null || (int)size.X != Target.Width || (int)size.Y != Target.Height)
                 {
                     Target?.Dispose();
-                    Target = new RenderTarget2D(gd, (int)size.X, (int)size.Y, false, SurfaceFormat.Color, DepthFormat.None);
+                    Target = new RenderTarget2D(gd, (int)size.X, (int)size.Y, false, SurfaceFormat.Color, (UseZ)?DepthFormat.Depth24:DepthFormat.None);
                 }
 
                 lock (Children)
@@ -49,7 +58,7 @@ namespace FSO.Client.UI.Framework
 
                 batch.End();
                 gd.SetRenderTarget(Target);
-                gd.Clear(Color.Transparent);
+                gd.Clear(ClearColor);
                 var pos = LocalPoint(0, 0);
 
                 batch.Begin(transformMatrix: Microsoft.Xna.Framework.Matrix.CreateTranslation(-(pos.X-BackOffset.X), -(pos.Y-BackOffset.Y), 0), blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
@@ -67,6 +76,23 @@ namespace FSO.Client.UI.Framework
                 Invalidated = false;
             }
             DynamicOverlay.PreDraw(batch);
+        }
+
+        public override void Update(UpdateState state)
+        {
+            BaseUpdate(state);
+            lock (Children)
+            {
+                var chCopy = new List<UIElement>(Children);
+                //todo: why are all these locks here, and what kind of problems might that cause
+                //also find a cleaner way to allow modification of an element's children by its own children.
+                foreach (var child in chCopy)
+                {
+                    if (child != DynamicOverlay)
+                        child.Update(state);
+                }
+            }
+            DynamicOverlay.Update(state);
         }
 
         public override void Draw(UISpriteBatch batch)

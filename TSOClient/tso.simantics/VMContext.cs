@@ -80,8 +80,8 @@ namespace FSO.SimAntics
             }
 
             Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
-            GlobalTreeTable = Globals.Resource.List<TTAB>().FirstOrDefault();
-            GlobalTTAs = Globals.Resource.List<TTAs>().FirstOrDefault();
+            GlobalTreeTable = Globals.Resource.List<TTAB>()?.FirstOrDefault();
+            GlobalTTAs = Globals.Resource.List<TTAs>()?.FirstOrDefault();
             RandomSeed = (ulong)((new Random()).NextDouble() * UInt64.MaxValue); //when resuming state, this should be set.
 
             AddPrimitive(new VMPrimitiveRegistration(new VMSleep())

@@ -53,10 +53,16 @@ namespace FSO.IDE
             new Thread(() =>
             {
                 if (MainWindow.Instance == null) return;
-                MainWindow.Instance.Invoke(new MainWindowDelegate(() =>
+                try
                 {
-                    MainWindow.Instance.BHAVManager.OpenTracer(vm, targetEnt);
-                }), null);
+                    MainWindow.Instance.Invoke(new MainWindowDelegate(() =>
+                    {
+                        MainWindow.Instance.BHAVManager.OpenTracer(vm, targetEnt);
+                    }), null);
+                } catch (Exception)
+                {
+                    //oops?
+                }
             }).Start();
         }
 

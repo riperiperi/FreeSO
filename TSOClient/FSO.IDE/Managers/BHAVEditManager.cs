@@ -55,6 +55,7 @@ namespace FSO.IDE.Managers
             window = new BHAVEditor(vm, entity);
             window.Show();
             window.Activate();
+            window.UpdateDebugger();
             Tracers.Add(entity, window);
             return window;
         }

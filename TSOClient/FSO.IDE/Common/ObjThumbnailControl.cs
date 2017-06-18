@@ -1,5 +1,6 @@
 ﻿using FSO.Client;
 using FSO.Client.UI.Framework;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace FSO.IDE.Common
             if (FSOUI == null)
             {
                 var mainCont = new UIExternalContainer(128, 128);
+                mainCont.ClearColor = Color.TransparentBlack;
                 Renderer = new UIThumbnailRenderer(GUID);
                 mainCont.Add(Renderer);
                 GameFacade.Screens.AddExternal(mainCont);

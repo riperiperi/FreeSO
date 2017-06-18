@@ -19,6 +19,9 @@ namespace FSO.IDE.EditorComponent.UI
         public List<PrimitiveBox> Selected;
         public PrimitiveBox DebugPointer;
 
+        public int Width;
+        public int Height;
+
         public EditorScope Scope;
         public BHAV EditTarget;
         public UIBHAVEditor Editor {
@@ -35,6 +38,32 @@ namespace FSO.IDE.EditorComponent.UI
         private float m_dragOffsetX;
         private float m_dragOffsetY;
         private UIMouseEventRef HitTest;
+
+        public float AnimScrollX
+        {
+            set
+            {
+                X = value;
+                ForceRedraw = true;
+            }
+            get
+            {
+                return X;
+            }
+        }
+
+        public float AnimScrollY
+        {
+            set
+            {
+                Y = value;
+                ForceRedraw = true;
+            }
+            get
+            {
+                return Y;
+            }
+        }
 
         private int lastWidth;
         private int lastHeight;
@@ -205,7 +234,7 @@ namespace FSO.IDE.EditorComponent.UI
         public override void Draw(UISpriteBatch batch)
         {
             var res = EditorResource.Get();
-            DrawTiledTexture(batch, res.Background, new Rectangle((int)Math.Floor(this.Position.X/-200)*200, (int)Math.Floor(this.Position.Y/ -200)*200, batch.Width+200, batch.Height+200), Color.White);
+            DrawTiledTexture(batch, res.Background, new Rectangle((int)Math.Floor(this.Position.X/-200)*200, (int)Math.Floor(this.Position.Y/ -200)*200, Width+200, Height+200), Color.White);
 
             foreach (var child in Primitives)
             {

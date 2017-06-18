@@ -268,6 +268,10 @@ namespace FSO.Client.UI
             lock (m_ExtContainers)
             {
                 //todo: release resources?
+                GameThread.NextUpdate(x =>
+                {
+                    cont.Removed();
+                });
                 m_ExtContainers.Remove(cont);
             }
         }
@@ -478,8 +482,8 @@ namespace FSO.Client.UI
                     lock (ext)
                     {
                         if (!ext.HasUpdated) ext.Update(null);
-                        ext.PreDraw(null);
-                        ext.Draw(null);
+                        ext.PreDraw(SpriteBatch);
+                        ext.Draw(SpriteBatch);
                     }
                 }
             }

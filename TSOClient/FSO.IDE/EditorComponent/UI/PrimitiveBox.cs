@@ -32,6 +32,19 @@ namespace FSO.IDE.EditorComponent.UI
             set { _Height = value; }
         }
 
+        public override Vector2 Size
+        {
+            get
+            {
+                return new Vector2(Width, Height);
+            }
+
+            set
+            {
+
+            }
+        }
+
         private static Color ShadCol = new Color(0xAF, 0xAF, 0xA3);
 
         public byte InstPtr;
@@ -303,8 +316,8 @@ namespace FSO.IDE.EditorComponent.UI
                 this.Y = position.Y - m_dragOffsetY;
                 state.SharedData["ExternalDraw"] = true;
             }
-            UpdateNodePos(state);
             base.Update(state);
+            if (InvalidationParent?.Invalidated == true) UpdateNodePos(state);
         }
 
         public void UpdateNodePos(UpdateState state)

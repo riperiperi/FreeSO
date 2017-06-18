@@ -47,45 +47,48 @@ namespace FSO.IDE
             ObjectTree.Nodes.Clear();
 
             var objects = ObjectRegistry.MastersByFilename;
-            foreach (var obj in objects)
+            lock (objects)
             {
-                var filename = obj.Key;
-                var masters = obj.Value;
-                var fileNode = new TreeNode(filename);
-                bool fileAdded = false;
-
-                var nodes = new List<TreeNode>();
-                foreach (var master in masters)
+                foreach (var obj in objects)
                 {
-                    //if the master matches the search, OR at least one child does, it appears.
-                    int matches = 0;
-                    var node = new TreeNode(master.Name);
-                    SourceNodeToEnt.Add(node, master);
-                    if (master.SearchMatch(searchTerms)) matches++;
-                    foreach (var child in master.Children)
+                    var filename = obj.Key;
+                    var masters = obj.Value;
+                    var fileNode = new TreeNode(filename);
+                    bool fileAdded = false;
+
+                    var nodes = new List<TreeNode>();
+                    foreach (var master in masters)
                     {
-                        if (child.SearchMatch(searchTerms))
+                        //if the master matches the search, OR at least one child does, it appears.
+                        int matches = 0;
+                        var node = new TreeNode(master.Name);
+                        SourceNodeToEnt.Add(node, master);
+                        if (master.SearchMatch(searchTerms)) matches++;
+                        foreach (var child in master.Children)
                         {
-                            var cnode = new TreeNode(child.Name);
-                            SourceNodeToEnt.Add(cnode, child);
-                            node.Nodes.Add(cnode);
-                            matches++;
+                            if (child.SearchMatch(searchTerms))
+                            {
+                                var cnode = new TreeNode(child.Name);
+                                SourceNodeToEnt.Add(cnode, child);
+                                node.Nodes.Add(cnode);
+                                matches++;
+                            }
+                        }
+                        if (matches > 0)
+                        {
+                            if (!fileAdded)
+                            {
+                                fileAdded = true;
+                                ObjectTree.Nodes.Add(fileNode);
+                                VisibleNodes.Add(fileNode);
+                            }
+                            fileNode.Nodes.Add(node);
+                            VisibleNodes.Add(node);
+                            foreach (var cnode in node.Nodes) VisibleNodes.Add((TreeNode)cnode);
                         }
                     }
-                    if (matches > 0)
-                    {
-                        if (!fileAdded)
-                        {
-                            fileAdded = true;
-                            ObjectTree.Nodes.Add(fileNode);
-                            VisibleNodes.Add(fileNode);
-                        }
-                        fileNode.Nodes.Add(node);
-                        VisibleNodes.Add(node);
-                        foreach (var cnode in node.Nodes) VisibleNodes.Add((TreeNode)cnode);
-                    }
+                    fileNode.Expand();
                 }
-                fileNode.Expand();
             }
             ObjectTree.EndUpdate();
 

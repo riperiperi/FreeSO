@@ -24,45 +24,6 @@ namespace FSO.IDE.EditorComponent.Primitives
         {
             var op = (VMSubRoutineOperand)Operand;
             var name = scope.GetSubroutineName(PrimID);
-
-            var paramNames = new string[4];
-            for(var i=0; i < 4; i++){
-                paramNames[i] = "arg" + i;
-            }
-
-            var bhav = scope.GetBHAV(PrimID);
-            if(bhav != null){
-                //There might be param names
-                var labels = scope.GetLabels(bhav.ChunkID);
-                if(labels?.ParamNames != null){
-                    for(var i=0; i < 4; i++){
-                        if(i < labels.ParamNames.Length){
-                            paramNames[i] = labels.ParamNames[i];
-                        }
-                    }
-                }
-            }
-
-            //Add parameter names and values
-            name += "(";
-            for(var i=0; i < bhav.Args; i++){
-                if(i > 0){
-                    name += ", ";
-                }
-
-                name += paramNames[i] + "=";
-
-                short argValue = op.Arguments[i];
-                string argValueString = argValue + "";
-
-                if(argValue == -1){
-                    argValueString = scope.GetVarName(VMVariableScope.Temps, (short)i);
-                }
-
-                name += argValueString;
-            }
-            name += ")";
-
             return name;
         }
 
@@ -70,6 +31,51 @@ namespace FSO.IDE.EditorComponent.Primitives
         {
             var op = (VMSubRoutineOperand)Operand;
             var result = new StringBuilder();
+
+            var paramNames = new string[4];
+            for (var i = 0; i < 4; i++)
+            {
+                paramNames[i] = "arg" + i;
+            }
+
+            var bhav = scope.GetBHAV(PrimID);
+            if (bhav != null)
+            {
+                //There might be param names
+                var labels = scope.GetLabels(bhav.ChunkID);
+                if (labels?.ParamNames != null)
+                {
+                    for (var i = 0; i < 4; i++)
+                    {
+                        if (i < labels.ParamNames.Length)
+                        {
+                            paramNames[i] = labels.ParamNames[i];
+                        }
+                    }
+                }
+            }
+
+            //Add parameter names and values
+            for (var i = 0; i < bhav.Args; i++)
+            {
+                if (i > 0)
+                {
+                    result.Append(", ");
+                }
+
+                result.Append(paramNames[i] + "=");
+
+                short argValue = op.Arguments[i];
+                string argValueString = argValue + "";
+
+                if (argValue == -1)
+                {
+                    argValueString = scope.GetVarName(VMVariableScope.Temps, (short)i);
+                }
+
+                result.Append(argValueString);
+            }
+
             return result.ToString();
         }
 
