@@ -1,20 +1,23 @@
 ![image](http://freeso.org/wp-content/uploads/2016/03/freeso-logo.png?1)
 
-A full reimplementation of The Sims Online, using Monogame. FreeSO aims to be faithful to the original game as well as include quality of life changes such as hardware rendering, custom dynamic lighting, hi-res output and >2 floor houses. If you simply wish to play, you can install FreeSO and the original TSO files using our installer on http://freeso.org, and it will connect to our official servers.
+A full reimplementation of The Sims Online, using Monogame. While FreeSO aims to be faithful to the original game, it includes many quality of life changes such as hardware rendering, custom dynamic lighting, hi-res output and >2 floor houses. If you simply wish to play, you can install FreeSO and the original TSO files using our installer on http://freeso.org, and it will connect to our official servers.
 
 FreeSO currently depends on the original game files (objects, avatars, ui) to function, which are available for download from EA servers. FreeSO is simply a game engine, and does not contain any copyrighted material in and of itself.
 
 ![image](http://freeso.org/wp-content/uploads/2017/05/band.png)
 
-# The Sims 1
+# The Sims 1 via Simitone
 
-FreeSO is additionally a base project for an ongoing re-implementation of The Sims 1's engine, targetted mainly at mobile devices. The content system, HIT VM and SimAntics VM included within this repo support both TSO and TS1 game files. A separate repo and UI frontend for this project is forthcoming.
+FreeSO is additionally a base project for an ongoing re-implementation of The Sims 1's engine, [Simitone](https://github.com/RHY3756547/Simitone), targetted mainly at mobile devices. 
+
+The content system, HIT VM and SimAntics VM included within this repo support both TSO and TS1 game files - meaning that TS1 will still run in a limited sense under TSO's UI frontend within FreeSO. [Simitone](https://github.com/RHY3756547/Simitone) fully restores TS1 gameplay by tying the neighbourhood and game systems together with a suitable UI frontend.
 
 # Volcanic
 
 Volcanic is an extension of FreeSO that allows users to view, modify and save game objects alongside a live instance of the SimAntics VM. It features a vast array of resource editors for objects - the most prominent being the script editor. It allows for easy creation of new objects, and debugging of existing ones. Volcanic also functions when the FSO engine has loaded TS1 objects and other resources.
 
 ![image](https://i.gyazo.com/431b8e3cb1547563bb2d64a380fb76e6.gif)
+![image](https://i.gyazo.com/ba013836812ce97c9b555f72be50b1db.gif)
 
 # Contributing
 You can contribute to FreeSO by testing cutting edge features in the latest releases, filing bugs, and joining in the discussion on our forums!
