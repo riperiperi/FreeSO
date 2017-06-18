@@ -87,7 +87,7 @@ namespace FSO.Client.UI.Panels
         private void SendMessageEnter(UIElement element)
         {
             //remove newline first
-            ChatEntryTextEdit.CurrentText = ChatEntryTextEdit.CurrentText.Substring(0, ChatEntryTextEdit.CurrentText.Length - 2);
+            //ChatEntryTextEdit.CurrentText = ChatEntryTextEdit.CurrentText.Substring(0, ChatEntryTextEdit.CurrentText.Length - 2);
             SendMessage(this);
         }
 

@@ -421,7 +421,7 @@ namespace FSO.Client.UI.Controls
                     Invalidate();
                 }
 
-                var allowInput = m_SBuilder.Length < MaxChars && m_Lines.Count <= MaxLines;
+                var allowInput = m_SBuilder.Length < MaxChars && m_SBuilder.Length.ToString().Split('\n').Count() <= MaxLines;
 
                 var inputResult = state.InputManager.ApplyKeyboardInput(m_SBuilder, state, SelectionStart, SelectionEnd, allowInput);
                 if (inputResult != null)
