@@ -116,7 +116,7 @@ namespace FSO.IDE
             for (int i = 0; i < stack.Count; i++)
             {
                 var item = new ListViewItem(
-                    new string[] { (stack[i] is VMRoutingFrame)?"<Routing Frame>":stack[i].Routine.Rti.Name, "filename"
+                    new string[] { (stack[i] is VMRoutingFrame)?"<Routing Frame>":stack[i].Routine.Rti.Name, stack[i].Routine.Chunk.ChunkParent.Filename ?? "-"
                     });
                 if (stack[i] is VMRoutingFrame)
                 {

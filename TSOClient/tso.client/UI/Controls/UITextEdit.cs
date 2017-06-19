@@ -426,10 +426,10 @@ namespace FSO.Client.UI.Controls
                 var inputResult = state.InputManager.ApplyKeyboardInput(m_SBuilder, state, SelectionStart, SelectionEnd, allowInput);
                 if (inputResult != null)
                 {
-                    Control_ValidateText();
-
                     SelectionStart = inputResult.SelectionStart;
                     SelectionEnd = inputResult.SelectionEnd;
+
+                    Control_ValidateText();
 
                     if (inputResult.ContentChanged)
                     {
@@ -542,7 +542,7 @@ namespace FSO.Client.UI.Controls
         public int MaxLines
         {
             get{ return m_MaxLines; }
-            set { m_MaxLines = value;  }
+            set { m_MaxLines = (value<0)?int.MaxValue:value;  }
         }
         [UIAttribute("capacity")]
         public int MaxChars
@@ -572,6 +572,9 @@ namespace FSO.Client.UI.Controls
                 }
                 m_SBuilder = new StringBuilder(String.Join("\r\n", newLines));
             }
+
+            SelectionStart = Math.Min(m_SBuilder.Length, SelectionStart);
+            SelectionEnd = Math.Min(m_SBuilder.Length, SelectionEnd);
         }
 
         /// <summary>

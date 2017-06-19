@@ -175,7 +175,7 @@ namespace FSO.IDE.EditorComponent.UI
         private void DebugButtonClick(UIElement button)
         {
             if (button == DebugGo)
-                if (DebugEntity.Thread.ThreadBreak == VMThreadBreakMode.Active)
+                if (DebugEntity.Thread.ThreadBreak != VMThreadBreakMode.Pause)
                     DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.Immediate;
                 else
                     DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.Active;

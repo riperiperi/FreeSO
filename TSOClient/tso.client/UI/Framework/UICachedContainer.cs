@@ -40,7 +40,7 @@ namespace FSO.Client.UI.Framework
             var gd = batch.GraphicsDevice;
             if (Invalidated)
             {
-                var size = Size;
+                var size = Size * Scale;
                 if (Target == null || (int)size.X != Target.Width || (int)size.Y != Target.Height)
                 {
                     Target?.Dispose();
@@ -100,7 +100,7 @@ namespace FSO.Client.UI.Framework
             if (!Visible) return;
             if (Target != null)
             {
-                DrawLocalTexture(batch, Target, -BackOffset.ToVector2());
+                DrawLocalTexture(batch, Target, null, -BackOffset.ToVector2(), new Vector2(1/ScaleX, 1/ScaleY));
             }
             DynamicOverlay.Draw(batch);
         }
