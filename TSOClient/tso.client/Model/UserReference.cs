@@ -131,7 +131,7 @@ namespace FSO.Client.Model
 
         public AvatarUserReference(uint avatarId) : this()
         {
-            GameFacade.Kernel.Get<IClientDataService>().Get<Avatar>(avatarId).ContinueWith(x =>
+            FSOFacade.Kernel.Get<IClientDataService>().Get<Avatar>(avatarId).ContinueWith(x =>
             {
                 CurrentAvatar.Value = x.Result;
             });

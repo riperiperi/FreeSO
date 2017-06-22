@@ -188,7 +188,7 @@ namespace FSO.Client.UI.Panels
 
             //Take a copy so we dont change the original when we alpha mask it
             Texture2D cityThumbTex = TextureUtils.Copy(GameFacade.GraphicsDevice, TextureUtils.TextureFromFile(
-               GameFacade.Game.GraphicsDevice, cityThumb));
+               GameFacade.GraphicsDevice, cityThumb));
             TextureUtils.CopyAlpha(ref cityThumbTex, thumbnailAlphaImage);
 
             CityThumb.Texture = cityThumbTex;

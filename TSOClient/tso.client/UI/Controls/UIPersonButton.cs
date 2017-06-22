@@ -43,7 +43,7 @@ namespace FSO.Client.UI.Controls
 
         public UIPersonButton()
         {
-            DataService = GameFacade.Kernel.Get<IClientDataService>();
+            DataService = FSOFacade.Kernel.Get<IClientDataService>();
 
             User = new Binding<UserReference>()
                 .WithBinding(this, "Tooltip", "Name")

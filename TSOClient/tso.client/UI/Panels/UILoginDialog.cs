@@ -153,7 +153,7 @@ namespace FSO.Client.UI.Panels
         void loginBtn_OnButtonClick(UIElement button)
         {
             m_LoginScreen.Login();
-            //GameFacade.Controller.ShowPersonSelection();
+            //FSOFacade.Controller.ShowPersonSelection();
         }
 
         void exitBtn_OnButtonClick(UIElement button)

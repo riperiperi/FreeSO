@@ -397,7 +397,7 @@ namespace FSO.Client.UI.Screens
             if (lotName == "") return;
             CleanupLastWorld();
 
-            World = new LotView.World(GameFacade.Game.GraphicsDevice);
+            World = new LotView.World(GameFacade.GraphicsDevice);
             World.Opacity = 1;
             GameFacade.Scenes.Add(World);
 

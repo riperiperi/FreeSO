@@ -324,7 +324,18 @@ namespace FSO.SimAntics.Engine
             LotTilePos startPos = Caller.Position;
             CurrentWaypoint = CurRoute.Position;
             WalkTo = null;
+
+            var startPoint = new Point((int)startPos.x, (int)startPos.y);
+            var endPoint = new Point((int)CurRoute.Position.x, (int)CurRoute.Position.y);
+
+            if (startPoint == endPoint)
+            {
+                State = VMRoutingFrameState.TURN_ONLY;
+                return true;
+            }
+
             var myRoom = VM.Context.GetRoomAt(startPos);
+            if (myRoom == 0) return false;
 
             var roomInfo = VM.Context.RoomInfo[myRoom];
             var obstacles = new List<VMObstacle>();
@@ -354,11 +365,8 @@ namespace FSO.SimAntics.Engine
                     obstacles.Add(new VMObstacle(ft.x1-3, ft.y1-3, ft.x2+3, ft.y2+3));
             }
 
-            obstacles.AddRange(roomInfo.Room.WallObs);
+            obstacles.AddRange(roomInfo.Room.WallObs); //can be null
             obstacles.AddRange(roomInfo.Room.RoomObs);
-
-            var startPoint = new Point((int)startPos.x, (int)startPos.y);
-            var endPoint = new Point((int)CurRoute.Position.x, (int)CurRoute.Position.y);
 
             foreach (var rect in obstacles)
             {
@@ -366,12 +374,6 @@ namespace FSO.SimAntics.Engine
             }
 
             var router = new VMRectRouter(obstacles);
-
-            if (startPoint == endPoint)
-            {
-                State = VMRoutingFrameState.TURN_ONLY;
-                return true;
-            }
 
             WalkTo = router.Route(startPoint, endPoint); //returns linked list with size 1 or greater or null
             if (WalkTo != null)

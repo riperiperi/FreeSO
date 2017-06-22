@@ -61,7 +61,7 @@ namespace FSO.Client.UI.Screens
                 //load the sandbox screen in neighbourhood view mode
                 GameThread.NextUpdate(x =>
                 {
-                    GameFacade.Controller.EnterSandboxMode("", false);
+                    FSOFacade.Controller.EnterSandboxMode("", false);
                 });
             }
 
@@ -249,7 +249,7 @@ namespace FSO.Client.UI.Screens
 
         private void SetProgress(int stage)
         {
-            var auth = GameFacade.Kernel.Get<AuthClient>();
+            var auth = FSOFacade.Kernel.Get<AuthClient>();
             LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 3).ToString())
                 .Replace("EA.COM", auth.BaseUrl.Substring(7).TrimEnd('/'));
             LoginProgress.Progress = 25 * (stage - 1);

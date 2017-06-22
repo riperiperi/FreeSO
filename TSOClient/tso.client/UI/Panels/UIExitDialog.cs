@@ -45,7 +45,7 @@ namespace FSO.Client.UI.Panels
 
         private void ReLoginButton_OnButtonClick(UIElement button)
         {
-            GameFacade.Controller.Disconnect(true);
+            FSOFacade.Controller.Disconnect(true);
         }
     }
 }

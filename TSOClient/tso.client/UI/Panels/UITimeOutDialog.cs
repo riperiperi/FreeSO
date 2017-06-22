@@ -61,7 +61,7 @@ namespace FSO.Client.UI.Panels
         private void ForceDC()
         {
             UIScreen.RemoveDialog(this);
-            GameFacade.Controller.Disconnect(false);
+            FSOFacade.Controller.Disconnect(false);
         }
     }
 }

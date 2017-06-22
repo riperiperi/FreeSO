@@ -247,7 +247,7 @@ namespace FSO.Client.UI.Screens
             Title.SetTitle("");
             this.Add(Title);
             
-            this.Add(GameFacade.MessageController);
+            this.Add(FSOFacade.MessageController);
 
             MessageTray = new UIMessageTray();
             MessageTray.X = ScreenWidth - 70;
@@ -314,7 +314,7 @@ namespace FSO.Client.UI.Screens
 
         private void InitializeMap(int cityMap)
         {
-            CityRenderer = new Terrain(GameFacade.Game.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
+            CityRenderer = new Terrain(GameFacade.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
             CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
             CityRenderer.Initialize(cityMap);
             CityRenderer.LoadContent(GameFacade.GraphicsDevice);
@@ -530,7 +530,7 @@ namespace FSO.Client.UI.Screens
         {
             CleanupLastWorld();
 
-            World = new LotView.World(GameFacade.Game.GraphicsDevice);
+            World = new LotView.World(GameFacade.GraphicsDevice);
             World.Opacity = 0;
             GameFacade.Scenes.Add(World);
             Driver = new VMClientDriver(ClientStateChange);

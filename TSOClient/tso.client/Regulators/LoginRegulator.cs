@@ -128,7 +128,7 @@ namespace FSO.Client.Regulators
                     }
                     break;
                 case "LoggedIn":
-                    GameFacade.Controller.ShowPersonSelection();
+                    FSOFacade.Controller.ShowPersonSelection();
                     break;
             }
         }

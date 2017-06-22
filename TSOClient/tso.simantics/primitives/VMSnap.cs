@@ -76,6 +76,7 @@ namespace FSO.SimAntics.Primitives
                     }
                     else
                     {
+                        if (parser.FailCode == Model.Routing.VMRouteFailCode.NoValidGoals) avatar.SetValue(VMStackObjectVariable.PrimitiveResult, 2);
                         avatar.SetValue(VMStackObjectVariable.PrimitiveResultID, (parser.Blocker == null) ? (short)0 : parser.Blocker.ObjectID);
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     }
@@ -103,6 +104,7 @@ namespace FSO.SimAntics.Primitives
                         callee.PushUserInteraction(SHOO_INTERACTION, posChange.Object, context.VM.Context, false);
                     }
                 }
+                if (posChange.Status == VMPlacementError.LocationOutOfBounds) entity.SetValue(VMStackObjectVariable.PrimitiveResult, 2);
                 entity.SetValue(VMStackObjectVariable.PrimitiveResultID, (posChange.Object == null) ? (short)0 : posChange.Object.ObjectID);
                 return false;
             }

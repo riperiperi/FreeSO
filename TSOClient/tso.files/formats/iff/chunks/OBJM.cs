@@ -83,8 +83,10 @@ namespace FSO.Files.Formats.IFF.Chunks
                     var objID = data[bas+11]; //object id
                     var dir = data[bas + 1];
                     var parent = data[bas + 26];
+                    var containerid = data[bas + 2];
+                    var containerslot = data[bas + 2];
 
-                    ObjectData[objID] = new MappedObject() { ObjectID = objID, Direction = dir, Data = data, ParentID = parent };
+                    ObjectData[objID] = new MappedObject() { ObjectID = objID, Direction = dir, Data = data, ParentID = parent, ContainerID = containerid, ContainerSlot = containerslot };
 
                     lastOff = endOff;
                 }

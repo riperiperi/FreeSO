@@ -76,6 +76,7 @@
     <Compile Include="Controllers\Panels\RelationshipDialogController.cs" />
     <Compile Include="Controllers\RoommateRequestController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
+    <Compile Include="FSOFacade.cs" />
     <Compile Include="GameContent\UIFileIDs.cs" />
     <Compile Include="Model\UserReference.cs" />
     <Compile Include="GameContent\CacheModule.cs" />

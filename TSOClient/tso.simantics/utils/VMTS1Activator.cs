@@ -16,6 +16,16 @@ namespace FSO.SimAntics.Utils
 {
     public class VMTS1Activator
     {
+        public static HashSet<uint> ControllerObjects = new HashSet<uint>()
+        {
+            0xAED879C5, //phone line
+            0xC61F8102, //go studio plugin
+            0xEAA79D86, //go neighbourhood
+            0xA6F31853, //go downtown
+            0xABA9DF4A, //go vacation
+            0x99197314, //go magictown
+        };
+
         private VM VM;
         private LotView.World World;
         private Blueprint Blueprint;
@@ -129,9 +139,14 @@ namespace FSO.SimAntics.Utils
             }
 
             var content = Content.Content.Get();
+            foreach (var controller in ControllerObjects)
+            {
+                VM.Context.CreateObjectInstance(controller, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
+            }
             var ents = new List<Tuple<VMEntity, OBJM.MappedObject>>();
             foreach (var obj in objm.ObjectData.Values)
             {
+                if (ControllerObjects.Contains(obj.GUID)) continue;
                 var res = content.WorldObjects.Get(obj.GUID);
                 if (res == null) continue; //failed to load this object
                 if (res.OBJ.MasterID != 0)

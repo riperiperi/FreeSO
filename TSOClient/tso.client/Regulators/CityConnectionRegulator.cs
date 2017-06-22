@@ -269,7 +269,7 @@ namespace FSO.Client.Regulators
                     break;
 
                 case "UnexpectedDisconnect":
-                    GameFacade.Controller.FatalNetworkError(23);
+                    FSOFacade.Controller.FatalNetworkError(23);
                     break;
 
                 case "Disconnect":

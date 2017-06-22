@@ -96,7 +96,7 @@ namespace FSO.Client
                 new NetworkModule(),
                 new CacheModule()
             );
-            GameFacade.Kernel = kernel;
+            FSOFacade.Kernel = kernel;
 
             var settings = GlobalSettings.Default;
             if (FSOEnvironment.DPIScaleFactor != 1 || FSOEnvironment.SoftwareDepth)
@@ -126,7 +126,7 @@ namespace FSO.Client
             SceneMgr = new _3DLayer();
             SceneMgr.Initialize(GraphicsDevice);
 
-            GameFacade.Controller = kernel.Get<GameController>();
+            FSOFacade.Controller = kernel.Get<GameController>();
             GameFacade.Screens = uiLayer;
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
@@ -146,7 +146,7 @@ namespace FSO.Client
             hit.SetMasterVolume(HITVolumeGroup.AMBIENCE, GlobalSettings.Default.AmbienceVolume / 10f);
 
             GameFacade.Strings = new ContentStrings();
-            GameFacade.Controller.StartLoading();
+            FSOFacade.Controller.StartLoading();
 
             GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
 

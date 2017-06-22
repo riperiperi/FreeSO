@@ -1048,7 +1048,7 @@ namespace FSO.Client.UI.Framework
         public T BindController<T>()
         {
             var controllerInstance = 
-                GameFacade.Kernel.Get<T>(new ConstructorArgument("view", this));
+                FSOFacade.Kernel.Get<T>(new ConstructorArgument("view", this));
             this.Controller = controllerInstance;
             return controllerInstance;
         }

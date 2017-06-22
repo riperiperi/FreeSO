@@ -307,7 +307,7 @@ namespace FSO.Client.UI
 
             var f1Down = state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.F1);
             if(_F1KeyDown && !f1Down){
-                GameFacade.Controller.ToggleDebugMenu();
+                FSOFacade.Controller.ToggleDebugMenu();
             }
 
             _F1KeyDown = f1Down;

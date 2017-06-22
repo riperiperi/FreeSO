@@ -45,7 +45,7 @@ namespace FSO.SimAntics.Primitives
                     short result = 1;
                     if (zones.TryGetValue(context.Thread.TempRegisters[0], out result))
                         context.Thread.TempRegisters[0] = result;
-                    else context.Thread.TempRegisters[0] = 1;
+                    else context.Thread.TempRegisters[0] = (short)((context.Thread.TempRegisters[0] >= 81 && context.Thread.TempRegisters[0] <= 89)?2:1);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTS1CallMode.ChangeToLotInTemp0:
                     context.VM.SignalLotSwitch((uint)context.Thread.TempRegisters[0]);

@@ -101,9 +101,9 @@ namespace FSO.Client.UI.Panels
             {
                 GlobalSettings.Default.GameEntryUrl = serverNameBox.CurrentText;
                 GlobalSettings.Default.CitySelectorUrl = serverNameBox.CurrentText;
-                var auth = GameFacade.Kernel.Get<AuthClient>();
+                var auth = FSOFacade.Kernel.Get<AuthClient>();
                 auth.SetBaseUrl(serverNameBox.CurrentText);
-                var city = GameFacade.Kernel.Get<CityClient>();
+                var city = FSOFacade.Kernel.Get<CityClient>();
                 city.SetBaseUrl(serverNameBox.CurrentText);
                 GlobalSettings.Default.Save();
             }

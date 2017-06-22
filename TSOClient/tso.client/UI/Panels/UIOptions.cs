@@ -131,7 +131,7 @@ namespace FSO.Client.UI.Panels
                 Buttons = new UIAlertButton[]
                 {
                     new UIAlertButton(UIAlertButtonType.Yes, (btn) => {
-                        GameFacade.Controller.Disconnect();
+                        FSOFacade.Controller.Disconnect();
                         UIScreen.RemoveDialog(alert);
                     }),
                     new UIAlertButton(UIAlertButtonType.No, (btn) => { UIScreen.RemoveDialog(alert); })

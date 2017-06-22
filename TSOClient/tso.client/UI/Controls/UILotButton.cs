@@ -41,7 +41,7 @@ namespace FSO.Client.UI.Controls
 
         public UILotButton()
         {
-            DataService = GameFacade.Kernel.Get<IClientDataService>();
+            DataService = FSOFacade.Kernel.Get<IClientDataService>();
 
             NameLabel = new UILabel();
             NameLabel.Y = 52;

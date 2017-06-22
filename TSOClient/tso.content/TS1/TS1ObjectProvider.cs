@@ -77,6 +77,7 @@ namespace FSO.Content.TS1
             var files = Directory.EnumerateFiles(path);
             foreach (var filename in files)
             {
+                if (Path.GetExtension(filename) != ".iff") return;
                 var file = new IffFile(filename);
                 file.MarkThrowaway();
                 var objects = file.List<OBJD>();

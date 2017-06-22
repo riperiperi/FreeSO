@@ -216,7 +216,7 @@ namespace FSO.Client.UI.Screens
         private void CreditsButton_OnButtonClick(UIElement button)
         {
             /** Show the credits screen **/
-            GameFacade.Controller.ShowCredits();
+            FSOFacade.Controller.ShowCredits();
         }
 
         public void ShowCitySelector(List<ShardStatusItem> shards, Callback<ShardStatusItem> onOk)

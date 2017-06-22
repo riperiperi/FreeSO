@@ -61,7 +61,7 @@ namespace FSO.Client.UI.Controls
             Camera = new WorldCamera(GameFacade.GraphicsDevice);
             Camera.Zoom = Zoom;
             Camera.CenterTile = new Vector2(-1, -1)*FSOEnvironment.DPIScaleFactor;
-            Scene = new _3DTargetScene(GameFacade.Game.GraphicsDevice, Camera, 
+            Scene = new _3DTargetScene(GameFacade.GraphicsDevice, Camera, 
                 new Point(140 * FSOEnvironment.DPIScaleFactor, 200 * FSOEnvironment.DPIScaleFactor), 
                 (GlobalSettings.Default.AntiAlias)?8:0);
             Scene.ID = "UISim";
@@ -112,7 +112,7 @@ namespace FSO.Client.UI.Controls
 
         private void GraphicsDevice_DeviceReset(object sender, EventArgs e)
         {
-            Scene.DeviceReset(GameFacade.Game.GraphicsDevice);
+            Scene.DeviceReset(GameFacade.GraphicsDevice);
         }
 
         public override void Update(UpdateState state)

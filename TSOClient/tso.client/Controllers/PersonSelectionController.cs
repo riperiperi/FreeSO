@@ -32,14 +32,14 @@ namespace FSO.Client.Controllers
 
         public void ConnectToAvatar(AvatarData avatar, bool autoJoinLot)
         {
-            GameFacade.Controller.ConnectToCity(avatar.ShardName, avatar.ID, autoJoinLot ? avatar.LotLocation : null);
+            FSOFacade.Controller.ConnectToCity(avatar.ShardName, avatar.ID, autoJoinLot ? avatar.LotLocation : null);
         }
 
         public void CreateAvatar()
         {
             View.ShowCitySelector(Shards.All, (ShardStatusItem selectedShard) =>
             {
-                GameFacade.Controller.ConnectToCAS(selectedShard.Name);
+                FSOFacade.Controller.ConnectToCAS(selectedShard.Name);
             });
         }
     }

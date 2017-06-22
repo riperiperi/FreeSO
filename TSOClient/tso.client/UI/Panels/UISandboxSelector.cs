@@ -100,7 +100,7 @@ namespace FSO.Client.UI.Panels
         {
             if (BookmarkListBox.SelectedItem == null) { return; }
             var item = (UIXMLLotEntry)BookmarkListBox.SelectedItem.Data;
-            GameFacade.Controller.EnterSandboxMode(item.Path, false);
+            FSOFacade.Controller.EnterSandboxMode(item.Path, false);
         }
 
         private void CloseButton_OnButtonClick(UIElement button)
