@@ -51,25 +51,26 @@ namespace FSO.Files.HIT
             var signature = new string(Reader.ReadChars(4));
 
             var tableLoc = FindBytePattern(Reader.BaseStream, new byte[] { (byte)'E', (byte)'N', (byte)'T', (byte)'P' });
-            if (tableLoc == -1) throw new Exception("No entry point table?");
-
-            Reader.BaseStream.Seek(tableLoc, SeekOrigin.Begin);
-            EntryPointByTrackID = new Dictionary<uint, uint>();
-
-            while (true)
+            if (tableLoc != -1)
             {
+                Reader.BaseStream.Seek(tableLoc, SeekOrigin.Begin);
+                EntryPointByTrackID = new Dictionary<uint, uint>();
 
-                var EndTest = ASCIIEncoding.ASCII.GetString(Reader.ReadBytes(4)); //can be invalid chars
-                if (EndTest.Equals("EENT", StringComparison.InvariantCultureIgnoreCase))
+                while (true)
                 {
-                    break;
-                }
-                else
-                {
-                    Reader.BaseStream.Position -= 4; //go back to read it as a table entry
-                    var track = Reader.ReadUInt32();
-                    var address = Reader.ReadUInt32();
-                    EntryPointByTrackID.Add(track, address);
+
+                    var EndTest = ASCIIEncoding.ASCII.GetString(Reader.ReadBytes(4)); //can be invalid chars
+                    if (EndTest.Equals("EENT", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        Reader.BaseStream.Position -= 4; //go back to read it as a table entry
+                        var track = Reader.ReadUInt32();
+                        var address = Reader.ReadUInt32();
+                        EntryPointByTrackID.Add(track, address);
+                    }
                 }
             }
 

@@ -62,6 +62,9 @@ namespace FSO.SimAntics.Primitives
                     context.Thread.TempRegisters[1] = 1; //set to 1 if we spawned a whole family.
                     context.VM.VerifyFamily();
                     break;
+                case VMGenericTS1CallMode.TakeTaxiHook:
+                    //set downtown sim?
+                    break;
             }
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

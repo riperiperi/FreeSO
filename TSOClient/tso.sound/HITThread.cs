@@ -11,6 +11,8 @@ using System.Text;
 using System.Diagnostics;
 using FSO.Files.HIT;
 using Microsoft.Xna.Framework.Audio;
+using FSO.Content.Interfaces;
+using FSO.Content.Model;
 
 namespace FSO.HIT
 {
@@ -18,6 +20,7 @@ namespace FSO.HIT
     {
         public uint PC; //program counter
         public HITFile Src;
+        public HITResourceGroup ResGroup;
         private Hitlist Hitlist;
         private int[] Registers; //includes args, vars, whatever "h" is up to 0xf
         private int[] LocalVar; //the sims online set, 0x10 "argstyle" up to 0x45 orientz. are half of these even used? no. but even in the test files? no
@@ -31,7 +34,7 @@ namespace FSO.HIT
         public bool Loop;
         private bool PlaySimple;
 
-        private uint Patch; //sound id
+        private Patch Patch; //sound id
         public bool HasSetLoop;
 
         private List<HITNoteEntry> Notes;
@@ -57,7 +60,7 @@ namespace FSO.HIT
 
         public Stack<int> Stack;
 
-        private FSO.Content.Audio audContent;
+        private IAudioProvider audContent;
 
         public override bool Tick() //true if continue, false if kill
         {
@@ -100,7 +103,7 @@ namespace FSO.HIT
                     while (true)
                     {
                         var opcode = Src.Data[PC++];
-                        if (opcode > HITInterpreter.Instructions.Length) opcode = 0;
+                        if (opcode >= HITInterpreter.Instructions.Length) opcode = 0;
                         var result = HITInterpreter.Instructions[opcode](this);
                         if (result == HITResult.HALT) return true;
                         else if (result == HITResult.KILL)
@@ -131,9 +134,10 @@ namespace FSO.HIT
             }
         }
 
-        public HITThread(HITFile Src, HITVM VM)
+        public HITThread(HITResourceGroup Src, HITVM VM)
         {
-            this.Src = Src;
+            this.ResGroup = Src;
+            this.Src = Src.hit;
             this.VM = VM;
             Registers = new int[16];
             Registers[1] = 12; //gender (offset into object var table)
@@ -148,9 +152,10 @@ namespace FSO.HIT
             audContent = Content.Content.Get().Audio;
         }
 
-        public HITThread(uint TrackID, HITVM VM)
+        public HITThread(uint TrackID, HITVM VM, HITResourceGroup Src)
         {
             this.VM = VM;
+            ResGroup = Src;
             Owners = new List<int>();
             Notes = new List<HITNoteEntry>();
             NotesByChannel = new Dictionary<SoundEffectInstance, HITNoteEntry>();
@@ -158,14 +163,13 @@ namespace FSO.HIT
             audContent = Content.Content.Get().Audio;
             SetTrack(TrackID);
 
-            Patch = ActiveTrack.SoundID;
             SimpleMode = true;
             PlaySimple = true; //play next frame, so we have time to set volumes.
         }
 
         public void LoadHitlist(uint id)
         {
-            Hitlist = audContent.GetHitlist(id);
+            Hitlist = audContent.GetHitlist(id, ResGroup);
         }
 
         public uint HitlistChoose() //returns a random id from the hitlist
@@ -197,51 +201,20 @@ namespace FSO.HIT
 
         public void SetTrack(uint value)
         {
-            if (audContent.TracksById.ContainsKey(value))
-            {
-                ActiveTrack = audContent.TracksById[value];
-                Patch = ActiveTrack.SoundID;
-            }
-            else
-            {
-                Debug.WriteLine("Couldn't find track: " + value);
-            }
+            SetTrack(value, 0);
         }
 
         public void SetTrack(uint value, uint fallback)
         {
-            if (audContent.TracksById.ContainsKey(value))
+            ActiveTrack = audContent.GetTrack(value, fallback, ResGroup);
+            if (ActiveTrack != null)
             {
-                ActiveTrack = audContent.TracksById[value];
-                Patch = ActiveTrack.SoundID;
-            }
-            else
-            {
-                if (audContent.TracksById.ContainsKey(fallback))
+                if (ActiveTrack.HitlistID != 0)
                 {
-                    ActiveTrack = audContent.TracksById[fallback];
-                    Patch = ActiveTrack.SoundID;
+                    LoadHitlist(ActiveTrack.HitlistID);
+                    if (ActiveTrack.SoundID == 0) ActiveTrack.SoundID = HitlistChoose();
                 }
-                else
-                {
-                    if (audContent.TracksByBackupId.ContainsKey(value))
-                    {
-                        ActiveTrack = audContent.TracksByBackupId[value];
-                        Patch = ActiveTrack.SoundID;
-                    }
-                    else
-                    {
-                        if (audContent.TracksByBackupId.ContainsKey(fallback))
-                        {
-                            ActiveTrack = audContent.TracksByBackupId[fallback];
-                            Patch = ActiveTrack.SoundID;
-                        }
-                        else
-                        {
-                            Debug.WriteLine("Couldn't find track: " + value + ", with alternative " + fallback);
-                        }
-                    }
-                }
+                Patch = audContent.GetPatch(ActiveTrack.SoundID, ResGroup);
             }
         }
 
@@ -288,7 +261,7 @@ namespace FSO.HIT
             }
             else
             {
-                Debug.WriteLine("HITThread: Couldn't find sound: " + Patch.ToString());
+                Debug.WriteLine("HITThread: Couldn't find sound");
             }
 
             return -1;
@@ -316,7 +289,7 @@ namespace FSO.HIT
             }
             else
             {
-                Debug.WriteLine("HITThread: Couldn't find sound: " + Patch.ToString());
+                Debug.WriteLine("HITThread: Couldn't find sound");
             }
             return -1;
         }
@@ -353,7 +326,8 @@ namespace FSO.HIT
             switch (location)
             {
                 case 0x12: //patch, switch active track
-                    Patch = (uint)value;
+                case 50:
+                    Patch = audContent.GetPatch((uint)value, ResGroup);
                     break;
             }
         }
@@ -432,13 +406,13 @@ namespace FSO.HIT
     public struct HITNoteEntry 
     {
         public SoundEffectInstance instance;
-        public uint SoundID; //This is for killing specific sounds, see HITInterpreter.SeqGroupKill.
+        public Patch Sound; //This is for killing specific sounds, see HITInterpreter.SeqGroupKill.
         public bool ended;
 
-        public HITNoteEntry(SoundEffectInstance instance, uint SoundID)
+        public HITNoteEntry(SoundEffectInstance instance, Patch sound)
         {
             this.instance = instance;
-            this.SoundID = SoundID;
+            this.Sound = sound;
             this.ended = false;
         }
     }

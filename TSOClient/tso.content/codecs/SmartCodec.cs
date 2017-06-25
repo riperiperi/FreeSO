@@ -18,11 +18,16 @@ namespace FSO.Content.Codecs
             {".bcf", new BCFCodec() },
             {".bmf", new BMFCodec() },
             {".cfp", new CFPCodec() },
-            {".bmp", new TextureCodec() }
+            {".bmp", new TextureCodec() },
+            {".wav", new SFXCodec() },
+            {".mp3", new SFXCodec() },
+            {".xa", new SFXCodec() },
+            {".utk", new SFXCodec() }
         };
 
         public static object Decode(Stream stream, string extension)
         {
+            extension = extension.ToLowerInvariant();
             IGenericContentCodec codec = null;
             if (CodecForExtension.TryGetValue(extension, out codec))
             {

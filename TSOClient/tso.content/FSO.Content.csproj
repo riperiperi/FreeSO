@@ -94,6 +94,7 @@
     <Compile Include="Codecs\OTFCodec.cs" />
     <Compile Include="Codecs\OutfitCodec.cs" />
     <Compile Include="Codecs\PurchasableOutfitCodec.cs" />
+    <Compile Include="Codecs\SFXCodec.cs" />
     <Compile Include="Codecs\SkeletonCodec.cs" />
     <Compile Include="Codecs\SmartCodec.cs" />
     <Compile Include="Codecs\TextureCodec.cs" />
@@ -114,11 +115,14 @@
     <Compile Include="IniProvider.cs" />
     <Compile Include="CityMapsProvider.cs" />
     <Compile Include="Interfaces\AbstractObjectProvider.cs" />
+    <Compile Include="Interfaces\IAudioProvider.cs" />
     <Compile Include="Interfaces\IObjectCatalog.cs" />
     <Compile Include="Interfaces\IObjectProvider.cs" />
     <Compile Include="Model\AudioReference.cs" />
     <Compile Include="Model\AudioType.cs" />
     <Compile Include="Model\CityMap.cs" />
+    <Compile Include="Model\HITEventRegistration.cs" />
+    <Compile Include="Model\HITResourceGroup.cs" />
     <Compile Include="Model\RackOutfit.cs" />
     <Compile Include="Model\RackOutfits.cs" />
     <Compile Include="Model\TextureRef.cs" />
@@ -127,6 +131,7 @@
     <Compile Include="Model\Wall.cs" />
     <Compile Include="RackOutfitsProvider.cs" />
     <Compile Include="ResAction.cs" />
+    <Compile Include="TS1\TS1Audio.cs" />
     <Compile Include="TS1\TS1AvatarTextureProvider.cs" />
     <Compile Include="TS1\TS1BCFProvider.cs" />
     <Compile Include="TS1\TS1BMFProvider.cs" />

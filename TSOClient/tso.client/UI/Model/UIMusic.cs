@@ -13,5 +13,18 @@ namespace FSO.Client.UI.Model
         public static readonly string CAS = "bkground_createasim";
         public static readonly string Map = "bkground_nhoodpluslot";
         public static readonly string None = "bkground_fade";
+
+        public static readonly string Buy = "bkground_buy1";
+        public static readonly string Build = "bkground_build";
+        public static readonly string Nhood = "bkground_nhood1";
+        public static readonly string Downtown = "station_dtnhood";
+        public static readonly string Vacation = "station_vacation";
+        public static readonly string Unleashed = "station_unleashed";
+        public static readonly string Superstar = "station_superstar";
+        public static readonly string SuperstarTransition = "music_superstar_transition";
+        public static readonly string Magictown = "music_magictown";
+        public static readonly string MagictownCredits = "music_magictown_credits";
+        public static readonly string MagictownBuild = "music_magictown_build";
+        public static readonly string MagictownBuy = "music_magictown_buy";
     }
 }

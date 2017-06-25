@@ -106,14 +106,27 @@ namespace FSO.HIT
             return HITResult.CONTINUE;
         }
 
+        public static uint PCTrans(uint id, HITThread thread)
+        {
+            if (Content.Content.Get().TS1)
+            {
+                //dunno why this is ts1 specific, but whatever
+                //need to remap from the call id to the function offset
+
+                thread.ResGroup.hot.TrackData.TryGetValue(id, out id);
+            }
+            return id;
+        }
+
         /// <summary>
         /// Call a function; push the instruction pointer and jump to the given address.
         /// </summary>
         public static HITResult Call(HITThread thread)
         {
             uint targ = thread.ReadUInt32();
+
             thread.Stack.Push((int)thread.PC);
-            thread.PC = targ;
+            thread.PC = PCTrans(targ, thread);
 
             return HITResult.CONTINUE;
         }
@@ -194,11 +207,11 @@ namespace FSO.HIT
             if (read > 15) //literal
             {
                 thread.PC--; //backtraaackkk
-                thread.PC = thread.ReadUInt32();
+                thread.PC = PCTrans(thread.ReadUInt32(), thread);
             }
             else //no idea if there are collisions. if there are i'm blaming fatbag. >:)
             {
-                thread.PC = (uint)thread.ReadVar(read);
+                thread.PC = PCTrans((uint)thread.ReadVar(read), thread);
                 if (thread.ReadByte() == 0) thread.PC += 2; //if next is no-op, the operand is 4 byte
                 else thread.PC--; //operand is 1 byte (next is an instruction), backtrack
             }
@@ -566,7 +579,7 @@ namespace FSO.HIT
         {
             var loc = thread.ReadUInt32();
 
-            if (thread.ZeroFlag) thread.PC = loc;
+            if (thread.ZeroFlag) thread.PC = PCTrans(loc, thread);
 
             return HITResult.CONTINUE;
         }
@@ -578,7 +591,7 @@ namespace FSO.HIT
         {
             var loc = thread.ReadUInt32();
 
-            if (!thread.ZeroFlag) thread.PC = loc;
+            if (!thread.ZeroFlag) thread.PC = PCTrans(loc, thread);
 
             return HITResult.CONTINUE;
         }
@@ -590,7 +603,7 @@ namespace FSO.HIT
         {
             var loc = thread.ReadUInt32();
 
-            if (!thread.SignFlag && !thread.ZeroFlag) thread.PC = loc; //last set/compare result was > 0
+            if (!thread.SignFlag && !thread.ZeroFlag) thread.PC = PCTrans(loc, thread); //last set/compare result was > 0
 
             return HITResult.CONTINUE;
         }
@@ -602,7 +615,7 @@ namespace FSO.HIT
         {
             var loc = thread.ReadUInt32();
 
-            if (thread.SignFlag) thread.PC = loc; //last set/compare result was < 0
+            if (thread.SignFlag) thread.PC = PCTrans(loc, thread); //last set/compare result was < 0
 
             return HITResult.CONTINUE;
         }
@@ -614,7 +627,7 @@ namespace FSO.HIT
         {
             var loc = thread.ReadUInt32();
 
-            if (!thread.SignFlag) thread.PC = loc; //last set/compare result was >= 0
+            if (!thread.SignFlag) thread.PC = PCTrans(loc, thread); //last set/compare result was >= 0
 
             return HITResult.CONTINUE;
         }
@@ -626,7 +639,7 @@ namespace FSO.HIT
         {
             var loc = thread.ReadUInt32();
 
-            if (thread.SignFlag || thread.ZeroFlag) thread.PC = loc; //last set/compare result was <= 0
+            if (thread.SignFlag || thread.ZeroFlag) thread.PC = PCTrans(loc, thread); //last set/compare result was <= 0
 
             return HITResult.CONTINUE;
         }
@@ -873,7 +886,6 @@ namespace FSO.HIT
             var index = thread.ReadVar(thread.ReadByte());
 
             thread.LoadHitlist((byte)index);
-            //Converting this to an int is a hack because WriteVar only takes an int... o_O
             int TrackID = (int)thread.LoadTrack(index);
 
             thread.WriteVar(dest, TrackID);

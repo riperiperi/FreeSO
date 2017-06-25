@@ -6,16 +6,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using FSO.Files.HIT;
 
-namespace FSO.HIT.Model
+namespace FSO.Content.Model
 {
-    public class HITEventRegistration
+    /// <summary>
+    /// Groups related HIT resources, like the tsov2 series or newmain.
+    /// </summary>
+    public class HITResourceGroup
     {
-        public string Name;
-        public HITEvents EventType;
-        public uint TrackID;
-        public HITResourceGroup ResGroup; //used to access this event's hit code
+        public EVT evt;
+        public HITFile hit;
+        public HSM hsm;
+        public Hot hot; //used by ts1
     }
 }

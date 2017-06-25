@@ -20,13 +20,14 @@ using FSO.Files.XA;
 using FSO.Files.UTK;
 using FSO.Files.HIT;
 using Microsoft.Xna.Framework.Audio;
+using FSO.Content.Interfaces;
 
 namespace FSO.Content
 {
     /// <summary>
     /// Manager for the audio content.
     /// </summary>
-    public class Audio
+    public class Audio : IAudioProvider
     {
         private Content ContentManager;
 
@@ -50,6 +51,68 @@ namespace FSO.Content
 
         /** Audio Cache **/
         public Dictionary<uint, SoundEffect> SFXCache;
+
+        private Dictionary<string, HITEventRegistration> _Events;
+        public Dictionary<string, HITEventRegistration> Events
+        {
+            get
+            {
+                return _Events;
+            }
+        }
+
+        // from radio.ini, should probably load from there in future
+        private Dictionary<string, string> _StationPaths = new Dictionary<string, string>
+        {
+            {"KBEA", "Music/Stations/Beach/"},
+            {"KCLA", "Music/Stations/Classica/"},
+            {"KCOU", "Music/Stations/Country/"},
+            {"KCDA", "Music/Stations/CountryD/"},
+            {"KDIS", "Music/Stations/Disco/"},
+            {"KEZE", "Music/Stations/EZ/"},
+            {"KEZX", "Music/Stations/EZX/"},
+            {"KLAT", "Music/Stations/Latin/"},
+            {"KRAP", "Music/Stations/Rap/"},
+            {"KRAV", "Music/Stations/Rave/"},
+            {"KROC", "Music/Stations/Rock/"},
+// These ones aren't radio stations - they're UI music
+            {"KMAP", "Music/Modes/Map/"},
+            {"KSEL", "Music/Modes/Select/"},
+            {"KCRE", "Music/Modes/Create/"},
+//tv
+            { "KACT", "sounddata/tvstations/tv_action/" },
+            { "KCOM", "sounddata/tvstations/tv_comedy_cartoon/" },
+            { "KMYS", "sounddata/tvstations/tv_mystery/" },
+            { "KROM", "sounddata/tvstations/tv_romance/" },
+// More music
+            {"KHOR", "Music/Stations/Horror/"},
+            {"KOLD", "Music/Stations/OldWorld/"},
+            {"KSCI", "Music/Stations/SciFi/"},
+        };
+
+        private Dictionary<int, string> _MusicModes = new Dictionary<int, string>
+        {
+            { 11, "KSEL" },
+            { 12, "KCRE" },
+            { 13, "KMAP" },
+            { 9, "" }
+        };
+
+        public Dictionary<string, string> StationPaths
+        {
+            get
+            {
+                return _StationPaths;
+            }
+        }
+
+        public Dictionary<int, string> MusicModes
+        {
+            get
+            {
+                return _MusicModes;
+            }
+        }
 
         public Audio(Content contentManager)
         {
@@ -94,6 +157,23 @@ namespace FSO.Content
             HitlistsById = new Dictionary<uint, Hitlist>();
 
             AddTracksFrom(TSOAudio);
+
+            //load events
+            _Events = new Dictionary<string, HITEventRegistration>();
+            var content = ContentManager;
+            var newmain = LoadHitGroup(content.GetPath("sounddata/newmain.hit"), content.GetPath("sounddata/eventlist.txt"), content.GetPath("sounddata/newmain.hsm"));
+            var relationships = LoadHitGroup(content.GetPath("sounddata/relationships.hit"), content.GetPath("sounddata/relationships.evt"), content.GetPath("sounddata/relationships.hsm"));
+            var tsoep5 = LoadHitGroup(content.GetPath("sounddata/tsoep5.hit"), content.GetPath("sounddata/tsoep5.evt"), content.GetPath("sounddata/tsoep5.hsm"));
+            var tsoV2 = LoadHitGroup(content.GetPath("sounddata/tsov2.hit"), content.GetPath("sounddata/tsov2.evt"), null); //tsov2 has no hsm file
+            var tsov3 = LoadHitGroup(content.GetPath("sounddata/tsov3.hit"), content.GetPath("sounddata/tsov3.evt"), content.GetPath("sounddata/tsov3.hsm"));
+            var turkey = LoadHitGroup(content.GetPath("sounddata/turkey.hit"), content.GetPath("sounddata/turkey.evt"), content.GetPath("sounddata/turkey.hsm"));
+
+            RegisterEvents(newmain);
+            RegisterEvents(relationships);
+            RegisterEvents(tsoep5);
+            RegisterEvents(tsoV2);
+            RegisterEvents(tsov3);
+            RegisterEvents(turkey);
         }
 
         /// <summary>
@@ -166,12 +246,13 @@ namespace FSO.Content
 
             return null;
         }
+
         /// <summary>
         /// Gets a Hitlist from a DBPF using its InstanceID.
         /// </summary>
         /// <param name="InstanceID">The InstanceID of the Hitlist.</param>
         /// <returns>A Hitlist instance.</returns>
-        public Hitlist GetHitlist(uint InstanceID)
+        public Hitlist GetHitlist(uint InstanceID, HITResourceGroup group)
         {
             if (HitlistsById.ContainsKey(InstanceID)) return HitlistsById[InstanceID];
 
@@ -193,12 +274,54 @@ namespace FSO.Content
         }
 
         /// <summary>
+        /// Gets a Track using its ID.
+        /// </summary>
+        /// <param name="value">Track ID</param>
+        /// <param name="fallback">(TSO ONLY) Secondary Track ID lookup</param>
+        /// <returns>A Track instance.</returns>
+        public Track GetTrack(uint value, uint fallback, HITResourceGroup group)
+        {
+            if (TracksById.ContainsKey(value))
+            {
+                return TracksById[value];
+            }
+            else
+            {
+                if ((fallback != 0) && TracksById.ContainsKey(fallback))
+                {
+                    return TracksById[fallback];
+                }
+                else
+                {
+                    if (TracksByBackupId.ContainsKey(value))
+                    {
+                        return TracksByBackupId[value];
+                    }
+                    else
+                    {
+                        if (TracksByBackupId.ContainsKey(fallback))
+                        {
+                            return TracksByBackupId[fallback];
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Couldn't find track: " + value + ", with alternative " + fallback);
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Gets a sound effect from the sound effects cache.
         /// </summary>
-        /// <param name="InstanceID">The InstanceID of the sound effect.</param>
-        /// <returns>The sound effect as a GCHandle instance.</returns>
-        public SoundEffect GetSFX(uint InstanceID)
+        /// <param name="Patch">A Patch instance containing the file location or ID.</param>
+        /// <returns>The sound effect.</returns>
+        public SoundEffect GetSFX(Patch patch)
         {
+            if (patch == null) return null;
+            var InstanceID = patch.FileID;
             if (SFXCache.ContainsKey(InstanceID)) return SFXCache[InstanceID];
             byte filetype = 0;
 
@@ -237,6 +360,18 @@ namespace FSO.Content
         }
 
         /// <summary>
+        /// Gets a Patch instance for the given patch ID.
+        /// TSO: Patch ID directly translates to FileID.
+        /// TS1: Patch ID lookup to obtain patch.
+        /// </summary>
+        /// <param name="id">The Patch ID.</param>
+        /// <returns>A Patch instance.</returns>
+        public Patch GetPatch(uint id, HITResourceGroup group)
+        {
+            return new Patch(id);
+        }
+
+        /// <summary>
         /// Compiles the radio stations in the game to a list of AudioReference instances.
         /// </summary>
         /// <returns>The radio stations in the game as a list of AudioReference instances.</returns>
@@ -245,6 +380,40 @@ namespace FSO.Content
             var result = new List<AudioReference>();
             result.AddRange(Stations);
             return result;
+        }
+
+        private void RegisterEvents(HITResourceGroup group)
+        {
+            var events = group.evt;
+            for (int i = 0; i < events.Entries.Count; i++)
+            {
+                var entry = events.Entries[i];
+                if (!_Events.ContainsKey(entry.Name))
+                {
+                    _Events.Add(entry.Name, new HITEventRegistration()
+                    {
+                        Name = entry.Name,
+                        EventType = (FSO.Files.HIT.HITEvents)entry.EventType,
+                        TrackID = entry.TrackID,
+                        ResGroup = group
+                    });
+                }
+            }
+        }
+
+        private HITResourceGroup LoadHitGroup(string HITPath, string EVTPath, string HSMPath)
+        {
+            var events = new EVT(EVTPath);
+            var hitfile = new HITFile(HITPath);
+            HSM hsmfile = null;
+            if (HSMPath != null) hsmfile = new HSM(HSMPath);
+
+            return new HITResourceGroup()
+            {
+                evt = events,
+                hit = hitfile,
+                hsm = hsmfile
+            };
         }
     }
 }

@@ -23,43 +23,6 @@ namespace FSO.HIT.Events
     /// </summary>
     public class HITTVOn : HITSound
     {
-        // from radio.ini, should probably load from there in future
-        private static Dictionary<string, string> StationPaths = new Dictionary<string, string>
-        {
-            {"KBEA", "Music/Stations/Beach/"},
-            {"KCLA", "Music/Stations/Classica/"},
-            {"KCOU", "Music/Stations/Country/"},
-            {"KCDA", "Music/Stations/CountryD/"},
-            {"KDIS", "Music/Stations/Disco/"},
-            {"KEZE", "Music/Stations/EZ/"},
-            {"KEZX", "Music/Stations/EZX/"},
-            {"KLAT", "Music/Stations/Latin/"},
-            {"KRAP", "Music/Stations/Rap/"},
-            {"KRAV", "Music/Stations/Rave/"},
-            {"KROC", "Music/Stations/Rock/"},
-// These ones aren't radio stations - they're UI music
-            {"KMAP", "Music/Modes/Map/"},
-            {"KSEL", "Music/Modes/Select/"},
-            {"KCRE", "Music/Modes/Create/"},
-//tv
-            { "KACT", "sounddata/tvstations/tv_action/" },
-            { "KCOM", "sounddata/tvstations/tv_comedy_cartoon/" },
-            { "KMYS", "sounddata/tvstations/tv_mystery/" },
-            { "KROM", "sounddata/tvstations/tv_romance/" },
-// More music
-            {"KHOR", "Music/Stations/Horror/"},
-            {"KOLD", "Music/Stations/OldWorld/"},
-            {"KSCI", "Music/Stations/SciFi/"},
-        };
-
-        private static Dictionary<int, string> MusicModes = new Dictionary<int, string>
-        {
-            { 11, "KSEL" },
-            { 12, "KCRE" },
-            { 13, "KMAP" },
-            { 9, "" }
-        };
-
         private string Station;
         private Dictionary<string, SoundEffect> SFXCache = new Dictionary<string, SoundEffect>();
         private List<string> Sounds = new List<string>();
@@ -126,7 +89,8 @@ namespace FSO.HIT.Events
         {
             this.VM = vm;
             Station = new string(new char[] { (char)(TrackID & 0xFF), (char)((TrackID>>8) & 0xFF), (char)((TrackID>>16) & 0xFF), (char)((TrackID>>24) & 0xFF) });
-            if (StationPaths.ContainsKey(Station)) LoadStation(StationPaths[Station].ToLowerInvariant());
+            var paths = Content.Content.Get().Audio.StationPaths;
+            if (paths.ContainsKey(Station)) LoadStation(CleanPath(paths[Station]));
         }
 
         public HITTVOn(uint id, HITVM vm, bool IDMode)
@@ -137,7 +101,8 @@ namespace FSO.HIT.Events
             if (id == 5)
             {
                 //loadloop. load direct sound...
-                var sfx = Content.Content.Get().Audio.GetSFX(0x00004f85);
+                var sfx = Content.Content.Get().Audio.GetSFX(new Patch(0x00004f85));
+                if (sfx == null) return;
                 SFXCache.Add("loadloop", sfx);
                 Instance = sfx.CreateInstance();
                 Instance.Volume = GetVolFactor();
@@ -146,9 +111,15 @@ namespace FSO.HIT.Events
             }
             else
             {
-                MusicModes.TryGetValue((int)id, out Station);
-                if (StationPaths.ContainsKey(Station)) LoadStation(StationPaths[Station].ToLowerInvariant());
+                var aud = Content.Content.Get().Audio;
+                aud.MusicModes.TryGetValue((int)id, out Station);
+                if (aud.StationPaths.ContainsKey(Station)) LoadStation(CleanPath(aud.StationPaths[Station]));
             }
+        }
+
+        private string CleanPath(string path)
+        {
+            return (Content.Content.Get().TS1) ? path : path.ToLowerInvariant();
         }
 
         public void Fade()
@@ -158,12 +129,20 @@ namespace FSO.HIT.Events
 
         private void LoadStation(string path)
         {
-            var statBase = Content.Content.Get().GetPath(path);
+            var content = Content.Content.Get();
+            var statBase = (content.TS1)?Path.Combine(content.TS1BasePath, path):content.GetPath(path);
             var files = Directory.GetFiles(statBase, "*.xa", SearchOption.AllDirectories);
+            var rand = new Random();
 
             if (files.Length > 0)
             {
                 //tv.
+                //include commercials from previous directory
+                var files2 = Directory.GetFiles(statBase.Substring(0, statBase.LastIndexOf(Path.DirectorySeparatorChar)), "*.xa", SearchOption.AllDirectories);
+                foreach (var file in files2)
+                {
+                    Sounds.Insert(rand.Next(Sounds.Count + 1), file);
+                }
             }
             else
             {
@@ -171,7 +150,7 @@ namespace FSO.HIT.Events
                 files = Directory.GetFiles(statBase, "*.mp3", SearchOption.AllDirectories);
                 IsMusic = true;
             }
-            var rand = new Random();
+
             foreach (var file in files)
             {
                 Sounds.Insert(rand.Next(Sounds.Count + 1), file);

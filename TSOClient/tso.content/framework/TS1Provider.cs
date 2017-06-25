@@ -29,6 +29,7 @@ namespace FSO.Content.Framework
         {
             var entries = FarProvider.GetEntriesForExtension(ext);
             var result = new Dictionary<string, IContentReference>();
+            if (entries == null) return result;
             foreach (var entry in entries)
             {
                 var name = Path.GetFileName(entry.FarEntry.Filename.ToLowerInvariant());

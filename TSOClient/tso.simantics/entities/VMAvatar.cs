@@ -173,6 +173,7 @@ namespace FSO.SimAntics
             thread.ObjectVar[7] = Math.Min(100, GetPersonData(VMPersonDataVariable.MechanicalSkill)/10);
             thread.ObjectVar[11] = Math.Min(100, GetPersonData(VMPersonDataVariable.BodySkill) / 10);
 
+            thread.ObjectVar[14] = GetPersonData(VMPersonDataVariable.PersonsAge);
             thread.ObjectVar[15] = GetPersonData(VMPersonDataVariable.NicePersonality) / 10;
             thread.ObjectVar[16] = GetPersonData(VMPersonDataVariable.ActivePersonality) / 10;
             thread.ObjectVar[17] = GetPersonData(VMPersonDataVariable.GenerousPersonality) / 10;

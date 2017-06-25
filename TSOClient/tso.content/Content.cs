@@ -119,19 +119,20 @@ namespace FSO.Content
                 AvatarAnimations = new TS1BCFAnimationProvider(BCFGlobal);
                 AvatarSkeletons = new TS1BCFSkeletonProvider(BCFGlobal);
                 AvatarAppearances = new TS1BCFAppearanceProvider(BCFGlobal);
+                Audio = new TS1Audio(this);
             } else
             {
                 AvatarAnimations = new AvatarAnimationProvider(this);
                 AvatarSkeletons = new AvatarSkeletonProvider(this);
                 WorldObjects = new WorldObjectProvider(this);
                 WorldCatalog = new WorldObjectCatalog();
+                Audio = new Audio(this);
             }
             WorldFloors = new WorldFloorProvider(this);
             WorldWalls = new WorldWallProvider(this);
             WorldObjectGlobals = new WorldGlobalProvider(this);
             WorldRoofs = new WorldRoofProvider(this);
 
-            Audio = new Audio(this);
             GlobalTuning = new Tuning(Path.Combine(basePath, "tuning.dat"));
             Ini = new IniProvider(this);
             CityMaps = new CityMapsProvider(this);
@@ -312,7 +313,7 @@ namespace FSO.Content
         public AvatarThumbnailProvider AvatarThumbnails;
 
         /** Audio **/
-        public Audio Audio;
+        public IAudioProvider Audio;
 
         /** GlobalTuning **/
         public Tuning GlobalTuning;

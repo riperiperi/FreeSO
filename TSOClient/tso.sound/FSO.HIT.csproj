@@ -95,8 +95,6 @@
     <Compile Include="HITSound.cs" />
     <Compile Include="HITThread.cs" />
     <Compile Include="HITVM.cs" />
-    <Compile Include="Model\HITEventRegistration.cs" />
-    <Compile Include="Model\HITResourceGroup.cs" />
     <Compile Include="Model\HITVolumeGroup.cs" />
   </ItemGroup>
   <ItemGroup>

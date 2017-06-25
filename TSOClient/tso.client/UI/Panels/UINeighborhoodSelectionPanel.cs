@@ -29,12 +29,14 @@ namespace FSO.Client.UI.Panels
             new NeighborhoodViewConfig()
             {
                 Graphic = "Downtown\\DScreen.bmp",
+                Music = "station_dtnhood",
                 Scale = 1f,
                 FullImageAnimations = new NeighborhoodImageAnim[] {new NeighborhoodImageAnim("Downtown\\dscreen00.bmp", "Downtown\\dscreen01.bmp", "Downtown\\dscreen02.bmp", "Downtown\\dscreen03.bmp", "Downtown\\dscreen04.bmp") }
             },
             new NeighborhoodViewConfig()
             {
                 Graphic = "VIsland\\visland.bmp",
+                Music = "station_vacation",
                 Scale = 1f,
                 FullImageAnimations = new NeighborhoodImageAnim[] {
                     new NeighborhoodImageAnim("VIsland\\visland_waves001.bmp", "VIsland\\visland_waves002.bmp", "VIsland\\visland_waves003.bmp", "VIsland\\visland_waves004.bmp", "VIsland\\visland_waves005.bmp"),
@@ -52,6 +54,7 @@ namespace FSO.Client.UI.Panels
             new NeighborhoodViewConfig()
             {
                 Graphic = "Studiotown\\DScreen.bmp",
+                Music = "station_superstar",
                 Scale = 1f,
                 FullImageAnimations = new NeighborhoodImageAnim[] {new NeighborhoodImageAnim("Studiotown\\DScreen_top_layer.bmp") } //TODO: cars
             },
@@ -60,6 +63,7 @@ namespace FSO.Client.UI.Panels
             {
                 Graphic = "Magicland\\DScreen.bmp",
                 Pulsate = false,
+                Music = "music_magictown",
                 Scale = 1f,
                 FullImageAnimations = new NeighborhoodImageAnim[] {new NeighborhoodImageAnim(new Vector2(0, 62), "Magicland\\DScreen_waves1.bmp", "Magicland\\DScreen_waves2.bmp", "Magicland\\DScreen_waves3.bmp", "Magicland\\DScreen_waves4.bmp", "Magicland\\DScreen_waves5.bmp", "Magicland\\DScreen_waves6.bmp") } //todo: blimp
             },
@@ -110,11 +114,14 @@ namespace FSO.Client.UI.Panels
                 lelem.Position = layer.Position;
                 Add(lelem);
             }
+
+            if (config.Music != null) HIT.HITVM.Get().PlaySoundEvent(config.Music);
         }
 
         public void SelectHouse(int house)
         {
             OnHouseSelect?.Invoke(house);
+            HIT.HITVM.Get().PlaySoundEvent("bkground_fade");
         }
     }
 
@@ -161,6 +168,7 @@ namespace FSO.Client.UI.Panels
         public NeighborhoodImageAnim[] FullImageAnimations = new NeighborhoodImageAnim[0];
         public int FrameDuration = 15;
         public bool Pulsate = true;
+        public string Music = "bkground_nhood1";
     }
 
     public class NeighborhoodImageAnim

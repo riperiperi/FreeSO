@@ -28,6 +28,10 @@ namespace FSO.Files.HIT
         public uint Looped;
         public uint Volume;
 
+        //ts1
+        public uint SubroutineID;
+        public uint HitlistID;
+
         /// <summary>
         /// Creates a new track.
         /// </summary>
@@ -74,6 +78,8 @@ namespace FSO.Files.HIT
 
             Reader.Close();
         }
+
+        public Track() { }
 
         private uint ParseHexString(string input)
         {
