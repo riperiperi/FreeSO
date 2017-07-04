@@ -26,8 +26,45 @@ namespace FSO.Files.Formats.IFF.Chunks
         public SPR2Frame[] Frames = new SPR2Frame[0];
         public uint DefaultPaletteID;
         public bool SpritePreprocessed;
-        public bool ZAsAlpha;
-        public bool FloorCopy;
+
+        private bool _ZAsAlpha;
+        public bool ZAsAlpha
+        {
+            get
+            {
+                return _ZAsAlpha;
+            }
+            set
+            {
+                _ZAsAlpha = value;
+                if (value)
+                {
+                    foreach (var frame in Frames)
+                    {
+                        if (frame.Decoded) frame.CopyZToAlpha();
+                    }
+                }
+            }
+        }
+        private bool _FloorCopy;
+        public bool FloorCopy
+        {
+            get
+            {
+                return _FloorCopy;
+            }
+            set
+            {
+                _FloorCopy = value;
+                if (value)
+                {
+                    foreach (var frame in Frames)
+                    {
+                        if (frame.Decoded) frame.FloorCopy();
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Reads a SPR2 chunk from a stream.
@@ -141,6 +178,13 @@ namespace FSO.Files.Formats.IFF.Chunks
         private SPR2 Parent;
         private uint Version;
         private byte[] ToDecode;
+        public bool Decoded
+        {
+            get
+            {
+                return ToDecode == null;
+            }
+        }
         public bool ContainsNothing = false;
         public bool ContainsNoZ = false;
 
@@ -239,6 +283,12 @@ namespace FSO.Files.Formats.IFF.Chunks
             var hasAlpha = (this.Flags & 0x04) == 0x04;
 
             var numPixels = this.Width * this.Height;
+            var fc = Parent.FloorCopy;
+            if (fc)
+            {
+                numPixels += Height;
+                Width++;
+            }
             if (hasPixels){
                 this.PixelData = new Color[numPixels];
                 this.PalData = new byte[numPixels];
@@ -398,7 +448,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 y++;
             }
             if (Parent.ZAsAlpha) CopyZToAlpha();
-            //if (Parent.FloorCopy) FloorCopy();
+            if (Parent.FloorCopy) FloorCopy();
         }
 
         /// <summary>
@@ -435,15 +485,25 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         public void FloorCopy()
         {
+            if (Width%2 != 0)
+            {
+                var target = new Color[(Width + 1) * Height];
+                for (int y=0; y<Height; y++)
+                {
+                    Array.Copy(PixelData, y * Width, target, y * (Width + 1), Width);
+                }
+                PixelData = target;
+                Width += 1;
+            }
             var ndat = new Color[PixelData.Length];
-            int hw = (Width+1) / 2;
+            int hw = (Width) / 2;
             int hh = (Height) / 2;
             int idx = 0;
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    var xp = (((x>hw)?(x-1):x) + hw) % Width;
+                    var xp = (x + hw) % Width;
                     var yp = (y + hh) % Height;
                     var rep = PixelData[xp + yp * Width];
                     if (rep.A > 0) ndat[idx] = rep;

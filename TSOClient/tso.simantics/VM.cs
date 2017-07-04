@@ -207,9 +207,10 @@ namespace FSO.SimAntics
         private float Fraction;
         public void Update()
         {
-            var oldFrame = (GameTickNum * 30 * SpeedMultiplier) / GameTickRate;
+            var mul = Math.Max(SpeedMultiplier, 1);
+            var oldFrame = (GameTickNum * 30 * mul) / GameTickRate;
             GameTickNum++;
-            var newFrame = (GameTickNum * 30 * SpeedMultiplier) / GameTickRate;
+            var newFrame = (GameTickNum * 30 * mul) / GameTickRate;
             for (int i = 0; i < newFrame - oldFrame; i++)
             {
                 Tick();
@@ -221,6 +222,7 @@ namespace FSO.SimAntics
 
         public void PreDraw()
         {
+            if (SpeedMultiplier == 0) Fraction = 0;
             //fractional animation for avatars
             foreach (var obj in Context.ObjectQueries.Avatars)
             {
@@ -280,7 +282,7 @@ namespace FSO.SimAntics
         {
             if (CurrentFamily == null) return;
             SetGlobalValue(9, (short)CurrentFamily.ChunkID);
-            var missingMembers = new HashSet<uint>(CurrentFamily.FamilyGUIDs);
+            var missingMembers = new HashSet<uint>(CurrentFamily.RuntimeSubset);
             foreach (var avatar in Context.ObjectQueries.Avatars)
             {
                 missingMembers.Remove(avatar.Object.OBJ.GUID);
@@ -290,8 +292,10 @@ namespace FSO.SimAntics
             {
                 var sim = Context.CreateObjectInstance(member, LotView.Model.LotTilePos.OUT_OF_WORLD, LotView.Model.Direction.NORTH).Objects[0];
                 ((VMAvatar)sim).SetPersonData(VMPersonDataVariable.TS1FamilyNumber, (short)CurrentFamily.ChunkID);
+                sim.TSOState.Budget.Value = 1000000;
                 var mailbox = Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
                 if (mailbox != null) VMFindLocationFor.FindLocationFor(sim, mailbox, Context, VMPlaceRequestFlags.Default);
+                ((Model.TSOPlatform.VMTSOAvatarState)sim.TSOState).Permissions = Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
             }
 
         }
@@ -316,7 +320,7 @@ namespace FSO.SimAntics
             Scheduler.BeginTick(tickID);
             if (GlobalLink != null) GlobalLink.Tick(this);
             if (EODHost != null) EODHost.Tick();
-            Context.Clock.Tick();
+            if (SpeedMultiplier > 0) Context.Clock.Tick();
             GlobalState[6] = (short)Context.Clock.Seconds;
             GlobalState[5] = (short)Context.Clock.Minutes;
             GlobalState[0] = (short)Context.Clock.Hours;

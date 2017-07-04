@@ -37,6 +37,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 //todo: swimming??
 
                 animation = FSO.Content.Content.Get().AvatarAnimations.Get(avatar.WalkAnimations[posture] + ".anim");
+                if (animation == null) return VMPrimitiveExitCode.GOTO_TRUE;
                 var state = new VMAnimationState(animation, operand.PlayBackwards);
                 state.Loop = true;
                 avatar.Animations.Add(state);
@@ -78,12 +79,13 @@ namespace FSO.SimAntics.Engine.Primitives
 
                     //SPECIAL CASE: if we are ending the animation, and the number of events run < expected events
                     //forcefully run those events, with id as their event number. (required for bath drain)
-                    if (cAnim.EndReached)
+                    if (cAnim.EndReached && cAnim.EventsRun != 255)
                     {
-                        while (cAnim.EventsRun < operand.ExpectedEventCount)
+                        for (int i=0; i< operand.ExpectedEventCount; i++)
                         {
-                            cAnim.EventQueue.Add(cAnim.EventsRun++);
+                            cAnim.EventQueue.Add((short)i);
                         }
+                        cAnim.EventsRun = 255;
                     }
 
                     if (cAnim.EventQueue.Count > 0) //favor events over end. do not want to miss any.
@@ -118,11 +120,11 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMAnimateSimOperand : VMPrimitiveOperand {
         public ushort AnimationID {get; set;}
-        public byte LocalEventNumber;
+        public byte LocalEventNumber { get; set; }
         public byte _pad;
         public VMAnimationScope Source { get; set; }
         public byte Flags;
-        public byte ExpectedEventCount;
+        public byte ExpectedEventCount { get; set; }
 
         #region VMPrimitiveOperand Members
 

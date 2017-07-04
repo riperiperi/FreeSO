@@ -875,7 +875,7 @@ namespace FSO.SimAntics.Utils
                         tempVM.Context.Architecture.RegenRoomMap();
                         tempVM.Context.RegeneratePortalInfo();
 
-                        var terrainC = new TerrainComponent(new Rectangle(1, 1, size - 2, size - 2), blueprint);
+                        var terrainC = new TerrainComponent(new Rectangle(0, 0, size, size), blueprint);
                         terrainC.Initialize(subworld.State.Device, subworld.State);
                         blueprint.Terrain = terrainC;
 

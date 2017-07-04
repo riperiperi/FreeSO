@@ -299,7 +299,7 @@ namespace FSO.LotView
                     _2d.Pause();
                     _2d.Resume(); 
                     Blueprint.FloorComp.DrawBound = new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13);
-                    Blueprint.FloorComp.Draw(gd, state);
+                    //Blueprint.FloorComp.Draw(gd, state);
                     Blueprint.FloorComp.DrawBound = null;
                     Blueprint.WallComp.Draw(gd, state);
                     _2d.Pause();
@@ -520,7 +520,8 @@ namespace FSO.LotView
             {
                 _2d.Pause();
                 _2d.Resume(); //clear the sprite buffer before we begin drawing what we're going to cache
-                Blueprint.FloorComp.Draw(gd, state);
+                //Blueprint.FloorComp.Draw(gd, state);
+                Blueprint.FloorGeom.FullReset(gd);
                 ClearDrawBuffer(StaticFloorCache);
                 _2d.End(StaticFloorCache, true);
             }

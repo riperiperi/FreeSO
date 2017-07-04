@@ -14,8 +14,14 @@ namespace FSO.SimAntics.Model
         public int Width;
         public int Height;
 
-        public sbyte[] Heights;
+        public byte[] Heights;
+        public byte[] Centers;
         public byte[] GrassState;
+
+        public byte[] VisHeights;
+        public byte[] VisGrass;
+        private byte[] OldHeights;
+        private byte[] OldGrass;
 
         public TerrainType LightType = TerrainType.GRASS;
         public TerrainType DarkType = TerrainType.GRASS;
@@ -25,8 +31,46 @@ namespace FSO.SimAntics.Model
             Width = width;
             Height = height;
 
-            Heights = new sbyte[width * height];
+            Heights = new byte[width * height];
             GrassState = new byte[width * height];
+            Centers = new byte[width * height];
+
+            VisHeights = new byte[width * height];
+            VisGrass = new byte[width * height];
+        }
+
+        public void EnterVis()
+        {
+            OldHeights = Heights;
+            OldGrass = GrassState;
+
+            Array.Copy(Heights, VisHeights, Heights.Length);
+            Array.Copy(GrassState, VisGrass, GrassState.Length);
+
+            Heights = VisHeights;
+            GrassState = VisGrass;
+        }
+
+        public void ExitVis()
+        {
+            Heights = OldHeights;
+            GrassState = OldGrass;
+        }
+
+        public void RegenerateCenters() //TODO: partial update
+        {
+            int i = 0;
+            for (int y=0; y<Height; y++)
+            {
+                for (int x = 0; x < Width; x++) {
+                    Centers[i] = (byte)((
+                        Heights[i] 
+                        + Heights[y * Width + ((x + 1) % Width)] 
+                        + Heights[((y + 1) % Height) * Width + ((x + 1) % Width)] 
+                        + Heights[((y + 1) % Height) * Width + x]) / 4);
+                    i++;
+                }
+            }
         }
 
         public void GenerateGrassStates() //generates a set of grass states for a lot.
@@ -117,7 +161,7 @@ namespace FSO.SimAntics.Model
         {
             LightType = (TerrainType)reader.ReadByte();
             DarkType = (TerrainType)reader.ReadByte();
-            Heights = (sbyte[])((Array)reader.ReadBytes(reader.ReadInt32()));
+            Heights = (byte[])((Array)reader.ReadBytes(reader.ReadInt32()));
             GrassState = reader.ReadBytes(reader.ReadInt32());
         }
     }

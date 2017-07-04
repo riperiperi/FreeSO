@@ -90,6 +90,11 @@ namespace FSO.SimAntics.Model
             if (persistID != 0) AvatarsByPersist[persistID] = ava;
         }
 
+        public void RemoveAvatarPersist(uint persistID)
+        {
+            AvatarsByPersist.Remove(persistID);
+        }
+
         public void RegisterMultitilePersist(VMMultitileGroup mul, uint persistID)
         {
             if (persistID != 0) MultitileByPersist[persistID] = mul;

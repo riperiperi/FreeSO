@@ -22,7 +22,7 @@ namespace FSO.LotView.Components
     {
         public Avatar Avatar;
         public bool IsPet;
-        public Blueprint blueprint;
+        public float Scale = 1;
 
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -74,19 +74,27 @@ namespace FSO.LotView.Components
             }
         }
 
+        private Vector3 AltitudeOff;
+
         public override Vector3 Position
         {
             get
             {
-                if (Container == null) return _Position;
+                if (Container == null) return _Position + AltitudeOff;
                 else return Container.GetSLOTPosition(ContainerSlot) + new Vector3(0.5f, 0.5f, (IsPet?0:-1.4f)); //apply offset to snap character into slot
             }
             set
             {
                 _Position = value;
+                if (blueprint != null) AltitudeOff = new Vector3(0, 0, blueprint.InterpAltitude(_Position));
                 OnPositionChanged();
                 _WorldDirty = true;
             }
+        }
+
+        public Vector3 StoredPosition
+        {
+            get { return _Position; }
         }
 
         public override float PreferredDrawOrder
@@ -145,7 +153,9 @@ namespace FSO.LotView.Components
                 else if ((DisplayFlags & AvatarDisplayFlags.TSOGhost) != 0) col = new Color(255, 255, 255, 64);
 
                 Avatar.LightPositions = (WorldConfig.Current.AdvancedLighting)?CloseLightPositions(Position):null;
-                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, (Room>65532 || Room == 0)?Room:blueprint.Rooms[Room].Base, col); 
+                var newWorld = Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World;
+                if (Scale != 1f) newWorld = Matrix.CreateScale(Scale) * newWorld;
+                world._3D.DrawMesh(newWorld, Avatar, (short)ObjectID, (Room>65532 || Room == 0)?Room:blueprint.Rooms[Room].Base, col); 
             }
 
             if (Headline != null && !Headline.IsDisposed)

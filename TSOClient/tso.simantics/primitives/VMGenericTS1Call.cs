@@ -1,6 +1,9 @@
 ﻿using FSO.Files.Utils;
+using FSO.LotView.Components;
+using FSO.LotView.Model;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -45,25 +48,67 @@ namespace FSO.SimAntics.Primitives
                     short result = 1;
                     if (zones.TryGetValue(context.Thread.TempRegisters[0], out result))
                         context.Thread.TempRegisters[0] = result;
-                    else context.Thread.TempRegisters[0] = (short)((context.Thread.TempRegisters[0] >= 81 && context.Thread.TempRegisters[0] <= 89)?2:1);
+                    else context.Thread.TempRegisters[0] = (short)((context.Thread.TempRegisters[0] >= 81 && context.Thread.TempRegisters[0] <= 89) ? 2 : 1);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTS1CallMode.ChangeToLotInTemp0:
+                    //-1 is this family's home lot
+                    var crossData = Content.Content.Get().Neighborhood.GameState;
+                    crossData.ActiveFamily = context.VM.CurrentFamily;
+                    crossData.DowntownSimGUID = context.Caller.Object.OBJ.GUID;
+                    crossData.LotTransitInfo = context.VM.GetGlobalValue(34);
                     context.VM.SignalLotSwitch((uint)context.Thread.TempRegisters[0]);
                     return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
                 case VMGenericTS1CallMode.SelectDowntownLot:
                     break;
                 case VMGenericTS1CallMode.BuildTheDowntownSimAndPlaceObjIDInTemp0:
-                    //currently downtown sim is just in selected sim id.
+
+                    //spawn downtown sim out of world
+
+                    var crossDataDT = Content.Content.Get().Neighborhood.GameState;
+
+                    var control = context.VM.Context.CreateObjectInstance(crossDataDT.DowntownSimGUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH)?.BaseObject;
+                    ((Model.TSOPlatform.VMTSOAvatarState)control.TSOState).Permissions = Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
+                    control.TSOState.Budget.Value = 1000000;
+                    context.VM.SetGlobalValue(3, control.ObjectID);
+                    context.VM.SendCommand(new VMNetChangeControlCmd() { TargetID = control.ObjectID });
+                    crossDataDT.ActiveFamily.SelectOneMember(crossDataDT.DowntownSimGUID);
+                    context.VM.ActivateFamily(crossDataDT.ActiveFamily);
+
                     context.Thread.TempRegisters[0] = context.VM.GetGlobalValue(3);
+                    if (VM.UseWorld) context.VM.Context.World.State.ScrollAnchor = (AvatarComponent)(context.VM.GetObjectById(context.VM.GetGlobalValue(3))?.WorldUI);
                     break;
                 case VMGenericTS1CallMode.BuildVacationFamilyPutFamilyNumInTemp0:
                     //in our implementation, vacation lots build the family in the same way as normal lots.
-                    context.Thread.TempRegisters[0] = context.VM.GetGlobalValue(9);
-                    context.Thread.TempRegisters[1] = 1; //set to 1 if we spawned a whole family.
-                    context.VM.VerifyFamily();
+                    var crossData2 = Content.Content.Get().Neighborhood.GameState;
+                    if (crossData2.LotTransitInfo >= 1)
+                    {
+                        crossData2.ActiveFamily.SelectWholeFamily();
+                        context.VM.ActivateFamily(crossData2.ActiveFamily);
+                        context.Thread.TempRegisters[0] = context.VM.GetGlobalValue(9);
+
+                        //set to 1 if we spawned a whole family.
+                        //seems to be from globals 34 on the lot we exited. Magic town uses 0 for a single sim, and 1 for whole family 
+                        //(blimp, though 1 is still set for whole family when theres only one person in it!)
+
+                        context.VM.VerifyFamily();
+                        context.VM.SendCommand(new VMNetChangeControlCmd() { TargetID = context.VM.Context.ObjectQueries.GetObjectsByGUID(crossData2.DowntownSimGUID).FirstOrDefault()?.ObjectID ?? 0 });
+                    } else
+                    {
+                        var control2 = context.VM.Context.CreateObjectInstance(crossData2.DowntownSimGUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH)?.BaseObject;
+                        ((Model.TSOPlatform.VMTSOAvatarState)control2.TSOState).Permissions = Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
+                        control2.TSOState.Budget.Value = 1000000;
+                        context.VM.SetGlobalValue(3, control2.ObjectID);
+                        context.VM.SendCommand(new VMNetChangeControlCmd() { TargetID = control2.ObjectID });
+                        crossData2.ActiveFamily.SelectOneMember(crossData2.DowntownSimGUID);
+                        context.VM.ActivateFamily(crossData2.ActiveFamily);
+
+                        context.Thread.TempRegisters[0] = context.VM.GetGlobalValue(3);
+                    }
+
+                    context.Thread.TempRegisters[1] = (short)((crossData2.LotTransitInfo >= 1)?1:0);
                     break;
                 case VMGenericTS1CallMode.TakeTaxiHook:
-                    //set downtown sim?
+                    //unused past hot date?
                     break;
             }
             return VMPrimitiveExitCode.GOTO_TRUE;

@@ -104,7 +104,7 @@ namespace FSO.SimAntics.Utils
 
         private TerrainComponent CreateTerrain(XmlHouseData model)
         {
-            var terrain = new TerrainComponent(new Rectangle(1, 1, model.Size - 2, model.Size - 2), Blueprint);
+            var terrain = new TerrainComponent(new Rectangle(0, 0, model.Size, model.Size), Blueprint);
             this.InitWorldComponent(terrain);
             return terrain;
         }

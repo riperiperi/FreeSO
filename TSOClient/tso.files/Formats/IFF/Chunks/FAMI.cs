@@ -31,6 +31,18 @@ namespace FSO.Files.Formats.IFF.Chunks
         public int Unknown; //19 or 1?
         public uint[] FamilyGUIDs;
 
+        public uint[] RuntimeSubset; //the members of this family currently active
+
+        public void SelectWholeFamily()
+        {
+            RuntimeSubset = FamilyGUIDs;
+        }
+
+        public void SelectOneMember(uint guid)
+        {
+            RuntimeSubset = new uint[] { guid };
+        }
+
         /// <summary>
         /// Reads a FAMI chunk from a stream.
         /// </summary>

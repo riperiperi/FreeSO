@@ -1053,7 +1053,9 @@ namespace FSO.SimAntics.Engine
             anim.Weight = 0.66f;
             anim.Speed = 1.5f;
             anim.Loop = true;
-            anim = PlayAnim(anims[(WalkStyle == 1 || pool) ? 21 : (obj.IsPet?20:25)], obj); //Run full:Walk Half
+            var hWalkAnim = anims[(WalkStyle == 1 || pool) ? 21 : (obj.IsPet ? 20 : 25)];
+            if (hWalkAnim == "") hWalkAnim = anims[(WalkStyle == 1) ? 21 : 20];
+            anim = PlayAnim(hWalkAnim, obj); //Run full:Walk Half
             anim.Weight = 0.33f;
             anim.Speed = 1.5f;
             anim.Loop = true;

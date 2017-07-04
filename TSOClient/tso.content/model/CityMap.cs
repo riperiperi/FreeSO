@@ -157,7 +157,11 @@ namespace FSO.Content.Model
         GRASS = 0,
         SNOW = 3,
         SAND = 1,
-        NULL = -1
+        NULL = -1,
+
+        TS1DarkGrass = 5,
+        TS1AutumnGrass = 6,
+        TS1Cloud = 7
     }
 
     public class TextureValueMap <T>

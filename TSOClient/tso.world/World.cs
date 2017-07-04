@@ -353,17 +353,30 @@ namespace FSO.LotView
             State.PreciseZoom = SmoothZoomFrom;
         }
 
+        public void CenterTo(EntityComponent comp)
+        {
+            Vector3 pelvisCenter;
+            if (comp is AvatarComponent)
+            {
+                pelvisCenter = ((AvatarComponent)comp).GetPelvisPosition();
+            } else
+            {
+                pelvisCenter = comp.Position;
+            }
+            State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
+            if (State.Level != comp.Level) State.Level = comp.Level;
+
+            State.CenterTile -= (comp.Level - 1) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
+
+        }
+
         public override void Update(UpdateState state)
         {
             base.Update(state);
 
             if (State.ScrollAnchor != null)
             {
-                var pelvisCenter = State.ScrollAnchor.GetPelvisPosition();
-                State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
-                if (State.Level != State.ScrollAnchor.Level) State.Level = State.ScrollAnchor.Level;
-
-                State.CenterTile -= (State.ScrollAnchor.Level - 1) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
+                CenterTo(State.ScrollAnchor);
             }
 
             if (SmoothZoomTimer > -1)
@@ -481,6 +494,32 @@ namespace FSO.LotView
             State._2D.End();
             State._3D.End();
             State._2D.OutputDepth = false;
+        }
+
+        public Vector2 EstTileAtPosWithScroll(Vector2 pos)
+        {
+            //performs a search to find the elevated tile position from the current viewing angle
+            //essentially, we first assume the terrain height is 0, and calculate a tile position
+            //the true screen position of this tile is calculated using its elevation and compared to the input position
+            //the input position is offset by this elevation guess. 
+            //repeat until elevation is small enough or 10 tries.
+
+            Vector2 yOff = new Vector2();
+            Vector2 tile = new Vector2();
+            float lastDiff = 0;
+            for (int i = 0; i < 10; i++)
+            {
+                tile = State.WorldSpace.GetTileAtPosWithScroll(pos + yOff);
+                var truePosition = State.WorldSpace.GetScreenFromTile(new Vector3(tile, (State.Level - 1) * 2.95f + Blueprint.InterpAltitude(
+                    new Vector3(Math.Max(1, Math.Min(Blueprint.Width-1, tile.X)), Math.Max(1, Math.Min(Blueprint.Height-1, tile.Y)), 0)
+                    ))) + State.WorldSpace.GetPointScreenOffset();
+                var diff = (truePosition - pos);
+                if (lastDiff != 0 && lastDiff * diff.Y < 0)
+                    diff /= 2;
+                lastDiff = diff.Y;
+                yOff -= diff;
+            }
+            return tile;
         }
 
         /// <summary>

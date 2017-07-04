@@ -26,6 +26,7 @@ namespace FSO.LotView.Components
 
         private int GeomLength;
         private byte[] GrassState; //0 = green, 255 = brown. to start with, should be randomly distriuted in range 0-128.
+        private byte[] GroundHeight;
         private int NumPrimitives;
         private int BladePrimitives;
         private int GridPrimitives;
@@ -60,11 +61,12 @@ namespace FSO.LotView.Components
             UpdateLotType();
         }
 
-        public void UpdateTerrain(TerrainType light, TerrainType dark, sbyte[] heights, byte[] grass)
+        public void UpdateTerrain(TerrainType light, TerrainType dark, byte[] heights, byte[] grass)
         {
             LightType = light;
             DarkType = dark;
             GrassState = grass;
+            GroundHeight = heights;
             UpdateLotType();
             TerrainDirty = true;
         }
@@ -89,6 +91,59 @@ namespace FSO.LotView.Components
             if (!FSOEnvironment.UseMRT) GrassHeight /= 2;
             if (GrassHeight == 0) GrassHeight = 1;
             GrassDensityScale = LotTypeGrassInfo.GrassDensity[index];
+        }
+
+
+        private Vector3 GetNormalAt(int x, int y)
+        {
+            var sum = new Vector3();
+            var rotToNormalXY = Matrix.CreateRotationZ((float)(Math.PI / 2));
+            var rotToNormalZY = Matrix.CreateRotationX(-(float)(Math.PI / 2));
+            var limit = (Size.Width-1);
+
+            if (x < limit)
+            {
+                var vec = new Vector3();
+                vec.X = 1;
+                vec.Y = GetElevationPoint(x + 1, y) - GetElevationPoint(x, y);
+                vec = Vector3.Transform(vec, rotToNormalXY);
+                sum += vec;
+            }
+
+            if (x > 1)
+            {
+                var vec = new Vector3();
+                vec.X = 1;
+                vec.Y = GetElevationPoint(x, y) - GetElevationPoint(x - 1, y);
+                vec = Vector3.Transform(vec, rotToNormalXY);
+                sum += vec;
+            }
+
+            if (y < limit)
+            {
+                var vec = new Vector3();
+                vec.Z = 1;
+                vec.Y = GetElevationPoint(x, y + 1) - GetElevationPoint(x, y);
+                vec = Vector3.Transform(vec, rotToNormalZY);
+                sum += vec;
+            }
+
+            if (y > 1)
+            {
+                var vec = new Vector3();
+                vec.Z = 1;
+                vec.Y = GetElevationPoint(x, y) - GetElevationPoint(x, y - 1);
+                vec = Vector3.Transform(vec, rotToNormalZY);
+                sum += vec;
+            }
+            if (sum != Vector3.Zero) sum.Normalize();
+            return sum;
+        }
+
+        private float GetElevationPoint(int x, int y)
+        {
+            if (x >= Size.Width || y >= Size.Height) return 0;
+            return GroundHeight[((y) * (Size.Width) + (x))] * 9/16f;
         }
 
         public override float PreferredDrawOrder
@@ -119,7 +174,7 @@ namespace FSO.LotView.Components
             var quadWidth = WorldSpace.GetWorldFromTile((float)Size.Width / (float)quads);
             var quadHeight = WorldSpace.GetWorldFromTile((float)Size.Height / (float)quads);
             var numQuads = quads * quads;
-            var archSize = quads + 2;
+            var archSize = quads;
 
             TerrainVertex[] Geom = new TerrainVertex[numQuads * 4];
             int[] Indexes = new int[numQuads * 6];
@@ -142,6 +197,11 @@ namespace FSO.LotView.Components
                     var bl = new Vector3(tl.X, 0.0f, tl.Z + quadHeight);
                     var br = new Vector3(tl.X + quadWidth, 0.0f, tl.Z + quadHeight);
 
+                    tl.Y = GetElevationPoint(x, y);
+                    tr.Y = GetElevationPoint(x+1, y);
+                    bl.Y = GetElevationPoint(x, y+1);
+                    br.Y = GetElevationPoint(x+1, y+1);
+
                     Indexes[indexOffset++] = geomOffset;
                     Indexes[indexOffset++] = (geomOffset + 1);
                     Indexes[indexOffset++] = (geomOffset + 2);
@@ -150,7 +210,7 @@ namespace FSO.LotView.Components
                     Indexes[indexOffset++] = (geomOffset + 3);
                     Indexes[indexOffset++] = geomOffset;
 
-                    short tx = (short)(x + 1), ty = (short)(y + 1);
+                    short tx = (short)x, ty = (short)y;
 
                     if (blueprint.GetFloor(tx,ty,1).Pattern == 0 && 
                         (blueprint.GetWall(tx,ty, 1).Segments & (WallSegments.HorizontalDiag | WallSegments.VerticalDiag)) == 0)
@@ -164,15 +224,15 @@ namespace FSO.LotView.Components
                         BladeIndexes[bindexOffset++] = geomOffset;
                     }
 
-                    Color tlCol = Color.Lerp(LightGreen, LightBrown, GrassState[y * archSize + x]/255f);
-                    Color trCol = Color.Lerp(LightGreen, LightBrown, GrassState[y * archSize + ((x + 1) % archSize)] / 255f);
-                    Color blCol = Color.Lerp(LightGreen, LightBrown, GrassState[((y + 1) % archSize) * archSize + x] / 255f);
-                    Color brCol = Color.Lerp(LightGreen, LightBrown, GrassState[((y + 1) % archSize) * archSize + ((x + 1) % archSize)] / 255f);
+                    Color tlCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x, y));
+                    Color trCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x+1, y));
+                    Color blCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x, y+1));
+                    Color brCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x+1, y+1));
 
-                    Geom[geomOffset++] = new TerrainVertex(tl, tlCol.ToVector4(), new Vector2(x * 64, y * 64), GrassState[y * archSize + x] / 255f);
-                    Geom[geomOffset++] = new TerrainVertex(tr, trCol.ToVector4(), new Vector2((x + 1) * 64, y * 64), GrassState[y * archSize + ((x + 1) % archSize)] / 255f);
-                    Geom[geomOffset++] = new TerrainVertex(br, brCol.ToVector4(), new Vector2((x + 1) * 64, (y + 1) * 64), GrassState[((y + 1) % archSize) * archSize + ((x + 1) % archSize)] / 255f);
-                    Geom[geomOffset++] = new TerrainVertex(bl, blCol.ToVector4(), new Vector2(x * 64, (y + 1) * 64), GrassState[((y + 1) % archSize) * archSize + x] / 255f);
+                    Geom[geomOffset++] = new TerrainVertex(tl, tlCol.ToVector4(), new Vector2(((x - y)+1) * 0.5f, (x + y) * 0.5f), GetGrassState(x,y), GetNormalAt(x, y));
+                    Geom[geomOffset++] = new TerrainVertex(tr, trCol.ToVector4(), new Vector2(((x - y)+2) * 0.5f, (x+1 + y) * 0.5f), GetGrassState(x+1, y), GetNormalAt(x+1, y));
+                    Geom[geomOffset++] = new TerrainVertex(br, brCol.ToVector4(), new Vector2(((x - y)+1) * 0.5f, (x + y + 2) * 0.5f), GetGrassState(x+1, y+1), GetNormalAt(x+1, y+1));
+                    Geom[geomOffset++] = new TerrainVertex(bl, blCol.ToVector4(), new Vector2((x - y) * 0.5f, (x + y + 1) * 0.5f), GetGrassState(x, y+1), GetNormalAt(x, y+1));
                 }
             }
 
@@ -204,6 +264,13 @@ namespace FSO.LotView.Components
                 TGridIndexBuffer.SetData(TGridIndices);
                 TGridPrimitives = TGridIndices.Length / 2;
             }
+        }
+
+        private float GetGrassState(int x, int y)
+        {
+            var offset = (y - 1) * Size.Width + x - 1;
+            if (offset < 0) return 1;
+            return GrassState[offset] / 255f;
         }
 
         private int[] GetGridIndicesForArea(Rectangle area, int quads)
@@ -258,12 +325,16 @@ namespace FSO.LotView.Components
         public override void Draw(GraphicsDevice device, WorldState world){
             if (TerrainDirty || VertexBuffer == null) RegenTerrain(device, world, Bp);
             if (VertexBuffer == null) return;
+            device.DepthStencilState = DepthStencilState.Default;
             PPXDepthEngine.RenderPPXDepth(Effect, true, (depthMode) =>
             {
             Effect.Parameters["LightGreen"].SetValue(LightGreen.ToVector4());
             Effect.Parameters["DarkGreen"].SetValue(DarkGreen.ToVector4());
             Effect.Parameters["DarkBrown"].SetValue(DarkBrown.ToVector4());
             Effect.Parameters["LightBrown"].SetValue(LightBrown.ToVector4());
+                var light = new Vector3(0.3f, 1, -0.3f);
+                //light.Normalize();
+            Effect.Parameters["LightVec"]?.SetValue(light);
             Effect.Parameters["Level"].SetValue((float)0);
             Effect.Parameters["UseTexture"].SetValue(false);
             Effect.Parameters["ScreenSize"].SetValue(new Vector2(device.Viewport.Width, device.Viewport.Height) / world.PreciseZoom);
@@ -283,10 +354,17 @@ namespace FSO.LotView.Components
             device.SetVertexBuffer(VertexBuffer);
             device.Indices = IndexBuffer;
 
+            var tex = world._2D.GetTexture(Content.Content.Get().WorldFloors.Get(429).Near.Frames[0]);
+            Effect.Parameters["UseTexture"].SetValue(true);
+            Effect.Parameters["IgnoreColor"].SetValue(true);
             Effect.CurrentTechnique = Effect.Techniques["DrawBase"];
+
+            Bp.FloorGeom.DrawFloor(device, Effect, world);
+
+
             var pass = Effect.CurrentTechnique.Passes[WorldConfig.Current.PassOffset];
             pass.Apply();
-            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, NumPrimitives);
+            //device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, NumPrimitives);
 
             int grassScale;
             float grassDensity;
@@ -306,6 +384,8 @@ namespace FSO.LotView.Components
                     break;
             }
 
+            //    grassScale = 0;
+
             grassDensity *= GrassDensityScale;
 
             if (BladePrimitives > 0)
@@ -323,7 +403,7 @@ namespace FSO.LotView.Components
                     }
                 }
                 var depth = device.DepthStencilState;
-                device.DepthStencilState = DepthStencilState.None;
+                //device.DepthStencilState = DepthStencilState.None;
                 device.Indices = BladeIndexBuffer;
                 for (int i = 0; i < grassNum; i++)
                 {

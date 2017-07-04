@@ -327,7 +327,8 @@ namespace FSO.HIT
             {
                 case 0x12: //patch, switch active track
                 case 50:
-                    Patch = audContent.GetPatch((uint)value, ResGroup);
+                    var replacePatch = audContent.GetPatch((uint)value, ResGroup);
+                    if (replacePatch != null) Patch = replacePatch; //river loop seems to try to load an invalid patch?
                     break;
             }
         }

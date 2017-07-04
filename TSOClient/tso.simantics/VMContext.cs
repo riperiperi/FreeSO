@@ -1253,7 +1253,7 @@ namespace FSO.SimAntics
             if (VM.UseWorld)
             {
                 World.State.WorldSize = input.Architecture.Width;
-                Blueprint.Terrain = new TerrainComponent(new Rectangle(1, 1, input.Architecture.Width - 2, input.Architecture.Height - 2), Blueprint);
+                Blueprint.Terrain = new TerrainComponent(new Rectangle(0, 0, input.Architecture.Width, input.Architecture.Height), Blueprint);
                 Blueprint.Terrain.Initialize(this.World.State.Device, this.World.State);
 
                 World.InitBlueprint(Blueprint);

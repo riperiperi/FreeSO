@@ -39,13 +39,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             if (IffData)
             {
-                vm.SetGlobalValue(10, JobLevel); //set house number
                 var iff = new IffFile();
                 using (var stream = new MemoryStream(XMLData))
                 {
                     iff.Read(stream);
                 }
-                var activator = new VMTS1Activator(vm, vm.Context.World);
+                var activator = new VMTS1Activator(vm, vm.Context.World, JobLevel);
                 var blueprint = activator.LoadFromIff(iff);
                 vm.VerifyFamily();
             }

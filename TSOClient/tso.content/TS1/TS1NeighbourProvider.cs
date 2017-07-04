@@ -21,6 +21,7 @@ namespace FSO.Content.TS1
         public NGBH Neighborhood;
         public Dictionary<short, FAMI> FamilyForHouse = new Dictionary<short, FAMI>();
         public Content ContentManager;
+        public TS1GameState GameState = new TS1GameState();
 
         public TS1NeighborhoodProvider(Content contentManager)
         {
@@ -99,5 +100,12 @@ namespace FSO.Content.TS1
         {
             return GetHouse(id)?.Get<BMP>(512); //roof on
         }
+    }
+
+    public class TS1GameState
+    {
+        public FAMI ActiveFamily;
+        public uint DowntownSimGUID;
+        public short LotTransitInfo;
     }
 }

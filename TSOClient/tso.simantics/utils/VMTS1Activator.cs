@@ -1,4 +1,5 @@
-﻿using FSO.Files.Formats.IFF;
+﻿using FSO.Content.Model;
+using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.LotView;
 using FSO.LotView.Components;
@@ -26,19 +27,49 @@ namespace FSO.SimAntics.Utils
             0x99197314, //go magictown
         };
 
+        public static Dictionary<int, TerrainType> HouseNumToType = new Dictionary<int, TerrainType>
+        {
+            { 28, TerrainType.SAND },
+            { 29, TerrainType.SAND },
+
+            { 40, TerrainType.SNOW },
+            { 41, TerrainType.SNOW },
+            { 42, TerrainType.SNOW },
+
+            { 46, TerrainType.SAND },
+            { 47, TerrainType.SAND },
+            { 48, TerrainType.SAND },
+
+            { 90, TerrainType.TS1DarkGrass },
+            { 91, TerrainType.TS1DarkGrass },
+            { 92, TerrainType.TS1DarkGrass },
+            { 93, TerrainType.TS1DarkGrass },
+            { 94, TerrainType.TS1DarkGrass },
+            { 95, TerrainType.TS1AutumnGrass },
+            { 96, TerrainType.TS1AutumnGrass },
+            { 99, TerrainType.TS1Cloud }
+        };
+
         private VM VM;
         private LotView.World World;
         private Blueprint Blueprint;
+        private int Size;
+        private short HouseNumber;
 
-        public VMTS1Activator(VM vm, LotView.World world)
+        public VMTS1Activator(VM vm, LotView.World world, short hn)
         {
             this.VM = vm;
             this.World = world;
+            HouseNumber = hn;
         }
 
         public Blueprint LoadFromIff(IffFile iff)
         {
-            var size = 64; //ts1 lots are fixed size
+            var simi = iff.Get<SIMI>(1);
+
+            Size = simi.GlobalData[23];
+            var type = simi.GlobalData[35];
+            var size = Size; //ts1 lots are 64x64... but we convert them into dynamic size.
             if (VM.UseWorld) this.Blueprint = new Blueprint(size, size);
             VM.Entities = new List<VMEntity>();
             VM.Scheduler = new Engine.VMScheduler(VM);
@@ -47,8 +78,23 @@ namespace FSO.SimAntics.Utils
             VM.Context.Blueprint = Blueprint;
             VM.Context.Architecture = new VMArchitecture(size, size, Blueprint, VM.Context);
 
+            VM.GlobalState = simi.GlobalData;
+
+            VM.GlobalState[20] = 255; //Game Edition. Basically, what "expansion packs" are running. Let's just say all of them.
+            VM.GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.
+            VM.GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
+
+            VM.SetGlobalValue(10, HouseNumber); //set house number
+
+            TerrainType ttype = TerrainType.GRASS;
+            if (!HouseNumToType.TryGetValue(HouseNumber, out ttype))
+                ttype = TerrainType.GRASS;
+            VM.Context.Architecture.Terrain.LightType = (ttype == TerrainType.SAND) ? TerrainType.GRASS : ttype;
+            VM.Context.Architecture.Terrain.DarkType = ttype;
+
             var floorM = iff.Get<FLRm>(1)?.Entries ?? iff.Get<FLRm>(0)?.Entries ?? new List<WALmEntry>();
             var wallM = iff.Get<WALm>(1)?.Entries ?? iff.Get<WALm>(0)?.Entries ?? new List<WALmEntry>();
+
             var floorDict = BuildFloorDict(floorM);
             var wallDict = BuildWallDict(wallM);
 
@@ -72,7 +118,7 @@ namespace FSO.SimAntics.Utils
                 arch.Walls[1] = RemapWalls(DecodeWalls(iff.Get<ARRY>(102).TransposeData), wallDict, floorDict);
             }
             //objects as 103
-            arch.Terrain.GrassState = iff.Get<ARRY>(6).TransposeData.Select(x => (byte)(127-x)).ToArray();
+            arch.Terrain.GrassState = iff.Get<ARRY>(6).TransposeData.Select(x => (byte)(127 - x)).ToArray();
             //arch.Terrain.DarkType = Content.Model.TerrainType.SAND;
             //arch.Terrain.LightType = Content.Model.TerrainType.GRASS;
             arch.SignalTerrainRedraw();
@@ -81,31 +127,40 @@ namespace FSO.SimAntics.Utils
             var pools = iff.Get<ARRY>(9).TransposeData;
             var water = iff.Get<ARRY>(10).TransposeData;
 
-            for (int i=0; i<pools.Length; i++)
+            for (int i = 0; i < pools.Length; i++)
             {
                 //pools in freeso are slightly different
                 if (pools[i] != 0xff && pools[i] != 0x0) arch.Floors[0][i].Pattern = 65535;
                 if (water[i] != 0xff && water[i] != 0x0) arch.Floors[0][i].Pattern = 65534;
             }
 
+            arch.Floors[0] = ResizeFloors(arch.Floors[0], size);
+            arch.Floors[1] = ResizeFloors(arch.Floors[1], size);
+            arch.Walls[0] = ResizeWalls(arch.Walls[0], size);
+            arch.Walls[1] = ResizeWalls(arch.Walls[1], size);
+            arch.Terrain.GrassState = ResizeGrass(arch.Terrain.GrassState, size);
+            arch.Terrain.Heights = ResizeGrass(DecodeHeights(iff.Get<ARRY>(0).TransposeData), size);
+            arch.Terrain.RegenerateCenters();
+
             if (VM.UseWorld)
             {
                 World.State.WorldSize = size;
                 Blueprint.Terrain = CreateTerrain(size);
+                Blueprint.Altitude = arch.Terrain.Heights;
             }
 
             arch.RebuildWallsAt();
 
             arch.RegenRoomMap();
             VM.Context.RegeneratePortalInfo();
-            
-            
+
+
             var objm = iff.Get<OBJM>(1);
 
             var objt = iff.Get<OBJT>(0);
             int j = 0;
 
-            for (int i=0; i< objm.IDToOBJT.Length; i+=2)
+            for (int i = 0; i < objm.IDToOBJT.Length; i += 2)
             {
                 if (objm.IDToOBJT[i] == 0) continue;
                 MappedObject target;
@@ -114,7 +169,7 @@ namespace FSO.SimAntics.Utils
                 target.Name = entry.Name;
                 target.GUID = entry.GUID;
 
-                Console.WriteLine((objm.IDToOBJT[i]) + ": " + objt.Entries[objm.IDToOBJT[i+1]-1].Name);
+                Console.WriteLine((objm.IDToOBJT[i]) + ": " + objt.Entries[objm.IDToOBJT[i + 1] - 1].Name);
             }
 
             var objFlrs = new ushort[][] { DecodeObjID(iff.Get<ARRY>(3)?.TransposeData), DecodeObjID(iff.Get<ARRY>(103)?.TransposeData) };
@@ -219,6 +274,72 @@ namespace FSO.SimAntics.Utils
             return this.Blueprint;
         }
 
+        private FloorTile[] ResizeFloors(FloorTile[] floors, int size)
+        {
+            if (size >= 64) return floors;
+            var result = new FloorTile[size * size];
+            int iS = 0;
+            int iD = 0;
+            for (int y=0; y<64; y++)
+            {
+                if (y >= size) return result;
+                for (int x=0; x<64; x++)
+                {
+                    if (x < size) result[iD++] = floors[iS];
+                    iS++;
+                }
+                
+            }
+            return result;
+        }
+
+        private WallTile[] ResizeWalls(WallTile[] walls, int size)
+        {
+            if (size >= 64) return walls;
+            var result = new WallTile[size * size];
+            int iS = 0;
+            int iD = 0;
+            for (int y = 0; y < 64; y++)
+            {
+                if (y >= size) return result;
+                for (int x = 0; x < 64; x++)
+                {
+                    if (x < size) result[iD++] = walls[iS];
+                    iS++;
+                }
+            }
+            return result;
+        }
+
+        private byte[] ResizeGrass(byte[] data, int size)
+        {
+            if (size >= 64) return data;
+            var result = new byte[size * size];
+            int iS = 0;
+            int iD = 0;
+            for (int y = 0; y < 64; y++)
+            {
+                if (y >= size) return result;
+                for (int x = 0; x < 64; x++)
+                {
+                    if (x < size) result[iD++] = data[iS];
+                    iS++;
+                }
+            }
+            return result;
+        }
+
+        private byte[] DecodeHeights(byte[] heights)
+        {
+            var result = new byte[heights.Length / 4];
+            int j = 0;
+            for (int i = 0; i < heights.Length; i += 4)
+            {
+                result[j++] = heights[i+1];
+            }
+            return result;
+        }
+
         private FloorTile[] RemapFloors(FloorTile[] floors, Dictionary<byte, ushort> dict)
         {
             for (int i=0; i<floors.Length; i++)
@@ -313,7 +434,7 @@ namespace FSO.SimAntics.Utils
 
         private TerrainComponent CreateTerrain(int size)
         {
-            var terrain = new TerrainComponent(new Rectangle(1, 1, size - 2, size - 2), Blueprint);
+            var terrain = new TerrainComponent(new Rectangle(0, 0, size, size), Blueprint);
             this.InitWorldComponent(terrain);
             return terrain;
         }

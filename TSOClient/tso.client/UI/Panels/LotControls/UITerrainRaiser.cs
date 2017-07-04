@@ -25,7 +25,7 @@ using FSO.Common;
 
 namespace FSO.Client.UI.Panels.LotControls
 {
-    public class UIWallPlacer : UICustomLotControl
+    public class UITerrainRaiser : UICustomLotControl
     {
         VMMultitileGroup WallCursor;
         VM vm;
@@ -34,56 +34,29 @@ namespace FSO.Client.UI.Panels.LotControls
 
         private bool Drawing;
         private Point StartPosition;
-        private int DrawDir;
-        private int DrawLength;
-        private Point EndPosition;
 
-        private ushort DrawPattern;
-        private ushort DrawStyle;
-        private ushort Pattern;
-        private ushort Style;
+        private byte StartTerrainHeight;
+        private int StartMousePosition;
+        private Point EndMousePosition;
 
         private VMArchitectureCommand LastCmd;
         private bool WasDown;
 
-        private Point[] DirUnits =
+        public UITerrainRaiser(VM vm, LotView.World world, UILotControl parent, List<int> parameters)
         {
-            new Point(1, 0),
-            new Point(1, 1),
-            new Point(0, 1),
-            new Point(-1, 1),
-            new Point(-1, 0),
-            new Point(-1, -1),
-            new Point(0, -1),
-            new Point(1, -1),
-        };
-
-        public UIWallPlacer(VM vm, LotView.World world, UILotControl parent, List<int> parameters)
-        {
-            Pattern = (ushort)parameters[0];
-            Style = (ushort)parameters[1];
-            if (Style == 1)
-            {
-                DrawPattern = 255;
-                DrawStyle = 255;
-            } else
-            {
-                DrawPattern = Pattern;
-                DrawStyle = Style;
-            }
-
             this.vm = vm;
             World = parent.World;
             Parent = parent;
-            WallCursor = vm.Context.CreateObjectInstance(0x00000439, LotTilePos.OUT_OF_WORLD, FSO.LotView.Model.Direction.NORTH, true);
+            WallCursor = vm.Context.CreateObjectInstance(0x2F39B7A6, LotTilePos.OUT_OF_WORLD, FSO.LotView.Model.Direction.NORTH, true);
 
             ((ObjectComponent)WallCursor.Objects[0].WorldUI).ForceDynamic = true;
         }
 
-        //0: wall
-        //1: bulldoze
-        //2: paint
-        //3: rect
+        //0: up
+        //1: down
+        //2: error
+        //3: anchor
+        //4: level
         public void SetCursorGraphic(short id)
         {
             WallCursor.Objects[0].SetValue(VMStackObjectVariable.Graphic, id);
@@ -98,6 +71,9 @@ namespace FSO.Client.UI.Panels.LotControls
                 Drawing = true;
                 var tilePos = World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
                 StartPosition = new Point((int)Math.Round(tilePos.X), (int)Math.Round(tilePos.Y));
+                var terrain = vm.Context.Architecture.Terrain;
+                StartTerrainHeight = terrain.Heights[StartPosition.Y*terrain.Width + StartPosition.X];
+                StartMousePosition = (int)(state.MouseState.Y - World.State.WorldSpace.GetScreenOffset().Y);
             }
         }
 
@@ -107,45 +83,34 @@ namespace FSO.Client.UI.Panels.LotControls
             {
                 var cmds = new List<VMArchitectureCommand>();
 
-                if (state.ShiftDown)
-                {
-                    if (StartPosition != EndPosition)
-                    {
-                        int smallX = Math.Min(StartPosition.X, EndPosition.X);
-                        int smallY = Math.Min(StartPosition.Y, EndPosition.Y);
-                        int bigX = Math.Max(StartPosition.X, EndPosition.X);
-                        int bigY = Math.Max(StartPosition.Y, EndPosition.Y);
+                var mpos = (int)(state.MouseState.Y - World.State.WorldSpace.GetScreenOffset().Y);
+                var mod = (StartMousePosition - mpos) / (15 / (1 << (3 - (int)World.State.Zoom)));
 
-                        cmds.Add(new VMArchitectureCommand
-                        {
-                            Type = VMArchitectureCommandType.WALL_RECT,
-                            level = World.State.Level,
-                            pattern = Pattern,
-                            style = Style,
-                            x = smallX,
-                            y = smallY,
-                            x2 = bigX - smallX,
-                            y2 = bigY - smallY
-                        });
-                    }
-                }
-                else
+                if (mod != 0 || (state.CtrlDown))
                 {
-                    if (DrawLength > 0) cmds.Add(new VMArchitectureCommand {
-                        Type = (state.CtrlDown) ?
-                            VMArchitectureCommandType.WALL_DELETE:VMArchitectureCommandType.WALL_LINE,
-                        level = World.State.Level, pattern = Pattern, style = Style, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
+                    var newHeight = StartTerrainHeight + mod;
+
+                    cmds.Add(new VMArchitectureCommand
+                    {
+                        Type = VMArchitectureCommandType.TERRAIN_RAISE,
+                        x = StartPosition.X,
+                        y = StartPosition.Y,
+                        level = (sbyte)newHeight,
+                        pattern = (ushort)((state.CtrlDown)?1:0)
+                    });
+
                 }
+
                 if (cmds.Count > 0 && (Parent.ActiveEntity == null || vm.Context.Architecture.LastTestCost <= Parent.ActiveEntity.TSOState.Budget.Value))
                 {
                     vm.SendCommand(new VMNetArchitectureCmd
                     {
                         Commands = new List<VMArchitectureCommand>(cmds)
                     });
-
-                    //vm.Context.Architecture.RunCommands(cmds);
+                    
                     HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolPlace);
-                } else HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolUp);
+                }
+                else HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolUp);
             }
             Drawing = false;
         }
@@ -159,30 +124,19 @@ namespace FSO.Client.UI.Panels.LotControls
             cmds.Clear();
             if (Drawing)
             {
-                var diff = cursor - StartPosition;
-                DrawLength = (int)Math.Round(Math.Sqrt(diff.X * diff.X + diff.Y * diff.Y));
-                DrawDir = (int)DirectionUtils.PosMod(Math.Round(Math.Atan2(diff.Y, diff.X) / (Math.PI / 4)), 8);
-                
+                cursor = StartPosition;
+                var mpos = (int)(state.MouseState.Y - World.State.WorldSpace.GetScreenOffset().Y);
+                var mod = (StartMousePosition - mpos) / (15 / (1 << (3 - (int)World.State.Zoom)));
+                var newHeight = StartTerrainHeight + mod;
 
-                if (state.ShiftDown)
+                cmds.Add(new VMArchitectureCommand
                 {
-                    EndPosition = cursor;
-                    int smallX = Math.Min(StartPosition.X, EndPosition.X);
-                    int smallY = Math.Min(StartPosition.Y, EndPosition.Y);
-                    int bigX = Math.Max(StartPosition.X, EndPosition.X);
-                    int bigY = Math.Max(StartPosition.Y, EndPosition.Y);
-                    cmds.Add(new VMArchitectureCommand { Type = VMArchitectureCommandType.WALL_RECT, level = World.State.Level, pattern = DrawPattern, style = DrawStyle,
-                        x = smallX, y = smallY,
-                        x2 = bigX-smallX, y2 = bigY-smallY
-                    });
-                }
-                else
-                {
-                    cursor = StartPosition + new Point(DirUnits[DrawDir].X * DrawLength, DirUnits[DrawDir].Y * DrawLength);
-                    cmds.Add(new VMArchitectureCommand { Type = (state.CtrlDown) ?
-                            VMArchitectureCommandType.WALL_DELETE : VMArchitectureCommandType.WALL_LINE,
-                        level = World.State.Level, pattern = DrawPattern, style = DrawStyle, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
-                }
+                    Type = VMArchitectureCommandType.TERRAIN_RAISE,
+                    x = StartPosition.X,
+                    y = StartPosition.Y,
+                    level = (sbyte)newHeight,
+                    pattern = (ushort)((state.CtrlDown) ? 1 : 0)
+                });
             }
 
             if (cmds.Count > 0)
@@ -198,7 +152,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 {
                     var disallowed = Parent.ActiveEntity != null && cost > Parent.ActiveEntity.TSOState.Budget.Value;
                     state.UIState.TooltipProperties.Show = true;
-                    state.UIState.TooltipProperties.Color = disallowed?Color.DarkRed:Color.Black;
+                    state.UIState.TooltipProperties.Color = disallowed ? Color.DarkRed : Color.Black;
                     state.UIState.TooltipProperties.Opacity = 1;
                     state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X, state.MouseState.Y);
                     state.UIState.Tooltip = (cost < 0) ? ("-$" + (-cost)) : ("$" + cost);
@@ -225,7 +179,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 }
             }
 
-            WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, (World.State.Level-1)*2.95f), Direction.NORTH, vm.Context);
+            WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, (World.State.Level - 1) * 2.95f), Direction.NORTH, vm.Context);
 
             if (state.ShiftDown) SetCursorGraphic(3);
             else if (state.CtrlDown) SetCursorGraphic(1);

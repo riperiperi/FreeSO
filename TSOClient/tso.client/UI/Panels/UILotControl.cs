@@ -339,7 +339,7 @@ namespace FSO.Client.UI.Panels
                 {
                     VMEntity obj;
                     //get new pie menu, make new pie menu panel for it
-                    var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+                    var tilePos = World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
 
                     LotTilePos targetPos = LotTilePos.FromBigTile((short)tilePos.X, (short)tilePos.Y, World.State.Level);
                     if (vm.Context.SolidToAvatars(targetPos).Solid) targetPos = LotTilePos.OUT_OF_WORLD;
@@ -718,7 +718,7 @@ namespace FSO.Client.UI.Panels
             {
                 World.State.DynamicCutaway = (WallsMode == 1);
                 //first we need to cycle the rooms that are being cutaway. Keep this up even if we're in all-cut mode.
-                var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+                var mouseTilePos = World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
                 var roomHover = vm.Context.GetRoomAt(LotTilePos.FromBigTile((short)(mouseTilePos.X), (short)(mouseTilePos.Y), World.State.Level));
                 var outside = (vm.Context.RoomInfo[roomHover].Room.IsOutside);
                 if (!outside && !CutRooms.Contains(roomHover))

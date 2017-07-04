@@ -96,6 +96,7 @@ namespace FSO.SimAntics
 
         public VMArchitecture(int width, int height, Blueprint blueprint, VMContext context)
         {
+            DisableClip = context.VM?.TS1 == true;
             this.Context = context;
             this.Width = width;
             this.Height = height;
@@ -318,17 +319,26 @@ namespace FSO.SimAntics
                 for (int i = 1; i < Stories; i++)
                     RegenerateSupported(i + 1);
             }
+
+            if (TerrainDirty && VM.UseWorld)
+            {
+                WorldUI.Altitude = Terrain.Heights;
+                Terrain.RegenerateCenters();
+                WorldUI.AltitudeCenters = Terrain.Centers;
+                WorldUI.Terrain.UpdateTerrain(Terrain.LightType, Terrain.DarkType, Terrain.Heights, Terrain.GrassState);
+                TerrainDirty = false;
+            }
+
             if (VM.UseWorld && Redraw)
             {
                 LastTestCost = SimulateCommands(Commands, true);
                 WorldUI.SignalWallChange();
                 WorldUI.SignalFloorChange();
-            }
-
-            if (TerrainDirty && VM.UseWorld)
-            {
-                WorldUI.Terrain.UpdateTerrain(Terrain.LightType, Terrain.DarkType, Terrain.Heights, Terrain.GrassState);
-                TerrainDirty = false;
+                if (TerrainDirty)
+                {
+                    WorldUI.Terrain.UpdateTerrain(Terrain.LightType, Terrain.DarkType, Terrain.VisHeights, Terrain.VisGrass);
+                    TerrainDirty = false;
+                }
             }
 
             var clock = Context.Clock;
@@ -358,8 +368,8 @@ namespace FSO.SimAntics
                 RealMode = false;
                 var oldWalls = Walls;
                 var oldWallsAt = WallsAt;
-
                 var oldFloors = Floors;
+                Terrain.EnterVis();
 
                 WallsAt = new List<int>[Stories];
                 for (int i = 0; i < Stories; i++)
@@ -383,6 +393,8 @@ namespace FSO.SimAntics
                 Floors = oldFloors;
                 Walls = oldWalls;
                 WallsAt = oldWallsAt;
+                Terrain.ExitVis();
+                if (!visualChange) TerrainDirty = false;
                 RealMode = true;
             }
             return cost;
@@ -510,6 +522,21 @@ namespace FSO.SimAntics
                                 avatar.Name,
                                 Context.VM.GetUserIP(avatar.PersistID),
                                 "placed " + frCount.Total / 2f + " tiles with pattern #" + com.pattern
+                            ));
+                        }
+                        break;
+
+                    case VMArchitectureCommandType.TERRAIN_RAISE:
+                        var height = (byte)com.level;
+                        var terrainCount = VMArchitectureTools.RaiseTerrain(this, new Point(com.x, com.y), height, com.pattern > 0);
+                        if (terrainCount > 0)
+                        {
+                            cost += terrainCount;
+                            if (avatar != null)
+                                Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                                avatar.Name,
+                                Context.VM.GetUserIP(avatar.PersistID),
+                                "modified terrain by " + cost + " units."
                             ));
                         }
                         break;
@@ -674,6 +701,26 @@ namespace FSO.SimAntics
                 }
                 flr++;
             }
+        }
+
+        public void SetTerrainHeight(short tileX, short tileY, byte height)
+        {
+            var off = GetOffset(tileX, tileY);
+
+            Terrain.Heights[off] = height;
+
+            TerrainDirty = true;
+            Redraw = true;
+        }
+
+        public void SetTerrainGrass(short tileX, short tileY, byte grass)
+        {
+            var off = GetOffset(tileX, tileY);
+
+            Terrain.GrassState[off] = grass;
+
+            TerrainDirty = true;
+            Redraw = true;
         }
 
         public void SetWall(short tileX, short tileY, sbyte level, WallTile wall)

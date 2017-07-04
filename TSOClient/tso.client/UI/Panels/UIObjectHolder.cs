@@ -446,7 +446,7 @@ namespace FSO.Client.UI.Panels
                 }
                 else
                 {
-                    var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor) + Holding.TilePosOffset;
+                    var tilePos = World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor) + Holding.TilePosOffset;
                     MoveSelected(tilePos, 1);
                 }
             }
@@ -470,7 +470,7 @@ namespace FSO.Client.UI.Panels
                         Holding.RealEnt = objGroup.BaseObject;
                         Holding.CanDelete = canDelete;
                         Holding.MoveTarget = newHover;
-                        Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+                        Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
                         if (OnPickup != null) OnPickup(Holding, state);
                         //ExecuteEntryPoint(12); //User Pickup
                     }

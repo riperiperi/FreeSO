@@ -238,7 +238,13 @@ namespace FSO.LotView
 
         public void InvalidateCamera()
         {
-            WorldCamera.CenterTile = CenterTile;
+            var ctr = WorldSpace.GetScreenFromTile(CenterTile);
+            ctr.X = (float)Math.Round(ctr.X);
+            ctr.Y = (float)Math.Round(ctr.Y);
+            var test = new Vector2(0.5f);   
+            test *= 1 << (3 - (int)Zoom);
+            var back = WorldSpace.GetTileFromScreen(ctr + test);
+            WorldCamera.CenterTile = back;
             WorldCamera.Zoom = Zoom;
             WorldCamera.Rotation = Rotation;
             WorldCamera.PreciseZoom = PreciseZoom;
@@ -328,16 +334,22 @@ namespace FSO.LotView
             WorldPxHeight = dim.Y;
         }
 
+        public Vector2 GetPointScreenOffset()
+        {
+            var centerPos = GetScreenFromTile(State.CenterTile);
+            var result = new Vector2(-centerPos.X, -centerPos.Y);
+            result.X += (WorldPxWidth / 2.0f);
+            result.Y += (WorldPxHeight / 2.0f);
+            return result;
+        }
+
         /// <summary>
         /// Gets the offset for the screen based on the scroll position
         /// </summary>
         /// <returns></returns>
         public Vector2 GetScreenOffset()
         {
-            var centerPos = GetScreenFromTile(State.CenterTile);
-            var result = new Vector2(-centerPos.X, -centerPos.Y);
-            result.X += (WorldPxWidth / 2.0f);
-            result.Y += (WorldPxHeight / 2.0f);
+            var result = GetPointScreenOffset();
             result.Y -= CadgeBaseLine;
             result.X -= (CadgeWidth / 2.0f);
 

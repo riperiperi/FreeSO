@@ -106,7 +106,7 @@ namespace FSO.Client.UI.Panels
 
             CategoryMap = new Dictionary<UIButton, int>
             {
-                { TerrainButton, 29 },
+                { TerrainButton, 10 },
                 { WaterButton, 5 },
                 { WallButton, 7 },
                 { WallpaperButton, 8 },
@@ -303,7 +303,7 @@ namespace FSO.Client.UI.Panels
             {
                 var res = item.Special.Res;
                 var resID = item.Special.ResID;
-                if (res.GetName(resID) != "")
+                if (res != null && res.GetName(resID) != "")
                 {
                     QueryPanel.SetInfo(res.GetIcon(resID), res.GetName(resID), res.GetDescription(resID), res.GetPrice(resID));
                     QueryPanel.Mode = 1;

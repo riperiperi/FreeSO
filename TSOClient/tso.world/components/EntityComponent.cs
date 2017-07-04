@@ -4,12 +4,14 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using FSO.LotView.Model;
 
 namespace FSO.LotView.Components
 {
     public abstract class EntityComponent : WorldComponent
     {
         public Texture2D Headline;
+        public Blueprint blueprint;
 
         public short ObjectID; //set this any time it changes so that hit test works.
 
@@ -42,6 +44,7 @@ namespace FSO.LotView.Components
             set
             {
                 _Position = value;
+                if (blueprint != null) _Position.Z += blueprint.InterpAltitude(_Position);
                 OnPositionChanged();
                 _WorldDirty = true;
             }

@@ -134,7 +134,7 @@ namespace FSO.SimAntics
 
         public override Vector3 VisualPosition
         {
-            get { return (UseWorld) ? WorldUI.Position : new Vector3(); }
+            get { return (UseWorld) ? ((AvatarComponent)WorldUI).StoredPosition : new Vector3(); }
             set { if (UseWorld) WorldUI.Position = value; }
         }
         public override float RadianDirection
@@ -166,7 +166,8 @@ namespace FSO.SimAntics
         public void SubmitHITVars(HIT.HITThread thread)
         {
             if (thread.ObjectVar == null) return;
-            thread.ObjectVar[0] = GetPersonData(VMPersonDataVariable.Gender);
+            var age = GetPersonData(VMPersonDataVariable.PersonsAge);
+            thread.ObjectVar[0] = (age < 18 && age != 0)?2:GetPersonData(VMPersonDataVariable.Gender);
             thread.ObjectVar[2] = Math.Min(100, GetPersonData(VMPersonDataVariable.CookingSkill)/10);
             thread.ObjectVar[5] = Math.Min(100, GetPersonData(VMPersonDataVariable.CreativitySkill)/10);
             //6 unknown
@@ -346,13 +347,15 @@ namespace FSO.SimAntics
         public void InitBodyData(VMContext context)
         {
             //init walking strings
-            var GlobWalk = context.Globals.Resource.Get<STR>(150);
+            var age = PersonData[(int)VMPersonDataVariable.PersonsAge];
+            var child = age == 0 || age < 18;
+            var GlobWalk = context.Globals.Resource.Get<STR>((ushort)(child?151:150));
             for (int i = 0; i < GlobWalk.Length; i++)
             {
                 WalkAnimations[i] = GlobWalk.GetString(i);
             }
 
-            var GlobSwim = context.Globals.Resource.Get<STR>(158);
+            var GlobSwim = context.Globals.Resource.Get<STR>((ushort)(child?160:158));
             for (int i = 0; i < GlobSwim.Length; i++)
             {
                 SwimAnimations[i] = GlobSwim.GetString(i);
@@ -726,6 +729,10 @@ namespace FSO.SimAntics
             VMTSOJobInfo jobInfo = null;
             switch (variable)
             {
+                case VMPersonDataVariable.TS1ScalingSim:
+                    if (Thread?.Context?.VM?.TS1 == true && VM.UseWorld)
+                        ((AvatarComponent)WorldUI).Scale = value / 100f;
+                    break;
                 case VMPersonDataVariable.OnlineJobID:
                     if (value > 4) return false;
                     if (!((VMTSOAvatarState)TSOState).JobInfo.ContainsKey(value))

@@ -105,10 +105,13 @@ namespace FSO.IDE.EditorComponent.Primitives
             panel.Controls.Add(new OpComboControl(master, escope, Operand, "Animation Source:", "Source", new OpStaticNamedPropertyProvider(
                 new string[] { "This Tree's Object", "Global", "Person", "Misc" }, 0)));
 
+            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Expected Events:", "ExpectedEventCount", new OpStaticValueBoundsProvider(0, 255)));
             panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags:", new OpFlag[] {
                 new OpFlag("Play Backwards", "PlayBackwards"),
                 new OpFlag("Place Events in Local", "StoreFrameInLocal")
                 }));
+
+            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Target Local:", "LocalEventNumber", new OpStaticValueBoundsProvider(0, 255)));
         }
     }
 

@@ -32,11 +32,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             if (vm.TS1)
             {
-
+                if (vm.CurrentFamily == null) return true;
+                var gameState = Content.Content.Get().Neighborhood.GameState;
                 var control = vm.Entities.FirstOrDefault(x => x is VMAvatar && !((VMAvatar)x).IsPet && ((VMAvatar)x).GetPersonData(VMPersonDataVariable.TS1FamilyNumber) == vm.CurrentFamily?.ChunkID);
                 if (control == null)
                 {
-                    control = vm.Context.CreateObjectInstance(0x32AA2056, LotTilePos.OUT_OF_WORLD, Direction.NORTH)?.BaseObject;
+                    control = vm.Context.CreateObjectInstance((gameState.DowntownSimGUID == 0)?0x32AA2056:gameState.DowntownSimGUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH)?.BaseObject;
                     control?.SetPosition(LotTilePos.FromBigTile(1, 1, 1), Direction.NORTH, vm.Context);
                 }
                 if (control != null)
