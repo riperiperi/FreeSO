@@ -68,10 +68,13 @@ namespace FSO.Client.UI.Panels.LotControls
             if (!Drawing)
             {
                 HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolDown);
-                Drawing = true;
+
                 var tilePos = World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
                 StartPosition = new Point((int)Math.Round(tilePos.X), (int)Math.Round(tilePos.Y));
                 var terrain = vm.Context.Architecture.Terrain;
+
+                if (StartPosition.Y >= terrain.Height || StartPosition.X >= terrain.Width || StartPosition.X < 0 || StartPosition.Y < 0) return;
+                Drawing = true;
                 StartTerrainHeight = terrain.Heights[StartPosition.Y*terrain.Width + StartPosition.X];
                 StartMousePosition = (int)(state.MouseState.Y - World.State.WorldSpace.GetScreenOffset().Y);
             }

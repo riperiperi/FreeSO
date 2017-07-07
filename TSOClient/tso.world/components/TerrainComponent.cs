@@ -388,6 +388,8 @@ namespace FSO.LotView.Components
 
             grassDensity *= GrassDensityScale;
 
+                if (!Bp.FloorGeom.SetGrassIndices(device, Effect, world)) return;
+
             if (BladePrimitives > 0)
             {
                 Effect.CurrentTechnique = Effect.Techniques["DrawBlades"];
@@ -403,8 +405,7 @@ namespace FSO.LotView.Components
                     }
                 }
                 var depth = device.DepthStencilState;
-                //device.DepthStencilState = DepthStencilState.None;
-                device.Indices = BladeIndexBuffer;
+                device.DepthStencilState = DepthStencilState.DepthRead;
                 for (int i = 0; i < grassNum; i++)
                 {
                     Effect.Parameters["World"].SetValue(Matrix.Identity * Matrix.CreateTranslation(0, i * (20 / 522f) * grassScale, 0));

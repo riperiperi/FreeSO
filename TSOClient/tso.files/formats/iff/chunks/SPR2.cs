@@ -283,6 +283,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             var hasAlpha = (this.Flags & 0x04) == 0x04;
 
             var numPixels = this.Width * this.Height;
+            var ow = Width;
             var fc = Parent.FloorCopy;
             if (fc)
             {
@@ -406,7 +407,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                         }
 
                         /** If row isnt filled in, the rest is transparent **/
-                        while (x < Width)
+                        while (x < ow)
                         {
                             var offset = (y * Width) + x;
                             if (hasZBuffer)
@@ -480,6 +481,9 @@ namespace FSO.Files.Formats.IFF.Chunks
             for (int i=0; i<PixelData.Length; i++)
             {
                 PixelData[i].A = (ZBufferData[i] < 32)?(byte)0:ZBufferData[i];
+                PixelData[i].R = (byte)((PixelData[i].R * PixelData[i].A) / 255);
+                PixelData[i].G = (byte)((PixelData[i].G * PixelData[i].A) / 255);
+                PixelData[i].B = (byte)((PixelData[i].B * PixelData[i].A) / 255);
             }
         }
 
@@ -506,7 +510,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     var xp = (x + hw) % Width;
                     var yp = (y + hh) % Height;
                     var rep = PixelData[xp + yp * Width];
-                    if (rep.A > 0) ndat[idx] = rep;
+                    if (rep.A >= 254) ndat[idx] = rep;
                     else ndat[idx] = PixelData[idx];
                     idx++;
                 }

@@ -348,7 +348,7 @@ namespace FSO.SimAntics
         {
             //init walking strings
             var age = PersonData[(int)VMPersonDataVariable.PersonsAge];
-            var child = age == 0 || age < 18;
+            var child = (age == 0 || age < 18) && context.VM.TS1;
             var GlobWalk = context.Globals.Resource.Get<STR>((ushort)(child?151:150));
             for (int i = 0; i < GlobWalk.Length; i++)
             {

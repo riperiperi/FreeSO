@@ -54,10 +54,91 @@ namespace FSO.LotView.Components
                 {
                     var pat = data[j].Pattern;
                     if ((j + 1) % Bp.Width < 2 || (pat == 0 && i > 0)) continue;
-                    lvl.AddTile(pat, (ushort)j);
+                    lvl.AddTile(PatternConvert(pat, (ushort)j, (sbyte)(i+1)), (ushort)j);
                 }
                 lvl.RegenAll(gd);
             }
+        }
+
+        private static Point[] PoolDirections =
+        {
+            new Point(0, -1),
+            new Point(1, -1),
+            new Point(1, 0),
+            new Point(1, 1),
+            new Point(0, 1),
+            new Point(-1, 1),
+            new Point(-1, 0),
+            new Point(-1, -1),
+        };
+
+        private static Dictionary<WorldRotation, Vector4> TexMat = new Dictionary<WorldRotation, Vector4>()
+        {
+            {WorldRotation.TopLeft, new Vector4(1,0,0,1) },
+            {WorldRotation.TopRight, new Vector4(0,1,1,0) },
+            {WorldRotation.BottomRight, new Vector4(1,0,0,1) },
+            {WorldRotation.BottomLeft, new Vector4(0,1,1,0) }
+        };
+
+        private static Dictionary<WorldRotation, Vector4> CounterTexMat = new Dictionary<WorldRotation, Vector4>()
+        {
+            {WorldRotation.TopLeft, new Vector4(1,0,0,1) },
+            {WorldRotation.TopRight, new Vector4(0,1,-1,0) },
+            {WorldRotation.BottomRight, new Vector4(-1,0,0,-1) },
+            {WorldRotation.BottomLeft, new Vector4(0,-1,1,0) }
+        };
+
+        private static Dictionary<WorldZoom, Vector2> TexOffset = new Dictionary<WorldZoom, Vector2>()
+        {
+            {WorldZoom.Near, new Vector2(0, -0.5f/64) },
+            {WorldZoom.Medium, new Vector2(0, -0.5f/32) },
+            {WorldZoom.Far, new Vector2(0, -0.5f/16) },
+        };
+
+        public ushort PatternConvert(ushort pattern, ushort index, sbyte level)
+        {
+            //65520 - 65535 (inclusive): pool tiles
+            //65504 - 65519 (inclusive): water tiles
+            //corners to come later...
+
+            if (pattern < 65534) return pattern;
+            else
+            {
+                //pool tile... check adjacent tiles
+                var x = index % Bp.Width;
+                var y = index / Bp.Width;
+
+                int poolAdj = 0;
+                for (int i = 0; i < PoolDirections.Length; i++)
+                {
+                    var testTile = new Point(x, y) + PoolDirections[i];
+                    if ((testTile.X <= 0 || testTile.X >= Bp.Width - 1) || (testTile.Y <= 0 || testTile.Y >= Bp.Height - 1)
+                        || Bp.GetFloor((short)testTile.X, (short)testTile.Y, level).Pattern == pattern) poolAdj |= 1 << i;
+                }
+
+                var adj = (PoolSegments)poolAdj;
+                ushort spriteNum = 0;
+                if ((adj & PoolSegments.TopRight) > 0) spriteNum |= 1;
+                if ((adj & PoolSegments.TopLeft) > 0) spriteNum |= 2;
+                if ((adj & PoolSegments.BottomLeft) > 0) spriteNum |= 4;
+                if ((adj & PoolSegments.BottomRight) > 0) spriteNum |= 8;
+
+                if (pattern == 65535) spriteNum += 65520;
+                else spriteNum += 65504;
+
+                return spriteNum;
+            }
+        }
+
+        public bool SetGrassIndices(GraphicsDevice gd, Effect e, WorldState state)
+        {
+            var floor = Floors[0];
+            FloorTileGroup grp = null;
+            if (!floor.GroupForTileType.TryGetValue(0, out grp)) return false;
+            var dat = grp.GPUData;
+            if (dat == null) return false;
+            gd.Indices = dat;
+            return true;
         }
 
         public void DrawFloor(GraphicsDevice gd, Effect e, WorldState state)
@@ -66,6 +147,10 @@ namespace FSO.LotView.Components
             //we just need to get the right texture and offset
             var flrContent = Content.Content.Get().WorldFloors;
 
+            e.Parameters["TexOffset"].SetValue(TexOffset[state.Zoom]*-1f);
+            var tmat = TexMat[state.Rotation];
+            e.Parameters["TexMatrix"].SetValue(tmat);
+
             var f = 0;
             foreach (var floor in Floors)
             {
@@ -73,8 +158,10 @@ namespace FSO.LotView.Components
 
                 var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, 2.95f*(f-1)*3, 0);
                 e.Parameters["World"].SetValue(worldmat);
+                e.Parameters["Level"].SetValue((float)(f-1));
                 foreach (var type in floor.GroupForTileType)
                 {
+                    bool pointFilter = false;
                     var dat = type.Value.GPUData;
                     if (dat == null) continue;
                     gd.Indices = dat;
@@ -88,34 +175,97 @@ namespace FSO.LotView.Components
                     }
                     else
                     {
-                        var flr = flrContent.Get(id);
 
-                        if (flr == null) continue;
-
-                        Texture2D SPR;
-                        switch (state.Zoom)
+                        Texture2D SPR = null;
+                        if (id >= 65504)
                         {
-                            case WorldZoom.Far:
-                                SPR = state._2D.GetTexture(flr.Far.Frames[0]);
-                                break;
-                            case WorldZoom.Medium:
-                                SPR = state._2D.GetTexture(flr.Medium.Frames[0]);
-                                break;
-                            default:
-                                SPR = state._2D.GetTexture(flr.Near.Frames[0]);
-                                break;
+                            var pool = id >= 65520;
+                            pointFilter = true;
+                            if (!pool)
+                            {
+                                e.Parameters["UseTexture"].SetValue(false);
+                                e.Parameters["IgnoreColor"].SetValue(false);
+
+                                //quickly draw under the water
+                                var pass2 = e.CurrentTechnique.Passes[WorldConfig.Current.PassOffset];
+                                pass2.Apply();
+                                gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
+
+                                e.Parameters["UseTexture"].SetValue(true);
+                                e.Parameters["IgnoreColor"].SetValue(true);
+                                e.Parameters["World"].SetValue(worldmat * Matrix.CreateTranslation(0, 0.05f, 0));
+                                id -= 65504;
+                            } else
+                            {
+                                id -= 65520;
+                            }
+
+                            e.Parameters["TexMatrix"].SetValue(CounterTexMat[state.Rotation]);
+                            
+                            var rot = (int)state.Rotation;
+                            rot = (4 - rot) % 4;
+                            id = (ushort)(((id << rot) & 15) | (id >> (4 - rot)));
+                            //pools & water are drawn with special logic, and may also be drawn slightly above the ground.
+
+                            int baseSPR;
+                            int frameNum = 0;
+                            switch (state.Zoom)
+                            {
+                                case WorldZoom.Far:
+                                    baseSPR = (pool) ? 0x400 : 0x800;
+                                    frameNum = (pool) ? 0 : 2;
+                                    SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
+                                    break;
+                                case WorldZoom.Medium:
+                                    baseSPR = (pool) ? 0x410 : 0x800;
+                                    frameNum = (pool) ? 0 : 1;
+                                    SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
+                                    break;
+                                default:
+                                    baseSPR = (pool) ? 0x420 : 0x800;
+                                    SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            var flr = flrContent.Get(id);
+
+                            if (flr == null) continue;
+
+                            switch (state.Zoom)
+                            {
+                                case WorldZoom.Far:
+                                    SPR = state._2D.GetTexture(flr.Far.Frames[0]);
+                                    break;
+                                case WorldZoom.Medium:
+                                    SPR = state._2D.GetTexture(flr.Medium.Frames[0]);
+                                    break;
+                                default:
+                                    SPR = state._2D.GetTexture(flr.Near.Frames[0]);
+                                    break;
+                            }
                         }
                         e.Parameters["BaseTex"].SetValue(SPR);
                     }
 
                     var pass = e.CurrentTechnique.Passes[WorldConfig.Current.PassOffset];
                     pass.Apply();
+                    if (pointFilter)
+                    {
+                        gd.SamplerStates[0] = new SamplerState() { Filter = TextureFilter.Point };
+                    }
                     gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
 
                     if (id == 0)
                     {
                         e.Parameters["UseTexture"].SetValue(true);
                         e.Parameters["IgnoreColor"].SetValue(true);
+                    }
+                    if (pointFilter)
+                    {
+                        e.Parameters["World"].SetValue(worldmat);
+                        e.Parameters["TexMatrix"].SetValue(tmat);
                     }
                 }
             }

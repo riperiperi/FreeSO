@@ -11,6 +11,9 @@ float4 DiffuseColor;
 float2 ScreenOffset;
 float GrassProb;
 
+float2 TexOffset;
+float4 TexMatrix;
+
 //LIGHTING
 float4 OutsideLight;
 float4 OutsideDark;
@@ -133,6 +136,7 @@ GrassPSVTX GrassVS(GrassVTX input)
 	output.ModelPos = mul(input.Position, World);
     output.Color = input.Color;
     output.GrassInfo = input.GrassInfo;
+	output.GrassInfo.yz = output.GrassInfo.yz*TexMatrix.xw + output.GrassInfo.zy*TexMatrix.zy + TexOffset;
     output.GrassInfo.w = position.z / position.w;
 	output.Normal = input.Normal;
 
@@ -229,7 +233,7 @@ void BasePSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB :
 		color = depthB;
 	}
 	else {
-		//color = DiffuseColor * LightDot(input.Normal);
+		color = DiffuseColor * LightDot(input.Normal);
 		if (IgnoreColor == false) color *= input.Color;
 		if (UseTexture == true) {
 			color *= tex2D(TexSampler, input.GrassInfo.yz);

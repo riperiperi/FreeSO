@@ -241,7 +241,7 @@ namespace FSO.LotView
             var ctr = WorldSpace.GetScreenFromTile(CenterTile);
             ctr.X = (float)Math.Round(ctr.X);
             ctr.Y = (float)Math.Round(ctr.Y);
-            var test = new Vector2(0.5f);   
+            var test = new Vector2(0.5f, 0);   
             test *= 1 << (3 - (int)Zoom);
             var back = WorldSpace.GetTileFromScreen(ctr + test);
             WorldCamera.CenterTile = back;
