@@ -649,19 +649,26 @@ namespace FSO.SimAntics.Utils
 
         //==== TERRAIN ====
 
-        public static int RaiseTerrain(VMArchitecture target, Point pos, byte height, bool smoothMode)
+        public static int RaiseTerrain(VMArchitecture target, Rectangle pos, byte height, bool smoothMode)
         {
             //does a sort of flood fill from the start point to ensure the raise is valid
             //when any point height is changed its neighbours are checked for the height difference constraint
             int constrain = 5;
             if (smoothMode) constrain = 1;
-            int totalChanges = 1;
+            if (pos.X < 0 || pos.Y < 0 || pos.X >= target.Width || pos.Y >= target.Height) return 0;
 
             var considered = new Dictionary<Point, byte>();
             var stack = new Stack<Point>();
 
-            stack.Push(pos);
-            considered.Add(pos, height);
+            for (int x=0; x<=pos.Width; x++)
+            {
+                for (int y=0; y<=pos.Height; y++)
+                {
+                    var p = pos.Location + new Point(x, y);
+                    stack.Push(p);
+                    considered.Add(p, height);
+                }
+            }
             var tr = target.Terrain;
             var firstDiff = tr.Heights[pos.Y * tr.Width + pos.X] - height;
 
@@ -693,7 +700,7 @@ namespace FSO.SimAntics.Utils
                     var diff = myHeight - ht;
                     if (diff * firstDiff > 0) continue;
 
-                    if (smoothMode) constrain = Math.Min(5, Math.Max(1, (int)Math.Round((a - pos).ToVector2().Length())));
+                    if (smoothMode) constrain = Math.Min(5, Math.Max(1, (int)Math.Round(DistanceToRect(a, pos))));
 
                     if (diff > constrain)
                     {
@@ -718,11 +725,25 @@ namespace FSO.SimAntics.Utils
             //actually change the terrain
             foreach (var change in considered)
             {
+                var changedBy = Math.Abs(target.GetTerrainHeight((short)change.Key.X, (short)change.Key.Y) - change.Value);
                 target.SetTerrainHeight((short)change.Key.X, (short)change.Key.Y, change.Value);
-                target.SetTerrainGrass((short)change.Key.X, (short)change.Key.Y, 255);
+                if (change.Key.X > 0 && change.Key.Y > 0)
+                    target.SetTerrainGrass((short)(change.Key.X-1), (short)(change.Key.Y-1), 
+                        (byte)Math.Min(255, target.GetTerrainGrass((short)(change.Key.X - 1), (short)(change.Key.Y - 1)) + changedBy*64));
             }
 
             return considered.Count;
+        }
+
+        private static double DistanceToRect(Point pt, Rectangle rect)
+        {
+            var xDist = 0;
+            if (pt.X < rect.Left) xDist = pt.X - rect.Left;
+            else if (pt.X > rect.Right) xDist = rect.Right - pt.X;
+            var yDist = 0;
+            if (pt.Y < rect.Top) yDist = pt.Y - rect.Top;
+            else if (pt.Y > rect.Bottom) yDist = rect.Bottom - pt.Y;
+            return Math.Sqrt(xDist * xDist + yDist * yDist);
         }
 
         //==== CUTAWAYS ====

@@ -280,7 +280,7 @@ namespace FSO.LotView
 
             var oldCenter = state.CenterTile;
             state.CenterTile = new Vector2(Blueprint.Width/2, Blueprint.Height/2);
-            state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((576 - state.WorldSpace.WorldPxWidth)*4, (576 - state.WorldSpace.WorldPxHeight)*4) / 2);
+            state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((576 - state.WorldSpace.WorldPxWidth)*4, (576 - state.WorldSpace.WorldPxHeight)*4) / 2, false);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             state.TempDraw = true;
             Blueprint.Cutaway = new bool[Blueprint.Cutaway.Length];
@@ -482,7 +482,7 @@ namespace FSO.LotView
                         break;
                     case BlueprintDamageType.FLOOR_CHANGED:
                     case BlueprintDamageType.WALL_CHANGED:
-                        recacheTerrain = true;
+                        //recacheTerrain = true;
                         recacheFloors = true;
                         recacheWalls = true;
                         Blueprint.RoofComp.ShapeDirty = true;
@@ -498,7 +498,7 @@ namespace FSO.LotView
             //scroll buffer loads in increments of SCROLL_BUFFER
             var newOff = GetScrollIncrement(pxOffset, state);
             var oldCenter = state.CenterTile;
-            state.CenterTile += state.WorldSpace.GetTileFromScreen(newOff-pxOffset); //offset the scroll to the position of the scroll buffer.
+            state.CenterTile += state.WorldSpace.GetTileFromScreen(newOff-pxOffset, false); //offset the scroll to the position of the scroll buffer.
             var tileOffset = state.CenterTile;
 
             pxOffset = newOff;
@@ -547,7 +547,7 @@ namespace FSO.LotView
                 ClearDrawBuffer(StaticObjectsCache);
                 _2d.End(StaticObjectsCache, true);
             }
-
+            
             if (!drawImmediate)
             {
                 state.PrepareLighting();

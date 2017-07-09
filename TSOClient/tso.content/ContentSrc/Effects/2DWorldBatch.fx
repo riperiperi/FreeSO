@@ -462,6 +462,7 @@ void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR
     else {
 		//advanced light
 		float4 projection = mul(float4(v.screenPos.x, v.screenPos.y, d.x*d.y, d.y), iWVP);
+		projection.y -= v.objectID.x;
 		pixel *= lightInterp(projection);
 		pixel.rgb += projection.yzw * 0.00000000001; //monogame keeps trying to optimise out entire matrix columns im like well played guys who needs those right
 		color = pixel;

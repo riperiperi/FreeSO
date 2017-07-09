@@ -236,6 +236,8 @@ namespace FSO.LotView
             InvalidateCamera();
         }
 
+        public float BaseHeight;
+
         public void InvalidateCamera()
         {
             var ctr = WorldSpace.GetScreenFromTile(CenterTile);
@@ -244,7 +246,7 @@ namespace FSO.LotView
             var test = new Vector2(0.5f, 0);   
             test *= 1 << (3 - (int)Zoom);
             var back = WorldSpace.GetTileFromScreen(ctr + test);
-            WorldCamera.CenterTile = back;
+            WorldCamera.CenterTile = new Vector3(back, BaseHeight);
             WorldCamera.Zoom = Zoom;
             WorldCamera.Rotation = Rotation;
             WorldCamera.PreciseZoom = PreciseZoom;
@@ -302,6 +304,7 @@ namespace FSO.LotView
         public float CadgeWidth;
         public float CadgeHeight;
         public float CadgeBaseLine;
+        public float TerrainHeight;
 
         public float TileSin60;
         public float TileSin30;
@@ -384,20 +387,13 @@ namespace FSO.LotView
         /// <returns>Indices of tile at position.</returns>
         public Vector2 GetTileAtPosWithScroll(Vector2 pos)
         {
-            int wallHeight = 0;
-            switch (State.Zoom)
-            {
-                case WorldZoom.Far:
-                    wallHeight = 57;
-                    break;
-                case WorldZoom.Medium:
-                    wallHeight = 115;
-                    break;
-                case WorldZoom.Near:
-                    wallHeight = 231;
-                    break;
-            }
-            return State.CenterTile + GetTileFromScreen(pos - new Vector2((WorldPxWidth / 2.0f), (WorldPxHeight / 2.0f)-wallHeight*(State.Level-1)));
+            return State.CenterTile + GetTileFromScreen(pos - new Vector2((WorldPxWidth / 2.0f), (WorldPxHeight / 2.0f)-TerrainHeight*(State.Level-1)));
+        }
+        
+
+        public Vector2 GetTileFromScreen(Vector2 pos)
+        {
+            return GetTileFromScreen(pos, true);
         }
 
         /// <summary>
@@ -405,9 +401,10 @@ namespace FSO.LotView
         /// </summary>
         /// <param name="pos">The position of the tile.</param>
         /// <returns>Indices of tile at position.</returns>
-        public Vector2 GetTileFromScreen(Vector2 pos) //gets floor tile at a screen position w/o scroll
+        public Vector2 GetTileFromScreen(Vector2 pos, bool respectHeight) //gets floor tile at a screen position w/o scroll
         {
             Vector2 result = new Vector2();
+            if (respectHeight) pos.Y += (State.BaseHeight / 3f) * TerrainHeight;
             switch (State.Rotation)
             {
                 case WorldRotation.TopLeft:
@@ -449,7 +446,6 @@ namespace FSO.LotView
         {
             var screenx = 0.0f;
             var screeny = 0.0f;
-
             switch (State.Rotation)
             {
                 case WorldRotation.TopLeft:
@@ -471,6 +467,8 @@ namespace FSO.LotView
                     screeny = ((-tile.X + tile.Y) * TilePxHeightHalf) - (tile.Z * OneUnitDistance * (float)Math.Cos(Math.PI / 6));
                     break;
             }
+
+            screeny -= (State.BaseHeight / 3f) * TerrainHeight;
 
             return new Vector2(screenx, screeny);
         }
@@ -528,6 +526,7 @@ namespace FSO.LotView
                     CadgeWidth = 34;
                     CadgeHeight = 96;
                     CadgeBaseLine = 87;
+                    TerrainHeight = 59;
                     break;
 
                 case WorldZoom.Medium:
@@ -541,6 +540,7 @@ namespace FSO.LotView
                     CadgeWidth = 68;
                     CadgeHeight = 192;
                     CadgeBaseLine = 174;
+                    TerrainHeight = 118;
                     break;
 
                 case WorldZoom.Near:
@@ -553,9 +553,11 @@ namespace FSO.LotView
                     CadgeWidth = 136;
                     CadgeHeight = 384;
                     CadgeBaseLine = 348;
+                    TerrainHeight = 235;
                     break;
             }
 
+            TerrainHeight *= 300;
             OneUnitDistance = (float)Math.Sqrt(Math.Pow(TilePxWidth, 2) / 2.0);
             TileSin60 = TilePxWidth / (float)Math.Sqrt(5.0);
             TileSin30 = TilePxHeight / (float)Math.Sqrt(5.0);

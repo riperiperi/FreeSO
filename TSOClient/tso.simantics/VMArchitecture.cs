@@ -527,8 +527,13 @@ namespace FSO.SimAntics
                         break;
 
                     case VMArchitectureCommandType.TERRAIN_RAISE:
+                    case VMArchitectureCommandType.TERRAIN_FLATTEN:
                         var height = (byte)com.level;
-                        var terrainCount = VMArchitectureTools.RaiseTerrain(this, new Point(com.x, com.y), height, com.pattern > 0);
+                        Rectangle rect;
+                        if (com.Type == VMArchitectureCommandType.TERRAIN_FLATTEN) rect = new Rectangle(com.x, com.y, com.x2, com.y2);
+                        else rect = new Rectangle(com.x, com.y, 0, 0);
+
+                        var terrainCount = VMArchitectureTools.RaiseTerrain(this, rect, height, com.pattern > 0);
                         if (terrainCount > 0)
                         {
                             cost += terrainCount;
@@ -713,6 +718,13 @@ namespace FSO.SimAntics
             Redraw = true;
         }
 
+        public byte GetTerrainHeight(short tileX, short tileY)
+        {
+            var off = GetOffset(tileX, tileY);
+
+            return Terrain.Heights[off];
+        }
+
         public void SetTerrainGrass(short tileX, short tileY, byte grass)
         {
             var off = GetOffset(tileX, tileY);
@@ -721,6 +733,13 @@ namespace FSO.SimAntics
 
             TerrainDirty = true;
             Redraw = true;
+        }
+
+        public byte GetTerrainGrass(short tileX, short tileY)
+        {
+            var off = GetOffset(tileX, tileY);
+
+            return Terrain.GrassState[off];
         }
 
         public void SetWall(short tileX, short tileY, sbyte level, WallTile wall)

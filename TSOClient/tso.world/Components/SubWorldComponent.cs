@@ -150,7 +150,10 @@ namespace FSO.LotView.Components
         public void DrawArch(GraphicsDevice gd, WorldState parentState)
         {
             var parentScroll = parentState.CenterTile;
+            var parentHeight = parentState.BaseHeight;
+            parentState.BaseHeight = State.BaseHeight;
             parentState.CenterTile += GlobalPosition; //TODO: vertical offset
+
 
             var pxOffset = -parentState.WorldSpace.GetScreenOffset();
 
@@ -165,6 +168,7 @@ namespace FSO.LotView.Components
             Blueprint.RoofComp.Draw(gd, parentState);
             parentState.SilentLevel = level;
 
+            parentState.BaseHeight = parentHeight;
             parentState.CenterTile = parentScroll;
             parentState.PrepareLighting();
         }
@@ -172,6 +176,8 @@ namespace FSO.LotView.Components
         public void DrawObjects(GraphicsDevice gd, WorldState parentState)
         {
             var parentScroll = parentState.CenterTile;
+            var parentHeight = parentState.BaseHeight;
+            parentState.BaseHeight = State.BaseHeight;
             parentState.CenterTile += GlobalPosition; //TODO: vertical offset
 
             State.PrepareLighting();
@@ -180,6 +186,7 @@ namespace FSO.LotView.Components
             parentState._2D.SetScroll(pxOffset);
             parentState._2D.RenderCache(StaticObjectsCache);
 
+            parentState.BaseHeight = parentHeight;
             parentState.CenterTile = parentScroll;
             parentState.PrepareLighting();
         }

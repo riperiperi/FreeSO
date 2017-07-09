@@ -122,6 +122,7 @@ namespace FSO.LotView.Components
         public Dictionary<ushort, Wall> WallCache = new Dictionary<ushort,Wall>();
         public Dictionary<ushort, WallStyle> WallStyleCache = new Dictionary<ushort,WallStyle>();
 
+        private float TileAltitude;
         private uint TileRoom;
 
         public override void Draw(GraphicsDevice device, WorldState world)
@@ -152,7 +153,9 @@ namespace FSO.LotView.Components
                         if (comp.Segments != 0)
                         {
                             comp = RotateWall(world.Rotation, comp, x, y, level);
-                            var tilePosition = new Vector3(x, y, (level-1) * 2.95f + blueprint.GetAltitude(x,y));
+                            var alt = blueprint.GetAltitude(x, y);
+                            var tilePosition = new Vector3(x, y, (level-1) * 2.95f + alt);
+                            TileAltitude = alt*3f * 65535f;
                             world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                             world._2D.OffsetTile(tilePosition);
                             var myCuts = Cuts[off];
@@ -901,6 +904,7 @@ namespace FSO.LotView.Components
 
             _Sprite.Room = (ushort)TileRoom;
             _Sprite.Floor = Level;
+            _Sprite.ObjectID = TileAltitude;
 
             return _Sprite;
         }
@@ -962,6 +966,7 @@ namespace FSO.LotView.Components
 
             _Sprite.Room = (ushort)TileRoom;
             _Sprite.Floor = Level;
+            _Sprite.ObjectID = TileAltitude;
 
             return _Sprite;
         }
@@ -1171,6 +1176,7 @@ namespace FSO.LotView.Components
             spr.Depth = _Sprite.Depth;
             spr.Room = _Sprite.Room;
             spr.Floor = _Sprite.Floor;
+            spr.ObjectID = _Sprite.ObjectID;
             return spr;
         }
     }

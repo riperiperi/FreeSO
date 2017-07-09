@@ -213,6 +213,23 @@ namespace FSO.Client.UI.Controls.Catalog
                     Parameters = new List<int> { }
                 }
             });
+
+            _Catalog[10].Insert(0, new UICatalogElement
+            {
+                Item = new ObjectCatalogItem()
+                {
+                    Name = "Flatten Terrain",
+                    Category = 7,
+                    Price = 1,
+                },
+                Special = new UISpecialCatalogElement
+                {
+                    Control = typeof(UITerrainFlatten),
+                    ResID = 0,
+                    Res = null,
+                    Parameters = new List<int> { }
+                }
+            });
         }
 
         public static short[] WallStyleIDs =

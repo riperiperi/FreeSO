@@ -25,15 +25,17 @@ using FSO.Common;
 
 namespace FSO.Client.UI.Panels.LotControls
 {
-    public class UITerrainRaiser : UICustomLotControl
+    public class UITerrainFlatten : UICustomLotControl
     {
         VMMultitileGroup WallCursor;
+        VMMultitileGroup WallCursor2;
         VM vm;
         LotView.World World;
         UILotControl Parent;
 
         private bool Drawing;
         private Point StartPosition;
+        private Point EndPosition;
 
         private byte StartTerrainHeight;
         private int StartMousePosition;
@@ -42,14 +44,16 @@ namespace FSO.Client.UI.Panels.LotControls
         private VMArchitectureCommand LastCmd;
         private bool WasDown;
 
-        public UITerrainRaiser(VM vm, LotView.World world, UILotControl parent, List<int> parameters)
+        public UITerrainFlatten(VM vm, LotView.World world, UILotControl parent, List<int> parameters)
         {
             this.vm = vm;
             World = parent.World;
             Parent = parent;
             WallCursor = vm.Context.CreateObjectInstance(0x2F39B7A6, LotTilePos.OUT_OF_WORLD, FSO.LotView.Model.Direction.NORTH, true);
+            WallCursor2 = vm.Context.CreateObjectInstance(0x2F39B7A6, LotTilePos.OUT_OF_WORLD, FSO.LotView.Model.Direction.NORTH, true);
 
             ((ObjectComponent)WallCursor.Objects[0].WorldUI).ForceDynamic = true;
+            ((ObjectComponent)WallCursor2.Objects[0].WorldUI).ForceDynamic = true;
         }
 
         //0: up
@@ -57,10 +61,10 @@ namespace FSO.Client.UI.Panels.LotControls
         //2: error
         //3: anchor
         //4: level
-        public void SetCursorGraphic(short id)
+        public void SetCursorGraphic(short id, VMMultitileGroup group)
         {
-            WallCursor.Objects[0].SetValue(VMStackObjectVariable.Graphic, id);
-            ((VMGameObject)WallCursor.Objects[0]).RefreshGraphic();
+            group.Objects[0].SetValue(VMStackObjectVariable.Graphic, id);
+            ((VMGameObject)group.Objects[0]).RefreshGraphic();
         }
 
         public void MouseDown(UpdateState state)
@@ -86,22 +90,24 @@ namespace FSO.Client.UI.Panels.LotControls
             {
                 var cmds = new List<VMArchitectureCommand>();
 
-                var mpos = (int)(state.MouseState.Y - World.State.WorldSpace.GetScreenOffset().Y);
-                var mod = (StartMousePosition - mpos) / (15 / (1 << (3 - (int)World.State.Zoom)));
+                var cursor = EndPosition;
+                var smallX = Math.Min(StartPosition.X, cursor.X);
+                var smallY = Math.Min(StartPosition.Y, cursor.Y);
+                var bigX = Math.Max(StartPosition.X, cursor.X);
+                var bigY = Math.Max(StartPosition.Y, cursor.Y);
 
-                if (mod != 0 || (state.CtrlDown))
+                if (smallX != bigX || bigY != smallY || (state.CtrlDown))
                 {
-                    var newHeight = StartTerrainHeight + mod;
-
                     cmds.Add(new VMArchitectureCommand
                     {
-                        Type = VMArchitectureCommandType.TERRAIN_RAISE,
-                        x = StartPosition.X,
-                        y = StartPosition.Y,
-                        level = (sbyte)newHeight,
-                        pattern = (ushort)((state.CtrlDown)?1:0)
+                        Type = VMArchitectureCommandType.TERRAIN_FLATTEN,
+                        x = smallX,
+                        y = smallY,
+                        x2 = bigX - smallX,
+                        y2 = bigY - smallY,
+                        level = (sbyte)StartTerrainHeight,
+                        pattern = (ushort)((state.CtrlDown) ? 1 : 0)
                     });
-
                 }
 
                 if (cmds.Count > 0 && (Parent.ActiveEntity == null || vm.Context.Architecture.LastTestCost <= Parent.ActiveEntity.TSOState.Budget.Value))
@@ -125,22 +131,28 @@ namespace FSO.Client.UI.Panels.LotControls
 
             var cmds = vm.Context.Architecture.Commands;
             cmds.Clear();
-            int mod = 0;
             if (Drawing)
             {
-                cursor = StartPosition;
-                var mpos = (int)(state.MouseState.Y - World.State.WorldSpace.GetScreenOffset().Y);
-                mod = (StartMousePosition - mpos) / (15 / (1 << (3 - (int)World.State.Zoom)));
-                var newHeight = StartTerrainHeight + mod;
+                EndPosition = cursor;
+                var smallX = Math.Min(StartPosition.X, cursor.X);
+                var smallY = Math.Min(StartPosition.Y, cursor.Y);
+                var bigX = Math.Max(StartPosition.X, cursor.X);
+                var bigY = Math.Max(StartPosition.Y, cursor.Y);
 
                 cmds.Add(new VMArchitectureCommand
                 {
-                    Type = VMArchitectureCommandType.TERRAIN_RAISE,
-                    x = StartPosition.X,
-                    y = StartPosition.Y,
-                    level = (sbyte)newHeight,
+                    Type = VMArchitectureCommandType.TERRAIN_FLATTEN,
+                    x = smallX,
+                    y = smallY,
+                    x2 = bigX-smallX,
+                    y2 = bigY-smallY,
+                    level = (sbyte)StartTerrainHeight,
                     pattern = (ushort)((state.CtrlDown) ? 1 : 0)
                 });
+                WallCursor2.SetVisualPosition(new Vector3(StartPosition.X, StartPosition.Y, (World.State.Level - 1) * 2.95f), Direction.NORTH, vm.Context);
+            } else
+            {
+                WallCursor2.SetVisualPosition(new Vector3(-2048, -2048, 0), Direction.NORTH, vm.Context);
             }
 
             if (cmds.Count > 0)
@@ -183,12 +195,10 @@ namespace FSO.Client.UI.Panels.LotControls
                 }
             }
 
+            WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, (World.State.Level - 1) * 2.95f), Direction.NORTH, vm.Context);
 
-            WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, (World.State.Level - 1) * 2.95f + mod * 3f/16f), Direction.NORTH, vm.Context);
-
-            if (state.ShiftDown) SetCursorGraphic(3);
-            else if (state.CtrlDown) SetCursorGraphic(1);
-            else SetCursorGraphic(0);
+            SetCursorGraphic(3, WallCursor);
+            SetCursorGraphic(3, WallCursor2);
         }
 
         public void Release()

@@ -177,7 +177,7 @@ namespace FSO.LotView.Utils
             sprite.AbsoluteDestRect = new Rectangle((int)(x + PxOffset.X), (int)(y + PxOffset.Y), width, height);
             sprite.AbsoluteWorldPosition = sprite.WorldPosition + WorldOffset;
             sprite.AbsoluteTilePosition = sprite.TilePosition + TileOffset; 
-            sprite.ObjectID = ObjectID;
+            if (sprite.ObjectID == 0) sprite.ObjectID = ObjectID;
             sprite.DrawOrder = DrawOrder;
 
             bool added = false;

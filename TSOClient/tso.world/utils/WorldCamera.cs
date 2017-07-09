@@ -50,8 +50,8 @@ namespace FSO.LotView.Utils
             }
         }
 
-        private Vector2 _CenterTile;
-        public Vector2 CenterTile
+        private Vector3 _CenterTile;
+        public Vector3 CenterTile
         {
             get { return _CenterTile; }
             set { _CenterTile = value; m_ViewDirty = true; }
@@ -238,7 +238,7 @@ namespace FSO.LotView.Utils
             var size = WorldSize * WorldSpace.WorldUnitsPerTile;
             var halfSize = (WorldSize/2.0f) * WorldSpace.WorldUnitsPerTile;
 
-            var offset = new Vector3(-centerX, 0.0f, -centerY);
+            var offset = new Vector3(-centerX, -CenterTile.Z*WorldSpace.WorldUnitsPerTile, -centerY);
             var view = Matrix.Identity;
 
             view *= Matrix.CreateTranslation(offset.X, offset.Y, offset.Z);

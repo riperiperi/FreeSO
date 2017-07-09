@@ -335,7 +335,6 @@ namespace FSO.LotView.Components
                 var light = new Vector3(0.3f, 1, -0.3f);
                 //light.Normalize();
             Effect.Parameters["LightVec"]?.SetValue(light);
-            Effect.Parameters["Level"].SetValue((float)0);
             Effect.Parameters["UseTexture"].SetValue(false);
             Effect.Parameters["ScreenSize"].SetValue(new Vector2(device.Viewport.Width, device.Viewport.Height) / world.PreciseZoom);
             //Effect.Parameters["depthOutMode"].SetValue(DepthMode && (!FSOEnvironment.UseMRT));
@@ -388,10 +387,9 @@ namespace FSO.LotView.Components
 
             grassDensity *= GrassDensityScale;
 
-                if (!Bp.FloorGeom.SetGrassIndices(device, Effect, world)) return;
-
-            if (BladePrimitives > 0)
+            if (Bp.FloorGeom.SetGrassIndices(device, Effect, world))
             {
+                Effect.Parameters["Level"].SetValue((float)0);
                 Effect.CurrentTechnique = Effect.Techniques["DrawBlades"];
                 int grassNum = (int)Math.Ceiling(GrassHeight / (float)grassScale);
                 
@@ -441,7 +439,7 @@ namespace FSO.LotView.Components
                     }
                     
                     var depth = device.DepthStencilState;
-                    device.DepthStencilState = DepthStencilState.None;
+                    device.DepthStencilState = DepthStencilState.DepthRead;
                     Effect.CurrentTechnique = Effect.Techniques["DrawGrid"];
                     Effect.Parameters["World"].SetValue(Matrix.Identity * Matrix.CreateTranslation(0, ((int)(world.Zoom)-1) * (18 / 522f) * grassScale, 0));
 

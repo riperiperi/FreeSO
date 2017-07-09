@@ -5,6 +5,7 @@ using FSO.LotView.Model;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.Marshals.Hollow;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Drivers;
 using Microsoft.Xna.Framework;
 using System;
@@ -443,6 +444,55 @@ namespace FSO.SimAntics.Utils
             RestoreTerrain(vm, vm.TSOState.Terrain.BlendN[1, 1], vm.TSOState.Terrain.Roads[1, 1]);
         }
 
+        public static float RestoreHeight(VM vm, VMTSOSurroundingTerrain terrain, int x, int y)
+        {
+            var sr = new float[4, 4];
+
+            for (int oy = 0; oy < 4; oy++)
+            {
+                var srcY = Math.Min(3, Math.Max(0, oy + y - 1));
+                for (int ox = 0; ox < 4; ox++)
+                {
+                    var srcX = Math.Min(3, Math.Max(0, ox + x - 1));
+                    sr[3-oy, ox] = terrain.Height[srcX, srcY];
+                }
+            }
+
+            var baseLevel = (sr[1, 1] + sr[1, 2] + sr[2, 2] + sr[2, 1]) / 4;
+
+            var target = vm.Context.Architecture.Terrain;
+
+
+            for (int oy = 1; oy < target.Height; oy++)
+            {
+                float fracy = (oy - 1f) / (target.Height - 2f);
+                float y1 = Cubic(sr[0, 0], sr[0, 1], sr[0, 2], sr[0, 3], fracy);
+                float y2 = Cubic(sr[1, 0], sr[1, 1], sr[1, 2], sr[1, 3], fracy);
+                float y3 = Cubic(sr[2, 0], sr[2, 1], sr[2, 2], sr[2, 3], fracy);
+                float y4 = Cubic(sr[3, 0], sr[3, 1], sr[3, 2], sr[3, 3], fracy);
+
+                for (int ox = 1; ox < target.Width; ox++)
+                {
+                    float fracx = (ox - 1f) / (target.Width - 2f);
+                    int index = (target.Height-oy) * target.Width + (target.Height-ox);
+                    var h = Cubic(y1, y2, y3, y4, fracx);
+                    target.Heights[index] = (byte)((h-baseLevel)*10f + 128);
+                }
+            }
+            target.RegenerateCenters();
+            return baseLevel;
+        }
+
+        private static float Cubic(float v0, float v1, float v2, float v3, float fracy)
+        {
+            float A = (v3 - v2) - (v0 - v1);
+            float B = (v0 - v1) - A;
+            float C = v2 - v0;
+            float D = v1;
+
+            return (float)(A * Math.Pow(fracy, 3) + B * Math.Pow(fracy, 2) + C * fracy + D);
+        }
+
         public static void RestoreTerrain(VM vm, TerrainBlend blend, byte roads)
         {
             var arch = vm.Context.Architecture;
@@ -832,6 +882,10 @@ namespace FSO.SimAntics.Utils
                 world.Dispose();
             }
             vm.Context.Blueprint.SubWorlds.Clear();
+
+            var baseHeight = RestoreHeight(vm, terrain, 1, 1);
+            vm.Context.World.State.BaseHeight = (128 * 3) / 16f;
+
             if (lotsMode == 0) return;
             for (int y=0; y<3; y++)
             {
@@ -847,6 +901,7 @@ namespace FSO.SimAntics.Utils
                     var state = (hollowAdj == null)? null : hollowAdj[y * 3 + x];
                     if (lotsMode == 1) state = null;
 
+                    float height = 0;
                     VMHollowMarshal hollow = null;
                     if (state != null)
                     {
@@ -858,6 +913,7 @@ namespace FSO.SimAntics.Utils
                             }
                             tempVM.HollowLoad(hollow);
                             RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y]);
+                            height = RestoreHeight(tempVM, terrain, x, y);
                             tempVM.Tick();
                         } catch (Exception)
                         {
@@ -880,12 +936,15 @@ namespace FSO.SimAntics.Utils
                         blueprint.Terrain = terrainC;
 
                         RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y]);
+                        height = RestoreHeight(tempVM, terrain, x, y);
+
                         PopulateBlankTerrain(tempVM);
 
                         tempVM.Tick();
                     }
 
                     subworld.State.Level = 5;
+                    subworld.State.BaseHeight = ((((baseHeight - height) * 10) + 128) * 3f) / 16;
                     subworld.GlobalPosition = new Vector2((1 - y) * (size - 2), (x - 1) * (size - 2));
 
                     vm.Context.Blueprint.SubWorlds.Add(subworld);

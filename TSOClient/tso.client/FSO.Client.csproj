@@ -122,6 +122,7 @@
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobbyController.cs" />
     <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
     <Compile Include="UI\Panels\LotControls\UIRoofer.cs" />
+    <Compile Include="UI\Panels\LotControls\UITerrainFlatten.cs" />
     <Compile Include="UI\Panels\LotControls\UITerrainRaiser.cs" />
     <Compile Include="UI\Panels\UISandboxSelector.cs" />
     <Compile Include="UI\Panels\UINeighborhoodSelectionPanel.cs" />

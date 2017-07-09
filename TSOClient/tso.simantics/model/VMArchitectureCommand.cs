@@ -73,5 +73,6 @@ namespace FSO.SimAntics.Model
         FLOOR_FILL,
 
         TERRAIN_RAISE,
+        TERRAIN_FLATTEN,
     }
 }
