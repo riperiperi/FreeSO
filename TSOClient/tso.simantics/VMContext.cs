@@ -805,8 +805,37 @@ namespace FSO.SimAntics
             ObjectQueries.UnregisterObjectPos(obj);
         }
 
+        public bool SlopeVertexCheck(int x, int y)
+        {
+            var pos = LotTilePos.FromBigTile((short)x, (short)y, 1);
+            if (!CheckSlopeValid(pos)) return false;
+            pos.x -= 16;
+            if (!CheckSlopeValid(pos)) return false;
+            pos.y -= 16;
+            if (!CheckSlopeValid(pos)) return false;
+            pos.x += 16;
+            if (!CheckSlopeValid(pos)) return false;
+            return true;
+        }
+
+        public bool CheckSlopeValid(LotTilePos pos)
+        {
+            if (pos.x < 0 || pos.y < 0) return true;
+            var objs = ObjectQueries.GetObjectsAt(pos);
+            if (objs != null)
+            {
+                foreach (var obj in objs)
+                {
+                    if (obj.SlopeValid() != VMPlacementError.Success) return false;
+                }
+            }
+            if (Architecture.GetWall(pos.TileX, pos.TileY, pos.Level).Segments != 0) return false;
+            return true;
+        }
+
         public bool CheckWallValid(LotTilePos pos, WallTile wall)
         {
+            if (wall.Segments > 0 && Architecture.GetTerrainSloped(pos.TileX, pos.TileY)) return false;
             var objs = ObjectQueries.GetObjectsAt(pos);
             if (objs == null) return true;
             foreach (var obj in objs)

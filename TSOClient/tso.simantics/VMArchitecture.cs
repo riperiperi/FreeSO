@@ -51,6 +51,7 @@ namespace FSO.SimAntics
         public VMRoomMap[] Rooms;
         public List<VMRoom> RoomData;
         public event ArchitectureEvent WallsChanged;
+        public Rectangle TerrainLimit; //in tso mode, this is set to the maximum buildable area.
 
         public VMContext Context; //used for access to objects
 
@@ -96,7 +97,17 @@ namespace FSO.SimAntics
 
         public VMArchitecture(int width, int height, Blueprint blueprint, VMContext context)
         {
-            DisableClip = context.VM?.TS1 == true;
+            if (Content.Content.Get().TS1)
+            {
+                DisableClip = true;
+                TerrainLimit = new Rectangle(1, 1, width - 2, height - 2);
+            }
+            else
+            {
+                TerrainLimit = new Rectangle(7, 7, 64, 64);
+                TerrainLimit.Inflate(-1, -1);
+            }
+
             this.Context = context;
             this.Width = width;
             this.Height = height;
@@ -528,7 +539,7 @@ namespace FSO.SimAntics
 
                     case VMArchitectureCommandType.TERRAIN_RAISE:
                     case VMArchitectureCommandType.TERRAIN_FLATTEN:
-                        var height = (byte)com.level;
+                        var height = (short)com.style;
                         Rectangle rect;
                         if (com.Type == VMArchitectureCommandType.TERRAIN_FLATTEN) rect = new Rectangle(com.x, com.y, com.x2, com.y2);
                         else rect = new Rectangle(com.x, com.y, 0, 0);
@@ -544,6 +555,10 @@ namespace FSO.SimAntics
                                 "modified terrain by " + cost + " units."
                             ));
                         }
+                        break;
+                    case VMArchitectureCommandType.GRASS_DOT:
+                        var dotCount = VMArchitectureTools.DotTerrain(this, new Point(com.x, com.y), (short)com.pattern);
+                        cost += dotCount;
                         break;
                 }
             }
@@ -708,7 +723,13 @@ namespace FSO.SimAntics
             }
         }
 
-        public void SetTerrainHeight(short tileX, short tileY, byte height)
+        public bool GetTerrainSloped(short tileX, short tileY)
+        {
+            var off = GetOffset(tileX, tileY);
+            return Terrain.Sloped[off];
+        }
+
+        public void SetTerrainHeight(short tileX, short tileY, short height)
         {
             var off = GetOffset(tileX, tileY);
 
@@ -718,7 +739,7 @@ namespace FSO.SimAntics
             Redraw = true;
         }
 
-        public byte GetTerrainHeight(short tileX, short tileY)
+        public short GetTerrainHeight(short tileX, short tileY)
         {
             var off = GetOffset(tileX, tileY);
 
@@ -809,7 +830,7 @@ namespace FSO.SimAntics
             {
                 //first check if we're supported
                 if (floor.Pattern > 65533 && level > 1 && RoomData[(int)Rooms[level - 2].Map[offset]&0xFFFF].IsOutside) return false;
-                if (level > 1 && !Supported[level - 2][offset]) return false;
+                if (floor.Pattern > 0 && level > 1 && !Supported[level - 2][offset]) return false;
                 //check if objects need/don't need floors
                 if (!Context.CheckFloorValid(LotTilePos.FromBigTile((short)tileX, (short)tileY, level), floor)) return false;
             }

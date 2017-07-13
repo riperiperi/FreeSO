@@ -420,6 +420,7 @@ namespace FSO.LotView
             if (HasInit == false) { return; }
             State._2D.PreciseZoom = State.PreciseZoom;
             State.OutsideColor = Blueprint.OutsideColor;
+            FSO.Common.Rendering.Framework.GameScreen.ClearColor = new Color(new Color(0x72, 0x72, 0x72).ToVector4() * State.OutsideColor.ToVector4());
             foreach (var sub in Blueprint.SubWorlds) sub.PreDraw(device, State);
             if (Blueprint != null)
             {

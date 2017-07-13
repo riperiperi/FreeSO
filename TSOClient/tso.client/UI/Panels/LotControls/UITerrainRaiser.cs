@@ -35,7 +35,7 @@ namespace FSO.Client.UI.Panels.LotControls
         private bool Drawing;
         private Point StartPosition;
 
-        private byte StartTerrainHeight;
+        private short StartTerrainHeight;
         private int StartMousePosition;
         private Point EndMousePosition;
 
@@ -87,7 +87,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 var cmds = new List<VMArchitectureCommand>();
 
                 var mpos = (int)(state.MouseState.Y - World.State.WorldSpace.GetScreenOffset().Y);
-                var mod = (StartMousePosition - mpos) / (15 / (1 << (3 - (int)World.State.Zoom)));
+                var mod = ((StartMousePosition - mpos)*10) / (15 / (1 << (3 - (int)World.State.Zoom)));
 
                 if (mod != 0 || (state.CtrlDown))
                 {
@@ -98,7 +98,7 @@ namespace FSO.Client.UI.Panels.LotControls
                         Type = VMArchitectureCommandType.TERRAIN_RAISE,
                         x = StartPosition.X,
                         y = StartPosition.Y,
-                        level = (sbyte)newHeight,
+                        style = (ushort)newHeight,
                         pattern = (ushort)((state.CtrlDown)?1:0)
                     });
 
@@ -130,7 +130,7 @@ namespace FSO.Client.UI.Panels.LotControls
             {
                 cursor = StartPosition;
                 var mpos = (int)(state.MouseState.Y - World.State.WorldSpace.GetScreenOffset().Y);
-                mod = (StartMousePosition - mpos) / (15 / (1 << (3 - (int)World.State.Zoom)));
+                mod = ((StartMousePosition - mpos)*10) / (15 / (1 << (3 - (int)World.State.Zoom)));
                 var newHeight = StartTerrainHeight + mod;
 
                 cmds.Add(new VMArchitectureCommand
@@ -138,7 +138,7 @@ namespace FSO.Client.UI.Panels.LotControls
                     Type = VMArchitectureCommandType.TERRAIN_RAISE,
                     x = StartPosition.X,
                     y = StartPosition.Y,
-                    level = (sbyte)newHeight,
+                    style = (ushort)newHeight,
                     pattern = (ushort)((state.CtrlDown) ? 1 : 0)
                 });
             }
@@ -184,7 +184,7 @@ namespace FSO.Client.UI.Panels.LotControls
             }
 
 
-            WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, (World.State.Level - 1) * 2.95f + mod * 3f/16f), Direction.NORTH, vm.Context);
+            WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, (World.State.Level - 1) * 2.95f + mod * vm.Context.Blueprint.TerrainFactor), Direction.NORTH, vm.Context);
 
             if (state.ShiftDown) SetCursorGraphic(3);
             else if (state.CtrlDown) SetCursorGraphic(1);

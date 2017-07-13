@@ -236,17 +236,16 @@ namespace FSO.LotView
             InvalidateCamera();
         }
 
-        public float BaseHeight;
 
         public void InvalidateCamera()
         {
             var ctr = WorldSpace.GetScreenFromTile(CenterTile);
             ctr.X = (float)Math.Round(ctr.X);
             ctr.Y = (float)Math.Round(ctr.Y);
-            var test = new Vector2(0.5f, 0);   
+            var test = new Vector2(-0.5f, 0);   
             test *= 1 << (3 - (int)Zoom);
             var back = WorldSpace.GetTileFromScreen(ctr + test);
-            WorldCamera.CenterTile = new Vector3(back, BaseHeight);
+            WorldCamera.CenterTile = new Vector3(back, 0);
             WorldCamera.Zoom = Zoom;
             WorldCamera.Rotation = Rotation;
             WorldCamera.PreciseZoom = PreciseZoom;
@@ -389,22 +388,15 @@ namespace FSO.LotView
         {
             return State.CenterTile + GetTileFromScreen(pos - new Vector2((WorldPxWidth / 2.0f), (WorldPxHeight / 2.0f)-TerrainHeight*(State.Level-1)));
         }
-        
-
-        public Vector2 GetTileFromScreen(Vector2 pos)
-        {
-            return GetTileFromScreen(pos, true);
-        }
 
         /// <summary>
         /// Gets indices of a tile given a position without a scroll offset.
         /// </summary>
         /// <param name="pos">The position of the tile.</param>
         /// <returns>Indices of tile at position.</returns>
-        public Vector2 GetTileFromScreen(Vector2 pos, bool respectHeight) //gets floor tile at a screen position w/o scroll
+        public Vector2 GetTileFromScreen(Vector2 pos) //gets floor tile at a screen position w/o scroll
         {
             Vector2 result = new Vector2();
-            if (respectHeight) pos.Y += (State.BaseHeight / 3f) * TerrainHeight;
             switch (State.Rotation)
             {
                 case WorldRotation.TopLeft:
@@ -467,8 +459,6 @@ namespace FSO.LotView
                     screeny = ((-tile.X + tile.Y) * TilePxHeightHalf) - (tile.Z * OneUnitDistance * (float)Math.Cos(Math.PI / 6));
                     break;
             }
-
-            screeny -= (State.BaseHeight / 3f) * TerrainHeight;
 
             return new Vector2(screenx, screeny);
         }
@@ -557,7 +547,7 @@ namespace FSO.LotView
                     break;
             }
 
-            TerrainHeight *= 300;
+            TerrainHeight *= -1;
             OneUnitDistance = (float)Math.Sqrt(Math.Pow(TilePxWidth, 2) / 2.0);
             TileSin60 = TilePxWidth / (float)Math.Sqrt(5.0);
             TileSin30 = TilePxHeight / (float)Math.Sqrt(5.0);

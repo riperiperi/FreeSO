@@ -48,14 +48,14 @@ namespace FSO.LotView.Components
             new Rectangle(60, 144+NEAR_YOFF, 16, 232)
         };
         private static Rectangle[] DESTINATION_MED = new Rectangle[] {
-            new Rectangle(2, 38+MED_YOFF, 32, 135),
-            new Rectangle(34, 38+MED_YOFF, 32, 135),
+            new Rectangle(2, 38+MED_YOFF, 32, 136),
+            new Rectangle(34, 38+MED_YOFF, 32, 136),
             new Rectangle(2, 54+MED_YOFF, 64, 120),
             new Rectangle(30, 72+MED_YOFF, 8, 116)
         };
         private static Rectangle[] DESTINATION_FAR = new Rectangle[] {
-            new Rectangle(1, 19+FAR_YOFF, 16, 67),
-            new Rectangle(17, 19+FAR_YOFF, 16, 67),
+            new Rectangle(1, 19+FAR_YOFF, 16, 68),
+            new Rectangle(17, 19+FAR_YOFF, 16, 68),
             new Rectangle(1, 27+FAR_YOFF, 32, 60),
             new Rectangle(15, 36+FAR_YOFF, 4, 58)
         };

@@ -280,7 +280,7 @@ namespace FSO.LotView
 
             var oldCenter = state.CenterTile;
             state.CenterTile = new Vector2(Blueprint.Width/2, Blueprint.Height/2);
-            state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((576 - state.WorldSpace.WorldPxWidth)*4, (576 - state.WorldSpace.WorldPxHeight)*4) / 2, false);
+            state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((576 - state.WorldSpace.WorldPxWidth)*4, (576 - state.WorldSpace.WorldPxHeight)*4) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             state.TempDraw = true;
             Blueprint.Cutaway = new bool[Blueprint.Cutaway.Length];
@@ -344,7 +344,10 @@ namespace FSO.LotView
         /// <param name="state"></param>
         public void PreDraw(GraphicsDevice gd, WorldState state)
         {
+            //var oht = state.BaseHeight;
+            //state.BaseHeight = 0;
             var pxOffset = -state.WorldSpace.GetScreenOffset();
+            //state.BaseHeight = oht;
             var damage = Blueprint.Damage;
             var _2d = state._2D;
 
@@ -498,7 +501,7 @@ namespace FSO.LotView
             //scroll buffer loads in increments of SCROLL_BUFFER
             var newOff = GetScrollIncrement(pxOffset, state);
             var oldCenter = state.CenterTile;
-            state.CenterTile += state.WorldSpace.GetTileFromScreen(newOff-pxOffset, false); //offset the scroll to the position of the scroll buffer.
+            state.CenterTile += state.WorldSpace.GetTileFromScreen(newOff-pxOffset); //offset the scroll to the position of the scroll buffer.
             var tileOffset = state.CenterTile;
 
             pxOffset = newOff;
@@ -547,7 +550,7 @@ namespace FSO.LotView
                 ClearDrawBuffer(StaticObjectsCache);
                 _2d.End(StaticObjectsCache, true);
             }
-            
+
             if (!drawImmediate)
             {
                 state.PrepareLighting();
@@ -564,12 +567,12 @@ namespace FSO.LotView
                         {
                             WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(true);
                             DrawFloorBuf(gd, state, pxOffset);
-                            WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(false);
                             DrawWallBuf(gd, state, pxOffset);
+                            WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(false);
                             DrawObjBuf(gd, state, pxOffset);
                         }
                     }
-                    StaticObjects = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
+                    StaticObjects = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), newOff, new Vector3(tileOffset, 0));
                 }
             }
             //state._2D.PreciseZoom = state.PreciseZoom;
@@ -630,11 +633,13 @@ namespace FSO.LotView
             {
                 _2d.SetScroll(pxOffset);
                 _2d.Begin(state.Camera);
+
+                var p2O = pxOffset;
                 WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(true);
-                DrawFloorBuf(gd, state, pxOffset);
+                DrawFloorBuf(gd, state, p2O);
                 WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(false);
-                DrawWallBuf(gd, state, pxOffset);
-                DrawObjBuf(gd, state, pxOffset);
+                DrawWallBuf(gd, state, p2O);
+                DrawObjBuf(gd, state, p2O);
             }
             else
             {

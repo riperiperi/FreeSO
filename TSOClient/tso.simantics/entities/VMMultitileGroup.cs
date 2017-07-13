@@ -152,6 +152,7 @@ namespace FSO.SimAntics.Entities
             var bObj = BaseObject;
             var bOff = Offsets[Objects.IndexOf(BaseObject)];
             var leadOff = new Vector3(bOff.x, bOff.y, 0);
+            var offTotal = new Vector3();
 
             //TODO: optimize so we don't have to recalculate all of this
             if (pos != LotTilePos.OUT_OF_WORLD)
@@ -161,6 +162,7 @@ namespace FSO.SimAntics.Entities
                     var sub = Objects[i];
                     var off = new Vector3(Offsets[i].x, Offsets[i].y, 0);
                     off = Vector3.Transform(off-leadOff, rotMat);
+                    offTotal += off;
 
                     var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), (sbyte)(pos.Level + Offsets[i].Level));
                     places[i] = sub.PositionValid(offPos, direction, context, flags);
@@ -178,8 +180,17 @@ namespace FSO.SimAntics.Entities
                         return places[i];
                     }
                 }
+            } else
+            {
+                for (int i = 0; i < Objects.Count(); i++)
+                {
+                    var off = new Vector3(Offsets[i].x, Offsets[i].y, 0);
+                    off = Vector3.Transform(off - leadOff, rotMat);
+                    offTotal += off;
+                }
             }
-            
+
+            offTotal /= Objects.Count(); //this is now the average offset
             //verification success
 
             for (int i = 0; i < Objects.Count(); i++)
@@ -192,6 +203,7 @@ namespace FSO.SimAntics.Entities
                     LotTilePos.OUT_OF_WORLD :
                     new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), (sbyte)(pos.Level + Offsets[i].Level));
 
+                if (VM.UseWorld) sub.WorldUI.MTOffset = off - offTotal;
                 sub.SetIndivPosition(offPos, direction, context, places[i]);
             }
             for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context, false);

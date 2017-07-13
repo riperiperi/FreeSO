@@ -139,7 +139,7 @@ namespace FSO.SimAntics.Utils
             arch.Walls[0] = ResizeWalls(arch.Walls[0], size);
             arch.Walls[1] = ResizeWalls(arch.Walls[1], size);
             arch.Terrain.GrassState = ResizeGrass(arch.Terrain.GrassState, size);
-            arch.Terrain.Heights = ResizeGrass(DecodeHeights(iff.Get<ARRY>(0).TransposeData), size);
+            arch.Terrain.Heights = Array.ConvertAll(ResizeGrass(DecodeHeights(iff.Get<ARRY>(0).TransposeData), size), x=>(short)(x*10));
             arch.Terrain.RegenerateCenters();
 
             if (VM.UseWorld)

@@ -23,6 +23,7 @@ namespace FSO.LotView.Components
         public Avatar Avatar;
         public bool IsPet;
         public float Scale = 1;
+        public int Level = 0;
 
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -86,6 +87,7 @@ namespace FSO.LotView.Components
             set
             {
                 _Position = value;
+                Level = (int)(value.Z / 2.94f);
                 if (blueprint != null) AltitudeOff = new Vector3(0, 0, blueprint.InterpAltitude(_Position));
                 OnPositionChanged();
                 _WorldDirty = true;
@@ -155,7 +157,7 @@ namespace FSO.LotView.Components
                 Avatar.LightPositions = (WorldConfig.Current.AdvancedLighting)?CloseLightPositions(Position):null;
                 var newWorld = Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World;
                 if (Scale != 1f) newWorld = Matrix.CreateScale(Scale) * newWorld;
-                world._3D.DrawMesh(newWorld, Avatar, (short)ObjectID, (Room>65532 || Room == 0)?Room:blueprint.Rooms[Room].Base, col); 
+                world._3D.DrawMesh(newWorld, Avatar, (short)ObjectID, (Room>65532 || Room == 0)?Room:blueprint.Rooms[Room].Base, col, Level); 
             }
 
             if (Headline != null && !Headline.IsDisposed)

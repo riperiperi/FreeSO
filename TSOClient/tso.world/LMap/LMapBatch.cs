@@ -28,6 +28,7 @@ namespace FSO.LotView.LMap
 
         private Blueprint Blueprint;
         private LightData OutdoorsLight;
+        public Vector3 LightVec = new Vector3(0, 1f, 0);
         public Vector2 MapLayout; //width * height floors. Ordered by width first. x = floor%width, y = (int)floot/width.
         public Vector2 InvMapLayout;
 
@@ -323,10 +324,15 @@ namespace FSO.LotView.LMap
             lightPos = Vector3.Transform(lightPos, Transform);
             var z = lightPos.Z;
             if (lightPos.Y < 0) lightPos.Y *= -1;
+
             light.LightPos = new Vector2(lightPos.Z, -lightPos.X);
             light.LightDir = -light.LightPos;
             light.LightDir.Normalize();
             lightPos.Normalize();
+            
+            LightVec = new Vector3(lightPos.Z, 1f, -lightPos.X);
+            Blueprint.Terrain.LightVec = LightVec;
+
             light.FalloffMultiplier = (float)Math.Sqrt(lightPos.X * lightPos.X + lightPos.Z * lightPos.Z) / lightPos.Y;
 
             if (modTime > 0.25) modTime = 0.5 - modTime;

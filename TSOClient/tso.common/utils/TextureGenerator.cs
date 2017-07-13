@@ -28,6 +28,7 @@ namespace FSO.Common.Utils
         private static Texture2D[] WallZBuffer;
         private static Texture2D[] AirTiles;
         private static Texture2D MotiveArrow; //actually a diamond, clip to get required direction
+        private static Texture2D TerrainNoise;
 
         public static Texture2D GetPxWhite(GraphicsDevice gd)
         {
@@ -97,7 +98,7 @@ namespace FSO.Common.Utils
             return PieBG;
         }
 
-        public static Texture2D GetMotiveArrow(GraphicsDevice gd, Color highlight, Color bg)
+        public static Texture2D GetMotiveArrow(GraphicsDevice gd)
         {
             if (MotiveArrow == null)
             {
@@ -114,6 +115,27 @@ namespace FSO.Common.Utils
                 MotiveArrow.SetData<Color>(data);
             }
             return MotiveArrow;
+        }
+
+        public static Texture2D GetTerrainNoise(GraphicsDevice gd)
+        {
+            if (TerrainNoise == null)
+            {
+                TerrainNoise = new Texture2D(gd, 512, 512);
+                Color[] data = new Color[512 * 512];
+
+                var rd = new Random();
+                for (int i = 0; i < data.Length; i++)
+                {
+                    //distribution is an average of two noise functions.
+                    data[i].R = (byte)((rd.Next(255) + rd.Next(255)) / 2);
+                    data[i].G = (byte)((rd.Next(255) + rd.Next(255)) / 2);
+                    data[i].B = (byte)((rd.Next(255) + rd.Next(255)) / 2);
+                    data[i].A = (byte)((rd.Next(255) + rd.Next(255)) / 2);
+                }
+                TerrainNoise.SetData(data);
+            }
+            return TerrainNoise;
         }
 
         public static float FLAT_Z_INC = 1.525f;

@@ -914,7 +914,8 @@ namespace FSO.SimAntics
         public VMPlacementResult PositionValid(LotTilePos pos, Direction direction, VMContext context, VMPlaceRequestFlags flags)
         {
             if (pos == LotTilePos.OUT_OF_WORLD) return new VMPlacementResult();
-            if ((((flags & VMPlaceRequestFlags.UserBuildableLimit) > 0) && context.IsUserOutOfBounds(pos)) || context.IsOutOfBounds(pos))
+            var userOOB = context.IsUserOutOfBounds(pos);
+            if ((((flags & VMPlaceRequestFlags.UserBuildableLimit) > 0) && userOOB) || context.IsOutOfBounds(pos))
                 return new VMPlacementResult(VMPlacementError.LocationOutOfBounds);
 
             //TODO: speedup with exit early checks
@@ -933,12 +934,30 @@ namespace FSO.SimAntics
             VMPlacementError floorValid = FloorChangeValid(floor, pos.Level);
             if (floorValid != VMPlacementError.Success) return new VMPlacementResult(floorValid);
 
+            if (!userOOB && arch.GetTerrainSloped(pos.TileX, pos.TileY)) //sloped
+            {
+                var slopeValid = SlopeValid();
+                if (slopeValid != VMPlacementError.Success) return new VMPlacementResult(slopeValid);
+            }
+
             //we've passed the wall test, now check if we intersect any objects.
             if ((flags & VMPlaceRequestFlags.AllowIntersection) > 0) return new VMPlacementResult(VMPlacementError.Success);
             var valid = (this is VMAvatar)? context.GetAvatarPlace(this, pos, direction) : context.GetObjPlace(this, pos, direction);
             if (valid.Object != null && ((flags & VMPlaceRequestFlags.AcceptSlots) == 0))
                 valid.Status = VMPlacementError.CantIntersectOtherObjects;
             return valid;
+        }
+
+        public VMPlacementError SlopeValid()
+        {
+            var placeFlags = (VMPlacementFlags)ObjectData[(int)VMStackObjectVariable.PlacementFlags];
+
+            if ((placeFlags & VMPlacementFlags.OnFloor) > 0 && (placeFlags & VMPlacementFlags.OnSlope) == 0)
+            {
+                return VMPlacementError.CantPlaceOnSlope;
+            }
+
+            return VMPlacementError.Success;
         }
 
         public VMPlacementError FloorChangeValid(ushort floor, sbyte level)

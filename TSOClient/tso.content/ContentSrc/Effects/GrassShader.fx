@@ -46,6 +46,13 @@ sampler advLightSampler = sampler_state {
 	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
 };
 
+texture TerrainNoise : Diffuse;
+sampler TerrainNoiseSampler = sampler_state {
+	texture = <TerrainNoise>;
+	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
+	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
+};
+
 struct GrassVTX
 {
     float4 Position : SV_Position0;
@@ -77,12 +84,12 @@ float2 nrand2(float2 n) {
 
 float2 hash22(float2 p)
 {
-    float3 p3 = frac(float3(p.xyx) * 0.1031);
+	float3 p3 = frac(float3(p.xyx) * 0.1031);
     p3 += dot(p3, p3.yzx+19.19);
     return frac(float2((p3.x + p3.y)*p3.z, (p3.x+p3.z)*p3.y));
 }
 
-float2 iterhash22(in float2 uv) {
+/*float2 iterhash22(in float2 uv) {
     float2 a = float2(0,0);
     for (int t = 0; t < 2; t++)
     {
@@ -90,6 +97,10 @@ float2 iterhash22(in float2 uv) {
         a += hash22(uv*v);
     }
     return a / 2.0;
+}*/
+
+float2 iterhash22(float2 uv) {
+	return tex2D(TerrainNoiseSampler, uv / 512.0).xy;
 }
 
 float4 packDepth(float d) {
@@ -153,12 +164,12 @@ float4 CM(float mult) {
 }
 
 float4 LightDot(float3 normal) {
-	return CM(dot(LightVec, normalize(normal)));
+	return CM(dot(LightVec, normalize(normal)) * 0.5f + 0.5f);
 }
 
 void BladesPS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB:COLOR1)
 {
-    float2 rand = iterhash22(floor(input.ScreenPos.xy+ScreenOffset)); //nearest neighbour effect
+    float2 rand = iterhash22(input.ScreenPos.xy+ScreenOffset); //nearest neighbour effect
     if (rand.y > GrassProb*((2.0-input.GrassInfo.x)/2)) discard;
     //grass blade here
 
@@ -177,7 +188,7 @@ void BladesPS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB:COLOR
 
 void BladesPSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR1)
 {
-	float2 rand = iterhash22(floor(input.ScreenPos.xy + ScreenOffset)); //nearest neighbour effect
+	float2 rand = iterhash22(input.ScreenPos.xy + ScreenOffset); //nearest neighbour effect
 	if (rand.y > GrassProb*((2.0 - input.GrassInfo.x) / 2)) discard;
 	//grass blade here
 

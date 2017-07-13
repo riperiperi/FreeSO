@@ -12,6 +12,7 @@ namespace FSO.LotView.Components
     {
         public Texture2D Headline;
         public Blueprint blueprint;
+        public Vector3 MTOffset;
 
         public short ObjectID; //set this any time it changes so that hit test works.
 
@@ -44,7 +45,7 @@ namespace FSO.LotView.Components
             set
             {
                 _Position = value;
-                if (blueprint != null) _Position.Z += blueprint.InterpAltitude(_Position);
+                if (blueprint != null) _Position.Z += blueprint.InterpAltitude(new Vector3(0.5f, 0.5f, 0) + _Position - MTOffset/16);
                 OnPositionChanged();
                 _WorldDirty = true;
             }

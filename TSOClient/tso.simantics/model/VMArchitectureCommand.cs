@@ -74,5 +74,7 @@ namespace FSO.SimAntics.Model
 
         TERRAIN_RAISE,
         TERRAIN_FLATTEN,
+
+        GRASS_DOT
     }
 }

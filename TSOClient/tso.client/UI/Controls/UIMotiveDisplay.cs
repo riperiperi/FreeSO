@@ -59,7 +59,7 @@ namespace FSO.Client.UI.Controls
                 batch.Draw(Filler, LocalRect(x + (int)(60 * p), y, 1, 5), Color.Black);
 
                 var arrowState = ArrowStates[motive];
-                var arrow = TextureGenerator.GetMotiveArrow(batch.GraphicsDevice, Color.White, Color.Transparent);
+                var arrow = TextureGenerator.GetMotiveArrow(batch.GraphicsDevice);
                 if (arrowState > 0)
                 {
                     for (int i = 0; i < Math.Ceiling(arrowState / 60f); i++)

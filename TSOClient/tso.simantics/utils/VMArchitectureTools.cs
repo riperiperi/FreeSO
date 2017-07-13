@@ -649,15 +649,27 @@ namespace FSO.SimAntics.Utils
 
         //==== TERRAIN ====
 
-        public static int RaiseTerrain(VMArchitecture target, Rectangle pos, byte height, bool smoothMode)
+        public static int DotTerrain(VMArchitecture target, Point pos, short mod)
+        {
+            var bounds = target.DisableClip ? new Rectangle(0, 0, target.Width, target.Height) : target.BuildableArea;
+            if (!bounds.Contains(pos)) return 0;
+            var current = target.GetTerrainGrass((short)pos.X, (short)pos.Y);
+            var n = (byte)Math.Max(0, Math.Min(255, current + mod));
+            return (Math.Abs(current - n) + 31) / 32;
+        }
+
+        public static int RaiseTerrain(VMArchitecture target, Rectangle pos, short height, bool smoothMode)
         {
             //does a sort of flood fill from the start point to ensure the raise is valid
             //when any point height is changed its neighbours are checked for the height difference constraint
-            int constrain = 5;
-            if (smoothMode) constrain = 1;
-            if (pos.X < 0 || pos.Y < 0 || pos.X >= target.Width || pos.Y >= target.Height) return 0;
+            int constrain = 5*10;
+            if (smoothMode) constrain = 1*10;
+            var bounds = target.DisableClip ? new Rectangle(0, 0, target.Width, target.Height) : target.BuildableArea;
 
-            var considered = new Dictionary<Point, byte>();
+            if (!pos.Intersects(bounds)) return 0;
+            else pos = Rectangle.Intersect(pos, bounds);
+
+            var considered = new Dictionary<Point, short>();
             var stack = new Stack<Point>();
 
             for (int x=0; x<=pos.Width; x++)
@@ -667,6 +679,7 @@ namespace FSO.SimAntics.Utils
                     var p = pos.Location + new Point(x, y);
                     stack.Push(p);
                     considered.Add(p, height);
+                    if (!(target.DisableClip || target.Context.SlopeVertexCheck(p.X, p.Y))) return 0;
                 }
             }
             var tr = target.Terrain;
@@ -694,25 +707,35 @@ namespace FSO.SimAntics.Utils
 
                 foreach (var a in adj) {
                     if (a.X < 0 || a.Y < 0 || a.X >= tr.Width || a.Y >= tr.Height) return 0;
-                    byte ht;
+                    short ht;
                     if (!considered.TryGetValue(a, out ht))
                         ht = tr.Heights[a.Y * tr.Width + a.X];
                     var diff = myHeight - ht;
-                    if (diff * firstDiff > 0) continue;
+                    var first = height - ht;
 
-                    if (smoothMode) constrain = Math.Min(5, Math.Max(1, (int)Math.Round(DistanceToRect(a, pos))));
+                    if (!target.TerrainLimit.Contains(a))
+                    {
+                        if (!target.DisableClip && Math.Abs(diff) > 100 * 10) return 0;
+                        else continue;
+                    }
+
+                    if (diff * first <= 0) continue;
+
+                    if (smoothMode) constrain = Math.Min(5, Math.Max(1, (int)Math.Round(DistanceToRect(a, pos))))*10;
 
                     if (diff > constrain)
                     {
                         //lower the terrain
-                        ht = (byte)(myHeight - constrain);
+                        ht = (short)(myHeight - constrain);
                     }
                     else if (diff < -constrain)
                     {
                         //raise the terrain
-                        ht = (byte)(myHeight + constrain);
+                        ht = (short)(myHeight + constrain);
                     }
                     else continue;
+
+                    if (!(target.DisableClip || target.Context.SlopeVertexCheck(a.X, a.Y))) return 0;
 
                     //we needed to change the height. verify that that is a legal move. (walls, floors, objects demand no slope change)
                     //todo
@@ -723,16 +746,18 @@ namespace FSO.SimAntics.Utils
             }
 
             //actually change the terrain
+            int cost = 0;
             foreach (var change in considered)
             {
                 var changedBy = Math.Abs(target.GetTerrainHeight((short)change.Key.X, (short)change.Key.Y) - change.Value);
+                cost += (changedBy + 9) / 10;
                 target.SetTerrainHeight((short)change.Key.X, (short)change.Key.Y, change.Value);
                 if (change.Key.X > 0 && change.Key.Y > 0)
                     target.SetTerrainGrass((short)(change.Key.X-1), (short)(change.Key.Y-1), 
-                        (byte)Math.Min(255, target.GetTerrainGrass((short)(change.Key.X - 1), (short)(change.Key.Y - 1)) + changedBy*64));
+                        (byte)Math.Min(255, target.GetTerrainGrass((short)(change.Key.X - 1), (short)(change.Key.Y - 1)) + changedBy*6));
             }
 
-            return considered.Count;
+            return cost;
         }
 
         private static double DistanceToRect(Point pt, Rectangle rect)

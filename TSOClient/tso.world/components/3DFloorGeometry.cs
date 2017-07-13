@@ -156,7 +156,7 @@ namespace FSO.LotView.Components
             {
                 if (f++ >= state.Level) continue;
 
-                var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, 2.95f*(f-1)*3, 0);
+                var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, 2.95f*(f-1)* 3 - Bp.BaseAlt * Bp.TerrainFactor * 3, 0);
                 e.Parameters["World"].SetValue(worldmat);
                 e.Parameters["Level"].SetValue((float)(f-1));
                 foreach (var type in floor.GroupForTileType)

@@ -66,8 +66,10 @@ namespace FSO.LotView.Model
         public Rectangle TargetBuildableArea;
         public LightData OutdoorsLight;
 
-        public byte[] Altitude;
-        public byte[] AltitudeCenters;
+        public short[] Altitude;
+        public short[] AltitudeCenters;
+        public float TerrainFactor = 3 / 160f;
+        public int BaseAlt;
 
         public Blueprint(int width, int height){
             this.Width = width;
@@ -101,7 +103,7 @@ namespace FSO.LotView.Model
         public float GetAltitude(int x, int y)
         {
             if (x <= 0 || y <= 0) return 0f;
-            return AltitudeCenters[((y % Height) * Width + (x % Width))] * 3/16f;
+            return (AltitudeCenters[((y % Height) * Width + (x % Width))] - BaseAlt) * TerrainFactor;
         }
 
         public float InterpAltitude(Vector3 Position)
@@ -114,15 +116,15 @@ namespace FSO.LotView.Model
             var nextY = (int)Math.Ceiling(Position.Y);
             var xLerp = Position.X % 1f;
             var yLerp = Position.Y % 1f;
-            float h00 = Altitude[((baseY % Height) * Width + (baseX % Width))] * 3 / 16f;
-            float h01 = Altitude[((nextY % Height) * Width + (baseX % Width))] * 3 / 16f;
-            float h10 = Altitude[((baseY % Height) * Width + (nextX % Width))] * 3 / 16f;
-            float h11 = Altitude[((nextY % Height) * Width + (nextX % Width))] * 3 / 16f;
+            float h00 = Altitude[((baseY % Height) * Width + (baseX % Width))] * TerrainFactor;
+            float h01 = Altitude[((nextY % Height) * Width + (baseX % Width))] * TerrainFactor;
+            float h10 = Altitude[((baseY % Height) * Width + (nextX % Width))] * TerrainFactor;
+            float h11 = Altitude[((nextY % Height) * Width + (nextX % Width))] * TerrainFactor;
 
             float xl1 = xLerp * h10 + (1 - xLerp) * h00;
             float xl2 = xLerp * h11 + (1 - xLerp) * h01;
 
-            return yLerp * xl2 + (1 - yLerp) * xl1;
+            return yLerp * xl2 + (1 - yLerp) * xl1 - BaseAlt * TerrainFactor;
         }
 
         public void SetLightColor(Effect effect, Color outside, Color minOut)

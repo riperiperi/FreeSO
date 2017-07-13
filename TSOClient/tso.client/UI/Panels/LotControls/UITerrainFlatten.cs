@@ -37,7 +37,7 @@ namespace FSO.Client.UI.Panels.LotControls
         private Point StartPosition;
         private Point EndPosition;
 
-        private byte StartTerrainHeight;
+        private short StartTerrainHeight;
         private int StartMousePosition;
         private Point EndMousePosition;
 
@@ -105,7 +105,7 @@ namespace FSO.Client.UI.Panels.LotControls
                         y = smallY,
                         x2 = bigX - smallX,
                         y2 = bigY - smallY,
-                        level = (sbyte)StartTerrainHeight,
+                        style = (ushort)StartTerrainHeight,
                         pattern = (ushort)((state.CtrlDown) ? 1 : 0)
                     });
                 }
@@ -146,7 +146,7 @@ namespace FSO.Client.UI.Panels.LotControls
                     y = smallY,
                     x2 = bigX-smallX,
                     y2 = bigY-smallY,
-                    level = (sbyte)StartTerrainHeight,
+                    style = (ushort)StartTerrainHeight,
                     pattern = (ushort)((state.CtrlDown) ? 1 : 0)
                 });
                 WallCursor2.SetVisualPosition(new Vector3(StartPosition.X, StartPosition.Y, (World.State.Level - 1) * 2.95f), Direction.NORTH, vm.Context);

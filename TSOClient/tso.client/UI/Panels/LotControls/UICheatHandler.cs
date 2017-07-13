@@ -102,6 +102,7 @@ namespace FSO.Client.UI.Panels.LotControls
         public override void Draw(UISpriteBatch batch)
         {
             base.Draw(batch);
+            //DebugTexture = Common.Utils.TextureGenerator.GetTerrainNoise(batch.GraphicsDevice);
             if (DebugTexture != null)
             {
                 DrawLocalTexture(batch, DebugTexture, new Vector2(20, 20));
