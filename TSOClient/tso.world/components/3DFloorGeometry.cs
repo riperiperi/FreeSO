@@ -1,4 +1,5 @@
-﻿using FSO.LotView.Model;
+﻿using FSO.Common.Utils;
+using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -41,7 +42,7 @@ namespace FSO.LotView.Components
             }
         }
 
-        public void FullReset(GraphicsDevice gd)
+        public void FullReset(GraphicsDevice gd, bool buildMode)
         {
             for (int i=0; i<Floors.Length; i++)
             {
@@ -53,8 +54,10 @@ namespace FSO.LotView.Components
                 for (int j=width; j<end; j++)
                 {
                     var pat = data[j].Pattern;
-                    if ((j + 1) % Bp.Width < 2 || (pat == 0 && i > 0)) continue;
-                    lvl.AddTile(PatternConvert(pat, (ushort)j, (sbyte)(i+1)), (ushort)j);
+                    if ((j + 1) % Bp.Width < 2) continue;
+                    var convert = PatternConvert(pat, (ushort)j, (sbyte)(i + 1), buildMode);
+                    if (convert == 0 && i > 0) continue;
+                    lvl.AddTile(convert, (ushort)j);
                 }
                 lvl.RegenAll(gd);
             }
@@ -95,13 +98,24 @@ namespace FSO.LotView.Components
             {WorldZoom.Far, new Vector2(0, -0.5f/16) },
         };
 
-        public ushort PatternConvert(ushort pattern, ushort index, sbyte level)
+        public ushort PatternConvert(ushort pattern, ushort index, sbyte level, bool buildMode)
         {
             //65520 - 65535 (inclusive): pool tiles
             //65504 - 65519 (inclusive): water tiles
+            //65503: air tile
             //corners to come later...
 
-            if (pattern < 65534) return pattern;
+            if (buildMode && pattern == 0 && level > 1)
+            {
+                var x = index % Bp.Width;
+                var y = index / Bp.Width;
+                if (Bp.Supported[level - 2][y * Bp.Height + x])
+                {
+                    return 65503;
+                }
+                else return 0;
+            }
+            else if (pattern < 65534) return pattern;
             else
             {
                 //pool tile... check adjacent tiles
@@ -159,6 +173,7 @@ namespace FSO.LotView.Components
                 var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, 2.95f*(f-1)* 3 - Bp.BaseAlt * Bp.TerrainFactor * 3, 0);
                 e.Parameters["World"].SetValue(worldmat);
                 e.Parameters["Level"].SetValue((float)(f-1));
+                e.Parameters["RoomMap"].SetValue(state.Rooms.RoomMaps[f-1]);
                 foreach (var type in floor.GroupForTileType)
                 {
                     bool pointFilter = false;
@@ -177,54 +192,75 @@ namespace FSO.LotView.Components
                     {
 
                         Texture2D SPR = null;
-                        if (id >= 65504)
+                        if (id >= 65503)
                         {
-                            var pool = id >= 65520;
-                            pointFilter = true;
-                            if (!pool)
+                            if (id == 65503)
                             {
-                                e.Parameters["UseTexture"].SetValue(false);
-                                e.Parameters["IgnoreColor"].SetValue(false);
-
-                                //quickly draw under the water
-                                var pass2 = e.CurrentTechnique.Passes[WorldConfig.Current.PassOffset];
-                                pass2.Apply();
-                                gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
-
-                                e.Parameters["UseTexture"].SetValue(true);
-                                e.Parameters["IgnoreColor"].SetValue(true);
-                                e.Parameters["World"].SetValue(worldmat * Matrix.CreateTranslation(0, 0.05f, 0));
-                                id -= 65504;
-                            } else
-                            {
-                                id -= 65520;
+                                pointFilter = true;
+                                var airTiles = TextureGenerator.GetAirTiles(gd);
+                                switch (state.Zoom)
+                                {
+                                    case WorldZoom.Far:
+                                        SPR = airTiles[2];
+                                        break;
+                                    case WorldZoom.Medium:
+                                        SPR = airTiles[1];
+                                        break;
+                                    case WorldZoom.Near:
+                                        SPR = airTiles[0];
+                                        break;
+                                }
                             }
-
-                            e.Parameters["TexMatrix"].SetValue(CounterTexMat[state.Rotation]);
-                            
-                            var rot = (int)state.Rotation;
-                            rot = (4 - rot) % 4;
-                            id = (ushort)(((id << rot) & 15) | (id >> (4 - rot)));
-                            //pools & water are drawn with special logic, and may also be drawn slightly above the ground.
-
-                            int baseSPR;
-                            int frameNum = 0;
-                            switch (state.Zoom)
+                            else
                             {
-                                case WorldZoom.Far:
-                                    baseSPR = (pool) ? 0x400 : 0x800;
-                                    frameNum = (pool) ? 0 : 2;
-                                    SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
-                                    break;
-                                case WorldZoom.Medium:
-                                    baseSPR = (pool) ? 0x410 : 0x800;
-                                    frameNum = (pool) ? 0 : 1;
-                                    SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
-                                    break;
-                                default:
-                                    baseSPR = (pool) ? 0x420 : 0x800;
-                                    SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
-                                    break;
+                                var pool = id >= 65520;
+                                pointFilter = true;
+                                if (!pool)
+                                {
+                                    e.Parameters["UseTexture"].SetValue(false);
+                                    e.Parameters["IgnoreColor"].SetValue(false);
+
+                                    //quickly draw under the water
+                                    var pass2 = e.CurrentTechnique.Passes[WorldConfig.Current.PassOffset];
+                                    pass2.Apply();
+                                    gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
+
+                                    e.Parameters["UseTexture"].SetValue(true);
+                                    e.Parameters["IgnoreColor"].SetValue(true);
+                                    e.Parameters["World"].SetValue(worldmat * Matrix.CreateTranslation(0, 0.05f, 0));
+                                    id -= 65504;
+                                }
+                                else
+                                {
+                                    id -= 65520;
+                                }
+
+                                e.Parameters["TexMatrix"].SetValue(CounterTexMat[state.Rotation]);
+
+                                var rot = (int)state.Rotation;
+                                rot = (4 - rot) % 4;
+                                id = (ushort)(((id << rot) & 15) | (id >> (4 - rot)));
+                                //pools & water are drawn with special logic, and may also be drawn slightly above the ground.
+
+                                int baseSPR;
+                                int frameNum = 0;
+                                switch (state.Zoom)
+                                {
+                                    case WorldZoom.Far:
+                                        baseSPR = (pool) ? 0x400 : 0x800;
+                                        frameNum = (pool) ? 0 : 2;
+                                        SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
+                                        break;
+                                    case WorldZoom.Medium:
+                                        baseSPR = (pool) ? 0x410 : 0x800;
+                                        frameNum = (pool) ? 0 : 1;
+                                        SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
+                                        break;
+                                    default:
+                                        baseSPR = (pool) ? 0x420 : 0x800;
+                                        SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
+                                        break;
+                                }
                             }
                         }
                         else

@@ -388,6 +388,7 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
+            CategoryMap[TerrainButton] = (state.ShiftDown && (LotController?.ActiveEntity?.TSOState as VMTSOAvatarState)?.Permissions >= VMTSOAvatarPermissions.Admin) ? 29 : 10;
             var objCount = LotController.vm.Context.ObjectQueries.NumUserObjects;
             if (LastObjCount != objCount)
             {

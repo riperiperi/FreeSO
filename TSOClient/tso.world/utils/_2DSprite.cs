@@ -70,6 +70,7 @@ namespace FSO.LotView.Utils
             Sprites.Add(_2DBatchRenderMode.RESTORE_DEPTH, new List<_2DSprite>());
             Sprites.Add(_2DBatchRenderMode.WALL, new List<_2DSprite>());
             Sprites.Add(_2DBatchRenderMode.Z_BUFFER, new List<_2DSprite>());
+            Sprites.Add(_2DBatchRenderMode.FLOOR, new List<_2DSprite>());
         }
     }
 }

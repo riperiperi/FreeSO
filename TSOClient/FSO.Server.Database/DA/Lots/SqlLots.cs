@@ -109,7 +109,7 @@ namespace FSO.Server.Database.DA.Lots
         {
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE "
                 + "(ABS(CAST((location&65535) AS SIGNED) - CAST((@location&65535) AS SIGNED)) = 1 OR ABS(CAST((location/65536) AS SIGNED) - CAST((@location/65536) AS SIGNED)) = 1) "
-                + "AND shard_id = @shard_id", new { location = location, shard_id = shard_id }).ToList();
+                + "AND shard_id = @shard_id AND move_flags = 0", new { location = location, shard_id = shard_id }).ToList();
         }
 
         public void RenameLot(int id, string newName)

@@ -31,6 +31,7 @@ using FSO.SimAntics.Marshals.Hollow;
 using FSO.SimAntics.Engine.Debug;
 using FSO.Common;
 using FSO.SimAntics.Primitives;
+using FSO.LotView.Model;
 
 namespace FSO.SimAntics
 {
@@ -677,6 +678,23 @@ namespace FSO.SimAntics
             foreach (var multi in input.MultitileGroups)
             {
                 var grp = new VMMultitileGroup(multi, Context); //should self register
+                if (VM.UseWorld)
+                {
+                    var b = grp.BaseObject;
+                    var avgPos = new LotTilePos();
+                    foreach (var obj in grp.Objects)
+                    {
+                        avgPos += obj.Position;
+                    }
+                    avgPos /= grp.Objects.Count;
+
+                    foreach (var obj in grp.Objects)
+                    {
+                        var off = obj.Position - avgPos;
+                        obj.WorldUI.MTOffset = new Vector3(off.x, off.y, 0);
+                        obj.Position = obj.Position;
+                    }
+                }
                 var persist = grp.BaseObject?.PersistID ?? 0;
                 if (persist != 0 && grp.BaseObject is VMGameObject) Context.ObjectQueries.RegisterMultitilePersist(grp, persist);
             }

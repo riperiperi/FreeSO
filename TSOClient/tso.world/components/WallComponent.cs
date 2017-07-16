@@ -64,9 +64,9 @@ namespace FSO.LotView.Components
         private static Rectangle JUNCDEST_MED = new Rectangle(2, 158 + MED_YOFF, 64, 32);
         private static Rectangle JUNCDEST_FAR = new Rectangle(1, 79 + FAR_YOFF, 32, 16);
 
-        private static Rectangle FLRDEST_NEAR = new Rectangle(5, 316, 127, 64);
-        private static Rectangle FLRDEST_MED = new Rectangle(3, 158, 63, 32);
-        private static Rectangle FLRDEST_FAR = new Rectangle(2, 79, 31, 16);
+        private static Rectangle FLRDEST_NEAR = new Rectangle(4, 316 + 1, 127, 64);
+        private static Rectangle FLRDEST_MED = new Rectangle(2, 158, 63, 32);
+        private static Rectangle FLRDEST_FAR = new Rectangle(1, 79, 31, 16);
 
         private static Dictionary<JunctionFlags, int> JunctionMap = new Dictionary<JunctionFlags, int>()
         {
@@ -913,7 +913,7 @@ namespace FSO.LotView.Components
 
         private _2DSprite GetFloorSprite(Floor pattern, int rotation, WorldState world, byte cut)
         {
-            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
+            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.FLOOR);
             if (pattern == null) return _Sprite;
             SPR2 sprite = null;
             switch (world.Zoom)
@@ -934,6 +934,9 @@ namespace FSO.LotView.Components
                     _Sprite.Depth = WallZBuffers[12];
                     break;
             }
+            _Sprite.DestRect.Width++;
+            _Sprite.DestRect.X--;
+            _Sprite.DestRect.Y++;
             if (sprite != null)
             {
                 _Sprite.Pixel = world._2D.GetTexture(sprite.Frames[rotation]);

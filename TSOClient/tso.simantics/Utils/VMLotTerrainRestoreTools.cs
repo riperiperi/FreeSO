@@ -442,6 +442,25 @@ namespace FSO.SimAntics.Utils
         {
             //take center of lotstate
             RestoreTerrain(vm, vm.TSOState.Terrain.BlendN[1, 1], vm.TSOState.Terrain.Roads[1, 1]);
+
+            RestoreHeight(vm, vm.TSOState.Terrain, 1, 1);
+        }
+
+        public static int GetBaseLevel(VM vm, VMTSOSurroundingTerrain terrain, int x, int y)
+        {
+            var sr = new float[4, 4];
+
+            for (int oy = 0; oy < 4; oy++)
+            {
+                var srcY = Math.Min(3, Math.Max(0, oy + y - 1));
+                for (int ox = 0; ox < 4; ox++)
+                {
+                    var srcX = Math.Min(3, Math.Max(0, ox + x - 1));
+                    sr[3 - oy, ox] = terrain.Height[srcX, srcY];
+                }
+            }
+
+            return (int)(((sr[1, 1] + sr[1, 2] + sr[2, 2] + sr[2, 1]) / 4) * 100);
         }
 
         public static int RestoreHeight(VM vm, VMTSOSurroundingTerrain terrain, int x, int y)
@@ -952,8 +971,8 @@ namespace FSO.SimAntics.Utils
             }
             vm.Context.Blueprint.SubWorlds.Clear();
 
-            var baseHeight = RestoreHeight(vm, terrain, 1, 1);
-            vm.Context.Blueprint.BaseAlt = 0;// 128;
+            var baseHeight = GetBaseLevel(vm, terrain, 1, 1);
+            //vm.Context.Blueprint.BaseAlt = 0;// 128;
             //vm.Context.World.State.BaseHeight = 0;// (128 * 3) / 16f;
 
             if (lotsMode == 0) return;
@@ -983,7 +1002,10 @@ namespace FSO.SimAntics.Utils
                             }
                             tempVM.HollowLoad(hollow);
                             RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y]);
-                            height = RestoreHeight(tempVM, terrain, x, y);
+                            if (hollow.Version < 19)
+                                height = RestoreHeight(tempVM, terrain, x, y);
+                            else
+                                height = GetBaseLevel(tempVM, terrain, x, y);
                             tempVM.Context.Blueprint.BaseAlt = (int)((baseHeight - height));
                             foreach (var obj in tempVM.Entities)
                             {

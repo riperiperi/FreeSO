@@ -341,6 +341,11 @@ namespace FSO.LotView.Utils
                 var spritesWithDepth = sprites.Sprites[_2DBatchRenderMode.Z_BUFFER];
                 RenderSpriteList(spritesWithDepth, effect, effect.Techniques["drawZSpriteDepthChannel"], cache);
 
+                var floors = sprites.Sprites[_2DBatchRenderMode.FLOOR];
+                effect.Parameters["drawingFloor"].SetValue(true);
+                RenderSpriteList(floors, effect, effect.Techniques["drawZSpriteDepthChannel"], cache);
+                effect.Parameters["drawingFloor"].SetValue(false);
+
                 var walls = sprites.Sprites[_2DBatchRenderMode.WALL];
                 RenderSpriteList(walls, effect, effect.Techniques["drawZWallDepthChannel"], cache);
 
@@ -358,6 +363,11 @@ namespace FSO.LotView.Utils
 
                 var spritesWithDepth = sprites.Sprites[_2DBatchRenderMode.Z_BUFFER];
                 RenderSpriteList(spritesWithDepth, effect, effect.Techniques[(OBJIDMode) ? "drawZSpriteOBJID" : "drawZSprite"], cache);
+
+                var floors = sprites.Sprites[_2DBatchRenderMode.FLOOR];
+                effect.Parameters["drawingFloor"].SetValue(true);
+                RenderSpriteList(floors, effect, effect.Techniques["drawZSpriteDepthChannel"], cache);
+                effect.Parameters["drawingFloor"].SetValue(false);
 
                 var walls = sprites.Sprites[_2DBatchRenderMode.WALL];
                 RenderSpriteList(walls, effect, effect.Techniques[(OBJIDMode) ? "drawZSpriteOBJID" : "drawZWall"], cache);
@@ -486,6 +496,7 @@ namespace FSO.LotView.Utils
             effect.Parameters["pixelTexture"].SetValue(group.Pixel);
             if (group.Depth != null) effect.Parameters["depthTexture"].SetValue(group.Depth);
             if (group.Mask != null) effect.Parameters["maskTexture"].SetValue(group.Mask);
+            effect.Parameters["drawingFloor"].SetValue(group.Floors);
 
             effect.CurrentTechnique = group.Technique;
             EffectPassCollection passes = group.Technique.Passes;
@@ -508,7 +519,7 @@ namespace FSO.LotView.Utils
 
         private void RenderSpriteList(List<_2DSprite> sprites, Effect effect, EffectTechnique technique, List<_2DDrawGroup> cache){
             if (sprites.Count == 0) { return; }
-
+            bool floors = sprites.First().RenderMode == _2DBatchRenderMode.FLOOR;
             /** Group by texture **/
             var groupByTexture = GroupByTexture(sprites);
             foreach (var group in groupByTexture)
@@ -583,7 +594,8 @@ namespace FSO.LotView.Utils
                     Vertices = vertices,
                     Indices = indices,
                     Primitives = count,
-                    Technique = technique
+                    Technique = technique,
+                    Floors = floors
                 };
 
                 if (cache != null) cache.Add(dg);
@@ -802,7 +814,8 @@ namespace FSO.LotView.Utils
         NO_DEPTH,
         Z_BUFFER,
         RESTORE_DEPTH,
-        WALL
+        WALL,
+        FLOOR
     }
 
     public class _2DSpriteTextureGroup

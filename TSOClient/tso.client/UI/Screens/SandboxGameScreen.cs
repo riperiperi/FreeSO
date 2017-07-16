@@ -472,7 +472,7 @@ namespace FSO.Client.UI.Screens
                         SkinTone = (byte)settings.DebugSkin,
                         Gender = (short)(settings.DebugGender ? 1 : 0),
                         Permissions = SimAntics.Model.TSOPlatform.VMTSOAvatarPermissions.Admin,
-                        Budget = 100000
+                        Budget = 1000000
                     }
 
                 };

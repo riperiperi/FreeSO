@@ -328,6 +328,7 @@ namespace FSO.LotView.Components
             if (VertexBuffer == null) return;
             if (world.Light != null) LightVec = world.Light.LightVec;
             device.DepthStencilState = DepthStencilState.Default;
+            device.BlendState = BlendState.Opaque;
             PPXDepthEngine.RenderPPXDepth(Effect, true, (depthMode) =>
             {
             Effect.Parameters["LightGreen"].SetValue(LightGreen.ToVector4());
@@ -340,6 +341,11 @@ namespace FSO.LotView.Components
             Effect.Parameters["UseTexture"].SetValue(false);
             Effect.Parameters["ScreenSize"].SetValue(new Vector2(device.Viewport.Width, device.Viewport.Height) / world.PreciseZoom);
             Effect.Parameters["TerrainNoise"].SetValue(TextureGenerator.GetTerrainNoise(device));
+
+
+            Effect.Parameters["TileSize"].SetValue(new Vector2(1f / Bp.Width, 1f / Bp.Height));
+            Effect.Parameters["RoomMap"].SetValue(world.Rooms.RoomMaps[0]);
+            Effect.Parameters["RoomLight"].SetValue(world.AmbientLight);
             //Effect.Parameters["depthOutMode"].SetValue(DepthMode && (!FSOEnvironment.UseMRT));
 
             var offset = -world.WorldSpace.GetScreenOffset();
@@ -396,6 +402,7 @@ namespace FSO.LotView.Components
             if (Bp.FloorGeom.SetGrassIndices(device, Effect, world))
             {
                 Effect.Parameters["Level"].SetValue((float)0);
+                Effect.Parameters["RoomMap"].SetValue(world.Rooms.RoomMaps[0]);
                 Effect.CurrentTechnique = Effect.Techniques["DrawBlades"];
                 int grassNum = (int)Math.Ceiling(GrassHeight / (float)grassScale);
                 

@@ -100,12 +100,12 @@ namespace FSO.IDE
 
         public BHAVEditor(VM vm, VMEntity entity) : this()
         {
-            if (Editor == null) return;
             DebugMode = true;
             DebugEntity = entity;
             Text = "Tracer - " + entity.ToString() + " (ID " + entity.ObjectID + ")";
             
             UpdateStack();
+            if (Editor == null) return;
             Editor.DisableDebugger += DisableDebugger;
         }
 

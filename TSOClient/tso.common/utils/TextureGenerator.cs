@@ -169,9 +169,9 @@ namespace FSO.Common.Utils
             new float[] {32, 16, 153, 0, FLAT_Z_INC*4},
 
             //18
-            new float[] {128, 64, 257, 0, -FLAT_Z_INC}, //near junction walls up
-            new float[] {64, 32, 257, 0, -FLAT_Z_INC*2}, //med junction walls up
-            new float[] {32, 16, 257, 0, -FLAT_Z_INC*4}, //far junction walls up
+            new float[] {128, 64, 263, 0, -FLAT_Z_INC}, //near junction walls up
+            new float[] {64, 32, 263, 0, -FLAT_Z_INC*2}, //med junction walls up
+            new float[] {32, 16, 263, 0, -FLAT_Z_INC*4}, //far junction walls up
 
             
             //versions for corners (man this is getting complicated)
@@ -246,7 +246,7 @@ namespace FSO.Common.Utils
 
         private static Texture2D GenerateAirTile(GraphicsDevice gd, int width, int height)
         {
-            var tex = new Texture2D(gd, width, height);
+            var tex = new Texture2D(gd, width+1, height);
             Color[] data = new Color[width * height];
 
             int center = width/2;
@@ -267,8 +267,39 @@ namespace FSO.Common.Utils
 
                 middleOff += (i == height/2-1)?1:((i<height/2)?2:-2);
             }
-            tex.SetData<Color>(data);
+            tex.SetData<Color>(FloorCopy(data, width, height));
             return tex;
+        }
+
+        public static Color[] FloorCopy(Color[] data, int width, int height)
+        {
+            if (width % 2 != 0)
+            {
+                var target = new Color[(width + 1) * height];
+                for (int y = 0; y < height; y++)
+                {
+                    Array.Copy(data, y * width, target, y * (width + 1), width);
+                }
+                data = target;
+                width += 1;
+            }
+            var ndat = new Color[data.Length];
+            int hw = (width) / 2;
+            int hh = (height) / 2;
+            int idx = 0;
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    var xp = (x + hw) % width;
+                    var yp = (y + hh) % height;
+                    var rep = data[xp + yp * width];
+                    if (rep.A >= 254) ndat[idx] = rep;
+                    else ndat[idx] = data[idx];
+                    idx++;
+                }
+            }
+            return ndat;
         }
 
         public static Texture2D GenerateObjectIconBorder(GraphicsDevice gd, Color highlight, Color bg)

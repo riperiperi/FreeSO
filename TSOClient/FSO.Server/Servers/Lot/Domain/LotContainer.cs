@@ -616,7 +616,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     catch (Exception e)
                     {
                         //something bad happened. not entirely sure how we should deal with this yet
-                        LOG.Error("VM ERROR: " + e.StackTrace);
+                        LOG.Error("VM ERROR: " + e.Message +  e.StackTrace);
                         Host.Shutdown();
                         return;
                     }

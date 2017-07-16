@@ -110,6 +110,7 @@ namespace FSO.LotView
             _2DWorld.Init(blueprint);
             _3DWorld.Init(blueprint);
             Light?.Init(blueprint);
+            State.Rooms.Init(blueprint);
 
             HasInitBlueprint = true;
             HasInit = HasInitGPU & HasInitBlueprint;
@@ -591,6 +592,7 @@ namespace FSO.LotView
             base.Dispose();
             State.AmbientLight?.Dispose();
             Light?.Dispose();
+            State.Rooms.Dispose();
             if (State._2D != null) State._2D.Dispose();
             if (_2DWorld != null) _2DWorld.Dispose();
             if (Blueprint != null)

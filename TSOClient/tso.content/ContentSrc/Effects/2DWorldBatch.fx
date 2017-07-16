@@ -362,6 +362,7 @@ technique drawZWall {
  */
 
 void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
+	if (drawingFloor == true && abs(v.texCoords.x - 0.5) > 0.503 - abs(0.5 - v.texCoords.y)) discard;
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
 	if (pixel.a <= 0.01) discard;
 	float2 d = depthCalc2(v);
@@ -393,6 +394,7 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COL
 }
 
 void psZDepthSpriteSimple(ZVertexOut v, out float4 color:COLOR0, out float4 depthB : COLOR1, out float depth : DEPTH0) {
+	if (drawingFloor == true && abs(v.texCoords.x - 0.5) > 0.503 - abs(0.5 - v.texCoords.y)) discard;
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
 	if (pixel.a <= 0.01) discard;
 	depth = depthCalc(v);

@@ -236,8 +236,9 @@ namespace FSO.SimAntics.Model
         {
             writer.Write((byte)LightType);
             writer.Write((byte)DarkType);
-            writer.Write(Heights.Length);
-            writer.Write(VMSerializableUtils.ToByteArray(Heights));
+            var ba = VMSerializableUtils.ToByteArray(Heights);
+            writer.Write(ba.Length);
+            writer.Write(ba);
             writer.Write(GrassState.Length);
             writer.Write(GrassState);
         }

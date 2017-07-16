@@ -31,7 +31,7 @@ namespace FSO.SimAntics.NetPlay.Model
         public static T[] ToTArray<T>(byte[] input)
         {
             var result = new T[input.Length / Marshal.SizeOf(typeof(T))];
-            Buffer.BlockCopy(input, 0, result, 0, result.Length);
+            Buffer.BlockCopy(input, 0, result, 0, input.Length);
             return result;
         }
     }

@@ -79,13 +79,12 @@ namespace FSO.SimAntics.Engine.Primitives
 
                     //SPECIAL CASE: if we are ending the animation, and the number of events run < expected events
                     //forcefully run those events, with id as their event number. (required for bath drain)
-                    if (cAnim.EndReached && cAnim.EventsRun != 255)
+                    if (cAnim.EndReached)
                     {
-                        for (int i=0; i< operand.ExpectedEventCount; i++)
+                        while (cAnim.EventsRun < operand.ExpectedEventCount)
                         {
-                            cAnim.EventQueue.Add((short)i);
+                            cAnim.EventQueue.Add(cAnim.EventsRun++);
                         }
-                        cAnim.EventsRun = 255;
                     }
 
                     if (cAnim.EventQueue.Count > 0) //favor events over end. do not want to miss any.

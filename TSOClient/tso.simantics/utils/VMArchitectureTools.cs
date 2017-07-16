@@ -655,6 +655,7 @@ namespace FSO.SimAntics.Utils
             if (!bounds.Contains(pos)) return 0;
             var current = target.GetTerrainGrass((short)pos.X, (short)pos.Y);
             var n = (byte)Math.Max(0, Math.Min(255, current + mod));
+            target.SetTerrainGrass((short)pos.X, (short)pos.Y, n);
             return (Math.Abs(current - n) + 31) / 32;
         }
 
@@ -665,6 +666,7 @@ namespace FSO.SimAntics.Utils
             int constrain = 5*10;
             if (smoothMode) constrain = 1*10;
             var bounds = target.DisableClip ? new Rectangle(0, 0, target.Width, target.Height) : target.BuildableArea;
+            bounds = Rectangle.Intersect(bounds, target.TerrainLimit);
 
             if (!pos.Intersects(bounds)) return 0;
             else pos = Rectangle.Intersect(pos, bounds);

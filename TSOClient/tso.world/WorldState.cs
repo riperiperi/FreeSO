@@ -40,7 +40,7 @@ namespace FSO.LotView
             this.World = world;
             this.WorldCamera = new WorldCamera(device);
             WorldCamera.ViewDimensions = new Vector2(worldPxWidth, worldPxHeight);
-
+            Rooms = new GPURoomMaps(device);
             WorldSpace = new WorldSpace(worldPxWidth, worldPxHeight, this);
             Zoom = WorldZoom.Near;
             Rotation = WorldRotation.TopLeft;
@@ -69,6 +69,7 @@ namespace FSO.LotView
         public _3DWorldBatch _3D;
         public LMapBatch Light;
         public Texture2D AmbientLight;
+        public GPURoomMaps Rooms;
         public Color OutsideColor; //temporary to give this to terrain component. in future it will use ambient light texture
         public bool DynamicCutaway;
 

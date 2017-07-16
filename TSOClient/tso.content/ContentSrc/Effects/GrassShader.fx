@@ -23,6 +23,8 @@ float2 LightOffset;
 float2 MapLayout;
 //END LIGHTING
 
+float2 TileSize;
+
 float Level;
 
 bool depthOutMode;
@@ -44,6 +46,20 @@ sampler advLightSampler = sampler_state {
 	texture = <advancedLight>;
 	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
 	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
+};
+
+texture RoomMap : Diffuse;
+sampler RoomMapSampler = sampler_state {
+	texture = <RoomMap>;
+	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
+	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
+};
+
+texture RoomLight : Diffuse;
+sampler RoomLightSampler = sampler_state {
+	texture = <RoomLight>;
+	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
+	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
 };
 
 texture TerrainNoise : Diffuse;
@@ -89,7 +105,10 @@ float2 hash22(float2 p)
     return frac(float2((p3.x + p3.y)*p3.z, (p3.x+p3.z)*p3.y));
 }
 
-/*float2 iterhash22(in float2 uv) {
+/*
+old shader code for grass noise. now we use a texture.
+
+float2 iterhash22(in float2 uv) {
     float2 a = float2(0,0);
     for (int t = 0; t < 2; t++)
     {
@@ -136,6 +155,44 @@ float4 lightProcess(float4 inPosition) {
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
 	return lightColor(lTex);
+}
+
+float2 RoomIDToUV(float room) {
+	return float2((room % 256) / 255.5, floor(room / 256) / 255.5);
+}
+
+float GetRoomID(float2 uv) {
+	float4 test = tex2D(RoomMapSampler, uv * TileSize);
+	float room1 = round(test.x * 255 + (test.y * 65280));
+	float room2 = round(test.z * 255 + (test.w * 65280));
+	bool diagType = (room2 > 32767);
+	if (diagType == true) {
+		room2 -= 32768;
+	}
+	if (room1 != room2) {
+		//diagonal mode
+		if (diagType == true) {
+			//horizontal diag:
+			if ((uv.x % 1) + (uv.y % 1) >= 1)
+				return (room2); //hi room
+			else
+				return (room1); //low room
+		}
+		else {
+			//vertical diag:
+			if ((uv.x % 1) - (uv.y % 1) > 0)
+				return (room1); //low room
+			else
+				return (room2); //hi room
+		}
+	}
+	else {
+		return room1;
+	}
+}
+
+float4 SimpleLight(float2 uv) {
+	return tex2D(RoomLightSampler, RoomIDToUV(GetRoomID(uv / 3)));
 }
 
 GrassPSVTX GrassVS(GrassVTX input)
@@ -201,7 +258,7 @@ void BladesPSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB
 		float bladeCol = rand.x*0.6;
 		float4 green = lerp(LightGreen, DarkGreen, bladeCol);
 		float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-		color = lerp(green, brown, input.GrassInfo.x) * DiffuseColor * LightDot(input.Normal);
+		color = lerp(green, brown, input.GrassInfo.x) * SimpleLight(input.ModelPos.xz) * LightDot(input.Normal);
 	}
 }
 
@@ -231,6 +288,7 @@ void BasePS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB:COLOR1)
 		if (IgnoreColor == false) color *= input.Color;
 		if (UseTexture == true) {
 			color *= tex2D(TexSampler, input.GrassInfo.yz);
+			if (color.a < 0.5) discard;
 		}
     }
 }
@@ -244,10 +302,11 @@ void BasePSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB :
 		color = depthB;
 	}
 	else {
-		color = DiffuseColor * LightDot(input.Normal);
+		color = SimpleLight(input.ModelPos.xz) * LightDot(input.Normal);
 		if (IgnoreColor == false) color *= input.Color;
 		if (UseTexture == true) {
 			color *= tex2D(TexSampler, input.GrassInfo.yz);
+			if (color.a < 0.5) discard;
 		}
 	}
 }
@@ -259,7 +318,7 @@ technique DrawBase
 
 #if SM4
         VertexShader = compile vs_4_0_level_9_1 GrassVS();
-        PixelShader = compile ps_4_0_level_9_1 BasePSSimple();
+        PixelShader = compile ps_4_0_level_9_3 BasePSSimple();
 #else
         VertexShader = compile vs_3_0 GrassVS();
         PixelShader = compile ps_3_0 BasePSSimple();
