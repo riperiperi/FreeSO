@@ -104,7 +104,7 @@ namespace FSO.SimAntics
             }
             else
             {
-                TerrainLimit = new Rectangle(7, 7, 64, 64);
+                TerrainLimit = new Rectangle(6, 6, 65, 65);
                 TerrainLimit.Inflate(-1, -1);
             }
 

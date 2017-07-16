@@ -609,11 +609,18 @@ namespace FSO.SimAntics
         public void Load(VMMarshal input)
         {
             var clientJoin = (Context.Architecture == null);
-            var oldWorld = Context.World;
+            //var oldWorld = Context.World;
             Context = new VMContext(input.Context, Context);
             Context.VM = this;
             Context.Architecture.RegenRoomMap();
             Context.RegeneratePortalInfo();
+
+            if (VM.UseWorld)
+            {
+                Context.Architecture.Terrain.RegenerateCenters();
+                Context.Blueprint.Altitude = Context.Architecture.Terrain.Heights;
+                Context.Blueprint.AltitudeCenters = Context.Architecture.Terrain.Centers;
+            }
 
             var oldSounds = new List<VMSoundTransfer>();
 

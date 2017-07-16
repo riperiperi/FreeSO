@@ -666,7 +666,9 @@ namespace FSO.SimAntics.Utils
             int constrain = 5*10;
             if (smoothMode) constrain = 1*10;
             var bounds = target.DisableClip ? new Rectangle(0, 0, target.Width, target.Height) : target.BuildableArea;
-            bounds = Rectangle.Intersect(bounds, target.TerrainLimit);
+            var tl = target.TerrainLimit;
+            tl.Width++; tl.Height++;
+            bounds = Rectangle.Intersect(bounds, tl);
 
             if (!pos.Intersects(bounds)) return 0;
             else pos = Rectangle.Intersect(pos, bounds);
