@@ -534,9 +534,9 @@ namespace FSO.SimAntics.Utils
                 }
             }
 
+            target.RegenerateCenters();
             if (VM.UseWorld)
             {
-                target.RegenerateCenters();
                 vm.Context.Blueprint.Altitude = target.Heights;
                 vm.Context.Blueprint.AltitudeCenters = target.Centers;
             }

@@ -1,0 +1,12 @@
+﻿1 ^Terrain Tool^
+2 ^Flatten Tool^
+3 ^Grass Tool^
+
+101 ^Use this tool to create interesting landscapes, which will impress visitors and make the local council mad. Click on the corner of a tile and drag to change its height. This may raise additional tiles around the initial target to keep terrain from becoming too steep.
+
+Hold Shift for finer grained control over terrain height. Hold Control to use a smooth pattern for changing the terrain level. Modified ground will revert to dead grass.^
+102 ^Use this tool to create flat areas suitable for placing buildings and objects. Click on the corner of a tile with your target height, then drag over the area you wish to flatten to that height.
+
+Hold Control to use a smooth pattern for changing the terrain level. Modified ground will revert to dead grass.^
+103 ^Use this tool to place or kill grass anywhere on your lot. Useful for creating paths, or reviving grass after terrain modification. Click on the corner of a tile and drag to start painting the grass.
+Hold Shift for finer grained control over grass level. Hold Control to remove grass instead.^

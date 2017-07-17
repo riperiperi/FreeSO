@@ -16,22 +16,22 @@ namespace FSO.Client.UI.Controls.Catalog
     public class UICatalogWallResProvider : UICatalogResProvider
     {
 
-        public Texture2D GetIcon(ulong id)
+        public override Texture2D GetIcon(ulong id)
         {
             return Content.Content.Get().WorldWalls.GetWallStyleIcon((ushort)id).GetTexture(GameFacade.GraphicsDevice);
         }
 
-        public string GetName(ulong id)
+        public override string GetName(ulong id)
         {
             return Content.Content.Get().WorldWalls.GetWallStyle(id).Name;
         }
 
-        public string GetDescription(ulong id)
+        public override string GetDescription(ulong id)
         {
             return Content.Content.Get().WorldWalls.GetWallStyle(id).Description;
         }
 
-        public int GetPrice(ulong id)
+        public override int GetPrice(ulong id)
         {
             return Content.Content.Get().WorldWalls.GetWallStyle(id).Price;
         }

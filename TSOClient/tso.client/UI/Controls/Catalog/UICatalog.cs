@@ -209,7 +209,7 @@ namespace FSO.Client.UI.Controls.Catalog
                 {
                     Control = typeof(UITerrainRaiser),
                     ResID = 0,
-                    Res = null,
+                    Res = new UICatalogTerrainResProvider(),
                     Parameters = new List<int> { }
                 }
             });
@@ -225,8 +225,8 @@ namespace FSO.Client.UI.Controls.Catalog
                 Special = new UISpecialCatalogElement
                 {
                     Control = typeof(UITerrainFlatten),
-                    ResID = 0,
-                    Res = null,
+                    ResID = 1,
+                    Res = new UICatalogTerrainResProvider(),
                     Parameters = new List<int> { }
                 }
             });
@@ -242,8 +242,8 @@ namespace FSO.Client.UI.Controls.Catalog
                 Special = new UISpecialCatalogElement
                 {
                     Control = typeof(UIGrassPaint),
-                    ResID = 0,
-                    Res = null,
+                    ResID = 2,
+                    Res = new UICatalogTerrainResProvider(),
                     Parameters = new List<int> { }
                 }
             });

@@ -277,6 +277,13 @@ namespace FSO.Client.UI.Panels
             }
 
             PreviousPageButton.Disabled = true;
+
+            var showsubtools = CategoryMap[button] != 10;
+            SubToolBg.Visible = showsubtools;
+            SubtoolsSlider.Visible = showsubtools;
+            PreviousPageButton.Visible = showsubtools;
+            NextPageButton.Visible = showsubtools;
+            
             return;
         }
 
@@ -305,7 +312,7 @@ namespace FSO.Client.UI.Panels
                 var resID = item.Special.ResID;
                 if (res != null && res.GetName(resID) != "")
                 {
-                    QueryPanel.SetInfo(res.GetIcon(resID), res.GetName(resID), res.GetDescription(resID), res.GetPrice(resID));
+                    QueryPanel.SetInfo(res.GetThumb(resID), res.GetName(resID), res.GetDescription(resID), res.GetPrice(resID));
                     QueryPanel.Mode = 1;
                     QueryPanel.Tab = 0;
                     QueryPanel.Active = true;

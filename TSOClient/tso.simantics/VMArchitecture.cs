@@ -313,7 +313,7 @@ namespace FSO.SimAntics
         }
 
         public void Tick()
-        { 
+        {
             if (WallsDirty || FloorsDirty)
             {
                 RegenRoomMap();
@@ -331,12 +331,17 @@ namespace FSO.SimAntics
                     RegenerateSupported(i + 1);
             }
 
-            if (TerrainDirty && VM.UseWorld)
+            if (TerrainDirty)
             {
-                WorldUI.Altitude = Terrain.Heights;
                 Terrain.RegenerateCenters();
-                WorldUI.AltitudeCenters = Terrain.Centers;
-                WorldUI.Terrain.UpdateTerrain(Terrain.LightType, Terrain.DarkType, Terrain.Heights, Terrain.GrassState);
+                if (VM.UseWorld)
+                {
+                    WorldUI.Altitude = Terrain.Heights;
+
+                    WorldUI.AltitudeCenters = Terrain.Centers;
+                    WorldUI.Terrain.UpdateTerrain(Terrain.LightType, Terrain.DarkType, Terrain.Heights, Terrain.GrassState);
+
+                }
                 TerrainDirty = false;
             }
 

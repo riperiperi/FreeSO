@@ -614,10 +614,10 @@ namespace FSO.SimAntics
             Context.VM = this;
             Context.Architecture.RegenRoomMap();
             Context.RegeneratePortalInfo();
+            Context.Architecture.Terrain.RegenerateCenters();
 
             if (VM.UseWorld)
             {
-                Context.Architecture.Terrain.RegenerateCenters();
                 Context.Blueprint.Altitude = Context.Architecture.Terrain.Heights;
                 Context.Blueprint.AltitudeCenters = Context.Architecture.Terrain.Centers;
             }

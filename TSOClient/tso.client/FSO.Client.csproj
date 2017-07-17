@@ -90,6 +90,7 @@
     <Compile Include="Rendering\City\Plugins\AbstractCityPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
     <Compile Include="UI\Controls\Catalog\UICatalogRoofResProvider.cs" />
+    <Compile Include="UI\Controls\Catalog\UICatalogTerrainResProvider.cs" />
     <Compile Include="UI\Controls\UISlotsImage.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UIDynamicContainers.cs" />
