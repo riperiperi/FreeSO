@@ -121,7 +121,6 @@ namespace FSO.Client.UI.Panels
                 { HandButton, 28 },
             };
 
-            TerrainButton.Disabled = (LotController?.ActiveEntity?.TSOState as VMTSOAvatarState)?.Permissions < VMTSOAvatarPermissions.Admin;
             TerrainButton.OnButtonClick += ChangeCategory;
             WaterButton.OnButtonClick += ChangeCategory;
             WallButton.OnButtonClick += ChangeCategory;

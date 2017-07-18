@@ -807,14 +807,17 @@ namespace FSO.SimAntics
 
         public bool SlopeVertexCheck(int x, int y)
         {
-            var pos = LotTilePos.FromBigTile((short)x, (short)y, 1);
-            if (!CheckSlopeValid(pos)) return false;
-            pos.x -= 16;
-            if (!CheckSlopeValid(pos)) return false;
-            pos.y -= 16;
-            if (!CheckSlopeValid(pos)) return false;
-            pos.x += 16;
-            if (!CheckSlopeValid(pos)) return false;
+            for (sbyte i = 1; i <= 5; i++)
+            {
+                var pos = LotTilePos.FromBigTile((short)x, (short)y, i);
+                if (!CheckSlopeValid(pos)) return false;
+                pos.x -= 16;
+                if (!CheckSlopeValid(pos)) return false;
+                pos.y -= 16;
+                if (!CheckSlopeValid(pos)) return false;
+                pos.x += 16;
+                if (!CheckSlopeValid(pos)) return false;
+            }
             return true;
         }
 

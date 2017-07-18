@@ -950,6 +950,7 @@ namespace FSO.SimAntics
 
         public VMPlacementError SlopeValid()
         {
+            if (this is VMAvatar) return VMPlacementError.Success;
             var placeFlags = (VMPlacementFlags)ObjectData[(int)VMStackObjectVariable.PlacementFlags];
 
             if ((placeFlags & VMPlacementFlags.OnFloor) > 0 && (placeFlags & VMPlacementFlags.OnSlope) == 0)

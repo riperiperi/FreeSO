@@ -88,6 +88,7 @@ namespace FSO.Client.UI.Panels.LotControls
 
                 var mpos = (int)(state.MouseState.Y - World.State.WorldSpace.GetScreenOffset().Y);
                 var mod = ((StartMousePosition - mpos)*10) / (15 / (1 << (3 - (int)World.State.Zoom)));
+                if (!state.ShiftDown) mod = (int)Math.Round(mod / 10f) * 10;
 
                 if (mod != 0 || (state.CtrlDown))
                 {
@@ -131,6 +132,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 cursor = StartPosition;
                 var mpos = (int)(state.MouseState.Y - World.State.WorldSpace.GetScreenOffset().Y);
                 mod = ((StartMousePosition - mpos)*10) / (15 / (1 << (3 - (int)World.State.Zoom)));
+                if (!state.ShiftDown) mod = (int)Math.Round(mod / 10f) * 10;
                 var newHeight = StartTerrainHeight + mod;
 
                 cmds.Add(new VMArchitectureCommand
@@ -178,6 +180,8 @@ namespace FSO.Client.UI.Panels.LotControls
             {
                 if (WasDown)
                 {
+                    vm.Context.Architecture.Commands.Clear();
+                    vm.Context.Architecture.SignalTerrainRedraw();
                     vm.Context.Architecture.SignalRedraw();
                     WasDown = false;
                 }
@@ -186,8 +190,7 @@ namespace FSO.Client.UI.Panels.LotControls
 
             WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, (World.State.Level - 1) * 2.95f + mod * vm.Context.Blueprint.TerrainFactor), Direction.NORTH, vm.Context);
 
-            if (state.ShiftDown) SetCursorGraphic(3);
-            else if (state.CtrlDown) SetCursorGraphic(1);
+            if (state.CtrlDown) SetCursorGraphic(1);
             else SetCursorGraphic(0);
         }
 
@@ -195,6 +198,7 @@ namespace FSO.Client.UI.Panels.LotControls
         {
             WallCursor.Delete(vm.Context);
             vm.Context.Architecture.Commands.Clear();
+            vm.Context.Architecture.SignalTerrainRedraw();
             vm.Context.Architecture.SignalRedraw();
         }
     }

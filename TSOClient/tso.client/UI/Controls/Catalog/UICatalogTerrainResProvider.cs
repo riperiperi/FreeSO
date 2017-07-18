@@ -24,7 +24,7 @@ namespace FSO.Client.UI.Controls.Catalog
                 case 1:
                     return UIElement.GetTexture(0x1E100000001); //level icon
                 case 2:
-                    return UIElement.GetTexture(0x1E000000001); //down icon (used for grass....)
+                    return UIElement.GetTexture(0x42A00000001); //wallpaper button icon (for grass)
                 default:
                     return null;
             }

@@ -63,6 +63,30 @@ namespace FSO.LotView.Components
             }
         }
 
+        public void SliceReset(GraphicsDevice gd, Rectangle slice)
+        {
+            for (int i = 0; i < Floors.Length; i++)
+            {
+                var lvl = Floors[i];
+                var data = Bp.Floors[i];
+                lvl.Clear();
+
+                for (int x=slice.X; x<slice.Right; x++)
+                {
+                    for (int y = slice.Y; y < slice.Bottom; y++)
+                    {
+                        var j = y * Bp.Width + x;
+                        var pat = data[j].Pattern;
+                        if ((j + 1) % Bp.Width < 2) continue;
+                        var convert = PatternConvert(pat, (ushort)j, (sbyte)(i + 1), false);
+                        if (convert == 0 && i > 0) continue;
+                        lvl.AddTile(convert, (ushort)j);
+                    }
+                }
+                lvl.RegenAll(gd);
+            }
+        }
+
         private static Point[] PoolDirections =
         {
             new Point(0, -1),
@@ -144,15 +168,15 @@ namespace FSO.LotView.Components
             }
         }
 
-        public bool SetGrassIndices(GraphicsDevice gd, Effect e, WorldState state)
+        public int SetGrassIndices(GraphicsDevice gd, Effect e, WorldState state)
         {
             var floor = Floors[0];
             FloorTileGroup grp = null;
-            if (!floor.GroupForTileType.TryGetValue(0, out grp)) return false;
+            if (!floor.GroupForTileType.TryGetValue(0, out grp)) return 0;
             var dat = grp.GPUData;
-            if (dat == null) return false;
+            if (dat == null) return 0;
             gd.Indices = dat;
-            return true;
+            return dat.IndexCount/3;
         }
 
         public void DrawFloor(GraphicsDevice gd, Effect e, WorldState state)

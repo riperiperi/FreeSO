@@ -298,8 +298,9 @@ namespace FSO.LotView
                 {
                     _2d.Pause();
                     _2d.Resume(); 
-                    Blueprint.FloorComp.DrawBound = new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13);
-                    //Blueprint.FloorComp.Draw(gd, state);
+                    Blueprint.FloorGeom.SliceReset(gd, new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13));
+                    Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
+                    Blueprint.Terrain.Draw(gd, state);
                     Blueprint.FloorComp.DrawBound = null;
                     Blueprint.WallComp.Draw(gd, state);
                     _2d.Pause();
@@ -318,6 +319,8 @@ namespace FSO.LotView
 
             }
 
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED));
             //return things to normal
             //state.PrepareLighting();
             state.OutsideColor = lastLight;

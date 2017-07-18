@@ -652,6 +652,7 @@ namespace FSO.SimAntics.Utils
         public static int DotTerrain(VMArchitecture target, Point pos, short mod)
         {
             var bounds = target.DisableClip ? new Rectangle(0, 0, target.Width, target.Height) : target.BuildableArea;
+            bounds.X--; bounds.Y--; bounds.Width++; bounds.Height++;
             if (!bounds.Contains(pos)) return 0;
             var current = target.GetTerrainGrass((short)pos.X, (short)pos.Y);
             var n = (byte)Math.Max(0, Math.Min(255, current + mod));
@@ -667,8 +668,8 @@ namespace FSO.SimAntics.Utils
             if (smoothMode) constrain = 1*10;
             var bounds = target.DisableClip ? new Rectangle(0, 0, target.Width, target.Height) : target.BuildableArea;
             var tl = target.TerrainLimit;
-            tl.Width++; tl.Height++;
             bounds = Rectangle.Intersect(bounds, tl);
+            bounds.Width--; bounds.Height--;
 
             if (!pos.Intersects(bounds)) return 0;
             else pos = Rectangle.Intersect(pos, bounds);

@@ -398,8 +398,9 @@ namespace FSO.LotView.Components
             //    grassScale = 0;
 
             grassDensity *= GrassDensityScale;
+            var primitives = Bp.FloorGeom.SetGrassIndices(device, Effect, world);
 
-            if (Bp.FloorGeom.SetGrassIndices(device, Effect, world))
+            if (primitives > 0)
             {
                 Effect.Parameters["Level"].SetValue((float)0);
                 Effect.Parameters["RoomMap"].SetValue(world.Rooms.RoomMaps[0]);
@@ -430,7 +431,7 @@ namespace FSO.LotView.Components
 
                         pass = Effect.CurrentTechnique.Passes[WorldConfig.Current.PassOffset];
                         pass.Apply();
-                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, BladePrimitives);
+                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, primitives);
                     }
                     if (FSOEnvironment.UseMRT)
                     {

@@ -79,7 +79,7 @@ namespace FSO.Client.UI.Controls.Catalog
             
             if (Icon != null)
             {
-                if (Icon.Width / Icon.Height > 3)
+                if (Icon.Width / Icon.Height > 2)
                 {
                     //special button
                     DrawLocalTexture(batch, Icon, new Rectangle((!Disabled && (Active || Hovered)) ? Icon.Width / 4 : 0, 0, Icon.Width / 4, Icon.Height), new Vector2(2, 2));

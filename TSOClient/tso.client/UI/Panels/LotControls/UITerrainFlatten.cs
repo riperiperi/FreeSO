@@ -190,6 +190,8 @@ namespace FSO.Client.UI.Panels.LotControls
             {
                 if (WasDown)
                 {
+                    vm.Context.Architecture.Commands.Clear();
+                    vm.Context.Architecture.SignalTerrainRedraw();
                     vm.Context.Architecture.SignalRedraw();
                     WasDown = false;
                 }
@@ -205,6 +207,7 @@ namespace FSO.Client.UI.Panels.LotControls
         {
             WallCursor.Delete(vm.Context);
             vm.Context.Architecture.Commands.Clear();
+            vm.Context.Architecture.SignalTerrainRedraw();
             vm.Context.Architecture.SignalRedraw();
         }
     }
