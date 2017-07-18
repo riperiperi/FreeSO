@@ -12,6 +12,7 @@ using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Utils;
 using FSO.Files;
 using FSO.Server.DataService.Model;
+using FSO.Server.Protocol.Electron.Packets;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -229,6 +230,7 @@ namespace FSO.Client.Controllers
 
         private void ShowLotBuyDialog(Lot lot)
         {
+            GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Hourglass);
             GameThread.InUpdate(() =>
             {
                 if (_LotBuyAlert != null) { return; }
@@ -239,16 +241,19 @@ namespace FSO.Client.Controllers
                 var price = lot.Lot_Price;
                 var ourCash = Parent.Screen.VisualBudget;
 
-                DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
+
+                DataService.Request(MaskedStruct.SimPage_Main, Network.MyCharacter).ContinueWith(x =>
                 {
-                    if (!x.IsFaulted && x.Result != null && x.Result.Avatar_LotGridXY != 0)
+                    var avatar = x.Result as Avatar;
+                    if (!x.IsFaulted && avatar != null && avatar.Avatar_LotGridXY != 0)
                     {
                         //we already have a lot. We need to show the right dialog depending on whether or not we're owner.
-                        var oldID = x.Result.Avatar_LotGridXY;
+                        var oldID = avatar.Avatar_LotGridXY;
                         DataService.Request(MaskedStruct.PropertyPage_LotInfo, oldID).ContinueWith(y =>
                         {
-                            GameThread.InUpdate(() =>
+                            GameThread.SetTimeout(() => //setting a timeout here because for some reason when the request finishes we might not have all of the data yet...
                             {
+                                GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Normal);
                                 bool canBuy = true;
                                 if (!y.IsFaulted && y.Result != null)
                                 {
@@ -321,7 +326,7 @@ namespace FSO.Client.Controllers
                                     UIButton toDisable;
                                     if (_LotBuyAlert.ButtonMap.TryGetValue(UIAlertButtonType.Yes, out toDisable)) toDisable.Disabled = !canBuy;
                                 }
-                            });
+                            }, 100);
                         });
                     }
                     else
@@ -329,6 +334,10 @@ namespace FSO.Client.Controllers
                         //we don't have a lot
                         _LotBuyAlert = null;
                         ShowNormalLotBuy("$"+price.ToString(), "$" + ourCash.ToString());
+                        var canBuy = price <= ourCash;
+                        UIButton toDisable;
+                        if (_LotBuyAlert.ButtonMap.TryGetValue(UIAlertButtonType.Yes, out toDisable)) toDisable.Disabled = !canBuy;
+                        GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Normal);
                     }
                 });
             });
@@ -374,7 +383,7 @@ namespace FSO.Client.Controllers
         {
             UIScreen.RemoveDialog(_LotBuyAlert);
             _LotBuyAlert = null;
-            PurchaseRegulator.Purchase(new PurchaseLotRequest
+            PurchaseRegulator.Purchase(new Regulators.PurchaseLotRequest
             {
                 X = _BuyLot.Lot_Location.Location_X,
                 Y = _BuyLot.Lot_Location.Location_Y,
@@ -389,7 +398,7 @@ namespace FSO.Client.Controllers
             UIScreen.RemoveDialog(_LotBuyName);
             ShowCreationProgressBar(true);
 
-            PurchaseRegulator.Purchase(new PurchaseLotRequest {
+            PurchaseRegulator.Purchase(new Regulators.PurchaseLotRequest {
                 X = _BuyLot.Lot_Location.Location_X,
                 Y = _BuyLot.Lot_Location.Location_Y,
                 Name = name
@@ -400,15 +409,40 @@ namespace FSO.Client.Controllers
 
         private void PurchaseRegulator_OnError(object data)
         {
-            ShowCreationProgressBar(false);
-            //TODO: Find error messages in lang table
-            UIScreen.GlobalShowAlert(new UIAlertOptions
+            GameThread.NextUpdate(x =>
             {
-                Message = data.ToString(),
-                //TODO: Find something in string tables?
-                Title = "Buy Property",
-                Width = 300
-            }, true);
+                ShowCreationProgressBar(false);
+                //TODO: Find error messages in lang table
+                var reason = (PurchaseLotFailureReason)data;
+
+                string error = "An error occurred.";
+                switch (reason)
+                {
+                    case PurchaseLotFailureReason.INSUFFICIENT_FUNDS:
+                        error = GameFacade.Strings.GetString("215", "26");
+                        break;
+                    case PurchaseLotFailureReason.NOT_OFFLINE_FOR_MOVE:
+                        error = GameFacade.Strings.GetString("211", "53");
+                        break;
+                    case PurchaseLotFailureReason.IN_LOT_CANT_EVICT:
+                        error = GameFacade.Strings.GetString("211", "64");
+                        break;
+                    case PurchaseLotFailureReason.LOT_TAKEN:
+                    case PurchaseLotFailureReason.LOT_NOT_PURCHASABLE:
+                        error = GameFacade.Strings.GetString("211", "46");
+                        break;
+                    default:
+                        error = GameFacade.Strings.GetString("211", "55") + " ("+reason.ToString()+")";
+                        break;
+                }
+                UIScreen.GlobalShowAlert(new UIAlertOptions
+                {
+                    Message = error,
+                    //TODO: Find something in string tables?
+                    Title = "",
+                    Width = 300
+                }, true);
+            });
         }
 
         private void PurchaseRegulator_OnTransition(string state, object data)

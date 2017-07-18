@@ -29,35 +29,41 @@ namespace FSO.Client.Controllers
         
         private void CASRegulator_OnTransition(string state, object data)
         {
-            switch (state){
-                case "Idle":
-                    break;
-                case "CreateSim":
-                    break;
-                case "Waiting":
-                    //Show waiting dialog
-                    View.ShowCreationProgressBar(true);
-                    break;
-                case "Error":
-                    if (data != null)
-                    {
-                        var casr = (CreateASimResponse)data;
-                        if (casr.Reason == CreateASimFailureReason.NAME_TAKEN) {
-                            ShowError(ErrorMessage.FromUIText("222", "4", "5"));
-                        } else
+            Common.Utils.GameThread.NextUpdate(x =>
+            {
+                switch (state)
+                {
+                    case "Idle":
+                        break;
+                    case "CreateSim":
+                        break;
+                    case "Waiting":
+                        //Show waiting dialog
+                        View.ShowCreationProgressBar(true);
+                        break;
+                    case "Error":
+                        if (data != null)
                         {
-                            //name validation error... just say its in use for now (unless client validation incorrect, should not appear.
-                            ShowError(ErrorMessage.FromUIText("222", "4", "5"));
+                            var casr = (CreateASimResponse)data;
+                            if (casr.Reason == CreateASimFailureReason.NAME_TAKEN)
+                            {
+                                ShowError(ErrorMessage.FromUIText("222", "4", "5"));
+                            }
+                            else
+                            {
+                                //name validation error... just say its in use for now (unless client validation incorrect, should not appear.
+                                ShowError(ErrorMessage.FromUIText("222", "4", "5"));
+                            }
                         }
-                    }
-                    View.ShowCreationProgressBar(false);
-                    break;
-                case "Success":
-                    //Connect to the city with our new avatar
-                    var response = (CreateASimResponse)data;
-                    FSOFacade.Controller.ConnectToCity(null, response.NewAvatarId, null);
-                    break;
-            }
+                        View.ShowCreationProgressBar(false);
+                        break;
+                    case "Success":
+                        //Connect to the city with our new avatar
+                        var response = (CreateASimResponse)data;
+                        FSOFacade.Controller.ConnectToCity(null, response.NewAvatarId, null);
+                        break;
+                }
+            });
         }
 
         private void ShowError(ErrorMessage errorMsg) { 

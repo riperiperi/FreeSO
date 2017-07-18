@@ -41,7 +41,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 {
                     foreach (var frame in Frames)
                     {
-                        if (frame.Decoded) frame.CopyZToAlpha();
+                        if (frame.Decoded && frame.PixelData != null) frame.CopyZToAlpha();
                     }
                 }
             }
@@ -60,7 +60,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 {
                     foreach (var frame in Frames)
                     {
-                        if (frame.Decoded) frame.FloorCopy();
+                        if (frame.Decoded && frame.PixelData != null) frame.FloorCopy();
                     }
                 }
             }

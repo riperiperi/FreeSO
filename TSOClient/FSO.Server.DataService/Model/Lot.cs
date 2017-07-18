@@ -107,6 +107,7 @@ namespace FSO.Common.DataService.Model
             get { return _Lot_LastCatChange; }
             set
             {
+                _Lot_HoursSinceLastLotCatChange = value;
                 _Lot_LastCatChange = value;
                 NotifyPropertyChanged("Lot_HoursSinceLastLotCatChange");
             }
@@ -134,6 +135,7 @@ namespace FSO.Common.DataService.Model
                 //return (uint)TimeSpan.FromMilliseconds(diff).TotalMilliseconds;
             }
             set{
+                _Lot_LastCatChange = value;
                 _Lot_HoursSinceLastLotCatChange = value;
             }
         }
