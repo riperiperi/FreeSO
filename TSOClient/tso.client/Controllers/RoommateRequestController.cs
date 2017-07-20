@@ -90,6 +90,7 @@ namespace FSO.Client.Controllers
             }
             else if (message is ChangeRoommateResponse)
             {
+                DataService.Request(MaskedStruct.CurrentCity, 0);
                 string title;
                 string msg;
                 var resp = (ChangeRoommateResponse)message;

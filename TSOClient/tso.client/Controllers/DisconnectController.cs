@@ -14,10 +14,12 @@ namespace FSO.Client.Controllers
         private TransitionScreen View;
         private CityConnectionRegulator CityConnectionRegulator;
         private LotConnectionRegulator LotConnectionRegulator;
+        private LoginRegulator LoginRegulator;
 
-        private Callback onDisconnected;
+        int totalComplete = 0;
+        private Action<bool> onDisconnected;
 
-        public DisconnectController(TransitionScreen view, CityConnectionRegulator cityRegulator, LotConnectionRegulator lotRegulator, Network.Network network)
+        public DisconnectController(TransitionScreen view, CityConnectionRegulator cityRegulator, LotConnectionRegulator lotRegulator, LoginRegulator logRegulator, Network.Network network)
         {
             View = view;
             View.ShowProgress = false;
@@ -27,6 +29,24 @@ namespace FSO.Client.Controllers
             CityConnectionRegulator = cityRegulator;
             CityConnectionRegulator.OnTransition += CityConnectionRegulator_OnTransition;
             LotConnectionRegulator = lotRegulator;
+            LoginRegulator = logRegulator;
+            LoginRegulator.OnError += LoginRegulator_OnError;
+            LoginRegulator.OnTransition += LoginRegulator_OnTransition;
+        }
+
+        private void LoginRegulator_OnTransition(string state, object data)
+        {
+            switch (state)
+            {
+                case "LoggedIn":
+                    if (++totalComplete == 2) onDisconnected(false);
+                    break;
+            }
+        }
+
+        private void LoginRegulator_OnError(object data)
+        {
+            onDisconnected(true);
         }
 
         private void CityConnectionRegulator_OnTransition(string state, object data)
@@ -36,22 +56,25 @@ namespace FSO.Client.Controllers
                 case "Disconnect":
                     break;
                 case "Disconnected":
-                    onDisconnected();
+                    if (++totalComplete == 2) onDisconnected(false);
                     break;
             }
         }
 
-        public void Disconnect(Callback onDisconnected)
+        public void Disconnect(Action<bool> onDisconnected)
         {
+            totalComplete = 0;
             this.onDisconnected = onDisconnected;
             CityConnectionRegulator.Disconnect();
             LotConnectionRegulator.Disconnect();
-
+            LoginRegulator.AsyncTransition("AvatarData");
         }
 
         public void Dispose()
         {
             CityConnectionRegulator.OnTransition -= CityConnectionRegulator_OnTransition;
+            LoginRegulator.OnTransition -= LoginRegulator_OnTransition;
+            LoginRegulator.OnError -= LoginRegulator_OnError;
         }
     }
 }

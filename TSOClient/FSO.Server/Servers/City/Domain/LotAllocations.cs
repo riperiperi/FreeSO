@@ -87,7 +87,12 @@ namespace FSO.Server.Servers.City.Domain
             {
                 using (var da = DAFactory.Get())
                 {
-                    location = da.Lots.Get(lotId)?.location;
+                    var lot = da.Lots.Get(lotId);
+                    if (lot != null)
+                    {
+                        location = lot.location;
+                        if (lot.owner_id == null) da.Lots.Delete(lotId); //this lot should no longer exist.
+                    }
                 }
             }
             else

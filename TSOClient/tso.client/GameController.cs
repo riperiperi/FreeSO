@@ -20,6 +20,7 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels;
 using FSO.Client.UI;
 using FSO.Common.DatabaseService.Model;
+using FSO.Server.Protocol.Electron.Packets;
 
 namespace FSO.Client
 {
@@ -103,6 +104,21 @@ namespace FSO.Client
             });
         }
 
+        public void RetireAvatar(string cityName, uint avatarId)
+        {
+            ChangeState<TransitionScreen, ConnectCityController>((view, controller) =>
+            {
+                controller.Connect(cityName, avatarId, () => {
+                    var network = Kernel.Get<Network.Network>();
+                    network.CityClient.Write(new AvatarRetireRequest());
+                    GameThread.SetTimeout(() =>
+                    {
+                        Disconnect();
+                    }, 1000);
+                }, new Common.Utils.Callback(Disconnect));
+            });
+        }
+
         public void ConnectToCAS(string cityName)
         {
             /**
@@ -146,7 +162,7 @@ namespace FSO.Client
         public void Disconnect(bool toLogin){
             ChangeState<TransitionScreen, DisconnectController>((view, controller) =>
             {
-                controller.Disconnect(() => HandleDisconnect(toLogin));
+                controller.Disconnect((forceLogin) => HandleDisconnect(forceLogin || toLogin));
             });
         }
 

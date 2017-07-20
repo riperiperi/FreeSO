@@ -343,24 +343,18 @@ namespace FSO.Client.UI.Screens
             }
 
             UIAlertOptions AlertOptions = new UIAlertOptions();
+            UIAlert alert = null;
 
             AlertOptions.Title = GameFacade.Strings.GetString("169", "9");
             AlertOptions.Message = GameFacade.Strings.GetString("169", "10");
             AlertOptions.Buttons = new UIAlertButton[] {
-                new UIAlertButton(UIAlertButtonType.OK, new ButtonClickDelegate(PersonSlot_OnButtonClick)),
+                new UIAlertButton(UIAlertButtonType.OK, (btn) => {
+                    FSOFacade.Controller.RetireAvatar(Avatar.ShardName, Avatar.ID);
+                }),
                 new UIAlertButton(UIAlertButtonType.Cancel)
             };
 
-            UIScreen.GlobalShowAlert(AlertOptions, true);
-        }
-
-        /// <summary>
-        /// User confirmed character retirement.
-        /// </summary>
-        private void PersonSlot_OnButtonClick(UIElement button)
-        {
-            //UIPacketSenders.SendCharacterRetirement(Avatar);
-            //UIScreen.RemoveDialog(RetireCharAlert);
+            alert = UIScreen.GlobalShowAlert(AlertOptions, true);
         }
 
         /// <summary>

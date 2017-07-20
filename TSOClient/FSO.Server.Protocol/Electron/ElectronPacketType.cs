@@ -24,6 +24,7 @@ namespace FSO.Server.Protocol.Electron
         ChangeRoommateResponse,
         ModerationRequest,
         FSOVMProtocolMessage,
+        AvatarRetireRequest,
         Unknown
     }
 

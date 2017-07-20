@@ -21,6 +21,11 @@ namespace FSO.Server.Database.DA.Avatars
             return Context.Connection.Query<DbAvatar>("SELECT * FROM fso_avatars WHERE avatar_id = @id", new { id = id }).FirstOrDefault();
         }
 
+        public bool Delete(uint id)
+        {
+            return Context.Connection.Execute("DELETE FROM fso_avatars WHERE avatar_id = @id", new { id = id }) > 0;
+        }
+
         public int GetPrivacyMode(uint id)
         {
             return Context.Connection.Query<int>("SELECT privacy_mode FROM fso_avatars WHERE avatar_id = @id", new { id = id }).FirstOrDefault();

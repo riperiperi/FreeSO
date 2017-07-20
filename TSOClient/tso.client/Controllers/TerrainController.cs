@@ -447,11 +447,14 @@ namespace FSO.Client.Controllers
 
         private void PurchaseRegulator_OnTransition(string state, object data)
         {
-            if(state == "PurchaseComplete")
+            GameThread.InUpdate(() =>
             {
-                DataService.Request(MaskedStruct.CurrentCity, 0);
-                ShowCreationProgressBar(false);
-            }
+                if (state == "PurchaseComplete")
+                {
+                    DataService.Request(MaskedStruct.CurrentCity, 0);
+                    ShowCreationProgressBar(false);
+                }
+            });
         }
 
         private UIAlert _ProgressAlert;

@@ -11,6 +11,7 @@ namespace FSO.Server.Database.DA.Avatars
         uint Create(DbAvatar avatar);
 
         DbAvatar Get(uint id);
+        bool Delete(uint id);
         int GetPrivacyMode(uint id);
         int GetModerationLevel(uint id);
         DbJobLevel GetCurrentJobLevel(uint avatar_id);

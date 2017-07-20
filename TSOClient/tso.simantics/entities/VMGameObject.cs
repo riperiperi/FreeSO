@@ -186,7 +186,7 @@ namespace FSO.SimAntics
                 var ent = pt.GetSlot(i);
                 if (ent != null) return DeepestObjInSlot(ent, depth++);
             }
-            return this;
+            return pt;
         }
 
         public override float RadianDirection

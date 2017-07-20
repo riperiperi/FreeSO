@@ -220,6 +220,9 @@
     <Content Include="DatabaseScripts\changes\0014_client_id.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="DatabaseScripts\changes\0015_avatar_lot_retire.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="DatabaseScripts\fso_transactions.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

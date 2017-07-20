@@ -1,5 +1,6 @@
 ﻿using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
+using FSO.Common.Security;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Roommates;
@@ -61,7 +62,7 @@ namespace FSO.Server.Servers.City.Handlers
                                 session.Write(new ChangeRoommateRequest
                                 {
                                     Type = ChangeRoommateType.INVITE,
-                                    AvatarId = lotdb.owner_id,
+                                    AvatarId = lotdb.owner_id ?? 0,
                                     LotLocation = lotdb.location
                                 });
                             }
@@ -196,127 +197,145 @@ namespace FSO.Server.Servers.City.Handlers
                         }
                         else if (packet.Type == ChangeRoommateType.KICK)
                         {
-                            var lot = da.Lots.GetByLocation(Context.ShardId, packet.LotLocation);
-                            if (lot == null) { Status(session, ChangeRoommateResponseStatus.UNKNOWN); return; }
-
-                            var roommates = da.Roommates.GetLotRoommates(lot.lot_id);
-                            if (roommates.Count(x => x.is_pending == 0) <= 1)
-                            {
-                                //we're the last roommate here. the lot must be closed. This will cause the lot to fall off-map.
-                                if (lot.owner_id != session.AvatarId)
-                                {
-                                    //only the owner can delete their lot
-                                    Status(session, ChangeRoommateResponseStatus.UNKNOWN); return;
-                                }
-
-                                //TODO: let user do this with their lot falling off map. for now they must use start fresh mode.
-                                Status(session, ChangeRoommateResponseStatus.UNKNOWN); return;
-                            }
-                            else if (roommates.Any(x => x.avatar_id == packet.AvatarId && x.is_pending == 0))
-                            {
-                                //avatar can be removed from the lot.
-                                var selfDelete = false;
-                                if (session.AvatarId == packet.AvatarId)
-                                {
-                                    //self deletes are allowed
-                                    selfDelete = true;
-                                }
-                                else if (lot.owner_id != session.AvatarId)
-                                {
-                                    //only the owner can kickout other roommates
-                                    Status(session, ChangeRoommateResponseStatus.YOU_ARE_NOT_OWNER); return;
-                                }
-
-                                if (da.Roommates.RemoveRoommate(packet.AvatarId, lot.lot_id) == 0)
-                                {
-                                    //nothing happened when we tried to remove this user's roommate status.
-                                    Status(session, ChangeRoommateResponseStatus.YOU_ARE_NOT_ROOMMATE); return;
-                                }
-
-                                if (selfDelete && lot.owner_id == session.AvatarId) {
-                                    //lot needs a new owner
-                                    da.Lots.ReassignOwner(lot.lot_id); //database will assign oldest roommate as owner.
-                                }
-
-                                var lotDS = await DataService.Get<FSO.Common.DataService.Model.Lot>(packet.LotLocation);
-                                if (lotDS != null)
-                                {
-                                    lotDS.Lot_RoommateVec = lotDS.Lot_RoommateVec.Remove(packet.AvatarId);
-                                    var newLot = da.Lots.Get(lot.lot_id);
-                                    lotDS.Lot_OwnerVec = ImmutableList.Create(newLot.owner_id);
-                                }
-
-                                //if online, notify the lot
-                                var lotOwned = da.LotClaims.GetByLotID(lot.lot_id);
-                                if (lotOwned != null)
-                                {
-                                    var lotServer = LotServers.GetLotServerSession(lotOwned.owner);
-                                    if (lotServer != null)
-                                    {
-                                        //immediately notify lot of new roommate
-                                        lotServer.Write(new NotifyLotRoommateChange()
-                                        {
-                                            AvatarId = packet.AvatarId,
-                                            LotId = lot.lot_id,
-                                            Change = Protocol.Gluon.Model.ChangeType.REMOVE_ROOMMATE
-                                        });
-                                    }
-                                } else
-                                {
-                                    //try force the lot open
-                                    var result = await Lots.TryFindOrOpen(lot.location, 0, session);
-                                }
-
-                                //TODO: if offline, force the lot to open so we can remove the kicked out roommate's objects.
-
-                                var avatar = await DataService.Get<Avatar>(packet.AvatarId);
-                                if (avatar != null) avatar.Avatar_LotGridXY = 0;
-
-                                //try to notify roommates
-                                foreach (var roomie in roommates)
-                                {
-                                    var kickedMe = roomie.avatar_id == packet.AvatarId;
-                                    if (roomie.is_pending == 0 && !(kickedMe && selfDelete) && session.AvatarId != roomie.avatar_id)
-                                    {
-                                        var targetSession = Sessions.GetByAvatarId(roomie.avatar_id);
-                                        if (targetSession != null)
-                                        {
-                                            targetSession.Write(new ChangeRoommateResponse()
-                                            {
-                                                Type = (kickedMe)?ChangeRoommateResponseStatus.GOT_KICKED:ChangeRoommateResponseStatus.ROOMMATE_LEFT,
-                                                Extra = packet.AvatarId
-                                            });
-                                        }
-                                    }
-                                }
-
-                                if (selfDelete) { Status(session, ChangeRoommateResponseStatus.SELFKICK_SUCCESS); return; }
-                                else { Status(session, ChangeRoommateResponseStatus.KICK_SUCCESS); return; }
-                            }
-                            else
-                            {
-                                //not roommate??
-                                Status(session, ChangeRoommateResponseStatus.YOU_ARE_NOT_ROOMMATE); return;
-                            }
-                            //if target avatar is our avatar, we are moving out
-
-                            //if we are owner of the lot, set the new owner to the first (earliest) roommate entry in the database.
-                            //if we are the last person in the lot, the lot must be closed before doing this.
-                            //make sure all references are set to new owner!
-
-                            //remove roommate entry for target avatar.
-                            //update lot data service and avatar data service for targets.
-
-                            //if lot open, notify lot server of change (roommate add/remove AND new/same owner)
-                            //the lot will remove objects as necessary
-
-                            //future: if lot closed, special request to a lot server to quickly open an unjoinable instance of the lot to remove our objects.
+                            var result = await TryKick(packet.LotLocation, session.AvatarId, packet.AvatarId);
+                            Status(session, result);
                         }
                     }
                 }
             }
             catch (Exception e) {
                 Status(session, ChangeRoommateResponseStatus.UNKNOWN);
+            }
+        }
+
+        public async Task<ChangeRoommateResponseStatus> TryKick(uint location, uint requester, uint target)
+        {
+            using (var da = DAFactory.Get())
+            {
+                var lot = da.Lots.GetByLocation(Context.ShardId, location);
+                if (lot == null) return ChangeRoommateResponseStatus.UNKNOWN;
+
+                var roommates = da.Roommates.GetLotRoommates(lot.lot_id);
+                /*
+                if (roommates.Count(x => x.is_pending == 0) <= 1)
+                {
+                    //we're the last roommate here. the lot must be closed. This will cause the lot to fall off-map.
+                    if (lot.owner_id != requester)
+                    {
+                        //only the owner can delete their lot
+                        return ChangeRoommateResponseStatus.UNKNOWN;
+                    }
+
+                    //TODO: let user do this with their lot falling off map. for now they must use start fresh mode.
+                    return ChangeRoommateResponseStatus.UNKNOWN;
+                }
+                else */
+                if (roommates.Any(x => x.avatar_id == target && x.is_pending == 0))
+                {
+                    //avatar can be removed from the lot.
+                    var selfDelete = false;
+                    if (requester == target)
+                    {
+                        //self deletes are allowed
+                        selfDelete = true;
+                    }
+                    else if (lot.owner_id != requester)
+                    {
+                        //only the owner can kickout other roommates
+                        return ChangeRoommateResponseStatus.YOU_ARE_NOT_OWNER;
+                    }
+
+                    if (da.Roommates.RemoveRoommate(target, lot.lot_id) == 0)
+                    {
+                        //nothing happened when we tried to remove this user's roommate status.
+                        return ChangeRoommateResponseStatus.YOU_ARE_NOT_ROOMMATE;
+                    }
+
+                    if (selfDelete && lot.owner_id == requester)
+                    {
+                        //lot needs a new owner
+                        da.Lots.ReassignOwner(lot.lot_id); //database will assign oldest roommate as owner.
+                    }
+
+                    /*
+                    var lotDS = await DataService.Get<FSO.Common.DataService.Model.Lot>(location);
+                    if (lotDS != null)
+                    {
+                        lotDS.Lot_RoommateVec = lotDS.Lot_RoommateVec.Remove(target);
+                        var newLot = da.Lots.Get(lot.lot_id);
+                        lotDS.Lot_OwnerVec = ImmutableList.Create(newLot.owner_id ?? 0);
+                    }*/
+
+                    //this invalidation handles a few things... any changes to the roommates vector, and the possibility of the lot being deleted
+                    //(when owner id is null, the lot disappears from the city until it is deleted)
+                    DataService.Invalidate<FSO.Common.DataService.Model.Lot>(location);
+
+                    //if online, notify the lot
+                    var lotOwned = da.LotClaims.GetByLotID(lot.lot_id);
+                    if (lotOwned != null)
+                    {
+                        var lotServer = LotServers.GetLotServerSession(lotOwned.owner);
+                        if (lotServer != null)
+                        {
+                            //immediately notify lot of new roommate
+                            lotServer.Write(new NotifyLotRoommateChange()
+                            {
+                                AvatarId = target,
+                                LotId = lot.lot_id,
+                                Change = Protocol.Gluon.Model.ChangeType.REMOVE_ROOMMATE
+                            });
+                        }
+                    }
+                    else
+                    {
+                        //try force the lot open
+                        var result = await Lots.TryFindOrOpen(lot.location, 0, NullSecurityContext.INSTANCE);
+                    }
+
+                    //TODO: if offline, force the lot to open so we can remove the kicked out roommate's objects.
+
+                    var avatar = await DataService.Get<Avatar>(target);
+                    if (avatar != null) avatar.Avatar_LotGridXY = 0;
+
+                    //try to notify roommates
+                    foreach (var roomie in roommates)
+                    {
+                        var kickedMe = roomie.avatar_id == target;
+                        if (roomie.is_pending == 0 && !(kickedMe && selfDelete) && target != roomie.avatar_id)
+                        {
+                            var targetSession = Sessions.GetByAvatarId(roomie.avatar_id);
+                            if (targetSession != null)
+                            {
+                                targetSession.Write(new ChangeRoommateResponse()
+                                {
+                                    Type = (kickedMe) ? ChangeRoommateResponseStatus.GOT_KICKED : ChangeRoommateResponseStatus.ROOMMATE_LEFT,
+                                    Extra = target
+                                });
+                            }
+                        }
+                    }
+
+                    if (selfDelete) return ChangeRoommateResponseStatus.SELFKICK_SUCCESS;
+                    else return ChangeRoommateResponseStatus.KICK_SUCCESS;
+                }
+                else
+                {
+                    //not roommate??
+                    return ChangeRoommateResponseStatus.YOU_ARE_NOT_ROOMMATE;
+                }
+                //if target avatar is our avatar, we are moving out
+
+                //if we are owner of the lot, set the new owner to the first (earliest) roommate entry in the database.
+                //if we are the last person in the lot, the lot must be closed before doing this.
+                //make sure all references are set to new owner!
+
+                //remove roommate entry for target avatar.
+                //update lot data service and avatar data service for targets.
+
+                //if lot open, notify lot server of change (roommate add/remove AND new/same owner)
+                //the lot will remove objects as necessary
+
+                //future: if lot closed, special request to a lot server to quickly open an unjoinable instance of the lot to remove our objects.
             }
         }
     }

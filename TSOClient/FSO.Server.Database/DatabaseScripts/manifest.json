@@ -156,6 +156,17 @@
       "requires": [
         "9a48f9fc-5950-4348-9ccf-318a263be4eb"
       ]
-    }
+    },
+
+    {
+      "id": "17b82f41-7e0a-4ae8-b4ea-db383bced329",
+      "script": "changes/0015_avatar_lot_retire.sql",
+      "idempotent": false,
+      "requires": [
+        "bec36bbc-1774-44cb-a7c5-03f4a00e801c",
+        "3b7c199c-c369-4f2c-855b-2554e93484bc",
+        "52795d47-a25e-418f-a618-fb89300aab01"
+      ]
+    },
   ]
 }

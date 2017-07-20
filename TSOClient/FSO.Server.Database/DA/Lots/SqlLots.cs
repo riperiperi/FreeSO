@@ -56,7 +56,7 @@ namespace FSO.Server.Database.DA.Lots
                 failReason = "ROOMIE";
                 var roomie = new DbRoommate()
                 {
-                    avatar_id = lot.owner_id,
+                    avatar_id = lot.owner_id ?? 0,
                     is_pending = 0,
                     lot_id = (int)result,
                     permissions_level = 2
@@ -192,9 +192,9 @@ namespace FSO.Server.Database.DA.Lots
             Context.Connection.Query("UPDATE fso_lots SET admit_mode = @admit_mode WHERE lot_id = @id", new { id = lot_id, admit_mode = admit_mode });
         }
 
-        public void UpdateLocation(int lot_id, uint location, bool startFresh)
+        public bool UpdateLocation(int lot_id, uint location, bool startFresh)
         {
-            Context.Connection.Query("UPDATE fso_lots SET location = @location, move_flags = @move WHERE lot_id = @id", new { id = lot_id, location = location, move = (byte)(startFresh?2:1) });
+            return Context.Connection.Execute("UPDATE fso_lots SET location = @location, move_flags = @move WHERE lot_id = @id", new { id = lot_id, location = location, move = (byte)(startFresh?2:1) }) > 0;
         }
     }
 }
