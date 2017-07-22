@@ -334,7 +334,7 @@ namespace FSO.Server.Servers.Lot.Domain
             var total = 0;
             var complete = 0;
             var ents = new List<VMEntity>(Lot.Entities);
-            var needToCreate = new HashSet<uint>();
+            var needToCreate = new HashSet<uint>(RequiredGUIDs);
             var removeAll = (LotPersist.move_flags & 6) > 0;
             foreach (var ent in ents)
             {

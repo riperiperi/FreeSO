@@ -42,9 +42,11 @@ namespace FSO.SimAntics.Primitives
                     }
                     break;
                 case 1: //light
-                case 2: //area contribution
                     context.VM.Context.RefreshLighting(context.VM.Context.GetObjectRoom(target), true, new HashSet<ushort>());
                     if (target is VMGameObject) ((VMGameObject)target).RefreshLight();
+                    break;
+                case 2: //area contribution
+                    context.VM.Context.RefreshRoomScore(context.VM.Context.GetObjectRoom(target));
                     break;
             }
 
