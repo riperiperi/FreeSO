@@ -322,7 +322,17 @@ namespace FSO.Client.Regulators
             else if (message is AnnouncementMsgPDU)
             {
                 GameThread.InUpdate(() => {
-                    UIScreen.GlobalShowAnnouncement((AnnouncementMsgPDU)message);
+                    var msg = (AnnouncementMsgPDU)message;
+                    UIAlert alert = null;
+                    alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+                    {
+                        Title = GameFacade.Strings.GetString("195", "30") + GameFacade.CurrentCityName,
+                        Message = GameFacade.Strings.GetString("195", "28") + msg.SenderID.Substring(2) + "\r\n"
+                        + GameFacade.Strings.GetString("195", "29") + msg.Subject + "\r\n"
+                        + msg.Message,
+                        Buttons = UIAlertButton.Ok((btn) => UIScreen.RemoveDialog(alert)),
+                        Alignment = TextAlignment.Left
+                    }, true);
                 });
             } else if (message is ChangeRoommateResponse)
             {

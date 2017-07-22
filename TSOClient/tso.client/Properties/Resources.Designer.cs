@@ -59,15 +59,5 @@ namespace FSO.Client.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        public static byte[] UIScript {
-            get {
-                object obj = ResourceManager.GetObject("UIScript", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
     }
 }

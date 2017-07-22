@@ -293,8 +293,6 @@ namespace FSO.Client.UI
             }
         }
 
-        private bool _F1KeyDown = false;
-
         public void Update(UpdateState state)
         {
             GameThread.DigestUpdate(state);
@@ -304,13 +302,6 @@ namespace FSO.Client.UI
             state.MouseOverWindow = mousePosition.X > 0 && mousePosition.Y > 0 &&
                                     mousePosition.X < bounds.Width && mousePosition.Y < bounds.Height;
             state.WindowFocused = GameFacade.Game.IsActive;
-
-            var f1Down = state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.F1);
-            if(_F1KeyDown && !f1Down){
-                FSOFacade.Controller.ToggleDebugMenu();
-            }
-
-            _F1KeyDown = f1Down;
 
             /** 
              * Handle the mouse events from the previous frame

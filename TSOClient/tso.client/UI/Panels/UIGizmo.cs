@@ -536,12 +536,12 @@ namespace FSO.Client.UI.Panels
             this.Add(FiltersProperty);
 
             Search = new UIGizmoSearch(ui, this);
-            Search.BindController<GizmoSearchController>();
+            ControllerUtils.BindController<GizmoSearchController>(Search);
             Search.Visible = false;
             this.Add(Search);
 
             Top100 = new UIGizmoTop100(ui, this);
-            Top100.BindController<GizmoTop100Controller>();
+            ControllerUtils.BindController<GizmoTop100Controller>(Top100);
             Top100.Visible = false;
             Top100.Background.Visible = false;
             this.Add(Top100);

@@ -1,5 +1,6 @@
 ﻿using FSO.Client.Model;
 using FSO.Client.UI.Panels;
+using FSO.Client.Utils;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Framework;
 using FSO.Common.DataService.Model;
@@ -99,7 +100,7 @@ namespace FSO.Client.Controllers
             }
 
             var window = new UIMessageWindow();
-            window.BindController<MessagingWindowController>().Init(message, this);
+            ControllerUtils.BindController<MessagingWindowController>(window).Init(message, this);
             Game.AddWindow(window);
             MessageWindows.Add(message, window);
             ActiveMessages.Add(message);

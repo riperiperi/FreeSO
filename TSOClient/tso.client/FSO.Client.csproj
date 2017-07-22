@@ -77,7 +77,7 @@
     <Compile Include="Controllers\RoommateRequestController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
     <Compile Include="FSOFacade.cs" />
-    <Compile Include="GameContent\UIFileIDs.cs" />
+    <Compile Include="GameStartProxy.cs" />
     <Compile Include="Model\UserReference.cs" />
     <Compile Include="GameContent\CacheModule.cs" />
     <Compile Include="Network\ClientDataService.cs" />
@@ -93,17 +93,10 @@
     <Compile Include="UI\Controls\Catalog\UICatalogTerrainResProvider.cs" />
     <Compile Include="UI\Controls\UISlotsImage.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
-    <Compile Include="UI\Controls\UIDynamicContainers.cs" />
     <Compile Include="UI\Controls\UILotButton.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />
-    <Compile Include="UI\Controls\UICustomTooltip.cs" />
-    <Compile Include="UI\Controls\UIRadioButton.cs" />
     <Compile Include="UI\Controls\UISkillBar.cs" />
     <Compile Include="UI\Controls\UIValidationMessages.cs" />
-    <Compile Include="UI\Framework\DoubleClick.cs" />
-    <Compile Include="UI\Framework\IUIAutoSize.cs" />
-    <Compile Include="UI\Framework\UICachedContainer.cs" />
-    <Compile Include="UI\Framework\UIDebounce.cs" />
     <Compile Include="UI\Panels\EODs\Archetypes\UIBasicEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIBandEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIGameCompDrawACardPluginEOD.cs" />
@@ -144,11 +137,7 @@
     <Compile Include="UI\Panels\UIMessageTray.cs" />
     <Compile Include="UI\Panels\UIPersonPage.cs" />
     <Compile Include="Debug\IDEHook.cs" />
-    <Compile Include="GameStartProxy.cs" />
-    <Compile Include="GlobalSettings.cs" />
     <Compile Include="UI\Controls\UIVMPersonButton.cs" />
-    <Compile Include="UI\Framework\UIExternalContainer.cs" />
-    <Compile Include="UI\Model\UIMusic.cs" />
     <Compile Include="UI\Panels\EODs\EODLiveModeOpt.cs" />
     <Compile Include="UI\Panels\EODs\UIDanceFloorEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIEOD.cs" />
@@ -169,16 +158,13 @@
     <Compile Include="UI\Screens\IGameScreen.cs" />
     <Compile Include="UI\Screens\SandboxGameScreen.cs" />
     <Compile Include="UI\UIRelationshipBar.cs" />
-    <Compile Include="Utils\DrawingUtils.cs" />
+    <Compile Include="Utils\ControllerUtils.cs" />
     <Compile Include="Utils\Endian.cs" />
     <Compile Include="Utils\GameLocator\ILocator.cs" />
     <Compile Include="Utils\GameLocator\LinuxLocator.cs" />
     <Compile Include="Utils\GameLocator\WindowsLocator.cs" />
-    <Compile Include="Utils\MathCache.cs" />
-    <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Utils\MonogameLinker.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
-    <Compile Include="Utils\UIUtils.cs" />
     <Compile Include="Utils\WinFormsClipboard.cs" />
     <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll">
       <Link>Monogame\Linux\MonoGame.Framework.dll</Link>
@@ -287,7 +273,6 @@
     <Compile Include="Controllers\PersonSelectionController.cs" />
     <Compile Include="Controllers\PersonSelectionEditController.cs" />
     <Compile Include="GameController.cs" />
-    <Compile Include="GameFacade.cs" />
     <Compile Include="Network\Network.cs" />
     <Compile Include="Network\NetworkModule.cs" />
     <Compile Include="Regulators\CreateASimRegulator.cs" />
@@ -305,44 +290,9 @@
     <Compile Include="UI\Controls\Catalog\UICatalogFloorResProvider.cs" />
     <Compile Include="UI\Controls\Catalog\UICatalogWallpaperResProvider.cs" />
     <Compile Include="UI\Controls\Catalog\UICatalogWallResProvider.cs" />
-    <Compile Include="UI\Controls\UIAlert.cs" />
-    <Compile Include="UI\Controls\UIBlocker.cs" />
-    <Compile Include="UI\Controls\UIButton.cs" />
-    <Compile Include="UI\Controls\UIClickableLabel.cs" />
-    <Compile Include="UI\Controls\UICollectionViewer.cs" />
-    <Compile Include="UI\Controls\UIDialog.cs" />
-    <Compile Include="UI\Controls\UIGridViewer.cs" />
-    <Compile Include="UI\Controls\UIGridViewerRender.cs" />
-    <Compile Include="UI\Controls\UIImage.cs" />
     <Compile Include="UI\Controls\UIInteraction.cs" />
-    <Compile Include="UI\Controls\UILabel.cs" />
-    <Compile Include="UI\Controls\UIListBox.cs" />
     <Compile Include="UI\Controls\UIMotiveDisplay.cs" />
-    <Compile Include="UI\Controls\UIPaginationBar.cs" />
-    <Compile Include="UI\Controls\UIProgressBar.cs" />
-    <Compile Include="UI\Controls\UIRectangle.cs" />
     <Compile Include="UI\Controls\UISim.cs" />
-    <Compile Include="UI\Controls\UISlider.cs" />
-    <Compile Include="UI\Controls\UITextBox.cs" />
-    <Compile Include="UI\Controls\UITextEdit.cs" />
-    <Compile Include="UI\Framework\Font.cs" />
-    <Compile Include="UI\Framework\GameScreen.cs" />
-    <Compile Include="UI\Framework\IUIProcess.cs" />
-    <Compile Include="UI\Framework\Matrix2D.cs" />
-    <Compile Include="UI\Framework\Parser\UIAttribute.cs" />
-    <Compile Include="UI\Framework\Parser\UIScript.cs" />
-    <Compile Include="UI\Framework\Parser\UIScriptModel.cs" />
-    <Compile Include="UI\Framework\Parser\UIScriptParser.cs" />
-    <Compile Include="UI\Framework\TextRenderer.cs" />
-    <Compile Include="UI\Framework\TextStyle.cs" />
-    <Compile Include="UI\Framework\UIContainer.cs" />
-    <Compile Include="UI\Framework\UIElement.cs" />
-    <Compile Include="UI\Framework\UIScreen.cs" />
-    <Compile Include="UI\Framework\UISpriteBatch.cs" />
-    <Compile Include="UI\Framework\UITween.cs" />
-    <Compile Include="UI\Model\SlicedTextureRef.cs" />
-    <Compile Include="UI\Model\UIElementState.cs" />
-    <Compile Include="UI\Model\UISounds.cs" />
     <Compile Include="UI\Panels\LotControls\UICustomLotControl.cs" />
     <Compile Include="UI\Panels\LotControls\UIFloorPainter.cs" />
     <Compile Include="UI\Panels\LotControls\UIWallPainter.cs" />
@@ -378,9 +328,7 @@
     <Compile Include="UI\Screens\MaxisLogo.cs" />
     <Compile Include="UI\Screens\PersonSelection.cs" />
     <Compile Include="UI\Screens\PersonSelectionEdit.cs" />
-    <Compile Include="UI\UILayer.cs" />
     <Compile Include="Utils\ErrorMessage.cs" />
-    <Compile Include="GameContent\ContentStrings.cs" />
     <Compile Include="TSOGame.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -488,8 +436,6 @@
     <Content Include="Monogame\MacOS\Tao.Sdl.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="UI\Framework\Parser\UIScript.egt" />
-    <None Include="UI\Framework\Parser\UIScript.grm" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -537,6 +483,10 @@
     <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
       <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>
       <Name>FSO.Server.Protocol</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.UI\FSO.UI.csproj">
+      <Project>{73e2ad5b-720b-4ef3-9b7c-55931d0ec693}</Project>
+      <Name>FSO.UI</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>

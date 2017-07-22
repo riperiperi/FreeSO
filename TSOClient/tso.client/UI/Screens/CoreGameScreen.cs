@@ -238,7 +238,7 @@ namespace FSO.Client.UI.Screens
             this.Add(ucp);
 
             gizmo = new UIGizmo();
-            gizmo.BindController<GizmoController>();
+            ControllerUtils.BindController<GizmoController>(gizmo);
             gizmo.X = ScreenWidth - 430;
             gizmo.Y = ScreenHeight - 230;
             this.Add(gizmo);
@@ -259,22 +259,22 @@ namespace FSO.Client.UI.Screens
 
             PersonPage = new UIPersonPage();
             PersonPage.Visible = false;
-            PersonPage.BindController<PersonPageController>();
+            ControllerUtils.BindController<PersonPageController>(PersonPage);
             WindowContainer.Add(PersonPage);
 
             LotPage = new UILotPage();
             LotPage.Visible = false;
-            LotPage.BindController<LotPageController>();
+            ControllerUtils.BindController<LotPageController>(LotPage);
             WindowContainer.Add(LotPage);
 
             Bookmarks = new UIBookmarks();
             Bookmarks.Visible = false;
-            Bookmarks.BindController<BookmarksController>();
+            ControllerUtils.BindController<BookmarksController>(Bookmarks);
             WindowContainer.Add(Bookmarks);
 
             Relationships = new UIRelationshipDialog();
             Relationships.Visible = false;
-            Relationships.BindController<RelationshipDialogController>();
+            ControllerUtils.BindController<RelationshipDialogController>(Relationships);
             WindowContainer.Add(Relationships);
         }
 
@@ -306,7 +306,7 @@ namespace FSO.Client.UI.Screens
             CityRenderer.m_ZoomProgress = 0;
 
             JoinLotProgress = new UIJoinLotProgress();
-            JoinLotProgress.BindController<JoinLotProgressController>();
+            ControllerUtils.BindController<JoinLotProgressController>(JoinLotProgress);
 
             terrainController.Init(CityRenderer);
             CityRenderer.SetController(terrainController);
@@ -341,6 +341,9 @@ namespace FSO.Client.UI.Screens
             GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
             base.Update(state);
+
+            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F1))
+                FSOFacade.Controller.ToggleDebugMenu();
 
             if (CityRenderer != null)
             {

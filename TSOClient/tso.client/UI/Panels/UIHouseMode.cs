@@ -135,7 +135,7 @@ namespace FSO.Client.UI.Panels
                         break;
                     case 4:
                         Panel = new UIAdmitBanPanel(LotControl);
-                        var ctr = Panel.BindController<LotAdmitController>();
+                        var ctr = ControllerUtils.BindController<LotAdmitController>(Panel);
                         break;
                     case 5:
                         Panel = new UIEnvPanel(LotControl);

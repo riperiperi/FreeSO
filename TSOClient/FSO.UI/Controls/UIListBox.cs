@@ -26,7 +26,7 @@ namespace FSO.Client.UI.Controls
         public event ChangeDelegate OnChange;
         public event ButtonClickDelegate OnDoubleClick;
 
-        public int NumVisibleRows { get; internal set; }
+        public int NumVisibleRows { get; set; }
         public int ScrollOffset { get; set; }
 
         public bool AllowDisabledSelection = false;

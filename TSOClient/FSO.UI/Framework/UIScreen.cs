@@ -13,7 +13,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Utils;
 using FSO.Common;
-using FSO.Server.Protocol.Voltron.Packets;
 
 namespace FSO.Client.UI.Framework
 {
@@ -39,21 +38,6 @@ namespace FSO.Client.UI.Framework
             {
                 return GameFacade.Screens.CurrentUIScreen;
             }
-        }
-
-        public static UIAlert GlobalShowAnnouncement(AnnouncementMsgPDU msg)
-        {
-            UIAlert alert = null;
-            alert = GlobalShowAlert(new UIAlertOptions()
-            {
-                Title = GameFacade.Strings.GetString("195", "30") + GameFacade.CurrentCityName,
-                Message = GameFacade.Strings.GetString("195", "28") + msg.SenderID.Substring(2) + "\r\n"
-                + GameFacade.Strings.GetString("195", "29") + msg.Subject + "\r\n"
-                + msg.Message,
-                Buttons = UIAlertButton.Ok((btn) => RemoveDialog(alert)),
-                Alignment = TextAlignment.Left
-            }, true);
-            return alert;
         }
 
         public static UIAlert GlobalShowAlert(UIAlertOptions options, bool modal)

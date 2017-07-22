@@ -84,7 +84,7 @@ namespace FSO.Client.UI.Framework.Parser
         {
             //This procedure can be called to load the parse tables. The class can
             //read tables using a BinaryReader.
-            parser.LoadTables(new BinaryReader(new MemoryStream(Properties.Resources.UIScript)));
+            parser.LoadTables(new BinaryReader(new FileStream("Content/UIScript.egt", FileMode.Open, FileAccess.Read, FileShare.ReadWrite)));
         }
 
         public bool Parse(TextReader reader)

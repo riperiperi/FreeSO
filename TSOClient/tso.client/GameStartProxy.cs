@@ -1,4 +1,5 @@
 ﻿using FSO.LotView;
+using FSO.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace FSO.Client
     /// To avoid dynamically linking monogame from Program.cs (where we have to choose the correct version for the OS),
     /// we use this mediator class.
     /// </summary>
-    public class GameStartProxy
+    public class GameStartProxy : IGameStartProxy
     {
         public void Start(bool useDX)
         {

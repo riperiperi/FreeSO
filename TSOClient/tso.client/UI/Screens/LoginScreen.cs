@@ -26,6 +26,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using FSO.Common.Utils;
+using FSO.Common.Rendering.Framework.Model;
 
 namespace FSO.Client.UI.Screens
 {
@@ -145,6 +146,13 @@ namespace FSO.Client.UI.Screens
                     };
                 });
             }
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F1))
+                FSOFacade.Controller.ToggleDebugMenu();
         }
 
         public override void GameResized()

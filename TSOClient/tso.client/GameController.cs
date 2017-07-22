@@ -21,6 +21,7 @@ using FSO.Client.UI.Panels;
 using FSO.Client.UI;
 using FSO.Common.DatabaseService.Model;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.Client.Utils;
 
 namespace FSO.Client
 {
@@ -235,7 +236,7 @@ namespace FSO.Client
                 }
 
                 var view = (UIScreen)Kernel.Get<TView>();
-                var controller = view.BindController<TController>();
+                var controller = ControllerUtils.BindController<TController>(view);
                 GameFacade.Screens.RemoveCurrent();
                 GameFacade.Screens.AddScreen(view);
 
