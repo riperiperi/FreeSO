@@ -31,6 +31,7 @@ using FSO.SimAntics.Marshals.Hollow;
 using FSO.SimAntics.Engine.Debug;
 using FSO.Common;
 using FSO.SimAntics.Primitives;
+using FSO.LotView.Model;
 
 namespace FSO.SimAntics
 {
@@ -207,9 +208,10 @@ namespace FSO.SimAntics
         private float Fraction;
         public void Update()
         {
-            var oldFrame = (GameTickNum * 30 * SpeedMultiplier) / GameTickRate;
+            var mul = Math.Max(SpeedMultiplier, 1);
+            var oldFrame = (GameTickNum * 30 * mul) / GameTickRate;
             GameTickNum++;
-            var newFrame = (GameTickNum * 30 * SpeedMultiplier) / GameTickRate;
+            var newFrame = (GameTickNum * 30 * mul) / GameTickRate;
             for (int i = 0; i < newFrame - oldFrame; i++)
             {
                 Tick();
@@ -221,6 +223,7 @@ namespace FSO.SimAntics
 
         public void PreDraw()
         {
+            if (SpeedMultiplier == 0) Fraction = 0;
             //fractional animation for avatars
             foreach (var obj in Context.ObjectQueries.Avatars)
             {
@@ -280,7 +283,7 @@ namespace FSO.SimAntics
         {
             if (CurrentFamily == null) return;
             SetGlobalValue(9, (short)CurrentFamily.ChunkID);
-            var missingMembers = new HashSet<uint>(CurrentFamily.FamilyGUIDs);
+            var missingMembers = new HashSet<uint>(CurrentFamily.RuntimeSubset);
             foreach (var avatar in Context.ObjectQueries.Avatars)
             {
                 missingMembers.Remove(avatar.Object.OBJ.GUID);
@@ -290,8 +293,10 @@ namespace FSO.SimAntics
             {
                 var sim = Context.CreateObjectInstance(member, LotView.Model.LotTilePos.OUT_OF_WORLD, LotView.Model.Direction.NORTH).Objects[0];
                 ((VMAvatar)sim).SetPersonData(VMPersonDataVariable.TS1FamilyNumber, (short)CurrentFamily.ChunkID);
+                sim.TSOState.Budget.Value = 1000000;
                 var mailbox = Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
                 if (mailbox != null) VMFindLocationFor.FindLocationFor(sim, mailbox, Context, VMPlaceRequestFlags.Default);
+                ((Model.TSOPlatform.VMTSOAvatarState)sim.TSOState).Permissions = Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
             }
 
         }
@@ -316,7 +321,7 @@ namespace FSO.SimAntics
             Scheduler.BeginTick(tickID);
             if (GlobalLink != null) GlobalLink.Tick(this);
             if (EODHost != null) EODHost.Tick();
-            Context.Clock.Tick();
+            if (SpeedMultiplier > 0) Context.Clock.Tick();
             GlobalState[6] = (short)Context.Clock.Seconds;
             GlobalState[5] = (short)Context.Clock.Minutes;
             GlobalState[0] = (short)Context.Clock.Hours;
@@ -604,11 +609,18 @@ namespace FSO.SimAntics
         public void Load(VMMarshal input)
         {
             var clientJoin = (Context.Architecture == null);
-            var oldWorld = Context.World;
+            //var oldWorld = Context.World;
             Context = new VMContext(input.Context, Context);
             Context.VM = this;
             Context.Architecture.RegenRoomMap();
             Context.RegeneratePortalInfo();
+            Context.Architecture.Terrain.RegenerateCenters();
+
+            if (VM.UseWorld)
+            {
+                Context.Blueprint.Altitude = Context.Architecture.Terrain.Heights;
+                Context.Blueprint.AltitudeCenters = Context.Architecture.Terrain.Centers;
+            }
 
             var oldSounds = new List<VMSoundTransfer>();
 
@@ -673,6 +685,23 @@ namespace FSO.SimAntics
             foreach (var multi in input.MultitileGroups)
             {
                 var grp = new VMMultitileGroup(multi, Context); //should self register
+                if (VM.UseWorld)
+                {
+                    var b = grp.BaseObject;
+                    var avgPos = new LotTilePos();
+                    foreach (var obj in grp.Objects)
+                    {
+                        avgPos += obj.Position;
+                    }
+                    avgPos /= grp.Objects.Count;
+
+                    foreach (var obj in grp.Objects)
+                    {
+                        var off = obj.Position - avgPos;
+                        obj.WorldUI.MTOffset = new Vector3(off.x, off.y, 0);
+                        obj.Position = obj.Position;
+                    }
+                }
                 var persist = grp.BaseObject?.PersistID ?? 0;
                 if (persist != 0 && grp.BaseObject is VMGameObject) Context.ObjectQueries.RegisterMultitilePersist(grp, persist);
             }

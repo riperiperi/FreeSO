@@ -53,6 +53,7 @@
     <Compile Include="Components\SubWorldComponent.cs" />
     <Compile Include="Components\TerrainComponent.cs" />
     <Compile Include="Components\WallComponent.cs" />
+    <Compile Include="LMap\GPURoomMaps.cs" />
     <Compile Include="LMap\GradVertex.cs" />
     <Compile Include="LMap\LightData.cs" />
     <Compile Include="LMap\LMapBatch.cs" />

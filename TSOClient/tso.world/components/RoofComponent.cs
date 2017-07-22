@@ -195,7 +195,7 @@ namespace FSO.LotView.Components
 
         private Vector3 ToWorldPos(int x, int y, int z, int level, float pitch)
         {
-            return new Vector3((x/16f) * 3f, (z * pitch / 16f) * 3f + ((level -1)* 2.95f * 3f), (y / 16f) * 3f);
+            return new Vector3((x/16f) * 3f, (z * pitch / 16f) * 3f + ((level -1)* 2.95f * 3f) + blueprint.GetAltitude(x/16,y/16)*3, (y / 16f) * 3f);
         }
 
         private static Point[] advanceByDir = new Point[]
@@ -487,6 +487,9 @@ namespace FSO.LotView.Components
                         Effect.Parameters["DiffuseColor"].SetValue(new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1.0f));
                         Effect.Parameters["UseTexture"].SetValue(true);
                         Effect.Parameters["BaseTex"].SetValue(Texture);
+                        Effect.Parameters["IgnoreColor"].SetValue(false);
+                        Effect.Parameters["TexOffset"].SetValue(Vector2.Zero);
+                        Effect.Parameters["TexMatrix"].SetValue(new Vector4(1, 0, 0, 1));
 
                         device.SetVertexBuffer(dg.VertexBuffer);
                         device.Indices = dg.IndexBuffer;

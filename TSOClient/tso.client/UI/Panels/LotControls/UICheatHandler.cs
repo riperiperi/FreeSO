@@ -45,7 +45,7 @@ namespace FSO.Client.UI.Panels.LotControls
             
             return;
 
-            var tilePos = vm.Context.World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(LastState.MouseState.X, LastState.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+            var tilePos = vm.Context.World.EstTileAtPosWithScroll(new Vector2(LastState.MouseState.X, LastState.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
             LotTilePos targetrPos = new LotTilePos((short)(tilePos.X * 16), (short)(tilePos.Y * 16), vm.Context.World.State.Level);
             var room = vm.Context.GetRoomAt(targetrPos);
 
@@ -102,6 +102,7 @@ namespace FSO.Client.UI.Panels.LotControls
         public override void Draw(UISpriteBatch batch)
         {
             base.Draw(batch);
+            //DebugTexture = Common.Utils.TextureGenerator.GetTerrainNoise(batch.GraphicsDevice);
             if (DebugTexture != null)
             {
                 DrawLocalTexture(batch, DebugTexture, new Vector2(20, 20));
@@ -117,7 +118,7 @@ namespace FSO.Client.UI.Panels.LotControls
             var cmd = msg.Substring(1, spaceIndex - 1);
             var args = msg.Substring(Math.Min(msg.Length, spaceIndex + 1), Math.Max(0, msg.Length - (spaceIndex + 1)));
             string response = "("+msg+") ";
-            var tilePos = vm.Context.World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+            var tilePos = vm.Context.World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
             try {
                 switch (cmd.ToLowerInvariant())
                 {

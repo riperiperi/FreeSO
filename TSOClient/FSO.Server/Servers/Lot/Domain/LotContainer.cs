@@ -2,6 +2,7 @@
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Enum;
 using FSO.Common.Utils;
+using FSO.LotView.Model;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Avatars;
@@ -106,7 +107,13 @@ namespace FSO.Server.Servers.Lot.Domain
             0x5157DDF2, //cat carrier
             0x3278BD34, //dog carrier
         };
-        
+
+        private static HashSet<uint> RequiredGUIDs = new HashSet<uint>()
+        {
+            0x37EB32F3, //skill controller
+            0x534564D5, //skill degrade
+        };
+
         public LotContainer(IDAFactory da, LotContext context, ILotHost host, IKernel kernel, LotServerConfiguration config, IRealestateDomain realestate)
         {
             VM.UseWorld = false;
@@ -327,9 +334,11 @@ namespace FSO.Server.Servers.Lot.Domain
             var total = 0;
             var complete = 0;
             var ents = new List<VMEntity>(Lot.Entities);
+            var needToCreate = new HashSet<uint>();
             var removeAll = (LotPersist.move_flags & 6) > 0;
             foreach (var ent in ents)
             {
+                needToCreate.Remove(ent.Object.OBJ.GUID);
                 if (ent.PersistID >= 16777216 && ent is VMGameObject)
                 {
                     if (LotPersist.admit_mode == 5) {
@@ -339,7 +348,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                     if (ent.MultitileGroup.Objects.Count == 0) continue;
                     objectsOnLot.Add(ent.PersistID);
-                    if (false && (removeAll || !Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID)))
+                    if (removeAll || !Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID))
                     {
                         //we need to send objects in slots back to their owners inventory too, so we don't lose what was on tables etc.
                         var sendback = new List<VMEntity>();
@@ -372,6 +381,10 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     da.Objects.ReturnLostObjects((uint)Context.DbId, objectsOnLot);
                 }
+            }
+
+            foreach (var obj in needToCreate) {
+                Lot.Context.CreateObjectInstance(obj, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
             }
 
             if ((LotPersist.move_flags & 2) > 0)
@@ -495,7 +508,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
             Lot.TSOState.Terrain = Terrain;
             Lot.TSOState.Name = LotPersist.name;
-            Lot.TSOState.OwnerID = LotPersist.owner_id;
+            Lot.TSOState.OwnerID = LotPersist.owner_id ?? 0;
             Lot.TSOState.Roommates = new HashSet<uint>();
             Lot.TSOState.BuildRoommates = new HashSet<uint>();
             Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
@@ -616,7 +629,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     catch (Exception e)
                     {
                         //something bad happened. not entirely sure how we should deal with this yet
-                        LOG.Error("VM ERROR: " + e.StackTrace);
+                        LOG.Error("VM ERROR: " + e.Message +  e.StackTrace);
                         Host.Shutdown();
                         return;
                     }
@@ -1090,6 +1103,29 @@ namespace FSO.Server.Servers.Lot.Domain
             }
             catch (Exception e) { }
             SaveRing();
+
+            //if we have a null owner, this lot needs to be deleted.
+
+            if (!JobLot) {
+                using (var da = DAFactory.Get())
+                {
+                    var lot = da.Lots.Get(Context.DbId);
+                    if (lot.owner_id == null)
+                    {
+
+                        try
+                        {
+                            var lotStr = LotPersist.lot_id.ToString("x8");
+                            Directory.Delete(Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/"), true);
+                        } catch (Exception)
+                        {
+                            
+                        }
+                        //note that the lot has to be deleted from db by lot allocations, since it still needs to unlock the location this property was at.
+                    }
+                }
+            }
+
             Host.Shutdown();
         }
 

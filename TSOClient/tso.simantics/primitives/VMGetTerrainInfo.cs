@@ -24,26 +24,31 @@ namespace FSO.SimAntics.Primitives
             }
 
             //TODO: all.
-
+            var pos = obj.Position;
+            var arch = context.VM.Context.Architecture;
             switch (operand.Mode)
             {
                 case 0: //four altitudes around stack object
-                    //3 is flat in pre-alpha. TODO when terrain is in progress.
-                    context.Thread.TempRegisters[0] = 3;
-                    context.Thread.TempRegisters[1] = 3;
-                    context.Thread.TempRegisters[2] = 3;
-                    context.Thread.TempRegisters[3] = 3;
+                        //3 is flat in pre-alpha. to convert back to tso/ts1 units we must divide through by 10.
+                    context.Thread.TempRegisters[0] = (short)(arch.GetTerrainHeight(pos.TileX, pos.TileY)/10);
+                    context.Thread.TempRegisters[1] = (short)(arch.GetTerrainHeight((short)Math.Min(arch.Width - 1, pos.TileX + 1), pos.TileY) / 10);
+                    context.Thread.TempRegisters[2] = (short)(arch.GetTerrainHeight(pos.TileX, (short)Math.Min(arch.Height - 1, pos.TileY + 1)) / 10);
+                    context.Thread.TempRegisters[3] = (short)(arch.GetTerrainHeight((short)Math.Min(arch.Width - 1, pos.TileX + 1), (short)Math.Min(arch.Height - 1, pos.TileY + 1)) / 10);
                     break;
                 case 1: //slope at stack object
                     //unverifiable since terrain tool is a little broken in pre-alpha
                     //most likely altitude difference. +x slope down towards positive x, -x slope down towards -x. 
-                    context.Thread.TempRegisters[0] = 0;
-                    context.Thread.TempRegisters[1] = 0;
+                    if (pos == LotTilePos.OUT_OF_WORLD) break;
+                    var h1 = arch.GetTerrainHeight(pos.TileX, pos.TileY);
+                    var h2 = arch.GetTerrainHeight((short)Math.Min(arch.Width-1, pos.TileX+1), pos.TileY);
+                    var h3 = arch.GetTerrainHeight(pos.TileX, (short)Math.Min(arch.Height - 1, pos.TileY + 1));
+                    var h4 = arch.GetTerrainHeight((short)Math.Min(arch.Width - 1, pos.TileX + 1), (short)Math.Min(arch.Height - 1, pos.TileY + 1));
+                    context.Thread.TempRegisters[0] = (short)(((h1 - h2) + (h3 - h4)) / 20);
+                    context.Thread.TempRegisters[1] = (short)(((h3 - h1) + (h4 - h2)) / 20);
                     break;
                 case 2: //fixed coordinates of stack object
 
                     //VERIFIED
-                    var pos = obj.Position;
                     context.Thread.TempRegisters[0] = pos.TileX; //tile x
                     context.Thread.TempRegisters[1] = (short)(pos.x%16); //sub-tile x
                     context.Thread.TempRegisters[2] = pos.TileY; //tile y

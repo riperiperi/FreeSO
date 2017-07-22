@@ -37,6 +37,7 @@ namespace FSO.Client.UI.Screens
         private Queue<SimConnectStateChange> StateChanges;
 
         public UIJoinLotProgress JoinLotProgress;
+        public bool Downtown;
 
         public UILotControl LotControl { get; set; } //world, lotcontrol and vm will be null if we aren't in a lot.
         private LotView.World World;
@@ -301,6 +302,7 @@ namespace FSO.Client.UI.Screens
 
             if (SwitchLot > 0)
             {
+
                 InitializeLot(Path.Combine(Content.Content.Get().TS1BasePath, "UserData/Houses/House" + SwitchLot.ToString().PadLeft(2, '0') + ".iff"), false);
                 SwitchLot = -1;
             }
@@ -444,10 +446,14 @@ namespace FSO.Client.UI.Screens
 
             if (!external)
             {
-                vm.ActivateFamily(ActiveFamily);
+                if (!Downtown && ActiveFamily != null)
+                {
+                    ActiveFamily.SelectWholeFamily();
+                    vm.ActivateFamily(ActiveFamily);
+                }
                 BlueprintReset(lotName);
 
-                vm.Context.Clock.Hours = 0;
+                vm.Context.Clock.Hours = 12;
                 vm.TSOState.Size = (10) | (3 << 8);
                 vm.Context.UpdateTSOBuildableArea();
                 vm.MyUID = 1;
@@ -466,7 +472,7 @@ namespace FSO.Client.UI.Screens
                         SkinTone = (byte)settings.DebugSkin,
                         Gender = (short)(settings.DebugGender ? 1 : 0),
                         Permissions = SimAntics.Model.TSOPlatform.VMTSOAvatarPermissions.Admin,
-                        Budget = 100000
+                        Budget = 1000000
                     }
 
                 };
@@ -532,6 +538,14 @@ namespace FSO.Client.UI.Screens
 
         private void VMLotSwitch(uint lotId)
         {
+            if ((short)lotId == -1)
+            {
+                Downtown = false;
+                lotId = (uint)ActiveFamily.HouseNumber;
+            } else
+            {
+                Downtown = true;
+            }
             SwitchLot = (int)lotId;
         }
 

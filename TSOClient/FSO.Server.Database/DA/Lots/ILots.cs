@@ -28,7 +28,7 @@ namespace FSO.Server.Database.DA.Lots
         void UpdateDescription(int lot_id, string description);
         void UpdateLotCategory(int lot_id, LotCategory category);
         void UpdateLotAdmitMode(int lot_id, byte admit_mode);
-        void UpdateLocation(int lot_id, uint location, bool startFresh);
+        bool UpdateLocation(int lot_id, uint location, bool startFresh);
         void UpdateOwner(int lot_id, uint avatar_id);
         void ReassignOwner(int lot_id);
 

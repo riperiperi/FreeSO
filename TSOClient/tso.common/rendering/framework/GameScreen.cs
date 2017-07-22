@@ -25,6 +25,8 @@ namespace FSO.Common.Rendering.Framework
         public GraphicsDevice Device;
         public UpdateState State;
 
+        public static Color ClearColor = new Color(0x72, 0x72, 0x72);
+
         private int touchedFrames;
 		private int lastTouchCount;
 		private MouseState lastMouseState;
@@ -152,7 +154,7 @@ namespace FSO.Common.Rendering.Framework
                 }
             }
 
-            Device.Clear(new Color(0x72, 0x72, 0x72));
+            Device.Clear(ClearColor);
             //Device.RasterizerState.AlphaBlendEnable = true;
             //Device.DepthStencilState.DepthBufferEnable = true;
 

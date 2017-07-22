@@ -222,7 +222,8 @@ namespace FSO.Server.Servers.City
                 typeof(LotServerShutdownResponseHandler),
                 typeof(ElectronFindAvatarHandler),
                 typeof(ChangeRoommateHandler),
-                typeof(ModerationHandler)
+                typeof(ModerationHandler),
+                typeof(AvatarRetireHandler)
             };
         }
     }

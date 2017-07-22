@@ -35,6 +35,7 @@ namespace FSO.LotView.Utils
         public Texture2D Depth;
         public Texture2D Mask;
         public EffectTechnique Technique;
+        public bool Floors;
 
         public void Dispose()
         {

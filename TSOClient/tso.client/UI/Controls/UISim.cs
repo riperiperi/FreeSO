@@ -60,7 +60,7 @@ namespace FSO.Client.UI.Controls
             Vitaboy.Avatar.DefaultTechnique = (GlobalSettings.Default.Lighting) ? 3 : 0;
             Camera = new WorldCamera(GameFacade.GraphicsDevice);
             Camera.Zoom = Zoom;
-            Camera.CenterTile = new Vector2(-1, -1)*FSOEnvironment.DPIScaleFactor;
+            Camera.CenterTile = new Vector3(-1, -1, 0)*FSOEnvironment.DPIScaleFactor;
             Scene = new _3DTargetScene(GameFacade.GraphicsDevice, Camera, 
                 new Point(140 * FSOEnvironment.DPIScaleFactor, 200 * FSOEnvironment.DPIScaleFactor), 
                 (GlobalSettings.Default.AntiAlias)?8:0);

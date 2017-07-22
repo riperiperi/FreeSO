@@ -15,6 +15,7 @@ float4 MaxLight;
 float3 WorldToLightFactor;
 float2 LightOffset;
 float2 MapLayout;
+float Level;
 //END LIGHTING
 
 Texture MeshTex;
@@ -89,8 +90,7 @@ float4 lightProcess(float4 inPosition) {
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;
 
-	float level = floor(inPosition.y); //todo: better definition of level? (will need for terrain)
-	inPosition.xz += 1 / MapLayout * float2(level % MapLayout.x, floor(level / MapLayout.x));
+	inPosition.xz += 1 / MapLayout * float2(Level % MapLayout.x, floor(Level / MapLayout.x));
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
 	lTex = lerp(lTex, float4(lTex.x, lTex.y, lTex.x, lTex.y), clamp((inPosition.y % 1) * 3, 0, 1));
@@ -241,7 +241,6 @@ technique SSAA
 //additional technique for basic shadowing
 
 float FloorHeight;
-float Level;
 float2 LightPosition;
 
 struct ShadVertexIn

@@ -78,7 +78,7 @@ namespace FSO.Server.DataService.Providers
             using (var db = DAFactory.Get())
             {
                 var lot = db.Lots.GetByLocation(ShardId, key);
-                if (lot == null) return null;
+                if (lot == null || lot.owner_id == null) return null;
                 else
                 {
                     var roommates = db.Roommates.GetLotRoommates(lot.lot_id);
@@ -138,8 +138,8 @@ namespace FSO.Server.DataService.Providers
                 Lot_IsOnline = false,
                 Lot_Location = new Location { Location_X = location.X, Location_Y = location.Y },
                 Lot_Price = (uint)Realestate.GetPurchasePrice(location.X, location.Y),
-                Lot_LeaderID = lot.owner_id,
-                Lot_OwnerVec = ImmutableList.Create(lot.owner_id),
+                Lot_LeaderID = lot.owner_id ?? 0,
+                Lot_OwnerVec = ImmutableList.Create(lot.owner_id ?? 0),
                 Lot_RoommateVec = ImmutableList.Create<uint>(),
                 Lot_LotAdmitInfo = new LotAdmitInfo() { LotAdmitInfo_AdmitMode = lot.admit_mode },
                 Lot_NumOccupants = 0,

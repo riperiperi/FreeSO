@@ -105,6 +105,7 @@ namespace FSO.IDE
             Text = "Tracer - " + entity.ToString() + " (ID " + entity.ObjectID + ")";
             
             UpdateStack();
+            if (Editor == null) return;
             Editor.DisableDebugger += DisableDebugger;
         }
 

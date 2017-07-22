@@ -12,11 +12,16 @@ using System.Text;
 
 namespace FSO.Client.UI.Controls.Catalog
 {
-    public interface UICatalogResProvider
+    public abstract class UICatalogResProvider
     {
-        Texture2D GetIcon(ulong id);
-        string GetName(ulong id);
-        string GetDescription(ulong id);
-        int GetPrice(ulong id);
+        public abstract Texture2D GetIcon(ulong id);
+        public abstract string GetName(ulong id);
+        public abstract string GetDescription(ulong id);
+        public abstract int GetPrice(ulong id);
+
+        public virtual Texture2D GetThumb(ulong id)
+        {
+            return GetIcon(id);
+        }
     }
 }

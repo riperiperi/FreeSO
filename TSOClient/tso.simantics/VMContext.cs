@@ -805,8 +805,40 @@ namespace FSO.SimAntics
             ObjectQueries.UnregisterObjectPos(obj);
         }
 
+        public bool SlopeVertexCheck(int x, int y)
+        {
+            for (sbyte i = 1; i <= 5; i++)
+            {
+                var pos = LotTilePos.FromBigTile((short)x, (short)y, i);
+                if (!CheckSlopeValid(pos)) return false;
+                pos.x -= 16;
+                if (!CheckSlopeValid(pos)) return false;
+                pos.y -= 16;
+                if (!CheckSlopeValid(pos)) return false;
+                pos.x += 16;
+                if (!CheckSlopeValid(pos)) return false;
+            }
+            return true;
+        }
+
+        public bool CheckSlopeValid(LotTilePos pos)
+        {
+            if (pos.x < 0 || pos.y < 0) return true;
+            var objs = ObjectQueries.GetObjectsAt(pos);
+            if (objs != null)
+            {
+                foreach (var obj in objs)
+                {
+                    if (obj.SlopeValid() != VMPlacementError.Success) return false;
+                }
+            }
+            if (Architecture.GetWall(pos.TileX, pos.TileY, pos.Level).Segments != 0) return false;
+            return true;
+        }
+
         public bool CheckWallValid(LotTilePos pos, WallTile wall)
         {
+            if (wall.Segments > 0 && Architecture.GetTerrainSloped(pos.TileX, pos.TileY)) return false;
             var objs = ObjectQueries.GetObjectsAt(pos);
             if (objs == null) return true;
             foreach (var obj in objs)
@@ -1253,7 +1285,7 @@ namespace FSO.SimAntics
             if (VM.UseWorld)
             {
                 World.State.WorldSize = input.Architecture.Width;
-                Blueprint.Terrain = new TerrainComponent(new Rectangle(1, 1, input.Architecture.Width - 2, input.Architecture.Height - 2), Blueprint);
+                Blueprint.Terrain = new TerrainComponent(new Rectangle(0, 0, input.Architecture.Width, input.Architecture.Height), Blueprint);
                 Blueprint.Terrain.Initialize(this.World.State.Device, this.World.State);
 
                 World.InitBlueprint(Blueprint);

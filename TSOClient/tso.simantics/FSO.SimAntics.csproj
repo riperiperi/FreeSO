@@ -184,6 +184,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetAdjHollowSyncCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAsyncPriceCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAsyncSaleCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetChangeControlCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChangeEnvironmentCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChangeLotSizeCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetEODMessageCmd.cs" />

@@ -647,6 +647,137 @@ namespace FSO.SimAntics.Utils
             return floorsCovered;
         }
 
+        //==== TERRAIN ====
+
+        public static int DotTerrain(VMArchitecture target, Point pos, short mod)
+        {
+            var bounds = target.DisableClip ? new Rectangle(0, 0, target.Width, target.Height) : target.BuildableArea;
+            bounds.X--; bounds.Y--; bounds.Width++; bounds.Height++;
+            if (!bounds.Contains(pos)) return 0;
+            var current = target.GetTerrainGrass((short)pos.X, (short)pos.Y);
+            var n = (byte)Math.Max(0, Math.Min(255, current + mod));
+            target.SetTerrainGrass((short)pos.X, (short)pos.Y, n);
+            return (Math.Abs(current - n) + 31) / 32;
+        }
+
+        public static int RaiseTerrain(VMArchitecture target, Rectangle pos, short height, bool smoothMode)
+        {
+            //does a sort of flood fill from the start point to ensure the raise is valid
+            //when any point height is changed its neighbours are checked for the height difference constraint
+            int constrain = 5*10;
+            if (smoothMode) constrain = 1*10;
+            var bounds = target.DisableClip ? new Rectangle(0, 0, target.Width, target.Height) : target.BuildableArea;
+            var tl = target.TerrainLimit;
+            bounds = Rectangle.Intersect(bounds, tl);
+            bounds.Width--; bounds.Height--;
+
+            if (!pos.Intersects(bounds)) return 0;
+            else pos = Rectangle.Intersect(pos, bounds);
+
+            var considered = new Dictionary<Point, short>();
+            var stack = new Stack<Point>();
+
+            for (int x=0; x<=pos.Width; x++)
+            {
+                for (int y=0; y<=pos.Height; y++)
+                {
+                    var p = pos.Location + new Point(x, y);
+                    stack.Push(p);
+                    considered.Add(p, height);
+                    if (!(target.DisableClip || target.Context.SlopeVertexCheck(p.X, p.Y))) return 0;
+                }
+            }
+            var tr = target.Terrain;
+            var firstDiff = tr.Heights[pos.Y * tr.Width + pos.X] - height;
+
+            while (stack.Count > 0)
+            {
+                var p = stack.Pop();
+                //check adjacent points
+                var adj = new Point[]
+                {
+                    p + new Point(-1, 0),
+                    p + new Point(1, 0),
+                    p + new Point(0, -1),
+                    p + new Point(0, 1),
+                };
+                
+                //if any of these are OOB exit early. TODO
+
+                var myHeight = considered[p];
+
+                // check each adjacent height. if it has to be changed, first check if it can be:
+                // - if a wall, floor (on any level) or object is preventing this from happening, fail.
+                // - else queue its height to be changed and check its adjacent.
+
+                foreach (var a in adj) {
+                    if (a.X < 0 || a.Y < 0 || a.X >= tr.Width || a.Y >= tr.Height) return 0;
+                    short ht;
+                    if (!considered.TryGetValue(a, out ht))
+                        ht = tr.Heights[a.Y * tr.Width + a.X];
+                    var diff = myHeight - ht;
+                    var first = height - ht;
+
+                    if (!target.TerrainLimit.Contains(a))
+                    {
+                        if (!target.DisableClip && Math.Abs(diff) > 100 * 10) return 0;
+                        else continue;
+                    }
+
+                    if (diff * first <= 0) continue;
+
+                    if (smoothMode) constrain = Math.Min(5, Math.Max(1, (int)Math.Round(DistanceToRect(a, pos))))*10;
+
+                    if (diff > constrain)
+                    {
+                        //lower the terrain
+                        ht = (short)(myHeight - constrain);
+                    }
+                    else if (diff < -constrain)
+                    {
+                        //raise the terrain
+                        ht = (short)(myHeight + constrain);
+                    }
+                    else continue;
+
+                    if (!(target.DisableClip || target.Context.SlopeVertexCheck(a.X, a.Y))) return 0;
+
+                    //we needed to change the height. verify that that is a legal move. (walls, floors, objects demand no slope change)
+                    //todo
+
+                    considered[a] = ht; //this can overwrite previous expectations
+                    stack.Push(a);
+                }
+            }
+
+            //actually change the terrain
+            int cost = 0;
+            foreach (var change in considered)
+            {
+                var changedBy = Math.Abs(target.GetTerrainHeight((short)change.Key.X, (short)change.Key.Y) - change.Value);
+                cost += (changedBy + 9) / 10;
+                target.SetTerrainHeight((short)change.Key.X, (short)change.Key.Y, change.Value);
+                if (change.Key.X > 0 && change.Key.Y > 0)
+                    target.SetTerrainGrass((short)(change.Key.X-1), (short)(change.Key.Y-1), 
+                        (byte)Math.Min(255, target.GetTerrainGrass((short)(change.Key.X - 1), (short)(change.Key.Y - 1)) + changedBy*6));
+            }
+
+            return cost;
+        }
+
+        private static double DistanceToRect(Point pt, Rectangle rect)
+        {
+            var xDist = 0;
+            if (pt.X < rect.Left) xDist = pt.X - rect.Left;
+            else if (pt.X > rect.Right) xDist = rect.Right - pt.X;
+            var yDist = 0;
+            if (pt.Y < rect.Top) yDist = pt.Y - rect.Top;
+            else if (pt.Y > rect.Bottom) yDist = rect.Bottom - pt.Y;
+            return Math.Sqrt(xDist * xDist + yDist * yDist);
+        }
+
+        //==== CUTAWAYS ====
+
         public static int[][] CutCheckDir =
         {
             new int[] {-1,-1},

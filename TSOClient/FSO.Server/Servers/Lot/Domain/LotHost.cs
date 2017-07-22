@@ -466,6 +466,8 @@ namespace FSO.Server.Servers.Lot.Domain
         private static readonly int BACKGROUND_NOTIFY_TIMEOUT = 2000;
         //the number of times recieving no background tasks after which we assume the main thread is stuck in an infinite loop.
         private static readonly int BACKGROUND_TIMEOUT_ABANDON_COUNT = 4;
+        private static readonly int BACKGROUND_TIMEOUT_SECONDS = 15;
+        private uint LastTaskRecv = 0;
         private int BgTimeoutExpiredCount = 0;
         public uint LastActivity = Epoch.Now;
         private bool BgKilled;
@@ -475,6 +477,7 @@ namespace FSO.Server.Servers.Lot.Domain
             {
                 while (true)
                 {
+                    if (LastTaskRecv == 0) LastTaskRecv = Epoch.Now;
                     var notified = BackgroundNotify.WaitOne(BACKGROUND_NOTIFY_TIMEOUT);
                     List<Callback> tasks = new List<Callback>();
                     lock (BackgroundTasks)
@@ -485,25 +488,35 @@ namespace FSO.Server.Servers.Lot.Domain
 
                     if (tasks.Count > 1000) LOG.Error("Surprising number of background tasks for lot with dbid = " + Context.DbId + ": "+tasks.Count);
 
-                    if (tasks.Count > 0) BgTimeoutExpiredCount = 0;
-                    else if (++BgTimeoutExpiredCount > BACKGROUND_TIMEOUT_ABANDON_COUNT)
+                    if (tasks.Count > 0) LastTaskRecv = Epoch.Now; //BgTimeoutExpiredCount = 0;
+                    else if (Epoch.Now - LastTaskRecv > BACKGROUND_TIMEOUT_SECONDS) //++BgTimeoutExpiredCount > BACKGROUND_TIMEOUT_ABANDON_COUNT)
                     {
                         BgTimeoutExpiredCount = int.MinValue;
-                        
+
                         //Background tasks stop when we shut down
                         if (!ShuttingDown)
                         {
                             LOG.Error("Main thread for lot with dbid = " + Context.DbId + " entered an infinite loop and had to be terminated!");
 
+                            bool IsRunningOnMono = (Type.GetType("Mono.Runtime") != null);
+
                             //suspend and resume are deprecated, but we need to use them to analyse the stack of stuck main threads
                             //sorry microsoft
-                            MainThread.Suspend();
-                            var trace = new StackTrace(MainThread, false);
-                            MainThread.Resume();
+                            if (!IsRunningOnMono)
+                            {
+                                MainThread.Suspend();
+                                var trace = new StackTrace(MainThread, false);
+                                MainThread.Resume();
 
-                            LOG.Error("Trace (immediately when aborting): " + trace.ToString());
+                                LOG.Error("Trace (immediately when aborting): " + trace.ToString());
+                            }
+                            else
+                            {
+                                LOG.Error("on mono, so can't obtain immediate trace.");
+                            }
 
                             MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
+                            return;
                         }
                     }
 

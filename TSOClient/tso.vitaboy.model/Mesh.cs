@@ -246,6 +246,7 @@ namespace FSO.Vitaboy
                         io.ReadFloat(),
                         io.ReadFloat()
                     );
+                    if (VertexBuffer[i].Normal == Vector3.Zero) VertexBuffer[i].Normal = new Vector3(0, 1, 0);
                 }
 
                 BlendVerts = new Vector3[blendVertexCount];

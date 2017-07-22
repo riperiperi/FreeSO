@@ -215,15 +215,38 @@ namespace FSO.Client.UI.Panels
 
         private void ChangeCategory(UIElement button)
         {
-            //initiate dialog to get the target category
-            var catDialog = new UILotCategoryDialog();
-            UIScreen.GlobalShowDialog(new DialogReference
+            string error = null;
+            if (CurrentLot != null && CurrentLot.Value != null)
             {
-                Dialog = catDialog,
-                Controller = this,
-                Modal = true,
-            });
-            catDialog.OnCategoryChange += ChangeCategory;
+                var hours = ((uint)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds - CurrentLot.Value.Lot_LastCatChange) / (60 * 60);
+                if (hours < 168)
+                {
+                    error = GameFacade.Strings.GetString("190", "31", new string[] { Math.Ceiling((168 - hours) / 24f).ToString() });
+                }
+                if (CurrentLot.Value.Lot_IsOnline)
+                {
+                    error = GameFacade.Strings.GetString("190", "30");
+                }
+            }
+            if (error != null)
+            {
+                UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Message = error
+                }, true);
+            }
+            else
+            {
+                //initiate dialog to get the target category
+                var catDialog = new UILotCategoryDialog();
+                UIScreen.GlobalShowDialog(new DialogReference
+                {
+                    Dialog = catDialog,
+                    Controller = this,
+                    Modal = true,
+                });
+                catDialog.OnCategoryChange += ChangeCategory;
+            }
         }
 
         private void ChangeCategory(LotCategory cat)

@@ -97,6 +97,7 @@
     <Compile Include="Electron\Model\FindAvatarResponseStatus.cs" />
     <Compile Include="Electron\Model\FindLotResponseStatus.cs" />
     <Compile Include="Electron\Model\ModerationRequestType.cs" />
+    <Compile Include="Electron\Packets\AvatarRetireRequest.cs" />
     <Compile Include="Electron\Packets\ChangeRoommateRequest.cs" />
     <Compile Include="Electron\Packets\ChangeRoommateResponse.cs" />
     <Compile Include="Electron\Packets\FSOVMProtocolMessage.cs" />

@@ -50,7 +50,8 @@ namespace FSO.SimAntics.NetPlay.Model
             { VMCommandType.SetIgnore, typeof(VMNetSetIgnoreCmd) },
             { VMCommandType.SetRoof, typeof(VMNetSetRoofCmd) },
 			{ VMCommandType.SetOutfit, typeof(VMNetSetOutfitCmd) },
-            { VMCommandType.TimeoutNotify, typeof(VMNetTimeoutNotifyCmd) }
+            { VMCommandType.TimeoutNotify, typeof(VMNetTimeoutNotifyCmd) },
+            { VMCommandType.ChangeControl, typeof(VMNetChangeControlCmd) }
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -145,6 +146,7 @@ namespace FSO.SimAntics.NetPlay.Model
         SetRoof = 32,
         SetOutfit = 33,
 
-        TimeoutNotify = 34
+        TimeoutNotify = 34,
+        ChangeControl = 35
     }
 }

@@ -106,7 +106,7 @@ namespace FSO.Client.UI.Panels
 
             CategoryMap = new Dictionary<UIButton, int>
             {
-                { TerrainButton, 29 },
+                { TerrainButton, 10 },
                 { WaterButton, 5 },
                 { WallButton, 7 },
                 { WallpaperButton, 8 },
@@ -121,7 +121,6 @@ namespace FSO.Client.UI.Panels
                 { HandButton, 28 },
             };
 
-            TerrainButton.Disabled = (LotController?.ActiveEntity?.TSOState as VMTSOAvatarState)?.Permissions < VMTSOAvatarPermissions.Admin;
             TerrainButton.OnButtonClick += ChangeCategory;
             WaterButton.OnButtonClick += ChangeCategory;
             WallButton.OnButtonClick += ChangeCategory;
@@ -277,6 +276,13 @@ namespace FSO.Client.UI.Panels
             }
 
             PreviousPageButton.Disabled = true;
+
+            var showsubtools = CategoryMap[button] != 10;
+            SubToolBg.Visible = showsubtools;
+            SubtoolsSlider.Visible = showsubtools;
+            PreviousPageButton.Visible = showsubtools;
+            NextPageButton.Visible = showsubtools;
+            
             return;
         }
 
@@ -303,9 +309,9 @@ namespace FSO.Client.UI.Panels
             {
                 var res = item.Special.Res;
                 var resID = item.Special.ResID;
-                if (res.GetName(resID) != "")
+                if (res != null && res.GetName(resID) != "")
                 {
-                    QueryPanel.SetInfo(res.GetIcon(resID), res.GetName(resID), res.GetDescription(resID), res.GetPrice(resID));
+                    QueryPanel.SetInfo(res.GetThumb(resID), res.GetName(resID), res.GetDescription(resID), res.GetPrice(resID));
                     QueryPanel.Mode = 1;
                     QueryPanel.Tab = 0;
                     QueryPanel.Active = true;
@@ -388,6 +394,7 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
+            CategoryMap[TerrainButton] = (state.ShiftDown && (LotController?.ActiveEntity?.TSOState as VMTSOAvatarState)?.Permissions >= VMTSOAvatarPermissions.Admin) ? 29 : 10;
             var objCount = LotController.vm.Context.ObjectQueries.NumUserObjects;
             if (LastObjCount != objCount)
             {

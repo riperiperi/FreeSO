@@ -46,7 +46,7 @@ namespace FSO.LotView.Utils
             this.Device = device;
         }
 
-        public void DrawMesh(Matrix world, Avatar binding, short objID, ushort room, Color color)
+        public void DrawMesh(Matrix world, Avatar binding, short objID, ushort room, Color color, int level)
         {
             this.Sprites.Add(new _3DSprite {
                 Effect = _3DSpriteEffect.CHARACTER,
@@ -54,7 +54,8 @@ namespace FSO.LotView.Utils
                 World = world,
                 ObjectID = objID,
                 Room = room,
-                Color = color
+                Color = color,
+                Level = level
             });
         }
 
@@ -105,6 +106,7 @@ namespace FSO.LotView.Utils
                 foreach (var geom in sprites)
                 {
                     if (OBJIDMode) effect.Parameters["ObjectID"].SetValue(geom.ObjectID / 65535f);
+                    effect.Parameters["Level"].SetValue((float)geom.Level);
                     if (RoomLights != null)
                     {
                         var col = RoomLights[geom.Room].ToVector4() * geom.Color.ToVector4();

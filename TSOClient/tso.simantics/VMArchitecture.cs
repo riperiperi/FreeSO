@@ -51,6 +51,7 @@ namespace FSO.SimAntics
         public VMRoomMap[] Rooms;
         public List<VMRoom> RoomData;
         public event ArchitectureEvent WallsChanged;
+        public Rectangle TerrainLimit; //in tso mode, this is set to the maximum buildable area.
 
         public VMContext Context; //used for access to objects
 
@@ -96,6 +97,17 @@ namespace FSO.SimAntics
 
         public VMArchitecture(int width, int height, Blueprint blueprint, VMContext context)
         {
+            if (Content.Content.Get().TS1)
+            {
+                DisableClip = true;
+                TerrainLimit = new Rectangle(1, 1, width - 2, height - 2);
+            }
+            else
+            {
+                TerrainLimit = new Rectangle(6, 6, 65, 65);
+                TerrainLimit.Inflate(-1, -1);
+            }
+
             this.Context = context;
             this.Width = width;
             this.Height = height;
@@ -301,7 +313,7 @@ namespace FSO.SimAntics
         }
 
         public void Tick()
-        { 
+        {
             if (WallsDirty || FloorsDirty)
             {
                 RegenRoomMap();
@@ -318,17 +330,31 @@ namespace FSO.SimAntics
                 for (int i = 1; i < Stories; i++)
                     RegenerateSupported(i + 1);
             }
+
+            if (TerrainDirty)
+            {
+                Terrain.RegenerateCenters();
+                if (VM.UseWorld)
+                {
+                    WorldUI.Altitude = Terrain.Heights;
+
+                    WorldUI.AltitudeCenters = Terrain.Centers;
+                    WorldUI.Terrain.UpdateTerrain(Terrain.LightType, Terrain.DarkType, Terrain.Heights, Terrain.GrassState);
+
+                }
+                TerrainDirty = false;
+            }
+
             if (VM.UseWorld && Redraw)
             {
                 LastTestCost = SimulateCommands(Commands, true);
                 WorldUI.SignalWallChange();
                 WorldUI.SignalFloorChange();
-            }
-
-            if (TerrainDirty && VM.UseWorld)
-            {
-                WorldUI.Terrain.UpdateTerrain(Terrain.LightType, Terrain.DarkType, Terrain.Heights, Terrain.GrassState);
-                TerrainDirty = false;
+                if (TerrainDirty)
+                {
+                    WorldUI.Terrain.UpdateTerrain(Terrain.LightType, Terrain.DarkType, Terrain.VisHeights, Terrain.VisGrass);
+                    TerrainDirty = false;
+                }
             }
 
             var clock = Context.Clock;
@@ -358,8 +384,8 @@ namespace FSO.SimAntics
                 RealMode = false;
                 var oldWalls = Walls;
                 var oldWallsAt = WallsAt;
-
                 var oldFloors = Floors;
+                Terrain.EnterVis();
 
                 WallsAt = new List<int>[Stories];
                 for (int i = 0; i < Stories; i++)
@@ -383,6 +409,8 @@ namespace FSO.SimAntics
                 Floors = oldFloors;
                 Walls = oldWalls;
                 WallsAt = oldWallsAt;
+                Terrain.ExitVis();
+                if (!visualChange) TerrainDirty = false;
                 RealMode = true;
             }
             return cost;
@@ -512,6 +540,30 @@ namespace FSO.SimAntics
                                 "placed " + frCount.Total / 2f + " tiles with pattern #" + com.pattern
                             ));
                         }
+                        break;
+
+                    case VMArchitectureCommandType.TERRAIN_RAISE:
+                    case VMArchitectureCommandType.TERRAIN_FLATTEN:
+                        var height = (short)com.style;
+                        Rectangle rect;
+                        if (com.Type == VMArchitectureCommandType.TERRAIN_FLATTEN) rect = new Rectangle(com.x, com.y, com.x2, com.y2);
+                        else rect = new Rectangle(com.x, com.y, 0, 0);
+
+                        var terrainCount = VMArchitectureTools.RaiseTerrain(this, rect, height, com.pattern > 0);
+                        if (terrainCount > 0)
+                        {
+                            cost += terrainCount;
+                            if (avatar != null)
+                                Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                                avatar.Name,
+                                Context.VM.GetUserIP(avatar.PersistID),
+                                "modified terrain by " + cost + " units."
+                            ));
+                        }
+                        break;
+                    case VMArchitectureCommandType.GRASS_DOT:
+                        var dotCount = VMArchitectureTools.DotTerrain(this, new Point(com.x, com.y), (short)com.pattern);
+                        cost += dotCount;
                         break;
                 }
             }
@@ -676,6 +728,46 @@ namespace FSO.SimAntics
             }
         }
 
+        public bool GetTerrainSloped(short tileX, short tileY)
+        {
+            var off = GetOffset(tileX, tileY);
+            return Terrain.Sloped[off];
+        }
+
+        public void SetTerrainHeight(short tileX, short tileY, short height)
+        {
+            var off = GetOffset(tileX, tileY);
+
+            Terrain.Heights[off] = height;
+
+            TerrainDirty = true;
+            Redraw = true;
+        }
+
+        public short GetTerrainHeight(short tileX, short tileY)
+        {
+            var off = GetOffset(tileX, tileY);
+
+            return Terrain.Heights[off];
+        }
+
+        public void SetTerrainGrass(short tileX, short tileY, byte grass)
+        {
+            var off = GetOffset(tileX, tileY);
+
+            Terrain.GrassState[off] = grass;
+
+            TerrainDirty = true;
+            Redraw = true;
+        }
+
+        public byte GetTerrainGrass(short tileX, short tileY)
+        {
+            var off = GetOffset(tileX, tileY);
+
+            return Terrain.GrassState[off];
+        }
+
         public void SetWall(short tileX, short tileY, sbyte level, WallTile wall)
         {
             var off = GetOffset(tileX, tileY);
@@ -743,7 +835,7 @@ namespace FSO.SimAntics
             {
                 //first check if we're supported
                 if (floor.Pattern > 65533 && level > 1 && RoomData[(int)Rooms[level - 2].Map[offset]&0xFFFF].IsOutside) return false;
-                if (level > 1 && !Supported[level - 2][offset]) return false;
+                if (floor.Pattern > 0 && level > 1 && !Supported[level - 2][offset]) return false;
                 //check if objects need/don't need floors
                 if (!Context.CheckFloorValid(LotTilePos.FromBigTile((short)tileX, (short)tileY, level), floor)) return false;
             }

@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.HIT;
 
 namespace FSO.Client.UI.Panels
 {
@@ -49,7 +50,8 @@ namespace FSO.Client.UI.Panels
                 Graphic = "Community\\NScreen_unleashed.bmp",
                 Scale = 2f,
                 Pulsate = false,
-                FullImageAnimations = new NeighborhoodImageAnim[] {new NeighborhoodImageAnim("Community\\NScreen_unleashed_waves001.bmp", "Community\\NScreen_unleashed_waves002.bmp", "Community\\NScreen_unleashed_waves003.bmp", "Community\\NScreen_unleashed_waves004.bmp", "Community\\NScreen_unleashed_waves005.bmp", "Community\\NScreen_unleashed_waves006.bmp") }
+                FullImageAnimations = new NeighborhoodImageAnim[] {new NeighborhoodImageAnim("Community\\NScreen_unleashed_waves001.bmp", "Community\\NScreen_unleashed_waves002.bmp", "Community\\NScreen_unleashed_waves003.bmp", "Community\\NScreen_unleashed_waves004.bmp", "Community\\NScreen_unleashed_waves005.bmp", "Community\\NScreen_unleashed_waves006.bmp") },
+                BGSound = "river_loop"
             },
             new NeighborhoodViewConfig()
             {
@@ -64,6 +66,7 @@ namespace FSO.Client.UI.Panels
                 Graphic = "Magicland\\DScreen.bmp",
                 Pulsate = false,
                 Music = "music_magictown",
+                BGSound = "mt_river_loop",
                 Scale = 1f,
                 FullImageAnimations = new NeighborhoodImageAnim[] {new NeighborhoodImageAnim(new Vector2(0, 62), "Magicland\\DScreen_waves1.bmp", "Magicland\\DScreen_waves2.bmp", "Magicland\\DScreen_waves3.bmp", "Magicland\\DScreen_waves4.bmp", "Magicland\\DScreen_waves5.bmp", "Magicland\\DScreen_waves6.bmp") } //todo: blimp
             },
@@ -71,6 +74,7 @@ namespace FSO.Client.UI.Panels
 
         public TS1Provider Provider;
         public event Action<int> OnHouseSelect;
+        public HITSound BgSound;
         public UINeighborhoodSelectionPanel(ushort mode)
         {
             Provider = Content.Content.Get().TS1Global;
@@ -100,13 +104,18 @@ namespace FSO.Client.UI.Panels
             var locations = locationIff.Get<STR>(mode);
             if (locations == null) return;
 
+            var buttons = new List<UINeighborhoodHouseButton>();
+
             for (int i = 0; i < locations.Length; i++)
             {
                 var loc = locations.GetString(i).Split(',');
                 var button = new UINeighborhoodHouseButton(int.Parse(loc[0].TrimStart()), SelectHouse, config.Scale);
                 button.Position = new Vector2(int.Parse(loc[1].TrimStart()), int.Parse(loc[2].TrimStart()));
-                Add(button);
+                buttons.Add(button);
             }
+
+            var ordered = buttons.OrderBy(x => x.Y);
+            foreach (var btn in ordered) Add(btn);
 
             foreach (var layer in config.FullImageAnimations)
             {
@@ -115,13 +124,25 @@ namespace FSO.Client.UI.Panels
                 Add(lelem);
             }
 
+            BgSound?.RemoveOwner(-25);
             if (config.Music != null) HIT.HITVM.Get().PlaySoundEvent(config.Music);
+            if (config.BGSound != null)
+            {
+                BgSound = HITVM.Get().PlaySoundEvent(config.BGSound);
+                BgSound.AddOwner(-25);
+            }
         }
 
         public void SelectHouse(int house)
         {
             OnHouseSelect?.Invoke(house);
             HIT.HITVM.Get().PlaySoundEvent("bkground_fade");
+        }
+
+        public override void Removed()
+        {
+            base.Removed();
+            BgSound?.RemoveOwner(-25);
         }
     }
 
@@ -140,6 +161,8 @@ namespace FSO.Client.UI.Panels
             Frames = anim.Frames.Select(x=> ((ITextureRef)provider.Get(x)).Get(GameFacade.GraphicsDevice)).ToArray();
             SubFrame = frameTime;
             FrameTime = frameTime;
+            FrameTime *= GlobalSettings.Default.TargetRefreshRate;
+            FrameTime /= 60;
             TotalFrames = pulsate ? (Frames.Length * 2 - 2) : Frames.Length;
         }
 
@@ -157,7 +180,10 @@ namespace FSO.Client.UI.Panels
         public override void Draw(UISpriteBatch batch)
         {
             var realFrame = (FrameNum >= Frames.Length) ? ((Frames.Length - 2) - (FrameNum - Frames.Length)) : FrameNum;
+            var fm2 = (TotalFrames != 0) ? ((FrameNum + 1) % TotalFrames) : 0;
+            var realFrame2 = (fm2 >= Frames.Length) ? ((Frames.Length - 2) - (fm2 - Frames.Length)) : fm2;
             DrawLocalTexture(batch, Frames[Math.Max(0, realFrame)], Vector2.Zero);
+            DrawLocalTexture(batch, Frames[Math.Max(0, realFrame2)], null, Vector2.Zero, Vector2.One, Color.White*(1-((float)SubFrame/FrameTime)));
         }
     }
 
@@ -169,6 +195,7 @@ namespace FSO.Client.UI.Panels
         public int FrameDuration = 15;
         public bool Pulsate = true;
         public string Music = "bkground_nhood1";
+        public string BGSound;
     }
 
     public class NeighborhoodImageAnim
@@ -193,6 +220,7 @@ namespace FSO.Client.UI.Panels
         private Texture2D HouseOpenTex;
         private float HouseScale;
         private bool Hovered;
+        private THMB Offsets;
         public float AlphaTime { get; set; }
 
         public UINeighborhoodHouseButton(int houseNumber, Action<int> selectionCallback, float scale)
@@ -203,6 +231,7 @@ namespace FSO.Client.UI.Panels
             HouseOpenTex = house.Get<BMP>(512).GetTexture(GameFacade.GraphicsDevice);
             ManualTextureMask(ref HouseOpenTex, new Color(248, 0, 248, 255));
             HouseScale = scale;
+            Offsets = house.Get<THMB>(512); //get offsets before scaling
 
             var w = (int)(HouseTex.Width / HouseScale);
             var h = (int)(HouseTex.Height / HouseScale);
@@ -211,10 +240,11 @@ namespace FSO.Client.UI.Panels
                 {
                     switch (evt) {
                         case UIMouseEventType.MouseUp:
+                            HIT.HITVM.Get().PlaySoundEvent(Model.UISounds.NeighborhoodClick);
                             selectionCallback(houseNumber); break;
                         case UIMouseEventType.MouseOver:
                             GameFacade.Screens.Tween.To(this, 0.5f, new Dictionary<string, float>() { { "AlphaTime", 1f } });
-                            HIT.HITVM.Get().PlaySoundEvent(Model.UISounds.Whoosh);
+                            HIT.HITVM.Get().PlaySoundEvent(Model.UISounds.NeighborhoodRollover);
                             Hovered = true; break;
                         case UIMouseEventType.MouseOut:
                             GameFacade.Screens.Tween.To(this, 0.5f, new Dictionary<string, float>() { { "AlphaTime", 0f } });
@@ -225,10 +255,13 @@ namespace FSO.Client.UI.Panels
 
         public override void Draw(UISpriteBatch batch)
         {
-            DrawLocalTexture(batch, HouseTex, null, new Vector2(-HouseTex.Width, -HouseTex.Height)/(HouseScale*2), new Vector2(1f/HouseScale, 1f/HouseScale));
+            var yOff = new Vector2(Offsets.XOff, Offsets.BaseYOff) / (HouseScale * 2f);
+            var yOff2 = yOff;
+            yOff2.Y -= Offsets.AddYOff / (HouseScale);
+            DrawLocalTexture(batch, HouseTex, null, new Vector2(-HouseTex.Width, -HouseTex.Height)/(HouseScale*2) + yOff, new Vector2(1f/HouseScale, 1f/HouseScale));
             if (AlphaTime > 0)
             {
-                DrawLocalTexture(batch, HouseOpenTex, null, new Vector2(-HouseTex.Width, -HouseTex.Height) / (HouseScale * 2), new Vector2(1f / HouseScale, 1f / HouseScale), Color.White*AlphaTime);
+                DrawLocalTexture(batch, HouseOpenTex, null, new Vector2(-HouseTex.Width, -HouseTex.Height) / (HouseScale * 2) + yOff2, new Vector2(1f / HouseScale, 1f / HouseScale), Color.White*AlphaTime);
             }
         }
 

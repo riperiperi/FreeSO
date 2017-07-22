@@ -12,6 +12,7 @@ using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.SimAntics.Model;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.LotView.Model;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -32,6 +33,7 @@ namespace FSO.SimAntics.Primitives
             List<VMPieMenuInteraction> betterActions = new List<VMPieMenuInteraction>();
             foreach (var iobj in ents)
             {
+                if (iobj.Position == LotTilePos.OUT_OF_WORLD) continue;
                 var obj = iobj.MultitileGroup.GetInteractionGroupLeader(iobj);
                 if (processed.Contains(obj.ObjectID) || (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)) continue;
                 processed.Add(obj.ObjectID);

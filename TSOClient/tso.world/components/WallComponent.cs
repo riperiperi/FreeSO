@@ -48,14 +48,14 @@ namespace FSO.LotView.Components
             new Rectangle(60, 144+NEAR_YOFF, 16, 232)
         };
         private static Rectangle[] DESTINATION_MED = new Rectangle[] {
-            new Rectangle(2, 38+MED_YOFF, 32, 135),
-            new Rectangle(34, 38+MED_YOFF, 32, 135),
+            new Rectangle(2, 38+MED_YOFF, 32, 136),
+            new Rectangle(34, 38+MED_YOFF, 32, 136),
             new Rectangle(2, 54+MED_YOFF, 64, 120),
             new Rectangle(30, 72+MED_YOFF, 8, 116)
         };
         private static Rectangle[] DESTINATION_FAR = new Rectangle[] {
-            new Rectangle(1, 19+FAR_YOFF, 16, 67),
-            new Rectangle(17, 19+FAR_YOFF, 16, 67),
+            new Rectangle(1, 19+FAR_YOFF, 16, 68),
+            new Rectangle(17, 19+FAR_YOFF, 16, 68),
             new Rectangle(1, 27+FAR_YOFF, 32, 60),
             new Rectangle(15, 36+FAR_YOFF, 4, 58)
         };
@@ -64,9 +64,9 @@ namespace FSO.LotView.Components
         private static Rectangle JUNCDEST_MED = new Rectangle(2, 158 + MED_YOFF, 64, 32);
         private static Rectangle JUNCDEST_FAR = new Rectangle(1, 79 + FAR_YOFF, 32, 16);
 
-        private static Rectangle FLRDEST_NEAR = new Rectangle(5, 316, 127, 64);
-        private static Rectangle FLRDEST_MED = new Rectangle(3, 158, 63, 32);
-        private static Rectangle FLRDEST_FAR = new Rectangle(2, 79, 31, 16);
+        private static Rectangle FLRDEST_NEAR = new Rectangle(4, 316 + 1, 127, 64);
+        private static Rectangle FLRDEST_MED = new Rectangle(2, 158, 63, 32);
+        private static Rectangle FLRDEST_FAR = new Rectangle(1, 79, 31, 16);
 
         private static Dictionary<JunctionFlags, int> JunctionMap = new Dictionary<JunctionFlags, int>()
         {
@@ -122,6 +122,7 @@ namespace FSO.LotView.Components
         public Dictionary<ushort, Wall> WallCache = new Dictionary<ushort,Wall>();
         public Dictionary<ushort, WallStyle> WallStyleCache = new Dictionary<ushort,WallStyle>();
 
+        private float TileAltitude;
         private uint TileRoom;
 
         public override void Draw(GraphicsDevice device, WorldState world)
@@ -152,7 +153,9 @@ namespace FSO.LotView.Components
                         if (comp.Segments != 0)
                         {
                             comp = RotateWall(world.Rotation, comp, x, y, level);
-                            var tilePosition = new Vector3(x, y, (level-1) * 2.95f);
+                            var alt = blueprint.GetAltitude(x, y);
+                            var tilePosition = new Vector3(x, y, (level-1) * 2.95f + alt);
+                            TileAltitude = alt*3f * 65535f;
                             world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                             world._2D.OffsetTile(tilePosition);
                             var myCuts = Cuts[off];
@@ -583,12 +586,12 @@ namespace FSO.LotView.Components
                         if (UpJunctions[off] == 0)
                         {
                             flags = DownJunctions[off];
-                            yOff = 0.3f + (level - 1) * 2.95f; ;
+                            yOff = 0.3f + (level - 1) * 2.95f + blueprint.GetAltitude(x, y);
                         }
                         else
                         {
                             flags = UpJunctions[off];
-                            yOff = level * 2.95f;
+                            yOff = level * 2.95f + blueprint.GetAltitude(x, y);
                         }
 
                         if (flags > 0 && JunctionMap.ContainsKey(flags)) //there is a junction here! if the junction map contains the unrotated junction, it will contain the rotated junction.
@@ -901,6 +904,7 @@ namespace FSO.LotView.Components
 
             _Sprite.Room = (ushort)TileRoom;
             _Sprite.Floor = Level;
+            _Sprite.ObjectID = TileAltitude;
 
             return _Sprite;
         }
@@ -909,7 +913,7 @@ namespace FSO.LotView.Components
 
         private _2DSprite GetFloorSprite(Floor pattern, int rotation, WorldState world, byte cut)
         {
-            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
+            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.FLOOR);
             if (pattern == null) return _Sprite;
             SPR2 sprite = null;
             switch (world.Zoom)
@@ -930,6 +934,9 @@ namespace FSO.LotView.Components
                     _Sprite.Depth = WallZBuffers[12];
                     break;
             }
+            _Sprite.DestRect.Width++;
+            _Sprite.DestRect.X--;
+            _Sprite.DestRect.Y++;
             if (sprite != null)
             {
                 _Sprite.Pixel = world._2D.GetTexture(sprite.Frames[rotation]);
@@ -962,6 +969,7 @@ namespace FSO.LotView.Components
 
             _Sprite.Room = (ushort)TileRoom;
             _Sprite.Floor = Level;
+            _Sprite.ObjectID = TileAltitude;
 
             return _Sprite;
         }
@@ -1171,6 +1179,7 @@ namespace FSO.LotView.Components
             spr.Depth = _Sprite.Depth;
             spr.Room = _Sprite.Room;
             spr.Floor = _Sprite.Floor;
+            spr.ObjectID = _Sprite.ObjectID;
             return spr;
         }
     }

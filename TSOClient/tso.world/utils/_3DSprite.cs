@@ -22,6 +22,7 @@ namespace FSO.LotView.Utils
         public short ObjectID;
         public ushort Room;
         public Color Color;
+        public int Level;
     }
 
     public enum _3DSpriteEffect {

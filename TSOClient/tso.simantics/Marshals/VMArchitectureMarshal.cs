@@ -36,6 +36,7 @@ namespace FSO.SimAntics.Marshals
             Height = reader.ReadInt32();
             Stories = reader.ReadInt32();
             Terrain = new VMArchitectureTerrain(Width, Height);
+            Terrain.Version = Version;
             if (Version > 6) Terrain.Deserialize(reader);
 
             var size = Width * Height;

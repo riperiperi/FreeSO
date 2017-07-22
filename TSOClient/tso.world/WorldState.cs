@@ -40,7 +40,7 @@ namespace FSO.LotView
             this.World = world;
             this.WorldCamera = new WorldCamera(device);
             WorldCamera.ViewDimensions = new Vector2(worldPxWidth, worldPxHeight);
-
+            Rooms = new GPURoomMaps(device);
             WorldSpace = new WorldSpace(worldPxWidth, worldPxHeight, this);
             Zoom = WorldZoom.Near;
             Rotation = WorldRotation.TopLeft;
@@ -69,6 +69,7 @@ namespace FSO.LotView
         public _3DWorldBatch _3D;
         public LMapBatch Light;
         public Texture2D AmbientLight;
+        public GPURoomMaps Rooms;
         public Color OutsideColor; //temporary to give this to terrain component. in future it will use ambient light texture
         public bool DynamicCutaway;
 
@@ -236,9 +237,16 @@ namespace FSO.LotView
             InvalidateCamera();
         }
 
+
         public void InvalidateCamera()
         {
-            WorldCamera.CenterTile = CenterTile;
+            var ctr = WorldSpace.GetScreenFromTile(CenterTile);
+            ctr.X = (float)Math.Round(ctr.X);
+            ctr.Y = (float)Math.Round(ctr.Y);
+            var test = new Vector2(-0.5f, 0);   
+            test *= 1 << (3 - (int)Zoom);
+            var back = WorldSpace.GetTileFromScreen(ctr + test);
+            WorldCamera.CenterTile = new Vector3(back, 0);
             WorldCamera.Zoom = Zoom;
             WorldCamera.Rotation = Rotation;
             WorldCamera.PreciseZoom = PreciseZoom;
@@ -296,6 +304,7 @@ namespace FSO.LotView
         public float CadgeWidth;
         public float CadgeHeight;
         public float CadgeBaseLine;
+        public float TerrainHeight;
 
         public float TileSin60;
         public float TileSin30;
@@ -328,16 +337,22 @@ namespace FSO.LotView
             WorldPxHeight = dim.Y;
         }
 
+        public Vector2 GetPointScreenOffset()
+        {
+            var centerPos = GetScreenFromTile(State.CenterTile);
+            var result = new Vector2(-centerPos.X, -centerPos.Y);
+            result.X += (WorldPxWidth / 2.0f);
+            result.Y += (WorldPxHeight / 2.0f);
+            return result;
+        }
+
         /// <summary>
         /// Gets the offset for the screen based on the scroll position
         /// </summary>
         /// <returns></returns>
         public Vector2 GetScreenOffset()
         {
-            var centerPos = GetScreenFromTile(State.CenterTile);
-            var result = new Vector2(-centerPos.X, -centerPos.Y);
-            result.X += (WorldPxWidth / 2.0f);
-            result.Y += (WorldPxHeight / 2.0f);
+            var result = GetPointScreenOffset();
             result.Y -= CadgeBaseLine;
             result.X -= (CadgeWidth / 2.0f);
 
@@ -372,20 +387,7 @@ namespace FSO.LotView
         /// <returns>Indices of tile at position.</returns>
         public Vector2 GetTileAtPosWithScroll(Vector2 pos)
         {
-            int wallHeight = 0;
-            switch (State.Zoom)
-            {
-                case WorldZoom.Far:
-                    wallHeight = 57;
-                    break;
-                case WorldZoom.Medium:
-                    wallHeight = 115;
-                    break;
-                case WorldZoom.Near:
-                    wallHeight = 231;
-                    break;
-            }
-            return State.CenterTile + GetTileFromScreen(pos - new Vector2((WorldPxWidth / 2.0f), (WorldPxHeight / 2.0f)-wallHeight*(State.Level-1)));
+            return State.CenterTile + GetTileFromScreen(pos - new Vector2((WorldPxWidth / 2.0f), (WorldPxHeight / 2.0f)-TerrainHeight*(State.Level-1)));
         }
 
         /// <summary>
@@ -437,7 +439,6 @@ namespace FSO.LotView
         {
             var screenx = 0.0f;
             var screeny = 0.0f;
-
             switch (State.Rotation)
             {
                 case WorldRotation.TopLeft:
@@ -516,6 +517,7 @@ namespace FSO.LotView
                     CadgeWidth = 34;
                     CadgeHeight = 96;
                     CadgeBaseLine = 87;
+                    TerrainHeight = 59;
                     break;
 
                 case WorldZoom.Medium:
@@ -529,6 +531,7 @@ namespace FSO.LotView
                     CadgeWidth = 68;
                     CadgeHeight = 192;
                     CadgeBaseLine = 174;
+                    TerrainHeight = 118;
                     break;
 
                 case WorldZoom.Near:
@@ -541,9 +544,11 @@ namespace FSO.LotView
                     CadgeWidth = 136;
                     CadgeHeight = 384;
                     CadgeBaseLine = 348;
+                    TerrainHeight = 235;
                     break;
             }
 
+            TerrainHeight *= -1;
             OneUnitDistance = (float)Math.Sqrt(Math.Pow(TilePxWidth, 2) / 2.0);
             TileSin60 = TilePxWidth / (float)Math.Sqrt(5.0);
             TileSin30 = TilePxHeight / (float)Math.Sqrt(5.0);

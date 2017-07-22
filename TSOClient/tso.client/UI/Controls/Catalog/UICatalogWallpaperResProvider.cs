@@ -16,7 +16,7 @@ namespace FSO.Client.UI.Controls.Catalog
 {
     public class UICatalogWallpaperResProvider : UICatalogResProvider
     {
-        public Texture2D GetIcon(ulong id)
+        public override Texture2D GetIcon(ulong id)
         {
             return Content.Content.Get().WorldWalls.GetWallThumb((ushort)id, GameFacade.GraphicsDevice);
         }
@@ -26,17 +26,17 @@ namespace FSO.Client.UI.Controls.Catalog
             return (id > 255);
         }
 
-        public string GetName(ulong id)
+        public override string GetName(ulong id)
         {
             return Content.Content.Get().WorldWalls.Entries[(ushort)id].Name;
         }
 
-        public string GetDescription(ulong id)
+        public override string GetDescription(ulong id)
         {
             return Content.Content.Get().WorldWalls.Entries[(ushort)id].Description;
         }
 
-        public int GetPrice(ulong id)
+        public override int GetPrice(ulong id)
         {
             return Content.Content.Get().WorldWalls.Entries[(ushort)id].Price;
         }

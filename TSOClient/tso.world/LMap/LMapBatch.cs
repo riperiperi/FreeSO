@@ -1,4 +1,10 @@
-﻿using FSO.LotView.Model;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using FSO.LotView.Model;
 using FSO.Vitaboy;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -19,8 +25,6 @@ namespace FSO.LotView.LMap
 
         public RenderTarget2D LightMap;
 
-        public List<Texture2D> RoomMaps;
-
         GraphicsDevice GD;
         private Effect GradEffect;
         private Effect LightEffect;
@@ -28,13 +32,12 @@ namespace FSO.LotView.LMap
 
         private Blueprint Blueprint;
         private LightData OutdoorsLight;
+        public Vector3 LightVec = new Vector3(0, 1f, 0);
         public Vector2 MapLayout; //width * height floors. Ordered by width first. x = floor%width, y = (int)floot/width.
         public Vector2 InvMapLayout;
 
         public HashSet<ushort> DirtyRooms = new HashSet<ushort>();
         public sbyte RedrawFloor;
-
-        bool cleared = false;
 
         private Point ScissorBase;
 
@@ -96,7 +99,7 @@ namespace FSO.LotView.LMap
             Avatar.Effect.Parameters["MapLayout"].SetValue(MapLayout);
         }
 
-        public void SetFloor(sbyte floor)
+        public void SetFloor(sbyte floor, WorldState state)
         {
             //the goal is to center 0-(75*16)
             var width = (int)MapLayout.X;
@@ -107,7 +110,7 @@ namespace FSO.LotView.LMap
             //var floorHeight = 75 * 16;
 
             LightEffect.Parameters["UVBase"].SetValue(new Vector2(x, y));
-            LightEffect.Parameters["roomMap"].SetValue(RoomMaps[floor]);
+            LightEffect.Parameters["roomMap"].SetValue(state.Rooms.RoomMaps[floor]);
 
             var res = (Blueprint.Width - 2) * 8;
             ScissorBase = new Point(res * x, res * y);
@@ -128,8 +131,6 @@ namespace FSO.LotView.LMap
             ShadowTarg = new RenderTarget2D(GD, wl, wh, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             ObjShadowTarg = new RenderTarget2D(GD, wl, wh, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             LightMap = new RenderTarget2D(GD, wl * 3, wh * 2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents); //just ground floor for now.
-            RoomMaps = new List<Texture2D>();
-            for (int i = 0; i < 5; i++) RoomMaps.Add(new Texture2D(GD, w, h, false, SurfaceFormat.Color));
             Projection = Matrix.CreateOrthographicOffCenter(new Rectangle(0, 0, (w-2) * 16, (h-2) * 16), -10, 10);
 
             //initialize lighteffect with default params
@@ -145,13 +146,6 @@ namespace FSO.LotView.LMap
             LightEffect.Parameters["RoomUVOff"].SetValue(new Vector2(0, 0));
 
             SetMapLayout(3, 2);
-        }
-
-        public void SetRoomMap(sbyte floor, uint[] map)
-        {
-            RoomMaps[floor].SetData(map);
-            var test = new Color[RoomMaps[floor].Width * RoomMaps[floor].Height];
-            RoomMaps[floor].GetData<Color>(test);
         }
 
         private VertexPosition[] Dat;
@@ -173,14 +167,10 @@ namespace FSO.LotView.LMap
         public void ResetDraw()
         {
             GD.SetRenderTarget(null);
-            cleared = false;
         }
 
         public void InvalidateOutdoors()
         {
-            sbyte floor = 0;
-            SetFloor(floor);
-
             var rooms = Blueprint.Rooms;
             var lightRooms = Blueprint.Light;
             for (int i = 0; i < rooms.Count; i++)
@@ -188,15 +178,6 @@ namespace FSO.LotView.LMap
                 var room = rooms[i];
                 if (!room.IsOutside || room.WallLines == null) continue;
                 DirtyRooms.Add((ushort)i);
-                /*
-                if (room.Floor != floor)
-                {
-                    floor = room.Floor;
-                    SetFloor(floor);
-                }
-                var light = lightRooms[i];
-                DrawRoom(room, light, true);
-                */
             }
         }
 
@@ -211,18 +192,18 @@ namespace FSO.LotView.LMap
             DirtyRooms.Add(room);
         }
 
-        public void ParseInvalidated(sbyte floorLimit)
+        public void ParseInvalidated(sbyte floorLimit, WorldState state)
         {
             SetMapLayout(3, 2);
             if (floorLimit > RedrawFloor)
             {
-                RedrawAll();
+                RedrawAll(state);
                 RedrawFloor = 6;
             }
 
             //initialize lighteffect with default params
             sbyte floor = 0;
-            SetFloor(floor);
+            SetFloor(floor, state);
 
             var rooms = Blueprint.Rooms;
             var lightRooms = Blueprint.Light;
@@ -235,7 +216,7 @@ namespace FSO.LotView.LMap
                 if (room.Floor != floor)
                 {
                     floor = room.Floor;
-                    SetFloor(floor);
+                    SetFloor(floor, state);
                 }
                 if (rm >= lightRooms.Length) break;
                 var light = lightRooms[rm];
@@ -250,11 +231,11 @@ namespace FSO.LotView.LMap
             RedrawFloor = 0;
         }
 
-        public void RedrawAll()
+        public void RedrawAll(WorldState state)
         {
             DirtyRooms.Clear();
             sbyte floor = 0;
-            SetFloor(floor);
+            SetFloor(floor, state);
             var rooms = Blueprint.Rooms;
             var lightRooms = Blueprint.Light;
 
@@ -268,7 +249,7 @@ namespace FSO.LotView.LMap
                 if (room.Floor != floor)
                 {
                     floor = room.Floor;
-                    SetFloor(floor);
+                    SetFloor(floor, state);
                 }
                 if (i >= lightRooms.Length) break;
                 var light = lightRooms[i];
@@ -323,10 +304,15 @@ namespace FSO.LotView.LMap
             lightPos = Vector3.Transform(lightPos, Transform);
             var z = lightPos.Z;
             if (lightPos.Y < 0) lightPos.Y *= -1;
+
             light.LightPos = new Vector2(lightPos.Z, -lightPos.X);
             light.LightDir = -light.LightPos;
             light.LightDir.Normalize();
             lightPos.Normalize();
+            
+            LightVec = new Vector3(lightPos.Z, 1f, -lightPos.X);
+            Blueprint.Terrain.LightVec = LightVec;
+
             light.FalloffMultiplier = (float)Math.Sqrt(lightPos.X * lightPos.X + lightPos.Z * lightPos.Z) / lightPos.Y;
 
             if (modTime > 0.25) modTime = 0.5 - modTime;
@@ -442,20 +428,11 @@ namespace FSO.LotView.LMap
             effect.Parameters["Projection"].SetValue(Projection);
             GD.ScissorRectangle = DrawRect;
             GD.Clear(Color.Black);
-            /*GD.SetRenderTarget(ShadowTarg);
-            if (!cleared)
-            {
-                cleared = true;
-                //GD.RasterizerState = new RasterizerState() { ScissorTestEnable = true, CullMode = CullMode.None };
-                //GD.ScissorRectangle = new Rectangle((int)pointLight.X / 2 - 100, (int)pointLight.Y / 2 - 100, 200, 200);
-                GD.Clear(Color.Black);
-            }*/
             effect.CurrentTechnique = effect.Techniques[0];
             EffectPassCollection passes = effect.Techniques[0].Passes;
             passes[pass].Apply();
 
             if (geom.Item1.Length > 0) GD.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, geom.Item1, 0, geom.Item1.Length, geom.Item2, 0, geom.Item2.Length / 3);
-            //GD.SetRenderTarget(null);
         }
 
         public void DrawWallShadows(List<Vector2[]> walls, LightData pointLight)
@@ -482,7 +459,7 @@ namespace FSO.LotView.LMap
 
         public RenderTarget2D DebugLightMap()
         {
-            RedrawAll();
+            RedrawAll(null);
             return LightMap;
         }
 
@@ -504,13 +481,6 @@ namespace FSO.LotView.LMap
             ShadowTarg?.Dispose();
             ObjShadowTarg?.Dispose();
             LightMap?.Dispose();
-            if (RoomMaps != null)
-            {
-                foreach (var map in RoomMaps)
-                {
-                    map?.Dispose();
-                }
-            }
         }
     }
 }

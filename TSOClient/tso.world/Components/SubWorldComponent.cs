@@ -119,7 +119,7 @@ namespace FSO.LotView.Components
             {
                 //clear the sprite buffer before we begin drawing what we're going to cache
                 Blueprint.Terrain.RegenTerrain(gd, state, Blueprint);
-                Blueprint.FloorComp.Draw(gd, state);
+                Blueprint.FloorGeom.FullReset(gd, false);
                 Blueprint.WallComp.Draw(gd, state);
                 StaticArchCache.Clear();
                 state._2D.End(StaticArchCache, true);
@@ -157,11 +157,11 @@ namespace FSO.LotView.Components
             State.PrepareLighting();
 
             parentState._2D.SetScroll(pxOffset);
+            var level = parentState.SilentLevel;
+            parentState.SilentLevel = 5;
             Blueprint.Terrain.Draw(gd, parentState);
             parentState._2D.RenderCache(StaticArchCache);
             parentState._2D.Pause();
-            var level = parentState.SilentLevel;
-            parentState.SilentLevel = 5;
             Blueprint.RoofComp.Draw(gd, parentState);
             parentState.SilentLevel = level;
 

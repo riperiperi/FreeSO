@@ -74,6 +74,7 @@ namespace FSO.Client.UI.Controls.Catalog
 
                     AddWallStyles();
                     AddRoofs();
+                    AddTerrainTools();
 
                     return _Catalog;
                 }
@@ -190,6 +191,62 @@ namespace FSO.Client.UI.Controls.Catalog
                     }
                 });
             }
+        }
+
+        private static void AddTerrainTools()
+        {
+            var res = new UICatalogWallResProvider();
+
+            _Catalog[10].Insert(0, new UICatalogElement
+            {
+                Item = new ObjectCatalogItem()
+                {
+                    Name = "Raise/Lower Terrain",
+                    Category = 7,
+                    Price = 1,
+                },
+                Special = new UISpecialCatalogElement
+                {
+                    Control = typeof(UITerrainRaiser),
+                    ResID = 0,
+                    Res = new UICatalogTerrainResProvider(),
+                    Parameters = new List<int> { }
+                }
+            });
+
+            _Catalog[10].Insert(0, new UICatalogElement
+            {
+                Item = new ObjectCatalogItem()
+                {
+                    Name = "Flatten Terrain",
+                    Category = 7,
+                    Price = 1,
+                },
+                Special = new UISpecialCatalogElement
+                {
+                    Control = typeof(UITerrainFlatten),
+                    ResID = 1,
+                    Res = new UICatalogTerrainResProvider(),
+                    Parameters = new List<int> { }
+                }
+            });
+
+            _Catalog[10].Insert(0, new UICatalogElement
+            {
+                Item = new ObjectCatalogItem()
+                {
+                    Name = "Grass Tool",
+                    Category = 7,
+                    Price = 1,
+                },
+                Special = new UISpecialCatalogElement
+                {
+                    Control = typeof(UIGrassPaint),
+                    ResID = 2,
+                    Res = new UICatalogTerrainResProvider(),
+                    Parameters = new List<int> { }
+                }
+            });
         }
 
         public static short[] WallStyleIDs =

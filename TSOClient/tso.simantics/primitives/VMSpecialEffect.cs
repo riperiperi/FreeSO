@@ -19,7 +19,10 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMSpecialEffectOperand)args;
-            //TODO: Implement this, fridge has one when u have no money
+            if (context.VM.TS1 && VM.UseWorld)
+            {
+                if (((byte)operand.Flags & (1<<3)) > 0) context.VM.Context.World.CenterTo(context.StackObject.WorldUI);
+            }
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

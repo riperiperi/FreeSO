@@ -8,6 +8,7 @@ using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
+using Ninject;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,14 +25,16 @@ namespace FSO.Server.Servers.City.Handlers
         private IDAFactory DA;
         private IDataService DataService;
         private CityServerContext Context;
+        private IKernel Kernel;
         
-        public PurchaseLotHandler(CityServerContext context, IRealestateDomain realestate, IDAFactory da, IDataService dataService)
+        public PurchaseLotHandler(CityServerContext context, IRealestateDomain realestate, IDAFactory da, IDataService dataService, IKernel kernel)
         {
             Context = context;
             GlobalRealestate = realestate;
             Realestate = realestate.GetByShard(context.ShardId);
             DA = da;
             DataService = dataService;
+            Kernel = kernel;
         }
 
         public async void Handle(IVoltronSession session, PurchaseLotRequest packet)
@@ -57,6 +60,17 @@ namespace FSO.Server.Servers.City.Handlers
 
             using (var db = DA.Get())
             {
+                if (db.Lots.GetByLocation(Context.ShardId, packedLocation) != null)
+                {
+                    session.Write(new PurchaseLotResponse()
+                    {
+                        Status = PurchaseLotStatus.FAILED,
+                        Reason = PurchaseLotFailureReason.LOT_TAKEN,
+                    });
+                    return;
+                }
+
+
                 var ownedLot = db.Lots.GetByOwner(session.AvatarId);
                 if (ownedLot != null)
                 {
@@ -96,7 +110,19 @@ namespace FSO.Server.Servers.City.Handlers
                         });
                         return;
                     }
-                    db.Lots.UpdateLocation(ownedLot.lot_id, packedLocation, packet.StartFresh);
+
+                    if (!db.Lots.UpdateLocation(ownedLot.lot_id, packedLocation, packet.StartFresh))
+                    {
+                        //needs to refund the player.
+                        var transactionResult2 = db.Avatars.Transaction(uint.MaxValue, session.AvatarId, moveCost, 5); 
+                        session.Write(new PurchaseLotResponse()
+                        {
+                            Status = PurchaseLotStatus.FAILED,
+                            Reason = PurchaseLotFailureReason.LOT_TAKEN,
+                            NewFunds = transactionResult2.source_budget
+                        });
+                        return;
+                    }
 
                     DataService.Invalidate<FSO.Common.DataService.Model.Lot>(ownedLot.location); //nullify old lot
                     DataService.Invalidate<FSO.Common.DataService.Model.Lot>(packedLocation); //update new lot
@@ -107,6 +133,31 @@ namespace FSO.Server.Servers.City.Handlers
                     var myLots = db.Roommates.GetAvatarsLots(session.AvatarId);
                     if (myLots.Count > 0)
                     {
+                        if (myLots[0].permissions_level > 1)
+                        {
+                            //owner should not be able to move out of a lot implicitly
+                            session.Write(new PurchaseLotResponse()
+                            {
+                                Status = PurchaseLotStatus.FAILED,
+                                Reason = PurchaseLotFailureReason.UNKNOWN
+                            });
+                            return;
+                        }
+                        var lot = db.Lots.Get(myLots[0].lot_id);
+                        if (lot != null)
+                        {
+                            var kickResult = await Kernel.Get<ChangeRoommateHandler>().TryKick(lot.location, session.AvatarId, session.AvatarId);
+                            if (kickResult != Protocol.Electron.Model.ChangeRoommateResponseStatus.SELFKICK_SUCCESS)
+                            {
+                                session.Write(new PurchaseLotResponse()
+                                {
+                                    Status = PurchaseLotStatus.FAILED,
+                                    Reason = PurchaseLotFailureReason.IN_LOT_CANT_EVICT
+                                });
+                                return;
+                            }
+                        }
+                        /*
                         //we can't be in the lot when this happens. Make sure city owns avatar.
                         bool canEvict = session.AvatarClaimId != 0;
                         if (!canEvict)
@@ -129,6 +180,7 @@ namespace FSO.Server.Servers.City.Handlers
                             });
                             return;
                         }
+                        */
                     }
 
                     var name = packet.Name;

@@ -322,12 +322,20 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                 foreach (var set in LanguageSets)
                 {
-                    io.WriteUInt16((ushort)set.Strings.Length);
-                    foreach (var str in set.Strings)
+                    if (set?.Strings == null)
                     {
-                        io.WriteByte((byte)(str.LanguageCode - 1));
-                        io.WriteVariableLengthPascalString(str.Value);
-                        io.WriteVariableLengthPascalString(str.Comment);
+                        io.WriteInt16(0);
+                    }
+                    else
+                    {
+                        io.WriteUInt16((ushort)set.Strings.Length);
+
+                        foreach (var str in set.Strings)
+                        {
+                            io.WriteByte((byte)(str.LanguageCode - 1));
+                            io.WriteVariableLengthPascalString(str.Value);
+                            io.WriteVariableLengthPascalString(str.Comment);
+                        }
                     }
                 }
 

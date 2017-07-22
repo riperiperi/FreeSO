@@ -70,6 +70,11 @@ namespace FSO.SimAntics.Model
         PATTERN_FILL,
 
         FLOOR_RECT,
-        FLOOR_FILL
+        FLOOR_FILL,
+
+        TERRAIN_RAISE,
+        TERRAIN_FLATTEN,
+
+        GRASS_DOT
     }
 }

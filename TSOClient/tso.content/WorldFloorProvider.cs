@@ -184,10 +184,10 @@ namespace FSO.Content
             } else if (id == 65534)
             {
                 var spr = FloorGlobals.Get<SPR2>(0x800);
-                spr.FloorCopy = true;
                 if (!spr.SpritePreprocessed)
                 {
                     spr.ZAsAlpha = true;
+                    spr.FloorCopy = true;
                     spr.SpritePreprocessed = true;
                 }
                 return TextureUtils.Copy(device, spr.Frames[0].GetTexture(device));

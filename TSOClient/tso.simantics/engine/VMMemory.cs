@@ -810,7 +810,7 @@ namespace FSO.SimAntics.Engine.Utils
         public static Animation GetAnimation(VMStackFrame context, VMAnimationScope scope, ushort id){
 
             STR animTable = null;
-            bool child = ((VMAvatar)context.Caller).GetPersonData(VMPersonDataVariable.PersonsAge) < 18;
+            bool child = ((VMAvatar)context.Caller).GetPersonData(VMPersonDataVariable.PersonsAge) < 18 && context.VM.TS1;
 
             switch (scope){
                 case VMAnimationScope.Object:

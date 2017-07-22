@@ -38,6 +38,7 @@ namespace FSO.LotView.Model
 
         public FloorTile[][] Floors;
         public FloorComponent FloorComp;
+        public _3DFloorGeometry FloorGeom;
 
         public RoofComponent RoofComp;
 
@@ -65,6 +66,11 @@ namespace FSO.LotView.Model
         public Rectangle TargetBuildableArea;
         public LightData OutdoorsLight;
 
+        public short[] Altitude;
+        public short[] AltitudeCenters;
+        public float TerrainFactor = 3 / 160f;
+        public int BaseAlt;
+
         public Blueprint(int width, int height){
             this.Width = width;
             this.Height = height;
@@ -75,6 +81,7 @@ namespace FSO.LotView.Model
             this.FloorComp = new FloorComponent();
             FloorComp.blueprint = this;
             this.RoofComp = new RoofComponent(this);
+            this.FloorGeom = new _3DFloorGeometry(this);
         
             RoomColors = new Color[65536];
             this.WallsAt = new List<int>[Stories];
@@ -91,6 +98,33 @@ namespace FSO.LotView.Model
                 this.Floors[i] = new FloorTile[numTiles];
             }
             this.Cutaway = new bool[numTiles];
+        }
+
+        public float GetAltitude(int x, int y)
+        {
+            if (x <= 0 || y <= 0) return 0f;
+            return (AltitudeCenters[((y % Height) * Width + (x % Width))] - BaseAlt) * TerrainFactor;
+        }
+
+        public float InterpAltitude(Vector3 Position)
+        {
+            if (Altitude == null) return 0f;
+            var baseX = (int)Math.Max(1, Math.Min(Width-1, Position.X));
+            var baseY = (int)Math.Max(1, Math.Min(Height-1, Position.Y));
+            if (baseX < 0 || baseY < 0) return 0;
+            var nextX = (int)Math.Max(1, Math.Min(Width - 1, Math.Ceiling(Position.X)));
+            var nextY = (int)Math.Max(1, Math.Min(Height - 1, Math.Ceiling(Position.Y)));
+            var xLerp = Position.X % 1f;
+            var yLerp = Position.Y % 1f;
+            float h00 = Altitude[((baseY % Height) * Width + (baseX % Width))] * TerrainFactor;
+            float h01 = Altitude[((nextY % Height) * Width + (baseX % Width))] * TerrainFactor;
+            float h10 = Altitude[((baseY % Height) * Width + (nextX % Width))] * TerrainFactor;
+            float h11 = Altitude[((nextY % Height) * Width + (nextX % Width))] * TerrainFactor;
+
+            float xl1 = xLerp * h10 + (1 - xLerp) * h00;
+            float xl2 = xLerp * h11 + (1 - xLerp) * h01;
+
+            return yLerp * xl2 + (1 - yLerp) * xl1 - BaseAlt * TerrainFactor;
         }
 
         public void SetLightColor(Effect effect, Color outside, Color minOut)

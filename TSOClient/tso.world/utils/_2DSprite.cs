@@ -25,7 +25,7 @@ namespace FSO.LotView.Utils
         public Texture2D Mask;
         public Vector3 TilePosition;
         public Vector3 WorldPosition;
-        public short ObjectID; //used for mouse hit test render mode
+        public Single ObjectID; //used for mouse hit test render mode
         public ushort Room = 0xFFFF; //room to use for ambient light
         public sbyte Floor = 1;
 
@@ -70,6 +70,7 @@ namespace FSO.LotView.Utils
             Sprites.Add(_2DBatchRenderMode.RESTORE_DEPTH, new List<_2DSprite>());
             Sprites.Add(_2DBatchRenderMode.WALL, new List<_2DSprite>());
             Sprites.Add(_2DBatchRenderMode.Z_BUFFER, new List<_2DSprite>());
+            Sprites.Add(_2DBatchRenderMode.FLOOR, new List<_2DSprite>());
         }
     }
 }

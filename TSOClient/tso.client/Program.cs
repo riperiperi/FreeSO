@@ -92,6 +92,12 @@ namespace FSO.Client
                             case "ogl":
                                 useDX = false;
                                 break;
+                            case "ts1":
+                                GlobalSettings.Default.TS1HybridEnable = true;
+                                break;
+                            case "tso":
+                                GlobalSettings.Default.TS1HybridEnable = false;
+                                break;
                         }
                     }
                 }

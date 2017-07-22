@@ -31,7 +31,6 @@ namespace FSO.LotView.Components
         private DGRP DrawGroup;
         private DGRPRenderer dgrp;
         public WorldObjectRenderInfo renderInfo;
-        public Blueprint blueprint;
         public int DynamicCounter; //how long this sprite has been dynamic without changing sprite
         public List<SLOTItem> ContainerSlots;
 

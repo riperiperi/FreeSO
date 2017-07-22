@@ -37,7 +37,7 @@ namespace FSO.Client.Regulators
 
             AddState("AuthLogin").OnlyTransitionFrom("NotLoggedIn");
             AddState("InitialConnect").OnlyTransitionFrom("AuthLogin");
-            AddState("AvatarData").OnlyTransitionFrom("InitialConnect", "UpdateRequired");
+            AddState("AvatarData").OnlyTransitionFrom("InitialConnect", "UpdateRequired", "LoggedIn");
             AddState("ShardStatus").OnlyTransitionFrom("AvatarData");
             AddState("LoggedIn").OnlyTransitionFrom("ShardStatus");
 

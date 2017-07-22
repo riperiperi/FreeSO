@@ -37,6 +37,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 //todo: swimming??
 
                 animation = FSO.Content.Content.Get().AvatarAnimations.Get(avatar.WalkAnimations[posture] + ".anim");
+                if (animation == null) return VMPrimitiveExitCode.GOTO_TRUE;
                 var state = new VMAnimationState(animation, operand.PlayBackwards);
                 state.Loop = true;
                 avatar.Animations.Add(state);
@@ -118,11 +119,11 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMAnimateSimOperand : VMPrimitiveOperand {
         public ushort AnimationID {get; set;}
-        public byte LocalEventNumber;
+        public byte LocalEventNumber { get; set; }
         public byte _pad;
         public VMAnimationScope Source { get; set; }
         public byte Flags;
-        public byte ExpectedEventCount;
+        public byte ExpectedEventCount { get; set; }
 
         #region VMPrimitiveOperand Members
 

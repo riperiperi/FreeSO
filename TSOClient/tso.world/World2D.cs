@@ -298,8 +298,9 @@ namespace FSO.LotView
                 {
                     _2d.Pause();
                     _2d.Resume(); 
-                    Blueprint.FloorComp.DrawBound = new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13);
-                    Blueprint.FloorComp.Draw(gd, state);
+                    Blueprint.FloorGeom.SliceReset(gd, new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13));
+                    Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
+                    Blueprint.Terrain.Draw(gd, state);
                     Blueprint.FloorComp.DrawBound = null;
                     Blueprint.WallComp.Draw(gd, state);
                     _2d.Pause();
@@ -318,6 +319,8 @@ namespace FSO.LotView
 
             }
 
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED));
             //return things to normal
             //state.PrepareLighting();
             state.OutsideColor = lastLight;
@@ -344,7 +347,10 @@ namespace FSO.LotView
         /// <param name="state"></param>
         public void PreDraw(GraphicsDevice gd, WorldState state)
         {
+            //var oht = state.BaseHeight;
+            //state.BaseHeight = 0;
             var pxOffset = -state.WorldSpace.GetScreenOffset();
+            //state.BaseHeight = oht;
             var damage = Blueprint.Damage;
             var _2d = state._2D;
 
@@ -466,12 +472,12 @@ namespace FSO.LotView
                         Blueprint.RoofComp.StyleDirty = true;
                         break;
                     case BlueprintDamageType.ROOM_CHANGED:
+                        for (sbyte i = 0; i < Blueprint.RoomMap.Length; i++)
+                        {
+                            state.Rooms.SetRoomMap(i, Blueprint.RoomMap[i]);
+                        }
                         if (state.Light != null)
                         {
-                            for (sbyte i = 0; i < Blueprint.RoomMap.Length; i++)
-                            {
-                                state.Light.SetRoomMap(i, Blueprint.RoomMap[i]);
-                            }
                             if (lightChangeType < 2)
                             {
                                 lightChangeType = 2;
@@ -482,7 +488,7 @@ namespace FSO.LotView
                         break;
                     case BlueprintDamageType.FLOOR_CHANGED:
                     case BlueprintDamageType.WALL_CHANGED:
-                        recacheTerrain = true;
+                        //recacheTerrain = true;
                         recacheFloors = true;
                         recacheWalls = true;
                         Blueprint.RoofComp.ShapeDirty = true;
@@ -493,7 +499,7 @@ namespace FSO.LotView
             if (recacheWalls) redrawWall = true;
             if (recacheObjects) redrawStaticObjects = true;
             damage.Clear();
-            state.Light?.ParseInvalidated((sbyte)(state.Level + ((state.DrawRoofs)?1:0)));
+            state.Light?.ParseInvalidated((sbyte)(state.Level + ((state.DrawRoofs)?1:0)), state);
 
             //scroll buffer loads in increments of SCROLL_BUFFER
             var newOff = GetScrollIncrement(pxOffset, state);
@@ -520,7 +526,8 @@ namespace FSO.LotView
             {
                 _2d.Pause();
                 _2d.Resume(); //clear the sprite buffer before we begin drawing what we're going to cache
-                Blueprint.FloorComp.Draw(gd, state);
+                //Blueprint.FloorComp.Draw(gd, state);
+                Blueprint.FloorGeom.FullReset(gd, state.BuildMode > 1);
                 ClearDrawBuffer(StaticFloorCache);
                 _2d.End(StaticFloorCache, true);
             }
@@ -561,14 +568,12 @@ namespace FSO.LotView
 
                         while (buffer.NextPass())
                         {
-                            WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(true);
                             DrawFloorBuf(gd, state, pxOffset);
-                            WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(false);
                             DrawWallBuf(gd, state, pxOffset);
                             DrawObjBuf(gd, state, pxOffset);
                         }
                     }
-                    StaticObjects = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), pxOffset, new Vector3(tileOffset, 0));
+                    StaticObjects = new ScrollBuffer(bufferTexture.Get(), depthTexture.Get(), newOff, new Vector3(tileOffset, 0));
                 }
             }
             //state._2D.PreciseZoom = state.PreciseZoom;
@@ -629,11 +634,11 @@ namespace FSO.LotView
             {
                 _2d.SetScroll(pxOffset);
                 _2d.Begin(state.Camera);
-                WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(true);
-                DrawFloorBuf(gd, state, pxOffset);
-                WorldContent._2DWorldBatchEffect.Parameters["drawingFloor"].SetValue(false);
-                DrawWallBuf(gd, state, pxOffset);
-                DrawObjBuf(gd, state, pxOffset);
+
+                var p2O = pxOffset;
+                DrawFloorBuf(gd, state, p2O);
+                DrawWallBuf(gd, state, p2O);
+                DrawObjBuf(gd, state, p2O);
             }
             else
             {

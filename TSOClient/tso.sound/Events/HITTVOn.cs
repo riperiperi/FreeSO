@@ -138,7 +138,13 @@ namespace FSO.HIT.Events
             {
                 //tv.
                 //include commercials from previous directory
-                var files2 = Directory.GetFiles(statBase.Substring(0, statBase.LastIndexOf(Path.DirectorySeparatorChar)), "*.xa", SearchOption.AllDirectories);
+
+                var bs = Path.GetDirectoryName(statBase);
+
+                var index = bs.LastIndexOf('/');
+                if (index == -1) index = bs.LastIndexOf('\\');
+
+                var files2 = Directory.GetFiles(bs.Substring(0, index), "*.xa", SearchOption.TopDirectoryOnly);
                 foreach (var file in files2)
                 {
                     Sounds.Insert(rand.Next(Sounds.Count + 1), file);

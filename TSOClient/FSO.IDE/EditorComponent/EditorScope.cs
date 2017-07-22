@@ -210,6 +210,7 @@ namespace FSO.IDE.EditorComponent
                     return (attr == null) ? data.ToString() : attr;
                 case VMVariableScope.StackObjectAttributes:
                 case VMVariableScope.StackObjectLeadTileAttribute:
+                    if (StackObject == null) break;
                     var stackAttr = StackObject.Resource.Get<STR>(256);
                     if (stackAttr == null) break;
                     attr = stackAttr.GetString(data);

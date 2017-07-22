@@ -50,8 +50,8 @@ namespace FSO.LotView.Utils
             }
         }
 
-        private Vector2 _CenterTile;
-        public Vector2 CenterTile
+        private Vector3 _CenterTile;
+        public Vector3 CenterTile
         {
             get { return _CenterTile; }
             set { _CenterTile = value; m_ViewDirty = true; }
@@ -232,16 +232,13 @@ namespace FSO.LotView.Utils
 
         protected override void CalculateView()
         {
-            var offset = new Vector3((CenterTile.X * WorldSpace.WorldUnitsPerTile) / 2.0f, 0.0f, (CenterTile.Y * WorldSpace.WorldUnitsPerTile) / 2.0f);
-            offset = Vector3.Zero;
-            offset = new Vector3(32.0f, 0.0f, -32.0f);
 
             var centerX = CenterTile.X * WorldSpace.WorldUnitsPerTile;
             var centerY = CenterTile.Y * WorldSpace.WorldUnitsPerTile;
             var size = WorldSize * WorldSpace.WorldUnitsPerTile;
             var halfSize = (WorldSize/2.0f) * WorldSpace.WorldUnitsPerTile;
 
-            offset = new Vector3(-centerX, 0.0f, -centerY);
+            var offset = new Vector3(-centerX, -CenterTile.Z*WorldSpace.WorldUnitsPerTile, -centerY);
             var view = Matrix.Identity;
 
             view *= Matrix.CreateTranslation(offset.X, offset.Y, offset.Z);
@@ -265,6 +262,7 @@ namespace FSO.LotView.Utils
             view *= Matrix.CreateRotationY(MathHelper.ToRadians(rotationY));
             view *= Matrix.CreateRotationX(MathHelper.ToRadians(30.0f));
             m_View = view;
+            
         }
     }
 }

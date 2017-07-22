@@ -9,7 +9,7 @@ namespace FSO.Client.UI.Controls.Catalog
 {
     public class UICatalogRoofResProvider : UICatalogResProvider
     {
-        public Texture2D GetIcon(ulong id)
+        public override Texture2D GetIcon(ulong id)
         {
             var roofs = Content.Content.Get().WorldRoofs;
             return roofs.Get(roofs.IDToName((int)id)).Get(GameFacade.GraphicsDevice);
@@ -20,17 +20,17 @@ namespace FSO.Client.UI.Controls.Catalog
             return false;
         }
 
-        public string GetName(ulong id)
+        public override string GetName(ulong id)
         {
             return "";
         }
 
-        public string GetDescription(ulong id)
+        public override string GetDescription(ulong id)
         {
             return "";
         }
 
-        public int GetPrice(ulong id)
+        public override int GetPrice(ulong id)
         {
             return 0;
         }
