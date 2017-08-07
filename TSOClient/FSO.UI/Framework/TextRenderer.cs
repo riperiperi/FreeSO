@@ -41,6 +41,7 @@ namespace FSO.Client.UI.Framework
             var m_LineHeight = TextStyle.MeasureString("W").Y - (2 * txtScale.Y);
             var spaceWidth = TextStyle.MeasureString(" ").X;
 
+            text = text.Replace("\r", "");
             var words = text.Split(' ').ToList();
             var newWordsArray = TextRenderer.ExtractLineBreaks(words);
 
@@ -87,7 +88,7 @@ namespace FSO.Client.UI.Framework
                 position.Y += m_LineHeight;
             }
 
-            result.BoundingBox = new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)options.MaxWidth, (int)(yPosition-m_LineHeight));
+            result.BoundingBox = new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)options.MaxWidth, (int)(yPosition-(m_LineHeight + topLeft.Y)));
             result.MaxWidth = realMaxWidth;
             foreach (var cmd in drawCommands)
             {
@@ -108,7 +109,7 @@ namespace FSO.Client.UI.Framework
                 var allowedWidth = (currentLineNum*lineHeight<topLeftIconSpace.Y)?lineWidth-topLeftIconSpace.X:lineWidth;
                 var word = newWordsArray[i];
 
-                if (word == "\r\n")
+                if (word == "\n")
                 {
                     /** Line break **/
                     m_Lines.Add(new UITextEditLine
@@ -231,14 +232,14 @@ namespace FSO.Client.UI.Framework
             for (var i = 0; i < words.Count; i++)
             {
                 var word = words[i];
-                var breaks = word.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+                var breaks = word.Split(new string[] { "\n" }, StringSplitOptions.None);
 
                 for (var x = 0; x < breaks.Length; x++)
                 {
                     newWordsArray.Add(breaks[x]);
                     if (x != breaks.Length - 1)
                     {
-                        newWordsArray.Add("\r\n");
+                        newWordsArray.Add("\n");
                     }
                 }
             }

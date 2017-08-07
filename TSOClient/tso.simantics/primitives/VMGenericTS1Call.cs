@@ -75,7 +75,7 @@ namespace FSO.SimAntics.Primitives
                     context.VM.ActivateFamily(crossDataDT.ActiveFamily);
 
                     context.Thread.TempRegisters[0] = context.VM.GetGlobalValue(3);
-                    if (VM.UseWorld) context.VM.Context.World.State.ScrollAnchor = (AvatarComponent)(context.VM.GetObjectById(context.VM.GetGlobalValue(3))?.WorldUI);
+                    if (VM.UseWorld) context.VM.Context.World.CenterTo((AvatarComponent)(context.VM.GetObjectById(context.VM.GetGlobalValue(3))?.WorldUI));
                     break;
                 case VMGenericTS1CallMode.BuildVacationFamilyPutFamilyNumInTemp0:
                     //in our implementation, vacation lots build the family in the same way as normal lots.

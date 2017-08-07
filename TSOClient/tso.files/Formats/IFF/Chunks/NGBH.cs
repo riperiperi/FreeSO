@@ -77,5 +77,10 @@ namespace FSO.Files.Formats.IFF.Chunks
             GUID = io.ReadUInt32();
             Count = io.ReadUInt16();
         }
+
+        public InventoryItem Clone()
+        {
+            return new InventoryItem() { Type = Type, GUID = GUID, Count = Count };
+        }
     }
 }

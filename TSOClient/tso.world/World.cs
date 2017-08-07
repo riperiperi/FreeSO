@@ -41,6 +41,7 @@ namespace FSO.LotView
         public uint LastCacheClear = 0;
         public static bool DirectX = false;
         public float Opacity = 1f;
+        public float BackbufferScale = 1f;
 
         public float SmoothZoomTimer = -1;
         public float SmoothZoomFrom = 1f;
@@ -248,7 +249,7 @@ namespace FSO.LotView
                  */
                 scrollVector = new Vector2();
 
-                var basis = GetScrollBasis();
+                var basis = GetScrollBasis(true);
 
                 switch (cursor)
                 {
@@ -306,13 +307,19 @@ namespace FSO.LotView
             return false;
         }
 
-        public void Scroll (Vector2 dir)
+
+        public void Scroll (Vector2 dir, bool multiplied)
         {
-            var basis = GetScrollBasis();
+            var basis = GetScrollBasis(multiplied);
             State.CenterTile += dir.X*basis[0] + dir.Y*basis[1];
         }
 
-        public Vector2[] GetScrollBasis()
+        public void Scroll(Vector2 dir)
+        {
+            Scroll(dir, true);
+        }
+
+        public Vector2[] GetScrollBasis(bool multiplied)
         {
             Vector2[] output = new Vector2[2];
             switch (State.Rotation)
@@ -334,9 +341,12 @@ namespace FSO.LotView
                     output[0] = new Vector2(1, 1);
                     break;
             }
-            int multiplier = ((1 << (3 - (int)State.Zoom)) * 3) / 2;
-            output[0] *= multiplier;
-            output[1] *= multiplier;
+            if (multiplied)
+            {
+                int multiplier = ((1 << (3 - (int)State.Zoom)) * 3) / 2;
+                output[0] *= multiplier;
+                output[1] *= multiplier;
+            }
             return output;
         }
 
@@ -369,6 +379,13 @@ namespace FSO.LotView
 
             State.CenterTile -= (pelvisCenter.Z/2.95f) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
 
+        }
+
+        public void RestoreTerrainToCenterTile()
+        {
+            //center tiles center the lot on a tile at the base level of 0 elevation.
+            var pos = Blueprint.InterpAltitude(new Vector3(State.CenterTile, 0)) + (State.Level - 1) * 2.95f;
+            State.CenterTile -= (pos / 2.95f) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
         }
 
         public override void Update(UpdateState state)
@@ -469,7 +486,7 @@ namespace FSO.LotView
             if (!UseBackbuffer)
                 InternalDraw(device);
             else
-                PPXDepthEngine.DrawBackbuffer(Opacity);
+                PPXDepthEngine.DrawBackbuffer(Opacity, BackbufferScale);
             return;
         }
 

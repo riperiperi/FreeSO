@@ -234,14 +234,7 @@ namespace FSO.SimAntics
                 Name = "old_relationship",
                 OperandModel = typeof(VMOldRelationshipOperand) //same primitive, different operand
             });
-            
-            //different in ts1
-            AddPrimitive(new VMPrimitiveRegistration(new VMTransferFunds())
-            {
-                Opcode = 25,
-                Name = "transfer_funds",
-                OperandModel = typeof(VMTransferFundsOperand)
-            });
+           
 
             AddPrimitive(new VMPrimitiveRegistration(new VMRelationship())
             {
@@ -461,6 +454,13 @@ namespace FSO.SimAntics
                     OperandModel = typeof(VMGenericTS1CallOperand)
                 });
 
+                AddPrimitive(new VMPrimitiveRegistration(new VMTS1Budget())
+                {
+                    Opcode = 25,
+                    Name = "budget",
+                    OperandModel = typeof(VMTransferFundsOperand)
+                });
+
                 AddPrimitive(new VMPrimitiveRegistration(new VMGosubFoundAction())
                 {
                     Opcode = 30,
@@ -484,6 +484,13 @@ namespace FSO.SimAntics
                     Opcode = 1,
                     Name = "generic_sims_online_call",
                     OperandModel = typeof(VMGenericTSOCallOperand)
+                });
+
+                AddPrimitive(new VMPrimitiveRegistration(new VMTransferFunds())
+                {
+                    Opcode = 25,
+                    Name = "transfer_funds",
+                    OperandModel = typeof(VMTransferFundsOperand)
                 });
             }
         }

@@ -78,8 +78,6 @@ namespace FSO.LotView.Model
             var numTiles = width * height;
             this.WallComp = new WallComponent();
             WallComp.blueprint = this;
-            this.FloorComp = new FloorComponent();
-            FloorComp.blueprint = this;
             this.RoofComp = new RoofComponent(this);
             this.FloorGeom = new _3DFloorGeometry(this);
         

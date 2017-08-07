@@ -25,6 +25,11 @@ namespace FSO.Content.TS1
             return (short)(JobResource.Get<CARR>(jobID)?.GetJobData(jobLevel, data) ?? 0);
         }
 
+        public CARR GetJob(ushort jobID)
+        {
+            return JobResource.Get<CARR>(jobID);
+        }
+
         public short SetToNext(short current)
         {
             return (short)(JobResource.List<CARR>().FirstOrDefault(x => x.ChunkID > current)?.ChunkID ?? -1);
@@ -35,6 +40,12 @@ namespace FSO.Content.TS1
             //TODO: use STR#
             var job = JobResource.Get<CARR>((ushort)jobID);
             return (job?.Name ?? "(unknown)") + " career track for a " + job?.JobLevels[0].JobName + ".";
+        }
+
+        public STR JobStrings(short jobID)
+        {
+            //TODO: use STR#
+            return JobResource.Get<STR>((ushort)jobID);
         }
     }
 }

@@ -201,7 +201,12 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        private UIMouseEventRef ClickHandler;
+        protected UIMouseEventRef ClickHandler;
+
+        public void InflateHitbox(int x, int y)
+        {
+            ClickHandler.Region.Inflate(x, y);
+        }
 
         [UIAttribute("image")]
         public Texture2D Texture 
@@ -314,7 +319,7 @@ namespace FSO.Client.UI.Controls
 
         private void OnMouseEvent(UIMouseEventType type, UpdateState state)
         {
-            if (m_Disabled) { return; }
+            if ((m_Disabled || Opacity < 1f) && type != UIMouseEventType.MouseOut) { return; }
 
             switch (type)
             {

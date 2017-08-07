@@ -539,6 +539,11 @@ namespace FSO.Server.Servers.Lot.Domain
                         {
                             LOG.Info("Background task failed on lot with dbid = " + Context.DbId + "! (continuing)" + ex.ToString());
                         }
+                        if (Epoch.Now - LastTaskRecv > 10)
+                        {
+                            LOG.Info("WARNING: Unusually long background task for dbid = " + Context.DbId + "! " + (Epoch.Now - LastTaskRecv) + "seconds");
+                        }
+                        LastTaskRecv = Epoch.Now;
                     }
                 }
             }

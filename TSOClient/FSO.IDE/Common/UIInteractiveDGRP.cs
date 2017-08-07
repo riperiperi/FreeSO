@@ -60,6 +60,11 @@ namespace FSO.IDE.Common
                     if (TargetOBJ == null) return;
                     TargetTile = TargetOBJ.Objects.FirstOrDefault(x => x.Object.OBJ.GUID == id);
                     if (TargetTile == null) TargetTile = TargetOBJ.BaseObject;
+                    if (TargetTile == null)
+                    {
+                        TargetOBJ = null;
+                        return;
+                    }
                     var tile = TargetTile.VisualPosition;
                     TempVM.Context.World.State.CenterTile = new Vector2(tile.X, tile.Y) - new Vector2(2.5f, 2.5f);
                     foreach (var obj in TargetOBJ.Objects)

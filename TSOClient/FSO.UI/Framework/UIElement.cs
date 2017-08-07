@@ -319,9 +319,9 @@ namespace FSO.Client.UI.Framework
             _BlendColor = Color.White;
 
             //Convert the opacity percentage into a byte (0-255)
-            _BlendColor *= _Opacity;
+            _BlendColor *= Opacity;
             _OpacityDirty = false;
-            _HasOpacity = _Opacity != 1.0f;
+            _HasOpacity = Opacity != 1.0f;
         }
 
         /// <summary>
@@ -422,9 +422,12 @@ namespace FSO.Client.UI.Framework
                     //we have been asked to keep an eye on using ListenForMouse.
                     foreach (var mouseRegion in m_MouseRefs)
                     {
-                        if (HitTestArea(state, mouseRegion.Region, true))
+                        foreach (var mouse in state.MouseStates)
                         {
-                            state.MouseEvents.Add(mouseRegion);
+                            if (HitTestArea(mouse.MouseState, mouseRegion.Region, true))
+                            {
+                                state.MouseEvents.Add(new Tuple<int, UIMouseEventRef>(mouse.ID, mouseRegion));
+                            }
                         }
                     }
                 }
@@ -722,7 +725,7 @@ namespace FSO.Client.UI.Framework
             pos = FlooredLocalPoint(pos);
 
             if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
-            batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state), 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state)*Opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
         }
 
         /// <summary>
@@ -785,6 +788,39 @@ namespace FSO.Client.UI.Framework
         /// <param name="from"></param>
         /// <param name="to"></param>
         /// <param name="scale"></param>
+        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation)
+        {
+            //if (!m_IsInvalidated)
+            //{
+            batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
+                        new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
+            //}
+        }
+
+        /// <summary>
+        /// Draws a texture to the UIElement. This method will deal with
+        /// the matrix calculations
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="texture"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="scale"></param>
+        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation, Vector2 origin)
+        {
+            batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
+                        origin, _Scale * scale, SpriteEffects.None, 0.0f);
+        }
+
+        /// <summary>
+        /// Draws a texture to the UIElement. This method will deal with
+        /// the matrix calculations
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="texture"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="scale"></param>
         /// <param name="blend"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color blend)
         {
@@ -821,7 +857,7 @@ namespace FSO.Client.UI.Framework
         /// <param name="state"></param>
         /// <param name="?"></param>
         /// <returns></returns>
-        public bool HitTestArea(UpdateState state, Rectangle area, bool cache)
+        public bool HitTestArea(MouseState state, Rectangle area, bool cache)
         {
             if (!Visible) { return false; }
 
@@ -857,8 +893,8 @@ namespace FSO.Client.UI.Framework
                 }
             }
 
-            var mx = state.MouseState.X;
-            var my = state.MouseState.Y;
+            var mx = state.X;
+            var my = state.Y;
 
             if (mx >= globalLeft && mx <= globalRight &&
                 my >= globalTop && my <= globalBottom)
@@ -950,7 +986,7 @@ namespace FSO.Client.UI.Framework
             Color ColorTo = Color.Transparent;
 
             Color[] data = new Color[Texture.Width * Texture.Height];
-            Texture.GetData(data);
+            //Texture.GetData(data);
 
             for (int i = 0; i < data.Length; i++)
             {
@@ -958,6 +994,9 @@ namespace FSO.Client.UI.Framework
                     data[i] = ColorTo;
             }
 
+            //var newTex = new Texture2D(Texture.GraphicsDevice, Texture.Width, Texture.Height);
+            //Texture.Dispose();
+            //Texture = newTex;
             Texture.SetData(data);
         }
 

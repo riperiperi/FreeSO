@@ -123,21 +123,22 @@ namespace FSO.LotView.Components
             var room = blueprint.Rooms[Room].Base;
             var lights = (room >= blueprint.Light.Length)?new List<LightData>():blueprint.Light[room].Lights;
             var xy = new Vector2(Position.X, Position.Y);
-            var result = new List<Vector2>();
+            var result = new List<System.Tuple<float, Vector2>>();
 
             foreach (var light in lights)
             {
-                if (light.LightIntensity > 0.2f && (xy*16 - light.LightPos).Length() < light.LightSize)
+                var dist = (xy * 16 - light.LightPos).Length();
+                if (light.LightIntensity > 0.2f && dist < light.LightSize)
                 {
-                    result.Add((light.LightPos / 16f) * 3f);
+                    result.Add(new System.Tuple<float, Vector2>(dist, (light.LightPos / 16f) * 3f));
                 }
             }
 
             if (blueprint.Rooms[room].IsOutside && blueprint.OutdoorsLight != null)
             {
-                result.Add(new Vector2(Position.X*3, Position.Y*3)+(-blueprint.OutdoorsLight.LightDir*3f * blueprint.OutdoorsLight.FalloffMultiplier));
+                result.Add(new System.Tuple<float, Vector2>(0, new Vector2(Position.X*3, Position.Y*3)+(-blueprint.OutdoorsLight.LightDir*3f * blueprint.OutdoorsLight.FalloffMultiplier)));
             }
-            return result;
+            return result.OrderBy(x => x.Item1).Select(x => x.Item2).Take(4).ToList();
         }
 
         public override void Draw(GraphicsDevice device, WorldState world)

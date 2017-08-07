@@ -63,6 +63,7 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 }
 
 bool OutsideRoomCheck(float2 uv) {
+
 	uv *= RoomUVRescale;
 	uv += RoomUVOff;
 	float4 test = tex2D(roomSampler, uv);
@@ -118,7 +119,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 
 float4 PixelShaderFunctionOutdoors(VertexShaderOutput input) : COLOR0{
 	float2 uv = input.p;
-	if (OutsideRoomCheck(uv)) discard;
+	//if (OutsideRoomCheck(uv)) discard;
 	float light = 1;
 
 	float2 shadow = float2(tex2D(shadowSampler, uv).r, tex2D(floorShadowSampler, uv).r);

@@ -76,7 +76,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public uint GUID;
         public int UnknownNegOne; //negative 1 usually
 
-        public Dictionary<int, List<int>> Relationships;
+        public Dictionary<int, List<short>> Relationships;
 
         public Neighbour() { }
 
@@ -118,18 +118,19 @@ namespace FSO.Files.Formats.IFF.Chunks
             if (UnknownNegOne != -1) { }
 
             var entries = io.ReadInt32();
-            Relationships = new Dictionary<int, List<int>>();
+            Relationships = new Dictionary<int, List<short>>();
             for (int i=0; i<entries; i++)
             {
                 var keyCount = io.ReadInt32();
                 if (keyCount != 1) { }
                 var key = io.ReadInt32();
-                var values = new List<int>();
+                var values = new List<short>();
                 var valueCount = io.ReadInt32();
                 for (int j=0; j<valueCount; j++)
                 {
-                    values.Add(io.ReadInt32());
+                    values.Add((short)io.ReadInt32());
                 }
+                Relationships.Add(key, values);
             }
         }
     }

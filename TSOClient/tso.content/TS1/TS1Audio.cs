@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using FSO.Content.Codecs;
 using FSO.Content.Model;
+using FSO.Common.Utils;
 
 namespace FSO.Content.TS1
 {
@@ -47,7 +48,7 @@ namespace FSO.Content.TS1
             {IIS(6681), "Music/Stations/CountryD/"},
             {IIS(6684), "Music/Stations/Disco/"},
             {IIS(65536), "Music/Stations/EZ/"},
-            {IIS(65537), "Music/Stations/EZX/"},
+            {IIS(65537), "Music/Stations/EZExp/"},
             {IIS(270), "Music/Stations/Latin/"},
             {IIS(6682), "Music/Stations/Rap/"},
             {IIS(6683), "Music/Stations/Rave/"},
@@ -162,8 +163,8 @@ namespace FSO.Content.TS1
                 var cFile = Path.Combine(ContentManager.TS1BasePath, file);
                 var bPath = cFile.Substring(0, cFile.Length - 4); //path without .hot extension
 
-                var hsm = new HSM(bPath + ".hsm");
-                var hit = new HITFile(bPath + ".hit");
+                var hsm = new HSM(PathCaseTools.Insensitive(bPath + ".hsm"));
+                var hit = new HITFile(PathCaseTools.Insensitive(bPath + ".hit"));
                 var hot = new Hot(cFile, hsm);
 
                 var group = new HITResourceGroup() { hsm = hsm, hit = hit, hot = hot };
@@ -225,7 +226,6 @@ namespace FSO.Content.TS1
             if (aud != null)
             {
                 var stream = new MemoryStream(aud.Data);
-
                 var sfx = SoundEffect.FromStream(stream);
                 stream.Close();
                 SFXCache.Add(patch, sfx);
@@ -245,12 +245,14 @@ namespace FSO.Content.TS1
             }
             else
             {
+                Console.WriteLine(patch.Filename+" was null");
                 return null;// pinnedArray; //we couldn't find anything! can't return null so do this... not the best idea tbh
             }
         }
 
         private DecodedSFX GetAudioFrom(string fileName)
         {
+            fileName = fileName.ToLowerInvariant();
             var ext = Path.GetExtension(fileName);
             var fname = Path.GetFileName(fileName);
             switch (ext)
@@ -264,7 +266,7 @@ namespace FSO.Content.TS1
                 case ".utk":
                     return UTKSounds.Get(fname);
             }
-                    
+            Console.WriteLine("what... "+ext);
             return null;
         }
 

@@ -70,6 +70,7 @@
     <Compile Include="Controls\UISlider.cs" />
     <Compile Include="Controls\UITextBox.cs" />
     <Compile Include="Controls\UITextEdit.cs" />
+    <Compile Include="Debug\IDEHook.cs" />
     <Compile Include="Framework\DoubleClick.cs" />
     <Compile Include="Framework\Font.cs" />
     <Compile Include="Framework\GameScreen.cs" />
@@ -92,6 +93,7 @@
     <Compile Include="Framework\UITween.cs" />
     <Compile Include="GameFacade.cs" />
     <Compile Include="GlobalSettings.cs" />
+    <Compile Include="IFSOProgram.cs" />
     <Compile Include="IGameStartProxy.cs" />
     <Compile Include="Model\SlicedTextureRef.cs" />
     <Compile Include="Model\UIElementState.cs" />
@@ -125,6 +127,14 @@
     <ProjectReference Include="..\tso.content\FSO.Content.csproj">
       <Project>{c0068df7-f2e8-4399-846d-556bf9a35c00}</Project>
       <Name>FSO.Content</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.files\FSO.Files.csproj">
+      <Project>{18583453-a970-4ac5-83b1-2d6bfdf94c24}</Project>
+      <Name>FSO.Files</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.simantics\FSO.SimAntics.csproj">
+      <Project>{5eddefd2-c850-49c1-812d-ddeff09125ef}</Project>
+      <Name>FSO.SimAntics</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.sound\FSO.HIT.csproj">
       <Project>{072781d8-51ec-4143-9cae-daf50177d3ad}</Project>

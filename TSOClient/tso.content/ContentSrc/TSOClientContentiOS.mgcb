@@ -61,18 +61,6 @@
 /processorParam:DebugMode=Auto
 /build:Effects/VerShader.fx
 
-#begin Textures/gridTexture.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/gridTexture.png
-
 #begin Effects/Vitaboy.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -108,4 +96,46 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/GrassShaderiOS.fx
+
+#begin Effects/gradpoly2D.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/gradpoly2D.fx
+
+#begin Effects/LightMap2D.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/LightMap2D.fx
+
+#begin Effects/VitaboyiOS.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/VitaboyiOS.fx
+
+#begin Fonts/Mobile_15px.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=Color
+/build:Fonts/Mobile_15px.spritefont
+
+#begin Fonts/Mobile_20px.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=Color
+/build:Fonts/Mobile_20px.spritefont
+
+#begin Fonts/Mobile_25px.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=Color
+/build:Fonts/Mobile_25px.spritefont
+
+#begin Fonts/Mobile_50px.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=Color
+/build:Fonts/Mobile_50px.spritefont
 

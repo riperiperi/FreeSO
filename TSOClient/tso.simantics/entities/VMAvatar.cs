@@ -66,7 +66,7 @@ namespace FSO.SimAntics
         public double TurnVelocity;
 
         private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];
-        private VMAvatarMotiveDecay MotiveDecay;
+        private VMIMotiveDecay MotiveDecay;
         private short[] PersonData = new short[101];
         private short[] MotiveData = new short[16];
         private VMEntity HandObject;
@@ -229,7 +229,7 @@ namespace FSO.SimAntics
             }
 
 
-            MotiveDecay = new VMAvatarMotiveDecay();
+            MotiveDecay = (Content.Content.Get().TS1) ? (VMIMotiveDecay)new VMTS1MotiveDecay() : new VMAvatarMotiveDecay();
             for (int i = 0; i < 16; i++)
             {
                 MotiveChanges[i] = new VMMotiveChange();
@@ -248,7 +248,7 @@ namespace FSO.SimAntics
                 var type = data.GetString(0);
                 if (type == "adult") AvatarType = VMAvatarType.Adult;
                 else if (type == "child") AvatarType = VMAvatarType.Child;
-                else if (type == "cat") AvatarType = VMAvatarType.Cat;
+                else if (type == "cat" || type == "kat") AvatarType = VMAvatarType.Cat;
                 else if (type == "dog") AvatarType = VMAvatarType.Dog;
             }
 
@@ -569,8 +569,6 @@ namespace FSO.SimAntics
                 MotiveChanges[i].Tick(this); //tick over motive changes
             }
 
-            if (VM.UseWorld) avatar.Avatar.ReloadSkeleton();
-
             PersonData[(int)VMPersonDataVariable.TickCounter]++;
             if (KillTimeout > -1)
             {
@@ -703,6 +701,11 @@ namespace FSO.SimAntics
             }
         }
 
+        public bool HasMotiveChange(VMMotive motive)
+        {
+            return MotiveChanges[(int)motive].PerHourChange != 0;
+        }
+
         public virtual void ClearMotiveChanges()
         {
             for (int i = 0; i < 16; i++)
@@ -786,7 +789,9 @@ namespace FSO.SimAntics
 
         public void InheritNeighbor(Neighbour neigh)
         {
-            if (neigh.PersonData != null) PersonData = neigh.PersonData;
+            var lastGender = GetPersonData(VMPersonDataVariable.Gender);
+            if (neigh.PersonData != null) PersonData = neigh.PersonData.ToArray();
+            SetPersonData(VMPersonDataVariable.Gender, lastGender); //fixes cats switching to children suddenly
             SetPersonData(VMPersonDataVariable.NeighborId, neigh.NeighbourID);
         }
 

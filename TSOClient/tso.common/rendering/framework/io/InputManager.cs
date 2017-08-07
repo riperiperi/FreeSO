@@ -474,70 +474,69 @@ namespace FSO.Common.Rendering.Framework.IO
             return (capsLock ^ shift) ? char.ToUpper(baseChar) : baseChar;
         }
 
-        /// <summary>
-        /// Mouse event code, ensures depth is considered for mouse events
-        /// </summary>
-        private UIMouseEventRef LastMouseOver;
-        private UIMouseEventRef LastMouseDown;
-        private bool LastMouseDownState = false;
-
         public void HandleMouseEvents(UpdateState state)
         {
-            var mouseBtnDown = state.MouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
-            var mouseDif = mouseBtnDown != LastMouseDownState;
-            LastMouseDownState = mouseBtnDown;
+            foreach (var mouse in state.MouseStates) {
+                var mouseBtnDown = mouse.MouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                var mouseDif = mouseBtnDown != mouse.LastMouseDownState;
+                if (mouse.NewMultiMouse) mouse.NewMultiMouse = false;
+                else
+                    mouse.LastMouseDownState = mouseBtnDown;
+                state.MouseState = mouse.MouseState; //make sure each event uses the mouse state for this mouse.
+                state.CurrentMouseID = mouse.ID;
+                //if anyone accesses vanilla mouse state during the update loop, it will be the last mouse that was present.
 
-            if (mouseDif)
-            {
-                if (mouseBtnDown)
+                var topMost =
+                    state.MouseEvents.Where(x => x.Item1 == mouse.ID).OrderByDescending(x => x.Item2.Element.Depth).FirstOrDefault();
+
+                if (topMost != null && !mouse.Dead)
                 {
-                    if (LastMouseDown != null)
+
+                    /** different element? **/
+                    if (mouse.LastMouseOver != topMost.Item2)
                     {
-                        /** We already have mouse down on an object **/
-                        return;
-                    }
-                    if (LastMouseOver != null)
-                    {
-                        LastMouseDown = LastMouseOver;
-                        LastMouseDown.Callback(UIMouseEventType.MouseDown, state);
+
+                        if (mouse.LastMouseOver != null)
+                        {
+                            mouse.LastMouseOver.Callback(UIMouseEventType.MouseOut, state);
+                        }
+
+                        topMost.Item2.Callback(UIMouseEventType.MouseOver, state);
+                        mouse.LastMouseOver = topMost.Item2;
                     }
                 }
                 else
                 {
-                    if (LastMouseDown != null)
+                    if (mouse.LastMouseOver != null)
                     {
-                        LastMouseDown.Callback(UIMouseEventType.MouseUp, state);
-                        LastMouseDown = null;
+                        mouse.LastMouseOver.Callback(UIMouseEventType.MouseOut, state);
+                        mouse.LastMouseOver = null;
                     }
                 }
-            }
 
-            if (state.MouseEvents.Count > 0)
-            {
-                var topMost =
-                    state.MouseEvents.OrderByDescending(x => x.Element.Depth).First();
-
-
-                /** Same element **/
-                if (LastMouseOver == topMost)
+                if (mouseDif)
                 {
-                    return;
-                }
-
-                if (LastMouseOver != null)
-                {
-                    LastMouseOver.Callback(UIMouseEventType.MouseOut, state);
-                }
-
-                topMost.Callback(UIMouseEventType.MouseOver, state);
-                LastMouseOver = topMost;
-            }
-            else
-            {
-                if (LastMouseOver != null)
-                {
-                    LastMouseOver.Callback(UIMouseEventType.MouseOut, state);
-                    LastMouseOver = null;
+                    if (mouseBtnDown)
+                    {
+                        if (mouse.LastMouseDown != null)
+                        {
+                            /** We already have mouse down on an object **/
+                            return;
+                        }
+                        if (mouse.LastMouseOver != null)
+                        {
+                            mouse.LastMouseDown = mouse.LastMouseOver;
+                            mouse.LastMouseDown.Callback(UIMouseEventType.MouseDown, state);
+                        }
+                    }
+                    else
+                    {
+                        if (mouse.LastMouseDown != null)
+                        {
+                            mouse.LastMouseDown.Callback(UIMouseEventType.MouseUp, state);
+                            mouse.LastMouseDown = null;
+                        }
+                    }
                 }
             }
 

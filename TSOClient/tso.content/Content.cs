@@ -36,15 +36,26 @@ namespace FSO.Content
     /// </summary>
     public class Content
     {
+        public static ContentLoadingProgress LoadProgress;
+
         public static void Init(string basepath, GraphicsDevice device){
-            if (INSTANCE != null) return;
-            INSTANCE = new Content(basepath, ContentMode.CLIENT, device);
+            if (INSTANCE != null) {
+                if (!INSTANCE.Inited) INSTANCE.Init();
+                return;
+            }
+            INSTANCE = new Content(basepath, ContentMode.CLIENT, device, true);
         }
 
         public static void Init(string basepath, ContentMode mode)
         {
             if (INSTANCE != null) return;
-            INSTANCE = new Content(basepath, mode, null);
+            INSTANCE = new Content(basepath, mode, null, true);
+        }
+
+        public static void InitBasic(string basepath, GraphicsDevice device)
+        {
+            if (INSTANCE != null) return;
+            INSTANCE = new Content(basepath, ContentMode.CLIENT, device, false);
         }
 
         private static Content INSTANCE;
@@ -63,12 +74,14 @@ namespace FSO.Content
         public string BasePath;
         public string[] AllFiles;
         public string[] TS1AllFiles;
+        public string[] ContentFiles;
         private GraphicsDevice Device;
         public ContentMode Mode;
         public bool TS1 = TS1Hybrid;
         public TS1Provider TS1Global;
         public TS1BCFProvider BCFGlobal;
         public string TS1BasePath = TS1HybridBasePath;
+        public bool Inited = false;
 
         public ChangeManager Changes;
 
@@ -77,8 +90,9 @@ namespace FSO.Content
         /// </summary>
         /// <param name="basePath">Path to client directory.</param>
         /// <param name="device">A GraphicsDevice instance.</param>
-        private Content(string basePath, ContentMode mode, GraphicsDevice device)
+        private Content(string basePath, ContentMode mode, GraphicsDevice device, bool init)
         {
+            LoadProgress = ContentLoadingProgress.Started;
             this.BasePath = basePath;
             this.Device = device;
             this.Mode = mode;
@@ -120,6 +134,7 @@ namespace FSO.Content
                 AvatarSkeletons = new TS1BCFSkeletonProvider(BCFGlobal);
                 AvatarAppearances = new TS1BCFAppearanceProvider(BCFGlobal);
                 Audio = new TS1Audio(this);
+                CustomUI = new CustomUIProvider(this);
             } else
             {
                 AvatarAnimations = new AvatarAnimationProvider(this);
@@ -127,6 +142,8 @@ namespace FSO.Content
                 WorldObjects = new WorldObjectProvider(this);
                 WorldCatalog = new WorldObjectCatalog();
                 Audio = new Audio(this);
+                CityMaps = new CityMapsProvider(this);
+                RackOutfits = new RackOutfitsProvider(this);
             }
             WorldFloors = new WorldFloorProvider(this);
             WorldWalls = new WorldWallProvider(this);
@@ -135,11 +152,9 @@ namespace FSO.Content
 
             GlobalTuning = new Tuning(Path.Combine(basePath, "tuning.dat"));
             Ini = new IniProvider(this);
-            CityMaps = new CityMapsProvider(this);
 
-            RackOutfits = new RackOutfitsProvider(this);
-
-            Init();
+            InitBasic();
+            if (init) Init();
         }
 
         /// <summary>
@@ -147,6 +162,7 @@ namespace FSO.Content
         /// </summary>
         public void InitWorld()
         {
+            LoadProgress = ContentLoadingProgress.InitObjects;
             if (TS1)
             {
                 ((TS1ObjectProvider)WorldObjects).Init();
@@ -158,9 +174,22 @@ namespace FSO.Content
             }
 
             WorldObjectGlobals.Init();
+            LoadProgress = ContentLoadingProgress.InitArch;
             WorldWalls.Init();
             WorldFloors.Init();
             WorldRoofs.Init();
+            LoadProgress = ContentLoadingProgress.Done;
+        }
+
+        private void InitBasic()
+        {
+            if (TS1)
+            {
+                var contentFiles = new List<string>();
+                _ScanFiles("Content/", contentFiles, "Content/");
+                ContentFiles = contentFiles.ToArray();
+                CustomUI.Init();
+            }
         }
 
         /// <summary>
@@ -168,25 +197,30 @@ namespace FSO.Content
         /// </summary>
         private void Init()
         {
+            Inited = true;
             /** Scan system for files **/
+            LoadProgress = ContentLoadingProgress.ScanningFiles;
             var allFiles = new List<string>();
-            _ScanFiles(BasePath, allFiles);
+            _ScanFiles(BasePath, allFiles, BasePath);
             AllFiles = allFiles.ToArray();
 
             var ts1AllFiles = new List<string>();
             var oldBase = BasePath;
             if (TS1)
             {
-                BasePath = TS1BasePath;
-                _ScanFiles(TS1BasePath, ts1AllFiles);
-                BasePath = oldBase;
+                _ScanFiles(TS1BasePath, ts1AllFiles, TS1BasePath);
                 TS1AllFiles = ts1AllFiles.ToArray();
             }
 
+            LoadProgress = ContentLoadingProgress.InitGlobal;
             TS1Global?.Init();
+            LoadProgress = ContentLoadingProgress.InitBCF;
             BCFGlobal?.Init();
 
             if (!TS1) PIFFRegistry.Init(Path.Combine(FSOEnvironment.ContentDir, "Patch/"));
+            else PIFFRegistry.Init(Path.Combine(FSOEnvironment.ContentDir, "TS1Patch/"));
+
+            LoadProgress = ContentLoadingProgress.InitAvatars;
             Archives = new Dictionary<string, FAR3Archive>();
             if (Mode == ContentMode.CLIENT)
             {
@@ -209,14 +243,15 @@ namespace FSO.Content
                 ((AvatarSkeletonProvider)AvatarSkeletons).Init();
                 ((AvatarAppearanceProvider)AvatarAppearances).Init();
                 ((AvatarMeshProvider)AvatarMeshes)?.Init();
+                CityMaps.Init();
+                RackOutfits.Init();
             }
-            
+
+            LoadProgress = ContentLoadingProgress.InitAudio;
             Audio.Init();
             AvatarPurchasables.Init();
             AvatarCollections.Init();
             Ini.Init();
-            CityMaps.Init();
-            RackOutfits.Init();
 
             DataDefinition = new TSODataDefinition();
             using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
@@ -234,19 +269,19 @@ namespace FSO.Content
         /// </summary>
         /// <param name="dir">The directory to scan.</param>
         /// <param name="fileList">The list of files to scan for.</param>
-        private void _ScanFiles(string dir, List<string> fileList)
+        private void _ScanFiles(string dir, List<string> fileList, string baseDir)
         {
             var fullPath = dir;
             var files = Directory.GetFiles(fullPath);
             foreach (var file in files)
             {
-                fileList.Add(file.Substring(BasePath.Length));
+                fileList.Add(file.Substring(baseDir.Length));
             }
 
             var dirs = Directory.GetDirectories(fullPath);
             foreach (var subDir in dirs)
             {
-                _ScanFiles(subDir, fileList);
+                _ScanFiles(subDir, fileList, baseDir);
             }
         }
 
@@ -298,6 +333,7 @@ namespace FSO.Content
         public WorldRoofProvider WorldRoofs;
 
         public UIGraphicsProvider UIGraphics;
+        public CustomUIProvider CustomUI;
         
         /** Avatar **/
         public IContentProvider<Mesh> AvatarMeshes;
@@ -335,5 +371,20 @@ namespace FSO.Content
 
         /** TS1 Neighbourhood Data **/
         public TS1NeighborhoodProvider Neighborhood;
+    }
+
+    public enum ContentLoadingProgress : int
+    {
+        Started = 0,
+        ScanningFiles = 1,
+        InitGlobal = 2,
+        InitBCF = 3,
+        InitAvatars = 4,
+        InitAudio = 5,
+        InitObjects = 6,
+        InitArch = 7,
+        Done = 8,
+
+        Invalid = -1
     }
 }

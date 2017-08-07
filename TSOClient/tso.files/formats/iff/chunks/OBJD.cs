@@ -139,6 +139,11 @@ namespace FSO.Files.Formats.IFF.Chunks
             "RatingFun",
             "RatingRoom",
             "RatingSkillFlags",
+
+            "NumTypeAttributes",
+            "MiscFlags",
+            "TypeAttrGUID1",
+            "TypeAttrGUID2"
         };
 
         public ushort GUID1
@@ -248,7 +253,20 @@ namespace FSO.Files.Formats.IFF.Chunks
         public ushort RatingSkillFlags { get; set; }
 
         public ushort[] RawData;
+        public ushort NumTypeAttributes { get; set; }
+        public ushort MiscFlags { get; set; }
+        public uint TypeAttrGUID;
 
+        public ushort TypeAttrGUID1
+        {
+            get { return (ushort)(TypeAttrGUID); }
+            set { TypeAttrGUID = (TypeAttrGUID & 0xFFFF0000) | value; }
+        }
+        public ushort TypeAttrGUID2
+        {
+            get { return (ushort)(TypeAttrGUID >> 16); }
+            set { TypeAttrGUID = (TypeAttrGUID & 0x0000FFFF) | ((uint)value << 16); }
+        }
 
         public bool IsMaster
         {
@@ -420,6 +438,13 @@ namespace FSO.Files.Formats.IFF.Chunks
                     this.RatingFun = io.ReadUInt16();
                     this.RatingRoom = io.ReadUInt16();
                     this.RatingSkillFlags = io.ReadUInt16();
+                    if (numFields > 90)
+                    {
+                        this.NumTypeAttributes = io.ReadUInt16();
+                        this.MiscFlags = io.ReadUInt16();
+                        this.TypeAttrGUID = io.ReadUInt32();
+                    }
+                    if (this.TypeAttrGUID == 0) this.TypeAttrGUID = GUID;
                 }
             }
         }

@@ -99,6 +99,7 @@
     <Compile Include="Engine\VMStackFrame.cs" />
     <Compile Include="Entities\VMAvatarMotiveDecay.cs" />
     <Compile Include="Entities\VMMultitileGroup.cs" />
+    <Compile Include="Entities\VMTS1MotiveDecay.cs" />
     <Compile Include="Marshals\Hollow\VMHollowGameObjectMarshal.cs" />
     <Compile Include="Marshals\Hollow\VMHollowMarshal.cs" />
     <Compile Include="Marshals\Threads\VMQueuedActionMarshal.cs" />
@@ -286,6 +287,7 @@
     <Compile Include="Primitives\VMTestObjectType.cs" />
     <Compile Include="Primitives\VMTestSimInteractingWith.cs" />
     <Compile Include="Primitives\VMTransferFunds.cs" />
+    <Compile Include="Primitives\VMTS1Budget.cs" />
     <Compile Include="Primitives\VMTS1InventoryOperations.cs" />
     <Compile Include="Utils\TimePropertyListItemSorter.cs" />
     <Compile Include="Utils\VMArchitectureTools.cs" />

@@ -63,6 +63,7 @@ namespace FSO.Client.UI.Framework
 
                 batch.Begin(transformMatrix: Microsoft.Xna.Framework.Matrix.CreateTranslation(-(pos.X-BackOffset.X), -(pos.Y-BackOffset.Y), 0), blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
                 batch.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+                InternalDraw(batch);
                 lock (Children)
                 {
                     foreach (var child in Children)
@@ -76,6 +77,11 @@ namespace FSO.Client.UI.Framework
                 Invalidated = false;
             }
             DynamicOverlay.PreDraw(batch);
+        }
+
+        public virtual void InternalDraw(UISpriteBatch batch)
+        {
+
         }
 
         public override void Update(UpdateState state)

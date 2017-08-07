@@ -27,10 +27,11 @@
     <MtouchFastDev>true</MtouchFastDev>
     <MtouchUseSGen>true</MtouchUseSGen>
     <MtouchUseRefCounting>true</MtouchUseRefCounting>
-    <MtouchLink>None</MtouchLink>
+    <MtouchLink>Full</MtouchLink>
     <MtouchArch>i386</MtouchArch>
     <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
     <MtouchTlsProvider>Default</MtouchTlsProvider>
+    <MtouchExtraArgs>--</MtouchExtraArgs>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
     <Optimize>true</Optimize>
@@ -43,7 +44,7 @@
     <MtouchUseRefCounting>True</MtouchUseRefCounting>
     <MtouchFloat32>False</MtouchFloat32>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
-    <MtouchLink>None</MtouchLink>
+    <MtouchLink>Full</MtouchLink>
     <MtouchArch>ARMv7, ARM64</MtouchArch>
     <MtouchDebug>True</MtouchDebug>
     <MtouchUseLlvm>True</MtouchUseLlvm>
@@ -55,10 +56,10 @@
     <MtouchUseThumb>False</MtouchUseThumb>
     <MtouchEnableBitcode>False</MtouchEnableBitcode>
     <OptimizePNGs>True</OptimizePNGs>
-    <DeviceSpecificBuild>False</DeviceSpecificBuild>
+    <DeviceSpecificBuild>true</DeviceSpecificBuild>
     <MtouchI18n>west</MtouchI18n>
     <IpaMetadata>iTunesMetadata.plist</IpaMetadata>
-    <MtouchExtraArgs>-v -v -v -v </MtouchExtraArgs>
+    <MtouchExtraArgs>--linkskip=MonoGame.Framework --linkskip=FSO.Files --linkskip=FSO.SimAntics --linkskip=FSO.Content --linkskip=FSO.Client --linkskip=Ninject -v -v -v -v</MtouchExtraArgs>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
     <Optimize>true</Optimize>
@@ -123,12 +124,20 @@
     <Reference Include="FSO.Server.Protocol">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Server.Protocol.dll</HintPath>
     </Reference>
+    <Reference Include="FSO.UI">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="JWT, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\JWT.3.0.2\lib\netstandard1.3\JWT.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Mina.NET">
       <HintPath>..\tso.client\bin\WindowsGL\Release\Mina.NET.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\tso.client\bin\WindowsGL\Release\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\netstandard1.3\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Ninject, Version=4.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

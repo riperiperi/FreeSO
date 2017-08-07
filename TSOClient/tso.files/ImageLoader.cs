@@ -19,6 +19,7 @@ namespace FSO.Files
     public class ImageLoader
     {
         public static bool UseSoftLoad = true;
+        public static bool PremultiplyPNG = false;
 
         public static HashSet<uint> MASK_COLORS = new HashSet<uint>{
             new Microsoft.Xna.Framework.Color(0xFF, 0x00, 0xFF, 0xFF).PackedValue,
@@ -26,7 +27,15 @@ namespace FSO.Files
             new Microsoft.Xna.Framework.Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
+        public static Func<GraphicsDevice, Stream, Texture2D> BaseFunction = WinFromStream;
+
+
         public static Texture2D FromStream(GraphicsDevice gd, Stream str)
+        {
+            return BaseFunction(gd, str);
+        }
+
+        private static Texture2D WinFromStream(GraphicsDevice gd, Stream str)
         {
             //if (!UseSoftLoad)
             //{
@@ -75,6 +84,18 @@ namespace FSO.Files
                     try
                     {
                         var tex = Texture2D.FromStream(gd, str);
+                        if (PremultiplyPNG)
+                        {
+                            var buffer = new Color[tex.Width * tex.Height];
+                            tex.GetData<Color>(buffer);
+
+                            for (int i = 0; i < buffer.Length; i++)
+                            {
+                                var a = buffer[i].A;
+                                buffer[i] = new Color((byte)((buffer[i].R * a) / 255), (byte)((buffer[i].G * a) / 255), (byte)((buffer[i].B * a) / 255), a);
+                            }
+                            tex.SetData(buffer);
+                        }
                         return tex;
                     }
                     catch (Exception e)
@@ -99,7 +120,7 @@ namespace FSO.Files
 
 			for (int i = 0; i < size; i+=4)
 			{
-                if (buffer[i] >= 249 && buffer[i+2] >= 249 && buffer[i+1] <= 4)
+                if (buffer[i] >= 248 && buffer[i+2] >= 248 && buffer[i+1] <= 4)
                 {
                     buffer[i] = buffer[i + 1] = buffer[i + 2] = buffer[i + 3] = 0;
                     didChange = true;

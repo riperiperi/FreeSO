@@ -204,6 +204,7 @@
     <Compile Include="Utils\IXMLEntity.cs" />
     <Compile Include="Utils\LinqUtils.cs" />
     <Compile Include="Utils\MoneyFormatter.cs" />
+    <Compile Include="Utils\PathCaseTools.cs" />
     <Compile Include="Utils\Promise.cs" />
     <Compile Include="Utils\PPXDepthEngine.cs" />
     <Compile Include="Utils\StateMachine.cs" />

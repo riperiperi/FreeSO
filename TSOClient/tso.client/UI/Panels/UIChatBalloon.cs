@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Client.UI.Controls;
-using System.Speech.Synthesis;
+//using System.Speech.Synthesis;
 
 namespace FSO.Client.UI.Panels
 {
@@ -313,23 +313,23 @@ namespace FSO.Client.UI.Panels
 
     public class UITTSContext : ITTSContext
     {
-        private SpeechSynthesizer Synth;
+        //private SpeechSynthesizer Synth;
 
         public UITTSContext()
         {
-            Synth = new SpeechSynthesizer();
-            Synth.SetOutputToDefaultAudioDevice();
+            //Synth = new SpeechSynthesizer();
+            //Synth.SetOutputToDefaultAudioDevice();
         }
 
         public void Dispose()
         {
-            Synth.Dispose();
+            //Synth.Dispose();
         }
 
         public void Speak(string text, bool gender)
         {
-            Synth.SelectVoiceByHints((gender) ? VoiceGender.Female : VoiceGender.Male);
-            Synth.SpeakAsync(text);
+            //Synth.SelectVoiceByHints((gender) ? VoiceGender.Female : VoiceGender.Male);
+            //Synth.SpeakAsync(text);
         }
     }
 

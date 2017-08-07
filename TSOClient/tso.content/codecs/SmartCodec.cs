@@ -19,6 +19,8 @@ namespace FSO.Content.Codecs
             {".bmf", new BMFCodec() },
             {".cfp", new CFPCodec() },
             {".bmp", new TextureCodec() },
+            {".tga", new TextureCodec() },
+            {".jpg", new TextureCodec() },
             {".wav", new SFXCodec() },
             {".mp3", new SFXCodec() },
             {".xa", new SFXCodec() },

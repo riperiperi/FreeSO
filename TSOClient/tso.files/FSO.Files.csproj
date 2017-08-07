@@ -79,6 +79,7 @@
     <Compile Include="Formats\IFF\Chunks\SIMI.cs" />
     <Compile Include="Formats\IFF\Chunks\THMB.cs" />
     <Compile Include="Formats\IFF\Chunks\TRCN.cs" />
+    <Compile Include="Formats\IFF\Chunks\TTAT.cs" />
     <Compile Include="Formats\IFF\Chunks\WALm.cs" />
     <Compile Include="Formats\tsodata\TSODataDefinition.cs" />
     <Compile Include="Formats\IFF\ChunkRuntimeInfo.cs" />

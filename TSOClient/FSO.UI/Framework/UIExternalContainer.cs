@@ -156,6 +156,12 @@ namespace FSO.Client.UI.Framework
             State.MouseState = mouse;
             State.KeyboardState = Keyboard.GetState();
 
+            if (State.MouseStates.Count == 0)
+            {
+                State.MouseStates.Add(new MultiMouse() { ID = 1 });
+            }
+            State.MouseStates[0].MouseState = mouse;
+
             State.SharedData.Clear();
             State.Update();
 

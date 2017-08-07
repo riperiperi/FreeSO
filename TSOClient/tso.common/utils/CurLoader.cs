@@ -12,6 +12,7 @@ namespace FSO.Common.Utils
 {
     public static class CurLoader
     {
+
         public static MouseCursor LoadMonoCursor(GraphicsDevice gd, Stream stream)
         {
             var cur = LoadCursor(gd, stream);

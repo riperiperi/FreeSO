@@ -182,12 +182,12 @@ namespace FSO.SimAntics.Engine.Utils
                     return (short)context.StackObject.EntryPoints[data].ActionFunction;
 
                 case VMVariableScope.MyTypeAttr: //36
+                    if (context.VM.TS1) return (short)Content.Content.Get().Neighborhood.GetTATT((context.Caller.MasterDefinition ?? context.Caller.Object.OBJ).TypeAttrGUID, data);
                     return 0;
-                    throw new VMSimanticsException("Unused", context);
                 
                 case VMVariableScope.StackObjectTypeAttr: //37
+                    if (context.VM.TS1) return (short)Content.Content.Get().Neighborhood.GetTATT((context.StackObject.MasterDefinition ?? context.StackObject.Object.OBJ).TypeAttrGUID, data);
                     return 0;
-                    throw new VMSimanticsException("Unused", context);
 
                 case VMVariableScope.NeighborsObjectDefinition: //38
                     if (!context.VM.TS1) throw new VMSimanticsException("Only valid in TS1.", context);
@@ -591,7 +591,7 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMOBJDVariable.PrepareForSaleTreeID:
                     throw new VMSimanticsException("Not Implemented!", context);
                 default:
-                    throw new VMSimanticsException("Unknown definition var", context);
+                    return 0;
             }
         }
             
@@ -724,12 +724,12 @@ namespace FSO.SimAntics.Engine.Utils
                     return false; //you can't set this!
 
                 case VMVariableScope.MyTypeAttr: //36
+                    if (context.VM.TS1) Content.Content.Get().Neighborhood.SetTATT((context.Caller.MasterDefinition ?? context.Caller.Object.OBJ).TypeAttrGUID, data, value);
                     return true;
-                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.StackObjectTypeAttr: //37
+                    if (context.VM.TS1) Content.Content.Get().Neighborhood.SetTATT((context.StackObject.MasterDefinition ?? context.StackObject.Object.OBJ).TypeAttrGUID, data, value);
                     return true;
-                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.NeighborsObjectDefinition: //38
                     return false; //you can't set this!

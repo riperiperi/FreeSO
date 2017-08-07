@@ -631,6 +631,8 @@ namespace FSO.SimAntics
                 case VMStackObjectVariable.SlotCount:
                     return (short)TotalSlots();
                 case VMStackObjectVariable.UseCount:
+                    //TS1 Person to Person: use count is checked to see if both avatars still have the interaction in their queues.
+                    //it doesn't have to be the active entity to count towards the use count.
                     return (short)((Thread == null)?0:GetUsers(Thread.Context, null).Count);
                 case VMStackObjectVariable.LockoutCount:
                     var count = ObjectData[(short)var];
@@ -668,6 +670,13 @@ namespace FSO.SimAntics
                         case 1: //safe to delete
                             value = (short)((IsInUse(Thread.Context, true) || (Container != null && Container is VMAvatar)) ? 0 : 1);
                             break;
+                    }
+                    break;
+                case VMStackObjectVariable.Category:
+                    if (Thread != null)
+                    {
+                        Thread.Context.ObjectQueries.RemoveCategory(this, ObjectData[(short)var]);
+                        Thread.Context.ObjectQueries.RegisterCategory(this, value);
                     }
                     break;
             }
@@ -876,13 +885,23 @@ namespace FSO.SimAntics
             {
                 foreach (var ava in context.ObjectQueries.Avatars)
                 {
+                    bool found = false;
                     foreach (var item in ava.Thread.Stack)
                     {
                         if (item.Callee == this) {
-                            users.Add(ava);
+                            found = true;
                             break;
-                         }
+                        }
                     }
+                    foreach (var item in ava.Thread.Queue)
+                    {
+                        if (item.Callee == this)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) users.Add(ava);
                 }
             }
             return users;
@@ -915,7 +934,7 @@ namespace FSO.SimAntics
         {
             if (pos == LotTilePos.OUT_OF_WORLD) return new VMPlacementResult();
             var userOOB = context.IsUserOutOfBounds(pos);
-            if ((((flags & VMPlaceRequestFlags.UserBuildableLimit) > 0) && userOOB) || context.IsOutOfBounds(pos))
+            if ((((flags & VMPlaceRequestFlags.UserBuildableLimit) > 0) && !context.VM.TS1 && userOOB) || context.IsOutOfBounds(pos))
                 return new VMPlacementResult(VMPlacementError.LocationOutOfBounds);
 
             //TODO: speedup with exit early checks

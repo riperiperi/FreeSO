@@ -24,6 +24,7 @@ namespace FSO.IDE
             EditorResource.Get().Init(GameFacade.GraphicsDevice);
             EditorScope.Behaviour = new Files.Formats.IFF.IffFile(Content.Content.Get().GetPath("objectdata/globals/behavior.iff"));
             EditorScope.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
+            Program.MainThread = Thread.CurrentThread;
 
             var t = new Thread(() =>
             {

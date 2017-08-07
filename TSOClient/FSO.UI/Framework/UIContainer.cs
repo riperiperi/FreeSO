@@ -210,6 +210,7 @@ namespace FSO.Client.UI.Framework
             }
 
             /** If we have opacity, draw ourself to a texture so we can blend it later **/
+            /*
             if (_HasOpacity)
             {
 
@@ -227,6 +228,7 @@ namespace FSO.Client.UI.Framework
 
                 AlphaBlendedScene = bufferTexture.Get();
             }
+            */
         }
 
         /// <summary>
@@ -245,14 +247,6 @@ namespace FSO.Client.UI.Framework
              * If opacity is not 100% we need to draw to a texture
              * and then paint that with our opacity value
              */
-            if (_HasOpacity)
-            {
-                if (AlphaBlendedScene != null)
-                {
-                    batch.Draw(AlphaBlendedScene, Vector2.Zero, _BlendColor);
-                }
-            }
-            else
             {
                 lock (Children)
                 {

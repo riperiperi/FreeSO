@@ -562,10 +562,6 @@
       <Project>{c0068df7-f2e8-4399-846d-556bf9a35c00}</Project>
       <Name>FSO.Content</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.debug\FSO.Debug.csproj">
-      <Project>{43fbd6a2-4c4d-479c-a1a8-ed4cb591bde4}</Project>
-      <Name>FSO.Debug</Name>
-    </ProjectReference>
     <ProjectReference Include="..\tso.files\FSO.Files.csproj">
       <Project>{18583453-a970-4ac5-83b1-2d6bfdf94c24}</Project>
       <Name>FSO.Files</Name>

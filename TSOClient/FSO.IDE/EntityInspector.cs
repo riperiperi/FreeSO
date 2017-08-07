@@ -8,6 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using FSO.SimAntics;
+using FSO.Common.Utils;
+using System.Threading;
+using System.Diagnostics;
 
 namespace FSO.IDE
 {
@@ -34,6 +37,11 @@ namespace FSO.IDE
 
             EntityList = new List<InspectorEntityMeta>();
             ItemToEnt = new Dictionary<ListViewItem, InspectorEntityMeta>();
+            if (!Program.MainThread.IsAlive)
+            {
+                Application.Exit();
+                return;
+            }
             Content.Content.Get().Changes.Invoke((Action<List<InspectorEntityMeta>>)GetEntityList, EntityList);
             EntityView.Items.Clear();
 

@@ -46,11 +46,23 @@ namespace FSO.Vitaboy
         /// </summary>
         public void StripAllButHead()
         {
+            int i = 0;
+            foreach (var bone in Skeleton.Bones)
+            {
+                if (bone.Name != "HEAD")
+                {
+                    bone.AbsoluteMatrix = Microsoft.Xna.Framework.Matrix.CreateScale(0f);
+                    SkelBones[i] = bone.AbsoluteMatrix;
+                }
+                i++;
+            }
+            /*
             if (m_Handgroup != null) {
                 RemoveAppearance(m_LeftHandInstance, true);
                 RemoveAppearance(m_RightHandInstance, true);
             }
             RemoveAppearance(m_BodyInstance, true);
+            */
         }
 
         private AvatarAppearanceInstance m_LeftHandInstance;

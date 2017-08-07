@@ -47,9 +47,14 @@ namespace FSO.SimAntics.Primitives
                     throw new VMSimanticsException("Invalid relationship type!", context);
             }
 
-            if (obj1 == null || obj2 == null) return VMPrimitiveExitCode.GOTO_TRUE;
+            var ts1 = context.VM.TS1;
+            if ((obj1 == null || obj2 == null) && !(ts1 && operand.UseNeighbor)) return VMPrimitiveExitCode.GOTO_TRUE;
             List<short> relToTarg;
-            if (obj2.PersistID > 0)
+
+            var myNID = (obj1 as VMAvatar)?.GetPersonData(Model.VMPersonDataVariable.NeighborId) ?? 0;
+            var targNID = (obj2 as VMAvatar)?.GetPersonData(Model.VMPersonDataVariable.NeighborId) ?? 0;
+
+            if (!ts1 && obj2.PersistID > 0)
             {
                 //use persist matrix whenever possible.
                 //ignores use neighbour flag so we can use str/ltr.
@@ -62,6 +67,42 @@ namespace FSO.SimAntics.Primitives
                 }
                 if (operand.SetMode > 0) obj1.ChangedRels.Add(targId);
                 relToTarg = rels[targId];
+            }
+            else if (ts1 && (operand.UseNeighbor || (myNID > 0 && targNID > 0)))
+            {
+                //ts1 neighbour matrix
+                if (operand.UseNeighbor)
+                {
+                    switch (operand.Mode)
+                    {
+                        case 0: //from me to stack object
+                            myNID = ((VMAvatar)context.Caller).GetPersonData(Model.VMPersonDataVariable.NeighborId);
+                            targNID = context.StackObjectID;
+                            break;
+                        case 1: //from stack object to me
+                            myNID = context.StackObjectID;
+                            targNID = ((VMAvatar)context.Caller).GetPersonData(Model.VMPersonDataVariable.NeighborId);
+                            break;
+                        case 2: //from stack object to object in local/stack param
+                            myNID = context.StackObjectID;
+                            targNID = (operand is VMOldRelationshipOperand) ? context.Args[0] : context.Locals[operand.Local];
+                            break;
+                        case 3: //from object in local/stack param to stack object
+                            myNID = (operand is VMOldRelationshipOperand) ? context.Args[0] : context.Locals[operand.Local];
+                            targNID = context.StackObjectID;
+                            break;
+                        default:
+                            throw new VMSimanticsException("Invalid relationship type!", context);
+                    }
+                }
+
+                var rels = Content.Content.Get().Neighborhood.GetNeighborByID(myNID).Relationships;
+                if (!rels.ContainsKey(targNID))
+                {
+                    if (operand.FailIfTooSmall) return VMPrimitiveExitCode.GOTO_FALSE;
+                    else rels.Add(targNID, new List<short>());
+                }
+                relToTarg = rels[targNID];
             }
             else
             {

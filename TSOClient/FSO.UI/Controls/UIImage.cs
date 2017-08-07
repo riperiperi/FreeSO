@@ -114,11 +114,13 @@ namespace FSO.Client.UI.Controls
         public float Width
         {
             get { return m_Width; }
+            set { SetSize(value, Height); }
         }
 
         public float Height
         {
             get { return m_Height; }
+            set { SetSize(Width, value); }
         }
 
         public void SetSize(float width, float height)
@@ -272,7 +274,7 @@ namespace FSO.Client.UI.Controls
         {
             TC_Scale = new Vector2((width - (Left + Right)) / (TC.Width), 1);
             MC_Scale = new Vector2(
-                            (width - (Left + Right)) / (MC.Width),
+                            (float)Math.Ceiling(width - (Left + Right)) / (MC.Width),
                             (height - (Top + Bottom)) / (MC.Height)
                        );
             BC_Scale = new Vector2((width - (Left + Right)) / (BC.Width), 1);

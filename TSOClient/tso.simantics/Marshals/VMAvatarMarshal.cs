@@ -20,7 +20,7 @@ namespace FSO.SimAntics.Marshals
         public int MessageTimeout;
         
         public VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];
-        public VMAvatarMotiveDecay MotiveDecay;
+        public VMIMotiveDecay MotiveDecay;
         public short[] PersonData = new short[101];
         public short[] MotiveData = new short[16];
         public short HandObject;

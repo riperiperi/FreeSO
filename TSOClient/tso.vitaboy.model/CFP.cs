@@ -52,7 +52,7 @@ namespace FSO.Vitaboy
                     ReadNFloats(io, anim.Rotations.Count(), (i, w) => anim.Rotations[i].W = -w);
                 }
             }
-            Data = null;
+            //Data = null;
         }
 
         public static void ReadNFloats(IoBuffer io, int floats, Action<int, float> output)

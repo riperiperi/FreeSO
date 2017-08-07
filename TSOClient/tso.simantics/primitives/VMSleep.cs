@@ -32,7 +32,7 @@ namespace FSO.SimAntics.Primitives
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
-            if (context.Args[operand.StackVarToDec] < 0) { 
+            if (context.Args[operand.StackVarToDec] == -1) { 
                 context.Thread.ScheduleIdleStart = 0;
                 context.VM.Context.NextRandom(1); //rng cycle - for desync detect
                 return VMPrimitiveExitCode.GOTO_TRUE;

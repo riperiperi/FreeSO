@@ -34,7 +34,8 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         public Texture2D GetTexture(GraphicsDevice device)
         {
-            return Texture2D.FromStream(device, new MemoryStream(data));
+            return ImageLoader.FromStream(device, new MemoryStream(data));
+            //return Texture2D.FromStream(device, new MemoryStream(data));
         }
     }
 

@@ -14,13 +14,26 @@ using FSO.Common.Rendering.Framework.IO;
 
 namespace FSO.Common.Rendering.Framework.Model
 {
+    public class MultiMouse
+    {
+        public int ID;
+        public MouseState MouseState;
+        public UIMouseEventRef LastMouseDown;
+        public UIMouseEventRef LastMouseOver;
+        public bool LastMouseDownState = false;
+        public bool NewMultiMouse = true;
+        public bool Dead = false;
+    }
+
     /// <summary>
     /// Contains common information used in the update loop
     /// </summary>
     public class UpdateState
     {
         public GameTime Time;
+        public List<MultiMouse> MouseStates = new List<MultiMouse>();
         public MouseState MouseState;
+        public int CurrentMouseID;
         public KeyboardState KeyboardState;
         public bool ShiftDown
         {
@@ -44,7 +57,7 @@ namespace FSO.Common.Rendering.Framework.Model
 
         /** A Place to keep shared variables, clears every update cycle **/
         public Dictionary<string, object> SharedData = new Dictionary<string, object>();
-        public List<UIMouseEventRef> MouseEvents = new List<UIMouseEventRef>();
+        public List<Tuple<int, UIMouseEventRef>> MouseEvents = new List<Tuple<int, UIMouseEventRef>>();
 
         private Dictionary<Keys, long> KeyDownTime = new Dictionary<Keys, long>();
         private List<Keys> KeyInRepeatMode = new List<Keys>();

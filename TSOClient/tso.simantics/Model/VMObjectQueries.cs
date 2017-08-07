@@ -13,6 +13,7 @@ namespace FSO.SimAntics.Model
         private Dictionary<int, List<VMEntity>> TileToObjects = new Dictionary<int, List<VMEntity>>();
 
         private Dictionary<uint, List<VMEntity>> ObjectsByGUID = new Dictionary<uint, List<VMEntity>>();
+        private Dictionary<short, List<VMEntity>> ObjectsByCategory = new Dictionary<short, List<VMEntity>>();
         public List<VMEntity> Avatars = new List<VMEntity>();
         public Dictionary<uint, VMAvatar> AvatarsByPersist = new Dictionary<uint, VMAvatar>();
         public Dictionary<uint, VMMultitileGroup> MultitileByPersist = new Dictionary<uint, VMMultitileGroup>();
@@ -106,6 +107,28 @@ namespace FSO.SimAntics.Model
             if (vm.TSOState.LimitExceeded) VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
         }
 
+        public void RegisterCategory(VMEntity obj, short category)
+        {
+            List<VMEntity> tile = null;
+            ObjectsByCategory.TryGetValue(category, out tile);
+            if (tile == null)
+            {
+                tile = new List<VMEntity>();
+                ObjectsByCategory.Add(category, tile);
+            }
+            if (!tile.Contains(obj)) VM.AddToObjList(tile, obj); //shouldn't be a problem any more, but just in case check first.
+            else { }
+        }
+
+        public void RemoveCategory(VMEntity obj, short category)
+        {
+            List<VMEntity> tile = null;
+            ObjectsByCategory.TryGetValue(category, out tile);
+            if (tile == null) return; //???
+            tile.Remove(obj);
+            if (tile.Count == 0) ObjectsByCategory.Remove(category);
+        }
+
         public void NewObject(VMEntity obj)
         {
             var guid = obj.Object.OBJ.GUID;
@@ -117,6 +140,7 @@ namespace FSO.SimAntics.Model
                 ObjectsByGUID.Add(guid, list);
             }
             VM.AddToObjList(list, obj);
+            RegisterCategory(obj, obj.GetValue(VMStackObjectVariable.Category));
 
             if (obj is VMAvatar)
             {
@@ -135,6 +159,7 @@ namespace FSO.SimAntics.Model
                 list.Remove(obj);
                 if (list.Count == 0) ObjectsByGUID.Remove(guid);
             }
+            RemoveCategory(obj, obj.GetValue(VMStackObjectVariable.Category));
 
             if (obj is VMAvatar)
             {
@@ -163,6 +188,13 @@ namespace FSO.SimAntics.Model
         {
             List<VMEntity> tile = null;
             ObjectsByGUID.TryGetValue(guid, out tile);
+            return tile;
+        }
+
+        public List<VMEntity> GetObjectsByCategory(short category)
+        {
+            List<VMEntity> tile = null;
+            ObjectsByCategory.TryGetValue(category, out tile);
             return tile;
         }
     }

@@ -16,9 +16,14 @@ namespace FSO.Content.TS1
     {
         public IffFile MainResource;
         public IffFile LotLocations;
+        public IffFile StreetNames;
+        public IffFile NeighbourhoodDesc;
+        public IffFile STDesc;
+        public IffFile MTDesc;
         public Dictionary<short, short> ZoningDictionary = new Dictionary<short, short>();
         public NBRS Neighbors;
         public NGBH Neighborhood;
+        public TATT TypeAttributes;
         public Dictionary<short, FAMI> FamilyForHouse = new Dictionary<short, FAMI>();
         public Content ContentManager;
         public TS1GameState GameState = new TS1GameState();
@@ -29,6 +34,10 @@ namespace FSO.Content.TS1
             MainResource = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/Neighborhood.iff"));
             LotLocations = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/LotLocations.iff"));
             var lotZoning = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/LotZoning.iff"));
+            StreetNames = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/StreetNames.iff"));
+            NeighbourhoodDesc = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/Houses/NeighborhoodDesc.iff"));
+            STDesc = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/Houses/STDesc.iff"));
+            MTDesc = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/Houses/MTDesc.iff"));
 
             var zones = lotZoning.Get<STR>(1);
             for (int i=0; i<zones.Length; i++)
@@ -38,6 +47,7 @@ namespace FSO.Content.TS1
             }
             Neighbors = MainResource.List<NBRS>().FirstOrDefault();
             Neighborhood = MainResource.List<NGBH>().FirstOrDefault();
+            TypeAttributes = MainResource.List<TATT>().FirstOrDefault();
 
             FamilyForHouse = new Dictionary<short, FAMI>();
             var families = MainResource.List<FAMI>();
@@ -99,6 +109,42 @@ namespace FSO.Content.TS1
         public BMP GetHouseThumb(int id)
         {
             return GetHouse(id)?.Get<BMP>(512); //roof on
+        }
+
+        public int GetTATT(uint guid, int index)
+        {
+            int[] dat = null;
+            if (TypeAttributes.TypeAttributesByGUID.TryGetValue(guid, out dat))
+            {
+                if (index >= dat.Length) return 0;
+                else return dat[index];
+            }
+            return 0;
+        }
+
+        public Tuple<string, string> GetHouseNameDesc(int houseID)
+        {
+            STR res;
+            if (houseID < 80) res = NeighbourhoodDesc.Get<STR>((ushort)(houseID + 2000));
+            else if (houseID < 90) res = STDesc.Get<STR>((ushort)(houseID + 2000));
+            else res = MTDesc.Get<STR>((ushort)(houseID + 2000));
+
+            if (res == null) return new Tuple<string, string>("", "");
+            else return new Tuple<string, string>(res.GetString(0), res.GetString(1));
+        }
+
+        public void SetTATT(uint guid, int index, int value)
+        {
+            int[] dat = null;
+            if (!TypeAttributes.TypeAttributesByGUID.TryGetValue(guid, out dat))
+            {
+                var obj = ContentManager.WorldObjects.Get(guid);
+                if (obj == null) return;
+                dat = new int[32];
+                TypeAttributes.TypeAttributesByGUID[guid] = dat;
+            }
+            if (index >= dat.Length) return;
+            else dat[index] = value;
         }
     }
 

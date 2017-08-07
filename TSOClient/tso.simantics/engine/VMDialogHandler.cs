@@ -20,7 +20,7 @@ namespace FSO.SimAntics.Engine
     {
         //should use a Trie for this in future, for performance reasons
         private static string[] valid = {
-            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:", "FixedLocal:", "DynamicObjectName", "MoneyXL:", "JobOffer:", "Param", "\r\n"
+            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:", "FixedLocal:", "DynamicObjectName", "MoneyXL:", "JobOffer:", "Job:", "JobDesc:", "Param:", "\r\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -95,7 +95,7 @@ namespace FSO.SimAntics.Engine
                         {
                             try
                             {
-                                if (cmdString == "DynamicStringLocal:" || cmdString == "TimeLocal:" || cmdString == "JobOffer:")
+                                if (cmdString == "DynamicStringLocal:" || cmdString == "TimeLocal:" || cmdString == "JobOffer:" || cmdString == "Job:" || cmdString == "JobDesc:")
                                 {
                                     values[1] = -1;
                                     values[2] = -1;
@@ -206,6 +206,13 @@ namespace FSO.SimAntics.Engine
                                     output.Append(Content.Content.Get().Jobs.JobOffer(
                                         (short)VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]),
                                         VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[1])));
+                                    break;
+                                case "Job:":
+                                case "JobDesc:":
+                                    var level = VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[1]);
+                                    var jobStr = Content.Content.Get().Jobs.JobStrings(
+                                        (short)VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]));
+                                    if (jobStr != null) output.Append(jobStr.GetString(level*3+((cmdString=="JobDesc:")?3:4)));
                                     break;
                                 case "Param:":
                                     output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Parameters, values[0]).ToString()); break;

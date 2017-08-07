@@ -4,6 +4,7 @@
  * http://mozilla.org/MPL/2.0/. 
  */
 
+using FSO.Common;
 using FSO.LotView.Model;
 using FSO.Vitaboy;
 using Microsoft.Xna.Framework;
@@ -130,7 +131,7 @@ namespace FSO.LotView.LMap
 
             ShadowTarg = new RenderTarget2D(GD, wl, wh, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             ObjShadowTarg = new RenderTarget2D(GD, wl, wh, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            LightMap = new RenderTarget2D(GD, wl * 3, wh * 2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents); //just ground floor for now.
+            LightMap = new RenderTarget2D(GD, (wl * 3), (wh * 2), false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents); //just ground floor for now.
             Projection = Matrix.CreateOrthographicOffCenter(new Rectangle(0, 0, (w-2) * 16, (h-2) * 16), -10, 10);
 
             //initialize lighteffect with default params

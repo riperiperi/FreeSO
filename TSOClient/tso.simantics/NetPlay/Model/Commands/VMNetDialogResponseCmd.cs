@@ -16,10 +16,18 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override bool Execute(VM vm, VMAvatar caller)
         {
             if (ResponseText.Length > 32) ResponseText = ResponseText.Substring(0, 32);
-            //TODO: check if net user owns caller!
-            if (caller == null || 
-                caller.Thread.BlockingState == null || !(caller.Thread.BlockingState is VMDialogResult)) return false;
-            var state = (VMDialogResult)caller.Thread.BlockingState;
+
+            VMEntity owner = caller;
+            if (vm.TS1)
+            {
+                owner = vm.GlobalBlockingDialog;
+                vm.SpeedMultiplier = vm.LastSpeedMultiplier;
+                vm.LastSpeedMultiplier = 0;
+                vm.GlobalBlockingDialog = null;
+            }
+            if (owner == null ||
+                owner.Thread.BlockingState == null || !(owner.Thread.BlockingState is VMDialogResult)) return false;
+            var state = (VMDialogResult)owner.Thread.BlockingState;
             state.Responded = true;
             state.ResponseCode = ResponseCode;
             state.ResponseText = ResponseText;

@@ -62,17 +62,73 @@ namespace FSO.Common.Rendering.Framework
             State.PreviousKeyboardState = State.KeyboardState;
             State.FrameTextInput = TextCharacters;
 
-            if (hasFocus)
+            var touchMode = FSOEnvironment.SoftwareKeyboard;
+
+            if (touchMode)
             {
-                State.MouseState = Mouse.GetState();
-                TouchStub(State);
-                State.KeyboardState = Keyboard.GetState();
+                State.KeyboardState = new KeyboardState();
+                TouchCollection touches = TouchPanel.GetState();
+
+                var missing = new HashSet<MultiMouse>(State.MouseStates);
+                //relate touches to their last virtual mouse
+                foreach (var touch in touches)
+                {
+                    var mouse = State.MouseStates.FirstOrDefault(x => x.ID == touch.Id);
+                    if (mouse == null)
+                    {
+                        Console.WriteLine("new id: " + touch.Id);
+                        mouse = new MultiMouse { ID = touch.Id };
+                        State.MouseStates.Add(mouse);
+                    }
+                    missing.Remove(mouse);
+
+                    mouse.MouseState = new MouseState(
+                        (int)touch.Position.X, (int)touch.Position.Y, 0,
+                        ButtonState.Pressed,
+                        ButtonState.Released,
+                        ButtonState.Released,
+                        ButtonState.Released,
+                        ButtonState.Released
+                        );
+                }
+                
+                //if virtual mouses no longer have their touch, they are performing a "mouse up"
+                //if the state has mouseovers, we should record the mouse state as being lifted.
+                foreach (var miss in missing)
+                {
+                    Console.WriteLine("killing: " + miss.ID);
+                    if (miss.LastMouseOver == null && miss.LastMouseDown == null)
+                    {
+                        State.MouseStates.Remove(miss);
+                    } else
+                    {
+                        miss.MouseState = new MouseState(miss.MouseState.X, miss.MouseState.Y, 0, ButtonState.Released, ButtonState.Released, ButtonState.Released, ButtonState.Released, ButtonState.Released);
+                        miss.Dead = true;
+                    }
+                }
             }
             else
             {
-                State.MouseState = new MouseState();
-                State.KeyboardState = new KeyboardState();
+                //single mouse state
+                if (hasFocus)
+                {
+                    State.MouseState = Mouse.GetState();
+                    State.KeyboardState = Keyboard.GetState();
+                }
+                else
+                {
+                    State.MouseState = new MouseState();
+                    State.KeyboardState = new KeyboardState();
+                }
+
+                if (State.MouseStates.Count == 0)
+                {
+                    State.MouseStates.Add(new MultiMouse { ID = 1 });
+                }
+
+                State.MouseStates[0].MouseState = State.MouseState;
             }
+
 
             State.SharedData.Clear();
             State.Update();
@@ -154,6 +210,8 @@ namespace FSO.Common.Rendering.Framework
                 }
             }
 
+            Device.SetRenderTarget(null);
+            Device.BlendState = BlendState.AlphaBlend;
             Device.Clear(ClearColor);
             //Device.RasterizerState.AlphaBlendEnable = true;
             //Device.DepthStencilState.DepthBufferEnable = true;

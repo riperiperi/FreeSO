@@ -111,6 +111,7 @@ namespace FSO.SimAntics.Engine
                         case VMPersonSuits.DefaultSwimwear:
                             return avatar.DefaultSuits.Swimwear.ID;
                         case VMPersonSuits.JobOutfit:
+                            if (context.VM.TS1) return null;
                             var job = avatar.GetPersonData(VMPersonDataVariable.OnlineJobID);
                             if (job < 1 || job > 5) return null;
                             var level = Math.Max(0, Math.Min(3, (avatar.GetPersonData(VMPersonDataVariable.OnlineJobGrade) - 1) / 4));

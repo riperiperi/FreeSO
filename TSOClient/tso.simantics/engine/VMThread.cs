@@ -294,7 +294,7 @@ namespace FSO.SimAntics.Engine
             catch (Exception e)
             {
 #if IDE_COMPAT
-                if (!IsCheck)
+                if (!IsCheck && VM.SignalBreaks)
                 {
                     Breakpoint(Stack.LastOrDefault(), "!"+e.Message+" "+StackTraceSimplify(e.StackTrace.Split('\n').FirstOrDefault(x => x.Contains(".cs")) ?? ""));
                     ContinueExecution = false;
@@ -735,6 +735,7 @@ namespace FSO.SimAntics.Engine
                 if ((index > ActiveQueueBlock || Stack.LastOrDefault()?.ActionTree == false) && interaction.Mode == Engine.VMQueueMode.Normal)
                 {
                     Queue.Remove(interaction);
+                    interaction.Callee.ExecuteEntryPoint(4, Context, true); //queue skipped
                 }
                 else
                 {
@@ -769,12 +770,13 @@ namespace FSO.SimAntics.Engine
                 }
                 else if (avatar.IsPet) return null; //not allowed
 
-                var isVisitor = avatar.ObjectID != Context.VM.GetGlobalValue(3);
+                var isVisitor = avatar.GetPersonData(VMPersonDataVariable.PersonType) == 1 && avatar.GetPersonData(VMPersonDataVariable.TS1FamilyNumber) != Context.VM.CurrentFamily?.ChunkID;
+                    //avatar.ObjectID != Context.VM.GetGlobalValue(3);
 
                 TTABFlags ts1State =
                       ((isVisitor) ? TTABFlags.AllowVisitors : 0)
                     | ((avatar.GetPersonData(VMPersonDataVariable.PersonsAge) < 18) ? TTABFlags.TS1NoChild : 0)
-                    | ((avatar.GetPersonData(VMPersonDataVariable.PersonsAge) >= 18) ? TTABFlags.TS1NoAdult : 0);
+                    | ((avatar.GetPersonData(VMPersonDataVariable.PersonsAge) >= 18 && !avatar.IsPet) ? TTABFlags.TS1NoAdult : 0);
 
                 //DEBUG: enable debug interction for all CSRs.
                 if ((action.Flags & TTABFlags.Debug) > 0)
@@ -786,7 +788,7 @@ namespace FSO.SimAntics.Engine
                 }
 
                 //NEGATIVE EFFECTS:
-                var pos = ts1State & TTABFlags.TS1NoChild | TTABFlags.TS1NoAdult;
+                var pos = ts1State & (TTABFlags.TS1NoChild | TTABFlags.TS1NoAdult);
                 var ts1Compare = action.Flags;
                 if ((pos & ts1Compare) > 0) return null;
 

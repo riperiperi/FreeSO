@@ -27,7 +27,7 @@ namespace FSO.Vitaboy
         public Skeleton Skeleton { get; internal set; }
         public Skeleton BaseSkeleton { get; internal set; }
         public List<Vector2> LightPositions;
-        private Matrix[] SkelBones;
+        protected Matrix[] SkelBones;
 
         public static void setVitaboyEffect(Effect e) {
             Effect = e;
@@ -119,11 +119,12 @@ namespace FSO.Vitaboy
             var result = new AvatarAppearanceInstance();
             result.Bindings = new List<AvatarBindingInstance>();
 
+            int i = 0;
             foreach (var bindingReference in appearance.Bindings)
             {
                 var binding = bindingReference.RealBinding ?? FSO.Content.Content.Get().AvatarBindings.Get(bindingReference.TypeID, bindingReference.FileID);
                 if (binding == null) { continue; }
-                if (texOverride != null)
+                if ((i++ == 0) && texOverride != null)
                 {
                     binding = binding.TS1Copy();
                     binding.TextureName = texOverride;
@@ -249,6 +250,8 @@ namespace FSO.Vitaboy
             Effect.Parameters["Projection"].SetValue(Projection);
             Effect.Parameters["World"].SetValue(World);
             Effect.Parameters["AmbientLight"].SetValue(new Vector4(1, 1, 1, 1));
+
+            var test = Vector4.Transform(new Vector4(0, 5.2f, 0, 1), World * View * Projection);
 
             DrawGeometry(device, Effect);
         }

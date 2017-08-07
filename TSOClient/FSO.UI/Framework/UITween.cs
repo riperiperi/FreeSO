@@ -42,6 +42,7 @@ namespace FSO.Client.UI.Framework
             if (complete)
             {
                 inst.RenderPercent(1.0f);
+                inst.Stop();
             }
             lock (m_ActiveTweens)
             {
@@ -143,6 +144,7 @@ namespace FSO.Client.UI.Framework
             if (LastProgress != 1.0f)
             {
                 RenderPercent(1.0f);
+                Stop();
             }
             if (OnComplete != null)
             {
@@ -158,34 +160,41 @@ namespace FSO.Client.UI.Framework
 
             var time = ticks - m_StartTime;
             var progress = (time) / m_Duration;
+            var visProgress = progress;
             if (progress >= 1)
             {
                 progress = 1;
+                visProgress = 1;
             }
             else if (progress < 0)
             {
                 progress = 0;
+                visProgress = 0;
             }
             else
             {
-                progress = m_EaseFunction(time, 0, 1, m_Duration);
+                visProgress = m_EaseFunction(time, 0, 1, m_Duration);
             }
             m_LastProgress = progress;
-            RenderPercent(progress);
+            RenderPercent(visProgress);
+
+            if (progress >= 1.0f)
+            {
+                Stop();
+            }
         }
 
+        public void Stop()
+        {
+            m_Active = false;
+            m_Owner.Stop(this, false);
+        }
 
         public void RenderPercent(float progress)
         {
             foreach (var field in m_Fields)
             {
                 field.SetValue(field.Start + ((field.End - field.Start) * progress), m_Object);
-            }
-
-            if (progress >= 1.0f)
-            {
-                m_Active = false;
-                m_Owner.Stop(this, false);
             }
         }
 
@@ -304,7 +313,7 @@ namespace FSO.Client.UI.Framework
     public class TweenElastic
     {
         public static EaseFunction EaseIn = new EaseFunction(_EaseIn);
-        //public static EaseFunction EaseOut = new EaseFunction(_EaseOut);
+        public static EaseFunction EaseOut = new EaseFunction(_EaseOut);
         //public static EaseFunction EaseInOut = new EaseFunction(_EaseInOut);
 
         private static float _2PI = (float)Math.PI * 2.0f;
@@ -325,22 +334,29 @@ namespace FSO.Client.UI.Framework
             return -(a * (float)Math.Pow(2.0f, 10.0f * (t -= 1)) * (float)Math.Sin((t * d - s) * _2PI / p)) + b;
         }
 
-        //private static float _EaseOut(float t, float b, float c, float d)
-        //{
-        //    if (t == 0)
-        //    {
-        //        return b;
-        //    }
-        //    if ((t /= d) == 1)
-        //    {
-        //        return b + c;
-        //    }
-        //    var p = d * 0.3f;
-        //    var a = c;
-        //    var s = p / 4.0f;
+        private static float _EaseOut(float t, float b, float c, float d)
+        {
+            t /= d;
+            var ts = t * t;
+            var tc = ts * t;
+            return b + c * (56 * tc * ts + -175 * ts * ts + 200 * tc + -100 * ts + 20 * t);
 
-        //    return (a * (float)Math.Pow(2.0f, -10.0f * t) * (float)Math.Sin((t * d - s) * _2PI / p) + c + b);
-        //}
+            /*
+            if (t == 0)
+            {
+                return b;
+            }
+            if ((t /= d) == 1)
+            {
+                return b + c;
+            }
+            var p = d * 0.3f;
+            var a = c;
+            var s = p / 4.0f;
+
+            return (a * (float)Math.Pow(2.0f, -10.0f * t) * (float)Math.Sin((t * d - s) * _2PI / p) + c + b);
+            */
+        }
 
         //private static float _EaseInOut(float t, float b, float c, float d)
         //{

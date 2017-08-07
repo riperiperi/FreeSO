@@ -235,6 +235,7 @@ namespace FSO.LotView
                     bounds = _2d.GetSpriteListBounds();
                 }
             }
+            bounds.Inflate(1, 1);
             bounds.X = Math.Max(0, Math.Min(1023, bounds.X));
             bounds.Y = Math.Max(0, Math.Min(1023, bounds.Y));
             if (bounds.Width + bounds.X > 1024) bounds.Width = 1024 - bounds.X;
@@ -301,7 +302,6 @@ namespace FSO.LotView
                     Blueprint.FloorGeom.SliceReset(gd, new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13));
                     Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
                     Blueprint.Terrain.Draw(gd, state);
-                    Blueprint.FloorComp.DrawBound = null;
                     Blueprint.WallComp.Draw(gd, state);
                     _2d.Pause();
 
@@ -389,7 +389,7 @@ namespace FSO.LotView
                         recacheObjects = true;
                         recacheWalls = true;
                         recacheFloors = true;
-                        recacheTerrain = true;
+                        //recacheTerrain = true;
                         break;
                     case BlueprintDamageType.SCROLL:
                         if (StaticObjects == null || StaticObjects.PxOffset != GetScrollIncrement(pxOffset, state))

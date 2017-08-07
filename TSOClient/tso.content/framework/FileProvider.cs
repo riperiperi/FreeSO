@@ -11,6 +11,7 @@ using System.Text;
 using FSO.Common.Content;
 using System.Text.RegularExpressions;
 using System.IO;
+using FSO.Content.Codecs;
 
 namespace FSO.Content.Framework
 {
@@ -26,6 +27,8 @@ namespace FSO.Content.Framework
         protected Dictionary<string, T> Cache;
         protected List<FileContentReference<T>> Items;
         private Regex FilePattern;
+        public bool UseContent;
+        public bool UseTS1;
 
         /// <summary>
         /// Creates a new instance of FileProvider.
@@ -52,7 +55,8 @@ namespace FSO.Content.Framework
             lock (Cache)
             {
                 List<string> matchedFiles = new List<string>();
-                foreach (var file in ContentManager.AllFiles)
+                var files = UseContent ? ContentManager.ContentFiles : (UseTS1?ContentManager.TS1AllFiles:ContentManager.AllFiles);
+                foreach (var file in files)
                 {
                     if (FilePattern.IsMatch(file.Replace('\\', '/')))
                     {
@@ -85,10 +89,12 @@ namespace FSO.Content.Framework
 
                 if (EntriesByName.ContainsKey(name))
                 {
-                    var fullPath = ContentManager.GetPath(EntriesByName[name]);
+                    var fullPath = UseContent? ("Content/"+EntriesByName[name]):(UseTS1?Path.Combine(ContentManager.TS1BasePath, EntriesByName[name]):ContentManager.GetPath(EntriesByName[name]));
                     using (var reader = File.OpenRead(fullPath))
                     {
-                        var item = Codec.Decode(reader);
+                        T item;
+                        if (Codec == null) item = (T)SmartCodec.Decode(reader, Path.GetExtension(fullPath));
+                        else item = Codec.Decode(reader);
                         Cache.Add(name, item);
                         return item;
                     }
@@ -101,10 +107,12 @@ namespace FSO.Content.Framework
         {
             if (EntriesByName.ContainsKey(name))
             {
-                var fullPath = ContentManager.GetPath(EntriesByName[name]);
+                var fullPath = UseContent ? ("Content/" + EntriesByName[name]) : (UseTS1 ? Path.Combine(ContentManager.TS1BasePath, EntriesByName[name]) : ContentManager.GetPath(EntriesByName[name]));
                 using (var reader = File.OpenRead(fullPath))
                 {
-                    var item = Codec.Decode(reader);
+                    T item;
+                    if (Codec == null) item = (T)SmartCodec.Decode(reader, Path.GetExtension(fullPath));
+                    else item = Codec.Decode(reader);
                     return item;
                 }
             }
@@ -125,7 +133,7 @@ namespace FSO.Content.Framework
 
         public List<IContentReference<T>> List()
         {
-            throw new NotImplementedException();
+            return new List<IContentReference<T>>(Items);
         }
 
         public T Get(ContentID id)
@@ -167,5 +175,10 @@ namespace FSO.Content.Framework
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

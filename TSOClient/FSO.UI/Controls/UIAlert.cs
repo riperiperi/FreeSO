@@ -116,7 +116,7 @@ namespace FSO.Client.UI.Controls
             var w = m_Options.Width;
             var h = m_Options.Height;
 
-            h = Math.Max(h, Math.Max((int)IconSpace.Y, m_MessageText == null ? 0 : m_MessageText.BoundingBox.Height) + 32);
+            h = Math.Max(h, Math.Max((int)IconSpace.Y, m_MessageText == null ? 0 : m_MessageText.BoundingBox.Height ) + 32 + 38);
 
             if(_ProgressBar != null){
                 _ProgressBar.Position = new Vector2(_ProgressBar.Position.X, h + 12);

@@ -784,7 +784,7 @@ namespace FSO.Client.UI.Controls
             m_LineHeight = TextStyle.MeasureString("W").Y;
 
             m_Lines.Clear();
-
+            txt = txt.Replace("\r", "");
             var words = txt.Split(' ').ToList();
 	        var spaceWidth = TextStyle.MeasureString(" ").X;
 

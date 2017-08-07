@@ -77,6 +77,7 @@
     <Compile Include="Controllers\RoommateRequestController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
     <Compile Include="FSOFacade.cs" />
+    <Compile Include="FSOProgram.cs" />
     <Compile Include="GameStartProxy.cs" />
     <Compile Include="Model\UserReference.cs" />
     <Compile Include="GameContent\CacheModule.cs" />
@@ -136,7 +137,6 @@
     <Compile Include="UI\Panels\UILotPurchaseDialog.cs" />
     <Compile Include="UI\Panels\UIMessageTray.cs" />
     <Compile Include="UI\Panels\UIPersonPage.cs" />
-    <Compile Include="Debug\IDEHook.cs" />
     <Compile Include="UI\Controls\UIVMPersonButton.cs" />
     <Compile Include="UI\Panels\EODs\EODLiveModeOpt.cs" />
     <Compile Include="UI\Panels\EODs\UIDanceFloorEOD.cs" />
@@ -380,7 +380,6 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System" />
-    <Reference Include="System.Speech" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="GOLDEngine">
@@ -459,6 +458,10 @@
       <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
       <Name>MonoGame.Framework.WindowsGL</Name>
       <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\mp3sharp\mp3sharp\Mp3Sharp.csproj">
+      <Project>{834cab58-648d-47cc-ac6f-d01c08c809a4}</Project>
+      <Name>Mp3Sharp</Name>
     </ProjectReference>
     <ProjectReference Include="..\FSO.Common.DatabaseService\FSO.Common.DatabaseService.csproj">
       <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>

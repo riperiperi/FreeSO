@@ -23,7 +23,7 @@ namespace FSO.SimAntics.Model
         private double fractional;
         public bool Ticked;
 
-        public static TuningEntry LotMotives = Content.Content.Get().GlobalTuning.EntriesByName["lotmotives"];
+        public static TuningEntry? LotMotives;
 
         public void Clear()
         {
@@ -36,7 +36,9 @@ namespace FSO.SimAntics.Model
             Ticked = true;
             if (PerHourChange != 0)
             {
-                double rate = (PerHourChange/60.0)/(30.0*5.0); //timed for 5 second minutes
+                
+                double rate = (PerHourChange/60.0)/(30.0); //timed for 5 second minutes
+                if (!Content.Content.Get().TS1) rate /= 5;
                 fractional += rate;
                 if (Math.Abs(fractional) >= 1)
                 {
@@ -54,12 +56,23 @@ namespace FSO.SimAntics.Model
 
         public static int ScaleRate(VM vm, int rate, VMMotive type)
         {
-            if (vm.TSOState.PropertyCategory == 4 && type > 0) rate = (rate * 3) / 2; //1.5x gain multiplier on services lots
-            if (VMMotive.Comfort == type) return rate;
-            var ind = Array.IndexOf(VMAvatarMotiveDecay.DecrementMotives, type);
-            string category = VMAvatarMotiveDecay.CategoryNames[vm.TSOState.PropertyCategory];
-            var weight = ToFixed1000(LotMotives.GetNum(category + "_" + VMAvatarMotiveDecay.LotMotiveNames[ind] + "Weight"));
-            return (rate * 1000) / weight;
+            if (vm.TS1)
+            {
+                if (type == VMMotive.Energy)
+                {
+                    rate *= (int)VMTS1MotiveDecay.Constants[0] / (24 - (int)VMTS1MotiveDecay.Constants[1]);
+                }
+                return rate;
+            } else
+            {
+                if (LotMotives == null) LotMotives = Content.Content.Get().GlobalTuning.EntriesByName["lotmotives"];
+                if (vm.TSOState.PropertyCategory == 4 && type > 0) rate = (rate * 3) / 2; //1.5x gain multiplier on services lots
+                if (VMMotive.Comfort == type) return rate;
+                var ind = Array.IndexOf(VMAvatarMotiveDecay.DecrementMotives, type);
+                string category = VMAvatarMotiveDecay.CategoryNames[vm.TSOState.PropertyCategory];
+                var weight = ToFixed1000(LotMotives.Value.GetNum(category + "_" + VMAvatarMotiveDecay.LotMotiveNames[ind] + "Weight"));
+                return (rate * 1000) / weight;
+            }
         }
 
         private static int ToFixed1000(float input)

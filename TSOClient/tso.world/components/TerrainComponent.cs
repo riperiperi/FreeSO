@@ -329,6 +329,7 @@ namespace FSO.LotView.Components
             if (world.Light != null) LightVec = world.Light.LightVec;
             device.DepthStencilState = DepthStencilState.Default;
             device.BlendState = BlendState.Opaque;
+            device.RasterizerState = RasterizerState.CullNone;
             PPXDepthEngine.RenderPPXDepth(Effect, true, (depthMode) =>
             {
             Effect.Parameters["LightGreen"].SetValue(LightGreen.ToVector4());

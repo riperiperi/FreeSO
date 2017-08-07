@@ -28,6 +28,7 @@ namespace FSO.SimAntics.Primitives
             if (context.Thread.IsCheck) return VMPrimitiveExitCode.GOTO_FALSE;
 
             var obj = context.StackObject;
+            if (obj == null) return VMPrimitiveExitCode.GOTO_FALSE;
             var avatar = (VMAvatar)context.Caller;
 
             if (obj.Position == LotTilePos.OUT_OF_WORLD) return VMPrimitiveExitCode.GOTO_FALSE;

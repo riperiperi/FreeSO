@@ -301,6 +301,7 @@ namespace FSO.Client.UI
             var bounds = GameFacade.Game.Window.ClientBounds;
             state.MouseOverWindow = mousePosition.X > 0 && mousePosition.Y > 0 &&
                                     mousePosition.X < bounds.Width && mousePosition.Y < bounds.Height;
+            if (FSOEnvironment.SoftwareKeyboard) state.MouseOverWindow = true;
             state.WindowFocused = GameFacade.Game.IsActive;
 
             /** 
@@ -316,7 +317,7 @@ namespace FSO.Client.UI
             state.MouseEvents.Clear();
 
             state.InputManager = inputManager;
-            Content.Content.Get().Changes.RunResModifications();
+            Content.Content.Get()?.Changes.RunResModifications();
             mainUI.Update(state);
 
             if (state.AltDown && state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Enter))

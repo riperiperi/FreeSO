@@ -47,7 +47,7 @@ namespace FSO.SimAntics.Primitives
 
 
             var neighbourhood = Content.Content.Get().Neighborhood;
-            var inTarget = (operand.UseStackObject) ? context.VM.GetObjectById(context.Thread.TempRegisters[4]) : context.Caller;
+            var inTarget = (operand.UseObjectInTemp4) ? context.VM.GetObjectById(context.Thread.TempRegisters[4]) : context.Caller;
             if (inTarget is VMGameObject) { }
             var target = (VMAvatar)(inTarget);
             var neighbour = target.GetPersonData(Model.VMPersonDataVariable.NeighborId);
@@ -121,7 +121,7 @@ namespace FSO.SimAntics.Primitives
             }
         }
 
-        public bool UseStackObject
+        public bool UseObjectInTemp4
         {
             get
             {

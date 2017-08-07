@@ -42,6 +42,7 @@ namespace FSO.SimAntics
     {
         public static bool UseSchedule = true;
         private static bool _UseWorld = true;
+        public static bool SignalBreaks = false;
         public static bool UseWorld
         {
             get { return _UseWorld; }
@@ -205,7 +206,9 @@ namespace FSO.SimAntics
         private int GameTickRate = 60;
         private int GameTickNum = 0;
         public int SpeedMultiplier = 1;
+        public int LastSpeedMultiplier;
         private float Fraction;
+        public VMEntity GlobalBlockingDialog;
         public void Update()
         {
             var mul = Math.Max(SpeedMultiplier, 1);
@@ -215,6 +218,7 @@ namespace FSO.SimAntics
             for (int i = 0; i < newFrame - oldFrame; i++)
             {
                 Tick();
+                if (SpeedMultiplier == 0) break;
             }
 
             Fraction = ((GameTickNum * 30 * SpeedMultiplier) - (newFrame * GameTickRate)) / (float)GameTickRate;

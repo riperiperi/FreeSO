@@ -45,15 +45,15 @@ namespace FSO.Content.TS1
                 var file = (BCF)bcf.GetThrowawayGeneric();
                 foreach (var anim in file.Animations)
                 {
-                    AnimHostBCF[anim.Name.ToLowerInvariant()] = Path.GetFileName(bcf.ToString().ToLowerInvariant());
+                    AnimHostBCF[anim.Name.ToLowerInvariant()] = Path.GetFileName(bcf.ToString().ToLowerInvariant().Replace('\\', '/'));
                 }
                 foreach (var skin in file.Appearances)
                 {
-                    SkinHostBCF[skin.Name.ToLowerInvariant()] = Path.GetFileName(bcf.ToString().ToLowerInvariant());
+                    SkinHostBCF[skin.Name.ToLowerInvariant()] = Path.GetFileName(bcf.ToString().ToLowerInvariant().Replace('\\', '/'));
                 }
                 foreach (var skel in file.Skeletons)
                 {
-                    SkelHostBCF.Add(skel.Name.ToLowerInvariant(), Path.GetFileName(bcf.ToString().ToLowerInvariant()));
+                    SkelHostBCF.Add(skel.Name.ToLowerInvariant(), Path.GetFileName(bcf.ToString().ToLowerInvariant().Replace('\\', '/')));
                 }
             }
         }

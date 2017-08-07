@@ -137,6 +137,10 @@ namespace FSO.SimAntics.Primitives
                         entities = context.VM.Context.ObjectQueries.Avatars; break;
                     case VMSetToNextSearchType.ObjectOfType:
                         entities = context.VM.Context.ObjectQueries.GetObjectsByGUID(operand.GUID); break;
+                    case VMSetToNextSearchType.ObjectWithCategoryEqualToSP0:
+                        entities = context.VM.Context.ObjectQueries.GetObjectsByCategory(context.Args[0]); break;
+                    default:
+                        break;
                 }
                 if (entities == null) return VMPrimitiveExitCode.GOTO_FALSE;
 
@@ -152,10 +156,7 @@ namespace FSO.SimAntics.Primitives
                         switch (operand.SearchType)
                         { //manual search types
                             case VMSetToNextSearchType.NonPerson:
-                                found = (temp.GetType() == typeof(VMGameObject));
-                                break;
-                            case VMSetToNextSearchType.ObjectWithCategoryEqualToSP0:
-                                found = (temp.GetValue(Model.VMStackObjectVariable.Category) == context.Args[0]); //I'm assuming that means "Stack parameter 0", that category means function and that it needs to be exactly the same (no subsets)
+                                found = (temp is VMGameObject);
                                 break;
                             case VMSetToNextSearchType.ClosestHouse:
                                 return VMPrimitiveExitCode.GOTO_FALSE;

@@ -27,6 +27,8 @@ namespace FSO.SimAntics.Utils
             0x99197314, //go magictown
         };
 
+        public bool DeleteAvatars = true;
+
         public static Dictionary<int, TerrainType> HouseNumToType = new Dictionary<int, TerrainType>
         {
             { 28, TerrainType.SAND },
@@ -85,6 +87,7 @@ namespace FSO.SimAntics.Utils
             VM.GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
 
             VM.SetGlobalValue(10, HouseNumber); //set house number
+            VM.SetGlobalValue(32, 0); //simless build mode
 
             TerrainType ttype = TerrainType.GRASS;
             if (!HouseNumToType.TryGetValue(HouseNumber, out ttype))
@@ -204,6 +207,7 @@ namespace FSO.SimAntics.Utils
                 if (ControllerObjects.Contains(obj.GUID)) continue;
                 var res = content.WorldObjects.Get(obj.GUID);
                 if (res == null) continue; //failed to load this object
+                var objd = res.OBJ;
                 if (res.OBJ.MasterID != 0)
                 {
                     var allObjs = res.Resource.List<OBJD>().Where(x => x.MasterID == res.OBJ.MasterID);
@@ -217,6 +221,7 @@ namespace FSO.SimAntics.Utils
 
                         var master = allObjs.FirstOrDefault(x => x.SubIndex < 0);
                         if (master == null) continue;
+                        objd = master;
                         obj.GUID = master.GUID;
                     }
                     else
@@ -224,6 +229,8 @@ namespace FSO.SimAntics.Utils
                         continue;
                     }
                 }
+
+                //if (DeleteAvatars && objd.ObjectType == OBJDType.Person) continue;
 
                 //objm parent positioning
                 //objects without positions inherit position from the objects in their "parent id".
@@ -248,8 +255,6 @@ namespace FSO.SimAntics.Utils
                 if (obj.ContainerID == 0 && obj.ArryX != 0 && obj.ArryY != 0)
                     nobj.SetPosition(LotTilePos.FromBigTile((short)(obj.ArryX), (short)(obj.ArryY), (sbyte)obj.ArryLevel), dir, VM.Context, VMPlaceRequestFlags.AcceptSlots);
 
-                for (int i = 0; i < nobj.MultitileGroup.Objects.Count; i++) nobj.MultitileGroup.Objects[i].ExecuteEntryPoint(11, VM.Context, true);
-
                 ents.Add(new Tuple<VMEntity, OBJM.MappedObject>(nobj, obj));
             }
 
@@ -267,6 +272,9 @@ namespace FSO.SimAntics.Utils
                     */
                 }
             }
+
+            var entClone = new List<VMEntity>(VM.Entities);
+            foreach (var nobj in entClone) nobj.ExecuteEntryPoint(11, VM.Context, true);
 
             arch.SignalTerrainRedraw();
             VM.Context.World?.InitBlueprint(Blueprint);

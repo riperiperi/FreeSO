@@ -127,6 +127,7 @@ namespace FSO.HIT
 
         public HITSound PlaySoundEvent(string evt)
         {
+            Console.WriteLine("trying " + evt);
             evt = evt.ToLowerInvariant();
             if (ActiveEvents.ContainsKey(evt))
             {
@@ -136,8 +137,10 @@ namespace FSO.HIT
 
             var content = FSO.Content.Content.Get();
             var evts = content.Audio.Events;
+
             if (evts.ContainsKey(evt))
             {
+                Console.WriteLine("yes");
                 var evtent = evts[evt];
 
                 //objects call the wrong event for piano playing

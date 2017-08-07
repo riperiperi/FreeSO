@@ -9,7 +9,12 @@ using System.IO;
 
 namespace FSO.SimAntics.Entities
 {
-    public class VMAvatarMotiveDecay : VMSerializable
+    public interface VMIMotiveDecay : VMSerializable
+    {
+        void Tick(VMAvatar avatar, VMContext context);
+    }
+
+    public class VMAvatarMotiveDecay : VMIMotiveDecay
     {
         public static string[] LotMotiveNames = new string[]
         {

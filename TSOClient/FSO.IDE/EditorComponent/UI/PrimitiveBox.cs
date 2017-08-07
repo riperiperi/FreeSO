@@ -161,7 +161,7 @@ namespace FSO.IDE.EditorComponent.UI
             }, this);
 
             Width = Math.Max((int)titleWidth, BodyTextLabels.MaxWidth)+10;
-            Height = BodyTextLabels.BoundingBox.Height+20;
+            Height = BodyTextLabels.BoundingBox.Height+43;
             Title.Size = new Vector2(Width, 24);
 
             var shift = (Width - 300) / 2;

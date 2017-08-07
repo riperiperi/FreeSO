@@ -212,6 +212,7 @@ namespace FSO.SimAntics.Entities
 
         public void SetVisualPosition(Vector3 pos, Direction direction, VMContext context)
         {
+            if (Objects.Count == 0) return;
             int Dir = 0;
             switch (direction)
             {
