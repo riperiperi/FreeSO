@@ -1136,7 +1136,7 @@ namespace FSO.Server.Servers.Lot.Domain
         public void AvatarLeave(IVoltronSession session)
         {
             //Exit lot, Persist the avatars data, remove avatar lock
-            LOG.Info("Avatar"+session.AvatarId+" left lot "+Context.DbId);
+            LOG.Info("Avatar "+session.AvatarId+" left lot "+Context.DbId);
 
             // defer the following so that the avatar save is queued, then their session's claim is released.
             lock (SessionsToRelease) SessionsToRelease.Add(session);

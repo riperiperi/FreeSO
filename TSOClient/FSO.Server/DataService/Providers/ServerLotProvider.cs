@@ -92,7 +92,7 @@ namespace FSO.Server.DataService.Providers
         {
             base.Insert(key, value);
             lock (LotsByName) LotsByName[value.Lot_Name] = value;
-            lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo.SetItem(value.Lot_Location_Packed, value.Lot_IsOnline);
+            lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo = CityRepresentation.City_ReservedLotInfo.SetItem(value.Lot_Location_Packed, value.Lot_IsOnline);
         }
 
         protected override Lot Remove(uint key)
@@ -101,7 +101,7 @@ namespace FSO.Server.DataService.Providers
             if (value != null)
             {
                 lock (LotsByName) LotsByName.Remove(value.Lot_Name);
-                lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo.Remove(value.Lot_Location_Packed);
+                lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo = CityRepresentation.City_ReservedLotInfo.Remove(value.Lot_Location_Packed);
                 
                 CityRepresentation.City_SpotlightsVector = CityRepresentation.City_SpotlightsVector.Remove(value.Lot_Location_Packed);
             }
@@ -216,7 +216,7 @@ namespace FSO.Server.DataService.Providers
                     }
                     break;
                 case "Lot_IsOnline":
-                    lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo.SetItem(lot.Lot_Location_Packed, lot.Lot_IsOnline);
+                    lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo = CityRepresentation.City_ReservedLotInfo.SetItem(lot.Lot_Location_Packed, lot.Lot_IsOnline);
                     break;
                 case "Lot_SpotLightText":
                     lock (CityRepresentation)

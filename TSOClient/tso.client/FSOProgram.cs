@@ -108,6 +108,7 @@ namespace FSO.Client
             }*/
 
             var path = gameLocator.FindTheSimsOnline();
+            if (!linux) UI.Panels.ITTSContext.Provider = UI.Model.UITTSContext.PlatformProvider;
 
             if (UseDX) GlobalSettings.Default.AntiAlias = false;
 

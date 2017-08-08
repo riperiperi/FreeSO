@@ -107,7 +107,6 @@ namespace FSO.Common.Rendering.Framework
             };
 
             foreach(var item in map){
-                break; //broken by monogame not supporting grayscale bitmaps again...
                 m_CursorMap.Add(item.Key,
                     LoadCustomCursor(
                         Path.Combine(basepath, "uigraphics/shared/cursors/" + item.Value)

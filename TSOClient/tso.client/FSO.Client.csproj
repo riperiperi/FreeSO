@@ -98,6 +98,7 @@
     <Compile Include="UI\Controls\UIPersonButton.cs" />
     <Compile Include="UI\Controls\UISkillBar.cs" />
     <Compile Include="UI\Controls\UIValidationMessages.cs" />
+    <Compile Include="UI\Model\UITTSContext.cs" />
     <Compile Include="UI\Panels\EODs\Archetypes\UIBasicEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIBandEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIGameCompDrawACardPluginEOD.cs" />
@@ -380,6 +381,7 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System" />
+    <Reference Include="System.Speech" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="GOLDEngine">

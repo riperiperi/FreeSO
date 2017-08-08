@@ -156,7 +156,6 @@ namespace FSO.SimAntics.Engine
                 if (e is ThreadAbortException) throw e;
                 //we need to catch these so that the parent can be restored.
             }
-            
 
             //copy child stack things to parent stack
             Stack = OldStack;

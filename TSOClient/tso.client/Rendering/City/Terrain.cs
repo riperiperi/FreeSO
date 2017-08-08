@@ -1037,7 +1037,7 @@ namespace FSO.Client.Rendering.City
         private void DrawHouses(float HB) //draws house icons in far view
         {
             var spriteBatch = m_Batch;
-            spriteBatch.Begin();
+            spriteBatch.Begin(sortMode: SpriteSortMode.Texture);
             float iScale = (float)m_ScrWidth / (HB * 2);
             LotTileEntry[] lots = LotTileData;
             for (int i=0; i<lots.Length; i++) {
@@ -1070,7 +1070,7 @@ namespace FSO.Client.Rendering.City
         private void DrawSprites(float HB, float VB)
         {
             var spriteBatch = m_Batch;
-            spriteBatch.Begin();
+            spriteBatch.Begin(sortMode: SpriteSortMode.Texture);
 
             if (m_Zoomed == TerrainZoomMode.Far && m_HandleMouse)
             {

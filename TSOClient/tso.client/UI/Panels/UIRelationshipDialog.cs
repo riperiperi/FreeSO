@@ -279,7 +279,8 @@ namespace FSO.Client.UI.Panels
         {
             if (Rels == null) return;
             IEnumerable<Relationship> query = Rels.Where(x => x.Relationship_IsOutgoing == OutgoingMode).OrderBy(OrderFunction);
-            if (OrderFunction == OrderRoommate) query = query.Where(x => Roommates.Contains(x.Relationship_TargetID));
+            if (OrderFunction == OrderRoommate)
+                query = query.Where(x => Roommates?.Contains(x.Relationship_TargetID) == true);
             if (Filter != null) query = query.Where(x => Filter.Contains(x.Relationship_TargetID));
 
             var oldItems = ResultsBox.Items;

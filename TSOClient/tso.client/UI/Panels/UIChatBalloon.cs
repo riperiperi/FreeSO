@@ -71,7 +71,10 @@ namespace FSO.Client.UI.Panels
             ShadowStyle = BodyTextStyle.Clone();
             ShadowStyle.Color = Color.Black;
 
-            if (!GameFacade.Linux && GlobalSettings.Default.EnableTTS) TTSContext = new UITTSContext();
+            if (!GameFacade.Linux && GlobalSettings.Default.EnableTTS)
+            {
+                TTSContext = (ITTSContext.Provider == null) ? null : ITTSContext.Provider();
+            }
         }
 
         public void SetNameMessage(string name, string message, bool gender)
@@ -108,7 +111,7 @@ namespace FSO.Client.UI.Panels
             }
 
             DisplayRect.Width = textW + 18 * 2;
-            DisplayRect.Height = BodyTextLabels.BoundingBox.Height + 18 * 2;
+            DisplayRect.Height = BodyTextLabels.BoundingBox.Height + 18 * 3;
         }
 
         private void AlphaCopy(Texture2D tex)
@@ -311,31 +314,12 @@ namespace FSO.Client.UI.Panels
         }
     }
 
-    public class UITTSContext : ITTSContext
+
+
+    public abstract class ITTSContext
     {
-        //private SpeechSynthesizer Synth;
-
-        public UITTSContext()
-        {
-            //Synth = new SpeechSynthesizer();
-            //Synth.SetOutputToDefaultAudioDevice();
-        }
-
-        public void Dispose()
-        {
-            //Synth.Dispose();
-        }
-
-        public void Speak(string text, bool gender)
-        {
-            //Synth.SelectVoiceByHints((gender) ? VoiceGender.Female : VoiceGender.Male);
-            //Synth.SpeakAsync(text);
-        }
-    }
-
-    public interface ITTSContext
-    {
-        void Dispose();
-        void Speak(string text, bool gender);
+        public static Func<ITTSContext> Provider;
+        public abstract void Dispose();
+        public abstract void Speak(string text, bool gender);
     }
 }

@@ -29,6 +29,7 @@ using FSO.Server.Protocol.CitySelector;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Database.DA.Hosts;
+using Mina.Core.Write;
 
 namespace FSO.Server.Framework.Aries
 {
@@ -171,7 +172,7 @@ namespace FSO.Server.Framework.Aries
 
         public void SessionCreated(IoSession session)
         {
-            LOG.Info("[SESSION-CREATE]");
+            LOG.Info("[SESSION-CREATE (" + Config.Call_Sign +")]");
 
             //Setup session
             var ariesSession = new AriesSession(session);
@@ -226,7 +227,7 @@ namespace FSO.Server.Framework.Aries
 
         public void SessionClosed(IoSession session)
         {
-            LOG.Info("[SESSION-CLOSED]");
+            LOG.Info("[SESSION-CLOSED (" + Config.Call_Sign + ")]");
 
             var ariesSession = session.GetAttribute<IAriesSession>("s");
             _Sessions.Remove(ariesSession);
@@ -252,10 +253,21 @@ namespace FSO.Server.Framework.Aries
             //todo: handle individual error codes
             if (cause is System.Net.Sockets.SocketException)
             {
-                LOG.Error(cause, "SocketException: " + cause.ToString());
                 session.Close(true);
             }
-            else LOG.Error(cause, "Unknown error: " + cause.ToString());
+            else if (cause is WriteToClosedSessionException || cause is WriteTimeoutException)
+            {
+                //don't do anything... mina should be able to deal with this
+            }
+            else if (cause is System.InvalidOperationException)
+            {
+                LOG.Error(cause, "CRITICAL (mina bug): " + cause.ToString());
+                session.Close(true);
+            }
+            else
+            {
+                LOG.Error(cause, "Unknown error: " + cause.ToString());
+            }
         }
 
         public void MessageSent(IoSession session, object message)
