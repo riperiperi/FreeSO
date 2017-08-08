@@ -52,14 +52,16 @@ namespace FSO.SimAntics.Engine.Primitives
                 }
                 else if (operand.Destination == 0)
                 {
-                    return context.Thread.RunInMyStack(tree.bhav, context.StackObject.Object, context.Thread.TempRegisters, context.StackObject)
+                    var result = context.Thread.RunInMyStack(tree.bhav, context.StackObject.Object, context.Thread.TempRegisters, context.StackObject)
                         ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                    return (context.VM.Aborting) ? VMPrimitiveExitCode.ERROR : result;
                     //run in my stack
                 }
                 else
                 {
-                    return context.StackObject.Thread.RunInMyStack(tree.bhav, context.StackObject.Object, context.Thread.TempRegisters, context.StackObject)
+                    var result = context.StackObject.Thread.RunInMyStack(tree.bhav, context.StackObject.Object, context.Thread.TempRegisters, context.StackObject)
                         ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                    return (context.VM.Aborting) ? VMPrimitiveExitCode.ERROR : result;
                     //run in stack obj's stack
                 }
                 //found it! now lets call the tree ;)

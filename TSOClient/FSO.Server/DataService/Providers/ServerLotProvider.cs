@@ -51,7 +51,7 @@ namespace FSO.Server.DataService.Providers
                 City_NeighborhoodsVec = ImmutableList.Create<uint>(),
                 City_OnlineLotVector = ImmutableList.Create<bool>(),
                 City_ReservedLotVector = ImmutableList.Create<bool>(),
-                City_ReservedLotInfo = new Dictionary<uint, bool>(),
+                City_ReservedLotInfo = ImmutableDictionary.Create<uint, bool>(),
                 City_SpotlightsVector = ImmutableList.Create<uint>(),
                 City_Top100ListIDs = ImmutableList.Create<uint>(),
                 City_TopTenNeighborhoodsVector = ImmutableList.Create<uint>()
@@ -92,7 +92,7 @@ namespace FSO.Server.DataService.Providers
         {
             base.Insert(key, value);
             lock (LotsByName) LotsByName[value.Lot_Name] = value;
-            lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo[value.Lot_Location_Packed] = value.Lot_IsOnline;
+            lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo.SetItem(value.Lot_Location_Packed, value.Lot_IsOnline);
         }
 
         protected override Lot Remove(uint key)
@@ -216,7 +216,7 @@ namespace FSO.Server.DataService.Providers
                     }
                     break;
                 case "Lot_IsOnline":
-                    lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo[lot.Lot_Location_Packed] = lot.Lot_IsOnline;
+                    lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo.SetItem(lot.Lot_Location_Packed, lot.Lot_IsOnline);
                     break;
                 case "Lot_SpotLightText":
                     lock (CityRepresentation)

@@ -105,6 +105,7 @@ namespace FSO.SimAntics.Engine
                 temp.Tick();
                 temp.ThreadBreak = VMThreadBreakMode.Active; //cannot breakpoint in check trees
             }
+            if (context.VM.Aborting) return VMPrimitiveExitCode.ERROR;
             return (temp.DialogCooldown > 0) ? VMPrimitiveExitCode.RETURN_FALSE : temp.LastStackExitCode;
         }
 
@@ -155,6 +156,7 @@ namespace FSO.SimAntics.Engine
                 if (e is ThreadAbortException) throw e;
                 //we need to catch these so that the parent can be restored.
             }
+            
 
             //copy child stack things to parent stack
             Stack = OldStack;
@@ -493,6 +495,7 @@ namespace FSO.SimAntics.Engine
                     ContinueExecution = false;
                     break;
                 case VMPrimitiveExitCode.ERROR:
+                    ContinueExecution = false;
                     Pop(result);
                     break;
                 case VMPrimitiveExitCode.RETURN_TRUE:

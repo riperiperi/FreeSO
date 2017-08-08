@@ -17,7 +17,7 @@ namespace FSO.Common.DataService.Providers.Client
             {
                 City_NeighborhoodsVec = ImmutableList.Create<uint>(),
                 City_OnlineLotVector = ImmutableList.Create<bool>(),
-                City_ReservedLotInfo = new Dictionary<uint, bool>(),
+                City_ReservedLotInfo = ImmutableDictionary.Create<uint, bool>(),
                 City_ReservedLotVector = ImmutableList.Create<bool>(),
                 City_SpotlightsVector = ImmutableList.Create<uint>(),
                 City_Top100ListIDs = ImmutableList.Create<uint>(),

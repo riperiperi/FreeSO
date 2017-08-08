@@ -515,7 +515,9 @@ namespace FSO.Server.Servers.Lot.Domain
                                 LOG.Error("on mono, so can't obtain immediate trace.");
                             }
 
-                            MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
+                            Container.AbortVM();
+                            //MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
+                            Shutdown(); //it also doesnt tend to work too nicely on release builds. immediately free the lot.
                             return;
                         }
                     }
@@ -678,7 +680,7 @@ namespace FSO.Server.Servers.Lot.Domain
             SetSpotlight(false);
             ReleaseLotClaim();
             Host.ShutdownComplete(this);
-            BackgroundThread.Abort();
+            if (Thread.CurrentThread != BackgroundThread) BackgroundThread.Abort();
         }
 
         public void ForceShutdown(bool lotClosed)

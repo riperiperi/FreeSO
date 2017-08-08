@@ -80,6 +80,7 @@ namespace FSO.SimAntics.Engine
 
         public void RunTick()
         {
+            if (vm.Aborting) return;
             RunningNow = true;
             if (TickSchedule.TryGetValue(CurrentTickID, out TickThisFrame))
             {

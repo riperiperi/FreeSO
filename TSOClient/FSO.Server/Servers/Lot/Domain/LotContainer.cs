@@ -188,6 +188,11 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
             }
         }
+        
+        public void AbortVM()
+        {
+            Lot.Aborting = true;
+        }
 
         public void LoadAdj()
         {
@@ -676,7 +681,6 @@ namespace FSO.Server.Servers.Lot.Domain
                     if (beingKilled.Count() > 0)
                     {
                         //avatars that are being killed could die before their user disconnects. It's important to save them immediately.
-                        LOG.Info("Avatar Kill Save");
                         SaveAvatars(beingKilled, true);
                     }
 
@@ -702,7 +706,6 @@ namespace FSO.Server.Servers.Lot.Domain
                         //SaveAvatars(SessionsToRelease.Select(x => Lot.GetAvatarByPersist(x.AvatarId)), true); //todo: is this performed by the fact that we started the persist save above?
                         foreach (var session in SessionsToRelease)
                         {
-                            LOG.Info("Avatar Session Release");
                             Host.ReleaseAvatarClaim(session);
                         }
                         SessionsToRelease.Clear();
@@ -782,7 +785,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 var inventory = da.Objects.GetAvatarInventory(session.AvatarId);
                 var myRoomieLots = da.Roommates.GetAvatarsLots(session.AvatarId); //might want to use other entries to update the roomies table entirely.
                 var myIgnored = da.Bookmarks.GetAvatarIgnore(session.AvatarId);
-                LOG.Info("Avatar " + avatar.name + " has joined");
+                LOG.Info("Avatar " + avatar.name + " ("+session.AvatarId+") has joined lot "+Context.DbId);
 
                 //Load all the avatars data
                 var state = StateFromDB(avatar, rels, jobinfo, myRoomieLots, myIgnored);
@@ -1133,7 +1136,7 @@ namespace FSO.Server.Servers.Lot.Domain
         public void AvatarLeave(IVoltronSession session)
         {
             //Exit lot, Persist the avatars data, remove avatar lock
-            LOG.Info("Avatar left");
+            LOG.Info("Avatar"+session.AvatarId+" left lot "+Context.DbId);
 
             // defer the following so that the avatar save is queued, then their session's claim is released.
             lock (SessionsToRelease) SessionsToRelease.Add(session);

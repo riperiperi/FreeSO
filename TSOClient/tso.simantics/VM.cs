@@ -59,6 +59,7 @@ namespace FSO.SimAntics
             get { return GlobalLink != null; }
         }
         public bool TS1;
+        public bool Aborting = false;
 
         private const long TickInterval = 33 * TimeSpan.TicksPerMillisecond;
         public byte[][] HollowAdj;

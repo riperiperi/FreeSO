@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Mina.Core.Buffer;
+using System.Collections.Immutable;
 
 namespace FSO.Common.Serialization.TypeSerializers
 {
@@ -17,7 +18,7 @@ namespace FSO.Common.Serialization.TypeSerializers
 
         public bool CanSerialize(Type type)
         {
-            return typeof(IDictionary<uint, bool>).IsAssignableFrom(type);
+            return typeof(ImmutableDictionary<uint, bool>).IsAssignableFrom(type);
         }
 
         public object Deserialize(uint clsid, IoBuffer buffer, ISerializationContext serializer)
@@ -28,12 +29,13 @@ namespace FSO.Common.Serialization.TypeSerializers
                 var key = buffer.GetUInt32();
                 result.Add(key, buffer.Get() > 0);
             }
-            return result;
+            
+            return ImmutableDictionary.ToImmutableDictionary(result);
         }
 
         public void Serialize(IoBuffer output, object value, ISerializationContext serializer)
         {
-            var dict = (IDictionary<uint, bool>)value;
+            var dict = (ImmutableDictionary<uint, bool>)value;
             output.PutUInt32((uint)dict.Count);
             foreach (var elem in dict)
             {

@@ -43,8 +43,8 @@ namespace FSO.Common.DataService.Model
             set { _City_NeighborhoodsVec = value; NotifyPropertyChanged("City_NeighborhoodsVec"); }
         }
 
-        private Dictionary<uint, bool> _City_ReservedLotInfo;
-        public Dictionary<uint, bool> City_ReservedLotInfo
+        private ImmutableDictionary<uint, bool> _City_ReservedLotInfo;
+        public ImmutableDictionary<uint, bool> City_ReservedLotInfo
         {
             get { return _City_ReservedLotInfo; }
             set { _City_ReservedLotInfo = value; NotifyPropertyChanged("City_ReservedLotInfo"); }
