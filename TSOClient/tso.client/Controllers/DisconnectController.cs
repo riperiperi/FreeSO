@@ -17,6 +17,7 @@ namespace FSO.Client.Controllers
         private LoginRegulator LoginRegulator;
 
         int totalComplete = 0;
+        int targetComplete = 2;
         private Action<bool> onDisconnected;
 
         public DisconnectController(TransitionScreen view, CityConnectionRegulator cityRegulator, LotConnectionRegulator lotRegulator, LoginRegulator logRegulator, Network.Network network)
@@ -39,7 +40,7 @@ namespace FSO.Client.Controllers
             switch (state)
             {
                 case "LoggedIn":
-                    if (++totalComplete == 2) onDisconnected(false);
+                    if (++totalComplete == targetComplete) onDisconnected(false);
                     break;
             }
         }
@@ -56,18 +57,26 @@ namespace FSO.Client.Controllers
                 case "Disconnect":
                     break;
                 case "Disconnected":
-                    if (++totalComplete == 2) onDisconnected(false);
+                    if (++totalComplete == targetComplete) onDisconnected(false);
                     break;
             }
         }
 
-        public void Disconnect(Action<bool> onDisconnected)
+        public void Disconnect(Action<bool> onDisconnected, bool forceLogin)
         {
             totalComplete = 0;
             this.onDisconnected = onDisconnected;
+
+            if (forceLogin)
+            {
+                targetComplete = 1;
+                LoginRegulator.Logout();
+            }
+
             CityConnectionRegulator.Disconnect();
             LotConnectionRegulator.Disconnect();
-            LoginRegulator.AsyncTransition("AvatarData");
+
+            if (!forceLogin) LoginRegulator.AsyncTransition("AvatarData");
         }
 
         public void Dispose()

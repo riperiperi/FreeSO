@@ -35,6 +35,7 @@ namespace FSO.IDE
                 FSOProgram = Activator.CreateInstance(type) as IFSOProgram;
                 type = asm.GetType("FSO.Client.GameStartProxy");
                 StartProxy = Activator.CreateInstance(type) as IGameStartProxy;
+                AssemblyUtils.Entry = asm;
             } catch (Exception)
             {
                 try

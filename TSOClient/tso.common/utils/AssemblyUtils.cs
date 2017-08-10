@@ -9,11 +9,12 @@ namespace FSO.Common.Utils
 {
     public class AssemblyUtils
     {
+        public static Assembly Entry;
         public static List<Assembly> GetFreeSOLibs()
         {
             var map = new Dictionary<string, Assembly>();
-            var entry = Assembly.GetEntryAssembly();
-            RecurseAssembly(entry, map);
+            if (Entry == null) Entry = Assembly.GetEntryAssembly();
+            RecurseAssembly(Entry, map);
             return map.Values.ToList();
         }
 

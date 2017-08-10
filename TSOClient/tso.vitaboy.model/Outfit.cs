@@ -102,8 +102,9 @@ namespace FSO.Vitaboy
 
         public void Read(STR bodyStrings)
         {
-            TS1AppearanceID = ToApr(bodyStrings.GetString(1));
-            TS1TextureID = ToTex(bodyStrings.GetString(1));
+            var bodies = bodyStrings.GetString(1).Split(';');
+            TS1AppearanceID = ToApr(bodies.FirstOrDefault());
+            TS1TextureID = ToTex(bodies.FirstOrDefault());
 
             LiteralHandgroup = new HandGroup()
             {

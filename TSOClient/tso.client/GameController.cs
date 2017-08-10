@@ -163,7 +163,7 @@ namespace FSO.Client
         public void Disconnect(bool toLogin){
             ChangeState<TransitionScreen, DisconnectController>((view, controller) =>
             {
-                controller.Disconnect((forceLogin) => HandleDisconnect(forceLogin || toLogin));
+                controller.Disconnect((forceLogin) => HandleDisconnect(forceLogin || toLogin), toLogin);
             });
         }
 

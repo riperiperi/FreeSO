@@ -40,7 +40,6 @@ namespace FSO.Common.DataService.Framework
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("huh??");
                 }
             }
         }
