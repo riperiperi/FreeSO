@@ -92,7 +92,7 @@ namespace FSO.Server.Database.DA.Lots
 
         public List<DbLot> AllLocations(int shard_id)
         {
-            return Context.Connection.Query<DbLot>("SELECT location, name FROM fso_lots WHERE shard_id = @shard_id", new { shard_id = shard_id }).ToList();
+            return Context.Connection.Query<DbLot>("SELECT location, name, category, description FROM fso_lots WHERE shard_id = @shard_id", new { shard_id = shard_id }).ToList();
         }
 
         public List<string> AllNames(int shard_id)
