@@ -133,3 +133,21 @@
 /processorParam:TextureFormat=Compressed
 /build:Fonts/Mobile_50px.spritefont
 
+#begin Effects/RCObject.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/RCObject.fx
+
+#begin Effects/VitaboyiOS.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/VitaboyiOS.fx
+
+#begin Effects/SSAA.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/SSAA.fx
+

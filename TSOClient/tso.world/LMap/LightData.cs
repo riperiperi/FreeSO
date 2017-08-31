@@ -24,13 +24,15 @@ namespace FSO.LotView.LMap
         public Rectangle LightBounds; //based off of LightPos and LightSize. limits shadow and lightmap render bounds
         public float ShadowMultiplier; //outdoors type only. informs strength of shadows.
 
+        public sbyte Level;
+
         public LightData() { }
 
         public LightData(Vector2 pos, bool outdoors, int size)
         {
             LightPos = pos;
             LightType = LightType.ROOM;
-            if (OutdoorsColor) LightIntensity = 0.75f;
+            if (outdoors) LightIntensity = 0.60f;
             OutdoorsColor = outdoors;
             LightBounds = new Rectangle((int)pos.X-size, (int)pos.Y-size, size * 2, size * 2);
             LightSize = size;

@@ -26,6 +26,8 @@ using FSO.Common.Utils;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model.Sound;
 using FSO.SimAntics.Primitives;
+using FSO.LotView.Utils;
+using FSO.LotView.RC;
 
 namespace FSO.SimAntics
 {
@@ -333,11 +335,21 @@ namespace FSO.SimAntics
                     if (Position.Level > worldState.Level) volume /= 4;
                     else if (Position.Level != worldState.Level) volume /= 2;
 
+                    var rcs = (worldState as WorldStateRC);
+                    if (rcs != null)
+                    {
+                        volume *= (10 / ((rcs.Zoom3D*rcs.Zoom3D)+10));
+                    }
                     volume = Math.Min(1f, Math.Max(0f, volume));
 
-                    if (sound.SetVolume(volume, pan, ObjectID) && this is VMAvatar && sound is HITThread)
+                    if (sound.SetVolume(volume, pan, ObjectID))
                     {
-                        ((VMAvatar)this).SubmitHITVars((HITThread)sound);
+                        if (this is VMAvatar && sound is HITThread) ((VMAvatar)this).SubmitHITVars((HITThread)sound);
+                        if (Thread.Context.World is LotView.RC.WorldRC)
+                        {
+                            //3d sound
+                            //sound.Set3D(new Vector3(VisualPosition.X, VisualPosition.Z, VisualPosition.Y) * 3f);
+                        }
                     }
                 }
             }
@@ -893,12 +905,24 @@ namespace FSO.SimAntics
                             break;
                         }
                     }
-                    foreach (var item in ava.Thread.Queue)
+
+                    //TS1 wants queued items that are inactive to count in "use count"...
+                    //...but tso doesn't. selectively disable for now.
+
+                    // TSO expects the use count of the 2 sim interaction object to be zero until both sims are actively using it.
+                    // if it detects the use count is greater than zero before this point, then it will attempt to update the "person count"
+                    // since neither sim has started the interaction, the relationships to them do not exist, and the person count is set to zero
+                    // this causes interactions to early exit most of the time...
+
+                    if (!found && context.VM.TS1)
                     {
-                        if (item.Callee == this)
+                        foreach (var item in ava.Thread.Queue)
                         {
-                            found = true;
-                            break;
+                            if (item.Callee == this)
+                            {
+                                found = true;
+                                break;
+                            }
                         }
                     }
                     if (found) users.Add(ava);

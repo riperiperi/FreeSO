@@ -84,6 +84,10 @@ namespace FSO.Client.UI.Screens
         {
             get
             {
+                if (m_ZoomLevel < 4 && InLot)
+                {
+                    return 4 - (int)World.State.Zoom;
+                }
                 return m_ZoomLevel;
             }
             set
@@ -117,9 +121,13 @@ namespace FSO.Client.UI.Screens
                             ucp.SetMode(UIUCP.UCPMode.LotMode);
                         } else
                         {
-                            if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
+                            LotControl.SetTargetZoom(targ);
+                            if (!FSOEnvironment.Enable3D)
+                            {
+                                if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
+                            }
                         }
-                        vm.Context.World.State.Zoom = targ;
+
                         m_ZoomLevel = value;
                     }
                 }
@@ -340,6 +348,9 @@ namespace FSO.Client.UI.Screens
         {
             GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
+            Visible = World?.Visible == false || (World?.State as FSO.LotView.RC.WorldStateRC)?.CameraMode != true;
+            GameFacade.Game.IsMouseVisible = Visible;
+
             base.Update(state);
 
             if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F1))
@@ -374,14 +385,14 @@ namespace FSO.Client.UI.Screens
                     {
                         if (CityRenderer.m_Zoomed == TerrainZoomMode.Lot)
                         {
-                            if (CityRenderer.m_LotZoomProgress > 0.9995f)
+                            if (CityRenderer.m_LotZoomProgress > 0.9999f)
                             {
                                 CityRenderer.m_LotZoomProgress = 1f;
                                 CityRenderer.Visible = false;
                             }
                         } else
                         {
-                            if (CityRenderer.m_LotZoomProgress < 0.001f)
+                            if (CityRenderer.m_LotZoomProgress < 0.0001f)
                             {
                                 CityRenderer.m_LotZoomProgress = 0f;
                                 World.Visible = false;
@@ -533,7 +544,14 @@ namespace FSO.Client.UI.Screens
         {
             CleanupLastWorld();
 
-            World = new LotView.World(GameFacade.GraphicsDevice);
+            if (FSOEnvironment.Enable3D)
+            {
+                var rc = new LotView.RC.WorldRC(GameFacade.GraphicsDevice);
+                rc.SetSurroundingWorld(CityRenderer);
+                World = rc;
+            }
+            else World = new World(GameFacade.GraphicsDevice);
+
             World.Opacity = 0;
             GameFacade.Scenes.Add(World);
             Driver = new VMClientDriver(ClientStateChange);

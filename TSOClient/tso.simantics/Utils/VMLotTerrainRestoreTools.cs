@@ -982,7 +982,7 @@ namespace FSO.SimAntics.Utils
                 {
                     if (x == 1 & y == 1) continue; //that's us...
                     var gd = vm.Context.World.State.Device;
-                    var subworld = new SubWorldComponent(gd);
+                    var subworld = vm.Context.World.MakeSubWorld(gd);
                     subworld.Initialize(gd);
                     var tempVM = new VM(new VMContext(subworld), new VMServerDriver(new VMTSOGlobalLinkStub()), new VMNullHeadlineProvider());
                     tempVM.Init();
@@ -1049,6 +1049,7 @@ namespace FSO.SimAntics.Utils
                     vm.Context.Blueprint.SubWorlds.Add(subworld);
                 }
             }
+            vm.Context.World.InitSubWorlds();
         }
     }
 }

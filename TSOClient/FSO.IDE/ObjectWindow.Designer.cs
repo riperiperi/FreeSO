@@ -45,14 +45,17 @@
             this.DefinitionTab = new System.Windows.Forms.TabPage();
             this.DefinitionEditor = new FSO.IDE.ResourceBrowser.OBJDEditor();
             this.objPages = new System.Windows.Forms.TabControl();
+            this.Debug3D = new System.Windows.Forms.TabPage();
             this.NewOBJD = new System.Windows.Forms.Button();
             this.DeleteOBJD = new System.Windows.Forms.Button();
             this.ObjThumb = new FSO.IDE.Common.ObjThumbnailControl();
+            this.FSOMEdit = new FSO.IDE.ResourceBrowser.FSOMEditor();
             this.AppearanceTab.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.DefinitionTab.SuspendLayout();
             this.objPages.SuspendLayout();
+            this.Debug3D.SuspendLayout();
             this.SuspendLayout();
             // 
             // ObjCombo
@@ -208,11 +211,23 @@
             this.objPages.Controls.Add(this.tabPage2);
             this.objPages.Controls.Add(this.tabPage3);
             this.objPages.Controls.Add(this.AppearanceTab);
+            this.objPages.Controls.Add(this.Debug3D);
             this.objPages.Location = new System.Drawing.Point(7, 68);
             this.objPages.Name = "objPages";
             this.objPages.SelectedIndex = 0;
             this.objPages.Size = new System.Drawing.Size(770, 485);
             this.objPages.TabIndex = 0;
+            // 
+            // Debug3D
+            // 
+            this.Debug3D.Controls.Add(this.FSOMEdit);
+            this.Debug3D.Location = new System.Drawing.Point(4, 22);
+            this.Debug3D.Name = "Debug3D";
+            this.Debug3D.Padding = new System.Windows.Forms.Padding(3);
+            this.Debug3D.Size = new System.Drawing.Size(762, 459);
+            this.Debug3D.TabIndex = 5;
+            this.Debug3D.Text = "3D Debug";
+            this.Debug3D.UseVisualStyleBackColor = true;
             // 
             // NewOBJD
             // 
@@ -241,6 +256,14 @@
             this.ObjThumb.Size = new System.Drawing.Size(48, 48);
             this.ObjThumb.TabIndex = 23;
             // 
+            // FSOMEdit
+            // 
+            this.FSOMEdit.Location = new System.Drawing.Point(0, 0);
+            this.FSOMEdit.Margin = new System.Windows.Forms.Padding(0);
+            this.FSOMEdit.Name = "FSOMEdit";
+            this.FSOMEdit.Size = new System.Drawing.Size(762, 459);
+            this.FSOMEdit.TabIndex = 0;
+            // 
             // ObjectWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -268,6 +291,7 @@
             this.tabPage2.ResumeLayout(false);
             this.DefinitionTab.ResumeLayout(false);
             this.objPages.ResumeLayout(false);
+            this.Debug3D.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -292,5 +316,7 @@
         private System.Windows.Forms.TabControl objPages;
         private System.Windows.Forms.Button NewOBJD;
         private System.Windows.Forms.Button DeleteOBJD;
+        private System.Windows.Forms.TabPage Debug3D;
+        private ResourceBrowser.FSOMEditor FSOMEdit;
     }
 }

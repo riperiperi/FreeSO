@@ -124,7 +124,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 int dir = 0;
                 int altdir = 0;
                 Vector2 fract = new Vector2(tilePos.X - cursor.X, tilePos.Y - cursor.Y);
-                switch (World.State.Rotation)
+                switch (World.State.CutRotation)
                 {
                     case WorldRotation.BottomRight:
                         if (fract.X - fract.Y > 0) { dir = 2; altdir = 3; }

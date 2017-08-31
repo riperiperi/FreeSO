@@ -317,6 +317,11 @@ namespace FSO.Client.UI.Controls
         private bool m_isOver;
         private bool m_isDown;
 
+        public bool IsDown
+        {
+            get { return m_isDown; }
+        }
+
         private void OnMouseEvent(UIMouseEventType type, UpdateState state)
         {
             if ((m_Disabled || Opacity < 1f) && type != UIMouseEventType.MouseOut) { return; }

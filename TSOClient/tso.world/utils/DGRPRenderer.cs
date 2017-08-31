@@ -25,7 +25,7 @@ namespace FSO.LotView.Utils
     /// </summary>
     public class DGRPRenderer
     {
-        private DGRP DrawGroup;
+        protected DGRP DrawGroup;
         public Rectangle Bounding;
         private List<DGRPRendererItem> Items = new List<DGRPRendererItem>();
         public ulong DynamicSpriteFlags = 0x00000000;
@@ -34,7 +34,7 @@ namespace FSO.LotView.Utils
         public ushort NumDynamicSprites;
 
         public ushort Room;
-        public sbyte Level;
+        public sbyte Level = 1;
 
         public DGRPRenderer(DGRP group)
         {
@@ -58,7 +58,7 @@ namespace FSO.LotView.Utils
             }
         }
 
-        private bool _Dirty = true;
+        protected bool _Dirty = true;
         private bool _TextureDirty = true;
 
         private Direction _Direction;
@@ -115,7 +115,7 @@ namespace FSO.LotView.Utils
             //_Dirty = true;
         }
 
-        public void ValidateSprite(WorldState world)
+        public virtual void ValidateSprite(WorldState world)
         {
             if (DrawGroup == null) return;
             if (_Dirty)
@@ -208,7 +208,7 @@ namespace FSO.LotView.Utils
             }
         }
 
-        public void Draw(WorldState world)
+        public virtual void Draw(WorldState world)
         {
             ValidateSprite(world);
 

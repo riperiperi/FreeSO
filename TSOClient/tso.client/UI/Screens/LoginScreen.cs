@@ -142,7 +142,9 @@ namespace FSO.Client.UI.Screens
                     {
                         AdvancedLighting = settings.Lighting,
                         SmoothZoom = settings.SmoothZoom,
-                        SurroundingLots = settings.SurroundingLotMode
+                        SurroundingLots = settings.SurroundingLotMode,
+                        AA = settings.AntiAlias,
+                        Shadow3D = settings.Shadows3D
                     };
                 });
             }

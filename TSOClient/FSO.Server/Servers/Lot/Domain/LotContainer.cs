@@ -114,6 +114,12 @@ namespace FSO.Server.Servers.Lot.Domain
             0x534564D5, //skill degrade
         };
 
+        private static HashSet<uint> NoResetGUIDs = new HashSet<uint>()
+        {
+            0x3278BD34,
+            0x5157DDF2
+        };
+
         public LotContainer(IDAFactory da, LotContext context, ILotHost host, IKernel kernel, LotServerConfiguration config, IRealestateDomain realestate)
         {
             VM.UseWorld = false;
@@ -338,6 +344,14 @@ namespace FSO.Server.Servers.Lot.Domain
             var objectsOnLot = new List<uint>();
             var total = 0;
             var complete = 0;
+
+            var persists = Lot.Context.ObjectQueries.MultitileByPersist.Keys.ToList();
+            Dictionary<uint, DbObject> ownerInfo;
+            using (var da = DAFactory.Get())
+            {
+                ownerInfo = da.Objects.GetObjectOwners(persists).ToDictionary(x => x.object_id);
+            }
+
             var ents = new List<VMEntity>(Lot.Entities);
             var needToCreate = new HashSet<uint>(RequiredGUIDs);
             var removeAll = (LotPersist.move_flags & 6) > 0;
@@ -350,10 +364,30 @@ namespace FSO.Server.Servers.Lot.Domain
                         ent.PersistID = 0;
                         ((VMTSOObjectState)ent.TSOState).OwnerID = 0;
                         ((VMGameObject)ent).Disabled = 0;
+                        continue;
                     }
-                    if (ent.MultitileGroup.Objects.Count == 0) continue;
+                    if (ent.MultitileGroup.Objects.Count == 0 || ent != ent.MultitileGroup.BaseObject) continue;
+
+                    //look for this object in the owner info
+                    var deleteMode = 0;
+                    DbObject info = null;
+                    if (!ownerInfo.TryGetValue(ent.PersistID, out info))
+                    {
+                        deleteMode = 1;
+                    } else
+                    {
+                        if (((VMTSOObjectState)ent.TSOState).OwnerID != info.owner_id)
+                        {
+                            foreach (var e in ent.MultitileGroup.Objects) ((VMTSOObjectState)e.TSOState).OwnerID = info.owner_id ?? 0;
+                        }
+                        if (info.lot_id != Context.DbId)
+                            deleteMode = 2;
+                        else if (removeAll || !Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID))
+                            deleteMode = 1;
+                    }
+
                     objectsOnLot.Add(ent.PersistID);
-                    if (removeAll || !Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID))
+                    if (deleteMode > 0)
                     {
                         //we need to send objects in slots back to their owners inventory too, so we don't lose what was on tables etc.
                         var sendback = new List<VMEntity>();
@@ -367,19 +401,29 @@ namespace FSO.Server.Servers.Lot.Domain
                             {
                                 total++;
                                 //this is run synchro.
-                                VMGlobalLink.MoveToInventory(Lot, delE.MultitileGroup, (success, objid) =>
+                                if (deleteMode == 1)
                                 {
-                                    Lot.Context.ObjectQueries.RemoveMultitilePersist(Lot, delE.PersistID);
-                                    foreach (var o in delE.MultitileGroup.Objects) o.PersistID = 0; //no longer representative of the object in db.
+                                    //return to inventory, since the object is actually on this lot
+                                    VMGlobalLink.MoveToInventory(Lot, delE.MultitileGroup, (success, objid) =>
+                                    {
+                                        Lot.Context.ObjectQueries.RemoveMultitilePersist(Lot, delE.PersistID);
+                                        foreach (var o in delE.MultitileGroup.Objects) o.PersistID = 0; //no longer representative of the object in db.
+                                        delE.Delete(true, Lot.Context);
+                                        complete++;
+                                    }, true);
+                                } else
+                                {
+                                    //object is already elsewhere... do not save its state.
+                                    foreach (var obj in delE.MultitileGroup.Objects)
+                                        obj.PersistID = 0;
                                     delE.Delete(true, Lot.Context);
-                                    complete++;
-                                }, true);
+                                }
                             }
                         }
                     }
                 }
             }
-
+            
             if (objectsOnLot.Count != 0 && !JobLot)
             {
                 using (var da = DAFactory.Get())
@@ -554,8 +598,22 @@ namespace FSO.Server.Servers.Lot.Domain
                     ((VMGameObject)ent).DisableIfTSOCategoryWrong(Lot.Context);
                     if (ent.GetFlag(VMEntityFlags.Occupied))
                     {
-                        ent.ResetData();
-                        ent.Init(Lot.Context); //objects should not be occupied when we join the lot...
+                        if (NoResetGUIDs.Contains(ent.Object.OBJ.GUID))
+                        {
+                            //typically pet crates or other things which should never have state deleted.
+                            ent.SetFlag(VMEntityFlags.Occupied, false);
+                            if (ent.Position == LotTilePos.OUT_OF_WORLD)
+                            {
+                                //put it close to the mailbox
+                                var mailbox = Lot.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
+                                if (mailbox != null) SimAntics.Primitives.VMFindLocationFor.FindLocationFor(ent, mailbox, Lot.Context, VMPlaceRequestFlags.UserPlacement);
+                            }
+                        }
+                        else
+                        {
+                            ent.ResetData();
+                            ent.Init(Lot.Context); //objects should not be occupied when we join the lot...
+                        }
                     }
                     {
                         ent.ExecuteEntryPoint(2, Lot.Context, true);
@@ -638,6 +696,7 @@ namespace FSO.Server.Servers.Lot.Domain
                         Host.Shutdown();
                         return;
                     }
+                    if (Lot.Aborting) return; //background thread has already released all our avatars and our claim. exit immediately.
 
                     if (noRoomies)
                     {

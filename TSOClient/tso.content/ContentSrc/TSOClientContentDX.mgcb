@@ -109,3 +109,15 @@
 /processorParam:DebugMode=Auto
 /build:Effects/LightMap2D.fx
 
+#begin Effects/RCObject.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/RCObject.fx
+
+#begin Effects/SSAA.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/SSAA.fx
+

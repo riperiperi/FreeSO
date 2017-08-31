@@ -91,7 +91,10 @@
     <Compile Include="Formats\IFF\Chunks\CARR.cs" />
     <Compile Include="Formats\IFF\Chunks\FAMI.cs" />
     <Compile Include="Formats\IFF\Chunks\FAMs.cs" />
+    <Compile Include="Formats\IFF\Chunks\FSOM.cs" />
+    <Compile Include="Formats\IFF\Chunks\FSOR.cs" />
     <Compile Include="Formats\IFF\Chunks\IffFieldEncode.cs" />
+    <Compile Include="Formats\IFF\Chunks\MTEX.cs" />
     <Compile Include="Formats\IFF\Chunks\NBRS.cs" />
     <Compile Include="Formats\IFF\Chunks\NGBH.cs" />
     <Compile Include="Formats\IFF\Chunks\OBJM.cs" />
@@ -154,6 +157,10 @@
     <Compile Include="FAR3\FAR3Exception.cs" />
     <Compile Include="IniFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RC\DGRP3DGeometry.cs" />
+    <Compile Include="RC\DGRP3DMesh.cs" />
+    <Compile Include="RC\DGRPRCParams.cs" />
+    <Compile Include="RC\OBJReader.cs" />
     <Compile Include="Tuning.cs" />
     <Compile Include="Utils\CurLoader.cs" />
     <Compile Include="Utils\IFileInfoUtilizer.cs" />

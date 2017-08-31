@@ -65,9 +65,13 @@ namespace FSO.Files.Formats.IFF
             {"FAMs", typeof(FAMs) },
             {"THMB", typeof(THMB) },
             {"SIMI", typeof(SIMI) },
-            {"TATT", typeof(TATT) }
+            {"TATT", typeof(TATT) },
             //todo: FAMh (family motives ("family house"?)) field encoded.
             //todo: HOUS (house information)
+
+            {"FSOR", typeof(FSOR) },
+            {"FSOM", typeof(FSOM) },
+            {"MTEX", typeof(MTEX) }
         };
 
         public IffRuntimeInfo RuntimeInfo = new IffRuntimeInfo();

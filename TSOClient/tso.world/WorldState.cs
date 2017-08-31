@@ -47,7 +47,7 @@ namespace FSO.LotView
             Level = 1;
         }
 
-        public void SetDimensions(Vector2 dim)
+        public virtual void SetDimensions(Vector2 dim)
         {
             WorldCamera.ViewDimensions = dim;
             WorldSpace.SetDimensions(dim);
@@ -58,7 +58,7 @@ namespace FSO.LotView
         /// <summary>
         /// Gets the camera used by this WorldState instance.
         /// </summary>
-        public ICamera Camera 
+        public virtual ICamera Camera 
         {
             get { return WorldCamera; }
         }
@@ -175,6 +175,10 @@ namespace FSO.LotView
             set { _Rotation = value; InvalidateRotation();  }
         }
 
+        public virtual WorldRotation CutRotation {
+            get { return _Rotation; }
+        }
+
         /// <summary>
         /// Set rotation without invalidating.
         /// </summary>
@@ -238,7 +242,7 @@ namespace FSO.LotView
         }
 
 
-        public void InvalidateCamera()
+        public virtual void InvalidateCamera()
         {
             var ctr = WorldSpace.GetScreenFromTile(CenterTile);
             ctr.X = (float)Math.Round(ctr.X);
@@ -252,7 +256,21 @@ namespace FSO.LotView
             WorldCamera.PreciseZoom = PreciseZoom;
         }
 
-        public void PrepareLighting()
+        public Vector2 GetWallOffset()
+        {
+            var vd = Camera.View;
+            vd.M41 = 0; vd.M42 = 0; vd.M43 = 0;
+
+            var transform = Vector3.Transform(new Vector3(1, 0, 0), vd);
+            var xz = new Vector2(transform.Z, transform.X);
+            xz.Normalize();
+            xz *= 1.7f;
+            xz = Vector2.Clamp(xz, new Vector2(-1, -1), new Vector2(1, 1));
+            xz *= -0.15f / 2;
+            return xz;
+        }
+
+        public virtual void PrepareLighting()
         {
             var adv = (Light?.LightMap) ?? TextureGenerator.GetDefaultAdv(Device);
             var amb = AmbientLight ?? TextureGenerator.GetPxWhite(Device);
@@ -260,6 +278,7 @@ namespace FSO.LotView
             WorldContent._2DWorldBatchEffect.Parameters["advancedLight"].SetValue(adv);
             WorldContent.GrassEffect.Parameters["advancedLight"].SetValue(adv);
             WorldContent._2DWorldBatchEffect.Parameters["ambientLight"].SetValue(amb);
+            WorldContent.RCObject.Parameters["advancedLight"].SetValue(adv);
             Avatar.Effect.Parameters["advancedLight"].SetValue(adv);
 
             var frontDir = WorldCamera.FrontDirection();
@@ -268,6 +287,7 @@ namespace FSO.LotView
             WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(lightOffset);
             WorldContent.GrassEffect.Parameters["LightOffset"].SetValue(lightOffset);
             Avatar.Effect.Parameters["LightOffset"].SetValue(lightOffset);
+            WorldContent.RCObject.Parameters["LightOffset"].SetValue(lightOffset);
 
             WorldContent._2DWorldBatchEffect.Parameters["MaxFloor"].SetValue((float)Level-1);
         }
@@ -280,6 +300,7 @@ namespace FSO.LotView
 
             WorldContent._2DWorldBatchEffect.Parameters["advancedLight"].SetValue(adv);
             WorldContent.GrassEffect.Parameters["advancedLight"].SetValue(adv);
+            WorldContent.RCObject.Parameters["advancedLight"].SetValue(adv);
             WorldContent._2DWorldBatchEffect.Parameters["ambientLight"].SetValue(amb);
             Avatar.Effect.Parameters["advancedLight"].SetValue(adv);
         }

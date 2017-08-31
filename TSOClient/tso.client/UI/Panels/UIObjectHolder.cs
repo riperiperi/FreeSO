@@ -393,21 +393,15 @@ namespace FSO.Client.UI.Panels
                     cur = CursorType.SimsRotate;
                     if (Math.Sqrt(xDiff * xDiff + yDiff * yDiff) > 64)
                     {
-                        int dir;
-                        if (xDiff > 0)
-                        {
-                            if (yDiff > 0) dir = 1;
-                            else dir = 0;
-                        }
-                        else
-                        {
-                            if (yDiff > 0) dir = 2;
-                            else dir = 3;
-                        }
+                        var from = World.EstTileAtPosWithScroll(new Vector2(MouseDownX, MouseDownY));
+                        var target = World.EstTileAtPosWithScroll(state.MouseState.Position.ToVector2());
 
-                        cur = (CursorType)(dir + (int)CursorType.SimsRotateNE);
+                        var vec = target - from;
+                        var dir = Math.Atan2(vec.Y, vec.X);
+                        dir += Math.PI/2;
+                        if (dir < 0) dir += Math.PI*2;
+                        var newDir = (Direction)(1 << (((int)Math.Round(dir / (Math.PI / 2)) % 4) * 2));
 
-                        var newDir = (Direction)(1 << (((dir + 4 - (int)World.State.Rotation) % 4) * 2));
                         if (newDir != Holding.Dir || MouseClicked)
                         {
                             updatePos = true;

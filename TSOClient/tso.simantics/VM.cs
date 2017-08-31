@@ -212,6 +212,18 @@ namespace FSO.SimAntics
         public VMEntity GlobalBlockingDialog;
         public void Update()
         {
+            if (UseWorld)
+            {
+                Microsoft.Xna.Framework.Audio.SoundEffect.DistanceScale = 10;
+                var listener = HIT.HITVM.Get().Listener;
+                var cam = Context.World.State.Camera;
+                listener.Position = cam.Position;
+                var forward = cam.Target - cam.Position;
+                forward.X *= -1f;
+                forward.Normalize();
+                listener.Forward = forward;
+            }
+
             var mul = Math.Max(SpeedMultiplier, 1);
             var oldFrame = (GameTickNum * 30 * mul) / GameTickRate;
             GameTickNum++;
@@ -655,7 +667,7 @@ namespace FSO.SimAntics
                 }
                 else
                 {
-                    var worldObject = new ObjectComponent(objDefinition);
+                    var worldObject = Context.MakeObjectComponent(objDefinition);
                     var obj = new VMGameObject(objDefinition, worldObject);
                     obj.Load((VMGameObjectMarshal)ent);
                     if (UseWorld)
@@ -769,7 +781,7 @@ namespace FSO.SimAntics
                 VMEntity realEnt;
                 var objDefinition = FSO.Content.Content.Get().WorldObjects.Get(ent.GUID);
 
-                var worldObject = new ObjectComponent(objDefinition);
+                var worldObject = Context.MakeObjectComponent(objDefinition);
                 var obj = new VMGameObject(objDefinition, worldObject);
                 obj.HollowLoad(ent);
                 if (UseWorld)

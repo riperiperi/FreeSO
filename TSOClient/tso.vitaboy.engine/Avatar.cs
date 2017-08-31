@@ -39,8 +39,8 @@ namespace FSO.Vitaboy
         /// <param name="skel">A Skeleton instance.</param>
         public Avatar(Skeleton skel)
         {
-            this.Skeleton = skel.Clone();
-            this.BaseSkeleton = skel.Clone(); //keep a copy we can revert back to
+            this.Skeleton = skel?.Clone();
+            this.BaseSkeleton = skel?.Clone(); //keep a copy we can revert back to
         }
 
         public Avatar(Avatar old)

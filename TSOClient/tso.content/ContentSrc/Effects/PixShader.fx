@@ -89,6 +89,9 @@ float4 LightVec;
 float2 ShadSize;
 float ShadowMult;
 
+float FogMaxDist;
+float4 FogColor;
+
 float4 GetCityColor(VertexToPixel Input)
 {
 	float4 BlendA = tex2D(USamplerBlend, Input.BlendTextureCoord);
@@ -132,19 +135,29 @@ float4 CityPS(VertexToPixel Input) : COLOR0
 {
 	float4 BCol = GetCityColor(Input);
 	float depth = Input.vPos.z;
-	float diffuse = dot(normalize(Input.Normal.xyz), LightVec);
+	float diffuse = dot(normalize(Input.Normal.xyz), LightVec.xyz);
 	if (diffuse < 0) diffuse *= 0.5;
 
 	return float4(BCol.xyz*lerp(ShadowMult, 1, min(diffuse, shadowLerp(ShadSampler, ShadSize, Input.vPos.xy, depth+0.003*(2048.0/ShadSize.x)))), 1);
-
 }
 
 float4 CityPSNoShad(VertexToPixel Input) : COLOR0
 {
 	float4 BCol = GetCityColor(Input);
-	float diffuse = dot(normalize(Input.Normal.xyz), LightVec);
+	float diffuse = dot(normalize(Input.Normal.xyz), LightVec.xyz);
 	if (diffuse < 0) diffuse *= 0.5;
 	return float4(BCol.xyz*lerp(ShadowMult, 1, diffuse), 1);
+}
+
+float4 CityPSFog(VertexToPixel Input) : COLOR0
+{
+	float4 BCol = GetCityColor(Input);
+	float diffuse = dot(normalize(Input.Normal.xyz), LightVec.xyz);
+	if (diffuse < 0) diffuse *= 0.5;
+
+	float4 fogDistance = min(1, length(Input.vPos)/FogMaxDist);
+	BCol = float4(BCol.xyz*lerp(ShadowMult, 1, diffuse), 1);
+	return lerp(BCol, FogColor, fogDistance);
 }
 
 float4 ShadowMapPS(VertexToShad Input) : COLOR0
@@ -178,6 +191,15 @@ technique RenderCity
         PixelShader = compile ps_4_0_level_9_1 CityPSNoShad();
 #else
         PixelShader = compile ps_3_0 CityPSNoShad();
+#endif;
+	}
+
+	pass FinalFog
+	{
+#if SM4
+		PixelShader = compile ps_4_0_level_9_1 CityPSFog();
+#else
+		PixelShader = compile ps_3_0 CityPSFog();
 #endif;
 	}
 }

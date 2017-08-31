@@ -121,6 +121,13 @@ namespace FSO.Common.Rendering.Framework
                     State.KeyboardState = new KeyboardState();
                 }
 
+                if (State.KeyboardState.IsKeyDown(Keys.LeftAlt) && State.MouseState.LeftButton == ButtonState.Pressed)
+                {
+                    //emulated middle click with alt
+                    var ms = State.MouseState;
+                    State.MouseState = new MouseState(ms.X, ms.Y, ms.ScrollWheelValue, ButtonState.Released, ButtonState.Pressed, ms.RightButton, ms.XButton1, ms.XButton2);
+                }
+
                 if (State.MouseStates.Count == 0)
                 {
                     State.MouseStates.Add(new MultiMouse { ID = 1 });

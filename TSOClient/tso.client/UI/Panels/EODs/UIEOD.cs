@@ -76,6 +76,7 @@ namespace FSO.Client.UI.Panels.EODs
 
         public void Send(string evt, string data)
         {
+            if (data == null) return;
             Controller.Lot.vm.SendCommand(new VMNetEODMessageCmd
             {
                 PluginID = Controller.ActivePID,
@@ -87,6 +88,7 @@ namespace FSO.Client.UI.Panels.EODs
 
         public void Send(string evt, byte[] data)
         {
+            if (data == null) return;
             Controller.Lot.vm.SendCommand(new VMNetEODMessageCmd
             {
                 PluginID = Controller.ActivePID,

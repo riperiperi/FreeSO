@@ -15,6 +15,7 @@ using Microsoft.Xna.Framework;
 using System.Runtime.InteropServices;
 using FSO.Common.Utils;
 using FSO.Common.Rendering;
+using FSO.Common;
 
 namespace FSO.Files.Formats.IFF.Chunks
 {
@@ -36,18 +37,20 @@ namespace FSO.Files.Formats.IFF.Chunks
             }
             set
             {
-                _ZAsAlpha = value;
-                if (value)
+                if (value && !_ZAsAlpha)
                 {
                     foreach (var frame in Frames)
                     {
                         if (frame.Decoded && frame.PixelData != null) frame.CopyZToAlpha();
                     }
                 }
+                _ZAsAlpha = value;
+
             }
         }
-        private bool _FloorCopy;
-        public bool FloorCopy
+
+        private int _FloorCopy;
+        public int FloorCopy
         {
             get
             {
@@ -55,14 +58,18 @@ namespace FSO.Files.Formats.IFF.Chunks
             }
             set
             {
-                _FloorCopy = value;
-                if (value)
+                if (value > 0 && _FloorCopy == 0)
                 {
                     foreach (var frame in Frames)
                     {
-                        if (frame.Decoded && frame.PixelData != null) frame.FloorCopy();
+                        if (frame.Decoded && frame.PixelData != null)
+                        {
+                            if (value == 1) frame.FloorCopy();
+                            if (value == 2) frame.FloorCopyWater();
+                        }
                     }
                 }
+                _FloorCopy = value;
             }
         }
 
@@ -285,7 +292,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             var numPixels = this.Width * this.Height;
             var ow = Width;
             var fc = Parent.FloorCopy;
-            if (fc)
+            if (fc > 0)
             {
                 numPixels += Height;
                 Width++;
@@ -449,7 +456,8 @@ namespace FSO.Files.Formats.IFF.Chunks
                 y++;
             }
             if (Parent.ZAsAlpha) CopyZToAlpha();
-            if (Parent.FloorCopy) FloorCopy();
+            if (Parent.FloorCopy == 1) FloorCopy();
+            if (Parent.FloorCopy == 2) FloorCopyWater();
         }
 
         /// <summary>
@@ -481,9 +489,6 @@ namespace FSO.Files.Formats.IFF.Chunks
             for (int i=0; i<PixelData.Length; i++)
             {
                 PixelData[i].A = (ZBufferData[i] < 32)?(byte)0:ZBufferData[i];
-                PixelData[i].R = (byte)((PixelData[i].R * PixelData[i].A) / 255);
-                PixelData[i].G = (byte)((PixelData[i].G * PixelData[i].A) / 255);
-                PixelData[i].B = (byte)((PixelData[i].B * PixelData[i].A) / 255);
             }
         }
 
@@ -512,6 +517,68 @@ namespace FSO.Files.Formats.IFF.Chunks
                     var rep = PixelData[xp + yp * Width];
                     if (rep.A >= 254) ndat[idx] = rep;
                     else ndat[idx] = PixelData[idx];
+                    idx++;
+                }
+            }
+            PixelData = ndat;
+        }
+
+        public void FloorCopyWater()
+        {
+            if (Width % 2 != 0)
+            {
+                var target = new Color[(Width + 1) * Height];
+                for (int y = 0; y < Height; y++)
+                {
+                    Array.Copy(PixelData, y * Width, target, y * (Width + 1), Width);
+                }
+                PixelData = target;
+                Width += 1;
+            }
+            var ndat = new Color[PixelData.Length];
+            int hw = (Width) / 2;
+            int hh = (Height) / 2;
+            int idx = 0;
+
+            var palette = Parent.ChunkParent.Get<PALT>(this.PaletteID);
+            var transparentPixel = palette.Colors[TransparentColorIndex];
+            transparentPixel.A = 0;
+
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    var dat = PixelData[x + y * Width];
+                    if (dat.PackedValue == 0 || dat.PackedValue == transparentPixel.PackedValue)
+                    {
+                        if (x < hw)
+                        {
+                            for (int j = x; j < Width; j++)
+                            {
+                                var rep = PixelData[j + y * Width];
+                                if (!(rep.PackedValue == 0 || rep.PackedValue == transparentPixel.PackedValue))
+                                {
+                                    ndat[idx] = rep;
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for (int j = x; j >= 0; j--)
+                            {
+                                var rep = PixelData[j + y * Width];
+                                if (!(rep.PackedValue == 0 || rep.PackedValue == transparentPixel.PackedValue))
+                                {
+                                    ndat[idx] = rep;
+                                    break;
+                                }
+                            }
+                        }
+                    } else
+                    {
+                        ndat[idx] = PixelData[idx];
+                    }
                     idx++;
                 }
             }
@@ -547,7 +614,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 if (!IffFile.RETAIN_CHUNK_DATA)
                 {
                     PixelData = null;
-                    if (onlyThis) ZBufferData = null;
+                    if (onlyThis && !FSOEnvironment.Enable3D) ZBufferData = null;
                 }
             }
             if (TimedReferenceController.CurrentType != CacheType.PERMANENT) TimedReferenceController.KeepAlive(result, KeepAliveType.ACCESS);
@@ -587,7 +654,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 if (TimedReferenceController.CurrentType == CacheType.PERMANENT) PermaRefZ = result;
                 if (!IffFile.RETAIN_CHUNK_DATA)
                 {
-                    ZBufferData = null;
+                    if (!FSOEnvironment.Enable3D) ZBufferData = null;
                     if (onlyThis) PixelData = null;
                 }
             }
@@ -607,7 +674,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             if (!IffFile.RETAIN_CHUNK_DATA)
             {
                 PixelData = null;
-                ZBufferData = null;
+                if (!FSOEnvironment.Enable3D) ZBufferData = null;
             }
             return result;
         }

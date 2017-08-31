@@ -54,7 +54,7 @@ namespace FSO.SimAntics.Engine.Primitives
             if (operand.IDFromParam && source == VMAnimationScope.Object) source = VMAnimationScope.StackObject; //fixes MM rollercoaster
             animation = VMMemory.GetAnimation(context, source, id);
             if (animation == null){
-                return VMPrimitiveExitCode.GOTO_TRUE;
+                return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
             }
 
             if (operand.Mode == 3) //stop standard carry, then play and wait

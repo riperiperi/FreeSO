@@ -76,7 +76,8 @@ namespace FSO.HIT
                 for (int i = 0; i < Notes.Count; i++)
                 {
                     var inst = Notes[i].instance;
-                    inst.Pan = Pan;
+                    if (Emitter3D == null) inst.Pan = Pan;
+                    else Apply3D(inst);
                     inst.Volume = Math.Min(1.0f, Volume);
                 }
             }
@@ -251,7 +252,8 @@ namespace FSO.HIT
 
                 var instance = sound.CreateInstance();
                 instance.Volume = Volume;
-                instance.Pan = Pan;
+                if (Emitter3D == null) instance.Pan = Pan;
+                else Apply3D(instance);
                 instance.Play();
 
                 var entry = new HITNoteEntry(instance, Patch);
@@ -279,7 +281,8 @@ namespace FSO.HIT
             {
                 var instance = sound.CreateInstance();
                 instance.Volume = Volume;
-                instance.Pan = Pan;
+                if (Emitter3D == null) instance.Pan = Pan;
+                else Apply3D(instance);
                 instance.Play();
 
                 var entry = new HITNoteEntry(instance, Patch);

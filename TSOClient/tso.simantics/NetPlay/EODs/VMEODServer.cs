@@ -158,7 +158,7 @@ namespace FSO.SimAntics.NetPlay.EODs
 
         public void Send(string evt, string body)
         {
-            if (Avatar == null) return;
+            if (Avatar == null || body == null) return;
             var cmd = new VMNetEODMessageCmd
             {
                 PluginID = ActivePID,
@@ -173,7 +173,7 @@ namespace FSO.SimAntics.NetPlay.EODs
 
         public void Send(string evt, byte[] body)
         {
-            if (Avatar == null) return;
+            if (Avatar == null || body == null) return;
             var cmd = new VMNetEODMessageCmd
             {
                 PluginID = ActivePID,

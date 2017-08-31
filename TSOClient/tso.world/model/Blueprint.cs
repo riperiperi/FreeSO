@@ -14,6 +14,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using FSO.Vitaboy;
 using FSO.LotView.LMap;
+using FSO.LotView.RC;
+using FSO.Common;
 
 namespace FSO.LotView.Model
 {
@@ -39,6 +41,7 @@ namespace FSO.LotView.Model
         public FloorTile[][] Floors;
         public FloorComponent FloorComp;
         public _3DFloorGeometry FloorGeom;
+        public WallComponentRC WCRC;
 
         public RoofComponent RoofComp;
 
@@ -80,6 +83,11 @@ namespace FSO.LotView.Model
             WallComp.blueprint = this;
             this.RoofComp = new RoofComponent(this);
             this.FloorGeom = new _3DFloorGeometry(this);
+            if (WorldConfig.Current.Shadow3D || FSOEnvironment.Enable3D)
+            {
+                this.WCRC = new WallComponentRC();
+                WCRC.blueprint = this;
+            }
         
             RoomColors = new Color[65536];
             this.WallsAt = new List<int>[Stories];
@@ -141,6 +149,7 @@ namespace FSO.LotView.Model
             SetLightColor(WorldContent._2DWorldBatchEffect, OutsideColor, minOut);
             SetLightColor(WorldContent.GrassEffect, OutsideColor, minOut);
             SetLightColor(Avatar.Effect, OutsideColor, minOut);
+            SetLightColor(WorldContent.RCObject, OutsideColor, minOut);
 
             for (int i=0; i<Light.Length; i++)
             {

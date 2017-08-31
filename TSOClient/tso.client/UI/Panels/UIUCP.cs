@@ -24,6 +24,7 @@ using FSO.Common;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Utils;
 using FSO.Common.Rendering.Framework;
+using FSO.LotView.RC;
 
 namespace FSO.Client.UI.Panels
 {
@@ -109,6 +110,7 @@ namespace FSO.Client.UI.Panels
         private UIBlocker PanelBlocker;
         private UIBlocker GameBlocker;
         private UILabel FloorNumLabel;
+        private int LastZoom;
 
         public UIUCP(UIScreen owner)
         {
@@ -288,6 +290,7 @@ namespace FSO.Client.UI.Panels
 
         private void RotateCounterClockwise(UIElement button)
         {
+            if (FSOEnvironment.Enable3D && Game.InLot) return;
             var newRot = (Game.Rotation - 1);
             if (newRot < 0) newRot = 3;
             Game.Rotation = newRot;
@@ -295,6 +298,7 @@ namespace FSO.Client.UI.Panels
 
         private void RotateClockwise(UIElement button)
         {
+            if (FSOEnvironment.Enable3D && Game.InLot) return;
             Game.Rotation = (Game.Rotation+1)%4;
         }
 
@@ -362,7 +366,7 @@ namespace FSO.Client.UI.Panels
                 if (FloorNumLabel.Caption != level) FloorNumLabel.Caption = level;
 
                 if (CurrentPanel == 3 && BuildModeButton.Disabled) SetPanel(-1);
-
+                if (LastZoom != Game.ZoomLevel) UpdateZoomButton();
             }
             else budget = OldMoney;
 
@@ -382,6 +386,15 @@ namespace FSO.Client.UI.Panels
             MoneyText.Caption = "$" + Game.VisualBudget.ToString("##,#0");
 
             base.Update(state);
+
+            if (FSOEnvironment.Enable3D && Game.InLot)
+            {
+                //if the zoom or rotation buttons are down, gradually change their values.
+                if (RotateClockwiseButton.IsDown) ((WorldStateRC)Game.vm.Context.World.State).RotationX += 2f / FSOEnvironment.RefreshRate;
+                if (RotateCounterClockwiseButton.IsDown) ((WorldStateRC)Game.vm.Context.World.State).RotationX -= 2f / FSOEnvironment.RefreshRate;
+                if (ZoomInButton.IsDown) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom + 1f / FSOEnvironment.RefreshRate, 2));
+                if (ZoomOutButton.IsDown) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom - 1f / FSOEnvironment.RefreshRate, 2));
+            }
         }
 
         private string ZeroPad(string input, int digits)
@@ -416,6 +429,7 @@ namespace FSO.Client.UI.Panels
 
         private void ZoomControl(UIElement button)
         {
+            if (FSOEnvironment.Enable3D && Game.InLot) return;
             Game.ZoomLevel = (Game.ZoomLevel + ((button == ZoomInButton) ? -1 : 1));
             /*if(Game.ZoomLevel >= 4) SetPanel(0);    // Make the panels disappear when zoomed out to far mode   -  Causes crashes for unknown reasons*/
         }
@@ -610,14 +624,15 @@ namespace FSO.Client.UI.Panels
             {
                 NeighborhoodButton.Disabled = true;
                 WorldButton.Disabled = true;
-                ZoomInButton.Disabled = (!Game.InLot) || (Game.ZoomLevel == 1);
-                ZoomOutButton.Disabled = (Game.ZoomLevel == 3);
+                ZoomInButton.Disabled = (!Game.InLot) || (!FSOEnvironment.Enable3D && (Game.ZoomLevel == 1));
+                ZoomOutButton.Disabled = (!FSOEnvironment.Enable3D && (Game.ZoomLevel == 3));
             }
             else
             {
-                ZoomInButton.Disabled = (!Game.InLot) ? (Game.ZoomLevel == 4) : (Game.ZoomLevel == 1);
+                ZoomInButton.Disabled = (!Game.InLot) ? (Game.ZoomLevel == 4) : (!FSOEnvironment.Enable3D && (Game.ZoomLevel == 1));
                 ZoomOutButton.Disabled = (Game.ZoomLevel == 5);
             }
+            LastZoom = Game.ZoomLevel;
         }
 
 

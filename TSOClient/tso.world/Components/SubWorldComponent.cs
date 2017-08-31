@@ -59,7 +59,7 @@ namespace FSO.LotView.Components
         /// </summary>
         /// <param name="gd"></param>
         /// <param name="state"></param>
-        public void PreDraw(GraphicsDevice gd, WorldState state)
+        public virtual void PreDraw(GraphicsDevice gd, WorldState state)
         {
             if (Blueprint == null) return;
             var pxOffset = -state.WorldSpace.GetScreenOffset();
@@ -113,19 +113,22 @@ namespace FSO.LotView.Components
             }
             damage.Clear();
 
-            state._2D.End();
-            state._2D.Begin(state.Camera);
+            var is2d = state.Camera is WorldCamera;
+            if (is2d) {
+                state._2D.End();
+                state._2D.Begin(state.Camera);
+            }
             if (recacheWalls)
             {
                 //clear the sprite buffer before we begin drawing what we're going to cache
                 Blueprint.Terrain.RegenTerrain(gd, state, Blueprint);
                 Blueprint.FloorGeom.FullReset(gd, false);
-                Blueprint.WallComp.Draw(gd, state);
+                if (is2d) Blueprint.WallComp.Draw(gd, state);
                 StaticArchCache.Clear();
                 state._2D.End(StaticArchCache, true);
             }
 
-            if (recacheObjects)
+            if (recacheObjects && is2d)
             {
                 state._2D.Pause();
                 state._2D.Resume();
@@ -147,10 +150,12 @@ namespace FSO.LotView.Components
             state.SilentLevel = oldLevel;
         }
 
-        public void DrawArch(GraphicsDevice gd, WorldState parentState)
+        public virtual void DrawArch(GraphicsDevice gd, WorldState parentState)
         {
             var parentScroll = parentState.CenterTile;
-            parentState.CenterTile += GlobalPosition; //TODO: vertical offset
+            if (!(parentState.Camera is WorldCamera))
+                parentState.Camera.Translation = new Vector3(GlobalPosition.X*3, 0, GlobalPosition.Y*3);
+            else parentState.CenterTile += GlobalPosition; //TODO: vertical offset
 
             var pxOffset = -parentState.WorldSpace.GetScreenOffset();
 
@@ -160,16 +165,21 @@ namespace FSO.LotView.Components
             var level = parentState.SilentLevel;
             parentState.SilentLevel = 5;
             Blueprint.Terrain.Draw(gd, parentState);
-            parentState._2D.RenderCache(StaticArchCache);
-            parentState._2D.Pause();
+            if (parentState.Camera is WorldCamera)
+            {
+                parentState._2D.RenderCache(StaticArchCache);
+                parentState._2D.Pause();
+            }
             Blueprint.RoofComp.Draw(gd, parentState);
             parentState.SilentLevel = level;
 
             parentState.CenterTile = parentScroll;
+            if (!(parentState.Camera is WorldCamera))
+                parentState.Camera.Translation = Vector3.Zero;
             parentState.PrepareLighting();
         }
 
-        public void DrawObjects(GraphicsDevice gd, WorldState parentState)
+        public virtual void DrawObjects(GraphicsDevice gd, WorldState parentState)
         {
             var parentScroll = parentState.CenterTile;
             parentState.CenterTile += GlobalPosition; //TODO: vertical offset

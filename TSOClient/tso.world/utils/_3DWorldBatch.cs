@@ -65,6 +65,7 @@ namespace FSO.LotView.Utils
         public void End()
         {
             if (Sprites.Count == 0) return;
+            Device.BlendState = BlendState.AlphaBlend;
             //Device.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;
 
             var character = Sprites.Where(x => x.Effect == _3DSpriteEffect.CHARACTER).ToList();
@@ -100,7 +101,7 @@ namespace FSO.LotView.Utils
 
             effect.CurrentTechnique = technique;
             ApplyCamera(effect);
-            effect.Parameters["SoftwareDepth"].SetValue(FSOEnvironment.SoftwareDepth);
+            effect.Parameters["SoftwareDepth"].SetValue(!FSOEnvironment.Enable3D && FSOEnvironment.SoftwareDepth);
             foreach (var pass in technique.Passes)
             {
                 foreach (var geom in sprites)
@@ -109,7 +110,7 @@ namespace FSO.LotView.Utils
                     effect.Parameters["Level"].SetValue((float)geom.Level);
                     if (RoomLights != null)
                     {
-                        var col = RoomLights[geom.Room].ToVector4() * geom.Color.ToVector4();
+                        var col = ((WorldConfig.Current.AdvancedLighting)?new Vector4(1):RoomLights[geom.Room].ToVector4()) * geom.Color.ToVector4();
                         effect.Parameters["AmbientLight"].SetValue(col);
                     }
                     /*if (geom.Geometry is Avatar)

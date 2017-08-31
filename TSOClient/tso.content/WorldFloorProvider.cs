@@ -67,9 +67,9 @@ namespace FSO.Content
                 var medium = floorGlobals.Get<SPR2>((ushort)(i + 256));
                 var near = floorGlobals.Get<SPR2>((ushort)(i + 512)); //2048 is water tile
 
-                far.FloorCopy = true;
-                medium.FloorCopy = true;
-                near.FloorCopy = true;
+                far.FloorCopy = 1;
+                medium.FloorCopy = 1;
+                near.FloorCopy = 1;
 
                 this.AddFloor(new Floor
                 {
@@ -187,7 +187,7 @@ namespace FSO.Content
                 if (!spr.SpritePreprocessed)
                 {
                     spr.ZAsAlpha = true;
-                    spr.FloorCopy = true;
+                    spr.FloorCopy = 2;
                     spr.SpritePreprocessed = true;
                 }
                 return TextureUtils.Copy(device, spr.Frames[0].GetTexture(device));
@@ -198,12 +198,16 @@ namespace FSO.Content
         public SPR2 GetGlobalSPR(ushort id)
         {
             var spr = FloorGlobals.Get<SPR2>(id);
-            if (id > 0x800 && id < 0x810 && !spr.SpritePreprocessed)
+            if (id >= 0x800 && id <= 0x810 && !spr.SpritePreprocessed)
             {
                 spr.ZAsAlpha = true;
                 spr.SpritePreprocessed = true;
+                spr.FloorCopy = 2;
             }
-            spr.FloorCopy = true;
+            else
+            {
+                spr.FloorCopy = (id >= 0x400 && id <= 0x430)?2:1;
+            }
             return spr;
         }
 
@@ -226,9 +230,9 @@ namespace FSO.Content
                 var medium = iff.Get<SPR2>(257);
                 var near = iff.Get<SPR2>(513);
 
-                far.FloorCopy = true;
-                medium.FloorCopy = true;
-                near.FloorCopy = true;
+                far.FloorCopy = 1;
+                medium.FloorCopy = 1;
+                near.FloorCopy = 1;
 
                 ById[(ushort)id] = new Floor
                 {

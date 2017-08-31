@@ -34,6 +34,7 @@ namespace FSO.LotView
         }
 
         public void DrawAfter2D(GraphicsDevice gd, WorldState state){
+            gd.BlendState = BlendState.AlphaBlend;
             var pxOffset = state.WorldSpace.GetScreenOffset();
             var _2d = state._2D;
             foreach (var avatar in Blueprint.Avatars)
@@ -45,6 +46,7 @@ namespace FSO.LotView
                     avatar.Draw(gd, state);
                 }
             }
+
             if (state.DrawRoofs) Blueprint.RoofComp.Draw(gd, state);
         }
     }

@@ -18,6 +18,7 @@ namespace FSO.HIT
         protected float Volume = 1;
         protected float InstVolume = 1;
         protected float Pan;
+        protected Microsoft.Xna.Framework.Audio.AudioEmitter Emitter3D;
 
         protected bool EverHadOwners; //if we never had owners, don't kill the thread. (ui sounds)
         public int LastMainOwner = -1;
@@ -57,6 +58,20 @@ namespace FSO.HIT
                 Pan = pan;
                 return true;
             }
+        }
+
+        public void Set3D(Microsoft.Xna.Framework.Vector3 Position)
+        {
+            Microsoft.Xna.Framework.Audio.SoundEffect.DistanceScale = 100f;
+            if (Emitter3D == null) Emitter3D = new Microsoft.Xna.Framework.Audio.AudioEmitter();
+            Emitter3D.Position = Position;
+        }
+
+        public void Apply3D(Microsoft.Xna.Framework.Audio.SoundEffectInstance inst)
+        {
+            Emitter3D.Forward = VM.Listener.Forward;
+            inst.Volume = 1f;
+            inst.Apply3D(VM.Listener, Emitter3D);
         }
 
         public void RecalculateVolume()

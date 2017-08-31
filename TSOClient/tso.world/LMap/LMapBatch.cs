@@ -6,6 +6,7 @@
 
 using FSO.Common;
 using FSO.LotView.Model;
+using FSO.LotView.RC;
 using FSO.Vitaboy;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -23,8 +24,17 @@ namespace FSO.LotView.LMap
 
         public RenderTarget2D ShadowTarg;
         public RenderTarget2D ObjShadowTarg;
+        public RenderTarget2D OutsideShadowTarg;
+        private int OutShadowFloor = -1;
 
         public RenderTarget2D LightMap;
+        public WallComponentRC WallComp
+        {
+            get
+            {
+                return Blueprint.WCRC;
+            }
+        }
 
         GraphicsDevice GD;
         private Effect GradEffect;
@@ -33,6 +43,8 @@ namespace FSO.LotView.LMap
 
         private Blueprint Blueprint;
         private LightData OutdoorsLight;
+        public Vector3 SunVector;
+        public bool Night;
         public Vector3 LightVec = new Vector3(0, 1f, 0);
         public Vector2 MapLayout; //width * height floors. Ordered by width first. x = floor%width, y = (int)floot/width.
         public Vector2 InvMapLayout;
@@ -91,10 +103,12 @@ namespace FSO.LotView.LMap
             factor *= invMapLayout;
 
             WorldContent.GrassEffect.Parameters["WorldToLightFactor"].SetValue(factor);
+            WorldContent.RCObject.Parameters["WorldToLightFactor"].SetValue(factor);
             WorldContent._2DWorldBatchEffect.Parameters["WorldToLightFactor"].SetValue(factor);
             Avatar.Effect.Parameters["WorldToLightFactor"].SetValue(factor);
 
             WorldContent.GrassEffect.Parameters["MapLayout"].SetValue(MapLayout);
+            WorldContent.RCObject.Parameters["MapLayout"].SetValue(MapLayout);
             WorldContent._2DWorldBatchEffect.Parameters["MapLayout"].SetValue(MapLayout);
             LightEffect.Parameters["MapLayout"].SetValue(MapLayout);
             Avatar.Effect.Parameters["MapLayout"].SetValue(MapLayout);
@@ -145,6 +159,7 @@ namespace FSO.LotView.LMap
             LightEffect.Parameters["LightPower"].SetValue(2.0f);
             LightEffect.Parameters["RoomUVRescale"].SetValue(new Vector2((w - 2) / (float)w, (h - 2) / (float)h));
             LightEffect.Parameters["RoomUVOff"].SetValue(new Vector2(0, 0));
+            LightEffect.Parameters["SSAASize"].SetValue(new Vector2(1f/600));
 
             SetMapLayout(3, 2);
         }
@@ -172,12 +187,13 @@ namespace FSO.LotView.LMap
 
         public void InvalidateOutdoors()
         {
+            OutShadowFloor = -1;
             var rooms = Blueprint.Rooms;
             var lightRooms = Blueprint.Light;
             for (int i = 0; i < rooms.Count; i++)
             {
                 var room = rooms[i];
-                if (!room.IsOutside || room.WallLines == null) continue;
+                if ((!room.IsOutside && (WallComp == null || !lightRooms[i].Lights.Any(x => x.OutdoorsColor))) || room.WallLines == null) continue;
                 DirtyRooms.Add((ushort)i);
             }
         }
@@ -195,6 +211,7 @@ namespace FSO.LotView.LMap
 
         public void ParseInvalidated(sbyte floorLimit, WorldState state)
         {
+            GD.BlendState = BlendState.AlphaBlend;
             SetMapLayout(3, 2);
             if (floorLimit > RedrawFloor)
             {
@@ -210,7 +227,8 @@ namespace FSO.LotView.LMap
             var lightRooms = Blueprint.Light;
 
             var dirty = new List<ushort>(DirtyRooms);
-            foreach (var rm in dirty)
+            var ordered =  dirty.OrderBy(x => rooms[x].Floor);
+            foreach (var rm in ordered)
             {
                 var room = rooms[rm];
                 if (room.WallLines == null || room.Floor > floorLimit) continue;
@@ -234,6 +252,7 @@ namespace FSO.LotView.LMap
 
         public void RedrawAll(WorldState state)
         {
+            OutShadowFloor = -1;
             DirtyRooms.Clear();
             sbyte floor = 0;
             SetFloor(floor, state);
@@ -305,6 +324,10 @@ namespace FSO.LotView.LMap
             lightPos = Vector3.Transform(lightPos, Transform);
             var z = lightPos.Z;
             if (lightPos.Y < 0) lightPos.Y *= -1;
+
+            SunVector = lightPos;
+            SunVector.Normalize();
+            Night = night;
 
             light.LightPos = new Vector2(lightPos.Z, -lightPos.X);
             light.LightDir = -light.LightPos;
@@ -392,15 +415,26 @@ namespace FSO.LotView.LMap
             }
 
 
-            if (room.IsOutside)
+            if (room.IsOutside || WallComp != null)
             {
-                var res = (Blueprint.Width-2) * 8;
-                DrawRect = new Rectangle(0, 0, res, res);
+                var res = (Blueprint.Width - 2) * 8;
+                if (!room.IsOutside)
+                {
+                    DrawRect = new Rectangle(0, 0, res, res);
+                }
+                else
+                {
+                    DrawRect = bigBounds;
+                }
                 if (OutdoorsLight == null) BuildOutdoorsLight(Blueprint.OutsideTime);
                 var light = OutdoorsLight;
                 //generate shadows
-                DrawObjShadows(lighting.ObjectFootprints, light);
+                light.Level = (sbyte)(room.Floor);
                 DrawWallShadows(room.WallLines, light);
+                if (room.IsOutside)
+                {
+                    DrawObjShadows(lighting.ObjectFootprints, light);
+                }
 
                 //draw the light onto the lightmap
                 GD.SetRenderTarget(LightMap);
@@ -415,10 +449,11 @@ namespace FSO.LotView.LMap
                 var effect = LightEffect;
                 effect.CurrentTechnique = effect.Techniques[0];
                 EffectPassCollection passes = effect.Techniques[0].Passes;
-                passes[1].Apply();
+                passes[room.IsOutside?((WallComp==null)?1:4):3].Apply();
 
                 GD.SetVertexBuffer(LightBuf);
                 GD.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+                LightEffect.Parameters["shadowMap"].SetValue(ShadowTarg);
             }
         }
 
@@ -438,9 +473,47 @@ namespace FSO.LotView.LMap
 
         public void DrawWallShadows(List<Vector2[]> walls, LightData pointLight)
         {
-            GD.SetRenderTarget(ShadowTarg);
-            var geom = ShadowGeometry.GenerateWallShadows(walls, pointLight);
-            DrawShadows(geom, (pointLight.LightType == LightType.OUTDOORS)?2:0, pointLight);
+            if (pointLight.LightType == LightType.OUTDOORS && WallComp != null)
+            {
+                if (OutsideShadowTarg == null || OutsideShadowTarg.IsDisposed)
+                {
+                    OutsideShadowTarg = new RenderTarget2D(GD, ShadowTarg.Width*2, ShadowTarg.Height*2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                }
+                LightEffect.Parameters["shadowMap"].SetValue(OutsideShadowTarg);
+                LightEffect.Parameters["SSAASize"].SetValue(new Vector2(1f/OutsideShadowTarg.Width, 1f/OutsideShadowTarg.Height));
+                if (OutShadowFloor == pointLight.Level) return;
+                OutShadowFloor = pointLight.Level;
+                GD.SetRenderTarget(OutsideShadowTarg);
+                var rect = new Rectangle(DrawRect.X * 2, DrawRect.Y * 2, DrawRect.Width*2, DrawRect.Height*2);
+                GD.ScissorRectangle = rect;
+                GD.Clear(Color.Black);
+                var effect = this.GradEffect;
+
+                effect.Parameters["Projection"].SetValue(Projection);
+                var mat = Matrix.Identity;
+                //we have to build our own matrix here, which is weird
+                //the y axis has to contribute to the other two axis, using the light direction.
+
+                mat.M11 = 1; mat.M12 = 0; mat.M31 = pointLight.LightDir.X;//; //x axis. 
+                mat.M21 = 0; mat.M22 = 1; mat.M32 = pointLight.LightDir.Y;//light.LightDir.Y; //y axis.
+                mat.M33 = 0;
+
+                mat = Matrix.CreateScale(16, 16, 32 * pointLight.FalloffMultiplier) * mat;
+
+                WallComp.DrawLMap(GD, pointLight, Projection, mat);
+                Blueprint.Terrain.DrawLMap(GD, pointLight, Projection, mat);
+                Blueprint.RoofComp.DrawLMap(GD, pointLight, Projection, mat);
+
+                effect.CurrentTechnique = effect.Techniques[0];
+                EffectPassCollection passes = effect.Techniques[0].Passes;
+                passes[2].Apply();
+            }
+            else
+            {
+                GD.SetRenderTarget(ShadowTarg);
+                var geom = ShadowGeometry.GenerateWallShadows(walls, pointLight);
+                DrawShadows(geom, (pointLight.LightType == LightType.OUTDOORS) ? 2 : 0, pointLight);
+            }
         }
 
         public void DrawObjShadows(List<Rectangle> objects, LightData pointLight)
@@ -481,6 +554,7 @@ namespace FSO.LotView.LMap
         {
             ShadowTarg?.Dispose();
             ObjShadowTarg?.Dispose();
+            OutsideShadowTarg?.Dispose();
             LightMap?.Dispose();
         }
     }

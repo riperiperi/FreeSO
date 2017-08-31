@@ -252,6 +252,7 @@ namespace FSO.Content.TS1
 
         private DecodedSFX GetAudioFrom(string fileName)
         {
+            if (fileName == null) return null;
             fileName = fileName.ToLowerInvariant();
             var ext = Path.GetExtension(fileName);
             var fname = Path.GetFileName(fileName);

@@ -85,6 +85,9 @@ namespace FSO.Client
                             case "tso":
                                 GlobalSettings.Default.TS1HybridEnable = false;
                                 break;
+                            case "3d":
+                                FSOEnvironment.Enable3D = true;
+                                break;
                         }
                     }
                 }
@@ -109,8 +112,6 @@ namespace FSO.Client
 
             var path = gameLocator.FindTheSimsOnline();
             if (!linux) UI.Panels.ITTSContext.Provider = UI.Model.UITTSContext.PlatformProvider;
-
-            if (UseDX) GlobalSettings.Default.AntiAlias = false;
 
             if (path != null)
             {

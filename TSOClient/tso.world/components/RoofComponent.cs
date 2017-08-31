@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.LotView.Utils;
 using FSO.Common.Utils;
+using FSO.LotView.LMap;
 
 namespace FSO.LotView.Components
 {
@@ -44,7 +45,7 @@ namespace FSO.LotView.Components
         {
             var roofs = Content.Content.Get().WorldRoofs;
             Texture = roofs.Get(roofs.IDToName((int)RoofStyle)).Get(device);
-            for (int i=1; i<=blueprint.Stories; i++)
+            for (int i = 1; i <= blueprint.Stories; i++)
             {
                 RegenRoof((sbyte)(i + 1), device);
             }
@@ -87,7 +88,8 @@ namespace FSO.LotView.Components
                     {
                         evaluated[off] = true;
                         var tilePos = new LotTilePos((short)(x * 8), (short)(y * 8), level);
-                        if (IsRoofable(tilePos)) {
+                        if (IsRoofable(tilePos))
+                        {
                             //bingo. try expand a rectangle here.
                             RoofSpread(tilePos, evaluated, width, height, level, result);
                         }
@@ -100,7 +102,7 @@ namespace FSO.LotView.Components
 
         public void MeshRects(int level, GraphicsDevice device)
         {
-            var rects = RoofRects[level-2];
+            var rects = RoofRects[level - 2];
             if (rects == null) return;
             if (Drawgroups[level - 2] != null && Drawgroups[level - 2].NumPrimitives > 0)
             {
@@ -108,7 +110,7 @@ namespace FSO.LotView.Components
                 Drawgroups[level - 2].IndexBuffer.Dispose();
             }
 
-            var numQuads = rects.Count*4; //4 sides for each roof rectangle
+            var numQuads = rects.Count * 4; //4 sides for each roof rectangle
             TerrainVertex[] Geom = new TerrainVertex[numQuads * 4];
             int[] Indexes = new int[numQuads * 6];
 
@@ -147,7 +149,7 @@ namespace FSO.LotView.Components
                 //quad as two tris
                 for (int j = 0; j < 16; j += 4)
                 {
-                    Indexes[indexOffset++] = geomOffset+j;
+                    Indexes[indexOffset++] = geomOffset + j;
                     Indexes[indexOffset++] = (geomOffset + 1) + j;
                     Indexes[indexOffset++] = (geomOffset + 2) + j;
 
@@ -156,8 +158,8 @@ namespace FSO.LotView.Components
                     Indexes[indexOffset++] = geomOffset + j;
                 }
 
-                Vector2 texScale = new Vector2(2/3f, 1f);
-                Geom[geomOffset++] = new TerrainVertex(tl, topCol.ToVector4()*darken, new Vector2(tl.X, tl.Z * -1) * texScale, 0);
+                Vector2 texScale = new Vector2(2 / 3f, 1f);
+                Geom[geomOffset++] = new TerrainVertex(tl, topCol.ToVector4() * darken, new Vector2(tl.X, tl.Z * -1) * texScale, 0);
                 Geom[geomOffset++] = new TerrainVertex(tr, topCol.ToVector4() * darken, new Vector2(tr.X, tr.Z * -1) * texScale, 0);
                 Geom[geomOffset++] = new TerrainVertex(m_tr, topCol.ToVector4(), new Vector2(m_tr.X, m_tr.Z * -1) * texScale, 0);
                 Geom[geomOffset++] = new TerrainVertex(m_tl, topCol.ToVector4(), new Vector2(m_tl.X, m_tl.Z * -1) * texScale, 0);
@@ -171,13 +173,13 @@ namespace FSO.LotView.Components
                 Geom[geomOffset++] = new TerrainVertex(bl, btmCol.ToVector4() * darken, new Vector2(bl.X, bl.Z) * texScale, 0);
                 Geom[geomOffset++] = new TerrainVertex(m_bl, btmCol.ToVector4(), new Vector2(m_bl.X, m_bl.Z) * texScale, 0);
                 Geom[geomOffset++] = new TerrainVertex(m_br, btmCol.ToVector4(), new Vector2(m_br.X, m_br.Z) * texScale, 0);
-               
+
                 Geom[geomOffset++] = new TerrainVertex(bl, leftCol.ToVector4() * darken, new Vector2(bl.Z, bl.X * -1) * texScale, 0);
                 Geom[geomOffset++] = new TerrainVertex(tl, leftCol.ToVector4() * darken, new Vector2(tl.Z, tl.X * -1) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(m_tl, leftCol.ToVector4(), new Vector2(m_tl.Z, m_tl.X*-1) * texScale, 0);
+                Geom[geomOffset++] = new TerrainVertex(m_tl, leftCol.ToVector4(), new Vector2(m_tl.Z, m_tl.X * -1) * texScale, 0);
                 Geom[geomOffset++] = new TerrainVertex(m_bl, leftCol.ToVector4(), new Vector2(m_bl.Z, m_bl.X * -1) * texScale, 0);
             }
-            
+
             var result = new RoofDrawGroup();
             if (numPrimitives > 0)
             {
@@ -195,7 +197,7 @@ namespace FSO.LotView.Components
 
         private Vector3 ToWorldPos(int x, int y, int z, int level, float pitch)
         {
-            return new Vector3((x/16f) * 3f, (z * pitch / 16f) * 3f + ((level -1)* 2.95f * 3f) + blueprint.GetAltitude(x/16,y/16)*3, (y / 16f) * 3f);
+            return new Vector3((x / 16f) * 3f, (z * pitch / 16f) * 3f + ((level - 1) * 2.95f * 3f) + blueprint.GetAltitude(x / 16, y / 16) * 3, (y / 16f) * 3f);
         }
 
         private static Point[] advanceByDir = new Point[]
@@ -213,18 +215,18 @@ namespace FSO.LotView.Components
                 case 0:
                     return new Point(rect.x2, rect.y1);
                 case 1:
-                    return new Point(rect.x2-8, rect.y2);
+                    return new Point(rect.x2 - 8, rect.y2);
                 case 2:
-                    return new Point(rect.x1-8, rect.y2-8);
+                    return new Point(rect.x1 - 8, rect.y2 - 8);
                 case 3:
-                    return new Point(rect.x1, rect.y1-8);
+                    return new Point(rect.x1, rect.y1 - 8);
             }
             return new Point();
         }
 
         private bool RangeCheck(RoofRect me, RoofRect into, int dir)
         {
-            switch (dir%2)
+            switch (dir % 2)
             {
                 case 0:
                     return (me.y1 > into.y1 && me.y2 < into.y2);
@@ -249,7 +251,7 @@ namespace FSO.LotView.Components
 
         private void RoofSpread(LotTilePos start, bool[] evaluated, int width, int height, sbyte level, List<RoofRect> result)
         {
-            var rect = new RoofRect(start.x, start.y, start.x+8, start.y+8);
+            var rect = new RoofRect(start.x, start.y, start.x + 8, start.y + 8);
             var toCtr = new Point(4, 4);
 
             while (rect.ExpandDir != -1)
@@ -259,8 +261,8 @@ namespace FSO.LotView.Components
                 var dir = rect.ExpandDir;
                 var startPt = StartLocation(rect, dir);
                 var testPt = startPt;
-                var inc = advanceByDir[(dir+1)%4];
-                var count = Math.Abs(rect.GetByDir((dir+1)%4) - rect.GetByDir((dir + 3) % 4)) / 8;
+                var inc = advanceByDir[(dir + 1) % 4];
+                var count = Math.Abs(rect.GetByDir((dir + 1) % 4) - rect.GetByDir((dir + 3) % 4)) / 8;
 
                 bool canExpand = true;
                 for (int i = 0; i < count; i++)
@@ -380,7 +382,7 @@ namespace FSO.LotView.Components
 
         public bool IndoorsOrFloor(int x, int y, int level)
         {
-            return level <= blueprint.Stories && (TileIndoors(x,y,level) || blueprint.GetFloor((short)x, (short)y, (sbyte)level).Pattern != 0);
+            return level <= blueprint.Stories && (TileIndoors(x, y, level) || blueprint.GetFloor((short)x, (short)y, (sbyte)level).Pattern != 0);
         }
 
         public bool IsRoofable(LotTilePos pos)
@@ -389,7 +391,7 @@ namespace FSO.LotView.Components
             var tileX = pos.TileX;
             var tileY = pos.TileY;
             var level = pos.Level;
-            if (tileX <= 0 || tileX >= blueprint.Width-1 || tileY <= 0 || tileY >= blueprint.Height-1) return false;
+            if (tileX <= 0 || tileX >= blueprint.Width - 1 || tileY <= 0 || tileY >= blueprint.Height - 1) return false;
             //must be over indoors
             var halftile = false;
             if (!TileIndoors(tileX, tileY, level - 1))
@@ -414,7 +416,7 @@ namespace FSO.LotView.Components
                     if (TileIndoors(tileX, tileY - 1, level - 1)) found = true;
                 }
 
-                if (TileIndoors(tileX + ((pos.x % 16 == 8)?1:-1), tileY + ((pos.y % 16 == 8) ? 1 : -1), level - 1)) found = true;
+                if (TileIndoors(tileX + ((pos.x % 16 == 8) ? 1 : -1), tileY + ((pos.y % 16 == 8) ? 1 : -1), level - 1)) found = true;
                 if (!found) return false;
                 halftile = true;
             }
@@ -466,16 +468,17 @@ namespace FSO.LotView.Components
                 RegenRoof(device);
                 ShapeDirty = false;
                 StyleDirty = false;
-            } else if (StyleDirty)
+            }
+            else if (StyleDirty)
             {
                 RemeshRoof(device);
                 StyleDirty = false;
             }
 
-            for (int i=0; i<Drawgroups.Length; i++)
+            for (int i = 0; i < Drawgroups.Length; i++)
             {
                 if (i > world.Level - 1) return;
-                Effect.Parameters["Level"].SetValue((float)i+1);
+                Effect.Parameters["Level"].SetValue((float)i + 1);
                 if (Drawgroups[i] != null)
                 {
                     var dg = Drawgroups[i];
@@ -504,7 +507,57 @@ namespace FSO.LotView.Components
                 }
             }
         }
-        
+
+        public void DrawLMap(GraphicsDevice gd, LightData light, Matrix projection, Matrix lightTransform)
+        {
+            if (ShapeDirty)
+            {
+                RegenRoof(gd);
+                ShapeDirty = false;
+                StyleDirty = false;
+            }
+            else if (StyleDirty)
+            {
+                RemeshRoof(gd);
+                StyleDirty = false;
+            }
+
+            var s = Matrix.Identity;
+            s.M22 = 0;
+            s.M33 = 0;
+            s.M23 = 1;
+            s.M32 = 1;
+
+            for (int i = light.Level; i < Drawgroups.Length; i++)
+            {
+                Effect.Parameters["Level"].SetValue((float)i + 1);
+                if (Drawgroups[i] != null)
+                {
+                    var dg = Drawgroups[i];
+                    if (dg.NumPrimitives == 0) continue;
+
+                    Effect.Parameters["UseTexture"].SetValue(false);
+                    Effect.Parameters["Projection"].SetValue(projection);
+                    var view = Matrix.Identity;
+                    Effect.Parameters["View"].SetValue(view);
+
+                    var worldmat = Matrix.CreateScale(1 / 3f, 0, 1 / 3f) * Matrix.CreateTranslation(0, 1f * (i - (light.Level-1)), 0) * s * lightTransform;
+
+                    Effect.Parameters["World"].SetValue(worldmat);
+                    Effect.Parameters["DiffuseColor"].SetValue(new Vector4(1, 1, 1, 1) * (float)(4 - (i - (light.Level))) / 5f);
+
+                    gd.SetVertexBuffer(dg.VertexBuffer);
+                    gd.Indices = dg.IndexBuffer;
+
+                    Effect.CurrentTechnique = Effect.Techniques["DrawLMap"];
+                    foreach (var pass in Effect.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                        gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.NumPrimitives);
+                    }
+                }
+            }
+        }
     }
 
     public class RoofDrawGroup

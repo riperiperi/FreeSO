@@ -19,6 +19,7 @@ namespace FSO.Common.Utils
         private static RenderTarget2D BackbufferDepth;
         private static RenderTarget2D Backbuffer;
         private static SpriteBatch SB;
+        public static int SSAA = 1;
 
         public static void InitGD(GraphicsDevice gd)
         {
@@ -30,8 +31,9 @@ namespace FSO.Common.Utils
             if (BackbufferDepth != null) BackbufferDepth.Dispose();
             if (Backbuffer != null) Backbuffer.Dispose();
             var scale = FSOEnvironment.DPIScaleFactor;
-            BackbufferDepth = CreateRenderTarget(GD, 1, 0, SurfaceFormat.Color, GD.Viewport.Width/scale, GD.Viewport.Height / scale, DepthFormat.None);
-            Backbuffer = CreateRenderTarget(GD, 1, 0, SurfaceFormat.Color, GD.Viewport.Width / scale, GD.Viewport.Height / scale, DepthFormat.Depth24Stencil8);
+            if (!FSOEnvironment.Enable3D)
+                BackbufferDepth = CreateRenderTarget(GD, 1, 0, SurfaceFormat.Color, SSAA*GD.Viewport.Width/scale, SSAA * GD.Viewport.Height / scale, DepthFormat.None);
+            Backbuffer = CreateRenderTarget(GD, 1, 0, SurfaceFormat.Color, SSAA * GD.Viewport.Width / scale, SSAA * GD.Viewport.Height / scale, DepthFormat.Depth24Stencil8);
         }
 
         private static RenderTarget2D ActiveColor;
@@ -62,6 +64,11 @@ namespace FSO.Common.Utils
             {
                 if (depth != null) gd.SetRenderTargets(color, depth);
             }
+        }
+
+        public static RenderTarget2D GetBackbuffer()
+        {
+            return Backbuffer;
         }
 
         public delegate void RenderPPXProcedureDelegate(bool depthPass);
@@ -132,13 +139,22 @@ namespace FSO.Common.Utils
             }
         }
 
+        public static Action<GraphicsDevice, RenderTarget2D> SSAAFunc;
+
         public static void DrawBackbuffer(float opacity, float scale)
         {
             if (Backbuffer == null) return; //this gfx mode does not use a rendertarget backbuffer
-            SB.Begin();
-            SB.Draw(Backbuffer, new Vector2(Backbuffer.Width * (1 - scale) / 2, Backbuffer.Height * (1 - scale) / 2), null, Color.White*opacity, 0f, new Vector2(), new Vector2(FSOEnvironment.DPIScaleFactor, FSOEnvironment.DPIScaleFactor)*scale,
-                SpriteEffects.None, 0);
-            SB.End();
+            if (SSAA > 1)
+            {
+                SSAAFunc(GD, Backbuffer);
+            }
+            else
+            {
+                SB.Begin();
+                SB.Draw(Backbuffer, new Vector2(Backbuffer.Width * (1 - scale) / 2, Backbuffer.Height * (1 - scale) / 2), null, Color.White * opacity, 0f, new Vector2(), new Vector2(FSOEnvironment.DPIScaleFactor, FSOEnvironment.DPIScaleFactor) * scale,
+                    SpriteEffects.None, 0);
+                SB.End();
+            }
         }
 
         public static Point GetWidthHeight()

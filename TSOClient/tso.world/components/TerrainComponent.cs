@@ -17,6 +17,7 @@ using FSO.LotView.Model;
 using FSO.Content.Model;
 using FSO.Common;
 using FSO.Common.Utils;
+using FSO.LotView.LMap;
 
 namespace FSO.LotView.Components
 {
@@ -53,6 +54,7 @@ namespace FSO.LotView.Components
         public bool DrawGrid = false;
         public bool TerrainDirty = true;
         private Blueprint Bp;
+        public bool _3D = false;
 
         public TerrainComponent(Rectangle size, Blueprint blueprint){
             this.Size = size;
@@ -328,7 +330,7 @@ namespace FSO.LotView.Components
             if (VertexBuffer == null) return;
             if (world.Light != null) LightVec = world.Light.LightVec;
             device.DepthStencilState = DepthStencilState.Default;
-            device.BlendState = BlendState.Opaque;
+            device.BlendState = BlendState.NonPremultiplied;
             device.RasterizerState = RasterizerState.CullNone;
             PPXDepthEngine.RenderPPXDepth(Effect, true, (depthMode) =>
             {
@@ -352,7 +354,9 @@ namespace FSO.LotView.Components
             var offset = -world.WorldSpace.GetScreenOffset();
 
             Effect.Parameters["Projection"].SetValue(world.Camera.Projection);
-            Effect.Parameters["View"].SetValue(world.Camera.View * Matrix.CreateTranslation(0, 0, -0.25f));
+            var view = world.Camera.View;
+            if (!_3D) view = view * Matrix.CreateTranslation(0, 0, -0.25f);
+            Effect.Parameters["View"].SetValue(view);
             //world._3D.ApplyCamera(Effect);
             var translation = ((world.Zoom == WorldZoom.Far) ? -7 : ((world.Zoom == WorldZoom.Medium) ? -5 : -3)) * (20 / 522f);
             if (world.PreciseZoom < 1) translation /= world.PreciseZoom;
@@ -366,15 +370,15 @@ namespace FSO.LotView.Components
             device.SetVertexBuffer(VertexBuffer);
             device.Indices = IndexBuffer;
 
-            var tex = world._2D.GetTexture(Content.Content.Get().WorldFloors.Get(429).Near.Frames[0]);
             Effect.Parameters["UseTexture"].SetValue(true);
             Effect.Parameters["IgnoreColor"].SetValue(true);
             Effect.CurrentTechnique = Effect.Techniques["DrawBase"];
 
-            Bp.FloorGeom.DrawFloor(device, Effect, world);
+            var floors = new HashSet<sbyte>();
+            for (sbyte f = 0; f < world.Level; f++) floors.Add(f);
+            var pass = Effect.CurrentTechnique.Passes[(_3D) ? 2 : WorldConfig.Current.PassOffset];
+            Bp.FloorGeom.DrawFloor(device, Effect, world.Zoom, world.Rotation, world.Rooms.RoomMaps, floors, pass, state: world);
 
-
-            var pass = Effect.CurrentTechnique.Passes[WorldConfig.Current.PassOffset];
             pass.Apply();
             //device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, NumPrimitives);
 
@@ -430,7 +434,7 @@ namespace FSO.LotView.Components
 
                         Effect.Parameters["ScreenOffset"].SetValue(offset - off2);
 
-                        pass = Effect.CurrentTechnique.Passes[WorldConfig.Current.PassOffset];
+                        pass = Effect.CurrentTechnique.Passes[(_3D)?2:WorldConfig.Current.PassOffset];
                         pass.Apply();
                         device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, primitives);
                     }
@@ -463,14 +467,14 @@ namespace FSO.LotView.Components
                         //draw target size in red, below old size
                         device.Indices = TGridIndexBuffer;
                         Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0.5f, 1f, 0.5f, 1.0f));
-                        pass = Effect.CurrentTechnique.Passes[0];
+                        pass = Effect.CurrentTechnique.Passes[(_3D)?1:0];
                         pass.Apply();
                         device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, TGridPrimitives);
                     }
 
                     Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0, 0, 0, 1.0f));
                     device.Indices = GridIndexBuffer;
-                    pass = Effect.CurrentTechnique.Passes[0];
+                    pass = Effect.CurrentTechnique.Passes[(_3D) ? 1 : 0];
                     pass.Apply();
                     device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, GridPrimitives);
 
@@ -483,6 +487,38 @@ namespace FSO.LotView.Components
                     }
                 }
             });
+        }
+
+        public void DrawLMap(GraphicsDevice gd, LightData light, Matrix projection, Matrix lightTransform)
+        {
+            if (TerrainDirty || VertexBuffer == null) return;
+            if (VertexBuffer == null) return;
+            //light.Normalize();
+            Effect.Parameters["UseTexture"].SetValue(false);
+            Effect.Parameters["Projection"].SetValue(projection);
+            var view = Matrix.Identity;
+            Effect.Parameters["View"].SetValue(view);
+
+            var s = Matrix.Identity;
+            s.M22 = 0;
+            s.M33 = 0;
+            s.M23 = 1;
+            s.M32 = 1;
+
+            var worldmat = Matrix.CreateScale(1 / 3f, 1f, 1 / 3f) * s * lightTransform;
+            Effect.Parameters["World"].SetValue(worldmat);
+
+            gd.SetVertexBuffer(VertexBuffer);
+            gd.Indices = IndexBuffer;
+
+            Effect.Parameters["UseTexture"].SetValue(true);
+            Effect.Parameters["IgnoreColor"].SetValue(true);
+            Effect.CurrentTechnique = Effect.Techniques["DrawLMap"];
+
+            var pass = Effect.CurrentTechnique.Passes[0];
+            var floors = new HashSet<sbyte>();
+            for (sbyte i = (sbyte)(light.Level + 1); i < 5; i++) floors.Add(i);
+            Bp.FloorGeom.DrawFloor(gd, Effect, WorldZoom.Near, WorldRotation.TopLeft, null, floors, pass, lightWorld: worldmat, minFloor: light.Level);
         }
 
         public void Dispose()

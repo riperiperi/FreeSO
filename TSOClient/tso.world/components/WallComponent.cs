@@ -496,22 +496,6 @@ namespace FSO.LotView.Components
                                         spr.Floor = level;
                                         world._2D.Draw(spr);
                                     }
-
-                                    //draw diagonally cut floors
-                                    if (comp.TopLeftPattern != 0)
-                                    {
-                                        var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 3);
-                                        floor.Room = (ushort)((TileRoom >> roomSide) & 0x7FFF);
-                                        floor.Floor = level;
-                                        if (floor.Pixel != null) world._2D.Draw(floor);
-                                    }
-                                    if (comp.TopLeftStyle != 0)
-                                    {
-                                        var floor = GetFloorSprite(floorContent.Get(comp.TopLeftStyle), 0, world, 2);
-                                        floor.Room = (ushort)((TileRoom >> (16-roomSide)) & 0x7FFF);
-                                        floor.Floor = level;
-                                        if (floor.Pixel != null) world._2D.Draw(floor);
-                                    }
                                 }
                             }
 
@@ -558,21 +542,6 @@ namespace FSO.LotView.Components
                                         spr.Room = 1;
                                         spr.Floor = level;
                                         world._2D.Draw(spr);
-                                    }
-                                    //draw diagonally cut floors
-                                    if (comp.TopLeftPattern != 0)
-                                    {
-                                        var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 1);
-                                        floor.Room = (ushort)(TileRoom >> roomSide);
-                                        floor.Floor = level;
-                                        if (floor.Pixel != null) world._2D.Draw(floor);
-                                    }
-                                    if (comp.TopLeftStyle != 0)
-                                    {
-                                        var floor = GetFloorSprite(floorContent.Get(comp.TopLeftStyle), 0, world, 0);
-                                        floor.Room = (ushort)(TileRoom >> (16-roomSide));
-                                        floor.Floor = level;
-                                        if (floor.Pixel != null) world._2D.Draw(floor);
                                     }
                                 }
                             }
@@ -900,71 +869,6 @@ namespace FSO.LotView.Components
                 _Sprite.Pixel = world._2D.GetTexture(sprite.Frames[rotation]);
                 _Sprite.Mask = world._2D.GetTexture(mask.Frames[rotation]);
                 _Sprite.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, _Sprite.Pixel.Width, _Sprite.Pixel.Height);
-            }
-
-            _Sprite.Room = (ushort)TileRoom;
-            _Sprite.Floor = Level;
-            _Sprite.ObjectID = TileAltitude;
-
-            return _Sprite;
-        }
-
-        //Gets a floor sprite. Used to draw floors cut in half by walls.
-
-        private _2DSprite GetFloorSprite(Floor pattern, int rotation, WorldState world, byte cut)
-        {
-            var _Sprite = world._2D.NewSprite(_2DBatchRenderMode.FLOOR);
-            if (pattern == null) return _Sprite;
-            SPR2 sprite = null;
-            switch (world.Zoom)
-            {
-                case WorldZoom.Far:
-                    sprite = pattern.Far;
-                    _Sprite.DestRect = FLRDEST_FAR;
-                    _Sprite.Depth = WallZBuffers[14];
-                    break;
-                case WorldZoom.Medium:
-                    sprite = pattern.Medium;
-                    _Sprite.DestRect = FLRDEST_MED;
-                    _Sprite.Depth = WallZBuffers[13];
-                    break;
-                case WorldZoom.Near:
-                    sprite = pattern.Near;
-                    _Sprite.DestRect = FLRDEST_NEAR;
-                    _Sprite.Depth = WallZBuffers[12];
-                    break;
-            }
-            _Sprite.DestRect.Width++;
-            _Sprite.DestRect.X--;
-            _Sprite.DestRect.Y++;
-            if (sprite != null)
-            {
-                _Sprite.Pixel = world._2D.GetTexture(sprite.Frames[rotation]);
-                _Sprite.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, _Sprite.Pixel.Width, _Sprite.Pixel.Height);
-            }
-
-            switch (cut)
-            {
-                case 0: //vertical cut, left side
-                    _Sprite.DestRect.Width /= 2;
-                    _Sprite.SrcRect.Width /= 2;
-                    break;
-                case 1: //vertical cut, right side
-                    _Sprite.DestRect.X += _Sprite.DestRect.Width / 2;
-                    _Sprite.DestRect.Width /= 2;
-                    _Sprite.SrcRect.X += _Sprite.SrcRect.Width / 2;
-                    _Sprite.SrcRect.Width /= 2;
-                    break;
-                case 2: //horizontal cut, top side
-                    _Sprite.DestRect.Height /= 2;
-                    _Sprite.SrcRect.Height /= 2;
-                    break;
-                case 3:
-                    _Sprite.DestRect.Y += _Sprite.DestRect.Height / 2;
-                    _Sprite.DestRect.Height /= 2;
-                    _Sprite.SrcRect.Y += _Sprite.SrcRect.Height / 2;
-                    _Sprite.SrcRect.Height /= 2;
-                    break;
             }
 
             _Sprite.Room = (ushort)TileRoom;

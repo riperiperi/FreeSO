@@ -15,6 +15,7 @@ using FSO.LotView.Model;
 using FSO.LotView.Utils;
 using FSO.Common.Utils;
 using FSO.LotView.LMap;
+using FSO.LotView.RC;
 
 namespace FSO.LotView.Components
 {
@@ -46,6 +47,7 @@ namespace FSO.LotView.Components
         public double RadianDirection;
         public override ushort Room { get; set; }
         public AvatarDisplayFlags DisplayFlags;
+        public bool IsDead;
 
         private Direction _Direction;
         public override Direction Direction
@@ -112,9 +114,14 @@ namespace FSO.LotView.Components
 
         public override Vector2 GetScreenPos(WorldState world)
         {
-            var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition / 3.0f;
-            var transhead = Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
-            return world.WorldSpace.GetScreenFromTile(transhead) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
+            var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition;
+            var projected = Vector4.Transform(new Vector4(headpos, 1), Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World * world.Camera.View * world.Camera.Projection);
+            if (world.Camera is WorldCamera) projected.Z = 1;
+            var res1 = new Vector2(projected.X / projected.Z, -projected.Y / projected.Z);
+            //res1.X /= PPXDepthEngine.SSAA;
+            //res1.Y /= PPXDepthEngine.SSAA;
+            var size = PPXDepthEngine.GetWidthHeight();
+            return new Vector2((size.X / PPXDepthEngine.SSAA) * 0.5f * (res1.X + 1f), (size.Y / PPXDepthEngine.SSAA) * 0.5f * (res1.Y + 1f)); //world.WorldSpace.GetScreenFromTile(transhead) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
         }
 
         private List<Vector2> CloseLightPositions(Vector3 Position)
@@ -141,11 +148,40 @@ namespace FSO.LotView.Components
             return result.OrderBy(x => x.Item1).Select(x => x.Item2).Take(4).ToList();
         }
 
+        public void DrawHeadline3D(GraphicsDevice device, WorldState world)
+        {
+            if (Headline == null || Headline.IsDisposed) return;
+            var gd = world.Device;
+            var effect = WorldContent.GetBE(gd);
+
+            effect.TextureEnabled = true;
+            effect.VertexColorEnabled = false;
+
+            Vector3 scale;
+            Quaternion rotation;
+            Vector3 translation;
+            world.Camera.View.Decompose(out scale, out rotation, out translation);
+            var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition / 3.0f;
+            var tHead1 = Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI)));
+            var newWorld = Matrix.CreateScale(Headline.Width / 64f, Headline.Height / -64f, 1) * Matrix.Invert(Matrix.CreateFromQuaternion(rotation)) * Matrix.CreateTranslation(new Vector3(tHead1.X * 3, 1.6f + tHead1.Z * 3, tHead1.Y * 3)) * this.World;
+
+            effect.DiffuseColor = Color.White.ToVector3();
+            effect.World = newWorld;
+            effect.Texture = Headline;
+            effect.View = world.Camera.View;
+            effect.Projection = world.Camera.Projection;
+            effect.CurrentTechnique.Passes[0].Apply();
+
+            gd.SetVertexBuffer(WorldContent.GetTextureVerts(gd));
+            gd.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+        }
+
         public override void Draw(GraphicsDevice device, WorldState world)
         {
             Avatar.Position = WorldSpace.GetWorldFromTile(Position);
             var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition / 3.0f;
-            var transhead = Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
+            var tHead1 = Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI)));
+            var transhead = tHead1 + this.Position - new Vector3(0.5f, 0.5f, 0f);
 
             if (!Visible) return;
 
@@ -153,7 +189,7 @@ namespace FSO.LotView.Components
 
                 Color col = Color.White;
                 if ((DisplayFlags & AvatarDisplayFlags.ShowAsGhost) > 0) col = new Color(32, 255, 96) * 0.66f;
-                else if ((DisplayFlags & AvatarDisplayFlags.TSOGhost) != 0) col = new Color(255, 255, 255, 64);
+                else if (IsDead) col = new Color(255, 255, 255, 64);
 
                 Avatar.LightPositions = (WorldConfig.Current.AdvancedLighting)?CloseLightPositions(Position):null;
                 var newWorld = Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World;
@@ -164,20 +200,27 @@ namespace FSO.LotView.Components
             if (Headline != null && !Headline.IsDisposed)
             {
                 var headOff = (transhead-Position) + new Vector3(0,0,0.66f);
-                var headPx = world.WorldSpace.GetScreenFromTile(headOff);
+                if (world is WorldStateRC)
+                {
+                    //this is done in world2DRC, after everything else.
+                }
+                else
+                {
+                    var headPx = world.WorldSpace.GetScreenFromTile(headOff);
 
-                var item = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
-                item.Pixel = Headline;
-                item.Depth = TextureGenerator.GetWallZBuffer(device)[30];
+                    var item = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
+                    item.Pixel = Headline;
+                    item.Depth = TextureGenerator.GetWallZBuffer(device)[30];
 
-                item.SrcRect = new Rectangle(0, 0, Headline.Width, Headline.Height);
-                item.WorldPosition = headOff;
-                var off = PosCenterOffsets[(int)world.Zoom - 1];
-                item.DestRect = new Rectangle(
-                    ((int)headPx.X - Headline.Width / 2) + (int)off.X,
-                    ((int)headPx.Y - Headline.Height / 2) + (int)off.Y, Headline.Width, Headline.Height);
-                item.Room = Room;
-                world._2D.Draw(item);
+                    item.SrcRect = new Rectangle(0, 0, Headline.Width, Headline.Height);
+                    item.WorldPosition = headOff;
+                    var off = PosCenterOffsets[(int)world.Zoom - 1];
+                    item.DestRect = new Rectangle(
+                        ((int)headPx.X - Headline.Width / 2) + (int)off.X,
+                        ((int)headPx.Y - Headline.Height / 2) + (int)off.Y, Headline.Width, Headline.Height);
+                    item.Room = Room;
+                    world._2D.Draw(item);
+                }
             }
         }
     }

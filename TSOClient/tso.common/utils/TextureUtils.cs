@@ -264,8 +264,9 @@ namespace FSO.Common.Utils
             else return;
         }
 
-        public static Texture2D Decimate(Texture2D Texture, GraphicsDevice gd, int factor)
+        public static Texture2D Decimate(Texture2D Texture, GraphicsDevice gd, int factor, bool disposeOld)
         {
+            if (Texture.Width < factor || Texture.Height < factor) return Texture;
             var size = Texture.Width * Texture.Height*4;
             byte[] buffer = new byte[size];
 
@@ -300,6 +301,7 @@ namespace FSO.Common.Utils
                     }
                 }
             }
+            if (disposeOld) Texture.Dispose();
 
             var outTex = new Texture2D(gd, newWidth, newHeight);
             outTex.SetData(target);

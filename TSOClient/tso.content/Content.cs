@@ -99,6 +99,7 @@ namespace FSO.Content
 
             if(device != null)
             {
+                RCMeshes = new RCMeshProvider(device);
                 UIGraphics = new UIGraphicsProvider(this);
                 if (TS1)
                 {
@@ -371,6 +372,9 @@ namespace FSO.Content
 
         /** TS1 Neighbourhood Data **/
         public TS1NeighborhoodProvider Neighborhood;
+
+        /** 3D Reconstructed Object Meshes **/
+        public RCMeshProvider RCMeshes;
     }
 
     public enum ContentLoadingProgress : int

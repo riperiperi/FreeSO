@@ -33,6 +33,7 @@ struct VertexToShad
 };
 
 float4x4 BaseMatrix;
+float4x4 MV;
 float4x4 LightMatrix;
 
 float4 GetPositionFromLight(float4 position)
@@ -65,6 +66,16 @@ VertexToPixelOut CityVS(VertexToPixel Input)
 	Output.vPos.y = (1.0f - Output.vPos.y); //position of vertice on shadow map
 	
 	Output.vPos.z = 1 - (LightPos.z/LightPos.w); //feed depth relative to light to compare against shadow map depth
+	return Output;
+}
+
+VertexToPixelOut CityFogVS(VertexToPixel Input)
+{
+	VertexToPixelOut Output = CityNoShadVS(Input);
+
+	float4 pos = mul(Input.VertexPosition, MV);
+	pos.z += pos.w / 100000000;
+	Output.vPos = pos.xyz;
 	return Output;
 }
 
@@ -105,4 +116,12 @@ technique RenderCity
 #endif;
 	}
 	
+	pass FinalFog
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 CityFogVS();
+#else
+		VertexShader = compile vs_3_0 CityFogVS();
+#endif;
+	}
 }

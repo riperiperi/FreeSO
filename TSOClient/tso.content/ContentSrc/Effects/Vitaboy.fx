@@ -170,7 +170,7 @@ float4 psVitaboyAdv(VitaVertexOut v) : COLOR0
 	else {
 		//SOFTWARE DEPTH
 		if (SoftwareDepth == true && depthOutMode == false && unpackDepth(tex2D(depthMapSampler, v.screenPos.xy)) < depth) discard;
-		float4 color = aaTex(v) * lightProcess(v.modelPos);
+		float4 color = aaTex(v) * lightProcess(v.modelPos) * AmbientLight;
 		color.rgb *= pow((dot(normalize(v.normal), float3(0, 1, 0)) + 1) / 2, 0.5)*0.5 + 0.5f;
 		return color;
 	}

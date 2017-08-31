@@ -6,11 +6,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Common;
 
 namespace FSO.Client.UI.Framework
 {
     public class UICachedContainer : UIContainer
     {
+        public bool UseMultisample;
         public bool Invalidated;
         protected RenderTarget2D Target;
         public UIContainer DynamicOverlay = new UIContainer();
@@ -44,7 +46,7 @@ namespace FSO.Client.UI.Framework
                 if (Target == null || (int)size.X != Target.Width || (int)size.Y != Target.Height)
                 {
                     Target?.Dispose();
-                    Target = new RenderTarget2D(gd, (int)size.X, (int)size.Y, false, SurfaceFormat.Color, (UseZ)?DepthFormat.Depth24:DepthFormat.None);
+                    Target = new RenderTarget2D(gd, (int)size.X, (int)size.Y, false, SurfaceFormat.Color, (UseZ)?DepthFormat.Depth24:DepthFormat.None, (UseMultisample && !FSOEnvironment.DirectX)?4:0, RenderTargetUsage.PreserveContents);
                 }
 
                 lock (Children)

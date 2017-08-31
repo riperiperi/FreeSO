@@ -227,6 +227,7 @@ namespace FSO.LotView.Utils
             var view = Matrix.Identity;
             view *= Matrix.CreateRotationY(MathHelper.ToRadians(rotationY));
             view *= Matrix.CreateRotationX(MathHelper.ToRadians(30.0f));
+
             return view;
         }
 
@@ -242,25 +243,7 @@ namespace FSO.LotView.Utils
             var view = Matrix.Identity;
 
             view *= Matrix.CreateTranslation(offset.X, offset.Y, offset.Z);
-            //view = Matrix.Identity;
-            var rotationY = 0.0f;
-            switch (_Rotation)
-            {
-                case WorldRotation.TopLeft:
-                    rotationY = 315.0f;
-                    break;
-                case WorldRotation.TopRight:
-                    rotationY = 225.0f;
-                    break;
-                case WorldRotation.BottomRight:
-                    rotationY = 135.0f;
-                    break;
-                case WorldRotation.BottomLeft:
-                    rotationY = 45.0f;
-                    break;
-            }
-            view *= Matrix.CreateRotationY(MathHelper.ToRadians(rotationY));
-            view *= Matrix.CreateRotationX(MathHelper.ToRadians(30.0f));
+            view *= GetRotationMatrix();
             m_View = view;
             
         }

@@ -140,6 +140,7 @@
     <Compile Include="UI\Panels\LotControls\UITerrainFlatten.cs" />
     <Compile Include="UI\Panels\LotControls\UIGrassPaint.cs" />
     <Compile Include="UI\Panels\LotControls\UITerrainRaiser.cs" />
+    <Compile Include="UI\Panels\UILotControlTouchHelper.cs" />
     <Compile Include="UI\Panels\UISandboxSelector.cs" />
     <Compile Include="UI\Panels\UINeighborhoodSelectionPanel.cs" />
     <Compile Include="UI\Panels\UITimeOutDialog.cs" />

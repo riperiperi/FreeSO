@@ -68,7 +68,7 @@ namespace FSO.LotView
         public static readonly int SCROLL_BUFFER = 512; //resolution to add to render size for scroll reasons
 
 
-        private Blueprint Blueprint;
+        protected Blueprint Blueprint;
         private Dictionary<WorldComponent, WorldObjectRenderInfo> RenderInfo = new Dictionary<WorldComponent, WorldObjectRenderInfo>();
 
         private List<_2DDrawBuffer> StaticObjectsCache = new List<_2DDrawBuffer>();
@@ -79,7 +79,7 @@ namespace FSO.LotView
         private ScrollBuffer StaticFloor;
         private ScrollBuffer StaticWall;
 
-        private int TicksSinceLight = 0;
+        protected int TicksSinceLight = 0;
 
         public void Init(Blueprint blueprint)
         {
@@ -99,7 +99,7 @@ namespace FSO.LotView
         /// <param name="gd">GraphicsDevice instance.</param>
         /// <param name="state">WorldState instance.</param>
         /// <returns>Object's ID if the object was found at the given position.</returns>
-        public short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd, WorldState state)
+        public virtual short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd, WorldState state)
         {
             /** Draw all objects to a texture as their IDs **/
             var oldCenter = state.CenterTile;
@@ -169,7 +169,7 @@ namespace FSO.LotView
         /// <param name="gd">GraphicsDevice instance.</param>
         /// <param name="state">WorldState instance.</param>
         /// <returns>Object's ID if the object was found at the given position.</returns>
-        public Texture2D GetObjectThumb(ObjectComponent[] objects, Vector3[] positions, GraphicsDevice gd, WorldState state)
+        public virtual Texture2D GetObjectThumb(ObjectComponent[] objects, Vector3[] positions, GraphicsDevice gd, WorldState state)
         {
             var oldZoom = state.Zoom;
             var oldRotation = state.Rotation;
@@ -259,8 +259,9 @@ namespace FSO.LotView
         /// <param name="gd">GraphicsDevice instance.</param>
         /// <param name="state">WorldState instance.</param>
         /// <returns>Object's ID if the object was found at the given position.</returns>
-        public Texture2D GetLotThumb(GraphicsDevice gd, WorldState state)
+        public virtual Texture2D GetLotThumb(GraphicsDevice gd, WorldState state)
         {
+            if (!(state.Camera is WorldCamera)) return new Texture2D(gd, 8, 8);
             var oldZoom = state.Zoom;
             var oldRotation = state.Rotation;
             var oldLevel = state.Level;
@@ -345,7 +346,7 @@ namespace FSO.LotView
         /// </summary>
         /// <param name="gd"></param>
         /// <param name="state"></param>
-        public void PreDraw(GraphicsDevice gd, WorldState state)
+        public virtual void PreDraw(GraphicsDevice gd, WorldState state)
         {
             //var oht = state.BaseHeight;
             //state.BaseHeight = 0;
@@ -370,6 +371,7 @@ namespace FSO.LotView
             var redrawWall = im;
 
             var recacheWalls = false;
+            var recacheCutaway = false;
             var recacheFloors = false;
             var recacheTerrain = false;
             var recacheObjects = false;
@@ -466,7 +468,7 @@ namespace FSO.LotView
                         }
                         break;
                     case BlueprintDamageType.WALL_CUT_CHANGED:
-                        recacheWalls = true;
+                        recacheCutaway = true;
                         break;
                     case BlueprintDamageType.ROOF_STYLE_CHANGED:
                         Blueprint.RoofComp.StyleDirty = true;
@@ -496,10 +498,9 @@ namespace FSO.LotView
                 }
             }
             if (recacheFloors || recacheTerrain) redrawFloor = true;
-            if (recacheWalls) redrawWall = true;
+            if (recacheWalls || recacheCutaway) redrawWall = true;
             if (recacheObjects) redrawStaticObjects = true;
             damage.Clear();
-            state.Light?.ParseInvalidated((sbyte)(state.Level + ((state.DrawRoofs)?1:0)), state);
 
             //scroll buffer loads in increments of SCROLL_BUFFER
             var newOff = GetScrollIncrement(pxOffset, state);
@@ -513,6 +514,13 @@ namespace FSO.LotView
                 Blueprint.Terrain.RegenTerrain(gd, state, Blueprint);
 
             if (recacheWalls)
+                Blueprint.WCRC?.Generate(gd, state, false);
+            else if (recacheCutaway)
+                Blueprint.WCRC?.Generate(gd, state, true);
+
+            state.Light?.ParseInvalidated((sbyte)(state.Level + ((state.DrawRoofs) ? 1 : 0)), state);
+
+            if (recacheWalls || recacheCutaway)
             {
                 _2d.Pause();
                 _2d.Resume(); //clear the sprite buffer before we begin drawing what we're going to cache
@@ -586,8 +594,11 @@ namespace FSO.LotView
         {
             var _2d = state._2D;
             _2d.SetScroll(pxOffset);
-            Blueprint.Terrain.DepthMode = _2d.OutputDepth;
-            Blueprint.Terrain.Draw(gd, state);
+            if (Blueprint.Terrain != null)
+            {
+                Blueprint.Terrain.DepthMode = _2d.OutputDepth;
+                Blueprint.Terrain.Draw(gd, state);
+            }
             _2d.RenderCache(StaticFloorCache);
             foreach (var sub in Blueprint.SubWorlds) sub.DrawArch(gd, state);
         }
@@ -607,7 +618,7 @@ namespace FSO.LotView
             _2d.RenderCache(StaticObjectsCache);
         }
 
-        public Vector2 GetScrollIncrement(Vector2 pxOffset, WorldState state)
+        private Vector2 GetScrollIncrement(Vector2 pxOffset, WorldState state)
         {
             var scrollSize = SCROLL_BUFFER / state.PreciseZoom;
             return new Vector2((float)Math.Floor(pxOffset.X / scrollSize) * scrollSize, (float)Math.Floor(pxOffset.Y / scrollSize) * scrollSize);
@@ -618,7 +629,7 @@ namespace FSO.LotView
         /// </summary>
         /// <param name="gd"></param>
         /// <param name="state"></param>
-        public void Draw(GraphicsDevice gd, WorldState state){
+        public virtual void Draw(GraphicsDevice gd, WorldState state){
 
             var _2d = state._2D;
             /**
@@ -694,7 +705,7 @@ namespace FSO.LotView
             buf.Clear();
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             ClearDrawBuffer(StaticWallCache);
             ClearDrawBuffer(StaticFloorCache);

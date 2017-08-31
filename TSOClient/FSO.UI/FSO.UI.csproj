@@ -108,6 +108,7 @@
     <Compile Include="Utils\UIUtils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="Framework\Parser\UIScript.egt" />
     <None Include="Framework\Parser\UIScript.grm" />
   </ItemGroup>

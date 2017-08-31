@@ -28,8 +28,8 @@ namespace FSO.LotView.Components
 
         public GameObject Obj;
 
-        private DGRP DrawGroup;
-        private DGRPRenderer dgrp;
+        protected DGRP DrawGroup;
+        protected DGRPRenderer dgrp;
         public WorldObjectRenderInfo renderInfo;
         public int DynamicCounter; //how long this sprite has been dynamic without changing sprite
         public List<SLOTItem> ContainerSlots;
@@ -90,7 +90,7 @@ namespace FSO.LotView.Components
             dgrp.NumDynamicSprites = obj.OBJ.NumDynamicSprites;
         }
 
-        public DGRP DGRP
+        public virtual DGRP DGRP
         {
             get
             {
@@ -191,7 +191,7 @@ namespace FSO.LotView.Components
             }
         }
 
-        private float RadianDirection
+        protected float RadianDirection
         {
             get
             {
@@ -221,6 +221,7 @@ namespace FSO.LotView.Components
             set
             {
                 _Direction = value;
+                _WorldDirty = true;
                 if (dgrp != null) {
                     dgrp.Direction = value;
                     dgrp.InvalidateRotation();

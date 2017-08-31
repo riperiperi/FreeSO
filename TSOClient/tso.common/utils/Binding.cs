@@ -17,7 +17,8 @@ namespace FSO.Common.Utils
 
         public Binding()
         {
-            Binding.All.Add(this);
+            lock(Binding.All)
+                Binding.All.Add(this);
         }
 
         ~Binding()
@@ -268,11 +269,14 @@ namespace FSO.Common.Utils
         public static void DisposeAll()
         {
             //dispose of all bindings that are left over (city leave return)
-            foreach (var item in All)
+            lock (All)
             {
-                item.Dispose();
+                foreach (var item in All)
+                {
+                    item.Dispose();
+                }
+                All.Clear();
             }
-            All.Clear();
         }
     }
 

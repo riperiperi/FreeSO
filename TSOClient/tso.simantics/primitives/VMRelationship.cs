@@ -54,7 +54,7 @@ namespace FSO.SimAntics.Primitives
             var myNID = (obj1 as VMAvatar)?.GetPersonData(Model.VMPersonDataVariable.NeighborId) ?? 0;
             var targNID = (obj2 as VMAvatar)?.GetPersonData(Model.VMPersonDataVariable.NeighborId) ?? 0;
 
-            if (!ts1 && obj2.PersistID > 0)
+            if (!ts1 && (obj2.PersistID > 0))
             {
                 //use persist matrix whenever possible.
                 //ignores use neighbour flag so we can use str/ltr.

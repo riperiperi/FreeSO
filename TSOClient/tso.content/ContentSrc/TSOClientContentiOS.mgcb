@@ -139,3 +139,9 @@
 /processorParam:TextureFormat=Color
 /build:Fonts/Mobile_50px.spritefont
 
+#begin Effects/RCObject.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/RCObject.fx
+

@@ -21,7 +21,7 @@ namespace FSO.Common.Rendering.Framework
     {
         private List<_3DComponent> m_Elements = new List<_3DComponent>();
 
-        public _3DLayer Parent;
+        public new _3DLayer Parent;
 
         /// <summary>
         /// Creates a new _3DScene instance.

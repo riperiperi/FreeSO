@@ -262,6 +262,25 @@ void BladesPSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB
 	}
 }
 
+void BladesPS3D(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR1)
+{
+	float2 rand = iterhash22(input.GrassInfo.yz*100); //nearest neighbour effect
+	if (rand.y > GrassProb*((2.0 - input.GrassInfo.x) / 2)) discard;
+	//grass blade here
+
+	float d = input.GrassInfo.w;
+	depthB = packDepth(d);
+	if (depthOutMode == true) {
+		color = depthB;
+	}
+	else {
+		float bladeCol = rand.x*0.6;
+		float4 green = lerp(LightGreen, DarkGreen, bladeCol);
+		float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
+		color = lerp(green, brown, input.GrassInfo.x) * lightProcess(input.ModelPos) * LightDot(input.Normal);//DiffuseColor;
+	}
+}
+
 void GridPS(GrassPSVTX input, out float4 color:COLOR0)
 {
 	if (floor(input.ScreenPos.xy + ScreenOffset).x % 2 == 0) discard;
@@ -274,6 +293,31 @@ void GridPS(GrassPSVTX input, out float4 color:COLOR0)
 	}
 }
 
+void GridPS3D(GrassPSVTX input, out float4 color:COLOR0)
+{
+	if (abs(floor(input.GrassInfo.y * 24)) % 2 == 0) discard;
+	//checkerboard. skip odd.
+	if (depthOutMode == true) {
+		discard;
+	}
+	else {
+		color = DiffuseColor;
+	}
+}
+
+bool Water;
+
+float2 LoopUV(float2 uv) {
+	if (Water == false) return uv;
+	uv = frac(uv);
+
+	float dir1 = uv.x + uv.y;
+	float dir2 = uv.x + (1 - uv.y);
+	if (dir1 < 0.5 || dir1 > 1.5 || dir2 < 0.5 || dir2 > 1.5) {
+		uv = frac(uv + float2(0.5, 0.5));
+	}
+	return uv;
+}
 
 void BasePS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB:COLOR1)
 {
@@ -287,7 +331,7 @@ void BasePS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB:COLOR1)
         color = lightProcess(input.ModelPos) * LightDot(input.Normal);//*DiffuseColor;
 		if (IgnoreColor == false) color *= input.Color;
 		if (UseTexture == true) {
-			color *= tex2D(TexSampler, input.GrassInfo.yz);
+			color *= tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
 			if (color.a < 0.5) discard;
 		}
     }
@@ -305,10 +349,26 @@ void BasePSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB :
 		color = SimpleLight(input.ModelPos.xz) * LightDot(input.Normal);
 		if (IgnoreColor == false) color *= input.Color;
 		if (UseTexture == true) {
-			color *= tex2D(TexSampler, input.GrassInfo.yz);
+			color *= tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
 			if (color.a < 0.5) discard;
 		}
 	}
+}
+
+void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
+{
+	float d = input.GrassInfo.w;
+	color = lightProcess(input.ModelPos) * LightDot(input.Normal);//*DiffuseColor;
+	if (IgnoreColor == false) color *= input.Color;
+	if (UseTexture == true) {
+		color *= tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
+		if (color.a < 0.5) discard;
+	}
+}
+
+void BasePSLMap(GrassPSVTX input, out float4 color:COLOR0)
+{
+	color = DiffuseColor;
 }
 
 technique DrawBase
@@ -331,10 +391,23 @@ technique DrawBase
 
 #if SM4
 		VertexShader = compile vs_4_0_level_9_1 GrassVS();
-		PixelShader = compile ps_4_0_level_9_1 BasePS();
+		PixelShader = compile ps_4_0_level_9_3 BasePS();
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 BasePS();
+#endif;
+
+	}
+
+	pass MainPass3D
+	{
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 GrassVS();
+		PixelShader = compile ps_4_0_level_9_3 BasePS3D();
+#else
+		VertexShader = compile vs_3_0 GrassVS();
+		PixelShader = compile ps_3_0 BasePS3D();
 #endif;
 
 	}
@@ -354,6 +427,19 @@ technique DrawGrid
 #endif;
 
 	}
+
+	pass MainPass3D
+	{
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 GrassVS();
+		PixelShader = compile ps_4_0_level_9_1 GridPS3D();
+#else
+		VertexShader = compile vs_3_0 GrassVS();
+		PixelShader = compile ps_3_0 GridPS3D();
+#endif;
+
+	}
 }
 
 technique DrawBlades
@@ -369,14 +455,41 @@ technique DrawBlades
 #endif;
 	}
 
-    pass MainBlades
-    {
+	pass MainBlades
+	{
 #if SM4
-        VertexShader = compile vs_4_0_level_9_3 GrassVS();
-        PixelShader = compile ps_4_0_level_9_3 BladesPS(); 
+		VertexShader = compile vs_4_0_level_9_3 GrassVS();
+		PixelShader = compile ps_4_0_level_9_3 BladesPS();
 #else
-        VertexShader = compile vs_3_0 GrassVS();
-        PixelShader = compile ps_3_0 BladesPS();
+		VertexShader = compile vs_3_0 GrassVS();
+		PixelShader = compile ps_3_0 BladesPS();
 #endif;
-    }
+	}
+
+	pass MainBlades3D
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_3 GrassVS();
+		PixelShader = compile ps_4_0_level_9_3 BladesPS3D();
+#else
+		VertexShader = compile vs_3_0 GrassVS();
+		PixelShader = compile ps_3_0 BladesPS3D();
+#endif;
+	}
+}
+
+technique DrawLMap
+{
+	pass MainPass
+	{
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 GrassVS();
+		PixelShader = compile ps_4_0_level_9_1 BasePSLMap();
+#else
+		VertexShader = compile vs_3_0 GrassVS();
+		PixelShader = compile ps_3_0 BasePSLMap();
+#endif;
+
+	}
 }

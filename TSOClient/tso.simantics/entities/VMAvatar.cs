@@ -779,8 +779,7 @@ namespace FSO.SimAntics
                 case VMPersonDataVariable.SkillLock:
                     return true;
                 case VMPersonDataVariable.IsGhost:
-                    SetPersonData(VMPersonDataVariable.RenderDisplayFlags, (short)(GetPersonData(VMPersonDataVariable.RenderDisplayFlags) & ~(-1)));
-                    if (value > 0) SetPersonData(VMPersonDataVariable.RenderDisplayFlags, (short)(GetPersonData(VMPersonDataVariable.RenderDisplayFlags) | -1));
+                    if (WorldUI != null) ((AvatarComponent)WorldUI).IsDead = value > 0;
                     break;
             }
             PersonData[(ushort)variable] = value;
@@ -966,7 +965,7 @@ namespace FSO.SimAntics
             var ico = FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
 
             //todo: better dispose handling for these icons
-            return (store > 0 && ico != null)?TextureUtils.Decimate(ico, gd, 1<<(2-store)):ico;
+            return (store > 0 && ico != null)?TextureUtils.Decimate(ico, gd, 1<<(2-store), false):ico;
         }
 
         #region VM Marshalling Functions
@@ -1061,6 +1060,7 @@ namespace FSO.SimAntics
             InitBodyData(context);
             SetPersonData(VMPersonDataVariable.Gender, gender);
             SetPersonData(VMPersonDataVariable.RenderDisplayFlags, GetPersonData(VMPersonDataVariable.RenderDisplayFlags));
+            SetPersonData(VMPersonDataVariable.IsGhost, GetPersonData(VMPersonDataVariable.IsGhost));
             BodyOutfit = input.BodyOutfit;
             HeadOutfit = input.HeadOutfit;
             if (UseWorld) ((AvatarComponent)WorldUI).blueprint = context.Blueprint;

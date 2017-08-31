@@ -39,6 +39,7 @@ namespace FSO.HIT
         private HITTVOn TVEvent;
         private HITTVOn MusicEvent;
         private HITTVOn NextMusic;
+        public AudioListener Listener = new AudioListener();
 
         private List<FSCPlayer> FSCPlayers;
         public List<SoundEffectInstance> AmbLoops;

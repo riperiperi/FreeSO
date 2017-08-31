@@ -51,6 +51,20 @@ namespace FSO.LotView.Components
             }
         }
 
+        public Vector3 UnmoddedPosition
+        {
+            get
+            {
+                return _Position;
+            }
+            set
+            {
+                _Position = value;
+                OnPositionChanged();
+                _WorldDirty = true;
+            }
+        }
+
         public override float PreferredDrawOrder
         {
             get

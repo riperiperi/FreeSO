@@ -21,6 +21,7 @@ namespace FSO.LotView
     public class WorldContent
     {
         public static ContentManager ContentManager;
+        private static BasicEffect _be;
 
         public static void Init(GameServiceContainer serviceContainer, string rootDir)
         {
@@ -62,6 +63,44 @@ namespace FSO.LotView
             {
                 return ContentManager.Load<Effect>("Effects/GrassShader"+EffectSuffix);
             }
+        }
+
+        public static Effect RCObject
+        {
+            get
+            {
+                return ContentManager.Load<Effect>("Effects/RCObject");
+            }
+        }
+
+        public static Effect SSAA
+        {
+            get
+            {
+                return ContentManager.Load<Effect>("Effects/SSAA");
+            }
+        }
+
+        private static VertexBuffer _TextureVerts;
+        public static VertexBuffer GetTextureVerts(GraphicsDevice gd) 
+        {
+            if (_TextureVerts == null)
+            {
+                var verts = new VertexPositionTexture[4];
+                verts[0] = new VertexPositionTexture(new Vector3(-1, -1, 0), new Vector2(0, 0));
+                verts[1] = new VertexPositionTexture(new Vector3(-1, 1, 0), new Vector2(0, 1));
+                verts[2] = new VertexPositionTexture(new Vector3(1, -1, 0), new Vector2(1, 0));
+                verts[3] = new VertexPositionTexture(new Vector3(1, 1, 0), new Vector2(1, 1));
+                _TextureVerts = new VertexBuffer(gd, typeof(VertexPositionTexture), 4, BufferUsage.None);
+                _TextureVerts.SetData(verts);
+            }
+            return _TextureVerts;
+        }
+
+        public static BasicEffect GetBE(GraphicsDevice gd)
+        {
+            if (_be == null) _be = new BasicEffect(gd);
+            return _be;
         }
     }
 }

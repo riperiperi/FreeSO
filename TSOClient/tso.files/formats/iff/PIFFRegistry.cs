@@ -15,6 +15,7 @@ namespace FSO.Files.Formats.IFF
 
         public static void Init(string basePath)
         {
+            if (!Directory.Exists(basePath)) return;
             string[] paths = Directory.GetFiles(basePath, "*.piff", SearchOption.AllDirectories);
             for (int i = 0; i < paths.Length; i++)
             {

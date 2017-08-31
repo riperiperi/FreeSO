@@ -16,6 +16,7 @@ float2 MapLayout;
 float2 UVBase;
 
 float2 ShadowPowers;
+float2 SSAASize;
 
 bool IsOutdoors;
 
@@ -58,6 +59,7 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
     VertexShaderOutput output = (VertexShaderOutput)0;
     output.Position = mul(float4(input.Position.xy, 0, 1), Projection);
     output.p = input.Position.xy * MapLayout - UVBase;
+	output.p += SSAASize / 20000000;
 
     return output;
 }
@@ -119,7 +121,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 
 float4 PixelShaderFunctionOutdoors(VertexShaderOutput input) : COLOR0{
 	float2 uv = input.p;
-	//if (OutsideRoomCheck(uv)) discard;
+	if (OutsideRoomCheck(uv)) discard;
 	float light = 1;
 
 	float2 shadow = float2(tex2D(shadowSampler, uv).r, tex2D(floorShadowSampler, uv).r);
@@ -135,6 +137,50 @@ float4 PixelShaderFunctionOutdoors(VertexShaderOutput input) : COLOR0{
 	else {
 		return float4(light, 0.0, floorLight, 0.0);
 	}
+}
+
+float SSAASample(float2 uv) {
+	float result = 0;
+	uv += SSAASize / 2;
+	result += tex2D(shadowSampler, uv).r;
+	result += tex2D(shadowSampler, uv + float2(SSAASize.x, 0)).r;
+	result += tex2D(shadowSampler, uv + float2(0, SSAASize.y)).r;
+	result += tex2D(shadowSampler, uv + float2(SSAASize.x, SSAASize.y)).r;
+	return result / 4;
+}
+
+float4 PixelShaderFunctionOutdoorsSSAA(VertexShaderOutput input) : COLOR0{
+	float2 uv = input.p;
+	if (OutsideRoomCheck(uv)) discard;
+	float light = 1;
+
+	float2 shadow = float2(SSAASample(uv), tex2D(floorShadowSampler, uv).r);
+	shadow *= ShadowPowers;
+
+	light -= light*shadow.x;
+	float floorLight = light - light*shadow.y;
+	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
+	// output different under diff conditions
+	if (IsOutdoors == true) {
+		return float4(0.0, light, 0.0, floorLight);
+	}
+	else {
+		return float4(light, 0.0, floorLight, 0.0);
+	}
+}
+
+float4 PixelShaderFunctionLightBleed(VertexShaderOutput input) : COLOR0{
+	float2 uv = input.p;
+	if (OutsideRoomCheck(uv)) discard;
+	float light = 1;
+
+	float2 shadow = float2(SSAASample(uv) * 5/4, 0);
+
+	light -= light*shadow.x;
+	float floorLight = light - light*shadow.y;
+	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
+	// output different under diff conditions
+	return float4(0.0, light, 0.0, floorLight);
 }
 
 float4 PixelShaderFunctionMask(VertexShaderOutput input) : COLOR0{
@@ -184,6 +230,34 @@ technique Draw2D
 #else
 		VertexShader = compile vs_3_0 VertexShaderFunction();
 		PixelShader = compile ps_3_0 PixelShaderFunctionMask();
+#endif;
+
+	}
+
+	pass BleedPass
+	{
+		AlphaBlendEnable = TRUE; DestBlend = ONE; SrcBlend = ONE; BlendOp = Add; ZEnable = FALSE;
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();
+		PixelShader = compile ps_4_0_level_9_1 PixelShaderFunctionLightBleed();
+#else
+		VertexShader = compile vs_3_0 VertexShaderFunction();
+		PixelShader = compile ps_3_0 PixelShaderFunctionLightBleed();
+#endif;
+
+	}
+
+	pass SSAAPass
+	{
+		AlphaBlendEnable = TRUE; DestBlend = ONE; SrcBlend = ONE; BlendOp = Add; ZEnable = FALSE;
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();
+		PixelShader = compile ps_4_0_level_9_1 PixelShaderFunctionOutdoorsSSAA();
+#else
+		VertexShader = compile vs_3_0 VertexShaderFunction();
+		PixelShader = compile ps_3_0 PixelShaderFunctionOutdoorsSSAA();
 #endif;
 
 	}

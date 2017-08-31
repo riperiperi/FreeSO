@@ -48,6 +48,7 @@ namespace FSO.LotView.Components
             {
                 var lvl = Floors[i];
                 var data = Bp.Floors[i];
+                var walls = Bp.Walls[i];
                 lvl.Clear();
                 var width = Bp.Width;
                 var end = data.Length - width;
@@ -55,9 +56,20 @@ namespace FSO.LotView.Components
                 {
                     var pat = data[j].Pattern;
                     if ((j + 1) % Bp.Width < 2) continue;
-                    var convert = PatternConvert(pat, (ushort)j, (sbyte)(i + 1), buildMode);
-                    if (convert == 0 && i > 0) continue;
-                    lvl.AddTile(convert, (ushort)j);
+                    var wall = walls[j];
+                    if ((wall.Segments & WallSegments.AnyDiag) > 0)
+                    {
+                        var vertical = (wall.Segments & WallSegments.VerticalDiag) > 0;
+
+                        if (wall.TopLeftPattern != 0 || i == 0) lvl.AddTileDiag(wall.TopLeftPattern, (ushort)j, true, vertical);
+                        if (wall.TopLeftStyle != 0 || i == 0) lvl.AddTileDiag(wall.TopLeftStyle, (ushort)j, false, vertical);
+                    }
+                    else
+                    {
+                        var convert = PatternConvert(pat, (ushort)j, (sbyte)(i + 1), buildMode);
+                        if (convert == 0 && i > 0) continue;
+                        lvl.AddTile(convert, (ushort)j);
+                    }
                 }
                 lvl.RegenAll(gd);
             }
@@ -179,28 +191,37 @@ namespace FSO.LotView.Components
             return dat.IndexCount/3;
         }
 
-        public void DrawFloor(GraphicsDevice gd, Effect e, WorldState state)
+        public void DrawFloor(GraphicsDevice gd, Effect e, WorldZoom zoom, WorldRotation rot, List<Texture2D> roommaps, HashSet<sbyte> floors, EffectPass pass, 
+            Matrix? lightWorld = null, WorldState state = null, int minFloor = 0)
         {
             //assumes the effect and all its parameters have been set up already
             //we just need to get the right texture and offset
             var flrContent = Content.Content.Get().WorldFloors;
 
-            e.Parameters["TexOffset"].SetValue(TexOffset[state.Zoom]*-1f);
-            var tmat = TexMat[state.Rotation];
+            e.Parameters["TexOffset"].SetValue(new Vector2());// TexOffset[zoom]*-1f);
+            var tmat = TexMat[rot];
             e.Parameters["TexMatrix"].SetValue(tmat);
 
             var f = 0;
             foreach (var floor in Floors)
             {
-                if (f++ >= state.Level) continue;
+                if (!floors.Contains((sbyte)(f++))) continue;
 
-                var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, 2.95f*(f-1)* 3 - Bp.BaseAlt * Bp.TerrainFactor * 3, 0);
+                Matrix worldmat;
+                if (lightWorld == null)
+                    worldmat = Matrix.CreateTranslation(0, 2.95f * (f - 1) * 3 - Bp.BaseAlt * Bp.TerrainFactor * 3, 0);
+                else
+                {
+                    worldmat = Matrix.CreateScale(1, 0, 1) * Matrix.CreateTranslation(0, 1f * (f - (1 + minFloor)), 0) * lightWorld.Value;
+                    e.Parameters["DiffuseColor"].SetValue(new Vector4(1, 1, 1, 1) * (float)(6 - (f - (minFloor)))/5f);
+                }
+                
                 e.Parameters["World"].SetValue(worldmat);
                 e.Parameters["Level"].SetValue((float)(f-1));
-                e.Parameters["RoomMap"].SetValue(state.Rooms.RoomMaps[f-1]);
+                if (roommaps != null) e.Parameters["RoomMap"].SetValue(roommaps[f-1]);
                 foreach (var type in floor.GroupForTileType)
                 {
-                    bool pointFilter = false;
+                    bool water = false;
                     var dat = type.Value.GPUData;
                     if (dat == null) continue;
                     gd.Indices = dat;
@@ -220,9 +241,9 @@ namespace FSO.LotView.Components
                         {
                             if (id == 65503)
                             {
-                                pointFilter = true;
+                                water = true;
                                 var airTiles = TextureGenerator.GetAirTiles(gd);
-                                switch (state.Zoom)
+                                switch (zoom)
                                 {
                                     case WorldZoom.Far:
                                         SPR = airTiles[2];
@@ -237,21 +258,21 @@ namespace FSO.LotView.Components
                             }
                             else
                             {
+                                e.Parameters["Water"].SetValue(true);
                                 var pool = id >= 65520;
-                                pointFilter = true;
+                                water = true;
                                 if (!pool)
                                 {
                                     e.Parameters["UseTexture"].SetValue(false);
                                     e.Parameters["IgnoreColor"].SetValue(false);
 
                                     //quickly draw under the water
-                                    var pass2 = e.CurrentTechnique.Passes[WorldConfig.Current.PassOffset];
-                                    pass2.Apply();
+                                    pass.Apply();
                                     gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
 
                                     e.Parameters["UseTexture"].SetValue(true);
                                     e.Parameters["IgnoreColor"].SetValue(true);
-                                    e.Parameters["World"].SetValue(worldmat * Matrix.CreateTranslation(0, 0.05f, 0));
+                                    if (lightWorld == null) e.Parameters["World"].SetValue(worldmat * Matrix.CreateTranslation(0, 0.05f, 0));
                                     id -= 65504;
                                 }
                                 else
@@ -259,31 +280,34 @@ namespace FSO.LotView.Components
                                     id -= 65520;
                                 }
 
-                                e.Parameters["TexMatrix"].SetValue(CounterTexMat[state.Rotation]);
+                                e.Parameters["TexMatrix"].SetValue(CounterTexMat[rot]);
 
-                                var rot = (int)state.Rotation;
-                                rot = (4 - rot) % 4;
-                                id = (ushort)(((id << rot) & 15) | (id >> (4 - rot)));
+                                var roti = (int)rot;
+                                roti = (4 - roti) % 4;
+                                id = (ushort)(((id << roti) & 15) | (id >> (4 - roti)));
                                 //pools & water are drawn with special logic, and may also be drawn slightly above the ground.
 
                                 int baseSPR;
                                 int frameNum = 0;
-                                switch (state.Zoom)
+                                if (state != null)
                                 {
-                                    case WorldZoom.Far:
-                                        baseSPR = (pool) ? 0x400 : 0x800;
-                                        frameNum = (pool) ? 0 : 2;
-                                        SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
-                                        break;
-                                    case WorldZoom.Medium:
-                                        baseSPR = (pool) ? 0x410 : 0x800;
-                                        frameNum = (pool) ? 0 : 1;
-                                        SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
-                                        break;
-                                    default:
-                                        baseSPR = (pool) ? 0x420 : 0x800;
-                                        SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
-                                        break;
+                                    switch (zoom)
+                                    {
+                                        case WorldZoom.Far:
+                                            baseSPR = (pool) ? 0x400 : 0x800;
+                                            frameNum = (pool) ? 0 : 2;
+                                            SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
+                                            break;
+                                        case WorldZoom.Medium:
+                                            baseSPR = (pool) ? 0x410 : 0x800;
+                                            frameNum = (pool) ? 0 : 1;
+                                            SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
+                                            break;
+                                        default:
+                                            baseSPR = (pool) ? 0x420 : 0x800;
+                                            SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
+                                            break;
+                                    }
                                 }
                             }
                         }
@@ -293,28 +317,28 @@ namespace FSO.LotView.Components
 
                             if (flr == null) continue;
 
-                            switch (state.Zoom)
+                            if (state != null)
                             {
-                                case WorldZoom.Far:
-                                    SPR = state._2D.GetTexture(flr.Far.Frames[0]);
-                                    break;
-                                case WorldZoom.Medium:
-                                    SPR = state._2D.GetTexture(flr.Medium.Frames[0]);
-                                    break;
-                                default:
-                                    SPR = state._2D.GetTexture(flr.Near.Frames[0]);
-                                    break;
+                                switch (zoom)
+                                {
+                                    case WorldZoom.Far:
+                                        SPR = state._2D.GetTexture(flr.Far.Frames[0]);
+                                        break;
+                                    case WorldZoom.Medium:
+                                        SPR = state._2D.GetTexture(flr.Medium.Frames[0]);
+                                        break;
+                                    default:
+                                        SPR = state._2D.GetTexture(flr.Near.Frames[0]);
+                                        break;
+                                }
                             }
                         }
+
+                        //e.Parameters["UseTexture"].SetValue(SPR != null);
                         e.Parameters["BaseTex"].SetValue(SPR);
                     }
 
-                    var pass = e.CurrentTechnique.Passes[WorldConfig.Current.PassOffset];
                     pass.Apply();
-                    if (pointFilter)
-                    {
-                        gd.SamplerStates[0] = new SamplerState() { Filter = TextureFilter.Point };
-                    }
                     gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
 
                     if (id == 0)
@@ -322,13 +346,15 @@ namespace FSO.LotView.Components
                         e.Parameters["UseTexture"].SetValue(true);
                         e.Parameters["IgnoreColor"].SetValue(true);
                     }
-                    if (pointFilter)
+                    if (water)
                     {
                         e.Parameters["World"].SetValue(worldmat);
                         e.Parameters["TexMatrix"].SetValue(tmat);
+                        e.Parameters["Water"].SetValue(false);
                     }
                 }
             }
+            e.Parameters["Water"].SetValue(false);
         }
 
         /*
@@ -421,6 +447,17 @@ namespace FSO.LotView.Components
             group.AddIndex(offset);
         }
 
+        public void AddTileDiag(ushort tileID, ushort offset, bool side, bool vertical)
+        {
+            FloorTileGroup group;
+            if (!GroupForTileType.TryGetValue(tileID, out group))
+            {
+                group = new FloorTileGroup();
+                GroupForTileType[tileID] = group;
+            }
+            group.AddDiagIndex(offset, side, vertical);
+        }
+
         public void Regen(GraphicsDevice gd, HashSet<ushort> floors)
         {
 
@@ -483,6 +520,24 @@ namespace FSO.LotView.Components
             var result = new List<int> { o2, o2 + 1, o2 + 2, o2 + 2, o2 + 3, o2 };
             GeomForOffset[offset] = result;
         }
+
+        public void AddDiagIndex(ushort offset, bool side, bool vertical)
+        {
+            //
+            var o2 = offset * 4;
+            List<int> result;
+            if (vertical)
+            {
+                if (side) result = new List<int> { o2, o2 + 1, o2 + 2 };
+                else result = new List<int> { o2 + 2, o2 + 3, o2 };
+            } else
+            {
+                if (side) result = new List<int> { o2+1, o2 + 2, o2 + 3 };
+                else result = new List<int> { o2, o2 + 1, o2 + 3 };
+            }
+            GeomForOffset[(ushort)(offset + (side?32768:0))] = result;
+        }
+
 
         public bool RemoveIndex(ushort offset)
         {

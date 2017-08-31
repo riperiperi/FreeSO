@@ -374,10 +374,13 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COL
     } else {
 		bool lastRow = floor(v.roomVec.y * 256) == 255;
 		int col = floor(v.roomVec.x * 256);
-		if (lastRow == true && col == 254) pixel = float4(float3(1.0, 1.0, 1.0) - pixel.xyz, pixel.a);
-		else if (lastRow == true && col == 253) {
-			float gray = dot(pixel.xyz, float3(0.2989, 0.5870, 0.1140));
-			pixel = float4(gray, gray, gray, pixel.a);
+		if (lastRow == true && col > 252) {
+			if (col == 254) pixel = float4(float3(1.0, 1.0, 1.0) - pixel.xyz, pixel.a);
+			else if (col == 253) {
+				float gray = dot(pixel.xyz, float3(0.2989, 0.5870, 0.1140));
+				pixel = float4(gray, gray, gray, pixel.a);
+			}
+			//255 does not light pixel at all.
 		}
 		else if (v.roomVec.x < 0.0) pixel *= tex2D(ambientSampler, v.roomVec);
 		else if (v.roomVec.x != 0.0) {

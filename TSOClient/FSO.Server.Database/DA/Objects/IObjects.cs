@@ -15,6 +15,7 @@ namespace FSO.Server.Database.DA.Objects
         IEnumerable<DbObject> All(int shard_id);
         List<DbObject> GetAvatarInventory(uint avatar_id);
         List<DbObject> ObjOfTypeInAvatarInventory(uint avatar_id, uint guid);
+        List<DbObject> GetObjectOwners(IEnumerable<uint> object_ids);
         int ReturnLostObjects(uint lot_id, IEnumerable<uint> object_ids);
         bool ConsumeObjsOfTypeInAvatarInventory(uint avatar_id, uint guid, int num);
         List<DbObject> GetByAvatarId(uint avatar_id);

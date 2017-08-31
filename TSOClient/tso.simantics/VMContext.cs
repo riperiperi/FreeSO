@@ -624,6 +624,7 @@ namespace FSO.SimAntics
                 area += info.Room.Area;
                 foreach (var ent in info.Entities)
                 {
+                    if (ent.MultitileGroup.Objects.Count == 0) continue;
                     var mainSource = ent == ent.MultitileGroup.Objects[0];
                     var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
                     
@@ -1169,7 +1170,7 @@ namespace FSO.SimAntics
                         var subObjDefinition = FSO.Content.Content.Get().WorldObjects.Get(objd[i].GUID);
                         if (subObjDefinition != null)
                         {
-                            var worldObject = new ObjectComponent(subObjDefinition);
+                            var worldObject = MakeObjectComponent(subObjDefinition);
                             var vmObject = new VMGameObject(subObjDefinition, worldObject);
                             vmObject.GhostImage = ghostImage;
                             if (UseWorld) Blueprint.AddObject(worldObject);
@@ -1225,7 +1226,7 @@ namespace FSO.SimAntics
                 }
                 else
                 {
-                    var worldObject = new ObjectComponent(objDefinition);
+                    var worldObject = MakeObjectComponent(objDefinition);
                     var vmObject = new VMGameObject(objDefinition, worldObject);
 
                     vmObject.MultitileGroup = group;
@@ -1263,6 +1264,12 @@ namespace FSO.SimAntics
             {
                 VM.EODHost.ForceDisconnectObj(target);
             }
+        }
+
+        public ObjectComponent MakeObjectComponent(GameObject obj)
+        {
+            if (UseWorld) return World.MakeObjectComponent(obj);
+            return new ObjectComponent(obj);
         }
 
         public void AddPrimitive(VMPrimitiveRegistration primitive){

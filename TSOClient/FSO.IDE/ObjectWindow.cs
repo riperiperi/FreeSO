@@ -112,6 +112,7 @@ namespace FSO.IDE
             IffResView.ChangeActiveObject(ActiveObj);
             FuncEditor.SetActiveObject(ActiveObj);
             DrawgroupEdit.SetActiveObject(ActiveObj);
+            FSOMEdit.SetActiveObject(ActiveObj);
 
             //update top var
 

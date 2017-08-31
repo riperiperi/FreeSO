@@ -76,7 +76,7 @@ namespace FSO.SimAntics.Engine.Utils
                     return ((VMAvatar)context.Caller).GetMotiveData((VMMotive)data);
 
                 case VMVariableScope.StackObjectMotives: //15
-                    return ((VMAvatar)context.StackObject).GetMotiveData((VMMotive)data);
+                    return (context.StackObject as VMAvatar)?.GetMotiveData((VMMotive)data) ?? 0;
 
                 case VMVariableScope.StackObjectSlot: //16
                     var slotObj = context.StackObject.GetSlot(data);
@@ -658,7 +658,7 @@ namespace FSO.SimAntics.Engine.Utils
                     return ((VMAvatar)context.Caller).SetMotiveData((VMMotive)data, value);
 
                 case VMVariableScope.StackObjectMotives: //15
-                    return ((VMAvatar)context.StackObject).SetMotiveData((VMMotive)data, value);
+                    return (context.StackObject as VMAvatar)?.SetMotiveData((VMMotive)data, value) ?? false;
 
                 case VMVariableScope.StackObjectSlot: //16
                     throw new VMSimanticsException("Not implemented...", context);

@@ -120,6 +120,9 @@
     <Content Include="ContentSrc\Effects\2DWorldBatchiOS.fx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="ContentSrc\Effects\SSAA.fx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="ContentSrc\Effects\GrassShaderiOS.fx" />
     <Content Include="ContentSrc\Effects\GrassShader.fx" />
     <Content Include="ContentSrc\Effects\LightMap2D.fx">
@@ -128,6 +131,7 @@
     <Content Include="Content\UI\uitext\english.dir\_f107_custombuildstrings.cst">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="ContentSrc\Effects\RCObject.fx" />
     <Compile Include="Framework\FAR1Provider.cs" />
     <Compile Include="Framework\FAR3Provider.cs" />
     <Compile Include="Framework\FileProvider.cs" />
@@ -155,6 +159,7 @@
     <Compile Include="Model\Floor.cs" />
     <Compile Include="Model\Wall.cs" />
     <Compile Include="RackOutfitsProvider.cs" />
+    <Compile Include="RCMeshProvider.cs" />
     <Compile Include="ResAction.cs" />
     <Compile Include="TS1\CustomUIProvider.cs" />
     <Compile Include="TS1\TS1Audio.cs" />
@@ -452,6 +457,7 @@
     <Content Include="Content\Textures\terrain\roadcorner15.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="app.config" />
     <None Include="ContentSrc\Effects\2dWorldBatch.mgfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -567,6 +573,21 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\OGL\Fonts\Mobile_50px.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Effects\RCObject.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Effects\RCObject.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DX\Effects\SSAA.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Effects\SSAA.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\MeshReplace\splitrailfence_iff_100.fsom">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Content\Patch\oj-rest-controller_uninit_local.piff">

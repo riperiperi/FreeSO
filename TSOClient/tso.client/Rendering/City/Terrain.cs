@@ -26,10 +26,13 @@ using FSO.Client.Controllers;
 using FSO.LotView;
 using FSO.Client.Rendering.City.Plugins;
 using FSO.Common;
+using FSO.LotView.RC;
+using FSO.Common.Rendering.Framework.Camera;
+using FSO.LotView.Utils;
 
 namespace FSO.Client.Rendering.City
 {
-    public class Terrain : _3DAbstract, IDisposable
+    public class Terrain : _3DAbstract, IDisposable, IRCSurroundings
     {
         public override List<_3DComponent> GetElements()
         {
@@ -1338,7 +1341,9 @@ namespace FSO.Client.Rendering.City
                 m_ShadowMult = 0.50f; //Shadow strength. Remember to change the above if you alter this.
             }
         }
-        
+
+        private Vector3 LotPosition;
+
         public void InheritPosition(World lotWorld, CoreGameScreenController controller)
         {
             if (controller != null)
@@ -1373,6 +1378,8 @@ namespace FSO.Client.Rendering.City
                             break;
                     }
 
+                    LotPosition = new Vector3((float)(x + 1), elev / 12.0f, (float)(y + 0));
+
                     Vector3 scrollPos = Vector3.Transform(new Vector3((float)(x + 1)-tile.Y, elev / 12.0f, (float)(y + 0)+tile.X), m_MovMatrix);
                     m_TargVOffX += (scrollPos.X - m_TargVOffX)/3;
                     m_TargVOffY += (scrollPos.Y - m_TargVOffY)/3;
@@ -1384,7 +1391,14 @@ namespace FSO.Client.Rendering.City
         {
             return(MapData.ElevationData[(y * 512 + x)] + MapData.ElevationData[(y * 512 + Math.Min(x + 1, 511))] +
                         MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511))] +
-                        MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + x)]) / 4; //elevation of sprite is the average elevation of the 4 vertices of the tile
+                        MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + x)]) / 4f; //elevation of sprite is the average elevation of the 4 vertices of the tile
+        }
+
+        private float GetMinElevationAt(int x, int y)
+        {
+            return Math.Min(Math.Min(Math.Min(MapData.ElevationData[(y * 512 + x)], MapData.ElevationData[(y * 512 + Math.Min(x + 1, 511))]),
+                        MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511))]),
+                        MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + x)]); //elevation of sprite is the average elevation of the 4 vertices of the tile
         }
 
         private void FixedTimeUpdate(UpdateState state)
@@ -1513,6 +1527,7 @@ namespace FSO.Client.Rendering.City
             float LisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / m_LotZoomSize;  // currently set 144 to near zoom
 
             float IsoScale = (1 - m_ZoomProgress) * FisoScale + (m_ZoomProgress) * ZisoScale;
+            if (FSOEnvironment.Enable3D) return IsoScale;
             return (1-m_LotZoomProgress) * IsoScale + m_LotZoomProgress * LisoScale;
         }
 
@@ -1547,7 +1562,11 @@ namespace FSO.Client.Rendering.City
             float HB = m_ScrWidth * IsoScale;
             float VB = m_ScrHeight * IsoScale;
 
+            m_GraphicsDevice.Clear(Color.Black);
+            if (FSOEnvironment.Enable3D && m_LotZoomProgress > 0.0001f) return;
+
             Matrix ProjectionMatrix = Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 524);
+
             Matrix ViewMatrix = Matrix.Identity;
             Matrix WorldMatrix = Matrix.Identity;
 
@@ -1602,8 +1621,6 @@ namespace FSO.Client.Rendering.City
                 }
             }
             VertexShader.Parameters["LightMatrix"].SetValue(m_LightMatrix);
-            m_GraphicsDevice.Clear(Color.Black);
-
 
             if (ShadowsEnabled)
             {
@@ -1637,7 +1654,177 @@ namespace FSO.Client.Rendering.City
             Draw2DPoly(); //draw spotlights using 2DVert shader
             Plugin?.Draw(m_Batch);
         }
+
+        public static DepthStencilState StencilWrite = new DepthStencilState()
+        {
+            StencilEnable = true,
+            StencilFunction = CompareFunction.Always,
+            StencilFail = StencilOperation.Keep,
+            StencilPass = StencilOperation.Replace,
+            CounterClockwiseStencilPass = StencilOperation.Replace,
+            StencilDepthBufferFail = StencilOperation.Keep,
+            DepthBufferEnable = false,
+            DepthBufferWriteEnable = false,
+            ReferenceStencil = 1,
+            TwoSidedStencilMode = true
+        };
+
+        public static DepthStencilState StencilOnly = new DepthStencilState()
+        {
+            StencilEnable = true,
+            StencilFunction = CompareFunction.NotEqual,
+            DepthBufferEnable = true,
+            DepthBufferWriteEnable = true,
+            ReferenceStencil = 1,
+            TwoSidedStencilMode = true
+        };
+        public static BlendState NoColor = new BlendState() { ColorWriteChannels = ColorWriteChannels.None };
+
+        public uint StencilLotID;
+        public VertexBuffer StencilVertices;
+
+        public void DrawSurrounding(GraphicsDevice gfx, ICamera camera, Vector4 fogColor, int surroundNumber) {
+            if (!GlobalSettings.Default.CitySkybox)
+            {
+                if (camera is WorldCamera3D)
+                {
+                    var wc = (WorldCamera3D)camera;
+                    if (wc.FromIntensity != 0) wc.FromIntensity = 0;
+                }
+                return;
+            }
+            m_GraphicsDevice = gfx;
+
+            var world = Matrix.CreateTranslation(-LotPosition + new Vector3(-1 / 75f, -0.011f, 1 / 75f)) * Matrix.CreateRotationY((float)Math.PI / 2) * Matrix.CreateScale(75f * 3, 75f * 3 / 3f, 75f * 3);
+
+            float IsoScale = GetIsoScale();
+            m_LastIsoScale = IsoScale;
+
+            float HB = m_ScrWidth * IsoScale;
+            float VB = m_ScrHeight * IsoScale;
+
+            if (camera is WorldCamera3D)
+            {
+                var wc = (WorldCamera3D)camera;
+
+                Matrix ProjectionMatrix = Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 524);
+
+                Matrix ViewMatrix = Matrix.Identity;
+
+                ViewMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (float)(1.0 - m_ZoomProgress) / 2, 1)); //makes world flatter in near view. This effect is present in the original, 
+                ViewMatrix *= Matrix.CreateRotationY((45.0f / 180.0f) * (float)Math.PI);
+                ViewMatrix *= Matrix.CreateRotationX((30.0f / 180.0f) * (float)Math.PI); //render in pseudo-isometric: http://en.wikipedia.org/wiki/Isometric_graphics_in_video_games_and_pixel_art
+                ViewMatrix *= Matrix.CreateTranslation(new Vector3(-360f, 0f, -262f)); //move model to center of screen.
+
+                ViewMatrix = Matrix.Invert(world) * ViewMatrix;
+
+                wc.FromProjection = ProjectionMatrix;
+                wc.FromView = ViewMatrix;
+                wc.FromIntensity = 1 - m_LotZoomProgress;
+            }
+
+            var v = camera.View;
+            var p = camera.Projection;
+
+            ShadowRes = GlobalSettings.Default.ShadowQuality;
+            ShadowsEnabled = GlobalSettings.Default.CityShadows;
+
+            m_GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+            m_GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+
+            m_ScrHeight = m_GraphicsDevice.Viewport.Height;
+            m_ScrWidth = m_GraphicsDevice.Viewport.Width;
+
+            if (RegenData) GenerateAssets(); //if assets are flagged as requiring regeneration, regenerate them!
+
+            VertexShader.CurrentTechnique = VertexShader.Techniques[0];
+            VertexShader.Parameters["BaseMatrix"].SetValue(world * v * p * Matrix.CreateScale(1f, 1f, 0.04f));
+            VertexShader.Parameters["MV"].SetValue(world * v);
+
+            PixelShader.CurrentTechnique = PixelShader.Techniques[0];
+            PixelShader.Parameters["LightCol"].SetValue(new Vector4(m_TintColor.R / 255.0f, m_TintColor.G / 255.0f, m_TintColor.B / 255.0f, 1) * 1.25f);
+            var lightVec = Vector3.Normalize(m_LightPosition - new Vector3(256, 0, 256));
+            PixelShader.Parameters["LightVec"].SetValue(lightVec);
+            PixelShader.Parameters["VertexColorTex"].SetValue(m_VertexColor);
+            PixelShader.Parameters["TextureAtlasTex"].SetValue(Atlas);
+            PixelShader.Parameters["TransAtlasTex"].SetValue(TransAtlas);
+            PixelShader.Parameters["RoadAtlasTex"].SetValue(RoadAtlas);
+            PixelShader.Parameters["RoadAtlasCTex"].SetValue(RoadCAtlas);
+            PixelShader.Parameters["ShadowMult"].SetValue(m_ShadowMult);
+
+            PixelShader.Parameters["FogColor"].SetValue(fogColor);
+            PixelShader.Parameters["FogMaxDist"].SetValue(300f*75f);
+
+            VertexShader.Parameters["LightMatrix"].SetValue(m_LightMatrix);
+
+            //first stencil out the area under this lot. the pixel shader for the city is a bit expensive 
+            //so doing this actually saves some time, assuming stencil fill rate is not a problem.
+            gfx.DepthStencilState = StencilWrite;
+            gfx.BlendState = NoColor;
+
+            PixelShader.CurrentTechnique.Passes[1].Apply();
+            VertexShader.CurrentTechnique.Passes[3].Apply();
+
+            var controller = UIScreen.Current.FindController<CoreGameScreenController>();
+            var id = controller.GetCurrentLotID();
+            if (id != StencilLotID)
+            {
+                var x = id >> 16;
+                var y = id & 0xFFFF;
+
+                if (x >= 512 || y >= 512)
+                {
+                    x = 255;
+                    y = 255;
+                }
+
+                float minElev = float.MaxValue;
+
+                for (int x2=-surroundNumber; x2<= surroundNumber; x2++)
+                {
+                    for (int y2 = -surroundNumber; y2 <= surroundNumber; y2++)
+                    {
+                        float elev = GetMinElevationAt((int)(x+x2), (int)(y+y2));
+                        if (minElev > elev) minElev = elev;
+                    }
+                }
+
+                var verts = new MeshVertex[]
+                {
+                    new MeshVertex() { Coord = new Vector3((float)(x-surroundNumber) + 0.1f, minElev / 12.0f, (float)(y-surroundNumber) + 0.1f) },
+                    new MeshVertex() { Coord = new Vector3((float)(x + 1+ surroundNumber) - 0.1f, minElev / 12.0f, (float)(y-surroundNumber) + 0.1f) },
+                    new MeshVertex() { Coord = new Vector3((float)(x-surroundNumber) + 0.1f, minElev / 12.0f, (float)(y + 1+ surroundNumber) - 0.1f) },
+                    new MeshVertex() { Coord = new Vector3((float)(x + 1+ surroundNumber) - 0.1f, minElev / 12.0f, (float)(y + 1+ surroundNumber) - 0.1f) },
+                };
+                if (StencilVertices != null) StencilVertices.Dispose();
+                StencilVertices = new VertexBuffer(gfx, typeof(MeshVertex), 4, BufferUsage.None);
+                StencilVertices.SetData(verts);
+                StencilLotID = id;
+            }
+
+            gfx.SetVertexBuffer(StencilVertices);
+            gfx.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+
+            gfx.DepthStencilState = StencilOnly;
+            gfx.BlendState = BlendState.NonPremultiplied;
+
+            PixelShader.CurrentTechnique.Passes[3].Apply();
+            VertexShader.CurrentTechnique.Passes[3].Apply();
+
+            gfx.SetVertexBuffer(vertBuf);
+            try
+            {
+                gfx.DrawPrimitives(PrimitiveType.TriangleList, 0, m_MeshTris);
+            }
+            catch (Exception e)
+            {
+
+            }
+            gfx.DepthStencilState = DepthStencilState.Default;
+        }
     }
+
+ 
 
     public enum TerrainZoomMode
     {

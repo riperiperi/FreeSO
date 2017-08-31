@@ -100,6 +100,7 @@
     <Compile Include="AboutWindow.Designer.cs">
       <DependentUpon>AboutWindow.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\Debug\UI3DDGRP.cs" />
     <Compile Include="Common\ExternalWorld.cs" />
     <Compile Include="Common\AvatarAnimatorControl.cs">
       <SubType>UserControl</SubType>
@@ -133,6 +134,12 @@
     <Compile Include="Common\UIAvatarAnimator.cs" />
     <Compile Include="Common\UIInteractiveDGRP.cs" />
     <Compile Include="Common\UIThumbnailRenderer.cs" />
+    <Compile Include="Common\Debug3DControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Common\Debug3DControl.Designer.cs">
+      <DependentUpon>Debug3DControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditorComponent\BHAVViewControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -302,6 +309,12 @@
     <Compile Include="ResourceBrowser\DGRPEditor.Designer.cs">
       <DependentUpon>DGRPEditor.cs</DependentUpon>
     </Compile>
+    <Compile Include="ResourceBrowser\FSOMEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\FSOMEditor.Designer.cs">
+      <DependentUpon>FSOMEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\GenericTextInput.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -468,6 +481,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\DGRPEditor.resx">
       <DependentUpon>DGRPEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\FSOMEditor.resx">
+      <DependentUpon>FSOMEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\GenericTextInput.resx">
       <DependentUpon>GenericTextInput.cs</DependentUpon>

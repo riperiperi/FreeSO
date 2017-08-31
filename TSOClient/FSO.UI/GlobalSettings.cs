@@ -65,7 +65,10 @@ namespace FSO.Client
             { "CompatState", "-1" },
 
             { "TS1HybridPath", "D:/Games/The Sims/" },
-            { "TS1HybridEnable", "false" }
+            { "TS1HybridEnable", "false" },
+
+            { "Shadows3D", "false" },
+            { "CitySkybox", "true" },
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -109,6 +112,9 @@ namespace FSO.Client
 
         public string TS1HybridPath { get; set; }
         public bool TS1HybridEnable { get; set; }
+
+        public bool Shadows3D { get; set; }
+        public bool CitySkybox { get; set; }
 
         public static int TARGET_COMPAT_STATE = 2;
     }

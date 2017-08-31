@@ -33,13 +33,24 @@ namespace FSO.IDE
             base.OnCreateControl();
             if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
             {
+                RegisterCleanup();
+            } 
+        }
+
+        private bool RegisteredCleanup;
+
+        public void RegisterCleanup()
+        {
+            if (!RegisteredCleanup)
+            {
                 var parent = FindForm();
                 if (parent == null) return;
                 parent.FormClosing += Cleanup;
 
                 parent.Activated += ParentGotFocus;
                 parent.Deactivate += ParentLostFocus;
-            } 
+                RegisteredCleanup = true;
+            }
         }
 
         private void Cleanup(object sender, FormClosingEventArgs e)
@@ -77,6 +88,7 @@ namespace FSO.IDE
                 FSOUI.Height = Height;
                 FSOUI.OnFrame += FSOUIFrame;
             }
+            RegisterCleanup();
         }
 
         private void FSOUIFrame()

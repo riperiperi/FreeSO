@@ -52,9 +52,9 @@ namespace FSO.LotView
         protected bool HasInitBlueprint;
         protected bool HasInit;
 
-        private World2D _2DWorld = new World2D();
-        private World3D _3DWorld = new World3D();
-        private LMapBatch Light;
+        protected World2D _2DWorld = new World2D();
+        protected World3D _3DWorld = new World3D();
+        protected LMapBatch Light;
         protected Blueprint Blueprint;
 
         public sbyte Stories
@@ -308,7 +308,7 @@ namespace FSO.LotView
         }
 
 
-        public void Scroll (Vector2 dir, bool multiplied)
+        public virtual void Scroll (Vector2 dir, bool multiplied)
         {
             var basis = GetScrollBasis(multiplied);
             State.CenterTile += dir.X*basis[0] + dir.Y*basis[1];
@@ -319,7 +319,7 @@ namespace FSO.LotView
             Scroll(dir, true);
         }
 
-        public Vector2[] GetScrollBasis(bool multiplied)
+        public virtual Vector2[] GetScrollBasis(bool multiplied)
         {
             Vector2[] output = new Vector2[2];
             switch (State.Rotation)
@@ -413,11 +413,7 @@ namespace FSO.LotView
             }
         }
 
-        /// <summary>
-        /// Pre-Draw
-        /// </summary>
-        /// <param name="device"></param>
-        public override void PreDraw(GraphicsDevice device)
+        protected void BoundView()
         {
             //bound the scroll so we can't see gray space.
             float boundfactor = 0.5f;
@@ -433,9 +429,17 @@ namespace FSO.LotView
             var tile = State.CenterTile;
             tile = new Vector2(Math.Min(boundfactor + off, Math.Max(off - boundfactor, tile.X)), Math.Min(boundfactor + off, Math.Max(off - boundfactor, tile.Y)));
             if (tile != State.CenterTile) State.CenterTile = tile;
+        }
 
+        /// <summary>
+        /// Pre-Draw
+        /// </summary>
+        /// <param name="device"></param>
+        public override void PreDraw(GraphicsDevice device)
+        {
             base.PreDraw(device);
             if (HasInit == false) { return; }
+            BoundView();
             State._2D.PreciseZoom = State.PreciseZoom;
             State.OutsideColor = Blueprint.OutsideColor;
             FSO.Common.Rendering.Framework.GameScreen.ClearColor = new Color(new Color(0x72, 0x72, 0x72).ToVector4() * State.OutsideColor.ToVector4());
@@ -490,8 +494,9 @@ namespace FSO.LotView
             return;
         }
 
-        private void InternalDraw(GraphicsDevice device)
+        protected virtual void InternalDraw(GraphicsDevice device)
         {
+            device.RasterizerState = RasterizerState.CullNone;
             State.PrepareLighting();
             State._2D.OutputDepth = true;
 
@@ -515,30 +520,126 @@ namespace FSO.LotView
             State._2D.OutputDepth = false;
         }
 
+        public float? BoxRC(Ray ray, BoundingBox box)
+        {
+            const float Epsilon = 1e-6f;
+
+            float? tMin = null, tMax = null;
+
+            if (Math.Abs(ray.Direction.X) < Epsilon)
+            {
+                if (ray.Position.X < box.Min.X || ray.Position.X > box.Max.X)
+                    return null;
+            }
+            else
+            {
+                tMin = (box.Min.X - ray.Position.X) / ray.Direction.X;
+                tMax = (box.Max.X - ray.Position.X) / ray.Direction.X;
+
+                if (tMin > tMax)
+                {
+                    var temp = tMin;
+                    tMin = tMax;
+                    tMax = temp;
+                }
+                if (tMin < 0) tMin = tMax;
+            }
+
+            if (Math.Abs(ray.Direction.Z) < Epsilon)
+            {
+                if (ray.Position.Z < box.Min.Z || ray.Position.Z > box.Max.Z)
+                    return null;
+            }
+            else
+            {
+                var tMinZ = (box.Min.Z - ray.Position.Z) / ray.Direction.Z;
+                var tMaxZ = (box.Max.Z - ray.Position.Z) / ray.Direction.Z;
+
+                if (tMinZ > tMaxZ)
+                {
+                    var temp = tMinZ;
+                    tMinZ = tMaxZ;
+                    tMaxZ = temp;
+                }
+                if (tMinZ < 0) tMinZ = tMaxZ;
+
+                //if ((tMin.HasValue && tMin > tMaxZ) || (tMax.HasValue && tMinZ > tMax))
+                //    return null;
+
+                if (!tMin.HasValue || tMinZ > tMin) tMin = tMinZ;
+                if (!tMax.HasValue || tMaxZ < tMax) tMax = tMaxZ;
+            }
+
+            // a negative tMin means that the intersection point is behind the ray's origin
+            // we discard these as not hitting the AABB
+            if (tMin < 0) return null;
+
+            return tMin;
+        }
+
         public Vector2 EstTileAtPosWithScroll(Vector2 pos)
         {
-            //performs a search to find the elevated tile position from the current viewing angle
-            //essentially, we first assume the terrain height is 0, and calculate a tile position
-            //the true screen position of this tile is calculated using its elevation and compared to the input position
-            //the input position is offset by this elevation guess. 
-            //repeat until elevation is small enough or 10 tries.
-
-            Vector2 yOff = new Vector2();
-            Vector2 tile = new Vector2();
-            float lastDiff = 0;
-            for (int i = 0; i < 10; i++)
+            var sPos = new Vector3(pos, 0);
+            
+            var p1 = State.Device.Viewport.Unproject(sPos, State.Camera.Projection, State.Camera.View, Matrix.Identity);
+            sPos.Z = 1;
+            var p2 = State.Device.Viewport.Unproject(sPos, State.Camera.Projection, State.Camera.View, Matrix.Identity);
+            var dir = p2 - p1;
+            dir.Normalize();
+            var ray = new Ray(p1, p2 - p1);
+            ray.Direction.Normalize();
+            ray.Position -= new Vector3(0, (State.Level-1) * 2.95f * 3, 0);
+            
+            var baseBox = new BoundingBox(new Vector3(0, -5000, 0), new Vector3(Blueprint.Width*3, 5000, Blueprint.Height*3));
+            if (baseBox.Contains(ray.Position) != ContainmentType.Contains)
             {
-                tile = State.WorldSpace.GetTileAtPosWithScroll(pos + yOff);
-                var truePosition = State.WorldSpace.GetScreenFromTile(new Vector3(tile, (State.Level - 1) * 2.95f + Blueprint.InterpAltitude(
-                    new Vector3(Math.Max(1, Math.Min(Blueprint.Width-1, tile.X)), Math.Max(1, Math.Min(Blueprint.Height-1, tile.Y)), 0)
-                    ))) + State.WorldSpace.GetPointScreenOffset();
-                var diff = (truePosition - pos);
-                if (lastDiff != 0 && lastDiff * diff.Y < 0)
-                    diff /= 2;
-                lastDiff = diff.Y;
-                yOff -= diff;
+                //move ray start inside box
+                var i = baseBox.Intersects(ray);
+                if (i != null)
+                {
+                    ray.Position += ray.Direction * (i.Value + 0.01f);
+                }
             }
-            return tile;
+
+            var mx = (int)ray.Position.X / 3;
+            var my = (int)ray.Position.Z / 3;
+
+            int iteration = 0;
+            while (mx > 0 && mx < Blueprint.Width && my > 0 && my<Blueprint.Width)
+            {
+                var plane = new Plane(
+                    new Vector3(mx * 3, Blueprint.Altitude[my * Blueprint.Width + mx] * Blueprint.TerrainFactor*3, my * 3),
+                    new Vector3(mx * 3+3, Blueprint.Altitude[my * Blueprint.Width + ((mx+1)%Blueprint.Width)] * Blueprint.TerrainFactor*3, my * 3),
+                    new Vector3(mx * 3+3, Blueprint.Altitude[((my+1)%Blueprint.Height) * Blueprint.Width + ((mx+1)%Blueprint.Width)] * Blueprint.TerrainFactor*3, my * 3+3)
+                    );
+                var tBounds = new BoundingBox(new Vector3(mx*3, -5000, my*3), new Vector3(mx*3+3, 5000, my*3+3));
+
+                var t1 = ray.Intersects(plane);
+                var t2 = BoxRC(ray, tBounds);
+                if (plane.DotCoordinate(ray.Position) > 0) t1 = 0;
+                if (t1 != null && t2 != null && t1.Value < t2.Value)
+                {
+                    //hit the ground...
+                    ray.Position += ray.Direction * (t1.Value + 0.00001f);
+                    return new Vector2(ray.Position.X / 3, ray.Position.Z / 3);
+                }
+                if (t2 == null) break;
+                ray.Position += ray.Direction * (t2.Value + 0.00001f);
+                mx = (int)ray.Position.X / 3;
+                my = (int)ray.Position.Z / 3;
+                if (iteration++ > 1000) break;
+            }
+
+            //fall back to base positioning
+            var bplane = new Plane(new Vector3(0, 0, 0), new Vector3(Blueprint.Width * 3, 0, 0), new Vector3(0, 0, Blueprint.Height * 3));
+            var cast = ray.Intersects(bplane);
+            if (cast != null)
+            {
+                ray.Position += ray.Direction * (cast.Value + 0.01f);
+                return new Vector2(ray.Position.X / 3, ray.Position.Z / 3);
+            }
+
+            return new Vector2(0, 0);
         }
 
         /// <summary>
@@ -573,11 +674,12 @@ namespace FSO.LotView
             return _2DWorld.GetLotThumb(gd, State);
         }
 
-        public void ChangedWorldConfig(GraphicsDevice gd)
+        public virtual void ChangedWorldConfig(GraphicsDevice gd)
         {
             //destroy any features that are no longer enabled.
 
             var config = WorldConfig.Current;
+
             if (config.AdvancedLighting)
             {
                 State.AmbientLight?.Dispose();
@@ -602,6 +704,41 @@ namespace FSO.LotView
                     State.AmbientLight = new Texture2D(gd, 256, 256);
                 if (Blueprint != null) Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
             }
+
+            if (Blueprint != null && !FSOEnvironment.Enable3D)
+            {
+                var shad3D = (Blueprint.WCRC != null);
+                if (config.Shadow3D != shad3D)
+                {
+                    if (config.AdvancedLighting && config.Shadow3D)
+                    {
+                        Blueprint.WCRC = new RC.WallComponentRC();
+                        Blueprint.WCRC.blueprint = Blueprint;
+                        Blueprint.WCRC.Generate(gd, State, false);
+                    }
+                    else
+                    {
+                        Blueprint.WCRC?.Dispose();
+                        Blueprint.WCRC = null;
+                    }
+                    Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+                }
+            }
+        }
+
+        public virtual ObjectComponent MakeObjectComponent(Content.GameObject obj)
+        {
+            return new ObjectComponent(obj);
+        }
+
+        public virtual SubWorldComponent MakeSubWorld(GraphicsDevice gd)
+        {
+            return new SubWorldComponent(gd);
+        }
+
+        public virtual void InitSubWorlds()
+        {
+
         }
 
         public override void Dispose()

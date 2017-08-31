@@ -13,6 +13,8 @@ namespace FSO.LotView
         public bool AdvancedLighting = false;
         public int SurroundingLots = 0;
         public bool SmoothZoom = false;
+        public bool AA = false;
+        public bool Shadow3D = false;
 
         public int PassOffset
         {

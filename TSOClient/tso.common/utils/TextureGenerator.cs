@@ -414,5 +414,66 @@ namespace FSO.Common.Utils
                 y++;
             }
         }
+
+        private static Texture2D Sun;
+        public static Texture2D GetSun(GraphicsDevice gd)
+        {
+            if (Sun == null)
+            {
+                Sun = new Texture2D(gd, 256, 256);
+                Color[] data = new Color[256 * 256];
+                int offset = 0;
+                for (int y = 0; y < 256; y++)
+                {
+                    for (int x = 0; x < 256; x++)
+                    {
+                        var distance = Math.Sqrt((y - 128) * (y - 128) + (x - 128) * (x - 128));
+                        var intensity = (1 - (distance - 25) / 103f);
+                        if (intensity < 0) data[offset++] = Color.Transparent;
+                        else
+                        {
+                            intensity *= intensity;
+                            data[offset++] = new Color(1, 1, 1, (float)intensity);
+                        }
+                    }
+                }
+                Sun.SetData<Color>(data);
+            }
+
+            return Sun;
+        }
+
+        private static Texture2D Moon;
+        public static Texture2D GetMoon(GraphicsDevice gd)
+        {
+            if (Moon == null)
+            {
+                Moon = new Texture2D(gd, 64, 64);
+                Color[] data = new Color[64 * 64];
+                int offset = 0;
+                for (int y = 0; y < 64; y++)
+                {
+                    for (int x = 0; x < 64; x++)
+                    {
+                        var distance = Math.Sqrt((y - 32) * (y - 32) + (x - 32) * (x - 32));
+                        var intensity = Math.Min(1, Math.Max(0, 32 - distance));
+
+                        if (intensity > 0)
+                        {
+                            //calculate crescent
+                            if (x < 32) distance = 0;
+                            else distance = Math.Sqrt((y - 32) * (y - 32) + (x - 32)*2 * (x - 32)*2);
+                            
+                            intensity *= 0.2f+(1-Math.Min(1, Math.Max(0, 32 - distance)))*0.8f;
+                        }
+
+                        data[offset++] = new Color(1, 1, 1, (float)intensity);
+                    }
+                }
+                Moon.SetData<Color>(data);
+            }
+
+            return Moon;
+        }
     }
 }

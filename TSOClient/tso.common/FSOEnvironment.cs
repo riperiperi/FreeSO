@@ -24,5 +24,7 @@ namespace FSO.Common
         public static int DPIScaleFactor = 1;
         public static bool SoftwareKeyboard = false;
         public static int RefreshRate = 60;
+
+        public static bool Enable3D;
     }
 }

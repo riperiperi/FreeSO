@@ -466,7 +466,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private static readonly int BACKGROUND_NOTIFY_TIMEOUT = 2000;
         //the number of times recieving no background tasks after which we assume the main thread is stuck in an infinite loop.
         private static readonly int BACKGROUND_TIMEOUT_ABANDON_COUNT = 4;
-        private static readonly int BACKGROUND_TIMEOUT_SECONDS = 15;
+        private static readonly int BACKGROUND_TIMEOUT_SECONDS = 30;
         private uint LastTaskRecv = 0;
         private int BgTimeoutExpiredCount = 0;
         public uint LastActivity = Epoch.Now;

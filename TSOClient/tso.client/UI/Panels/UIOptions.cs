@@ -200,6 +200,7 @@ namespace FSO.Client.UI.Panels
         public UIButton LightingCheckButton { get; set; }
         public UIButton UIEffectsCheckButton { get; set; }
         public UIButton EdgeScrollingCheckButton { get; set; }
+        public UIButton Wall3DButton { get; set; }
 
         // High-Medium-Low detail buttons:
 
@@ -217,6 +218,7 @@ namespace FSO.Client.UI.Panels
         public UILabel LightingLabel { get; set; }
 
         public UILabel TerrainDetailLabel { get; set; }
+        public UILabel Wall3DLabel { get; set; }
 
         public UIGraphicOptions()
         {
@@ -251,17 +253,32 @@ namespace FSO.Client.UI.Panels
             TerrainDetailMedButton.Tooltip = GameFacade.Strings.GetString("f103", "9");
             TerrainDetailHighButton.Tooltip = GameFacade.Strings.GetString("f103", "10");
 
+            Wall3DButton = new UIButton(AntiAliasCheckButton.Texture);
+            Wall3DButton.Position = UIEffectsCheckButton.Position + new Microsoft.Xna.Framework.Vector2(110, 0);
+            Wall3DButton.OnButtonClick += new ButtonClickDelegate(FlipSetting);
+            Add(Wall3DButton);
+            Wall3DLabel = new UILabel();
+            Wall3DLabel.Caption = GameFacade.Strings.GetString("f103", (FSOEnvironment.Enable3D)?"12":"11");
+            Wall3DLabel.CaptionStyle = UIEffectsLabel.CaptionStyle;
+            Wall3DLabel.Position = UIEffectsLabel.Position + new Microsoft.Xna.Framework.Vector2(110, 0);
+            Add(Wall3DLabel);
+
             SettingsChanged();
         }
 
         private void FlipSetting(UIElement button)
         {
             var settings = GlobalSettings.Default;
-            if (button == AntiAliasCheckButton && !GameFacade.DirectX) settings.AntiAlias = !(settings.AntiAlias);
+            if (button == AntiAliasCheckButton) settings.AntiAlias = !(settings.AntiAlias);
             else if (button == ShadowsCheckButton) settings.SmoothZoom = !(settings.SmoothZoom);
             else if (button == LightingCheckButton) settings.Lighting = !(settings.Lighting);
             else if (button == UIEffectsCheckButton) settings.CityShadows = !(settings.CityShadows);
             else if (button == EdgeScrollingCheckButton) settings.EdgeScroll = !(settings.EdgeScroll);
+            else if (button == Wall3DButton)
+            {
+                if (FSOEnvironment.Enable3D) settings.CitySkybox = !settings.CitySkybox;
+                else settings.Shadows3D = !settings.Shadows3D;
+            }
             GlobalSettings.Default.Save();
             SettingsChanged();
         }
@@ -305,12 +322,16 @@ namespace FSO.Client.UI.Panels
             TerrainDetailMedButton.Selected = (settings.SurroundingLotMode == 1);
             TerrainDetailHighButton.Selected = (settings.SurroundingLotMode == 2);
 
+            Wall3DButton.Selected = (FSOEnvironment.Enable3D)?settings.CitySkybox:settings.Shadows3D;
+
             var oldSurrounding = LotView.WorldConfig.Current.SurroundingLots;
             LotView.WorldConfig.Current = new LotView.WorldConfig()
             {
                 AdvancedLighting = settings.Lighting,
                 SmoothZoom = settings.SmoothZoom,
-                SurroundingLots = settings.SurroundingLotMode
+                SurroundingLots = settings.SurroundingLotMode,
+                AA = settings.AntiAlias,
+                Shadow3D = settings.Shadows3D
             };
 
             var vm = ((IGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;

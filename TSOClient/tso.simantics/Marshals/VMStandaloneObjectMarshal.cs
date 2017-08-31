@@ -114,7 +114,7 @@ namespace FSO.SimAntics.Marshals
                 VMEntity realEnt;
                 var objDefinition = FSO.Content.Content.Get().WorldObjects.Get(ent.GUID);
 
-                var worldObject = new ObjectComponent(objDefinition);
+                var worldObject = vm.Context.MakeObjectComponent(objDefinition);
                 var obj = new VMGameObject(objDefinition, worldObject);
                 obj.Load((VMGameObjectMarshal)ent);
                 obj.Contained = new VMEntity[ent.Contained.Length]; //we aren't loading slot data, but we need to initialize this.

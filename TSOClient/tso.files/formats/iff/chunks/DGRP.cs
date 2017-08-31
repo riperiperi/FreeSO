@@ -278,6 +278,18 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         #region IWorldTextureProvider Members
 
+        public byte[] GetDepth()
+        {
+            var iff = Parent.ChunkParent;
+            var spr2 = iff.Get<SPR2>((ushort)this.SpriteID);
+            if (spr2 != null)
+            {
+                spr2.Frames[this.SpriteFrameIndex].DecodeIfRequired(true);
+                return spr2.Frames[this.SpriteFrameIndex].ZBufferData;
+            }
+            return null;
+        }
+
         public WorldTexture GetWorldTexture(Microsoft.Xna.Framework.Graphics.GraphicsDevice device)
         {
             var iff = Parent.ChunkParent;

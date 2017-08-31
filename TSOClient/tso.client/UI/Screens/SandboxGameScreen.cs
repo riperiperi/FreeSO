@@ -62,6 +62,10 @@ namespace FSO.Client.UI.Screens
         {
             get
             {
+                if (m_ZoomLevel < 4 && InLot)
+                {
+                    return 4 - (int)World.State.Zoom;
+                }
                 return m_ZoomLevel;
             }
             set
@@ -82,8 +86,11 @@ namespace FSO.Client.UI.Screens
                         LotControl.Visible = true;
                         World.Visible = true;
                         ucp.SetMode(UIUCP.UCPMode.LotMode);
-                        if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
-                        vm.Context.World.State.Zoom = targ;
+                        LotControl.SetTargetZoom(targ);
+                        if (!FSOEnvironment.Enable3D)
+                        {
+                            if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
+                        }
                         m_ZoomLevel = value;
                     }
                 }
@@ -280,6 +287,9 @@ namespace FSO.Client.UI.Screens
         {
             GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
+            Visible = World?.Visible == true && (World?.State as FSO.LotView.RC.WorldStateRC)?.CameraMode != true;
+            GameFacade.Game.IsMouseVisible = Visible;
+
             base.Update(state);
             if (state.NewKeys.Contains(Keys.NumPad1)) ChangeSpeedTo(1);
             if (state.NewKeys.Contains(Keys.NumPad2)) ChangeSpeedTo(2);
@@ -399,7 +409,12 @@ namespace FSO.Client.UI.Screens
             if (lotName == "") return;
             CleanupLastWorld();
 
-            World = new LotView.World(GameFacade.GraphicsDevice);
+            if (FSOEnvironment.Enable3D)
+            {
+                var rc = new LotView.RC.WorldRC(GameFacade.GraphicsDevice);
+                World = rc;
+            }
+            else World = new World(GameFacade.GraphicsDevice);
             World.Opacity = 1;
             GameFacade.Scenes.Add(World);
 
@@ -453,7 +468,7 @@ namespace FSO.Client.UI.Screens
                 }
                 BlueprintReset(lotName);
 
-                vm.Context.Clock.Hours = 12;
+                vm.Context.Clock.Hours = 16;
                 vm.TSOState.Size = (10) | (3 << 8);
                 vm.Context.UpdateTSOBuildableArea();
                 vm.MyUID = 1;

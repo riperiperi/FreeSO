@@ -224,7 +224,7 @@ namespace FSO.LotView.Utils
         public void Begin(ICamera worldCamera)
         {
             this.WorldCamera = worldCamera;
-            ((WorldCamera)worldCamera).ProjectionDirty();
+            (worldCamera as WorldCamera)?.ProjectionDirty();
 
             this.Sprites.Clear();
             SpriteIndex = 0;
@@ -656,6 +656,7 @@ namespace FSO.LotView.Utils
         /// <returns>A Texture2D instance.</returns>
         public Texture2D GetTexture(ITextureProvider item)
         {
+            if (item == null) return null;
             lock (_TextureCache)
             {
                 if (_TextureCache.ContainsKey(item))

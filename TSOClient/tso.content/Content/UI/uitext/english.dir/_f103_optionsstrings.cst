@@ -9,3 +9,6 @@
 8 ^No surrounding lots. Gray void is drawn outside the lot.^
 9 ^Empty surrounding lots. (just ground and trees)^
 10 ^Full surrounding lots. (architecture, outdoor objects)^
+
+11 ^3D Shadows^
+12 ^City Skybox^
