@@ -413,7 +413,9 @@ namespace FSO.Server.Servers.Lot.Domain
                                     }, true);
                                 } else
                                 {
+
                                     //object is already elsewhere... do not save its state.
+                                    Lot.Context.ObjectQueries.RemoveMultitilePersist(Lot, delE.PersistID);
                                     foreach (var obj in delE.MultitileGroup.Objects)
                                         obj.PersistID = 0;
                                     delE.Delete(true, Lot.Context);
