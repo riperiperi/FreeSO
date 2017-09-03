@@ -172,7 +172,25 @@ namespace FSO.Common.Utils
                     task.SetResult(callback(x));
                 });
             }
-            return task.Task;
+            return TimeoutAfter(task.Task, new TimeSpan(0, 0, 5));
+        }
+
+        public static async Task<TResult> TimeoutAfter<TResult>(Task<TResult> task, TimeSpan timeout)
+        {
+            using (var timeoutCancellationTokenSource = new CancellationTokenSource())
+            {
+
+                var completedTask = await Task.WhenAny(task, Task.Delay(timeout, timeoutCancellationTokenSource.Token));
+                if (completedTask == task)
+                {
+                    timeoutCancellationTokenSource.Cancel();
+                    return await task;  // Very important in order to propagate exceptions
+                }
+                else
+                {
+                    return default(TResult);
+                }
+            }
         }
 
         public static void DigestUpdate(UpdateState state)

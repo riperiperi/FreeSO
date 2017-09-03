@@ -19,8 +19,11 @@ namespace FSO.Server
             Type toolType = null;
             object toolOptions = null;
 
+            string[] a2 = args;
+            if (args.Length == 0) a2 = new string[] { "run" };
+
             var options = new ProgramOptions();
-            var switchIsValid = new CommandLine.Parser().ParseArguments(args, options,
+            var switchIsValid = new CommandLine.Parser().ParseArguments(a2, options,
                 (verb, subOptions) =>
                 {
                     switch (verb)

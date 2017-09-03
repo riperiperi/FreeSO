@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -47,10 +48,10 @@ namespace FSO.Files.RC
                         }
                         break;
                     case "v":
-                        Vertices.Add(new Vector3(float.Parse(split[1]), float.Parse(split[2]), float.Parse(split[3])));
+                        Vertices.Add(new Vector3(float.Parse(split[1], CultureInfo.InvariantCulture), float.Parse(split[2], CultureInfo.InvariantCulture), float.Parse(split[3], CultureInfo.InvariantCulture)));
                         break;
                     case "vt":
-                        TextureCoords.Add(new Vector2(float.Parse(split[1]), float.Parse(split[2])));
+                        TextureCoords.Add(new Vector2(float.Parse(split[1], CultureInfo.InvariantCulture), float.Parse(split[2], CultureInfo.InvariantCulture)));
                         break;
                     case "f":
                         for (int i=0; i<3; i++)

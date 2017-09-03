@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -172,11 +173,11 @@ namespace FSO.Files.RC
             io.WriteLine("o "+o_name);
             foreach (var vert in SVerts)
             {
-                io.WriteLine("v "+vert.Position.X.ToString()+" "+vert.Position.Y.ToString()+" "+vert.Position.Z.ToString());
+                io.WriteLine("v "+vert.Position.X.ToString(CultureInfo.InvariantCulture) +" "+vert.Position.Y.ToString(CultureInfo.InvariantCulture) +" "+vert.Position.Z.ToString(CultureInfo.InvariantCulture));
             }
             foreach (var vert in SVerts)
             {
-                io.WriteLine("vt " + vert.TextureCoordinate.X.ToString() + " " + (1-vert.TextureCoordinate.Y).ToString());
+                io.WriteLine("vt " + vert.TextureCoordinate.X.ToString(CultureInfo.InvariantCulture) + " " + (1-vert.TextureCoordinate.Y).ToString(CultureInfo.InvariantCulture));
             }
             io.Write("f ");
             var ticker = 0;
