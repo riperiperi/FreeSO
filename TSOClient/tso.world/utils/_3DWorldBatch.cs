@@ -66,7 +66,7 @@ namespace FSO.LotView.Utils
         {
             if (Sprites.Count == 0) return;
             Device.BlendState = BlendState.AlphaBlend;
-            //Device.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;
+            Device.RasterizerState = RasterizerState.CullCounterClockwise;
 
             var character = Sprites.Where(x => x.Effect == _3DSpriteEffect.CHARACTER).ToList();
             var pass = WorldConfig.Current.PassOffset*2;
@@ -75,6 +75,7 @@ namespace FSO.LotView.Utils
             {
                 RenderSpriteList(character, Avatar.Effect, Avatar.Effect.Techniques[OBJIDMode ? 1 : pass]);
             });
+            Device.RasterizerState = RasterizerState.CullNone;
 
             /*
             ApplyCamera(Effect);

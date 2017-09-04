@@ -652,6 +652,23 @@ namespace FSO.Server.Servers.Lot.Domain
             Host.Broadcast(ignoreIDs, new FSOVMTickBroadcast() { Data = msg.Data });
         }
 
+        private void DereferenceLot()
+        {
+            //mono somehow keeps a reference to the LotContainer... (probably)
+            //this causes a substantial memory leak on linux
+            //since i can't profile this for some reason, dereference the lot
+            //data so we can minimize the impact.
+
+            Lot = null;
+            LotPersist = null;
+            LotAdj = null;
+            LotRoommates = null;
+
+            VMDriver = null;
+            VMGlobalLink = null;
+            HollowLots = null;
+        }
+
         /// <summary>
         /// Load and initialize everything to start up the lot
         /// </summary>
@@ -667,6 +684,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     LOG.Info("LOT " + Context.DbId + " LOAD EXECPTION:" + e.ToString());
                     Host.Shutdown();
+                    DereferenceLot();
                     return;
                 }
                 LOG.Info("Starting to host lot with dbid = " + Context.DbId);
@@ -696,9 +714,14 @@ namespace FSO.Server.Servers.Lot.Domain
                         //something bad happened. not entirely sure how we should deal with this yet
                         LOG.Error("VM ERROR: " + e.Message +  e.StackTrace);
                         Host.Shutdown();
+                        DereferenceLot();
                         return;
                     }
-                    if (Lot.Aborting) return; //background thread has already released all our avatars and our claim. exit immediately.
+                    if (Lot.Aborting)
+                    {
+                        DereferenceLot();
+                        return; //background thread has already released all our avatars and our claim. exit immediately.
+                    }
 
                     if (noRoomies)
                     {
@@ -723,6 +746,7 @@ namespace FSO.Server.Servers.Lot.Domain
                             if (--TimeToShutdown == 0 || (ShuttingDown && TimeToShutdown < (TICKRATE * 20 - 10)))
                             {
                                 Shutdown();
+                                DereferenceLot();
                                 return; //kill the lot
                             }
                         }
@@ -793,6 +817,7 @@ namespace FSO.Server.Servers.Lot.Domain
             {
                 LOG.Info("Fatal exception on lot " + Context.DbId + ":" + e.ToString());
                 Host.Shutdown();
+                DereferenceLot();
                 return;
             }
         }
