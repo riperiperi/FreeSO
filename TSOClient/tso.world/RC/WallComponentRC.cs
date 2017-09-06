@@ -296,7 +296,7 @@ namespace FSO.LotView.RC
                 foreach (var g in grp.Values)
                 {
                     if (g.PrimCount == 0) continue;
-                    effect.Parameters["MeshTex"].SetValue(g.Pixel);
+                    effect.Parameters["AnisoTex"].SetValue(g.Pixel);
                     effect.Parameters["MaskTex"].SetValue(g.Mask);
 
                     if (lastSideMask != g.UseOffset)

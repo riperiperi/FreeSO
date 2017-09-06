@@ -10,6 +10,7 @@ float4 DarkBrown;
 float4 DiffuseColor;
 float2 ScreenOffset;
 float GrassProb;
+float GrassFadeMul;
 
 float2 TexOffset;
 float4 TexMatrix;
@@ -34,11 +35,13 @@ bool IgnoreColor;
 texture BaseTex;
 sampler TexSampler = sampler_state {
 	texture = <BaseTex>;
-	MinFilter = Linear;
-	MagFilter = Linear;
-	MipFilter = Linear;
 	AddressU = Wrap;
 	AddressV = Wrap;
+
+	MipFilter = Anisotropic;
+	MagFilter = Anisotropic;
+	MinFilter = Anisotropic;
+	MaxAnisotropy = 16;
 };
 
 texture advancedLight : Diffuse;
@@ -66,7 +69,18 @@ texture TerrainNoise : Diffuse;
 sampler TerrainNoiseSampler = sampler_state {
 	texture = <TerrainNoise>;
 	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
-	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
+	MIPFILTER = NONE; MINFILTER = POINT; MAGFILTER = POINT;
+	MaxLOD = 0;
+};
+
+texture TerrainNoiseMip : Diffuse;
+sampler TerrainNoiseMipSampler = sampler_state {
+	texture = <TerrainNoiseMip>;
+	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
+	MipFilter = Anisotropic;
+	MagFilter = Anisotropic;
+	MinFilter = Anisotropic;
+	MaxAnisotropy = 16;
 };
 
 struct GrassVTX
@@ -81,7 +95,7 @@ struct GrassPSVTX {
     float4 Position : SV_Position0;
     float4 Color : COLOR0;
     float4 GrassInfo : TEXCOORD0; //x is liveness, yz is position
-    float2 ScreenPos : TEXCOORD1;
+    float3 ScreenPos : TEXCOORD1;
 	float4 ModelPos : TEXCOORD2;
 	float3 Normal : TEXCOORD3;
 };
@@ -209,7 +223,8 @@ GrassPSVTX GrassVS(GrassVTX input)
 	output.Normal = input.Normal;
 
 	float4 position2 = mul(float4(input.Position.x, 0, input.Position.z, input.Position.w), Temp4x4);
-	output.ScreenPos = ((position2.xy*float2(0.5, -0.5)) + float2(0.5, 0.5)) * ScreenSize;
+	output.ScreenPos.xy = ((position2.xy*float2(0.5, -0.5)) + float2(0.5, 0.5)) * ScreenSize;
+	output.ScreenPos.z = position.z;
 
     if (output.GrassInfo.x == -1.2 && output.GrassInfo.y == -1.2 && output.GrassInfo.z == -1.2 && output.GrassInfo.w < -1.0 && output.ScreenPos.x < -200 && output.ScreenPos.y < -300) output.Color *= 0.5; 
 
@@ -264,6 +279,8 @@ void BladesPSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB
 
 void BladesPS3D(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR1)
 {
+	float a = 2 - sqrt(input.ScreenPos.z / (25 * GrassFadeMul));
+	if (a <= 0) discard;
 	float2 rand = iterhash22(input.GrassInfo.yz*100); //nearest neighbour effect
 	if (rand.y > GrassProb*((2.0 - input.GrassInfo.x) / 2)) discard;
 	//grass blade here
@@ -279,6 +296,7 @@ void BladesPS3D(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : C
 		float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
 		color = lerp(green, brown, input.GrassInfo.x) * lightProcess(input.ModelPos) * LightDot(input.Normal);//DiffuseColor;
 	}
+	color.a = a;
 }
 
 void GridPS(GrassPSVTX input, out float4 color:COLOR0)
@@ -363,6 +381,24 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 	if (UseTexture == true) {
 		color *= tex2Dgrad(TexSampler, LoopUV(input.GrassInfo.yz), ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz)); //tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
 		if (color.a < 0.5) discard;
+	}
+	else {
+		float a = 1 - (2 - sqrt(input.ScreenPos.z / (25 * GrassFadeMul)));
+		if (a > 0) {
+			a = min(1, a);
+			//blade mipmaps
+			float2 rand = tex2D(TerrainNoiseMipSampler, input.GrassInfo.yz * 100 / 1024.0).xy;
+			float multex = rand.x;
+			multex *= ((2.0 - input.GrassInfo.x) / 2);
+			multex = (multex - 0.5) * 2.5 + 0.5;
+			multex *= a;
+
+			float bladeCol = rand.y*0.6;
+			float4 green = lerp(LightGreen, DarkGreen, bladeCol);
+			float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
+			float4 bladecolor = lerp(green, brown, input.GrassInfo.x) * lightProcess(input.ModelPos) * LightDot(input.Normal);
+			color = lerp(color, bladecolor, multex);
+		}
 	}
 }
 

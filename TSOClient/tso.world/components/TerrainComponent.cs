@@ -344,6 +344,8 @@ namespace FSO.LotView.Components
             Effect.Parameters["UseTexture"].SetValue(false);
             Effect.Parameters["ScreenSize"].SetValue(new Vector2(device.Viewport.Width, device.Viewport.Height) / world.PreciseZoom);
             Effect.Parameters["TerrainNoise"].SetValue(TextureGenerator.GetTerrainNoise(device));
+            Effect.Parameters["TerrainNoiseMip"].SetValue(TextureGenerator.GetTerrainNoise(device));
+            Effect.Parameters["GrassFadeMul"].SetValue((float)Math.Sqrt(device.Viewport.Width/1920f));
 
 
             Effect.Parameters["TileSize"].SetValue(new Vector2(1f / Bp.Width, 1f / Bp.Height));

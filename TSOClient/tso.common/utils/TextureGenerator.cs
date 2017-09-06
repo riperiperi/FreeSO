@@ -121,7 +121,7 @@ namespace FSO.Common.Utils
         {
             if (TerrainNoise == null)
             {
-                TerrainNoise = new Texture2D(gd, 512, 512);
+                TerrainNoise = new Texture2D(gd, 512, 512, true, SurfaceFormat.Color);
                 Color[] data = new Color[512 * 512];
 
                 var rd = new Random();
@@ -133,7 +133,7 @@ namespace FSO.Common.Utils
                     data[i].B = (byte)((rd.Next(255) + rd.Next(255)) / 2);
                     data[i].A = (byte)((rd.Next(255) + rd.Next(255)) / 2);
                 }
-                TerrainNoise.SetData(data);
+                TextureUtils.UploadWithMips(TerrainNoise, gd, data);
             }
             return TerrainNoise;
         }

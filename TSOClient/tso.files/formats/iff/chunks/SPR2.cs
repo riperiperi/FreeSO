@@ -607,8 +607,8 @@ namespace FSO.Files.Formats.IFF.Chunks
                     ContainsNothing = true;
                     return null;
                 }
-                result = new CachableTexture2D(device, this.Width, this.Height, true, SurfaceFormat.Color);
                 var mip = FSOEnvironment.Enable3D;
+                result = new CachableTexture2D(device, this.Width, this.Height, mip, SurfaceFormat.Color);
                 if (mip) TextureUtils.UploadWithMips(result, device, this.PixelData);
                 else result.SetData<Color>(this.PixelData);
                 PixelCache = new WeakReference<Texture2D>(result);

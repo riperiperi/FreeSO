@@ -24,6 +24,17 @@ sampler TexSampler = sampler_state {
 	AddressV = Clamp;
 };
 
+texture AnisoTex;
+sampler AnisoSampler = sampler_state {
+	texture = <AnisoTex>;
+	MipFilter = Anisotropic;
+	MagFilter = Anisotropic;
+	MinFilter = Anisotropic;
+	AddressU = Clamp;
+	AddressV = Clamp;
+	MaxAnisotropy = 4;
+};
+
 texture MaskTex;
 sampler MaskSampler = sampler_state {
 	texture = <MaskTex>;
@@ -174,7 +185,7 @@ float4 psWallRC(WallVertexOut v) : COLOR0
 	float2 texC = v.texCoord;
 	texC.x = frac(texC.x);
 	texC.y = frac(((v.texCoord.y % 1)-1/240)/-1.04);
-	float4 color = v.color * tex2Dgrad(TexSampler, texC, ddx(v.texCoord), ddy(v.texCoord)) * lightInterp(mPos); //tex2D(TexSampler, texC) * lightInterp(mPos); version for no mipmaps
+	float4 color = v.color * tex2Dgrad(AnisoSampler, texC, ddx(v.texCoord), ddy(v.texCoord)) * lightInterp(mPos); //tex2D(TexSampler, texC) * lightInterp(mPos); version for no mipmaps
 	if (SideMask != 0) {
 		//our mask is actually a texture of a top right wall.
 		//skew the texcoord appropriately.

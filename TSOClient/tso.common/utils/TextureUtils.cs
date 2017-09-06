@@ -326,7 +326,10 @@ namespace FSO.Common.Utils
         {
             var nw = w / 2;
             var nh = h / 2;
-            if (nw == 0 || nh == 0) return null;
+            bool linex = false, liney = false;
+            if (nw == 0 && nh == 0) return null;
+            if (nw == 0) { nw = 1; liney = true; }
+            if (nh == 0) { nh = 1; linex = true; }
             var size = nw*nh;
             Color[] buffer = new Color[size];
 
@@ -334,11 +337,11 @@ namespace FSO.Common.Utils
             int fyind = 0;
             for (int y = 0; y < nh; y ++)
             {
-                var yb = y * 2 == h;
+                var yb = y * 2 == h || linex;
                 int find = fyind;
                 for (int x = 0; x < nw; x ++)
                 {
-                    var xb = x * 2 == h;
+                    var xb = x * 2 == h || liney;
                     var c1 = old[find];
                     var c2 = (xb)?Color.Transparent:old[find + 1];
                     var c3 = (yb)?Color.Transparent:old[find + w];

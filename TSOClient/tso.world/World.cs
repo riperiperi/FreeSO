@@ -377,7 +377,8 @@ namespace FSO.LotView
             State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
             if (State.Level != comp.Level) State.Level = comp.Level;
 
-            State.CenterTile -= (pelvisCenter.Z/2.95f) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
+            if (!(this is RC.WorldRC))
+                State.CenterTile -= (pelvisCenter.Z/2.95f) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
 
         }
 
