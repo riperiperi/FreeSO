@@ -361,7 +361,7 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 	color = lightProcess(input.ModelPos) * LightDot(input.Normal);//*DiffuseColor;
 	if (IgnoreColor == false) color *= input.Color;
 	if (UseTexture == true) {
-		color *= tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
+		color *= tex2Dgrad(TexSampler, LoopUV(input.GrassInfo.yz), ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz)); //tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
 		if (color.a < 0.5) discard;
 	}
 }

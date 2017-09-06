@@ -12,6 +12,8 @@ using System.IO;
 using FSO.Files.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using FSO.Common.Utils;
+using FSO.Common;
 
 namespace FSO.Files.Formats.IFF.Chunks
 {
@@ -26,6 +28,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public ushort PaletteID;
         private List<uint> Offsets;
         public ByteOrder ByteOrd;
+        public bool WallStyle;
 
         /// <summary>
         /// Reads a SPR chunk from a stream.
@@ -263,8 +266,19 @@ namespace FSO.Files.Formats.IFF.Chunks
             DecodeIfRequired();
             if (PixelCache == null)
             {
-                PixelCache = new Texture2D(device, Math.Max(1,Width), Math.Max(1,Height));
-                if (Width*Height > 0) PixelCache.SetData<Color>(this.Data);
+                var mip = !Parent.WallStyle && FSOEnvironment.Enable3D;
+                PixelCache = new Texture2D(device, Math.Max(1,Width), Math.Max(1,Height), mip, SurfaceFormat.Color);
+                if (Width * Height > 0)
+                {
+                    if (mip)
+                    {
+                        TextureUtils.UploadWithMips(PixelCache, device, Data);
+                    }
+                    else
+                    {
+                        PixelCache.SetData<Color>(this.Data);
+                    }
+                }
                 else PixelCache.SetData<Color>(new Color[] { Color.Transparent });
                 if (!IffFile.RETAIN_CHUNK_DATA) Data = null;
             }

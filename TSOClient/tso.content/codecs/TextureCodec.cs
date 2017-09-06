@@ -23,6 +23,7 @@ namespace FSO.Content.Codecs
     {
         private bool Mask = false;
         private uint[] MaskColors = null;
+        private bool Mipmap = false;
 
         /// <summary>
         /// Creates a new instance of TextureCodec.
@@ -42,6 +43,18 @@ namespace FSO.Content.Codecs
             this.Mask = true;
             this.MaskColors = maskColors;
         }
+
+        /// <summary>
+        /// Creates a new instance of TextureCodec.
+        /// </summary>
+        /// <param name="device">A GraphicsDevice instance.</param>
+        /// <param name="maskColors">A list of masking colors to use for this texture.</param>
+        /// <param name="mips">If this texture codec should generate mipmaps.</param>
+        public TextureCodec(uint[] maskColors, bool mips) : this(maskColors)
+        {
+            Mipmap = mips;
+        }
+
 
         #region IContentCodec<Texture2D> Members
 

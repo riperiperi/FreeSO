@@ -97,11 +97,19 @@ namespace FSO.Content
                 var mediumd = WallGlobals.Get<SPR>((ushort)(i + 513));
                 var neard = WallGlobals.Get<SPR>((ushort)(i + 1025));
 
+                if (far != null)
+                {
+                    near.WallStyle = true; medium.WallStyle = true; far.WallStyle = true;
+                }
+
                 if (fard == null)
                 { //no walls down, just render exactly the same
                     fard = far;
                     mediumd = medium;
                     neard = near;
+                } else
+                {
+                    neard.WallStyle = true; mediumd.WallStyle = true; fard.WallStyle = true;
                 }
 
                 string name = null, description = null;

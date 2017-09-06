@@ -401,14 +401,20 @@ namespace FSO.SimAntics
                 if (Object.OBJ.WallStyle > 21 && Object.OBJ.WallStyle < 256)
                 { //first thing's first, is the style between 22-255 inclusive? If it is, then the style is stored in the object. Need to load its sprites and change the id for the objd.
                     var id = Object.OBJ.WallStyleSpriteID;
+                    var sprs = new SPR[6];
+                    for (int i=0; i<6; i++)
+                    {
+                        sprs[i] = Object.Resource.Get<SPR>((ushort)(id + i));
+                        sprs[i].WallStyle = true;
+                    }
                     var style = new WallStyle()
                     {
-                        WallsUpFar = Object.Resource.Get<SPR>(id),
-                        WallsUpMedium = Object.Resource.Get<SPR>((ushort)(id + 1)),
-                        WallsUpNear = Object.Resource.Get<SPR>((ushort)(id + 2)),
-                        WallsDownFar = Object.Resource.Get<SPR>((ushort)(id + 3)),
-                        WallsDownMedium = Object.Resource.Get<SPR>((ushort)(id + 4)),
-                        WallsDownNear = Object.Resource.Get<SPR>((ushort)(id + 5))
+                        WallsUpFar = sprs[0],
+                        WallsUpMedium = sprs[1],
+                        WallsUpNear = sprs[2],
+                        WallsDownFar = sprs[3],
+                        WallsDownMedium = sprs[4],
+                        WallsDownNear = sprs[5]
                     };
                     Object.OBJ.WallStyle = FSO.Content.Content.Get().WorldWalls.AddDynamicWallStyle(style);
                 }

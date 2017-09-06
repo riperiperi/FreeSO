@@ -174,7 +174,7 @@ float4 psWallRC(WallVertexOut v) : COLOR0
 	float2 texC = v.texCoord;
 	texC.x = frac(texC.x);
 	texC.y = frac(((v.texCoord.y % 1)-1/240)/-1.04);
-	float4 color = v.color * tex2D(TexSampler, texC) * lightInterp(mPos);
+	float4 color = v.color * tex2Dgrad(TexSampler, texC, ddx(v.texCoord), ddy(v.texCoord)) * lightInterp(mPos); //tex2D(TexSampler, texC) * lightInterp(mPos); version for no mipmaps
 	if (SideMask != 0) {
 		//our mask is actually a texture of a top right wall.
 		//skew the texcoord appropriately.
