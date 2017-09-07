@@ -405,7 +405,7 @@ namespace FSO.SimAntics
                     for (int i=0; i<6; i++)
                     {
                         sprs[i] = Object.Resource.Get<SPR>((ushort)(id + i));
-                        sprs[i].WallStyle = true;
+                        if (sprs[i] != null) sprs[i].WallStyle = true;
                     }
                     var style = new WallStyle()
                     {
