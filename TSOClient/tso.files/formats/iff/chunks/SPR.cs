@@ -266,7 +266,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             DecodeIfRequired();
             if (PixelCache == null)
             {
-                var mip = !Parent.WallStyle && FSOEnvironment.Enable3D;
+                var mip = !Parent.WallStyle && FSOEnvironment.Enable3D && FSOEnvironment.EnableNPOTMip;
                 PixelCache = new Texture2D(device, Math.Max(1,Width), Math.Max(1,Height), mip, SurfaceFormat.Color);
                 if (Width * Height > 0)
                 {

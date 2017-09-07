@@ -114,6 +114,8 @@ namespace FSO.Client
                 Shadow3D = settings.Shadows3D
             };
 
+            FeatureLevelTest.UpdateFeatureLevel(GraphicsDevice);
+
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
             GameFacade.Linux = (pid == PlatformID.MacOSX || pid == PlatformID.Unix);

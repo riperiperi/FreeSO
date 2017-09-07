@@ -607,7 +607,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     ContainsNothing = true;
                     return null;
                 }
-                var mip = FSOEnvironment.Enable3D;
+                var mip = FSOEnvironment.Enable3D && (FSOEnvironment.EnableNPOTMip || (Width == 128 && Height == 64));
                 result = new CachableTexture2D(device, this.Width, this.Height, mip, SurfaceFormat.Color);
                 if (mip) TextureUtils.UploadWithMips(result, device, this.PixelData);
                 else result.SetData<Color>(this.PixelData);

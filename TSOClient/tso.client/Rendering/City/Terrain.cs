@@ -1396,6 +1396,7 @@ namespace FSO.Client.Rendering.City
 
         private float GetMinElevationAt(int x, int y)
         {
+            if (x == -1 || y == -1) return 0;
             return Math.Min(Math.Min(Math.Min(MapData.ElevationData[(y * 512 + x)], MapData.ElevationData[(y * 512 + Math.Min(x + 1, 511))]),
                         MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511))]),
                         MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + x)]); //elevation of sprite is the average elevation of the 4 vertices of the tile

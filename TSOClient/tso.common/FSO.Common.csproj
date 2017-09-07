@@ -198,6 +198,7 @@
     <Compile Include="Utils\CurLoader.cs" />
     <Compile Include="Utils\DirectionUtils.cs" />
     <Compile Include="Utils\DotPath.cs" />
+    <Compile Include="Utils\FeatureLevelTest.cs" />
     <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\GameThread.cs" />
     <Compile Include="Utils\HTMLPrinter.cs" />

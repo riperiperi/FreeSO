@@ -26,5 +26,6 @@ namespace FSO.Common
         public static int RefreshRate = 60;
 
         public static bool Enable3D;
+        public static bool EnableNPOTMip = true;
     }
 }
