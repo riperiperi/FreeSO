@@ -36,6 +36,8 @@ namespace FSO.Client.UI.Screens
         public UILoginDialog LoginDialog;
         public UILoginProgress LoginProgress;
 
+        private UIAlert LastAlert;
+
         private LoginRegulator Regulator;
 
         public LoginScreen(LoginRegulator regulator)
@@ -206,12 +208,16 @@ namespace FSO.Client.UI.Screens
             {
                 ErrorMessage errorMsg = (ErrorMessage)error;
 
+                if (errorMsg.Message.StartsWith("INV-110")) {
+                    LoginDialog.ClearPassword();
+                }
+
                 /** Error message intended for the user **/
                 UIAlertOptions Options = new UIAlertOptions();
                 Options.Message = errorMsg.Message;
                 Options.Title = errorMsg.Title;
                 Options.Buttons = errorMsg.Buttons;
-                GlobalShowAlert(Options, true);
+                LastAlert = GlobalShowAlert(Options, true);
             }
         }
 
@@ -220,7 +226,11 @@ namespace FSO.Client.UI.Screens
         /// </summary>
         public void Login()
         {
-            if (LoginDialog.Username.Length == 0 || LoginDialog.Password.Length == 0){
+            if (LoginDialog.Username.Length == 0 || LoginDialog.Password.Length == 0) {
+                if ( LastAlert != null )
+                {
+                    LoginScreen.RemoveDialog(LastAlert);
+                }
                 return;
             }
 
