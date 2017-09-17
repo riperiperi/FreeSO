@@ -24,6 +24,8 @@ namespace FSO.Client.UI.Panels
 
         private List<VMChatEvent> History;
 
+        private int chatSize = 8;
+
         public int Visitors;
         public string LotName = "Test Lot";
 
@@ -57,8 +59,8 @@ namespace FSO.Client.UI.Panels
 
             ChatHistoryText.Position = new Vector2(29, 47);
             var histStyle = ChatHistoryText.TextStyle.Clone();
-            histStyle.Size = 8;
-            ChatHistoryText.Size = new Vector2(322, 150);
+            histStyle.Size = chatSize;
+            ChatHistoryText.Size = new Vector2(ChatHistoryBackground.Size.X - 19, ChatHistoryBackground.Size.Y - 16);
             ChatHistoryText.MaxLines = 10;
             ChatHistoryText.TextStyle = histStyle;
 
@@ -112,6 +114,39 @@ namespace FSO.Client.UI.Panels
         {
             if (!Visible) return;
             base.Draw(batch);
+        }
+
+        public void ResizeChatDialogByDelta(int delta)
+        {
+            if (chatSize + delta < 7 || chatSize + delta > 11)
+            {
+                return;
+            }
+            chatSize += delta;
+
+            var updatedSize = delta * 30; //Incease or decrease by 30px
+
+            var histStyle = ChatHistoryText.TextStyle.Clone();
+            histStyle.Size = chatSize;
+            ChatHistoryText.TextStyle = histStyle;
+
+            this.SetSize((int)Math.Round(this.Size.X) + updatedSize, (int)Math.Round(this.Size.Y) + updatedSize);
+
+            ChatHistoryBackground.SetSize(ChatHistoryBackground.Size.X + updatedSize, ChatHistoryBackground.Size.Y + updatedSize);
+            ChatHistoryText.SetSize(ChatHistoryBackground.Size.X - 19, ChatHistoryBackground.Size.Y - 16);
+
+            ChatHistorySlider.Position = new Vector2(ChatHistorySlider.Position.X + updatedSize, ChatHistorySlider.Position.Y);
+            ChatHistorySlider.SetSize(ChatHistorySlider.Size.X, ChatHistoryBackground.Size.Y - 26);
+            ChatHistoryScrollUpButton.Position = new Vector2(ChatHistoryScrollUpButton.Position.X + updatedSize, ChatHistoryScrollUpButton.Position.Y);
+            ChatHistoryScrollDownButton.Position = new Vector2(ChatHistoryScrollDownButton.Position.X + updatedSize, ChatHistoryScrollDownButton.Position.Y + updatedSize);
+
+            ChatEntryTextEdit.Position = new Vector2(ChatEntryTextEdit.Position.X, ChatEntryTextEdit.Position.Y + updatedSize);
+            ChatEntryTextEdit.SetSize(ChatEntryTextEdit.Size.X, ChatEntryTextEdit.Size.Y);
+            ChatEntryBackground.Position = new Vector2(ChatEntryBackground.Position.X, ChatEntryBackground.Position.Y + updatedSize);
+            ChatEntryBackground.SetSize(ChatEntryBackground.Size.X + updatedSize, ChatEntryBackground.Size.Y);
+
+            ChatEntryTextEdit.ComputeDrawingCommands();
+            ChatHistoryText.ComputeDrawingCommands();
         }
 
         public void RenderEvents()
