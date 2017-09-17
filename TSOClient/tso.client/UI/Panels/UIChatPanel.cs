@@ -201,11 +201,11 @@ namespace FSO.Client.UI.Panels
             }
 
             if (state.NewKeys.Contains(Keys.OemPlus) && state.CtrlDown && HistoryDialog.Visible) {
-                HistoryDialog.ResizeChatDialogByFactor(SizeFactor.Increase);
+                HistoryDialog.ResizeChatDialogByDelta(1);
             }
 
             if (state.NewKeys.Contains(Keys.OemMinus) && state.CtrlDown && HistoryDialog.Visible) {
-                HistoryDialog.ResizeChatDialogByFactor(SizeFactor.Decrease);
+                HistoryDialog.ResizeChatDialogByDelta(-1);
             }
 
             if (state.NewKeys.Contains(Keys.P) && state.CtrlDown)

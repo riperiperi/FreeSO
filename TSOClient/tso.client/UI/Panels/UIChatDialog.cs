@@ -10,12 +10,6 @@ using System.Text;
 
 namespace FSO.Client.UI.Panels
 {
-    public static class SizeFactor
-    {
-        public const int Decrease = -1;
-        public const int Increase = 1;
-    }
-
     public class UIChatDialog : UIDialog
     {
         public event UISendMessageDelegate OnSendMessage;
@@ -122,18 +116,18 @@ namespace FSO.Client.UI.Panels
             base.Draw(batch);
         }
 
-        public void ResizeChatDialogByFactor(int factor)
+        public void ResizeChatDialogByDelta(int delta)
         {
-            if (chatSize + factor < 7 || chatSize + factor > 11)
+            if (chatSize + delta < 7 || chatSize + delta > 11)
             {
                 return;
             }
-            chatSize += factor;
+            chatSize += delta;
 
-            var updatedSize = factor * 30; //Incease or decrease by 30px
+            var updatedSize = delta * 30; //Incease or decrease by 30px
 
             var histStyle = ChatHistoryText.TextStyle.Clone();
-            histStyle.setIdealFontSize(chatSize);
+            histStyle.Size = chatSize;
             ChatHistoryText.TextStyle = histStyle;
 
             this.SetSize((int)Math.Round(this.Size.X) + updatedSize, (int)Math.Round(this.Size.Y) + updatedSize);
