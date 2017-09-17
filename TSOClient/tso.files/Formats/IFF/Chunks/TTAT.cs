@@ -45,6 +45,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                         tatts[j] = iop.ReadInt32();
                     }
                     var unknown = iop.ReadInt32();
+                    var unknown2 = iop.ReadInt32();
                     TypeAttributesByGUID[guid] = tatts;
                 }
             }
