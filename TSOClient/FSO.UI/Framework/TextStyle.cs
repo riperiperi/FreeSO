@@ -110,6 +110,34 @@ namespace FSO.Client.UI.Framework
             }
         }
 
+        public void setIdealFontSize(int size)
+        {
+            m_pxSize = size;
+
+            FontEntry bestFont = null;
+
+            switch (size)
+            {
+                case 7:
+                case 8:
+                    bestFont = Font.GetIdeal(12);
+                    break;
+                case 9:
+                    bestFont = Font.GetIdeal(14);
+                    break;
+                case 10:
+                    bestFont = Font.GetIdeal(14);
+                    break;
+                default:
+                    bestFont = Font.GetIdeal(12);
+                    break;
+            }
+
+            SpriteFont = bestFont.Font;
+            Scale = ((float)m_pxSize) / ((float)bestFont.Size);
+            BaselineOffset = (float)Math.Floor(((m_pxSize + 5) * Scale));
+        }
+
         private int? _LineHeight;
 
         public int LineHeight

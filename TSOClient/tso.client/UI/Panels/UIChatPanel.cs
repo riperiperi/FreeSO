@@ -200,6 +200,14 @@ namespace FSO.Client.UI.Panels
                 HistoryDialog.Visible = !HistoryDialog.Visible;
             }
 
+            if (state.NewKeys.Contains(Keys.OemPlus) && state.CtrlDown && HistoryDialog.Visible) {
+                HistoryDialog.ResizeChatDialogByFactor(SizeFactor.Increase);
+            }
+
+            if (state.NewKeys.Contains(Keys.OemMinus) && state.CtrlDown && HistoryDialog.Visible) {
+                HistoryDialog.ResizeChatDialogByFactor(SizeFactor.Decrease);
+            }
+
             if (state.NewKeys.Contains(Keys.P) && state.CtrlDown)
             {
                 PropertyLog.Visible = !PropertyLog.Visible;

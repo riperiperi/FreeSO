@@ -50,6 +50,11 @@ namespace FSO.Client.UI.Framework
                 EntryList.OrderBy(x => Math.Abs(pxSize - x.Size)).FirstOrDefault();
         }
 
+        public FontEntry GetIdeal(int pxSize)
+        {
+            return EntryList.First(x => x.Size == pxSize);
+        }
+
         public void AddSize(int pxSize, SpriteFont font)
         {
             EntryList.Add(new FontEntry {
