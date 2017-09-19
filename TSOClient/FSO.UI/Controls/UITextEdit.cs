@@ -67,6 +67,7 @@ namespace FSO.Client.UI.Controls
         public event ChangeDelegate OnChange;
         public event KeyPressDelegate OnEnterPress;
         public event KeyPressDelegate OnTabPress;
+        public event KeyPressDelegate OnShiftTabPress;
 
         private UITextEditMode m_Mode = UITextEditMode.Editor;
         private bool m_IsReadOnly = false;
@@ -505,6 +506,7 @@ namespace FSO.Client.UI.Controls
 
                     if (inputResult.EnterPressed && OnEnterPress != null) OnEnterPress(this);
                     if (inputResult.TabPressed && OnTabPress != null) OnTabPress(this);
+                    if (inputResult.ShiftDown && inputResult.TabPressed && OnShiftTabPress != null) OnShiftTabPress(this);
                 }
 
                 if (m_IsDraggingSelection)

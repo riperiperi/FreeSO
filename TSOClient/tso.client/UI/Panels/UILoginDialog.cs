@@ -48,6 +48,7 @@ namespace FSO.Client.UI.Panels
             m_TxtPass.OnChange += M_TxtAccName_OnChange;
             //m_TxtPass.OnTabPress += new KeyPressDelegate(m_TxtPass_OnTabPress);
             m_TxtPass.OnEnterPress += new KeyPressDelegate(loginBtn_OnButtonClick);
+            m_TxtPass.OnShiftTabPress += new KeyPressDelegate(m_TxtPass_OnShiftTabPress);
             this.Add(m_TxtPass);
 
             /** Login button **/
@@ -120,6 +121,11 @@ namespace FSO.Client.UI.Panels
             GameFacade.Screens.inputManager.SetFocus(m_TxtPass);
         }
 
+        public void ClearPassword()
+        {
+            m_TxtPass.CurrentText = "";
+        }
+
         /*void m_TxtPass_OnTabPress(UIElement element)
         {
             GameFacade.Screens.inputManager.SetFocus(m_TxtAccName);
@@ -128,6 +134,11 @@ namespace FSO.Client.UI.Panels
         void m_TxtAccName_OnTabPress(UIElement element)
         {
             GameFacade.Screens.inputManager.SetFocus(m_TxtPass);
+        }
+
+        void m_TxtPass_OnShiftTabPress(UIElement element)
+        {
+            GameFacade.Screens.inputManager.SetFocus(m_TxtAccName);
         }
 
         public string Username
