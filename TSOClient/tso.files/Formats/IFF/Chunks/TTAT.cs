@@ -10,7 +10,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 {
     public class TATT : IffChunk
     {
-        public Dictionary<uint, int[]> TypeAttributesByGUID = new Dictionary<uint, int[]>();
+        public Dictionary<uint, short[]> TypeAttributesByGUID = new Dictionary<uint, short[]>();
 
         public override void Read(IffFile iff, Stream stream)
         {
@@ -26,25 +26,16 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                 var iop = new IffFieldEncode(io);
 
-                /*
-                var test1 = iop.ReadInt16();
-                var testas = new ushort[test1*2];
-                for (int i=0; i<test1*2; i++)
-                {
-                    testas[i] = iop.ReadUInt16();
-                }*/
-
                 var total = iop.ReadInt32();
                 for (int i=0; i<total; i++)
                 {
                     var guid = (uint)iop.ReadInt32();
                     var count = iop.ReadInt32();
-                    var tatts = new int[count];
+                    var tatts = new short[count];
                     for (int j=0; j<count; j++)
                     {
-                        tatts[j] = iop.ReadInt32();
+                        tatts[j] = iop.ReadInt16();
                     }
-                    var unknown = iop.ReadInt32();
                     TypeAttributesByGUID[guid] = tatts;
                 }
             }

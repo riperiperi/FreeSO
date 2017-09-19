@@ -111,9 +111,9 @@ namespace FSO.Content.TS1
             return GetHouse(id)?.Get<BMP>(512); //roof on
         }
 
-        public int GetTATT(uint guid, int index)
+        public short GetTATT(uint guid, int index)
         {
-            int[] dat = null;
+            short[] dat = null;
             if (TypeAttributes.TypeAttributesByGUID.TryGetValue(guid, out dat))
             {
                 if (index >= dat.Length) return 0;
@@ -133,14 +133,14 @@ namespace FSO.Content.TS1
             else return new Tuple<string, string>(res.GetString(0), res.GetString(1));
         }
 
-        public void SetTATT(uint guid, int index, int value)
+        public void SetTATT(uint guid, int index, short value)
         {
-            int[] dat = null;
+            short[] dat = null;
             if (!TypeAttributes.TypeAttributesByGUID.TryGetValue(guid, out dat))
             {
                 var obj = ContentManager.WorldObjects.Get(guid);
                 if (obj == null) return;
-                dat = new int[32];
+                dat = new short[32];
                 TypeAttributes.TypeAttributesByGUID[guid] = dat;
             }
             if (index >= dat.Length) return;

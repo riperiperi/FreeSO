@@ -182,11 +182,11 @@ namespace FSO.SimAntics.Engine.Utils
                     return (short)context.StackObject.EntryPoints[data].ActionFunction;
 
                 case VMVariableScope.MyTypeAttr: //36
-                    if (context.VM.TS1) return (short)Content.Content.Get().Neighborhood.GetTATT((context.Caller.MasterDefinition ?? context.Caller.Object.OBJ).TypeAttrGUID, data);
+                    if (context.VM.TS1) return Content.Content.Get().Neighborhood.GetTATT((context.Caller.MasterDefinition ?? context.Caller.Object.OBJ).TypeAttrGUID, data);
                     return 0;
                 
                 case VMVariableScope.StackObjectTypeAttr: //37
-                    if (context.VM.TS1) return (short)Content.Content.Get().Neighborhood.GetTATT((context.StackObject.MasterDefinition ?? context.StackObject.Object.OBJ).TypeAttrGUID, data);
+                    if (context.VM.TS1) return Content.Content.Get().Neighborhood.GetTATT((context.StackObject.MasterDefinition ?? context.StackObject.Object.OBJ).TypeAttrGUID, data);
                     return 0;
 
                 case VMVariableScope.NeighborsObjectDefinition: //38

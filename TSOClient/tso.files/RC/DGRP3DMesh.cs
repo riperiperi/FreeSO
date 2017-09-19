@@ -450,7 +450,7 @@ namespace FSO.Files.RC
         /// </summary>
         public DGRP3DMesh(DGRP dgrp, OBJ source, GraphicsDevice gd)
         {
-            Bounds = BoundingBox.CreateFromPoints(source.Vertices);
+            Bounds = source.Vertices.Count>0?BoundingBox.CreateFromPoints(source.Vertices):new BoundingBox();
             Geoms = new List<Dictionary<Texture2D, DGRP3DGeometry>>();
             if (dgrp == null) return;
             Name = dgrp.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff") + "_" + dgrp.ChunkID;

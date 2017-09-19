@@ -230,9 +230,6 @@ namespace FSO.Client.UI.Controls
                     spread.Enqueue(new Point(item.X, item.Y + 1));
                 }
             }
-
-
-
         }
 
         public override void Draw(UISpriteBatch batch)

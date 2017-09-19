@@ -98,7 +98,8 @@ namespace FSO.IDE.Common.Debug
                 {
                     if (obj.GetValue(VMStackObjectVariable.Room) == 2) continue;
                     var c = new Debug3DDGRPComponent();
-                    c.Mesh = Content.Content.Get().RCMeshes.Get(((ObjectComponent)obj.WorldUI).DGRP, obj.Object.OBJ); //new DGRP3DMesh(((ObjectComponent)obj.WorldUI).DGRP, obj.Object.OBJ, GameFacade.GraphicsDevice, null);
+                    var dgrp = ((ObjectComponent)obj.WorldUI).DGRP;
+                    c.Mesh = (dgrp == null)?null:Content.Content.Get().RCMeshes.Get(dgrp, obj.Object.OBJ); //new DGRP3DMesh(((ObjectComponent)obj.WorldUI).DGRP, obj.Object.OBJ, GameFacade.GraphicsDevice, null);
                     Scene.Add(c);
                     var vp = obj.VisualPosition;
                     c.Position = new Vector3(-(vp.X-0.5f), vp.Z, -(vp.Y-0.5f));
