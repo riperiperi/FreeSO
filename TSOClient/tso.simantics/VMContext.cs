@@ -912,6 +912,7 @@ namespace FSO.SimAntics
 
         public Rectangle GetTSOBuildableArea(int lotSInfo)
         {
+            if (Architecture == null) return new Rectangle();
             //note: sync on this DOES matter as the OOB check performs on some primitives, and objects are double checked before placement.
 
             var lotSize = lotSInfo & 255;

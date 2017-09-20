@@ -123,7 +123,6 @@ namespace FSO.Client.UI.Screens
                     {
                         /** No more labels to show! Preload must be complete :) **/
                         CheckProgressTimer.Stop();
-
                         FSOFacade.Controller.ShowLogin();
                     }
                 }

@@ -37,6 +37,8 @@ using FSO.Client.UI.Panels.EODs;
 using FSO.SimAntics.Utils;
 using FSO.Common;
 using FSO.LotView.RC;
+using System.IO;
+using FSO.SimAntics.Engine.TSOTransaction;
 
 namespace FSO.Client.UI.Panels
 {
@@ -50,6 +52,7 @@ namespace FSO.Client.UI.Panels
 
         private UIPieMenu PieMenu;
         private UIChatPanel ChatPanel;
+        private UIAlert LotSaveDialog;
 
         private bool ShowTooltip;
         private bool TipIsError;
@@ -787,7 +790,50 @@ namespace FSO.Client.UI.Panels
 
                 //set cutaway around mouse
                 UpdateCutaway(state);
+
+                if (state.NewKeys.Contains(Keys.S) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
+                {
+                    //save lot
+                    if (LotSaveDialog == null) SaveLot();
+                }
             }
+        }
+
+        private void SaveLot()
+        {
+            LotSaveDialog = new UIAlert(new UIAlertOptions
+            {
+                Title = "Save Lot",
+                Message = "Enter a filename to save this lot with. It will save locally to Content/LocalHouse, where it can be used in sandbox mode.",
+                TextEntry = true,
+                Width = 500,
+                Buttons = new UIAlertButton[]
+                {
+                    new UIAlertButton(UIAlertButtonType.Cancel, (b) => { UIScreen.RemoveDialog(LotSaveDialog); LotSaveDialog = null; }),
+                    new UIAlertButton(UIAlertButtonType.OK, (b) =>
+                    {
+                        try {
+                            var exporter = new VMWorldExporter();
+                            exporter.SaveHouse(vm, Path.Combine(FSOEnvironment.UserDir, ("Blueprints/"+LotSaveDialog.ResponseText+".xml")));
+                            var marshal = vm.Save();
+                            Directory.CreateDirectory(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/"));
+                            using (var output = new FileStream(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/"+LotSaveDialog.ResponseText+".fsov"), FileMode.Create))
+                            {
+                                marshal.SerializeInto(new BinaryWriter(output));
+                            }
+                            if (vm.GlobalLink != null) ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Save();
+
+                            UIScreen.GlobalShowAlert(new UIAlertOptions { Message = "Save successful!" }, true);
+                        } catch
+                        {
+                            UIScreen.GlobalShowAlert(new UIAlertOptions { Message = "Lot failed to save. You may need to run the game as administrator." }, true);
+                        }
+                        UIScreen.RemoveDialog(LotSaveDialog); LotSaveDialog = null;
+                    })
+                }
+            });
+            LotSaveDialog.ResponseText = "house_00";
+            UIScreen.GlobalShowDialog(LotSaveDialog, true);
         }
 
         private void UpdateCutaway(UpdateState state)

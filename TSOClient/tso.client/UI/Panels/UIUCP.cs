@@ -622,8 +622,6 @@ namespace FSO.Client.UI.Panels
 
             if (Game is SandboxGameScreen)
             {
-                NeighborhoodButton.Disabled = true;
-                WorldButton.Disabled = true;
                 ZoomInButton.Disabled = (!Game.InLot) || (!FSOEnvironment.Enable3D && (Game.ZoomLevel == 1));
                 ZoomOutButton.Disabled = (!FSOEnvironment.Enable3D && (Game.ZoomLevel == 3));
             }

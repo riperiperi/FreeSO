@@ -23,6 +23,7 @@ using System.Text.RegularExpressions;
 using FSO.Client.GameContent;
 using FSO.Client.UI.Model;
 using FSO.Common;
+using FSO.Client.UI.Panels;
 
 namespace FSO.Client.UI.Screens
 {
@@ -289,12 +290,35 @@ namespace FSO.Client.UI.Screens
 
         private void CancelButton_OnButtonClick(UIElement button)
         {
-            ((PersonSelectionEditController)Controller).Cancel();
+            var control = FindController<PersonSelectionEditController>();
+            if (control != null) control.Cancel();
+            else
+            {
+                FSOFacade.Controller.ShowLogin();
+            }
         }
 
         private void AcceptButton_OnButtonClick(UIElement button)
         {
-            ((PersonSelectionEditController)Controller).Create();
+            var control = FindController<PersonSelectionEditController>();
+            if (control != null) control.Create();
+            else
+            {
+                var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
+                var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
+                var headPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
+                var bodyPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedBody.PurchasableOutfitId);
+
+                GlobalSettings.Default.DebugBody = bodyPurchasable.OutfitID;
+                GlobalSettings.Default.DebugHead = headPurchasable.OutfitID;
+                GlobalSettings.Default.LastUser = NameTextEdit.CurrentText;
+                GlobalSettings.Default.DebugGender = (Gender == Gender.Male);
+                GlobalSettings.Default.DebugSkin = (int)AppearanceType;
+
+                GlobalSettings.Default.Save();
+
+                GlobalShowDialog(new UISandboxSelector(), true);
+            }
         }
 
         private void HeadSkinBrowser_OnChange(UIElement element)

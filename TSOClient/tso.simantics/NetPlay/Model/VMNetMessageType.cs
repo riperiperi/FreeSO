@@ -11,6 +11,7 @@ namespace FSO.SimAntics.NetPlay.Model
         //server -> client
         BroadcastTick = 0,
         Direct = 1,
+        AvatarData = 2,
         
         //client -> server
         Command = 128

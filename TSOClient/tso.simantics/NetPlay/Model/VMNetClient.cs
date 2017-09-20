@@ -16,6 +16,7 @@ namespace FSO.SimAntics.NetPlay.Model
         public VMNetAvatarPersistState AvatarState; //initial... obviously this can change while the lot is running.
         public bool HadAvatar;
         public int InactivityTicks;
+        public object NetHandle;
 
         private Queue<VMNetMessage> Messages = new Queue<VMNetMessage>();
 

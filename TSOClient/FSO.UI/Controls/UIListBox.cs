@@ -348,6 +348,7 @@ namespace FSO.Client.UI.Controls
 
         private void InternalSelect(int index)
         {
+            Invalidate();
             m_SelectedRow = index;
 
             if (OnChange != null)

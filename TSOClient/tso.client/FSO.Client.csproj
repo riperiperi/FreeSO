@@ -102,6 +102,11 @@
     <Compile Include="GameContent\CacheModule.cs" />
     <Compile Include="Network\ClientDataService.cs" />
     <Compile Include="Network\IClientDataService.cs" />
+    <Compile Include="Network\Sandbox\FSOSandboxClient.cs" />
+    <Compile Include="Network\Sandbox\FSOSandboxProtocol.cs" />
+    <Compile Include="Network\Sandbox\FSOSandboxProtocolDecoder.cs" />
+    <Compile Include="Network\Sandbox\FSOSandboxProtocolEncoder.cs" />
+    <Compile Include="Network\Sandbox\FSOSandboxServer.cs" />
     <Compile Include="Network\Topics.cs" />
     <Compile Include="Network\TopicSubscription.cs" />
     <Compile Include="Regulators\LotConnectionRegulator.cs" />

@@ -2,6 +2,7 @@
 using FSO.Client.Controllers.Panels;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Client.UI.Screens;
 using FSO.Client.Utils;
 using FSO.Common;
 using FSO.Common.DataService.Model;
@@ -15,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Panels
 {
-    public class UISandboxSelector : UIContainer
+    public class UISandboxSelector : UIDialog
     {
         public UIButton CloseButton { get; set; }
         public UIListBox BookmarkListBox { get; set; }
@@ -32,35 +33,107 @@ namespace FSO.Client.UI.Panels
 
         public Binding<Avatar> Binding;
 
-        public UISandboxSelector()
+        public UISandboxSelector() : base(UIDialogStyle.Close, true)
         {
+            if (GlobalSettings.Default.DebugBody == 0) {
+                GameThread.NextUpdate(x => FSOFacade.Controller.ShowPersonCreation(null));
+            }
             var ui = this.RenderScript("bookmarks.uis");
+            Caption = "Host a lot on :37564";
 
-            var background = ui.Create<UIImage>("BookmarkBackground");
-            SimsTab = ui.Create<UIImage>("SimsTab");
-            AddAt(0, SimsTab);
-            IgnoreTab = ui.Create<UIImage>("IgnoreTab");
-            AddAt(0, IgnoreTab);
-            IgnoreTab.Visible = false;
+            //var background = ui.Create<UIImage>("BookmarkBackground");
+            //SimsTab = ui.Create<UIImage>("SimsTab");
+            //AddAt(0, SimsTab);
+            //IgnoreTab = ui.Create<UIImage>("IgnoreTab");
+            //AddAt(0, IgnoreTab);
+            //IgnoreTab.Visible = false;
 
-            AddAt(0, ui.Create<UIImage>("Tab1Background"));
-            AddAt(0, ui.Create<UIImage>("Tab2Background"));
-            AddAt(0, ui.Create<UIImage>("ListBoxBackground"));
-            AddAt(0, background);
+            //AddAt(0, ui.Create<UIImage>("Tab1Background"));
+            //AddAt(0, ui.Create<UIImage>("Tab2Background"));
+            var listBg = ui.Create<UIImage>("ListBoxBackground");
+            AddAt(4, listBg);
+            //AddAt(0, background);
 
 
-            UIUtils.MakeDraggable(background, this, true);
-
+            //UIUtils.MakeDraggable(background, this, true);
+            listBg.With9Slice(25, 25, 25, 25);
+            listBg.Height += 180;
+            BookmarkListSlider.SetSize(10, 170 + 180);
+            BookmarkScrollDownButton.Y += 180;
             BookmarkListSlider.AttachButtons(BookmarkListScrollUpButton, BookmarkScrollDownButton, 1);
             BookmarkListBox.AttachSlider(BookmarkListSlider);
             BookmarkListBox.OnDoubleClick += BookmarkListBox_OnDoubleClick;
             BookmarkListBoxColors = ui.Create<UIListBoxTextStyle>("BookmarkListBoxColors", BookmarkListBox.FontStyle);
-            CloseButton.OnButtonClick += CloseButton_OnButtonClick;
+            Remove(CloseButton);
+            Remove(SimsTabButton);
+            Remove(IgnoreTabButton);
+            base.CloseButton.OnButtonClick += CloseButton_OnButtonClick;
 
             //IgnoreTabButton.OnButtonClick += (btn) => { ChangeType(BookmarkType.IGNORE_AVATAR); };
             //SimsTabButton.OnButtonClick += (btn) => { ChangeType(BookmarkType.AVATAR); };
 
             populateWithXMLHouses();
+
+            var joinButton = new UIButton();
+            joinButton.Caption = "Join a server";
+            joinButton.OnButtonClick += (btn) =>
+            {
+                UIAlert alert = null;
+                alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Message = "Enter the address of the server you wish to connect to. (can optionally include port, eg localhost:6666)",
+                    Width = 400,
+                    TextEntry = true,
+                    Buttons = new UIAlertButton[]
+                    {
+                        new UIAlertButton(UIAlertButtonType.Cancel, (btn2) => { UIScreen.RemoveDialog(alert); }),
+                        new UIAlertButton(UIAlertButtonType.OK, (btn2) => {
+                            UIScreen.RemoveDialog(alert);
+                            var addr = alert.ResponseText;
+                            if (!addr.Contains(':'))
+                            {
+                                addr += ":37564";
+                            }
+                            UIScreen.RemoveDialog(this);
+                            LotSwitch(addr, true);
+                        })
+                    }
+                }, true);
+                alert.ResponseText = "127.0.0.1";
+            };
+            joinButton.Width = 190;
+            joinButton.X = 25;
+            joinButton.Y = 500 - 50;
+            Add(joinButton);
+
+            var casButton = new UIButton();
+            casButton.Caption = "CAS";
+            casButton.OnButtonClick += (btn) =>
+            {
+                if (UIScreen.Current is SandboxGameScreen)
+                {
+                    ((SandboxGameScreen)UIScreen.Current).CleanupLastWorld();
+                }
+                FSOFacade.Controller.ShowPersonCreation(null);
+            };
+            casButton.Width = 50;
+            casButton.X = 300-(25+50);
+            casButton.Y = 500 - 50;
+            Add(casButton);
+
+            SetSize(300, 500);
+        }
+
+        public void LotSwitch(string location, bool external)
+        {
+            if (UIScreen.Current is SandboxGameScreen)
+            {
+                var sand = (SandboxGameScreen)UIScreen.Current;
+                sand.Initialize(location, external);
+            } else
+            {
+                FSOFacade.Controller.EnterSandboxMode(location, external);
+            }
         }
 
         public void populateWithXMLHouses()
@@ -83,6 +156,20 @@ namespace FSO.Client.UI.Panels
                 xmlHouses.Add(new UIXMLLotEntry { Filename = filename, Path = entry });
             }
 
+
+            paths = Directory.GetFiles(Path.Combine(FSOEnvironment.ContentDir, "LocalHouse/"), "*.fsov", SearchOption.AllDirectories);
+            for (int i = 0; i < paths.Length; i++)
+            {
+                string entry = paths[i];
+                entry = entry.Substring(0, entry.Length - 5) + ".xml";
+                string filename = Path.GetFileName(entry);
+                if (!xmlHouses.Any(x => x.Filename == filename))
+                {
+                    xmlHouses.Add(new UIXMLLotEntry { Filename = filename, Path = entry });
+                }
+            }
+
+
             BookmarkListBox.Columns[0].Alignment = TextAlignment.Left | TextAlignment.Top;
             BookmarkListBox.Items = xmlHouses.Select(x => new UIListBoxItem(x, x.Filename)).ToList();
         }
@@ -100,7 +187,8 @@ namespace FSO.Client.UI.Panels
         {
             if (BookmarkListBox.SelectedItem == null) { return; }
             var item = (UIXMLLotEntry)BookmarkListBox.SelectedItem.Data;
-            FSOFacade.Controller.EnterSandboxMode(item.Path, false);
+            UIScreen.RemoveDialog(this);
+            LotSwitch(item.Path, false);
         }
 
         private void CloseButton_OnButtonClick(UIElement button)

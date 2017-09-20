@@ -701,7 +701,7 @@ namespace FSO.Client.UI.Panels
             if (LotControl.vm.TSOState.Size != OldLotSize) UpdateCost();
 
             var blueprint = LotControl.vm.Context.Blueprint;
-            if (blueprint.TargetBuildableArea != TargetSize)
+            if (blueprint != null && blueprint.TargetBuildableArea != TargetSize)
             {
                 blueprint.TargetBuildableArea = TargetSize;
                 blueprint.Terrain.TerrainDirty = true;
@@ -777,8 +777,11 @@ namespace FSO.Client.UI.Panels
             PreviewTarget.Dispose();
             Batch.Dispose();
             var blueprint = LotControl.vm.Context.Blueprint;
-            blueprint.TargetBuildableArea = new Rectangle();
-            blueprint.Terrain.TerrainDirty = true;
+            if (blueprint != null)
+            {
+                blueprint.TargetBuildableArea = new Rectangle();
+                blueprint.Terrain.TerrainDirty = true;
+            }
             LotControl.World.InvalidateZoom();
         }
 

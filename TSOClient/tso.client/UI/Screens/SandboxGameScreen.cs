@@ -1,4 +1,5 @@
 ﻿using FSO.Client.Debug;
+using FSO.Client.Network.Sandbox;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Model;
 using FSO.Client.UI.Panels;
@@ -33,6 +34,9 @@ namespace FSO.Client.UI.Screens
         public UIGameTitle Title;
 
         public UIContainer WindowContainer;
+        public FSOSandboxServer SandServer;
+        public FSOSandboxClient SandCli;
+        public UISandboxSelector SandSelect;
 
         private Queue<SimConnectStateChange> StateChanges;
 
@@ -70,7 +74,7 @@ namespace FSO.Client.UI.Screens
             }
             set
             {
-                value = Math.Max(1, Math.Min(3, value));
+                value = Math.Max(1, Math.Min(5, value));
 
                 if (value < 4)
                 {
@@ -94,18 +98,10 @@ namespace FSO.Client.UI.Screens
                         m_ZoomLevel = value;
                     }
                 }
-                else //cityrenderer! we'll need to recreate this if it doesn't exist...
+                else //open the sandbox mode lot browser
                 {
-                    if (m_ZoomLevel < 4)
-                    { //coming from lot view... snap zoom % to 0 or 1
-                        Title.SetTitle(GameFacade.CurrentCityName);
-                        if (World != null)
-                        {
-                            LotControl.Visible = false;
-                        }
-                        ucp.SetMode(UIUCP.UCPMode.CityMode);
-                    }
-                    m_ZoomLevel = value;
+                    SandSelect = new UISandboxSelector();
+                    GlobalShowDialog(SandSelect, true);
                 }
                 ucp.UpdateZoomButton();
             }
@@ -334,7 +330,6 @@ namespace FSO.Client.UI.Screens
             TimedReferenceController.Clear();
             VM.ClearAssembled();
 
-            if (ZoomLevel < 4) ZoomLevel = 5;
             vm.Context.Ambience.Kill();
             foreach (var ent in vm.Entities)
             { //stop object sounds
@@ -358,6 +353,11 @@ namespace FSO.Client.UI.Screens
             World = null;
             Driver = null;
             LotControl = null;
+
+            SandServer?.Shutdown();
+            SandCli?.Disconnect();
+            SandServer = null;
+            SandCli = null;
         }
 
         /*
@@ -418,14 +418,54 @@ namespace FSO.Client.UI.Screens
             World.Opacity = 1;
             GameFacade.Scenes.Add(World);
 
+            var settings = GlobalSettings.Default;
+            var myState = new VMNetAvatarPersistState()
+            {
+                Name = settings.LastUser,
+                DefaultSuits = new VMAvatarDefaultSuits(settings.DebugGender),
+                BodyOutfit = settings.DebugBody,
+                HeadOutfit = settings.DebugHead,
+                PersistID = (uint)(new Random()).Next(),
+                SkinTone = (byte)settings.DebugSkin,
+                Gender = (short)(settings.DebugGender ? 0 : 1),
+                Permissions = SimAntics.Model.TSOPlatform.VMTSOAvatarPermissions.Admin,
+                Budget = 1000000,
+            };
+
             if (external)
             {
-                //external not yet implemented
-                Driver = new VMClientDriver(ClientStateChange);
+                var cd = new VMClientDriver(ClientStateChange);
+                SandCli = new FSOSandboxClient();
+                cd.OnClientCommand += (msg) => { SandCli.Write(new VMNetMessage(VMNetMessageType.Command, msg)); };
+                cd.OnShutdown += (reason) => SandCli.Disconnect();
+                SandCli.OnMessage += cd.ServerMessage;
+                SandCli.Connect(lotName);
+                Driver = cd;
+
+                var dat = new MemoryStream();
+                var str = new BinaryWriter(dat);
+                myState.SerializeInto(str);
+                var ava = new VMNetMessage(VMNetMessageType.AvatarData, dat.ToArray());
+                dat.Close();
+                SandCli.OnConnectComplete += () =>
+                {
+                    SandCli.Write(ava);
+                };
             } else
             {
                 var globalLink = new VMTSOGlobalLinkStub();
-                Driver = new VMServerDriver(globalLink);
+                var sd = new VMServerDriver(globalLink);
+                SandServer = new FSOSandboxServer();
+
+                Driver = sd;
+                sd.OnDropClient += SandServer.ForceDisconnect;
+                sd.OnTickBroadcast += SandServer.Broadcast;
+                sd.OnDirectMessage += SandServer.SendMessage;
+                SandServer.OnConnect += sd.ConnectClient;
+                SandServer.OnDisconnect += sd.DisconnectClient;
+                SandServer.OnMessage += sd.HandleMessage;
+
+                SandServer.Start((ushort)37564);
             }
 
             //Driver.OnClientCommand += VMSendCommand;
@@ -449,8 +489,6 @@ namespace FSO.Client.UI.Screens
                 LotControl.Visible = false;
             }
 
-            ZoomLevel = Math.Max(ZoomLevel, 4);
-
             if (IDEHook.IDE != null) IDEHook.IDE.StartIDE(vm);
 
             vm.OnFullRefresh += VMRefreshed;
@@ -471,24 +509,11 @@ namespace FSO.Client.UI.Screens
                 vm.Context.Clock.Hours = 16;
                 vm.TSOState.Size = (10) | (3 << 8);
                 vm.Context.UpdateTSOBuildableArea();
-                vm.MyUID = 1;
-                var settings = GlobalSettings.Default;
                 var myClient = new VMNetClient
                 {
-                    PersistID = 1,
+                    PersistID = myState.PersistID,
                     RemoteIP = "local",
-                    AvatarState = new VMNetAvatarPersistState()
-                    {
-                        Name = settings.LastUser,
-                        DefaultSuits = new VMAvatarDefaultSuits(settings.DebugGender),
-                        BodyOutfit = settings.DebugBody,
-                        HeadOutfit = settings.DebugHead,
-                        PersistID = 1,
-                        SkinTone = (byte)settings.DebugSkin,
-                        Gender = (short)(settings.DebugGender ? 1 : 0),
-                        Permissions = SimAntics.Model.TSOPlatform.VMTSOAvatarPermissions.Admin,
-                        Budget = 1000000
-                    }
+                    AvatarState = myState
 
                 };
 
@@ -498,6 +523,8 @@ namespace FSO.Client.UI.Screens
                 GameFacade.Cursor.SetCursor(CursorType.Normal);
                 ZoomLevel = 1;
             }
+            vm.MyUID = myState.PersistID;
+            ZoomLevel = 1;
         }
 
         public void BlueprintReset(string path)
