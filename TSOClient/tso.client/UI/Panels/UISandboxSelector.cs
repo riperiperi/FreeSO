@@ -157,17 +157,21 @@ namespace FSO.Client.UI.Panels
             }
 
 
-            paths = Directory.GetFiles(Path.Combine(FSOEnvironment.ContentDir, "LocalHouse/"), "*.fsov", SearchOption.AllDirectories);
-            for (int i = 0; i < paths.Length; i++)
+            try
             {
-                string entry = paths[i];
-                entry = entry.Substring(0, entry.Length - 5) + ".xml";
-                string filename = Path.GetFileName(entry);
-                if (!xmlHouses.Any(x => x.Filename == filename))
+                paths = Directory.GetFiles(Path.Combine(FSOEnvironment.ContentDir, "LocalHouse/"), "*.fsov", SearchOption.AllDirectories);
+                for (int i = 0; i < paths.Length; i++)
                 {
-                    xmlHouses.Add(new UIXMLLotEntry { Filename = filename, Path = entry });
+                    string entry = paths[i];
+                    entry = entry.Substring(0, entry.Length - 5) + ".xml";
+                    string filename = Path.GetFileName(entry);
+                    if (!xmlHouses.Any(x => x.Filename == filename))
+                    {
+                        xmlHouses.Add(new UIXMLLotEntry { Filename = filename, Path = entry });
+                    }
                 }
             }
+            catch { }
 
 
             BookmarkListBox.Columns[0].Alignment = TextAlignment.Left | TextAlignment.Top;
