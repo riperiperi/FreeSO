@@ -8,9 +8,17 @@ FreeSO currently depends on the original game files (objects, avatars, ui) to fu
 
 # The Sims 1 via Simitone
 
-FreeSO is additionally a base project for an ongoing re-implementation of The Sims 1's engine, [Simitone](https://github.com/RHY3756547/Simitone), targetted mainly at mobile devices. 
+FreeSO is additionally a base project for an ongoing re-implementation of The Sims 1's engine, [Simitone](https://github.com/riperiperi/Simitone), targetted mainly at mobile devices. 
 
-The content system, HIT VM and SimAntics VM included within this repo support both TSO and TS1 game files - meaning that TS1 will still run in a limited sense under TSO's UI frontend within FreeSO. [Simitone](https://github.com/RHY3756547/Simitone) fully restores TS1 gameplay by tying the neighbourhood and game systems together with a suitable UI frontend.
+The content system, HIT VM and SimAntics VM included within this repo support both TSO and TS1 game files - meaning that TS1 will still run in a limited sense under TSO's UI frontend within FreeSO. [Simitone](https://github.com/riperiperi/Simitone) fully restores TS1 gameplay by tying the neighbourhood and game systems together with a suitable UI frontend.
+
+# 3D Mode
+
+![image](https://cdn.discordapp.com/attachments/355135351234494464/355396364349210625/unknown.png)
+
+The FreeSO engine additionally supports an experimental 3D mode, which allows you to see the game from a different perspective. 3D meshes are reconstructed at runtime from the z-buffers included with object sprites. FreeSO also generates 3D geometry for walls and floors at runtime, and switches to an alternate camera with different controls when the mode is enabled. 
+
+The mode can be enabled via the launch parameter `-3d`. See the blog for more information. (http://freeso.org/the-impossible/)
 
 # Volcanic
 
@@ -22,15 +30,15 @@ Volcanic is an extension of FreeSO that allows users to view, modify and save ga
 # Contributing
 You can contribute to FreeSO by testing cutting edge features in the latest releases, filing bugs, and joining in the discussion on our forums!
 
-* [Getting Started](https://github.com/RHY3756547/FreeSO/wiki)
-* [Coding Standards](https://github.com/RHY3756547/FreeSO/wiki/Coding-standards)
-* [Pull Requests](https://github.com/RHY3756547/FreeSO/pulls): [Open](https://github.com/RHY3756547/FreeSO/pulls)/[Closed](https://github.com/RHY3756547/FreeSO/issues?q=is%3Apr+is%3Aclosed)
+* [Getting Started](https://github.com/riperiperi/FreeSO/wiki)
+* [Coding Standards](https://github.com/riperiperi/FreeSO/wiki/Coding-standards)
+* [Pull Requests](https://github.com/riperiperi/FreeSO/pulls): [Open](https://github.com/riperiperi/FreeSO/pulls)/[Closed](https://github.com/riperiperi/FreeSO/issues?q=is%3Apr+is%3Aclosed)
 * [Translation](http://forum.freeso.org/forums/translations.32/)
 * [Forums](http://forum.freeso.org)
 * [Blog](http://freeso.org)
 * [Official Discord](https://discordapp.com/invite/xveESFj)
 
-Looking for something to do? Check out the issues tagged as [help wanted](https://github.com/RHY3756547/FreeSO/labels/help%20wanted) to get started.
+Looking for something to do? Check out the issues tagged as [help wanted](https://github.com/riperiperi/FreeSO/labels/help%20wanted) to get started.
 
 Regarding translations, full object and UI translations should currently be released on the forums. An improved system for distribution and organisation will be set up in a month or two. Stay tuned!
 
