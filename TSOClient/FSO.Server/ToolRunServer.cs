@@ -39,6 +39,7 @@ namespace FSO.Server
         private List<AbstractServer> Servers;
         private List<CityServer> CityServers;
         private ApiServer ActiveApiServer;
+        private UserApi ActiveUApiServer;
         private TaskServer ActiveTaskServer;
         private RunServerOptions Options;
         private Protocol.Gluon.Model.ShutdownType ShutdownMode;
@@ -92,7 +93,6 @@ namespace FSO.Server
             if(Config.Services.Api != null &&
                 Config.Services.Api.Enabled)
             {
-                LOG.Info((Config.Services.Api.Regkey == null)?"null": Config.Services.Api.Regkey);
                 var childKernel = new ChildKernel(
                     Kernel
                 );
@@ -109,7 +109,14 @@ namespace FSO.Server
             if (Config.Services.UserApi != null &&
                 Config.Services.UserApi.Enabled)
             {
-                Servers.Add(new UserApi(Config));
+                var childKernel = new ChildKernel(
+                    Kernel
+                );
+                var api = new UserApi(Config, childKernel);
+                ActiveUApiServer = api;
+                Servers.Add(api);
+                api.OnRequestShutdown += RequestedShutdown;
+                api.OnBroadcastMessage += BroadcastMessage;
             }
 
             foreach(var cityServer in Config.Services.Cities){
@@ -274,6 +281,7 @@ namespace FSO.Server
                 remaining -= waitTime;
 
                 string timeString = (remaining % 60 == 0 && remaining > 60) ? ((remaining / 60) + " minutes") : (remaining + " seconds");
+                LOG.Info("Shutdown in "+timeString);
                 BroadcastMessage("FreeSO Server", "Shutting down", "The game server will go down for maintainance in " + timeString + ".");
             }
 
@@ -293,6 +301,11 @@ namespace FSO.Server
                 {
                     ActiveApiServer.Shutdown();
                     Servers.Remove(ActiveApiServer);
+                }
+                if (ActiveUApiServer != null)
+                {
+                    ActiveUApiServer.Shutdown();
+                    Servers.Remove(ActiveUApiServer);
                 }
                 if (ActiveTaskServer != null)
                 {

@@ -41,14 +41,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
     <Compile Include="Domain\Shards.cs" />
+    <Compile Include="IGluonHostPool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FSO.Common.Domain\FSO.Common.Domain.csproj">
       <Project>{9848faf5-444a-48cc-a26a-8115d8c4fb52}</Project>
       <Name>FSO.Common.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
+      <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
+      <Name>FSO.Server.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Database\FSO.Server.Database.csproj">
       <Project>{430acd60-e798-43f0-ad61-8b5a35df6ab2}</Project>
@@ -57,6 +61,10 @@
     <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
       <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>
       <Name>FSO.Server.Protocol</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
+      <Name>FSO.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

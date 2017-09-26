@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Tasks;
+using FSO.Server.Domain;
 using FSO.Server.Protocol.Gluon.Packets;
 using FSO.Server.Servers.Api.JsonWebToken;
 using FSO.Server.Utils;

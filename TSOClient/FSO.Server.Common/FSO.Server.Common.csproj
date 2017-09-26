@@ -61,10 +61,18 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IServerDebugger.cs" />
     <Compile Include="ServerVersion.cs" />
+    <Compile Include="Session\IAriesSession.cs" />
+    <Compile Include="Session\IGluonSession.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
+      <Name>FSO.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -166,6 +166,11 @@
     <Compile Include="Api.cs" />
     <Compile Include="ApiConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\Admin\AdminHostsController.cs" />
+    <Compile Include="Controllers\Admin\AdminOAuthController.cs" />
+    <Compile Include="Controllers\Admin\AdminShardsController.cs" />
+    <Compile Include="Controllers\Admin\AdminTasksController.cs" />
+    <Compile Include="Controllers\Admin\AdminUsersController.cs" />
     <Compile Include="Controllers\AuthLoginController.cs" />
     <Compile Include="Controllers\AvatarDataController.cs" />
     <Compile Include="Controllers\CityJSONController.cs" />

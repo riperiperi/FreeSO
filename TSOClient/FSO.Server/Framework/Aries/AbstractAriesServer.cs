@@ -42,6 +42,7 @@ namespace FSO.Server.Framework.Aries
         protected IDAFactory DAFactory;
 
         private IoAcceptor Acceptor;
+        private IoAcceptor PlainAcceptor;
         private IServerDebugger Debugger;
 
         private AriesPacketRouter _Router = new AriesPacketRouter();
@@ -121,15 +122,15 @@ namespace FSO.Server.Framework.Aries
                 }
 
                 //Bind in the plain too as a workaround until we can get Mina.NET to work nice for TLS in the AriesClient
-                var plainAcceptor = new AsyncSocketAcceptor();
+                PlainAcceptor = new AsyncSocketAcceptor();
                 if (Debugger != null){
-                    plainAcceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger(), Kernel.Get<ISerializationContext>()));
+                    PlainAcceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger(), Kernel.Get<ISerializationContext>()));
                 }
 
-                plainAcceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
-                plainAcceptor.Handler = this;
-                plainAcceptor.Bind(IPEndPointUtils.CreateIPEndPoint(Config.Binding.Replace("100", "101")));
-                LOG.Info("Listening on " + plainAcceptor.LocalEndPoint + " in the plain");
+                PlainAcceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
+                PlainAcceptor.Handler = this;
+                PlainAcceptor.Bind(IPEndPointUtils.CreateIPEndPoint(Config.Binding.Replace("100", "101")));
+                LOG.Info("Listening on " + PlainAcceptor.LocalEndPoint + " in the plain");
             }
             catch(Exception ex)
             {
@@ -281,6 +282,7 @@ namespace FSO.Server.Framework.Aries
         public override void Shutdown()
         {
             Acceptor.Dispose();
+            PlainAcceptor.Dispose();
             var sessions = _Sessions.RawSessions;
             lock (sessions)
             {

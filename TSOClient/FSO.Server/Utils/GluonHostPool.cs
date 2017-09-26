@@ -18,6 +18,7 @@ using FSO.Server.Protocol.Gluon.Packets;
 using Ninject.Modules;
 using FSO.Server.Protocol.Utils;
 using Ninject.Parameters;
+using FSO.Server.Domain;
 
 namespace FSO.Server.Utils
 {
@@ -422,28 +423,6 @@ namespace FSO.Server.Utils
         CONNECTING,
         CONNECTED,
         FAILED
-    }
-
-
-    public interface IGluonHostPool
-    {
-        string PoolHash { get; }
-
-        IGluonHost Get(string callSign);
-        IGluonHost GetByShardId(int shard_id);
-        IEnumerable<IGluonHost> GetByRole(DbHostRole role);
-        IEnumerable<IGluonHost> GetAll();
-
-        void Start();
-        void Stop();
-    }
-
-    public interface IGluonHost : IGluonSession
-    {
-        DbHostRole Role { get; }
-        bool Connected { get; }
-        DateTime BootTime { get; }
-        Task<IGluonCall> Call<IN>(IN input) where IN : IGluonCall;
     }
 
     public class GluonHostPoolModule : NinjectModule

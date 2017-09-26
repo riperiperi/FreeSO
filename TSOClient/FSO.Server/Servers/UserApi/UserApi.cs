@@ -11,6 +11,10 @@ using System.Web.Http;
 using Owin;
 using System.Collections.Specialized;
 using FSO.Server.Servers.Api;
+using static FSO.Server.Api.Api;
+using Ninject;
+using FSO.Server.Utils;
+using FSO.Server.Domain;
 
 namespace FSO.Server.Servers.UserApi
 {
@@ -18,10 +22,15 @@ namespace FSO.Server.Servers.UserApi
     {
         private IDisposable App;
         private ServerConfiguration Config;
+        private IKernel Kernel;
 
-        public UserApi(ServerConfiguration config)
+        public event APIRequestShutdownDelegate OnRequestShutdown;
+        public event APIBroadcastMessageDelegate OnBroadcastMessage;
+
+        public UserApi(ServerConfiguration config, IKernel kernel)
         {
             this.Config = config;
+            this.Kernel = kernel;
         }
 
         public override void AttachDebugger(IServerDebugger debugger)
@@ -40,6 +49,10 @@ namespace FSO.Server.Servers.UserApi
             App = WebApp.Start(Config.Services.UserApi.Bindings[0], x =>
             {
                 new UserApiStartup().Configuration(x, Config);
+                var api = INSTANCE;
+                api.OnBroadcastMessage += (s, t, m) => { OnBroadcastMessage?.Invoke(s, t, m); };
+                api.OnRequestShutdown += (t, st) => { OnRequestShutdown?.Invoke(t, st); };
+                api.HostPool = Kernel.Get<IGluonHostPool>();
             });
 
             //Console.ReadLine();

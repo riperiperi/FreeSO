@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Database.DA;
 using FSO.Server.Domain;
+using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Servers.Api.JsonWebToken;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,13 @@ namespace FSO.Server.Api
         public ApiConfig Config;
         public JWTFactory JWT;
         public Shards Shards;
+        public IGluonHostPool HostPool;
+
+        public event APIRequestShutdownDelegate OnRequestShutdown;
+        public event APIBroadcastMessageDelegate OnBroadcastMessage;
+
+        public delegate void APIRequestShutdownDelegate(uint time, ShutdownType type);
+        public delegate void APIBroadcastMessageDelegate(string sender, string title, string message);
 
         public Api()
         {
@@ -47,6 +55,7 @@ namespace FSO.Server.Api
                 ConnectionString = appSettings["connectionString"]
             });
 
+
             Shards = new Shards(DAFactory);
             Shards.AutoUpdate();
         }
@@ -58,25 +67,61 @@ namespace FSO.Server.Api
             {
                 throw new SecurityException("Unable to get http context");
             }*/
-
-            var cookies = request.Headers.GetCookies().FirstOrDefault();
-            if (cookies == null)
-                throw new SecurityException("Unable to find cookie");
-
-
-            var cookie = cookies["fso"];
-            if (cookie == null)
+            JWTUser result;
+            if (request.Headers.Authorization != null)
             {
-                throw new SecurityException("Unable to find cookie");
+                result = JWT.DecodeToken(request.Headers.Authorization.Parameter);
             }
+            else
+            {
+                var cookies = request.Headers.GetCookies().FirstOrDefault();
+                if (cookies == null)
+                    throw new SecurityException("Unable to find cookie");
 
-            var result = JWT.DecodeToken(cookie.Value);
+
+                var cookie = cookies["fso"];
+                if (cookie == null)
+                {
+                    throw new SecurityException("Unable to find cookie");
+                }
+                result = JWT.DecodeToken(cookie.Value);
+            }
             if(result == null)
             {
                 throw new SecurityException("Invalid token");
             }
 
             return result;
+        }
+
+        public void DemandModerator(JWTUser user)
+        {
+            if (!user.Claims.Contains("moderator")) throw new Exception("Requires Moderator level status");
+        }
+
+        public void DemandAdmin(JWTUser user)
+        {
+            if (!user.Claims.Contains("admin")) throw new Exception("Requires Admin level status");
+        }
+
+        public void DemandModerator(HttpRequestMessage request)
+        {
+            DemandModerator(RequireAuthentication(request));
+        }
+
+        public void DemandAdmin(HttpRequestMessage request)
+        {
+            DemandAdmin(RequireAuthentication(request));
+        }
+
+        public void RequestShutdown(uint time, ShutdownType type)
+        {
+            OnRequestShutdown?.Invoke(time, type);
+        }
+
+        public void BroadcastMessage(string sender, string title, string message)
+        {
+            OnBroadcastMessage?.Invoke(sender, title, message);
         }
     }
 }

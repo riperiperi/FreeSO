@@ -117,9 +117,6 @@ namespace FSO.Server.Servers.Api.Controllers
         }
     }
 
-
-
-
     class UserCreateModel
     {
         public string username;

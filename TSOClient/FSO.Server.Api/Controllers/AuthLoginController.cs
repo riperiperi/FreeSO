@@ -89,7 +89,6 @@ namespace FSO.Server.Api.Controllers
 
                 db.AuthTickets.Create(ticket);
             }
-
             var content = "Valid=TRUE\r\nTicket=" + ticket.ticket_id.ToString() + "\r\n";
             return ApiResponse.Plain(HttpStatusCode.OK, content);
         }

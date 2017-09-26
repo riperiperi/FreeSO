@@ -1,4 +1,5 @@
 ﻿using FSO.Server.Database.DA;
+using FSO.Server.Domain;
 using FSO.Server.Servers.Api.JsonWebToken;
 using FSO.Server.Utils;
 using Nancy;

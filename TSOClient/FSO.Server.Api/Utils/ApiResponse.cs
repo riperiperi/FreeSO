@@ -1,4 +1,5 @@
 ﻿using FSO.Common.Utils;
+using FSO.Server.Database.DA.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +24,15 @@ namespace FSO.Server.Api.Utils
         {
             var response = new HttpResponseMessage(code);
             response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(obj), Encoding.UTF8, "application/json");
+            return response;
+        }
+
+        public static HttpResponseMessage PagedList<T>(HttpStatusCode code, PagedList<T> list)
+        {
+            var response = new HttpResponseMessage(code);
+            response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(list), Encoding.UTF8, "application/json");
+            response.Headers.Add("X-Total-Count", list.Total.ToString());
+            response.Headers.Add("X-Offset", list.Offset.ToString());
             return response;
         }
 

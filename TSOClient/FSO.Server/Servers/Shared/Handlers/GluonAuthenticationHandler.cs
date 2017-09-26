@@ -1,4 +1,5 @@
-﻿using FSO.Server.Framework.Aries;
+﻿using FSO.Server.Domain;
+using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Gluon;
 using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.Gluon.Packets;

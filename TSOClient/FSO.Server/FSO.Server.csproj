@@ -198,12 +198,10 @@
     <Compile Include="Framework\Aries\AriesSession.cs" />
     <Compile Include="Framework\Aries\AriesHandler.cs" />
     <Compile Include="Framework\Aries\IAriesPacketRouter.cs" />
-    <Compile Include="Framework\Aries\IAriesSession.cs" />
     <Compile Include="Framework\Aries\IAriesSessionInterceptor.cs" />
     <Compile Include="Framework\Aries\ISessions.cs" />
     <Compile Include="Framework\Aries\Sessions.cs" />
     <Compile Include="Framework\Gluon\GluonSession.cs" />
-    <Compile Include="Framework\Gluon\IGluonSession.cs" />
     <Compile Include="Framework\Groups.cs" />
     <Compile Include="Framework\Voltron\IVoltronSession.cs" />
     <Compile Include="Framework\Voltron\VoltronSession.cs" />
