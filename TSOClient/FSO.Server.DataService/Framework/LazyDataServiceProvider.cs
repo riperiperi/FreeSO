@@ -11,8 +11,15 @@ namespace FSO.Common.DataService.Framework
     public abstract class LazyDataServiceProvider <KEY, VALUE> : AbstractDataServiceProvider<KEY, VALUE> where VALUE : IModel
     {
         //protected Dictionary<KEY, VALUE> Items = new Dictionary<KEY, VALUE>();
-        protected ConcurrentDictionary<KEY, Task<object>> Values = new ConcurrentDictionary<KEY, Task<object>>();
+        protected ConcurrentDictionary<KEY, TaskWrap<object>> Values = new ConcurrentDictionary<KEY, TaskWrap<object>>();
         protected TimeSpan LazyLoadTimeout = TimeSpan.FromSeconds(10);
+
+        public Task<object> ReloadTest(KEY castKey)
+        {
+            var val = Values[castKey];
+            if (val.Ready && RequiresReload(castKey, (VALUE)val.GetReady())) return null;
+            else return Values[castKey].Get();
+        }
 
         public override Task<object> Get(object key)
         {
@@ -25,28 +32,28 @@ namespace FSO.Common.DataService.Framework
             var reload = false;
 
             if (Values.ContainsKey(castKey)){
-                var val = Values[castKey];
-                if (RequiresReload(castKey, (VALUE)val.Result)) reload = true;
-                else return Values[castKey];
+                var result = ReloadTest(castKey);
+                if (result != null) return result;
+                else reload = true;
             }
 
             lock (Values)
             {
                 if (reload)
                 {
-                    Task<object> oldVal;
+                    TaskWrap<object> oldVal;
                     Values.TryRemove(castKey, out oldVal);
 
-                    var result = ResolveMissingKey(castKey, (VALUE)oldVal.Result);
-                    return Values.GetOrAdd(castKey, result);
+                    var result = new TaskWrap<object>(ResolveMissingKey(castKey, (VALUE)oldVal.GetReady()));
+                    return Values.GetOrAdd(castKey, result).Get();
                 }
                 else if (Values.ContainsKey(castKey))
                 {
-                    return Values[castKey];
+                    return Values[castKey].Get();
                 } else
                 {
-                    var result = ResolveMissingKey(castKey);
-                    return Values.GetOrAdd(castKey, result);
+                    var result = new TaskWrap<object>(ResolveMissingKey(castKey));
+                    return Values.GetOrAdd(castKey, result).Get();
                 }
 
 
@@ -79,6 +86,39 @@ namespace FSO.Common.DataService.Framework
         protected virtual bool RequiresReload(KEY key, VALUE value)
         {
             return false;
+        }
+    }
+
+    //experimental class to get around a mono issue where task resources are not freed
+    //when they are completed... only when they are deleted.
+    public class TaskWrap<T>
+    {
+        private Task<T> Task { get; set; }
+        private T Result;
+        public bool Ready { get { return Result != null; } }
+
+        public TaskWrap(Task<T> task) {
+            Task = task;
+        }
+
+        public async Task<T> Get()
+        {
+            var t = Task;
+            if (t != null)
+            {
+                var result = await t;
+                Result = result;
+                Task = null;
+                return result;
+            } else
+            {
+                return Result;
+            }
+        }
+
+        public T GetReady()
+        {
+            return Result;
         }
     }
 }
