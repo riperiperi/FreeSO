@@ -217,7 +217,7 @@ namespace FSO.LotView.Components
                 }
                 
                 e.Parameters["World"].SetValue(worldmat);
-                e.Parameters["Level"].SetValue((float)(f-1));
+                e.Parameters["Level"].SetValue((float)(f-((lightWorld == null)?0.999f:1f)));
                 if (roommaps != null) e.Parameters["RoomMap"].SetValue(roommaps[f-1]);
                 foreach (var type in floor.GroupForTileType)
                 {

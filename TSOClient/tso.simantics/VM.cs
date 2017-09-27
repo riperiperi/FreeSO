@@ -56,7 +56,7 @@ namespace FSO.SimAntics
 
         public bool IsServer
         {
-            get { return GlobalLink != null; }
+            get { return GlobalLink != null || Driver is VMFSORDriver; }
         }
         public bool TS1;
         public bool Aborting = false;

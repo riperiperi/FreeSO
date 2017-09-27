@@ -165,7 +165,7 @@ float4 lightProcess(float4 inPosition) {
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;
 
-	inPosition.xz += 1 / MapLayout * float2(Level % MapLayout.x, floor(Level / MapLayout.x));
+	inPosition.xz += 1 / MapLayout * floor(float2(Level % MapLayout.x, Level / MapLayout.x));
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
 	return lightColor(lTex);

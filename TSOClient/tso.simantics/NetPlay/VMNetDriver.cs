@@ -11,6 +11,8 @@ using System.Text;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Engine.TSOTransaction;
+using System.IO;
+using FSO.SimAntics.NetPlay.Drivers;
 
 namespace FSO.SimAntics.NetPlay
 {
@@ -22,6 +24,7 @@ namespace FSO.SimAntics.NetPlay
         public abstract bool Tick(VM vm);
         public abstract string GetUserIP(uint uid);
         public VMCloseNetReason CloseReason;
+        private BinaryWriter RecordStream;
 
         /// <summary>
         /// Indicates a VM inspired total connection shutdown. 
@@ -47,14 +50,17 @@ namespace FSO.SimAntics.NetPlay
                 }
             }
 
+            if (RecordStream != null) RecordTick(tick);
+
             vm.Context.RandomSeed = tick.RandomSeed;
             bool doTick = !tick.ImmediateMode;
             foreach(var cmd in tick.Commands)
             {
-                if (cmd.Command is VMStateSyncCmd)
+                if (cmd.Command is VMStateSyncCmd && ((VMStateSyncCmd)cmd.Command).Run)
                 {
                     if (LastTick + 1 != tick.TickID) System.Console.WriteLine("Jump to tick " + tick.TickID);
-                    doTick = false;
+                    if (!(this is VMFSORDriver)) doTick = false; //something weird here. this can break loading from saves casually - but must not be active for resyncs.
+                    //disable just for fsor playback
                 }
 
                 var caller = vm.GetAvatarByPersist(cmd.Command.ActorUID);
@@ -72,6 +78,27 @@ namespace FSO.SimAntics.NetPlay
             }
             LastTick = tick.TickID;
         }
+
+        //functions for recording command streams. 
+        //Should work on client or server, assuming there is a sync point at the start.
+
+        public void Record(Stream output)
+        {
+            RecordStream = new BinaryWriter(output);
+            RecordStream.Write(new char[] { 'F', 'S', 'O', 'r' });
+            RecordStream.Write(0); //version, for future extension
+        }
+
+        public void RecordTick(VMNetTick tick)
+        {
+            tick.SerializeInto(RecordStream);
+        }
+
+        public void EndRecord()
+        {
+            RecordStream?.BaseStream?.Close();
+        }
+
         public virtual void Shutdown()
         {
             if (OnShutdown != null) OnShutdown(CloseReason);

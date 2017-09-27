@@ -107,6 +107,7 @@ namespace FSO.SimAntics.Model
 
         public static int GetObjectLimit(VM vm)
         {
+            if (vm.TSOState.PropertyCategory == 255) return 10000;
             var lotInfo = vm.TSOState;
             var lotSize = lotInfo.Size & 255;
             var lotFloors = (lotInfo.Size >> 8) & 255;

@@ -108,7 +108,7 @@ namespace FSO.LotView.Utils
                 foreach (var geom in sprites)
                 {
                     if (OBJIDMode) effect.Parameters["ObjectID"].SetValue(geom.ObjectID / 65535f);
-                    effect.Parameters["Level"].SetValue((float)geom.Level);
+                    effect.Parameters["Level"].SetValue((float)geom.Level + 0.0001f);
                     if (RoomLights != null)
                     {
                         var col = ((WorldConfig.Current.AdvancedLighting)?new Vector4(1):RoomLights[geom.Room].ToVector4()) * geom.Color.ToVector4();

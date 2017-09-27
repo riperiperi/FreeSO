@@ -67,7 +67,8 @@ namespace FSO.SimAntics.Entities
             if (context.Clock.Minutes == LastMinute) return;
             LastMinute = context.Clock.Minutes;
 
-            string category = CategoryNames[context.VM.TSOState.PropertyCategory];
+            var cat = context.VM.TSOState.PropertyCategory;
+            string category = CategoryNames[(cat==255)?0:cat];
             string sleepState = (avatar.GetMotiveData(VMMotive.SleepState) == 0)?"Awake":"Asleep";
 
             int moodSum = 0;

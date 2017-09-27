@@ -48,7 +48,7 @@ namespace FSO.LotView.RC
             if (Room == 65533) effect.CurrentTechnique = effect.Techniques["DisabledDraw"];
 
             effect.Parameters["World"].SetValue(World);
-            effect.Parameters["Level"].SetValue((float)(Level-1));
+            effect.Parameters["Level"].SetValue((float)(Level-0.999f));
 
             int i = 0;
             foreach (var spr in Mesh.Geoms)

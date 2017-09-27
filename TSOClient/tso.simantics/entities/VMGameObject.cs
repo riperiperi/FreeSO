@@ -116,7 +116,7 @@ namespace FSO.SimAntics
             OBJD obj = Object.OBJ;
             if (MasterDefinition != null) obj = MasterDefinition;
             var category = context.VM.TSOState.PropertyCategory;
-            if (obj.LotCategories > 0 && (obj.LotCategories & (1 << category)) == 0)
+            if (category != 255 && obj.LotCategories > 0 && (obj.LotCategories & (1 << category)) == 0)
                 Disabled |= VMGameObjectDisableFlags.LotCategoryWrong;
             else
                 Disabled &= ~VMGameObjectDisableFlags.LotCategoryWrong; 

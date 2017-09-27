@@ -203,7 +203,7 @@ float4 lightProcess(float4 inPosition, float level) {
 	inPosition.y += 0.02;
 
 	//float level = floor(inPosition.y); //todo: sprite defines our level (3d walls will give us more control here)
-	inPosition.xz += 1 / MapLayout * float2(level % MapLayout.x, floor(level / MapLayout.x));
+	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
 
     float4 lTex = tex2D(advLightSampler, inPosition.xz);
 	if (drawingFloor == false) lTex.zw = lTex.xy;
@@ -214,10 +214,10 @@ float4 lightInterp(float4 inPosition) {
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;
 
-	float level = floor(inPosition.y); //todo: sprite defines our level (3d walls will give us more control here)
+	float level = floor(inPosition.y) + 0.0001; //todo: sprite defines our level (3d walls will give us more control here)
 	float abvLevel = min(MaxFloor, level + 1);
-	float2 iPA = inPosition.xz + 1 / MapLayout * float2(abvLevel % MapLayout.x, floor(abvLevel / MapLayout.x));
-	inPosition.xz += 1 / MapLayout * float2(level % MapLayout.x, floor(level / MapLayout.x));
+	float2 iPA = inPosition.xz + 1 / MapLayout * floor(float2(abvLevel % MapLayout.x, abvLevel / MapLayout.x));
+	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
 	lTex.xz = lerp(lTex.xz, tex2D(advLightSampler, iPA).xz, max(0, (inPosition.y % 1) * 2 - 1));

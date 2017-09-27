@@ -198,6 +198,7 @@ namespace FSO.Server.Servers.Lot.Domain
         public void AbortVM()
         {
             Lot.Aborting = true;
+            VMDriver.EndRecord();
         }
 
         public void LoadAdj()
@@ -541,6 +542,19 @@ namespace FSO.Server.Servers.Lot.Domain
             VMDriver.OnDirectMessage += DirectMessage;
             VMDriver.OnDropClient += DropClient;
 
+            if (JobLot) {
+                var jobPacked = Context.DbId - 0x200;
+                var jobLevel = (short)((jobPacked - 1) & 0xF);
+                var jobType = (short)((jobPacked - 1) / 0xF);
+                var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH-mm");
+
+                Directory.CreateDirectory(Path.Combine(Config.SimNFS, "LotLogs/"));
+                var filename = Path.Combine(Config.SimNFS, "LotLogs/[" + timestamp + "] Job " + jobType + "_" + jobLevel + " id" + Context.DbId + ".fsor");
+                LOG.Info("Recording Job Lot at " + filename);
+                var stream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+                VMDriver.Record(stream);
+            }
+
             Lot = new VM(new VMContext(null), VMDriver, new VMNullHeadlineProvider());
             Lot.Init();
 
@@ -586,8 +600,12 @@ namespace FSO.Server.Servers.Lot.Domain
             if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(Lot);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(Lot);
 
-            Lot.Context.Clock.Hours = tsoTime.Item1;
-            Lot.Context.Clock.Minutes = tsoTime.Item2;
+            Lot.ForwardCommand(new VMNetSetTimeCmd()
+            {
+                Hours = tsoTime.Item1,
+                Minutes = tsoTime.Item2,
+                Seconds = tsoTime.Item3
+            });
 
             Lot.Context.UpdateTSOBuildableArea();
 
@@ -624,6 +642,18 @@ namespace FSO.Server.Servers.Lot.Domain
             }
             LotActive.Set();
             ActiveYet = true;
+
+            if (JobLot)
+            {
+                //for recording. must resave lot to get appropriate state changes from terrain population 
+                //(important for playback to sync)
+                Lot.Tick();
+                Lot.ForwardCommand(new VMStateSyncCmd()
+                {
+                    State = Lot.Save(),
+                    Run = false,
+                });
+            }
         }
 
         private void DropClient(VMNetClient target)
@@ -1175,6 +1205,7 @@ namespace FSO.Server.Servers.Lot.Domain
         public void Shutdown()
         {
             //shut down this lot. Do a final save and close everything down.
+            VMDriver.EndRecord();
             LOG.Info("Lot with dbid = " + Context.DbId + " shutting down.");
             if ((LotPersist.move_flags & 4) > 0)
             {

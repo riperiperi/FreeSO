@@ -515,6 +515,7 @@ namespace FSO.Server.Servers.Lot.Domain
                                 LOG.Error("on mono, so can't obtain immediate trace.");
                             }
 
+                            MainThread.Priority = ThreadPriority.BelowNormal;
                             Container.AbortVM();
                             //MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
                             Shutdown(); //it also doesnt tend to work too nicely on release builds. immediately free the lot.

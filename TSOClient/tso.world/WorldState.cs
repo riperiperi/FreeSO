@@ -289,7 +289,7 @@ namespace FSO.LotView
             Avatar.Effect.Parameters["LightOffset"].SetValue(lightOffset);
             WorldContent.RCObject.Parameters["LightOffset"].SetValue(lightOffset);
 
-            WorldContent._2DWorldBatchEffect.Parameters["MaxFloor"].SetValue((float)Level-1);
+            WorldContent._2DWorldBatchEffect.Parameters["MaxFloor"].SetValue((float)Level-0.999f);
         }
 
         public void ClearLighting(bool indoors)

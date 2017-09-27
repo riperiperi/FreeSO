@@ -285,7 +285,7 @@ namespace FSO.LotView.RC
             var baseWorld = Matrix.CreateRotationX((float)Math.PI / 2) * Matrix.CreateScale(3f, -3f, 3f);
             effect.Parameters["World"].SetValue(baseWorld);
             effect.Parameters["SideMask"].SetValue(0f);
-            effect.Parameters["Level"].SetValue((float)(state.Level-1));
+            effect.Parameters["Level"].SetValue((float)(state.Level - 0.999f));
             //effect.Parameters["CutawayTex"].SetValue(Cutaway);
             //effect.Parameters["CurrentLevel"].SetValue(state.Level - 1);
             if (GroupsByTexture.Count < state.Level) return;

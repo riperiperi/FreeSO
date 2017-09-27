@@ -407,6 +407,7 @@ namespace FSO.Client.UI.Screens
         public void InitializeLot(string lotName, bool external)
         {
             if (lotName == "") return;
+            var recording = lotName.ToLowerInvariant().EndsWith(".fsor");
             CleanupLastWorld();
 
             if (FSOEnvironment.Enable3D)
@@ -432,7 +433,13 @@ namespace FSO.Client.UI.Screens
                 Budget = 1000000,
             };
 
-            if (external)
+            if (recording)
+            {
+                var stream = new FileStream(lotName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                var rd = new VMFSORDriver(stream);
+                Driver = rd;
+            }
+            else if (external)
             {
                 var cd = new VMClientDriver(ClientStateChange);
                 SandCli = new FSOSandboxClient();
@@ -497,7 +504,7 @@ namespace FSO.Client.UI.Screens
             vm.OnRequestLotSwitch += VMLotSwitch;
             vm.OnGenericVMEvent += Vm_OnGenericVMEvent;
 
-            if (!external)
+            if (!external && !recording)
             {
                 if (!Downtown && ActiveFamily != null)
                 {
@@ -506,6 +513,7 @@ namespace FSO.Client.UI.Screens
                 }
                 BlueprintReset(lotName);
 
+                vm.TSOState.PropertyCategory = 255;
                 vm.Context.Clock.Hours = 16;
                 vm.TSOState.Size = (10) | (3 << 8);
                 vm.Context.UpdateTSOBuildableArea();

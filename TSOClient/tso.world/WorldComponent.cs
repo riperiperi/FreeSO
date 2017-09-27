@@ -48,7 +48,12 @@ namespace FSO.LotView
 
         public short TileX = -2;
         public short TileY = -2;
-        public sbyte Level = -2;
+        protected sbyte _Level = -2;
+        public virtual sbyte Level
+        {
+            get { return _Level; }
+            set { _Level = value; }
+        }
 
         /// <summary>
         /// Position of the object in tile units

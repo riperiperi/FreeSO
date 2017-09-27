@@ -84,7 +84,7 @@ float4 lightProcess(float4 inPosition) {
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;
 
-	inPosition.xz += 1 / MapLayout * float2(Level % MapLayout.x, floor(Level / MapLayout.x));
+	inPosition.xz += 1 / MapLayout * floor(float2(Level % MapLayout.x, Level / MapLayout.x));
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
 	lTex = float4(lTex.x, lTex.y, lTex.x, lTex.y); //lerp(lTex, float4(lTex.x, lTex.y, lTex.x, lTex.y), clamp((inPosition.y % 1) * 3, 0, 1));
@@ -95,10 +95,10 @@ float4 lightInterp(float4 inPosition) {
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;
 
-	float level = floor(inPosition.y); 
+	float level = floor(inPosition.y) + 0.0001; 
 	float abvLevel = min(Level, level + 1);
-	float2 iPA = inPosition.xz + 1 / MapLayout * float2(abvLevel % MapLayout.x, floor(abvLevel / MapLayout.x));
-	inPosition.xz += 1 / MapLayout * float2(level % MapLayout.x, floor(level / MapLayout.x));
+	float2 iPA = inPosition.xz + 1 / MapLayout * floor(float2(abvLevel % MapLayout.x, abvLevel / MapLayout.x));
+	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
 	lTex.xz = lerp(lTex.xz, tex2D(advLightSampler, iPA).xz, max(0, (inPosition.y % 1) * 2 - 1));

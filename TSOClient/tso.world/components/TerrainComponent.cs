@@ -409,7 +409,7 @@ namespace FSO.LotView.Components
 
             if (primitives > 0)
             {
-                Effect.Parameters["Level"].SetValue((float)0);
+                Effect.Parameters["Level"].SetValue((float)0.0001f);
                 Effect.Parameters["RoomMap"].SetValue(world.Rooms.RoomMaps[0]);
                 Effect.CurrentTechnique = Effect.Techniques["DrawBlades"];
                 int grassNum = (int)Math.Ceiling(GrassHeight / (float)grassScale);

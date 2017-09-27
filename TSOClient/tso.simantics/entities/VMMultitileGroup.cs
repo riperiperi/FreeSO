@@ -237,6 +237,7 @@ namespace FSO.SimAntics.Entities
                 var off = new Vector3(Offsets[i].x/16f, Offsets[i].y/16f, sub.Object.OBJ.LevelOffset*2.95f);
                 off = Vector3.Transform(off-leadOff, rotMat);
 
+                if (VM.UseWorld) sub.WorldUI.Level = (sbyte)(Math.Round(pos.Z / 2.95f)+1);
                 sub.Direction = direction;
                 sub.VisualPosition = pos + off;
             }

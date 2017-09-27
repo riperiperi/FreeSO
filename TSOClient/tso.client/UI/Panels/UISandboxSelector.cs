@@ -58,6 +58,7 @@ namespace FSO.Client.UI.Panels
             //UIUtils.MakeDraggable(background, this, true);
             listBg.With9Slice(25, 25, 25, 25);
             listBg.Height += 180;
+            BookmarkListBox.VisibleRows += 10;
             BookmarkListSlider.SetSize(10, 170 + 180);
             BookmarkScrollDownButton.Y += 180;
             BookmarkListSlider.AttachButtons(BookmarkListScrollUpButton, BookmarkScrollDownButton, 1);
@@ -159,11 +160,12 @@ namespace FSO.Client.UI.Panels
 
             try
             {
-                paths = Directory.GetFiles(Path.Combine(FSOEnvironment.ContentDir, "LocalHouse/"), "*.fsov", SearchOption.AllDirectories);
+                paths = Directory.GetFiles(Path.Combine(FSOEnvironment.ContentDir, "LocalHouse/"), "*", SearchOption.AllDirectories);
                 for (int i = 0; i < paths.Length; i++)
                 {
                     string entry = paths[i];
-                    entry = entry.Substring(0, entry.Length - 5) + ".xml";
+                    if (!entry.ToLowerInvariant().EndsWith(".fsor"))
+                        entry = entry.Substring(0, entry.Length - 5) + ".xml";
                     string filename = Path.GetFileName(entry);
                     if (!xmlHouses.Any(x => x.Filename == filename))
                     {
@@ -175,7 +177,7 @@ namespace FSO.Client.UI.Panels
 
 
             BookmarkListBox.Columns[0].Alignment = TextAlignment.Left | TextAlignment.Top;
-            BookmarkListBox.Items = xmlHouses.Select(x => new UIListBoxItem(x, x.Filename)).ToList();
+            BookmarkListBox.Items = xmlHouses.Select(x => new UIListBoxItem(x, x.Filename.Substring(0, x.Filename.Length-4))).ToList();
         }
 
         private void ChangeType(BookmarkType type)

@@ -23,6 +23,12 @@ namespace FSO.LotView.RC
             dgrp.NumDynamicSprites = obj.OBJ.NumDynamicSprites;
         }
 
+        public override sbyte Level
+        {
+            get { return _Level; }
+            set { _Level = value; dgrp.Level = value; }
+        }
+
         private bool _BoundsDirty = true;
         private BoundingBox _Bounds;
         public override Matrix World

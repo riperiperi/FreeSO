@@ -13,6 +13,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     public class VMStateSyncCmd : VMNetCommandBodyAbstract
     {
         public VMMarshal State;
+        public bool Run = true;
         public VMSyncTraceTick Trace;
 
         //very important: we can't deserialize state information from the client. They might try to exhaust our memory, take a huge amount of our time or do bad things!
@@ -23,6 +24,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 #if VM_DESYNC_DEBUG
             if (Trace != null) vm.Trace.CompareFirstError(Trace);
 #endif
+            if (!Run) return true;
             vm.Load(State);
             if (VM.UseWorld && vm.Context.Blueprint.SubWorlds.Count == 0) VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
             return true;
