@@ -29,6 +29,7 @@ namespace FSO.Server.Servers.Tasks
 
             Engine.AddTask(DbTaskType.prune_database.ToString(), typeof(PruneDatabaseTask));
             Engine.AddTask(DbTaskType.bonus.ToString(), typeof(BonusTask));
+            Engine.AddTask(DbTaskType.shutdown.ToString(), typeof(ShutdownTask));
         }
 
         public override void Start()
@@ -76,5 +77,6 @@ namespace FSO.Server.Servers.Tasks
     public class TaskTuning
     {
         public BonusTaskTuning Bonus { get; set; }
+        public ShutdownTaskTuning Shutdown { get; set; }
     }
 }

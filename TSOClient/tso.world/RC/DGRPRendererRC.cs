@@ -75,5 +75,45 @@ namespace FSO.LotView.RC
 
             if (Room == 65533) effect.CurrentTechnique = effect.Techniques["Draw"];
         }
+
+        public void DrawLMap(GraphicsDevice device, sbyte level)
+        {
+            if (DrawGroup == null) return;
+            if (_Dirty)
+            {
+                Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
+                _Dirty = false;
+            }
+
+            //immedately draw the mesh.
+            var effect = WorldContent.RCObject;
+
+            var mat = World;
+            mat.M42 = ((Level-level) -1)*2.95f; //set y translation to 0
+            effect.Parameters["World"].SetValue(mat);
+
+            int i = 0;
+            foreach (var spr in Mesh.Geoms)
+            {
+                if (i == 0 || (((i - 1) > 63) ? ((DynamicSpriteFlags2 & ((ulong)0x1 << ((i - 1) - 64))) > 0) :
+                    ((DynamicSpriteFlags & ((ulong)0x1 << (i - 1))) > 0)))
+                {
+                    foreach (var geom in spr.Values)
+                    {
+                        if (geom.PrimCount == 0) continue;
+                        foreach (var pass in effect.CurrentTechnique.Passes)
+                        {
+                            pass.Apply();
+                            if (!geom.Rendered) continue;
+                            device.Indices = geom.Indices;
+                            device.SetVertexBuffer(geom.Verts);
+
+                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
+                        }
+                    }
+                }
+                i++;
+            }
+        }
     }
 }

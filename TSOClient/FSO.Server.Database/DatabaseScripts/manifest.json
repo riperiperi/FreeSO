@@ -168,5 +168,13 @@
         "52795d47-a25e-418f-a618-fb89300aab01"
       ]
     },
+    {
+      "id": "c029ed22-e252-40a4-8950-95ea24da1454",
+      "script": "changes/0016_extra_tasks.sql",
+      "idempotent": false,
+      "requires": [
+        "9e4dc7d8-06b7-4f2f-84a8-4da737072d55"
+      ]
+    },
   ]
 }

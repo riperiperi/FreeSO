@@ -127,6 +127,10 @@ float4 psRC(VertexOut v) : COLOR0
 	return color;
 }
 
+float4 psLMapRC(VertexOut v) : COLOR0
+{
+	return float4(1,1,1,1) * (1 - (v.modelPos.y / (3 * 2.95)) / 5);
+}
 
 float4 psDisabledRC(VertexOut v) : COLOR0
 {
@@ -296,6 +300,20 @@ technique WallLMap
 #else
 		VertexShader = compile vs_3_0 vsWallLMap();
 		PixelShader = compile ps_3_0 psWallLMap();
+#endif;
+	}
+}
+
+technique LMapDraw
+{
+	pass Pass1
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_3 vsRC();
+		PixelShader = compile ps_4_0_level_9_3 psLMapRC();
+#else
+		VertexShader = compile vs_3_0 vsRC();
+		PixelShader = compile ps_3_0 psLMapRC();
 #endif;
 	}
 }

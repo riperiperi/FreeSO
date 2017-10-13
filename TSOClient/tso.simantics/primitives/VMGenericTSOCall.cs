@@ -154,11 +154,20 @@ namespace FSO.SimAntics.Primitives
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.GlobalRepairCostInTempXL0: //34
-                    context.Thread.TempXL[0] = 0; //TODO
+                    var mech = ((VMAvatar)context.Caller).GetPersonData(VMPersonDataVariable.MechanicalSkill);
+                    var discount = (Math.Min((int)mech, 1000) * 50) / 1000 + (Math.Max(0, mech - 1000) * 2 / 100);
+                    context.Thread.TempXL[0] = ((context.StackObject.MultitileGroup.InitialPrice / 10) * (100-discount)) / 100; //TODO
                     return VMPrimitiveExitCode.GOTO_TRUE;
-                //35. Global Repair State (TODO)
+                case VMGenericTSOCallMode.GlobalRepairObjectState: //35
+                    //repairs the stack object
+                    if (context.StackObject is VMGameObject)
+                    {
+                        var state = (context.StackObject.TSOState as VMTSOObjectState);
+                        state.QtrDaysSinceLastRepair = 0;
+                    }
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.IsGlobalBroken: //36
-                    return VMPrimitiveExitCode.GOTO_FALSE; //TODO
+                    return ((context.StackObject.TSOState as VMTSOObjectState)?.Broken == true)?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
                 // 37. UNUSED
                 case VMGenericTSOCallMode.MayAddRoommate: //38
                     // CONDITIONS, where stack object is desired roommate: (TODO: support extensions)
@@ -255,9 +264,15 @@ namespace FSO.SimAntics.Primitives
                     context.Thread.TempRegisters[1] = (short)((7500 + context.VM.Context.NextRandom((ulong)(value * componentTable[1]))) / 10000); //cloth
                     context.Thread.TempRegisters[2] = (short)((7500 + context.VM.Context.NextRandom((ulong)(value * componentTable[2]))) / 10000); //parts
                     return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMGenericTSOCallMode.IsStackObjectForSale: //56. TODO
+                case VMGenericTSOCallMode.IsStackObjectForSale: //56.
                     return (((context.StackObject as VMGameObject)?.Disabled)?.HasFlag(VMGameObjectDisableFlags.ForSale) ?? false) ?
                         VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+
+                // === FREESO SPECIFIC ===
+                case VMGenericTSOCallMode.FSOLightRGBFromTemp012: //128
+                    context.StackObject.LightColor = new Microsoft.Xna.Framework.Color((byte)context.Thread.TempRegisters[0], (byte)context.Thread.TempRegisters[1], 
+                        (byte)context.Thread.TempRegisters[2], (byte)1);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
 
                 //TODO: may need to update in global server
                 default:
@@ -268,7 +283,7 @@ namespace FSO.SimAntics.Primitives
 
     public class VMGenericTSOCallOperand : VMPrimitiveOperand
     {
-        public VMGenericTSOCallMode Call;
+        public VMGenericTSOCallMode Call { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

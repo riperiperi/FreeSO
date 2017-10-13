@@ -12,6 +12,7 @@ namespace FSO.IDE.EditorComponent
         private static Dictionary<byte, Type> DescriptorById = new Dictionary<byte, Type>()
         {
             {0, typeof(SleepDescriptor) },
+            {1, typeof(GenericTSOCallDescriptor) },
             {2, typeof(ExpressionDescriptor) },
             {4, typeof(GrabDescriptor) },
             {5, typeof(DropDescriptor) },
@@ -34,6 +35,9 @@ namespace FSO.IDE.EditorComponent
             {29, typeof(SetMotiveChangeDescriptor) },
             {31, typeof(SetToNextDescriptor) },
             {32, typeof(TestObjectTypeDescriptor) },
+            {36, typeof(DialogDescriptors) },
+            {38, typeof(DialogDescriptors) },
+            {39, typeof(DialogDescriptors) },
             {42, typeof(CreateObjectInstanceDescriptor) },
             {43, typeof(DropOntoDescriptor) },
             {44, typeof(AnimateSimDescriptor) },
@@ -99,6 +103,8 @@ namespace FSO.IDE.EditorComponent
                 23, //play sound event
                 48, //stop all sounds
                 36, //dialog - all strings (hacked)
+                38,
+                39
             } },
             {PrimitiveGroup.Position, new List<byte> {
                 16, //find location for

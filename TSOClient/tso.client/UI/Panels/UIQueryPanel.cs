@@ -156,6 +156,7 @@ namespace FSO.Client.UI.Panels
                 //null for some reason?
                 WearValueText.Visible = (value == 1);
                 WearLabelText.Visible = (value == 1);
+                WearLabelText.Alignment = TextAlignment.Center | TextAlignment.Middle;
 
                 ForSalePrice.Visible = (value == 1);
 
@@ -170,7 +171,6 @@ namespace FSO.Client.UI.Panels
                 ObjectCrafterText.Visible = (value == 1);
 
                 WearProgressBar.Visible = (value == 1);
-                WearProgressBar.Value = 75;
 
                 //async sale stuff, as in "once I know what this actually does I'll care"
 
@@ -488,6 +488,9 @@ namespace FSO.Client.UI.Panels
             }
 
             if (entity is VMGameObject) {
+                WearProgressBar.Value = 100-((VMTSOObjectState)entity.TSOState).Wear/4;
+                WearProgressBar.Caption = ((VMTSOObjectState)entity.TSOState).Broken? GameFacade.Strings.GetString("206", "34") : null;
+                WearValueText.Caption = ((VMTSOObjectState)entity.TSOState).Wear / 4 + "%";
                 var objects = entity.MultitileGroup.Objects;
                 ObjectComponent[] objComps = new ObjectComponent[objects.Count];
                 for (int i=0; i<objects.Count; i++) {
@@ -499,6 +502,8 @@ namespace FSO.Client.UI.Panels
                 UpdateImagePosition();
             } else
             {
+                WearProgressBar.Value = 0;
+                WearValueText.Caption = "0%";
                 if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
                 Thumbnail.Texture = null;
             }

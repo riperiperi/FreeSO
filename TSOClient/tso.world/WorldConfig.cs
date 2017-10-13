@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ namespace FSO.LotView
         public static WorldConfig Current = new WorldConfig();
 
         public bool AdvancedLighting = false;
+        public bool UltraLighting = FSOEnvironment.Enable3D;
         public int SurroundingLots = 0;
         public bool SmoothZoom = false;
         public bool AA = false;

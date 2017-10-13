@@ -1768,45 +1768,53 @@ namespace FSO.Client.Rendering.City
 
             var controller = UIScreen.Current.FindController<CoreGameScreenController>();
             var id = controller.GetCurrentLotID();
-            if (id != StencilLotID)
+
+            if (m_LotZoomProgress == 1)
             {
-                var x = id >> 16;
-                var y = id & 0xFFFF;
-
-                if (x >= 512 || y >= 512)
+                if (id != StencilLotID)
                 {
-                    x = 255;
-                    y = 255;
-                }
+                    var x = id >> 16;
+                    var y = id & 0xFFFF;
 
-                float minElev = float.MaxValue;
-
-                for (int x2=-surroundNumber; x2<= surroundNumber; x2++)
-                {
-                    for (int y2 = -surroundNumber; y2 <= surroundNumber; y2++)
+                    if (x >= 512 || y >= 512)
                     {
-                        float elev = GetMinElevationAt((int)(x+x2), (int)(y+y2));
-                        if (minElev > elev) minElev = elev;
+                        x = 255;
+                        y = 255;
                     }
-                }
 
-                var verts = new MeshVertex[]
-                {
+                    float minElev = float.MaxValue;
+
+                    for (int x2 = -surroundNumber; x2 <= surroundNumber; x2++)
+                    {
+                        for (int y2 = -surroundNumber; y2 <= surroundNumber; y2++)
+                        {
+                            float elev = GetMinElevationAt((int)(x + x2), (int)(y + y2));
+                            if (minElev > elev) minElev = elev;
+                        }
+                    }
+
+                    var verts = new MeshVertex[]
+                    {
                     new MeshVertex() { Coord = new Vector3((float)(x-surroundNumber) + 0.1f, minElev / 12.0f, (float)(y-surroundNumber) + 0.1f) },
                     new MeshVertex() { Coord = new Vector3((float)(x + 1+ surroundNumber) - 0.1f, minElev / 12.0f, (float)(y-surroundNumber) + 0.1f) },
                     new MeshVertex() { Coord = new Vector3((float)(x-surroundNumber) + 0.1f, minElev / 12.0f, (float)(y + 1+ surroundNumber) - 0.1f) },
                     new MeshVertex() { Coord = new Vector3((float)(x + 1+ surroundNumber) - 0.1f, minElev / 12.0f, (float)(y + 1+ surroundNumber) - 0.1f) },
-                };
-                if (StencilVertices != null) StencilVertices.Dispose();
-                StencilVertices = new VertexBuffer(gfx, typeof(MeshVertex), 4, BufferUsage.None);
-                StencilVertices.SetData(verts);
-                StencilLotID = id;
+                    };
+                    if (StencilVertices != null) StencilVertices.Dispose();
+                    StencilVertices = new VertexBuffer(gfx, typeof(MeshVertex), 4, BufferUsage.None);
+                    StencilVertices.SetData(verts);
+                    StencilLotID = id;
+                }
+
+                gfx.SetVertexBuffer(StencilVertices);
+                gfx.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+                gfx.DepthStencilState = StencilOnly;
+            } else
+            {
+                gfx.DepthStencilState = DepthStencilState.Default;
             }
 
-            gfx.SetVertexBuffer(StencilVertices);
-            gfx.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
 
-            gfx.DepthStencilState = StencilOnly;
             gfx.BlendState = BlendState.NonPremultiplied;
 
             PixelShader.CurrentTechnique.Passes[3].Apply();

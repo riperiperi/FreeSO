@@ -52,6 +52,7 @@ namespace FSO.IDE.ResourceBrowser
         public List<InstructionIDNamePair> GetAllSubroutines(ScopeSource source)
         {
             var bhavs = GetAllResource<BHAV>(source);
+            if (source == ScopeSource.SemiGlobal && Resource is GameGlobalResource) bhavs = Resource.List<BHAV>();
             var output = new List<InstructionIDNamePair>();
             foreach (var bhav in bhavs)
             {

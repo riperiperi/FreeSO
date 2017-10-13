@@ -325,8 +325,6 @@ namespace FSO.LotView.RC
 
             var lastSideMask = false;
 
-            gd.BlendState = new BlendState() {
-                AlphaBlendFunction = BlendFunction.Max, ColorBlendFunction = BlendFunction.Max, ColorDestinationBlend = Blend.One };
             //gd.DepthStencilState = DepthStencilState.None;
             //gd.RasterizerState = RasterizerState.CullNone;
             //var baseWorld = Matrix.CreateRotationX((float)Math.PI / 2) * Matrix.CreateScale(3f, -3f, 3f);

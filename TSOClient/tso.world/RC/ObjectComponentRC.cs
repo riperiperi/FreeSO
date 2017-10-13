@@ -109,5 +109,14 @@ namespace FSO.LotView.RC
             ((DGRPRendererRC)dgrp).World = World;
             if (this.DrawGroup != null) dgrp.Draw(world);
         }
+
+        public void DrawLMap(GraphicsDevice device, sbyte level)
+        {
+            //#if !DEBUG 
+            if (!Visible || (Position.X < -2043 && Position.Y < -2043) || Level < 1) return;
+            //#endif
+            ((DGRPRendererRC)dgrp).World = World;
+            if (this.DrawGroup != null) ((DGRPRendererRC)dgrp).DrawLMap(device, level);
+        }
     }
 }

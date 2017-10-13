@@ -111,6 +111,7 @@ namespace FSO.SimAntics
         public EntityComponent WorldUI;
 
         public uint TimestampLockoutCount = 0;
+        public Color LightColor = Color.White;
 
         //inferred properties (from object resource)
         public GameGlobalResource SemiGlobal;
@@ -1309,6 +1310,7 @@ namespace FSO.SimAntics
             target.DynamicSpriteFlags2 = DynamicSpriteFlags2;
             target.Position = _Position;
             target.TimestampLockoutCount = TimestampLockoutCount;
+            target.LightColor = LightColor;
         }
 
         public virtual void Load(VMEntityMarshal input)
@@ -1344,6 +1346,7 @@ namespace FSO.SimAntics
             Position = input.Position;
 
             TimestampLockoutCount = input.TimestampLockoutCount;
+            LightColor = input.LightColor;
 
             if (UseWorld) WorldUI.Visible = GetValue(VMStackObjectVariable.Hidden) == 0;
         }

@@ -209,6 +209,8 @@
     </Compile>
     <Compile Include="EditorComponent\Primitives\ChangeSuitDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\DialogDescriptors.cs" />
+    <Compile Include="EditorComponent\Primitives\GenericTSOCallDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SnapDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\TestObjectTypeDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\NotifyOutOfIdleDescriptor.cs" />

@@ -25,10 +25,11 @@ namespace FSO.LotView.LMap
         public float ShadowMultiplier; //outdoors type only. informs strength of shadows.
 
         public sbyte Level;
+        public ushort Room;
 
         public LightData() { }
 
-        public LightData(Vector2 pos, bool outdoors, int size)
+        public LightData(Vector2 pos, bool outdoors, int size, ushort room, sbyte level)
         {
             LightPos = pos;
             LightType = LightType.ROOM;
@@ -36,6 +37,8 @@ namespace FSO.LotView.LMap
             OutdoorsColor = outdoors;
             LightBounds = new Rectangle((int)pos.X-size, (int)pos.Y-size, size * 2, size * 2);
             LightSize = size;
+            Room = room;
+            Level = level;
         }
 
         public void UpdateBounds()

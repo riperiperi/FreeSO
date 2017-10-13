@@ -69,9 +69,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 //overwrite value
 
                 var objDefinition = CreatedGroup.BaseObject.MasterDefinition ?? CreatedGroup.BaseObject.Object.OBJ;
-                value = Math.Max(0, Math.Min(value, (value * (100-objDefinition.InitialDepreciation)) / 100));
 
-                CreatedGroup.Price = (int)value;
+                CreatedGroup.InitialPrice = (int)value;
 
                 return true;
             }

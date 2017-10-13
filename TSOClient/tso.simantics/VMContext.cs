@@ -633,12 +633,12 @@ namespace FSO.SimAntics
                     {
                         if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
                         {
-                            if (true) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), true, 160));
+                            if (true) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), true, 160, room, info.Room.Floor));
                             outside += (ushort)cont;
                         }
                         else
                         {
-                            if (mainSource) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 160));
+                            if (mainSource) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 160, room, info.Room.Floor));
                             inside += (ushort)cont;
                         }
                     }
@@ -654,7 +654,7 @@ namespace FSO.SimAntics
                 foreach (var portal in info.WindowPortals)
                 {
                     var ent = VM.GetObjectById(portal.ObjectID);
-                    var wlight = new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 100);
+                    var wlight = new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 100, room, info.Room.Floor);
                     wlight.WindowRoom = portal.TargetRoom;
                     var bRoom = RoomInfo[portal.TargetRoom].Room.LightBaseRoom;
                     affected.Add(bRoom);
@@ -1114,7 +1114,7 @@ namespace FSO.SimAntics
 
             if (newGroup != null)
             {
-                newGroup.Price = group.Price;
+                newGroup.InitialPrice = group.InitialPrice;
                 for (int i=0; i < Math.Min(newGroup.Objects.Count, group.Objects.Count); i++) {
                     newGroup.Objects[i].IgnoreIntersection = group;
                     newGroup.Objects[i].SetValue(VMStackObjectVariable.Graphic, group.Objects[i].GetValue(VMStackObjectVariable.Graphic));
@@ -1122,7 +1122,8 @@ namespace FSO.SimAntics
                     newGroup.Objects[i].DynamicSpriteFlags2 = group.Objects[i].DynamicSpriteFlags2;
                     newGroup.Objects[i].SetDynamicSpriteFlag(0, group.Objects[i].IsDynamicSpriteFlagSet(0));
                     newGroup.Objects[i].PlatformState = group.Objects[i].PlatformState;
-                    if (newGroup.Objects[i] is VMGameObject) ((VMGameObject)newGroup.Objects[i]).RefreshGraphic();
+                    if (newGroup.Objects[i] is VMGameObject)
+                        ((VMGameObject)newGroup.Objects[i]).RefreshGraphic();
                 }
             }
 
@@ -1154,9 +1155,9 @@ namespace FSO.SimAntics
 
             int salePrice = 0;
             if (item != null) salePrice = (int)item.Value.Price;
-            salePrice = Math.Max(0, Math.Min(salePrice, (salePrice * (100 - objDefinition.OBJ.InitialDepreciation)) / 100));
+            //salePrice = Math.Max(0, Math.Min(salePrice, (salePrice * (100 - objDefinition.OBJ.InitialDepreciation)) / 100));
 
-            group.Price = (int)salePrice;
+            group.InitialPrice = (int)salePrice;
 
             var master = objDefinition.OBJ.MasterID;
             if (master != 0 && objDefinition.OBJ.SubIndex == -1)

@@ -456,9 +456,11 @@ namespace FSO.Server.Servers.Lot.Domain
             Container = Kernel.Get<LotContainer>();
 
             BackgroundThread = new Thread(_DigestBackground);
+            BackgroundThread.Name = "Lot " + Context.DbId + " (background)";
             BackgroundThread.Start();
 
             MainThread = new Thread(Container.Run);
+            MainThread.Name = "Lot " + Context.DbId + " (main)";
             MainThread.Start();
         }
 
@@ -607,11 +609,14 @@ namespace FSO.Server.Servers.Lot.Domain
 
                     //check if this user has special permissions. should only happen when a lot is full
                     //let them in anyways if they do
-                    var avatar = DAFactory.Get().Avatars.Get(session.AvatarId);
-                    if (avatar.moderation_level == 0 && !Context.JobLot)
+                    using (var da = DAFactory.Get())
                     {
-                        if (DAFactory.Get().Roommates.Get(session.AvatarId, Context.DbId) == null)
-                            return false; //not a roommate
+                        var avatar = da.Avatars.Get(session.AvatarId);
+                        if (avatar.moderation_level == 0 && !Context.JobLot)
+                        {
+                            if (da.Roommates.Get(session.AvatarId, Context.DbId) == null)
+                                return false; //not a roommate
+                        }
                     }
                 }
 

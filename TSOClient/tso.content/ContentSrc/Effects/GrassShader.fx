@@ -151,8 +151,10 @@ float unpackDepth(float4 d) {
 
 float4 lightColor(float4 intensities) {
 	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-	float lightFactor = (intensities.x == 0) ? 0 : (intensities.x * (intensities.z / intensities.x));
-	float outlightFactor = (intensities.y == 0) ? 0 : (intensities.y * (intensities.w / intensities.y));
+	float lightFactor = min(intensities.x, intensities.z);
+	float outlightFactor = min(intensities.y, intensities.w);
+	//float lightFactor = (intensities.x == 0) ? 0 : (intensities.x * (intensities.z / intensities.x));
+	//float outlightFactor = (intensities.y == 0) ? 0 : (intensities.y * (intensities.w / intensities.y));
 
 	float4 col = lerp(lerp(OutsideDark, OutsideLight, outlightFactor), MaxLight, lightFactor);
 	//float4 col = lerp(lerp(float4(0.5,0.5,0.5,1), float4(1,1,1,1), outlightFactor), float4(1, 1, 1, 1), lightFactor);

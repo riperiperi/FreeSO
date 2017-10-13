@@ -847,7 +847,7 @@ namespace FSO.SimAntics.Engine
                 }
                 else if (avatar.IsPet) return null; //not allowed
 
-                if ((action.Flags & TTABFlags.TSOIsRepair) > 0) return null;
+                if ((action.Flags & TTABFlags.TSOIsRepair) > 0 != ((action.Callee.TSOState as VMTSOObjectState)?.Broken ?? false)) return null;
 
                 TSOFlags tsoState =
                     ((!(action.Callee is VMGameObject) || avatar.PersistID == ((VMTSOObjectState)action.Callee.TSOState).OwnerID)

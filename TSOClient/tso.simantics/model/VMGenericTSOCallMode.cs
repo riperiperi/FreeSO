@@ -79,6 +79,9 @@ namespace FSO.SimAntics.Model
         EjectCustomBitmap = 61,
         LaunchEditInUserMode = 62,
         SetTemp0ToFirstSkinID = 63,
-        BroadcastDevice = 64
+        BroadcastDevice = 64,
+
+        //FSO functions
+        FSOLightRGBFromTemp012 = 128
     }
 }

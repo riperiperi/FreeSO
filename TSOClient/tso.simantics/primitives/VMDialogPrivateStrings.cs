@@ -120,14 +120,52 @@ namespace FSO.SimAntics.Primitives
     {
         //engage and block sim, automatic icon, local reference 0, string not debug
 
-        public byte CancelStringID; //button 3. renaming used for genie, as an example.
-        public byte IconNameStringID;
-        public byte MessageStringID;
-        public byte YesStringID; //button 1
-        public byte NoStringID; //button 2
-        public VMDialogType Type;
-        public byte TitleStringID;
+        public byte CancelStringID { get; set; } //button 3. renaming used for genie, as an example.
+        public byte IconNameStringID { get; set; }
+        public byte MessageStringID { get; set; }
+        public byte YesStringID { get; set; } //button 1
+        public byte NoStringID { get; set; } //button 2
+        public VMDialogType Type { get; set; }
+        public byte TitleStringID { get; set; }
         public VMDialogFlags Flags; 
+
+        public bool Continue
+        {
+            get
+            {
+                return (Flags & VMDialogFlags.Continue) == VMDialogFlags.Continue;
+            }
+            set
+            {
+                if (value) Flags |= VMDialogFlags.Continue;
+                else Flags &= ~VMDialogFlags.Continue;
+            }
+        }
+        public bool UseTempXL
+        {
+            get
+            {
+                return (Flags & VMDialogFlags.UseTempXL) == VMDialogFlags.UseTempXL;
+            }
+            set
+            {
+                if (value) Flags |= VMDialogFlags.UseTempXL;
+                else Flags &= ~VMDialogFlags.UseTempXL;
+            }
+        }
+
+        public bool UseTemp1
+        {
+            get
+            {
+                return (Flags & VMDialogFlags.UseTemp1) == VMDialogFlags.UseTemp1;
+            }
+            set
+            {
+                if (value) Flags |= VMDialogFlags.UseTemp1;
+                else Flags &= ~VMDialogFlags.UseTemp1;
+            }
+        }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

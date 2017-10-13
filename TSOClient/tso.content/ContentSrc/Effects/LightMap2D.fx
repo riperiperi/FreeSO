@@ -12,6 +12,8 @@ float LightSize; //in position space (0,1)
 float LightPower = 2.0; //gamma correction on lights. can get some nicer distributions.
 float LightIntensity = 1.0;
 float TargetRoom;
+float BlurMax;
+float BlurMin;
 float2 MapLayout;
 float2 UVBase;
 
@@ -40,6 +42,12 @@ sampler floorShadowSampler = sampler_state {
 	texture = <floorShadowMap>;
 	AddressU = CLAMP; AddressV = CLAMP; AddressW = CLAMP;
 	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
+};
+
+sampler floorShadowSamplerLin = sampler_state {
+	texture = <floorShadowMap>;
+	AddressU = CLAMP; AddressV = CLAMP; AddressW = CLAMP;
+	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
 };
 
 
@@ -98,25 +106,49 @@ bool OutsideRoomCheck(float2 uv) {
 	}
 }
 
-float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
-{
-    float2 uv = input.p;
-	if (OutsideRoomCheck(uv)) discard;
-    float light = clamp(1.0 - distance(uv, LightPosition) / LightSize, 0.0, 1.0);
-    light = pow(light, LightPower);
-
-	float2 shadow = float2(tex2D(shadowSampler, uv).r, tex2D(floorShadowSampler, uv).r);
+float4 LightFinal(float light, float2 shadow) {
 	shadow *= ShadowPowers;
-
+	light = pow(light, LightPower);
 	light -= light*shadow.x;
 	float floorLight = light - light*shadow.y;
 	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
 	// output different under diff conditions
 	if (IsOutdoors == true) {
 		return float4(0.0, light, 0.0, floorLight) * LightIntensity;
-	} else {
+	}
+	else {
 		return float4(light, 0.0, floorLight, 0.0) * LightIntensity;
 	}
+}
+
+float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
+{
+    float2 uv = input.p;
+	if (OutsideRoomCheck(uv)) discard;
+    float light = clamp(1.0 - distance(uv, LightPosition) / LightSize, 0.0, 1.0);
+	float2 shadow = float2(tex2D(shadowSampler, uv).r, tex2D(floorShadowSampler, uv).r);
+	return LightFinal(light, shadow);
+}
+
+float4 PixelShaderFunctionBlur(VertexShaderOutput input) : COLOR0
+{
+	float2 uv = input.p;
+	if (OutsideRoomCheck(uv)) discard;
+	float dist = distance(uv, LightPosition);
+	float light = clamp(1.0 - dist / LightSize, 0.0, 1.0);
+
+	float blurAmount = dist / LightSize;
+	blurAmount = lerp(BlurMin, BlurMax, blurAmount);
+
+	float fs = 0;
+	for (int x = -2; x < 3; x++) {
+		for (int y = -2; y < 3; y++) {
+			fs += tex2D(floorShadowSamplerLin, uv + float2(x*blurAmount, y*blurAmount)).r;
+		}
+	}
+
+	float2 shadow = float2(tex2D(shadowSampler, uv).r, fs/(5*5));
+	return LightFinal(light, shadow);
 }
 
 float4 PixelShaderFunctionOutdoors(VertexShaderOutput input) : COLOR0{
@@ -258,6 +290,20 @@ technique Draw2D
 #else
 		VertexShader = compile vs_3_0 VertexShaderFunction();
 		PixelShader = compile ps_3_0 PixelShaderFunctionOutdoorsSSAA();
+#endif;
+
+	}
+
+	pass MainPassBlur
+	{
+		AlphaBlendEnable = TRUE; DestBlend = ONE; SrcBlend = ONE; BlendOp = Add; ZEnable = FALSE;
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();
+		PixelShader = compile ps_4_0_level_9_3 PixelShaderFunctionBlur();
+#else
+		VertexShader = compile vs_3_0 VertexShaderFunction();
+		PixelShader = compile ps_3_0 PixelShaderFunctionBlur();
 #endif;
 
 	}
