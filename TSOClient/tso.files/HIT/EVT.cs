@@ -75,8 +75,8 @@ namespace FSO.Files.HIT
                 IsHex = true;
             }
             //Sigh, Maxis...
-            else if (input.Contains("a") || input.Contains("b") || input.Contains("b") ||
-                input.Contains("c") || input.Contains("d") || input.Contains("e") || input.Contains("f"))
+            else if (input.Contains("a") || input.Contains("b") || input.Contains("c") ||
+                     input.Contains("d") || input.Contains("e") || input.Contains("f"))
             {
                 IsHex = true;
             }
