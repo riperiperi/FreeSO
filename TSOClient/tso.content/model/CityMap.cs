@@ -113,10 +113,10 @@ namespace FSO.Content.Model
             t = GetTerrain(x-1, y + 1);
             if ((y + 1 < 512) && (x - 1 >= 0) && (t > sample)) edges[5] = t;
 
-            t = t = GetTerrain(x-1, y);
+            t = GetTerrain(x-1, y);
             if ((x - 1 >= 0) && (t > sample)) edges[6] = t;
 
-            t = t = GetTerrain(x - 1, y - 1);
+            t =  GetTerrain(x - 1, y - 1);
             if ((y - 1 >= 0) && (x - 1 >= 0) && (t > sample)) edges[7] = t;
 
             int binary = 0;

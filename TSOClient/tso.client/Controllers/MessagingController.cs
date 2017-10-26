@@ -142,7 +142,7 @@ namespace FSO.Client.Controllers
                         message.Message = GameFacade.Strings.GetString("195", "18");
                         break;
                     default:
-                        message.Message = message.Message = GameFacade.Strings.GetString("195", "11");
+                        message.Message = GameFacade.Strings.GetString("195", "11");
                         break;
                 }
             }
