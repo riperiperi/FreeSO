@@ -187,7 +187,7 @@ namespace FSO.Client.UI.Panels.EODs
             int resultVal = 1;
             int.TryParse(txt, out resultVal);
             if (resultVal > 1 && resultVal < 5) SetTip(Script.GetString("strResultSuccess"));
-            else if (resultVal > 4 && resultVal < 8) SetTip(Script.GetString("strResultSuccessBonus"));
+            else if (resultVal > 5 && resultVal < 8) SetTip(Script.GetString("strResultSuccessBonus"));
             else SetTip(Script.GetString("strResultFailure"));
         }
 
