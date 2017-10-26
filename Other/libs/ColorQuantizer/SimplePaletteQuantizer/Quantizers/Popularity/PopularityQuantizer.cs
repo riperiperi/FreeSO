@@ -97,7 +97,7 @@ namespace SimplePaletteQuantizer.Quantizers.Popularity
             // the average color from them, thus our new palette.
             IEnumerable<Color> colors = colorMap.
                  OrderBy(entry => random.Next(colorMap.Count)).
-                 OrderByDescending(entry => entry.Value.PixelCount).
+                 ThenByDescending(entry => entry.Value.PixelCount).
                  Take(colorCount).
                  Select(entry => entry.Value.GetAverage());
 

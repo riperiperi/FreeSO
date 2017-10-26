@@ -51,7 +51,7 @@ namespace FSO.IDE
 
             if (entries.Count == 0) return false;
 
-            entries = entries.OrderBy(x => x.SubIndex).OrderBy(x => x.Group).ToList();
+            entries = entries.OrderBy(x => x.SubIndex).ThenBy(x => x.Group).ToList();
 
             var GUID = (ActiveObj == null) ? 0 : ActiveObj.OBJ.GUID;
             //populate object selected box with options
