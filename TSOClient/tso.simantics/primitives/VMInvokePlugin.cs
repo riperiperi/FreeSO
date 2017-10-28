@@ -13,6 +13,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.NetPlay.EODs.Model;
 using FSO.SimAntics.Engine.Scopes;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -137,12 +138,12 @@ namespace FSO.SimAntics.Primitives
 
     public class VMInvokePluginOperand : VMPrimitiveOperand 
     {
-        public byte PersonLocal;
-        public byte ObjectLocal;
-        public byte EventLocal; //target of event id. values go in temp0
-        public bool Joinable;
+        public byte PersonLocal { get; set; }
+        public byte ObjectLocal { get; set; }
+        public byte EventLocal { get; set; } //target of event id. values go in temp0
+        public bool Joinable { get; set; }
 
-        public uint PluginID;
+        public uint PluginID { get; set; }
         //sign: 0x2a6356a0
         //dancefloor: 0x4a5be8ab
         //pizza: 0xea47ae39
@@ -161,7 +162,16 @@ namespace FSO.SimAntics.Primitives
             }
         }
 
-        public void Write(byte[] bytes) { }
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(PersonLocal);
+                io.Write(ObjectLocal);
+                io.Write(EventLocal);
+                io.Write((byte)(Joinable ? 1 : 0));
+                io.Write(PluginID);
+            }
+        }
         #endregion
     }
 }

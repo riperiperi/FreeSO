@@ -211,6 +211,9 @@
     <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\DialogDescriptors.cs" />
     <Compile Include="EditorComponent\Primitives\GenericTSOCallDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\InvokePluginDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\PushInteractionDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\RunTreeByNameDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SnapDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\TestObjectTypeDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\NotifyOutOfIdleDescriptor.cs" />

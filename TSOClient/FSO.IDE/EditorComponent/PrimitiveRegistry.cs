@@ -21,6 +21,7 @@ namespace FSO.IDE.EditorComponent
             {8, typeof(RandomNumberDescriptor) },
             {11, typeof(GetDistanceToDescriptor) },
             {12, typeof(GetDirectionToDescriptor) },
+            {13, typeof(PushInteractionDescriptor) },
             {14, typeof(FindBestObjectForFunctionDescriptor) },
             {15, typeof(BreakpointDescriptor) },
             {16, typeof(FindLocationForDescriptor) },
@@ -32,6 +33,7 @@ namespace FSO.IDE.EditorComponent
             {24, typeof(OldRelationshipDescriptor) },
             {26, typeof(RelationshipDescriptor) },
             {27, typeof(GotoRelativePositionDescriptor) },
+            {28, typeof(RunTreeByNameDescriptor) },
             {29, typeof(SetMotiveChangeDescriptor) },
             {31, typeof(SetToNextDescriptor) },
             {32, typeof(TestObjectTypeDescriptor) },
@@ -43,7 +45,8 @@ namespace FSO.IDE.EditorComponent
             {44, typeof(AnimateSimDescriptor) },
             {45, typeof(GotoRoutingSlotDescriptor) },
             {46, typeof(SnapDescriptor) },
-            {49, typeof(NotifyOutOfIdleDescriptor) }
+            {49, typeof(NotifyOutOfIdleDescriptor) },
+            {62, typeof(InvokePluginDescriptor) }
         };
 
         public static Dictionary<PrimitiveGroup, List<byte>> PrimitiveGroups = new Dictionary<PrimitiveGroup, List<byte>>

@@ -90,6 +90,7 @@ namespace FSO.IDE.ResourceBrowser
                 { FrontDir, "FrontDirection" },
                 { MultiGroupCombo, "MasterID" },
                 { ShadowType, "Shadow" },
+                { TypeCombo, "ObjectType" }
             };
 
             foreach (var entry in OBJDNumberEntry)
@@ -195,6 +196,12 @@ namespace FSO.IDE.ResourceBrowser
                     if (obj.MasterID == ActiveObj.OBJ.MasterID) MultiGroupCombo.SelectedIndex = i;
                     i++;
                 }
+            }
+
+            TypeCombo.Items.Clear();
+            foreach (var num in Enum.GetValues(typeof(OBJDType)))
+            {
+                TypeCombo.Items.Add(new NameValueCombo(num.ToString(), Convert.ToInt16(num), true));
             }
 
             MultitileList.Items.Clear();

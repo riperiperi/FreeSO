@@ -155,7 +155,7 @@ namespace FSO.IDE.EditorComponent
                     return DataListFromSTR(callerAttr, 0, null);
                 case VMVariableScope.StackObjectAttributes:
                 case VMVariableScope.StackObjectLeadTileAttribute:
-                    var stackAttr = StackObject.Resource.Get<STR>(256);
+                    var stackAttr = StackObject?.Resource.Get<STR>(256);
                     if (stackAttr == null) return DataListFromStrings(MakeEnumeratedStrings("Attribute ", Object.OBJ.NumAttributes), 0, null);
                     return DataListFromSTR(stackAttr, 0, null);
                 case VMVariableScope.Global:
