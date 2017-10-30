@@ -187,6 +187,7 @@
     <Compile Include="NetPlay\EODs\Handlers\VMEODPizzaMakerPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMAbstractEODRackPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODRackPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODRoulettePlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODScoreboardPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODSignsPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODSlotsPlugin.cs" />

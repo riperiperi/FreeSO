@@ -1,7 +1,7 @@
 ﻿using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Framework.Parser;
-using FSO.SimAntics.NetPlay.EODs;
+using FSO.Client.UI.Panels.EODs.Utils;
 using FSO.SimAntics.NetPlay.EODs.Handlers;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,13 +16,13 @@ namespace FSO.Client.UI.Panels.EODs
     public class UISlotsEOD : UIEOD
     {
         public UIScript Script;
+        private UIManageEODObjectPanel OwnerPanel;
 
         private byte MachineOdds { get; set; }
         private int EachBet;
         private int CurrentBet;
         private int DisplayedBet;
         private int MachineBalance;
-        private int OnOffState;
         private int WheelSpinTickCounter = 0;
         private int MachineMinimumBalance;
         private int MachineMaximumBalance;
@@ -32,15 +32,16 @@ namespace FSO.Client.UI.Panels.EODs
         private UILabel ActivePayoutTable;
         private Texture2D ActiveWheelTexture;
 
+        /*
+         * Owner UI Elements (deprecated)
+         */
         // Owner UI Images
         public UIImage ButtonSeat { get; set; }
         public UIImage TextBack { get; set; }
-
         // Owner UI Buttons
         public UISlider OddsSlider { get; set; }
         public UIButton OnOffButton { get; set; }
         public UIButton CashOutButton { get; set; }
-
         // Owner UI Textfields
         public UITextEdit CurrentOdds { get; set; }
         public UITextEdit CashText { get; set; }
@@ -49,6 +50,9 @@ namespace FSO.Client.UI.Panels.EODs
         public UILabel Player { get; set; } // starts at opaque=0
         public UILabel OnOff { get; set; } // starts at opaque=0
 
+        /*
+         * Player UI Elements
+         */
         // Player UI Images
         public UISlotsImage Wheel1;
         public UISlotsImage Wheel2;
@@ -89,7 +93,7 @@ namespace FSO.Client.UI.Panels.EODs
         public UITextEdit PayoutText6 { get; set; }
         public UITextEdit PayoutText7 { get; set; }
         public UITextEdit PayoutText8 { get; set; }
-        public UILabel Loading { get; set; } // announces wins and losses
+        public UILabel Loading { get; set; } // announces wins and losses *deprecated* in favor of SetTip()
 
         // Textures
         public Texture2D Wheel1Image { get; set; }
@@ -127,10 +131,6 @@ namespace FSO.Client.UI.Panels.EODs
             BinaryHandlers["slots_owner_init"] = OwnerInitHandler;
             BinaryHandlers["slots_player_init"] = PlayerInitHandler;
             BinaryHandlers["slots_spin"] = SlotsSpinHandler;
-
-            // Add message text
-            Loading.Alignment = TextAlignment.Left;
-            Loading.Caption = GameFacade.Strings["UIText", "259", "6"];
         }
         public override void OnExpand()
         {
@@ -151,7 +151,6 @@ namespace FSO.Client.UI.Panels.EODs
             PayoutTableColumn2Row2.Visible = true;
             PayoutTableColumn2Row3.Visible = true;
             PayoutTableColumn2Row4.Visible = true;
-            Loading.Y -= 135;
             base.OnExpand();
         }
         public override void OnContract()
@@ -173,11 +172,11 @@ namespace FSO.Client.UI.Panels.EODs
             PayoutTableColumn2Row2.Visible = false;
             PayoutTableColumn2Row3.Visible = false;
             PayoutTableColumn2Row4.Visible = false;
-            Loading.Y += 135;
             base.OnContract();
         }
         public override void OnClose()
         {
+            SetTip("");
             Send("slots_close_UI", "");
             base.OnClose();
         }
@@ -193,7 +192,11 @@ namespace FSO.Client.UI.Panels.EODs
                 Expandable = true,
                 Expanded = true
             });
+
+            SetTip(GameFacade.Strings["UIText", "259", "6"]);
+
             // hide owner UI elements
+            Loading.Visible = false;
             OddsSlider.Visible = false;
             OnOffButton.Visible = false;
             CashOutButton.Visible = false;
@@ -202,10 +205,6 @@ namespace FSO.Client.UI.Panels.EODs
             Player.Visible = false;
             OnOff.Visible = false;
             CashText.Visible = false;
-
-            // move loading
-            Loading.X -= 128;
-            Loading.Y -= 20;
 
             // create player UI iamges
             Wheelsback = Script.Create<UIImage>("WheelsBack");
@@ -353,37 +352,22 @@ namespace FSO.Client.UI.Panels.EODs
                 MachineTypeInit(0);
 
             // create a timer to animate the lights, milliseconds
-            LightsTimer = new System.Timers.Timer(666 + (2 / 3));
+            LightsTimer = new Timer(666 + (2 / 3));
             LightsTimer.Elapsed += new ElapsedEventHandler(LightsHandler);
 
             // create a timer to change offline messages
-            OfflineMessageTimer = new System.Timers.Timer(3000);
+            OfflineMessageTimer = new Timer(3000);
             OfflineMessageTimer.Elapsed += new ElapsedEventHandler(OfflineMessageHandler);
 
             // create a timer to handle the spinning of the wheels
-            WheelsSpinTimer = new System.Timers.Timer(25);
+            WheelsSpinTimer = new Timer(25);
             WheelsSpinTimer.Elapsed += new ElapsedEventHandler(AnimateWheelsHandler);
         }
 
         private void OwnerInitHandler(string evt, byte[] args)
         {
-            Controller.ShowEODMode(new EODLiveModeOpt
-            {
-                Buttons = 0,
-                Height = EODHeight.Normal,
-                Length = EODLength.Full,
-                Tips = EODTextTips.Short,
-                Timer = EODTimer.None,
-                Expandable = false
-            });
-
-            // create owner UIImages
-            ButtonSeat = Script.Create<UIImage>("ButtonSeat");
-            TextBack = Script.Create<UIImage>("TextBack");
-            AddAt(0, ButtonSeat);
-            AddAt(0, TextBack);
-
             // hide player UI elements
+            Loading.Visible = false;
             ArmButton.Visible = false;
             SpinButton.Visible = false;
             SpinnerIncreaseBet.Visible = false;
@@ -401,73 +385,27 @@ namespace FSO.Client.UI.Panels.EODs
             PayoutText7.Visible = false;
             PayoutText8.Visible = false;
 
-            // Move the messages, tweaks
-            Loading.X = 72;
-            Loading.Y = 6;
-            Loading.Caption = GameFacade.Strings["UIText", "259", "24"];
-            OnOff.Y = Odds.Y;
-            OnOff.X += 15;
-            OnOffButton.X += 15;
-            Odds.X += 18;
-            Player.X += 10;
-            House.X += 10;
-            OddsSlider.X += 25;
+            // hide owner UI elements created by the script
+            OddsSlider.Visible = false;
+            OnOffButton.Visible = false;
+            CashOutButton.Visible = false;
+            Odds.Visible = false;
+            House.Visible = false;
+            Player.Visible = false;
+            OnOff.Visible = false;
+            CashText.Visible = false;
 
-            // Set the Odds slider
-            if ((args == null) || (args.Length < 1) || (args[0] < 80))
-                MachineOdds = 80;
-            else if (args[0] > 110)
-                MachineOdds = 110;
-            else
+            bool machineIsOn = false;
+            if (args != null && args.Length > 3)
+            {
                 MachineOdds = args[0];
-            OddsSlider.Tooltip = MachineOdds + "%";
-            OddsSlider.MinValue = 80;
-            OddsSlider.MaxValue = 110;
-            OddsSlider.Value = MachineOdds;
-            CurrentOdds = new UITextEdit();
-            CurrentOdds.Size = new Microsoft.Xna.Framework.Vector2(45, 20);
-            CurrentOdds.Y = House.Y;
-            CurrentOdds.X = Odds.X + 46;
-            CurrentOdds.Mode = UITextEditMode.ReadOnly;
-            CurrentOdds.CurrentText = MachineOdds + "%";
-            Add(CurrentOdds);
-            Player.Y = House.Y = CashText.Y;
-            OddsSlider.Y += 18;
-
-            // initiate OnOffButton
-            if ((args != null) && (args.Length > 3))
-            {
-                OnOffButton.ForceState = OnOffState = args[3];
-                if (args[3] == 1)
-                {
-                    OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "14"];
-                }
-                else
-                    OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "13"];
-            }
-            else
-            {
-                OnOffButton.ForceState = OnOffState = 0;
-                OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "13"];
-            }
-
-            // calculate the money in the machine from the two shorts and populate textField
-            if ((args != null) && (args.Length > 2))
                 MachineBalance = (255 * args[2]) + args[1];
-            else
-                MachineBalance = 0;
-            CashText.Alignment = TextAlignment.Center;
-            CashText.Mode = UITextEditMode.ReadOnly;
-            CashText.CurrentText = "$" + MachineBalance;
 
-            // add click listeners
-            OnOffButton.OnButtonClick += OnOffHandler;
-            OddsSlider.OnChange += OddsChangeHandler;
-            CashOutButton.OnButtonClick += CashoutButtonHandler;
+                // on/off button
+                if (args[3] == 1)
+                    machineIsOn = true;
 
-            // get the minimum and maximum balances based on the machine type
-            if ((args != null) && (args.Length > 3))
-            {
+                // min/max balances
                 switch (args[4])
                 {
                     case 0:
@@ -484,242 +422,56 @@ namespace FSO.Client.UI.Panels.EODs
                         break;
                 }
             }
-        }
-        private void CashoutButtonHandler(UIElement targetButton)
-        {
-            CashOutButton.OnButtonClick -= CashoutButtonHandler;
+            // add an owner panel in order to manage
+            OwnerPanel = new UIManageEODObjectPanel(ManageEODObjectTypes.SlotMachine, MachineBalance, MachineMinimumBalance, MachineMaximumBalance,
+                MachineOdds, machineIsOn);
+            Add(OwnerPanel);
+            // subscribe in order to send events based on type
+            OwnerPanel.OnNewByteMessage += SendByteMessage;
+            OwnerPanel.OnNewStringMessage += SendStringMessage;
 
-            // show an alert that asks the user if they want to make a desposit or a withdrawal
-            UIAlert alert = null;
-            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+            Controller.ShowEODMode(new EODLiveModeOpt
             {
-                TextSize = 12,
-                Title = "Owner Transactions",
-                Message = "What would you like to do?",
-                Alignment = TextAlignment.Center,
-                TextEntry = false,
-                Buttons = new UIAlertButton[] {
-                    new UIAlertButton (UIAlertButtonType.OK, ((btn1) =>
-                {
-                    DepositPrompt();
-                    UIScreen.RemoveDialog(alert);
-                }), "Deposit"),
-                    new UIAlertButton (UIAlertButtonType.Cancel, ((btn2) =>
-                {
-                    WithdrawPrompt();
-                    UIScreen.RemoveDialog(alert);
-                }), "Withdraw")
-                }
-            }, true);
-        }
-        private void DepositPrompt()
-        {
-            // show an alert that asks the user how much to deposit into the machine
-            UIAlert alert = null;
-            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
-            {
-                TextSize = 12,
-                Title = "Deposit Simoleons",
-                Message = "This machine is currently stocked with: $" + MachineBalance + System.Environment.NewLine +
-                System.Environment.NewLine + "For players to use this machine you must maintain a minimum balance of: $" + MachineMinimumBalance +
-                System.Environment.NewLine + System.Environment.NewLine + "How much would you like to deposit?" +
-                System.Environment.NewLine + System.Environment.NewLine + "(This machine cannot hold more than: $" + MachineMaximumBalance + ")",
-                Alignment = TextAlignment.Left,
-                TextEntry = true,
-                MaxChars = 5,
-                Buttons = UIAlertButton.Ok((btn) =>
-                {
-                    InputHandler("d", alert.ResponseText.Trim());
-                    UIScreen.RemoveDialog(alert);
-                }),
+                Buttons = 0,
+                Height = EODHeight.Normal,
+                Length = EODLength.Full,
+                Tips = EODTextTips.Short,
+                Timer = EODTimer.None,
+                Expandable = false
+            });
 
-            }, true);
+            SetTip(GameFacade.Strings["UIText", "259", "24"]); // "Slot Machine Management"
         }
-        private void WithdrawPrompt()
+        private void SendByteMessage(EODMessageNode node)
         {
-            // show an alert that asks the user how much to withdraw from the machine
-            UIAlert alert = null;
-            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
-            {
-                TextSize = 12,
-                Title = "Withdraw Simoleons",
-                Message = "This machine is currently stocked with: $" + MachineBalance + System.Environment.NewLine +
-                System.Environment.NewLine + "For players to use this machine you must maintain a minimum balance of: $" + MachineMinimumBalance +
-                System.Environment.NewLine + System.Environment.NewLine + "How much would you like to withdraw?",
-                Alignment = TextAlignment.Left,
-                TextEntry = true,
-                MaxChars = 5,
-                Buttons = UIAlertButton.Ok((btn) =>
-                {
-                    InputHandler("w", alert.ResponseText.Trim());
-                    UIScreen.RemoveDialog(alert);
-                }),
-
-            }, true);
+            Send("slots_" + node.EventName, node.EventByteData);
         }
-        private void InputHandler(string type, string userInput)
+        private void SendStringMessage(EODMessageNode node)
         {
-            int amount;
-            userInput.Replace("-", ""); // in case any jokesters try to input a negative number
-            string eventName = "";
-            string eventMessage = "";
-            // try to parse the user's input
-            try
-            {
-                amount = Int32.Parse(userInput);
-                // input is valid, now check it against MachineBalance
-                if (amount == 0)
-                {
-                    eventName = null;
-                    eventMessage = VMEODSlotsInputErrorTypes.Null.ToString();
-                }
-                else if (type.Equals("w"))
-                { // withdrawing
-                    if (amount > MachineBalance)
-                    {
-                        eventName = null;
-                        eventMessage = VMEODSlotsInputErrorTypes.Overflow.ToString();
-                    }
-                    else
-                    {
-                        eventName = "slots_withdraw";
-                        eventMessage = "" + amount;
-                    }
-                }
-                else // depositing
-                {
-                    if ((amount + MachineBalance) > MachineMaximumBalance)
-                    {
-                        eventName = null;
-                        eventMessage = VMEODSlotsInputErrorTypes.Overflow.ToString();
-                    }
-                    else
-                    {
-                        eventName = "slots_deposit";
-                        eventMessage = "" + amount;
-                    }
-                }
-            }
-            catch (ArgumentNullException nullException)
-            {
-                eventName = null;
-                eventMessage = VMEODSlotsInputErrorTypes.Null.ToString();
-            }
-            catch (FormatException formatException)
-            {
-                eventName = null;
-                if (userInput.Length == 0)
-                    eventMessage = VMEODSlotsInputErrorTypes.Null.ToString();
-                else
-                    eventMessage = VMEODSlotsInputErrorTypes.Invalid.ToString();
-            }
-            catch (OverflowException overFlowException)
-            {
-                eventName = null;
-                eventMessage = VMEODSlotsInputErrorTypes.Overflow.ToString();
-            }
-            finally
-            {
-                if (eventName != null)
-                    Send(eventName, eventMessage);
-                else
-                {
-                    if (type.Equals("w"))
-                        InputFailHandler("slots_withdraw_fail", eventMessage);
-                    else
-                        InputFailHandler("slots_deposit_fail", eventMessage);
-                }
-            }
+            Send("slots_" + node.EventName, node.EventStringData);
         }
-        private void InputFailHandler(string transactionType, string failureReason)
+        private void ResumeManageHandler(string evt, string message)
         {
-            string message = "";
-            if (failureReason.Equals(VMEODSlotsInputErrorTypes.Null.ToString()))
+            if (OwnerPanel != null)
             {
-                ResumeManageHandler("slots_resume_manage", "" + MachineBalance);
-                return;
+                OwnerPanel.ResumeFromMachineBalance(evt, message);
             }
-            else if (failureReason.Equals(VMEODSlotsInputErrorTypes.Invalid.ToString()))
-                message = "That is not a valid number!";
-            else if (failureReason.Equals(VMEODSlotsInputErrorTypes.Overflow.ToString()))
+        }
+        private void DepositFailHandler(string evt, string message)
+        {
+            if (OwnerPanel != null)
             {
-                if (transactionType.Equals("slots_withdraw_fail"))
-                    message = "You cannot withdraw more than the balance of the machine!";
-                else
-                    message = "You cannot deposit that many simoleons because the machine can only hold: $" + MachineMaximumBalance;
+                OwnerPanel.DepositFailHandler(evt, message);
             }
-            else
-                message = "An unknown error occured.";
-            UIAlert alert = null;
-            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+        }
+        private void InputFailHandler(string evt, string message)
+        {
+            if (OwnerPanel != null)
             {
-                TextSize = 12,
-                Title = "Transaction Error",
-                Message = message,
-                Alignment = TextAlignment.Center,
-                TextEntry = false,
-                Buttons = UIAlertButton.Ok((btn) =>
-                {
-                    ResumeManageHandler("slots_resume_manage", "" + MachineBalance);
-                    UIScreen.RemoveDialog(alert);
-                }),
-
-            }, true);
-        }
-        private void DepositFailHandler(string evt, string amountString)
-        {
-            // show an alert that informs the user that they don't have the money to make the deposit
-            UIAlert alert = null;
-            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
-            {
-                TextSize = 12,
-                Title = "Transaction Error",
-                Message = "You don't have enough simoleons to deposit: $" + amountString,
-                Alignment = TextAlignment.Center,
-                TextEntry = false,
-                Buttons = UIAlertButton.Ok((btn) =>
-                {
-                    ResumeManageHandler("slots_resume_manage", "" + MachineBalance);
-                    UIScreen.RemoveDialog(alert);
-                }),
-
-            }, true);
-        }
-        private void ResumeManageHandler(string evt, string balance)
-        {
-            int newBalance;
-            var result = Int32.TryParse(balance, out newBalance);
-            if (result)
-                MachineBalance = newBalance;
-            CashText.CurrentText = "$" + MachineBalance;
-            CashOutButton.OnButtonClick += CashoutButtonHandler;
-        }
-        private void OddsChangeHandler(UIElement targetSlider)
-        {
-            OddsSlider.OnChange -= OddsChangeHandler;
-            MachineOdds = Convert.ToByte(OddsSlider.Value);
-            Send("slots_new_odds", new Byte[] { MachineOdds });
-            OddsSlider.Tooltip = MachineOdds + "%";
-            CurrentOdds.CurrentText = MachineOdds + "%";
-            OddsSlider.OnChange += OddsChangeHandler;
-        }
-        private void OnOffHandler(UIElement targetButton)
-        {
-            OnOffButton.Disabled = true;
-            if (OnOffState == 0)
-            {
-                OnOffButton.ForceState = OnOffState = 1;
-                OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "14"];
+                OwnerPanel.InputFailHandler(evt.Remove(0,6), message); // truncate "slots_"
             }
-            else
-            {
-                OnOffButton.ForceState = OnOffState = 0;
-                OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "13"];
-            }
-            Send("slots_toggle_onOff", "" + OnOffState);
-            OnOffButton.Disabled = false;
         }
-        private void NewGameHandler(String evt, String message)
+        private void NewGameHandler(string evt, string message)
         {
             WheelSpinTickCounter = 0;
             LightsTimer.Stop();
@@ -729,9 +481,7 @@ namespace FSO.Client.UI.Panels.EODs
             WheelListOne.Reset();
             WheelListTwo.Reset();
             WheelListThree.Reset();
-
-            if (Loading.Caption == GameFacade.Strings["UIText", "259", "6"])
-                Loading.Caption = GameFacade.Strings["UIText", "259", "18"];
+            SetTip(GameFacade.Strings["UIText", "259", "18"]);
         }
         private void BetIncreaseButtonPressedHandler(UIElement targetButton)
         {
@@ -773,12 +523,7 @@ namespace FSO.Client.UI.Panels.EODs
             LightsTimer.Interval = 500;
 
             // update text field to mention bet amount
-            Loading.Caption = GameFacade.Strings["UIText", "259", "21"];
-            Loading.Caption = Loading.Caption.Replace("%i", "" + DisplayedBet);
-
-            // get the three target stops, recast them as type EMOEODSlotsStops
-            /*WheelListOne.TargetStop = (EMOEDSlotsStops)Enum.Parse(typeof(EMOEDSlotsStops), (Enum.GetName(typeof(EMOEDSlotsStops),
-                WinningsandTargetStops[2]))); depricated approach */
+            SetTip(GameFacade.Strings["UIText", "259", "21"].Replace("%i", "" + DisplayedBet));
             WheelListOne.TargetStop = (VMEODSlotsStops)Enum.ToObject(typeof(VMEODSlotsStops), TargetStops[0]);
             WheelListTwo.TargetStop = (VMEODSlotsStops)Enum.ToObject(typeof(VMEODSlotsStops), TargetStops[1]);
             WheelListThree.TargetStop = (VMEODSlotsStops)Enum.ToObject(typeof(VMEODSlotsStops), TargetStops[2]);
@@ -787,14 +532,17 @@ namespace FSO.Client.UI.Panels.EODs
         private void DisplayLossHandler(string evt, string stringNumber)
         {
             LightsTimer.Interval = 666 + (2 / 3);
-            Loading.Caption = GameFacade.Strings["UIText", "259", stringNumber];
+            SetTip(GameFacade.Strings["UIText", "259", stringNumber]);
         }
         private void DisplayWinHandler(string evt, string stringNumber)
         {
             LightsTimer.Interval = 100;
-            var data = stringNumber.Split('%');
-            Loading.Caption = GameFacade.Strings["UIText", "259", data[0]];
-            Loading.Caption = Loading.Caption.Replace("%i", data[1]);
+            if (stringNumber != null)
+            {
+                var data = stringNumber.Split('%');
+                if (data.Length > 1)
+                    SetTip(GameFacade.Strings["UIText", "259", data[0]].Replace("%i", data[1]));
+            }
         }
         private void AnimateWheelsHandler(object source, ElapsedEventArgs args)
         {
@@ -833,10 +581,6 @@ namespace FSO.Client.UI.Panels.EODs
                     WheelsSpinTimer.Stop();
                     Send("slots_wheels_stopped", "");
                 }
-                else
-                {
-
-                }
                 WheelListOne.Spin();
                 WheelListTwo.Spin();
                 WheelListThree.Spin();
@@ -849,7 +593,7 @@ namespace FSO.Client.UI.Panels.EODs
             LightsTimer.Stop();
             OfflineMessageTimer.Start();
             BetText.Visible = false;
-            Loading.Caption = GameFacade.Strings["UIText", "259", "22"];
+            SetTip(GameFacade.Strings["UIText", "259", "22"]);
         }
         private void LightsHandler(object source, ElapsedEventArgs args)
         {
@@ -861,14 +605,10 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void OfflineMessageHandler(object source, ElapsedEventArgs args)
         {
-            if (Loading.Caption.Equals(GameFacade.Strings["UIText", "259", "22"]))
-            {
-                Loading.Caption = GameFacade.Strings["UIText", "259", "23"];
-            }
+            if (Controller.EODMessage.Equals(GameFacade.Strings["UIText", "259", "22"]))
+                SetTip(GameFacade.Strings["UIText", "259", "23"]);
             else
-            {
-                Loading.Caption = GameFacade.Strings["UIText", "259", "22"];
-            }
+                SetTip(GameFacade.Strings["UIText", "259", "22"]);
         }
         private void DrawWheelStops(bool wheelOneAlreadyDone, bool wheelTwoAlreadyDone, bool wheelThreeAlreadyDone)
         {
@@ -1002,7 +742,6 @@ namespace FSO.Client.UI.Panels.EODs
             }
             catch (Exception error)
             {
-                Console.WriteLine("UISLotsEOD.RemoveAllListeners: There was an error: " + error);
                 ArmButton.Disabled = true;
                 SpinButton.Disabled = true;
                 SpinnerIncreaseBet.Disabled = true;

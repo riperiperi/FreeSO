@@ -666,6 +666,12 @@
     <Content Include="Content\Patch\sculpturegopher_ctss.str.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Content\Patch\roulettesemiglobal.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Patch\roulettesemiglobal.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\Patch\slotmachine.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
