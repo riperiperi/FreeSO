@@ -18,11 +18,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public static readonly List<byte> LowNumbersList = new List<byte> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
         public static readonly List<byte> HighNumbersList = new List<byte> { 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36 };
         private VMEODRouletteGameStates GameState;
-        private int CurrentWinningNumber;
         private int MinBet;
         private int MaxBet;
         private int TableBalance;
-        private int OWnerBalance;
         private int Roundtimer;
         private int Tock;
         private VMEODClient Controller;
@@ -291,7 +289,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         public override void OnConnection(VMEODClient client)
         {
-
             if (client.Avatar != null)
             {
                 // args[0] is Max Bet, args[1] is Min Bet
@@ -450,7 +447,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         private void RemoveBetHandler(string evt, string valueAndTypeAndNumbers, VMEODClient client)
         {
-            // identy if the player
+            // identify if the player
             foreach (var player in Players)
             {
                 if (player.Client != null && player.Client.Equals(client))
@@ -843,12 +840,17 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             if (client != null)
                 Server.Disconnect(client);
+            foreach (var player in Players) {
+                if (player.Client != null && player.Client.Equals(client))
+                    Players.Remove(player);
+                break;
+            }
         }
         private void NewGame()
         {
             if (TableBalance < MaxBet * 140)
                 CloseTable();
-            //else
+            else
             {
                 foreach (var player in Players)
                 {
