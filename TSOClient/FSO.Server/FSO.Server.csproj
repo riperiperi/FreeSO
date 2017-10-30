@@ -89,10 +89,6 @@
       <HintPath>..\packages\Microsoft.Owin.Hosting.2.0.2\lib\net45\Microsoft.Owin.Hosting.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="MonoGame.Framework, Version=3.4.0.459, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Nancy, Version=1.4.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Nancy.1.4.3\lib\net40\Nancy.dll</HintPath>
       <Private>True</Private>
@@ -188,7 +184,10 @@
     <Compile Include="Domain\ServerTop100Domain.cs" />
     <Compile Include="Servers\Api\Controllers\Admin\AdminTasksController.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTUserIdentity.cs" />
+    <Compile Include="Servers\City\CityLivenessHandler.cs" />
     <Compile Include="Servers\City\CityServerModule.cs" />
+    <Compile Include="Servers\City\Domain\EventSystem.cs" />
+    <Compile Include="Servers\City\Handlers\MailHandler.cs" />
     <Compile Include="Servers\City\Handlers\ModerationHandler.cs" />
     <Compile Include="Servers\City\Handlers\AvatarRetireHandler.cs" />
     <Compile Include="Servers\Tasks\Domain\PruneDatabaseTask.cs" />
@@ -256,6 +255,7 @@
     <Compile Include="Servers\Lot\LotServerConfiguration.cs" />
     <Compile Include="Servers\Lot\LotServerModule.cs" />
     <Compile Include="Servers\Tasks\Domain\BonusTask.cs" />
+    <Compile Include="Servers\Tasks\Domain\ShutdownTask.cs" />
     <Compile Include="Servers\Tasks\Handlers\TaskEngineHandler.cs" />
     <Compile Include="Servers\Tasks\TaskServer.cs" />
     <Compile Include="Servers\UserApi\UserApi.cs" />
@@ -285,6 +285,10 @@
     <ProjectReference Include="..\..\Other\libs\FSOMina.NET\Mina.NET\Mina.NET.csproj">
       <Project>{28abbf94-0584-4254-a8b4-4843e6f4e867}</Project>
       <Name>Mina.NET</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
+      <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
+      <Name>MonoGame.Framework.WindowsGL</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
       <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>

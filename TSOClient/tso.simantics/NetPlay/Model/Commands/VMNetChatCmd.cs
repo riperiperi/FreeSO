@@ -109,6 +109,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         if (FromNet) return false;
                         vm.CloseNet(VMCloseNetReason.ServerShutdown);
                         break;
+                    case "qtrday":
+                        var count = int.Parse(args);
+                        for (int i=0; i<count; i++)
+                        {
+                            vm.ProcessQTRDay();
+                        }
+                        vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Ran "+count+" quarter days."));
+                        break;
                 }
                 return true;
             }

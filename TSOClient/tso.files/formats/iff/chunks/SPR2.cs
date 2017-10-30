@@ -616,10 +616,19 @@ namespace FSO.Files.Formats.IFF.Chunks
                 if (!IffFile.RETAIN_CHUNK_DATA)
                 {
                     PixelData = null;
-                    if (onlyThis && !FSOEnvironment.Enable3D) ZBufferData = null;
+                    //if (onlyThis && !FSOEnvironment.Enable3D) ZBufferData = null;
                 }
             }
             if (TimedReferenceController.CurrentType != CacheType.PERMANENT) TimedReferenceController.KeepAlive(result, KeepAliveType.ACCESS);
+            return result;
+        }
+
+        public Texture2D TryGetCachedZ()
+        {
+            Texture2D result = null;
+            if (ContainsNothing || ContainsNoZ) return null;
+            if (!ZCache.TryGetTarget(out result) || ((CachableTexture2D)result).BeingDisposed || result.IsDisposed)
+                return null;
             return result;
         }
 
@@ -656,7 +665,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 if (TimedReferenceController.CurrentType == CacheType.PERMANENT) PermaRefZ = result;
                 if (!IffFile.RETAIN_CHUNK_DATA)
                 {
-                    if (!FSOEnvironment.Enable3D) ZBufferData = null;
+                    //if (!FSOEnvironment.Enable3D) ZBufferData = null; disabled right now til we get a clean way of getting this post-world-texture for ultra lighting
                     if (onlyThis) PixelData = null;
                 }
             }

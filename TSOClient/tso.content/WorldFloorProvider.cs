@@ -198,13 +198,13 @@ namespace FSO.Content
         public SPR2 GetGlobalSPR(ushort id)
         {
             var spr = FloorGlobals.Get<SPR2>(id);
-            if (id >= 0x800 && id <= 0x810 && !spr.SpritePreprocessed)
+            if (id >= 0x800 && id <= 0x830 && !spr.SpritePreprocessed)
             {
                 spr.ZAsAlpha = true;
                 spr.SpritePreprocessed = true;
                 spr.FloorCopy = 2;
             }
-            else
+            else if (spr.FloorCopy == 0)
             {
                 spr.FloorCopy = (id >= 0x400 && id <= 0x430)?2:1;
             }

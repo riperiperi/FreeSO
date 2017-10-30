@@ -407,6 +407,7 @@ namespace FSO.Server.Utils
                 return false;
             }
         }
+        public uint LastRecv { get; set; }
 
         public bool Connected
         {

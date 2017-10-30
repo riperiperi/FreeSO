@@ -162,6 +162,13 @@ namespace FSO.SimAntics
         public string[] SwimAnimations = new string[50];
         private STR BodyStrings;
         private VMAvatarType AvatarType;
+        public override bool MovesOften
+        {
+            get
+            {
+                return true;
+            }
+        }
 
         public void SubmitHITVars(HIT.HITThread thread)
         {
@@ -224,7 +231,7 @@ namespace FSO.SimAntics
                 WorldUI = new AvatarComponent();
                 var avatarc = (AvatarComponent)WorldUI;
                 avatarc.Avatar = Avatar;
-                var type = BodyStrings.GetString(0);
+                var type = BodyStrings?.GetString(0) ?? "adult";
                 if (type != "adult" && type != "child") avatarc.IsPet = true;
             }
 
@@ -252,7 +259,7 @@ namespace FSO.SimAntics
                 else if (type == "dog") AvatarType = VMAvatarType.Dog;
             }
 
-            Avatar = new SimAvatar(FSO.Content.Content.Get().AvatarSkeletons.Get(data.GetString(0)+".skel"));
+            Avatar = new SimAvatar(FSO.Content.Content.Get().AvatarSkeletons.Get((data?.GetString(0)??"adult")+".skel"));
             if (UseWorld)
             {
                 switch (AvatarType)

@@ -81,7 +81,7 @@ namespace FSO.Client.UI.Controls
                     DataService.Get<Avatar>(_AvatarId).ContinueWith(x =>
                     {
                         if (x.Result == null) { return; }
-                        ((AvatarUserReference)(User.Value))?.Dispose();
+                        (User.Value as AvatarUserReference)?.Dispose();
                         User.Value = UserReference.Wrap(x.Result);
                     });
                     DataService.Request(Server.DataService.Model.MaskedStruct.SimPage_Main, _AvatarId);

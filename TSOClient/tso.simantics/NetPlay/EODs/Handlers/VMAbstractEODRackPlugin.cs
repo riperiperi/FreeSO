@@ -148,6 +148,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             {
                 case RackType.Formalwear:
                 case RackType.Daywear:
+                case RackType.CAS:
                     return VMPersonSuits.DefaultDaywear;
                 case RackType.Sleepwear:
                     return VMPersonSuits.DefaultSleepwear;
@@ -176,6 +177,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     case RackType.Formalwear:
                     case RackType.Sleepwear:
                     case RackType.Swimwear:
+                    case RackType.CAS:
                         return VMPersonSuits.DynamicCostume;
                 }
             }

@@ -86,7 +86,7 @@ namespace FSO.LotView.RC
                         Blueprint.GenerateRoomLights();
                         state.OutsideColor = Blueprint.RoomColors[1];
                         state._3D.RoomLights = Blueprint.RoomColors;
-
+                        state.OutsidePx.SetData(new Color[] { new Color(Blueprint.OutsideColor, (Blueprint.OutsideColor.R + Blueprint.OutsideColor.G + Blueprint.OutsideColor.B) / (255 * 3f)) });
                         if (state.AmbientLight != null)
                         {
                             state.AmbientLight.SetData(Blueprint.RoomColors);
@@ -96,16 +96,17 @@ namespace FSO.LotView.RC
                     case BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED:
                         if (lightChangeType >= 1) break;
                         lightChangeType = 1;
-
-                        state.Light?.InvalidateOutdoors();
+                        
                         Blueprint.GenerateRoomLights();
                         state.OutsideColor = Blueprint.RoomColors[1];
                         state._3D.RoomLights = Blueprint.RoomColors;
-
+                        state.OutsidePx.SetData(new Color[] { new Color(Blueprint.OutsideColor, (Blueprint.OutsideColor.R+Blueprint.OutsideColor.G+Blueprint.OutsideColor.B)/(255*3f)) });
                         if (state.AmbientLight != null)
                         {
                             state.AmbientLight.SetData(Blueprint.RoomColors);
                         }
+                        state.Light?.InvalidateOutdoors();
+
                         TicksSinceLight = 0;
                         break;
                     case BlueprintDamageType.OBJECT_MOVE:

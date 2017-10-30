@@ -67,25 +67,40 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMPushInteractionOperand : VMPrimitiveOperand
     {
-        public byte Interaction;
-        public byte ObjectLocation;
-        public VMPushPriority Priority;
+        public byte Interaction { get; set; }
+        public byte ObjectLocation { get; set; }
+        public VMPushPriority Priority { get; set; }
         public byte Flags;
-        public byte IconLocation;
+        public byte IconLocation { get; set; }
 
         public bool UseCustomIcon
         {
             get { return (Flags & 1) > 0; }
+            set
+            {
+                if (value) Flags |= 1;
+                else Flags &= unchecked((byte)~1);
+            }
         }
 
         public bool PushTailContinuation
         {
             get { return (Flags & 2) > 0; }
+            set
+            {
+                if (value) Flags |= 2;
+                else Flags &= unchecked((byte)~2);
+            }
         }
 
         public bool PushHeadContinuation
         {
             get { return (Flags & 4) > 0; }
+            set
+            {
+                if (value) Flags |= 4;
+                else Flags &= unchecked((byte)~4);
+            }
         }
 
         #region VMPrimitiveOperand Members

@@ -242,9 +242,9 @@ namespace FSO.SimAntics
         {
             if (SpeedMultiplier == 0) Fraction = 0;
             //fractional animation for avatars
-            foreach (var obj in Context.ObjectQueries.Avatars)
+            foreach (var obj in Entities)
             {
-                ((VMAvatar)obj).FractionalAnim(Fraction);
+                (obj as VMAvatar)?.FractionalAnim(Fraction);
             }
         }
 
@@ -338,11 +338,20 @@ namespace FSO.SimAntics
             Scheduler.BeginTick(tickID);
             if (GlobalLink != null) GlobalLink.Tick(this);
             if (EODHost != null) EODHost.Tick();
-            if (SpeedMultiplier > 0) Context.Clock.Tick();
-            GlobalState[6] = (short)Context.Clock.Seconds;
-            GlobalState[5] = (short)Context.Clock.Minutes;
-            GlobalState[0] = (short)Context.Clock.Hours;
-            GlobalState[4] = (short)Context.Clock.TimeOfDay;
+            if (SpeedMultiplier > 0)
+            {
+                var lastHour = Context.Clock.Hours;
+                Context.Clock.Tick();
+                GlobalState[6] = (short)Context.Clock.Seconds;
+                GlobalState[5] = (short)Context.Clock.Minutes;
+                GlobalState[0] = (short)Context.Clock.Hours;
+                GlobalState[4] = (short)Context.Clock.TimeOfDay;
+
+                if (lastHour != GlobalState[0] && GlobalState[0]%6 == 0)
+                {
+                    ProcessQTRDay();
+                }
+            }
 
             Context.Architecture.Tick();
 
@@ -377,6 +386,14 @@ namespace FSO.SimAntics
             }
 
             //Context.SetToNextCache.VerifyPositions(); use only for debug!
+        }
+
+        public void ProcessQTRDay()
+        {
+            foreach (var ent in Entities)
+            {
+                (ent.TSOState as VMTSOObjectState)?.ProcessQTRDay(this, ent);
+            }
         }
 
         /// <summary>

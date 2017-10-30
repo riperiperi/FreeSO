@@ -101,7 +101,7 @@ namespace FSO.SimAntics
         public Dictionary<uint, List<short>> MeToPersist;
         //signals which relationships have changed since the last time this was reset
         //used to partial update relationships when doing an avatar save to db
-        public HashSet<uint> ChangedRels = new HashSet<uint>(); 
+        public HashSet<uint> ChangedRels = new HashSet<uint>();
 
         public ulong DynamicSpriteFlags; /** Used to show/hide dynamic sprites **/
         public ulong DynamicSpriteFlags2;
@@ -111,6 +111,7 @@ namespace FSO.SimAntics
         public EntityComponent WorldUI;
 
         public uint TimestampLockoutCount = 0;
+        public Color LightColor = Color.White;
 
         //inferred properties (from object resource)
         public GameGlobalResource SemiGlobal;
@@ -120,6 +121,17 @@ namespace FSO.SimAntics
         public SLOT Slots;
         public OBJD MasterDefinition; //if this object is multitile, its master definition will be stored here.
         public OBJfFunctionEntry[] EntryPoints;  /** Entry points for specific events, eg. init, main, clean... **/
+        public virtual bool MovesOften
+        {
+            get
+            {
+                if (Container != null) return true;
+                if (Slots == null) return false;
+                if (!Slots.Slots.ContainsKey(3)) return false;
+                var slots = Slots.Slots[3];
+                return (slots.Count > 7);
+            }
+        }
 
         public string Name
         {
@@ -849,6 +861,7 @@ namespace FSO.SimAntics
         {
             PushUserInteraction(interaction, caller, context, global, null);
         }
+
         public void PushUserInteraction(int interaction, VMEntity caller, VMContext context, bool global, short[] args)
         {
             var action = GetAction(interaction, caller, context, global, args);
@@ -1309,6 +1322,7 @@ namespace FSO.SimAntics
             target.DynamicSpriteFlags2 = DynamicSpriteFlags2;
             target.Position = _Position;
             target.TimestampLockoutCount = TimestampLockoutCount;
+            target.LightColor = LightColor;
         }
 
         public virtual void Load(VMEntityMarshal input)
@@ -1344,6 +1358,7 @@ namespace FSO.SimAntics
             Position = input.Position;
 
             TimestampLockoutCount = input.TimestampLockoutCount;
+            LightColor = input.LightColor;
 
             if (UseWorld) WorldUI.Visible = GetValue(VMStackObjectVariable.Hidden) == 0;
         }

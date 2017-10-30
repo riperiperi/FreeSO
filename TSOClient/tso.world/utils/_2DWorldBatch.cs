@@ -90,9 +90,7 @@ namespace FSO.LotView.Utils
         {
             this.Device = device;
             this.Effect = WorldContent._2DWorldBatchEffect;
-            Effect.Parameters["OutsideLight"].SetValue(Color.White.ToVector4());
             Effect.Parameters["OutsideDark"].SetValue(new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
-            Effect.Parameters["MaxLight"].SetValue(Color.White.ToVector4());
             Effect.Parameters["WorldToLightFactor"].SetValue(new Vector3(1f / (3 * 75), 1f / (3 * 2.95f), 1f / (3 * 75)));
             //TODO: World size
             Sprites = new List<_2DSpriteGroup>();

@@ -69,6 +69,7 @@ namespace FSO.LotView
         public _3DWorldBatch _3D;
         public LMapBatch Light;
         public Texture2D AmbientLight;
+        public Texture2D OutsidePx;
         public GPURoomMaps Rooms;
         public Color OutsideColor; //temporary to give this to terrain component. in future it will use ambient light texture
         public bool DynamicCutaway;
@@ -272,7 +273,7 @@ namespace FSO.LotView
 
         public virtual void PrepareLighting()
         {
-            var adv = (Light?.LightMap) ?? TextureGenerator.GetDefaultAdv(Device);
+            var adv = (Light?.LightMap) ?? OutsidePx;
             var amb = AmbientLight ?? TextureGenerator.GetPxWhite(Device);
 
             WorldContent._2DWorldBatchEffect.Parameters["advancedLight"].SetValue(adv);
@@ -294,9 +295,9 @@ namespace FSO.LotView
 
         public void ClearLighting(bool indoors)
         {
-            var adv = TextureGenerator.GetDefaultAdv(Device);
+            var adv = OutsidePx;
             var amb = TextureGenerator.GetPxWhite(Device);
-            if (indoors) adv = amb;
+            //if (indoors) adv = amb;
 
             WorldContent._2DWorldBatchEffect.Parameters["advancedLight"].SetValue(adv);
             WorldContent.GrassEffect.Parameters["advancedLight"].SetValue(adv);

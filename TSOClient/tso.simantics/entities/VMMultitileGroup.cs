@@ -13,6 +13,7 @@ using Microsoft.Xna.Framework;
 using FSO.LotView.Components;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Marshals;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.Entities
 {
@@ -23,7 +24,16 @@ namespace FSO.SimAntics.Entities
     {
         public bool MultiTile;
         public string Name = "";
-        public int Price;
+        public int Price
+        {
+            get
+            {
+                var wear = (BaseObject?.TSOState as VMTSOObjectState)?.Wear ?? (20*4);
+                var value = Math.Max(0, Math.Min(InitialPrice, (InitialPrice * (400 - wear)) / 400));
+                return value;
+            }
+        }
+        public int InitialPrice;
         public int SalePrice = -1;
         public List<VMEntity> Objects = new List<VMEntity>();
         public List<LotTilePos> Offsets = new List<LotTilePos>();
@@ -304,7 +314,7 @@ namespace FSO.SimAntics.Entities
             {
                 MultiTile = MultiTile,
                 Name = Name,
-                Price = Price,
+                Price = InitialPrice,
                 SalePrice = SalePrice,
                 Objects = objs,
                 Offsets = Offsets.ToArray()
@@ -315,7 +325,7 @@ namespace FSO.SimAntics.Entities
         {
             MultiTile = input.MultiTile;
             Name = input.Name;
-            Price = input.Price;
+            InitialPrice = input.Price;
             SalePrice = input.SalePrice;
             if (SalePrice == 0) SalePrice = -1;
             Objects = new List<VMEntity>();

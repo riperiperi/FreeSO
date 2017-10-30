@@ -71,7 +71,7 @@
             this.GlobalSim = new System.Windows.Forms.CheckBox();
             this.VersionLabel = new System.Windows.Forms.Label();
             this.VersionEntry = new System.Windows.Forms.NumericUpDown();
-            this.comboBox2 = new System.Windows.Forms.ComboBox();
+            this.TypeCombo = new System.Windows.Forms.ComboBox();
             this.TypeLabel = new System.Windows.Forms.Label();
             this.CatalogBox = new System.Windows.Forms.GroupBox();
             this.CatResidence = new System.Windows.Forms.CheckBox();
@@ -630,13 +630,13 @@
             this.VersionEntry.Size = new System.Drawing.Size(59, 20);
             this.VersionEntry.TabIndex = 62;
             // 
-            // comboBox2
+            // TypeCombo
             // 
-            this.comboBox2.FormattingEnabled = true;
-            this.comboBox2.Location = new System.Drawing.Point(614, 21);
-            this.comboBox2.Name = "comboBox2";
-            this.comboBox2.Size = new System.Drawing.Size(77, 21);
-            this.comboBox2.TabIndex = 61;
+            this.TypeCombo.FormattingEnabled = true;
+            this.TypeCombo.Location = new System.Drawing.Point(614, 21);
+            this.TypeCombo.Name = "TypeCombo";
+            this.TypeCombo.Size = new System.Drawing.Size(77, 21);
+            this.TypeCombo.TabIndex = 61;
             // 
             // TypeLabel
             // 
@@ -1197,7 +1197,7 @@
             this.Controls.Add(this.GlobalSim);
             this.Controls.Add(this.VersionLabel);
             this.Controls.Add(this.VersionEntry);
-            this.Controls.Add(this.comboBox2);
+            this.Controls.Add(this.TypeCombo);
             this.Controls.Add(this.TypeLabel);
             this.Controls.Add(this.CatalogBox);
             this.Controls.Add(this.ObjectView);
@@ -1292,7 +1292,7 @@
         private System.Windows.Forms.CheckBox GlobalSim;
         private System.Windows.Forms.Label VersionLabel;
         private System.Windows.Forms.NumericUpDown VersionEntry;
-        private System.Windows.Forms.ComboBox comboBox2;
+        private System.Windows.Forms.ComboBox TypeCombo;
         private System.Windows.Forms.Label TypeLabel;
         private System.Windows.Forms.GroupBox CatalogBox;
         private System.Windows.Forms.CheckBox CatResidence;

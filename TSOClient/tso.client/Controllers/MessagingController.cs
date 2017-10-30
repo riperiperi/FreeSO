@@ -6,6 +6,7 @@ using FSO.Common.DataService.Framework;
 using FSO.Common.DataService.Model;
 using FSO.Common.Enum;
 using FSO.Common.Utils;
+using FSO.Files.Formats.tsodata;
 using FSO.Server.Clients;
 using FSO.Server.DataService.Model;
 using FSO.Server.Protocol.Electron.Packets;
@@ -50,11 +51,38 @@ namespace FSO.Client.Controllers
             });
         }
 
+        public Message ReadLetter(UserReference user, MessageItem item)
+        {
+            return AddMessage(new Message
+            {
+                Type = MessageType.ReadLetter,
+                User = user,
+                LetterID = item.ID
+            });
+        }
+
+
+        public Message WriteLetter(UserReference user)
+        {
+            return AddMessage(new Message
+            {
+                Type = MessageType.WriteLetter,
+                User = user,
+            });
+        }
+
+
         public void ToggleWindow(Message message) {
             var window = GetWindow(message);
             window.Visible = !window.Visible;
             message.Read = true;
             UpdateTray();
+        }
+
+        public void SetEmailMessage(Message message, MessageItem item)
+        {
+            var window = GetWindow(message);
+            window.SetEmail(item.Subject, item.Body, item.SenderID == item.TargetID);
         }
 
         public void ShowWindow(Message message)
@@ -69,10 +97,16 @@ namespace FSO.Client.Controllers
             return MessageWindows[message];
         }
 
-        private Message GetMessageByUser(UserReferenceType type, uint id)
+        private Message GetMessageByUser(MessageType mtype, UserReferenceType type, uint id)
         {
             var existing = ActiveMessages.FirstOrDefault(x => x.User.Type == type &&
-                                                              x.User.Id == id);
+                                                              x.User.Id == id && x.Type == mtype);
+            return existing;
+        }
+
+        private Message GetLetterByID(int id)
+        {
+            var existing = ActiveMessages.FirstOrDefault(x => x.LetterID == id);
             return existing;
         }
 
@@ -88,13 +122,13 @@ namespace FSO.Client.Controllers
 
         private Message AddMessage(Message message)
         {
-            if (ActiveMessages.Count >= 3)
+            if (ActiveMessages.Count(x => x.Type == message.Type) >= 3)
             {
                 //TODO: Play a sound
                 return null;
             }
 
-            var existing = GetMessageByUser(message.User.Type, message.User.Id);
+            var existing = (message.Type == MessageType.ReadLetter)?GetLetterByID(message.LetterID):GetMessageByUser(message.Type, message.User.Type, message.User.Id);
             if (existing != null){
                 return existing;
             }
@@ -147,7 +181,7 @@ namespace FSO.Client.Controllers
                 }
             }
 
-            var existing = GetMessageByUser(message.FromType, message.From);
+            var existing = GetMessageByUser(MessageType.Call, message.FromType, message.From);
             if (existing != null)
             {
                 var window = GetWindow(existing);
@@ -244,6 +278,7 @@ namespace FSO.Client.Controllers
     {
         public MessageType Type { get; set; }
         public UserReference User { get; set; }
+        public int LetterID;
         public bool Read;
     }
 

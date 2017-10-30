@@ -25,6 +25,8 @@ namespace FSO.Server.Protocol.Electron
         ModerationRequest,
         FSOVMProtocolMessage,
         AvatarRetireRequest,
+        MailRequest,
+        MailResponse,
         Unknown
     }
 
@@ -66,6 +68,10 @@ namespace FSO.Server.Protocol.Electron
                     return ElectronPacketType.ModerationRequest;
                 case 0x0010:
                     return ElectronPacketType.FSOVMProtocolMessage;
+                case 0x0011:
+                    return ElectronPacketType.MailRequest;
+                case 0x0012:
+                    return ElectronPacketType.MailResponse;
                 default:
                     return ElectronPacketType.Unknown;
             }
@@ -107,6 +113,10 @@ namespace FSO.Server.Protocol.Electron
                     return 0x000F;
                 case ElectronPacketType.FSOVMProtocolMessage:
                     return 0x0010;
+                case ElectronPacketType.MailRequest:
+                    return 0x0011;
+                case ElectronPacketType.MailResponse:
+                    return 0x0012;
             }
 
             return 0xFFFF;

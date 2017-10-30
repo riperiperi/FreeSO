@@ -110,7 +110,6 @@ technique Draw2D
 {
     pass MainPass
     {
-        AlphaBlendEnable = TRUE; DestBlend = ONE; SrcBlend = ONE; BlendOp = MAX; ZEnable = FALSE;
 
 #if SM4
         VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();
@@ -124,7 +123,6 @@ technique Draw2D
 
 	pass EllipsePass
 	{
-		AlphaBlendEnable = TRUE; DestBlend = ONE; SrcBlend = ONE; BlendOp = MAX; ZEnable = FALSE;
 
 #if SM4
 		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();
@@ -138,7 +136,6 @@ technique Draw2D
 
 	pass LinearPass
 	{
-		AlphaBlendEnable = TRUE; DestBlend = ONE; SrcBlend = ONE; BlendOp = MAX; ZEnable = FALSE;
 
 #if SM4
 		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();

@@ -284,6 +284,11 @@ namespace FSO.Client.UI.Screens
             Relationships.Visible = false;
             ControllerUtils.BindController<RelationshipDialogController>(Relationships);
             WindowContainer.Add(Relationships);
+
+            Inbox = new UIInbox();
+            Inbox.Visible = false;
+            ControllerUtils.BindController<InboxController>(Inbox);
+            WindowContainer.Add(Inbox);
         }
 
         public override void GameResized()
@@ -655,20 +660,21 @@ namespace FSO.Client.UI.Screens
 
         public void CloseInbox()
         {
-            this.Remove(Inbox);
-            Inbox = null;
+            Inbox.Visible = false;
         }
 
         public void OpenInbox()
         {
-            if (Inbox == null)
-            {
-                Inbox = new UIInbox();
-                this.Add(Inbox);
-                Inbox.X = GlobalSettings.Default.GraphicsWidth / 2 - 332;
-                Inbox.Y = GlobalSettings.Default.GraphicsHeight / 2 - 184;
-            }
-            //todo, on already visible move to front
+            Inbox.Visible = true;
+            Inbox.X = GlobalSettings.Default.GraphicsWidth / 2 - 332;
+            Inbox.Y = GlobalSettings.Default.GraphicsHeight / 2 - 184;
+            WindowContainer.SendToFront(Inbox);
+            ucp.FlashInbox(false);
+        }
+
+        public void FlashInbox(bool flash)
+        {
+            ucp.FlashInbox(flash);
         }
 
         private void MouseHandler(UIMouseEventType type, UpdateState state)

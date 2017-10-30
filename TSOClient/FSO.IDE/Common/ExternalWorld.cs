@@ -27,11 +27,12 @@ namespace FSO.IDE.Common
              */
             State = new WorldState(layer.Device, layer.Device.Viewport.Width / FSOEnvironment.DPIScaleFactor, layer.Device.Viewport.Height / FSOEnvironment.DPIScaleFactor, this);
             State.AmbientLight = new Texture2D(layer.Device, 256, 256);
+            State.OutsidePx = new Texture2D(layer.Device, 1, 1);
             State._3D = new FSO.LotView.Utils._3DWorldBatch(State);
             State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, 2, new SurfaceFormat[] {
                 World2D.BUFFER_SURFACE_FORMATS[0],
                 World2D.BUFFER_SURFACE_FORMATS[World2D.BUFFER_THUMB_DEPTH] }, new bool[] { true, false }, World2D.SCROLL_BUFFER);
-            State._2D.AdvLight = TextureGenerator.GetDefaultAdv(layer.Device);
+            State._2D.AdvLight = TextureGenerator.GetPxWhite(layer.Device);
             State.DrawOOB = true;
             UseBackbuffer = false;
 

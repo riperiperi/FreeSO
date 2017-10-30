@@ -22,6 +22,20 @@ namespace FSO.IDE.EditorComponent.OperandForms.DataProviders
             Map = map;
         }
 
+        public OpStaticNamedPropertyProvider(Type num)
+        {
+            Map = new Dictionary<int, string>();
+            var vals = Enum.GetValues(num);
+            var names = Enum.GetNames(num);
+            var i = 0;
+            foreach (var val in vals)
+            {
+                if (!Map.ContainsKey(Convert.ToInt32(val)))
+                    Map.Add(Convert.ToInt32(val), names[i]);
+                i++;
+            }
+        }
+
         public OpStaticNamedPropertyProvider(List<ScopeDataDefinition> str)
         {
             Map = new Dictionary<int, string>();

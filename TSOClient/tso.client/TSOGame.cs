@@ -105,13 +105,26 @@ namespace FSO.Client
                 settings.GraphicsHeight = GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor;
             }
 
+            if (settings.LightingMode == -1)
+            {
+                if (settings.Lighting)
+                {
+                    if (settings.Shadows3D)
+                        settings.LightingMode = 2;
+                    else
+                        settings.LightingMode = 1;
+                }
+                else
+                    settings.LightingMode = 0;
+                settings.Save();
+            }
+
             LotView.WorldConfig.Current = new LotView.WorldConfig()
             {
-                AdvancedLighting = settings.Lighting,
+                LightingMode = settings.LightingMode,
                 SmoothZoom = settings.SmoothZoom,
                 SurroundingLots = settings.SurroundingLotMode,
                 AA = settings.AntiAlias,
-                Shadow3D = settings.Shadows3D
             };
 
             FeatureLevelTest.UpdateFeatureLevel(GraphicsDevice);

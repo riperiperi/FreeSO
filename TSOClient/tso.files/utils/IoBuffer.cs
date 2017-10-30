@@ -134,6 +134,20 @@ namespace FSO.Files.Utils
         }
 
         /// <summary>
+        /// Reads a 64bit integer from the current stream. 
+        /// </summary>
+        /// <returns>An int.</returns>
+        public long ReadInt64()
+        {
+            var value = Reader.ReadInt64();
+            if (ByteOrder == ByteOrder.BIG_ENDIAN)
+            {
+                value = Endian.SwapInt64(value);
+            }
+            return value;
+        }
+
+        /// <summary>
         /// Reads an unsigned 32bit integer from the current stream. 
         /// </summary>
         /// <returns>A uint.</returns>

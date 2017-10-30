@@ -14,6 +14,7 @@ bool drawingFloor;
 float4 OutsideLight;
 float4 OutsideDark;
 float4 MaxLight;
+float2 MinAvg;
 float3 WorldToLightFactor;
 float2 LightOffset;
 float2 MapLayout;
@@ -187,14 +188,30 @@ float2 depthCalc2(ZVertexOut v) {
 }
 
 float4 lightColor(float4 intensities) {
+	return float4(intensities.rgb, 1);
+}
+
+float4 lightColorFloor(float4 intensities) {
 	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-	float lightFactor = (intensities.x * (intensities.z / (intensities.x + 0.00001)));
-	float outlightFactor = (intensities.y * (intensities.w / (intensities.y + 0.00001)));
 
-	float4 col = lerp(lerp(OutsideDark, OutsideLight, outlightFactor), MaxLight, lightFactor);
-	//float4 col = lerp(lerp(float4(0.5,0.5,0.5,1), float4(1,1,1,1), outlightFactor), float4(1, 1, 1, 1), lightFactor);
+	float avg = (intensities.r + intensities.g + intensities.b) / 3;
+	//floor shadow is how much less than average the alpha component is
 
-	return col;
+	float fshad = intensities.a / avg;
+
+	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
+}
+
+float4 lightColorI(float4 intensities, float i) {
+	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
+
+	float avg = (intensities.r + intensities.g + intensities.b) / 3;
+	//floor shadow is how much less than average the alpha component is
+
+	float fshad = intensities.a / avg;
+	fshad = lerp(fshad, 1, i);
+
+	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
 }
 
 float4 lightProcess(float4 inPosition, float level) {
@@ -206,7 +223,6 @@ float4 lightProcess(float4 inPosition, float level) {
 	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
 
     float4 lTex = tex2D(advLightSampler, inPosition.xz);
-	if (drawingFloor == false) lTex.zw = lTex.xy;
 	return lightColor(lTex);
 }
 
@@ -214,16 +230,15 @@ float4 lightInterp(float4 inPosition) {
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;
 
-	float level = floor(inPosition.y) + 0.0001; //todo: sprite defines our level (3d walls will give us more control here)
+	float level = max(0, floor(inPosition.y) + 0.0001); //todo: sprite defines our level (3d walls will give us more control here)
 	float abvLevel = min(MaxFloor, level + 1);
 	float2 iPA = inPosition.xz + 1 / MapLayout * floor(float2(abvLevel % MapLayout.x, abvLevel / MapLayout.x));
 	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
-	lTex.xz = lerp(lTex.xz, tex2D(advLightSampler, iPA).xz, max(0, (inPosition.y % 1) * 2 - 1));
+	lTex.rgb = lerp(lTex.rgb, tex2D(advLightSampler, iPA).rgb, max(0, (inPosition.y % 1) * 2 - 1));
 
-	lTex = lerp(lTex, float4(lTex.x, lTex.y, lTex.x, lTex.y), clamp((inPosition.y % 1) * 3, 0, 1));
-	return lightColor(lTex);
+	return lightColorI(lTex, clamp((inPosition.y % 1) * 3, 0, 1));
 }
 
 ZVertexOut vsZSprite(ZVertexIn v){

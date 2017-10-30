@@ -24,6 +24,8 @@ using FSO.Server.Database.DA.Tasks;
 using FSO.Server.Database.DA.Bonus;
 using FSO.Server.Database.DA.LotVisitTotals;
 using FSO.Server.Database.DA.Bans;
+using FSO.Server.Database.DA.Inbox;
+using FSO.Server.Database.DA.DbEvents;
 
 namespace FSO.Server.Database.DA
 {
@@ -276,6 +278,26 @@ namespace FSO.Server.Database.DA
                     _Bonus = new SqlBonus(Context);
                 }
                 return _Bonus;
+            }
+        }
+
+        private IInbox _Inbox;
+        public IInbox Inbox
+        {
+            get
+            {
+                if (_Inbox == null) _Inbox = new SqlInbox(Context);
+                return _Inbox;
+            }
+        }
+
+        private IEvents _Events;
+        public IEvents Events
+        {
+            get
+            {
+                if (_Events == null) _Events = new SqlEvents(Context);
+                return _Events;
             }
         }
 

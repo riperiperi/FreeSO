@@ -9,6 +9,7 @@ using FSO.LotView;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using System.Runtime.InteropServices;
+using Microsoft.Xna.Framework;
 
 namespace FSO.SimAntics.Marshals
 {
@@ -41,6 +42,7 @@ namespace FSO.SimAntics.Marshals
         public LotTilePos Position;
 
         public uint TimestampLockoutCount;
+        public Color LightColor = Color.White;
 
         public int Version;
 
@@ -52,7 +54,7 @@ namespace FSO.SimAntics.Marshals
             ObjectID = reader.ReadInt16();
             PersistID = reader.ReadUInt32();
 
-            if (this is VMGameObjectMarshal) PlatformState = new VMTSOObjectState();
+            if (this is VMGameObjectMarshal) PlatformState = new VMTSOObjectState(Version);
             else PlatformState = new VMTSOAvatarState(Version);
 
             PlatformState.Deserialize(reader);
@@ -115,6 +117,11 @@ namespace FSO.SimAntics.Marshals
             {
                 TimestampLockoutCount = reader.ReadUInt32();
             }
+
+            if (Version > 19)
+            {
+                LightColor = new Color(reader.ReadUInt32());
+            }
         }
 
         public virtual void SerializeInto(BinaryWriter writer)
@@ -157,6 +164,7 @@ namespace FSO.SimAntics.Marshals
             Position.SerializeInto(writer);
 
             writer.Write(TimestampLockoutCount);
+            writer.Write(LightColor.PackedValue);
         }
     }
 

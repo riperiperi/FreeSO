@@ -75,11 +75,11 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMRunTreeByNameOperand : VMPrimitiveOperand
     {
-        public ushort StringTable;
-        public byte StringScope;
+        public ushort StringTable { get; set; }
+        public byte StringScope { get; set; }
         public byte Unused;
-        public byte StringID;
-        public byte Destination;
+        public byte StringID { get; set; }
+        public byte Destination { get; set; }
 
         public void Read(byte[] bytes)
         {

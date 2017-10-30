@@ -93,7 +93,7 @@ namespace FSO.LotView.RC
                 parentState.Camera.Translation = new Vector3(GlobalPosition.X * 3, 0, GlobalPosition.Y * 3);
             else parentState.CenterTile += GlobalPosition; //TODO: vertical offset
 
-            State.PrepareLighting();
+            parentState.ClearLighting(false);
             
             var level = parentState.SilentLevel;
             parentState.SilentLevel = 5;

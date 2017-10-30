@@ -42,6 +42,7 @@ namespace FSO.LotView.Components
              */
             State = new WorldState(device, device.Viewport.Width, device.Viewport.Height, this);
             State.AmbientLight = new Texture2D(device, 256, 256);
+            State.OutsidePx = new Texture2D(device, 1, 1);
 
             HasInitGPU = true;
             HasInit = HasInitGPU & HasInitBlueprint;
@@ -96,6 +97,7 @@ namespace FSO.LotView.Components
                         Blueprint.OutsideColor = state.OutsideColor;
                         Blueprint.GenerateRoomLights();
                         State.OutsideColor = Blueprint.RoomColors[1];
+                        State.OutsidePx.SetData(new Color[] { state.OutsideColor });
                         State.AmbientLight.SetData(Blueprint.RoomColors);
                         TicksSinceLight = 0;
                         break;
@@ -159,7 +161,7 @@ namespace FSO.LotView.Components
 
             var pxOffset = -parentState.WorldSpace.GetScreenOffset();
 
-            State.PrepareLighting();
+            parentState.ClearLighting(true);
 
             parentState._2D.SetScroll(pxOffset);
             var level = parentState.SilentLevel;
@@ -184,7 +186,7 @@ namespace FSO.LotView.Components
             var parentScroll = parentState.CenterTile;
             parentState.CenterTile += GlobalPosition; //TODO: vertical offset
 
-            State.PrepareLighting();
+            parentState.ClearLighting(true);
             var pxOffset = -parentState.WorldSpace.GetScreenOffset();
 
             parentState._2D.SetScroll(pxOffset);

@@ -189,6 +189,7 @@ namespace FSO.Client.UI.Panels
 
 
             BookmarkListBox.Columns[0].Alignment = TextAlignment.Left | TextAlignment.Top;
+            BookmarkListBox.Columns[0].Width = (int)BookmarkListBox.Width;
             BookmarkListBox.Items = xmlHouses.Select(x => new UIListBoxItem(x, x.Filename.Substring(0, x.Filename.Length-4))).ToList();
         }
 

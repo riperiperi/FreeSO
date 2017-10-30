@@ -112,6 +112,9 @@ namespace FSO.Client.UI.Panels
         private UILabel FloorNumLabel;
         private int LastZoom;
 
+        private int InboxFlashTime;
+        private bool InboxFlashing;
+
         public UIUCP(UIScreen owner)
         {
             this.RenderScript("ucp.uis");
@@ -385,6 +388,26 @@ namespace FSO.Client.UI.Panels
             TimeText.Caption = hour.ToString() + ":" + ZeroPad(min.ToString(), 2) + " " + suffix;
             MoneyText.Caption = "$" + Game.VisualBudget.ToString("##,#0");
 
+            if (InboxFlashing)
+            {
+                if ((InboxFlashTime++) > FSOEnvironment.RefreshRate/2)
+                {
+                    if (PhoneButton.ForceState == 2)
+                    {
+                        PhoneButton.ForceState = -1;
+                        Invalidate();
+                    }
+                } else
+                {
+                    if (PhoneButton.ForceState != 2)
+                    {
+                        PhoneButton.ForceState = 2;
+                        Invalidate();
+                    }
+                }
+                InboxFlashTime %= FSOEnvironment.RefreshRate;
+            }
+
             base.Update(state);
 
             if (FSOEnvironment.Enable3D && Game.InLot)
@@ -394,6 +417,16 @@ namespace FSO.Client.UI.Panels
                 if (RotateCounterClockwiseButton.IsDown) ((WorldStateRC)Game.vm.Context.World.State).RotationX -= 2f / FSOEnvironment.RefreshRate;
                 if (ZoomInButton.IsDown) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom + 1f / FSOEnvironment.RefreshRate, 2));
                 if (ZoomOutButton.IsDown) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom - 1f / FSOEnvironment.RefreshRate, 2));
+            }
+        }
+
+        public void FlashInbox(bool flash)
+        {
+            InboxFlashing = flash;
+            InboxFlashTime = 0;
+            if (!flash)
+            {
+                PhoneButton.ForceState = -1;
             }
         }
 

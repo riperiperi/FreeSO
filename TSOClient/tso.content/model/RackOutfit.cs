@@ -41,6 +41,7 @@ namespace FSO.Content.Model
         Decor_Head = 4,
         Decor_Back = 5,
         Decor_Shoe = 6,
-        Decor_Tail = 7
+        Decor_Tail = 7,
+        CAS = 8
     }
 }

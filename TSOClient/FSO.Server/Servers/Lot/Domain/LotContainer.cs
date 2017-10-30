@@ -604,7 +604,8 @@ namespace FSO.Server.Servers.Lot.Domain
             {
                 Hours = tsoTime.Item1,
                 Minutes = tsoTime.Item2,
-                Seconds = tsoTime.Item3
+                Seconds = tsoTime.Item3,
+                UTCStart = DateTime.UtcNow.Ticks
             });
 
             Lot.Context.UpdateTSOBuildableArea();

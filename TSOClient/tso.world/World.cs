@@ -84,6 +84,8 @@ namespace FSO.LotView
             State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, World2D.NUM_2D_BUFFERS, 
                 World2D.BUFFER_SURFACE_FORMATS, World2D.FORMAT_ALWAYS_DEPTHSTENCIL, World2D.SCROLL_BUFFER);
 
+            State.OutsidePx = new Texture2D(layer.Device, 1, 1);
+
             ChangedWorldConfig(layer.Device);
 
             PPXDepthEngine.InitGD(layer.Device);
@@ -685,6 +687,8 @@ namespace FSO.LotView
             {
                 State.AmbientLight?.Dispose();
                 State.AmbientLight = null;
+                Light?.Dispose();
+                Light = null;
                 if (Light == null)
                 {
                     Light = new LMapBatch(gd, 8);
@@ -746,6 +750,7 @@ namespace FSO.LotView
         {
             base.Dispose();
             State.AmbientLight?.Dispose();
+            State.OutsidePx.Dispose();
             Light?.Dispose();
             State.Rooms.Dispose();
             if (State._2D != null) State._2D.Dispose();

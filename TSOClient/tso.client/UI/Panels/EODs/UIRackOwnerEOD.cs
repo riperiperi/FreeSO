@@ -227,6 +227,7 @@ namespace FSO.Client.UI.Panels.EODs
                 if (outfit.Gender != SelectedGender) { continue; }
 
                 Outfit TmpOutfit = Content.Content.Get().AvatarOutfits.Get(outfit.AssetID);
+                if (TmpOutfit == null) continue;
                 Appearance TmpAppearance = Content.Content.Get().AvatarAppearances.Get(TmpOutfit.GetAppearance(appearanceType));
                 FSO.Common.Content.ContentID thumbID = TmpAppearance.ThumbnailID;
                 

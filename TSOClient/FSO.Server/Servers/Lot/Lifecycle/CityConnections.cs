@@ -20,6 +20,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
         private static Logger LOG = LogManager.GetCurrentClassLogger();
         private Dictionary<LotServerConfigurationCity, CityConnection> Connections;
         private Thread ConnectionWatcher;
+        private AutoResetEvent ConnectionChanged = new AutoResetEvent(false);
         private bool _Running;
         public short LotCount;
 
@@ -89,6 +90,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
 
         private void CheckConnections()
         {
+            bool nextSleep = false;
             while (_Running)
             {
                 float cpu = 1;
@@ -108,14 +110,17 @@ namespace FSO.Server.Servers.Lot.Lifecycle
                 {
                     if (!connection.Connected)
                     {
-                        LOG.Info("Not connected!");
+                        LOG.Info("Attempting connection!");
                         connection.Connect();
                     }else{
                         connection.Write(capacity);
                     }
                 }
 
-                Thread.Sleep(Config.CityReportingInterval);
+                if (nextSleep)
+                    Thread.Sleep(Config.CityReportingInterval);
+                else
+                    nextSleep = ConnectionChanged.WaitOne(Config.CityReportingInterval);
             }
         }
     }
@@ -135,6 +140,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
                 return false;
             }
         }
+        public uint LastRecv { get; set; }
 
         private bool _Connecting = false;
         private DateTime _ConnectingStart;

@@ -118,6 +118,20 @@ namespace FSO.Files.Utils
         }
 
         /// <summary>
+        /// Writes a 32bit integer to the current stream. 
+        /// </summary>
+        /// <returns>An int.</returns>
+        public void WriteInt64(long value)
+        {
+            if (ByteOrder == ByteOrder.BIG_ENDIAN)
+            {
+                value = Endian.SwapInt64(value);
+            }
+            Writer.Write(value);
+        }
+
+
+        /// <summary>
         /// Writes an unsigned 32bit integer from to current stream. 
         /// </summary>
         /// <returns>A uint.</returns>

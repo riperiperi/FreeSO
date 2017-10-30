@@ -16,6 +16,11 @@ namespace FSO.LotView.RC
 {
     public class ObjectComponentRC : ObjectComponent
     {
+        static ObjectComponentRC()
+        {
+            MakeShadowComponent = (GameObject obj) => new ObjectComponentRC(obj);
+        }
+
         public ObjectComponentRC(GameObject obj) : base(obj)
         {
             dgrp = new DGRPRendererRC(this.DrawGroup, obj.OBJ);
@@ -108,6 +113,15 @@ namespace FSO.LotView.RC
             //#endif
             ((DGRPRendererRC)dgrp).World = World;
             if (this.DrawGroup != null) dgrp.Draw(world);
+        }
+
+        public override void DrawLMap(GraphicsDevice device, sbyte level)
+        {
+            //#if !DEBUG 
+            if (!Visible || (Position.X < -2043 && Position.Y < -2043) || Level < 1) return;
+            //#endif
+            ((DGRPRendererRC)dgrp).World = World;
+            if (this.DrawGroup != null) ((DGRPRendererRC)dgrp).DrawLMap(device, level);
         }
     }
 }

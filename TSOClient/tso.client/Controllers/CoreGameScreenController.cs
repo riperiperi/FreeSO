@@ -9,6 +9,7 @@ using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Enum;
 using FSO.Common.Utils;
+using FSO.Files.Formats.tsodata;
 using FSO.Server.Protocol.Electron.Model;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.SimAntics.NetPlay;
@@ -165,6 +166,62 @@ namespace FSO.Client.Controllers
             });
         }
 
+        public void DisplayEmail(MessageItem item)
+        {
+            UserReference r = null;
+            switch (item.Type)
+            {
+                case 1:
+                    r = UserReference.Of(UserReferenceType.TSO); break; //vote
+                case 2:
+                    r = UserReference.Of(UserReferenceType.TSO); break; //club
+                case 3:
+                    r = UserReference.Of(UserReferenceType.MAXIS); break;
+                case 4:
+                    r = UserReference.Of(UserReferenceType.TSO); break;
+                case 5:
+                    r = UserReference.Of(UserReferenceType.TSO); break; //house
+                case 6:
+                    r = UserReference.Of(UserReferenceType.TSO); break; //roommate
+            }
+            if (r == null)
+            {
+                DataService.Get<Avatar>(item.SenderID).ContinueWith(x =>
+                {
+                    GameThread.NextUpdate(y =>
+                    {
+                        var msg = Chat.ReadLetter(UserReference.Wrap(x.Result), item);
+                        if (msg != null)
+                        {
+                            Chat.SetEmailMessage(msg, item);
+                            Chat.ShowWindow(msg);
+                        }
+                    });
+                });
+            } else
+            {
+                GameThread.NextUpdate(y =>
+                {
+                    var msg = Chat.ReadLetter(r, item);
+                    if (msg != null)
+                    {
+                        Chat.SetEmailMessage(msg, item);
+                        Chat.ShowWindow(msg);
+                    }
+                });
+            }
+        }
+
+        public void WriteEmail(uint avatarId, string subject)
+        {
+            DataService.Get<Avatar>(avatarId).ContinueWith(x =>
+            {
+                var msg = Chat.WriteLetter(UserReference.Wrap(x.Result));
+                Chat.SetEmailMessage(msg, new MessageItem() { Subject = subject, Body = "" });
+                if (msg != null) Chat.ShowWindow(msg);
+            });
+        }
+
         public void UploadLotThumbnail()
         {
             if (!Screen.InLot) return;
@@ -290,6 +347,7 @@ namespace FSO.Client.Controllers
             RoommateProtocol.Dispose();
             Screen.JoinLotProgress.FindController<JoinLotProgressController>()?.Dispose();
             ((PersonPageController)Screen.PersonPage.Controller)?.Dispose();
+            ((InboxController)Screen.Inbox.Controller)?.Dispose();
         }
     }
 }

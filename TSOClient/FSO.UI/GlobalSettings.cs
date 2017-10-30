@@ -69,6 +69,8 @@ namespace FSO.Client
 
             { "Shadows3D", "false" },
             { "CitySkybox", "true" },
+
+            { "LightingMode", "-1" }
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -115,6 +117,8 @@ namespace FSO.Client
 
         public bool Shadows3D { get; set; }
         public bool CitySkybox { get; set; }
+
+        public int LightingMode { get; set; }
 
         public static int TARGET_COMPAT_STATE = 2;
     }

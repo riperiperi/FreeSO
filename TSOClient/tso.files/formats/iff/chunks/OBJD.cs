@@ -294,7 +294,12 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             Type me = typeof(OBJD);
             var prop = me.GetProperty(name);
-            value = Convert.ChangeType(value, prop.PropertyType);
+            try
+            {
+                value = Convert.ChangeType(value, prop.PropertyType);
+            } catch {
+                value = Enum.Parse(prop.PropertyType, value.ToString());
+            }
             prop.SetValue(this, value, null);
         }
 

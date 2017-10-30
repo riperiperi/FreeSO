@@ -80,6 +80,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Controllers\GizmoTop100Controller.cs" />
+    <Compile Include="Controllers\InboxController.cs" />
     <Compile Include="Controllers\JoinLotProgressController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\MessagingController.cs" />
@@ -147,6 +148,7 @@
     <Compile Include="UI\Panels\LotControls\UITerrainFlatten.cs" />
     <Compile Include="UI\Panels\LotControls\UIGrassPaint.cs" />
     <Compile Include="UI\Panels\LotControls\UITerrainRaiser.cs" />
+    <Compile Include="UI\Panels\MessageStore\UIMessageStore.cs" />
     <Compile Include="UI\Panels\UILotControlTouchHelper.cs" />
     <Compile Include="UI\Panels\UISandboxSelector.cs" />
     <Compile Include="UI\Panels\UINeighborhoodSelectionPanel.cs" />

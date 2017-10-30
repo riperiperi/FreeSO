@@ -161,6 +161,7 @@ namespace FSO.Server
                 var tasks = childKernel.Get<TaskServer>(new ConstructorArgument("config", Config.Services.Tasks));
                 Servers.Add(tasks);
                 ActiveTaskServer = tasks;
+                Server.Servers.Tasks.Domain.ShutdownTask.ShutdownHook = RequestedShutdown;
             }
 
             foreach (var server in Servers)

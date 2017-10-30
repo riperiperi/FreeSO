@@ -155,7 +155,7 @@ namespace FSO.IDE.EditorComponent
                     return DataListFromSTR(callerAttr, 0, null);
                 case VMVariableScope.StackObjectAttributes:
                 case VMVariableScope.StackObjectLeadTileAttribute:
-                    var stackAttr = StackObject.Resource.Get<STR>(256);
+                    var stackAttr = StackObject?.Resource.Get<STR>(256);
                     if (stackAttr == null) return DataListFromStrings(MakeEnumeratedStrings("Attribute ", Object.OBJ.NumAttributes), 0, null);
                     return DataListFromSTR(stackAttr, 0, null);
                 case VMVariableScope.Global:
@@ -245,7 +245,7 @@ namespace FSO.IDE.EditorComponent
                     if (bcon != null) return (short)bcon.Constants[keyID];
 
                     tuning = Object.Resource.Get<OTFTable>((ushort)(tableID + 4096));
-                    if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                    if (tuning != null) return (short?)tuning.GetKey(keyID)?.Value ?? (short)0;
                     break;
                 case 1: //semi globals
                     ushort testTab = (ushort)(tableID + 8192);
@@ -302,7 +302,7 @@ namespace FSO.IDE.EditorComponent
                     tuning = Object.Resource.Get<OTFTable>((ushort)(tableID + 4096));
                     if (tuning != null)
                     {
-                        return tuning.GetKey(keyID).Label;
+                        return tuning.GetKey(keyID)?.Label ?? "";
                     }
                     break;
                 case 1:

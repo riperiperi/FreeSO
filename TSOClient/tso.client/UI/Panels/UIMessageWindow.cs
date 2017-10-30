@@ -19,6 +19,7 @@ using FSO.Common.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Client.Model;
 using Microsoft.Xna.Framework;
+using FSO.Files.Formats.tsodata;
 
 namespace FSO.Client.UI.Panels
 {
@@ -97,6 +98,7 @@ namespace FSO.Client.UI.Panels
 
             LetterSubjectTextEdit.MaxLines = 1;
             LetterSubjectTextEdit.TextMargin = new Microsoft.Xna.Framework.Rectangle(2, 2, 2, 2);
+            LetterSubjectTextEdit.MaxChars = 128;
 
             MessageSlider.AttachButtons(MessageScrollUpButton, MessageScrollDownButton, 1);
             MessageTextEdit.AttachSlider(MessageSlider);
@@ -107,6 +109,7 @@ namespace FSO.Client.UI.Panels
 
             LetterSlider.AttachButtons(LetterScrollUpButton, LetterScrollDownButton, 1);
             LetterTextEdit.AttachSlider(LetterSlider);
+            LetterTextEdit.MaxChars = 1000;
             RespondLetterButton.OnButtonClick += new ButtonClickDelegate(RespondLetterButton_OnButtonClick);
             SendLetterButton.OnButtonClick += new ButtonClickDelegate(SendLetter);
 
@@ -157,8 +160,17 @@ namespace FSO.Client.UI.Panels
 
         private void RespondLetterButton_OnButtonClick(UIElement button)
         {
-            if (MessageType != Controllers.MessageType.ReadLetter) return;
-            SetType(Controllers.MessageType.WriteLetter);
+            if (User.Value?.Type != Common.Enum.UserReferenceType.AVATAR) return;
+            FindController<CoreGameScreenController>().WriteEmail(User.Value.Id, ClipString("RE: "+LetterSubjectTextEdit.CurrentText, 128));
+
+            /*if (MessageType != Controllers.MessageType.ReadLetter) return;
+            SetType(Controllers.MessageType.WriteLetter);*/
+        }
+
+        private string ClipString(string str, int length)
+        {
+            if (str.Length > length) return str.Substring(0, length);
+            else return str;
         }
 
         private void SendMessage(UIElement button)
@@ -177,10 +189,14 @@ namespace FSO.Client.UI.Panels
 
         private void SendLetter(UIElement button)
         {
-            /*if (MessageType != UIMessageType.Compose) return;
-            UIMessageController controller = (UIMessageController)GameFacade.MessageController;
-
-            controller.SendLetter(LetterTextEdit.CurrentText, LetterSubjectTextEdit.CurrentText, Author.GUID);*/
+            var msg = new MessageItem
+            {
+                Subject = LetterSubjectTextEdit.CurrentText,
+                Body = LetterTextEdit.CurrentText,
+                Type = 0,
+                Subtype = 0,
+            };
+            FindController<MessagingWindowController>().SendLetter(msg);
         }
 
         private void MessageTextEdit_OnChange(UIElement TextEdit)
@@ -195,10 +211,16 @@ namespace FSO.Client.UI.Panels
             RenderMessages();
         }
 
-        public void SetEmail(string subject, string message)
+        public void SetEmail(string subject, string message, bool to)
         {
             LetterSubjectTextEdit.CurrentText = subject;
             LetterTextEdit.CurrentText = message;
+
+            if (to)
+            {
+                RespondLetterButton.Disabled = true;
+            }
+            
         }
 
         public void RenderMessages()
@@ -241,6 +263,7 @@ namespace FSO.Client.UI.Panels
 
             SendLetterButton.Visible = (type == Controllers.MessageType.WriteLetter);
             RespondLetterButton.Visible = (type == Controllers.MessageType.ReadLetter);
+            RespondLetterButton.Disabled = (User.Value?.Type != Common.Enum.UserReferenceType.AVATAR);
 
             TypeBackground.Texture = (type == Controllers.MessageType.Call) ? backgroundMessageImage : (type == Controllers.MessageType.ReadLetter) ? backgroundLetterReadImage : backgroundLetterComposeImage;
 
@@ -354,7 +377,7 @@ namespace FSO.Client.UI.Panels
 
         public void SetEmail(string subject, string message)
         {
-            window.SetEmail(subject, message);
+            window.SetEmail(subject, message, false);
             if (!Shown) Alert = true;
         }
 

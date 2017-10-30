@@ -97,6 +97,8 @@
     <Compile Include="Electron\Packets\ChangeRoommateRequest.cs" />
     <Compile Include="Electron\Packets\ChangeRoommateResponse.cs" />
     <Compile Include="Electron\Packets\FSOVMProtocolMessage.cs" />
+    <Compile Include="Electron\Packets\MailRequest.cs" />
+    <Compile Include="Electron\Packets\MailResponse.cs" />
     <Compile Include="Electron\Packets\ModerationRequest.cs" />
     <Compile Include="Electron\Packets\FindAvatarResponse.cs" />
     <Compile Include="Electron\Packets\FindLotResponse.cs" />

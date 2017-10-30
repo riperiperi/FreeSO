@@ -285,7 +285,8 @@ namespace FSO.Files.Formats.IFF.Chunks
             if (spr2 != null)
             {
                 spr2.Frames[this.SpriteFrameIndex].DecodeIfRequired(true);
-                return spr2.Frames[this.SpriteFrameIndex].ZBufferData;
+                var buf = spr2.Frames[this.SpriteFrameIndex].ZBufferData;
+                return buf;
             }
             return null;
         }

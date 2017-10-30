@@ -22,14 +22,19 @@ namespace FSO.Server.Servers.City.Handlers
         private IDAFactory DAFactory;
         private CityServerContext Context;
         private LotServerPicker LotServers;
+        private CityLivenessEngine Liveness;
+        private EventSystem Events;
 
-        public VoltronConnectionLifecycleHandler(ISessions sessions, IDataService dataService, IDAFactory da, CityServerContext context, LotServerPicker lotServers)
+        public VoltronConnectionLifecycleHandler(ISessions sessions, IDataService dataService, IDAFactory da, CityServerContext context, LotServerPicker lotServers, CityLivenessEngine engine,
+            EventSystem events)
         {
             this.VoltronSessions = sessions.GetOrCreateGroup(Groups.VOLTRON);
             this.DataService = dataService;
             this.DAFactory = da;
             this.Context = context;
             this.LotServers = lotServers;
+            this.Liveness = engine;
+            this.Events = events;
         }
 
         public void Handle(IVoltronSession session, ClientByePDU packet)
@@ -39,7 +44,7 @@ namespace FSO.Server.Servers.City.Handlers
 
         public async void SessionClosed(IAriesSession session)
         {
-            if (!(session is IVoltronSession)){
+            if (!(session is IVoltronSession)) {
                 return;
             }
 
@@ -48,34 +53,36 @@ namespace FSO.Server.Servers.City.Handlers
 
             if (voltronSession.IsAnonymous) return;
 
-            //unenroll in voltron group, mark as offline in data service.
-            var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId);
-            if (avatar != null) avatar.Avatar_IsOnline = false;
+            Liveness.EnqueueChange(() => {
+                //unenroll in voltron group, mark as offline in data service.
+                var avatar = DataService.Get<Avatar>(voltronSession.AvatarId).Result;
+                if (avatar != null) avatar.Avatar_IsOnline = false;
 
-            using (var db = DAFactory.Get())
-            {
-                // if we don't own the claim for the avatar, we need to tell the server that does to release the avatar.
-                // right now it's just lot servers.
-
-                var claim = db.AvatarClaims.GetByAvatarID((uint)voltronSession.AvatarClaimId);
-                if (claim != null && claim.owner != Context.Config.Call_Sign)
+                using (var db = DAFactory.Get())
                 {
-                    var lotServer = LotServers.GetLotServerSession(claim.owner);
-                    if (lotServer != null)
-                    {
-                        var lot = db.Lots.GetByLocation(Context.ShardId, claim.location);
-                        lotServer.Write(new RequestLotClientTermination()
-                        {
-                            AvatarId = voltronSession.AvatarId,
-                            LotId = (lot != null)?lot.lot_id:((int)claim.location),
-                            FromOwner = Context.Config.Call_Sign
-                        });
-                    }
-                }
+                    // if we don't own the claim for the avatar, we need to tell the server that does to release the avatar.
+                    // right now it's just lot servers.
 
-                //nuke the claim anyways to be sure.
-                db.AvatarClaims.Delete(voltronSession.AvatarClaimId, Context.Config.Call_Sign);
-            }
+                    var claim = db.AvatarClaims.GetByAvatarID((uint)voltronSession.AvatarClaimId);
+                    if (claim != null && claim.owner != Context.Config.Call_Sign)
+                    {
+                        var lotServer = LotServers.GetLotServerSession(claim.owner);
+                        if (lotServer != null)
+                        {
+                            var lot = db.Lots.GetByLocation(Context.ShardId, claim.location);
+                            lotServer.Write(new RequestLotClientTermination()
+                            {
+                                AvatarId = voltronSession.AvatarId,
+                                LotId = (lot != null) ? lot.lot_id : ((int)claim.location),
+                                FromOwner = Context.Config.Call_Sign
+                            });
+                        }
+                    }
+
+                    //nuke the claim anyways to be sure.
+                    db.AvatarClaims.Delete(voltronSession.AvatarClaimId, Context.Config.Call_Sign);
+                }
+            });
         }
 
         public void SessionCreated(IAriesSession session)
@@ -110,6 +117,7 @@ namespace FSO.Server.Servers.City.Handlers
             //Mark as online
             avatar.Avatar_IsOnline = true;
             VoltronSessions.Enroll(newSession);
+            Events.UserJoined(voltronSession);
 
             //TODO: Somehow alert people this sim is online?
         }

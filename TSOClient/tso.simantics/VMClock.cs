@@ -21,6 +21,8 @@ namespace FSO.SimAntics
         public int Minutes;
         public int Hours;
         public int FirePercent;
+        public long UTCStart = DateTime.UtcNow.Ticks;
+
         public int TimeOfDay
         {
             get
@@ -34,6 +36,13 @@ namespace FSO.SimAntics
             get
             {
                 return ((MinuteFractions * 60) / TicksPerMinute);
+            }
+        }
+
+        public DateTime UTCNow
+        {
+            get {
+                return (new DateTime(UTCStart)).AddSeconds(Ticks / 30.0);
             }
         }
 
@@ -66,7 +75,8 @@ namespace FSO.SimAntics
                 TicksPerMinute = TicksPerMinute,
                 Minutes = Minutes,
                 Hours = Hours,
-                FirePercent = FirePercent
+                FirePercent = FirePercent,
+                UTCStart = UTCStart
             };
         }
 
@@ -78,6 +88,7 @@ namespace FSO.SimAntics
             Minutes = input.Minutes;
             Hours = input.Hours;
             FirePercent = input.FirePercent;
+            UTCStart = input.UTCStart;
         }
 
         public VMClock(VMClockMarshal input)

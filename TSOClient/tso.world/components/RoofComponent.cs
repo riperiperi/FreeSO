@@ -140,10 +140,10 @@ namespace FSO.LotView.Components
                 var m_bl = ToWorldPos(rect.x1 + height, rect.y2 - height, height, level, pitch) + new Vector3(0, heightMod, 0);
                 var m_br = ToWorldPos(rect.x2 - height, rect.y2 - height, height, level, pitch) + new Vector3(0, heightMod, 0);
 
-                Color topCol = Color.Lerp(Color.White, new Color(175, 175, 175), pitch);
-                Color rightCol = Color.White;
-                Color btmCol = Color.Lerp(Color.White, new Color(200, 200, 200), pitch);
-                Color leftCol = Color.Lerp(Color.White, new Color(150, 150, 150), pitch);
+                Color topCol = Color.White; //Color.Lerp(Color.White, new Color(175, 175, 175), pitch);
+                Color rightCol = Color.White; //Color.White;
+                Color btmCol = Color.White; //Color.Lerp(Color.White, new Color(200, 200, 200), pitch);
+                Color leftCol = Color.White; //Color.Lerp(Color.White, new Color(150, 150, 150), pitch);
                 Vector4 darken = new Vector4(0.8f, 0.8f, 0.8f, 1.0f);
 
                 //quad as two tris
@@ -158,26 +158,34 @@ namespace FSO.LotView.Components
                     Indexes[indexOffset++] = geomOffset + j;
                 }
 
+                var n1 = -Vector3.Normalize(Vector3.Cross(tl - tr, tr - m_tr));
+                var n1m = Vector3.Normalize(n1 + Vector3.Up);
                 Vector2 texScale = new Vector2(2 / 3f, 1f);
-                Geom[geomOffset++] = new TerrainVertex(tl, topCol.ToVector4() * darken, new Vector2(tl.X, tl.Z * -1) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(tr, topCol.ToVector4() * darken, new Vector2(tr.X, tr.Z * -1) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(m_tr, topCol.ToVector4(), new Vector2(m_tr.X, m_tr.Z * -1) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(m_tl, topCol.ToVector4(), new Vector2(m_tl.X, m_tl.Z * -1) * texScale, 0);
+                Geom[geomOffset++] = new TerrainVertex(tl, topCol.ToVector4(), new Vector2(tl.X, tl.Z * -1) * texScale, 0, n1);
+                Geom[geomOffset++] = new TerrainVertex(tr, topCol.ToVector4(), new Vector2(tr.X, tr.Z * -1) * texScale, 0, n1);
+                Geom[geomOffset++] = new TerrainVertex(m_tr, topCol.ToVector4(), new Vector2(m_tr.X, m_tr.Z * -1) * texScale, 0, n1m);
+                Geom[geomOffset++] = new TerrainVertex(m_tl, topCol.ToVector4(), new Vector2(m_tl.X, m_tl.Z * -1) * texScale, 0, n1m);
+                
+                n1 = -Vector3.Normalize(Vector3.Cross(tr - br, br - m_br));
+                n1m = Vector3.Normalize(n1 + Vector3.Up);
+                Geom[geomOffset++] = new TerrainVertex(tr, rightCol.ToVector4(), new Vector2(tr.Z, tr.X) * texScale, 0, n1);
+                Geom[geomOffset++] = new TerrainVertex(br, rightCol.ToVector4(), new Vector2(br.Z, br.X) * texScale, 0, n1);
+                Geom[geomOffset++] = new TerrainVertex(m_br, rightCol.ToVector4(), new Vector2(m_br.Z, m_br.X) * texScale, 0, n1m);
+                Geom[geomOffset++] = new TerrainVertex(m_tr, rightCol.ToVector4(), new Vector2(m_tr.Z, m_tr.X) * texScale, 0, n1m);
 
-                Geom[geomOffset++] = new TerrainVertex(tr, rightCol.ToVector4() * darken, new Vector2(tr.Z, tr.X) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(br, rightCol.ToVector4() * darken, new Vector2(br.Z, br.X) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(m_br, rightCol.ToVector4(), new Vector2(m_br.Z, m_br.X) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(m_tr, rightCol.ToVector4(), new Vector2(m_tr.Z, m_tr.X) * texScale, 0);
+                n1 = -Vector3.Normalize(Vector3.Cross(br - bl, bl - m_bl));
+                n1m = Vector3.Normalize(n1 + Vector3.Up);
+                Geom[geomOffset++] = new TerrainVertex(br, btmCol.ToVector4(), new Vector2(br.X, br.Z) * texScale, 0, n1);
+                Geom[geomOffset++] = new TerrainVertex(bl, btmCol.ToVector4(), new Vector2(bl.X, bl.Z) * texScale, 0, n1);
+                Geom[geomOffset++] = new TerrainVertex(m_bl, btmCol.ToVector4(), new Vector2(m_bl.X, m_bl.Z) * texScale, 0, n1m);
+                Geom[geomOffset++] = new TerrainVertex(m_br, btmCol.ToVector4(), new Vector2(m_br.X, m_br.Z) * texScale, 0, n1m);
 
-                Geom[geomOffset++] = new TerrainVertex(br, btmCol.ToVector4() * darken, new Vector2(br.X, br.Z) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(bl, btmCol.ToVector4() * darken, new Vector2(bl.X, bl.Z) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(m_bl, btmCol.ToVector4(), new Vector2(m_bl.X, m_bl.Z) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(m_br, btmCol.ToVector4(), new Vector2(m_br.X, m_br.Z) * texScale, 0);
-
-                Geom[geomOffset++] = new TerrainVertex(bl, leftCol.ToVector4() * darken, new Vector2(bl.Z, bl.X * -1) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(tl, leftCol.ToVector4() * darken, new Vector2(tl.Z, tl.X * -1) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(m_tl, leftCol.ToVector4(), new Vector2(m_tl.Z, m_tl.X * -1) * texScale, 0);
-                Geom[geomOffset++] = new TerrainVertex(m_bl, leftCol.ToVector4(), new Vector2(m_bl.Z, m_bl.X * -1) * texScale, 0);
+                n1 = -Vector3.Normalize(Vector3.Cross(bl - tl, tl - m_tl));
+                n1m = Vector3.Normalize(n1 + Vector3.Up);
+                Geom[geomOffset++] = new TerrainVertex(bl, leftCol.ToVector4(), new Vector2(bl.Z, bl.X * -1) * texScale, 0, n1);
+                Geom[geomOffset++] = new TerrainVertex(tl, leftCol.ToVector4(), new Vector2(tl.Z, tl.X * -1) * texScale, 0, n1);
+                Geom[geomOffset++] = new TerrainVertex(m_tl, leftCol.ToVector4(), new Vector2(m_tl.Z, m_tl.X * -1) * texScale, 0, n1m);
+                Geom[geomOffset++] = new TerrainVertex(m_bl, leftCol.ToVector4(), new Vector2(m_bl.Z, m_bl.X * -1) * texScale, 0, n1m);
             }
 
             var result = new RoofDrawGroup();
@@ -498,11 +506,9 @@ namespace FSO.LotView.Components
                         device.Indices = dg.IndexBuffer;
 
                         Effect.CurrentTechnique = Effect.Techniques["DrawBase"];
-                        foreach (var pass in Effect.CurrentTechnique.Passes)
-                        {
-                            pass.Apply();
-                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.NumPrimitives);
-                        }
+                        var pass = Effect.CurrentTechnique.Passes[Common.FSOEnvironment.Enable3D?2:WorldConfig.Current.PassOffset];
+                        pass.Apply();
+                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.NumPrimitives);
                     });
                 }
             }

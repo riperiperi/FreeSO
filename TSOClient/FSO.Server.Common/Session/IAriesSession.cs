@@ -10,6 +10,7 @@ namespace FSO.Server.Framework.Aries
     public interface IAriesSession : ISocketSession
     {
         bool IsAuthenticated { get; }
+        uint LastRecv { get; set; }
         
         void Write(params object[] messages);
         void Close();

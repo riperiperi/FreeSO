@@ -69,7 +69,9 @@ namespace FSO.SimAntics.Model
                 if (vm.TSOState.PropertyCategory == 4 && type > 0) rate = (rate * 3) / 2; //1.5x gain multiplier on services lots
                 if (VMMotive.Comfort == type) return rate;
                 var ind = Array.IndexOf(VMAvatarMotiveDecay.DecrementMotives, type);
-                string category = VMAvatarMotiveDecay.CategoryNames[vm.TSOState.PropertyCategory];
+                var cat = vm.TSOState.PropertyCategory;
+                if (cat == 255) cat = 0;
+                string category = VMAvatarMotiveDecay.CategoryNames[cat];
                 var weight = ToFixed1000(LotMotives.Value.GetNum(category + "_" + VMAvatarMotiveDecay.LotMotiveNames[ind] + "Weight"));
                 return (rate * 1000) / weight;
             }
