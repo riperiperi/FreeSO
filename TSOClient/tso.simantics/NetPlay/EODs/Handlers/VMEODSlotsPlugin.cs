@@ -64,14 +64,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             PlaintextHandlers["slots_deposit"] = DepositHandler;
             SimanticsHandlers[(short)VMOEDSlotsObjectEvents.GameOver] = GameOverHandler;
             SimanticsHandlers[(short)VMOEDSlotsObjectEvents.InsufficientFunds] = GameOverHandler;
-            SimanticsHandlers[1] = UnknownEventHandler;
-            SimanticsHandlers[2] = UnknownEventHandler;
-            SimanticsHandlers[3] = UnknownEventHandler;
-            SimanticsHandlers[7] = UnknownEventHandler;
-        }
-        private void UnknownEventHandler(short eventID, VMEODClient player)
-        {
-            //Console.WriteLine("I received this event and don't know what to do: " + eventID);
         }
         public override void OnConnection(VMEODClient client)
         {
@@ -154,7 +146,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 }
                 else
                 {
-                    //Console.WriteLine("There was an error trying to get this slot machine's balance.");
                     MachineBalance = -1;
                 }
             });
@@ -222,12 +213,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             {
                 failureReason = VMEODSlotsInputErrorTypes.Invalid.ToString();
             }
-            bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == UserClient.Avatar.PersistID);
+            bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
             // if the client is the owner of the object AND there were no failures detected
             if ((isOwner) && (failureReason.Length == 0))
             {
-
-                // atempt to credit the owner by debiting the machine
+                // attempt to credit the owner by debiting the machine
                 var VM = client.vm;
                 VM.GlobalLink.PerformTransaction(VM, false, Server.Object.PersistID, client.Avatar.PersistID, withdrawAmount,
 
@@ -247,13 +237,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     if (success)
                     {
                         MachineBalance = (int)(budget1);
-                        client.Send("slots_resume_manage", budget1 + "");
+                        client.Send("slots_resume_manage", MachineBalance + "");
                     }
                     else
-                    {
-                        //Console.WriteLine("VMEODSlotsPlugin.WithdrawHandler: There was an error trying to withdraw money to the owner!");
                         client.Send("slots_withdraw_fail", VMEODSlotsInputErrorTypes.Unknown.ToString());
-                    }
                 });
             }
             else // otherwise, send the failureReason
@@ -287,11 +274,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             {
                 failureReason = VMEODSlotsInputErrorTypes.Invalid.ToString();
             }
-            bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == UserClient.Avatar.PersistID);
+            bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
             // if the client is the owner of the object AND there were no failures detected
             if ((isOwner) && (failureReason.Length == 0))
             {
-                // atempt to credit the machine by debiting the owner
+                // attempt to credit the machine by debiting the owner
                 var VM = client.vm;
                 VM.GlobalLink.PerformTransaction(VM, false, client.Avatar.PersistID, Server.Object.PersistID, depositAmount,
 
@@ -311,7 +298,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     if (success)
                     {
                         MachineBalance = (int)(budget2);
-                        client.Send("slots_resume_manage", budget2 + "");
+                        client.Send("slots_resume_manage", MachineBalance + "");
                     }
                     else
                     {
@@ -535,7 +522,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
                     else
                     {
-                        //Console.WriteLine("VMEODSlotsPlugin.WheelsStoppedHandler: There was an error while paying the player the winnings.");
                         CurrentWinnings = 0; // winning payout cannot be duplicated
                     }
                 });
@@ -648,10 +634,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             for (s = 0; s < TotalSixthStops; s++)
             {
                 SlotsStops[index++] = VMEODSlotsStops.Sixth;
-            }
-            if (index != TotalStops)
-            {
-                //Console.WriteLine("VMEODSlotsPlugin.CalculateWheelStops: There was an error in creating the stops Array. The math is wrong.");
             }
         }
     }

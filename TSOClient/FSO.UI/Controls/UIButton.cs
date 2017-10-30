@@ -266,6 +266,7 @@ namespace FSO.Client.UI.Controls
 
         public event ButtonClickDelegate OnButtonClick;
         public event ButtonClickDelegate OnButtonHover;
+        public event ButtonClickDelegate OnButtonDown;
 
         public bool Highlight
         {
@@ -351,6 +352,8 @@ namespace FSO.Client.UI.Controls
                 case UIMouseEventType.MouseDown:
                     m_isDown = true;
                     CurrentFrame = 1;
+                    if (OnButtonDown != null)
+                        OnButtonDown(this);
                     break;
 
                 case UIMouseEventType.MouseUp:

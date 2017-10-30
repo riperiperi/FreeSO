@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using FSO.Common.Utils;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Framework.Parser;
 using FSO.Client.UI.Model;
@@ -22,6 +23,7 @@ namespace FSO.Client.UI.Controls
         private Rectangle SpecialBounds;
         private float m_Width;
         private float m_Height;
+        private bool m_TextureNeedsDisposal = false;
 
         public UISlotsImage(Texture2D texture)
         {
@@ -31,7 +33,22 @@ namespace FSO.Client.UI.Controls
         public Texture2D Texture
         {
             get { return m_Texture; }
-            set { m_Texture = value; }
+            set { m_Texture = value;
+                if (Width == 0)
+                {
+                    m_Width = m_Texture.Width;
+                }
+                if (Height == 0)
+                {
+                    m_Height = m_Texture.Height;
+                }
+            }
+        }
+
+        public bool TextureNeedsDisposal
+        {
+            get { return m_TextureNeedsDisposal; }
+            set { m_TextureNeedsDisposal = value; }
         }
 
         public float Width
@@ -84,6 +101,13 @@ namespace FSO.Client.UI.Controls
             TripleDrawMargins.CalculateOrigins(repeatX, repeatY);
             return this;
         }
+        public override void Removed()
+        {
+            if (m_TextureNeedsDisposal)
+                m_Texture.Dispose();
+            base.Removed();
+        }
+
         public override Rectangle GetBounds()
         {
             return new Rectangle(0, 0, (int)m_Width, (int)m_Height);
@@ -93,7 +117,7 @@ namespace FSO.Client.UI.Controls
         {
             m_Width = width;
             m_Height = height;
-            DrawType = UISlotsImageDrawTypes.Single;
+            DrawType = UISlotsImageDrawTypes.Special;
             SpecialBounds = new Rectangle(x, y, (int)m_Width, (int)m_Height);
         }
         public override void Draw(UISpriteBatch SBatch)
@@ -120,12 +144,56 @@ namespace FSO.Client.UI.Controls
                         DrawLocalTexture(SBatch, m_Texture, TripleDrawMargins.ThirdDrawSource, TripleDrawMargins.ThirdTarget);
                         break;
                     }
-                default:
+                case UISlotsImageDrawTypes.Special:
                     {
                         DrawLocalTexture(SBatch, m_Texture, SpecialBounds, Vector2.Zero);
                         break;
                     }
+                default:
+                    {
+                        if (m_Texture == null) { return; }
+
+                        if (m_Width != 0 && m_Height != 0)
+                        {
+                            DrawLocalTexture(SBatch, m_Texture, null, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height));
+                        }
+                        else
+                        {
+                            DrawLocalTexture(SBatch, m_Texture, Vector2.Zero);
+                        }
+                        break;
+                    }
             }
+        }
+
+        public Texture2D ApplyCircleMask(Texture2D originalTexture, int radius, Vector2 aCenter)
+        {
+            Texture2D textureCopy = TextureUtils.Copy(originalTexture.GraphicsDevice, originalTexture);
+
+            Color[] aColors = new Color[textureCopy.Height * textureCopy.Width];
+            textureCopy.GetData<Color>(aColors);
+
+            var i = 0;
+            for (int y = 0; y < textureCopy.Height; y++)
+            {
+                for (int x = 0; x < textureCopy.Width; x++)
+                {
+                    Vector2 aDistance = new Vector2(x - aCenter.X, y - aCenter.Y);
+
+                    if (aDistance.LengthSquared() > radius * radius)
+                    {
+                        aColors[i] = Color.Transparent;
+                    }
+                    else if (x == 20 && (y == 9 || y == 10 || y == 1))
+                    {
+                        // ugly shadow hardcode fix
+                        aColors[i] = Color.Transparent;
+                    }
+                    i++;
+                }
+            }
+            textureCopy.SetData<Color>(aColors);
+            return textureCopy;
         }
     }
     class DoubleDrawMargins
@@ -220,8 +288,28 @@ namespace FSO.Client.UI.Controls
     }
     public enum UISlotsImageDrawTypes : byte
     {
-        Single = 0,
+        Special = 0,
         Double = 1,
         Triple = 2
+    }
+
+    public class UIHighlightSprite : UIElement
+    {
+        private int m_Width;
+        private int m_Height;
+
+        public UIHighlightSprite(int width, int height)
+        {
+            m_Width = width;
+            m_Height = height;
+        }
+        public override void Draw(UISpriteBatch spriteBatch)
+        {
+            if (Visible)
+                DrawLocalTexture(spriteBatch, TextureGenerator.GetPxWhite(spriteBatch.GraphicsDevice), null, new Vector2(), new Vector2(m_Width, m_Height), new Color(Color.Black, 0.5f));
+            //spriteBatch.Draw(TextureGenerator.GetPxWhite(spriteBatch.GraphicsDevice), new Vector2(0, 0), null, new Color(Color.Black, 0.3f), 0, new Vector2(0,0),
+                //new Vector2(m_Width, m_Height), SpriteEffects.None, 0);
+        }
+
     }
 }
