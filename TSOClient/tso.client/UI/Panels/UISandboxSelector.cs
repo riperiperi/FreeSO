@@ -156,7 +156,19 @@ namespace FSO.Client.UI.Panels
                 string filename = Path.GetFileName(entry);
                 xmlHouses.Add(new UIXMLLotEntry { Filename = filename, Path = entry });
             }
+            
+            try
+            {
 
+                paths = Directory.GetFiles(Path.Combine(GlobalSettings.Default.TS1HybridPath, @"UserData/Houses/"), "House**.iff", SearchOption.AllDirectories);
+                for (int i = 0; i < paths.Length; i++)
+                {
+                    string entry = paths[i];
+                    string filename = Path.GetFileName(entry);
+                    xmlHouses.Add(new UIXMLLotEntry { Filename = filename, Path = entry });
+                }
+            }
+            catch { }
 
             try
             {
