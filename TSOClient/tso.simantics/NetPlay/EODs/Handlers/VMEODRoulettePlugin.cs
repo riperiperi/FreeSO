@@ -298,50 +298,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 var args = client.Invoker.Thread.TempRegisters;
                 MinBet = args[1];
                 MaxBet = args[0];
-                if (args[2] == 1) // owner, managing
-                {
-                    // is this really the owner?
-                    bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
-                    if (isOwner)
-                    {
-                        Owner = client;
-
-                        // get the amount of money in the object by sending a testOnly transaction for $1 from Maxis
-                        var VM = Owner.vm;
-
-                        VM.GlobalLink.PerformTransaction(VM, true, uint.MaxValue, Server.Object.PersistID, 1,
-
-                        (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
-                        {
-                            //TODO: Make this part of global link
-                            VM.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                            {
-                                Responded = true,
-                                Success = success,
-                                TransferAmount = transferAmount,
-                                UID1 = uid1,
-                                Budget1 = budget1,
-                                UID2 = uid2,
-                                Budget2 = budget2
-                            }));
-                            if (success)
-                            {
-                                TableBalance = (int)budget2;
-                                client.Send("roulette_manage", TableBalance + "%" + MinBet + "%" + MaxBet);
-                            }
-                        });
-                    }
-                }
-                /*else if (args[2] == 2) // croupier, NPC only
-                {
-                    // The cropuier's client is only used for animations. They literally have no other function.
-                    Croupier = client;
-                    if (Players.Count == 0)
-                        GotoState(VMEODRouletteGameStates.WaitingForPlayer);
-                    else
-                        GotoState(VMEODRouletteGameStates.BettingRound);
-                }*/
-                else // player
+                if (args[2] == 0)
                 {
                     var player = new RoulettePlayer(client);
                     player.OnPlayerBetChange += BroadcastBets;
@@ -374,6 +331,49 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                 GotoState(VMEODRouletteGameStates.BettingRound);
                         }
                     });
+                }
+                else // croupier or owner
+                {
+                    // is this the owner?
+                    bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
+                    if (isOwner)
+                    {
+                        Owner = client;
+
+                        // get the amount of money in the object by sending a testOnly transaction for $1 from Maxis
+                        var VM = Owner.vm;
+
+                        VM.GlobalLink.PerformTransaction(VM, true, uint.MaxValue, Server.Object.PersistID, 1,
+
+                        (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
+                        {
+                            //TODO: Make this part of global link
+                            VM.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
+                            {
+                                Responded = true,
+                                Success = success,
+                                TransferAmount = transferAmount,
+                                UID1 = uid1,
+                                Budget1 = budget1,
+                                UID2 = uid2,
+                                Budget2 = budget2
+                            }));
+                            if (success)
+                            {
+                                TableBalance = (int)budget2;
+                                client.Send("roulette_manage", TableBalance + "%" + MinBet + "%" + MaxBet);
+                            }
+                        });
+                    }
+                    else // not the owner, just the croupier
+                    {
+                        // The cropuier's client is only used for animations. They literally have no other function.
+                        Croupier = client;
+                        if (Players.Count == 0)
+                            GotoState(VMEODRouletteGameStates.WaitingForPlayer);
+                        else
+                            GotoState(VMEODRouletteGameStates.BettingRound);
+                    }
                 }
             }
             else
@@ -580,6 +580,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         // valid new minimum bet
                         MinBet = newMinBet;
                         Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.NewMinimumBet, newMinBet));
+                        client.Send("roulette_min_bet_success", "" + newMinBet);
                         return;
                     }
                 }
@@ -621,6 +622,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         // valid new max bet
                         MaxBet = newMaxBet;
                         Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.NewMaximumBet, newMaxBet));
+                        client.Send("roulette_max_bet_success", "" + newMaxBet);
                         return;
                     }
                 }

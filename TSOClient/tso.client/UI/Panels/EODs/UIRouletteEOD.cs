@@ -115,6 +115,8 @@ namespace FSO.Client.UI.Panels.EODs
             PlaintextHandlers["roulette_withdraw_fail"] = InputFailHandler;
             PlaintextHandlers["roulette_x_bet_fail"] = InputFailHandler; // max bet fail
             PlaintextHandlers["roulette_n_bet_fail"] = InputFailHandler; // min bet fail
+            PlaintextHandlers["roulette_max_bet_success"] = ResumeFromBetAmountHandler;
+            PlaintextHandlers["roulette_min_bet_success"] = ResumeFromBetAmountHandler;
             PlaintextHandlers["roulette_resume_manage"] = ResumeManageHandler;
             PlaintextHandlers["roulette_manage"] = ShowManageUIHandler;
         }
@@ -307,6 +309,13 @@ namespace FSO.Client.UI.Panels.EODs
             if (OwnerPanel != null)
             {
                 OwnerPanel.ResumeFromMachineBalance(evt, message);
+            }
+        }
+        private void ResumeFromBetAmountHandler(string evt, string minOrMaxBetString)
+        {
+            if (OwnerPanel != null)
+            {
+                OwnerPanel.ResumeFromBetAmount(evt.Remove(0, 9), minOrMaxBetString); // truncate "roulette_"
             }
         }
         private void DepositFailHandler(string evt, string message)

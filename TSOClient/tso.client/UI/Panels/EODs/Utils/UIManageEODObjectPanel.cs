@@ -118,10 +118,10 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 else
                     message = "An unknown error occured.";
             }
-            else if (failureReason.Equals(VMEODRouletteInputErrorTypes.BetTooHighForBalance))
+            else if (failureReason.Equals(VMEODRouletteInputErrorTypes.BetTooHighForBalance.ToString()))
                 message = "You do not have enough money in this object to cover that bet amount." + System.Environment.NewLine
                     + System.Environment.NewLine + "You must stock AT LEAST 140 times the maximum bet amount.";
-            else if (failureReason.Equals(VMEODRouletteInputErrorTypes.BetTooLow))
+            else if (failureReason.Equals(VMEODRouletteInputErrorTypes.BetTooLow.ToString()))
             {
                 if (transactionType.Equals("n"))
                     message = "The minimum bet cannot be lower than $1.";
@@ -130,7 +130,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 else
                     message = "An unknown error occured.";
             }
-            else if (failureReason.Equals(VMEODRouletteInputErrorTypes.BetTooHigh))
+            else if (failureReason.Equals(VMEODRouletteInputErrorTypes.BetTooHigh.ToString()))
             {
                 if (transactionType.Equals("n"))
                     message = "The minimum bet cannot be higher than the maximum bet.";
@@ -626,8 +626,6 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                         {
                             eventName = "new_minimum";
                             eventMessage = "" + amount;
-                            ObjectMinimumPlayerBet = amount;
-                            MinimumBetText.CurrentText = "$" + ObjectMinimumPlayerBet;
                         }
                     }
                 }
@@ -652,8 +650,6 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                         {
                             eventName = "new_maximum";
                             eventMessage = "" + amount;
-                            ObjectMaximumPlayerBet = amount;
-                            MaximumBetText.CurrentText = "$" + ObjectMaximumPlayerBet;
                         }
                     }
                 }
