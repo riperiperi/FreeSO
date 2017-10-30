@@ -784,6 +784,12 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         GameState = state;
                         // send the OBJ event to close the table. the object prims will boot the players
                         Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.CroupierLost));
+                        foreach (var player in Players)
+                        {
+                            if (player.Client != null)
+                                Server.Disconnect(player.Client);
+                        }
+                        Players = new List<RoulettePlayer>();
                         break;
                     }
                 case VMEODRouletteGameStates.Intermission:
@@ -911,9 +917,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private void CloseTable()
         {
             // something went wrong, need to pay winners immediately
-            /*if (GameState.Equals(VMEODRouletteGameStates.Spinning))
+            if (GameState.Equals(VMEODRouletteGameStates.Spinning))
                 SettleAccounts(true);
-            GotoState(VMEODRouletteGameStates.Closed);*/
+            GotoState(VMEODRouletteGameStates.Closed);
         }
 
         private void SettleAccounts(bool skipAnimations)
