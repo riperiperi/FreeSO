@@ -1,6 +1,7 @@
 ﻿using FSO.Client.UI.Panels;
 using FSO.Common.DataService;
 using FSO.Common.Utils;
+using FSO.Files.Formats.tsodata;
 using FSO.Server.DataService.Model;
 using FSO.Server.Protocol.Electron.Packets;
 using System;
@@ -29,8 +30,9 @@ namespace FSO.Client.Controllers
         public void Init(Message message, MessagingController parent){
             Message = message;
             Parent = parent;
-            View.SetType(message.Type);
             View.User.Value = message.User;
+            View.SetType(message.Type);
+
         }
 
         public void SendIM(string body){
@@ -61,6 +63,36 @@ namespace FSO.Client.Controllers
                 Type = InstantMessageType.MESSAGE,
                 AckID = Guid.NewGuid().ToString()
             });
+        }
+
+        public void SendLetter(MessageItem letter)
+        {
+            var cref = Network.MyCharacterRef;
+
+            if (View.MyUser.Value == null)
+            {
+                View.MyUser.Value = cref;
+                DataService.Request(MaskedStruct.Messaging_Message_Avatar, Network.MyCharacter).ContinueWith(x =>
+                {
+                    GameThread.NextUpdate(y =>
+                    {
+                        SendLetter(letter);
+                    });
+                });
+                return;
+            }
+
+            letter.SenderID = cref.Id;
+            if (letter.SenderName == null) letter.SenderName = cref.Name;
+            letter.TargetID = Message.User.Id;
+
+            Network.CityClient.Write(new MailRequest
+            {
+                Type = MailRequestType.SEND,
+                Item = letter
+            });
+
+            Close();
         }
 
         public void Close(){

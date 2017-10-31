@@ -508,7 +508,7 @@ namespace FSO.Client.UI.Controls
 
                     if (columnValue is string)
                     {
-                        DrawLocalString(batch, (string)columnValue, new Vector2(columnX, rowY), style, columnBounds, columnSpec.Alignment);
+                        DrawLocalString(batch, style.TruncateToWidth((string)columnValue, columnSpec.Width), new Vector2(columnX, rowY), style, columnBounds, columnSpec.Alignment);
                     }
                     else if (columnValue is Texture2D)
                     {

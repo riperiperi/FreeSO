@@ -214,6 +214,7 @@ namespace FSO.Server.Framework.Aries
                 }
             }
 
+            ariesSession.LastRecv = Epoch.Now;
             RouteMessage(ariesSession, message);
         }
 
@@ -283,13 +284,10 @@ namespace FSO.Server.Framework.Aries
         {
             Acceptor.Dispose();
             PlainAcceptor.Dispose();
-            var sessions = _Sessions.RawSessions;
-            lock (sessions)
-            {
-                var sessionClone = new List<IAriesSession>(sessions);
-                foreach (var session in sessionClone)
-                    session.Close();
-            }
+
+            var sessionClone = _Sessions.Clone();
+            foreach (var session in sessionClone)
+                session.Close();
 
             MarkHostDown();
         }

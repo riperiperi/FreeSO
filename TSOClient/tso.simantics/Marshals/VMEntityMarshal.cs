@@ -54,7 +54,7 @@ namespace FSO.SimAntics.Marshals
             ObjectID = reader.ReadInt16();
             PersistID = reader.ReadUInt32();
 
-            if (this is VMGameObjectMarshal) PlatformState = new VMTSOObjectState();
+            if (this is VMGameObjectMarshal) PlatformState = new VMTSOObjectState(Version);
             else PlatformState = new VMTSOAvatarState(Version);
 
             PlatformState.Deserialize(reader);

@@ -8,6 +8,7 @@ float4 AmbientLight;
 float4 OutsideLight;
 float4 OutsideDark;
 float4 MaxLight;
+float2 MinAvg;
 float3 WorldToLightFactor;
 float2 LightOffset;
 float2 MapLayout;
@@ -69,14 +70,30 @@ struct VertexOut
 
 
 float4 lightColor(float4 intensities) {
+	return float4(intensities.rgb, 1);
+}
+
+float4 lightColorFloor(float4 intensities) {
 	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-	float lightFactor = (intensities.x == 0) ? 0 : (intensities.x * (intensities.z / intensities.x));
-	float outlightFactor = (intensities.y == 0) ? 0 : (intensities.y * (intensities.w / intensities.y));
 
-	float4 col = lerp(lerp(OutsideDark, OutsideLight, outlightFactor), MaxLight, lightFactor);
-	//float4 col = lerp(lerp(float4(0.5,0.5,0.5,1), float4(1,1,1,1), outlightFactor), float4(1, 1, 1, 1), lightFactor);
+	float avg = (intensities.r + intensities.g + intensities.b) / 3;
+	//floor shadow is how much less than average the alpha component is
 
-	return col;
+	float fshad = intensities.a / avg;
+
+	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
+}
+
+float4 lightColorI(float4 intensities, float i) {
+	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
+
+	float avg = (intensities.r + intensities.g + intensities.b) / 3;
+	//floor shadow is how much less than average the alpha component is
+
+	float fshad = intensities.a / avg;
+	fshad = lerp(fshad, 1, i);
+
+	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
 }
 
 float4 lightProcess(float4 inPosition) {
@@ -87,7 +104,6 @@ float4 lightProcess(float4 inPosition) {
 	inPosition.xz += 1 / MapLayout * floor(float2(Level % MapLayout.x, Level / MapLayout.x));
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
-	lTex = float4(lTex.x, lTex.y, lTex.x, lTex.y); //lerp(lTex, float4(lTex.x, lTex.y, lTex.x, lTex.y), clamp((inPosition.y % 1) * 3, 0, 1));
 	return lightColor(lTex);
 }
 
@@ -101,10 +117,9 @@ float4 lightInterp(float4 inPosition) {
 	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
-	lTex.xz = lerp(lTex.xz, tex2D(advLightSampler, iPA).xz, max(0, (inPosition.y % 1) * 2 - 1));
+	lTex.rgb = lerp(lTex.rgb, tex2D(advLightSampler, iPA).rgb, max(0, (inPosition.y % 1) * 2 - 1));
 
-	lTex = lerp(lTex, float4(lTex.x, lTex.y, lTex.x, lTex.y), clamp((inPosition.y % 1) * 3, 0, 1));
-	return lightColor(lTex);
+	return lightColorI(lTex, clamp((inPosition.y % 1) * 3, 0, 1));
 }
 
 

@@ -187,7 +187,7 @@ namespace FSO.Client.UI.Controls
         {
             get
             {
-                if (m_SelectedIndex == -1)
+                if (m_SelectedIndex == -1 || m_SelectedIndex >= m_DataProvider.Count)
                 {
                     return null;
                 }

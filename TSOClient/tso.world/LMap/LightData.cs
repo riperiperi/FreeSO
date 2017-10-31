@@ -14,6 +14,7 @@ namespace FSO.LotView.LMap
         public LightType LightType; //indoors (point) or outdoors (directional)
         public bool OutdoorsColor; //indoors colour is always white. outdoors is whatever is outdoors.
         public bool DrawingWalls; //currently unused
+        public Color LightColor;
         public float FalloffMultiplier = 1f; //multiplier for shadow length, for outdoors type lights
         public float LightIntensity = 1f; //multiplier for light strength
         public int WindowRoom = -1; //defines what room this light sources its intensity from. used for window portals.
@@ -29,7 +30,7 @@ namespace FSO.LotView.LMap
 
         public LightData() { }
 
-        public LightData(Vector2 pos, bool outdoors, int size, ushort room, sbyte level)
+        public LightData(Vector2 pos, bool outdoors, int size, ushort room, sbyte level, Color color)
         {
             LightPos = pos;
             LightType = LightType.ROOM;
@@ -39,6 +40,7 @@ namespace FSO.LotView.LMap
             LightSize = size;
             Room = room;
             Level = level;
+            LightColor = color;
         }
 
         public void UpdateBounds()

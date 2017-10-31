@@ -288,7 +288,7 @@ namespace FSO.LotView
             Blueprint.Cutaway = new bool[Blueprint.Cutaway.Length];
 
             var _2d = state._2D;
-            state.ClearLighting(false);
+            state.ClearLighting(true);
             Promise<Texture2D> bufferTexture = null;
             var lastLight = state.OutsideColor;
             state.OutsideColor = Color.White;
@@ -301,7 +301,7 @@ namespace FSO.LotView
                     _2d.Pause();
                     _2d.Resume(); 
                     Blueprint.FloorGeom.SliceReset(gd, new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13));
-                    Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
+                    //Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
                     Blueprint.Terrain.Draw(gd, state);
                     Blueprint.WallComp.Draw(gd, state);
                     _2d.Pause();
@@ -416,7 +416,7 @@ namespace FSO.LotView
                         Blueprint.GenerateRoomLights();
                         state.OutsideColor = Blueprint.RoomColors[1];
                         state._3D.RoomLights = Blueprint.RoomColors;
-
+                        state.OutsidePx.SetData(new Color[] { new Color(Blueprint.OutsideColor, (Blueprint.OutsideColor.R + Blueprint.OutsideColor.G + Blueprint.OutsideColor.B) / (255 * 3f)) });
                         if (state.AmbientLight != null)
                         {
                             state.AmbientLight.SetData(Blueprint.RoomColors);
@@ -430,15 +430,16 @@ namespace FSO.LotView
                         redrawWall = true;
                         redrawStaticObjects = true;
 
-                        state.Light?.InvalidateOutdoors();
                         Blueprint.GenerateRoomLights();
                         state.OutsideColor = Blueprint.RoomColors[1];
                         state._3D.RoomLights = Blueprint.RoomColors;
-
+                        state.OutsidePx.SetData(new Color[] { new Color(Blueprint.OutsideColor, (Blueprint.OutsideColor.R + Blueprint.OutsideColor.G + Blueprint.OutsideColor.B) / (255 * 3f)) });
                         if (state.AmbientLight != null)
                         {
                             state.AmbientLight.SetData(Blueprint.RoomColors);
                         }
+                        state.Light?.InvalidateOutdoors();
+
                         TicksSinceLight = 0;
                         break;
                     case BlueprintDamageType.OBJECT_MOVE:

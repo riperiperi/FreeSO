@@ -36,9 +36,11 @@ namespace FSO.IDE.Common
                         ((VMAvatar)TargetTile).Animations.Add(astate);
                     }
                 }
+                
             }
 
             state.SharedData["ExternalDraw"] = true;
+            Invalidate();
         }
 
         public void SetAnimation(string anim)

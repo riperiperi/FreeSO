@@ -514,7 +514,7 @@ namespace FSO.Client.UI.Screens
                 BlueprintReset(lotName);
 
                 vm.TSOState.PropertyCategory = 255;
-                vm.Context.Clock.Hours = 16;
+                vm.Context.Clock.Hours = 0;
                 vm.TSOState.Size = (10) | (3 << 8);
                 vm.Context.UpdateTSOBuildableArea();
                 var myClient = new VMNetClient

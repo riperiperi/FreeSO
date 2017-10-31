@@ -176,5 +176,14 @@
         "9e4dc7d8-06b7-4f2f-84a8-4da737072d55"
       ]
     },
+    {
+      "id": "780dd09f-325b-4b85-8117-6d089ba88b23",
+      "script": "changes/0017_inbox_events.sql",
+      "idempotent": false,
+      "requires": [
+        "9a48f9fc-5950-4348-9ccf-318a263be4eb",
+        "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
+      ]
+    },
   ]
 }

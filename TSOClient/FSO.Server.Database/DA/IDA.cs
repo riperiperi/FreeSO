@@ -4,7 +4,9 @@ using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Bans;
 using FSO.Server.Database.DA.Bonus;
 using FSO.Server.Database.DA.Bookmarks;
+using FSO.Server.Database.DA.DbEvents;
 using FSO.Server.Database.DA.Hosts;
+using FSO.Server.Database.DA.Inbox;
 using FSO.Server.Database.DA.LotAdmit;
 using FSO.Server.Database.DA.LotClaims;
 using FSO.Server.Database.DA.Lots;
@@ -46,6 +48,8 @@ namespace FSO.Server.Database.DA
         ILotVisitTotals LotVisitTotals { get; }
         ILotTop100 LotTop100 { get; }
         IBonus Bonus { get; }
+        IInbox Inbox { get; }
+        IEvents Events { get; }
 
         //System tables
         IHosts Hosts { get; }

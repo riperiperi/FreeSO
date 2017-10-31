@@ -52,6 +52,7 @@ namespace FSO.Client.UI.Panels
             BookmarkListSlider.AttachButtons(BookmarkListScrollUpButton, BookmarkScrollDownButton, 1);
             BookmarkListBox.AttachSlider(BookmarkListSlider);
             BookmarkListBox.OnDoubleClick += BookmarkListBox_OnDoubleClick;
+            BookmarkListBox.Columns[0].Width = (int)BookmarkListBox.Width;
             BookmarkListBoxColors = ui.Create<UIListBoxTextStyle>("BookmarkListBoxColors", BookmarkListBox.FontStyle);
             CloseButton.OnButtonClick += CloseButton_OnButtonClick;
             IgnoreTabButton.OnButtonClick += (btn) => { ChangeType(BookmarkType.IGNORE_AVATAR); };

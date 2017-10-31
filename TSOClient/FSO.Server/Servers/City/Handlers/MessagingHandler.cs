@@ -60,6 +60,7 @@ namespace FSO.Server.Servers.City.Handlers
                 //unknown error
             }
         }
+
         public void WriteFail(IVoltronSession session, InstantMessage message, InstantMessageFailureReason fail) {
             session.Write(new InstantMessage
             {

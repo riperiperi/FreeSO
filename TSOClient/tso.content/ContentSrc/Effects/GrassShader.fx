@@ -19,6 +19,7 @@ float4 TexMatrix;
 float4 OutsideLight;
 float4 OutsideDark;
 float4 MaxLight;
+float2 MinAvg;
 float3 WorldToLightFactor;
 float2 LightOffset;
 float2 MapLayout;
@@ -34,6 +35,13 @@ bool UseTexture;
 bool IgnoreColor;
 texture BaseTex;
 sampler TexSampler = sampler_state {
+	texture = <BaseTex>;
+	AddressU = Wrap;
+	AddressV = Wrap;
+	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
+};
+
+sampler AnisoTexSampler = sampler_state {
 	texture = <BaseTex>;
 	AddressU = Wrap;
 	AddressV = Wrap;
@@ -150,16 +158,18 @@ float unpackDepth(float4 d) {
 }
 
 float4 lightColor(float4 intensities) {
+	return float4(intensities.rgb, 1);
+}
+
+float4 lightColorFloor(float4 intensities) {
 	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-	float lightFactor = min(intensities.x, intensities.z);
-	float outlightFactor = min(intensities.y, intensities.w);
-	//float lightFactor = (intensities.x == 0) ? 0 : (intensities.x * (intensities.z / intensities.x));
-	//float outlightFactor = (intensities.y == 0) ? 0 : (intensities.y * (intensities.w / intensities.y));
 
-	float4 col = lerp(lerp(OutsideDark, OutsideLight, outlightFactor), MaxLight, lightFactor);
-	//float4 col = lerp(lerp(float4(0.5,0.5,0.5,1), float4(1,1,1,1), outlightFactor), float4(1, 1, 1, 1), lightFactor);
+	float avg = (intensities.r + intensities.g + intensities.b) / 3;
+	//floor shadow is how much less than average the alpha component is
 
-	return col;
+	float fshad = intensities.a / avg;
+
+	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
 }
 
 float4 lightProcess(float4 inPosition) {
@@ -170,7 +180,7 @@ float4 lightProcess(float4 inPosition) {
 	inPosition.xz += 1 / MapLayout * floor(float2(Level % MapLayout.x, Level / MapLayout.x));
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
-	return lightColor(lTex);
+	return lightColorFloor(lTex);
 }
 
 float2 RoomIDToUV(float room) {
@@ -381,7 +391,7 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 	color = lightProcess(input.ModelPos) * LightDot(input.Normal);//*DiffuseColor;
 	if (IgnoreColor == false) color *= input.Color;
 	if (UseTexture == true) {
-		color *= tex2Dgrad(TexSampler, LoopUV(input.GrassInfo.yz), ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz)); //tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
+		color *= tex2Dgrad(AnisoTexSampler, LoopUV(input.GrassInfo.yz), ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz)); //tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
 		if (color.a < 0.5) discard;
 	}
 	else {

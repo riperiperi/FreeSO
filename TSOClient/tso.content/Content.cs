@@ -239,6 +239,8 @@ namespace FSO.Content
                 Neighborhood = new TS1NeighborhoodProvider(this);
             } else
             {
+                AvatarPurchasables.Init();
+                AvatarCollections.Init();
                 ((AvatarTextureProvider)AvatarTextures)?.Init();
                 ((AvatarAnimationProvider)AvatarAnimations).Init();
                 ((AvatarSkeletonProvider)AvatarSkeletons).Init();
@@ -250,8 +252,6 @@ namespace FSO.Content
 
             LoadProgress = ContentLoadingProgress.InitAudio;
             Audio.Init();
-            AvatarPurchasables.Init();
-            AvatarCollections.Init();
             Ini.Init();
 
             DataDefinition = new TSODataDefinition();

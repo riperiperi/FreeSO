@@ -1,6 +1,7 @@
 ﻿using FSO.Common.Content;
 using FSO.Content.Model;
 using FSO.Files;
+using FSO.Vitaboy;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -72,6 +73,37 @@ namespace FSO.Content
                 }else{
                     continue;
                 }
+
+                if (!Racks.ContainsKey(outfit.RackType))
+                {
+                    Racks.Add(outfit.RackType, new RackOutfits()
+                    {
+                        Outfits = new List<RackOutfit>(),
+                        RackType = outfit.RackType
+                    });
+                }
+
+                Racks[outfit.RackType].Outfits.Add(outfit);
+            }
+
+            //load CAS outfits too
+            AddCollection(Content.AvatarCollections.Get("ea_male.col"), RackOutfitGender.Male, RackType.CAS);
+            AddCollection(Content.AvatarCollections.Get("ea_female.col"), RackOutfitGender.Female, RackType.CAS);
+        }
+
+        public void AddCollection(Collection col, RackOutfitGender gender, RackType type)
+        {
+            foreach (var item in col)
+            {
+                var purchasable = Content.AvatarPurchasables.Get(item.PurchasableOutfitId);
+                if (purchasable == null) continue;
+                var outfit = new RackOutfit()
+                {
+                    AssetID = purchasable.OutfitID,
+                    Gender = gender,
+                    RackType = type,
+                    Price = 1000
+                };
 
                 if (!Racks.ContainsKey(outfit.RackType))
                 {

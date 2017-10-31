@@ -134,7 +134,7 @@ namespace FSO.Client.UI.Screens
                     GlobalShowAlert(new UIAlertOptions() { Message = GameFacade.Strings.GetString("f105", "2") }, true);
                     var settings = GlobalSettings.Default;
                     settings.CompatState = 0;
-                    settings.Lighting = false;
+                    settings.LightingMode = 0;
                     settings.SurroundingLotMode = 0;
                     settings.CityShadows = false;
                     settings.AntiAlias = false;
@@ -142,11 +142,10 @@ namespace FSO.Client.UI.Screens
 
                     LotView.WorldConfig.Current = new LotView.WorldConfig()
                     {
-                        AdvancedLighting = settings.Lighting,
+                        LightingMode = settings.LightingMode,
                         SmoothZoom = settings.SmoothZoom,
                         SurroundingLots = settings.SurroundingLotMode,
                         AA = settings.AntiAlias,
-                        Shadow3D = settings.Shadows3D
                     };
                 });
             }

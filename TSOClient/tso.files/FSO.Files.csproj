@@ -112,6 +112,7 @@
     <Compile Include="Formats\IFF\IffRuntimeInfo.cs" />
     <Compile Include="Formats\IFF\PIFFRegistry.cs" />
     <Compile Include="Formats\PiffEncoder.cs" />
+    <Compile Include="Formats\tsodata\MessageItem.cs" />
     <Compile Include="HIT\Patch.cs" />
     <Compile Include="ImageLoader.cs" />
     <Compile Include="FAR1\FAR1Archive.cs" />

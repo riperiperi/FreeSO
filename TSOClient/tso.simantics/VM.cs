@@ -242,9 +242,9 @@ namespace FSO.SimAntics
         {
             if (SpeedMultiplier == 0) Fraction = 0;
             //fractional animation for avatars
-            foreach (var obj in Context.ObjectQueries.Avatars)
+            foreach (var obj in Entities)
             {
-                ((VMAvatar)obj).FractionalAnim(Fraction);
+                (obj as VMAvatar)?.FractionalAnim(Fraction);
             }
         }
 

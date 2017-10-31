@@ -220,6 +220,9 @@ namespace FSO.Client.UI.Panels
         public UILabel TerrainDetailLabel { get; set; }
         public UILabel Wall3DLabel { get; set; }
 
+        public UISlider LightingSlider;
+        private bool InternalChange;
+
         public UIGraphicOptions()
         {
             var script = this.RenderScript("graphicspanel.uis");
@@ -254,16 +257,48 @@ namespace FSO.Client.UI.Panels
             TerrainDetailHighButton.Tooltip = GameFacade.Strings.GetString("f103", "10");
 
             Wall3DButton = new UIButton(AntiAliasCheckButton.Texture);
-            Wall3DButton.Position = UIEffectsCheckButton.Position + new Microsoft.Xna.Framework.Vector2(110, 0);
+            Wall3DButton.Position = AntiAliasCheckButton.Position + new Microsoft.Xna.Framework.Vector2(110, 0);
             Wall3DButton.OnButtonClick += new ButtonClickDelegate(FlipSetting);
             Add(Wall3DButton);
             Wall3DLabel = new UILabel();
             Wall3DLabel.Caption = GameFacade.Strings.GetString("f103", (FSOEnvironment.Enable3D)?"12":"11");
             Wall3DLabel.CaptionStyle = UIEffectsLabel.CaptionStyle;
-            Wall3DLabel.Position = UIEffectsLabel.Position + new Microsoft.Xna.Framework.Vector2(110, 0);
+            Wall3DLabel.Position = AntiAliasCheckButton.Position + new Microsoft.Xna.Framework.Vector2(134, 0);
             Add(Wall3DLabel);
+            Wall3DButton.Visible = FSOEnvironment.Enable3D;
+            Wall3DLabel.Visible = FSOEnvironment.Enable3D;
+
+            //switch lighting and uieffects label. replace lighting check with a slider
+
+            var ltLoc = LightingLabel.Position;
+            LightingLabel.Position = UIEffectsLabel.Position;
+            UIEffectsLabel.Position = ltLoc;
+            ltLoc = LightingCheckButton.Position;
+            LightingCheckButton.Position = UIEffectsCheckButton.Position;
+            UIEffectsCheckButton.Position = ltLoc;
+            LightingCheckButton.Visible = false;
+
+            LightingSlider = new UISlider();
+            LightingSlider.Orientation = 0;
+            LightingSlider.Texture = GetTexture(0x42500000001);
+            LightingSlider.MinValue = 0f;
+            LightingSlider.MaxValue = 3f;
+            LightingSlider.AllowDecimals = false;
+            LightingSlider.Position = LightingCheckButton.Position + new Microsoft.Xna.Framework.Vector2(96, 4);
+            LightingSlider.SetSize(96f, 0f);
+            Add(LightingSlider);
+            LightingLabel.X -= 24;
 
             SettingsChanged();
+
+            LightingSlider.OnChange += (elem) =>
+            {
+                if (InternalChange) return;
+                var settings = GlobalSettings.Default;
+                settings.LightingMode = (int)LightingSlider.Value;
+                GlobalSettings.Default.Save();
+                SettingsChanged();
+            };
         }
 
         private void FlipSetting(UIElement button)
@@ -322,16 +357,19 @@ namespace FSO.Client.UI.Panels
             TerrainDetailMedButton.Selected = (settings.SurroundingLotMode == 1);
             TerrainDetailHighButton.Selected = (settings.SurroundingLotMode == 2);
 
+            InternalChange = true;
+            LightingSlider.Value = settings.LightingMode;
+            InternalChange = false;
+
             Wall3DButton.Selected = (FSOEnvironment.Enable3D)?settings.CitySkybox:settings.Shadows3D;
 
             var oldSurrounding = LotView.WorldConfig.Current.SurroundingLots;
             LotView.WorldConfig.Current = new LotView.WorldConfig()
             {
-                AdvancedLighting = settings.Lighting,
+                LightingMode = settings.LightingMode,
                 SmoothZoom = settings.SmoothZoom,
                 SurroundingLots = settings.SurroundingLotMode,
                 AA = settings.AntiAlias,
-                Shadow3D = settings.Shadows3D
             };
 
             var vm = ((IGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;

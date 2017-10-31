@@ -12,6 +12,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public int Hours;
         public int Minutes;
         public int Seconds;
+        public long UTCStart;
 
         public override bool Execute(VM vm)
         {
@@ -19,6 +20,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             clock.Hours = Hours;
             clock.Minutes = Minutes;
             clock.MinuteFractions = (Seconds * clock.TicksPerMinute) / 60;
+            clock.UTCStart = UTCStart;
             return true;
         }
 
@@ -33,6 +35,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             Hours = reader.ReadInt32();
             Minutes = reader.ReadInt32();
             Seconds = reader.ReadInt32();
+            UTCStart = reader.ReadInt32();
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -41,6 +44,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             writer.Write(Hours);
             writer.Write(Minutes);
             writer.Write(Seconds);
+            writer.Write(UTCStart);
         }
     }
 }

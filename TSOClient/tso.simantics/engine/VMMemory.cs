@@ -224,8 +224,24 @@ namespace FSO.SimAntics.Engine.Utils
                     break;
                 case VMVariableScope.TSOStandardTime: //44
                     //return GetTSOStandardTime(data)
+                    var time = context.VM.Context.Clock.UTCNow;
+
+                    switch (data)
+                    {
+                        case 0:
+                            return (short)time.Second;
+                        case 1:
+                            return (short)time.Minute;
+                        case 2:
+                            return (short)time.Hour;
+                        case 3:
+                            return (short)time.Day;
+                        case 4:
+                            return (short)time.Month;
+                        case 5:
+                            return (short)time.Year;
+                    };
                     return 0;
-                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.GameTime: //45
                     switch (data)

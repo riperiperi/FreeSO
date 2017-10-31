@@ -564,15 +564,15 @@ namespace FSO.Client.UI.Controls
                 m_SBuilder.Remove(MaxChars, m_SBuilder.Length - MaxChars);
             }
 
-            var lines = m_SBuilder.ToString().Split(new string[] { "\r\n" }, StringSplitOptions.None);
+            var lines = m_SBuilder.ToString().Split(new string[] { "\n" }, StringSplitOptions.None);
             if (lines.Length > MaxLines)
             {
                 var newLines = new string[MaxLines];
                 for (var i = 0; i < MaxLines; i++)
                 {
-                    newLines[i] = lines[i];
+                    newLines[i] = lines[i].Replace("\r", "");
                 }
-                m_SBuilder = new StringBuilder(String.Join("\r\n", newLines));
+                m_SBuilder = new StringBuilder(String.Join("\n", newLines));
             }
 
             SelectionStart = Math.Min(m_SBuilder.Length, SelectionStart);

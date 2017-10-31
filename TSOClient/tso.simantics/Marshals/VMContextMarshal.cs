@@ -51,6 +51,7 @@ namespace FSO.SimAntics.Marshals
         public int Minutes;
         public int Hours;
         public int FirePercent = 20000;
+        public long UTCStart;
 
         private int Version;
         public VMClockMarshal() { }
@@ -64,6 +65,8 @@ namespace FSO.SimAntics.Marshals
             Minutes = reader.ReadInt32();
             Hours = reader.ReadInt32();
             if (Version > 17) FirePercent = reader.ReadInt32();
+            if (Version > 20) UTCStart = reader.ReadInt64();
+            else UTCStart = DateTime.UtcNow.Ticks;
         }
 
         public void SerializeInto(BinaryWriter writer)
@@ -74,6 +77,7 @@ namespace FSO.SimAntics.Marshals
             writer.Write(Minutes);
             writer.Write(Hours);
             writer.Write(FirePercent);
+            writer.Write(UTCStart);
         }
     }
 

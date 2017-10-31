@@ -11,12 +11,33 @@ namespace FSO.LotView
     {
         public static WorldConfig Current = new WorldConfig();
 
-        public bool AdvancedLighting = false;
-        public bool UltraLighting = FSOEnvironment.Enable3D;
+        //(off, advanced, +3d wall, ultra)
+        public int LightingMode;
+
+        public bool AdvancedLighting
+        {
+            get
+            {
+                return (LightingMode > 0);
+            }
+        }
+        public bool Shadow3D
+        {
+            get
+            {
+                return (LightingMode > 1);
+            }
+        }
+        public bool UltraLighting
+        {
+            get
+            {
+                return (LightingMode > 2);
+            }
+        }
         public int SurroundingLots = 0;
         public bool SmoothZoom = false;
         public bool AA = false;
-        public bool Shadow3D = false;
 
         public int PassOffset
         {

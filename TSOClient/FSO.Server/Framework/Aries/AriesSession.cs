@@ -10,6 +10,7 @@ namespace FSO.Server.Framework.Aries
     public class AriesSession : IAriesSession
     {
         public bool IsAuthenticated { get; set; }
+        public uint LastRecv { get; set; }
         public IoSession IoSession;
 
         public AriesSession(IoSession ioSession)

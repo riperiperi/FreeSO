@@ -58,7 +58,21 @@ namespace FSO.LotView.Model
         /// 
         public bool[] Cutaway;
 
-        public Color OutsideColor = Color.White;
+        private Color _OutsideColor = Color.White;
+        public Color MinOut;
+        public Color OutsideColor
+        {
+            get
+            {
+                return _OutsideColor;
+            }
+            set
+            {
+                _OutsideColor = value;
+                MinOut = value * (150 / 400f);
+                //MinOut = value * (float)(150 / Math.Sqrt(value.R * value.R + value.G * value.G + value.B * value.B));
+            }
+        }
         public double OutsideTime;
         public RoomLighting[] Light = new RoomLighting[0];
         public uint[][] RoomMap;
@@ -136,14 +150,16 @@ namespace FSO.LotView.Model
         public void SetLightColor(Effect effect, Color outside, Color minOut)
         {
             //return;
-            effect.Parameters["OutsideLight"].SetValue(outside.ToVector4());
-            effect.Parameters["OutsideDark"].SetValue(minOut.ToVector4());
-            effect.Parameters["MaxLight"].SetValue(Color.White.ToVector4());
+            effect.Parameters["OutsideLight"]?.SetValue(outside.ToVector4());
+            effect.Parameters["OutsideDark"]?.SetValue(minOut.ToVector4());
+            effect.Parameters["MaxLight"]?.SetValue(Color.White.ToVector4());
+            var avg = (minOut.R + minOut.G + minOut.B) / (255 * 3f);
+            effect.Parameters["MinAvg"]?.SetValue(new Vector2(avg, 1/(1-avg)));
         }
 
         public void GenerateRoomLights()
         {
-            var minOut = OutsideColor * (float)(150 / Math.Sqrt(OutsideColor.R * OutsideColor.R + OutsideColor.G * OutsideColor.G + OutsideColor.B * OutsideColor.B));
+            var minOut = MinOut;
             minOut.A = 255;
 
             SetLightColor(WorldContent._2DWorldBatchEffect, OutsideColor, minOut);

@@ -69,8 +69,7 @@ namespace FSO.LotView.Components
 
         public void Draw(GraphicsDevice gd, WorldState state)
         {
-            //just yank this from elsewhere for now.
-            var ocolor = WorldContent.RCObject.Parameters["OutsideLight"].GetValueVector4();
+            var ocolor = state.OutsideColor.ToVector4();
             var effect = WorldContent.GetBE(gd);
 
             var color = ocolor - new Vector4(0.35f) * 1.5f + new Vector4(0.35f);

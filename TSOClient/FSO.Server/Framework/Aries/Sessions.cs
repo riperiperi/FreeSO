@@ -47,6 +47,14 @@ namespace FSO.Server.Framework.Aries
             return newSession;
         }
 
+        public HashSet<IAriesSession> Clone()
+        {
+            lock (_Sessions)
+            {
+                return new HashSet<IAriesSession>(_Sessions);
+            }
+        }
+
         public void Broadcast(params object[] messages)
         {
             //TODO: Make this more efficient

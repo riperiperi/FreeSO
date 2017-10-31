@@ -42,7 +42,8 @@ namespace FSO.Client.UI.Panels.LotControls
         public override void PreDraw(UISpriteBatch batch)
         {
             base.PreDraw(batch);
-            
+
+            //DebugTexture = vm.Context.World.State.Light.LightMap;
             return;
 
             var tilePos = vm.Context.World.EstTileAtPosWithScroll(new Vector2(LastState.MouseState.X, LastState.MouseState.Y) / FSOEnvironment.DPIScaleFactor);

@@ -29,6 +29,8 @@ namespace FSO.Server.Servers.City
         private static Logger LOG = LogManager.GetCurrentClassLogger();
         private CityServerConfiguration Config;
         private ISessionGroup VoltronSessions;
+        private CityLivenessEngine Liveness;
+        public bool ShuttingDown;
 
         public CityServer(CityServerConfiguration config, IKernel kernel) : base(config, kernel)
         {
@@ -40,6 +42,8 @@ namespace FSO.Server.Servers.City
         {
             LOG.Info("Starting city server for city: " + Config.ID);
             base.Start();
+
+            Liveness.Start();
         }
 
         protected override void Bootstrap()
@@ -56,11 +60,15 @@ namespace FSO.Server.Servers.City
             var context = new CityServerContext();
             context.ShardId = shard.Id;
             context.Config = Config;
+            Kernel.Bind<EventSystem>().ToSelf().InSingletonScope();
+            Kernel.Bind<CityLivenessEngine>().ToSelf().InSingletonScope();
             Kernel.Bind<CityServerContext>().ToConstant(context);
             Kernel.Bind<int>().ToConstant(shard.Id).Named("ShardId");
             Kernel.Bind<CityServerConfiguration>().ToConstant(Config);
             Kernel.Bind<LotServerPicker>().To<LotServerPicker>().InSingletonScope();
             Kernel.Bind<LotAllocations>().To<LotAllocations>().InSingletonScope();
+
+            Liveness = Kernel.Get<CityLivenessEngine>();
 
             IDAFactory da = Kernel.Get<IDAFactory>();
             using (var db = da.Get()){
@@ -83,6 +91,8 @@ namespace FSO.Server.Servers.City
             }
 
             base.Bootstrap();
+
+            Kernel.Get<EventSystem>().Init();
         }
 
         public override void Shutdown()
@@ -92,6 +102,8 @@ namespace FSO.Server.Servers.City
 
         public async Task<bool> Shutdown(ShutdownType type)
         {
+            Liveness.Stop();
+            ShuttingDown = true;
             var lotServers = Kernel.Get<LotServerPicker>();
             var task = lotServers.ShutdownAllLotServers(type);
             await Task.WhenAny(task, Task.Delay(30 * 1000)); //wait at most 30 seconds for a city server shutdown.
@@ -223,7 +235,8 @@ namespace FSO.Server.Servers.City
                 typeof(ElectronFindAvatarHandler),
                 typeof(ChangeRoommateHandler),
                 typeof(ModerationHandler),
-                typeof(AvatarRetireHandler)
+                typeof(AvatarRetireHandler),
+                typeof(MailHandler)
             };
         }
     }

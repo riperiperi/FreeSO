@@ -147,6 +147,7 @@ namespace FSO.LotView.RC
 
             State._3D = new FSO.LotView.Utils._3DWorldBatch(State);
             State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, 0, new SurfaceFormat[0], new bool[0], World2D.SCROLL_BUFFER);
+            State.OutsidePx = new Texture2D(layer.Device, 1, 1);
 
             PPXDepthEngine.InitGD(layer.Device);
             ChangedWorldConfig(layer.Device);

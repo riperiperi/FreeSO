@@ -81,10 +81,18 @@ namespace FSO.Server.Servers.Lot
             Connections.Start();
         }
 
-        private void Connections_OnCityDisconnected(CityConnection connection)
+        private async void Connections_OnCityDisconnected(CityConnection connection)
         {
-            LOG.Warn("City connection panic, shutting down lots gracefully");
-            Lots.ShutdownByShard(connection.CityConfig.ID);
+            LOG.Warn("City connection lost... if it's not back in 30 seconds all its lots will be closed!");
+            await Task.Delay(30000);
+            try
+            {
+                if (!connection.Connected)
+                    Lots.ShutdownByShard(connection.CityConfig.ID);
+            } catch
+            {
+
+            }
         }
 
         protected override void HandleVoltronSessionResponse(IAriesSession session, object message)

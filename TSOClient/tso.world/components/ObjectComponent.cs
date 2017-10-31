@@ -37,6 +37,10 @@ namespace FSO.LotView.Components
         public bool HideForCutaway;
         public WallSegments AdjacentWall;
 
+        //for ultra lighting in 2d. objects can have a shadow component which handles drawing in 3d.
+        private ObjectComponent ShadowComponent;
+        public static Func<GameObject, ObjectComponent> MakeShadowComponent;
+
         public new bool Visible {
             get { return _Visible; }
             set {
@@ -351,6 +355,21 @@ namespace FSO.LotView.Components
                     ((int)headPx.Y-Headline.Height/2)+ (int)off.Y, Headline.Width, Headline.Height);
                 world._2D.Draw(item);
             }
+        }
+
+        public virtual void DrawLMap(GraphicsDevice device, sbyte level)
+        {
+            if (ShadowComponent == null) ShadowComponent = new RC.ObjectComponentRC(Obj);
+            if (!Visible) return;
+            if (Container != null && Container is AvatarComponent) return;
+            if (ShadowComponent.UnmoddedPosition != UnmoddedPosition) ShadowComponent.Position = UnmoddedPosition;
+            if (ShadowComponent.DGRP != DGRP) ShadowComponent.DGRP = DGRP;
+            if (ShadowComponent.Direction != Direction) ShadowComponent.Direction = Direction;
+            if (ShadowComponent.Room != Room) ShadowComponent.Room = Room;
+            if (ShadowComponent.DynamicSpriteFlags != DynamicSpriteFlags) ShadowComponent.DynamicSpriteFlags = DynamicSpriteFlags;
+            if (ShadowComponent.DynamicSpriteFlags2 != DynamicSpriteFlags2) ShadowComponent.DynamicSpriteFlags2 = DynamicSpriteFlags2;
+            if (ShadowComponent.Level != Level) ShadowComponent.Level = Level;
+            ShadowComponent.DrawLMap(device, level);
         }
     }
 }

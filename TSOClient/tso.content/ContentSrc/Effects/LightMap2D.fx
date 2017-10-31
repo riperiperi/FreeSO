@@ -8,6 +8,7 @@ float2 RoomUVRescale;
 float2 RoomUVOff;
 
 float2 LightPosition; //in position space (0,1)
+float4 LightColor;
 float LightSize; //in position space (0,1)
 float LightPower = 2.0; //gamma correction on lights. can get some nicer distributions.
 float LightIntensity = 1.0;
@@ -111,14 +112,8 @@ float4 LightFinal(float light, float2 shadow) {
 	light = pow(light, LightPower);
 	light -= light*shadow.x;
 	float floorLight = light - light*shadow.y;
-	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-	// output different under diff conditions
-	if (IsOutdoors == true) {
-		return float4(0.0, light, 0.0, floorLight) * LightIntensity;
-	}
-	else {
-		return float4(light, 0.0, floorLight, 0.0) * LightIntensity;
-	}
+
+	return float4(LightColor.rgb*light, LightColor.a * min(1, floorLight));
 }
 
 float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
@@ -126,7 +121,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
     float2 uv = input.p;
 	if (OutsideRoomCheck(uv)) discard;
     float light = clamp(1.0 - distance(uv, LightPosition) / LightSize, 0.0, 1.0);
-	float2 shadow = float2(tex2D(shadowSampler, uv).r, tex2D(floorShadowSampler, uv).r);
+	float2 shadow = float2(tex2D(shadowSampler, uv).r, tex2D(floorShadowSampler, uv).g);
 	return LightFinal(light, shadow);
 }
 
@@ -143,7 +138,7 @@ float4 PixelShaderFunctionBlur(VertexShaderOutput input) : COLOR0
 	float fs = 0;
 	for (int x = -2; x < 3; x++) {
 		for (int y = -2; y < 3; y++) {
-			fs += tex2D(floorShadowSamplerLin, uv + float2(x*blurAmount, y*blurAmount)).r;
+			fs += tex2D(floorShadowSamplerLin, uv + float2(x*blurAmount, y*blurAmount)).g;
 		}
 	}
 
@@ -156,28 +151,23 @@ float4 PixelShaderFunctionOutdoors(VertexShaderOutput input) : COLOR0{
 	if (OutsideRoomCheck(uv)) discard;
 	float light = 1;
 
-	float2 shadow = float2(tex2D(shadowSampler, uv).r, tex2D(floorShadowSampler, uv).r);
+	float2 shadow = float2(tex2D(shadowSampler, uv).r, tex2D(floorShadowSampler, uv).g);
 	shadow *= ShadowPowers;
 
 	light -= light*shadow.x;
 	float floorLight = light - light*shadow.y;
 	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
 	// output different under diff conditions
-	if (IsOutdoors == true) {
-		return float4(0.0, light, 0.0, floorLight);
-	}
-	else {
-		return float4(light, 0.0, floorLight, 0.0);
-	}
+	return float4(LightColor.rgb*light, LightColor.a * floorLight);
 }
 
-float SSAASample(float2 uv) {
-	float result = 0;
+float2 SSAASample(float2 uv) {
+	float2 result = float2(0, 0);
 	uv += SSAASize / 2;
-	result += tex2D(shadowSampler, uv).r;
-	result += tex2D(shadowSampler, uv + float2(SSAASize.x, 0)).r;
-	result += tex2D(shadowSampler, uv + float2(0, SSAASize.y)).r;
-	result += tex2D(shadowSampler, uv + float2(SSAASize.x, SSAASize.y)).r;
+	result += tex2D(shadowSampler, uv).rg;
+	result += tex2D(shadowSampler, uv + float2(SSAASize.x, 0)).rg;
+	result += tex2D(shadowSampler, uv + float2(0, SSAASize.y)).rg;
+	result += tex2D(shadowSampler, uv + float2(SSAASize.x, SSAASize.y)).rg;
 	return result / 4;
 }
 
@@ -186,19 +176,13 @@ float4 PixelShaderFunctionOutdoorsSSAA(VertexShaderOutput input) : COLOR0{
 	if (OutsideRoomCheck(uv)) discard;
 	float light = 1;
 
-	float2 shadow = float2(SSAASample(uv), tex2D(floorShadowSampler, uv).r);
+	float2 shadow = SSAASample(uv);
 	shadow *= ShadowPowers;
 
 	light -= light*shadow.x;
 	float floorLight = light - light*shadow.y;
-	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-	// output different under diff conditions
-	if (IsOutdoors == true) {
-		return float4(0.0, light, 0.0, floorLight);
-	}
-	else {
-		return float4(light, 0.0, floorLight, 0.0);
-	}
+
+	return float4(LightColor.rgb*light, LightColor.a * floorLight);
 }
 
 float4 PixelShaderFunctionLightBleed(VertexShaderOutput input) : COLOR0{
@@ -206,19 +190,18 @@ float4 PixelShaderFunctionLightBleed(VertexShaderOutput input) : COLOR0{
 	if (OutsideRoomCheck(uv)) discard;
 	float light = 1;
 
-	float2 shadow = float2(SSAASample(uv) * 5/4, 0);
+	float2 shadow = float2(SSAASample(uv).r * 5 / 4, 0);
 
 	light -= light*shadow.x;
 	float floorLight = light - light*shadow.y;
-	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-	// output different under diff conditions
-	return float4(0.0, light, 0.0, floorLight);
+
+	return float4(LightColor.rgb*light, LightColor.a * floorLight);
 }
 
 float4 PixelShaderFunctionMask(VertexShaderOutput input) : COLOR0{
 	float2 uv = input.p;
 	if (OutsideRoomCheck(uv)) discard;
-	return float4(0, 0, 0, 0);
+	return LightColor; //multiply light color onto the room
 }
 
 
@@ -254,7 +237,6 @@ technique Draw2D
 
 	pass ClearPass
 	{
-		AlphaBlendEnable = TRUE; DestBlend = ZERO; SrcBlend = ONE; BlendOp = Add; ZEnable = FALSE;
 
 #if SM4
 		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();

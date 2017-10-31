@@ -14,6 +14,7 @@ using FSO.SimAntics.Model;
 using System.IO;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Drivers;
+using Microsoft.Xna.Framework;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -223,7 +224,7 @@ namespace FSO.SimAntics.Primitives
                 //50. Set Original Purchase Price (TODO: parrot, snowman. should set to temp0)
                 case VMGenericTSOCallMode.HasTemporaryID: //51
                     //persist ID should be 0 til we get one.
-                    return (context.StackObject.PersistID == 0)?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
+                    return (context.StackObject.PersistID == 0 && context.StackObject.GetValue(VMStackObjectVariable.Reserved75) == 0)?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
                 case VMGenericTSOCallMode.SetStackObjOwnerToTemp0: //52
                     var obj = context.VM.GetObjectById(context.Thread.TempRegisters[0]); 
                     if (context.StackObject is VMAvatar || obj == null) return VMPrimitiveExitCode.GOTO_TRUE;
@@ -270,8 +271,10 @@ namespace FSO.SimAntics.Primitives
 
                 // === FREESO SPECIFIC ===
                 case VMGenericTSOCallMode.FSOLightRGBFromTemp012: //128
-                    context.StackObject.LightColor = new Microsoft.Xna.Framework.Color((byte)context.Thread.TempRegisters[0], (byte)context.Thread.TempRegisters[1], 
-                        (byte)context.Thread.TempRegisters[2], (byte)1);
+                    context.StackObject.LightColor = new Color((int)context.Thread.TempRegisters[0], (int)context.Thread.TempRegisters[1],
+                        (int)context.Thread.TempRegisters[2], (int)1);
+                    if (context.StackObject.GetValue(VMStackObjectVariable.LightingContribution) > 0)
+                        context.VM.Context.RefreshLighting(context.VM.Context.GetObjectRoom(context.StackObject), true, new HashSet<ushort>());
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
                 //TODO: may need to update in global server
