@@ -279,7 +279,7 @@ namespace FSO.Client.UI.Panels.EODs
                 if (Int32.TryParse(split[0], out tempBalance) & Int32.TryParse(split[1], out tempMinBet) & Int32.TryParse(split[2], out tempMaxBet))
                 {
                     OwnerPanel = new UIManageEODObjectPanel(
-                        ManageEODObjectTypes.Roulette, tempBalance, tempMaxBet * 140, Int32.MaxValue, tempMinBet, tempMaxBet);
+                        ManageEODObjectTypes.Roulette, tempBalance, tempMaxBet * 140, 999999, tempMinBet, tempMaxBet);
                     Add(OwnerPanel);
                     // subscribe in order to send events based on type
                     OwnerPanel.OnNewByteMessage += SendByteMessage;

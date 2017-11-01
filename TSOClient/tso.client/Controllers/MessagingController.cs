@@ -179,7 +179,6 @@ namespace FSO.Client.Controllers
                         message.Message = message.Message = GameFacade.Strings.GetString("195", "11");
                         break;
                 }
-                HIT.HITVM.Get().PlaySoundEvent("ui_call_q_full");
             }
 
             var existing = GetMessageByUser(MessageType.Call, message.FromType, message.From);
