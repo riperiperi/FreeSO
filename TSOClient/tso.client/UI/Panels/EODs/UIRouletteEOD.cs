@@ -104,10 +104,12 @@ namespace FSO.Client.UI.Panels.EODs
             BinaryHandlers["roulette_gameoverNSF"] = GameOverNSFHandler;
             BinaryHandlers["roulette_over_max"] = OverMaxBetHandler;
             PlaintextHandlers["roulette_bet_failed"] = NSFBetFailedHandler;
+            PlaintextHandlers["roulette_sound_play"] = SoundEffectHandler;
             PlaintextHandlers["roulette_spin"] = SpinHandler;
             PlaintextHandlers["roulette_sync_mine"] = MyBetsSyncHandler;
             PlaintextHandlers["roulette_sync_neighbor"] = NeighborBetsSyncHandler;
             PlaintextHandlers["roulette_round_time"] = TimeHandler;
+            PlaintextHandlers["roulette_under_min"] = UnderMinBetHandler;
             PlaintextHandlers["roulette_unknown_error"] = UnknownErrorHandler;
             // owner
             PlaintextHandlers["roulette_deposit_NSF"] = DepositFailHandler;
@@ -276,7 +278,8 @@ namespace FSO.Client.UI.Panels.EODs
             {
                 if (Int32.TryParse(split[0], out tempBalance) & Int32.TryParse(split[1], out tempMinBet) & Int32.TryParse(split[2], out tempMaxBet))
                 {
-                    OwnerPanel = new UIManageEODObjectPanel(ManageEODObjectTypes.Roulette, tempBalance, 0, Int32.MaxValue, tempMinBet, tempMaxBet);
+                    OwnerPanel = new UIManageEODObjectPanel(
+                        ManageEODObjectTypes.Roulette, tempBalance, tempMaxBet * 140, Int32.MaxValue, tempMinBet, tempMaxBet);
                     Add(OwnerPanel);
                     // subscribe in order to send events based on type
                     OwnerPanel.OnNewByteMessage += SendByteMessage;
@@ -435,6 +438,28 @@ namespace FSO.Client.UI.Panels.EODs
                     UIScreen.RemoveDialog(alert);
                 }),
             }, true);
+        }
+        private void UnderMinBetHandler(string evt, string lowBet)
+        {
+            // show an alert that tells the user that they did not meet the table's minimum bet
+            UIAlert alert = null;
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                TextSize = 12,
+                Title = "Betting Error",
+                Message = "Your bet of $" + lowBet + " did not meet the table's minimum bet of $" + MinBet + ".",
+                Alignment = TextAlignment.Center,
+                TextEntry = false,
+                Buttons = UIAlertButton.Ok((btn) =>
+                {
+                    UIScreen.RemoveDialog(alert);
+                }),
+            }, true);
+        }
+        private void SoundEffectHandler(string evt, string soundString)
+        {
+            HIT.HITVM.Get().PlaySoundEvent(soundString);
+            HIT.HITVM.Get().PlaySoundEvent(soundString);
         }
         /*
          * Checking to make sure that the user has enough money to keep playing makes the UI look clean by disallowing them to interact with the bet
