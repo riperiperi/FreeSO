@@ -179,8 +179,8 @@ float4 PixelShaderFunctionOutdoorsSSAA(VertexShaderOutput input) : COLOR0{
 	float2 shadow = SSAASample(uv);
 	shadow *= ShadowPowers;
 
+	float floorLight = light - light*max(shadow.x, shadow.y);
 	light -= light*shadow.x;
-	float floorLight = light - light*shadow.y;
 
 	return float4(LightColor.rgb*light, LightColor.a * floorLight);
 }
