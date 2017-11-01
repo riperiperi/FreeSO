@@ -63,6 +63,7 @@ namespace FSO.LotView.LMap
                         l1.LightPos = (l1.LightPos * (l1.Weight / newWeight)) + (l2.LightPos * (l2.Weight / newWeight));
                         l1.LightSize = (l1.LightSize + l2.LightSize) * 0.6f;
                         l1.LightIntensity = Math.Min(1.25f, (l1.LightIntensity + l2.LightIntensity) * 0.66f);
+                        l1.LightColor = new Color(l1.LightColor.ToVector4()+ l2.LightColor.ToVector4());
 
                         l1.UpdateBounds();
                         lights.RemoveAt(j--);

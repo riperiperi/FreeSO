@@ -62,6 +62,16 @@
     <StartupObject>
     </StartupObject>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ServerRelease|AnyCPU'">
+    <OutputPath>bin\ServerRelease\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="ColorCaches\BaseColorCache.cs" />
     <Compile Include="ColorCaches\EuclideanDistance\EuclideanDistanceColorCache.cs" />

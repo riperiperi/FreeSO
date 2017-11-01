@@ -167,6 +167,7 @@ namespace FSO.IDE
             {
                 //does not need to be thread safe as this is invoked from UI thread.
                 UpdateStack();
+                if (Editor == null) return;
                 if (DebugEntity.Thread.ThreadBreak == VMThreadBreakMode.Pause) {
                     Editor.NewBreak(Editor.DebugFrame);
                     StackView.Enabled = true;

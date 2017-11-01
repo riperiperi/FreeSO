@@ -18,6 +18,7 @@ namespace FSO.Server.Servers.City.Handlers
     public class VoltronConnectionLifecycleHandler : IAriesSessionInterceptor
     {
         private ISessionGroup VoltronSessions;
+        private ISessions Sessions;
         private IDataService DataService;
         private IDAFactory DAFactory;
         private CityServerContext Context;
@@ -29,6 +30,7 @@ namespace FSO.Server.Servers.City.Handlers
             EventSystem events)
         {
             this.VoltronSessions = sessions.GetOrCreateGroup(Groups.VOLTRON);
+            this.Sessions = sessions;
             this.DataService = dataService;
             this.DAFactory = da;
             this.Context = context;
@@ -55,6 +57,9 @@ namespace FSO.Server.Servers.City.Handlers
 
             Liveness.EnqueueChange(() => {
                 //unenroll in voltron group, mark as offline in data service.
+                //since this can happen async make sure our session hasnt been reopened before trying to delete its claim
+                if (Sessions.GetByAvatarId(voltronSession.AvatarId) != null) return;
+
                 var avatar = DataService.Get<Avatar>(voltronSession.AvatarId).Result;
                 if (avatar != null) avatar.Avatar_IsOnline = false;
 
