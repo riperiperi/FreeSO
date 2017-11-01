@@ -35,7 +35,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             Hours = reader.ReadInt32();
             Minutes = reader.ReadInt32();
             Seconds = reader.ReadInt32();
-            UTCStart = reader.ReadInt32();
+            UTCStart = reader.ReadInt64();
         }
 
         public override void SerializeInto(BinaryWriter writer)
