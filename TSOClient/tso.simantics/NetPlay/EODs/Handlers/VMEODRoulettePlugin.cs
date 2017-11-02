@@ -384,7 +384,18 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             if (Croupier != null && client.Equals(Croupier))
             {
+<<<<<<< HEAD
                 CloseTable();
+=======
+                if (Players.Count == 0)
+                    GotoState(VMEODRouletteGameStates.WaitingForPlayer);
+                else
+                {
+                    // if player left during betting phase, update neighbor bets of existing players
+                    if (GameState.Equals(VMEODRouletteGameStates.BettingRound))
+                        BroadcastBets(null);
+                }
+>>>>>>> refs/remotes/riperiperi/master
             }
             else
             {
@@ -400,6 +411,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         break;
                     }
                 }
+<<<<<<< HEAD
                 if (Players.Count == 0)
                     EnqueueGotoState(VMEODRouletteGameStates.WaitingForPlayer);
                 else
@@ -408,6 +420,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     if (GameState.Equals(VMEODRouletteGameStates.BettingRound))
                         BroadcastBets(null);
                 }
+=======
+>>>>>>> refs/remotes/riperiperi/master
             }
             base.OnDisconnection(client);
         }
