@@ -32,6 +32,8 @@ namespace FSO.Server.Api.Controllers
                         var lotstatus = da.LotClaims.AllLocations(shardid);
                         LastModel.reservedLots = lots.ConvertAll(x => x.location).ToArray();
                         LastModel.names = lots.ConvertAll(x => x.name).ToArray();
+                        LastModel.categories = lots.ConvertAll(x => x.category.ToString()).ToArray();
+                        LastModel.descriptions = lots.ConvertAll(x => x.description.ToString()).ToArray();
                         LastModel.activeLots = lotstatus.ConvertAll(x => x.location).ToArray();
                         LastModel.onlineCount = lotstatus.ConvertAll(x => x.active).ToArray();
                     }
@@ -48,6 +50,8 @@ namespace FSO.Server.Api.Controllers
     {
         public string[] names;
         public uint[] reservedLots;
+        public string[] categories;
+        public string[] descriptions;
         public uint[] activeLots;
         public int[] onlineCount;
     }
