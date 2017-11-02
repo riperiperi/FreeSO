@@ -18,6 +18,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public static readonly List<byte> LowNumbersList = new List<byte> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
         public static readonly List<byte> HighNumbersList = new List<byte> { 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36 };
         private VMEODRouletteGameStates GameState;
+        private VMEODRouletteGameStates NextState;
         private int MinBet;
         private int MaxBet;
         private int TableBalance;
@@ -27,7 +28,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private VMEODClient Croupier;
         private VMEODClient Owner;
         private List<RoulettePlayer> Players;
-        private List<RoulettePlayer> PlayersToRemove;
         private Random NextBall = new Random();
 
         public const int GLOBAL_MAXIMUM_CHIPS_PER_STACK = 20;
@@ -276,8 +276,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public VMEODRoulettePlugin(VMEODServer server) : base(server)
         {
             Players = new List<RoulettePlayer>();
-            PlayersToRemove = new List<RoulettePlayer>();
             GameState = VMEODRouletteGameStates.Closed;
+            NextState = VMEODRouletteGameStates.Invalid;
             PlaintextHandlers["roulette_UI_close"] = UIClosedHandler;
             PlaintextHandlers["roulette_new_bet"] = PlaceBetHandler;
             PlaintextHandlers["roulette_remove_bet"] = RemoveBetHandler;
@@ -326,7 +326,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             client.Send("roulette_player", new byte[] { (byte)(MinBet / 255), (byte)(MinBet % 255), (byte)(MaxBet / 255),
                                 (byte)(MaxBet % 255), (byte)(player.SimoleonBalance / 255), (byte)(player.SimoleonBalance % 255) });
                             if (Croupier != null && GameState.Equals(VMEODRouletteGameStates.WaitingForPlayer))
-                                GotoState(VMEODRouletteGameStates.BettingRound);
+                                EnqueueGotoState(VMEODRouletteGameStates.BettingRound);
                         }
                     });
                 }
@@ -368,9 +368,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         // The cropuier's client is only used for animations. They literally have no other function.
                         Croupier = client;
                         if (Players.Count == 0)
-                            GotoState(VMEODRouletteGameStates.WaitingForPlayer);
+                            EnqueueGotoState(VMEODRouletteGameStates.WaitingForPlayer);
                         else
-                            GotoState(VMEODRouletteGameStates.BettingRound);
+                            EnqueueGotoState(VMEODRouletteGameStates.BettingRound);
                     }
                 }
             }
@@ -384,18 +384,12 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             if (Croupier != null && client.Equals(Croupier))
             {
-                if (Players.Count == 0)
-                    GotoState(VMEODRouletteGameStates.WaitingForPlayer);
-                else
-                {
-                    // if player left during betting phase, update neighbor bets of existing players
-                    if (GameState.Equals(VMEODRouletteGameStates.BettingRound))
-                        BroadcastBets(null);
-                }
+                CloseTable();
             }
             else
             {
-                foreach (var player in Players)
+                var playersToRemove = new List<RoulettePlayer>(Players);
+                foreach (var player in playersToRemove)
                 {
                     if (player.Client.Equals(client))
                     {
@@ -406,6 +400,14 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         break;
                     }
                 }
+                if (Players.Count == 0)
+                    EnqueueGotoState(VMEODRouletteGameStates.WaitingForPlayer);
+                else
+                {
+                    // if player left during betting phase, update neighbor bets of existing players
+                    if (GameState.Equals(VMEODRouletteGameStates.BettingRound))
+                        BroadcastBets(null);
+                }
             }
             base.OnDisconnection(client);
         }
@@ -414,6 +416,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             if (Controller == null)
                 return;
+            if (NextState != VMEODRouletteGameStates.Invalid)
+            {
+                GotoState(NextState);
+                NextState = VMEODRouletteGameStates.Invalid;
+            }
             switch (GameState)
             {
                 case VMEODRouletteGameStates.BettingRound:
@@ -428,19 +435,19 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             }
                         }
                         else
-                            GotoState(VMEODRouletteGameStates.Spinning);
+                            EnqueueGotoState(VMEODRouletteGameStates.Spinning);
                         break;
                     }
                 case VMEODRouletteGameStates.Spinning:
                     {
                         if (++Tock >= 360) // let's try 12 seconds
-                            GotoState(VMEODRouletteGameStates.Intermission);
+                            EnqueueGotoState(VMEODRouletteGameStates.Intermission);
                         break;
                     }
                 case VMEODRouletteGameStates.Intermission:
                     {
                         if (++Tock >= 180) // let's try 6 seconds
-                            GotoState(VMEODRouletteGameStates.BettingRound);
+                            EnqueueGotoState(VMEODRouletteGameStates.BettingRound);
                         break;
                     }
             }
@@ -782,10 +789,14 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         Tock = 0;
                         GameState = state;
                         Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.CroupierLost));
-                        foreach (var player in Players)
+                        var playersToRemove = new List<RoulettePlayer>(Players);
+                        foreach (var player in playersToRemove)
                         {
                             if (player.Client != null)
+                            {
                                 Server.Disconnect(player.Client);
+                                Players.Remove(player);
+                            }
                         }
                         Players = new List<RoulettePlayer>();
                         break;
@@ -847,7 +858,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             if (client != null)
                 Server.Disconnect(client);
-            foreach (var player in Players) {
+            var playersToRemove = new List<RoulettePlayer>(Players);
+            foreach (var player in playersToRemove) {
                 if (player.Client != null && player.Client.Equals(client))
                     Players.Remove(player);
                 break;
@@ -859,7 +871,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 CloseTable();
             else
             {
-                foreach (var player in Players)
+                var playersToRemove = new List<RoulettePlayer>(Players);
+                foreach (var player in playersToRemove)
                 {
                     if (player.Client != null)
                     {
@@ -869,24 +882,17 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         else
                         {
                             player.BroadcastGameoverNSF(MinBet);
-                            // queue removal
-                            PlayersToRemove.Add(player);
+                            // don't come back until you have more money
+                            Players.Remove(player);
                         }
                     }
-                    else // queue removal of null client
-                        PlayersToRemove.Add(player);
+                    else // removal of null client
+                        Players.Remove(player);
                 }
-                // remove queued players
-                foreach (var player in PlayersToRemove)
-                {
-                    if (Players.Remove(player) && player.Client != null)
-                        Server.Disconnect(player.Client);
-                }
-
                 if (Croupier == null || Croupier.Avatar == null || Croupier.Avatar.Dead)
                     CloseTable();
                 else if (Players.Count == 0)
-                    GotoState(VMEODRouletteGameStates.WaitingForPlayer);
+                    EnqueueGotoState(VMEODRouletteGameStates.WaitingForPlayer);
             }
         }
 
@@ -922,13 +928,17 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 }
             }
         }
+        private void EnqueueGotoState(VMEODRouletteGameStates nextState)
+        {
+            NextState = nextState;
+        }
 
         private void CloseTable()
         {
             // something went wrong, need to pay winners immediately
-            if (GameState.Equals(VMEODRouletteGameStates.Spinning))
+            if (GameState.Equals(VMEODRouletteGameStates.Spinning) && Players.Count > 0)
                 SettleAccounts(true);
-            GotoState(VMEODRouletteGameStates.Closed);
+            EnqueueGotoState(VMEODRouletteGameStates.Closed);
         }
 
         private void SettleAccounts(bool skipAnimations)
@@ -1456,7 +1466,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         WaitingForPlayer = 1,
         BettingRound = 2,
         Spinning = 3,
-        Intermission = 4
+        Intermission = 4,
+        Invalid = 255
     }
 
     public enum VMEODRouletteBetTypes
