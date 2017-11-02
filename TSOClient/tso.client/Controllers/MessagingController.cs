@@ -124,7 +124,7 @@ namespace FSO.Client.Controllers
         {
             if (ActiveMessages.Count(x => x.Type == message.Type) >= 3)
             {
-                //TODO: Play a sound
+                HIT.HITVM.Get().PlaySoundEvent("ui_call_q_full");
                 return null;
             }
 
@@ -197,6 +197,7 @@ namespace FSO.Client.Controllers
                         FromType = UserReferenceType.AVATAR,
                         From = Network.MyCharacter
                     });
+                    HIT.HITVM.Get().PlaySoundEvent("ui_call_rec_next");
                 }
                 return;
             }
@@ -223,7 +224,10 @@ namespace FSO.Client.Controllers
             }
 
             var newWindow = GetWindow(newMessage);
-            newMessage.Read = true;
+            // in TSO, new message windows were received in the tray and had to be opened 
+            newMessage.Read = false;
+            newWindow.Visible = false;
+            UpdateTray();
             newWindow.AddMessage(newMessage.User, message.Message, IMEntryType.MESSAGE_IN);
 
             //We need to make sure we have their name and icon
@@ -238,6 +242,7 @@ namespace FSO.Client.Controllers
                         FromType = UserReferenceType.AVATAR,
                         From = Network.MyCharacter
                     });
+                    HIT.HITVM.Get().PlaySoundEvent("ui_call_rec_first");
                 }
 
                 DataService.Request(MaskedStruct.Messaging_Icon_Avatar, message.From);

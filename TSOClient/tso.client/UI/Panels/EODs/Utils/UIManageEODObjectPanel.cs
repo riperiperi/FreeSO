@@ -245,8 +245,8 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             AddAt(0, MachineBalanceTextBack);
             MachineBalanceText = new UITextEdit()
             {
-                Size = new Vector2(65, 20),
-                X = 114,
+                Size = new Vector2(85, 20),
+                X = 104,
                 Y = 94,
                 Alignment = TextAlignment.Center,
                 Mode = UITextEditMode.ReadOnly,
@@ -536,7 +536,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 System.Environment.NewLine + System.Environment.NewLine + "(This machine cannot hold more than: $" + ObjectMaximumBalance + ")",
                 Alignment = TextAlignment.Left,
                 TextEntry = true,
-                MaxChars = 5,
+                MaxChars = (Type.Equals(ManageEODObjectTypes.SlotMachine)) ? 5 : 6,
                 Buttons = UIAlertButton.Ok((btn) =>
                 {
                     UserInputHandler("d", alert.ResponseText.Trim());
@@ -558,7 +558,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 System.Environment.NewLine + System.Environment.NewLine + "How much would you like to withdraw?",
                 Alignment = TextAlignment.Left,
                 TextEntry = true,
-                MaxChars = 5,
+                MaxChars = (Type.Equals(ManageEODObjectTypes.SlotMachine)) ? 5 : 6,
                 Buttons = UIAlertButton.Ok((btn) =>
                 {
                     UserInputHandler("w", alert.ResponseText.Trim());

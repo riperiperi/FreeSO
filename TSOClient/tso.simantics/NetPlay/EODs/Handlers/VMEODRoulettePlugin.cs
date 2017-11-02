@@ -295,16 +295,16 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 var args = client.Invoker.Thread.TempRegisters;
                 MinBet = args[1];
                 MaxBet = args[0];
-                if (args[2] == 0)
+                if (args[2] == 0) // a player
                 {
                     var player = new RoulettePlayer(client);
                     player.OnPlayerBetChange += BroadcastBets;
                     Players.Add(player);
 
-                    // get the amount of money the player has by sending a testOnly transaction for $1 from Maxis
+                    // get the amount of money the player has by sending a testOnly transaction for $1 from the table
                     var VM = player.Client.vm;
 
-                    VM.GlobalLink.PerformTransaction(VM, true, uint.MaxValue, player.Client.Avatar.PersistID, 1,
+                    VM.GlobalLink.PerformTransaction(VM, true, Server.Object.PersistID, player.Client.Avatar.PersistID, 1,
 
                     (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                     {
@@ -321,6 +321,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         }));
                         if (success)
                         {
+                            TableBalance = (int)budget1;
                             player.SimoleonBalance = (int)budget2;
                             client.Send("roulette_player", new byte[] { (byte)(MinBet / 255), (byte)(MinBet % 255), (byte)(MaxBet / 255),
                                 (byte)(MaxBet % 255), (byte)(player.SimoleonBalance / 255), (byte)(player.SimoleonBalance % 255) });
@@ -382,7 +383,16 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public override void OnDisconnection(VMEODClient client)
         {
             if (Croupier != null && client.Equals(Croupier))
-                CloseTable();
+            {
+                if (Players.Count == 0)
+                    GotoState(VMEODRouletteGameStates.WaitingForPlayer);
+                else
+                {
+                    // if player left during betting phase, update neighbor bets of existing players
+                    if (GameState.Equals(VMEODRouletteGameStates.BettingRound))
+                        BroadcastBets(null);
+                }
+            }
             else
             {
                 foreach (var player in Players)
@@ -395,14 +405,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         Players.Remove(player);
                         break;
                     }
-                }
-                if (Players.Count == 0)
-                    GotoState(VMEODRouletteGameStates.WaitingForPlayer);
-                else
-                {
-                    // if player left during betting phase, update neighbor bets of existing players
-                    if (GameState.Equals(VMEODRouletteGameStates.BettingRound))
-                        BroadcastBets(null);
                 }
             }
             base.OnDisconnection(client);
@@ -612,7 +614,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 else
                 {
                     // does the machine have enough money to cover this bet amount?
-                    if (newMaxBet > TableBalance * 140)
+                    if (newMaxBet > TableBalance / 140)
                         failureReason = VMEODRouletteInputErrorTypes.BetTooHighForBalance.ToString();
                     else
                     {
@@ -779,7 +781,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     {
                         Tock = 0;
                         GameState = state;
-                        // send the OBJ event to close the table. the object prims will boot the players
                         Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.CroupierLost));
                         foreach (var player in Players)
                         {
@@ -807,21 +808,27 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         // send event for croupier to spin the wheel
                         Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.CroupierSpinWheel, Croupier.Avatar.ObjectID));
 
-                        int winningNumber = NextBall.Next(0, 38); // not sure if this is acceptable and true to the game, but whatever for now
+                        int winningNumber = NextBall.Next(0, 38);
                         if (winningNumber == 37)
                             winningNumber = 100; // double zero
                         // accept the bets of each player, check if they are a winner, send them spinning event
                         foreach (var player in Players)
                         {
-                            int playerBetAmount = player.AcceptBets();
-                            if (playerBetAmount > 0)
+                            int playerBetAmount = player.CalculateTotalBets();
+                            if (playerBetAmount >= MinBet)
                             {
+                                playerBetAmount = player.AcceptBets();
                                 DeductBetAmount(playerBetAmount, player);
                                 player.IsWinner(winningNumber);
                                 // send event to display bet amount taken over head
                                 Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.PlayerShowBetAmount,
                                     new short[] { player.Client.Avatar.ObjectID, (short)playerBetAmount }));
-                                // *todo* player.PlayKachingSoundEffect
+                                player.Client.Send("roulette_sound_play", "ui_object_place");
+                            }
+                            else
+                            {
+                                if (playerBetAmount > 0)
+                                    player.BroadCastUnderMinBet();
                             }
                             player.Client.Send("roulette_spin", winningNumber + "%" + player.PayoutDue);
                         }
@@ -934,7 +941,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     {
                         Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.PushPlayerWinAnimation,
                             new short[] { player.Client.Avatar.ObjectID, (short)player.PayoutDue }));
-                        // *todo* player.PlayKachingSoundEffect
+                        player.Client.Send("roulette_sound_play", "ui_moneyback");
                     }
                     else if (player.PaidForBets)
                         Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.PushPlayerLoseAnimation,
@@ -1214,6 +1221,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
                     allBetsDataString += betDataString;
                 }
+                if (allBetsDataString.Length == 0)
+                    allBetsDataString = "%0";
                 // remove the very first % when sending
                 Client.Send("roulette_sync_mine", grandTotalOfBets + "%" + allBetsDataString.Remove(0, 1));
             }
@@ -1276,6 +1285,13 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             if (Client != null)
                 Client.Send("roulette_unknown_error", "");
+            SyncMyBets();
+        }
+        internal void BroadCastUnderMinBet()
+        {
+            if (Client != null)
+                Client.Send("roulette_under_min", "" + CalculateTotalBets());
+            _AllBets = new List<RouletteBet>();
             SyncMyBets();
         }
     }
