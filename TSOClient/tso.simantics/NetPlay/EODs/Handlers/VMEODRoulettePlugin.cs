@@ -883,6 +883,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         {
                             player.BroadcastGameoverNSF(MinBet);
                             // don't come back until you have more money
+                            Server.Disconnect(player.Client);
                             Players.Remove(player);
                         }
                     }
