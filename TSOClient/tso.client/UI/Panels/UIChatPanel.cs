@@ -179,6 +179,7 @@ namespace FSO.Client.UI.Panels
 
             InvalidAreas[3] = botRect;
             var lastFocus = state.InputManager.GetFocus();
+            if (lastFocus != null && !TextBox.Visible && !HistoryDialog.Visible) state.InputManager.SetFocus(null); // Reset focus to null if chat boxes aren't open
             if (HistoryDialog.Visible) TextBox.Visible = false;
             else
             {
@@ -215,7 +216,7 @@ namespace FSO.Client.UI.Panels
                 if (HistoryDialog.ChatEntryTextEdit.CurrentText.Length < 1)
                     if (lastFocus == HistoryDialog.ChatEntryTextEdit)
                         state.InputManager.SetFocus(null);
-                    else
+                    else if (lastFocus == null)
                         state.InputManager.SetFocus(HistoryDialog.ChatEntryTextEdit);
             }
             if (state.NewKeys.Contains(Keys.H) && state.CtrlDown)
