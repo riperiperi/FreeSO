@@ -20,7 +20,7 @@ namespace FSO.LotView.Components
 
         public abstract ushort Room { get; set; }
 
-        public virtual Vector3 GetSLOTPosition(int slot)
+        public virtual Vector3 GetSLOTPosition(int slot, bool avatar)
         {
             return new Vector3(0, 0, 0);
         }
@@ -40,7 +40,7 @@ namespace FSO.LotView.Components
             get
             {
                 if (Container == null) return _Position;
-                else return Container.GetSLOTPosition(ContainerSlot);
+                else return Container.GetSLOTPosition(ContainerSlot, false);
             }
             set
             {

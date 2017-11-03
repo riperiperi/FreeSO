@@ -32,7 +32,7 @@ namespace FSO.LotView.Components
             new Vector2(5+64, 316+32)
         };
 
-        public override Vector3 GetSLOTPosition(int slot)
+        public override Vector3 GetSLOTPosition(int slot, bool avatar)
         {
             var handpos = Avatar.Skeleton.GetBone("R_FINGER0").AbsolutePosition / 3.0f;
             return Vector3.Transform(new Vector3(handpos.X, handpos.Z, handpos.Y), Matrix.CreateRotationZ((float)(RadianDirection+Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
@@ -86,8 +86,7 @@ namespace FSO.LotView.Components
                 if (Container == null) return _Position + AltitudeOff;
                 else
                 {
-                    var pos = Container.GetSLOTPosition(ContainerSlot);
-                    pos.Z = (float)Math.Round(pos.Z / 2.95f) * 2.95f;
+                    var pos = Container.GetSLOTPosition(ContainerSlot, true);
                     return pos + new Vector3(0.5f, 0.5f, 0); //pos + new Vector3(0.5f, 0.5f, (IsPet ? 0 : -1.4f)); //apply offset to snap character into slot
                 }
             }
