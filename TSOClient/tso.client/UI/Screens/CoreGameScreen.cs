@@ -358,7 +358,7 @@ namespace FSO.Client.UI.Screens
 
             base.Update(state);
 
-            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F1))
+            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F1) && state.CtrlDown)
                 FSOFacade.Controller.ToggleDebugMenu();
 
             if (CityRenderer != null)

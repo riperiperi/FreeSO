@@ -87,6 +87,8 @@ namespace FSO.Client.UI.Panels
         private int OldMY;
         private bool FoundMe; //if false and avatar changes, center. Should center on join lot.
 
+        public bool KBScroll;
+
         public bool RMBScroll;
         private int RMBScrollX;
         private int RMBScrollY;
@@ -731,6 +733,20 @@ namespace FSO.Client.UI.Panels
                 if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
 
                 bool scrolled = false;
+                if (KBScroll)
+                {
+                    World.State.ScrollAnchor = null;
+                    int KeyboardAxisX = 0;
+                    int KeyboardAxisY = 0;
+                    Vector2 scrollBy = new Vector2();
+                    if (state.KeyboardState.IsKeyDown(Keys.Up) || state.KeyboardState.IsKeyDown(Keys.W)) KeyboardAxisY -= 1;
+                    if (state.KeyboardState.IsKeyDown(Keys.Left) || state.KeyboardState.IsKeyDown(Keys.A)) KeyboardAxisX -= 1;
+                    if (state.KeyboardState.IsKeyDown(Keys.Down) || state.KeyboardState.IsKeyDown(Keys.S)) KeyboardAxisY += 1;
+                    if (state.KeyboardState.IsKeyDown(Keys.Right) || state.KeyboardState.IsKeyDown(Keys.D)) KeyboardAxisX += 1;
+                    scrollBy = new Vector2(KeyboardAxisX, KeyboardAxisY);
+                    scrollBy *= 0.05f;
+                    World.Scroll(scrollBy * (60f / FSOEnvironment.RefreshRate));
+                }
                 if (RMBScroll)
                 {
                     World.State.ScrollAnchor = null;
@@ -768,7 +784,13 @@ namespace FSO.Client.UI.Panels
                     World.Scroll(scrollBy * (60f / FSOEnvironment.RefreshRate));
                     scrolled = true;
                 }
-                if (MouseIsOn)
+                var lastFocus = state.InputManager.GetFocus();
+                if (state.KeyboardState.IsKeyDown(Keys.Up) || state.KeyboardState.IsKeyDown(Keys.Left) || state.KeyboardState.IsKeyDown(Keys.Down) || state.KeyboardState.IsKeyDown(Keys.Right) ||
+                    (lastFocus == null && (state.KeyboardState.IsKeyDown(Keys.W) || state.KeyboardState.IsKeyDown(Keys.A) || state.KeyboardState.IsKeyDown(Keys.S) || state.KeyboardState.IsKeyDown(Keys.D))))
+                    KBScroll = true;
+                else
+                    KBScroll = false;
+                    if (MouseIsOn)
                 {
                     if (state.MouseState.RightButton == ButtonState.Pressed)
                     {
