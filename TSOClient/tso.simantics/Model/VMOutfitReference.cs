@@ -41,10 +41,10 @@ namespace FSO.SimAntics.Model
             ts1 = false;
             if (ts1)
             {
-                return new VMOutfitReference(data);
+                return new VMOutfitReference(data.Trim());
             } else
             {
-                return new VMOutfitReference(Convert.ToUInt64(data, 16));
+                return new VMOutfitReference(Convert.ToUInt64(data.Trim(), 16));
             }
         }
 

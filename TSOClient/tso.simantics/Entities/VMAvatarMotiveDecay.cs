@@ -65,6 +65,7 @@ namespace FSO.SimAntics.Entities
             var roomScore = context.GetRoomScore(context.GetRoomAt(avatar.Position));
             avatar.SetMotiveData(VMMotive.Room, roomScore);
             if (context.Clock.Minutes == LastMinute) return;
+            if (avatar.GetPersonData(VMPersonDataVariable.Cheats) > 0) return;
             LastMinute = context.Clock.Minutes;
 
             var cat = context.VM.TSOState.PropertyCategory;

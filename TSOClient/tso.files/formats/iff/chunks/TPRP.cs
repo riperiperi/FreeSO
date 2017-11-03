@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace FSO.Files.Formats.IFF.Chunks
 {
@@ -40,8 +41,43 @@ namespace FSO.Files.Formats.IFF.Chunks
                     LocalNames[i] = (version == 5) ? io.ReadPascalString() : io.ReadNullTerminatedString();
                 }
 
-                //TODO: flags and unknowns
+                for (int i = 0; i < pCount; i++)
+                {
+                    //flags for parameters. probably disabled, unused, etc.
+                    var flag = io.ReadByte();
+                }
+
+                //what are these?
+                if (version >= 3)
+                    io.ReadInt32();
+                if (version >= 4)
+                    io.ReadInt32();
             }
+        }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteInt32(0);
+                io.WriteInt32(5); //version
+                io.WriteCString("PRPT", 4);
+                io.WriteInt32(ParamNames.Length);
+                io.WriteInt32(LocalNames.Length);
+                foreach (var param in ParamNames)
+                    io.WritePascalString(param);
+                foreach (var local in LocalNames)
+                    io.WritePascalString(local);
+
+                for (int i=0; i<ParamNames.Length; i++)
+                {
+                    io.WriteByte(0);
+                }
+
+                io.WriteInt32(0);
+                io.WriteInt32(0);
+            }
+            return true;
         }
     }
 }

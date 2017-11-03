@@ -1292,7 +1292,10 @@ namespace FSO.Client.UI.Controls
             }
             else
             {
+                if (Style.Shadow)
+                    batch.DrawString(Style.SpriteFont, Text, Position + new Vector2(0, 1), Color.Black, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
                 batch.DrawString(Style.SpriteFont, Text, Position, Style.Color, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+               
             }
         }
         #endregion

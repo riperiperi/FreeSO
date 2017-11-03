@@ -163,12 +163,12 @@ namespace FSO.SimAntics.Primitives
                     //repairs the stack object
                     if (context.StackObject is VMGameObject)
                     {
-                        var state = (context.StackObject.TSOState as VMTSOObjectState);
+                        var state = (context.StackObject.MultitileGroup.BaseObject.TSOState as VMTSOObjectState);
                         state.QtrDaysSinceLastRepair = 0;
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.IsGlobalBroken: //36
-                    return ((context.StackObject.TSOState as VMTSOObjectState)?.Broken == true)?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
+                    return ((context.StackObject.MultitileGroup.BaseObject.TSOState as VMTSOObjectState)?.Broken == true)?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
                 // 37. UNUSED
                 case VMGenericTSOCallMode.MayAddRoommate: //38
                     // CONDITIONS, where stack object is desired roommate: (TODO: support extensions)

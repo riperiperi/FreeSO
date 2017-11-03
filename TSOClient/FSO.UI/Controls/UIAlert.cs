@@ -12,6 +12,7 @@ using FSO.Client.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using FSO.Common.Utils;
+using FSO.UI.Controls;
 
 namespace FSO.Client.UI.Controls
 {
@@ -31,12 +32,19 @@ namespace FSO.Client.UI.Controls
 
         private List<UIButton> Buttons;
         private UITextBox TextBox;
+        private UIColorPicker ColorEntry;
 
         public string ResponseText
         {
             get
             {
-                return (TextBox == null) ? null : TextBox.CurrentText;
+                if (TextBox != null) return TextBox.CurrentText;
+                else if (ColorEntry != null)
+                {
+                    var color = ColorEntry.Color;
+                    return ((color.R << 16) | (color.G << 8) | color.B).ToString();
+                }
+                return null;
             }
             set
             {
@@ -107,6 +115,12 @@ namespace FSO.Client.UI.Controls
                 this.Add(TextBox);
             }
 
+            if (options.Color)
+            {
+                ColorEntry = new UIColorPicker();
+                Add(ColorEntry);
+            }
+
             /** Position buttons **/
             RefreshSize();
         }
@@ -138,6 +152,13 @@ namespace FSO.Client.UI.Controls
                 TextBox.Y = h - 54;
                 TextBox.SetSize(w - 64, 25);
                 h += 45;
+            }
+
+            if (m_Options.Color)
+            {
+                ColorEntry.X = (w - 272) / 2;
+                ColorEntry.Y = h - 54;
+                h += 148;
             }
 
             SetSize(w, h);
@@ -266,6 +287,7 @@ namespace FSO.Client.UI.Controls
         public int MaxChars = int.MaxValue;
         public int TextSize = 10;
         public bool ProgressBar;
+        public bool Color;
 
         public bool TextEntry = false;
         public UIAlertButton[] Buttons = new UIAlertButton[] { new UIAlertButton() };

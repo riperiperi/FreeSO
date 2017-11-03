@@ -64,6 +64,7 @@
     <Compile Include="Controls\UIButton.cs" />
     <Compile Include="Controls\UIClickableLabel.cs" />
     <Compile Include="Controls\UICollectionViewer.cs" />
+    <Compile Include="Controls\UIColorPicker.cs" />
     <Compile Include="Controls\UICustomTooltip.cs" />
     <Compile Include="Controls\UIDialog.cs" />
     <Compile Include="Controls\UIDynamicContainers.cs" />

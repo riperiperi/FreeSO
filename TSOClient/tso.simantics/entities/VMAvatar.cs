@@ -285,6 +285,11 @@ namespace FSO.SimAntics
         {
             if (data == null) return;
 
+            var skinTone = data.GetString(14);
+            if (skinTone.Equals("lgt", StringComparison.InvariantCultureIgnoreCase) || context.VM.TS1) SkinTone = AppearanceType.Light;
+            else if (skinTone.Equals("med", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Medium;
+            else if (skinTone.Equals("drk", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Dark;
+
             try
             {
                 if (context.VM.TS1) {
@@ -297,8 +302,8 @@ namespace FSO.SimAntics
 
                     if (randBody != "")
                     {
-                        var bodySpl = randBody.Split(';');
-                        DefaultSuits.Daywear = VMOutfitReference.Parse(bodySpl[context.NextRandom((ulong)bodySpl.Length - 1)], context.VM.TS1);
+                        var bodySpl = randBody.Split(';').Where(x => !string.IsNullOrEmpty(x)).ToArray();
+                        DefaultSuits.Daywear = VMOutfitReference.Parse(bodySpl[context.NextRandom((ulong)bodySpl.Length)], context.VM.TS1);
                     }
                     else if (body != "")
                     {
@@ -312,8 +317,8 @@ namespace FSO.SimAntics
 
                     if (randHead != "")
                     {
-                        var headSpl = randHead.Split(';');
-                        HeadOutfit = VMOutfitReference.Parse(headSpl[context.NextRandom((ulong)headSpl.Length - 1)], context.VM.TS1);
+                        var headSpl = randHead.Split(';').Where(x => !string.IsNullOrEmpty(x)).ToArray();
+                        HeadOutfit = VMOutfitReference.Parse(headSpl[context.NextRandom((ulong)headSpl.Length)], context.VM.TS1);
                     }
                     else if (head != "")
                     {
@@ -339,16 +344,11 @@ namespace FSO.SimAntics
             var names = data.GetString(11);
             if (names != "")
             {
-                var nameSpl = names.Split(';');
+                var nameSpl = names.Split(';').Where(x => !string.IsNullOrEmpty(x)).ToArray();
                 Name = nameSpl[context.NextRandom((ulong)nameSpl.Length)];
             }
 
             PersonData[(int)VMPersonDataVariable.PersonsAge] = Convert.ToInt16(data.GetString(13));
-
-            var skinTone = data.GetString(14);
-            if (skinTone.Equals("lgt", StringComparison.InvariantCultureIgnoreCase) || context.VM.TS1) SkinTone = AppearanceType.Light;
-            else if (skinTone.Equals("med", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Medium;
-            else if (skinTone.Equals("drk", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Dark;
         }
 
         public void InitBodyData(VMContext context)

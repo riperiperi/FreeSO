@@ -266,7 +266,10 @@ namespace FSO.Client.UI.Panels
                     Parent.Add(TS1NeighSelector);
                     TS1NeighSelector.OnHouseSelect += HouseSelected;
                     return;
-
+                case VMDialogType.FSOColor:
+                    options.Buttons = new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, b0Event, info.Yes), new UIAlertButton(UIAlertButtonType.Cancel, b1Event, info.Cancel) };
+                    options.Color = true;
+                    break;
             }
 
             var alert = UIScreen.GlobalShowAlert(options, true);
