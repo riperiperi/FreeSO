@@ -47,7 +47,7 @@ namespace FSO.SimAntics.Engine.Primitives
                     break;
                 case VMCreateObjectPosition.InSlot0OfStackObject:
                 case VMCreateObjectPosition.InMyHand:
-                    dir = Direction.NORTH;
+                    dir = (operand.Position == VMCreateObjectPosition.InMyHand)?context.Caller.Direction:context.StackObject.Direction;
                     //this object should start in slot 0 of the stack object!
                     //we have to create it first tho so hold your horses
                     break;

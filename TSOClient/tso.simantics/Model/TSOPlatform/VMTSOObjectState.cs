@@ -53,6 +53,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
         }
 
         public void ProcessQTRDay(VM vm, VMEntity owner) {
+            if (((VMGameObject)owner).Disabled > 0) return;
             Wear += 1;
             if (Wear > 90 * 4) Wear = 90 * 4;
 
@@ -69,7 +70,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
                 //lerp
                 //1% at 50%, 4% at 90%
                 var prob = 100 + ((Wear - (50 * 4)) * 75) / 40;
-                if (rand < prob)
+                if (rand < prob && owner.MultitileGroup.BaseObject == owner)
                 {
                     //break the object
                     QtrDaysSinceLastRepair = 255;

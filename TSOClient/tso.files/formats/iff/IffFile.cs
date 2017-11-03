@@ -213,7 +213,6 @@ namespace FSO.Files.Formats.IFF
 
                     //todo: exporting PIFF as IFF SHOULD NOT DO THIS
                     c.OriginalData = data; //if we revert, it is to the last save.
-                    c.AddedByPatch = false;
                     c.RuntimeInfo = ChunkRuntimeState.Normal;
 
                     io.WriteUInt32((uint)data.Length+76);

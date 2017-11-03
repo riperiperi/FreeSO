@@ -84,7 +84,12 @@ namespace FSO.LotView.Components
             get
             {
                 if (Container == null) return _Position + AltitudeOff;
-                else return Container.GetSLOTPosition(ContainerSlot) + new Vector3(0.5f, 0.5f, (IsPet?0:-1.4f)); //apply offset to snap character into slot
+                else
+                {
+                    var pos = Container.GetSLOTPosition(ContainerSlot);
+                    pos.Z = (float)Math.Round(pos.Z / 2.95f) * 2.95f;
+                    return pos + new Vector3(0.5f, 0.5f, 0); //pos + new Vector3(0.5f, 0.5f, (IsPet ? 0 : -1.4f)); //apply offset to snap character into slot
+                }
             }
             set
             {

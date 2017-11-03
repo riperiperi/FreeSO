@@ -101,6 +101,14 @@ namespace FSO.SimAntics.Primitives
                             if ((operand.Flags & VMDialogFlags.UseTempXL) > 0) context.Thread.TempXL[tempNumber] = number;
                             else context.Thread.TempRegisters[tempNumber] = (short)number;
                             return VMPrimitiveExitCode.GOTO_TRUE;
+                        case VMDialogType.FSOColor:
+                            int number2;
+                            if (curDialog.ResponseCode == 1) return VMPrimitiveExitCode.GOTO_FALSE;
+                            if (!int.TryParse(curDialog.ResponseText, out number2)) return VMPrimitiveExitCode.GOTO_FALSE;
+                            context.Thread.TempRegisters[0] = (byte)(number2 >> 16);
+                            context.Thread.TempRegisters[1] = (byte)(number2 >> 8);
+                            context.Thread.TempRegisters[2] = (byte)(number2);
+                            return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                 }
                 else
@@ -242,7 +250,9 @@ namespace FSO.SimAntics.Primitives
         TS1Spellbook = 12,
         TS1Magictown = 13,
         TS1TransformMe = 14,
-        TS1Cookbook = 15
+        TS1Cookbook = 15,
+        
+        FSOColor = 128
     }
 
     public class VMDialogResult : VMAsyncState

@@ -489,7 +489,7 @@ namespace FSO.Client.UI.Panels
 
             if (entity is VMGameObject) {
                 WearProgressBar.Value = 100-((VMTSOObjectState)entity.TSOState).Wear/4;
-                WearProgressBar.Caption = ((VMTSOObjectState)entity.TSOState).Broken? GameFacade.Strings.GetString("206", "34") : null;
+                WearProgressBar.Caption = ((VMTSOObjectState)entity.MultitileGroup.BaseObject.TSOState).Broken? GameFacade.Strings.GetString("206", "34") : null;
                 WearValueText.Caption = ((VMTSOObjectState)entity.TSOState).Wear / 4 + "%";
                 var objects = entity.MultitileGroup.Objects;
                 ObjectComponent[] objComps = new ObjectComponent[objects.Count];

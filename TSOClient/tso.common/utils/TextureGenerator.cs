@@ -476,5 +476,94 @@ namespace FSO.Common.Utils
 
             return Moon;
         }
+
+        public static Color FromHSV(float h, float s, float v)
+        {
+            var h2 = (int)h / 60;
+            var chroma = s * v; //times value, but it is always one
+            var X = chroma * (1 - Math.Abs(((h / 60f) % 2) - 1));
+            Color result;
+            switch (h2)
+            {
+                case 0:
+                    result = new Color(chroma, X, 0); break;
+                case 1:
+                    result = new Color(X, chroma, 0); break;
+                case 2:
+                    result = new Color(0, chroma, X); break;
+                case 3:
+                    result = new Color(0, X, chroma); break;
+                case 4:
+                    result = new Color(X, 0, chroma); break;
+                case 5:
+                    result = new Color(chroma, 0, X); break;
+                default:
+                    result = Color.Black; break; //undefined
+            }
+            var m = v - chroma;
+            var blend = Color.White * m;
+            result.R += blend.R;
+            result.G += blend.G;
+            result.B += blend.B;
+            return result;
+        }
+
+        public static Tuple<float, float, float> ToHSV(Color color)
+        {
+            var r = color.R / 255f;
+            var g = color.G / 255f;
+            var b = color.B / 255f;
+            var min = Math.Min(Math.Min(r, g), b);
+            var max = Math.Max(Math.Max(r, g), b);
+            if (min == max) return new Tuple<float, float, float>(0, 0, min);
+
+            var d = (r == min) ? (g - b) : ((b == min) ? r - g : b - r);
+            var h = (r == min) ? 3 : ((b == min) ? 1 : 5);
+            return new Tuple<float, float, float>(
+                60 * (h - d / (max - min)),
+                (max - min) / max,
+                max);
+        }
+
+        private static Texture2D HSMatrix;
+        public static Texture2D GetHSMatrix(GraphicsDevice gd)
+        {
+            if (HSMatrix == null)
+            {
+                HSMatrix = new Texture2D(gd, 360, 256);
+                Color[] data = new Color[360 * 256];
+                int offset = 0;
+                for (int y = 0; y < 256; y++) //y is saturation
+                {
+                    for (int x = 0; x < 360; x++) //x is hue
+                    {
+                        data[offset++] = FromHSV(x, 1 - (y / 256f), 1f);
+                    }
+                }
+                HSMatrix.SetData<Color>(data);
+            }
+
+            return HSMatrix;
+        }
+
+        private static Texture2D HSGrad;
+        public static Texture2D GetHSGrad(GraphicsDevice gd)
+        {
+            if (HSGrad == null)
+            {
+                HSGrad = new Texture2D(gd, 1, 256);
+                Color[] data = new Color[1 * 256];
+                int offset = 0;
+                for (int y = 0; y < 256; y++) //y is saturation
+                {
+                    var mod = Color.White * (1 - y / 255f);
+                    mod.A = 255;
+                    data[offset++] = mod; 
+                }
+                HSGrad.SetData<Color>(data);
+            }
+
+            return HSGrad;
+        }
     }
 }

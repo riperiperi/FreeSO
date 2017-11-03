@@ -236,8 +236,13 @@ namespace FSO.SimAntics.NetPlay.Model
         {
             SkinTone = (byte)avatar.SkinTone;
             DefaultSuits = avatar.DefaultSuits; //todo: clone?
-            //if naked, save in daywear.
-            BodyOutfit = (avatar.BodyOutfit.ID == 0x24E0000000D || avatar.BodyOutfit.ID == 0x10000000D)?avatar.DefaultSuits.Daywear.ID : avatar.BodyOutfit.ID;
+            //if naked or using clothes rack, save in daywear.
+            //TODO: store and check simantics outfit category, and restore using that instead.
+            var dyn = avatar.DynamicSuits;
+            var bID = avatar.BodyOutfit.ID;
+            var saveDaywear = dyn.Daywear == bID || dyn.Sleepwear == bID || dyn.Swimwear == bID;
+            saveDaywear = saveDaywear || (bID == 0x24E0000000D || bID == 0x10000000D);
+            BodyOutfit = (saveDaywear)?avatar.DefaultSuits.Daywear.ID : bID;
 
             HeadOutfit = avatar.HeadOutfit.ID;
             Name = avatar.Name;
