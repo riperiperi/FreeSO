@@ -6,6 +6,7 @@ using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 using FSO.SimAntics.NetPlay.EODs.Handlers.Data;
 using FSO.SimAntics.NetPlay.EODs.Model;
 using FSO.SimAntics.NetPlay.EODs.Utils;
+using FSO.SimAntics.Model.TSOPlatform;
 using Mina.Core.Buffer;
 using System;
 using System.Collections.Generic;
@@ -117,7 +118,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 }
                 RackType = (RackType)rackType;
                 client.Send("rack_show", ((short)RackType).ToString());
-                BroadcastOutfits(client.vm, false);
+                if (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID)
+                    BroadcastOutfits(client.vm, true);
+                else
+                    BroadcastOutfits(client.vm, false);
             }
         }
 

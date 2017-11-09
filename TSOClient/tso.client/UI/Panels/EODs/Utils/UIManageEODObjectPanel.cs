@@ -744,7 +744,8 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             if (Type.Equals(ManageEODObjectTypes.Roulette))
             {
                 typeConditional = "Roulette Tables must be able to cover 35 times any bet for 4 simultaneous players, so AT LEAST 140x the maximum bet."
-                    + System.Environment.NewLine + "For example: if your maximum bet is $100, you must have AT LEAST $14000 in this object.";
+                    + System.Environment.NewLine + System.Environment.NewLine + 
+                    "For example: if your maximum bet is $100, you must have AT LEAST $14000 in this object.";
                 if (isMinBet)
                 {
                     setBet = "Minimum";

@@ -182,6 +182,7 @@ namespace FSO.Client.UI.Panels.EODs
         {
             SetTip("");
             Send("roulette_UI_close", "");
+            CloseInteraction();
             base.OnClose();
         }
         // Server sends EOD time remaining as a string. Ignore this if in Managing State.

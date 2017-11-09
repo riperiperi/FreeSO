@@ -336,7 +336,7 @@ namespace FSO.Client.UI.Panels
                 EODSub.Reset();
                 EODMsgWin.Reset();
 
-                var buttons = new string[] { "None", "One", "Two" };
+                var buttons = new string[] { "None", "One", "Two", "Three" }; // three doesn't work, but at least for now it won't be out of bounds array
                 var buttonLayout = buttons[options.Buttons];
                 Script.ApplyControlProperties(EODButtonLayout, "EODButtonLayout" + buttonLayout + EODLayout.GetHeightSuffix(options.Height, true));
                 Script.ApplyControlProperties(EODSub, "EODSub" + options.Length + "Length" + EODLayout.GetHeightSuffix(options.Height, true));
