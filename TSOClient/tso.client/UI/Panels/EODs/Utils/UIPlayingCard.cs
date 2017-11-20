@@ -37,6 +37,16 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             else
                 return null;
         }
+        public static string GetRandomCardName()
+        {
+            var cards = Enum.GetNames(typeof(FullPlayCardAssets));
+            Random random = new Random();
+            var card = cards[random.Next(0, cards.Length)];
+            // do not return card named "Back"
+            while (card.Equals(FullPlayCardAssets.Back.ToString()))
+                card = cards[random.Next(0, cards.Length)];
+            return (card);
+        }
         /*
          * partial card textures have filenames starting with b*** .bmp - e.g. (./uigraphics/eods/casinoshared/cards/b6c.bmp) bback.bmp
          */
