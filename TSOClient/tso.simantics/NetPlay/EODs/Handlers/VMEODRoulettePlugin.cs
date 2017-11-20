@@ -25,7 +25,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private int Roundtimer;
         private int Tock;
         private VMEODClient Controller;
-        private VMEODClient Croupier;
+        private VMAvatar Croupier;
         private VMEODClient Owner;
         private List<RoulettePlayer> Players;
         private Random NextBall = new Random();
@@ -325,8 +325,14 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             player.SimoleonBalance = (int)budget2;
                             client.Send("roulette_player", new byte[] { (byte)(MinBet / 255), (byte)(MinBet % 255), (byte)(MaxBet / 255),
                                 (byte)(MaxBet % 255), (byte)(player.SimoleonBalance / 255), (byte)(player.SimoleonBalance % 255) });
-                            if (Croupier != null && GameState.Equals(VMEODRouletteGameStates.WaitingForPlayer))
-                                EnqueueGotoState(VMEODRouletteGameStates.BettingRound);
+
+                            // for some reason, subsequent NPC VMs after the first one do not talk to the plugin, so a failsafe is necessary
+                            Croupier = GetCroupierFromObject();
+                            if (Croupier != null)
+                            {
+                                if (GameState.Equals(VMEODRouletteGameStates.WaitingForPlayer) || GameState.Equals(VMEODRouletteGameStates.Closed))
+                                    EnqueueGotoState(VMEODRouletteGameStates.BettingRound);
+                            }
                         }
                     });
                 }
@@ -366,7 +372,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     else // not the owner, just the croupier
                     {
                         // The cropuier's client is only used for animations. They literally have no other function.
-                        Croupier = client;
+                        Croupier = client.Avatar;
                         if (Players.Count == 0)
                             EnqueueGotoState(VMEODRouletteGameStates.WaitingForPlayer);
                         else
@@ -382,7 +388,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         public override void OnDisconnection(VMEODClient client)
         {
-            if (Croupier != null && client.Equals(Croupier))
+            if (Croupier != null && client.Avatar != null && client.Avatar.Equals(Croupier))
             {
                 CloseTable();
             }
@@ -416,6 +422,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             if (Controller == null)
                 return;
+            Croupier = GetCroupierFromObject();
+            if (Croupier == null)
+                CloseTable();
             if (NextState != VMEODRouletteGameStates.Invalid)
             {
                 GotoState(NextState);
@@ -452,6 +461,20 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
             }
             base.Tick();
+        }
+
+        private VMAvatar GetCroupierFromObject()
+        {
+            VMAvatar avatar = null;
+            try
+            {
+                avatar = (VMAvatar)Server.Object.MultitileGroup.Objects[0].Contained[0];
+            }
+            catch (NullReferenceException NullException)
+            {
+
+            }
+            return avatar;
         }
 
         private void RemoveBetHandler(string evt, string valueAndTypeAndNumbers, VMEODClient client)
@@ -806,7 +829,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         Tock = 0;
                         GameState = state;
                         // send event for croupier to collect chips
-                        Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.CroupierCollectChips, Croupier.Avatar.ObjectID));
+                        Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.CroupierCollectChips, Croupier.ObjectID));
                         // pay the payouts
                         SettleAccounts(false);
                         break;
@@ -817,7 +840,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         GameState = state;
 
                         // send event for croupier to spin the wheel
-                        Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.CroupierSpinWheel, Croupier.Avatar.ObjectID));
+                        Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.CroupierSpinWheel, Croupier.ObjectID));
 
                         int winningNumber = NextBall.Next(0, 38);
                         if (winningNumber == 37)
@@ -890,7 +913,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     else // removal of null client
                         Players.Remove(player);
                 }
-                if (Croupier == null || Croupier.Avatar == null || Croupier.Avatar.Dead)
+                // failsafe, do we still have a croupier?
+                Croupier = GetCroupierFromObject();
+                if (Croupier == null || Croupier.Dead)
                     CloseTable();
                 else if (Players.Count == 0)
                     EnqueueGotoState(VMEODRouletteGameStates.WaitingForPlayer);

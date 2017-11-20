@@ -1,10 +1,12 @@
-﻿using FSO.Client.UI.Controls;
+﻿using FSO.Content.Model;
+using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Framework.Parser;
 using FSO.Client.UI.Panels.EODs.Utils;
 using FSO.SimAntics.NetPlay.EODs.Handlers;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.IO;
 using System.Timers;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +19,7 @@ namespace FSO.Client.UI.Panels.EODs
     {
         public UIScript Script;
         private UIManageEODObjectPanel OwnerPanel;
-
+        private bool IsManaging;
         private byte MachineOdds { get; set; }
         private int EachBet;
         private int CurrentBet;
@@ -45,10 +47,10 @@ namespace FSO.Client.UI.Panels.EODs
         // Owner UI Textfields
         public UITextEdit CurrentOdds { get; set; }
         public UITextEdit CashText { get; set; }
-        public UILabel Odds { get; set; } // starts at opaque=0
-        public UILabel House { get; set; } // starts at opaque=0
-        public UILabel Player { get; set; } // starts at opaque=0
-        public UILabel OnOff { get; set; } // starts at opaque=0
+        public UILabel Odds { get; set; }
+        public UILabel House { get; set; }
+        public UILabel Player { get; set; }
+        public UILabel OnOff { get; set; }
 
         /*
          * Player UI Elements
@@ -84,6 +86,8 @@ namespace FSO.Client.UI.Panels.EODs
         public UILabel PayoutTable1 { get; set; }
         public UILabel PayoutTable2 { get; set; }
         public UILabel PayoutTable3 { get; set; }
+        private UILabel PayoutTable4;
+        private UILabel PayoutTable5;
         public UITextEdit BetText { get; set; }
         public UITextEdit PayoutText1 { get; set; }
         public UITextEdit PayoutText2 { get; set; }
@@ -99,12 +103,16 @@ namespace FSO.Client.UI.Panels.EODs
         public Texture2D Wheel1Image { get; set; }
         public Texture2D Wheel2Image { get; set; }
         public Texture2D Wheel3Image { get; set; }
+        private Texture2D Wheel4Image;
+        private Texture2D Wheel5Image = GetTexture(0x00000C9C00000001);
         public Texture2D MoneyChipsImage { get; set; }
         public Texture2D LightsFrame1Image { get; set; }
         public Texture2D LightsFrame2Image { get; set; }
         public Texture2D Wheel1LegendImage { get; set; }
         public Texture2D Wheel2LegendImage { get; set; }
         public Texture2D Wheel3LegendImage { get; set; }
+        private Texture2D Wheel4LegendImage;
+        private Texture2D Wheel5LegendImage = GetTexture(0x00000CA700000001);
 
         // texutre constants including positions of each slot stop in the texture file
         public const int WHEEL_TEXTURE_WIDTH_AND_HEIGHT = 58;
@@ -120,7 +128,80 @@ namespace FSO.Client.UI.Panels.EODs
         public UISlotsEOD(UIEODController controller) : base(controller)
         {
             Script = this.RenderScript("slotseod.uis");
+
+            /*
+             * special cases not included in script, Custom Content Slot Machine Types
+             */
+            var gd = Wheel1Image.GraphicsDevice;
+            // try to get textures for Slot Machine #4 Slot stops
+            try
+            {
+                AbstractTextureRef wheel4ImageRef = new FileTextureRef("Content/Textures/EOD/eod_slots_wheelandspin4.bmp");
+                Wheel4Image = wheel4ImageRef.Get(gd);
+            }
+            catch (Exception e)
+            {
+                Wheel4Image = Wheel3Image;
+            }
+            // try to get textures for Slot Machine #4 Legend - if fail use slot machine #3 as default
+            try
+            {
+                AbstractTextureRef wheel4LegendImageRef = new FileTextureRef("Content/Textures/EOD/eod_slots_wheellegend4.bmp");
+                Wheel4LegendImage = wheel4LegendImageRef.Get(gd);
+            }
+            catch (Exception e)
+            {
+                Wheel4LegendImage = Wheel3LegendImage;
+            }
+
+            // try to get textures for Slot Machine #5 Slot stops
+            try
+            {
+                AbstractTextureRef wheel5ImageRef = new FileTextureRef("Content/Textures/EOD/eod_slots_wheelandspin5.bmp");
+                Wheel5Image = wheel5ImageRef.Get(gd);
+            }
+            catch (Exception e)
+            {
+                Wheel5Image = Wheel3Image;
+            }
+            // try to get textures for Slot Machine #5 Legend - if fail use slot machine #3 as default
+            try
+            {
+                AbstractTextureRef wheel5LegendImageRef = new FileTextureRef("Content/Textures/EOD/eod_slots_wheellegend5.bmp");
+                Wheel5LegendImage = wheel5LegendImageRef.Get(gd);
+            }
+            catch (Exception e)
+            {
+                Wheel5LegendImage = Wheel3LegendImage;
+            }
+
+            // payout tables for slot machine #4 and #5
+            var textStyle = PayoutTable3.CaptionStyle;
+            PayoutTable4 = new UILabel()
+            {
+                Size = PayoutTable3.Size,
+                X = PayoutTable3.X,
+                Y = PayoutTable3.Y,
+                _Alignment = 1,
+                Caption = "\"" + VMEODSlotMachineMaximumBalances.X_Marks_the_Spot.ToString().Replace('_', ' ') + "\""
+                + GameFacade.Strings["UIText", "259", "15"].Remove(0,8),
+                CaptionStyle = textStyle
+            };
+            Add(PayoutTable4);
+            PayoutTable5 = new UILabel()
+            {
+                Size = PayoutTable3.Size,
+                X = PayoutTable3.X,
+                Y = PayoutTable3.Y,
+                _Alignment = 1,
+                Caption = "\"" + VMEODSlotMachineMaximumBalances.Undefined.ToString().Replace('_', ' ') + "\""
+                + GameFacade.Strings["UIText", "259", "15"].Remove(0, 8),
+                CaptionStyle = textStyle
+            };
+            Add(PayoutTable5);
+
             PlaintextHandlers["slots_new_game"] = NewGameHandler;
+            PlaintextHandlers["slots_cleanup"] = CleanUpHandler;
             PlaintextHandlers["slots_display_win"] = DisplayWinHandler;
             PlaintextHandlers["slots_display_loss"] = DisplayLossHandler;
             PlaintextHandlers["slots_close_machine"] = CloseMachineHandler;
@@ -128,7 +209,7 @@ namespace FSO.Client.UI.Panels.EODs
             PlaintextHandlers["slots_deposit_NSF"] = DepositFailHandler;
             PlaintextHandlers["slots_withdraw_fail"] = InputFailHandler;
             PlaintextHandlers["slots_deposit_fail"] = InputFailHandler;
-            BinaryHandlers["slots_owner_init"] = OwnerInitHandler;
+            PlaintextHandlers["slots_owner_init"] = OwnerInitHandler;
             BinaryHandlers["slots_player_init"] = PlayerInitHandler;
             BinaryHandlers["slots_spin"] = SlotsSpinHandler;
         }
@@ -178,6 +259,7 @@ namespace FSO.Client.UI.Panels.EODs
         {
             SetTip("");
             Send("slots_close_UI", "");
+            CloseInteraction();
             base.OnClose();
         }
         private void PlayerInitHandler(string evt, byte[] args)
@@ -346,8 +428,8 @@ namespace FSO.Client.UI.Panels.EODs
             WinningLine = Script.Create<UIImage>("WinningLine");
             Add(WinningLine);
 
-            if ((args != null) && (args.Length > 1))
-                MachineTypeInit(args[1]);
+            if ((args != null) && (args.Length > 0))
+                MachineTypeInit(args[0]);
             else
                 MachineTypeInit(0);
 
@@ -364,8 +446,10 @@ namespace FSO.Client.UI.Panels.EODs
             WheelsSpinTimer.Elapsed += new ElapsedEventHandler(AnimateWheelsHandler);
         }
 
-        private void OwnerInitHandler(string evt, byte[] args)
+        private void OwnerInitHandler(string evt, string paybackBalanceTypeIsOn)
         {
+            IsManaging = true;
+
             // hide player UI elements
             Loading.Visible = false;
             ArmButton.Visible = false;
@@ -375,6 +459,8 @@ namespace FSO.Client.UI.Panels.EODs
             PayoutTable1.Visible = false;
             PayoutTable2.Visible = false;
             PayoutTable3.Visible = false;
+            PayoutTable4.Visible = false;
+            PayoutTable5.Visible = false;
             BetText.Visible = false;
             PayoutText1.Visible = false;
             PayoutText2.Visible = false;
@@ -396,30 +482,55 @@ namespace FSO.Client.UI.Panels.EODs
             CashText.Visible = false;
 
             bool machineIsOn = false;
-            if (args != null && args.Length > 3)
+            if (paybackBalanceTypeIsOn != null)
             {
-                MachineOdds = args[0];
-                MachineBalance = (255 * args[2]) + args[1];
-
-                // on/off button
-                if (args[3] == 1)
-                    machineIsOn = true;
-
-                // min/max balances
-                switch (args[4])
+                var split = paybackBalanceTypeIsOn.Split('%');
+                byte payBack = 0;
+                int machineBalance = -1;
+                byte machineType = 5;
+                byte machinePower = 0;
+                if (split.Length > 3 && Byte.TryParse(split[0], out payBack) && Byte.TryParse(split[2], out machineType) &&
+                    Byte.TryParse(split[3], out machinePower) && Int32.TryParse(split[1], out machineBalance))
                 {
-                    case 0:
-                        MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Viva_PGT;
-                        MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Viva_PGT;
-                        break;
-                    case 1:
-                        MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Gypsy_Queen;
-                        MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Gypsy_Queen;
-                        break;
-                    default:
-                        MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Jack_of_Hearts;
-                        MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Jack_of_Hearts;
-                        break;
+                    if (payBack < 80)
+                        payBack = 80;
+                    else if (payBack > 110)
+                        payBack = 110;
+                    MachineOdds = payBack;
+                    
+                    MachineBalance = machineBalance;
+
+                    // on/off button
+                    if (machinePower == 1)
+                        machineIsOn = true;
+
+                    if (machineType > 4)
+                        machineType = 0;
+
+                    // min/max balances
+                    switch (machineType)
+                    {
+                        case 0:
+                            MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Viva_PGT;
+                            MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Viva_PGT;
+                            break;
+                        case 1:
+                            MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Gypsy_Queen;
+                            MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Gypsy_Queen;
+                            break;
+                        case 2:
+                            MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Jack_of_Hearts;
+                            MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Jack_of_Hearts;
+                            break;
+                        case 3:
+                            MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.X_Marks_the_Spot;
+                            MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.X_Marks_the_Spot;
+                            break;
+                        case 4:
+                            MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Undefined;
+                            MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Undefined;
+                            break;
+                    }
                 }
             }
             // add an owner panel in order to manage
@@ -473,15 +584,18 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void NewGameHandler(string evt, string message)
         {
-            WheelSpinTickCounter = 0;
-            LightsTimer.Stop();
-            LightsTimer.Interval = 666 + (2 / 3);
-            LightsTimer.Start();
-            AddPlayerListeners();
-            WheelListOne.Reset();
-            WheelListTwo.Reset();
-            WheelListThree.Reset();
-            SetTip(GameFacade.Strings["UIText", "259", "18"]);
+            if (!IsManaging)
+            {
+                WheelSpinTickCounter = 0;
+                LightsTimer.Stop();
+                LightsTimer.Interval = 666 + (2 / 3);
+                LightsTimer.Start();
+                AddPlayerListeners();
+                WheelListOne.Reset();
+                WheelListTwo.Reset();
+                WheelListThree.Reset();
+                SetTip(GameFacade.Strings["UIText", "259", "18"]);
+            }
         }
         private void BetIncreaseButtonPressedHandler(UIElement targetButton)
         {
@@ -493,7 +607,6 @@ namespace FSO.Client.UI.Panels.EODs
             else
             {
                 CurrentBet++;
-                DisplayedBet = CurrentBet * EachBet;
                 UpdateBetText();
             }
             AddPlayerListeners();
@@ -508,7 +621,6 @@ namespace FSO.Client.UI.Panels.EODs
             else
             {
                 CurrentBet--;
-                DisplayedBet = CurrentBet * EachBet;
                 UpdateBetText();
             }
             AddPlayerListeners();
@@ -590,13 +702,17 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void CloseMachineHandler(string evt, string msg)
         {
-            LightsTimer.Stop();
-            OfflineMessageTimer.Start();
-            BetText.Visible = false;
-            SetTip(GameFacade.Strings["UIText", "259", "22"]);
+            if (!IsManaging)
+            {
+                LightsTimer.Stop();
+                OfflineMessageTimer.Start();
+                BetText.Visible = false;
+                SetTip(GameFacade.Strings["UIText", "259", "22"]);
+            }
         }
         private void LightsHandler(object source, ElapsedEventArgs args)
         {
+            Parent.Invalidate();
             if (LightsFrame2 == null) { return; }
             else if (LightsFrame2.Visible == true)
                 LightsFrame2.Visible = false;
@@ -605,10 +721,14 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void OfflineMessageHandler(object source, ElapsedEventArgs args)
         {
-            if (Controller.EODMessage.Equals(GameFacade.Strings["UIText", "259", "22"]))
+            Parent.Invalidate();
+            if (!IsManaging)
+            {
+                if (Controller.EODMessage.Equals(GameFacade.Strings["UIText", "259", "22"]))
                 SetTip(GameFacade.Strings["UIText", "259", "23"]);
             else
                 SetTip(GameFacade.Strings["UIText", "259", "22"]);
+            }
         }
         private void DrawWheelStops(bool wheelOneAlreadyDone, bool wheelTwoAlreadyDone, bool wheelThreeAlreadyDone)
         {
@@ -671,7 +791,10 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTable1.Y -= 5;
                     PayoutTable2.Visible = false;
                     PayoutTable3.Visible = false;
+                    PayoutTable4.Visible = false;
+                    PayoutTable5.Visible = false;
                     ActivePayoutTable = PayoutTable1;
+                    PayoutTable1.Caption = PayoutTable1.Caption.Replace("Viva PGT", "\"Viva PGT\"");
                     EachBet = 1;
                     break;
                 case 1:
@@ -691,6 +814,8 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTable2.Y -= 5;
                     PayoutTable1.Visible = false;
                     PayoutTable3.Visible = false;
+                    PayoutTable4.Visible = false;
+                    PayoutTable5.Visible = false;
                     ActivePayoutTable = PayoutTable2;
                     EachBet = 5;
                     break;
@@ -711,10 +836,54 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTable3.Y -= 5;
                     PayoutTable1.Visible = false;
                     PayoutTable2.Visible = false;
+                    PayoutTable4.Visible = false;
+                    PayoutTable5.Visible = false;
                     ActivePayoutTable = PayoutTable3;
                     EachBet = 10;
                     break;
-                default:
+                case 3:
+                    Wheel1.Texture = Wheel4Image;
+                    Wheel2.Texture = Wheel4Image;
+                    Wheel3.Texture = Wheel4Image;
+                    ActiveWheelTexture = Wheel4Image;
+                    PayoutTableColumn1Row1.Texture = Wheel4LegendImage;
+                    PayoutTableColumn1Row2.Texture = Wheel4LegendImage;
+                    PayoutTableColumn1Row3.Texture = Wheel4LegendImage;
+                    PayoutTableColumn1Row4.Texture = Wheel4LegendImage;
+                    PayoutTableColumn2Row1.Texture = Wheel4LegendImage;
+                    PayoutTableColumn2Row2.Texture = Wheel4LegendImage;
+                    PayoutTableColumn2Row3.Texture = Wheel4LegendImage;
+                    PayoutTableColumn2Row4.Texture = Wheel4LegendImage;
+                    PayoutTable4.X -= 40;
+                    PayoutTable4.Y -= 5;
+                    PayoutTable1.Visible = false;
+                    PayoutTable2.Visible = false;
+                    PayoutTable3.Visible = false;
+                    PayoutTable5.Visible = false;
+                    ActivePayoutTable = PayoutTable4;
+                    EachBet = 25;
+                    break;
+                case 4:
+                    Wheel1.Texture = Wheel5Image;
+                    Wheel2.Texture = Wheel5Image;
+                    Wheel3.Texture = Wheel5Image;
+                    ActiveWheelTexture = Wheel5Image;
+                    PayoutTableColumn1Row1.Texture = Wheel5LegendImage;
+                    PayoutTableColumn1Row2.Texture = Wheel5LegendImage;
+                    PayoutTableColumn1Row3.Texture = Wheel5LegendImage;
+                    PayoutTableColumn1Row4.Texture = Wheel5LegendImage;
+                    PayoutTableColumn2Row1.Texture = Wheel5LegendImage;
+                    PayoutTableColumn2Row2.Texture = Wheel5LegendImage;
+                    PayoutTableColumn2Row3.Texture = Wheel5LegendImage;
+                    PayoutTableColumn2Row4.Texture = Wheel5LegendImage;
+                    PayoutTable5.X -= 32;
+                    PayoutTable5.Y -= 5;
+                    PayoutTable1.Visible = false;
+                    PayoutTable2.Visible = false;
+                    PayoutTable3.Visible = false;
+                    PayoutTable4.Visible = false;
+                    ActivePayoutTable = PayoutTable5;
+                    EachBet = 100;
                     break;
             }
             // customise the chips texture
@@ -724,29 +893,19 @@ namespace FSO.Client.UI.Panels.EODs
             BetText.Mode = UITextEditMode.ReadOnly;
             Add(BetText);
             CurrentBet = 1;
-            DisplayedBet = CurrentBet * EachBet;
             UpdateBetText();
         }
         private void UpdateBetText()
         {
+            DisplayedBet = CurrentBet * EachBet;
             BetText.CurrentText = "$" + DisplayedBet;
         }
         private void RemovePlayerListeners()
         {
-            try
-            {
-                ArmButton.OnButtonClick -= SpinButtonPressedHandler;
-                SpinButton.OnButtonClick -= SpinButtonPressedHandler;
-                SpinnerIncreaseBet.OnButtonClick -= BetIncreaseButtonPressedHandler;
-                SpinnerDecreaseBet.OnButtonClick -= BetDecreaseButtonPressedHandler;
-            }
-            catch (Exception error)
-            {
-                ArmButton.Disabled = true;
-                SpinButton.Disabled = true;
-                SpinnerIncreaseBet.Disabled = true;
-                SpinnerDecreaseBet.Disabled = true;
-            }
+            ArmButton.OnButtonClick -= SpinButtonPressedHandler;
+            SpinButton.OnButtonClick -= SpinButtonPressedHandler;
+            SpinnerIncreaseBet.OnButtonClick -= BetIncreaseButtonPressedHandler;
+            SpinnerDecreaseBet.OnButtonClick -= BetDecreaseButtonPressedHandler;
         }
         private void AddPlayerListeners()
         {
@@ -758,6 +917,17 @@ namespace FSO.Client.UI.Panels.EODs
             SpinButton.Disabled = false;
             SpinnerIncreaseBet.Disabled = false;
             SpinnerDecreaseBet.Disabled = false;
+        }
+        private void CleanUpHandler(string evt, string nothing)
+        {
+            if (Wheel4Image != null)
+                Wheel4Image.Dispose();
+            if (Wheel4LegendImage != null)
+                Wheel4LegendImage.Dispose();
+            if (Wheel5Image != null)
+                Wheel5Image.Dispose();
+            if (Wheel5LegendImage != null)
+                Wheel5LegendImage.Dispose();
         }
     }
     class WheelStopsList

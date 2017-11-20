@@ -536,7 +536,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 System.Environment.NewLine + System.Environment.NewLine + "(This machine cannot hold more than: $" + ObjectMaximumBalance + ")",
                 Alignment = TextAlignment.Left,
                 TextEntry = true,
-                MaxChars = (Type.Equals(ManageEODObjectTypes.SlotMachine)) ? 5 : 6,
+                MaxChars = 6,
                 Buttons = UIAlertButton.Ok((btn) =>
                 {
                     UserInputHandler("d", alert.ResponseText.Trim());
@@ -558,7 +558,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 System.Environment.NewLine + System.Environment.NewLine + "How much would you like to withdraw?",
                 Alignment = TextAlignment.Left,
                 TextEntry = true,
-                MaxChars = (Type.Equals(ManageEODObjectTypes.SlotMachine)) ? 5 : 6,
+                MaxChars = 6,
                 Buttons = UIAlertButton.Ok((btn) =>
                 {
                     UserInputHandler("w", alert.ResponseText.Trim());
@@ -744,7 +744,8 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             if (Type.Equals(ManageEODObjectTypes.Roulette))
             {
                 typeConditional = "Roulette Tables must be able to cover 35 times any bet for 4 simultaneous players, so AT LEAST 140x the maximum bet."
-                    + System.Environment.NewLine + "For example: if your maximum bet is $100, you must have AT LEAST $14000 in this object.";
+                    + System.Environment.NewLine + System.Environment.NewLine + 
+                    "For example: if your maximum bet is $100, you must have AT LEAST $14000 in this object.";
                 if (isMinBet)
                 {
                     setBet = "Minimum";

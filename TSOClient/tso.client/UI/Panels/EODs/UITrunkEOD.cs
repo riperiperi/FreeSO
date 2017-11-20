@@ -36,6 +36,7 @@ namespace FSO.Client.UI.Panels.EODs
         public override void OnClose()
         {
             Send("trunk_close_UI", "");
+            CloseInteraction();
             base.OnClose();
         }
         private void FillUIHandler(string evt, string collectionPath)

@@ -213,6 +213,7 @@
     <Compile Include="NetPlay\EODs\Handlers\VMEODTimerPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODWarGamePlugin.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODEvent.cs" />
+    <Compile Include="NetPlay\EODs\Utils\AbstractPlayingCardsDeck.cs" />
     <Compile Include="NetPlay\EODs\Utils\EODLobby.cs" />
     <Compile Include="NetPlay\EODs\Utils\EODPersist.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODTrunkPlugin.cs" />
