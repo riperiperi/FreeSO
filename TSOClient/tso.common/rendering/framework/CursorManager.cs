@@ -76,40 +76,46 @@ namespace FSO.Common.Rendering.Framework
             }
         }
 
-        public void Init(string basepath)
+        public Dictionary<CursorType, string> GenMap()
         {
-
-            var map = new Dictionary<CursorType, string>(){
+            return new Dictionary< CursorType, string> (){
                 //{CursorType.Normal, "arrow.cur"},
-                {CursorType.ArrowUp, "up.cur"},
-                {CursorType.ArrowUpLeft, "upleft.cur"},
-                {CursorType.ArrowUpRight, "upright.cur"},
-                {CursorType.ArrowDown, "down.cur"},
-                {CursorType.ArrowDownLeft, "downleft.cur"},
-                {CursorType.ArrowDownRight, "downright.cur"},
-                {CursorType.ArrowLeft, "left.cur"},
-                {CursorType.ArrowRight, "right.cur"},
-                {CursorType.LiveNothing, "livenothing.cur"},
-                {CursorType.LiveObjectAvail, "liveobjectavail.cur"},
-                {CursorType.LiveObjectUnavail, "liveobjectunavail.cur"},
-                {CursorType.LivePerson, "liveperson.cur"},
+                { CursorType.ArrowUp, "up.cur"},
+                { CursorType.ArrowUpLeft, "upleft.cur"},
+                { CursorType.ArrowUpRight, "upright.cur"},
+                { CursorType.ArrowDown, "down.cur"},
+                { CursorType.ArrowDownLeft, "downleft.cur"},
+                { CursorType.ArrowDownRight, "downright.cur"},
+                { CursorType.ArrowLeft, "left.cur"},
+                { CursorType.ArrowRight, "right.cur"},
+                { CursorType.LiveNothing, "livenothing.cur"},
+                { CursorType.LiveObjectAvail, "liveobjectavail.cur"},
+                { CursorType.LiveObjectUnavail, "liveobjectunavail.cur"},
+                { CursorType.LivePerson, "liveperson.cur"},
 
-                {CursorType.SimsRotate, "simsrotate.cur" },
-                {CursorType.SimsRotateNE, "simsrotatene.cur" },
-                {CursorType.SimsRotateNW, "simsrotatenw.cur" },
-                {CursorType.SimsRotateSE, "simsrotatese.cur" },
-                {CursorType.SimsRotateSW, "simsrotatesw.cur" },
+                { CursorType.SimsRotate, "simsrotate.cur" },
+                { CursorType.SimsRotateNE, "simsrotatene.cur" },
+                { CursorType.SimsRotateNW, "simsrotatenw.cur" },
+                { CursorType.SimsRotateSE, "simsrotatese.cur" },
+                { CursorType.SimsRotateSW, "simsrotatesw.cur" },
 
-                {CursorType.SimsMove, "simsmove.cur" },
-                {CursorType.SimsPlace, "simsplace.cur" },
+                { CursorType.SimsMove, "simsmove.cur" },
+                { CursorType.SimsPlace, "simsplace.cur" },
 
-                {CursorType.Hourglass, "hourglass.cur" }
+                { CursorType.Hourglass, "hourglass.cur" }
             };
+        }
+
+        public void Init(string basepath, bool ts1)
+        {
+            var map = GenMap();
 
             foreach(var item in map){
+                var curPath = "UIGraphics/Shared/cursors/" + item.Value;
+                if (!ts1) curPath = curPath.ToLowerInvariant();
                 m_CursorMap.Add(item.Key,
                     LoadCustomCursor(
-                        Path.Combine(basepath, "uigraphics/shared/cursors/" + item.Value)
+                        Path.Combine(basepath, curPath)
                     ));
             }
             

@@ -37,8 +37,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             //it must be queued on the global link.
 
             if (Verified) return true;
-            if (caller == null || //caller must be on lot, have build permissions
-                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.BuildBuyRoommate) return false; 
+            if (!vm.TS1 && (caller == null || //caller must be on lot, have build permissions
+                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.BuildBuyRoommate)) return false; 
 
             for (int i = 0; i < Commands.Count; i++)
             {

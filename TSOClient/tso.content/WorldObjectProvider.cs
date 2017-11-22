@@ -191,7 +191,8 @@ namespace FSO.Content
     {
         Far,
         PIFFClone,
-        Standalone
+        Standalone,
+        User
     }
 
     /// <summary>

@@ -87,7 +87,7 @@ namespace FSO.IDE.EditorComponent.UI
             PlacingName.Size = new Vector2(1, 1);
             PlacingName.CaptionStyle = TextStyle.DefaultLabel.Clone();
             PlacingName.CaptionStyle.Font = FSO.Client.GameFacade.EdithFont;
-            PlacingName.CaptionStyle.Size = 14;
+            PlacingName.CaptionStyle.Size = 15;
             PlacingName.CaptionStyle.Color = new Color(0, 102, 26);
 
             PlacingName.Caption = "Placing Report Metric";

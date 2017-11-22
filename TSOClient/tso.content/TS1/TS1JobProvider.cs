@@ -39,13 +39,19 @@ namespace FSO.Content.TS1
         {
             //TODO: use STR#
             var job = JobResource.Get<CARR>((ushort)jobID);
-            return (job?.Name ?? "(unknown)") + " career track for a " + job?.JobLevels[0].JobName + ".";
+            return (job?.Name ?? "(unknown)") + " career track for a " + job?.JobLevels[jobLevel].JobName + ".";
         }
 
         public STR JobStrings(short jobID)
         {
             //TODO: use STR#
             return JobResource.Get<STR>((ushort)jobID);
+        }
+
+        public JobLevel GetJobLevel(short jobID, int jobLevel)
+        {
+            var job = JobResource.Get<CARR>((ushort)jobID);
+            return job?.JobLevels[jobLevel];
         }
     }
 }

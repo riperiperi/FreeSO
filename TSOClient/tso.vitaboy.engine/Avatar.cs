@@ -24,8 +24,8 @@ namespace FSO.Vitaboy
     {
         public List<AvatarBindingInstance> Bindings = new List<AvatarBindingInstance>();
         public static Effect Effect;
-        public Skeleton Skeleton { get; internal set; }
-        public Skeleton BaseSkeleton { get; internal set; }
+        public Skeleton Skeleton { get; set; }
+        public Skeleton BaseSkeleton { get; set; }
         public List<Vector2> LightPositions;
         protected Matrix[] SkelBones;
 
@@ -120,15 +120,38 @@ namespace FSO.Vitaboy
             result.Bindings = new List<AvatarBindingInstance>();
 
             int i = 0;
-            foreach (var bindingReference in appearance.Bindings)
+            int replaced = 0;
+            var realBindings = appearance.Bindings.Select(bindingReference =>
+                bindingReference.RealBinding ?? FSO.Content.Content.Get().AvatarBindings?.Get(bindingReference.TypeID, bindingReference.FileID)).ToList();
+
+            if (Content.Content.Get().TS1)
             {
-                var binding = bindingReference.RealBinding ?? FSO.Content.Content.Get().AvatarBindings.Get(bindingReference.TypeID, bindingReference.FileID);
-                if (binding == null) { continue; }
-                if ((i++ == 0) && texOverride != null)
+                foreach (var binding in realBindings)
                 {
-                    binding = binding.TS1Copy();
-                    binding.TextureName = texOverride;
+                    if (binding == null) { continue; }
+                    var mesh = Content.Content.Get().AvatarMeshes.Get(binding.MeshName);
+                    if (texOverride != null &&
+                            mesh.TextureName.ToLowerInvariant() == texOverride.ToLowerInvariant()
+                            .Replace("lgt", "")
+                            .Replace("med", "")
+                            .Replace("drk", "")
+                            || mesh.TextureName.ToLowerInvariant() == "x")
+                    {
+                        replaced = i;
+                    }
+                    i++;
                 }
+
+                if (texOverride != null)
+                {
+                    realBindings[replaced] = realBindings[replaced].TS1Copy();
+                    realBindings[replaced].TextureName = texOverride;
+                }
+            }
+
+            foreach (var binding in realBindings)
+            {
+                if (binding == null) { continue; }
                 result.Bindings.Add(AddBinding(binding));
             }
 

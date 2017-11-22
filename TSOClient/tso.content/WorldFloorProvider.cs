@@ -31,41 +31,33 @@ namespace FSO.Content
         private Dictionary<ushort, Floor> ById;
 
         public Dictionary<ushort, FloorReference> Entries;
-        public FAR1Provider<IffFile> Floors;
+        public IContentProvider<IffFile> Floors;
         public Dictionary<string, ushort> DynamicFloorFromID;
 
         private IffFile FloorGlobals;
+        private IffFile BuildGlobals;
         public int NumFloors;
 
         public WorldFloorProvider(Content contentManager)
         {
             this.ContentManager = contentManager;
-        }
-
-        /// <summary>
-        /// Initiates loading of floors.
-        /// </summary>
-        public void Init()
-        {
 
             this.Entries = new Dictionary<ushort, FloorReference>();
             this.ById = new Dictionary<ushort, Floor>();
+            DynamicFloorFromID = new Dictionary<string, ushort>();
 
-            var floorGlobalsPath = ContentManager.GetPath("objectdata/globals/floors.iff");
-            var floorGlobals = new IffFile(floorGlobalsPath);
-            FloorGlobals = floorGlobals;
+        }
 
-            var buildGlobalsPath = ContentManager.GetPath("objectdata/globals/build.iff");
-            var buildGlobals = new IffFile(buildGlobalsPath); //todo: centralize?
-
+        private void InitGlobals ()
+        {
             /** There is a small handful of floors in a global file for some reason **/
             ushort floorID = 1;
-            var floorStrs = buildGlobals.Get<STR>(0x83);
-            for (ushort i = 1; i < (floorStrs.Length/3); i++)
+            var floorStrs = BuildGlobals.Get<STR>(0x83);
+            for (ushort i = 1; i < (floorStrs.Length / 3); i++)
             {
-                var far = floorGlobals.Get<SPR2>(i);
-                var medium = floorGlobals.Get<SPR2>((ushort)(i + 256));
-                var near = floorGlobals.Get<SPR2>((ushort)(i + 512)); //2048 is water tile
+                var far = FloorGlobals.Get<SPR2>(i);
+                var medium = FloorGlobals.Get<SPR2>((ushort)(i + 256));
+                var near = FloorGlobals.Get<SPR2>((ushort)(i + 512)); //2048 is water tile
 
                 far.FloorCopy = 1;
                 medium.FloorCopy = 1;
@@ -92,7 +84,7 @@ namespace FSO.Content
                 floorID++;
             }
 
-            var waterStrs = buildGlobals.Get<STR>(0x85);
+            var waterStrs = BuildGlobals.Get<STR>(0x85);
             //add pools for catalog logic
             Entries.Add(65535, new FloorReference(this)
             {
@@ -116,6 +108,70 @@ namespace FSO.Content
 
 
             floorID = 256;
+        }
+
+        public void InitTS1()
+        {
+            var floorGlobalsPath = Path.Combine(ContentManager.TS1BasePath, "GameData/floors.iff");
+            var floorGlobals = new IffFile(floorGlobalsPath);
+            FloorGlobals = floorGlobals;
+
+            var buildGlobalsPath = Path.Combine(ContentManager.TS1BasePath, "GameData/Build.iff");
+            BuildGlobals = new IffFile(buildGlobalsPath); //todo: centralize?
+
+            InitGlobals();
+
+            //load *.flr iffs from both the TS1 provider and folder
+
+            ushort floorID = 256;
+            var files = new FileProvider<IffFile>(ContentManager, new IffCodec(), new Regex(".*/Floors.*\\.flr"));
+            files.UseTS1 = true;
+            var ts1 = new TS1SubProvider<IffFile>(ContentManager.TS1Global, ".flr");
+            files.Init();
+            ts1.Init();
+            var compo = new CompositeProvider<IffFile>(new List<IContentProvider<IffFile>>() {
+                ts1,
+                files
+                });
+
+            Floors = compo;
+            var all = compo.ListGeneric();
+            foreach (var entry in all)
+            {
+                var iff = (IffFile)entry.GetThrowawayGeneric();
+                DynamicFloorFromID[Path.GetFileNameWithoutExtension(entry.ToString().Replace('\\', '/')).ToLowerInvariant()] = floorID;
+                var catStrings = iff.Get<STR>(0);
+
+                Entries.Add(floorID, new FloorReference(this)
+                {
+                    ID = floorID,
+                    FileName = Path.GetFileName(entry.ToString().Replace('\\', '/')).ToLowerInvariant(),
+
+                    Name = catStrings.GetString(0),
+                    Price = int.Parse(catStrings.GetString(1)),
+                    Description = catStrings.GetString(2)
+                });
+
+                floorID++;
+            }
+            NumFloors = floorID;
+        }
+
+        /// <summary>
+        /// Initiates loading of floors.
+        /// </summary>
+        public void Init()
+        {
+            var floorGlobalsPath = ContentManager.GetPath("objectdata/globals/floors.iff");
+            var floorGlobals = new IffFile(floorGlobalsPath);
+            FloorGlobals = floorGlobals;
+
+            var buildGlobalsPath = ContentManager.GetPath("objectdata/globals/build.iff");
+            BuildGlobals = new IffFile(buildGlobalsPath); //todo: centralize?
+
+            InitGlobals();
+
+            ushort floorID = 256;
 
             var archives = new string[]
             {
@@ -125,7 +181,6 @@ namespace FSO.Content
                 "housedata/floors4/floors4.far"
             };
 
-            DynamicFloorFromID = new Dictionary<string, ushort>();
 
             for (var i = 0; i < archives.Length; i++)
             {
@@ -162,8 +217,9 @@ namespace FSO.Content
             }
 
             NumFloors = floorID;
-            this.Floors = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*/floors.*\\.far"));
-            Floors.Init();
+            var far1 = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*/floors.*\\.far"));
+            this.Floors = far1;
+            far1.Init();
         }
 
         private void AddFloor(Floor floor)
@@ -177,11 +233,13 @@ namespace FSO.Content
             if (id < 256)
             {
                 return TextureUtils.Copy(device, ById[id].Near.Frames[0].GetTexture(device));
-            } else if (id == 65535)
+            }
+            else if (id == 65535)
             {
-                
+
                 return TextureUtils.Copy(device, FloorGlobals.Get<SPR2>(0x420).Frames[0].GetTexture(device));
-            } else if (id == 65534)
+            }
+            else if (id == 65534)
             {
                 var spr = FloorGlobals.Get<SPR2>(0x800);
                 if (!spr.SpritePreprocessed)
@@ -192,7 +250,19 @@ namespace FSO.Content
                 }
                 return TextureUtils.Copy(device, spr.Frames[0].GetTexture(device));
             }
-            else return this.Floors.ThrowawayGet(Entries[(ushort)id].FileName).Get<SPR2>(513).Frames[0].GetTexture(device);
+            else
+            {
+                IffFile iff;
+                if (this.Floors is FAR1Provider<IffFile>)
+                    iff = ((FAR1Provider<IffFile>)this.Floors).ThrowawayGet(Entries[(ushort)id].FileName);
+                else
+                    iff = this.Floors.Get(Entries[(ushort)id].FileName);
+
+                var spr = iff?.Get<SPR2>(513);
+                if (spr != null) spr.FloorCopy = 1;
+
+                return spr?.Frames[0].GetTexture(device);
+            }
         }
 
         public SPR2 GetGlobalSPR(ushort id)

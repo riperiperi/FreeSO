@@ -47,7 +47,59 @@ namespace FSO.Files.RC
             {"dishwashers.iff", new DGRPRCParams() { CounterFix = true } },
             {"trashcompactor.iff", new DGRPRCParams() { CounterFix = true } },
             {"3tileclock.iff", new DGRPRCParams() { BlenderTweak = true } },
+
+            {"fencessuperstar.iff", new DGRPRCParams() { CounterFix = true } },
+            {"fencesnowbank.iff", new DGRPRCParams() { CounterFix = true } },
+            {"fencesunleashed.iff", new DGRPRCParams() { CounterFix = true } },
+            {"fencelodgestone.iff", new DGRPRCParams() { CounterFix = true } },
+            {"fenceparty.iff", new DGRPRCParams() { CounterFix = true } },
+            {"fencecarnival.iff", new DGRPRCParams() { CounterFix = true } },
+            {"fencesspellbound.iff", new DGRPRCParams() { CounterFix = true } },
+            {"columnarchmagic.iff", new DGRPRCParams() { CounterFix = true } },
         };
+
+        //STATIC: multithreading for 
+
+        public static Queue<Action> QueuedRC = new Queue<Action>();
+        public static AutoResetEvent NewRecon = new AutoResetEvent(false);
+
+        public static void InitRCWorkers()
+        {
+            var cores = Math.Max(1, Environment.ProcessorCount-1); //maybe detect hyperthreading somehow
+            for (int i=0; i<cores; i++)
+            {
+                var thread = new Thread(RCWorkerLoop);
+                thread.Priority = ThreadPriority.BelowNormal;
+                //todo: priority below normal, so we dont disrupt the game?
+                thread.Start();
+            }
+        }
+
+        public static void QueueWork(Action work)
+        {
+            lock (QueuedRC) QueuedRC.Enqueue(work);
+            NewRecon.Set();
+        }
+
+        public static void RCWorkerLoop()
+        {
+            while (!GameThread.Killed)
+            {
+                Action item = null;
+                while (true)
+                {
+                    lock (QueuedRC)
+                    {
+                        if (QueuedRC.Count > 0) item = QueuedRC.Dequeue();
+                        else break;
+                    }
+                    item?.Invoke();
+                }
+                WaitHandle.WaitAny(new WaitHandle[] { NewRecon, GameThread.OnKilled });
+            }
+        }
+
+        //END STATIC
 
         public int Version = CURRENT_VERSION;
         public int ReconstructVersion;
@@ -169,7 +221,7 @@ namespace FSO.Files.RC
                     var depth = sprite.GetDepth();
                     if (depth == null) continue;
 
-                    Task.Run(() =>
+                    QueueWork(() =>
                     {
                         var boundPts = new List<Vector3>();
                         //begin async part

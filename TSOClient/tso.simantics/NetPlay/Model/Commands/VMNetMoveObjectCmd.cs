@@ -26,19 +26,21 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override bool Execute(VM vm, VMAvatar caller)
         {
             VMEntity obj = vm.GetObjectById(ObjectID);
-            if (obj == null || caller == null || (obj is VMAvatar) || 
-                (((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Owner 
-                && obj.IsUserMovable(vm.Context, false) != VMPlacementError.Success))
-                return false;
-            if (((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate) return false;
+            if (!vm.TS1) {
+                if (obj == null || caller == null || (obj is VMAvatar) ||
+                    (((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Owner
+                    && obj.IsUserMovable(vm.Context, false) != VMPlacementError.Success))
+                    return false;
+                if (((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate) return false;
+            } else if (obj == null) return false;
             var result = obj.SetPosition(new LotTilePos(x, y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
             if (result.Status == VMPlacementError.Success)
             {
                 obj.MultitileGroup.ExecuteEntryPoint(11, vm.Context); //User Placement
 
-                vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
-                    caller.Name,
-                    vm.GetUserIP(caller.PersistID),
+                vm.SignalChatEvent(new VMChatEvent(caller?.PersistID ?? 0, VMChatEventType.Arch,
+                    caller?.Name ?? "Unknown",
+                    vm.GetUserIP(caller?.PersistID ?? 0),
                     "moved " + obj.ToString() +" to (" + x / 16f + ", " + y / 16f + ", " + level + ")"
                 ));
 

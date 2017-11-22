@@ -186,6 +186,7 @@ namespace FSO.IDE
                     if (Framebuffer != null) e.Graphics.DrawImage(Framebuffer, new Point());
                 }
             }
+            if (FSOUI != null) FSOUI.NeedFrames = 5;
         }
 
         protected override void OnResize(EventArgs e)

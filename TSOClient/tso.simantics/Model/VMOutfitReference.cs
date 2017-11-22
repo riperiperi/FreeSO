@@ -27,13 +27,27 @@ namespace FSO.SimAntics.Model
             ID = id;
         }
 
+        public VMOutfitReference(Outfit oft)
+        {
+            OftData = oft;
+        }
+
         public VMOutfitReference(STR str, bool head)
         {
             OftData = new Outfit();
             if (head)
-                OftData.ReadHead(str);
+                OftData.ReadHead(str.GetString(2));
             else 
                 OftData.Read(str);
+        }
+
+        public VMOutfitReference(string data, bool head)
+        {
+            OftData = new Outfit();
+            if (head)
+                OftData.ReadHead(data);
+            else
+                OftData.Read(data);
         }
 
         public static VMOutfitReference Parse(string data, bool ts1)

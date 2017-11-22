@@ -25,7 +25,7 @@ namespace FSO.Files.Utils
     /// <summary>
     /// IOBuffer is a very basic wrapper over System.BinaryReader that inherits from IDisposable.
     /// </summary>
-    public class IoBuffer : IDisposable
+    public class IoBuffer : IDisposable, BCFReadProxy
     {
         private Stream Stream;
         private BinaryReader Reader;

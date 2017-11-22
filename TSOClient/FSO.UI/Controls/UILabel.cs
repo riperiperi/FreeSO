@@ -46,7 +46,16 @@ namespace FSO.Client.UI.Controls
         {
             get
             {
-                return (Wrapped && _WrappedOutput != null) ? _WrappedOutput.Lines.Count : 1;
+                if (Wrapped)
+                {
+                    if (_WrappedOutput == null)
+                    {
+                        var scale = new Vector2(CaptionStyle.Scale);
+                        _WrappedOutput = UIUtils.WordWrap(m_Text, m_Size.Width, CaptionStyle, scale);
+                    }
+                    return _WrappedOutput.Lines.Count;
+                }
+                return 1;
             }
         }
 

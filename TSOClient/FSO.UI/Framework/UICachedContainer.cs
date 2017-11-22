@@ -124,6 +124,7 @@ namespace FSO.Client.UI.Framework
             set
             {
                 Invalidate();
+                Invalidated = true;
                 _Size = value;
             }
         }

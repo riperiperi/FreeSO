@@ -40,5 +40,10 @@ namespace FSO.Client.UI.Controls.Catalog
         {
             return Content.Content.Get().WorldFloors.Entries[(ushort)id].Price;
         }
+
+        public override bool DoDispose()
+        {
+            return false;
+        }
     }
 }

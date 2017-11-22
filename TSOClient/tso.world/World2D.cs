@@ -185,6 +185,7 @@ namespace FSO.LotView
             state.SilentZoom = WorldZoom.Near;
             state.SilentRotation = WorldRotation.BottomRight;
             state.SilentPreciseZoom = 1;
+            state._2D.PreciseZoom = state.PreciseZoom;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
             state.DrawOOB = true;
@@ -197,6 +198,11 @@ namespace FSO.LotView
             state._2D.OBJIDMode = false;
             Rectangle bounds = new Rectangle();
             state.ClearLighting(true);
+
+            //Blueprint.SetLightColor(WorldContent._2DWorldBatchEffect, Color.White, Color.White);
+            //Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
+            //Blueprint.SetLightColor(Vitaboy.Avatar.Effect, Color.White, Color.White);
+
             using (var buffer = state._2D.WithBuffer(BUFFER_THUMB, ref bufferTexture, BUFFER_THUMB_DEPTH, ref depthTexture))
             {
                 _2d.SetScroll(new Vector2());
@@ -512,7 +518,7 @@ namespace FSO.LotView
             pxOffset = newOff;
 
             if (recacheTerrain)
-                Blueprint.Terrain.RegenTerrain(gd, state, Blueprint);
+                Blueprint.Terrain.RegenTerrain(gd, Blueprint);
 
             if (recacheWalls)
                 Blueprint.WCRC?.Generate(gd, state, false);

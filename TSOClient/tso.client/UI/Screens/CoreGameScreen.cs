@@ -38,6 +38,7 @@ using FSO.Client.UI.Panels.WorldUI;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.Common;
 using FSO.Common.Utils;
+using FSO.UI.Model;
 
 namespace FSO.Client.UI.Screens
 {
@@ -109,7 +110,7 @@ namespace FSO.Client.UI.Screens
                     if (vm == null) ZoomLevel = 4; //call this again but set minimum cityrenderer view
                     else
                     {
-                        Title.SetTitle(LotControl.GetLotTitle());
+                        SetTitle();
                         var targ = (WorldZoom)(4 - value); //near is 3 for some reason... will probably revise
                         if (m_ZoomLevel > 3)
                         {
@@ -212,6 +213,7 @@ namespace FSO.Client.UI.Screens
 
         public CoreGameScreen() : base()
         {
+            DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0);
             StateChanges = new Queue<SimConnectStateChange>();
             /**
             * Music
@@ -433,6 +435,19 @@ namespace FSO.Client.UI.Screens
             }
 
             if (vm != null) vm.Update();
+
+            var joinAttempt = DiscordRpcEngine.Secret;
+            if (joinAttempt != null)
+            {
+                var split = joinAttempt.Split('#');
+                uint lotID;
+                if (uint.TryParse(split[0], out lotID))
+                {
+                    FindController<CoreGameScreenController>()?.JoinLot(lotID);
+                }
+
+                DiscordRpcEngine.Secret = null;
+            }
         }
 
         public override void PreDraw(UISpriteBatch batch)
@@ -446,6 +461,7 @@ namespace FSO.Client.UI.Screens
             if (vm == null) return;
 
             //clear our cache too, if the setting lets us do that
+            DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0);
             TimedReferenceController.Clear();
             TimedReferenceController.Clear();
             VM.ClearAssembled();
@@ -613,11 +629,28 @@ namespace FSO.Client.UI.Screens
             FindController<CoreGameScreenController>()?.SwitchLot(lotId);
         }
 
+        private string lastLotTitle = "";
         private void Vm_OnChatEvent(SimAntics.NetPlay.Model.VMChatEvent evt)
         {
             if (ZoomLevel < 4)
             {
-                Title.SetTitle(LotControl.GetLotTitle());
+                SetTitle();
+            }
+        }
+
+        private void SetTitle()
+        {
+            var title = LotControl.GetLotTitle();
+            Title.SetTitle(title);
+            if (lastLotTitle != title)
+            {
+                DiscordRpcEngine.SendFSOPresence(
+                    vm.LotName,
+                    (int)FindController<CoreGameScreenController>().GetCurrentLotID(),
+                    vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0),
+                    vm.LotName.StartsWith("{job:") ? 4 : 24
+                    );
+                lastLotTitle = title;
             }
         }
 

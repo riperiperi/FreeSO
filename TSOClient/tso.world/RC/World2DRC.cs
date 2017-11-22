@@ -25,6 +25,7 @@ namespace FSO.LotView.RC
         private bool Drawn;
         public RenderTarget2D LotThumbTarget;
         public RenderTarget2D ObjThumbTarget;
+        public double LastTimeOfDay;
 
         public override void PreDraw(GraphicsDevice gd, WorldState state)
         {
@@ -56,7 +57,11 @@ namespace FSO.LotView.RC
 
             var lightChangeType = 0;
 
-            if (TicksSinceLight++ > 60 * 4) damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+            if (Math.Abs(Blueprint.OutsideTime - LastTimeOfDay) > 0.001f)
+            {
+                damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+                LastTimeOfDay = Blueprint.OutsideTime;
+            }
 
             WorldObjectRenderInfo info = null;
 
@@ -172,7 +177,7 @@ namespace FSO.LotView.RC
             damage.Clear();
 
             if (recacheTerrain)
-                Blueprint.Terrain.RegenTerrain(gd, state, Blueprint);
+                Blueprint.Terrain.RegenTerrain(gd, Blueprint);
 
             if (recacheWalls)
                 Blueprint.WCRC?.Generate(gd, state, false);
@@ -483,7 +488,7 @@ namespace FSO.LotView.RC
             //frustrum.Contains(skyBounds)
             if ((state.Camera as WorldCamera3D)?.FromIntensity > 0 || skyBounds?.Any(x => x.Intersects(frustrum)) != false)
             {
-                if (Dome == null) Dome = new SkyDomeComponent(gd);
+                if (Dome == null) Dome = new SkyDomeComponent(gd, Blueprint);
                 Dome.Draw(gd, state);
 
                 Surroundings?.DrawSurrounding(gd, state.Camera, Dome.FogColor, (Blueprint.SubWorlds.Count>0)?1:0);
@@ -540,6 +545,7 @@ namespace FSO.LotView.RC
             base.Dispose();
             LotThumbTarget?.Dispose();
             ObjThumbTarget?.Dispose();
+            Dome?.Dispose();
         }
     }
 }

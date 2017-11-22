@@ -31,6 +31,7 @@ namespace FSO.Client.UI.Framework
         public MouseState mouse;
         public bool HasFocus;
         public bool HasUpdated;
+        public int NeedFrames = 5;
 
         public int Width
         {
@@ -86,7 +87,7 @@ namespace FSO.Client.UI.Framework
         {
             var invalid = Invalidated;
             base.PreDraw(batch);
-            if (invalid && Target != null)
+            if (invalid && Target != null && NeedFrames-- > 0)
             {
                 var expectedSize = Target.Width * Target.Height * 4;
                 if (RawImage == null || RawImage.Length != expectedSize)

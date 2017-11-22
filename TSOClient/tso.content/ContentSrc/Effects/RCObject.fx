@@ -1,19 +1,10 @@
-﻿float4x4 World;
+﻿#include "LightingCommon.fx"
+
+float4x4 World;
 float4x4 ViewProjection;
 
 float ObjectID;
 float4 AmbientLight;
-
-//LIGHTING
-float4 OutsideLight;
-float4 OutsideDark;
-float4 MaxLight;
-float2 MinAvg;
-float3 WorldToLightFactor;
-float2 LightOffset;
-float2 MapLayout;
-float Level;
-//END LIGHTING
 
 texture MeshTex;
 sampler TexSampler = sampler_state {
@@ -48,13 +39,6 @@ sampler MaskSampler = sampler_state {
 
 float SideMask;
 
-texture advancedLight : Diffuse;
-sampler advLightSampler = sampler_state {
-	texture = <advancedLight>;
-	AddressU = Clamp; AddressV = Clamp; AddressW = Clamp;
-	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
-};
-
 struct VertexIn
 {
 	float4 position : SV_Position0;
@@ -67,61 +51,6 @@ struct VertexOut
 	float2 texCoord : TEXCOORD0;
 	float4 modelPos : TEXCOORD1;
 };
-
-
-float4 lightColor(float4 intensities) {
-	return float4(intensities.rgb, 1);
-}
-
-float4 lightColorFloor(float4 intensities) {
-	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-
-	float avg = (intensities.r + intensities.g + intensities.b) / 3;
-	//floor shadow is how much less than average the alpha component is
-
-	float fshad = intensities.a / avg;
-
-	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
-}
-
-float4 lightColorI(float4 intensities, float i) {
-	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-
-	float avg = (intensities.r + intensities.g + intensities.b) / 3;
-	//floor shadow is how much less than average the alpha component is
-
-	float fshad = intensities.a / avg;
-	fshad = lerp(fshad, 1, i);
-
-	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
-}
-
-float4 lightProcess(float4 inPosition) {
-	float2 orig = inPosition.x;
-	inPosition.xyz *= WorldToLightFactor;
-	inPosition.xz += LightOffset;
-
-	inPosition.xz += 1 / MapLayout * floor(float2(Level % MapLayout.x, Level / MapLayout.x));
-
-	float4 lTex = tex2D(advLightSampler, inPosition.xz);
-	return lightColor(lTex);
-}
-
-float4 lightInterp(float4 inPosition) {
-	inPosition.xyz *= WorldToLightFactor;
-	inPosition.xz += LightOffset;
-
-	float level = floor(inPosition.y) + 0.0001; 
-	float abvLevel = min(Level, level + 1);
-	float2 iPA = inPosition.xz + 1 / MapLayout * floor(float2(abvLevel % MapLayout.x, abvLevel / MapLayout.x));
-	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
-
-	float4 lTex = tex2D(advLightSampler, inPosition.xz);
-	lTex.rgb = lerp(lTex.rgb, tex2D(advLightSampler, iPA).rgb, max(0, (inPosition.y % 1) * 2 - 1));
-
-	return lightColorI(lTex, clamp((inPosition.y % 1) * 3, 0, 1));
-}
-
 
 VertexOut vsRC(VertexIn v) {
 	VertexOut result;
@@ -204,7 +133,11 @@ float4 psWallRC(WallVertexOut v) : COLOR0
 	float2 texC = v.texCoord;
 	texC.x = frac(texC.x);
 	texC.y = frac(((v.texCoord.y % 1)-1/240)/-1.04);
-	float4 color = v.color * tex2Dgrad(AnisoSampler, texC, ddx(v.texCoord), ddy(v.texCoord)) * lightInterp(mPos); //tex2D(TexSampler, texC) * lightInterp(mPos); version for no mipmaps
+#if SIMPLE
+	float4 color = v.color * tex2D(TexSampler, texC) * lightInterp(mPos); // version for no mipmaps
+#else
+	float4 color = v.color * tex2Dgrad(AnisoSampler, texC, ddx(v.texCoord), ddy(v.texCoord)) * lightInterp(mPos);
+#endif
 	if (SideMask != 0) {
 		//our mask is actually a texture of a top right wall.
 		//skew the texcoord appropriately.

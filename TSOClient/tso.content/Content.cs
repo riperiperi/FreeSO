@@ -65,7 +65,18 @@ namespace FSO.Content
         }
 
         //for debugging TS1 content system
-        public static bool TS1Hybrid = false;
+        public static bool TS1Hybrid
+        {
+            get
+            {
+                return (Target == FSOEngineMode.TS1 || Target == FSOEngineMode.TS1Hybrid);
+            }
+            set
+            {
+                Target = (value) ? FSOEngineMode.TS1Hybrid : FSOEngineMode.TSO;
+            }
+        }
+        public static FSOEngineMode Target;
         public static string TS1HybridBasePath = "D:/Games/The Sims/";
 
         /**
@@ -117,13 +128,6 @@ namespace FSO.Content
                 AbstractTextureRef.ImageFetchFunction = AbstractTextureRef.ImageFetchWithDevice;
             }
             Changes = new ChangeManager();
-            AvatarBindings = new AvatarBindingProvider(this);
-            AvatarAppearances = new AvatarAppearanceProvider(this);
-            AvatarOutfits = new AvatarOutfitProvider(this);
-
-            AvatarPurchasables = new AvatarPurchasables(this);
-            AvatarCollections = new AvatarCollectionsProvider(this);
-            AvatarThumbnails = new AvatarThumbnailProvider(this);
 
             if (TS1)
             {
@@ -138,6 +142,14 @@ namespace FSO.Content
                 CustomUI = new CustomUIProvider(this);
             } else
             {
+                AvatarBindings = new AvatarBindingProvider(this);
+                AvatarAppearances = new AvatarAppearanceProvider(this);
+                AvatarOutfits = new AvatarOutfitProvider(this);
+
+                AvatarPurchasables = new AvatarPurchasables(this);
+                AvatarCollections = new AvatarCollectionsProvider(this);
+                AvatarThumbnails = new AvatarThumbnailProvider(this);
+
                 AvatarAnimations = new AvatarAnimationProvider(this);
                 AvatarSkeletons = new AvatarSkeletonProvider(this);
                 WorldObjects = new WorldObjectProvider(this);
@@ -145,14 +157,13 @@ namespace FSO.Content
                 Audio = new Audio(this);
                 CityMaps = new CityMapsProvider(this);
                 RackOutfits = new RackOutfitsProvider(this);
+                Ini = new IniProvider(this);
+                GlobalTuning = new Tuning(Path.Combine(basePath, "tuning.dat"));
             }
             WorldFloors = new WorldFloorProvider(this);
             WorldWalls = new WorldWallProvider(this);
             WorldObjectGlobals = new WorldGlobalProvider(this);
             WorldRoofs = new WorldRoofProvider(this);
-
-            GlobalTuning = new Tuning(Path.Combine(basePath, "tuning.dat"));
-            Ini = new IniProvider(this);
 
             InitBasic();
             if (init) Init();
@@ -167,17 +178,22 @@ namespace FSO.Content
             if (TS1)
             {
                 ((TS1ObjectProvider)WorldObjects).Init();
+                WorldObjectGlobals.Init();
+                LoadProgress = ContentLoadingProgress.InitArch;
+
+                WorldWalls.InitTS1();
+                WorldFloors.InitTS1();
             }
             else
             {
                 ((WorldObjectProvider)WorldObjects).Init((Device != null));
                 ((WorldObjectCatalog)WorldCatalog).Init(this);
-            }
+                WorldObjectGlobals.Init();
+                LoadProgress = ContentLoadingProgress.InitArch;
 
-            WorldObjectGlobals.Init();
-            LoadProgress = ContentLoadingProgress.InitArch;
-            WorldWalls.Init();
-            WorldFloors.Init();
+                WorldWalls.Init();
+                WorldFloors.Init();
+            }
             WorldRoofs.Init();
             LoadProgress = ContentLoadingProgress.Done;
         }
@@ -202,8 +218,11 @@ namespace FSO.Content
             /** Scan system for files **/
             LoadProgress = ContentLoadingProgress.ScanningFiles;
             var allFiles = new List<string>();
-            _ScanFiles(BasePath, allFiles, BasePath);
-            AllFiles = allFiles.ToArray();
+            if (Target != FSOEngineMode.TS1)
+            {
+                _ScanFiles(BasePath, allFiles, BasePath);
+                AllFiles = allFiles.ToArray();
+            }
 
             var ts1AllFiles = new List<string>();
             var oldBase = BasePath;
@@ -223,14 +242,11 @@ namespace FSO.Content
 
             LoadProgress = ContentLoadingProgress.InitAvatars;
             Archives = new Dictionary<string, FAR3Archive>();
-            if (Mode == ContentMode.CLIENT)
+            if (Target != FSOEngineMode.TS1 && Mode == ContentMode.CLIENT)
             {
                 UIGraphics.Init();
-                AvatarHandgroups.Init();
             }
 
-            AvatarBindings.Init();
-            AvatarOutfits.Init();
             if (TS1)
             {
                 ((TS1AvatarTextureProvider)AvatarTextures)?.Init();
@@ -239,8 +255,12 @@ namespace FSO.Content
                 Neighborhood = new TS1NeighborhoodProvider(this);
             } else
             {
+                if (Mode == ContentMode.CLIENT) AvatarHandgroups.Init();
+                AvatarBindings.Init();
+                AvatarOutfits.Init();
                 AvatarPurchasables.Init();
                 AvatarCollections.Init();
+                AvatarThumbnails.Init();
                 ((AvatarTextureProvider)AvatarTextures)?.Init();
                 ((AvatarAnimationProvider)AvatarAnimations).Init();
                 ((AvatarSkeletonProvider)AvatarSkeletons).Init();
@@ -248,19 +268,17 @@ namespace FSO.Content
                 ((AvatarMeshProvider)AvatarMeshes)?.Init();
                 CityMaps.Init();
                 RackOutfits.Init();
+
+                DataDefinition = new TSODataDefinition();
+                using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
+                {
+                    DataDefinition.Read(stream);
+                }
+                Ini.Init();
             }
 
             LoadProgress = ContentLoadingProgress.InitAudio;
             Audio.Init();
-            Ini.Init();
-
-            DataDefinition = new TSODataDefinition();
-            using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
-            {
-                DataDefinition.Read(stream);
-            }
-                
-            AvatarThumbnails.Init();
 
             InitWorld();
         }
@@ -390,5 +408,12 @@ namespace FSO.Content
         Done = 8,
 
         Invalid = -1
+    }
+
+    public enum FSOEngineMode
+    {
+        TSO,
+        TS1Hybrid,
+        TS1
     }
 }

@@ -28,13 +28,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (ObjectPID == 0) //only has value when this is an inventory move.
             {
                 VMEntity obj = vm.GetObjectById(ObjectID);
-                if (obj == null || caller == null) return false;
+                if (obj == null || (!vm.TS1 && caller == null)) return false;
                 obj.Delete(CleanupAll, vm.Context);
 
                 // If we're the server, tell the global link to give their money back.
                 if (vm.GlobalLink != null)
                 {
-                    vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller.PersistID, obj.MultitileGroup.Price,
+                    vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller?.PersistID ?? uint.MaxValue, obj.MultitileGroup.Price,
                     (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                     {
                         vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
@@ -49,9 +49,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         }));
                     });
                 }
-                vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
-                    caller.Name,
-                    vm.GetUserIP(caller.PersistID),
+                vm.SignalChatEvent(new VMChatEvent(caller?.PersistID ?? 0, VMChatEventType.Arch,
+                    caller?.Name ?? "Unknown",
+                    vm.GetUserIP(caller?.PersistID ?? 0),
                     "deleted " + obj.ToString()
                 ));
             }
@@ -103,19 +103,23 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             if (Verified) return true;
             ObjectPID = 0;
-            var permissions = ((VMTSOAvatarState)caller.TSOState).Permissions;
-            if (caller == null || permissions < VMTSOAvatarPermissions.Roommate) return false;
             VMEntity obj = vm.GetObjectById(ObjectID);
-            if (obj != null && permissions == VMTSOAvatarPermissions.Admin)
+            if (!vm.TS1)
             {
-                VMNetLockCmd.LockObj(vm, obj);
-                return true; //admins can always deete
+                if (caller == null) return false;
+                var permissions = ((VMTSOAvatarState)caller.TSOState).Permissions;
+                if (permissions < VMTSOAvatarPermissions.Roommate) return false;
+                if (obj != null && permissions == VMTSOAvatarPermissions.Admin)
+                {
+                    VMNetLockCmd.LockObj(vm, obj);
+                    return true; //admins can always deete
+                }
             }
             if (obj == null || (obj is VMAvatar) || obj.IsUserMovable(vm.Context, true) != VMPlacementError.Success) return false;
             if ((((VMGameObject)obj).Disabled & VMGameObjectDisableFlags.TransactionIncomplete) > 0) return false; //can't delete objects mid trasaction...
             VMNetLockCmd.LockObj(vm, obj);
 
-            var canDelete = obj.PersistID == 0 || ((VMTSOObjectState)obj.TSOState).OwnerID == caller.PersistID;
+            var canDelete = vm.TS1 || obj.PersistID == 0 || ((VMTSOObjectState)obj.TSOState).OwnerID == caller.PersistID;
             if (canDelete)
             {
                 //straight up delete this object. another check will be done at the execution stage.

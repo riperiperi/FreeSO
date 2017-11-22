@@ -67,7 +67,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             if (set == STRLangCode.Default) set = DefaultLangCode;
             int code = (int)set;
-            if (LanguageSets[code-1].Strings.Length == 0) return LanguageSets[0]; //if undefined, fallback to English US
+            if ((LanguageSets[code-1]?.Strings.Length ?? 0) == 0) return LanguageSets[0]; //if undefined, fallback to English US
             else return LanguageSets[code-1];
         }
 
@@ -188,7 +188,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public STRItem GetStringEntry(int index, STRLangCode language)
         {
             var languageSet = GetLanguageSet(language);
-            if (index < languageSet.Strings.Length)
+            if (index < (languageSet?.Strings.Length ?? 0))
             {
                 return languageSet.Strings[index];
             }

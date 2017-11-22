@@ -21,7 +21,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public class VMTSOGlobalLinkStub : IVMTSOGlobalLink
     {
         private Queue<VMNetArchitectureCmd> ArchBuffer = new Queue<VMNetArchitectureCmd>();
-        public VMTSOStandaloneDatabase Database = new VMTSOStandaloneDatabase();
+        public VMTSOStandaloneDatabase Database; // = new VMTSOStandaloneDatabase();
         private bool WaitingOnArch;
 
         public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback)
@@ -172,6 +172,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
 
         public void LoadPluginPersist(VM vm, uint objectPID, uint pluginID, VMAsyncPluginLoadCallback callback)
         {
+            if (Database == null) callback(null);
             var dat = Database.LoadPluginPersist(objectPID, pluginID);
 
             new System.Threading.Thread(() =>
@@ -183,7 +184,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
 
         public void SavePluginPersist(VM vm, uint objectPID, uint pluginID, byte[] data)
         {
-            Database.SavePluginPersist(objectPID, pluginID, data);
+            Database?.SavePluginPersist(objectPID, pluginID, data);
         }
 
         public uint NextPersist = 0x1000000;

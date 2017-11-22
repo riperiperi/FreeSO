@@ -94,10 +94,10 @@ namespace FSO.Vitaboy
             }
         }
 
-        public void ReadHead(STR bodyStrings)
+        public void ReadHead(string dat)
         {
-            TS1AppearanceID = ToApr(bodyStrings.GetString(2));
-            TS1TextureID = ToTex(bodyStrings.GetString(2));
+            TS1AppearanceID = ToApr(dat);
+            TS1TextureID = ToTex(dat);
         }
 
         public void Read(STR bodyStrings)
@@ -125,6 +125,15 @@ namespace FSO.Vitaboy
                     }
                 }
             };
+        }
+
+        public void Read(string dat)
+        {
+            var bodies = dat.Split(';');
+            TS1AppearanceID = ToApr(bodies.FirstOrDefault());
+            TS1TextureID = ToTex(bodies.FirstOrDefault());
+
+            //right now handgroup comes from the sim. in future might want to search for this.
         }
 
         private string ToApr(string input)

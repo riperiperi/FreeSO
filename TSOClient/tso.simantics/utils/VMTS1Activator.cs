@@ -88,6 +88,9 @@ namespace FSO.SimAntics.Utils
 
             VM.SetGlobalValue(10, HouseNumber); //set house number
             VM.SetGlobalValue(32, 0); //simless build mode
+            VM.Context.Clock.Hours = VM.GetGlobalValue(0);
+            VM.Context.Clock.Minutes = VM.GetGlobalValue(5);
+            VM.Context.Clock.MinuteFractions = (VM.GetGlobalValue(6) * VM.Context.Clock.TicksPerMinute);
 
             TerrainType ttype = TerrainType.GRASS;
             if (!HouseNumToType.TryGetValue(HouseNumber, out ttype))
@@ -104,18 +107,19 @@ namespace FSO.SimAntics.Utils
             var arch = VM.Context.Architecture;
             //altitude as 0
             var advFloors = iff.Get<ARRY>(11);
+            var flags = iff.Get<ARRY>(8).TransposeData;
             if (advFloors != null)
             {
                 //advanced walls and floors from modern ts1. use 16 bit wall/floor data.
-                arch.Floors[0] = RemapFloors(DecodeAdvFloors(advFloors.TransposeData), floorDict);
-                arch.Floors[1] = RemapFloors(DecodeAdvFloors(iff.Get<ARRY>(111).TransposeData), floorDict);
+                arch.Floors[0] = RemapFloors(DecodeAdvFloors(advFloors.TransposeData), floorDict, flags);
+                arch.Floors[1] = RemapFloors(DecodeAdvFloors(iff.Get<ARRY>(111).TransposeData), floorDict, flags);
                 //objects as 3
                 arch.Walls[0] = RemapWalls(DecodeAdvWalls(iff.Get<ARRY>(12).TransposeData), wallDict, floorDict);
                 arch.Walls[1] = RemapWalls(DecodeAdvWalls(iff.Get<ARRY>(112).TransposeData), wallDict, floorDict);
             } else
             {
-                arch.Floors[0] = RemapFloors(DecodeFloors(iff.Get<ARRY>(1).TransposeData), floorDict);
-                arch.Floors[1] = RemapFloors(DecodeFloors(iff.Get<ARRY>(101).TransposeData), floorDict);
+                arch.Floors[0] = RemapFloors(DecodeFloors(iff.Get<ARRY>(1).TransposeData), floorDict, flags);
+                arch.Floors[1] = RemapFloors(DecodeFloors(iff.Get<ARRY>(101).TransposeData), floorDict, flags);
                 //objects as 3
                 arch.Walls[0] = RemapWalls(DecodeWalls(iff.Get<ARRY>(2).TransposeData), wallDict, floorDict);
                 arch.Walls[1] = RemapWalls(DecodeWalls(iff.Get<ARRY>(102).TransposeData), wallDict, floorDict);
@@ -141,6 +145,7 @@ namespace FSO.SimAntics.Utils
             arch.Floors[1] = ResizeFloors(arch.Floors[1], size);
             arch.Walls[0] = ResizeWalls(arch.Walls[0], size);
             arch.Walls[1] = ResizeWalls(arch.Walls[1], size);
+            arch.FineBuildableArea = ResizeFlags(flags, size);
             arch.Terrain.GrassState = ResizeGrass(arch.Terrain.GrassState, size);
             arch.Terrain.Heights = Array.ConvertAll(ResizeGrass(DecodeHeights(iff.Get<ARRY>(0).TransposeData), size), x=>(short)(x*10));
             arch.Terrain.RegenerateCenters();
@@ -150,6 +155,7 @@ namespace FSO.SimAntics.Utils
                 World.State.WorldSize = size;
                 Blueprint.Terrain = CreateTerrain(size);
                 Blueprint.Altitude = arch.Terrain.Heights;
+                Blueprint.FineArea = arch.FineBuildableArea;
             }
 
             arch.RebuildWallsAt();
@@ -172,7 +178,7 @@ namespace FSO.SimAntics.Utils
                 target.Name = entry.Name;
                 target.GUID = entry.GUID;
 
-                Console.WriteLine((objm.IDToOBJT[i]) + ": " + objt.Entries[objm.IDToOBJT[i + 1] - 1].Name);
+                //Console.WriteLine((objm.IDToOBJT[i]) + ": " + objt.Entries[objm.IDToOBJT[i + 1] - 1].Name);
             }
 
             var objFlrs = new ushort[][] { DecodeObjID(iff.Get<ARRY>(3)?.TransposeData), DecodeObjID(iff.Get<ARRY>(103)?.TransposeData) };
@@ -282,6 +288,29 @@ namespace FSO.SimAntics.Utils
             return this.Blueprint;
         }
 
+        private bool[] ResizeFlags(byte[] flags, int size)
+        {
+            //flag 1 = not sloped
+            //flag 2 = ? (tends to be active alongside 4)
+            //flag 4 = ?
+            //flag 32 = user buildable
+            if (size >= 64) return flags.Select(x => (x&32)==0).ToArray();
+            var result = new bool[size * size];
+            int iS = 0;
+            int iD = 0;
+            for (int y = 0; y < 64; y++)
+            {
+                if (y >= size) return result;
+                for (int x = 0; x < 64; x++)
+                {
+                    if (x < size) result[iD++] = (flags[iS]&32) == 0;
+                    iS++;
+                }
+
+            }
+            return result;
+        }
+
         private FloorTile[] ResizeFloors(FloorTile[] floors, int size)
         {
             if (size >= 64) return floors;
@@ -348,12 +377,12 @@ namespace FSO.SimAntics.Utils
             return result;
         }
 
-        private FloorTile[] RemapFloors(FloorTile[] floors, Dictionary<byte, ushort> dict)
+        private FloorTile[] RemapFloors(FloorTile[] floors, Dictionary<byte, ushort> dict, byte[] flags)
         {
             for (int i=0; i<floors.Length; i++)
             {
                 var floor = floors[i];
-                if (floor.Pattern != 0)
+                if (floor.Pattern != 0 && ((flags[i] & 32) == 0) || floor.Pattern > 30)
                 {
                     ushort newID;
                     if (dict.TryGetValue((byte)floor.Pattern, out newID))

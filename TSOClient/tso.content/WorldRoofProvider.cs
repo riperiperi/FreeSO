@@ -12,8 +12,10 @@ namespace FSO.Content
 {
     public class WorldRoofProvider : FileProvider<ITextureRef>
     {
-        public WorldRoofProvider(Content contentManager) : base(contentManager, new TextureCodec(), new Regex("housedata/roofs/.*\\.jpg"))
+        public WorldRoofProvider(Content contentManager) : base(contentManager, new TextureCodec(), 
+            new Regex(contentManager.TS1? "GameData/Roofs/.*\\.bmp" : "housedata/roofs/.*\\.jpg"))
         {
+            UseTS1 = contentManager.TS1;
         }
 
         public int Count

@@ -16,9 +16,9 @@ namespace FSO.Content.Framework
         private Content Manager;
         private Dictionary<string, string[]> BareFoldersByExtension = new Dictionary<string, string[]>()
         {
-            { ".bmp", new string[] { "GameData/Skins/" } },
-            { ".cmx", new string[] { "GameData/Skins/" } },
-            { ".skn", new string[] { "GameData/Skins/" } },
+            { ".bmp", new string[] { "GameData/Skins/", "ExpansionShared/SkinsBuy/" } },
+            { ".cmx", new string[] { "GameData/Skins/", "ExpansionShared/SkinsBuy/" } },
+            { ".skn", new string[] { "GameData/Skins/", "ExpansionShared/SkinsBuy/" } }
         };
 
         private Dictionary<string, FileProvider<object>> FileProvidersByRegex = new Dictionary<string, FileProvider<object>>();
@@ -39,7 +39,7 @@ namespace FSO.Content.Framework
         {
             var entries = FarProvider.GetEntriesForExtension(ext);
             var result = new Dictionary<string, IContentReference>();
-            /*
+            
             string[] folders = null;
             if (BareFoldersByExtension.TryGetValue(ext, out folders))
             {
@@ -62,7 +62,7 @@ namespace FSO.Content.Framework
                         result[entry.ToString()] = entry;
                     }
                 }
-            }*/
+            }
 
             if (entries == null) return result;
             foreach (var entry in entries)
@@ -106,7 +106,12 @@ namespace FSO.Content.Framework
             Converter = x => (T)x;
         }
 
-        public void Init()
+        public IEnumerable<string> GetAllNames()
+        {
+            return Entries.Keys;
+        }
+
+        public virtual void Init()
         {
             Entries = BaseProvider.BuildDictionary(Extensions[0], "globals");
 

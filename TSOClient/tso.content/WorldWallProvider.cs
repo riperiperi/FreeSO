@@ -34,16 +34,25 @@ namespace FSO.Content
         private Dictionary<ushort, WallStyle> StyleById;
         public Dictionary<string, ushort> DynamicWallFromID;
         private IffFile WallGlobals;
+        private IffFile BuildGlobals;
 
         public Dictionary<ushort, WallReference> Entries;
 
-        public FAR1Provider<IffFile> Walls;
+        public IContentProvider<IffFile> Walls;
 
         public int NumWalls;
 
         public WorldWallProvider(Content contentManager)
         {
             this.ContentManager = contentManager;
+
+            WallStyleToIndex = WallStyleIDs.ToDictionary(x => x, x => Array.IndexOf(WallStyleIDs, x));
+
+            this.Entries = new Dictionary<ushort, WallReference>();
+            this.ById = new Dictionary<ushort, Wall>();
+            this.StyleById = new Dictionary<ushort, WallStyle>();
+            this.WallStyles = new List<WallStyle>();
+            DynamicWallFromID = new Dictionary<string, ushort>();
         }
 
         public ushort[] WallStyleIDs =
@@ -66,28 +75,12 @@ namespace FSO.Content
 
         public Dictionary<ushort, int> WallStyleToIndex;
 
-        /// <summary>
-        /// Initiates loading of walls.
-        /// </summary>
-        public void Init()
+        private void InitGlobals()
         {
-            WallStyleToIndex = WallStyleIDs.ToDictionary(x => x, x => Array.IndexOf(WallStyleIDs, x));
-
-            this.Entries = new Dictionary<ushort, WallReference>();
-            this.ById = new Dictionary<ushort, Wall>();
-            this.StyleById = new Dictionary<ushort, WallStyle>();
-            this.WallStyles = new List<WallStyle>();
-
-            var wallGlobalsPath = ContentManager.GetPath("objectdata/globals/walls.iff");
-            WallGlobals = new IffFile(wallGlobalsPath);
-
-            var buildGlobalsPath = ContentManager.GetPath("objectdata/globals/build.iff");
-            var buildGlobals = new IffFile(buildGlobalsPath); //todo: centralize?
-
             /** Get wall styles from globals file **/
-            var styleStrs = buildGlobals.Get<STR>(0x81);
+            var styleStrs = BuildGlobals.Get<STR>(0x81);
             ushort wallID = 1;
-            for (ushort i = 2; i < 512; i+=2)
+            for (ushort i = 2; i < 512; i += 2)
             {
                 var far = WallGlobals.Get<SPR>((ushort)(i));
                 var medium = WallGlobals.Get<SPR>((ushort)(i + 512));
@@ -107,7 +100,8 @@ namespace FSO.Content
                     fard = far;
                     mediumd = medium;
                     neard = near;
-                } else
+                }
+                else
                 {
                     neard.WallStyle = true; mediumd.WallStyle = true; fard.WallStyle = true;
                 }
@@ -116,7 +110,7 @@ namespace FSO.Content
                 int price = -1;
                 int buyIndex = -1;
                 WallStyleToIndex.TryGetValue(wallID, out buyIndex);
-                
+
                 if (buyIndex != -1)
                 {
                     price = int.Parse(styleStrs.GetString(buyIndex * 3));
@@ -146,12 +140,12 @@ namespace FSO.Content
             //so only refresh wall cache at same time as obj cache! (do this on lot unload)
 
             /** Get wall patterns from globals file **/
-            var wallStrs = buildGlobals.Get<STR>(0x83);
+            var wallStrs = BuildGlobals.Get<STR>(0x83);
 
             wallID = 0;
             for (ushort i = 0; i < 256; i++)
             {
-                var far = WallGlobals.Get<SPR>((ushort)(i+1536));
+                var far = WallGlobals.Get<SPR>((ushort)(i + 1536));
                 var medium = WallGlobals.Get<SPR>((ushort)(i + 1536 + 256));
                 var near = WallGlobals.Get<SPR>((ushort)(i + 1536 + 512));
 
@@ -170,7 +164,7 @@ namespace FSO.Content
                         ID = wallID,
                         FileName = "global",
 
-                        Name = wallStrs.GetString((i-1)*3+1),
+                        Name = wallStrs.GetString((i - 1) * 3 + 1),
                         Price = int.Parse(wallStrs.GetString((i - 1) * 3 + 0)),
                         Description = wallStrs.GetString((i - 1) * 3 + 2)
                     });
@@ -180,14 +174,75 @@ namespace FSO.Content
             }
 
             Junctions = new Wall
-                {
-                    ID = wallID,
-                    Far = WallGlobals.Get<SPR>(4096),
-                    Medium = WallGlobals.Get<SPR>(4097),
-                    Near = WallGlobals.Get<SPR>(4098),
-                };
+            {
+                ID = wallID,
+                Far = WallGlobals.Get<SPR>(4096),
+                Medium = WallGlobals.Get<SPR>(4097),
+                Near = WallGlobals.Get<SPR>(4098),
+            };
 
             wallID = 256;
+        }
+
+        public void InitTS1()
+        {
+            var wallGlobalsPath = Path.Combine(ContentManager.TS1BasePath, "GameData/walls.iff");
+            WallGlobals = new IffFile(wallGlobalsPath);
+
+            var buildGlobalsPath = Path.Combine(ContentManager.TS1BasePath, "GameData/Build.iff");
+            BuildGlobals = new IffFile(buildGlobalsPath);
+
+            InitGlobals();
+
+            //load *.wll iffs from both the TS1 provider and folder
+
+            ushort wallID = 256;
+            var files = new FileProvider<IffFile>(ContentManager, new IffCodec(), new Regex(".*/Walls.*\\.wll"));
+            files.UseTS1 = true;
+            var ts1 = new TS1SubProvider<IffFile>(ContentManager.TS1Global, ".wll");
+            files.Init();
+            ts1.Init();
+            var compo =  new CompositeProvider<IffFile>(new List<IContentProvider<IffFile>>() {
+                ts1,
+                files
+                });
+
+            Walls = compo;
+            var all = compo.ListGeneric();
+            foreach (var entry in all)
+            {
+                var iff = (IffFile)entry.GetThrowawayGeneric();
+                DynamicWallFromID[Path.GetFileNameWithoutExtension(entry.ToString().Replace('\\', '/')).ToLowerInvariant()] = wallID;
+                var catStrings = iff.Get<STR>(0);
+
+                Entries.Add(wallID, new WallReference(this)
+                {
+                    ID = wallID,
+                    FileName = Path.GetFileName(entry.ToString().Replace('\\', '/')).ToLowerInvariant(),
+
+                    Name = catStrings.GetString(0),
+                    Price = int.Parse(catStrings.GetString(1)),
+                    Description = catStrings.GetString(2)
+                });
+
+                wallID++;
+            }
+            NumWalls = wallID;
+        }
+
+        /// <summary>
+        /// Initiates loading of walls.
+        /// </summary>
+        public void Init()
+        {
+            var wallGlobalsPath = ContentManager.GetPath("objectdata/globals/walls.iff");
+            WallGlobals = new IffFile(wallGlobalsPath);
+
+            var buildGlobalsPath = ContentManager.GetPath("objectdata/globals/build.iff");
+            BuildGlobals = new IffFile(buildGlobalsPath); //todo: centralize?
+
+            InitGlobals();
+            ushort wallID = 256;
 
             var archives = new string[]
             {
@@ -196,8 +251,6 @@ namespace FSO.Content
                 "housedata/walls3/walls3.far",
                 "housedata/walls4/walls4.far"
             };
-
-            DynamicWallFromID = new Dictionary<string, ushort>();
 
             for (var i = 0; i < archives.Length; i++)
             {
@@ -232,8 +285,9 @@ namespace FSO.Content
                 archive.Close();
             }
 
-            this.Walls = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*/walls.*\\.far"));
-            Walls.Init();
+            var far1 = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*/walls.*\\.far"));
+            far1.Init();
+            Walls = far1;
             NumWalls = wallID;
         }
 
@@ -287,7 +341,11 @@ namespace FSO.Content
             }
             else
             {
-                var iff = this.Walls.ThrowawayGet(Entries[(ushort)id].FileName);
+                IffFile iff;
+                if (this.Walls is FAR1Provider<IffFile>)
+                    iff = ((FAR1Provider<IffFile>)this.Walls).ThrowawayGet(Entries[(ushort)id].FileName);
+                else
+                    iff = this.Walls.Get(Entries[(ushort)id].FileName);
                 var spr = iff.Get<SPR>(1793);
                 return (spr == null)?null:spr.Frames[2].GetTexture(device);
             }
@@ -362,9 +420,9 @@ namespace FSO.Content
         public string Name;
         public string Description;
 
-        private WorldWallProvider Provider;
+        private IContentProvider<Wall> Provider;
 
-        public WallReference(WorldWallProvider provider)
+        public WallReference(IContentProvider<Wall> provider)
         {
             this.Provider = provider;
         }

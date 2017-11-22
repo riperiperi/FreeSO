@@ -1,4 +1,5 @@
-﻿using FSO.Files.Formats.IFF;
+﻿using FSO.Common;
+using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
 using System;
 using System.Collections.Generic;
@@ -27,20 +28,53 @@ namespace FSO.Content.TS1
         public Dictionary<short, FAMI> FamilyForHouse = new Dictionary<short, FAMI>();
         public Content ContentManager;
         public TS1GameState GameState = new TS1GameState();
+        public string UserPath;
 
         public TS1NeighborhoodProvider(Content contentManager)
         {
             ContentManager = contentManager;
-            MainResource = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/Neighborhood.iff"));
-            LotLocations = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/LotLocations.iff"));
-            var lotZoning = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/LotZoning.iff"));
-            StreetNames = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/StreetNames.iff"));
-            NeighbourhoodDesc = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/Houses/NeighborhoodDesc.iff"));
-            STDesc = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/Houses/STDesc.iff"));
-            MTDesc = new IffFile(Path.Combine(contentManager.TS1BasePath, "UserData/Houses/MTDesc.iff"));
+            InitSpecific(0);
+        }
+
+        public void InitSpecific(int id)
+        {
+            ZoningDictionary.Clear();
+            FamilyForHouse.Clear();
+
+            var udName = "UserData" + ((id == 0) ? "" : (id+1).ToString());
+            //simitone shouldn't modify existing ts1 data, since our house saves are incompatible.
+            //therefore we should copy to the simitone user data.
+
+            var userPath = Path.Combine(FSOEnvironment.UserDir, udName + "/");
+
+            if (!Directory.Exists(userPath))
+            {
+                var source = Path.Combine(ContentManager.TS1BasePath, udName + "/");
+                var destination = userPath;
+
+                //quick and dirty copy.
+
+                foreach (string dirPath in Directory.GetDirectories(source, "*",
+                    SearchOption.AllDirectories))
+                    Directory.CreateDirectory(dirPath.Replace('\\', '/').Replace(source, destination));
+
+                foreach (string newPath in Directory.GetFiles(source, "*.*",
+                    SearchOption.AllDirectories))
+                    File.Copy(newPath, newPath.Replace('\\', '/').Replace(source, destination), true);
+            }
+
+            UserPath = userPath;
+
+            MainResource = new IffFile(Path.Combine(UserPath, "Neighborhood.iff"));
+            LotLocations = new IffFile(Path.Combine(UserPath, "LotLocations.iff"));
+            var lotZoning = new IffFile(Path.Combine(UserPath, "LotZoning.iff"));
+            StreetNames = new IffFile(Path.Combine(UserPath, "StreetNames.iff"));
+            NeighbourhoodDesc = new IffFile(Path.Combine(UserPath, "Houses/NeighborhoodDesc.iff"));
+            STDesc = new IffFile(Path.Combine(UserPath, "Houses/STDesc.iff"));
+            MTDesc = new IffFile(Path.Combine(UserPath, "Houses/MTDesc.iff"));
 
             var zones = lotZoning.Get<STR>(1);
-            for (int i=0; i<zones.Length; i++)
+            for (int i = 0; i < zones.Length; i++)
             {
                 var split = zones.GetString(i).Split(',');
                 ZoningDictionary[short.Parse(split[0])] = (short)((split[1] == " community") ? 1 : 0);
@@ -103,7 +137,7 @@ namespace FSO.Content.TS1
 
         public IffFile GetHouse(int id)
         {
-            return new IffFile(Path.Combine(ContentManager.TS1BasePath, "UserData/Houses/House"+id.ToString().PadLeft(2, '0')+".iff"));
+            return new IffFile(Path.Combine(UserPath, "Houses/House"+id.ToString().PadLeft(2, '0')+".iff"));
         }
 
         public BMP GetHouseThumb(int id)

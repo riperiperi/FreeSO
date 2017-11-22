@@ -792,7 +792,10 @@ namespace FSO.Client.UI.Panels
                 }
 
                 if (LiveMode) LiveModeUpdate(state, scrolled);
-                else if (CustomControl != null) CustomControl.Update(state, scrolled);
+                else if (CustomControl != null)
+                {
+                    CustomControl.Update(state, scrolled);
+                }
                 else ObjectHolder.Update(state, scrolled);
 
                 //set cutaway around mouse

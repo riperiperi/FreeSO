@@ -53,10 +53,9 @@ namespace FSO.Vitaboy
         /// Reads an animation from a stream.
         /// </summary>
         /// <param name="stream">The Stream instance to read from.</param>
-        public void Read(Stream stream, bool bcf)
+        public void Read(BCFReadProxy io, bool bcf)
         {
-            using (var io = IoBuffer.FromStream(stream, bcf ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN))
-            {
+
                 if (!bcf)
                 {
                     var version = io.ReadUInt32();
@@ -159,7 +158,6 @@ namespace FSO.Vitaboy
 
                     Motions[i] = motion;
                 }
-            }
         }
 
         /// <summary>
@@ -167,7 +165,7 @@ namespace FSO.Vitaboy
         /// </summary>
         /// <param name="io">IOBuffer instance used to read an animation.</param>
         /// <returns>A PropertyList instance.</returns>
-        private PropertyList ReadPropertyList(IoBuffer io, bool shortPairs)
+        private PropertyList ReadPropertyList(BCFReadProxy io, bool shortPairs)
         {
             var propsCount = (shortPairs) ? 1 : io.ReadUInt32();
             var result = new PropertyListItem[propsCount];

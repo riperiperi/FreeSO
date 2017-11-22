@@ -260,7 +260,7 @@ namespace FSO.SimAntics
             }
 
             Avatar = new SimAvatar(FSO.Content.Content.Get().AvatarSkeletons.Get((data?.GetString(0)??"adult")+".skel"));
-            if (UseWorld)
+            if (UseWorld && !FSO.Content.Content.Get().TS1)
             {
                 switch (AvatarType)
                 {
@@ -964,9 +964,11 @@ namespace FSO.SimAntics
         public override Texture2D GetIcon(GraphicsDevice gd, int store)
         {
             if (Avatar.Head == null && Avatar.Body == null) return null;
+            var content = FSO.Content.Content.Get();
+            if (content.TS1) return null;
             Outfit ThumbOutfit = (Avatar.Head == null) ? Avatar.Body : Avatar.Head;
             var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
-            var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
+            var Appearance = content.AvatarAppearances.Get(AppearanceID);
 
             if (Appearance == null) return null;
             var ico = FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
@@ -1043,10 +1045,12 @@ namespace FSO.SimAntics
                 }
 
                 var oftProvider = Content.Content.Get().AvatarOutfits;
-                if (Decoration.Back != 0) Avatar.DecorationBack = oftProvider.Get(Decoration.Back);
-                if (Decoration.Head != 0) Avatar.DecorationHead = oftProvider.Get(Decoration.Head);
-                if (Decoration.Tail != 0) Avatar.DecorationTail = oftProvider.Get(Decoration.Tail);
-                if (Decoration.Shoes != 0) Avatar.DecorationShoes = oftProvider.Get(Decoration.Shoes);
+                if (oftProvider != null) { 
+                    if (Decoration.Back != 0) Avatar.DecorationBack = oftProvider.Get(Decoration.Back);
+                    if (Decoration.Head != 0) Avatar.DecorationHead = oftProvider.Get(Decoration.Head);
+                    if (Decoration.Tail != 0) Avatar.DecorationTail = oftProvider.Get(Decoration.Tail);
+                    if (Decoration.Shoes != 0) Avatar.DecorationShoes = oftProvider.Get(Decoration.Shoes);
+                }
             }
 
             SkinTone = input.SkinTone;

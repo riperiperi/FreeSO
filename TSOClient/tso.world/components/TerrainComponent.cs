@@ -154,7 +154,7 @@ namespace FSO.LotView.Components
             get { return 0.0f; }
         }
 
-        public void RegenTerrain(GraphicsDevice device, WorldState world, Blueprint blueprint)
+        public void RegenTerrain(GraphicsDevice device, Blueprint blueprint)
         {
             if (GrassState == null)
             {
@@ -239,7 +239,7 @@ namespace FSO.LotView.Components
                 }
             }
 
-            var GridIndices = GetGridIndicesForArea(Bp.BuildableArea, quads);
+            var GridIndices = (Bp.FineArea != null)?GetGridIndicesForFine(Bp.FineArea, quads):GetGridIndicesForArea(Bp.BuildableArea, quads);
             var TGridIndices = GetGridIndicesForArea(Bp.TargetBuildableArea, quads);
 
             VertexBuffer = new VertexBuffer(device, typeof(TerrainVertex), Geom.Length, BufferUsage.None);
@@ -310,6 +310,42 @@ namespace FSO.LotView.Components
             return GridIndices;
         }
 
+        private int[] GetGridIndicesForFine(bool[] area, int quads)
+        {
+            List<int> GridIndices = new List<int>();
+            var i = quads+1;
+            for (var y = 1; y < quads-1; y++)
+            {
+                for (var x = 1; x < quads-1; x++)
+                {
+                    var tile = area[i];
+
+                    if (tile)
+                    {
+                        var tileOff = i * 4;
+                        GridIndices.Add(tileOff);
+                        GridIndices.Add(tileOff + 1);
+                        GridIndices.Add(tileOff);
+                        GridIndices.Add(tileOff + 3);
+
+                        if (x == quads - 1 || !area[i + 1])
+                        {
+                            GridIndices.Add(tileOff + 1); //+x
+                            GridIndices.Add(tileOff + 2); //+x+y
+                        }
+                        if (y == quads - 1 || !area[i+quads])
+                        {
+                            GridIndices.Add(tileOff + 3); //+y
+                            GridIndices.Add(tileOff + 2); //+x+y
+                        }
+                    }
+                    i++;
+                }
+                i += 2;
+            }
+            return GridIndices.ToArray();
+        }
+
         /// <summary>
         /// Setup component to run on graphics device
         /// </summary>
@@ -326,7 +362,7 @@ namespace FSO.LotView.Components
         /// <param name="device"></param>
         /// <param name="world"></param>
         public override void Draw(GraphicsDevice device, WorldState world){
-            if (TerrainDirty || VertexBuffer == null) RegenTerrain(device, world, Bp);
+            if (TerrainDirty || VertexBuffer == null) RegenTerrain(device, Bp);
             if (VertexBuffer == null) return;
             if (world.Light != null) LightVec = world.Light.LightVec;
             device.DepthStencilState = DepthStencilState.Default;
@@ -493,7 +529,7 @@ namespace FSO.LotView.Components
 
         public void DrawLMap(GraphicsDevice gd, LightData light, Matrix projection, Matrix lightTransform)
         {
-            if (TerrainDirty || VertexBuffer == null) return;
+            if (TerrainDirty || VertexBuffer == null) RegenTerrain(gd, Bp);
             if (VertexBuffer == null) return;
             //light.Normalize();
             Effect.Parameters["UseTexture"].SetValue(false);

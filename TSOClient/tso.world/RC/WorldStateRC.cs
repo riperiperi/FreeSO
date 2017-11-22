@@ -48,6 +48,8 @@ namespace FSO.LotView.RC
             get { return (_Use2DCam)?WorldCamera:(ICamera)_Camera; }
         }
 
+        public bool FixedCam;
+
         public override void SetDimensions(Vector2 dim)
         {
             _Camera.ProjectionOrigin = dim/2;
@@ -153,6 +155,7 @@ namespace FSO.LotView.RC
             {
                 var baseHeight = CamHeight;
                 if (CameraMode) {
+                    if (FixedCam) return;
                     _Camera.Position = new Vector3(CenterTile.X * WorldSpace.WorldUnitsPerTile, baseHeight + 3 + FPCamHeight, CenterTile.Y * WorldSpace.WorldUnitsPerTile);
 
                     var mat = Matrix.CreateRotationZ((_RotationY - (float)Math.PI/2) * 0.99f) * Matrix.CreateRotationY(_RotationX);

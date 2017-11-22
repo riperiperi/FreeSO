@@ -110,6 +110,7 @@
     <Compile Include="Engine\Routing\VMRectRouter.cs" />
     <Compile Include="Engine\TSOGlobalLink\IVMTSOGlobalLink.cs" />
     <Compile Include="Engine\TSOGlobalLink\Model\VMGLOutfit.cs" />
+    <Compile Include="Engine\TSOGlobalLink\VMTS1GlobalLinkStub.cs" />
     <Compile Include="Engine\TSOGlobalLink\VMTSOGlobalLinkStub.cs" />
     <Compile Include="Engine\TSOGlobalLink\VMTSOStandaloneDatabase.cs" />
     <Compile Include="Engine\VMDialogHandler.cs" />

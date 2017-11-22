@@ -123,7 +123,7 @@ namespace FSO.LotView.Components
             if (recacheWalls)
             {
                 //clear the sprite buffer before we begin drawing what we're going to cache
-                Blueprint.Terrain.RegenTerrain(gd, state, Blueprint);
+                Blueprint.Terrain.RegenTerrain(gd, Blueprint);
                 Blueprint.FloorGeom.FullReset(gd, false);
                 if (is2d) Blueprint.WallComp.Draw(gd, state);
                 StaticArchCache.Clear();

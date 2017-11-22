@@ -9,25 +9,35 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using FSO.Files.Formats.IFF;
+using FSO.Files.Formats.IFF.Chunks;
 
 namespace FSO.Client.GameContent
 {
     public class ContentStrings
     {
         private Dictionary<string, Dictionary<string, Dictionary<string, string>>> StringTable;
+        public static bool TS1;
 
         public ContentStrings()
         {
             StringTable = new Dictionary<string, Dictionary<string, Dictionary<string, string>>>();
             var langdir = GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir";
-            var tsodir = Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/");
-            var fsodir = "Content/UI/uitext/";
 
-            if (Directory.Exists(Path.Combine(tsodir, langdir)))
-                Load("UIText", Path.Combine(tsodir, langdir));
+            if (TS1)
+            {
+                LoadTS1();
+            }
             else
-                Load("UIText", Path.Combine(tsodir, "english.dir"));
+            {
+                var tsodir = Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/");
 
+                if (Directory.Exists(Path.Combine(tsodir, langdir)))
+                    Load("UIText", Path.Combine(tsodir, langdir));
+                else
+                    Load("UIText", Path.Combine(tsodir, "english.dir"));
+            }
+            var fsodir = "Content/UI/uitext/";
             if (Directory.Exists(Path.Combine(fsodir, langdir)))
                 Load("UIText", Path.Combine(fsodir, langdir));
             else
@@ -112,6 +122,31 @@ namespace FSO.Client.GameContent
             }
 
             return "";
+        }
+
+        public void LoadTS1()
+        {
+            var path = Path.Combine(Content.Content.TS1HybridBasePath, "GameData/UIText.iff");
+            var iff = new IffFile(path);
+
+            var dirName = "UIText";
+            Dictionary<string, Dictionary<string, string>> table;
+            if (!StringTable.TryGetValue(dirName, out table))
+            {
+                table = new Dictionary<string, Dictionary<string, string>>();
+                StringTable.Add(dirName, table);
+            }
+
+            var tables = iff.List<STR>();
+            foreach (var str in tables)
+            {
+                var tableData = new Dictionary<string, string>();
+                for (int i=0; i<str.Length; i++)
+                {
+                    tableData[i.ToString()] = str.GetString(i); 
+                }
+                table[str.ChunkID.ToString()] = tableData; //overwrites previous.
+            }
         }
 
         /// <summary>

@@ -82,6 +82,99 @@ namespace FSO.SimAntics.Engine
             }
         };
 
+        public static VMOutfitReference GetPersonSuitTS1(VMStackFrame context, ushort id)
+        {
+            var avatar = (VMAvatar)context.Caller;
+            var type = (VMPersonSuits)id;
+            var bodyStrings = avatar.Object.Resource.Get<STR>(avatar.Object.OBJ.BodyStringID);
+            bool male = (avatar.GetPersonData(VMPersonDataVariable.Gender) == 0);
+            var age = avatar.GetPersonData(VMPersonDataVariable.PersonsAge);
+            var skn = bodyStrings.GetString(14).ToLowerInvariant();
+            var child = (age < 18 && age != 0);
+
+            var code = "fit";
+            if (bodyStrings.GetString(1).ToLowerInvariant().Contains("fat"))
+                code = "fat";
+            else if (bodyStrings.GetString(1).ToLowerInvariant().Contains("skn"))
+                code = "skn";
+            if (child) code = "uchd";
+            else code = (male ? "m" : "f") + code;
+
+            VMOutfitReference toHandCopy = null;
+            switch (type)
+            {
+                //todo: (tail etc), cockroach head
+
+                case VMPersonSuits.DefaultDaywear:
+                    return new VMOutfitReference(bodyStrings, false);
+                case VMPersonSuits.Naked:
+                    toHandCopy = new VMOutfitReference("n"+code+"_01,BODY="+"n"+code+skn+"_01", false);
+                    break;
+                case VMPersonSuits.DefaultSwimwear:
+                    toHandCopy = new VMOutfitReference("n" + code + "_01,BODY=" + "u" + code + skn + "_"+((male && !child)?"briefs":"undies")+"01", false);
+                    break;
+                case VMPersonSuits.TS1Formal:
+                    toHandCopy = new VMOutfitReference("f" + code + "_01,BODY=" + "f" + code + skn + "_01", false);
+                    break;
+                case VMPersonSuits.JobOutfit:
+                    var jtype = avatar.GetPersonData(FSO.SimAntics.Model.VMPersonDataVariable.JobType);
+                    var level = avatar.GetPersonData(FSO.SimAntics.Model.VMPersonDataVariable.JobPromotionLevel);
+
+                    var job = Content.Content.Get().Jobs.GetJobLevel(jtype, level);
+
+                    var bskn = job.MaleUniformMesh;
+                    if (bskn == "") return new VMOutfitReference(bodyStrings, false);
+
+                    if (!male && job.FemaleUniformMesh != null) bskn = job.FemaleUniformMesh;
+                    bskn = bskn.ToLowerInvariant().Replace("$g", code[0].ToString()).Replace("$b", code.Substring(1)).Replace("$c", skn);
+                    var btex = job.UniformSkin;
+                    btex = btex.ToLowerInvariant().Replace("$g", code[0].ToString()).Replace("$b", code.Substring(1)).Replace("$c", skn);
+
+                    toHandCopy = new VMOutfitReference(bskn+",BODY=" + btex, false);
+                    break;
+                case VMPersonSuits.DefaultSleepwear:
+                    var pj = (child ? "pjs" : "pajama");
+                    var gen = (child ? (male ? "m" : "f") : (code));
+                    var gen2 = (male ? "m" : "f");
+                    toHandCopy = new VMOutfitReference(pj + gen + "_01,BODY=" + pj + gen2 + skn + "_01", false);
+                    break;
+                case VMPersonSuits.SkeletonPlus:
+                    toHandCopy = new VMOutfitReference((child?"skeletonchd_01": "skeleton_01")+",BODY=skeleton_01", true);
+                    break;
+                case VMPersonSuits.SkeletonMinus:
+                    toHandCopy = new VMOutfitReference((child ? "skeletonchd_01" : "skeleton_01") + ",BODY=skeleneg_01", true);
+                    break;
+                case VMPersonSuits.TS1Toga:
+                case VMPersonSuits.TS1Country:
+                case VMPersonSuits.TS1Luau:
+                case VMPersonSuits.TS1Rave:
+                case VMPersonSuits.TS1Costume: //person strings 27. hands: 28, 29
+                case VMPersonSuits.TS1ExpandedFormal: //person strings 30 (f###)
+                    toHandCopy = new VMOutfitReference(bodyStrings.GetString(30), false);
+                    break;
+                case VMPersonSuits.TS1ExpandedSwimsuit: //person strings 31 (s###)
+                    toHandCopy = new VMOutfitReference(bodyStrings.GetString(31), false);
+                    break;
+                case VMPersonSuits.TS1ExpandedPajamas: //person strings 32 (l###)
+                    toHandCopy = new VMOutfitReference(bodyStrings.GetString(32), false);
+                    break;
+                case VMPersonSuits.TS1Disco: //???
+                case VMPersonSuits.TS1Winter: //person strings 33 (w###)
+                    toHandCopy = new VMOutfitReference(bodyStrings.GetString(33), false);
+                    break;
+                case VMPersonSuits.TS1HighFashion: //person strings 34 (h###)
+                    toHandCopy = new VMOutfitReference(bodyStrings.GetString(34), false);
+                    break;
+            }
+
+            if (toHandCopy == null) return null;
+            else
+            {
+                toHandCopy.OftData.LiteralHandgroup = avatar.DefaultSuits.Daywear.OftData.LiteralHandgroup;
+            }
+            return toHandCopy;
+        }
+
         public static object GetSuit(VMStackFrame context, VMSuitScope scope, ushort id)
         {
             STR suitTable = null;
@@ -98,6 +191,8 @@ namespace FSO.SimAntics.Engine
                     break;
                 case VMSuitScope.Person:
                     //get outfit from person
+                    if (context.VM.TS1) return GetPersonSuitTS1(context, id);
+
                     var type = (VMPersonSuits)id;
                     bool male = (avatar.GetPersonData(VMPersonDataVariable.Gender) == 0);
                     switch (type)

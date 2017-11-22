@@ -877,7 +877,7 @@ namespace FSO.SimAntics
             if (context.IsUserOutOfBounds(Position)) return VMPlacementError.CantBePickedupOutOfBounds;
             if (IsInUse(context, true)) return VMPlacementError.InUse;
             var total = TotalSlots();
-            for (int i = 0; i < TotalSlots(); i++)
+            for (int i = 0; i < total; i++)
             {
                 var item = GetSlot(i);
                 if (item != null &&
@@ -971,7 +971,7 @@ namespace FSO.SimAntics
         {
             if (pos == LotTilePos.OUT_OF_WORLD) return new VMPlacementResult();
             var userOOB = context.IsUserOutOfBounds(pos);
-            if ((((flags & VMPlaceRequestFlags.UserBuildableLimit) > 0) && !context.VM.TS1 && userOOB) || context.IsOutOfBounds(pos))
+            if ((((flags & VMPlaceRequestFlags.UserBuildableLimit) > 0) && userOOB) || context.IsOutOfBounds(pos))
                 return new VMPlacementResult(VMPlacementError.LocationOutOfBounds);
 
             //TODO: speedup with exit early checks

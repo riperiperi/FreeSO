@@ -13,6 +13,11 @@ namespace FSO.Common.Utils
         public static bool UpdateFeatureLevel(GraphicsDevice gd)
         {
             //if 3d is enabled, check if we support non-power-of-two mipmaps
+            if (FSOEnvironment.SoftwareKeyboard)
+            {
+                FSOEnvironment.EnableNPOTMip = false;
+                return true;
+            }
             if (FSOEnvironment.Enable3D)
             {
                 try

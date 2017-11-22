@@ -77,7 +77,7 @@ namespace FSO.LotView.RC
             if (recacheWalls)
             {
                 //clear the sprite buffer before we begin drawing what we're going to cache
-                Blueprint.Terrain.RegenTerrain(gd, state, Blueprint);
+                Blueprint.Terrain.RegenTerrain(gd, Blueprint);
                 Blueprint.FloorGeom.FullReset(gd, false);
                 Blueprint.WCRC.Generate(gd, state, false);
             }
