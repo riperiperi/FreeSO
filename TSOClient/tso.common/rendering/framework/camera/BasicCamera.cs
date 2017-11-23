@@ -102,6 +102,8 @@ namespace FSO.Common.Rendering.Framework.Camera
             }
         }
 
+        public float FOV = (float)Math.PI / 4f;
+
         protected virtual void CalculateProjection()
         {
             var device = m_Device;
@@ -113,7 +115,7 @@ namespace FSO.Common.Rendering.Framework.Camera
             var projectionX = 0.0f - (1.0f * ratioX);
             var projectionY = (1.0f * ratioY);
 
-            m_Projection = Matrix.CreatePerspectiveFieldOfView((float)Math.PI / 4f, aspect, NearPlane, FarPlane);
+            m_Projection = Matrix.CreatePerspectiveFieldOfView(FOV, aspect, NearPlane, FarPlane);
 
             /*m_Projection = Matrix.CreatePerspectiveOffCenter(
                 projectionX, projectionX + 1.0f,

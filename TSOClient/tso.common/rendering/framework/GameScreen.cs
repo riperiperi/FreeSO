@@ -76,7 +76,6 @@ namespace FSO.Common.Rendering.Framework
                     var mouse = State.MouseStates.FirstOrDefault(x => x.ID == touch.Id);
                     if (mouse == null)
                     {
-                        Console.WriteLine("new id: " + touch.Id);
                         mouse = new MultiMouse { ID = touch.Id };
                         State.MouseStates.Add(mouse);
                     }
@@ -96,7 +95,6 @@ namespace FSO.Common.Rendering.Framework
                 //if the state has mouseovers, we should record the mouse state as being lifted.
                 foreach (var miss in missing)
                 {
-                    Console.WriteLine("killing: " + miss.ID);
                     if (miss.LastMouseOver == null && miss.LastMouseDown == null)
                     {
                         State.MouseStates.Remove(miss);

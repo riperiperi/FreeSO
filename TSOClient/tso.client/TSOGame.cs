@@ -25,6 +25,8 @@ using FSO.Common.Utils;
 using FSO.Common;
 using Microsoft.Xna.Framework.Audio;
 using FSO.HIT.Model;
+using FSO.UI.Model;
+using FSO.Files.RC;
 //using System.Windows.Forms;
 
 namespace FSO.Client
@@ -149,7 +151,7 @@ namespace FSO.Client
             GameFacade.GraphicsDevice = GraphicsDevice;
             GameFacade.GraphicsDeviceManager = Graphics;
             GameFacade.Cursor = new CursorManager(GraphicsDevice);
-            if (!GameFacade.Linux) GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""));
+            if (!GameFacade.Linux) GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""), false);
 
             /** Init any computed values **/
             GameFacade.Init();
@@ -179,6 +181,7 @@ namespace FSO.Client
             this.IsFixedTimeStep = true;
 
             WorldContent.Init(this.Services, Content.RootDirectory);
+            DGRP3DMesh.InitRCWorkers();
             if (!FSOEnvironment.SoftwareKeyboard) AddTextInput();
             base.Screen.Layers.Add(SceneMgr);
             base.Screen.Layers.Add(uiLayer);
@@ -194,6 +197,7 @@ namespace FSO.Client
             ds.AddProvider(new ClientAvatarProvider());
 
             this.Window.Title = "FreeSO";
+            DiscordRpcEngine.Init();
 
             if (!GlobalSettings.Default.Windowed && !GameFacade.GraphicsDeviceManager.IsFullScreen)
             {
@@ -225,6 +229,13 @@ namespace FSO.Client
         void LostFocus(object sender, EventArgs e)
         {
             GameFacade.Focus = false;
+        }
+
+        protected override void OnExiting(object sender, EventArgs args)
+        {
+            base.OnExiting(sender, args);
+            GameThread.Killed = true;
+            GameThread.OnKilled.Set();
         }
 
         /// <summary>
@@ -276,6 +287,7 @@ namespace FSO.Client
         protected override void Update(GameTime gameTime)
         {
             GameThread.UpdateExecuting = true;
+            DiscordRpcEngine.Update();
 
             if (HITVM.Get() != null) HITVM.Get().Tick();
 

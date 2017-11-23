@@ -11,6 +11,7 @@ using System.Text;
 using FSO.Content.Framework;
 using System.IO;
 using FSO.Vitaboy;
+using FSO.Files.Utils;
 
 namespace FSO.Content.Codecs
 {
@@ -24,7 +25,10 @@ namespace FSO.Content.Codecs
         public override object GenDecode(System.IO.Stream stream)
         {
             var mesh = new Mesh();
-            mesh.Read(stream, true);
+            using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                mesh.Read((BCFReadProxy)io, true);
+            }
             return mesh;
         }
 

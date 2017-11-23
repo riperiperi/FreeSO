@@ -428,7 +428,7 @@ namespace FSO.Vitaboy
             set
             {
                 _BodyOutfitId = value;
-                var outfit = Content.Content.Get().AvatarOutfits.Get(value);
+                var outfit = Content.Content.Get().AvatarOutfits?.Get(value);
                 this.Body = outfit;
                 this.Handgroup = outfit;
             }
@@ -444,7 +444,7 @@ namespace FSO.Vitaboy
             set
             {
                 _HeadOutfitId = value;
-                var outfit = Content.Content.Get().AvatarOutfits.Get(value);
+                var outfit = Content.Content.Get().AvatarOutfits?.Get(value);
                 this.Head = outfit;
             }
             get

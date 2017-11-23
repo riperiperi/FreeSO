@@ -46,10 +46,10 @@ namespace FSO.LotView.RC
                 terrainHeight = (Blueprint.InterpAltitude(new Vector3(State.CenterTile, 0))) * 3;
                 var targHeight = terrainHeight + (State.Level - 1) * 2.95f * 3;
                 targHeight = Math.Max((Blueprint.InterpAltitude(new Vector3(State.Camera.Position.X, State.Camera.Position.Z, 0)/3) + (State.Level - 1) * 2.95f) * 3, terrainHeight);
-                rcState.CamHeight += (targHeight - rcState.CamHeight) / 5f;
+                rcState.CamHeight += (targHeight - rcState.CamHeight) * (1f-(float)Math.Pow(0.8f, 60f/FSOEnvironment.RefreshRate));
             }
 
-            if (Visible)
+            if (Visible && !rcState.FixedCam)
             {
 
                 if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))

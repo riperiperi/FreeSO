@@ -16,6 +16,8 @@ namespace FSO.Content.Codecs
             {".flr", new IffCodec() },
             {".wll", new IffCodec() },
             {".bcf", new BCFCodec() },
+            {".skn", new SKNCodec() },
+            {".cmx", new CMXCodec() },
             {".bmf", new BMFCodec() },
             {".cfp", new CFPCodec() },
             {".bmp", new TextureCodec() },

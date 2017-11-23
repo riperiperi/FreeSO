@@ -134,8 +134,6 @@
     <Compile Include="Rendering\City\CityMapData.cs" />
     <Compile Include="Rendering\City\Plugins\AbstractCityPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
-    <Compile Include="UI\Controls\Catalog\UICatalogRoofResProvider.cs" />
-    <Compile Include="UI\Controls\Catalog\UICatalogTerrainResProvider.cs" />
     <Compile Include="UI\Controls\UISlotsImage.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UILotButton.cs" />
@@ -334,11 +332,7 @@
     <Compile Include="Rendering\City\MeshVertex.cs" />
     <Compile Include="Rendering\City\Terrain.cs" />
     <Compile Include="UI\Controls\Catalog\UICatalog.cs" />
-    <Compile Include="UI\Controls\Catalog\UICatalogResProvider.cs" />
     <Compile Include="UI\Controls\Catalog\UICatalogItem.cs" />
-    <Compile Include="UI\Controls\Catalog\UICatalogFloorResProvider.cs" />
-    <Compile Include="UI\Controls\Catalog\UICatalogWallpaperResProvider.cs" />
-    <Compile Include="UI\Controls\Catalog\UICatalogWallResProvider.cs" />
     <Compile Include="UI\Controls\UIInteraction.cs" />
     <Compile Include="UI\Controls\UIMotiveDisplay.cs" />
     <Compile Include="UI\Controls\UISim.cs" />

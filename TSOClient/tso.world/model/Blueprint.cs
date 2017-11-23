@@ -74,12 +74,14 @@ namespace FSO.LotView.Model
             }
         }
         public double OutsideTime;
+        public float OutsideSkyP;
         public RoomLighting[] Light = new RoomLighting[0];
         public uint[][] RoomMap;
         public List<Room> Rooms = new List<Room>();
 
         public Color[] RoomColors;
         public Rectangle BuildableArea;
+        public bool[] FineArea;
         public Rectangle TargetBuildableArea;
         public LightData OutdoorsLight;
 

@@ -17,7 +17,7 @@ namespace FSO.Content.Codecs
 
         public override object GenDecode(System.IO.Stream stream)
         {
-            var result = new BCF(stream);
+            var result = new BCF(stream, false);
             return result;
         }
 

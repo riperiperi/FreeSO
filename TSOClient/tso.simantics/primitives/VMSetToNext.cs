@@ -184,7 +184,7 @@ namespace FSO.SimAntics.Primitives
 
                 if (loop)
                 {
-                    if (first == null) return VMPrimitiveExitCode.GOTO_FALSE; //no elements of this kind at all.
+                    if (first == null || !entities.Contains(Pointer)) return VMPrimitiveExitCode.GOTO_FALSE; //no elements of this kind at all.
                     else
                     {
                         VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, first.ObjectID); //set to loop, so go back to lowest obj id.

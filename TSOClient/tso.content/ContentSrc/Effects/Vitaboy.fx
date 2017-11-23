@@ -1,3 +1,5 @@
+#include "LightingCommon.fx"
+
 float4x4 World;
 float4x4 View;
 float4x4 Projection;
@@ -7,17 +9,6 @@ float4 AmbientLight;
 float4x4 SkelBindings[50];
 bool SoftwareDepth;
 bool depthOutMode;
-
-//LIGHTING
-float4 OutsideLight;
-float4 OutsideDark;
-float4 MaxLight;
-float2 MinAvg;
-float3 WorldToLightFactor;
-float2 LightOffset;
-float2 MapLayout;
-float Level;
-//END LIGHTING
 
 Texture MeshTex;
 sampler TexSampler = sampler_state {
@@ -35,13 +26,6 @@ sampler depthMapSampler = sampler_state {
     texture = <depthMap>;
     AddressU = CLAMP; AddressV = CLAMP; AddressW = CLAMP;
     MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
-};
-
-texture advancedLight : Diffuse;
-sampler advLightSampler = sampler_state {
-	texture = <advancedLight>;
-	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
-	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
 };
 
 struct VitaVertexIn
@@ -75,44 +59,6 @@ float unpackDepth(float4 d) {
     return dot(d, float4(1.0, 1 / 255.0, 1 / 65025.0, 0)); //d.r + (d.g / 256.0) + (d.b / 65536.0);
 }
 
-float4 lightColor(float4 intensities) {
-	return float4(intensities.rgb, 1);
-}
-
-float4 lightColorFloor(float4 intensities) {
-	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-
-	float avg = (intensities.r + intensities.g + intensities.b) / 3;
-	//floor shadow is how much less than average the alpha component is
-
-	float fshad = intensities.a / avg;
-
-	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
-}
-
-float4 lightColorI(float4 intensities, float i) {
-	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-
-	float avg = (intensities.r + intensities.g + intensities.b) / 3;
-	//floor shadow is how much less than average the alpha component is
-
-	float fshad = intensities.a / avg;
-	fshad = lerp(fshad, 1, i);
-
-	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
-}
-
-float4 lightProcess(float4 inPosition) {
-	float2 orig = inPosition.x;
-	inPosition.xyz *= WorldToLightFactor;
-	inPosition.xz += LightOffset;
-
-	inPosition.xz += 1 / MapLayout * floor(float2(Level % MapLayout.x, Level / MapLayout.x));
-
-	float4 lTex = tex2D(advLightSampler, inPosition.xz);
-	return lightColor(lTex);
-}
-
 VitaVertexOut vsVitaboy(VitaVertexIn v) {
     VitaVertexOut result;
     float4 position = (1.0-v.params.z) * mul(v.position, SkelBindings[int(v.params.x)]) + v.params.z * mul(float4(v.bvPosition, 1.0), SkelBindings[int(v.params.y)]);
@@ -130,7 +76,11 @@ VitaVertexOut vsVitaboy(VitaVertexIn v) {
     return result;
 }
 
+
 float4 aaTex(VitaVertexOut v) {
+#if SIMPLE
+	return tex2D(TexSampler, v.texCoord);
+#else
 	float2 texDDX = ddx(v.texCoord);
 	float2 texDDY = ddy(v.texCoord);
 	float4 color = float4(0, 0, 0, 0);
@@ -145,7 +95,9 @@ float4 aaTex(VitaVertexOut v) {
 	}
 	color /= 9;
 	return color;
+#endif
 }
+
 
 float4 psVitaboy(VitaVertexOut v) : COLOR0
 {
@@ -154,8 +106,10 @@ float4 psVitaboy(VitaVertexOut v) : COLOR0
         return packObjID(depth);
     }
     else {
+#if SIMPLE
         //SOFTWARE DEPTH
         if (SoftwareDepth == true && depthOutMode == false && unpackDepth(tex2D(depthMapSampler, v.screenPos.xy)) < depth) discard;
+#endif
 		float4 color = aaTex(v)*AmbientLight; 
 		color.rgb *= pow((dot(normalize(v.normal), float3(0, 1, 0)) + 1) / 2, 0.5)*0.5 + 0.5f;
         return color;
@@ -169,8 +123,10 @@ float4 psVitaboyNoSSAA(VitaVertexOut v) : COLOR0
 		return packObjID(depth);
 	}
 	else {
+#if SIMPLE
 		//SOFTWARE DEPTH
 		if (SoftwareDepth == true && depthOutMode == false && unpackDepth(tex2D(depthMapSampler, v.screenPos.xy)) < depth) discard;
+#endif
 		float4 color = tex2D(TexSampler, v.texCoord) * AmbientLight;
 		color.rgb *= pow((dot(normalize(v.normal), float3(0, 1, 0)) + 1) / 2, 0.5)*0.5 + 0.5f;
 		return color;
@@ -184,8 +140,10 @@ float4 psVitaboyAdv(VitaVertexOut v) : COLOR0
 		return packObjID(depth);
 	}
 	else {
+#if SIMPLE
 		//SOFTWARE DEPTH
 		if (SoftwareDepth == true && depthOutMode == false && unpackDepth(tex2D(depthMapSampler, v.screenPos.xy)) < depth) discard;
+#endif
 		float4 color = aaTex(v) * lightProcess(v.modelPos) * AmbientLight;
 		color.rgb *= pow((dot(normalize(v.normal), float3(0, 1, 0)) + 1) / 2, 0.5)*0.5 + 0.5f;
 		return color;
@@ -338,6 +296,9 @@ float4 psShadow(ShadVertexOut v) : COLOR0
 {
 	if (v.factor == 0) discard;
 	float depth = v.screenPos.z / v.screenPos.w;
+
+	if (SoftwareDepth == true && depthOutMode == false && unpackDepth(tex2D(depthMapSampler, v.screenPos.xy)) < depth) discard;
+
 
 	float light = clamp(1.0 - distance(v.ellipseBasePos.zw, LightPosition) / 30, 0.0, 1.0);
 	light = pow(light, 2);

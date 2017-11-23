@@ -231,7 +231,7 @@ namespace FSO.SimAntics
             for (int i = 0; i < newFrame - oldFrame; i++)
             {
                 Tick();
-                if (SpeedMultiplier == 0) break;
+                if (SpeedMultiplier <= 0) break;
             }
 
             Fraction = ((GameTickNum * 30 * SpeedMultiplier) - (newFrame * GameTickRate)) / (float)GameTickRate;
@@ -240,7 +240,7 @@ namespace FSO.SimAntics
 
         public void PreDraw()
         {
-            if (SpeedMultiplier == 0) Fraction = 0;
+            if (SpeedMultiplier <= 0) Fraction = 0;
             //fractional animation for avatars
             foreach (var obj in Entities)
             {
@@ -320,6 +320,17 @@ namespace FSO.SimAntics
 
         public void Tick()
         {
+            /*
+            foreach (var smoke in smokes)
+            {
+                SendCommand(new VMNetDeleteObjectCmd
+                {
+                    CleanupAll = true,
+                    ObjectID = smoke.ObjectID
+                });
+                System.Threading.Thread.Sleep(30);
+            }*/
+
             if (BHAVDirty)
             {
                 foreach (var ent in Entities) if (ent.Thread != null) ent.Thread.RoutineDirty = true;

@@ -236,7 +236,9 @@ namespace FSO.SimAntics.Primitives
                 //53. Is On Editable Tile
                 //54. Set Stack Object's Crafter Name To Avatar in Temp 0
                 case VMGenericTSOCallMode.CalcHarvestComponents: //55
-                    var table = Content.Content.Get().GlobalTuning.EntriesByName["harvest component table"];
+                    var tableq = Content.Content.Get().GlobalTuning?.EntriesByName["harvest component table"];
+                    if (tableq == null) return VMPrimitiveExitCode.GOTO_FALSE;
+                    var table = tableq.Value;
                     int[] componentTable = new int[] { 0, 0, 0 };
                     var objb = context.StackObject;
                     uint guid = objb.Object.OBJ.GUID;

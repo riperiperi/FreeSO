@@ -49,7 +49,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
-            if (Blacklist.Contains(GUID) || caller == null) return false;
+            if (!vm.TS1 && (Blacklist.Contains(GUID) || caller == null)) return false;
 
             //careful here! if the object can't be placed, we have to give the user their money back.
             if (TryPlace(vm, caller))
@@ -96,7 +96,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         private bool TryPlace(VM vm, VMAvatar caller)
         {
-            if (!vm.TSOState.CanPlaceNewUserObject(vm)) return false;
+            if (!vm.TS1 && !vm.TSOState.CanPlaceNewUserObject(vm)) return false;
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
 
@@ -111,14 +111,18 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 return false;
             }
 
-            foreach (var obj in group.Objects) {
-                if (obj is VMGameObject) ((VMTSOObjectState)obj.TSOState).OwnerID = caller.PersistID;
+            if (!vm.TS1)
+            {
+                foreach (var obj in group.Objects)
+                {
+                    if (obj is VMGameObject) ((VMTSOObjectState)obj.TSOState).OwnerID = caller.PersistID;
+                }
             }
             CreatedGroup = group;
 
-            vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
-                caller.Name,
-                vm.GetUserIP(caller.PersistID),
+            vm.SignalChatEvent(new VMChatEvent(caller?.PersistID ?? 0, VMChatEventType.Arch,
+                caller?.Name ?? "Unknown",
+                vm.GetUserIP(caller?.PersistID ?? 0),
                 "placed " + group.BaseObject.ToString() + " at (" + x / 16f + ", " + y / 16f + ", " + level + ")"
             ));
             return true;
@@ -128,21 +132,26 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             if (Verified) return true; //set internally when transaction succeeds. trust that the verification happened.
             value = 0; //do not trust value from net
-            if (caller == null || //caller must be on lot, have build permissions
-                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate ||
-                !vm.TSOState.CanPlaceNewUserObject(vm))
-                return false;
-
+            if (!vm.TS1)
+            {
+                if (caller == null || //caller must be on lot, have build permissions
+                    ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate ||
+                    !vm.TSOState.CanPlaceNewUserObject(vm))
+                    return false;
+            }
             //get entry in catalog. first verify if it can be bought at all. (if not, error out)
             //TODO: error feedback for client
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
-            var whitelist = (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Roommate) ? RoomieWhiteList : BuilderWhiteList;
 
-            if (item == null || !whitelist.Contains(item.Value.Category))
+            if (!vm.TS1)
             {
-                if (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Admin) return true;
-                return false; //not purchasable
+                var whitelist = (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Roommate) ? RoomieWhiteList : BuilderWhiteList;
+                if (item == null || !whitelist.Contains(item.Value.Category))
+                {
+                    if (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Admin) return true;
+                    return false; //not purchasable
+                }
             }
             
             if (item != null)
@@ -155,7 +164,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             //TODO: fine grained purchase control based on user status
 
             //perform the transaction. If it succeeds, requeue the command
-            vm.GlobalLink.PerformTransaction(vm, false, caller.PersistID, uint.MaxValue, value,
+            vm.GlobalLink.PerformTransaction(vm, false, caller?.PersistID ?? uint.MaxValue, uint.MaxValue, value,
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
                     if (success)

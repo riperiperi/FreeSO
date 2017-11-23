@@ -69,7 +69,7 @@ namespace FSO.LotView
         {
             get
             {
-                return ContentManager.Load<Effect>("Effects/RCObject");
+                return ContentManager.Load<Effect>("Effects/RCObject" + EffectSuffix);
             }
         }
 

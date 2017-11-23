@@ -297,6 +297,8 @@ namespace FSO.Client.UI
         {
             GameThread.DigestUpdate(state);
 
+            if (GameFacade.Game.Window == null) return;
+
             var mousePosition = state.MouseState.Position;
             var bounds = GameFacade.Game.Window.ClientBounds;
             state.MouseOverWindow = mousePosition.X > 0 && mousePosition.Y > 0 &&

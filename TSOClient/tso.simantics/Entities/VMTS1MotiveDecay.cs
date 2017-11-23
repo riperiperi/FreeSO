@@ -46,9 +46,6 @@ namespace FSO.SimAntics.Entities
         public short[] MotiveFractions = new short[7]; //in 1/1000ths
         public int LastMinute;
 
-        TuningEntry LotMotives = Content.Content.Get().GlobalTuning.EntriesByName["lotmotives"];
-        TuningEntry SimMotives = Content.Content.Get().GlobalTuning.EntriesByName["simmotives"];
-
         public void Tick(VMAvatar avatar, VMContext context)
         {
             var roomScore = context.GetRoomScore(context.GetRoomAt(avatar.Position));

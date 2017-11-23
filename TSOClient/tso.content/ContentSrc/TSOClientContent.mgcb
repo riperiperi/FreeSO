@@ -151,3 +151,9 @@
 /processorParam:DebugMode=Auto
 /build:Effects/SSAA.fx
 
+#begin Effects/RCObjectiOS.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/RCObjectiOS.fx
+

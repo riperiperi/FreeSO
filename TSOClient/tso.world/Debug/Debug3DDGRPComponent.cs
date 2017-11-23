@@ -50,10 +50,10 @@ namespace FSO.LotView.Debug
                 foreach (var pass in Effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
+                    device.SamplerStates[0] = SamplerState.LinearClamp;
                     if (!geom.Rendered) continue;
                     device.Indices = geom.Indices;
                     device.SetVertexBuffer(geom.Verts);
-
                     device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
                 }
             }

@@ -84,7 +84,6 @@ namespace FSO.Client.UI.Screens
                     }
                     else
                     {
-                        Title.SetTitle(LotControl.GetLotTitle());
                         var targ = (WorldZoom)(4 - value); //near is 3 for some reason... will probably revise
                         HITVM.Get().PlaySoundEvent(UIMusic.None);
                         LotControl.Visible = true;
@@ -461,6 +460,7 @@ namespace FSO.Client.UI.Screens
             } else
             {
                 var globalLink = new VMTSOGlobalLinkStub();
+                globalLink.Database = new SimAntics.Engine.TSOGlobalLink.VMTSOStandaloneDatabase();
                 var sd = new VMServerDriver(globalLink);
                 SandServer = new FSOSandboxServer();
 

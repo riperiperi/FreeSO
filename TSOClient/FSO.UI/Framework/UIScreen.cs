@@ -105,6 +105,11 @@ namespace FSO.Client.UI.Framework
             return new Rectangle(0, 0, ScreenWidth, ScreenHeight);
         }
 
+        public virtual bool CloseAttempt()
+        {
+            return true;
+        }
+
         public int ScreenWidth
         {
             get

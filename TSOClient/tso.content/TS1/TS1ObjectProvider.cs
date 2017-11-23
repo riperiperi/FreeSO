@@ -46,7 +46,7 @@ namespace FSO.Content.TS1
                     {
                         Entries.Add(obj.GUID, new GameObjectReference(this)
                         {
-                            FileName = iff.ToString(),
+                            FileName = Path.GetFileName(iff.ToString().Replace('\\', '/')),
                             ID = obj.GUID,
                             Name = obj.ChunkLabel,
                             Source = GameObjectSource.Far,
@@ -55,16 +55,26 @@ namespace FSO.Content.TS1
                         });
 
                         //does this object appear in the catalog?
-                        if (obj.FunctionFlags > 0 && (obj.MasterID == 0 || obj.SubIndex == -1))
+                        if ((obj.FunctionFlags > 0 || obj.BuildModeType > 0) && obj.Disabled == 0 && (obj.MasterID == 0 || obj.SubIndex == -1))
                         {
+                            //todo: more than one of these set? no normal game objects do this
+                            //todo: room sort
                             var cat = (sbyte)Math.Log(obj.FunctionFlags, 2);
+                            if (obj.FunctionFlags == 0) cat = (sbyte)(obj.BuildModeType+7);
                             var item = new ObjectCatalogItem()
                             {
-                                Category = (sbyte)(cat + 11), //debug for now
+                                Category = (sbyte)(cat), //0-7 buy categories. 8-15 build mode categories
                                 GUID = obj.GUID,
                                 DisableLevel = 0,
                                 Price = obj.Price,
-                                Name = obj.ChunkLabel
+                                Name = obj.ChunkLabel,
+
+                                Subsort = (byte)obj.FunctionSubsort,
+                                CommunitySort = (byte)obj.CommunitySubsort,
+                                DowntownSort = (byte)obj.DTSubsort,
+                                MagictownSort = (byte)obj.MTSubsort,
+                                StudiotownSort = (byte)obj.STSubsort,
+                                VacationSort = (byte)obj.VacationSubsort
                             };
                             ItemsByCategory[item.Category].Add(item);
                             ItemsByGUID[item.GUID] = item;
@@ -80,6 +90,7 @@ namespace FSO.Content.TS1
                 if (Path.GetExtension(filename) != ".iff") return;
                 var file = new IffFile(filename);
                 file.MarkThrowaway();
+
                 var objects = file.List<OBJD>();
                 if (objects != null)
                 {
@@ -90,7 +101,7 @@ namespace FSO.Content.TS1
                             FileName = filename,
                             ID = obj.GUID,
                             Name = obj.ChunkLabel,
-                            Source = GameObjectSource.Standalone,
+                            Source = GameObjectSource.User,
                             Group = (short)obj.MasterID,
                             SubIndex = obj.SubIndex
                         });

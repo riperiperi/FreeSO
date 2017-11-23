@@ -39,7 +39,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public override bool Tick(VM vm)
         {
-            if (vm.SpeedMultiplier == 0) return true;
+            if (vm.SpeedMultiplier <= 0) return true;
             //try to read a new tick from the stream
             bool success = false;
             if (Reader.BaseStream.Position < Reader.BaseStream.Length - 1)

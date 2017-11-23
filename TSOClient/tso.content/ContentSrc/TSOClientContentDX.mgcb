@@ -121,3 +121,27 @@
 /processorParam:DebugMode=Auto
 /build:Effects/SSAA.fx
 
+#begin Fonts/Mobile_15px.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=DxtCompressed
+/build:Fonts/Mobile_15px.spritefont
+
+#begin Fonts/Mobile_20px.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=DxtCompressed
+/build:Fonts/Mobile_20px.spritefont
+
+#begin Fonts/Mobile_25px.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=DxtCompressed
+/build:Fonts/Mobile_25px.spritefont
+
+#begin Fonts/Mobile_50px.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=DxtCompressed
+/build:Fonts/Mobile_50px.spritefont
+

@@ -24,7 +24,7 @@ namespace FSO.SimAntics.Engine.Scopes
         Naked = 1,
         DefaultSwimwear = 2,
         JobOutfit = 3,
-        
+        TS1Formal = 4,
         DefaultSleepwear = 5,
         SkeletonPlus = 6,
         SkeletonMinus = 7,
@@ -32,6 +32,18 @@ namespace FSO.SimAntics.Engine.Scopes
         DecorationBack = 9,
         DecorationShoes = 10,
         DecorationTail = 11,
+
+        TS1Toga = 8,
+        TS1Country = 9,
+        TS1Luau = 10,
+        TS1Rave = 11,
+        TS1Costume = 12, //person strings 27. hands: 28, 29
+        TS1ExpandedFormal = 13, //person strings 30 (f###)
+        TS1ExpandedSwimsuit = 14, //person strings 31 (s###)
+        TS1ExpandedPajamas = 15, //person strings 32 (l###)
+        TS1Disco = 16, //???
+        TS1Winter = 17, //person strings 33 (w###)
+        TS1HighFashion = 18, //person strings 34 (h###)
 
         TeleporterMishap = 20,
         CockroachHead = 21,

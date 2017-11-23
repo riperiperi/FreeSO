@@ -58,6 +58,7 @@ namespace FSO.Server.Servers.City
                 lock (LivenessActions)
                 {
                     actionCopy = new List<Action>(LivenessActions);
+                    LivenessActions.Clear();
                 }
 
                 foreach (var action in actionCopy)

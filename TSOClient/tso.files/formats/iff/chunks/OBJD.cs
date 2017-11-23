@@ -257,6 +257,18 @@ namespace FSO.Files.Formats.IFF.Chunks
         public ushort MiscFlags { get; set; }
         public uint TypeAttrGUID;
 
+        public ushort FunctionSubsort { get; set; }
+        public ushort DTSubsort { get; set; }
+        public ushort KeepBuying { get; set; }
+        public ushort VacationSubsort { get; set; }
+        public ushort ResetLotAction { get; set; }
+        public ushort CommunitySubsort { get; set; }
+        public ushort DreamFlags { get; set; }
+        public ushort RenderFlags { get; set; }
+        public ushort VitaboyFlags { get; set; }
+        public ushort STSubsort { get; set; }
+        public ushort MTSubsort { get; set; }
+
         public ushort TypeAttrGUID1
         {
             get { return (ushort)(TypeAttrGUID); }
@@ -431,7 +443,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 this.BHAV_DynamicMultiTileUpdate = io.ReadUInt16();
                 this.ShadowBrightness = io.ReadUInt16();
 
-                if (numFields > 80)
+                if (numFields > 78)
                 {
                     this.BHAV_Repair = io.ReadUInt16();
                     this.WallStyleSpriteID = io.ReadUInt16();
@@ -448,6 +460,23 @@ namespace FSO.Files.Formats.IFF.Chunks
                         this.NumTypeAttributes = io.ReadUInt16();
                         this.MiscFlags = io.ReadUInt16();
                         this.TypeAttrGUID = io.ReadUInt32();
+                        try
+                        {
+                            this.FunctionSubsort = io.ReadUInt16();
+                            this.DTSubsort = io.ReadUInt16();
+                            this.KeepBuying = io.ReadUInt16();
+                            this.VacationSubsort = io.ReadUInt16();
+                            this.ResetLotAction = io.ReadUInt16();
+                            this.CommunitySubsort = io.ReadUInt16();
+                            this.DreamFlags = io.ReadUInt16();
+                            this.RenderFlags = io.ReadUInt16();
+                            this.VitaboyFlags = io.ReadUInt16();
+                            this.STSubsort = io.ReadUInt16();
+                            this.MTSubsort = io.ReadUInt16();
+                        } catch (Exception)
+                        {
+                            //past this point if these fields are here is really a mystery
+                        }
                     }
                     if (this.TypeAttrGUID == 0) this.TypeAttrGUID = GUID;
                 }

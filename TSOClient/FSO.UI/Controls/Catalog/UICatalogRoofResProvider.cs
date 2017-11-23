@@ -34,5 +34,10 @@ namespace FSO.Client.UI.Controls.Catalog
         {
             return 0;
         }
+
+        public override bool DoDispose()
+        {
+            return false;
+        }
     }
 }

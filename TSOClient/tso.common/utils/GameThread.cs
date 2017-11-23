@@ -102,6 +102,8 @@ namespace FSO.Common.Utils
 
     public class GameThread
     {
+        public static bool Killed;
+        public static EventWaitHandle OnKilled = new EventWaitHandle(false, EventResetMode.ManualReset);
         public static bool UpdateExecuting;
         private static List<UpdateHook> _UpdateHooks = new List<UpdateHook>();
         private static Queue<Callback<UpdateState>> _UpdateCallbacks = new Queue<Callback<UpdateState>>();

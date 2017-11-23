@@ -11,6 +11,7 @@ using System.Text;
 using FSO.Vitaboy;
 using FSO.Content.Framework;
 using System.IO;
+using FSO.Files.Utils;
 
 namespace FSO.Content.Codecs
 {
@@ -24,7 +25,10 @@ namespace FSO.Content.Codecs
         public override object GenDecode(System.IO.Stream stream)
         {
             var ani = new Animation();
-            ani.Read(stream, false);
+            using (var io = IoBuffer.FromStream(stream, ByteOrder.BIG_ENDIAN))
+            {
+                ani.Read((BCFReadProxy)io, false);
+            }
             return ani;
         }
 

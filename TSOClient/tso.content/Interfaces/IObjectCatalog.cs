@@ -20,5 +20,12 @@ namespace FSO.Content.Interfaces
         public uint Price;
         public string Name;
         public byte DisableLevel; //1 = only shopping, 2 = rare (unsellable?)
+
+        public byte Subsort;
+        public byte DowntownSort;
+        public byte VacationSort;
+        public byte CommunitySort;
+        public byte StudiotownSort;
+        public byte MagictownSort;
     }
 }

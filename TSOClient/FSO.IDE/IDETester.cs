@@ -12,6 +12,7 @@ using FSO.Client;
 using FSO.Content;
 using System.Windows.Forms;
 using System.Threading;
+using System.IO;
 
 namespace FSO.IDE
 {
@@ -22,8 +23,10 @@ namespace FSO.IDE
         public void StartIDE(VM vm)
         {
             EditorResource.Get().Init(GameFacade.GraphicsDevice);
-            EditorScope.Behaviour = new Files.Formats.IFF.IffFile(Content.Content.Get().GetPath("objectdata/globals/behavior.iff"));
-            EditorScope.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
+            var content = Content.Content.Get();
+            EditorScope.Behaviour = new Files.Formats.IFF.IffFile(
+                content.TS1?Path.Combine(content.TS1BasePath, "GameData/Behavior.iff"):content.GetPath("objectdata/globals/behavior.iff"));
+            EditorScope.Globals = content.WorldObjectGlobals.Get("global");
             Program.MainThread = Thread.CurrentThread;
 
             var t = new Thread(() =>

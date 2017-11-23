@@ -244,7 +244,7 @@ namespace FSO.SimAntics
             {
                 if (slot > -1 && slot < Contained.Length)
                 {
-                    if (!obj.GhostImage)
+                    if (obj.GhostImage == GhostImage)
                     {
                         Contained[slot] = obj;
                         obj.Container = this;
@@ -375,11 +375,7 @@ namespace FSO.SimAntics
 
         public override void PositionChange(VMContext context, bool noEntryPoint)
         {
-            if (GhostImage) return;
-
-            var room = context.GetObjectRoom(this);
-            SetRoom(room);
-            for (int i=0; i<Contained.Length; i++)
+            for (int i = 0; i < Contained.Length; i++)
             {
                 if (Contained[i] != null)
                 {
@@ -388,6 +384,10 @@ namespace FSO.SimAntics
                     Contained[i].PositionChange(context, noEntryPoint); //recursive
                 }
             }
+            if (GhostImage) return;
+
+            var room = context.GetObjectRoom(this);
+            SetRoom(room);
 
             context.RegisterObjectPos(this);
 

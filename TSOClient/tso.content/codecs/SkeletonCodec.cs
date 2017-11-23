@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using FSO.Vitaboy;
 using FSO.Content.Framework;
+using FSO.Files.Utils;
 
 namespace FSO.Content.Codecs
 {
@@ -18,7 +19,10 @@ namespace FSO.Content.Codecs
         public override object GenDecode(System.IO.Stream stream)
         {
             var result = new Skeleton();
-            result.Read(stream, false);
+            using (var io = IoBuffer.FromStream(stream, ByteOrder.BIG_ENDIAN))
+            {
+                result.Read((BCFReadProxy)io, false);
+            }
             return result;
         }
 

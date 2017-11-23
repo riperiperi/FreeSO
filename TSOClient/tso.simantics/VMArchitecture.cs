@@ -28,6 +28,7 @@ namespace FSO.SimAntics
 
         public bool DisableClip;
         public Rectangle BuildableArea;
+        public bool[] FineBuildableArea;
         public int BuildableFloors;
 
         //public for quick access and iteration. 
@@ -83,6 +84,24 @@ namespace FSO.SimAntics
             new Color(70, 70, 70)*1.25f,
             new Color(55, 75, 111)*1.25f,
             new Color(50, 70, 122)*1.25f,
+        };
+
+        private float[] m_SkyColors = new float[]
+        {
+            4/8f,
+            4/8f,
+            4/8f,
+            5/8f,
+            6/8f, //sunrise
+            7/8f,
+            8/8f, //peak
+            0/8f, //peak
+            0/8f,
+            0/8f,
+            1/8f, //sunset
+            2/8f,
+            3/8f,
+            4/8f,
         };
 
         public void SetRoof(float pitch, uint style)
@@ -163,6 +182,12 @@ namespace FSO.SimAntics
                 double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
                 WorldUI.OutsideColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
                 WorldUI.OutsideTime = time;
+
+                var sky1 = m_SkyColors[(int)Math.Floor(time * (m_SkyColors.Length - 1))]; //first colour
+                var sky2 = m_SkyColors[(int)Math.Floor(time * (m_SkyColors.Length - 1)) + 1]; //second colour
+                if (sky1 == 1f && sky2 == 0f) Progress = 0;
+                WorldUI.OutsideSkyP = (float)Progress * sky2 + (1 - (float)Progress) * sky1;
+
                 Context.World.State?.Light?.BuildOutdoorsLight(time);
             }
         }
@@ -426,7 +451,7 @@ namespace FSO.SimAntics
             {
                 var com = commands[i];
                 var avaEnt = Context.VM.Entities.FirstOrDefault(x => x.PersistID == com.CallerUID);
-                if ((avaEnt == null || avaEnt is VMGameObject) && !transient) return 0; //we need an avatar to run a command from net
+                if ((avaEnt == null || avaEnt is VMGameObject) && !transient && !Context.VM.TS1) return 0; //we need an avatar to run a command from net
                 var avatar = (transient)? null : (VMAvatar)avaEnt;
                 lastAvatar = avatar;
                 var styleInd = -1;

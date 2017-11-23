@@ -23,12 +23,13 @@ namespace FSO.Content.TS1
         public Dictionary<string, string> SkinHostBCF = new Dictionary<string, string>();
         public Dictionary<string, string> SkelHostBCF = new Dictionary<string, string>();
         public Content ContentManager;
+        public Dictionary<string, TS1ClothingCollection> CollectionsByName = new Dictionary<string, TS1ClothingCollection>();
 
         public TS1BCFProvider(Content contentManager, TS1Provider provider)
         {
             ContentManager = contentManager;
             BaseProvider = provider;
-            BCFProvider = new TS1SubProvider<BCF>(provider, ".bcf");
+            BCFProvider = new TS1SubProvider<BCF>(provider, new string[] { ".bcf", ".cmx" });
             CFPProvider = new TS1SubProvider<CFP>(provider, ".cfp");
         }
 
@@ -56,6 +57,39 @@ namespace FSO.Content.TS1
                     SkelHostBCF.Add(skel.Name.ToLowerInvariant(), Path.GetFileName(bcf.ToString().ToLowerInvariant().Replace('\\', '/')));
                 }
             }
+            
+            foreach (var item in SkinHostBCF.Keys)
+            {
+                if (char.IsDigit(item[1]) && char.IsDigit(item[2]) && char.IsDigit(item[3])) {
+                    if (item[0] == 'b' || item[0] == 'c')
+                    {
+                        var uindex = item.IndexOf('_');
+                        if (uindex == -1) uindex = item.Length;
+                        var type = item.Substring(4, uindex - 4);
+                        if (type.EndsWith("fat") || type.EndsWith("fit") || type.EndsWith("skn")) type = type.Substring(0, type.Length - 3);
+                        AddItem(item[0].ToString(), type, item);
+                    }
+                }
+            }
+        }
+
+        private void AddItem(string cat, string avatartype, string item)
+        {
+            TS1ClothingCollection col;
+            if (!CollectionsByName.TryGetValue(cat, out col))
+            {
+                col = new TS1ClothingCollection();
+                CollectionsByName[cat] = col;
+            }
+
+            List<string> items;
+            if (!col.ClothesByAvatarType.TryGetValue(avatartype, out items))
+            {
+                items = new List<string>();
+                col.ClothesByAvatarType[avatartype] = items;
+            }
+
+            items.Add(item);
         }
 
         public object Get(string name, Type expected)
@@ -111,7 +145,7 @@ namespace FSO.Content.TS1
 
     public class TS1BCFSubProvider<T> : IContentProvider<T>
     {
-        TS1BCFProvider BaseProvider;
+        public TS1BCFProvider BaseProvider;
         public TS1BCFSubProvider(TS1BCFProvider baseProvider)
         {
             BaseProvider = baseProvider;
@@ -163,5 +197,13 @@ namespace FSO.Content.TS1
         public TS1BCFAppearanceProvider(TS1BCFProvider baseProvider) : base(baseProvider)
         {
         }
+    }
+
+    public class TS1ClothingCollection
+    {
+        public string Name; //
+
+        //"fa", "ma", "cat", "dog", etc.
+        public Dictionary<string, List<string>> ClothesByAvatarType = new Dictionary<string, List<string>>();
     }
 }

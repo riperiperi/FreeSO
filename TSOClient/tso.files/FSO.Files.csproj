@@ -183,6 +183,7 @@
     <Compile Include="RC\DGRPRCParams.cs" />
     <Compile Include="RC\OBJReader.cs" />
     <Compile Include="Tuning.cs" />
+    <Compile Include="Utils\BCFReadProxy.cs" />
     <Compile Include="Utils\CurLoader.cs" />
     <Compile Include="Utils\IFileInfoUtilizer.cs" />
     <Compile Include="Utils\IoWriter.cs" />

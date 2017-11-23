@@ -602,88 +602,101 @@ namespace FSO.SimAntics
             var info = RoomInfo[room];
             var isoutside = info.Room.IsOutside;
             room = info.Room.LightBaseRoom;
-            if (visited.Contains(room)) return;
-            visited.Add(room);
-            info = RoomInfo[room];
-            var light = new RoomLighting();
-            RoomInfo[room].Light = light;
-            light.Bounds = info.Room.Bounds;
-            light.AmbientLight = 0;
-            var affected = new HashSet<ushort>();
-
-            var area = 0;
-            var outside = 0;
-            var inside = 0;
-            var roomScore = 0;
             var useWorld = UseWorld;
-            foreach (var rm in info.Room.SupportRooms)
+            if (!visited.Contains(room))
             {
-                info = RoomInfo[rm];
-                light.Bounds = Rectangle.Union(light.Bounds, info.Room.Bounds);
-                RoomInfo[room].Light = light; //adjacent rooms share a light object.
-                area += info.Room.Area;
-                foreach (var ent in info.Entities)
-                {
-                    if (ent.MultitileGroup.Objects.Count == 0) continue;
-                    var mainSource = ent == ent.MultitileGroup.Objects[0];
-                    var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
-                    
-                    var cont = ent.GetValue(VMStackObjectVariable.LightingContribution);
-                    if (cont > 0)
-                    {
-                        if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
-                        {
-                            if (true) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), true, 160, room, info.Room.Floor, ent.LightColor));
-                            outside += (ushort)cont;
-                        }
-                        else
-                        {
-                            if (mainSource) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 160, room, info.Room.Floor, ent.LightColor));
-                            inside += (ushort)cont;
-                        }
-                    }
-                    else if (useWorld && ent is VMGameObject && !ent.MovesOften)
-                    {
-                        if (mainSource) {
-                            var bound = ent.MultitileGroup.LightBounds();
-                            if (bound != null) light.ObjectFootprints.Add(bound.Value);
-                        }
-                        light.Components.Add((ObjectComponent)ent.WorldUI);
-                    }
-                    var roomImpact = ent.GetValue(VMStackObjectVariable.RoomImpact);
-                    if (roomImpact != 0) roomScore += roomImpact;
-                }
-
-                foreach (var portal in info.WindowPortals)
-                {
-                    if (RoomInfo[RoomInfo[portal.TargetRoom].Room.LightBaseRoom].Room.IsOutside) continue;
-                    var ent = VM.GetObjectById(portal.ObjectID);
-                    var wlight = new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 100, room, info.Room.Floor, ent.LightColor);
-                    wlight.WindowRoom = portal.TargetRoom;
-                    var bRoom = RoomInfo[portal.TargetRoom].Room.LightBaseRoom;
-                    affected.Add(bRoom);
-                    light.Lights.Add(wlight);
-                }
-
-            }
-
-            float areaScale = Math.Max(1, area / 100f);
-            LightData.Cluster(light.Lights);
-            light.OutsideLight = Math.Min((ushort)100, (ushort)(outside / areaScale));
-            light.AmbientLight = Math.Min((ushort)100, (ushort)(inside / areaScale));
-
-            if (info.Room.IsOutside)
-            {
+                visited.Add(room);
+                info = RoomInfo[room];
+                var light = new RoomLighting();
+                RoomInfo[room].Light = light;
+                light.Bounds = info.Room.Bounds;
                 light.AmbientLight = 0;
-                light.OutsideLight = 100;
+                var affected = new HashSet<ushort>();
+
+                var area = 0;
+                var outside = 0;
+                var inside = 0;
+                var roomScore = 0;
+
+                foreach (var rm in info.Room.SupportRooms)
+                {
+                    info = RoomInfo[rm];
+                    light.Bounds = Rectangle.Union(light.Bounds, info.Room.Bounds);
+                    RoomInfo[room].Light = light; //adjacent rooms share a light object.
+                    area += info.Room.Area;
+                    foreach (var ent in info.Entities)
+                    {
+                        if (ent.MultitileGroup.Objects.Count == 0) continue;
+                        var mainSource = ent == ent.MultitileGroup.Objects[0];
+                        var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
+
+                        var cont = ent.GetValue(VMStackObjectVariable.LightingContribution);
+                        if (cont > 0)
+                        {
+                            if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
+                            {
+                                if (true) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), true, 160, room, info.Room.Floor, ent.LightColor));
+                                outside += (ushort)cont;
+                            }
+                            else
+                            {
+                                if (mainSource) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 160, room, info.Room.Floor, ent.LightColor));
+                                inside += (ushort)cont;
+                            }
+                        }
+                        else if (useWorld && ent is VMGameObject && !ent.MovesOften)
+                        {
+                            if (mainSource)
+                            {
+                                var bound = ent.MultitileGroup.LightBounds();
+                                if (bound != null) light.ObjectFootprints.Add(bound.Value);
+                            }
+                            light.Components.Add((ObjectComponent)ent.WorldUI);
+                        }
+                        var roomImpact = ent.GetValue(VMStackObjectVariable.RoomImpact);
+                        if (roomImpact != 0) roomScore += roomImpact;
+                    }
+
+                    foreach (var portal in info.WindowPortals)
+                    {
+                        if (RoomInfo[RoomInfo[portal.TargetRoom].Room.LightBaseRoom].Room.IsOutside) continue;
+                        var ent = VM.GetObjectById(portal.ObjectID);
+                        var wlight = new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 100, room, info.Room.Floor, ent.LightColor);
+                        wlight.WindowRoom = portal.TargetRoom;
+                        var bRoom = RoomInfo[portal.TargetRoom].Room.LightBaseRoom;
+                        affected.Add(bRoom);
+                        light.Lights.Add(wlight);
+                    }
+
+                }
+
+                float areaScale = Math.Max(1, area / 100f);
+                LightData.Cluster(light.Lights);
+                light.OutsideLight = Math.Min((ushort)100, (ushort)(outside / areaScale));
+                light.AmbientLight = Math.Min((ushort)100, (ushort)(inside / areaScale));
+
+                if (info.Room.IsOutside)
+                {
+                    light.AmbientLight = 0;
+                    light.OutsideLight = 100;
+                }
+
+                float areaRScale = Math.Max(1, area / 12f);
+                if (info.Room.IsOutside) areaRScale = 30;
+                roomScore = (short)(roomScore / areaRScale);
+                roomScore -= (info.Room.IsOutside) ? 15 : 10;
+
+                light.RoomScore = (short)Math.Min(100, Math.Max(-100, roomScore));
+
+                if (useWorld)
+                {
+                    Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED, (short)room, 0, 0));
+                    foreach (var a in affected)
+                    {
+                        Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED, (short)a, 0, 0));
+                    }
+                }
             }
-
-            float areaRScale = Math.Max(1, area / 12f);
-            if (info.Room.IsOutside) areaRScale = 30;
-            roomScore = (short)(roomScore / areaRScale);
-            roomScore -= (info.Room.IsOutside) ? 15 : 10;
-
-            light.RoomScore = (short)Math.Min(100, Math.Max(-100, roomScore));
 
             if (commit && useWorld)
             {
@@ -691,11 +704,6 @@ namespace FSO.SimAntics
                 for (int i = 0; i < RoomInfo.Length; i++)
                 {
                     Blueprint.Light[i] = RoomInfo[i].Light;
-                }
-                Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED, (short)room, 0, 0));
-                foreach (var a in affected)
-                {
-                    Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED, (short)a, 0, 0));
                 }
             }
         }
@@ -902,8 +910,22 @@ namespace FSO.SimAntics
         /// <returns></returns>
         public bool IsUserOutOfBounds(LotTilePos pos)
         {
-            var area = Architecture.BuildableArea;
-            return (pos.TileX < area.X || pos.TileY < area.Y || pos.Level < 1 || pos.TileX >= area.Right || pos.TileY >= area.Bottom || pos.Level > _Arch.BuildableFloors);
+            var fine = Architecture.FineBuildableArea;
+            if (fine != null)
+            {
+                if (pos.TileX < 0 || pos.TileX >= _Arch.Width) return false;
+                else if (pos.TileY < 0 || pos.TileY >= _Arch.Height) return false;
+                else if (pos.Level < 1 || pos.Level > _Arch.BuildableFloors) return false;
+                else
+                {
+                    return !fine [pos.TileX + pos.TileY * _Arch.Width];
+                }
+            }
+            else
+            {
+                var area = Architecture.BuildableArea;
+                return (pos.TileX < area.X || pos.TileY < area.Y || pos.Level < 1 || pos.TileX >= area.Right || pos.TileY >= area.Bottom || pos.Level > _Arch.BuildableFloors);
+            }
         }
 
         public void UpdateTSOBuildableArea()
@@ -1120,14 +1142,31 @@ namespace FSO.SimAntics
             {
                 newGroup.InitialPrice = group.InitialPrice;
                 for (int i=0; i < Math.Min(newGroup.Objects.Count, group.Objects.Count); i++) {
+                    var original = group.Objects[i];
                     newGroup.Objects[i].IgnoreIntersection = group;
                     newGroup.Objects[i].SetValue(VMStackObjectVariable.Graphic, group.Objects[i].GetValue(VMStackObjectVariable.Graphic));
+                    newGroup.Objects[i].SetValue(VMStackObjectVariable.Hidden, group.Objects[i].GetValue(VMStackObjectVariable.Hidden));
                     newGroup.Objects[i].DynamicSpriteFlags = group.Objects[i].DynamicSpriteFlags;
                     newGroup.Objects[i].DynamicSpriteFlags2 = group.Objects[i].DynamicSpriteFlags2;
                     newGroup.Objects[i].SetDynamicSpriteFlag(0, group.Objects[i].IsDynamicSpriteFlagSet(0));
                     newGroup.Objects[i].PlatformState = group.Objects[i].PlatformState;
                     if (newGroup.Objects[i] is VMGameObject)
+                    {
                         ((VMGameObject)newGroup.Objects[i]).RefreshGraphic();
+                        newGroup.Objects[i].SetRoom(65534);
+                        ((ObjectComponent)newGroup.Objects[i].WorldUI).ForceDynamic = true;
+                    }
+
+                    var slots = original.TotalSlots();
+                    for (int j=0; j<slots; j++)
+                    {
+                        var item = original.GetSlot(j);
+                        if (item != null)
+                        {
+                            var grp = GhostCopyGroup(item.MultitileGroup);
+                            newGroup.Objects[i].PlaceInSlot(grp.BaseObject, j, false, this);
+                        }
+                    }
                 }
             }
 
