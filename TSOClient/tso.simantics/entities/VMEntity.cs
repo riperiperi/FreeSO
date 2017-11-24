@@ -574,7 +574,7 @@ namespace FSO.SimAntics
 
         public VMBHAVOwnerPair GetBHAVWithOwner(ushort ActionID, VMContext context)
         {
-            BHAV bhav;
+            BHAV bhav = null;
             GameObject CodeOwner;
             if (ActionID < 4096)
             { //global
@@ -586,7 +586,8 @@ namespace FSO.SimAntics
             }
             else
             { //semi-global
-                bhav = SemiGlobal.Get<BHAV>(ActionID);
+                if (SemiGlobal != null)
+                    bhav = SemiGlobal.Get<BHAV>(ActionID);
             }
 
             CodeOwner = Object;

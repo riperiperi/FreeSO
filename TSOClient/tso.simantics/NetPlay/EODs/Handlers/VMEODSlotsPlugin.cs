@@ -68,7 +68,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public override void OnConnection(VMEODClient client)
         {
             UserClient = client;
-
             var args = client.Invoker.Thread.TempRegisters;
             // check machine type buy object GUID
             var guid = Server.Object.Object.GUID;
@@ -101,23 +100,76 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         MachineBalanceMax = (int)VMEODSlotMachineMaximumBalances.Jack_of_Hearts;
                         break;
                     }
+                // "X Marks the Spot" Slot Machine - $25 (separate object, very first attempt at "original" CC)
+                case 82792878:
+                    {
+                        MachineType = 3;
+                        MachineBetDenomination = 25;
+                        MachineBalanceMin = (int)VMEODSlotMachineMinimumBalances.X_Marks_the_Spot;
+                        MachineBalanceMax = (int)VMEODSlotMachineMaximumBalances.X_Marks_the_Spot;
+                        break;
+                    }
+                // "Undefined" Slot Machine - $100 (separate object, CC)
+                case 2147483648:
+                    {
+                        MachineType = 4;
+                        MachineBetDenomination = 100;
+                        MachineBalanceMin = (int)VMEODSlotMachineMinimumBalances.Undefined;
+                        MachineBalanceMax = (int)VMEODSlotMachineMaximumBalances.Undefined;
+                        break;
+                    }
+                default:
+                    {
+                        MachineType = 255;
+                        break;
+                    }
             }
             // is the cilent the owner of the object?
             bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == UserClient.Avatar.PersistID);
 
-            // UserClient is a player
-            if ((args != null) && (args.Length > 3) && (args[1] < 79)) // is player because arg[1] on player can only be 1 5 or 10
-            { // args[3] = StackObject's Payback
+            // UserClient is Player
+            if (args[0] == 1)
+            {
+                /*
+                 * args[0] = 1 for Player
+                 * args[1] = Passed Bet (bet denomination)
+                 * args[2] = Machine type
+                 * args[3] = StackObject's Payback
+                 */
                 MachinePaybackPercent = args[3];
                 CalculateWheelStops(MachinePaybackPercent);
-                UserClient.Send("slots_player_init", new byte[] { MachineBetDenomination, MachineType });
+                if (MachineType == 255) // GUID mismatch
+                {
+                    MachineType = (byte)args[2];
+                    string machineType = Enum.GetName(typeof(VMEODSlotMachineTypes), MachineType);
+                    MachineBalanceMin = (int)Enum.Parse(typeof(VMEODSlotMachineMinimumBalances), machineType);
+                    MachineBalanceMax = (int)Enum.Parse(typeof(VMEODSlotMachineMaximumBalances), machineType);
+                    MachineBetDenomination = (byte)Enum.Parse(typeof(VMEODSlotMachineTypeBetDenomiations), machineType);
+                }
+                UserClient.Send("slots_player_init", new byte[] { MachineType });
             }
-            // UserClient is owner
-            else if ((isOwner) && (args != null) && (args.Length > 4) && (args[1] > 79)) // HAS to be 80 > args[1] < 100
-            { // args[1] = StackObject's Payback, args[2] = StackObject's (Balance % 16384), args[3] = StackObject's (Balance / 16384), args[4] = 0 for "Off" or 1 for "On"
-                var AlledgedMachineBalance = (short)((16384 * args[3]) + args[2]);
-                UserClient.Send("slots_owner_init", new byte[5] { (byte)(args[1]), (byte)(AlledgedMachineBalance % 255),
-                    (byte)(AlledgedMachineBalance / 255), (byte)(args[4]), MachineType });
+            // UserClient is Owner
+            else if ((isOwner) && (args[0] == 2))
+            {
+                /*
+                 * args[0] = 2 for Owner
+                 * args[1] = StackObject's Payback,
+                 * args[2] = StackObject's (Balance % 16384),
+                 * args[3] = StackObject's (Balance / 16384),
+                 * args[4] = 0 for "Off" or 1 for "On"
+                 * args[5] = Machine type
+                 */
+                MachinePaybackPercent = args[1];
+                var AlledgedMachineBalance = ((16384 * args[3]) + args[2]);
+                if (MachineType == 255)
+                {
+                    MachineType = (byte)args[5];
+                    string machineType = Enum.GetName(typeof(VMEODSlotMachineTypes), MachineType);
+                    MachineBalanceMin = (int)Enum.Parse(typeof(VMEODSlotMachineMinimumBalances), machineType);
+                    MachineBalanceMax = (int)Enum.Parse(typeof(VMEODSlotMachineMaximumBalances), machineType);
+                    MachineBetDenomination = (byte)Enum.Parse(typeof(VMEODSlotMachineTypeBetDenomiations), machineType);
+                }
+                UserClient.Send("slots_owner_init", MachinePaybackPercent + "%" + AlledgedMachineBalance + "%" + MachineType + "%" + args[4]);
             }
             // get the amount of money in the machine by sending a testOnly transaction for $1 from maxis to machine
             var VM = UserClient.vm;
@@ -141,8 +193,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 {
                     // amount of money currently in the machine
                     MachineBalance = (int)(budget2);
-                    if ((args != null) && (args.Length > 3) && (args[1] < 79))
+                    if (MachineBalance >= MachineBalanceMin && MachineBalance < MachineBalanceMax)
                         UserClient.Send("slots_new_game", "");
+                    else
+                        UserClient.Send("slots_close_machine", "");
                 }
                 else
                 {
@@ -152,6 +206,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         }
         public override void OnDisconnection(VMEODClient client)
         {
+            client.Send("slots_cleanup", "");
             base.OnDisconnection(client);
         }
         private void GameOverHandler(short eventID, VMEODClient player)
@@ -163,7 +218,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             }
             else
             {
-                UserClient.Send("slots_close_machine", "");
+                player.Send("slots_close_machine", "");
             }
         }
         private void ToggleOnOffHandler(string evt, string OnOffStateString, VMEODClient client)
@@ -516,14 +571,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         Budget2 = budget2
                     }));
                     if (success)
-                    {
                         MachineBalance = (int)(budget1);
-                        CurrentWinnings = 0; // winning payout cannot be duplicated
-                    }
-                    else
-                    {
-                        CurrentWinnings = 0; // winning payout cannot be duplicated
-                    }
                 });
             }
             else
@@ -648,8 +696,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
     }
     public enum VMOEDSlotsObjectEvents : short
     {
-        InitPlay = -2,
-        StopPlay = -1, // dispatched by object on Exit for Motives — onDisconnect may be better
+        VMEODConnect = -2,
+        VMEODDisconnect = -1, // dispatched by object on Exit for Motives — onDisconnect may be better
         Idle = 0,
         // Unknown or Unimplemented = 1,
         // Unknown or Unimplemented = 2,
@@ -680,17 +728,41 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         SixthBlank = 10,
         Sixth = 11
     }
-    public enum VMEODSlotMachineMinimumBalances : short
+    [Flags]
+    public enum VMEODSlotMachineTypes : byte
+    {
+        Viva_PGT = 0,
+        Gypsy_Queen = 1,
+        Jack_of_Hearts = 2,
+        X_Marks_the_Spot = 3,
+        Undefined = 4
+    }
+    [Flags]
+    public enum VMEODSlotMachineTypeBetDenomiations : byte
+    {
+        Viva_PGT = 1,
+        Gypsy_Queen = 5,
+        Jack_of_Hearts = 10,
+        X_Marks_the_Spot = 25,
+        Undefined = 100
+    }
+    [Flags]
+    public enum VMEODSlotMachineMinimumBalances : int
     {
         Viva_PGT = 2500,
         Gypsy_Queen = 12500,
-        Jack_of_Hearts = 25000
+        Jack_of_Hearts = 25000,
+        X_Marks_the_Spot = 62500,
+        Undefined = 250000
     }
+    [Flags]
     public enum VMEODSlotMachineMaximumBalances : int
     {
-        Viva_PGT = 15000,
-        Gypsy_Queen = 35000,
-        Jack_of_Hearts = 65000
+        Viva_PGT = 15000, // 6 times the min balance, for convenience; 3 rest are 3x the min balance
+        Gypsy_Queen = 37500,
+        Jack_of_Hearts = 75000,
+        X_Marks_the_Spot = 187500,
+        Undefined = 750000
     }
     [Flags]
     public enum VMEODSlotsInputErrorTypes : byte

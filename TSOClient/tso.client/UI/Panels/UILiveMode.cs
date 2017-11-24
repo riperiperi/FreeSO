@@ -245,10 +245,14 @@ namespace FSO.Client.UI.Panels
                 LastEODConfig.Expanded = !LastEODConfig.Expanded;
                 if (LastEODConfig.Expanded)
                 {
+                    if (EODTimer.Visible == true)
+                        EODTimer.Texture = GetTexture(0x000001BF00000002); // eod_timerback_straight.tga
                     ActiveEOD.OnExpand();
                 }
                 else
                 {
+                    if (EODTimer.Visible == true)
+                        EODTimer.Texture = GetTexture(0x0000011300000002); // eod_timerback.tga
                     ActiveEOD.OnContract();
                 }
                 SetInEOD(LastEODConfig, ActiveEOD);
@@ -336,7 +340,7 @@ namespace FSO.Client.UI.Panels
                 EODSub.Reset();
                 EODMsgWin.Reset();
 
-                var buttons = new string[] { "None", "One", "Two" };
+                var buttons = new string[] { "None", "One", "Two", "Three" }; // three doesn't work, but at least for now it won't be out of bounds array
                 var buttonLayout = buttons[options.Buttons];
                 Script.ApplyControlProperties(EODButtonLayout, "EODButtonLayout" + buttonLayout + EODLayout.GetHeightSuffix(options.Height, true));
                 Script.ApplyControlProperties(EODSub, "EODSub" + options.Length + "Length" + EODLayout.GetHeightSuffix(options.Height, true));
@@ -366,8 +370,9 @@ namespace FSO.Client.UI.Panels
                 MsgWinTextEntry.Position = EODLayout.GetMessageWindowTextPosition(options.Height, options.Expanded);
 
                 //Timer
-                EODTimer.Position = EODLayout.GetTimerPosition(options.Height);
-                TimerTextEntry.Position = EODLayout.GetTimerTextPosition(options.Height);
+                EODTimer.Position = EODLayout.GetTimerPosition(options.Height, options.Expanded);
+                EODTimer.Texture = GetTexture(0x0000011300000002); // regular .\uigraphics\ucp\livepanel\eod_timerback.tga, changed for TallTall below
+                TimerTextEntry.Position = EODLayout.GetTimerTextPosition(options.Height, options.Expanded);
 
                 //Expand / contract
                 EODExpandButton.Position = EODLayout.GetExpandButtonPosition(options.Height);
@@ -396,6 +401,9 @@ namespace FSO.Client.UI.Panels
                     
                     EODTopButtonLayout.Position -= new Vector2(0, 155);
                     EODTopSub.Position -= new Vector2(0, 155);
+
+                    if (EODTimer.Visible == true && options.Expanded) // needs to be eod_timerback_straight.tga for TallTall
+                        EODTimer.Texture = GetTexture(0x000001BF00000002);
                 }
 
 
@@ -682,14 +690,34 @@ namespace FSO.Client.UI.Panels
             return GetPanelPosition(EODHeight.Tall) + (Vector2)Script.GetControlProperty("EODExpandBack", "position");
         }
 
-        public Vector2 GetTimerPosition(EODHeight height)
+        public Vector2 GetTimerPosition(EODHeight height, bool expanded)
         {
-            return GetTopLeft(height) + (Vector2)Script.GetControlProperty("EODTimer", "position");
+            var topLeftHeight = height;
+            if (height == EODHeight.TallTall)
+            {
+                topLeftHeight = EODHeight.Tall;
+                var position = GetTopLeft(topLeftHeight) + (Vector2)Script.GetControlProperty("EODTimer", "position");
+                if (expanded)
+                    position += (Vector2)Script.GetControlProperty("EODDoublePanelMsgOffset");
+                return position;
+            }
+            else
+                return GetTopLeft(topLeftHeight) + (Vector2)Script.GetControlProperty("EODTimer", "position");
         }
 
-        public Vector2 GetTimerTextPosition(EODHeight height)
+        public Vector2 GetTimerTextPosition(EODHeight height, bool expanded)
         {
-            return GetTopLeft(height) + (Vector2)Script.GetControlProperty("TimerTextEntry", "position");
+            var topLeftHeight = height;
+            if (height == EODHeight.TallTall)
+            {
+                topLeftHeight = EODHeight.Tall;
+                var position = GetTopLeft(topLeftHeight) + (Vector2)Script.GetControlProperty("TimerTextEntry", "position");
+                if (expanded)
+                    position += (Vector2)Script.GetControlProperty("EODDoublePanelMsgOffset");
+                return position;
+            }
+            else
+                return GetTopLeft(height) + (Vector2)Script.GetControlProperty("TimerTextEntry", "position");
         }
 
         public Vector2 GetMessageWindowPosition(EODHeight height, EODTextTips tips, bool expanded)

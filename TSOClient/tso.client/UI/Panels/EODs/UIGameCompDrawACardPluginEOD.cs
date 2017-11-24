@@ -92,6 +92,7 @@ namespace FSO.Client.UI.Panels.EODs
         {
             base.OnClose();
             Send("DrawCard_Close", "");
+            CloseInteraction();
         }
 
         private void BuildUI()

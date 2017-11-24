@@ -149,6 +149,10 @@
     <Content Include="ContentSrc\Effects\LightMap2D.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Textures\EOD\eod_slots_wheelandspin4.bmp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Textures\EOD\eod_slots_wheellegend4.bmp">
     <Content Include="ContentSrc\Effects\VitaboyiOS.fx" />
     <Content Include="Content\Textures\skycol.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -643,6 +647,9 @@
     <Content Include="Content\Patch\doghouse_motive.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Content\Objects\slotmachine04_Xtreasure.iff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="Content\DX\Fonts\Mobile_15px.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
