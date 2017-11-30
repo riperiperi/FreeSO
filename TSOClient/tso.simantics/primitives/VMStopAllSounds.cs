@@ -29,6 +29,7 @@ namespace FSO.SimAntics.Primitives
                 threads[i].Sound.RemoveOwner(owner.ObjectID);
             }
             threads.Clear();
+            context.VM.SoundEntities.Remove(owner);
 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

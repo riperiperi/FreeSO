@@ -50,7 +50,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 {
                     var compressionCode = io.ReadByte();
                     if (compressionCode != 1) throw new Exception("hey what!!");
-                    iop = new IffFieldEncode(io); //haven't guaranteed that this works, since none of the objects in the test lot use it.
+                    iop = new IffFieldEncode(io); 
                 }
                 for (int i = 0; i < Interactions.Length; i++)
                 {

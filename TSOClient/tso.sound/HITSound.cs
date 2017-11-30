@@ -100,5 +100,9 @@ namespace FSO.HIT
         {
             return Owners.Contains(id);
         }
+
+        public abstract void Pause();
+
+        public abstract void Resume();
     }
 }

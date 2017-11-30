@@ -20,7 +20,9 @@ float4 TexMatrix;
 float2 TileSize;
 
 bool depthOutMode;
+float3 CamPos;
 float3 LightVec;
+float GrassShininess;
 bool UseTexture;
 bool IgnoreColor;
 texture BaseTex;
@@ -217,6 +219,12 @@ float4 LightDot(float3 normal) {
 	return CM(dot(LightVec, normalize(normal)) * 0.5f + 0.5f);
 }
 
+float4 LightSpecular(float3 normal, float4 modelpos) {
+	float3 pos = normalize(CamPos - modelpos.xyz);
+	float cosan = abs(dot(pos, normal));
+	return DiffuseColor*(1-pow(cosan, GrassShininess));
+}
+
 #if SIMPLE
 void BladesPS(GrassPSVTX input, out float4 color:COLOR0)
 {
@@ -288,7 +296,7 @@ void BladesPS3D(GrassPSVTX input, out float4 color:COLOR0)
 	float bladeCol = rand.x*0.6;
 	float4 green = lerp(LightGreen, DarkGreen, bladeCol);
 	float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-	color = lerp(green, brown, input.GrassInfo.x) * lightProcessFloor(input.ModelPos) * LightDot(input.Normal);
+	color = lerp(green, brown, input.GrassInfo.x) * lightProcessFloor(input.ModelPos) * LightDot(input.Normal) + LightSpecular(input.Normal, input.ModelPos);
 	color.a = a;
 }
 
@@ -394,7 +402,7 @@ void BasePSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB :
 void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 {
 	float d = input.GrassInfo.w;
-	color = lightProcessFloor(input.ModelPos) * LightDot(input.Normal);//*DiffuseColor;
+	color = lightProcessFloor(input.ModelPos) * LightDot(input.Normal) + LightSpecular(input.Normal, input.ModelPos);
 	if (IgnoreColor == false) color *= input.Color;
 	if (UseTexture == true) {
 #if SIMPLE

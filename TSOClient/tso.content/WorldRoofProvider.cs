@@ -30,5 +30,10 @@ namespace FSO.Content
         {
             return Items[id].Name;
         }
+
+        public int NameToID(string name)
+        {
+            return Items.FindIndex(x => x.Name == name);
+        }
     }
 }

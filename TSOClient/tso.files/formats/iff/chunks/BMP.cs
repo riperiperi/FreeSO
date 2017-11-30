@@ -19,7 +19,7 @@ namespace FSO.Files.Formats.IFF.Chunks
     /// </summary>
     public class BMP : IffChunk
     {
-        private byte[] data;
+        public byte[] data;
 
         /// <summary>
         /// Reads a BMP chunk from a stream.
@@ -36,6 +36,12 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             return ImageLoader.FromStream(device, new MemoryStream(data));
             //return Texture2D.FromStream(device, new MemoryStream(data));
+        }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            stream.Write(data, 0, data.Length);
+            return true;
         }
     }
 

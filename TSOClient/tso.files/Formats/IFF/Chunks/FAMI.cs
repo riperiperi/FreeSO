@@ -24,14 +24,17 @@ namespace FSO.Files.Formats.IFF.Chunks
         public uint Version;
 
         public int HouseNumber;
+        //this is not a typical family number - it is unique between user created families, but -1 for townies.
+        //i believe it is an alternate family UID that basically runs on an auto increment to obtain its value.
+        //(in comparison with the ChunkID as family that is used ingame, which appears to fill spaces as they are left)
         public int FamilyNumber;
         public int Budget;
         public int NetWorth;
         public int FamilyFriends;
-        public int Unknown; //19 or 1?
+        public int Unknown; //19, 17 or 1? could be flags, (1, 16, 2) ... 0 for townies
         public uint[] FamilyGUIDs;
 
-        public uint[] RuntimeSubset; //the members of this family currently active
+        public uint[] RuntimeSubset; //the members of this family currently active. don't save!
 
         public void SelectWholeFamily()
         {
@@ -68,6 +71,29 @@ namespace FSO.Files.Formats.IFF.Chunks
                     FamilyGUIDs[i] = io.ReadUInt32();
                 }
             }
+        }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteInt32(0);
+                io.WriteUInt32(9);
+                io.WriteCString("IMAF", 4);
+                io.WriteInt32(HouseNumber);
+                io.WriteInt32(FamilyNumber);
+                io.WriteInt32(Budget);
+                io.WriteInt32(NetWorth);
+                io.WriteInt32(FamilyFriends);
+                io.WriteInt32(Unknown);
+                io.WriteInt32(FamilyGUIDs.Length);
+                foreach (var guid in FamilyGUIDs)
+                    io.WriteUInt32(guid);
+
+                for (int i = 0; i < 4; i++)
+                    io.WriteInt32(0);
+            }
+            return true;
         }
     }
 }

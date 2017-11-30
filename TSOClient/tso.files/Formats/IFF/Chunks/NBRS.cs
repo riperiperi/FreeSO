@@ -34,7 +34,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         /// Reads a NBRS chunk from a stream.
         /// </summary>
         /// <param name="iff">An Iff instance.</param>
-        /// <param name="stream">A Stream object holding a OBJf chunk.</param>
+        /// <param name="stream">A Stream object holding a NBRS chunk.</param>
         public override void Read(IffFile iff, Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
@@ -58,23 +58,44 @@ namespace FSO.Files.Formats.IFF.Chunks
             }
             Entries = Entries.OrderBy(x => x.NeighbourID).ToList();
         }
+
+        /// <summary>
+        /// Writes a NBRS chunk to a stream.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A destination stream.</param>
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteUInt32(0);
+                io.WriteUInt32(0x49);
+                io.WriteCString("SRBN", 4);
+                io.WriteInt32(Entries.Count);
+                foreach (var n in NeighbourByID.Values)
+                {
+                    n.Save(io);
+                }
+            }
+            return true;
+        }
     }
 
     public class Neighbour
     {
-        public int Unknown1; //1
-        public int Version; //0x4, 0xA
+        public int Unknown1 = 1; //1
+        public int Version = 0xA; //0x4, 0xA
         //if 0xA, unknown3 follows
         //0x4 indicates person data size of 0xa0.. (160 bytes, or 80 entries)
-        public int Unknown3; //9
+        public int Unknown3 = 9; //9
         public string Name;
-        public int MysteryZero;
+        public int MysteryZero = 0;
         public int PersonMode; //0/5/9
         public short[] PersonData; //can be null
 
         public short NeighbourID;
         public uint GUID;
-        public int UnknownNegOne; //negative 1 usually
+        public int UnknownNegOne = -1; //negative 1 usually
 
         public Dictionary<int, List<short>> Relationships;
 
@@ -131,6 +152,49 @@ namespace FSO.Files.Formats.IFF.Chunks
                     values.Add((short)io.ReadInt32());
                 }
                 Relationships.Add(key, values);
+            }
+        }
+
+        public void Save(IoWriter io)
+        {
+            io.WriteInt32(Unknown1);
+            io.WriteInt32(Version);
+            if (Version == 0xA) io.WriteInt32(Unknown3);
+            io.WriteNullTerminatedString(Name);
+            if (Name.Length % 2 == 0) io.WriteByte(0);
+            io.WriteInt32(MysteryZero);
+            io.WriteInt32(PersonMode);
+            if (PersonMode > 0)
+            {
+                var size = (Version == 0x4) ? 0xa0 : 0x200;
+                int pdi = 0;
+                for (int i = 0; i < size; i += 2)
+                {
+                    if (pdi >= 88)
+                    {
+                        io.WriteInt16(0);
+                    }
+                    else
+                    {
+                        io.WriteInt16(PersonData[pdi++]);
+                    }
+                }
+            }
+
+            io.WriteInt16(NeighbourID);
+            io.WriteUInt32(GUID);
+            io.WriteInt32(UnknownNegOne);
+
+            io.WriteInt32(Relationships.Count);
+            foreach (var rel in Relationships)
+            {
+                io.WriteInt32(1); //keycount (1)
+                io.WriteInt32(rel.Key);
+                io.WriteInt32(rel.Value.Count);
+                foreach (var val in rel.Value)
+                {
+                    io.WriteInt32(val);
+                }
             }
         }
     }

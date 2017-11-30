@@ -21,10 +21,12 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                 var TTAT = io.ReadUInt32();
 
+                IOProxy iop;
                 var compressionCode = io.ReadByte();
-                if (compressionCode != 1) throw new Exception("hey what!!");
-
-                var iop = new IffFieldEncode(io);
+                //HACK: for freeso we don't run the field encoding coompression
+                //since fso neighbourhoods are not compatible with ts1, it does not matter too much
+                if (compressionCode != 1) iop = new TTABNormal(io);
+                else iop = new IffFieldEncode(io);
 
                 var total = iop.ReadInt32();
                 for (int i=0; i<total; i++)
@@ -39,6 +41,29 @@ namespace FSO.Files.Formats.IFF.Chunks
                     TypeAttributesByGUID[guid] = tatts;
                 }
             }
+        }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteInt32(0);
+                io.WriteInt32(0); //version
+
+                io.WriteCString("TTAT");
+
+                io.WriteByte(0); //compression code
+                io.WriteInt32(TypeAttributesByGUID.Count);
+                foreach (var tatt in TypeAttributesByGUID)
+                {
+                    io.WriteUInt32(tatt.Key);
+                    io.WriteInt32(tatt.Value.Length);
+                    foreach (var value in tatt.Value)
+                        io.WriteInt16(value);
+                }
+
+            }
+            return true;
         }
     }
 }

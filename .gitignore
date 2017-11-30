@@ -79,3 +79,4 @@ UpgradeLog*.htm
 # Visual Studio Code
 .settings
 TSOClient/tso.client/GlobalSettings1.Designer.cs
+*.DS_Store

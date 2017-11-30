@@ -137,6 +137,7 @@
     <Compile Include="Marshals\Hollow\VMHollowMarshal.cs" />
     <Compile Include="Marshals\Threads\VMQueuedActionMarshal.cs" />
     <Compile Include="Marshals\Threads\VMRoutingFrameMarshal.cs" />
+    <Compile Include="Marshals\VMResourceIDMarshal.cs" />
     <Compile Include="Marshals\VMRuntimeHeadlineMarshal.cs" />
     <Compile Include="Marshals\Threads\VMStackFrameMarshal.cs" />
     <Compile Include="Marshals\Threads\VMThreadMarshal.cs" />

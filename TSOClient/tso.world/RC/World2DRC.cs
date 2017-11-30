@@ -306,7 +306,7 @@ namespace FSO.LotView.RC
             var effect = WorldContent.RCObject;
             effect.Parameters["ViewProjection"].SetValue(vp);
             effect.CurrentTechnique = effect.Techniques["Draw"];
-            state.ClearLighting(true);
+            state.ClearLighting(false);
             Blueprint.SetLightColor(WorldContent.RCObject, Color.White, Color.White);
 
             var objs = objects.OrderBy(x => ((ObjectComponentRC)x).SortDepth(vp)).ToList();
@@ -383,7 +383,7 @@ namespace FSO.LotView.RC
         /// <param name="gd">GraphicsDevice instance.</param>
         /// <param name="state">WorldState instance.</param>
         /// <returns>Object's ID if the object was found at the given position.</returns>
-        public override Texture2D GetLotThumb(GraphicsDevice gd, WorldState state)
+        public override Texture2D GetLotThumb(GraphicsDevice gd, WorldState state, Action<Texture2D> rooflessCallback)
         {
             var oldZoom = state.Zoom;
             var oldRotation = state.Rotation;
@@ -399,22 +399,25 @@ namespace FSO.LotView.RC
             state.Zoom = WorldZoom.Far;
             state.Rotation = WorldRotation.TopLeft;
             state.Level = Blueprint.Stories;
-            state.PreciseZoom = 1 / 4f;
+            var ts1 = Content.Content.Get().TS1;
+            state.PreciseZoom = ts1? (1 / 2f):(1 / 4f);
+            var size = ts1 ? (Blueprint.Width*16):(576);
             state._2D.PreciseZoom = state.PreciseZoom;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
 
             var oldCenter = state.CenterTile;
             state.CenterTile = new Vector2(Blueprint.Width / 2, Blueprint.Height / 2);
-            state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((576 - state.WorldSpace.WorldPxWidth) * 4, (576 - state.WorldSpace.WorldPxHeight) * 4) / 2);
+            state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((size - state.WorldSpace.WorldPxWidth) / state.PreciseZoom, (size - state.WorldSpace.WorldPxHeight) / state.PreciseZoom) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             state.TempDraw = true;
             Blueprint.Cutaway = new bool[Blueprint.Cutaway.Length];
             
 
             state.ClearLighting(false);
+            LotThumbTarget = null;
             if (LotThumbTarget == null)
-                LotThumbTarget = new RenderTarget2D(gd, 576, 576);
+                LotThumbTarget = new RenderTarget2D(gd, size, size, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
             var lastLight = state.OutsideColor;
             state.OutsideColor = Color.White;
             state._2D.OBJIDMode = false;
@@ -422,12 +425,16 @@ namespace FSO.LotView.RC
             gd.SetRenderTarget(LotThumbTarget);
             gd.Clear(Color.Transparent);
 
-            state._2D.ResetMatrices(576, 576);
+            state._2D.ResetMatrices(size, size);
 
-            Blueprint.FloorGeom.SliceReset(gd, new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13));
-            Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
-            Blueprint.SetLightColor(WorldContent.RCObject, Color.White, Color.White);
+            if (Blueprint.FineArea != null) Blueprint.FloorGeom.BuildableReset(gd, Blueprint.FineArea);
+            else Blueprint.FloorGeom.SliceReset(gd, new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13));
+            Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White*0.75f);
+            Blueprint.SetLightColor(WorldContent.RCObject, Color.White, Color.White * 0.75f);
+            var build = state.BuildMode;
+            state.SilentBuildMode = 0;
             Blueprint.Terrain.Draw(gd, state);
+            state.SilentBuildMode = build;
 
             var effect = WorldContent.RCObject;
             gd.BlendState = BlendState.NonPremultiplied;
@@ -447,12 +454,18 @@ namespace FSO.LotView.RC
             effect.CurrentTechnique = effect.Techniques["Draw"];
             var frustrum = new BoundingFrustum(vp);
             var objs = Blueprint.Objects.OrderBy(x => ((ObjectComponentRC)x).SortDepth(vp));
+            var fine = Blueprint.FineArea;
             foreach (var obj in objs)
             {
+                if (fine != null && (
+                    obj.Position.X < 0 ||
+                    obj.Position.X >= Blueprint.Width ||
+                    obj.Position.Y < 0 ||
+                    obj.Position.Y >= Blueprint.Width || !fine[(int)obj.Position.X + Blueprint.Width * (int)obj.Position.Y])) continue;
                 obj.Draw(gd, state);
             }
+            rooflessCallback?.Invoke(LotThumbTarget);
             Blueprint.RoofComp.Draw(gd, state);
-
 
             gd.SetRenderTarget(null);
 

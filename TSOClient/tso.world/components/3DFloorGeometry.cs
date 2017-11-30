@@ -99,6 +99,27 @@ namespace FSO.LotView.Components
             }
         }
 
+        public void BuildableReset(GraphicsDevice gd, bool[] buildable)
+        {
+            for (int i = 0; i < Floors.Length; i++)
+            {
+                var lvl = Floors[i];
+                var data = Bp.Floors[i];
+                lvl.Clear();
+
+                for (int j = 0; j < data.Length; j++)
+                {
+                    if (!buildable[j]) continue;
+                    var pat = data[j].Pattern;
+                    if ((j + 1) % Bp.Width < 2) continue;
+                    var convert = PatternConvert(pat, (ushort)j, (sbyte)(i + 1), false);
+                    if (convert == 0 && i > 0) continue;
+                    lvl.AddTile(convert, (ushort)j);
+                }
+                lvl.RegenAll(gd);
+            }
+        }
+
         private static Point[] PoolDirections =
         {
             new Point(0, -1),

@@ -405,6 +405,22 @@ namespace FSO.HIT
         {
             PC = (uint)Src.EntryPointByTrackID[(uint)TrackID];
         }
+
+        public override void Pause()
+        {
+            foreach (var note in Notes)
+            {
+                note.instance.Pause();
+            }
+        }
+
+        public override void Resume()
+        {
+            foreach (var note in Notes)
+            {
+                note.instance.Resume();
+            }
+        }
     }
 
     public struct HITNoteEntry 

@@ -58,7 +58,7 @@ namespace FSO.Client
             this.Window.ClientSizeChanged += new EventHandler<EventArgs>(Window_ClientSizeChanged);
 
             //might want to disable for linux
-                        Log.UseSensibleDefaults();
+            if (!FSOEnvironment.Linux) Log.UseSensibleDefaults();
 
             Thread.CurrentThread.Name = "Game";
         }
@@ -218,7 +218,7 @@ namespace FSO.Client
         /// </summary>
         void AddTextInput()
         {
-            this.Window.GetType().GetEvent("TextInput").AddEventHandler(this.Window, (EventHandler<TextInputEventArgs>)GameScreen.TextInput);
+            this.Window.GetType().GetEvent("TextInput")?.AddEventHandler(this.Window, (EventHandler<TextInputEventArgs>)GameScreen.TextInput);
         }
 
         void RegainFocus(object sender, EventArgs e)

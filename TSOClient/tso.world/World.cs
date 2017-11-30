@@ -671,10 +671,10 @@ namespace FSO.LotView
             return _2DWorld.GetObjectThumb(objects, positions, gd, State);
         }
 
-        public Texture2D GetLotThumb(GraphicsDevice gd)
+        public Texture2D GetLotThumb(GraphicsDevice gd, Action<Texture2D> rooflessCallback)
         {
             State._2D.Begin(this.State.Camera);
-            return _2DWorld.GetLotThumb(gd, State);
+            return _2DWorld.GetLotThumb(gd, State, rooflessCallback);
         }
 
         public virtual void ChangedWorldConfig(GraphicsDevice gd)

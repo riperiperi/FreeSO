@@ -298,7 +298,6 @@ namespace FSO.SimAntics
                 {
                     Thread.Context.VM.Scheduler.ScheduleTickIn(this, 1);
                 }
-                if (SoundThreads.Count > 0) TickSounds();
             }
             if (Headline != null)
             {
@@ -323,6 +322,11 @@ namespace FSO.SimAntics
         public void TickSounds()
         {
             if (!UseWorld) return;
+            if (Dead)
+            {
+                if (Thread != null) Thread.Context.VM.SoundEntities.Remove(this);
+                return;
+            }
             if (Thread != null)
             {
                 var worldState = Thread.Context.World.State;
@@ -335,6 +339,7 @@ namespace FSO.SimAntics
                     if (sound.Dead)
                     {
                         SoundThreads.RemoveAt(i--);
+                        if (SoundThreads.Count == 0) Thread.Context.VM.SoundEntities.Remove(this);
                         continue;
                     }
 
@@ -379,7 +384,7 @@ namespace FSO.SimAntics
 
         public bool RunEveryFrame()
         {
-            return (this is VMAvatar || (Headline != null) || (SoundThreads.Count > 0) || ((VMGameObject)this).Disabled > 0);
+            return (this is VMAvatar || (Headline != null) || ((VMGameObject)this).Disabled > 0);
         }
 
         public OBJfFunctionEntry[] GenerateFunctionTable(OBJD obj)

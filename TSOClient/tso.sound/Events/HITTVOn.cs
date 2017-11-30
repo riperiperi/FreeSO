@@ -74,7 +74,7 @@ namespace FSO.HIT.Events
 
             VolumeSet = false;
 
-            if (Instance == null || (IsMusic && MusicInstance.IsEnded()) || Instance.State != SoundState.Playing)
+            if (Instance == null || (IsMusic && MusicInstance.IsEnded()) || Instance.State == SoundState.Stopped)
             {
                 if (PlayNext()) return true;
                 else {
@@ -204,6 +204,16 @@ namespace FSO.HIT.Events
             if (!IsMusic && Pan != 0) Instance.Pan = Pan;
             Instance.Play();
             return true;
+        }
+
+        public override void Pause()
+        {
+            Instance.Pause();
+        }
+
+        public override void Resume()
+        {
+            Instance.Resume();
         }
     }
 }

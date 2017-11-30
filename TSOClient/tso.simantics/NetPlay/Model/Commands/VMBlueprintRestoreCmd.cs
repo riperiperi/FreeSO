@@ -12,6 +12,8 @@ using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Utils;
 using FSO.Files.Formats.IFF;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Marshals;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -44,8 +46,19 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 {
                     iff.Read(stream);
                 }
-                var activator = new VMTS1Activator(vm, vm.Context.World, JobLevel);
-                var blueprint = activator.LoadFromIff(iff);
+                var fsov = iff.List<FSOV>()?.FirstOrDefault();
+                if (fsov != null)
+                {
+                    var marshal = new VMMarshal();
+                    using (var read = new BinaryReader(new MemoryStream(fsov.Data)))
+                        marshal.Deserialize(read);
+                    vm.Load(marshal);
+                }
+                else
+                {
+                    var activator = new VMTS1Activator(vm, vm.Context.World, JobLevel);
+                    var blueprint = activator.LoadFromIff(iff);
+                }
                 vm.VerifyFamily();
             }
             else

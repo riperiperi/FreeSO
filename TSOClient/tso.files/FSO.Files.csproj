@@ -108,11 +108,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Formats\IFF\Chunks\ARRY.cs" />
+    <Compile Include="Formats\IFF\Chunks\PNG.cs" />
     <Compile Include="Formats\IFF\Chunks\CARR.cs" />
     <Compile Include="Formats\IFF\Chunks\FAMI.cs" />
     <Compile Include="Formats\IFF\Chunks\FAMs.cs" />
     <Compile Include="Formats\IFF\Chunks\FSOM.cs" />
     <Compile Include="Formats\IFF\Chunks\FSOR.cs" />
+    <Compile Include="Formats\IFF\Chunks\FSOV.cs" />
     <Compile Include="Formats\IFF\Chunks\IffFieldEncode.cs" />
     <Compile Include="Formats\IFF\Chunks\MTEX.cs" />
     <Compile Include="Formats\IFF\Chunks\NBRS.cs" />

@@ -27,6 +27,7 @@ namespace FSO.Files.Formats.IFF
         /// Should really only be set when the user wants to use the IDE, as it uses a lot more memory.
         /// </summary>
         public static bool RETAIN_CHUNK_DATA = false;
+        public bool RetainChunkData = RETAIN_CHUNK_DATA;
 
         public string Filename;
 
@@ -71,7 +72,9 @@ namespace FSO.Files.Formats.IFF
 
             {"FSOR", typeof(FSOR) },
             {"FSOM", typeof(FSOM) },
-            {"MTEX", typeof(MTEX) }
+            {"MTEX", typeof(MTEX) },
+            {"FSOV", typeof(FSOV) },
+            {"PNG_", typeof(PNG) }
         };
 
         public IffRuntimeInfo RuntimeInfo = new IffRuntimeInfo();
@@ -100,6 +103,21 @@ namespace FSO.Files.Formats.IFF
                 SetFilename(Path.GetFileName(filepath));
             }
         }
+
+        /// <summary>
+        /// Constructs an IFF instance from a filepath.
+        /// </summary>
+        /// <param name="filepath">Path to the IFF.</param>
+        public IffFile(string filepath, bool retainData) : this()
+        {
+            RetainChunkData = retainData;
+            using (var stream = File.Open(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                this.Read(stream);
+                SetFilename(Path.GetFileName(filepath));
+            }
+        }
+
 
         private bool WasReferenced = true;
         ~IffFile()
@@ -169,7 +187,7 @@ namespace FSO.Files.Formats.IFF
                         newChunk.ChunkLabel = chunkLabel;
                         newChunk.ChunkType = chunkType;
                         newChunk.ChunkData = io.ReadBytes(chunkDataSize);
-                        if (RETAIN_CHUNK_DATA)
+                        if (RetainChunkData)
                         {
                             newChunk.OriginalLabel = chunkLabel;
                             newChunk.OriginalData = newChunk.ChunkData;
@@ -519,7 +537,7 @@ namespace FSO.Files.Formats.IFF
                 foreach (var piff in piffs)
                 {
                     Patch(piff);
-                    if (RETAIN_CHUNK_DATA) RuntimeInfo.Patches.Add(piff);
+                    if (RetainChunkData) RuntimeInfo.Patches.Add(piff);
                 }
             }
         }

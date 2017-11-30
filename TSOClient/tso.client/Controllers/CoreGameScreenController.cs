@@ -227,7 +227,7 @@ namespace FSO.Client.Controllers
             if (!Screen.InLot) return;
             var lotID = JoinLotRegulator.GetCurrentLotID();
             if (lotID == 0) return;
-            var bigThumb = Screen.vm.Context.World.GetLotThumb(GameFacade.GraphicsDevice);
+            var bigThumb = Screen.vm.Context.World.GetLotThumb(GameFacade.GraphicsDevice, null);
             byte[] data;
             using (var stream = new MemoryStream()) {
                 var tex = TextureUtils.Decimate(bigThumb, GameFacade.GraphicsDevice, 2, false);

@@ -890,12 +890,14 @@ namespace FSO.SimAntics
         
                 Walls = Walls,
                 Floors = Floors,
+                FineBuildableArea = FineBuildableArea,
 
                 WallsDirty = WallsDirty,
                 FloorsDirty = FloorsDirty,
 
                 RoofPitch = RoofPitch,
-                RoofStyle = RoofStyle
+                RoofStyle = RoofStyle,
+                IDMap = Context.VM.TS1 ? new VMResourceIDMarshal(Context.VM) : null
             };
         }
 
@@ -908,6 +910,8 @@ namespace FSO.SimAntics
 
             Walls = input.Walls;
             Floors = input.Floors;
+            FineBuildableArea = input.FineBuildableArea;
+            if (VM.UseWorld) WorldUI.FineArea = FineBuildableArea;
 
             RoofPitch = input.RoofPitch;
             RoofStyle = input.RoofStyle;

@@ -27,6 +27,9 @@ namespace FSO.SimAntics.Marshals
         public uint RoofStyle = 16;
         public float RoofPitch = 0.66f;
 
+        public VMResourceIDMarshal IDMap;
+        public bool[] FineBuildableArea;
+
         public int Version;
         public VMArchitectureMarshal() { }
         public VMArchitectureMarshal(int version) { Version = version; }
@@ -63,6 +66,22 @@ namespace FSO.SimAntics.Marshals
                 RoofStyle = reader.ReadUInt32();
                 RoofPitch = reader.ReadSingle();
             }
+
+            if (Version > 21)
+            {
+                var hasIDMap = reader.ReadBoolean();
+                IDMap = new VMResourceIDMarshal();
+                IDMap.Deserialize(reader);
+            }
+
+            if (Version > 22)
+            {
+                var hasFineBuild = reader.ReadBoolean();
+                if (hasFineBuild)
+                {
+                    FineBuildableArea = reader.ReadBytes(size).Select(x => x>0).ToArray();
+                }
+            }
         }
 
         public void SerializeInto(BinaryWriter writer)
@@ -93,6 +112,12 @@ namespace FSO.SimAntics.Marshals
 
             writer.Write(RoofStyle);
             writer.Write(RoofPitch);
+
+            writer.Write(IDMap != null);
+            if (IDMap != null) IDMap.SerializeInto(writer);
+
+            writer.Write(FineBuildableArea != null);
+            if (FineBuildableArea != null) writer.Write(FineBuildableArea.Select(x => (byte)(x?1:0)).ToArray());
         }
     }
 

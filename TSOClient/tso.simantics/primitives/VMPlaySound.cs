@@ -57,6 +57,7 @@ namespace FSO.SimAntics.Primitives
                     }
 
                     owner.SoundThreads.Add(entry);
+                    context.VM.SoundEntities.Add(owner);
                     if (owner.Thread != null) owner.TickSounds();
                 }
             }

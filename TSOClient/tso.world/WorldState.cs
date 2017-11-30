@@ -295,7 +295,7 @@ namespace FSO.LotView
 
         public void ClearLighting(bool indoors)
         {
-            var adv = OutsidePx;
+            var adv = (indoors)?OutsidePx: TextureGenerator.GetPxWhite(Device);
             var amb = TextureGenerator.GetPxWhite(Device);
             //if (indoors) adv = amb;
 

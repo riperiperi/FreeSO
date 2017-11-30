@@ -30,14 +30,21 @@ namespace FSO.Content.TS1
         public TS1GameState GameState = new TS1GameState();
         public string UserPath;
 
+        public HashSet<uint> DirtyAvatars = new HashSet<uint>();
+
         public TS1NeighborhoodProvider(Content contentManager)
         {
             ContentManager = contentManager;
-            InitSpecific(0);
+            InitSpecific(1);
         }
 
+        /// <summary>
+        /// Intializes a specific neighbourhood. Also counts as a save discard, since it unloads the current neighbourhood.
+        /// </summary>
+        /// <param name="id"></param>
         public void InitSpecific(int id)
         {
+            DirtyAvatars.Clear();
             ZoningDictionary.Clear();
             FamilyForHouse.Clear();
 
@@ -89,6 +96,8 @@ namespace FSO.Content.TS1
             {
                 FamilyForHouse[(short)fam.HouseNumber] = fam;
             }
+
+            //todo: manage avatar iffs here
         }
 
         public Neighbour GetNeighborByID(short ID)
@@ -135,9 +144,33 @@ namespace FSO.Content.TS1
             return (short)(Neighbors.Entries.FirstOrDefault(x => x.NeighbourID > current && x.GUID == guid)?.NeighbourID ?? -1);
         }
 
+        public bool SaveNeighbourhood(bool withSims)
+        {
+            //todo: save iffs for dirty avatars. 
+            DirtyAvatars.Clear();
+
+            using (var stream = new FileStream(Path.Combine(UserPath, "Neighborhood.iff"), FileMode.Create, FileAccess.Write, FileShare.None))
+                MainResource.Write(stream);
+
+            return true;
+        }
+
+        public bool SaveHouse(int houseID, IffFile file)
+        {
+            using (var stream = new FileStream(GetHousePath(houseID), FileMode.Create, FileAccess.Write, FileShare.None))
+                file.Write(stream);
+
+            return true;
+        }
+
         public IffFile GetHouse(int id)
         {
             return new IffFile(Path.Combine(UserPath, "Houses/House"+id.ToString().PadLeft(2, '0')+".iff"));
+        }
+
+        public string GetHousePath(int id)
+        {
+            return Path.Combine(UserPath, "Houses/House" + id.ToString().PadLeft(2, '0') + ".iff");
         }
 
         public BMP GetHouseThumb(int id)

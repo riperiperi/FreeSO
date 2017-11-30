@@ -61,6 +61,33 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
             }
         }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteInt32(0);
+                io.WriteInt32(0x49);
+                io.WriteCString("HBGN", 4);
+                
+                for (int i=0; i<NeighborhoodData.Length; i++)
+                {
+                    io.WriteInt16(NeighborhoodData[i]);
+                }
+
+                io.WriteInt32(NeighborhoodData.Length);
+                foreach (var item in InventoryByID)
+                {
+                    io.WriteInt16(item.Key);
+                    io.WriteInt32(item.Value.Count);
+                    foreach (var invent in item.Value)
+                    {
+                        invent.SerializeInto(io);
+                    }
+                }
+            }
+            return true;
+        }
     }
 
     public class InventoryItem
@@ -76,6 +103,13 @@ namespace FSO.Files.Formats.IFF.Chunks
             Type = io.ReadInt32();
             GUID = io.ReadUInt32();
             Count = io.ReadUInt16();
+        }
+
+        public void SerializeInto(IoWriter io)
+        {
+            io.WriteInt32(Type);
+            io.WriteUInt32(GUID);
+            io.WriteUInt16(Count);
         }
 
         public InventoryItem Clone()

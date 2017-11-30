@@ -43,10 +43,12 @@ namespace FSO.Client.Utils
                 else if (Directory.Exists("/Users"))
                 {
                     monogameDir = "Monogame/MacOS/";
+                    return false;
                 }
                 else
                 {
                     monogameDir = "Monogame/Linux/";
+                    return false;
                 }
 
                 if (File.Exists("Monogame.Framework.dll")) File.Delete("Monogame.Framework.dll");

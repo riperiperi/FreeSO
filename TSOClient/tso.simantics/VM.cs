@@ -32,6 +32,7 @@ using FSO.SimAntics.Engine.Debug;
 using FSO.Common;
 using FSO.SimAntics.Primitives;
 using FSO.LotView.Model;
+using FSO.HIT;
 
 namespace FSO.SimAntics
 {
@@ -67,6 +68,7 @@ namespace FSO.SimAntics
         public VMContext Context { get; internal set; }
 
         public List<VMEntity> Entities = new List<VMEntity>();
+        public HashSet<VMEntity> SoundEntities = new HashSet<VMEntity>();
         public short[] GlobalState;
         public VMPlatformState PlatformState;
         public FAMI CurrentFamily;
@@ -208,6 +210,7 @@ namespace FSO.SimAntics
         private int GameTickNum = 0;
         public int SpeedMultiplier = 1;
         public int LastSpeedMultiplier;
+        private int LastFrameSpeed = 1;
         private float Fraction;
         public VMEntity GlobalBlockingDialog;
         public void Update()
@@ -222,6 +225,19 @@ namespace FSO.SimAntics
                 forward.X *= -1f;
                 forward.Normalize();
                 listener.Forward = forward;
+            }
+
+            if (LastFrameSpeed != SpeedMultiplier)
+            {
+                var allSounds = new List<HITSound>();
+                foreach (var ent in SoundEntities)
+                {
+                    allSounds.AddRange(ent.SoundThreads.Select(x => x.Sound));
+                }
+
+                if (SpeedMultiplier < 1 && LastFrameSpeed >= 1) allSounds.ForEach((x) => x.Pause()); 
+                else if (SpeedMultiplier >= 1 && LastFrameSpeed < 1) allSounds.ForEach((x) => x.Resume());
+                LastFrameSpeed = SpeedMultiplier;
             }
 
             var mul = Math.Max(SpeedMultiplier, 1);
@@ -241,6 +257,9 @@ namespace FSO.SimAntics
         public void PreDraw()
         {
             if (SpeedMultiplier <= 0) Fraction = 0;
+            var snd = new List<VMEntity>(SoundEntities);
+            foreach (var sound in snd)
+                sound.TickSounds();
             //fractional animation for avatars
             foreach (var obj in Entities)
             {
@@ -657,6 +676,8 @@ namespace FSO.SimAntics
             //var oldWorld = Context.World;
             Context = new VMContext(input.Context, Context);
             Context.VM = this;
+            var idMap = input.Context.Architecture.IDMap;
+            if (idMap != null) idMap.Apply(this);
             Context.Architecture.RegenRoomMap();
             Context.RegeneratePortalInfo();
             Context.Architecture.Terrain.RegenerateCenters();
@@ -679,6 +700,7 @@ namespace FSO.SimAntics
                 }
             }
 
+            SoundEntities = new HashSet<VMEntity>();
             Entities = new List<VMEntity>();
             Scheduler.Reset();
             ObjectsById = new Dictionary<short, VMEntity>();
@@ -776,7 +798,11 @@ namespace FSO.SimAntics
                 //find new owners
                 var obj = GetObjectById(snd.SourceID);
                 if (obj == null || obj.Object.GUID != snd.SourceGUID) snd.SFX.Sound.RemoveOwner(snd.SourceID);
-                else obj.SoundThreads.Add(snd.SFX); // successfully transfer sound to new object
+                else
+                {
+                    SoundEntities.Add(obj);
+                    obj.SoundThreads.Add(snd.SFX); // successfully transfer sound to new object
+                }
             }
 
             if (clientJoin)

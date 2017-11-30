@@ -197,7 +197,7 @@ namespace FSO.LotView
             Promise<Texture2D> depthTexture = null;
             state._2D.OBJIDMode = false;
             Rectangle bounds = new Rectangle();
-            state.ClearLighting(true);
+            state.ClearLighting(false);
 
             //Blueprint.SetLightColor(WorldContent._2DWorldBatchEffect, Color.White, Color.White);
             //Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
@@ -265,7 +265,7 @@ namespace FSO.LotView
         /// <param name="gd">GraphicsDevice instance.</param>
         /// <param name="state">WorldState instance.</param>
         /// <returns>Object's ID if the object was found at the given position.</returns>
-        public virtual Texture2D GetLotThumb(GraphicsDevice gd, WorldState state)
+        public virtual Texture2D GetLotThumb(GraphicsDevice gd, WorldState state, Action<Texture2D> rooflessCallback)
         {
             if (!(state.Camera is WorldCamera)) return new Texture2D(gd, 8, 8);
             var oldZoom = state.Zoom;
@@ -294,7 +294,7 @@ namespace FSO.LotView
             Blueprint.Cutaway = new bool[Blueprint.Cutaway.Length];
 
             var _2d = state._2D;
-            state.ClearLighting(true);
+            state.ClearLighting(false);
             Promise<Texture2D> bufferTexture = null;
             var lastLight = state.OutsideColor;
             state.OutsideColor = Color.White;
@@ -311,7 +311,6 @@ namespace FSO.LotView
                     Blueprint.Terrain.Draw(gd, state);
                     Blueprint.WallComp.Draw(gd, state);
                     _2d.Pause();
-
                     _2d.Resume();
                     foreach (var obj in Blueprint.Objects)
                     {
@@ -321,6 +320,9 @@ namespace FSO.LotView
                         _2d.OffsetTile(tilePosition);
                         obj.Draw(gd, state);
                     }
+                    _2d.Pause();
+                    _2d.Resume();
+                    rooflessCallback?.Invoke(bufferTexture.Get());
                     Blueprint.RoofComp.Draw(gd, state);
                 }
 

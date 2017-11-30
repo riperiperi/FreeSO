@@ -156,7 +156,9 @@ namespace FSO.LotView.Model
             effect.Parameters["OutsideDark"]?.SetValue(minOut.ToVector4());
             effect.Parameters["MaxLight"]?.SetValue(Color.White.ToVector4());
             var avg = (minOut.R + minOut.G + minOut.B) / (255 * 3f);
-            effect.Parameters["MinAvg"]?.SetValue(new Vector2(avg, 1/(1-avg)));
+            var minAvg = new Vector2(avg, 1 / (1 - avg));
+            if (float.IsInfinity(minAvg.Y)) minAvg.Y = 1;
+            effect.Parameters["MinAvg"]?.SetValue(minAvg);
         }
 
         public void GenerateRoomLights()

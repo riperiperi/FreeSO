@@ -82,8 +82,8 @@ namespace FSO.Content.TS1
                     }
                 }
             }
-
-            var path = Path.Combine(ContentManager.TS1BasePath, "UserData/Characters/");
+            
+            var path = Path.Combine(ContentManager.Neighborhood.UserPath, "Characters/");
             var files = Directory.EnumerateFiles(path);
             foreach (var filename in files)
             {

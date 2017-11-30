@@ -56,7 +56,7 @@ namespace FSO.LotView.Components
         private Blueprint Bp;
         public bool _3D = false;
 
-        public TerrainComponent(Rectangle size, Blueprint blueprint){
+        public TerrainComponent(Rectangle size, Blueprint blueprint) {
             this.Size = size;
             this.Effect = WorldContent.GrassEffect;
             this.Bp = blueprint;
@@ -102,7 +102,7 @@ namespace FSO.LotView.Components
             var sum = new Vector3();
             var rotToNormalXY = Matrix.CreateRotationZ((float)(Math.PI / 2));
             var rotToNormalZY = Matrix.CreateRotationX(-(float)(Math.PI / 2));
-            var limit = (Size.Width-1);
+            var limit = (Size.Width - 1);
 
             if (x < limit)
             {
@@ -201,9 +201,9 @@ namespace FSO.LotView.Components
                     var br = new Vector3(tl.X + quadWidth, 0.0f, tl.Z + quadHeight);
 
                     tl.Y = GetElevationPoint(x, y);
-                    tr.Y = GetElevationPoint(x+1, y);
-                    bl.Y = GetElevationPoint(x, y+1);
-                    br.Y = GetElevationPoint(x+1, y+1);
+                    tr.Y = GetElevationPoint(x + 1, y);
+                    bl.Y = GetElevationPoint(x, y + 1);
+                    br.Y = GetElevationPoint(x + 1, y + 1);
 
                     Indexes[indexOffset++] = geomOffset;
                     Indexes[indexOffset++] = (geomOffset + 1);
@@ -215,8 +215,8 @@ namespace FSO.LotView.Components
 
                     short tx = (short)x, ty = (short)y;
 
-                    if (blueprint.GetFloor(tx,ty,1).Pattern == 0 && 
-                        (blueprint.GetWall(tx,ty, 1).Segments & (WallSegments.HorizontalDiag | WallSegments.VerticalDiag)) == 0)
+                    if (blueprint.GetFloor(tx, ty, 1).Pattern == 0 &&
+                        (blueprint.GetWall(tx, ty, 1).Segments & (WallSegments.HorizontalDiag | WallSegments.VerticalDiag)) == 0)
                     {
                         BladeIndexes[bindexOffset++] = geomOffset;
                         BladeIndexes[bindexOffset++] = (geomOffset + 1);
@@ -228,18 +228,18 @@ namespace FSO.LotView.Components
                     }
 
                     Color tlCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x, y));
-                    Color trCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x+1, y));
-                    Color blCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x, y+1));
-                    Color brCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x+1, y+1));
+                    Color trCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x + 1, y));
+                    Color blCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x, y + 1));
+                    Color brCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x + 1, y + 1));
 
-                    Geom[geomOffset++] = new TerrainVertex(tl, tlCol.ToVector4(), new Vector2(((x - y)+1) * 0.5f, (x + y) * 0.5f), GetGrassState(x,y), GetNormalAt(x, y));
-                    Geom[geomOffset++] = new TerrainVertex(tr, trCol.ToVector4(), new Vector2(((x - y)+2) * 0.5f, (x+1 + y) * 0.5f), GetGrassState(x+1, y), GetNormalAt(x+1, y));
-                    Geom[geomOffset++] = new TerrainVertex(br, brCol.ToVector4(), new Vector2(((x - y)+1) * 0.5f, (x + y + 2) * 0.5f), GetGrassState(x+1, y+1), GetNormalAt(x+1, y+1));
-                    Geom[geomOffset++] = new TerrainVertex(bl, blCol.ToVector4(), new Vector2((x - y) * 0.5f, (x + y + 1) * 0.5f), GetGrassState(x, y+1), GetNormalAt(x, y+1));
+                    Geom[geomOffset++] = new TerrainVertex(tl, tlCol.ToVector4(), new Vector2(((x - y) + 1) * 0.5f, (x + y) * 0.5f), GetGrassState(x, y), GetNormalAt(x, y));
+                    Geom[geomOffset++] = new TerrainVertex(tr, trCol.ToVector4(), new Vector2(((x - y) + 2) * 0.5f, (x + 1 + y) * 0.5f), GetGrassState(x + 1, y), GetNormalAt(x + 1, y));
+                    Geom[geomOffset++] = new TerrainVertex(br, brCol.ToVector4(), new Vector2(((x - y) + 1) * 0.5f, (x + y + 2) * 0.5f), GetGrassState(x + 1, y + 1), GetNormalAt(x + 1, y + 1));
+                    Geom[geomOffset++] = new TerrainVertex(bl, blCol.ToVector4(), new Vector2((x - y) * 0.5f, (x + y + 1) * 0.5f), GetGrassState(x, y + 1), GetNormalAt(x, y + 1));
                 }
             }
 
-            var GridIndices = (Bp.FineArea != null)?GetGridIndicesForFine(Bp.FineArea, quads):GetGridIndicesForArea(Bp.BuildableArea, quads);
+            var GridIndices = (Bp.FineArea != null) ? GetGridIndicesForFine(Bp.FineArea, quads) : GetGridIndicesForArea(Bp.BuildableArea, quads);
             var TGridIndices = GetGridIndicesForArea(Bp.TargetBuildableArea, quads);
 
             VertexBuffer = new VertexBuffer(device, typeof(TerrainVertex), Geom.Length, BufferUsage.None);
@@ -267,6 +267,14 @@ namespace FSO.LotView.Components
                 TGridIndexBuffer.SetData(TGridIndices);
                 TGridPrimitives = TGridIndices.Length / 2;
             }
+        }
+
+        public TerrainVertex[] GetVertices(GraphicsDevice gd)
+        {
+            if (VertexBuffer == null) RegenTerrain(gd, Bp);
+            var dat = new TerrainVertex[VertexBuffer.VertexCount];
+            VertexBuffer.GetData<TerrainVertex>(dat);
+            return dat;
         }
 
         private float GetGrassState(int x, int y)
@@ -365,6 +373,7 @@ namespace FSO.LotView.Components
             if (TerrainDirty || VertexBuffer == null) RegenTerrain(device, Bp);
             if (VertexBuffer == null) return;
             if (world.Light != null) LightVec = world.Light.LightVec;
+
             device.DepthStencilState = DepthStencilState.Default;
             device.BlendState = BlendState.NonPremultiplied;
             device.RasterizerState = RasterizerState.CullNone;
@@ -393,7 +402,8 @@ namespace FSO.LotView.Components
 
             Effect.Parameters["Projection"].SetValue(world.Camera.Projection);
             var view = world.Camera.View;
-            if (!_3D) view = view * Matrix.CreateTranslation(0, 0, -0.25f);
+            var _3d = _3D;
+            if (!_3d) view = view * Matrix.CreateTranslation(0, 0, -0.25f);
             Effect.Parameters["View"].SetValue(view);
             //world._3D.ApplyCamera(Effect);
             var translation = ((world.Zoom == WorldZoom.Far) ? -7 : ((world.Zoom == WorldZoom.Medium) ? -5 : -3)) * (20 / 522f);
@@ -402,8 +412,10 @@ namespace FSO.LotView.Components
             var altOff = Bp.BaseAlt * Bp.TerrainFactor * 3;
             var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, translation - altOff, 0);
             Effect.Parameters["World"].SetValue(worldmat);
-
-            Effect.Parameters["DiffuseColor"].SetValue(new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1f));
+            if ((world as RC.WorldStateRC)?.Use2DCam == false) Effect.Parameters["CamPos"]?.SetValue(world.Camera.Position + world.Camera.Translation);
+            else Effect.Parameters["CamPos"]?.SetValue(new Vector3(0, 9999, 0));
+            Effect.Parameters["GrassShininess"].SetValue((float)0.25);
+            Effect.Parameters["DiffuseColor"].SetValue(world.OutsideColor.ToVector4() * Color.Lerp(LightGreen, Color.White, 0.25f).ToVector4());
 
             device.SetVertexBuffer(VertexBuffer);
             device.Indices = IndexBuffer;
@@ -414,7 +426,7 @@ namespace FSO.LotView.Components
 
             var floors = new HashSet<sbyte>();
             for (sbyte f = 0; f < world.Level; f++) floors.Add(f);
-            var pass = Effect.CurrentTechnique.Passes[(_3D) ? 2 : WorldConfig.Current.PassOffset];
+            var pass = Effect.CurrentTechnique.Passes[(_3d) ? 2 : WorldConfig.Current.PassOffset];
             Bp.FloorGeom.DrawFloor(device, Effect, world.Zoom, world.Rotation, world.Rooms.RoomMaps, floors, pass, state: world);
 
             pass.Apply();
@@ -443,7 +455,7 @@ namespace FSO.LotView.Components
             grassDensity *= GrassDensityScale;
             var primitives = Bp.FloorGeom.SetGrassIndices(device, Effect, world);
 
-            if (primitives > 0)
+            if (primitives > 0 && _3D == _3d)
             {
                 Effect.Parameters["Level"].SetValue((float)0.0001f);
                 Effect.Parameters["RoomMap"].SetValue(world.Rooms.RoomMaps[0]);
@@ -472,7 +484,7 @@ namespace FSO.LotView.Components
 
                         Effect.Parameters["ScreenOffset"].SetValue(offset - off2);
 
-                        pass = Effect.CurrentTechnique.Passes[(_3D)?2:WorldConfig.Current.PassOffset];
+                        pass = Effect.CurrentTechnique.Passes[(_3d)?2:WorldConfig.Current.PassOffset];
                         pass.Apply();
                         device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, primitives);
                     }
@@ -505,14 +517,14 @@ namespace FSO.LotView.Components
                         //draw target size in red, below old size
                         device.Indices = TGridIndexBuffer;
                         Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0.5f, 1f, 0.5f, 1.0f));
-                        pass = Effect.CurrentTechnique.Passes[(_3D)?1:0];
+                        pass = Effect.CurrentTechnique.Passes[(_3d)?1:0];
                         pass.Apply();
                         device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, TGridPrimitives);
                     }
 
                     Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0, 0, 0, 1.0f));
                     device.Indices = GridIndexBuffer;
-                    pass = Effect.CurrentTechnique.Passes[(_3D) ? 1 : 0];
+                    pass = Effect.CurrentTechnique.Passes[(_3d) ? 1 : 0];
                     pass.Apply();
                     device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, GridPrimitives);
 

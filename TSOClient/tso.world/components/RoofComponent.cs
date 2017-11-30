@@ -506,7 +506,7 @@ namespace FSO.LotView.Components
                         device.Indices = dg.IndexBuffer;
 
                         Effect.CurrentTechnique = Effect.Techniques["DrawBase"];
-                        var pass = Effect.CurrentTechnique.Passes[Common.FSOEnvironment.Enable3D?2:WorldConfig.Current.PassOffset];
+                        var pass = Effect.CurrentTechnique.Passes[(Common.FSOEnvironment.Enable3D && (world as RC.WorldStateRC)?.Use2DCam == false)?2:WorldConfig.Current.PassOffset];
                         pass.Apply();
                         device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.NumPrimitives);
                     });
