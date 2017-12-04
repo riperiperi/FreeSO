@@ -385,6 +385,7 @@ namespace FSO.SimAntics
 
             Context.Architecture.Tick();
 
+            if (SpeedMultiplier < 0) return;
             if (!UseSchedule) {
                 var entCpy = Entities.ToArray();
                 foreach (var obj in entCpy)

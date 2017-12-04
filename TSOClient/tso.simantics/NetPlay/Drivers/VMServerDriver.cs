@@ -176,6 +176,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
             var tick = new VMNetTick();
             tick.Commands = new List<VMNetCommand>(cmdQueue);
+            tick.TickID = TickID;
             if (vm.SpeedMultiplier > 0) tick.TickID = TickID++;
             tick.RandomSeed = vm.Context.RandomSeed;
             cmdQueue.Clear();

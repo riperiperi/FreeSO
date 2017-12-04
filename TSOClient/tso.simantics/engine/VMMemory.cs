@@ -491,7 +491,7 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMOBJDVariable.Unused38:
                     throw new VMSimanticsException("Not Implemented!", context);
                 case VMOBJDVariable.HasCriticalAttributes:
-                    throw new VMSimanticsException("Not Implemented!", context);
+                    return (short)((objd.NumAttributes > 0)?1:0);
                 case VMOBJDVariable.BuyModeType:
                     return (short)objd.FunctionFlags;
                 case VMOBJDVariable.CatalogStringsID:

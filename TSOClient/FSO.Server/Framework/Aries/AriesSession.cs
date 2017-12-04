@@ -19,6 +19,14 @@ namespace FSO.Server.Framework.Aries
             IsAuthenticated = false;
         }
 
+        public bool Connected
+        {
+            get
+            {
+                return IoSession?.Connected ?? false;
+            }
+        }
+
         public virtual void Close()
         {
             this.IoSession.Close(false);
