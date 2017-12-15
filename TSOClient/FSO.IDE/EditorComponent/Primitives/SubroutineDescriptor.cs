@@ -58,6 +58,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             //Add parameter names and values
             for (var i = 0; i < bhav.Args; i++)
             {
+                if (paramNames.Length <= i) continue;
                 if (i > 0)
                 {
                     result.Append(", ");

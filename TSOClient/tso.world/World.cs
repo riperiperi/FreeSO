@@ -395,6 +395,16 @@ namespace FSO.LotView
         {
             base.Update(state);
 
+            if (Blueprint != null)
+            {
+                if (!Content.Content.Get().TS1) Blueprint.Weather?.Update();
+                var partiCopy = new List<ParticleComponent>(Blueprint.Particles);
+                foreach (var particle in partiCopy)
+                {
+                    particle.Update(null, State);
+                }
+            }
+
             if (State.ScrollAnchor != null)
             {
                 CenterTo(State.ScrollAnchor);
@@ -520,6 +530,12 @@ namespace FSO.LotView
             State._2D.SetScroll(pxOffset);
             State._2D.End();
             State._3D.End();
+
+            foreach (var particle in Blueprint.Particles)
+            {
+                particle.Draw(device, State);
+            }
+
             State._2D.OutputDepth = false;
         }
 
@@ -761,6 +777,10 @@ namespace FSO.LotView
                 foreach (var world in Blueprint.SubWorlds)
                 {
                     world.Dispose();
+                }
+                foreach (var particle in Blueprint.Particles)
+                {
+                    particle.Dispose();
                 }
                 Blueprint.Terrain?.Dispose();
                 Blueprint.RoofComp?.Dispose();

@@ -77,7 +77,7 @@ namespace FSO.Files.RC
 
             var vertCount = io.ReadInt32();
             SVerts = new List<VertexPositionTexture>();
-            for (int i=0; i<vertCount; i++)
+            for (int i = 0; i < vertCount; i++)
             {
                 var x = io.ReadFloat();
                 var y = io.ReadFloat();
@@ -88,6 +88,15 @@ namespace FSO.Files.RC
             }
             var indexCount = io.ReadInt32();
             SIndices = ToTArray<int>(io.ReadBytes(indexCount * 4)).ToList();
+
+            /* bottom up triangle ordering. useful for trees.
+            var triBase = new int[SIndices.Count / 3][];
+            for (int i = 0; i < triBase.Length; i++) triBase[i] = new int[] { SIndices[i * 3], SIndices[i*3 + 1], SIndices[i * 3 + 2] };
+
+            var ordered = triBase.OrderBy(x => SVerts[x[0]].Position.Y);
+            SIndices.Clear();
+            foreach (var item in ordered) SIndices.AddRange(item);
+            */
 
             SComplete(gd);
         }

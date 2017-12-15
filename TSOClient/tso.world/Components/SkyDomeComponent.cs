@@ -95,6 +95,8 @@ namespace FSO.LotView.Components
 
         public void Draw(GraphicsDevice gd, WorldState state)
         {
+
+            gd.Clear(state.OutsideColor);
             var ocolor = state.OutsideColor.ToVector4();
             var effect = WorldContent.GetBE(gd);
 
@@ -102,9 +104,11 @@ namespace FSO.LotView.Components
 
             var color = ocolor - new Vector4(0.35f) * 1.5f + new Vector4(0.35f);
             color.W = 1;
-            FogColor = color * new Color(0x80, 0xC0, 0xFF, 0xFF).ToVector4();
+            var wint = BP.Weather.WeatherIntensity;
+
             effect.LightingEnabled = false;
             effect.Texture = GradTex;
+            effect.Alpha = (1 - (float)Math.Sqrt(wint) * 0.75f);
             effect.DiffuseColor = Vector3.One;
             effect.AmbientLightColor = Vector3.One;
             //effect.DiffuseColor = new Vector3(Math.Min(1, color.X), Math.Min(1, color.Y), Math.Min(1, color.Z));
@@ -119,7 +123,7 @@ namespace FSO.LotView.Components
             effect.World = Matrix.CreateScale(5f);
             gd.DepthStencilState = DepthStencilState.None;
             gd.RasterizerState = RasterizerState.CullNone;
-            gd.BlendState = BlendState.Opaque;
+            gd.BlendState = BlendState.AlphaBlend;
             gd.SamplerStates[0] = SamplerState.LinearWrap;
 
             foreach (var pass in effect.CurrentTechnique.Passes)
@@ -161,6 +165,7 @@ namespace FSO.LotView.Components
 
             gd.BlendState = BlendState.NonPremultiplied;
             gd.DepthStencilState = DepthStencilState.Default;
+            effect.Alpha = 1f;
         }
 
         public void Dispose()

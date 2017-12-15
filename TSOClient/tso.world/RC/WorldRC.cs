@@ -191,7 +191,6 @@ namespace FSO.LotView.RC
             _3DWorld.PreDraw(device, State);
             State._3D.End();
 
-
             if (UseBackbuffer)
             {
 
@@ -214,12 +213,16 @@ namespace FSO.LotView.RC
             var pxOffset = -State.WorldSpace.GetScreenOffset();
             //State._2D.ResetMatrices(device.Viewport.Width, device.Viewport.Height);
             ((World2DRC)_2DWorld).DrawBg(device, State, SkyBounds);
-
             _3DWorld.DrawBefore2D(device, State);
             _3DWorld.DrawAfter2D(device, State);
             State._3D.End();
 
             _2DWorld.Draw(device, State);
+
+            foreach (var particle in Blueprint.Particles)
+            {
+                particle.Draw(device, State);
+            }
         }
 
         public override ObjectComponent MakeObjectComponent(Content.GameObject obj)

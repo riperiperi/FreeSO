@@ -31,6 +31,7 @@ namespace FSO.IDE.EditorComponent
             {22, typeof(LookTowardsDescriptor) },
             {23, typeof(PlaySoundEventDescriptor) },
             {24, typeof(OldRelationshipDescriptor) },
+            {25, typeof(TransferFundsDescriptor) },
             {26, typeof(RelationshipDescriptor) },
             {27, typeof(GotoRelativePositionDescriptor) },
             {28, typeof(RunTreeByNameDescriptor) },

@@ -77,6 +77,11 @@ namespace FSO.SimAntics.Model
             }
         }
 
+        public static short ScaleMax(VM vm, short oldMax, VMMotive type)
+        {
+            return (short)((oldMax - 100) + vm.TuningCache.GetLimit(type));
+        }
+
         private static int ToFixed1000(float input)
         {
             return (int)(input * 1000);

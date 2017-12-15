@@ -185,5 +185,13 @@
         "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
       ]
     },
+    {
+      "id": "b21e29a1-8c25-465e-aa43-c7a0d6f44fb8",
+      "script": "changes/0018_dyn_payout_tuning.sql",
+      "idempotent": false,
+      "requires": [
+        "9879997a-4b16-4733-aff4-d0178ce2afa5"
+      ]
+    }
   ]
 }

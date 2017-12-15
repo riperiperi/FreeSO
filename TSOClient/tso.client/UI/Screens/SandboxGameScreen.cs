@@ -513,6 +513,16 @@ namespace FSO.Client.UI.Screens
                 }
                 BlueprintReset(lotName);
 
+                var experimentalTuning = new Common.Model.DynamicTuning(new List<Common.Model.DynTuningEntry> {
+                    new Common.Model.DynTuningEntry() { tuning_type = "overfill", tuning_table = 255, tuning_index = 15, value = 200 },
+                    new Common.Model.DynTuningEntry() { tuning_type = "overfill", tuning_table = 255, tuning_index = 5, value = 200 },
+                    new Common.Model.DynTuningEntry() { tuning_type = "overfill", tuning_table = 255, tuning_index = 6, value = 200 },
+                    new Common.Model.DynTuningEntry() { tuning_type = "overfill", tuning_table = 255, tuning_index = 7, value = 200 },
+                    new Common.Model.DynTuningEntry() { tuning_type = "overfill", tuning_table = 255, tuning_index = 8, value = 200 },
+                    new Common.Model.DynTuningEntry() { tuning_type = "overfill", tuning_table = 255, tuning_index = 9, value = 200 },
+                });
+                vm.ForwardCommand(new VMNetTuningCmd { Tuning = experimentalTuning });
+
                 vm.TSOState.PropertyCategory = 255;
                 vm.Context.Clock.Hours = 0;
                 vm.TSOState.Size = (10) | (3 << 8);

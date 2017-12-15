@@ -52,6 +52,8 @@ namespace FSO.LotView.Model
         public List<SubWorldComponent> SubWorlds = new List<SubWorldComponent>();
         public TerrainComponent Terrain;
 
+        public List<ParticleComponent> Particles = new List<ParticleComponent>();
+
         /// <summary>
         /// Walls Cutaway sections. Remember to manage these correctly - i.e remove when you're finished with them!
         /// </summary>
@@ -77,6 +79,7 @@ namespace FSO.LotView.Model
         public float OutsideSkyP;
         public RoomLighting[] Light = new RoomLighting[0];
         public uint[][] RoomMap;
+        public byte[] Indoors;
         public List<Room> Rooms = new List<Room>();
 
         public Color[] RoomColors;
@@ -84,6 +87,7 @@ namespace FSO.LotView.Model
         public bool[] FineArea;
         public Rectangle TargetBuildableArea;
         public LightData OutdoorsLight;
+        public WeatherController Weather;
 
         public short[] Altitude;
         public short[] AltitudeCenters;
@@ -120,6 +124,8 @@ namespace FSO.LotView.Model
                 this.Floors[i] = new FloorTile[numTiles];
             }
             this.Cutaway = new bool[numTiles];
+            this.Weather = new WeatherController(this);
+
         }
 
         public float GetAltitude(int x, int y)
@@ -149,12 +155,10 @@ namespace FSO.LotView.Model
             return yLerp * xl2 + (1 - yLerp) * xl1 - BaseAlt * TerrainFactor;
         }
 
-        public void SetLightColor(Effect effect, Color outside, Color minOut)
+        public static void SetLightColor(Effect effect, Color outside, Color minOut)
         {
             //return;
-            effect.Parameters["OutsideLight"]?.SetValue(outside.ToVector4());
             effect.Parameters["OutsideDark"]?.SetValue(minOut.ToVector4());
-            effect.Parameters["MaxLight"]?.SetValue(Color.White.ToVector4());
             var avg = (minOut.R + minOut.G + minOut.B) / (255 * 3f);
             var minAvg = new Vector2(avg, 1 / (1 - avg));
             if (float.IsInfinity(minAvg.Y)) minAvg.Y = 1;
@@ -170,6 +174,7 @@ namespace FSO.LotView.Model
             SetLightColor(WorldContent.GrassEffect, OutsideColor, minOut);
             SetLightColor(Avatar.Effect, OutsideColor, minOut);
             SetLightColor(WorldContent.RCObject, OutsideColor, minOut);
+            SetLightColor(WorldContent.ParticleEffect, OutsideColor, minOut);
 
             for (int i=0; i<Light.Length; i++)
             {
@@ -255,6 +260,40 @@ namespace FSO.LotView.Model
 
         private ushort GetOffset(int tileX, int tileY){
             return (ushort)((tileY * Width) + tileX);
+        }
+
+        public byte[] GetIndoors()
+        {
+            if (Indoors != null) return Indoors;
+            else
+            {
+                //generate the indoors map
+                var partition = 255 / (Stories+1);
+                Indoors = new byte[Width * Height];
+                for (int flr = 0; flr < Stories; flr++)
+                {
+                    var pflr = (byte)(partition * flr);
+                    var pflrn = (byte)(partition * (flr + 1));
+                    var rooms = RoomMap[flr];
+                    var floors = Floors[flr];
+                    for (int i=0; i<Indoors.Length; i++)
+                    {
+                        if (floors[i].Pattern > 0) Indoors[i] = pflr;
+                        var room = rooms[i];
+                        if ((room & 0xFFFF) > 0)
+                        {
+                            var rm = Rooms[(int)room & 0xFFFF];
+                            if (!rm.IsOutside) Indoors[i] = pflrn;
+                            if (((int)room >> 16) > 0)
+                            {
+                                rm = Rooms[(int)room >> 16];
+                                if (!rm.IsOutside) Indoors[i] = pflrn;
+                            }
+                        }
+                    }
+                }
+            }
+            return Indoors;
         }
     }
 

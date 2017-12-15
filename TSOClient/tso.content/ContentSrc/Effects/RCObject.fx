@@ -68,6 +68,7 @@ VertexOut vsRC(VertexIn v) {
 float4 psRC(VertexOut v) : COLOR0
 {
 	float4 color = tex2D(TexSampler, v.texCoord) * lightProcess(v.modelPos);
+	if (color.a < 0.01) discard;
 	return color;
 }
 

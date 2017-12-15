@@ -33,6 +33,7 @@ namespace FSO.Client.UI.Controls
         private int[] ArrowStates = new int[8];
         private int[] TargetArrowStates = new int[8];
         private bool FirstFrame = true;
+        private TextStyle MotiveStyle;
 
         public UIMotiveDisplay()
         {
@@ -44,19 +45,35 @@ namespace FSO.Client.UI.Controls
             MotiveValues = new short[8];
             Filler = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
             for (int i = 0; i < 8; i++) ChangeBuffer[i] = new Queue<int>();
+
+            var style = TextStyle.DefaultLabel.Clone();
+            style.Size = 8;
+            MotiveStyle = style;
+            MotiveStyle.Color = Color.White;
         }
 
         private void DrawMotive(UISpriteBatch batch, int x, int y, int motive, bool inDynamic)
         {
             if (inDynamic)
             {
-                double p = (MotiveValues[motive] + 100) / 200.0;
+                var mdat = MotiveValues[motive] + 100;
+                double p = Math.Min(1, (mdat) / 200.0);
                 Color barcol = new Color((byte)(57 * (1 - p)), (byte)(213 * p + 97 * (1 - p)), (byte)(49 * p + 90 * (1 - p)));
                 Color bgcol = new Color((byte)(57 * p + 214 * (1 - p)), (byte)(97 * p), (byte)(90 * p));
 
                 batch.Draw(Filler, LocalRect(x, y, 60, 5), bgcol);
                 batch.Draw(Filler, LocalRect(x, y, (int)(60 * p), 5), barcol);
                 batch.Draw(Filler, LocalRect(x + (int)(60 * p), y, 1, 5), Color.Black);
+
+                if (mdat > 200)
+                {
+                    var p2 = Math.Min(1, (mdat - 200) / 200.0);
+                    batch.Draw(Filler, LocalRect(x, y, (int)(60 * p2), 5), Color.White);
+                    batch.Draw(Filler, LocalRect(x + (int)(60 * p2), y, 1, 5), Color.Black);
+
+                    //MotiveStyle.Shadow = true;
+                    //DrawLocalString(batch, "+" + ((mdat-200) / 2f).ToString() + "%", new Vector2(x, y), MotiveStyle, new Rectangle(0, 0, 60, 5), TextAlignment.Center | TextAlignment.Middle);
+                }
 
                 var arrowState = ArrowStates[motive];
                 var arrow = TextureGenerator.GetMotiveArrow(batch.GraphicsDevice);
@@ -74,10 +91,9 @@ namespace FSO.Client.UI.Controls
             }
             else
             {
-                var style = TextStyle.DefaultLabel.Clone();
-                style.Size = 8;
+                var style = MotiveStyle;
 
-                var temp = style.Color;
+                var temp = TextStyle.DefaultLabel.Color;
                 style.Color = Color.Black;
                 DrawLocalString(batch, MotiveNames[motive], new Vector2(x + 1, y - 14), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center); //shadow
 

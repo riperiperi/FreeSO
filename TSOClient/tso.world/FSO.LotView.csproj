@@ -85,6 +85,7 @@
     <Compile Include="Components\EntityComponent.cs" />
     <Compile Include="Components\FloorComponent.cs" />
     <Compile Include="Components\ObjectComponent.cs" />
+    <Compile Include="Components\ParticleComponent.cs" />
     <Compile Include="Components\RoofComponent.cs" />
     <Compile Include="Components\SkyDomeComponent.cs" />
     <Compile Include="Components\SubWorldComponent.cs" />
@@ -107,6 +108,7 @@
     <Compile Include="Model\RoomLighting.cs" />
     <Compile Include="Model\ScrollBuffer.cs" />
     <Compile Include="Model\WallTile.cs" />
+    <Compile Include="Model\WeatherController.cs" />
     <Compile Include="Model\WorldRotation.cs" />
     <Compile Include="Model\WorldZoom.cs" />
     <Compile Include="Model\XmlHouse.cs" />
@@ -122,6 +124,7 @@
     <Compile Include="RC\WorldStateRC.cs" />
     <Compile Include="Utils\DGRPRenderer.cs" />
     <Compile Include="Utils\IsometricTileIterator.cs" />
+    <Compile Include="Utils\ParticleVertex.cs" />
     <Compile Include="Utils\SSAADownsample.cs" />
     <Compile Include="Utils\TerrainVertex.cs" />
     <Compile Include="Utils\WorldCamera.cs" />

@@ -188,6 +188,7 @@
     <Compile Include="Model\VMObjectQueries.cs" />
     <Compile Include="Model\VMStackObjectDefinitionVariable.cs" />
     <Compile Include="Model\VMStackObjectVariable.cs" />
+    <Compile Include="Model\VMTuningCache.cs" />
     <Compile Include="Model\VMWallLineBuilder.cs" />
     <Compile Include="NetPlay\Drivers\VMClientDriver.cs" />
     <Compile Include="NetPlay\Drivers\VMFSORDriver.cs" />
@@ -254,6 +255,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetSimLeaveCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSkillLockCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetTimeoutNotifyCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetTuningCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetUpdateInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetUpdatePersistStateCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMRequestResyncCmd.cs" />

@@ -255,6 +255,7 @@
     <Compile Include="EditorComponent\Primitives\IdleForInputDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\RelationshipDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SleepDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\TransferFundsDescriptor.cs" />
     <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
     <Compile Include="EditorComponent\VarAnimSelect.cs">
       <SubType>Form</SubType>

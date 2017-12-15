@@ -41,6 +41,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             string prepend = "";
             if (op.PassObjectIds) { flagStr.Append(prepend + "Pass Object IDs to main"); prepend = ", "; }
             if (op.PassTemp0) { flagStr.Append(prepend + "Pass Temp 0 to main"); prepend = ", "; }
+            if (op.PersistInDB) { flagStr.Append(prepend + "Persist in Database");  prepend = ", "; }
 
             if (flagStr.Length != 0)
             {
@@ -63,6 +64,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags:", new OpFlag[] {
                 new OpFlag("Pass Object IDs", "PassObjectIds"),
                 new OpFlag("Pass Temp 0 to Main", "PassTemp0"),
+                new OpFlag("Persist in DB", "PersistInDB"),
                 }));
 
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider(

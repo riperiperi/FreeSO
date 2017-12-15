@@ -280,6 +280,7 @@ namespace FSO.LotView
             WorldContent.GrassEffect.Parameters["advancedLight"].SetValue(adv);
             WorldContent._2DWorldBatchEffect.Parameters["ambientLight"].SetValue(amb);
             WorldContent.RCObject.Parameters["advancedLight"].SetValue(adv);
+            WorldContent.ParticleEffect.Parameters["advancedLight"]?.SetValue(adv);
             Avatar.Effect.Parameters["advancedLight"].SetValue(adv);
 
             var frontDir = WorldCamera.FrontDirection();
@@ -289,6 +290,7 @@ namespace FSO.LotView
             WorldContent.GrassEffect.Parameters["LightOffset"].SetValue(lightOffset);
             Avatar.Effect.Parameters["LightOffset"].SetValue(lightOffset);
             WorldContent.RCObject.Parameters["LightOffset"].SetValue(lightOffset);
+            WorldContent.ParticleEffect.Parameters["LightOffset"].SetValue(lightOffset);
 
             WorldContent._2DWorldBatchEffect.Parameters["MaxFloor"].SetValue((float)Level-0.999f);
         }

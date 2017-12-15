@@ -495,6 +495,7 @@ namespace FSO.LotView
                                 state.Light.InvalidateAll();
                             }
                         }
+                        Blueprint.Indoors = null;
                         Blueprint.RoofComp.ShapeDirty = true;
                         break;
                     case BlueprintDamageType.FLOOR_CHANGED:

@@ -280,5 +280,10 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         public void PurchaseOutfit(VM vm, uint outfitPID, uint objectPID, uint avatarPID, VMAsyncPurchaseOutfitCallback callback)
         {
         }
+
+        public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, short type, VMAsyncTransactionCallback callback)
+        {
+            PerformTransaction(vm, testOnly, uid1, uid2, amount, callback);
+        }
     }
 }

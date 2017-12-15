@@ -145,3 +145,9 @@
 /processorParam:TextureFormat=DxtCompressed
 /build:Fonts/Mobile_50px.spritefont
 
+#begin Effects/ParticleShader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/ParticleShader.fx
+

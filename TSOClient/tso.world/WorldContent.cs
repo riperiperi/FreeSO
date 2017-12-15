@@ -81,6 +81,14 @@ namespace FSO.LotView
             }
         }
 
+        public static Effect ParticleEffect
+        {
+            get
+            {
+                return ContentManager.Load<Effect>("Effects/ParticleShader");
+            }
+        }
+
         private static VertexBuffer _TextureVerts;
         public static VertexBuffer GetTextureVerts(GraphicsDevice gd) 
         {

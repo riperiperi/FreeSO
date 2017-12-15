@@ -51,12 +51,16 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback)
         {
+            PerformTransaction(vm, testOnly, uid1, uid2, amount, 0, callback);
+        }
 
+        public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, short type, VMAsyncTransactionCallback callback)
+        {
             Host.InBackground(() =>
             {
                 using (var db = DAFactory.Get())
                 {
-                    var result = (testOnly)?db.Avatars.TestTransaction(uid1, uid2, amount, 0):db.Avatars.Transaction(uid1, uid2, amount, 0);
+                    var result = (testOnly)?db.Avatars.TestTransaction(uid1, uid2, amount, 0):db.Avatars.Transaction(uid1, uid2, amount, type);
                     if (result == null) result = new Database.DA.Avatars.DbTransactionResult() { success = false };
 
                     var finalAmount = amount;

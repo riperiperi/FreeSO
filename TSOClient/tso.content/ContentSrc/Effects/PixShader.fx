@@ -3,8 +3,8 @@ struct VertexToPixel
 {
 	float4 VertexPosition : SV_Position0;
 
-	float2 ATextureCoord : TEXCOORD0;
-	float2 BTextureCoord : TEXCOORD1;
+	float4 ABTextureCoord : TEXCOORD0;
+	float3 shadPos : TEXCOORD1;
 	float2 CTextureCoord : TEXCOORD2;
 	float2 BlendTextureCoord : TEXCOORD3;
 	float2 RoadTextureCoord : TEXCOORD4;
@@ -95,7 +95,7 @@ float4 FogColor;
 float4 GetCityColor(VertexToPixel Input)
 {
 	float4 BlendA = tex2D(USamplerBlend, Input.BlendTextureCoord);
-	float4 Base = tex2D(USamplerTex, Input.BTextureCoord);
+	float4 Base = tex2D(USamplerTex, Input.ABTextureCoord.zw);
 	float4 Blend = tex2D(USamplerTex, Input.CTextureCoord);
 	float4 Road = tex2D(RSamplerTex, Input.RoadTextureCoord);
 	float4 RoadC = tex2D(RCSamplerTex, Input.RoadCTextureCoord);
@@ -104,7 +104,7 @@ float4 GetCityColor(VertexToPixel Input)
 	float InvA = 1.0 - A;
 	
 	Base = Base*InvA + Blend*A;
-	Base *= tex2D(USampler, Input.ATextureCoord);
+	Base *= tex2D(USampler, Input.ABTextureCoord.xy);
 	
 	Base = Base*(1.0-Road.w) + Road*Road.w;
 	Base = Base*(1.0-RoadC.w) + RoadC*RoadC.w;
@@ -134,11 +134,11 @@ float shadowLerp(sampler2D depths, float2 size, float2 uv, float compare){
 float4 CityPS(VertexToPixel Input) : COLOR0
 {
 	float4 BCol = GetCityColor(Input);
-	float depth = Input.vPos.z;
+	float depth = Input.shadPos.z;
 	float diffuse = dot(normalize(Input.Normal.xyz), LightVec.xyz);
 	if (diffuse < 0) diffuse *= 0.5;
 
-	return float4(BCol.xyz*lerp(ShadowMult, 1, min(diffuse, shadowLerp(ShadSampler, ShadSize, Input.vPos.xy, depth+0.003*(2048.0/ShadSize.x)))), 1);
+	return float4(BCol.xyz*lerp(ShadowMult, 1, min(diffuse, shadowLerp(ShadSampler, ShadSize, Input.shadPos.xy, depth+0.003*(2048.0/ShadSize.x)))), 1);
 }
 
 float4 CityPSNoShad(VertexToPixel Input) : COLOR0
@@ -157,6 +157,19 @@ float4 CityPSFog(VertexToPixel Input) : COLOR0
 
 	float4 fogDistance = min(1, length(Input.vPos)/FogMaxDist);
 	BCol = float4(BCol.xyz*lerp(ShadowMult, 1, diffuse), 1);
+	return lerp(BCol, FogColor, fogDistance);
+}
+
+float4 CityPSFogShad(VertexToPixel Input) : COLOR0
+{
+	float4 BCol = GetCityColor(Input);
+	float depth = Input.shadPos.z;
+	float diffuse = dot(normalize(Input.Normal.xyz), LightVec.xyz);
+	if (diffuse < 0) diffuse *= 0.5;
+
+	BCol = float4(BCol.xyz*lerp(ShadowMult, 1, min(diffuse, shadowLerp(ShadSampler, ShadSize, Input.shadPos.xy, depth + 0.003*(2048.0 / ShadSize.x)))), 1);
+
+	float4 fogDistance = min(1, length(Input.vPos)/FogMaxDist);
 	return lerp(BCol, FogColor, fogDistance);
 }
 
@@ -202,4 +215,14 @@ technique RenderCity
 		PixelShader = compile ps_3_0 CityPSFog();
 #endif;
 	}
+
+	pass FinalFogShadow
+	{
+#if SM4
+		PixelShader = compile ps_4_0_level_9_1 CityPSFogShad();
+#else
+		PixelShader = compile ps_3_0 CityPSFogShad();
+#endif;
+	}
+	//
 }

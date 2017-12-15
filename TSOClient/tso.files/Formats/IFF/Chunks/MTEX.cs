@@ -1,4 +1,7 @@
-﻿using FSO.Common.Rendering;
+﻿using FSO.Common;
+using FSO.Common.Rendering;
+using FSO.Common.Utils;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -36,7 +39,19 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         public Texture2D GetTexture(GraphicsDevice device)
         {
-            if (Cached == null) Cached = ImageLoader.FromStream(device, new MemoryStream(data));
+            if (Cached == null)
+            {
+                Cached = ImageLoader.FromStream(device, new MemoryStream(data));
+                if (FSOEnvironment.EnableNPOTMip)
+                {
+                    var data = new Color[Cached.Width * Cached.Height];
+                    Cached.GetData(data);
+                    var n = new Texture2D(device, Cached.Width, Cached.Height, true, SurfaceFormat.Color);
+                    TextureUtils.UploadWithMips(n, device, data);
+                    Cached.Dispose();
+                    Cached = n;
+                }
+            }
             if (!IffFile.RETAIN_CHUNK_DATA) data = null;
             return Cached;
         }

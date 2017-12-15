@@ -26,6 +26,8 @@ using FSO.Server.Database.DA.LotVisitTotals;
 using FSO.Server.Database.DA.Bans;
 using FSO.Server.Database.DA.Inbox;
 using FSO.Server.Database.DA.DbEvents;
+using FSO.Server.Database.DA.Tuning;
+using FSO.Server.Database.DA.Transactions;
 
 namespace FSO.Server.Database.DA
 {
@@ -298,6 +300,26 @@ namespace FSO.Server.Database.DA
             {
                 if (_Events == null) _Events = new SqlEvents(Context);
                 return _Events;
+            }
+        }
+
+        private ITuning _Tuning;
+        public ITuning Tuning
+        {
+            get
+            {
+                if (_Tuning == null) _Tuning = new SqlTuning(Context);
+                return _Tuning;
+            }
+        }
+
+        private ITransactions _Transactions;
+        public ITransactions Transactions
+        {
+            get
+            {
+                if (_Transactions == null) _Transactions = new SqlTransactions(Context);
+                return _Transactions;
             }
         }
 

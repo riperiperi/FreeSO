@@ -12,6 +12,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public interface IVMTSOGlobalLink
     {
         void LeaveLot(VM vm, VMAvatar avatar);
+        void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, short type, VMAsyncTransactionCallback callback);
         void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback);
         void RequestRoommate(VM vm, uint pid, int mode, byte permissions);
         void RemoveRoommate(VM vm, VMAvatar avatar);

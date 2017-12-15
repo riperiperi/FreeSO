@@ -1,6 +1,7 @@
 ﻿using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Enum;
+using FSO.Common.Model;
 using FSO.Common.Utils;
 using FSO.LotView.Model;
 using FSO.Server.Common;
@@ -73,6 +74,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private HashSet<uint> AvatarsToSave = new HashSet<uint>();
         private HashSet<IVoltronSession> SessionsToRelease = new HashSet<IVoltronSession>();
         private List<DbRelationship> RelationshipsToSave = new List<DbRelationship>();
+        private DynamicTuning Tuning;
 
         public static readonly int TICKRATE = 30;
         public static readonly int LOT_SAVE_PERIOD = TICKRATE * 60 * 10;
@@ -159,6 +161,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     LotPersist = db.Lots.Get(context.DbId);
                     LotAdj = db.Lots.GetAdjToLocation(context.ShardId, LotPersist.location);
                     LotRoommates = db.Roommates.GetLotRoommates(context.DbId);
+                    Tuning = new DynamicTuning(db.Tuning.All());
                 }
                 Realestate = realestate.GetByShard(LotPersist.shard_id);
                 GenerateTerrain();
@@ -606,6 +609,11 @@ namespace FSO.Server.Servers.Lot.Domain
                 Minutes = tsoTime.Item2,
                 Seconds = tsoTime.Item3,
                 UTCStart = DateTime.UtcNow.Ticks
+            });
+
+            Lot.ForwardCommand(new VMNetTuningCmd()
+            {
+                Tuning = Tuning
             });
 
             Lot.Context.UpdateTSOBuildableArea();

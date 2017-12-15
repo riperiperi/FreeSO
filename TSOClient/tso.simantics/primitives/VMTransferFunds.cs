@@ -51,6 +51,19 @@ namespace FSO.SimAntics.Primitives
             { VMTransferFundsExpenseType.IncomeTypewriter, 20f },*/
         };
 
+        //income objects skill maps to these
+        public static Dictionary<uint, VMTransferFundsExpenseType> SkillTypes = new Dictionary<uint, VMTransferFundsExpenseType>()
+        {
+            { 0xF662FBB4, VMTransferFundsExpenseType.IncomeChemistry },
+            { 0xAD0B9DD6, VMTransferFundsExpenseType.IncomeCanning },
+            { 0x2355AF84, VMTransferFundsExpenseType.IncomePinata },
+            { 0xB65D7564, VMTransferFundsExpenseType.IncomeTelemarket },
+            { 0x9FB223CE, VMTransferFundsExpenseType.IncomeEasel },
+            { 0x76BA6BA8, VMTransferFundsExpenseType.IncomeChalkboard },
+            { 0x4DDF498C, VMTransferFundsExpenseType.IncomeGGWorkbench },
+            { 0xF77D1200, VMTransferFundsExpenseType.IncomeTypewriter }
+        };
+
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMTransferFundsOperand)args;
@@ -156,7 +169,14 @@ namespace FSO.SimAntics.Primitives
                     //get id and vm now to avoid race conditions
                     var id = context.Caller.ObjectID; //this thread's object id
                     var vm = context.VM;
-                    context.VM.GlobalLink.PerformTransaction(context.VM, operand.JustTest, source, target, amount,
+
+                    var type = operand.ExpenseType;
+                    if (type == VMTransferFundsExpenseType.IncomeObjectsSkill)
+                    {
+                        SkillTypes.TryGetValue(context.Callee.MasterDefinition?.GUID ?? context.Callee.Object.OBJ.GUID, out type);
+                    }
+
+                    context.VM.GlobalLink.PerformTransaction(context.VM, operand.JustTest, source, target, amount, (short)type,
                         (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                         {
                             vm.SendCommand(new VMNetAsyncResponseCmd(id, new VMTransferFundsState
@@ -182,8 +202,8 @@ namespace FSO.SimAntics.Primitives
         public VMVariableScope AmountOwner;
         public ushort AmountData;
         public VMTransferFundsFlags Flags;
-        public VMTransferFundsExpenseType ExpenseType;
-        public VMTransferFundsType TransferType;
+        public VMTransferFundsExpenseType ExpenseType { get; set; }
+        public VMTransferFundsType TransferType { get; set; }
 
         public bool JustTest
         {

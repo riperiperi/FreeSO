@@ -20,11 +20,13 @@ using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.Shards;
 using FSO.Server.Database.DA.Tasks;
 using FSO.Server.Database.DA.Users;
+using FSO.Server.Database.DA.Tuning;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Server.Database.DA.Transactions;
 
 namespace FSO.Server.Database.DA
 {
@@ -50,6 +52,8 @@ namespace FSO.Server.Database.DA
         IBonus Bonus { get; }
         IInbox Inbox { get; }
         IEvents Events { get; }
+        ITuning Tuning { get; }
+        ITransactions Transactions { get; }
 
         //System tables
         IHosts Hosts { get; }

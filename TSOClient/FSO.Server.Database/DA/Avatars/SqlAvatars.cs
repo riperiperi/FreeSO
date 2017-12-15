@@ -201,6 +201,22 @@ namespace FSO.Server.Database.DA.Avatars
                 success = false;
                 t.Rollback();
             }
+
+            if (success && ((reason > 7 && reason != 9) || (source_id != uint.MaxValue && dest_id != uint.MaxValue))) {
+                var days = (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalDays;
+                Context.Connection.Execute("INSERT INTO fso_transactions (from_id, to_id, transaction_type, day, value, count) "+
+                    "VALUES (@from_id, @to_id, @transaction_type, @day, @value, @count) " +
+                    "ON DUPLICATE KEY UPDATE value = value + @value, count = count+1", new
+                {
+                    from_id = (amount>0)?source_id:dest_id,
+                    to_id = (amount>0)?dest_id:source_id,
+                    transaction_type = reason,
+                    day = (int)days,
+                    value = Math.Abs(amount),
+                    count = 1
+                });
+            }
+
             var result = Context.Connection.Query<DbTransactionResult>("SELECT a1.budget AS source_budget, a2.budget AS dest_budget "
                 + "FROM"
                 + "(SELECT budget, count(budget) FROM " + (srcObj ? "fso_objects" : "fso_avatars") + " WHERE " + (srcObj ? "object_id" : "avatar_id") + " = @source_id) a1,"

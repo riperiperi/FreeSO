@@ -178,7 +178,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public float AttenuationValue;
         public uint AutonomyThreshold;
         public int JoiningIndex;
-        public TSOFlags Flags2 = (TSOFlags)0x1f; //allow a lot of things
+        public TSOFlags Flags2 = (TSOFlags)0x1e; //allow a lot of things
 
         public InteractionMaskFlags MaskFlags {
             get {

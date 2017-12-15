@@ -291,6 +291,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             if (InternalChange) return;
             var me = (CheckBox)sender;
+            Selected.Flags2 &= ~TSOFlags.NonEmpty;
             var param = FlagNames[me];
             var property = Selected.GetType().GetProperty(param);
             var sel = Selected;

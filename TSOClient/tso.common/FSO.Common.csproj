@@ -150,6 +150,8 @@
     <Compile Include="MeshSimplify\Simplify.cs" />
     <Compile Include="MeshSimplify\SymmetricMatrix.cs" />
     <Compile Include="MeshSimplify\MSVertex.cs" />
+    <Compile Include="Model\DynamicTuning.cs" />
+    <Compile Include="Model\DynTuningEntry.cs" />
     <Compile Include="Model\IntersectRectSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rendering\CachableTexture2D.cs" />

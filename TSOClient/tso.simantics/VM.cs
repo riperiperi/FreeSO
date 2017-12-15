@@ -33,6 +33,7 @@ using FSO.Common;
 using FSO.SimAntics.Primitives;
 using FSO.LotView.Model;
 using FSO.HIT;
+using FSO.Common.Model;
 
 namespace FSO.SimAntics
 {
@@ -87,6 +88,8 @@ namespace FSO.SimAntics
             }
         }
 
+        public DynamicTuning Tuning;
+        public VMTuningCache TuningCache = new VMTuningCache();
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
         private short ObjectId = 1;
 
@@ -427,6 +430,11 @@ namespace FSO.SimAntics
             }
         }
 
+        public void UpdateTuning()
+        {
+            TuningCache.UpdateTuning(this);
+        }
+
         /// <summary>
         /// Adds an entity to this Virtual Machine.
         /// </summary>
@@ -638,7 +646,8 @@ namespace FSO.SimAntics
                 MultitileGroups = mult.ToArray(),
                 GlobalState = GlobalState,
                 PlatformState = PlatformState,
-                ObjectId = ObjectId
+                ObjectId = ObjectId,
+                Tuning = Tuning
             };
         }
 
@@ -815,6 +824,8 @@ namespace FSO.SimAntics
                 }
             }
             Context.UpdateTSOBuildableArea();
+            Tuning = input.Tuning;
+            UpdateTuning();
             if (OnFullRefresh != null) OnFullRefresh();
         }
 

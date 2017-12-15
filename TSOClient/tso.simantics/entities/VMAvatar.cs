@@ -810,7 +810,9 @@ namespace FSO.SimAntics
         public virtual bool SetMotiveData(VMMotive variable, short value)
         {
             if ((ushort)variable > 15) throw new Exception("Motive Data out of bounds!");
-            MotiveData[(ushort)variable] = (short)Math.Max(Math.Min((int)value, 100), -100);
+            var old = MotiveData[(ushort)variable];
+            //this run on garbage to access motive overfill is a bit stupid. Refrencing the tuning cache from each avatar might get stupid, though.
+            MotiveData[(ushort)variable] = (short)Math.Max(Math.Min(value, Math.Max((int)old, Thread?.Context?.VM?.TuningCache?.GetLimit(variable) ?? 100)), -100);
             return true;
         }
 

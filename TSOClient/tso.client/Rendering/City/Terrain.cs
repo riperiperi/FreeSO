@@ -29,6 +29,8 @@ using FSO.Common;
 using FSO.LotView.RC;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.LotView.Utils;
+using FSO.LotView.Components;
+using FSO.LotView.Model;
 
 namespace FSO.Client.Rendering.City
 {
@@ -151,6 +153,9 @@ namespace FSO.Client.Rendering.City
         private float m_LastIsoScale;
 
         public AbstractCityPlugin Plugin;
+        public List<ParticleComponent> Particles;
+        public BasicCamera ParticleCamera;
+        public WeatherController Weather;
 
         private Texture2D LoadTex(string Path)
         {
@@ -201,6 +206,10 @@ namespace FSO.Client.Rendering.City
             MapData.Load(CityStr, LoadTex, ext);
             m_Width = MapData.Width;
             m_Height = MapData.Height;
+
+            //DECEMBER TEMP: snow replace
+            //TODO: tie to tuning, or serverside weather system.
+            ForceSnow();
 
             m_Ground = LoadTex(gamepath + "gamedata/terrain/newformat/gr.tga");
             m_Rock = LoadTex(gamepath + "gamedata/terrain/newformat/rk.tga");
@@ -253,8 +262,36 @@ namespace FSO.Client.Rendering.City
             m_Batch = new SpriteBatch(GameFacade.GraphicsDevice);
         }
 
+        public void ForceSnow()
+        {
+            var dat = new Color[m_VertexColor.Width * m_VertexColor.Height];
+            m_VertexColor.GetData(dat);
+            var type = MapData.TerrainTypeColorData;
+
+            for (int i=0; i<dat.Length; i++)
+            {
+                var old = dat[i];
+                var greater = Math.Max(old.R, old.G);
+                if (old.B < greater)
+                {
+                    //make this pixel grayscale
+                    dat[i] = new Color(greater, greater, greater);
+                }
+                var oldType = type[i];
+                if (oldType == new Color(0, 255, 0) || oldType == Color.Yellow)
+                {
+                    type[i] = Color.White;
+                }
+            }
+
+            m_VertexColor.SetData(dat);
+        }
+
         public Terrain(GraphicsDevice Device) : base(Device)
         {
+            Particles = new List<ParticleComponent>();
+            Weather = new WeatherController(Particles);
+            ParticleCamera = new BasicCamera(Device, Vector3.Zero, new Vector3(0, 0.5f, 0.86602540f), Vector3.Up);
             //LoadContent(GfxDevice, Content);
         }
 
@@ -383,7 +420,9 @@ namespace FSO.Client.Rendering.City
             m_Water.Dispose(); 
             m_Sand.Dispose(); 
             m_Forest.Dispose();
-            m_DefaultHouse.Dispose(); 
+            m_DefaultHouse.Dispose();
+            foreach (var particle in Particles) particle.Dispose();
+            Particles.Clear();
             //m_LotOnline.Dispose(); these are handled by the UI engine
             //m_LotOffline.Dispose();
             //m_WhiteLine.Dispose();
@@ -1207,6 +1246,20 @@ namespace FSO.Client.Rendering.City
 
             if (Visible)
             { //if we're not visible, do not update CityRenderer state...
+                Weather.TintColor = m_TintColor.ToVector4();
+                Weather.Update();
+
+                //move the weather camera
+                var scale = GetIsoScale();
+                ParticleCamera.Position = new Vector3(0, 0.5f, 0.86602540f) * scale * 10000 + new Vector3(m_ViewOffX*4 + 2000, 0, (m_ViewOffY * -5 + 2000));
+                ParticleCamera.Target = ParticleCamera.Position - new Vector3(0, 0.5f, 0.86602540f);
+                ParticleCamera.ProjectionDirty();
+
+                var parti = new List<ParticleComponent>(Particles);
+                foreach (var particle in parti)
+                {
+                    particle.Update(m_GraphicsDevice, null);
+                }
                 if (DateTime.Now.Subtract(LastCityUpdate).TotalSeconds > 15)
                 {
                     FindController<TerrainController>()?.RequestNewCity();
@@ -1580,7 +1633,9 @@ namespace FSO.Client.Rendering.City
             ViewMatrix *= Matrix.CreateTranslation(new Vector3(-360f, 0f, -262f)); //move model to center of screen.
 
             VertexShader.CurrentTechnique = VertexShader.Techniques[0];
-            VertexShader.Parameters["BaseMatrix"].SetValue((WorldMatrix*ViewMatrix)*ProjectionMatrix);
+            var mv = WorldMatrix * ViewMatrix;
+            VertexShader.Parameters["BaseMatrix"].SetValue((mv)*ProjectionMatrix);
+            VertexShader.Parameters["MV"].SetValue(mv);
 
             PixelShader.CurrentTechnique = PixelShader.Techniques[0];
             PixelShader.Parameters["LightCol"].SetValue(new Vector4(m_TintColor.R / 255.0f, m_TintColor.G / 255.0f, m_TintColor.B / 255.0f, 1)*1.25f);
@@ -1592,6 +1647,14 @@ namespace FSO.Client.Rendering.City
             PixelShader.Parameters["RoadAtlasTex"].SetValue(RoadAtlas);
             PixelShader.Parameters["RoadAtlasCTex"].SetValue(RoadCAtlas);
             PixelShader.Parameters["ShadowMult"].SetValue(m_ShadowMult);
+            var fog = Weather.WeatherIntensity > 0.01f;
+            if (fog)
+            {
+                var fogColor = Weather.FogColor;
+                PixelShader.Parameters["FogMaxDist"].SetValue(fogColor.W);
+                fogColor.W = 1f;
+                PixelShader.Parameters["FogColor"].SetValue(fogColor);
+            }
 
             m_GraphicsDevice.SetVertexBuffer(vertBuf);
 
@@ -1625,13 +1688,13 @@ namespace FSO.Client.Rendering.City
 
             if (ShadowsEnabled)
             {
-                PixelShader.CurrentTechnique.Passes[0].Apply();
-                VertexShader.CurrentTechnique.Passes[0].Apply();
+                PixelShader.CurrentTechnique.Passes[(fog)?4:0].Apply();
+                VertexShader.CurrentTechnique.Passes[(fog) ? 4 : 0].Apply();
             }
             else
             {
-                PixelShader.CurrentTechnique.Passes[2].Apply();
-                VertexShader.CurrentTechnique.Passes[2].Apply();
+                PixelShader.CurrentTechnique.Passes[(fog) ? 3 : 2].Apply();
+                VertexShader.CurrentTechnique.Passes[(fog) ? 3 : 2].Apply();
             }
 
             try
@@ -1653,6 +1716,14 @@ namespace FSO.Client.Rendering.City
             m_2DVerts = new ArrayList(); //refresh list for spotlights
             DrawSpotlights(HB); //draw far view spotlights
             Draw2DPoly(); //draw spotlights using 2DVert shader
+
+
+            foreach (var particle in Particles)
+            {
+                var tint = m_TintColor;
+                particle.GenericDraw(gfx, ParticleCamera, tint, false);
+            }
+
             Plugin?.Draw(m_Batch);
         }
 
@@ -1753,8 +1824,10 @@ namespace FSO.Client.Rendering.City
             PixelShader.Parameters["RoadAtlasCTex"].SetValue(RoadCAtlas);
             PixelShader.Parameters["ShadowMult"].SetValue(m_ShadowMult);
 
+
+            PixelShader.Parameters["FogMaxDist"].SetValue(fogColor.W);
+            fogColor.W = 1f;
             PixelShader.Parameters["FogColor"].SetValue(fogColor);
-            PixelShader.Parameters["FogMaxDist"].SetValue(300f*75f);
 
             VertexShader.Parameters["LightMatrix"].SetValue(m_LightMatrix);
 

@@ -1,12 +1,15 @@
 ﻿using FSO.Common;
 using FSO.Common.Content;
+using FSO.Common.Utils;
 using FSO.Files;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.RC;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -113,6 +116,15 @@ namespace FSO.Content
                     using (var file = File.OpenRead(Path.Combine(dir, name)))
                     {
                         result = ImageLoader.FromStream(GD, file);
+                        if (FSOEnvironment.EnableNPOTMip)
+                        {
+                            var data = new Color[result.Width * result.Height];
+                            result.GetData(data);
+                            var n = new Texture2D(GD, result.Width, result.Height, true, SurfaceFormat.Color);
+                            TextureUtils.UploadWithMips(n, GD, data);
+                            result.Dispose();
+                            result = n;
+                        }
                     };
                 }
                 catch (Exception)

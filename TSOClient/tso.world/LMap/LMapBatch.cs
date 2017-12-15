@@ -107,11 +107,13 @@ namespace FSO.LotView.LMap
 
             WorldContent.GrassEffect.Parameters["WorldToLightFactor"].SetValue(factor);
             WorldContent.RCObject.Parameters["WorldToLightFactor"].SetValue(factor);
+            WorldContent.ParticleEffect.Parameters["WorldToLightFactor"].SetValue(factor);
             WorldContent._2DWorldBatchEffect.Parameters["WorldToLightFactor"].SetValue(factor);
             Avatar.Effect.Parameters["WorldToLightFactor"].SetValue(factor);
 
             WorldContent.GrassEffect.Parameters["MapLayout"].SetValue(MapLayout);
             WorldContent.RCObject.Parameters["MapLayout"].SetValue(MapLayout);
+            WorldContent.ParticleEffect.Parameters["MapLayout"].SetValue(MapLayout);
             WorldContent._2DWorldBatchEffect.Parameters["MapLayout"].SetValue(MapLayout);
             LightEffect.Parameters["MapLayout"].SetValue(MapLayout);
             Avatar.Effect.Parameters["MapLayout"].SetValue(MapLayout);

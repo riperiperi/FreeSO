@@ -16,8 +16,8 @@ struct VertexToPixelOut
 {
 	float4 VertexPosition : SV_Position0;
 	
-	float2 ATextureCoord : TEXCOORD0;
-	float2 BTextureCoord : TEXCOORD1;
+	float4 ABTextureCoord : TEXCOORD0;
+	float3 shadPos : TEXCOORD1;
 	float2 CTextureCoord : TEXCOORD2;
 	float2 BlendTextureCoord : TEXCOORD3;
 	float2 RoadTextureCoord : TEXCOORD4;
@@ -45,8 +45,8 @@ VertexToPixelOut CityNoShadVS(VertexToPixel Input)
 {
  	VertexToPixelOut Output = (VertexToPixelOut)0;
 	Output.VertexPosition = mul(Input.VertexPosition, BaseMatrix);
-	Output.ATextureCoord = Input.ATextureCoord;
-	Output.BTextureCoord = Input.BTextureCoord;
+	Output.ABTextureCoord.xy = Input.ATextureCoord;
+	Output.ABTextureCoord.zw = Input.BTextureCoord;
 	Output.CTextureCoord = Input.CTextureCoord;
 	Output.BlendTextureCoord = Input.BlendTextureCoord;
 	Output.RoadTextureCoord = Input.RoadTextureCoord;
@@ -62,10 +62,11 @@ VertexToPixelOut CityVS(VertexToPixel Input)
 	//calculate position of vertice in relation to light, for comparison to Shadow Map
 	float4 LightPos = GetPositionFromLight(Input.VertexPosition);
 	
-	Output.vPos.xy = 0.5*(LightPos.xy/LightPos.w)+float2(0.5, 0.5);
-	Output.vPos.y = (1.0f - Output.vPos.y); //position of vertice on shadow map
+	Output.shadPos.xy = 0.5*(LightPos.xy/LightPos.w)+float2(0.5, 0.5);
+	Output.shadPos.y = (1.0f - Output.shadPos.y); //position of vertex on shadow map
 	
-	Output.vPos.z = 1 - (LightPos.z/LightPos.w); //feed depth relative to light to compare against shadow map depth
+	Output.shadPos.z = 1 - (LightPos.z/LightPos.w); //feed depth relative to light to compare against shadow map depth
+	Output.vPos = float3(0, 0, 0);
 	return Output;
 }
 
@@ -73,9 +74,17 @@ VertexToPixelOut CityFogVS(VertexToPixel Input)
 {
 	VertexToPixelOut Output = CityNoShadVS(Input);
 
+	//calculate position of vertice in relation to light, for comparison to Shadow Map
+	float4 LightPos = GetPositionFromLight(Input.VertexPosition);
+
+	Output.shadPos.xy = 0.5*(LightPos.xy / LightPos.w) + float2(0.5, 0.5);
+	Output.shadPos.y = (1.0f - Output.shadPos.y); //position of vertex on shadow map
+
+	Output.shadPos.z = 1 - (LightPos.z / LightPos.w); //feed depth relative to light to compare against shadow map depth
+
 	float4 pos = mul(Input.VertexPosition, MV);
 	pos.z += pos.w / 100000000;
-	Output.vPos = pos.xyz;
+	Output.vPos = pos.xyz; //
 	return Output;
 }
 
@@ -117,6 +126,15 @@ technique RenderCity
 	}
 	
 	pass FinalFog
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 CityFogVS();
+#else
+		VertexShader = compile vs_3_0 CityFogVS();
+#endif;
+	}
+
+	pass FinalFogShadow
 	{
 #if SM4
 		VertexShader = compile vs_4_0_level_9_1 CityFogVS();

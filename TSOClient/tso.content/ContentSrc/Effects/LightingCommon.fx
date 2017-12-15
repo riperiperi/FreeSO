@@ -68,7 +68,7 @@ float4 lightInterp(float4 inPosition) {
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;
 
-	float level = floor(inPosition.y) + 0.0001;
+	float level = min(Level, floor(inPosition.y) + 0.0001);
 	float abvLevel = min(Level, level + 1);
 	float2 iPA = inPosition.xz + 1 / MapLayout * floor(float2(abvLevel % MapLayout.x, abvLevel / MapLayout.x));
 	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));

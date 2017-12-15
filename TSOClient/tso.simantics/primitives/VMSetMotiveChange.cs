@@ -31,7 +31,7 @@ namespace FSO.SimAntics.Primitives
             else
             {
                 var rate = (short)VMMotiveChange.ScaleRate(context.VM, VMMemory.GetVariable(context, (VMVariableScope)operand.DeltaOwner, operand.DeltaData), operand.Motive);
-                var MaxValue = VMMemory.GetVariable(context, (VMVariableScope)operand.MaxOwner, operand.MaxData);
+                var MaxValue = VMMotiveChange.ScaleMax(context.VM, VMMemory.GetVariable(context, (VMVariableScope)operand.MaxOwner, operand.MaxData), operand.Motive);
                 if (operand.Once) {
                     var motive = avatar.GetMotiveData(operand.Motive);
 

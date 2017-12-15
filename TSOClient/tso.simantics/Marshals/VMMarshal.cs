@@ -8,12 +8,13 @@ using FSO.SimAntics.Marshals.Threads;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using System.IO.Compression;
+using FSO.Common.Model;
 
 namespace FSO.SimAntics.Marshals
 {
     public class VMMarshal : VMSerializable
     {
-        public static readonly int LATEST_VERSION = 23;
+        public static readonly int LATEST_VERSION = 24;
 
         public int Version = LATEST_VERSION;
         public bool Compressed = true;
@@ -26,6 +27,8 @@ namespace FSO.SimAntics.Marshals
         public short[] GlobalState;
         public VMPlatformState PlatformState;
         public short ObjectId = 1;
+
+        public DynamicTuning Tuning;
 
         public void Deserialize(BinaryReader reader)
         {
@@ -90,6 +93,12 @@ namespace FSO.SimAntics.Marshals
 
             ObjectId = reader.ReadInt16();
 
+            if (Version > 23)
+            {
+                if (reader.ReadBoolean())
+                    Tuning = new DynamicTuning(reader);
+            }
+
             if (Compressed)
             {
                 reader.BaseStream.Close();
@@ -145,6 +154,9 @@ namespace FSO.SimAntics.Marshals
             //Console.WriteLine("== SERIAL: Globals done... " + timer.ElapsedMilliseconds + " ms ==");
 
             writer.Write(ObjectId);
+
+            writer.Write(Tuning != null);
+            if (Tuning != null) Tuning.SerializeInto(writer);
 
             if (Compressed)
             {

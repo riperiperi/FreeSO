@@ -164,6 +164,7 @@ namespace FSO.LotView.RC
                                 state.Light.InvalidateAll();
                             }
                         }
+                        Blueprint.Indoors = null;
                         Blueprint.RoofComp.ShapeDirty = true;
                         break;
                     case BlueprintDamageType.FLOOR_CHANGED:
@@ -504,7 +505,7 @@ namespace FSO.LotView.RC
                 if (Dome == null) Dome = new SkyDomeComponent(gd, Blueprint);
                 Dome.Draw(gd, state);
 
-                Surroundings?.DrawSurrounding(gd, state.Camera, Dome.FogColor, (Blueprint.SubWorlds.Count>0)?1:0);
+                Surroundings?.DrawSurrounding(gd, state.Camera, Blueprint.Weather.FogColor, (Blueprint.SubWorlds.Count>0)?1:0);
             }
             gd.Clear(ClearOptions.DepthBuffer, Color.White, 1, 0);
 

@@ -34,6 +34,9 @@ namespace FSO.Server.Servers.Tasks.Domain
                 db.LotVisitTotals.Purge(retentionDate);
                 db.Bonus.Purge(retentionDate);
                 db.LotVisits.PurgeByDate(retentionDate);
+
+                var days = (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalDays;
+                db.Transactions.Purge((int)days - 30);
             }
         }
 

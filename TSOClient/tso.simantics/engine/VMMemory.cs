@@ -197,6 +197,9 @@ namespace FSO.SimAntics.Engine.Utils
                     if (objd == null) return 0;
                     return GetEntityDefinitionVar(objd, (VMOBJDVariable)data, context);
 
+                case VMVariableScope.Unused:
+                    return context.VM.TuningCache.GetLimit((VMMotive)data);
+
                 case VMVariableScope.LocalByTemp: //40
                     return (short)context.Locals[context.Thread.TempRegisters[data]];
 
@@ -331,9 +334,9 @@ namespace FSO.SimAntics.Engine.Utils
                     return GetVariable(context, scope, data); //return a normal var
             }
         }
-        
 
-        public static short GetTuningVariable(VMEntity entity, ushort data, VMStackFrame context){
+
+        public static short GetTuningVariable(VMEntity entity, ushort data, VMStackFrame context) {
             var tableID = (ushort)(data >> 7);
             var keyID = (ushort)(data & 0x7F);
 
@@ -346,6 +349,22 @@ namespace FSO.SimAntics.Engine.Utils
             OTFTable tuning;
 
             /** This could be in a BCON or an OTF **/
+
+            var dyn = context.VM.Tuning;
+            if (dyn != null) {
+                string name = "object";
+                switch (mode)
+                {
+                    case 0: //local
+                        name = context.ScopeResource.MainIff.Filename; break;
+                    case 1: //semi globals
+                        name = context.ScopeResource.SemiGlobal?.Iff?.Filename ?? "unknown"; break;
+                    case 2: //semi globals
+                        name = "global.iff"; break;
+                }
+                var replacement = dyn.GetTuning(name, tableID, keyID);
+                if (replacement != null) return (short)replacement;
+            }
 
             switch (mode) {
                 case 0: //local
