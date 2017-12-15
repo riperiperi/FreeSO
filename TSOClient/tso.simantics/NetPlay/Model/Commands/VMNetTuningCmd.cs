@@ -33,6 +33,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override void SerializeInto(BinaryWriter writer)
         {
             base.SerializeInto(writer);
+            if (Tuning == null) Tuning = new DynamicTuning(new List<DynTuningEntry>());
             Tuning.SerializeInto(writer);
         }
     }

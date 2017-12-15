@@ -21,6 +21,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             clock.Minutes = Minutes;
             clock.MinuteFractions = (Seconds * clock.TicksPerMinute) / 60;
             clock.UTCStart = UTCStart;
+            clock.Ticks = 0;
             return true;
         }
 
