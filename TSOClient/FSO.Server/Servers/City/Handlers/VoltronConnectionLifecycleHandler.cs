@@ -58,7 +58,7 @@ namespace FSO.Server.Servers.City.Handlers
             Liveness.EnqueueChange(() => {
                 //unenroll in voltron group, mark as offline in data service.
                 //since this can happen async make sure our session hasnt been reopened before trying to delete its claim
-                if (Sessions.GetByAvatarId(voltronSession.AvatarId) != null) return;
+                if (Sessions.GetByAvatarId(voltronSession.AvatarId)?.Connected == true) return;
 
                 var avatar = DataService.Get<Avatar>(voltronSession.AvatarId).Result;
                 if (avatar != null) avatar.Avatar_IsOnline = false;

@@ -582,6 +582,7 @@ namespace FSO.LotView
 
         public Vector2 EstTileAtPosWithScroll(Vector2 pos)
         {
+            pos *= new Vector2(FSOEnvironment.DPIScaleFactor);
             var sPos = new Vector3(pos, 0);
             
             var p1 = State.Device.Viewport.Unproject(sPos, State.Camera.Projection, State.Camera.View, Matrix.Identity);

@@ -82,6 +82,8 @@ namespace FSO.Client
             if (uiLayer?.CurrentUIScreen == null) return;
 
             uiLayer.SpriteBatch.ResizeBuffer(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
+            GlobalSettings.Default.GraphicsWidth = width/FSOEnvironment.DPIScaleFactor;
+            GlobalSettings.Default.GraphicsHeight = height / FSOEnvironment.DPIScaleFactor;
             uiLayer.CurrentUIScreen.GameResized();
         }
 

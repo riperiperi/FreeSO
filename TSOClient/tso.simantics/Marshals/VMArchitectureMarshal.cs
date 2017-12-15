@@ -70,8 +70,11 @@ namespace FSO.SimAntics.Marshals
             if (Version > 21)
             {
                 var hasIDMap = reader.ReadBoolean();
-                IDMap = new VMResourceIDMarshal();
-                IDMap.Deserialize(reader);
+                if (hasIDMap)
+                {
+                    IDMap = new VMResourceIDMarshal();
+                    IDMap.Deserialize(reader);
+                }
             }
 
             if (Version > 22)

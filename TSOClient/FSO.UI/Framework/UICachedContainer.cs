@@ -63,7 +63,11 @@ namespace FSO.Client.UI.Framework
                 gd.Clear(ClearColor);
                 var pos = LocalPoint(0, 0);
 
-                batch.Begin(transformMatrix: Microsoft.Xna.Framework.Matrix.CreateTranslation(-(pos.X-BackOffset.X), -(pos.Y-BackOffset.Y), 0), blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
+                batch.Begin(transformMatrix:
+                    Microsoft.Xna.Framework.Matrix.CreateTranslation(-(pos.X), -(pos.Y), 0) *
+                    Microsoft.Xna.Framework.Matrix.CreateScale(1f / FSOEnvironment.DPIScaleFactor) *
+                    Microsoft.Xna.Framework.Matrix.CreateTranslation(BackOffset.X, BackOffset.Y, 0)
+                    , blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
                 batch.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
                 InternalDraw(batch);
                 lock (Children)
@@ -108,7 +112,7 @@ namespace FSO.Client.UI.Framework
             if (!Visible) return;
             if (Target != null)
             {
-                DrawLocalTexture(batch, Target, null, -BackOffset.ToVector2(), new Vector2(1/ScaleX, 1/ScaleY));
+                DrawLocalTexture(batch, Target, null, -BackOffset.ToVector2(), new Vector2(1/(ScaleX), 1/(ScaleY)));
             }
             DynamicOverlay.Draw(batch);
         }

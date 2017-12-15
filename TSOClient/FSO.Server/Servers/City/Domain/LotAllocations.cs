@@ -216,6 +216,7 @@ namespace FSO.Server.Servers.City.Domain
 
                             if (!allocation.TryClaim(lot))
                             {
+
                                 Remove(lotId);
                                 return Immediate(new TryFindLotResult
                                 {
@@ -452,7 +453,26 @@ namespace FSO.Server.Servers.City.Domain
                 }
                 else
                 {
-                    return false;
+                    var oldClaim = db.LotClaims.GetByLotID(lot.lot_id);
+                    if (oldClaim == null) return false; //what?
+                    else if (oldClaim.owner == Context.Config.Call_Sign)
+                    {
+                        //something went wrong and this lot claim did not get freed... but the city does own it.
+                        //if we got here, then there was no allocation in the city before now. 
+                        //therefore the only way the city could own a lot claim and not an allocation is if it got stuck somehow
+                        db.LotClaims.Delete((uint)oldClaim.claim_id, oldClaim.owner);
+                        claim = db.LotClaims.TryCreate(new Database.DA.LotClaims.DbLotClaim
+                        {
+                            shard_id = Context.ShardId,
+                            lot_id = lot.lot_id,
+                            owner = Context.Config.Call_Sign
+                        });
+                        ClaimId = claim;
+
+                        if (claim.HasValue) return true;
+                        else return false;
+                    }
+                    else return false;
                 }
             }
         }

@@ -78,6 +78,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 io.WriteInt32(NeighborhoodData.Length);
                 foreach (var item in InventoryByID)
                 {
+                    io.WriteInt32(1);
                     io.WriteInt16(item.Key);
                     io.WriteInt32(item.Value.Count);
                     foreach (var invent in item.Value)

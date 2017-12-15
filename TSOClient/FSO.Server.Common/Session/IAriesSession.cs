@@ -11,7 +11,8 @@ namespace FSO.Server.Framework.Aries
     {
         bool IsAuthenticated { get; }
         uint LastRecv { get; set; }
-        
+        bool Connected { get; }
+
         void Write(params object[] messages);
         void Close();
 

@@ -58,7 +58,7 @@ namespace FSO.SimAntics.Model
         {
             if (vm.TS1)
             {
-                if (type == VMMotive.Energy)
+                if (type == VMMotive.Energy && rate > 0)
                 {
                     rate *= (int)VMTS1MotiveDecay.Constants[0] / (24 - (int)VMTS1MotiveDecay.Constants[1]);
                 }
