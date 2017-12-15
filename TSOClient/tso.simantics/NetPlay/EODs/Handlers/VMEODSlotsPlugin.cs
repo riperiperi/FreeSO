@@ -109,13 +109,13 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         MachineBalanceMax = (int)VMEODSlotMachineMaximumBalances.X_Marks_the_Spot;
                         break;
                     }
-                // "Undefined" Slot Machine - $100 (separate object, CC)
-                case 2147483648:
+                // "Jackpot_by_Lucky_LLC" Slot Machine - $100 (separate object, CC)
+                case 82792879:
                     {
                         MachineType = 4;
                         MachineBetDenomination = 100;
-                        MachineBalanceMin = (int)VMEODSlotMachineMinimumBalances.Undefined;
-                        MachineBalanceMax = (int)VMEODSlotMachineMaximumBalances.Undefined;
+                        MachineBalanceMin = (int)VMEODSlotMachineMinimumBalances.Jackpot_by_Lucky_LLC;
+                        MachineBalanceMax = (int)VMEODSlotMachineMaximumBalances.Jackpot_by_Lucky_LLC;
                         break;
                     }
                 default:
@@ -171,6 +171,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 }
                 UserClient.Send("slots_owner_init", MachinePaybackPercent + "%" + AlledgedMachineBalance + "%" + MachineType + "%" + args[4]);
             }
+            // oops, a player has connected in the manage tree, but does not own machine
+            else
+            {
+                Server.Disconnect(client);
+            }
             // get the amount of money in the machine by sending a testOnly transaction for $1 from maxis to machine
             var VM = UserClient.vm;
 
@@ -196,7 +201,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     if (MachineBalance >= MachineBalanceMin && MachineBalance < MachineBalanceMax)
                         UserClient.Send("slots_new_game", "");
                     else
-                        UserClient.Send("slots_close_machine", "");
+                        if ((isOwner) && (args[0] == 2))
+                            UserClient.Send("slots_close_machine", "");
                 }
                 else
                 {
@@ -735,7 +741,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         Gypsy_Queen = 1,
         Jack_of_Hearts = 2,
         X_Marks_the_Spot = 3,
-        Undefined = 4
+        Jackpot_by_Lucky_LLC = 4
     }
     [Flags]
     public enum VMEODSlotMachineTypeBetDenomiations : byte
@@ -744,7 +750,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         Gypsy_Queen = 5,
         Jack_of_Hearts = 10,
         X_Marks_the_Spot = 25,
-        Undefined = 100
+        Jackpot_by_Lucky_LLC = 100
     }
     [Flags]
     public enum VMEODSlotMachineMinimumBalances : int
@@ -753,7 +759,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         Gypsy_Queen = 12500,
         Jack_of_Hearts = 25000,
         X_Marks_the_Spot = 62500,
-        Undefined = 250000
+        Jackpot_by_Lucky_LLC = 250000
     }
     [Flags]
     public enum VMEODSlotMachineMaximumBalances : int
@@ -762,7 +768,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         Gypsy_Queen = 37500,
         Jack_of_Hearts = 75000,
         X_Marks_the_Spot = 187500,
-        Undefined = 750000
+        Jackpot_by_Lucky_LLC = 750000
     }
     [Flags]
     public enum VMEODSlotsInputErrorTypes : byte

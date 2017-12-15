@@ -194,10 +194,11 @@ namespace FSO.Client.UI.Panels.EODs
                 X = PayoutTable3.X,
                 Y = PayoutTable3.Y,
                 _Alignment = 1,
-                Caption = "\"" + VMEODSlotMachineMaximumBalances.Undefined.ToString().Replace('_', ' ') + "\""
+                Caption = "\"" + VMEODSlotMachineMaximumBalances.Jackpot_by_Lucky_LLC.ToString().Replace('_', ' ') + "\""
                 + GameFacade.Strings["UIText", "259", "15"].Remove(0, 8),
                 CaptionStyle = textStyle
             };
+            PayoutTable5.Caption = PayoutTable5.Caption.Replace("\"Jackpot", "\"\'Jackpot\'");
             Add(PayoutTable5);
 
             PlaintextHandlers["slots_new_game"] = NewGameHandler;
@@ -257,7 +258,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         public override void OnClose()
         {
-            SetTip("");
+            CleanUpHandler("clean", "up");
             Send("slots_close_UI", "");
             CloseInteraction();
             base.OnClose();
@@ -527,8 +528,8 @@ namespace FSO.Client.UI.Panels.EODs
                             MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.X_Marks_the_Spot;
                             break;
                         case 4:
-                            MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Undefined;
-                            MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Undefined;
+                            MachineMinimumBalance = (int)VMEODSlotMachineMinimumBalances.Jackpot_by_Lucky_LLC;
+                            MachineMaximumBalance = (int)VMEODSlotMachineMaximumBalances.Jackpot_by_Lucky_LLC;
                             break;
                     }
                 }
@@ -586,6 +587,7 @@ namespace FSO.Client.UI.Panels.EODs
         {
             if (!IsManaging)
             {
+                OfflineMessageTimer.Stop();
                 WheelSpinTickCounter = 0;
                 LightsTimer.Stop();
                 LightsTimer.Interval = 666 + (2 / 3);
@@ -920,6 +922,8 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void CleanUpHandler(string evt, string nothing)
         {
+            OfflineMessageTimer?.Stop();
+            SetTip("");
             if (Wheel4Image != null)
                 Wheel4Image.Dispose();
             if (Wheel4LegendImage != null)
