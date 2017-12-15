@@ -27,7 +27,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
-            Tuning = new DynamicTuning(Tuning);
+            Tuning = new DynamicTuning(reader);
         }
 
         public override void SerializeInto(BinaryWriter writer)
