@@ -35,6 +35,7 @@ namespace FSO.LotView
                 return (LightingMode > 2);
             }
         }
+        public bool Weather = true;
         public int SurroundingLots = 0;
         public bool SmoothZoom = false;
         public bool AA = false;

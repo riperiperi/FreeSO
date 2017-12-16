@@ -368,7 +368,7 @@ namespace FSO.Client.UI
             TextStyle style = TextStyle.DefaultLabel.Clone();
             var toolScale = FSOEnvironment.DPIScaleFactor; //*zoom scale?
             style.Color = color;
-            style.Size = 8 * toolScale;
+            style.Size = (int)(8 * toolScale);
 
             var scale = new Vector2(1, 1);
             if (style.Scale != 1.0f)
@@ -376,10 +376,10 @@ namespace FSO.Client.UI
                 scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
             }
 
-            var wrapped = UIUtils.WordWrap(Tooltip, 290*toolScale, style, scale); //tooltip max width should be 300. There is a 5px margin on each side.
+            var wrapped = UIUtils.WordWrap(Tooltip, (int)(290*toolScale), style, scale); //tooltip max width should be 300. There is a 5px margin on each side.
 
-            int width = wrapped.MaxWidth + 10*toolScale;
-            int height = toolScale * 13 * wrapped.Lines.Count + 4; //13 per line + 4.
+            int width = (int)(wrapped.MaxWidth + 10*toolScale);
+            int height = (int)(toolScale * 13 * wrapped.Lines.Count + 4); //13 per line + 4.
 
             position.X = Math.Min(position.X, GlobalSettings.Default.GraphicsWidth*FSOEnvironment.DPIScaleFactor - width);
             position.Y = Math.Max(position.Y, height);

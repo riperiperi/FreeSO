@@ -146,6 +146,7 @@ namespace FSO.Client.UI.Screens
                         SmoothZoom = settings.SmoothZoom,
                         SurroundingLots = settings.SurroundingLotMode,
                         AA = settings.AntiAlias,
+                        Weather = settings.Weather
                     };
                 });
             }

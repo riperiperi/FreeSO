@@ -36,6 +36,7 @@ namespace FSO.LotView.Model
 
         public float LastI = -1;
         public int LastHour = -1;
+        public bool LastEnabled;
 
         public void Update()
         {
@@ -52,16 +53,18 @@ namespace FSO.LotView.Model
             var wint = WeatherIntensity;
             FogColor = (color * new Color(0x80, 0xC0, 0xFF, 0xFF).ToVector4()) * (1 - wint * 0.75f) + ocolor * (wint * 0.75f);
             FogColor.W = (wint) * (15 * 75f) + (1 - wint) * (300f * 75f);
+            var enabled = WorldConfig.Current.Weather;
 
-            if (LastI == i && LastHour == now.Hour && (Current?.Time ?? 0) < 100) return;
+            if (LastI == i && LastHour == now.Hour && (Current?.Time ?? 0) < 100 && enabled == LastEnabled) return;
 
             var curInt = GetWeatherIntensity(now);
             var lastInt = GetWeatherIntensity(now - new TimeSpan(1, 0, 0));
             LastI = i;
             LastHour = now.Hour;
+            LastEnabled = enabled;
 
             WeatherIntensity = ModeToIntensity[curInt] * i + ModeToIntensity[lastInt] * (1 - i);
-            if (WeatherIntensity > 0.01f)
+            if (WeatherIntensity > 0.01f && enabled)
             {
                 bool isFaded = false;
                 //is the new weather different enough? does the old one need to be refreshed?

@@ -628,6 +628,7 @@ namespace FSO.SimAntics
                     {
                         if (ent.MultitileGroup.Objects.Count == 0) continue;
                         var mainSource = ent == ent.MultitileGroup.Objects[0];
+                        if (((ent as VMGameObject)?.Disabled ?? 0) > 0) continue;
                         var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
 
                         var cont = ent.GetValue(VMStackObjectVariable.LightingContribution);

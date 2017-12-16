@@ -65,7 +65,7 @@ namespace FSO.Client.UI.Panels
             }
 
             BodyTextStyle = TextStyle.DefaultLabel.Clone();
-            BodyTextStyle.Size = 10;
+            BodyTextStyle.Size = 12;
             BodyTextStyle.Color = new Color(240, 240, 48);
 
             ShadowStyle = BodyTextStyle.Clone();
@@ -92,12 +92,12 @@ namespace FSO.Client.UI.Panels
         {
             BodyText = ((Offscreen && Message != "") ? "[" + Name + "] " : "") + Message;
 
-            var textW = Math.Max(130, Message.Length/2);
+            var textW = Math.Max(130, Message.Length*2);
             BodyTextLabels = TextRenderer.ComputeText(BodyText, new TextRendererOptions
             {
                 Alignment = TextAlignment.Center,
                 MaxWidth = textW,
-                Position = new Microsoft.Xna.Framework.Vector2(18, 18),
+                Position = new Microsoft.Xna.Framework.Vector2(18, 16),
                 Scale = _Scale,
                 TextStyle = BodyTextStyle,
                 WordWrap = true,
@@ -279,7 +279,7 @@ namespace FSO.Client.UI.Panels
             DrawLocalTexture(batch, BTiles, new Rectangle(40, 120, 1, 1), new Vector2(DisplayRect.Left + 20, DisplayRect.Top + 20), new Vector2(DisplayRect.Width-40, DisplayRect.Height-40), bgCol);
 
 
-            Vector2 offpos = new Vector2(DisplayRect.X + 1, DisplayRect.Y + 1);
+            Vector2 offpos = new Vector2(DisplayRect.X + 1, DisplayRect.Y + 1)*Scale;
             int posi = 0;
             foreach (var cmd in BodyTextLabels.DrawingCommands)
             {
@@ -294,7 +294,7 @@ namespace FSO.Client.UI.Panels
             TextRenderer.DrawText(BodyTextLabels.DrawingCommands, this, batch);
 
             posi = 0;
-            offpos = new Vector2(DisplayRect.X, DisplayRect.Y);
+            offpos = new Vector2(DisplayRect.X, DisplayRect.Y) * Scale;
             foreach (var cmd in BodyTextLabels.DrawingCommands)
             {
                 if (cmd is TextDrawCmd_Text) {

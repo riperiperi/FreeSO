@@ -30,7 +30,7 @@ namespace FSO.Common.Utils
         {
             if (BackbufferDepth != null) BackbufferDepth.Dispose();
             if (Backbuffer != null) Backbuffer.Dispose();
-            var scale = FSOEnvironment.DPIScaleFactor;
+            var scale = 1;//FSOEnvironment.DPIScaleFactor;
             if (!FSOEnvironment.Enable3D)
                 BackbufferDepth = CreateRenderTarget(GD, 1, 0, SurfaceFormat.Color, SSAA*GD.Viewport.Width/scale, SSAA * GD.Viewport.Height / scale, DepthFormat.None);
             Backbuffer = CreateRenderTarget(GD, 1, 0, SurfaceFormat.Color, SSAA * GD.Viewport.Width / scale, SSAA * GD.Viewport.Height / scale, DepthFormat.Depth24Stencil8);
@@ -151,7 +151,7 @@ namespace FSO.Common.Utils
             else
             {
                 SB.Begin();
-                SB.Draw(Backbuffer, new Vector2(Backbuffer.Width * (1 - scale) / 2, Backbuffer.Height * (1 - scale) / 2), null, Color.White * opacity, 0f, new Vector2(), new Vector2(FSOEnvironment.DPIScaleFactor, FSOEnvironment.DPIScaleFactor) * scale,
+                SB.Draw(Backbuffer, new Vector2(Backbuffer.Width * (1 - scale) / 2, Backbuffer.Height * (1 - scale) / 2), null, Color.White * opacity, 0f, new Vector2(), scale,
                     SpriteEffects.None, 0);
                 SB.End();
             }

@@ -447,7 +447,7 @@ namespace FSO.Client.UI.Panels
             else if (MouseClicked)
             {
                 //not holding an object, but one can be selected
-                var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X / FSOEnvironment.DPIScaleFactor, state.MouseState.Y / FSOEnvironment.DPIScaleFactor, GameFacade.GraphicsDevice);
+                var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
                 if (MouseClicked && (newHover != 0) && (vm.GetObjectById(newHover) is VMGameObject))
                 {
                     var objGroup = vm.GetObjectById(newHover).MultitileGroup;

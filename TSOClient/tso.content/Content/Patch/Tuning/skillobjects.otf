@@ -146,8 +146,8 @@
       <K i="0" l="Owner bonus in $" v="1"></K>
       <K i="1" l="Base pay" v="30"></K>
       <K i="2" l="Multiplier for Skill 10 * 10" v="30"></K>
-      <K i="3" l="Max group size" v="16"></K> <!-- solo job nerf: 16 sims for max bonus instead of 12 -->
-      <K i="4" l="Multiplier for Max group" v="25"></K> <!-- solo job nerf: 3.5x to 2.5x -->
+      <K i="3" l="Max group size" v="10"></K> <!-- solo job multiskill encourage: 10 sims for max bonus instead of 12 -->
+      <K i="4" l="Multiplier for Max group" v="22"></K> <!-- solo job multiskill: 3.5x to 2.2x -->
       <K i="5" l="seller time sec" v="60"></K>
       <K i="6" l="Money Lot Multiplier (%x100)" v="100"></K>
    </T>

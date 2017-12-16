@@ -261,7 +261,7 @@ namespace FSO.Client.UI.Panels
                 off2 = (off2 / world.PreciseZoom - off2) / 2;
 
                 label.TargetPt = ((avatar.WorldUI.GetScreenPos(vm.Context.World.State) + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom)))
-                   + off2) * world.PreciseZoom ;
+                   + off2) * world.PreciseZoom / FSOEnvironment.DPIScaleFactor;
 
             }
             base.Update(state);

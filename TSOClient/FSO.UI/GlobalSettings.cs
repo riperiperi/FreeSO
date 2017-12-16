@@ -70,7 +70,10 @@ namespace FSO.Client
             { "Shadows3D", "false" },
             { "CitySkybox", "true" },
 
-            { "LightingMode", "-1" }
+            { "LightingMode", "-1" },
+            { "Weather", "true" },
+            { "DirectionalLight3D", "true" },
+            { "DPIScaleFactor", "1" }
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -119,6 +122,10 @@ namespace FSO.Client
         public bool CitySkybox { get; set; }
 
         public int LightingMode { get; set; }
+
+        public bool Weather { get; set; }
+        public bool DirectionalLight3D { get; set; }
+        public float DPIScaleFactor { get; set; }
 
         public static int TARGET_COMPAT_STATE = 2;
     }

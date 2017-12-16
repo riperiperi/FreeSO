@@ -45,9 +45,10 @@ namespace FSO.Client
             if (GameFacade.DirectX) TimedReferenceController.SetMode(CacheType.PERMANENT);
             Content.RootDirectory = FSOEnvironment.GFXContentDir;
             Graphics.SynchronizeWithVerticalRetrace = true;
-            
-            Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
-            Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
+
+            FSOEnvironment.DPIScaleFactor = GlobalSettings.Default.DPIScaleFactor;
+            Graphics.PreferredBackBufferWidth = (int)(GlobalSettings.Default.GraphicsWidth * FSOEnvironment.DPIScaleFactor);
+            Graphics.PreferredBackBufferHeight = (int)(GlobalSettings.Default.GraphicsHeight * FSOEnvironment.DPIScaleFactor);
             TargetElapsedTime = new TimeSpan(10000000 / GlobalSettings.Default.TargetRefreshRate);
             FSOEnvironment.RefreshRate = GlobalSettings.Default.TargetRefreshRate;
 
@@ -82,8 +83,8 @@ namespace FSO.Client
             if (uiLayer?.CurrentUIScreen == null) return;
 
             uiLayer.SpriteBatch.ResizeBuffer(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
-            GlobalSettings.Default.GraphicsWidth = width/FSOEnvironment.DPIScaleFactor;
-            GlobalSettings.Default.GraphicsHeight = height / FSOEnvironment.DPIScaleFactor;
+            GlobalSettings.Default.GraphicsWidth = (int)(width / FSOEnvironment.DPIScaleFactor);
+            GlobalSettings.Default.GraphicsHeight = (int)(height / FSOEnvironment.DPIScaleFactor);
             uiLayer.CurrentUIScreen.GameResized();
         }
 
@@ -103,10 +104,10 @@ namespace FSO.Client
             FSOFacade.Kernel = kernel;
 
             var settings = GlobalSettings.Default;
-            if (FSOEnvironment.DPIScaleFactor != 1 || FSOEnvironment.SoftwareDepth)
+            if (FSOEnvironment.SoftwareDepth)
             {
-                settings.GraphicsWidth = GraphicsDevice.Viewport.Width / FSOEnvironment.DPIScaleFactor;
-                settings.GraphicsHeight = GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor;
+                settings.GraphicsWidth = (int)(GraphicsDevice.Viewport.Width / FSOEnvironment.DPIScaleFactor);
+                settings.GraphicsHeight = (int)(GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor);
             }
 
             if (settings.LightingMode == -1)

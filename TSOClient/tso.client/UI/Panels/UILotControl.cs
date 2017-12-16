@@ -495,8 +495,8 @@ namespace FSO.Client.UI.Panels
                 {
                     OldMX = state.MouseState.X;
                     OldMY = state.MouseState.Y;
-                    var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X/FSOEnvironment.DPIScaleFactor, 
-                        state.MouseState.Y / FSOEnvironment.DPIScaleFactor, 
+                    var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, 
+                        state.MouseState.Y, 
                         GameFacade.GraphicsDevice);
 
                     if (ObjectHover != newHover)

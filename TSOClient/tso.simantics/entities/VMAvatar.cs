@@ -816,6 +816,12 @@ namespace FSO.SimAntics
             return true;
         }
 
+
+        public void ReplaceMotiveData(short[] dat)
+        {
+            MotiveData = dat;
+        }
+
         public override VMObstacle GetObstacle(LotTilePos pos, Direction dir)
         {
             return (KillTimeout > -1 && !GetFlag(VMEntityFlags.HasZeroExtent)) ? null :

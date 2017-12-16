@@ -75,8 +75,8 @@ namespace FSO.Client.UI.Panels
                 switch (newPanel)
                 {
                     case 0:
-                        Panel = new UIGraphicOptions();
-                        GraphicsButton.Selected = true;
+                        var dialog = new UIGraphicsOptionsDialog();
+                        UIScreen.GlobalShowDialog(dialog, true);
                         break;
                     case 1:
                         Panel = new UIProfanityOptions();
@@ -88,6 +88,11 @@ namespace FSO.Client.UI.Panels
                         break;
                     default:
                         break;
+                }
+                if (Panel == null)
+                {
+                    CurrentPanel = -1;
+                    return;
                 }
                 Panel.X = 240;
                 Panel.Y = 0;

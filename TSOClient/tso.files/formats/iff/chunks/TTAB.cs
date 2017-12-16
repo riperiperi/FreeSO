@@ -49,8 +49,8 @@ namespace FSO.Files.Formats.IFF.Chunks
                 else
                 {
                     var compressionCode = io.ReadByte();
-                    if (compressionCode != 1) throw new Exception("hey what!!");
-                    iop = new IffFieldEncode(io); 
+                    if (compressionCode != 1) iop = new TTABNormal(io);
+                    else iop = new IffFieldEncode(io); 
                 }
                 for (int i = 0; i < Interactions.Length; i++)
                 {
@@ -87,7 +87,9 @@ namespace FSO.Files.Formats.IFF.Chunks
             using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
                 io.WriteUInt16((ushort)Interactions.Length);
-                io.WriteUInt16(8); //version. don't save to high version cause we can't write out using the complex io proxy.
+                io.WriteUInt16(10); //version. we save version 10 which uses the IO proxy
+                //...but we can't write out to that yet so write with compression code 0
+                io.WriteByte(0);
                 for (int i = 0; i < Interactions.Length; i++)
                 {
                     var action = Interactions[i];
@@ -107,7 +109,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                         io.WriteInt16(mot.EffectRangeMaximum);
                         io.WriteUInt16(mot.PersonalityModifier);
                     }
-                    //TODO: write out TSOFlags
+                    io.WriteUInt32((uint)action.Flags2);
                 }
             }
             return true;

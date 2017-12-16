@@ -33,6 +33,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 foreach (var o in obj.MultitileGroup.Objects) ((VMGameObject)o).Disabled &= ~VMGameObjectDisableFlags.ForSale;
                 obj.MultitileGroup.SalePrice = -1;
             }
+            vm.Context.RefreshLighting(vm.Context.GetObjectRoom(obj), true, new HashSet<ushort>());
             return true;
         }
 

@@ -219,7 +219,7 @@ namespace FSO.SimAntics.NetPlay.Model
 
             avatar.PersistID = PersistID;
 
-            for (int i = 0; i < MotiveData.Length; i++) avatar.SetMotiveData((VMMotive)i, MotiveData[i]);
+            avatar.ReplaceMotiveData(MotiveData);
             avatar.MeToPersist = new Dictionary<uint, List<short>>();
             foreach (var obj in Relationships) avatar.MeToPersist[obj.Target] = new List<short>(obj.Values);
 

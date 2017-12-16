@@ -62,7 +62,7 @@ namespace FSO.Client.UI.Controls
             Camera.Zoom = Zoom;
             Camera.CenterTile = new Vector3(-1, -1, 0)*FSOEnvironment.DPIScaleFactor;
             Scene = new _3DTargetScene(GameFacade.GraphicsDevice, Camera, 
-                new Point(140 * FSOEnvironment.DPIScaleFactor, 200 * FSOEnvironment.DPIScaleFactor), 
+                new Point((int)(140 * FSOEnvironment.DPIScaleFactor), (int)(200 * FSOEnvironment.DPIScaleFactor)), 
                 (GlobalSettings.Default.AntiAlias)?8:0);
             Scene.ID = "UISim";
 
@@ -101,6 +101,16 @@ namespace FSO.Client.UI.Controls
 
         public UISim() : this(true)
         {
+        }
+
+        public override void GameResized()
+        {
+            base.GameResized();
+            Camera.CenterTile = new Vector3(-1, -1, 0) * FSOEnvironment.DPIScaleFactor;
+            Scene.SetSize(new Point((int)(140 * FSOEnvironment.DPIScaleFactor), (int)(200 * FSOEnvironment.DPIScaleFactor)));
+            var scale = FSOEnvironment.DPIScaleFactor;
+            Avatar.Scale = new Vector3(scale, scale, scale);
+            Camera.ProjectionDirty();
         }
 
         public UISim(bool AddScene)

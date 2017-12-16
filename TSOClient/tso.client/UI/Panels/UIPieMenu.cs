@@ -366,7 +366,7 @@ namespace FSO.Client.UI.Panels
             if (m_CurrentItem == m_PieTree)
             {
                 var invScale = new Vector2(1 / TrueScale, 1 / TrueScale);
-                DrawLocalTexture(batch, HeadScene.Target, null, new Vector2(-100, -100)*invScale, invScale);
+                DrawLocalTexture(batch, HeadScene.Target, null, new Vector2(-100, -100), invScale);
             } //if we're top level, draw head!
         }
     }
