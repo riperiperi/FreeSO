@@ -81,7 +81,7 @@ namespace FSO.Client.UI.Panels
         {
             var ScreenWidth = GlobalSettings.Default.GraphicsWidth;
             var ScreenHeight = GlobalSettings.Default.GraphicsHeight;
-            batch.Draw(TextureGenerator.GetPxWhite(batch.GraphicsDevice), new Rectangle(0, 0, ScreenWidth, ScreenHeight), new Color(0x09, 0x18, 0x2F));
+            DrawLocalTexture(batch, TextureGenerator.GetPxWhite(batch.GraphicsDevice), null, Vector2.Zero, new Vector2(ScreenWidth, ScreenHeight), new Color(0x09, 0x18, 0x2F), 0f);
             base.Draw(batch);
         }
 

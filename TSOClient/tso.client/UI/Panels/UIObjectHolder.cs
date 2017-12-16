@@ -151,7 +151,7 @@ namespace FSO.Client.UI.Panels
             //      and so that clearing selections doesnt delete already placed objects.
             if (Holding != null)
             {
-                Holding.Group.Delete(vm.Context);
+                RecursiveDelete(vm.Context, Holding.Group.BaseObject);
 
                 for (int i = 0; i < Holding.CursorTiles.Length; i++) {
                     Holding.CursorTiles[i].Delete(true, vm.Context);
@@ -160,6 +160,28 @@ namespace FSO.Client.UI.Panels
             }
             Holding = null;
         }
+
+        private void RecursiveDelete(VMContext context, VMEntity real)
+        {
+            var rgrp = real.MultitileGroup;
+            for (int i = 0; i < rgrp.Objects.Count; i++)
+            {
+                var slots = rgrp.Objects[i].TotalSlots();
+                var objs = new List<VMEntity>();
+                for (int j = 0; j < slots; j++)
+                {
+                    var slot = rgrp.Objects[i].GetSlot(j);
+                    if (slot != null)
+                    {
+                        objs.Add(slot);
+                    }
+                        
+                }
+                foreach (var obj in objs) RecursiveDelete(context, obj);
+            }
+            rgrp.Delete(context);
+        }
+
 
         public void MouseDown(UpdateState state)
         {
