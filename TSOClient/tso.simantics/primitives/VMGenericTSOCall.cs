@@ -157,7 +157,7 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTSOCallMode.GlobalRepairCostInTempXL0: //34
                     var mech = ((VMAvatar)context.Caller).GetPersonData(VMPersonDataVariable.MechanicalSkill);
                     var discount = (Math.Min((int)mech, 1000) * 50) / 1000 + (Math.Max(0, mech - 1000) * 2 / 100);
-                    context.Thread.TempXL[0] = ((context.StackObject.MultitileGroup.InitialPrice / 10) * (100-discount)) / 100; //TODO
+                    context.Thread.TempXL[0] = ((context.StackObject.MultitileGroup.InitialPrice / 10) * (100-discount)) / 200;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.GlobalRepairObjectState: //35
                     //repairs the stack object
