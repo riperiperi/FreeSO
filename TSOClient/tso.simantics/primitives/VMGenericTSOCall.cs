@@ -93,7 +93,11 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.MakeMeStackObjectsOwner: //21
                     if (context.StackObject is VMAvatar) return VMPrimitiveExitCode.GOTO_TRUE;
-                    ((VMTSOObjectState)context.StackObject.TSOState).OwnerID = context.Caller.PersistID;
+                    foreach (var owned in context.StackObject.MultitileGroup.Objects)
+                        ((VMTSOObjectState)owned.TSOState).OwnerID = context.Caller.PersistID;
+
+                    if (context.VM.IsServer)
+                        context.VM.GlobalLink.UpdateObjectPersist(context.VM, context.StackObject.MultitileGroup, (worked, objid) => { });
                     //TODO: immediately persist? what to do when new owner has hit their object limit?
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 //TODO: may need to update in global server
@@ -231,7 +235,10 @@ namespace FSO.SimAntics.Primitives
 
                     foreach (var owned in context.StackObject.MultitileGroup.Objects)
                         ((VMTSOObjectState)owned.TSOState).OwnerID = obj.PersistID;
-                    //TODO: immediately persist? what to do when new owner has hit their object limit?
+
+                    if (context.VM.IsServer)
+                        context.VM.GlobalLink.UpdateObjectPersist(context.VM, context.StackObject.MultitileGroup, (worked, objid) => { });
+
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 //53. Is On Editable Tile
                 //54. Set Stack Object's Crafter Name To Avatar in Temp 0

@@ -285,5 +285,10 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         {
             PerformTransaction(vm, testOnly, uid1, uid2, amount, callback);
         }
+
+        public void UpdateObjectPersist(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback)
+        {
+
+        }
     }
 }

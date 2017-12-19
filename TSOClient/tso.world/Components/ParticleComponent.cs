@@ -177,7 +177,7 @@ namespace FSO.LotView.Components
                 //rot.Up = new Vector3(0, 1, 0);
                 //rot.Backward = new Vector3(0, 0, 1);
                 rot.Up = new Vector3(0, 1, 0);
-                var invxz = (FSOEnvironment.Enable3D)?Matrix.Identity:Matrix.Invert(rot);
+                var invxz = (FSOEnvironment.Enable3D)?Matrix.Invert(rot): Matrix.Identity;
                 effect.Parameters["InvXZRotation"].SetValue(invxz * Matrix.CreateScale(0.5f));
                 effect.Parameters["SubColor"].SetValue(Bp.OutsideColor.ToVector4() * 0.66f);
             } else

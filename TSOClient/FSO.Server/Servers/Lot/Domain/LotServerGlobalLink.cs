@@ -444,6 +444,23 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
+        public void UpdateObjectPersist(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback)
+        {
+            var objectPID = obj.BaseObject.PersistID;
+            var dbState = GenerateObjectPersist(obj);
+
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    //todo: race where inventory object could potentially be placed on the lot before the old instance of it is deleted
+                    //probably just block objects with same persist id from being placed.
+                    db.Objects.UpdatePersistState(objectPID, dbState);
+                    callback(true, objectPID);
+                }
+            });
+        }
+
         public void PurchaseFromOwner(VM vm, VMMultitileGroup obj, uint purchaserPID, VMAsyncInventorySaveCallback callback, VMAsyncTransactionCallback tcallback)
         {
             var objectPID = obj.BaseObject.PersistID;
