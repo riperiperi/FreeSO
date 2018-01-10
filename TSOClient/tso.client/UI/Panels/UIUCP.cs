@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using FSO.Client.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Screens;
 using FSO.Client.Rendering.City;
@@ -324,6 +325,22 @@ namespace FSO.Client.UI.Panels
             Game.LotControl.WallsMode = mode;
             UpdateWallsMode();
         }
+        private void UpdateWallsViewKeyHandler(int type)
+        {
+            var mode = Game.LotControl.WallsMode;
+            HouseViewSelectButton.Disabled = true; // triggers redraw of panel to show the correct mode
+            switch (type)
+            {
+                case 0:
+                    if (mode > 0) Game.LotControl.WallsMode -= 1;
+                    break;
+                case 1:
+                    if (mode < 3) Game.LotControl.WallsMode += 1;
+                    break;
+            }
+            UpdateWallsMode();
+            HouseViewSelectButton.Disabled = false;
+        }
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
@@ -409,15 +426,34 @@ namespace FSO.Client.UI.Panels
             }
 
             base.Update(state);
-
-            if (FSOEnvironment.Enable3D && Game.InLot)
+            if (Game.InLot)
             {
-                //if the zoom or rotation buttons are down, gradually change their values.
-                if (RotateClockwiseButton.IsDown) ((WorldStateRC)Game.vm.Context.World.State).RotationX += 2f / FSOEnvironment.RefreshRate;
-                if (RotateCounterClockwiseButton.IsDown) ((WorldStateRC)Game.vm.Context.World.State).RotationX -= 2f / FSOEnvironment.RefreshRate;
-                if (ZoomInButton.IsDown) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom + 1f / FSOEnvironment.RefreshRate, 2));
-                if (ZoomOutButton.IsDown) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom - 1f / FSOEnvironment.RefreshRate, 2));
+                if (state.NewKeys.Contains(Keys.F1) && !state.CtrlDown) SetPanel(1); // Live Mode Panel
+                if (state.NewKeys.Contains(Keys.F2)) SetPanel(2); // Buy Mode Panel
+                if (state.NewKeys.Contains(Keys.F3) && !BuildModeButton.Disabled) SetPanel(3); // Build Mode Panel
+                if (state.NewKeys.Contains(Keys.F4)) SetPanel(4); // House Mode Panel
+
+                if (FSOEnvironment.Enable3D)
+                {
+                    //if the zoom or rotation buttons are down, gradually change their values.
+                    if (RotateClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemPeriod)) ((WorldStateRC)Game.vm.Context.World.State).RotationX += 2f / FSOEnvironment.RefreshRate;
+                    if (RotateCounterClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemComma)) ((WorldStateRC)Game.vm.Context.World.State).RotationX -= 2f / FSOEnvironment.RefreshRate;
+                    if (ZoomInButton.IsDown || (state.KeyboardState.IsKeyDown(Keys.OemPlus) && !state.CtrlDown)) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom + 1f / FSOEnvironment.RefreshRate, 2));
+                    if (ZoomOutButton.IsDown || (state.KeyboardState.IsKeyDown(Keys.OemMinus) && !state.CtrlDown)) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom - 1f / FSOEnvironment.RefreshRate, 2));
+                }
+                else
+                {
+                    if (state.NewKeys.Contains(Keys.OemPlus) && !state.CtrlDown && !ZoomInButton.Disabled) { Game.ZoomLevel -= 1; UpdateZoomButton(); }
+                    if (state.NewKeys.Contains(Keys.OemMinus) && !state.CtrlDown && !ZoomOutButton.Disabled) { Game.ZoomLevel += 1; UpdateZoomButton(); }
+                    if (state.NewKeys.Contains(Keys.OemComma)) RotateCounterClockwise(null);
+                    if (state.NewKeys.Contains(Keys.OemPeriod)) RotateClockwise(null);
+                    if (state.NewKeys.Contains(Keys.PageDown)) FirstFloor(null);
+                    if (state.NewKeys.Contains(Keys.PageUp)) SecondFloor(null);
+                    if (state.NewKeys.Contains(Keys.Home)) UpdateWallsViewKeyHandler(1);
+                    if (state.NewKeys.Contains(Keys.End)) UpdateWallsViewKeyHandler(0);
+                }
             }
+            if (state.NewKeys.Contains(Keys.F5)) SetPanel(5); // Options Mode Panel
         }
 
         public void FlashInbox(bool flash)
@@ -465,7 +501,7 @@ namespace FSO.Client.UI.Panels
             if (FSOEnvironment.Enable3D && Game.InLot) return;
             Game.ZoomLevel = (Game.ZoomLevel + ((button == ZoomInButton) ? -1 : 1));
             /*if(Game.ZoomLevel >= 4) SetPanel(0);    // Make the panels disappear when zoomed out to far mode   -  Causes crashes for unknown reasons*/
-        }
+                }
 
         private void SetCityZoom(UIElement button)
         {

@@ -78,6 +78,7 @@ namespace FSO.Client.UI.Panels
                     HistoryDialog.Visible = !HistoryDialog.Visible;
                 };
                 Add(btn);
+                
             }
 
             Style = TextStyle.DefaultTitle.Clone();
@@ -177,10 +178,10 @@ namespace FSO.Client.UI.Panels
             botRect.Y = GlobalSettings.Default.GraphicsHeight - ((Owner.PanelActive) ? 135 : 20);
 
             InvalidAreas[3] = botRect;
+            var lastFocus = state.InputManager.GetFocus();
             if (HistoryDialog.Visible) TextBox.Visible = false;
             else
             {
-                var lastFocus = state.InputManager.GetFocus();
                 if (state.NewKeys.Contains(Keys.Enter) && (Owner.EODs.ActiveEOD == null ||
                         lastFocus == null || lastFocus == TextBox ||
                         lastFocus == HistoryDialog.ChatEntryTextEdit
@@ -193,11 +194,35 @@ namespace FSO.Client.UI.Panels
                     if (TextBox.Visible) state.InputManager.SetFocus(TextBox);
                 }
             }
-
+            if (state.NewKeys.Contains(Keys.Escape))
+            {
+                if (TextBox.Visible)
+                {
+                    TextBox.Clear();
+                    TextBox.Visible = !TextBox.Visible;
+                }
+                if (HistoryDialog.Visible)
+                    if (HistoryDialog.ChatEntryTextEdit.CurrentText.Length > 0)
+                    {
+                        HistoryDialog.ChatEntryTextEdit.CurrentText = "";
+                        HistoryDialog.OKButton.Disabled = true;
+                    }
+                    else if (lastFocus == HistoryDialog.ChatEntryTextEdit)
+                        state.InputManager.SetFocus(null);
+            }
+            if (state.NewKeys.Contains(Keys.Enter) && HistoryDialog.Visible)
+            {
+                if (HistoryDialog.ChatEntryTextEdit.CurrentText.Length < 1)
+                    if (lastFocus == HistoryDialog.ChatEntryTextEdit)
+                        state.InputManager.SetFocus(null);
+                    else if (lastFocus == null)
+                        state.InputManager.SetFocus(HistoryDialog.ChatEntryTextEdit);
+            }
             if (state.NewKeys.Contains(Keys.H) && state.CtrlDown)
             {
-                state.InputManager.SetFocus(null);
                 HistoryDialog.Visible = !HistoryDialog.Visible;
+                if (HistoryDialog.Visible) state.InputManager.SetFocus(HistoryDialog.ChatEntryTextEdit);
+                else state.InputManager.SetFocus(null);
             }
 
             if (state.NewKeys.Contains(Keys.OemPlus) && state.CtrlDown && HistoryDialog.Visible) {
