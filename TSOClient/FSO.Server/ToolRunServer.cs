@@ -43,7 +43,7 @@ namespace FSO.Server
         private TaskServer ActiveTaskServer;
         private RunServerOptions Options;
         private Protocol.Gluon.Model.ShutdownType ShutdownMode;
-        
+
         private IGluonHostPool HostPool;
 
         public ToolRunServer(RunServerOptions options, ServerConfiguration config, IKernel kernel, IGluonHostPool hostPool)
@@ -90,22 +90,6 @@ namespace FSO.Server
             CityServers = new List<CityServer>();
             Kernel.Bind<IServerNFSProvider>().ToConstant(new ServerNFSProvider(Config.SimNFS));
 
-            if(Config.Services.Api != null &&
-                Config.Services.Api.Enabled)
-            {
-                var childKernel = new ChildKernel(
-                    Kernel
-                );
-
-                var api = childKernel.Get<ApiServer>(new ConstructorArgument("config", Config.Services.Api));
-                api.OnRequestShutdown += RequestedShutdown;
-                api.OnBroadcastMessage += BroadcastMessage;
-                ActiveApiServer = api;
-                Servers.Add(
-                    api
-                );
-            }
-
             if (Config.Services.UserApi != null &&
                 Config.Services.UserApi.Enabled)
             {
@@ -117,9 +101,11 @@ namespace FSO.Server
                 Servers.Add(api);
                 api.OnRequestShutdown += RequestedShutdown;
                 api.OnBroadcastMessage += BroadcastMessage;
+                api.OnRequestUserDisconnect += RequestedUserDisconnect;
             }
 
-            foreach(var cityServer in Config.Services.Cities){
+            foreach (var cityServer in Config.Services.Cities)
+            {
                 /**
                  * Need to create a kernel for each city server as there is some data they do not share
                  */
@@ -134,7 +120,7 @@ namespace FSO.Server
                 Servers.Add(city);
             }
 
-            foreach(var lotServer in Config.Services.Lots)
+            foreach (var lotServer in Config.Services.Lots)
             {
                 if (lotServer.SimNFS == null) lotServer.SimNFS = Config.SimNFS;
                 var childKernel = new ChildKernel(
@@ -147,7 +133,7 @@ namespace FSO.Server
                 );
             }
 
-            if (Config.Services.Tasks != null 
+            if (Config.Services.Tasks != null
                 && Config.Services.Tasks.Enabled)
             {
                 var childKernel = new ChildKernel(
@@ -260,9 +246,19 @@ namespace FSO.Server
                         Subject = title
                     });
                 }
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 //don't fail if this somehow screws up
+            }
+        }
+
+        private void RequestedUserDisconnect(uint user_id)
+        {
+            //TODO: select shard to send disconnection request
+            foreach (var city in CityServers)
+            {
+                city.Sessions.GetByAvatarId(user_id)?.Close();
             }
         }
 
@@ -270,7 +266,7 @@ namespace FSO.Server
         {
             //TODO: select which shards to operate on
             ShutdownMode = type;
-            LOG.Info("Shutdown requested in "+time+" seconds.");
+            LOG.Info("Shutdown requested in " + time + " seconds.");
 
             var remaining = (int)time;
             foreach (var alertTime in ShutdownAlertTimings)
@@ -282,12 +278,12 @@ namespace FSO.Server
                 remaining -= waitTime;
 
                 string timeString = (remaining % 60 == 0 && remaining > 60) ? ((remaining / 60) + " minutes") : (remaining + " seconds");
-                LOG.Info("Shutdown in "+timeString);
+                LOG.Info("Shutdown in " + timeString);
                 BroadcastMessage("FreeSO Server", "Shutting down", "The game server will go down for maintainance in " + timeString + ".");
             }
 
             await Task.Delay((int)remaining * 1000);
-            
+
             LOG.Info("Shutdown commencing.");
             List<Task<bool>> ShutdownTasks = new List<Task<bool>>();
             foreach (var city in CityServers)
