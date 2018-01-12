@@ -160,6 +160,11 @@ namespace FSO.Server.Database.DA.Avatars
 
         public DbTransactionResult Transaction(uint source_id, uint dest_id, int amount, short reason)
         {
+            return Transaction(source_id, dest_id, amount, reason, null);
+        }
+
+        public DbTransactionResult Transaction(uint source_id, uint dest_id, int amount, short reason, Func<bool> transactionInject)
+        {
             var t = Context.Connection.BeginTransaction();
             var srcObj = (source_id >= 16777216);
             var dstObj = (dest_id >= 16777216);
@@ -195,6 +200,12 @@ namespace FSO.Server.Database.DA.Avatars
                     }
                     if (dstRes == 0) throw new Exception("Dest avatar/object does not exist!");
                 }
+
+                if (transactionInject != null)
+                {
+                    if (!transactionInject()) throw new Exception("Transaction Cancelled");
+                }
+
                 t.Commit();
             } catch (Exception)
             {

@@ -308,17 +308,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                     (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                     {
-                            //TODO: Make this part of global link
-                            VM.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                        {
-                            Responded = true,
-                            Success = success,
-                            TransferAmount = transferAmount,
-                            UID1 = uid1,
-                            Budget1 = budget1,
-                            UID2 = uid2,
-                            Budget2 = budget2
-                        }));
                         if (success)
                         {
                             TableBalance = (int)budget1;
@@ -353,17 +342,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                         (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                         {
-                            //TODO: Make this part of global link
-                            VM.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                            {
-                                Responded = true,
-                                Success = success,
-                                TransferAmount = transferAmount,
-                                UID1 = uid1,
-                                Budget1 = budget1,
-                                UID2 = uid2,
-                                Budget2 = budget2
-                            }));
                             if (success)
                             {
                                 TableBalance = (int)budget2;
@@ -703,17 +681,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
-                    //TODO: Make this part of global link
-                    VM.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                    {
-                        Responded = true,
-                        Success = success,
-                        TransferAmount = transferAmount,
-                        UID1 = uid1,
-                        Budget1 = budget1,
-                        UID2 = uid2,
-                        Budget2 = budget2
-                    }));
                     if (success)
                     {
                         TableBalance = (int)(budget1);
@@ -764,17 +731,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
-                    //TODO: Make this part of global link
-                    VM.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                    {
-                        Responded = true,
-                        Success = success,
-                        TransferAmount = transferAmount,
-                        UID1 = uid1,
-                        Budget1 = budget1,
-                        UID2 = uid2,
-                        Budget2 = budget2
-                    }));
                     if (success)
                     {
                         TableBalance = (int)(budget2);
@@ -1013,17 +969,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
-                    //TODO: Make this part of global link
-                    VM.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                    {
-                        Responded = true,
-                        Success = success,
-                        TransferAmount = transferAmount,
-                        UID1 = uid1,
-                        Budget1 = budget1,
-                        UID2 = uid2,
-                        Budget2 = budget2
-                    }));
                     if (success)
                     {
                         TableBalance = (int)budget2;
@@ -1044,17 +989,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
-                        //TODO: Make this part of global link
-                        VM.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                    {
-                        Responded = true,
-                        Success = success,
-                        TransferAmount = transferAmount,
-                        UID1 = uid1,
-                        Budget1 = budget1,
-                        UID2 = uid2,
-                        Budget2 = budget2
-                    }));
                     if (success)
                     {
                         TableBalance = (int)budget1;

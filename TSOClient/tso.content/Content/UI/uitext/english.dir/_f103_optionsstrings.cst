@@ -25,3 +25,7 @@
 20 ^Weather^
 21 ^Graphics Options^
 22 ^Detail:^
+
+23 ^Texture Compression^
+24 ^Enables DXT5 Texture Compression for walls, floors and objects. Sprites take up 1/4 of the VRAM at the cost of visual quality. Useful for avoiding crashes on Intel HD Graphics or old GPUs.^
+25 ^This option will not take full effect until you restart the game!^

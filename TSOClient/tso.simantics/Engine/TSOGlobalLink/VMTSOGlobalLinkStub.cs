@@ -10,6 +10,7 @@ using FSO.SimAntics.Engine.TSOGlobalLink;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
+using FSO.SimAntics.NetPlay.EODs.Handlers;
 
 namespace FSO.SimAntics.Engine.TSOTransaction
 {
@@ -24,7 +25,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         public VMTSOStandaloneDatabase Database; // = new VMTSOStandaloneDatabase();
         private bool WaitingOnArch;
 
-        public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback)
+        public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, short type, short thread, VMAsyncTransactionCallback callback)
         {
             var result = PerformTransaction(vm, testOnly, uid1, uid2, amount);
             if (callback != null)
@@ -35,7 +36,18 @@ namespace FSO.SimAntics.Engine.TSOTransaction
 
                 new System.Threading.Thread(() =>
                 {
-                    //System.Threading.Thread.Sleep(250);
+                    //update client side budgets for avatars involved.
+                    vm.SendCommand(new VMNetAsyncResponseCmd(thread, new VMTransferFundsState
+                    {
+                        Responded = true,
+                        Success = result,
+                        TransferAmount = finalAmount,
+                        UID1 = uid1,
+                        Budget1 = (obj1 == null) ? 0 : obj1.TSOState.Budget.Value,
+                        UID2 = uid2,
+                        Budget2 = (obj2 == null) ? 0 : obj2.TSOState.Budget.Value
+                    }));
+                    
                     callback(result, finalAmount,
                         uid1, (obj1 == null) ? 0 : obj1.TSOState.Budget.Value,
                         uid2, (obj2 == null) ? 0 : obj2.TSOState.Budget.Value);
@@ -65,7 +77,12 @@ namespace FSO.SimAntics.Engine.TSOTransaction
 
         public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, short type, VMAsyncTransactionCallback callback)
         {
-            PerformTransaction(vm, testOnly, uid1, uid2, amount, callback);
+            PerformTransaction(vm, testOnly, uid1, uid2, amount, type, 0, callback);
+        }
+
+        public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback)
+        {
+            PerformTransaction(vm, testOnly, uid1, uid2, amount, 0, 0, callback);
         }
 
         public void QueueArchitecture(VMNetArchitectureCmd cmd)
@@ -215,7 +232,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             //todo: nice stub for this using database?
         }
 
-        public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, VMAsyncInventoryRetrieveCallback callback)
+        public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, bool setOnLot, VMAsyncInventoryRetrieveCallback callback)
         {
             //todo: nice stub for this using database?
             callback(0, null); 
@@ -265,6 +282,58 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         }
 
         public void UpdateObjectPersist(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback)
+        {
+        }
+
+        public void GetDynPayouts(VMAsyncNewspaperCallback callback)
+        {
+            callback(new VMEODFNewspaperData() {
+                News = new List<VMEODFNewspaperNews>()
+                {
+                    new VMEODFNewspaperNews() {
+                        ID = 0,
+                        Name = "Test Event 1",
+                        Description = "This event should show up as the latest event. It has a description " +
+                        "which is too long to fit within the preview button, so the user has to click to " +
+                        "expand it into the upper view."
+                    },
+                    new VMEODFNewspaperNews() {
+                        ID = 1,
+                        Name = "A Past Event",
+                        Description = "This event should show up as a past event. It has a description " +
+                        "which is too long to fit within the preview button, so the user has to click to " +
+                        "expand it into the upper view."
+                    },
+                },
+                Points = 
+                new List<NetPlay.EODs.Handlers.VMEODFNewspaperPoint>()
+            {
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 0, Multiplier = 1.0f, Skilltype = 0 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 0, Multiplier = 1.2f, Skilltype = 1 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 0, Multiplier = 1.3f, Skilltype = 2 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 0, Multiplier = 0.95f, Skilltype = 3 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 0, Multiplier = 0.66f, Skilltype = 4 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 0, Multiplier = 1.3f, Skilltype = 5 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 0, Multiplier = 0.8f, Skilltype = 6 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 0, Multiplier = 1.0f, Skilltype = 7 },
+
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 1, Multiplier = 1.1f, Skilltype = 0 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 1, Multiplier = 1.3f, Skilltype = 1 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 1, Multiplier = 1.25f, Skilltype = 2 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 1, Multiplier = 1.05f, Skilltype = 3 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 1, Multiplier = 0.5f, Skilltype = 4 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 1, Multiplier = 1.5f, Skilltype = 5 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 1, Multiplier = 0.65f, Skilltype = 6 },
+                new NetPlay.EODs.Handlers.VMEODFNewspaperPoint() { Day = 1, Multiplier = 0.9f, Skilltype = 7 },
+            }
+            });
+        }
+
+        public void SecureTrade(VM vm, VMEODSecureTradePlayer p1, VMEODSecureTradePlayer p2, VMAsyncSecureTradeCallback callback)
+        {
+        }
+
+        public void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p)
         {
         }
     }

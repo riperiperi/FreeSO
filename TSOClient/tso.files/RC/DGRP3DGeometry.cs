@@ -25,7 +25,7 @@ namespace FSO.Files.RC
         public ushort CustomTexture;
         public static Func<string, Texture2D> ReplTextureProvider;
 
-        public List<VertexPositionTexture> SVerts; //simplified vertices
+        public List<DGRP3DVert> SVerts; //simplified vertices
         public List<int> SIndices; //simplified indices
 
         public VertexBuffer Verts;
@@ -41,7 +41,7 @@ namespace FSO.Files.RC
             PrimCount = SIndices.Count / 3;
             if (PrimCount > 0)
             {
-                Verts = new VertexBuffer(gd, typeof(VertexPositionTexture), SVerts.Count, BufferUsage.None);
+                Verts = new VertexBuffer(gd, typeof(DGRP3DVert), SVerts.Count, BufferUsage.None);
                 Verts.SetData(SVerts.ToArray());
                 Indices = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, SIndices.Count, BufferUsage.None);
                 Indices.SetData(SIndices.ToArray());
@@ -54,7 +54,7 @@ namespace FSO.Files.RC
         }
 
         public DGRP3DGeometry() { }
-        public DGRP3DGeometry(IoBuffer io, DGRP source, GraphicsDevice gd)
+        public DGRP3DGeometry(IoBuffer io, DGRP source, GraphicsDevice gd, int Version)
         {
             PixelSPR = io.ReadUInt16();
             PixelDir = io.ReadUInt16();
@@ -76,15 +76,27 @@ namespace FSO.Files.RC
             }
 
             var vertCount = io.ReadInt32();
-            SVerts = new List<VertexPositionTexture>();
-            for (int i = 0; i < vertCount; i++)
+            SVerts = new List<DGRP3DVert>();
+
+            if (Version > 1)
             {
-                var x = io.ReadFloat();
-                var y = io.ReadFloat();
-                var z = io.ReadFloat();
-                var u = io.ReadFloat();
-                var v = io.ReadFloat();
-                SVerts.Add(new VertexPositionTexture(new Vector3(x, y, z), new Vector2(u, v)));
+                var bytes = io.ReadBytes(vertCount * Marshal.SizeOf(typeof(DGRP3DVert)));
+                var readVerts = new DGRP3DVert[vertCount];
+                var pinnedHandle = GCHandle.Alloc(readVerts, GCHandleType.Pinned);
+                Marshal.Copy(bytes, 0, pinnedHandle.AddrOfPinnedObject(), bytes.Length);
+                pinnedHandle.Free();
+                SVerts = readVerts.ToList();
+            } else { 
+                for (int i = 0; i < vertCount; i++)
+                {
+                    var x = io.ReadFloat();
+                    var y = io.ReadFloat();
+                    var z = io.ReadFloat();
+                    var u = io.ReadFloat();
+                    var v = io.ReadFloat();
+                    var normal = new Vector3();
+                    SVerts.Add(new DGRP3DVert(new Vector3(x, y, z), normal, new Vector2(u, v)));
+                }
             }
             var indexCount = io.ReadInt32();
             SIndices = ToTArray<int>(io.ReadBytes(indexCount * 4)).ToList();
@@ -97,6 +109,8 @@ namespace FSO.Files.RC
             SIndices.Clear();
             foreach (var item in ordered) SIndices.AddRange(item);
             */
+
+            if (Version < 2) GenerateNormals(false);
 
             SComplete(gd);
         }
@@ -124,7 +138,7 @@ namespace FSO.Files.RC
                 }
             }
 
-            SVerts = new List<VertexPositionTexture>();
+            SVerts = new List<DGRP3DVert>();
             SIndices = new List<int>();
             var dict = new Dictionary<Tuple<int, int>, int>();
 
@@ -136,7 +150,7 @@ namespace FSO.Files.RC
                 {
                     //add a vertex
                     targ = SVerts.Count;
-                    var vert = new VertexPositionTexture(obj.Vertices[ind[0] - 1], obj.TextureCoords[ind[1] - 1]);
+                    var vert = new DGRP3DVert(obj.Vertices[ind[0] - 1], Vector3.Zero, obj.TextureCoords[ind[1] - 1]);
                     vert.TextureCoordinate.Y = 1 - vert.TextureCoordinate.Y;
                     SVerts.Add(vert);
                     dict[tup] = targ;
@@ -144,7 +158,38 @@ namespace FSO.Files.RC
                 SIndices.Add(targ);
             }
 
+            GenerateNormals(false);
+
             SComplete(gd);
+        }
+
+        public void GenerateNormals(bool invert)
+        {
+            GenerateNormals(invert, SVerts, SIndices);
+        }
+
+        public static void GenerateNormals(bool invert, List<DGRP3DVert> verts, List<int> indices)
+        {
+            for (int i = 0; i < indices.Count; i += 3)
+            {
+                var v1 = verts[indices[i + 1]].Position - verts[indices[i]].Position;
+                var v2 = verts[indices[i + 2]].Position - verts[indices[i + 1]].Position;
+                var cross = invert ? Vector3.Cross(v2, v1) : Vector3.Cross(v1, v2);
+                for (int j = 0; j < 3; j++)
+                {
+                    var id = indices[i + j];
+                    var v = verts[id];
+                    v.Normal += cross;
+                    verts[id] = v;
+                }
+            }
+
+            for (int i = 0; i < verts.Count; i++)
+            {
+                var v = verts[i];
+                v.Normal.Normalize();
+                verts[i] = v;
+            }
         }
 
         public void Save(IoWriter io)
@@ -159,6 +204,9 @@ namespace FSO.Files.RC
                 io.WriteFloat(vert.Position.Z);
                 io.WriteFloat(vert.TextureCoordinate.X);
                 io.WriteFloat(vert.TextureCoordinate.Y);
+                io.WriteFloat(vert.Normal.X);
+                io.WriteFloat(vert.Normal.Y);
+                io.WriteFloat(vert.Normal.Z);
             }
             io.WriteInt32(SIndices.Count);
             io.WriteBytes(ToByteArray(SIndices.ToArray()));

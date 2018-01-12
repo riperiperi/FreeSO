@@ -1,6 +1,7 @@
 ﻿using FSO.Common.Serialization.TypeSerializers;
 using Mina.Core.Buffer;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,8 @@ namespace FSO.Common.Serialization
     public class ModelSerializer : IModelSerializer
     {
         private List<ITypeSerializer> TypeSerializers = new List<ITypeSerializer>();
+        private ConcurrentDictionary<Type, ITypeSerializer> SerialCache = new ConcurrentDictionary<Type, ITypeSerializer>();
+        private ConcurrentDictionary<uint, ITypeSerializer> DeserialCache = new ConcurrentDictionary<uint, ITypeSerializer>();
 
         public ModelSerializer(){
             //Built-in
@@ -88,11 +91,17 @@ namespace FSO.Common.Serialization
         }
 
         private ITypeSerializer GetSerializer(uint clsid){
-            return TypeSerializers.FirstOrDefault(x => x.CanDeserialize(clsid));
+            return DeserialCache.GetOrAdd(clsid, (t) =>
+            {
+                return TypeSerializers.FirstOrDefault(x => x.CanDeserialize(clsid));
+            });
         }
 
         private ITypeSerializer GetSerializer(Type type){
-            return TypeSerializers.FirstOrDefault(x => x.CanSerialize(type));
+            return SerialCache.GetOrAdd(type, (t) =>
+            {
+                return TypeSerializers.FirstOrDefault(x => x.CanSerialize(type));
+            });
         }
     }
 }

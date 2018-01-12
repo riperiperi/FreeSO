@@ -15,8 +15,8 @@ namespace FSO.Server.Database.DA.Tuning
 
     public enum DbTuningType
     {
-        STATIC,
-        DYNAMIC,
-        EVENT
+        STATIC = 1,
+        DYNAMIC = 2,
+        EVENT = 3
     }
 }

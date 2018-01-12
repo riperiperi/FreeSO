@@ -108,7 +108,9 @@ namespace FSO.Content
             this.Device = device;
             this.Mode = mode;
 
-            if(device != null)
+            ImageLoader.PremultiplyPNG = (FSOEnvironment.DirectX)?0:1;
+
+            if (device != null)
             {
                 RCMeshes = new RCMeshProvider(device);
                 UIGraphics = new UIGraphicsProvider(this);
@@ -128,6 +130,7 @@ namespace FSO.Content
                 AbstractTextureRef.ImageFetchFunction = AbstractTextureRef.ImageFetchWithDevice;
             }
             Changes = new ChangeManager();
+            CustomUI = new CustomUIProvider(this);
 
             if (TS1)
             {
@@ -139,7 +142,6 @@ namespace FSO.Content
                 AvatarSkeletons = new TS1BCFSkeletonProvider(BCFGlobal);
                 AvatarAppearances = new TS1BCFAppearanceProvider(BCFGlobal);
                 Audio = new TS1Audio(this);
-                CustomUI = new CustomUIProvider(this);
             } else
             {
                 AvatarBindings = new AvatarBindingProvider(this);
@@ -200,13 +202,10 @@ namespace FSO.Content
 
         private void InitBasic()
         {
-            if (TS1)
-            {
-                var contentFiles = new List<string>();
-                _ScanFiles("Content/", contentFiles, "Content/");
-                ContentFiles = contentFiles.ToArray();
-                CustomUI.Init();
-            }
+            var contentFiles = new List<string>();
+            _ScanFiles("Content/", contentFiles, "Content/");
+            ContentFiles = contentFiles.ToArray();
+            CustomUI.Init();
         }
 
         /// <summary>

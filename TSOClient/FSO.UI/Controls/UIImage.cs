@@ -232,6 +232,7 @@ namespace FSO.Client.UI.Controls
         public int Right;
         public int Top;
         public int Bottom;
+        public int States = 1;
 
         public Rectangle TL;
         public Rectangle TC;
@@ -254,7 +255,7 @@ namespace FSO.Client.UI.Controls
 
         public void CalculateOrigins(Texture2D texture)
         {
-            int texWidth = texture.Width;
+            int texWidth = texture.Width / States;
             int texHeight = texture.Height;
 
             TL = new Rectangle(0, 0, Left, Top);
@@ -316,6 +317,12 @@ namespace FSO.Client.UI.Controls
 
         }
 
+        private Rectangle RectOffset(Rectangle rect, Point pt)
+        {
+            rect.Offset(pt);
+            return rect;
+        }
+
         public void DrawOntoPosition(SpriteBatch SBatch, UIElement element, Texture2D m_Texture, float width, float height, Vector2 position)
         {
             /** TL **/
@@ -345,6 +352,37 @@ namespace FSO.Client.UI.Controls
 
             /** BR **/
             element.DrawLocalTexture(SBatch, m_Texture, this.BR, position + new Vector2(width - this.Right, bottomY));
+        }
+
+        public void DrawOntoPositionSlice(SpriteBatch SBatch, UIElement element, Texture2D m_Texture, float width, float height, Vector2 position, Point offset)
+        {
+            /** TL **/
+            element.DrawLocalTexture(SBatch, m_Texture, RectOffset(this.TL, offset), position);
+
+            /** TC **/
+            element.DrawLocalTexture(SBatch, m_Texture, RectOffset(this.TC, offset), position + new Vector2(this.Left, 0), this.TC_Scale);
+
+            /** TR **/
+            element.DrawLocalTexture(SBatch, m_Texture, RectOffset(this.TR, offset), position + new Vector2(width - this.Right, 0));
+
+            /** ML **/
+            element.DrawLocalTexture(SBatch, m_Texture, RectOffset(this.ML, offset), position + new Vector2(0, this.Top), this.ML_Scale);
+
+            /** MC **/
+            element.DrawLocalTexture(SBatch, m_Texture, RectOffset(this.MC, offset), position + new Vector2(this.Left, this.Top), this.MC_Scale);
+
+            /** MR **/
+            element.DrawLocalTexture(SBatch, m_Texture, RectOffset(this.MR, offset), position + new Vector2(width - this.Right, this.Top), this.MR_Scale);
+
+            /** BL **/
+            var bottomY = height - this.Bottom;
+            element.DrawLocalTexture(SBatch, m_Texture, RectOffset(this.BL, offset), position + new Vector2(0, bottomY));
+
+            /** BC **/
+            element.DrawLocalTexture(SBatch, m_Texture, RectOffset(this.BC, offset), position + new Vector2(this.Left, bottomY), this.BC_Scale);
+
+            /** BR **/
+            element.DrawLocalTexture(SBatch, m_Texture, RectOffset(this.BR, offset), position + new Vector2(width - this.Right, bottomY));
         }
     }
 }

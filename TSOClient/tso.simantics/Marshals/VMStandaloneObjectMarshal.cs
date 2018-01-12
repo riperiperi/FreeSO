@@ -106,9 +106,10 @@ namespace FSO.SimAntics.Marshals
         /// Creates an instance of this (multitile) object in the target VM, out of world.
         /// </summary>
         /// <param name="vm"></param>
-        public VMMultitileGroup CreateInstance(VM vm)
+        public VMMultitileGroup CreateInstance(VM vm, bool ghost)
         {
             int i = 0;
+            var objs = new VMEntity[Entities.Length];
             foreach (var ent in Entities)
             {
                 VMEntity realEnt;
@@ -126,15 +127,28 @@ namespace FSO.SimAntics.Marshals
                 }
                 realEnt = obj;
                 obj.FetchTreeByName(vm.Context);
-                obj.Thread = new VMThread(vm.Context, obj, obj.Object.OBJ.StackSize);
-
-                vm.AddEntity(obj);
+                if (!ghost)
+                {
+                    obj.Thread = new VMThread(vm.Context, obj, obj.Object.OBJ.StackSize);
+                    vm.AddEntity(obj);
+                } else
+                {
+                    objs[i] = obj;
+                }
+                obj.GhostImage = ghost;
                 MultitileGroup.Objects[i++] = obj.ObjectID; //update saved group, in multitile group order (as saved)
                 if (VM.UseWorld) obj.WorldUI.ObjectID = obj.ObjectID;
-                vm.Scheduler.ScheduleTickIn(obj, 1);
+                if (!ghost) vm.Scheduler.ScheduleTickIn(obj, 1);
             }
-            
-            return new VMMultitileGroup(MultitileGroup, vm.Context); //should self register
+            VMMultitileGroup multi;
+            if (ghost)
+            {
+                multi = new VMMultitileGroup();
+                multi.LoadGhost(MultitileGroup, vm.Context, objs);
+            }
+            else
+                multi = new VMMultitileGroup(MultitileGroup, vm.Context);
+            return multi; //should self register
         }
     }
 

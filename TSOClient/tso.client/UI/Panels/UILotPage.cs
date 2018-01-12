@@ -72,6 +72,7 @@ namespace FSO.Client.UI.Panels
 
         private UILotThumbButton LotThumbnail { get; set; }
         private UIRoommateList RoommateList { get; set; }
+        private UIClickableLabel SkillGameplayLabel { get; set; }
         private UIPersonButton OwnerButton { get; set; }
         private Texture2D DefaultThumb;
         private string OriginalDescription;
@@ -122,6 +123,15 @@ namespace FSO.Client.UI.Panels
 
             RoommateList = script.Create<UIRoommateList>("RoommateList");
             Add(RoommateList);
+
+            SkillGameplayLabel = new UIClickableLabel();
+            SkillGameplayLabel.Position = RoommateList.Position + new Vector2(-1, 24);
+            SkillGameplayLabel.Size = new Vector2(180, 18);
+            SkillGameplayLabel.Alignment = TextAlignment.Center;
+            SkillGameplayLabel.OnButtonClick += SkillGameplayLabel_OnButtonClick;
+            SkillGameplayLabel.CaptionStyle = SkillGameplayLabel.CaptionStyle.Clone();
+            SkillGameplayLabel.CaptionStyle.Size = 9;
+            Add(SkillGameplayLabel);
 
             OwnerButton = script.Create<UIPersonButton>("HouseLeaderThumbSetup");
             OwnerButton.FrameSize = UIPersonButtonSize.LARGE;
@@ -187,6 +197,42 @@ namespace FSO.Client.UI.Panels
             Size = BackgroundExpandedImage.Size.ToVector2();
 
             SendToFront(ExpandButton, ContractButton);
+        }
+
+        private void SkillGameplayLabel_OnButtonClick(UIElement button)
+        {
+            if (HouseCategoryButton.Disabled) return;
+
+            string error = null;
+            if (CurrentLot != null && CurrentLot.Value != null)
+            {
+                if (CurrentLot.Value.Lot_IsOnline)
+                {
+                    error = GameFacade.Strings.GetString("f109", "4");
+                }
+            } else
+            {
+                return;
+            }
+            if (error != null)
+            {
+                UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Message = error
+                }, true);
+            } else
+            {
+                var dialog = new UILotSkillModeDialog((LotCategory)CurrentLot.Value.Lot_Category, CurrentLot.Value.Lot_SkillGamemode);
+                dialog.OnModeChosen += (mode) =>
+                {
+                    if (CurrentLot != null && CurrentLot.Value != null && FindController<CoreGameScreenController>().IsMe(CurrentLot.Value.Lot_LeaderID))
+                    {
+                        CurrentLot.Value.Lot_SkillGamemode = mode;
+                        FindController<LotPageController>().SaveSkillmode(CurrentLot.Value);
+                    }
+                };
+                UIScreen.GlobalShowDialog(dialog, true);
+            }
         }
 
         private void ChangeName(UIElement button)
@@ -316,6 +362,9 @@ namespace FSO.Client.UI.Panels
                 roomies.Remove(CurrentLot.Value.Lot_LeaderID);
                 foreach (var roomie in roomies) if (FindController<CoreGameScreenController>().IsMe(roomie)) isRoommate = true;
                 RoommateList.UpdateList(roomies);
+                SkillGameplayLabel.Caption = GameFacade.Strings.GetString("f109", (CurrentLot.Value.Lot_SkillGamemode+1).ToString());
+                SkillGameplayLabel.Visible = isOpen;
+                SkillGameplayLabel.CaptionStyle.Color = isMyProperty ? Color.LightBlue : TextStyle.DefaultLabel.Color;
 
                 var thumb = CurrentLot.Value.Lot_Thumbnail.Data;
                 if (((thumb?.Length) ?? 0) == 0)

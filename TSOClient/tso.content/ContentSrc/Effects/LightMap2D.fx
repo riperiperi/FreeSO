@@ -18,6 +18,9 @@ float BlurMin;
 float2 MapLayout;
 float2 UVBase;
 
+float3 LightDirection;
+float LightHeight;
+
 float2 ShadowPowers;
 float2 SSAASize;
 
@@ -116,6 +119,20 @@ float4 LightFinal(float light, float2 shadow) {
 	return float4(LightColor.rgb*light, LightColor.a * min(1, floorLight));
 }
 
+float4 DirectionFinal(float3 direction, float light, float shadow) {
+	//shadow *= ShadowPowers.x;
+	light = pow(light, LightPower);
+	light -= light*shadow;
+	light *= LightColor.a;
+
+	return float4(normalize(direction)*light, light);
+}
+
+float4 DirectionOutdoors(float3 direction, float light) {
+	light *= LightColor.a;
+	return float4(normalize(direction)*light, light);
+}
+
 float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 {
     float2 uv = input.p;
@@ -198,10 +215,75 @@ float4 PixelShaderFunctionLightBleed(VertexShaderOutput input) : COLOR0{
 	return float4(LightColor.rgb*light, LightColor.a * floorLight);
 }
 
+//direction functions, for light direction floating point targets.
+
+float4 DirectionFunction(VertexShaderOutput input) : COLOR0
+{
+	float2 uv = input.p;
+	if (OutsideRoomCheck(uv)) discard;
+
+	float3 direction = float3(uv.x, 0, uv.y) - float3(LightPosition.x, LightHeight, LightPosition.y);
+
+	float light = clamp(1.0 - distance(uv, LightPosition) / LightSize, 0.0, 1.0);
+	float shadow = tex2D(shadowSampler, uv).r;
+	return DirectionFinal(direction, light, shadow);
+}
+
+float4 DirectionFunctionOutdoors(VertexShaderOutput input) : COLOR0{
+	float2 uv = input.p;
+	if (OutsideRoomCheck(uv)) discard;
+	float light = 1;
+
+	float shadow = tex2D(shadowSampler, uv).r;
+	shadow *= ShadowPowers.x;
+
+	light -= light*shadow;
+	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
+	// output different under diff conditions
+	float4 result = DirectionOutdoors(LightDirection, light);
+	//result.xyz *= ShadowPowers.x;
+	return result;
+}
+
+
+float4 DirectionFunctionOutdoorsSSAA(VertexShaderOutput input) : COLOR0{
+	float2 uv = input.p;
+	if (OutsideRoomCheck(uv)) discard;
+	float light = 1;
+
+	float shadow = SSAASample(uv).r;
+	shadow *= ShadowPowers.x;
+
+	light -= light*shadow;
+
+	float4 result = DirectionOutdoors(LightDirection, light);
+	//result.xyz *= ShadowPowers.x;
+	return result;
+}
+
+float4 DirectionFunctionLightBleed(VertexShaderOutput input) : COLOR0{
+	float2 uv = input.p;
+	if (OutsideRoomCheck(uv)) discard;
+	float light = 1;
+
+	float shadow = SSAASample(uv).r * 5 / 4;
+
+	light -= light*shadow;
+
+	float4 result = DirectionOutdoors(LightDirection, light);
+	return result;
+}
+
 float4 PixelShaderFunctionMask(VertexShaderOutput input) : COLOR0{
 	float2 uv = input.p;
 	if (OutsideRoomCheck(uv)) discard;
 	return LightColor; //multiply light color onto the room
+}
+
+float4 DirectionFunctionMask(VertexShaderOutput input) : COLOR0{
+	float2 uv = input.p;
+	if (OutsideRoomCheck(uv)) discard;
+	return float4(LightColor.w, LightColor.w, LightColor.w, LightColor.w); //multiply light color onto the room
 }
 
 
@@ -286,6 +368,92 @@ technique Draw2D
 #else
 		VertexShader = compile vs_3_0 VertexShaderFunction();
 		PixelShader = compile ps_3_0 PixelShaderFunctionBlur();
+#endif;
+
+	}
+}
+
+technique DrawDirection
+{
+	pass MainPass
+	{
+		AlphaBlendEnable = TRUE; DestBlend = ONE; SrcBlend = ONE; BlendOp = Add; ZEnable = FALSE;
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();
+		PixelShader = compile ps_4_0_level_9_3 DirectionFunction();
+#else
+		VertexShader = compile vs_3_0 VertexShaderFunction();
+		PixelShader = compile ps_3_0 DirectionFunction();
+#endif;
+
+	}
+
+	pass OutsidePass
+	{
+		AlphaBlendEnable = TRUE; DestBlend = ONE; SrcBlend = ONE; BlendOp = Add; ZEnable = FALSE;
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();
+		PixelShader = compile ps_4_0_level_9_1 DirectionFunctionOutdoors();
+#else
+		VertexShader = compile vs_3_0 VertexShaderFunction();
+		PixelShader = compile ps_3_0 DirectionFunctionOutdoors();
+#endif;
+
+	}
+
+	pass ClearPass
+	{
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();
+		PixelShader = compile ps_4_0_level_9_1 DirectionFunctionMask();
+#else
+		VertexShader = compile vs_3_0 VertexShaderFunction();
+		PixelShader = compile ps_3_0 DirectionFunctionMask();
+#endif;
+
+	}
+
+	pass BleedPass
+	{
+		AlphaBlendEnable = TRUE; DestBlend = ONE; SrcBlend = ONE; BlendOp = Add; ZEnable = FALSE;
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();
+		PixelShader = compile ps_4_0_level_9_1 DirectionFunctionLightBleed();
+#else
+		VertexShader = compile vs_3_0 VertexShaderFunction();
+		PixelShader = compile ps_3_0 DirectionFunctionLightBleed();
+#endif;
+
+	}
+
+	pass SSAAPass
+	{
+		AlphaBlendEnable = TRUE; DestBlend = ONE; SrcBlend = ONE; BlendOp = Add; ZEnable = FALSE;
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();
+		PixelShader = compile ps_4_0_level_9_1 DirectionFunctionOutdoorsSSAA();
+#else
+		VertexShader = compile vs_3_0 VertexShaderFunction();
+		PixelShader = compile ps_3_0 DirectionFunctionOutdoorsSSAA();
+#endif;
+
+	}
+
+	pass MainPassBlur
+	{
+		AlphaBlendEnable = TRUE; DestBlend = ONE; SrcBlend = ONE; BlendOp = Add; ZEnable = FALSE;
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();
+		PixelShader = compile ps_4_0_level_9_1 DirectionFunction();
+#else
+		VertexShader = compile vs_3_0 VertexShaderFunction();
+		PixelShader = compile ps_3_0 DirectionFunction();
 #endif;
 
 	}

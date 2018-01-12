@@ -44,7 +44,11 @@ namespace FSO.SimAntics.NetPlay.EODs
             { 0xAA65FE9E, typeof(VMEODTimerPlugin) },
             { 0x895C1CEB, typeof(VMEODGameCompDrawACardPlugin) },
             { 0x8ADFC7A2, typeof(VMEODBandPlugin) },
-            { 0x0B2A6B83, typeof(VMEODRoulettePlugin) }
+            { 0x0B2A6B83, typeof(VMEODRoulettePlugin) },
+            { 0x897f82f5, typeof(VMEODSecureTradePlugin) },
+
+            //freeso specific
+            { 0x00001000, typeof(VMEODFNewspaperPlugin)}
         };
 
         public List<VMEODClient> Clients;

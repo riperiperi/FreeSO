@@ -61,6 +61,11 @@ namespace FSO.Client.Controllers.Panels
             DataService.Sync(target, new string[] { "Lot_Category" });
         }
 
+        public void SaveSkillmode(Lot target)
+        {
+            DataService.Sync(target, new string[] { "Lot_SkillGamemode" });
+        }
+
         public void SaveName(Lot target)
         {
             DataService.Sync(target, new string[] { "Lot_Name" });

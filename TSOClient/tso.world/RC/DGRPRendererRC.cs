@@ -8,6 +8,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.RC;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using FSO.Common.Rendering;
 
 namespace FSO.LotView.RC
 {
@@ -59,15 +60,15 @@ namespace FSO.LotView.RC
                     {
                         if (geom.PrimCount == 0) continue;
                         effect.Parameters["MeshTex"].SetValue(geom.Pixel);
-                        foreach (var pass in effect.CurrentTechnique.Passes)
-                        {
-                            pass.Apply();
-                            if (!geom.Rendered) continue;
-                            device.Indices = geom.Indices;
-                            device.SetVertexBuffer(geom.Verts);
+                        var info = geom.Pixel?.Tag as TextureInfo;
+                        effect.Parameters["UVScale"].SetValue(info?.UVScale ?? Vector2.One);
+                        var pass = effect.CurrentTechnique.Passes[(WorldConfig.Current.Directional && Room < 65533) ? 1:0];
+                        pass.Apply();
+                        if (!geom.Rendered) continue;
+                        device.Indices = geom.Indices;
+                        device.SetVertexBuffer(geom.Verts);
 
-                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
-                        }
+                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
                     }
                 }
                 i++;

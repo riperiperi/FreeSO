@@ -108,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Formats\IFF\Chunks\ARRY.cs" />
+    <Compile Include="Formats\IFF\Chunks\HOUS.cs" />
     <Compile Include="Formats\IFF\Chunks\PNG.cs" />
     <Compile Include="Formats\IFF\Chunks\CARR.cs" />
     <Compile Include="Formats\IFF\Chunks\FAMI.cs" />
@@ -182,6 +183,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RC\DGRP3DGeometry.cs" />
     <Compile Include="RC\DGRP3DMesh.cs" />
+    <Compile Include="RC\DGRP3DVert.cs" />
     <Compile Include="RC\DGRPRCParams.cs" />
     <Compile Include="RC\OBJReader.cs" />
     <Compile Include="Tuning.cs" />

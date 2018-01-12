@@ -25,6 +25,21 @@ namespace FSO.Server.Database.DA.Roommates
                 return false;
             }
         }
+
+        public bool CreateOrUpdate(DbRoommate roomie)
+        {
+            try
+            {
+                return (uint)Context.Connection.Execute("INSERT INTO fso_roommates (avatar_id, lot_id, permissions_level, is_pending) " +
+                                "VALUES (@avatar_id, @lot_id, @permissions_level, @is_pending) " +
+                                "ON DUPLICATE KEY UPDATE permissions_level = @permissions_level, is_pending = 0", roomie) > 0;
+            }
+            catch (SqlException)
+            {
+                return false;
+            }
+        }
+
         public DbRoommate Get(uint avatar_id, int lot_id)
         {
             return Context.Connection.Query<DbRoommate>("SELECT * FROM fso_roommates WHERE avatar_id = @avatar_id AND lot_id = @lot_id", 

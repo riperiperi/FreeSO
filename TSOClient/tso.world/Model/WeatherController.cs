@@ -18,10 +18,19 @@ namespace FSO.LotView.Model
         public ParticleComponent Current;
         public List<ParticleComponent> Particles;
         public Vector4? TintColor;
+        public Color OutsideWeatherTint;
+        public float Darken;
 
         public float[] ModeToIntensity = new float[]
         {
-            0f, 0.25f, 1f
+            0f, 0.25f, 1f, //snow
+            0f, 0.25f, 1f //rain
+        };
+
+        public float[] ModeToDarken = new float[]
+        {
+            0f, 0f, 0f, //snow
+            0f, 0.25f, 1f, //rain
         };
 
         public WeatherController(Blueprint bp) {
@@ -64,6 +73,16 @@ namespace FSO.LotView.Model
             LastEnabled = enabled;
 
             WeatherIntensity = ModeToIntensity[curInt] * i + ModeToIntensity[lastInt] * (1 - i);
+            Darken = ModeToDarken[curInt] * i + ModeToDarken[lastInt] * (1 - i);
+
+            OutsideWeatherTint = Color.Lerp(Color.White, new Color(159, 164, 181), Darken);
+
+            if (Bp != null)
+            {
+                Bp.OutsideWeatherTint = new Color(159, 164, 181);
+                Bp.OutsideWeatherTintP = Darken;
+            }
+
             if (WeatherIntensity > 0.01f && enabled)
             {
                 bool isFaded = false;
@@ -77,6 +96,7 @@ namespace FSO.LotView.Model
                 if (Current == null)
                 {
                     Current = new ParticleComponent(Bp, Particles);
+                    Current.Mode = (ParticleType)(curInt/3);
                     Current.FadeProgress = isFaded ? (float?)-1 : null;
                     Current.WeatherIntensity = WeatherIntensity;
                     Particles.Add(Current);
@@ -102,7 +122,7 @@ namespace FSO.LotView.Model
             {
                 rand.Next();
             }
-            return rand.Next(3);
+            return Math.Max(2, rand.Next(5)) + 1;
         }
         
     }

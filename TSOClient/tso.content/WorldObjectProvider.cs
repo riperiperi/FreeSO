@@ -210,6 +210,8 @@ namespace FSO.Content
         public abstract IffFile MainIff { get; }
         public abstract T Get<T>(ushort id);
         public abstract List<T> List<T>();
+        public Dictionary<uint, short> TuningCache;
+
         public T[] ListArray<T>()
         {
             List<T> result = List<T>();
@@ -252,6 +254,11 @@ namespace FSO.Content
                 if (sg != null) SemiGlobal = sg.Resource; //used for tuning constant fetching.
             }
 
+            Recache();
+        }
+
+        public void Recache()
+        {
             TreeByName = new Dictionary<string, VMTreeByNameTableEntry>();
             var bhavs = List<BHAV>();
             if (bhavs != null)
@@ -289,6 +296,34 @@ namespace FSO.Content
                             }
                         }
                         if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(bhav));
+                    }
+                }
+            }
+
+            TuningCache = new Dictionary<uint, short>();
+
+            var bcons = Iff.List<BCON>();
+            if (bcons != null)
+            {
+                foreach (var table in bcons)
+                {
+                    uint i = ((uint)table.ChunkID << 16);
+                    foreach (var item in table.Constants)
+                    {
+                        TuningCache[i++] = (short)item;
+                    }
+                }
+            }
+
+            if (Tuning != null)
+            {
+                foreach (var table in Tuning.Tables)
+                {
+                    if (table == null) continue;
+                    foreach (var item in table.Keys)
+                    {
+                        if (item == null) continue;
+                        TuningCache[((uint)table.ID << 16) | (uint)(item.ID)] = (short)item.Value;
                     }
                 }
             }

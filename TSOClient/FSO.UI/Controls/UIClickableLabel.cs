@@ -20,6 +20,7 @@ namespace FSO.Client.UI.Controls
     {
         private UIMouseEventRef ClickHandler;
         public event ButtonClickDelegate OnButtonClick;
+        public event UIMouseEvent OnMouseEvtExt;
 
         public UIClickableLabel()
         {
@@ -75,6 +76,7 @@ namespace FSO.Client.UI.Controls
                     m_isDown = false;
                     break;
             }
+            OnMouseEvtExt?.Invoke(type, state);
         }
 
     }

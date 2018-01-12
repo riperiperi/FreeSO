@@ -178,6 +178,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="ContentSrc\Effects\RCObject.fx" />
+    <Content Include="Content\UI\uitext\english.dir\_f109_newgameplaystrings.cst">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Compile Include="Framework\CompositeProvider.cs" />
     <Compile Include="Framework\FAR1Provider.cs" />
     <Compile Include="Framework\FAR3Provider.cs" />
@@ -225,6 +228,12 @@
     <Compile Include="UIGraphicsProvider.cs" />
     <Compile Include="WorldRoofProvider.cs" />
     <Compile Include="WorldWallProvider.cs" />
+    <Content Include="Content\uigraphics\eod\eod_news_bar.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\uigraphics\eod\eod_news_line.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
@@ -1004,6 +1013,15 @@
     <None Include="Content\Objects\slotmachine05_Jackpot.iff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Content\UI\uitext\english.dir\_f108_newspapereodstrings.cst">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\NewEODs\newspaper.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\NewEODs\newspaper.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

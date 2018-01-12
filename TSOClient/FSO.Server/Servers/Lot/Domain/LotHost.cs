@@ -75,6 +75,8 @@ namespace FSO.Server.Servers.Lot.Domain
                 AwaitingShutdown = true;
                 foreach (var lot in Lots)
                 {
+                    var now = Epoch.Now;
+                    if (now - lot.Value.LastActivity > 90) continue;
                     noWaiting = false;
                     lot.Value.ForceShutdown(false);
                 }
@@ -184,15 +186,15 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             var lot = GetLot(lot_id);
             if (lot == null) return false;
-            lot.DropClient(avatar_id);
+            lot.DropClient(avatar_id, false);
             return true;
         }
 
-        public bool NotifyRoommateChange(int lot_id, uint avatar_id, ChangeType change)
+        public bool NotifyRoommateChange(int lot_id, uint avatar_id, uint replace_id, ChangeType change)
         {
             var lot = GetLot(lot_id);
             if (lot == null) return false;
-            lot.Container.NotifyRoommateChange(avatar_id, change);
+            lot.Container.NotifyRoommateChange(avatar_id, replace_id, change);
             return true;
         }
 
@@ -472,12 +474,13 @@ namespace FSO.Server.Servers.Lot.Domain
         private uint LastTaskRecv = 0;
         private int BgTimeoutExpiredCount = 0;
         public uint LastActivity = Epoch.Now;
+        private bool BgAlive = true;
         private bool BgKilled;
         private void _DigestBackground()
         {
             try
             {
-                while (true)
+                while (BgAlive)
                 {
                     if (LastTaskRecv == 0) LastTaskRecv = Epoch.Now;
                     var notified = BackgroundNotify.WaitOne(BACKGROUND_NOTIFY_TIMEOUT);
@@ -518,7 +521,7 @@ namespace FSO.Server.Servers.Lot.Domain
                             }
 
                             MainThread.Priority = ThreadPriority.BelowNormal;
-                            Container.AbortVM();
+                            LOG.Error(Container.AbortVM());
                             //MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
                             Shutdown(); //it also doesnt tend to work too nicely on release builds. immediately free the lot.
                             return;
@@ -685,8 +688,14 @@ namespace FSO.Server.Servers.Lot.Domain
             SetOnline(false);
             SetSpotlight(false);
             ReleaseLotClaim();
+            BgAlive = false;
+            BackgroundNotify.Set();
+            if (Thread.CurrentThread != BackgroundThread) BackgroundThread.Join();
+
+            LOG.Info("Background Thread completely shut down for lot " + Context.DbId);
+
             Host.ShutdownComplete(this);
-            if (Thread.CurrentThread != BackgroundThread) BackgroundThread.Abort();
+
         }
 
         public void ForceShutdown(bool lotClosed)

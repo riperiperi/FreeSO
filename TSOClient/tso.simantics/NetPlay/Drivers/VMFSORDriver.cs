@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FSO.SimAntics.NetPlay.Model;
 using System.IO;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.SimAntics.NetPlay.Drivers
 {
@@ -48,6 +49,13 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 {
                     var tick = new VMNetTick();
                     tick.Deserialize(Reader);
+                    var ind = tick.Commands.FindIndex(x => x.Command is VMStateSyncCmd);
+                    if (ind > 0)
+                    {
+                        var cmd = tick.Commands[ind];
+                        tick.Commands.RemoveAt(ind);
+                        tick.Commands.Insert(0, cmd);
+                    }
                     InternalTick(vm, tick);
                     TickID = tick.TickID;
                     success = true;

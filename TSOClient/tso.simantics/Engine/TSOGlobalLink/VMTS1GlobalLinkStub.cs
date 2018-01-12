@@ -10,6 +10,7 @@ using FSO.SimAntics.Engine.TSOGlobalLink;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
+using FSO.SimAntics.NetPlay.EODs.Handlers;
 
 namespace FSO.SimAntics.Engine.TSOTransaction
 {
@@ -23,7 +24,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         private Queue<VMNetArchitectureCmd> ArchBuffer = new Queue<VMNetArchitectureCmd>();
         private bool WaitingOnArch;
 
-        public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback)
+        public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, short thread, short type, VMAsyncTransactionCallback callback)
         {
             var result = PerformTransaction(vm, testOnly, uid1, uid2, amount);
             if (callback != null)
@@ -34,11 +35,33 @@ namespace FSO.SimAntics.Engine.TSOTransaction
 
                 new System.Threading.Thread(() =>
                 {
+                    //update client side budgets for avatars involved.
+                    vm.SendCommand(new VMNetAsyncResponseCmd(thread, new VMTransferFundsState
+                    {
+                        Responded = true,
+                        Success = result,
+                        TransferAmount = finalAmount,
+                        UID1 = uid1,
+                        Budget1 = (obj1 == null) ? 0 : obj1.TSOState.Budget.Value,
+                        UID2 = uid2,
+                        Budget2 = (obj2 == null) ? 0 : obj2.TSOState.Budget.Value
+                    }));
+
                     callback(result, finalAmount,
                         uid1, (obj1 == null) ? 0 : GetBudgetForFamily(vm, obj1),
                         uid2, (obj2 == null) ? 0 : GetBudgetForFamily(vm, obj2));
                 }).Start();
             }
+        }
+
+        public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, short type, VMAsyncTransactionCallback callback)
+        {
+            PerformTransaction(vm, testOnly, uid1, uid2, amount, type, 0, callback);
+        }
+
+        public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback)
+        {
+            PerformTransaction(vm, testOnly, uid1, uid2, amount, 0, 0, callback);
         }
 
         public uint GetBudgetForFamily(VM vm, VMEntity ent)
@@ -139,16 +162,6 @@ namespace FSO.SimAntics.Engine.TSOTransaction
                                     cmd.Verified = true;
                                     vm.ForwardCommand(cmd);
                                 }
-                                vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                                { //update budgets on clients. id of 0 means there is no target thread.
-                                    Responded = true,
-                                    Success = success,
-                                    TransferAmount = transferAmount,
-                                    UID1 = uid1,
-                                    Budget1 = budget1,
-                                    UID2 = uid2,
-                                    Budget2 = budget2
-                                }));
                             });
                     }
                 }
@@ -232,10 +245,10 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             //todo: nice stub for this using database?
         }
 
-        public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, VMAsyncInventoryRetrieveCallback callback)
+        public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, bool setOnLot, VMAsyncInventoryRetrieveCallback callback)
         {
             //todo: nice stub for this using database?
-            callback(0, null); 
+            callback(0, null);
         }
 
         public void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback)
@@ -281,14 +294,20 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         {
         }
 
-        public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, short type, VMAsyncTransactionCallback callback)
-        {
-            PerformTransaction(vm, testOnly, uid1, uid2, amount, callback);
-        }
-
         public void UpdateObjectPersist(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback)
         {
 
+        }
+        public void GetDynPayouts(VMAsyncNewspaperCallback callback)
+        {
+        }
+
+        public void SecureTrade(VM vm, VMEODSecureTradePlayer p1, VMEODSecureTradePlayer p2, VMAsyncSecureTradeCallback callback)
+        {
+        }
+
+        public void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p)
+        {
         }
     }
 }

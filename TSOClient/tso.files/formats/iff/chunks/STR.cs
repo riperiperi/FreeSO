@@ -41,7 +41,8 @@ namespace FSO.Files.Formats.IFF.Chunks
             "Simplified Chinese",
             "Traditional Chinese",
             "Thai",
-            "Korean"
+            "Korean",
+            "Slovak"
         };
 
         public STRLanguageSet[] LanguageSets = new STRLanguageSet[20];
@@ -376,7 +377,10 @@ namespace FSO.Files.Formats.IFF.Chunks
         SimplifiedChinese = 17,
         TraditionalChinese = 18,
         Thai = 19,
-        Korean = 20
+        Korean = 20,
+
+        //begin freeso
+        Slovak = 21
     }
 
     /// <summary>

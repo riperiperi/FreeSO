@@ -27,5 +27,7 @@ namespace FSO.Common
 
         public static bool Enable3D;
         public static bool EnableNPOTMip = true;
+        public static bool TexCompress = true;
+        public static bool TexCompressSupport = true;
     }
 }

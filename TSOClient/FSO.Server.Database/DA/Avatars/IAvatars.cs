@@ -25,6 +25,7 @@ namespace FSO.Server.Database.DA.Avatars
 
         int GetBudget(uint avatar_id);
         DbTransactionResult Transaction(uint source_id, uint avatar_id, int amount, short reason);
+        DbTransactionResult Transaction(uint source_id, uint avatar_id, int amount, short reason, Func<bool> transactionInject);
         DbTransactionResult TestTransaction(uint source_id, uint avatar_id, int amount, short reason);
 
         void UpdateDescription(uint id, string description);

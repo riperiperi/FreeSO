@@ -68,8 +68,8 @@ namespace FSO.LotView.Components
         {
             //DECEMBER TEMP: snow replace
             //TODO: tie to tuning, or serverside weather system.
-            if (light == TerrainType.GRASS || light == TerrainType.SAND) light = TerrainType.SNOW;
-            if (dark == TerrainType.SAND) dark = TerrainType.SNOW;
+            //if (light == TerrainType.GRASS || light == TerrainType.SAND) light = TerrainType.SNOW;
+            //if (dark == TerrainType.SAND) dark = TerrainType.SNOW;
             LightType = light;
             DarkType = dark;
             GrassState = grass;
@@ -567,12 +567,72 @@ namespace FSO.LotView.Components
 
             Effect.Parameters["UseTexture"].SetValue(true);
             Effect.Parameters["IgnoreColor"].SetValue(true);
+            Effect.Parameters["DiffuseColor"].SetValue(new Vector4(1, 1, 1, 1));
             Effect.CurrentTechnique = Effect.Techniques["DrawLMap"];
 
             var pass = Effect.CurrentTechnique.Passes[0];
             var floors = new HashSet<sbyte>();
             for (sbyte i = (sbyte)(light.Level + 1); i < 5; i++) floors.Add(i);
             Bp.FloorGeom.DrawFloor(gd, Effect, WorldZoom.Near, WorldRotation.TopLeft, null, floors, pass, lightWorld: worldmat, minFloor: light.Level);
+        }
+
+        public BlendState Multiply = new BlendState()
+        {
+            ColorSourceBlend = Blend.DestinationColor,
+            ColorDestinationBlend = Blend.Zero,
+
+            AlphaSourceBlend = Blend.DestinationAlpha,
+            AlphaDestinationBlend = Blend.Zero,
+        };
+
+        public void DrawMask(GraphicsDevice gd, WorldState world)
+        {
+            if (TerrainDirty || VertexBuffer == null) RegenTerrain(gd, Bp);
+            if (VertexBuffer == null) return;
+            //light.Normalize();
+            gd.RasterizerState = RasterizerState.CullNone;
+            PPXDepthEngine.RenderPPXDepth(Effect, true, (depthMode) =>
+            {
+                Effect.Parameters["UseTexture"].SetValue(false);
+                Effect.Parameters["Projection"].SetValue(world.Camera.Projection);
+                Effect.Parameters["Level"].SetValue((float)0.0001f);
+                Effect.Parameters["RoomMap"].SetValue(world.Rooms.RoomMaps[0]);
+
+                var view = world.Camera.View;
+                var _3d = _3D;
+                if (!_3d) view = view * Matrix.CreateTranslation(0, 0, -0.25f);
+                Effect.Parameters["View"].SetValue(view);
+                //world._3D.ApplyCamera(Effect);
+                var translation = (0 * (20 / 522f));
+                if (world.PreciseZoom < 1) translation /= world.PreciseZoom;
+                else translation *= world.PreciseZoom;
+                var altOff = Bp.BaseAlt * Bp.TerrainFactor * 3;
+                var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, translation - altOff, 0);
+                Effect.Parameters["World"].SetValue(worldmat);
+
+                gd.SetVertexBuffer(VertexBuffer);
+                gd.Indices = IndexBuffer;
+
+                Effect.Parameters["UseTexture"].SetValue(false);
+                Effect.Parameters["IgnoreColor"].SetValue(false);
+                Effect.CurrentTechnique = Effect.Techniques["DrawMask"];
+
+                Effect.Parameters["LightVec"]?.SetValue(LightVec);
+                Effect.Parameters["MulRange"]?.SetValue(3f);
+                Effect.Parameters["MulBase"]?.SetValue(0.15f);
+                Effect.Parameters["BlurBounds"]?.SetValue(new Vector4(6, 6, 68, 68));
+
+
+                var pass = Effect.CurrentTechnique.Passes[0];
+                pass.Apply();
+                var primitives = Bp.FloorGeom.SetGrassIndices(gd, Effect, world);
+                var blendstate = gd.BlendState;
+                gd.BlendState = Multiply;
+                gd.DepthStencilState = DepthStencilState.Default;
+                gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, primitives);
+                gd.BlendState = blendstate;
+                gd.DepthStencilState = DepthStencilState.Default;
+            });
         }
 
         public void Dispose()

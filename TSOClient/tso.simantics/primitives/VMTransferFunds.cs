@@ -162,6 +162,24 @@ namespace FSO.SimAntics.Primitives
                 //otherwise, we can wait... make an async call to the transaction handler to process our request.
                 //the response will be dealt with on a later tick.
 
+                var type = operand.ExpenseType;
+
+                if (type == VMTransferFundsExpenseType.IncomeObjectsSkill
+                    || type == VMTransferFundsExpenseType.IncomeObjectsPizza
+                    || type == VMTransferFundsExpenseType.IncomeObjectsMaze
+                    || type == VMTransferFundsExpenseType.IncomeObjectsPaperC
+                    || type == VMTransferFundsExpenseType.IncomeObjectsMaze)
+                {
+                    //might have to zero out the money earned
+                    var destObj = context.VM.GetAvatarByPersist(target);
+                    if (destObj != null && destObj.SkillGameplayDisabled(context.VM))
+                    {
+                        context.Thread.TempXL[0] = 0;
+                        context.Thread.BlockingState = null;
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
+                }
+
                 context.Thread.BlockingState = new VMTransferFundsState();
 
                 if (context.VM.GlobalLink != null)
@@ -169,26 +187,15 @@ namespace FSO.SimAntics.Primitives
                     //get id and vm now to avoid race conditions
                     var id = context.Caller.ObjectID; //this thread's object id
                     var vm = context.VM;
-
-                    var type = operand.ExpenseType;
+                    
                     if (type == VMTransferFundsExpenseType.IncomeObjectsSkill)
                     {
                         SkillTypes.TryGetValue(context.Callee.MasterDefinition?.GUID ?? context.Callee.Object.OBJ.GUID, out type);
                     }
 
-                    context.VM.GlobalLink.PerformTransaction(context.VM, operand.JustTest, source, target, amount, (short)type,
+                    context.VM.GlobalLink.PerformTransaction(context.VM, operand.JustTest, source, target, amount, (short)type, id,
                         (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                         {
-                            vm.SendCommand(new VMNetAsyncResponseCmd(id, new VMTransferFundsState
-                            {
-                                Responded = true,
-                                Success = success,
-                                TransferAmount = transferAmount,
-                                UID1 = uid1,
-                                Budget1 = budget1,
-                                UID2 = uid2,
-                                Budget2 = budget2
-                            }));
                         });
                 }
                 return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;

@@ -49,6 +49,7 @@ namespace FSO.Client.UI.Panels
         private UIEODLayout EODLayout;
 
         public Texture2D BackgroundEODImg { get; set; } //live mode with backgrounded eod
+        public Texture2D BackgroundEODTradeImg { get; set; }
         public Texture2D EODPanelImg { get; set; }
         public Texture2D EODPanelTallImg { get; set; }
         public Texture2D EODDoublePanelTallImg { get; set; }
@@ -287,6 +288,7 @@ namespace FSO.Client.UI.Panels
 
             bool isTall = inEOD && (options.Height == EODHeight.Tall || options.Height == EODHeight.TallTall);
             bool isDoubleTall = inEOD && options.Height == EODHeight.TallTall;
+            bool isTrade = inEOD && options.Height == EODHeight.Trade;
 
 
             /**
@@ -307,7 +309,7 @@ namespace FSO.Client.UI.Panels
             EODTopSub.Visible = inEOD && options.Expandable && options.Expanded;
             EODTopButtonLayout.Visible = inEOD && options.Expandable && options.Expanded;
 
-            EODPanel.Visible = inEOD && !isTall;
+            EODPanel.Visible = inEOD && !isTall && !isTrade;
             EODPanelTall.Visible = inEOD && isTall;
             EODDoublePanelTall.Visible = inEOD && isDoubleTall && options.Expanded;
 
@@ -344,6 +346,8 @@ namespace FSO.Client.UI.Panels
                 var buttonLayout = buttons[options.Buttons];
                 Script.ApplyControlProperties(EODButtonLayout, "EODButtonLayout" + buttonLayout + EODLayout.GetHeightSuffix(options.Height, true));
                 Script.ApplyControlProperties(EODSub, "EODSub" + options.Length + "Length" + EODLayout.GetHeightSuffix(options.Height, true));
+                EODSub.Visible = options.Length != EODLength.None;
+                EODButtonLayout.Visible = EODSub.Visible;
 
                 if (options.Tips != EODTextTips.None){
                     Script.ApplyControlProperties(EODMsgWin, "EODMsgWin" + options.Tips.ToString());
@@ -352,13 +356,20 @@ namespace FSO.Client.UI.Panels
                 var topLeft = EODLayout.GetTopLeft(options.Height);
                 
                 //EOD position
-                ActiveEOD.Position = topLeft + (Vector2)Script.GetControlProperty("EODPosition");
+                ActiveEOD.Position = topLeft + (Vector2)Script.GetControlProperty(isTrade?"EODTradePosition":"EODPosition");
 
                 //Close button
                 EODCloseButton.Position = EODLayout.GetChromePosition("EODCloseButton", options.Height);
 
                 //Help button
                 EODHelpButton.Position = EODLayout.HelpButtonPosition;
+
+                if (isTrade && !Small800)
+                {
+                    //place the close/help button at 1024x768 position
+                    EODCloseButton.X += 224;
+                    EODHelpButton.X += 224;
+                }
 
                 //Chrome
                 var chromeOffset = EODLayout.GetChromeOffset(options.Height);
@@ -384,8 +395,11 @@ namespace FSO.Client.UI.Panels
                 EODPanelTall.Position = EODLayout.GetPanelPosition(EODHeight.Tall);
                 EODDoublePanelTall.Position = EODLayout.GetPanelPosition(EODHeight.TallTall);
 
-                Size = new Vector2(Background.Size.X, ((options.Height == EODHeight.TallTall && options.Expanded)? (EODDoublePanelTall.Size.Y + (EODDoublePanelTall.Y-EODMsgWin.Y)) :EODPanelTall.Size.Y) - (int)EODMsgWin.Position.Y);
-                BackOffset = new Point(0, -(int)EODMsgWin.Position.Y);
+                if (isTrade)
+                    Size = new Vector2(BackgroundEODTradeImg.Width, BackgroundEODTradeImg.Height);
+                else
+                    Size = new Vector2(Background.Size.X, ((options.Height == EODHeight.TallTall && options.Expanded) ? (EODDoublePanelTall.Size.Y + (EODDoublePanelTall.Y - EODMsgWin.Y)) : EODPanelTall.Size.Y) - (int)EODMsgWin.Position.Y);
+                BackOffset = new Point(isTrade?22:0, -(int)EODMsgWin.Position.Y);
                 
 
                 //Double tall panel chrome
@@ -398,7 +412,7 @@ namespace FSO.Client.UI.Panels
                     var topButtonLayout = buttons[options.TopPanelButtons];
                     Script.ApplyControlProperties(EODTopButtonLayout, "EODButtonLayout" + topButtonLayout + EODLayout.GetHeightSuffix(EODHeight.Tall));
                     Script.ApplyControlProperties(EODTopSub, "EODSub" + options.Length + "Length" + EODLayout.GetHeightSuffix(EODHeight.Tall));
-                    
+
                     EODTopButtonLayout.Position -= new Vector2(0, 155);
                     EODTopSub.Position -= new Vector2(0, 155);
 
@@ -441,6 +455,7 @@ namespace FSO.Client.UI.Panels
 
             } else
             {
+                BackOffset = new Point(0, 0);
                 Size = new Vector2(DefaultBGImage.Width, EODPanelTall.Size.Y);
             }
 
@@ -453,7 +468,7 @@ namespace FSO.Client.UI.Panels
             PeopleListBg.Visible = !inEOD;
             PreviousPageButton.Visible = !inEOD;
             NextPageButton.Visible = !inEOD;
-            Background.Visible = !inEOD;
+            Background.Visible = !inEOD || isTrade;
 
             PersonGrid.Columns = (eodPresent || Small800) ?4:9;
             PersonGrid.DrawPage();
@@ -461,7 +476,8 @@ namespace FSO.Client.UI.Panels
             PeopleListBg.SetSize(PeopleListBg.Texture.Width, PeopleListBg.Texture.Height);
 
             NextPageButton.Position = (eodPresent && !Small800) ? (Vector2)Script.GetControlProperty("NextPageEODButton") : DefaultNextPagePos;
-            Background.Texture = (eodPresent) ? BackgroundEODImg : DefaultBGImage;
+            Background.Texture = (eodPresent) ? (isTrade? BackgroundEODTradeImg : BackgroundEODImg) : DefaultBGImage;
+            Background.Position = (isTrade) ? new Vector2(-22, -79) : new Vector2(0, 35);
             Background.SetSize(Background.Texture.Width, Background.Texture.Height);
 
             UpdateThumbPosition();

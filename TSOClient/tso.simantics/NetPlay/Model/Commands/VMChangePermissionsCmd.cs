@@ -13,31 +13,81 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public uint TargetUID;
         public VMTSOAvatarPermissions Level;
+        public VMChangePermissionsMode Mode;
+        public uint ReplaceUID; //for object inherit modes. Set implicitly for owner replacement.
         public bool Verified;
         public override bool Execute(VM vm)
         {
             var obj = vm.GetAvatarByPersist(TargetUID);
             var roomieChange = false;
+            if (Mode == VMChangePermissionsMode.OBJECTS_ONLY)
+            {
+                roomieChange = true;
+            }
+            else
+            {
+                var ownerSwitch = Mode == VMChangePermissionsMode.OWNER_SWITCH || Mode == VMChangePermissionsMode.OWNER_SWITCH_WITH_OBJECTS;
+                if (ownerSwitch)
+                {
+                    ChangeUserLevel(vm, ReplaceUID, VMTSOAvatarPermissions.Visitor);
+                }
+                roomieChange = ChangeUserLevel(vm, TargetUID, Level);
+                if (ownerSwitch) roomieChange = true;
+            }
+
+            //mark objects not owned by roommates for inventory transfer
+            if (roomieChange)
+            {
+                VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
+                var roomies = vm.TSOState.Roommates;
+                foreach (var ent in vm.Entities)
+                {
+                    if (ent is VMGameObject && ent.PersistID > 0)
+                    {
+                        var owner = ((VMTSOObjectState)ent.TSOState).OwnerID;
+                        if (owner == ReplaceUID && ReplaceUID != 0)
+                        {
+                            ((VMTSOObjectState)ent.TSOState).OwnerID = TargetUID;
+                            owner = TargetUID;
+                        }
+                        var wasDisabled = (((VMGameObject)ent).Disabled & VMGameObjectDisableFlags.PendingRoommateDeletion) > 0;
+
+                        var toBeDisabled = !roomies.Contains(owner);
+
+                        if (wasDisabled != toBeDisabled)
+                        {
+                            if (toBeDisabled) ((VMGameObject)ent).Disabled |= VMGameObjectDisableFlags.PendingRoommateDeletion;
+                            else ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.PendingRoommateDeletion;
+                            vm.Scheduler.RescheduleInterrupt(ent);
+                            ((VMGameObject)ent).RefreshLight();
+                        }
+                    }
+                }
+            }
+            return base.Execute(vm);
+        }
+
+        private bool ChangeUserLevel(VM vm, uint pid, VMTSOAvatarPermissions level)
+        {
+            var obj = vm.GetAvatarByPersist(pid);
+            var roomieChange = false;
             if (obj == null)
             {
-                //todo: changing owner for off-lot users, though you really shouldn't be doing that.
-                vm.TSOState.BuildRoommates.Remove(TargetUID);
-                if (vm.TSOState.Roommates.Contains(TargetUID)) roomieChange = true;
-                vm.TSOState.Roommates.Remove(TargetUID);
-                if (Level >= VMTSOAvatarPermissions.Roommate && Level < VMTSOAvatarPermissions.Admin)
+                vm.TSOState.BuildRoommates.Remove(pid);
+                if (vm.TSOState.Roommates.Contains(pid)) roomieChange = true;
+                vm.TSOState.Roommates.Remove(pid);
+                if (level >= VMTSOAvatarPermissions.Roommate && level < VMTSOAvatarPermissions.Admin)
                 {
                     roomieChange = !roomieChange;
-                    vm.TSOState.Roommates.Add(TargetUID);
-                    if (Level > VMTSOAvatarPermissions.Roommate) vm.TSOState.BuildRoommates.Add(TargetUID);
+                    vm.TSOState.Roommates.Add(pid);
+                    if (level > VMTSOAvatarPermissions.Roommate) vm.TSOState.BuildRoommates.Add(pid);
+                    if (level == VMTSOAvatarPermissions.Owner) vm.TSOState.OwnerID = pid;
                 }
             }
             else
             {
 
                 var oldState = ((VMTSOAvatarState)obj.TSOState).Permissions;
-
-                /*if (vm.GlobalLink != null && oldState >= VMTSOAvatarPermissions.Admin)
-                    ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Administrators.Remove(obj.PersistID);*/
 
                 if (oldState >= VMTSOAvatarPermissions.Roommate)
                 {
@@ -46,36 +96,18 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     ((VMTSOAvatarState)obj.TSOState).Flags |= VMTSOAvatarFlags.CanBeRoommate;
                 }
                 if (oldState >= VMTSOAvatarPermissions.BuildBuyRoommate) vm.TSOState.BuildRoommates.Remove(obj.PersistID);
-                ((VMTSOAvatarState)obj.TSOState).Permissions = Level;
-                if (Level >= VMTSOAvatarPermissions.Roommate)
+                ((VMTSOAvatarState)obj.TSOState).Permissions = level;
+                if (level >= VMTSOAvatarPermissions.Roommate)
                 {
                     ((VMTSOAvatarState)obj.TSOState).Flags &= ~VMTSOAvatarFlags.CanBeRoommate;
                     roomieChange = !roomieChange; //flips roomie change back
                     vm.TSOState.Roommates.Add(obj.PersistID);
                 }
-                if (Level >= VMTSOAvatarPermissions.BuildBuyRoommate) vm.TSOState.BuildRoommates.Add(obj.PersistID);
-
-                /*if (vm.GlobalLink != null && Level >= VMTSOAvatarPermissions.Admin)
-                    ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Administrators.Add(obj.PersistID);*/
+                if (level >= VMTSOAvatarPermissions.BuildBuyRoommate) vm.TSOState.BuildRoommates.Add(obj.PersistID);
+                if (level == VMTSOAvatarPermissions.Owner) vm.TSOState.OwnerID = pid;
+                else if (vm.TSOState.OwnerID == pid) vm.TSOState.OwnerID = 0;
             }
-
-            //mark objects not owned by roommates for inventory transfer
-            if (roomieChange)
-            {
-                VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
-                foreach (var ent in vm.Entities)
-                {
-                    if (ent is VMGameObject && ent.PersistID > 0 && ((VMTSOObjectState)ent.TSOState).OwnerID == TargetUID)
-                    {
-                        var old = ((VMGameObject)ent).Disabled;
-                        if (Level < VMTSOAvatarPermissions.Roommate) ((VMGameObject)ent).Disabled |= VMGameObjectDisableFlags.PendingRoommateDeletion;
-                        else ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.PendingRoommateDeletion;
-                        if (old != ((VMGameObject)ent).Disabled) vm.Scheduler.RescheduleInterrupt(ent);
-                        ((VMGameObject)ent).RefreshLight();
-                    }
-                }
-            }
-            return base.Execute(vm);
+            return roomieChange;
         }
 
         public override bool Verify(VM vm, VMAvatar caller)
@@ -86,7 +118,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Owner)
                 return false;
 
-            if (Level > VMTSOAvatarPermissions.BuildBuyRoommate || Level < VMTSOAvatarPermissions.Roommate) return false; //can only switch to build roomie or back.
+            if (Level > VMTSOAvatarPermissions.BuildBuyRoommate || Level < VMTSOAvatarPermissions.Roommate) return false; //users can only switch to build roomie or back.
 
             if (!vm.TSOState.Roommates.Contains(TargetUID) || vm.TSOState.OwnerID == TargetUID) return false;
 
@@ -109,16 +141,28 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             base.SerializeInto(writer);
             writer.Write(TargetUID);
+            writer.Write(ReplaceUID);
             writer.Write((byte)Level);
+            writer.Write((byte)Mode);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
             TargetUID = reader.ReadUInt32();
+            ReplaceUID = reader.ReadUInt32();
             Level = (VMTSOAvatarPermissions)reader.ReadByte();
+            Mode = (VMChangePermissionsMode)reader.ReadByte();
         }
 
         #endregion
+    }
+
+    public enum VMChangePermissionsMode : byte
+    {
+        NORMAL = 0,
+        OWNER_SWITCH,
+        OWNER_SWITCH_WITH_OBJECTS,
+        OBJECTS_ONLY
     }
 }

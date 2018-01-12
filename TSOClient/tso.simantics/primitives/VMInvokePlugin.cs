@@ -37,7 +37,7 @@ namespace FSO.SimAntics.Primitives
             var operand = (VMInvokePluginOperand)args;
 
             var localEvt = context.Locals[operand.EventLocal];
-            if (localEvt < 0)
+            if (localEvt < 0 && localEvt > -3)
             {
                 if (context.VM.EODHost != null) context.VM.EODHost.ForceDisconnectObj(context.Caller);
                 context.Thread.EODConnection = null;
@@ -67,7 +67,7 @@ namespace FSO.SimAntics.Primitives
                     context.Thread.EODConnection = null;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
-            } else if (context.Locals[operand.EventLocal] == -2) {
+            } else if (localEvt == -2) {
                 //not connected. initiate connection.
                 var objID = context.Locals[operand.ObjectLocal];
                 var personID = context.Locals[operand.PersonLocal];

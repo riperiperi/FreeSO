@@ -27,6 +27,13 @@ namespace FSO.Server.DataService.Providers
 {
     public class ServerLotProvider : EagerDataServiceProvider<uint, Lot>
     {
+        public static Dictionary<LotCategory, uint> SkillGameplayCategory = new Dictionary<LotCategory, uint>()
+        {
+            { LotCategory.entertainment, 1 },
+            { LotCategory.services, 1 },
+            { LotCategory.romance, 1 },
+        };
+
         private Dictionary<string, Lot> LotsByName = new Dictionary<string, Lot>();
         public City CityRepresentation;
 
@@ -144,6 +151,7 @@ namespace FSO.Server.DataService.Providers
                 Lot_LotAdmitInfo = new LotAdmitInfo() { LotAdmitInfo_AdmitMode = lot.admit_mode },
                 Lot_NumOccupants = 0,
                 Lot_Category = (byte)lot.category,
+                Lot_SkillGamemode = lot.skill_mode,
                 Lot_LastCatChange = lot.category_change_date,
                 Lot_Description = lot.description,
                 Lot_Thumbnail = thumb
@@ -210,9 +218,18 @@ namespace FSO.Server.DataService.Providers
                     }
                     break;
                 case "Lot_Category":
+                    uint minSkill;
+                    if (!SkillGameplayCategory.TryGetValue((LotCategory)lot.Lot_Category, out minSkill)) minSkill = 0;
+                    lot.Lot_SkillGamemode = Math.Min(2, Math.Max(minSkill, lot.Lot_SkillGamemode));
                     using (var db = DAFactory.Get())
                     {
-                        db.Lots.UpdateLotCategory(lot.DbId, (LotCategory)(lot.Lot_Category));
+                        db.Lots.UpdateLotCategory(lot.DbId, (LotCategory)(lot.Lot_Category), lot.Lot_SkillGamemode);
+                    }
+                    break;
+                case "Lot_SkillGamemode":
+                    using (var db = DAFactory.Get())
+                    {
+                        db.Lots.UpdateLotCategory(lot.DbId, (LotCategory)(lot.Lot_Category), lot.Lot_SkillGamemode);
                     }
                     break;
                 case "Lot_IsOnline":
@@ -273,6 +290,16 @@ namespace FSO.Server.DataService.Providers
                     }
                     break;
 
+                case "Lot_SkillGamemode":
+                    context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+
+                    var svalue = (uint)value;
+                    uint minSkill;
+                    if (!SkillGameplayCategory.TryGetValue((LotCategory)lot.Lot_Category, out minSkill)) minSkill = 0;
+                    if (Math.Min(2, Math.Max(minSkill, svalue)) != svalue) throw new SecurityException("Invalid gamemode for this category.");
+
+                    if (lot.Lot_IsOnline) throw new SecurityException("Lot must be offline to change skill mode!");
+                    break;
                 //roommate only
                 case "Lot_Thumbnail":
                     context.DemandAvatars(roomies, AvatarPermissions.WRITE);

@@ -143,14 +143,28 @@ namespace FSO.Common.Utils
 
         public static Texture2D Copy(GraphicsDevice gd, Texture2D texture)
         {
-            var newTexture = new Texture2D(gd, texture.Width, texture.Height);
+            if (texture.Format == SurfaceFormat.Dxt5)
+            {
+                var newTexture = new Texture2D(gd, texture.Width, texture.Height, false, SurfaceFormat.Dxt5);
 
-            var size = texture.Width * texture.Height;
-            uint[] buffer = GetBuffer(size);
-            texture.GetData(buffer, 0, size);
+                var size = texture.Width * texture.Height;
+                byte[] buffer = new byte[size];
+                texture.GetData(buffer, 0, size);
 
-            newTexture.SetData(buffer, 0, size);
-            return newTexture;
+                newTexture.SetData(buffer, 0, size);
+                return newTexture;
+            }
+            else
+            {
+                var newTexture = new Texture2D(gd, texture.Width, texture.Height);
+
+                var size = texture.Width * texture.Height;
+                uint[] buffer = GetBuffer(size);
+                texture.GetData(buffer, 0, size);
+
+                newTexture.SetData(buffer, 0, size);
+                return newTexture;
+            }
         }
 
         public static void CopyAlpha(ref Texture2D TextureTo, Texture2D TextureFrom)
@@ -320,6 +334,319 @@ namespace FSO.Common.Utils
                 w /= 2;
                 h /= 2;
             }
+        }
+
+
+        public static void UploadDXT5WithMips(Texture2D Texture, int w, int h, GraphicsDevice gd, Color[] data)
+        {
+            int level = 0;
+            int dw = ((w + 3) / 4) * 4;
+            int dh = ((h + 3) / 4) * 4;
+            Tuple<byte[], Point> dxt = null;
+            while (data != null)
+            {
+                dxt = DXT5Compress(data, Math.Max(1,w), Math.Max(1,h), Math.Max(1, (dw+3)/4), Math.Max(1, (dh+3)/4));
+                Texture.SetData(level++, null, dxt.Item1, 0, dxt.Item1.Length);
+                data = Decimate(data, w, h);
+                w /= 2;
+                h /= 2;
+                dw /= 2;
+                dh /= 2;
+            }
+
+            while (dw > 0 || dh > 0)
+            {
+                Texture.SetData(level++, null, dxt.Item1, 0, dxt.Item1.Length);
+                dw /= 2;
+                dh /= 2;
+            }
+        }
+
+        public static void UploadDXT1WithMips(Texture2D Texture, int w, int h, GraphicsDevice gd, Color[] data)
+        {
+            int level = 0;
+            int dw = ((w + 3) / 4) * 4;
+            int dh = ((h + 3) / 4) * 4;
+            Tuple<byte[], Point> dxt = null;
+            while (data != null)
+            {
+                dxt = DXT1Compress(data, Math.Max(1, w), Math.Max(1, h), Math.Max(1, (dw + 3) / 4), Math.Max(1, (dh + 3) / 4));
+                Texture.SetData<byte>(level++, null, dxt.Item1, 0, dxt.Item1.Length*2);
+                data = Decimate(data, w, h);
+                w /= 2;
+                h /= 2;
+                dw /= 2;
+                dh /= 2;
+            }
+
+            while (dw > 0 || dh > 0)
+            {
+                Texture.SetData<byte>(level++, null, dxt.Item1, 0, dxt.Item1.Length*2);
+                dw /= 2;
+                dh /= 2;
+            }
+        }
+
+
+        public static Tuple<byte[], Point> DXT5Compress(Color[] data, int width, int height)
+        {
+            return DXT5Compress(data, width, height, (width + 3) / 4, (height + 3) / 4);
+        }
+
+        public static Tuple<byte[], Point> DXT5Compress(Color[] data, int width, int height, int blockW, int blockH)
+        {
+            var result = new byte[blockW * blockH * 16];
+            var blockI = 0;
+            for (int by = 0; by < blockH; by++)
+            {
+                for (int bx = 0; bx < blockW; bx++) {
+                    var block = new Color[16];
+
+                    var ti = 0;
+                    for (int y = 0; y < 4; y++)
+                    {
+                        var realy = ((by << 2) + y);
+                        if (realy >= height) break;
+                        var i = realy * width + (bx<<2);
+                        
+                        for (int x = 0; x < 4; x++)
+                        {
+                            if ((x + (bx << 2)) >= width)
+                                ti++;
+                            else
+                                block[ti++] = data[i++];
+                        }
+                    }
+
+                    Color minCol, maxCol;
+                    GetMinMaxColor(block, out minCol, out maxCol);
+
+                    //emit alpha data
+
+                    result[blockI++] = maxCol.A;
+                    result[blockI++] = minCol.A;
+
+                    var alpha = GetAlphaIndices(block, minCol, maxCol);
+
+                    result[blockI++] = (byte)((alpha[0] >> 0) | (alpha[1] << 3) | (alpha[2] << 6));
+                    result[blockI++] = (byte)((alpha[2] >> 2) | (alpha[3] << 1) | (alpha[4] << 4) | (alpha[5] << 7));
+                    result[blockI++] = (byte)((alpha[5] >> 1) | (alpha[6] << 2) | (alpha[7] << 5));
+                    result[blockI++] = (byte)((alpha[8] >> 0) | (alpha[9] << 3) | (alpha[10] << 6));
+                    result[blockI++] = (byte)((alpha[10] >> 2) | (alpha[11] << 1) | (alpha[12] << 4) | (alpha[13] << 7));
+                    result[blockI++] = (byte)((alpha[13] >> 1) | (alpha[14] << 2) | (alpha[15] << 5));
+
+                    //emit color data
+
+                    result[blockI++] = (byte)((maxCol.B >> 3) | (((maxCol.G >> 2) << 5) & 0xFF));
+                    result[blockI++] = (byte)(((maxCol.R >> 3) << 3) | (maxCol.G >> 2) >> 3);
+
+                    result[blockI++] = (byte)((minCol.B >> 3) | (((minCol.G >> 2) << 5) & 0xFF));
+                    result[blockI++] = (byte)(((minCol.R >> 3) << 3) | (minCol.G >> 2) >> 3);
+
+                    var indices = GetColorIndices(block, minCol, maxCol);
+                    result[blockI++] = (byte)indices;
+                    result[blockI++] = (byte)(indices >> 8);
+                    result[blockI++] = (byte)(indices >> 16);
+                    result[blockI++] = (byte)(indices >> 24);
+                }
+            }
+
+            return new Tuple<byte[], Point>(result, new Point(blockW * 4, blockH * 4));
+        }
+
+        public static Tuple<byte[], Point> DXT1Compress(Color[] data, int width, int height)
+        {
+            return DXT1Compress(data, width, height, (width + 3) / 4, (height + 3) / 4);
+        }
+
+        public static Tuple<byte[], Point> DXT1Compress(Color[] data, int width, int height, int blockW, int blockH)
+        {
+            var result = new byte[blockW * blockH * 8];
+            var blockI = 0;
+            for (int by = 0; by < blockH; by++)
+            {
+                for (int bx = 0; bx < blockW; bx++)
+                {
+                    var block = new Color[16];
+
+                    var ti = 0;
+                    for (int y = 0; y < 4; y++)
+                    {
+                        var realy = ((by << 2) + y);
+                        if (realy >= height) break;
+                        var i = realy * width + (bx << 2);
+
+                        for (int x = 0; x < 4; x++)
+                        {
+                            if ((x + (bx << 2)) >= width)
+                                ti++;
+                            else
+                                block[ti++] = data[i++];
+                        }
+                    }
+
+                    Color minCol, maxCol;
+                    GetMinMaxColor(block, out minCol, out maxCol);
+
+                    //emit color data
+
+                    uint indices;
+                    //if this block contains a transparent colour, it should be stored in alpha 1bit format.
+                    //we invert the max and min color to tell the gpu.
+                    if (minCol.A == 0)
+                    {
+                        result[blockI++] = (byte)((minCol.B >> 3) | (((minCol.G >> 2) << 5) & 0xFF));
+                        result[blockI++] = (byte)(((minCol.R >> 3) << 3) | (minCol.G >> 2) >> 3);
+
+                        result[blockI++] = (byte)((maxCol.B >> 3) | (((maxCol.G >> 2) << 5) & 0xFF));
+                        result[blockI++] = (byte)(((maxCol.R >> 3) << 3) | (maxCol.G >> 2) >> 3);
+
+                        indices = GetA1ColorIndices(block, minCol, maxCol);
+                    } else {
+                        result[blockI++] = (byte)((maxCol.B >> 3) | (((maxCol.G >> 2) << 5) & 0xFF));
+                        result[blockI++] = (byte)(((maxCol.R >> 3) << 3) | (maxCol.G >> 2) >> 3);
+
+                        result[blockI++] = (byte)((minCol.B >> 3) | (((minCol.G >> 2) << 5) & 0xFF));
+                        result[blockI++] = (byte)(((minCol.R >> 3) << 3) | (minCol.G >> 2) >> 3);
+
+                        indices = GetColorIndices(block, minCol, maxCol);
+                    }
+                    
+                    result[blockI++] = (byte)indices;
+                    result[blockI++] = (byte)(indices >> 8);
+                    result[blockI++] = (byte)(indices >> 16);
+                    result[blockI++] = (byte)(indices >> 24);
+                }
+            }
+
+            return new Tuple<byte[], Point>(result, new Point(blockW * 4, blockH * 4));
+        }
+
+        private static byte[] GetAlphaIndices(Color[] block, Color minCol, Color maxCol)
+        {
+            var result = new byte[16];
+            int alphaRange = maxCol.A - minCol.A;
+            if (alphaRange == 0) return result;
+            int halfAlpha = alphaRange / 2;
+            for (int ai = 0; ai < 16; ai++)
+            {
+                var a = block[ai].A;
+                //result alpha
+                //round point on line where the alpha is. 
+                var aindex = Math.Min(7, Math.Max(0, ((a - minCol.A) * 7 + halfAlpha) / alphaRange));
+                if (aindex == 7) aindex = 0;
+                else if (aindex == 0) aindex = 1;
+                else aindex = (8 - aindex);
+                result[ai] = (byte)aindex;
+            }
+            return result;
+        }
+
+        private static uint GetColorIndices(Color[] block, Color minCol, Color maxCol)
+        {
+            
+            var pal = new Color[]
+            {
+                maxCol,
+                minCol,
+                Color.Lerp(minCol, maxCol, 2/3f),
+                Color.Lerp(minCol, maxCol, 1/3f),
+            };
+
+            uint result = 0;
+
+            for (int i = 0; i < 16; i++)
+            {
+                var c = block[i];
+                int best = 10000;
+                uint besti = 0;
+                for (uint j = 0; j < 4; j++)
+                {
+                    int d = Math.Abs(pal[j].R - c.R) + Math.Abs(pal[j].G - c.G) + Math.Abs(pal[j].B - c.B);
+                    if (d < best)
+                    {
+                        best = d;
+                        besti = j;
+                    }
+                }
+                result |= besti << (i * 2);
+            }
+
+            return result;
+        }
+
+        private static uint GetA1ColorIndices(Color[] block, Color minCol, Color maxCol)
+        {
+
+            var pal = new Color[]
+            {
+                maxCol,
+                minCol,
+                Color.Lerp(minCol, maxCol, 1/2f),
+            };
+
+            uint result = 0;
+
+            for (int i = 0; i < 16; i++)
+            {
+                var c = block[i];
+
+                int best = 10000;
+                uint besti = 0;
+                if (c.A == 0) besti = 3;
+                else
+                {
+                    for (uint j = 0; j < 3; j++)
+                    {
+                        int d = Math.Abs(pal[j].R - c.R) + Math.Abs(pal[j].G - c.G) + Math.Abs(pal[j].B - c.B);
+                        if (d < best)
+                        {
+                            best = d;
+                            besti = j;
+                        }
+                    }
+                }
+                result |= besti << (i * 2);
+            }
+
+            return result;
+        }
+
+        private static void GetMinMaxColor(Color[] block, out Color minCol, out Color maxCol)
+        {
+            const int INSET_SHIFT = 4;
+            maxCol = Color.TransparentBlack;
+            minCol = Color.White;
+
+            for (int i = 0; i < 16; i++)
+            {
+                var col = block[i];
+
+                if (col.A < minCol.A) minCol.A = col.A;
+                if (col.A > maxCol.A) maxCol.A = col.A;
+                if (col.A == 0) continue;
+
+                if (col.R < minCol.R) minCol.R = col.R;
+                if (col.G < minCol.G) minCol.G = col.G;
+                if (col.B < minCol.B) minCol.B = col.B;
+
+                if (col.R > maxCol.R) maxCol.R = col.R;
+                if (col.G > maxCol.G) maxCol.G = col.G;
+                if (col.B > maxCol.B) maxCol.B = col.B;
+
+            }
+
+            //important to note that these packed value calculations can never overflow from
+            //one byte into the next.
+
+            //var inset = new Color(maxCol.PackedValue - minCol.PackedValue);
+            //inset.R >>= INSET_SHIFT;
+            //inset.G >>= INSET_SHIFT;
+            //inset.B >>= INSET_SHIFT;
+            //inset.A >>= INSET_SHIFT;
+
+            //minCol = new Color(minCol.PackedValue + inset.PackedValue);
+            //maxCol = new Color(maxCol.PackedValue - inset.PackedValue);
         }
 
         public static Color[] Decimate(Color[] old, int w, int h)

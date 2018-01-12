@@ -77,6 +77,9 @@ namespace FSO.LotView.Model
         }
         public double OutsideTime;
         public float OutsideSkyP;
+        public Color OutsideWeatherTint;
+        public float OutsideWeatherTintP;
+
         public RoomLighting[] Light = new RoomLighting[0];
         public uint[][] RoomMap;
         public byte[] Indoors;

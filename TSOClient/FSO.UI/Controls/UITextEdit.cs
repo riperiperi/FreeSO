@@ -268,6 +268,11 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+        public void RemoveMouseEvent()
+        {
+            RemoveMouseListener(m_MouseEvent);
+        }
+
         private Rectangle m_Bounds;
         public override Rectangle GetBounds()
         {
@@ -783,7 +788,7 @@ namespace FSO.Client.UI.Controls
             }
 
             var lineWidth = m_Width - (TextMargin.Left + TextMargin.Height);
-            m_LineHeight = TextStyle.MeasureString("W").Y;
+            m_LineHeight = TextStyle.MeasureString("W").Y + TextStyle.LineHeightModifier;
 
             m_Lines.Clear();
             txt = txt.Replace("\r", "");

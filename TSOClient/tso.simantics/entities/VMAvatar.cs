@@ -682,19 +682,21 @@ namespace FSO.SimAntics
                     if (Thread?.Context?.VM?.TS1 == true) break;
                     return (short)(MeToPersist.Count(x => x.Key < 16777216 && x.Value.Count > 1 && x.Value[1] >= 60));
                 case VMPersonDataVariable.SkillLock:
-                    // this variable returns the skills that are completely locked. since the skill degrade object checks the skill lock 
-                    // value anyways, this seems irrelevant. perhaps was used in special event/lot type situations.
-                    return 0;
-                    /* fully locks any skills that are locked by even one point
-                    return (short)(((GetPersonData(VMPersonDataVariable.SkillLockBody) > 0) ? 1 : 0) |
-                        ((GetPersonData(VMPersonDataVariable.SkillLockCharisma) > 0) ? 2 : 0) |
-                        ((GetPersonData(VMPersonDataVariable.SkillLockCooking) > 0) ? 4 : 0) |
-                        ((GetPersonData(VMPersonDataVariable.SkillLockCreativity) > 0) ? 8 : 0) |
-                        ((GetPersonData(VMPersonDataVariable.SkillLockLogic) > 0) ? 16 : 0) |
-                        ((GetPersonData(VMPersonDataVariable.SkillLockMechanical) > 0) ? 32 : 0));
-                        */
+                    // this variable contains a bitmask of skills which should not decay. our skill disable system sets them all,
+                    // but perhaps in the original they were used by events
+                    if (Thread == null) return 0;
+                    return (short)(SkillGameplayDisabled(Thread.Context.VM)?0x7FFF:0);
             }
             return PersonData[(ushort)variable];
+        }
+
+        public bool SkillGameplayDisabled(VM vm)
+        {
+            var mode = vm.TSOState.SkillMode;
+            if (mode == 0) return false;
+            else if (mode == 1)
+                return ((VMTSOAvatarState)TSOState).Permissions == VMTSOAvatarPermissions.Visitor;
+            else return true;
         }
 
         public virtual void SetMotiveChange(VMMotive motive, short PerHourChange, short MaxValue)
@@ -787,6 +789,14 @@ namespace FSO.SimAntics
                     return true;
                 case VMPersonDataVariable.IsGhost:
                     if (WorldUI != null) ((AvatarComponent)WorldUI).IsDead = value > 0;
+                    break;
+                case VMPersonDataVariable.BodySkill:
+                case VMPersonDataVariable.CharismaSkill:
+                case VMPersonDataVariable.CookingSkill:
+                case VMPersonDataVariable.CreativitySkill:
+                case VMPersonDataVariable.LogicSkill:
+                case VMPersonDataVariable.MechanicalSkill:
+                    if (Thread != null && SkillGameplayDisabled(Thread.Context.VM)) return true;
                     break;
             }
             PersonData[(ushort)variable] = value;
@@ -902,7 +912,7 @@ namespace FSO.SimAntics
         public override bool PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context)
         {
             if (GetSlot(slot) == obj) return true; //already in slot
-            if (GetSlot(slot) != null) return false;
+            if (GetSlot(slot) != null || obj.Dead) return false;
             if (cleanOld) obj.PrePositionChange(context);
 
             if (!obj.GhostImage)

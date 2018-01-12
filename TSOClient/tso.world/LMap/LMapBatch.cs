@@ -30,6 +30,7 @@ namespace FSO.LotView.LMap
         private int OutShadowFloor = -1;
 
         public RenderTarget2D LightMap;
+        public RenderTarget2D LightMapDirection;
         public WallComponentRC WallComp
         {
             get
@@ -143,6 +144,7 @@ namespace FSO.LotView.LMap
             var w = blueprint.Width;
             var h = blueprint.Height;
             var ultra = WorldConfig.Current.UltraLighting;
+            var directional = WorldConfig.Current.Directional;
 
             resPerTile = ultra?16:8;
 
@@ -155,6 +157,7 @@ namespace FSO.LotView.LMap
             ObjShadowTarg = new RenderTarget2D(GD, (ultra)?(wl*2):wl, (ultra)?(wh*2):wh, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             LightMap = new RenderTarget2D(GD, (wl * 3), (wh * 2), false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents); //just ground floor for now.
             Projection = Matrix.CreateOrthographicOffCenter(new Rectangle(0, 0, (w - borderSize) * 16, (h - borderSize) * 16), -10, 10);
+            if (directional) LightMapDirection = new RenderTarget2D(GD, (w - borderSize)*3*4, (h - borderSize)*2*4, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 
             //initialize lighteffect with default params
             LightEffect.Parameters["shadowMap"].SetValue(ShadowTarg);
@@ -284,6 +287,12 @@ namespace FSO.LotView.LMap
             GD.SetRenderTarget(LightMap);
             GD.Clear(Color.White * (Blueprint.MinOut.A / 255f));
 
+            if (LightMapDirection != null)
+            {
+                GD.SetRenderTarget(LightMapDirection);
+                GD.Clear(Color.TransparentBlack);
+            }
+
             for (int i = 0; i < rooms.Count; i++)
             {
                 var room = rooms[i];
@@ -399,11 +408,27 @@ namespace FSO.LotView.LMap
 
                 GD.SetVertexBuffer(LightBuf);
                 GD.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+
+                if (LightMapDirection != null)
+                {
+                    GD.SetRenderTarget(LightMapDirection);
+                    DrawRect = ScaleDirectionScissor(DrawRect);
+                    GD.ScissorRectangle = DrawRect;
+                    effect.CurrentTechnique = effect.Techniques[1];
+                    passes = effect.Techniques[1].Passes;
+                    effect.Parameters["LightColor"].SetValue(Vector4.Zero);
+                    GD.BlendState = BlendState.Opaque;
+                    passes[2].Apply();
+                    GD.SetVertexBuffer(LightBuf);
+                    GD.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+                }
             }
             var outFactor = 1 - (Blueprint.MinOut.A / 255f);
 
             var factor = 16f / resPerTile;
 
+            var colorTech = 0; //
+            var dirTech = 1; //
 
             if (room.IsOutside || WallComp != null)
             {
@@ -432,18 +457,35 @@ namespace FSO.LotView.LMap
                 GD.ScissorRectangle = DrawRect;
                 LightEffect.Parameters["LightColor"].SetValue(Color.White.ToVector4() * outFactor);
                 LightEffect.Parameters["ShadowPowers"].SetValue(new Vector2(0.75f, 0.6f) * light.ShadowMultiplier);
+                LightEffect.Parameters["LightHeight"].SetValue(1f/(float)Blueprint.Width);
 
                 LightEffect.Parameters["LightPosition"].SetValue(light.LightPos / (size * 16f)); //in position space (0,1)
+                LightEffect.Parameters["LightDirection"].SetValue(new Vector3(-SunVector.Z, SunVector.Y*-1, SunVector.X));
                 LightEffect.Parameters["LightSize"].SetValue(float.MaxValue); //in position space (0,1)
                 LightEffect.Parameters["IsOutdoors"]?.SetValue(true);
 
                 var effect = LightEffect;
-                effect.CurrentTechnique = effect.Techniques[0];
-                EffectPassCollection passes = effect.Techniques[0].Passes;
+                effect.CurrentTechnique = effect.Techniques[colorTech];
+                EffectPassCollection passes = effect.Techniques[colorTech].Passes;
                 passes[room.IsOutside ? ((WallComp == null) ? 1 : 4) : 3].Apply();
 
                 GD.SetVertexBuffer(LightBuf);
                 GD.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+
+                if (LightMapDirection != null)
+                {
+                    GD.SetRenderTarget(LightMapDirection);
+                    effect.CurrentTechnique = effect.Techniques[dirTech];
+                    passes = effect.Techniques[dirTech].Passes;
+                    DrawRect = ScaleDirectionScissor(DrawRect);
+                    GD.ScissorRectangle = DrawRect;
+
+                    passes[room.IsOutside ? ((WallComp == null) ? 1 : 4) : 3].Apply();
+
+                    GD.SetVertexBuffer(LightBuf);
+                    GD.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+                }
+
                 LightEffect.Parameters["shadowMap"].SetValue(ShadowTarg);
             }
 
@@ -488,8 +530,8 @@ namespace FSO.LotView.LMap
                 LightEffect.Parameters["LightIntensity"]?.SetValue(light.LightIntensity);
 
                 var effect = LightEffect;
-                effect.CurrentTechnique = effect.Techniques[0];
-                EffectPassCollection passes = effect.Techniques[0].Passes;
+                effect.CurrentTechnique = effect.Techniques[colorTech];
+                EffectPassCollection passes = effect.Techniques[colorTech].Passes;
 
                 if (WorldConfig.Current.UltraLighting)
                 {
@@ -501,6 +543,19 @@ namespace FSO.LotView.LMap
 
                 GD.SetVertexBuffer(LightBuf);
                 GD.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+
+                if (LightMapDirection != null)
+                {
+                    GD.SetRenderTarget(LightMapDirection);
+                    effect.CurrentTechnique = effect.Techniques[dirTech];
+                    passes = effect.Techniques[dirTech].Passes;
+                    DrawRect = ScaleDirectionScissor(DrawRect);
+
+                    passes[0].Apply();
+
+                    GD.SetVertexBuffer(LightBuf);
+                    GD.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+                }
             }
             if (!hasMulOutside)
             {
@@ -510,22 +565,37 @@ namespace FSO.LotView.LMap
 
         public void MultiplyOutdoors(Rectangle bigBounds)
         {
-            GD.SetRenderTarget(LightMap);
             DrawRect = bigBounds;
             DrawRect.Offset(ScissorBase);
-            GD.ScissorRectangle = DrawRect;
+            for (int i = 0; i < (LightMapDirection != null ? 4 : 1); i++)
+            {
+                GD.SetRenderTarget((i==0)?LightMap:LightMapDirection);
+                if (i == 1) DrawRect = ScaleDirectionScissor(DrawRect);
+                GD.ScissorRectangle = DrawRect;
 
-            var effect = LightEffect;
-            effect.CurrentTechnique = effect.Techniques[0];
-            EffectPassCollection passes = effect.Techniques[0].Passes;
-            var l = Blueprint.OutsideColor.ToVector4();
-            l.W = (l.X + l.Y + l.Z) / 3;
-            effect.Parameters["LightColor"].SetValue(l);
-            GD.BlendState = MulBlend;
-            passes[2].Apply();
+                var effect = LightEffect;
+                var tech = (i == 1) ? 1 : 0;
+                effect.CurrentTechnique = effect.Techniques[tech];
+                EffectPassCollection passes = effect.Techniques[tech].Passes;
+                var l = Blueprint.OutsideColor.ToVector4();
+                l.W = (l.X + l.Y + l.Z) / 3;
+                if (i >= 2) effect.Parameters["LightColor"].SetValue(new Vector4(new Vector3(Math.Abs(SunVector.Z), Math.Abs(SunVector.Y), Math.Abs(SunVector.X)) * l.W * ((i==3)?-1:1), l.W));
+                else effect.Parameters["LightColor"].SetValue(l);
+                GD.BlendState = MulBlend;
+                passes[2].Apply();
 
-            GD.SetVertexBuffer(LightBuf);
-            GD.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+                if (i == 2) GD.BlendState = MinBlend;
+                else if (i == 3) GD.BlendState = MaxBlend;
+
+                GD.SetVertexBuffer(LightBuf);
+                GD.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+            }
+        }
+
+        private Rectangle ScaleDirectionScissor(Rectangle src)
+        {
+            var factor = LightMap.Width / (float)LightMapDirection.Width;
+            return new Rectangle((int)(src.X / factor), (int)(src.Y / factor), (int)(src.Width / factor), (int)(src.Height / factor));
         }
 
         public void DrawShadows(Tuple<GradVertex[], int[]> geom, int pass, LightData light)
@@ -595,6 +665,13 @@ namespace FSO.LotView.LMap
         {
             AlphaBlendFunction = BlendFunction.Max,
             ColorBlendFunction = BlendFunction.Max,
+            ColorDestinationBlend = Blend.One,
+        };
+        
+        public BlendState MinBlend = new BlendState()
+        {
+            AlphaBlendFunction = BlendFunction.Min,
+            ColorBlendFunction = BlendFunction.Min,
             ColorDestinationBlend = Blend.One,
         };
 
@@ -781,6 +858,7 @@ namespace FSO.LotView.LMap
             ObjShadowTarg?.Dispose();
             OutsideShadowTarg?.Dispose();
             LightMap?.Dispose();
+            LightMapDirection?.Dispose();
         }
     }
 }

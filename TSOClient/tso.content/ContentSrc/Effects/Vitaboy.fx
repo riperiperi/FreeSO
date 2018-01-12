@@ -116,6 +116,8 @@ float4 psVitaboy(VitaVertexOut v) : COLOR0
     }
 }
 
+
+
 float4 psVitaboyNoSSAA(VitaVertexOut v) : COLOR0
 {
 	float depth = v.screenPos.z / v.screenPos.w;
@@ -146,6 +148,22 @@ float4 psVitaboyAdv(VitaVertexOut v) : COLOR0
 #endif
 		float4 color = aaTex(v) * lightProcess(v.modelPos) * AmbientLight;
 		color.rgb *= pow((dot(normalize(v.normal), float3(0, 1, 0)) + 1) / 2, 0.5)*0.5 + 0.5f;
+		return color;
+	}
+}
+
+float4 psVitaboyDir(VitaVertexOut v) : COLOR0
+{
+	float depth = v.screenPos.z / v.screenPos.w;
+	if (depthOutMode == true) {
+		return packObjID(depth);
+	}
+	else {
+	#if SIMPLE
+		//SOFTWARE DEPTH
+		if (SoftwareDepth == true && depthOutMode == false && unpackDepth(tex2D(depthMapSampler, v.screenPos.xy)) < depth) discard;
+	#endif
+		float4 color = aaTex(v) * lightProcessDirection(v.modelPos, normalize(v.normal)) * AmbientLight;
 		return color;
 	}
 }
@@ -323,3 +341,16 @@ technique ShadowTech
 	}
 }
 
+technique AdvancedLightingDirection
+{
+	pass Pass1
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 vsVitaboy();
+		PixelShader = compile ps_4_0_level_9_3 psVitaboyDir();
+#else
+		VertexShader = compile vs_3_0 vsVitaboy();
+		PixelShader = compile ps_3_0 psVitaboyDir();
+#endif;
+	}
+}

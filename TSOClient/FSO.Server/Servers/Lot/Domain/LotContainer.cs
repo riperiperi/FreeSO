@@ -18,6 +18,7 @@ using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Servers.City.Domain;
 using FSO.SimAntics;
+using FSO.SimAntics.Engine;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Marshals.Hollow;
@@ -203,10 +204,30 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
         
-        public void AbortVM()
+        public string AbortVM()
         {
             Lot.Aborting = true;
             VMDriver.EndRecord();
+
+            //if we're aborting this VM, we're getting a simantics stack trace, no matter what!
+
+            List<VMStackFrame> ActiveStack = null;
+            if (!Lot.Scheduler.RunningNow) return "Not running object tick.";
+            var objID = Lot.Scheduler.CurrentObjectID;
+            for (int i=0; i<100; i++)
+            {
+                try
+                {
+                    var obj = Lot.GetObjectById(objID);
+                    ActiveStack = new List<VMStackFrame>(obj.Thread.Stack);
+                    return obj.ToString() + " Running ("+i+"): \r\n\r\n" + VMSimanticsException.GetStackTrace(ActiveStack);
+                } catch (Exception)
+                {
+
+                }
+            }
+
+            return "Failed to obtain trace! (100 times)";
         }
 
         public void LoadAdj()
@@ -309,24 +330,35 @@ namespace FSO.Server.Servers.Lot.Domain
             {
                 var path = Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/state_" + newBackup.ToString() + ".fsov");
                 var marshal = Lot.Save();
-                using (var output = new FileStream(path, FileMode.Create))
-                {
-                    marshal.SerializeInto(new BinaryWriter(output));
-                }
-
-                path = Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/hollow.fsoh");
                 var hmarshal = Lot.HollowSave();
-                using (var output = new FileStream(path, FileMode.Create))
-                {
-                    hmarshal.SerializeInto(new BinaryWriter(output));
-                }
 
-                LotPersist.ring_backup_num = newBackup;
-                using (var db = DAFactory.Get())
-                {
-                    db.Lots.UpdateRingBackup(LotPersist.lot_id, newBackup);
-                    db.Flush();
-                }
+                Host.InBackground(() => {
+                    try
+                    {
+                        using (var output = new FileStream(path, FileMode.Create))
+                        {
+                            marshal.SerializeInto(new BinaryWriter(output));
+                        }
+
+                        path = Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/hollow.fsoh");
+                        using (var output = new FileStream(path, FileMode.Create))
+                        {
+                            hmarshal.SerializeInto(new BinaryWriter(output));
+                        }
+
+                        LotPersist.ring_backup_num = newBackup;
+                        using (var db = DAFactory.Get())
+                        {
+                            db.Lots.UpdateRingBackup(LotPersist.lot_id, newBackup);
+                            //db.Flush();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        LOG.Warn(e, "Failed to save lot (to disk/db) with dbid = " + Context.DbId);
+                        LOG.Warn(e.StackTrace);
+                    }
+                });
                 return true;
             } catch (Exception e)
             {
@@ -586,6 +618,7 @@ namespace FSO.Server.Servers.Lot.Domain
             Lot.TSOState.Roommates = new HashSet<uint>();
             Lot.TSOState.BuildRoommates = new HashSet<uint>();
             Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
+            Lot.TSOState.SkillMode = LotPersist.skill_mode;
             foreach (var roomie in LotRoommates)
             {
                 if (roomie.is_pending > 0) continue;
@@ -830,23 +863,36 @@ namespace FSO.Server.Servers.Lot.Domain
                         AvatarSaveTicker = AVATAR_SAVE_PERIOD;
                     }
 
+                    List<IVoltronSession> toRelease = null;
                     lock (SessionsToRelease)
                     {
                         //save avatar state, then release their avatar claims afterwards.
                         //SaveAvatars(SessionsToRelease.Select(x => Lot.GetAvatarByPersist(x.AvatarId)), true); //todo: is this performed by the fact that we started the persist save above?
-                        foreach (var session in SessionsToRelease)
+                        if (SessionsToRelease.Count > 0)
+                        {
+                            toRelease = new List<IVoltronSession>(SessionsToRelease);
+                            SessionsToRelease.Clear();
+                        }
+                    }
+
+                    if (toRelease != null) {
+                        foreach (var session in toRelease)
                         {
                             Host.ReleaseAvatarClaim(session);
                         }
-                        SessionsToRelease.Clear();
                     }
 
-                    lock (LotThreadActions)
-                    {
-                        while (LotThreadActions.Count > 0)
+                    Queue<Action> lotActions = null;
+                    lock (LotThreadActions) {
+                        if (LotThreadActions.Count > 0)
                         {
-                            LotThreadActions.Dequeue()();
+                            lotActions = new Queue<Action>(LotThreadActions);
+                            LotThreadActions.Clear();
                         }
+                    }
+
+                    if (lotActions != null) {
+                        while (lotActions.Count > 0) lotActions.Dequeue()();
                     }
 
                     if (--KeepAliveTicker <= 0)
@@ -1192,23 +1238,42 @@ namespace FSO.Server.Servers.Lot.Domain
             return state;
         }
 
-        public void NotifyRoommateChange(uint avatar_id, ChangeType change)
+        public void NotifyRoommateChange(uint avatar_id, uint replace_id, ChangeType change)
         {
+            var signalled = LotActive.WaitOne(10000); //wait til we're active at least
+            if (!signalled) return; //give up
             VMTSOAvatarPermissions newLevel = VMTSOAvatarPermissions.Visitor;
+            VMChangePermissionsMode mode = VMChangePermissionsMode.NORMAL;
             switch (change)
             {
                 case ChangeType.ADD_ROOMMATE:
                     newLevel = VMTSOAvatarPermissions.Roommate; break;
                 case ChangeType.REMOVE_ROOMMATE:
                     newLevel = VMTSOAvatarPermissions.Visitor; break;
+                case ChangeType.BECOME_OWNER:
+                    newLevel = VMTSOAvatarPermissions.Owner;
+                    mode = VMChangePermissionsMode.OWNER_SWITCH; break;
+                case ChangeType.BECOME_OWNER_WITH_OBJECTS:
+                    newLevel = VMTSOAvatarPermissions.Owner;
+                    mode = VMChangePermissionsMode.OWNER_SWITCH_WITH_OBJECTS; break;
+                case ChangeType.ROOMIE_INHERIT_OBJECTS_ONLY:
+                    mode = VMChangePermissionsMode.OBJECTS_ONLY; break;
             }
 
-            VMDriver.SendCommand(new VMChangePermissionsCmd
+            try
             {
-                TargetUID = avatar_id,
-                Level = newLevel,
-                Verified = true,
-            });
+                VMDriver.SendCommand(new VMChangePermissionsCmd
+                {
+                    TargetUID = avatar_id,
+                    Level = newLevel,
+                    Mode = mode,
+                    ReplaceUID = replace_id,
+                    Verified = true,
+                });
+            } catch (Exception)
+            {
+
+            }
         }
 
         public void ForceShutdown()

@@ -1,6 +1,7 @@
 ﻿using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public interface IVMTSOGlobalLink
     {
         void LeaveLot(VM vm, VMAvatar avatar);
+        void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, short type, short thread, VMAsyncTransactionCallback callback);
         void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, short type, VMAsyncTransactionCallback callback);
         void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback);
         void RequestRoommate(VM vm, uint pid, int mode, byte permissions);
@@ -25,7 +27,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback);
         void UpdateObjectPersist(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback);
         void PurchaseFromOwner(VM vm, VMMultitileGroup obj, uint purchaserPID, VMAsyncInventorySaveCallback callback, VMAsyncTransactionCallback tcallback);
-        void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, VMAsyncInventoryRetrieveCallback callback);
+        void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, bool setOnLot, VMAsyncInventoryRetrieveCallback callback);
         void ConsumeInventory(VM vm, uint ownerPID, uint guid, int mode, short num, VMAsyncInventoryConsumeCallback callback);
         void DeleteObject(VM vm, uint objectPID, VMAsyncDeleteObjectCallback callback);
         void SetSpotlightStatus(VM vm, bool on);
@@ -37,7 +39,14 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void UpdateOutfitSalePrice(VM vm, uint outfitPID, uint objectPID, int newSalePrice, VMAsyncUpdateOutfitSalePriceCallback callback);
         void PurchaseOutfit(VM vm, uint outfitPID, uint objectPID, uint avatarPID, VMAsyncPurchaseOutfitCallback callback);
 
+        //Trading
+        void SecureTrade(VM vm, VMEODSecureTradePlayer p1, VMEODSecureTradePlayer p2, VMAsyncSecureTradeCallback callback);
+
+        //FSO Newspaper
+        void GetDynPayouts(VMAsyncNewspaperCallback callback);
+
         void Tick(VM vm);
+        void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p);
     }
 
     public delegate void VMAsyncTransactionCallback(bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2);
@@ -55,4 +64,8 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public delegate void VMAsyncDeleteOutfitCallback(bool success);
     public delegate void VMAsyncUpdateOutfitSalePriceCallback(bool success);
     public delegate void VMAsyncPurchaseOutfitCallback(bool success);
+
+    public delegate void VMAsyncNewspaperCallback(VMEODFNewspaperData datapoints);
+    public delegate void VMAsyncSecureTradeCallback(VMEODSecureTradeError result);
+    public delegate void VMAsyncFindLotCallback(uint lotID, int objectCount, long objectValue, string lotName);
 }

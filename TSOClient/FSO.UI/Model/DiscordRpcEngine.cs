@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Common.Enum;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -48,7 +49,7 @@ namespace FSO.UI.Model
             }
         }
 
-        public static void SendFSOPresence(string lotName, int lotID, int players, int maxSize)
+        public static void SendFSOPresence(string lotName, int lotID, int players, int maxSize, int catID)
         {
             if (!Active) return;
             var presence = new DiscordRpc.RichPresence();
@@ -78,6 +79,9 @@ namespace FSO.UI.Model
             }
             else presence.state = (lotName == null) ? "Idle in city" : "In Lot: " + lotName;
 
+            presence.largeImageKey = "sunrise_crater";
+            presence.largeImageText = "Sunrise Crater";
+
             if (lotName != null)
             {
                 presence.joinSecret = lotID + "#" + lotName;
@@ -86,9 +90,17 @@ namespace FSO.UI.Model
                 presence.partyMax = maxSize;
                 presence.partySize = players;
                 presence.partyId = lotID.ToString();
+
+                presence.largeImageKey = "cat_" + catID;
+                presence.largeImageText = CapFirstWord(((LotCategory)catID).ToString());
             }
 
             DiscordRpc.UpdatePresence(ref presence);
+        }
+
+        private static string CapFirstWord(string cat)
+        {
+            return char.ToUpperInvariant(cat[0]) + cat.Substring(1);
         }
 
         public static void Ready()

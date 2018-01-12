@@ -11,6 +11,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.LotView.Model;
+using FSO.Common.Rendering;
 
 namespace FSO.LotView.Utils
 {
@@ -160,8 +161,9 @@ namespace FSO.LotView.Utils
                                 item.RenderMode = _2DBatchRenderMode.NO_DEPTH;
                             }
 
-                            item.SrcRect = new Rectangle(0, 0, item.Pixel.Width, item.Pixel.Height);
-                            item.DestRect = new Rectangle(0, 0, item.Pixel.Width, item.Pixel.Height);
+                            var pt = ((TextureInfo)item.Pixel.Tag).Size;
+                            item.SrcRect = new Rectangle(0, 0, pt.X, pt.Y);
+                            item.DestRect = new Rectangle(0, 0, pt.X, pt.Y);
                             item.FlipHorizontally = sprite.Flip;
 
                             Items.Add(new DGRPRendererItem { Sprite = item, DGRPSprite = sprite });
@@ -179,7 +181,7 @@ namespace FSO.LotView.Utils
                     var dgrpSprite = item.DGRPSprite;
 
                     var pxX = (world.WorldSpace.CadgeWidth / 2.0f) + dgrpSprite.SpriteOffset.X;
-                    var pxY = (world.WorldSpace.CadgeBaseLine - sprite.Pixel.Height) + dgrpSprite.SpriteOffset.Y;
+                    var pxY = (world.WorldSpace.CadgeBaseLine - item.Sprite.DestRect.Height) + dgrpSprite.SpriteOffset.Y;
 
                     if (dgrpSprite.ObjectOffset != Vector3.Zero) { }
                     var centerRelative = dgrpSprite.ObjectOffset * new Vector3(1f / 16f, 1f / 16f, 1f / 5f);

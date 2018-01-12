@@ -607,10 +607,26 @@ namespace FSO.Files.Formats.IFF.Chunks
                     ContainsNothing = true;
                     return null;
                 }
+                var tc = FSOEnvironment.TexCompress;
                 var mip = FSOEnvironment.Enable3D && (FSOEnvironment.EnableNPOTMip || (Width == 128 && Height == 64));
-                result = new CachableTexture2D(device, this.Width, this.Height, mip, SurfaceFormat.Color);
-                if (mip) TextureUtils.UploadWithMips(result, device, this.PixelData);
-                else result.SetData<Color>(this.PixelData);
+                if (tc)
+                {
+                    
+                    result = new CachableTexture2D(device, ((Width+3)/4)*4, ((Height + 3) / 4) * 4, mip, SurfaceFormat.Dxt5);
+                    if (mip) TextureUtils.UploadDXT5WithMips(result, Width, Height, device, this.PixelData);
+                    else
+                    {
+                        var dxt = TextureUtils.DXT5Compress(this.PixelData, this.Width, this.Height);
+                        result.SetData<byte>(dxt.Item1);
+                    }
+                }
+                else
+                {
+                    result = new CachableTexture2D(device, this.Width, this.Height, mip, SurfaceFormat.Color);
+                    if (mip) TextureUtils.UploadWithMips(result, device, this.PixelData);
+                    else result.SetData<Color>(this.PixelData);
+                }
+                result.Tag = new TextureInfo(result, Width, Height);
                 PixelCache = new WeakReference<Texture2D>(result);
                 if (TimedReferenceController.CurrentType == CacheType.PERMANENT) PermaRefP = result;
                 if (!IffFile.RETAIN_CHUNK_DATA)
@@ -659,8 +675,26 @@ namespace FSO.Files.Formats.IFF.Chunks
                     ContainsNoZ = true;
                     return null;
                 }
-                result = new CachableTexture2D(device, this.Width, this.Height, false, SurfaceFormat.Alpha8);
-                result.SetData<byte>(this.ZBufferData);
+                if (FSOEnvironment.TexCompress)
+                {
+                    result = new CachableTexture2D(device, ((Width+3)/4)*4, ((Height+3)/4)*4, false, SurfaceFormat.Alpha8);
+                    var tempZ = new byte[result.Width * result.Height];
+                    var dind = 0;
+                    var sind = 0;
+                    for (int i=0; i<Height; i++)
+                    {
+                        Array.Copy(ZBufferData, sind, tempZ, dind, Width);
+                        sind += Width;
+                        dind += result.Width;
+                    }
+                    
+                    result.SetData<byte>(tempZ);
+                }
+                else
+                {
+                    result = new CachableTexture2D(device, this.Width, this.Height, false, SurfaceFormat.Alpha8);
+                    result.SetData<byte>(this.ZBufferData);
+                }
                 ZCache = new WeakReference<Texture2D>(result);
                 if (TimedReferenceController.CurrentType == CacheType.PERMANENT) PermaRefZ = result;
                 if (!IffFile.RETAIN_CHUNK_DATA)

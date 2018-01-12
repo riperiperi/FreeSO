@@ -4,6 +4,7 @@ float4x4 World;
 float4x4 ViewProjection;
 
 float ObjectID;
+float2 UVScale;
 float4 AmbientLight;
 
 texture MeshTex;
@@ -43,6 +44,7 @@ struct VertexIn
 {
 	float4 position : SV_Position0;
 	float2 texCoord : TEXCOORD0;
+	float3 normal : TEXCOORD1;
 };
 
 struct VertexOut
@@ -50,17 +52,19 @@ struct VertexOut
 	float4 position : SV_Position0;
 	float2 texCoord : TEXCOORD0;
 	float4 modelPos : TEXCOORD1;
+	float3 normal : TEXCOORD2;
 };
 
 VertexOut vsRC(VertexIn v) {
 	VertexOut result;
 
-	result.texCoord = v.texCoord;
+	result.texCoord = v.texCoord * UVScale;
 
 	float4 wPos = mul(v.position, World);
 	float4 finalPos = mul(wPos, ViewProjection);
 	result.position = finalPos;
 	result.modelPos = wPos;
+	result.normal = mul(v.normal, (float3x3)World);
 
 	return result;
 }
@@ -71,6 +75,14 @@ float4 psRC(VertexOut v) : COLOR0
 	if (color.a < 0.01) discard;
 	return color;
 }
+
+float4 psDirRC(VertexOut v) : COLOR0
+{
+	float4 color = tex2D(TexSampler, v.texCoord) * lightProcessDirection(v.modelPos, normalize(v.normal));
+	if (color.a < 0.01) discard;
+	return color;
+}
+
 
 float4 psLMapRC(VertexOut v) : COLOR0
 {
@@ -207,6 +219,17 @@ technique Draw
 #else
 		VertexShader = compile vs_3_0 vsRC();
 		PixelShader = compile ps_3_0 psRC();
+#endif;
+	}
+
+	pass PassDirectional
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_3 vsRC();
+		PixelShader = compile ps_4_0_level_9_3 psDirRC();
+#else
+		VertexShader = compile vs_3_0 vsRC();
+		PixelShader = compile ps_3_0 psDirRC();
 #endif;
 	}
 }

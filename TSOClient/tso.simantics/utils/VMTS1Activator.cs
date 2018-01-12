@@ -56,6 +56,7 @@ namespace FSO.SimAntics.Utils
         private LotView.World World;
         private Blueprint Blueprint;
         private int Size;
+        private bool FlipRoad;
         private short HouseNumber;
 
         public VMTS1Activator(VM vm, LotView.World world, short hn)
@@ -68,6 +69,7 @@ namespace FSO.SimAntics.Utils
         public Blueprint LoadFromIff(IffFile iff)
         {
             var simi = iff.Get<SIMI>(1);
+            var hous = iff.Get<HOUS>(0);
 
             Size = simi.GlobalData[23];
             var type = simi.GlobalData[35];
@@ -79,6 +81,8 @@ namespace FSO.SimAntics.Utils
             VM.Context.VM = VM;
             VM.Context.Blueprint = Blueprint;
             VM.Context.Architecture = new VMArchitecture(size, size, Blueprint, VM.Context);
+
+            FlipRoad = (hous.CameraDir & 1) > 0;
 
             VM.GlobalState = simi.GlobalData;
 
@@ -149,6 +153,7 @@ namespace FSO.SimAntics.Utils
             arch.Terrain.GrassState = ResizeGrass(arch.Terrain.GrassState, size);
             arch.Terrain.Heights = Array.ConvertAll(ResizeGrass(DecodeHeights(iff.Get<ARRY>(0).TransposeData), size), x=>(short)(x*10));
             arch.Terrain.RegenerateCenters();
+            arch.RoofStyle = (uint)Content.Content.Get().WorldRoofs.NameToID(hous.RoofName.ToLowerInvariant()+".bmp");
 
             if (VM.UseWorld)
             {
@@ -382,6 +387,13 @@ namespace FSO.SimAntics.Utils
             for (int i=0; i<floors.Length; i++)
             {
                 var floor = floors[i];
+                if (FlipRoad)
+                {
+                    if (floor.Pattern == 10)
+                        floors[i].Pattern = 11;
+                    else if (floor.Pattern == 11)
+                        floors[i].Pattern = 10;
+                }
                 if (floor.Pattern != 0 && ((flags[i] & 32) == 0) || floor.Pattern > 30)
                 {
                     ushort newID;

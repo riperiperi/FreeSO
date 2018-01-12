@@ -165,6 +165,14 @@ namespace FSO.Common.DataService.Model
             set { _Lot_LotAdmitInfo = value; NotifyPropertyChanged("Lot_LotAdmitInfo"); }
         }
 
+        private uint _Lot_SkillGamemode;
+        [Persist]
+        public uint Lot_SkillGamemode
+        {
+            get { return _Lot_SkillGamemode; }
+            set { _Lot_SkillGamemode = value; NotifyPropertyChanged("Lot_SkillGamemode"); }
+        }
+
         public Location Lot_Location { get; set; }
 
         public uint Lot_Location_Packed

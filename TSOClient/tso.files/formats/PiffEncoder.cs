@@ -155,15 +155,16 @@ namespace FSO.Files.Formats
                 }
 
                 byte lastC = 0;
-                PIFFPatch curr = null;
+                PIFFPatch? curr = null;
                 List<byte> addArray = null;
                 int ptr = 0;
                 foreach (var c in changes)
                 {
                     if (c != lastC && curr != null)
                     {
-                        if (lastC == 1) curr.Data = addArray.ToArray();
-                        patches.Add(curr);
+                        var patch = curr.Value;
+                        if (lastC == 1) patch.Data = addArray.ToArray();
+                        patches.Add(patch);
                         curr = null;
                     }
                     if (c == 0) ptr++;
@@ -177,7 +178,9 @@ namespace FSO.Files.Formats
                         }
                         else
                         {
-                            curr.Size++;
+                            var patch = curr.Value;
+                            patch.Size++;
+                            curr = patch;
                             addArray.Add(newData[i + ptr]);
                         }
                         ptr++;
@@ -187,15 +190,20 @@ namespace FSO.Files.Formats
                         if (lastC != 2)
                             curr = new PIFFPatch { Mode = PIFFPatchMode.Remove, Offset = (uint)(i + ptr), Size = 1 };
                         else
-                            curr.Size++;
+                        {
+                            var patch = curr.Value;
+                            patch.Size++;
+                            curr = patch;
+                        }
                     }
                     lastC = c;
                 }
 
                 if (curr != null)
                 {
-                    if (lastC == 1) curr.Data = addArray.ToArray();
-                    patches.Add(curr);
+                    var patch = curr.Value;
+                    if (lastC == 1) patch.Data = addArray.ToArray();
+                    patches.Add(patch);
                 }
 
                 if (m < n)

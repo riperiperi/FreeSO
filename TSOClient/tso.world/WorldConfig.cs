@@ -39,11 +39,20 @@ namespace FSO.LotView
         public int SurroundingLots = 0;
         public bool SmoothZoom = false;
         public bool AA = false;
+        public bool Directional = true;
 
         public int PassOffset
         {
             get {
                 return (AdvancedLighting)?1:0;
+            }
+        }
+
+        public int DirPassOffset
+        {
+            get
+            {
+                return (AdvancedLighting) ? ((Directional)?1:1) : 0;
             }
         }
     }

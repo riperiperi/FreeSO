@@ -308,9 +308,9 @@ namespace FSO.Client.UI
 
             /** 
              * Handle the mouse events from the previous frame
-             * Its important to do this before the update calls because
-             * a lot of mouse events will make changes to the UI. If they do
-             * we want the Matrix's to be recalculated before the draw
+             * It's important to do this before the update calls because
+             * a lot of mouse events will make changes to the UI. If they do,
+             * we want the matrices to be recalculated before the draw
              * method and that is done in the update method.
              */
             if (state.ProcessMouseEvents){

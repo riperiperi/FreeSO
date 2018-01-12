@@ -29,7 +29,6 @@ namespace FSO.Client.UI.Controls.Catalog
         private Texture2D Background;
         private UIMouseEventRef ClickHandler;
         public event ButtonClickDelegate OnMouseEvent;
-        public UICatalog ParentCatalog;
         public UICatalogElement Info;
         public int Index;
 
@@ -76,7 +75,7 @@ namespace FSO.Client.UI.Controls.Catalog
 
         public override void Draw(UISpriteBatch batch)
         {
-            
+            if (!Visible) return;
             if (Icon != null)
             {
                 if (Icon.Width / Icon.Height > 2)

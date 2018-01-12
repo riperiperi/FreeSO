@@ -27,6 +27,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FSO.Server.Database.DA.Transactions;
+using FSO.Server.Database.DA.DynPayouts;
 
 namespace FSO.Server.Database.DA
 {
@@ -53,6 +54,7 @@ namespace FSO.Server.Database.DA
         IInbox Inbox { get; }
         IEvents Events { get; }
         ITuning Tuning { get; }
+        IDynPayouts DynPayouts { get; }
         ITransactions Transactions { get; }
 
         //System tables

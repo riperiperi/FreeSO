@@ -399,6 +399,28 @@ void BasePSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB :
 	}
 }
 
+float MulBase = 0.2;
+float MulRange = 7;
+float4 BlurBounds = float4(6, 6, 68, 68);
+
+void BasePSMul(GrassPSVTX input, out float4 color:COLOR0)
+{
+	float4 c = LightDot(input.Normal);
+
+	float2 edgeDistXY = min(input.ModelPos.xz-BlurBounds.xy*3, BlurBounds.zw*3 - input.ModelPos.xz);
+	float edgeDist = min(edgeDistXY.x, edgeDistXY.y);
+
+	edgeDist = min(1, edgeDist / 24.0);
+
+	//we want to mask out the terrain using its difference from the expected ground colour. 
+	//close to 0 should be zero, but past 30% should be fully apparent.
+	float3 expected = lerp(LightGreen.rgb, DarkGreen.rgb, 0.1);
+	c *= input.Color;
+	float diff = length(expected - c.rgb);
+	color = float4(1, 1, 1, 1)*max(0, min(1, (diff - MulBase) * MulRange)) * edgeDist;
+}
+
+
 void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 {
 	float d = input.GrassInfo.w;
@@ -555,6 +577,22 @@ technique DrawLMap
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 BasePSLMap();
+#endif;
+
+	}
+}
+
+technique DrawMask
+{
+	pass MainPass
+	{
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 GrassVS();
+		PixelShader = compile ps_4_0_level_9_1 BasePSMul();
+#else
+		VertexShader = compile vs_3_0 GrassVS();
+		PixelShader = compile ps_3_0 BasePSMul();
 #endif;
 
 	}

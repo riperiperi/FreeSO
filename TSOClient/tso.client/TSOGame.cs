@@ -27,6 +27,7 @@ using Microsoft.Xna.Framework.Audio;
 using FSO.HIT.Model;
 using FSO.UI.Model;
 using FSO.Files.RC;
+using System.Windows.Forms;
 //using System.Windows.Forms;
 
 namespace FSO.Client
@@ -42,7 +43,7 @@ namespace FSO.Client
 		public TSOGame() : base()
         {
             GameFacade.Game = this;
-            if (GameFacade.DirectX) TimedReferenceController.SetMode(CacheType.PERMANENT);
+            //if (GameFacade.DirectX) TimedReferenceController.SetMode(CacheType.PERMANENT);
             Content.RootDirectory = FSOEnvironment.GFXContentDir;
             Graphics.SynchronizeWithVerticalRetrace = true;
 
@@ -110,6 +111,7 @@ namespace FSO.Client
                 settings.GraphicsHeight = (int)(GraphicsDevice.Viewport.Height / FSOEnvironment.DPIScaleFactor);
             }
 
+            //manage settings
             if (settings.LightingMode == -1)
             {
                 if (settings.Lighting)
@@ -133,6 +135,14 @@ namespace FSO.Client
             };
 
             FeatureLevelTest.UpdateFeatureLevel(GraphicsDevice);
+
+            if (!FSOEnvironment.TexCompressSupport) settings.TexCompression = 0;
+            else if ((settings.TexCompression & 2) == 0)
+            {
+                settings.TexCompression = 1;
+            }
+            FSOEnvironment.TexCompress = (settings.TexCompression & 1) > 0;
+            //end settings management
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
@@ -266,8 +276,9 @@ namespace FSO.Client
             }
             catch (Exception e)
             {
-                //MessageBox.Windows.Forms.MessageBox.Show("Content could not be loaded. Make sure that the FreeSO content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
+                MessageBox.Show("Content could not be loaded. Make sure that the FreeSO content has been compiled! (ContentSrc/TSOClientContent.mgcb) \r\n\r\n"+e.ToString());
                 Exit();
+                Application.Exit();
             }
 
             FSO.Vitaboy.Avatar.setVitaboyEffect(vitaboyEffect);

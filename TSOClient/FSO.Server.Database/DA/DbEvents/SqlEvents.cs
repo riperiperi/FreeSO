@@ -31,6 +31,11 @@ namespace FSO.Server.Database.DA.DbEvents
             return Context.Connection.Query<DbEvent>("SELECT * FROM fso_events WHERE start_day <= @time AND end_day >= @time", new { time = time }).ToList();
         }
 
+        public List<DbEvent> GetLatestNameDesc(int limit)
+        {
+            return Context.Connection.Query<DbEvent>("SELECT * FROM fso_events WHERE title IS NOT NULL AND description IS NOT NULL ORDER BY start_day DESC LIMIT "+limit).ToList();
+        }
+
         public List<uint> GetParticipatingUsers(int event_id)
         {
             return Context.Connection.Query<uint>("SELECT user_id FROM fso_event_participation WHERE event_id = @event_id", new { event_id = event_id }).ToList();

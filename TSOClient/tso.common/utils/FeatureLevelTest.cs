@@ -33,6 +33,19 @@ namespace FSO.Common.Utils
                 }
             }
 
+            try
+            {
+                using (var mipTest = new Texture2D(gd, 4, 4, true, SurfaceFormat.Dxt5))
+                {
+                    var data = new byte[16];
+                    mipTest.SetData(data);
+                }
+            }
+            catch (Exception e)
+            {
+                FSOEnvironment.TexCompressSupport = false;
+            }
+
             return true;
         }
     }

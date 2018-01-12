@@ -115,6 +115,10 @@
     <Compile Include="DA\DbEvents\DbEvent.cs" />
     <Compile Include="DA\DbEvents\IEvents.cs" />
     <Compile Include="DA\DbEvents\SqlEvents.cs" />
+    <Compile Include="DA\DynPayouts\DbDynPayout.cs" />
+    <Compile Include="DA\DynPayouts\DbTransSummary.cs" />
+    <Compile Include="DA\DynPayouts\IDynPayouts.cs" />
+    <Compile Include="DA\DynPayouts\SqlDynPayouts.cs" />
     <Compile Include="DA\Hosts\DbHost.cs" />
     <Compile Include="DA\Hosts\IHosts.cs" />
     <Compile Include="DA\Hosts\SqlHosts.cs" />
@@ -187,6 +191,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\changes\0018_dyn_payout_tuning.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0019_skillmode.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\manifest.json">

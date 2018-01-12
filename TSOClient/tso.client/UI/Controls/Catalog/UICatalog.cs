@@ -268,7 +268,7 @@ namespace FSO.Client.UI.Controls.Catalog
         };
 
         public int PageSize { get; set; }
-        private List<UICatalogElement> Selected;
+        public List<UICatalogElement> Selected;
         private UICatalogItem[] CatalogItems;
         private Dictionary<uint, Texture2D> IconCache;
 
@@ -314,9 +314,11 @@ namespace FSO.Client.UI.Controls.Catalog
             int halfPage = PageSize / 2;
             
             for (int i=0; i<CatalogItems.Length; i++) {
+                var sel = Selected[index++];
                 var elem = new UICatalogItem(false);
-                elem.Index = index;
-                elem.Info = Selected[index++];
+                if (sel.Item.GUID == uint.MaxValue) elem.Visible = false;
+                elem.Index = index-1;
+                elem.Info = sel;
                 elem.Info.CalcPrice = (int)elem.Info.Item.Price;
 
                 if (elem.Info.Item.GUID != 0)
@@ -381,6 +383,7 @@ namespace FSO.Client.UI.Controls.Catalog
         public ObjectCatalogItem Item;
         public int CalcPrice;
         public UISpecialCatalogElement Special;
+        public object Tag;
     }
 
     public class UISpecialCatalogElement

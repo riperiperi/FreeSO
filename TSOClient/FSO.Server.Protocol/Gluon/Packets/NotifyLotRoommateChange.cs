@@ -16,12 +16,14 @@ namespace FSO.Server.Protocol.Gluon.Packets
     public class NotifyLotRoommateChange : AbstractGluonPacket
     {
         public uint AvatarId;
+        public uint ReplaceId;
         public int LotId;
         public ChangeType Change;
 
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             AvatarId = input.GetUInt32();
+            ReplaceId = input.GetUInt32();
             LotId = input.GetInt32();
             Change = input.GetEnum<ChangeType>();
         }
@@ -34,6 +36,7 @@ namespace FSO.Server.Protocol.Gluon.Packets
         public override void Serialize(IoBuffer output, ISerializationContext context)
         {
             output.PutUInt32(AvatarId);
+            output.PutUInt32(ReplaceId);
             output.PutInt32(LotId);
             output.PutEnum(Change);
         }

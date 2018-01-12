@@ -133,7 +133,12 @@ namespace FSO.SimAntics.Primitives
                 selection = sorted[(int)context.VM.Context.NextRandom((ulong)Math.Min(4, sorted.Count))];
             }
 
-            selection.Callee.PushUserInteraction(selection.ID, context.Caller, context.VM.Context, false, new short[] { selection.Param0, 0, 0, 0 });
+            var qaction = selection.Callee.GetAction(selection.ID, context.Caller, context.VM.Context, false, new short[] { selection.Param0, 0, 0, 0 });
+            if (qaction != null)
+            {
+                qaction.Priority = (short)VMQueuePriority.Autonomous;
+                context.Caller.Thread.EnqueueAction(qaction);
+            }
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

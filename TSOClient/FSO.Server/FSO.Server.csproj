@@ -200,6 +200,7 @@
     <Compile Include="Servers\City\Handlers\MailHandler.cs" />
     <Compile Include="Servers\City\Handlers\ModerationHandler.cs" />
     <Compile Include="Servers\City\Handlers\AvatarRetireHandler.cs" />
+    <Compile Include="Servers\Tasks\Domain\JobBalanceTask.cs" />
     <Compile Include="Servers\Tasks\Domain\PruneDatabaseTask.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServer.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServerConfig.cs" />

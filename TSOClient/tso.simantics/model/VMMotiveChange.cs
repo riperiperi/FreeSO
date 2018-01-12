@@ -65,6 +65,7 @@ namespace FSO.SimAntics.Model
                 return rate;
             } else
             {
+                if (rate < 0) return rate;
                 if (LotMotives == null) LotMotives = Content.Content.Get().GlobalTuning.EntriesByName["lotmotives"];
                 if (vm.TSOState.PropertyCategory == 4 && type > 0) rate = (rate * 3) / 2; //1.5x gain multiplier on services lots
                 if (VMMotive.Comfort == type) return rate;

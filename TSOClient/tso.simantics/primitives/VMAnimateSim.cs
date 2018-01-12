@@ -27,7 +27,7 @@ namespace FSO.SimAntics.Engine.Primitives
 
             Animation animation = null;
             var id = (operand.IDFromParam) ? (ushort)(context.Args[operand.AnimationID]) : operand.AnimationID;
-            
+
             if (id == 0)
             { //reset
                 avatar.Animations.Clear();
@@ -52,7 +52,15 @@ namespace FSO.SimAntics.Engine.Primitives
             }
             var source = operand.Source;
             if (operand.IDFromParam && source == VMAnimationScope.Object) source = VMAnimationScope.StackObject; //fixes MM rollercoaster
-            animation = VMMemory.GetAnimation(context, source, id);
+            if (!operand.IDFromParam) {
+                if (operand.AnimationCache == null)
+                    operand.AnimationCache = VMMemory.GetAnimation(context, source, id);
+                animation = operand.AnimationCache;
+            } else
+            {
+                animation = VMMemory.GetAnimation(context, source, id);
+            }
+
             if (animation == null){
                 return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
             }
@@ -118,12 +126,26 @@ namespace FSO.SimAntics.Engine.Primitives
     }
 
     public class VMAnimateSimOperand : VMPrimitiveOperand {
-        public ushort AnimationID {get; set;}
+        private ushort _AnimationID;
+        public ushort AnimationID
+        {
+            get
+            {
+                return _AnimationID;
+            }
+            set
+            {
+                _AnimationID = value;
+                AnimationCache = null;
+            }
+        }
         public byte LocalEventNumber { get; set; }
         public byte _pad;
         public VMAnimationScope Source { get; set; }
         public byte Flags;
         public byte ExpectedEventCount { get; set; }
+
+        public Animation AnimationCache;
 
         #region VMPrimitiveOperand Members
 

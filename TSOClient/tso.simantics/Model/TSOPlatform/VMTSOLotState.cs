@@ -23,6 +23,8 @@ namespace FSO.SimAntics.Model.TSOPlatform
 
         public VMTSOJobUI JobUI;
 
+        public byte SkillMode;
+
         public VMTSOLotState() { }
         public VMTSOLotState(int version) : base(version) { }
 
@@ -55,6 +57,11 @@ namespace FSO.SimAntics.Model.TSOPlatform
                     JobUI.Deserialize(reader);
                 }
             }
+
+            if (Version > 24)
+            {
+                SkillMode = reader.ReadByte();
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -73,6 +80,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
 
             writer.Write(JobUI != null);
             if (JobUI != null) JobUI.SerializeInto(writer);
+            writer.Write(SkillMode);
         }
 
         public bool CanPlaceNewUserObject(VM vm)

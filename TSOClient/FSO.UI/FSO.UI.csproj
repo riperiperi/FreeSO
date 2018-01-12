@@ -65,6 +65,7 @@
     <Compile Include="Controls\Catalog\UICatalogTerrainResProvider.cs" />
     <Compile Include="Controls\Catalog\UICatalogWallpaperResProvider.cs" />
     <Compile Include="Controls\Catalog\UICatalogWallResProvider.cs" />
+    <Compile Include="Controls\UINineSliceButton.cs" />
     <Compile Include="Controls\UIAlert.cs" />
     <Compile Include="Controls\UIBlocker.cs" />
     <Compile Include="Controls\UIButton.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="Panels\LotControls\UITerrainRaiser.cs" />
     <Compile Include="Panels\LotControls\UIWallPainter.cs" />
     <Compile Include="Panels\LotControls\UIWallPlacer.cs" />
+    <Compile Include="Panels\UI3DThumb.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UIFileIDs.cs" />
     <Compile Include="UILayer.cs" />

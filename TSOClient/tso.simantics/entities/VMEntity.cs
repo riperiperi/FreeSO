@@ -384,7 +384,7 @@ namespace FSO.SimAntics
 
         public bool RunEveryFrame()
         {
-            return (this is VMAvatar || (Headline != null) || ((VMGameObject)this).Disabled > 0);
+            return (this is VMAvatar || (Headline != null) || ((VMGameObject)this).Disabled > VMGameObjectDisableFlags.ForSale);
         }
 
         public OBJfFunctionEntry[] GenerateFunctionTable(OBJD obj)
@@ -698,7 +698,7 @@ namespace FSO.SimAntics
                     switch (value)
                     {
                         case 1: //safe to delete
-                            value = (short)((IsInUse(Thread.Context, true) || (Container != null && Container is VMAvatar)) ? 0 : 1);
+                            value = (short)((IsInUse(Thread.Context, true, true) || (Container != null && Container is VMAvatar)) ? 0 : 1);
                             break;
                     }
                     break;
@@ -952,6 +952,11 @@ namespace FSO.SimAntics
 
         public bool IsInUse(VMContext context, bool multitile)
         {
+            return IsInUse(context, multitile, false);
+        }
+
+        public bool IsInUse(VMContext context, bool multitile, bool stackObjSafety)
+        {
             if (multitile)
             {
                 foreach (var obj in MultitileGroup.Objects)
@@ -967,6 +972,7 @@ namespace FSO.SimAntics
                     foreach (var item in ava.Thread.Stack)
                     {
                         if (item.Callee == this) return true;
+                        if (stackObjSafety && item.StackObject == this) return true;
                     }
                 }
             }

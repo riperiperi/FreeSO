@@ -18,6 +18,7 @@ namespace FSO.Client.UI.Framework
         public UIContainer DynamicOverlay = new UIContainer();
         public Point BackOffset;
         public Color ClearColor = Color.TransparentBlack;
+        public bool UseMip;
         public bool UseZ;
 
         public UICachedContainer()
@@ -46,7 +47,7 @@ namespace FSO.Client.UI.Framework
                 if (Target == null || (int)size.X != Target.Width || (int)size.Y != Target.Height)
                 {
                     Target?.Dispose();
-                    Target = new RenderTarget2D(gd, (int)size.X, (int)size.Y, false, SurfaceFormat.Color, (UseZ)?DepthFormat.Depth24:DepthFormat.None, (UseMultisample && !FSOEnvironment.DirectX)?4:0, RenderTargetUsage.PreserveContents);
+                    Target = new RenderTarget2D(gd, (int)size.X, (int)size.Y, UseMip, SurfaceFormat.Color, (UseZ)?DepthFormat.Depth24:DepthFormat.None, (UseMultisample && !FSOEnvironment.DirectX)?4:0, RenderTargetUsage.PreserveContents);
                 }
 
                 lock (Children)
@@ -69,7 +70,6 @@ namespace FSO.Client.UI.Framework
                     Microsoft.Xna.Framework.Matrix.CreateTranslation(BackOffset.X, BackOffset.Y, 0)
                     , blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
                 batch.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
-                InternalDraw(batch);
                 lock (Children)
                 {
                     foreach (var child in Children)
@@ -78,6 +78,7 @@ namespace FSO.Client.UI.Framework
                         child.Draw(batch);
                     }
                 }
+                InternalDraw(batch);
                 batch.End();
                 gd.SetRenderTarget(null);
                 Invalidated = false;

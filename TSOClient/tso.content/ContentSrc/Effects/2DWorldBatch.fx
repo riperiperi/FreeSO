@@ -1,3 +1,5 @@
+#include "LightingCommon.fx"
+
 /**
  * Various effects for rendering the 2D world.
  */
@@ -9,23 +11,13 @@ float worldUnitsPerTile = 2.5;
 float3 dirToFront;
 float4 offToBack;
 bool depthOutMode;
-bool drawingFloor;
 
-float4 OutsideLight;
-float4 OutsideDark;
-float4 MaxLight;
-float2 MinAvg;
-float3 WorldToLightFactor;
-float2 LightOffset;
-float2 MapLayout;
 float MaxFloor;
 
 texture pixelTexture : Diffuse;
 texture depthTexture : Diffuse;
 texture maskTexture : Diffuse;
 texture ambientLight : Diffuse;
-
-texture advancedLight : Diffuse;
 
 sampler pixelSampler = sampler_state {
     texture = <pixelTexture>;
@@ -43,12 +35,6 @@ sampler maskSampler = sampler_state {
     texture = <maskTexture>;
     AddressU  = CLAMP; AddressV  = CLAMP; AddressW  = CLAMP;
     MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
-};
-
-sampler advLightSampler = sampler_state {
-	texture = <advancedLight>;
-	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
-	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
 };
 
 sampler ambientSampler = sampler_state {
@@ -187,46 +173,7 @@ float2 depthCalc2(ZVertexOut v) {
 	return (v.backDepth + (difference*v.frontDepth));
 }
 
-float4 lightColor(float4 intensities) {
-	return float4(intensities.rgb, 1);
-}
-
-float4 lightColorFloor(float4 intensities) {
-	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-
-	float avg = (intensities.r + intensities.g + intensities.b) / 3;
-	//floor shadow is how much less than average the alpha component is
-
-	float fshad = intensities.a / avg;
-
-	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
-}
-
-float4 lightColorI(float4 intensities, float i) {
-	// RGBA: LightIntensity, OutdoorsIntensity, LightIntensityShad, OutdoorsIntensityShad
-
-	float avg = (intensities.r + intensities.g + intensities.b) / 3;
-	//floor shadow is how much less than average the alpha component is
-
-	float fshad = intensities.a / avg;
-	fshad = lerp(fshad, 1, i);
-
-	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
-}
-
-float4 lightProcess(float4 inPosition, float level) {
-	inPosition.xyz *= WorldToLightFactor;
-	inPosition.xz += LightOffset;
-	inPosition.y += 0.02;
-
-	//float level = floor(inPosition.y); //todo: sprite defines our level (3d walls will give us more control here)
-	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
-
-    float4 lTex = tex2D(advLightSampler, inPosition.xz);
-	return lightColor(lTex);
-}
-
-float4 lightInterp(float4 inPosition) {
+float4 lightInterp2D(float4 inPosition) {
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;
 
@@ -377,7 +324,6 @@ technique drawZWall {
  */
 
 void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
-	if (drawingFloor == true && abs(v.texCoords.x - 0.5) > 0.503 - abs(0.5 - v.texCoords.y)) discard;
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
 	if (pixel.a <= 0.01) discard;
 	float2 d = depthCalc2(v);
@@ -401,7 +347,7 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COL
 		else if (v.roomVec.x != 0.0) {
 			//advanced lighting mode
 			float4 projection = mul(float4(v.screenPos.x, v.screenPos.y, d.x*d.y, d.y), iWVP);
-			pixel *= lightProcess(projection, v.objectID.y);
+			pixel *= lightProcessLevel(projection, v.objectID.y);
 			pixel.rgb += projection.yzw * 0.00000000001; //monogame keeps trying to optimise out entire matrix columns im like well played guys who needs those right
 		}
 		color = pixel;
@@ -412,7 +358,6 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COL
 }
 
 void psZDepthSpriteSimple(ZVertexOut v, out float4 color:COLOR0, out float4 depthB : COLOR1, out float depth : DEPTH0) {
-	if (drawingFloor == true && abs(v.texCoords.x - 0.5) > 0.503 - abs(0.5 - v.texCoords.y)) discard;
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
 	if (pixel.a <= 0.01) discard;
 	depth = depthCalc(v);
@@ -438,6 +383,42 @@ void psZDepthSpriteSimple(ZVertexOut v, out float4 color:COLOR0, out float4 dept
 		color.rgb *= color.a; //"pre"multiply, just here for experimentation
 	}
 }
+/*
+void psZDepthSpriteDirLight(ZVertexOut v, out float4 color:COLOR0, out float4 depthB : COLOR1, out float depth : DEPTH0) {
+	float4 pixel = tex2D(pixelSampler, v.texCoords);
+	if (pixel.a <= 0.01) discard;
+	float2 d = depthCalc2(v);
+	depth = d.x;
+
+	depthB = packDepth(depth);
+	if (depthOutMode == true) {
+		color = depthB;
+	}
+	else {
+		bool lastRow = floor(v.roomVec.y * 256) == 255;
+		int col = floor(v.roomVec.x * 256);
+		if (lastRow == true && col > 252) {
+			if (col == 254) pixel = float4(float3(1.0, 1.0, 1.0) - pixel.xyz, pixel.a);
+			else if (col == 253) {
+				float gray = dot(pixel.xyz, float3(0.2989, 0.5870, 0.1140));
+				pixel = float4(gray, gray, gray, pixel.a);
+			}
+			//255 does not light pixel at all.
+		}
+		else if (v.roomVec.x < 0.0) pixel *= tex2D(ambientSampler, v.roomVec);
+		else if (v.roomVec.x != 0.0) {
+			//advanced lighting mode
+			float4 projection = mul(float4(v.screenPos.x, v.screenPos.y, d.x*d.y, d.y), iWVP);
+			float3 normal = normalize(cross(ddx(projection.xyz), -ddy(projection.xyz)));
+			pixel *= lightProcessDirectionLevel(projection, normal, v.objectID.y);
+			pixel.rgb += projection.yzw * 0.00000000001; //monogame keeps trying to optimise out entire matrix columns im like well played guys who needs those right
+		}
+		color = pixel;
+
+		color.rgb *= max(1, v.objectID.x); //hack - otherwise v.objectID always equals 0 on intel and 1 on nvidia (yeah i don't know)
+		color.rgb *= color.a; //"pre"multiply, just here for experimentation
+	}
+}*/
 
 technique drawZSpriteDepthChannel {
 	pass simple {
@@ -465,6 +446,20 @@ technique drawZSpriteDepthChannel {
         PixelShader = compile ps_3_0 psZDepthSprite();
 #endif;
     }
+
+	/*
+	pass dirLighting {
+		ZEnable = true; ZWriteEnable = true;
+		CullMode = CCW;
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_3 vsZSprite(); //_level_9_1
+		PixelShader = compile ps_4_0_level_9_3 psZDepthSpriteDirLight(); //_level_9_1
+#else
+		VertexShader = compile vs_3_0 vsZSprite();
+		PixelShader = compile ps_3_0 psZDepthSpriteDirLight();
+#endif;
+	}*/
 }
 
 void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
@@ -483,7 +478,7 @@ void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR
 		//advanced light
 		float4 projection = mul(float4(v.screenPos.x, v.screenPos.y, d.x*d.y, d.y), iWVP);
 		projection.y -= v.objectID.x;
-		pixel *= lightInterp(projection);
+		pixel *= lightInterp2D(projection);
 		pixel.rgb += projection.yzw * 0.00000000001; //monogame keeps trying to optimise out entire matrix columns im like well played guys who needs those right
 		color = pixel;
 

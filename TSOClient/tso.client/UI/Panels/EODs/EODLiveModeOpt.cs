@@ -32,7 +32,8 @@ namespace FSO.Client.UI.Panels.EODs
     {
         Short,
         Medium,
-        Full
+        Full,
+        None
     }
 
     public enum EODTextTips

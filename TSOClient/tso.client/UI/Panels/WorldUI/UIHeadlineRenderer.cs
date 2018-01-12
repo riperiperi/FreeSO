@@ -120,6 +120,7 @@ namespace FSO.Client.UI.Panels.WorldUI
             if (e1 < 0 || e1 > 100) return; //invalid skill
             var skillValue = avatar.GetPersonData((VMPersonDataVariable)(e1));
             var speedValue = (eff & 0xFF);
+            if (avatar.SkillGameplayDisabled(avatar.Thread.Context.VM)) speedValue = 0;
             
             if (skillValue != SkillValue || SpeedValue != speedValue)
             {

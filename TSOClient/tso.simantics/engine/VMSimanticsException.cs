@@ -31,13 +31,16 @@ namespace FSO.SimAntics.Engine
             return output.ToString();
         }
 
-        public string GetStackTrace()
-        {
+        public string GetStackTrace() {
             if (context == null) return "No Stack Info.";
-            StringBuilder output = new StringBuilder();
-            
-            var stack = context.Thread.Stack;
 
+            var stack = context.Thread.Stack;
+            return GetStackTrace(stack);
+        }
+
+        public static string GetStackTrace(List<VMStackFrame> stack)
+        {
+            StringBuilder output = new StringBuilder();
             string prevEE = "";
             string prevER = "";
 
@@ -80,7 +83,7 @@ namespace FSO.SimAntics.Engine
                     output.Append(frame.InstructionPointer);
                     output.Append(" (");
                     var opcode = frame.GetCurrentInstruction().Opcode;
-                    var primitive = (opcode > 255)?null:context.VM.Context.Primitives[opcode];
+                    var primitive = (opcode > 255)?null:frame.VM.Context.Primitives[opcode];
                     output.Append((primitive == null)?opcode.ToString():primitive.Name);
                     output.Append(")");
                 }

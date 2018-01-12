@@ -140,7 +140,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         }
     }
 
-    public class PIFFPatch
+    public struct PIFFPatch
     {
         public uint Offset;
         public uint Size;

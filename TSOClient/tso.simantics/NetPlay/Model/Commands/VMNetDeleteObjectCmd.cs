@@ -37,16 +37,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller?.PersistID ?? uint.MaxValue, obj.MultitileGroup.Price,
                     (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                     {
-                        vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                        { //update budgets on clients. id of 0 means there is no target thread.
-                            Responded = true,
-                            Success = success,
-                            TransferAmount = transferAmount,
-                            UID1 = uid1,
-                            Budget1 = budget1,
-                            UID2 = uid2,
-                            Budget2 = budget2
-                        }));
+
                     });
                 }
                 vm.SignalChatEvent(new VMChatEvent(caller?.PersistID ?? 0, VMChatEventType.Arch,

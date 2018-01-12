@@ -366,42 +366,32 @@ namespace FSO.SimAntics.Engine.Utils
                 if (replacement != null) return (short)replacement;
             }
 
+            uint targID = 0;
+            Dictionary<uint, short> tuningCache = null;
+
             switch (mode) {
                 case 0: //local
-                    bcon = context.ScopeResource.Get<BCON>((ushort)(tableID+4096));
-                    if (bcon != null) return (short)bcon.Constants[keyID];
-
-                    tuning = context.ScopeResource.Get<OTFTable>((ushort)(tableID+4096));
-                    if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                    tuningCache = context.ScopeResource.TuningCache;
+                    targID = ((uint)(tableID + 4096) << 16) | keyID; 
                     break;
                 case 1: //semi globals
-                    ushort testTab = (ushort)(tableID + 8192);
-                    bcon = context.ScopeResource.Get<BCON>(testTab);
-                    if (bcon != null && keyID < bcon.Constants.Length) return (short)bcon.Constants[keyID];
-
-                    tuning = context.ScopeResource.Get<OTFTable>(testTab);
-                    if (tuning != null) return (short)tuning.GetKey(keyID).Value;
-
+                    targID = ((uint)(tableID + 8192) << 16) | keyID;
                     if (context.ScopeResource.SemiGlobal != null)
-                    {
-                        bcon = context.ScopeResource.SemiGlobal.Get<BCON>(testTab);
-                        if (bcon != null && keyID < bcon.Constants.Length) return (short)bcon.Constants[keyID];
-
-                        tuning = context.ScopeResource.SemiGlobal.Get<OTFTable>(testTab);
-                        if (tuning != null) return (short)tuning.GetKey(keyID).Value;
-                    }
+                        tuningCache = context.ScopeResource.SemiGlobal.TuningCache;
+                    else
+                        tuningCache = context.ScopeResource.TuningCache;
                     break;
                 case 2: //global
-                    bcon = context.Global.Resource.Get<BCON>((ushort)(tableID+256));
-                    if (bcon != null && keyID < bcon.Constants.Length) return (short)bcon.Constants[keyID];
-
-                    tuning = context.Global.Resource.Get<OTFTable>((ushort)(tableID+256));
-                    if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                    targID = ((uint)(tableID + 256) << 16) | keyID;
+                    tuningCache = context.Global.Resource.TuningCache;
                     break;
             }
 
-            //throw new Exception("Could not find tuning constant!");
+            short value;
+            if (tuningCache.TryGetValue(targID, out value)) return value;
+            throw new Exception("Could not find tuning constant!");
             return 0;
+            //throw new Exception("Could not find tuning constant!");
         }
 
 

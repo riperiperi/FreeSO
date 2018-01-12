@@ -43,7 +43,7 @@ namespace FSO.Client.UI.Panels.LotControls
         {
             base.PreDraw(batch);
 
-            //DebugTexture = vm.Context.World.State.Light.LightMap;
+            //DebugTexture = vm.Context.World.State.Light.LightMapDirection;
             return;
 
             var tilePos = vm.Context.World.EstTileAtPosWithScroll(new Vector2(LastState.MouseState.X, LastState.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
