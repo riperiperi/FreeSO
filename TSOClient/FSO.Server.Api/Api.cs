@@ -26,9 +26,11 @@ namespace FSO.Server.Api
 
         public event APIRequestShutdownDelegate OnRequestShutdown;
         public event APIBroadcastMessageDelegate OnBroadcastMessage;
+        public event APIRequestUserDisconnectDelegate OnRequestUserDisconnect;
 
         public delegate void APIRequestShutdownDelegate(uint time, ShutdownType type);
         public delegate void APIBroadcastMessageDelegate(string sender, string title, string message);
+        public delegate void APIRequestUserDisconnectDelegate(uint user_id);
 
         public Api()
         {
@@ -86,7 +88,7 @@ namespace FSO.Server.Api
                 }
                 result = JWT.DecodeToken(cookie.Value);
             }
-            if(result == null)
+            if (result == null)
             {
                 throw new SecurityException("Invalid token");
             }
@@ -97,6 +99,11 @@ namespace FSO.Server.Api
         public void DemandModerator(JWTUser user)
         {
             if (!user.Claims.Contains("moderator")) throw new Exception("Requires Moderator level status");
+        }
+
+        public void RequestUserDisconnect(uint user_id)
+        {
+            OnRequestUserDisconnect?.Invoke(user_id);
         }
 
         public void DemandAdmin(JWTUser user)

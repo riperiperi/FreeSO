@@ -26,6 +26,7 @@ namespace FSO.Server.Servers.UserApi
 
         public event APIRequestShutdownDelegate OnRequestShutdown;
         public event APIBroadcastMessageDelegate OnBroadcastMessage;
+        public event APIRequestUserDisconnectDelegate OnRequestUserDisconnect;
 
         public UserApi(ServerConfiguration config, IKernel kernel)
         {
@@ -52,6 +53,7 @@ namespace FSO.Server.Servers.UserApi
                 var api = INSTANCE;
                 api.OnBroadcastMessage += (s, t, m) => { OnBroadcastMessage?.Invoke(s, t, m); };
                 api.OnRequestShutdown += (t, st) => { OnRequestShutdown?.Invoke(t, st); };
+                api.OnRequestUserDisconnect += (i) => { OnRequestUserDisconnect?.Invoke(i); };
                 api.HostPool = Kernel.Get<IGluonHostPool>();
             });
 

@@ -21,7 +21,8 @@ namespace FSO.Server.Api
             config.Routes.MapHttpRoute(
                 name: "AuthLogin",
                 routeTemplate: "AuthLogin",
-                defaults: new {
+                defaults: new
+                {
                     controller = "AuthLogin"
                 }
             );
@@ -29,7 +30,8 @@ namespace FSO.Server.Api
             config.Routes.MapHttpRoute(
                 name: "InitialConnectServlet",
                 routeTemplate: "cityselector/app/InitialConnectServlet",
-                defaults: new {
+                defaults: new
+                {
                     controller = "InitialConnect"
                 }
             );
@@ -37,7 +39,8 @@ namespace FSO.Server.Api
             config.Routes.MapHttpRoute(
                 name: "AvatarDataServlet",
                 routeTemplate: "cityselector/app/AvatarDataServlet",
-                defaults: new {
+                defaults: new
+                {
                     controller = "AvatarData"
                 }
             );
@@ -109,6 +112,15 @@ namespace FSO.Server.Api
                 {
                     controller = "AdminUsers"
                 });
+
+            config.Routes.MapHttpRoute(
+                name: "AdminUsers3",
+                routeTemplate: "admin/ban",
+                defaults: new
+                {
+                    controller = "AdminUsers"
+                }
+                );
 
             config.Routes.MapHttpRoute(
                 name: "AdminShards",

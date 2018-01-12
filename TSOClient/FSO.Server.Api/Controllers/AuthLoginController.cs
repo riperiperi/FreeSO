@@ -18,6 +18,7 @@ namespace FSO.Server.Api.Controllers
         private static Func<HttpResponseMessage> ERROR_110 = printError("INV-110", "The member name or password you have entered is incorrect. Please try again.");
         private static Func<HttpResponseMessage> ERROR_302 = printError("INV-302", "The game has experienced an internal error. Please try again.");
         private static Func<HttpResponseMessage> ERROR_160 = printError("INV-160", "The server is currently down for maintainance. Please try again later.");
+        private static Func<HttpResponseMessage> ERROR_150 = printError("INV-150", "We're sorry, but your account has been suspended or cancelled.");
 
         /// <summary>
         /// If no parameters provided, return error
@@ -48,9 +49,14 @@ namespace FSO.Server.Api.Controllers
             using (var db = api.DAFactory.Get())
             {
                 var user = db.Users.GetByUsername(username);
-                if (user == null || user.is_banned)
+                if (user == null)
                 {
                     return ERROR_110();
+                }
+
+                if (user.is_banned)
+                {
+                    return ERROR_150();
                 }
 
                 if (api.Config.Maintainance && !(user.is_admin || user.is_moderator))
@@ -92,7 +98,7 @@ namespace FSO.Server.Api.Controllers
             var content = "Valid=TRUE\r\nTicket=" + ticket.ticket_id.ToString() + "\r\n";
             return ApiResponse.Plain(HttpStatusCode.OK, content);
         }
-        
+
 
         public static Func<HttpResponseMessage> printError(String code, String message)
         {
