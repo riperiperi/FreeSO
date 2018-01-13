@@ -1,4 +1,5 @@
-﻿using FSO.Server.Database.DA;
+﻿using FSO.Server.Api.Utils;
+using FSO.Server.Database.DA;
 using FSO.Server.Domain;
 using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Servers.Api.JsonWebToken;
@@ -27,10 +28,12 @@ namespace FSO.Server.Api
         public event APIRequestShutdownDelegate OnRequestShutdown;
         public event APIBroadcastMessageDelegate OnBroadcastMessage;
         public event APIRequestUserDisconnectDelegate OnRequestUserDisconnect;
+        public event APIRequestMailNotifyDelegate OnRequestMailNotify;
 
         public delegate void APIRequestShutdownDelegate(uint time, ShutdownType type);
         public delegate void APIBroadcastMessageDelegate(string sender, string title, string message);
         public delegate void APIRequestUserDisconnectDelegate(uint user_id);
+        public delegate void APIRequestMailNotifyDelegate(int message_id, string subject, string body, uint target_id);
 
         public Api()
         {
@@ -46,6 +49,18 @@ namespace FSO.Server.Api
             Config.Secret = appSettings["secret"];
             Config.UpdateUrl = appSettings["updateUrl"];
             Config.NFSdir = appSettings["nfsdir"];
+
+            if(appSettings["mailerHost"]!=null&&
+                appSettings["mailerUser"]!=null&&
+                appSettings["mailerPassword"]!=null&&
+                appSettings["mailerPort"]!=null)
+            {
+                Config.MailerEnabled = true;
+                Config.MailerHost = appSettings["mailerHost"];
+                Config.MailerUser = appSettings["mailerUser"];
+                Config.MailerPassword = appSettings["mailerPassword"];
+                Config.MailerPort = int.Parse(appSettings["mailerPort"]);
+            }
 
             JWT = new JWTFactory(new JWTConfiguration()
             {
@@ -96,14 +111,21 @@ namespace FSO.Server.Api
             return result;
         }
 
+        public void SendBanMail(string username, string email, int end_date)
+        {
+            ApiMail banMail = new ApiMail("MailBan");
+
+            var date = end_date == 0 ? "Permanent ban" : (new DateTime(1970, 1, 1, 0, 0, 0, 0).AddSeconds(end_date).ToLocalTime()).ToString();
+
+            banMail.AddString("username", username);
+            banMail.AddString("end", date);
+
+            banMail.Send(email, "Banned from ingame");
+        }
+
         public void DemandModerator(JWTUser user)
         {
             if (!user.Claims.Contains("moderator")) throw new Exception("Requires Moderator level status");
-        }
-
-        public void RequestUserDisconnect(uint user_id)
-        {
-            OnRequestUserDisconnect?.Invoke(user_id);
         }
 
         public void DemandAdmin(JWTUser user)
@@ -124,6 +146,16 @@ namespace FSO.Server.Api
         public void RequestShutdown(uint time, ShutdownType type)
         {
             OnRequestShutdown?.Invoke(time, type);
+        }
+
+        public void RequestUserDisconnect(uint user_id)
+        {
+            OnRequestUserDisconnect?.Invoke(user_id);
+        }
+
+        public void RequestMailNotify(int message_id, string subject, string body, uint target_id)
+        {
+            OnRequestMailNotify(message_id, subject, body, target_id);
         }
 
         public void BroadcastMessage(string sender, string title, string message)
