@@ -371,7 +371,7 @@ namespace FSO.Client.UI.Panels.EODs
             for (int i=6; i>=0; i--)
             {
                 var formats = CultureInfo.CurrentCulture.DateTimeFormat;
-                var pattern = formats.ShortDatePattern.Substring(0, formats.ShortDatePattern.IndexOf('y') - 1);
+                var pattern = formats.ShortDatePattern.Replace("y", "").Trim(formats.DateSeparator.FirstOrDefault());
                 DateLabels[i].Caption = time.ToString(pattern);
                 time -= new TimeSpan(1, 0, 0, 0);
             }

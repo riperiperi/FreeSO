@@ -192,6 +192,7 @@ namespace FSO.Client.UI.Panels
                     TextBox.Visible = !TextBox.Visible;
 
                     if (TextBox.Visible) state.InputManager.SetFocus(TextBox);
+                    else if (lastFocus == TextBox) state.InputManager.SetFocus(null);
                 }
             }
             if (state.NewKeys.Contains(Keys.Escape))

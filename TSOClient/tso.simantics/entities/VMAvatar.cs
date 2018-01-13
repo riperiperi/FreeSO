@@ -693,7 +693,7 @@ namespace FSO.SimAntics
         public bool ForceEnableSkill;
         public bool SkillGameplayDisabled(VM vm)
         {
-            if (ForceEnableSkill) return false;
+            if (ForceEnableSkill || PersistID == 0) return false;
             var mode = vm.TSOState.SkillMode;
             if (mode == 0) return false;
             else if (mode == 1)

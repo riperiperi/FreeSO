@@ -346,6 +346,7 @@ namespace FSO.Client.UI.Panels
             else if (type == UIMouseEventType.MouseDown)
             {
                 Touch.MiceDown.Add(state.CurrentMouseID);
+                state.InputManager.SetFocus(null);
             }
             else if (type == UIMouseEventType.MouseUp)
             {
@@ -794,9 +795,10 @@ namespace FSO.Client.UI.Panels
                     World.Scroll(scrollBy * (60f / FSOEnvironment.RefreshRate));
                     scrolled = true;
                 }
-                var lastFocus = state.InputManager.GetFocus();
-                if (state.KeyboardState.IsKeyDown(Keys.Up) || state.KeyboardState.IsKeyDown(Keys.Left) || state.KeyboardState.IsKeyDown(Keys.Down) || state.KeyboardState.IsKeyDown(Keys.Right) ||
-                    (lastFocus == null && (state.KeyboardState.IsKeyDown(Keys.W) || state.KeyboardState.IsKeyDown(Keys.A) || state.KeyboardState.IsKeyDown(Keys.S) || state.KeyboardState.IsKeyDown(Keys.D))))
+                var nofocus = state.InputManager.GetFocus() == null;
+                var keyst = state.KeyboardState;
+                if (nofocus && (keyst.IsKeyDown(Keys.Up) || keyst.IsKeyDown(Keys.Left) || keyst.IsKeyDown(Keys.Down) || keyst.IsKeyDown(Keys.Right) ||
+                    (keyst.IsKeyDown(Keys.W) || keyst.IsKeyDown(Keys.A) || keyst.IsKeyDown(Keys.S) || keyst.IsKeyDown(Keys.D))))
                     KBScroll = true;
                 else
                     KBScroll = false;
@@ -804,9 +806,10 @@ namespace FSO.Client.UI.Panels
                 {
                     if (state.MouseState.RightButton == ButtonState.Pressed)
                     {
-                        if (RMBScroll == false)
+                        if (!RMBScroll)
                         {
                             RMBScroll = true;
+                            state.InputManager.SetFocus(null);
                             RMBScrollX = state.MouseState.X;
                             RMBScrollY = state.MouseState.Y;
                         }

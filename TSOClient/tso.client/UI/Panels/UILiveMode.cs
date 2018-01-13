@@ -346,7 +346,7 @@ namespace FSO.Client.UI.Panels
                 var buttonLayout = buttons[options.Buttons];
                 Script.ApplyControlProperties(EODButtonLayout, "EODButtonLayout" + buttonLayout + EODLayout.GetHeightSuffix(options.Height, true));
                 Script.ApplyControlProperties(EODSub, "EODSub" + options.Length + "Length" + EODLayout.GetHeightSuffix(options.Height, true));
-                EODSub.Visible = options.Length != EODLength.None;
+                if (options.Length == EODLength.None) EODSub.Visible = false;
                 EODButtonLayout.Visible = EODSub.Visible;
 
                 if (options.Tips != EODTextTips.None){

@@ -609,6 +609,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
                 var tc = FSOEnvironment.TexCompress;
                 var mip = FSOEnvironment.Enable3D && (FSOEnvironment.EnableNPOTMip || (Width == 128 && Height == 64));
+                if (mip && TextureUtils.OverrideCompression(Width, Height)) tc = false;
                 if (tc)
                 {
                     
