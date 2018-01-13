@@ -116,7 +116,7 @@ ParticleOutput SnowVS(in ParticleInput input)
 
 //Parameters:
 //miny, yrange, fall speed, fall speed variation
-//wind x, wind z, wind variation, 
+//wind x, wind z, wind variation, width (0.3)
 //minx, xrange, minz, zrange
 ParticleOutput RainVS(in ParticleInput input)
 {
@@ -144,8 +144,8 @@ ParticleOutput RainVS(in ParticleInput input)
 	float4 lastCtr = realCtr - float4(delta, 0);
 
 	float3 newModelPosition = input.ModelPosition;
-	newModelPosition.x *= 0.12;
-	newModelPosition.y = input.ModelPosition.y * delta.y;
+	newModelPosition.x *= Parameters2.w;
+	newModelPosition.y = input.ModelPosition.y * delta.y + Parameters2.w;
 
 	float4 realPos = XZBillboard(realCtr, float4(newModelPosition, 1));
 
@@ -184,12 +184,12 @@ float4 RainPS(ParticleOutput input) : COLOR
 {
 	float level = (input.ModelPos.y) / (2.95 * 3);
 	if (level >= ClipLevel || round(dpth(tex2D(IndoorsSampler, input.ModelPos.xz / BpSize))*Stories) > level) discard;
-	return (1-cos(input.TexCoord.y*3.1415*2))/2*input.Color*lightInterp(input.ModelPos) * Color - SubColor;
+	return ((1-cos(input.TexCoord.y*3.1415*2)) * (1 - cos(input.TexCoord.x*3.1415 * 2))/4) *input.Color*lightInterp(input.ModelPos) - SubColor;
 }
 
 float4 RainSimplePS(ParticleOutput input) : COLOR
 {
-	return (1 - cos(input.TexCoord.y*3.1415 * 2)) / 2 * input.Color * Color - SubColor;
+	return ((1 - cos(input.TexCoord.y*3.1415 * 2)) * (1 - cos(input.TexCoord.x*3.1415 * 2)) / 4) * input.Color - SubColor;
 }
 
 

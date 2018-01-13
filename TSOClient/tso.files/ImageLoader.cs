@@ -19,7 +19,7 @@ namespace FSO.Files
     public class ImageLoader
     {
         public static bool UseSoftLoad = true;
-        public static bool PremultiplyPNG = false;
+        public static int PremultiplyPNG = 0;
 
         public static HashSet<uint> MASK_COLORS = new HashSet<uint>{
             new Microsoft.Xna.Framework.Color(0xFF, 0x00, 0xFF, 0xFF).PackedValue,
@@ -36,6 +36,11 @@ namespace FSO.Files
         }
 
         private static Texture2D WinFromStream(GraphicsDevice gd, Stream str)
+        {
+            return WinFromStreamP(gd, str, 0);
+        }
+
+        public static Texture2D WinFromStreamP(GraphicsDevice gd, Stream str, int premult)
         {
             //if (!UseSoftLoad)
             //{
@@ -84,7 +89,8 @@ namespace FSO.Files
                     try
                     {
                         var tex = Texture2D.FromStream(gd, str);
-                        if (PremultiplyPNG)
+                        premult += PremultiplyPNG;
+                        if (premult == 1)
                         {
                             var buffer = new Color[tex.Width * tex.Height];
                             tex.GetData<Color>(buffer);
@@ -93,6 +99,17 @@ namespace FSO.Files
                             {
                                 var a = buffer[i].A;
                                 buffer[i] = new Color((byte)((buffer[i].R * a) / 255), (byte)((buffer[i].G * a) / 255), (byte)((buffer[i].B * a) / 255), a);
+                            }
+                            tex.SetData(buffer);
+                        } else if (premult == -1) //divide out a premultiply... currently needed for dx since it premultiplies pngs without reason
+                        {
+                            var buffer = new Color[tex.Width * tex.Height];
+                            tex.GetData<Color>(buffer);
+
+                            for (int i = 0; i < buffer.Length; i++)
+                            {
+                                var a = buffer[i].A/255f;
+                                buffer[i] = new Color((byte)(buffer[i].R / a), (byte)(buffer[i].G / a), (byte)(buffer[i].B / a), buffer[i].A);
                             }
                             tex.SetData(buffer);
                         }

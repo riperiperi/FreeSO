@@ -1,4 +1,5 @@
 ﻿using FSO.Common.MeshSimplify;
+using FSO.Common.Rendering;
 using FSO.Common.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Utils;
@@ -17,8 +18,8 @@ namespace FSO.Files.RC
 {
     public class DGRP3DMesh
     {
-        public static int CURRENT_VERSION = 1;
-        public static int CURRENT_RECONSTRUCT = 1;
+        public static int CURRENT_VERSION = 2;
+        public static int CURRENT_RECONSTRUCT = 2;
 
         public static DGRPRCParams DefaultParams = new DGRPRCParams();
         public static Dictionary<string, DGRPRCParams> ParamsByIff = new Dictionary<string, DGRPRCParams>()
@@ -124,6 +125,8 @@ namespace FSO.Files.RC
                     var fsom = io.ReadCString(4);
                     Version = io.ReadInt32();
                     ReconstructVersion = io.ReadInt32();
+                    if (ReconstructVersion != 0 && ReconstructVersion < CURRENT_RECONSTRUCT)
+                        throw new Exception("Reconstruction outdated, must be rerun!");
                     Name = io.ReadPascalString();
 
                     var geomCount = io.ReadInt32();
@@ -134,7 +137,7 @@ namespace FSO.Files.RC
                         var subCount = io.ReadInt32();
                         for (int j = 0; j < subCount; j++)
                         {
-                            var geom = new DGRP3DGeometry(io, dgrp, gd);
+                            var geom = new DGRP3DGeometry(io, dgrp, gd, Version);
                             d.Add(geom.Pixel, geom);
                         }
                         Geoms.Add(d);
@@ -225,8 +228,8 @@ namespace FSO.Files.RC
                     {
                         var boundPts = new List<Vector3>();
                         //begin async part
-                        var w = tex.Width;
-                        var h = tex.Height;
+                        var w = ((TextureInfo)tex.Tag).Size.X;
+                        var h = ((TextureInfo)tex.Tag).Size.Y;
 
                         var pos = sprite.SpriteOffset + new Vector2(72, 348 - h);
                         var tl = Vector3.Transform(new Vector3(pos, 0), sprMat);
@@ -439,6 +442,7 @@ namespace FSO.Files.RC
                             verts = simple.vertices.Select(x =>
                             {
                                 var iv = Vector3.Transform(x.p, inv);
+                                //DGRP3DVert
                                 return new VertexPositionTexture(x.p,
                                     new Vector2(
                                         (sprite.Flip) ? (1 - ((iv.X - pos.X + 0.5f) / w)) : ((iv.X - pos.X + 0.5f) / w),
@@ -457,13 +461,15 @@ namespace FSO.Files.RC
                             {
                                 if (geom.SVerts == null)
                                 {
-                                    geom.SVerts = new List<VertexPositionTexture>();
+                                    geom.SVerts = new List<DGRP3DVert>();
                                     geom.SIndices = new List<int>();
                                 }
 
                                 var bID = geom.SVerts.Count;
                                 foreach (var id in indices) geom.SIndices.Add(id + bID);
-                                geom.SVerts.AddRange(verts);
+                                var verts2 = verts.Select(v => new DGRP3DVert(v.Position, Vector3.Zero, v.TextureCoordinate)).ToList();
+                                DGRP3DGeometry.GenerateNormals(!sprite.Flip, verts2, indices);
+                                geom.SVerts.AddRange(verts2);
 
                                 lock (this)
                                 {
@@ -477,13 +483,15 @@ namespace FSO.Files.RC
                             {
                                 if (geom.SVerts == null)
                                 {
-                                    geom.SVerts = new List<VertexPositionTexture>();
+                                    geom.SVerts = new List<DGRP3DVert>();
                                     geom.SIndices = new List<int>();
                                 }
 
                                 var baseID = geom.SVerts.Count;
                                 foreach (var id in indices) geom.SIndices.Add(id + baseID);
-                                geom.SVerts.AddRange(verts);
+                                var verts2 = verts.Select(v => new DGRP3DVert(v.Position, Vector3.Zero, v.TextureCoordinate)).ToList();
+                                DGRP3DGeometry.GenerateNormals(!sprite.Flip, verts2, indices);
+                                geom.SVerts.AddRange(verts2);
                                 lock (this)
                                 {
                                     if (++CompletedCount == TotalSprites) Complete(gd);
@@ -526,7 +534,10 @@ namespace FSO.Files.RC
             BoundPts = null;
             Save();
             foreach (var g in Geoms)
-                foreach (var e in g) e.Value.SComplete(gd);
+                foreach (var e in g)
+                {
+                    e.Value.SComplete(gd);
+                }
         }
 
         public void Save()

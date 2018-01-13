@@ -32,7 +32,10 @@ namespace FSO.SimAntics.NetPlay.EODs
             foreach (var server in curServers)
             {
                 if (server.Clients.Count == 0)
+                {
+                    if (server.Joinable) JoinableEODs.Remove(server.Object.ObjectID);
                     Servers.Remove(server);
+                }
                 else
                     server.Tick();
             }

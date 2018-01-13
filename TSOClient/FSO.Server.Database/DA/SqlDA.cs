@@ -28,6 +28,7 @@ using FSO.Server.Database.DA.Inbox;
 using FSO.Server.Database.DA.DbEvents;
 using FSO.Server.Database.DA.Tuning;
 using FSO.Server.Database.DA.Transactions;
+using FSO.Server.Database.DA.DynPayouts;
 
 namespace FSO.Server.Database.DA
 {
@@ -310,6 +311,17 @@ namespace FSO.Server.Database.DA
             {
                 if (_Tuning == null) _Tuning = new SqlTuning(Context);
                 return _Tuning;
+            }
+        }
+
+
+        private IDynPayouts _DynPayouts;
+        public IDynPayouts DynPayouts
+        {
+            get
+            {
+                if (_DynPayouts == null) _DynPayouts = new SqlDynPayouts(Context);
+                return _DynPayouts;
             }
         }
 

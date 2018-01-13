@@ -209,7 +209,7 @@ namespace FSO.Client.Rendering.City
 
             //DECEMBER TEMP: snow replace
             //TODO: tie to tuning, or serverside weather system.
-            ForceSnow();
+            //ForceSnow();
 
             m_Ground = LoadTex(gamepath + "gamedata/terrain/newformat/gr.tga");
             m_Rock = LoadTex(gamepath + "gamedata/terrain/newformat/rk.tga");
@@ -1359,6 +1359,15 @@ namespace FSO.Client.Rendering.City
             double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
 
             m_TintColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
+            if (Weather.Darken > 0)
+            {
+                //tint the outside colour, usually with some darkening effect.
+                m_TintColor = new Color(
+                        m_TintColor.ToVector4() *
+                        Weather.OutsideWeatherTint.ToVector4()
+                        );
+            }
+
 
             m_LightPosition = new Vector3(0, 0, -263);
             Matrix Transform = Matrix.Identity;

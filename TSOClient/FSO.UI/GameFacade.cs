@@ -40,7 +40,7 @@ namespace FSO.Client
         public static UpdateState LastUpdateState;
         public static Thread GameThread;
         public static bool Focus = true;
-        public static string CurrentCityName = "";
+        public static string CurrentCityName = "Sandbox";
 
         public static bool Linux;
         public static bool DirectX;

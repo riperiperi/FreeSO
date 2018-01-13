@@ -21,6 +21,10 @@ using FSO.Server.Database.DA.Roommates;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.Server.Database.DA.Avatars;
+using FSO.SimAntics.NetPlay.EODs.Handlers;
+using FSO.Server.Protocol.Gluon.Packets;
+using FSO.Server.Protocol.Gluon.Model;
+using FSO.Server.Servers.Lot.Lifecycle;
 
 namespace FSO.Server.Servers.Lot.Domain
 {
@@ -33,14 +37,16 @@ namespace FSO.Server.Servers.Lot.Domain
         private LotContext Context;
         private LotServerConfiguration Config;
         private Queue<VMNetArchitectureCmd> ArchBuffer = new Queue<VMNetArchitectureCmd>();
+        private CityConnections City;
         private bool WaitingOnArch;
 
-        public LotServerGlobalLink(LotServerConfiguration config, IDAFactory da, LotContext context, ILotHost host)
+        public LotServerGlobalLink(LotServerConfiguration config, IDAFactory da, LotContext context, ILotHost host, CityConnections city)
         {
             DAFactory = da;
             Host = host;
             Context = context;
             Config = config;
+            City = city;
         }
 
         public void LeaveLot(VM vm, VMAvatar avatar)
@@ -51,10 +57,15 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback)
         {
-            PerformTransaction(vm, testOnly, uid1, uid2, amount, 0, callback);
+            PerformTransaction(vm, testOnly, uid1, uid2, amount, 0, 0, callback);
         }
 
         public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, short type, VMAsyncTransactionCallback callback)
+        {
+            PerformTransaction(vm, testOnly, uid1, uid2, amount, type, 0, callback);
+        }
+
+        public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, short type, short thread, VMAsyncTransactionCallback callback)
         {
             Host.InBackground(() =>
             {
@@ -64,6 +75,19 @@ namespace FSO.Server.Servers.Lot.Domain
                     if (result == null) result = new Database.DA.Avatars.DbTransactionResult() { success = false };
 
                     var finalAmount = amount;
+
+                    //update client side budgets for avatars involved.
+                    vm.SendCommand(new VMNetAsyncResponseCmd(thread, new VMTransferFundsState
+                    {
+                        Responded = true,
+                        Success = result.success,
+                        TransferAmount = result.amount,
+                        UID1 = uid1,
+                        Budget1 = (uint)result.source_budget,
+                        UID2 = uid2,
+                        Budget2 = (uint)result.dest_budget
+                    }));
+
                     callback(result.success, result.amount,
                     uid1, (uint)result.source_budget,
                     uid2, (uint)result.dest_budget);
@@ -265,16 +289,6 @@ namespace FSO.Server.Servers.Lot.Domain
                                     cmd.Verified = true;
                                     vm.ForwardCommand(cmd);
                                 }
-                                vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                                { //update budgets on clients. id of 0 means there is no target thread.
-                                    Responded = true,
-                                    Success = success,
-                                    TransferAmount = transferAmount,
-                                    UID1 = uid1,
-                                    Budget1 = budget1,
-                                    UID2 = uid2,
-                                    Budget2 = budget2
-                                }));
                             });
                     }
                 }
@@ -535,7 +549,7 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
-        public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, VMAsyncInventoryRetrieveCallback callback)
+        public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, bool setOnLot, VMAsyncInventoryRetrieveCallback callback)
         {
             //TODO: maybe a ring backup system for this too? may be more difficult
             Host.InBackground(() =>
@@ -567,10 +581,16 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     var obj = db.Objects.Get(objectPID);
                     if (obj == null || obj.owner_id != ownerPID) callback(0, null); //object does not exist or request is for wrong owner.
-                    if (db.Objects.SetInLot(objectPID, (uint)Context.DbId))
-                        callback(obj.type, dat); //load the object with its data, if available.
-                    else
-                        callback(0, null); //object is already on a lot. we cannot load it!
+                    if (setOnLot)
+                    {
+                        if (db.Objects.SetInLot(objectPID, (uint)Context.DbId))
+                            callback(obj.type, dat); //load the object with its data, if available.
+                        else
+                            callback(0, null); //object is already on a lot. we cannot load it!
+                    } else if (obj.lot_id == null)
+                    {
+                        callback(obj.type, dat); //load the object with its data, if available. (for trade) 
+                    }
                 }
             });
         }
@@ -717,6 +737,211 @@ namespace FSO.Server.Servers.Lot.Domain
                 using (var db = DAFactory.Get())
                 {
                     callback(db.Outfits.ChangeOwner(outfitPID, objectPID, avatarPID));
+                }
+            });
+        }
+
+        public void GetDynPayouts(VMAsyncNewspaperCallback callback)
+        {
+            Host.InBackground(() =>
+            {
+                var data = new VMEODFNewspaperData();
+                using (var db = DAFactory.Get())
+                {
+                    var days = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalDays;
+                    var limitdays = days - 7;
+                    var history = db.DynPayouts.GetPayoutHistory(limitdays);
+
+                    var result = new List<VMEODFNewspaperPoint>();
+                    foreach (var p in history)
+                    {
+                        result.Add(new VMEODFNewspaperPoint()
+                        {
+                            Day = p.day,
+                            Skilltype = p.skilltype,
+                            Multiplier = p.multiplier,
+                            Flags = p.flags
+                        });
+                    }
+                    data.Points = result.OrderBy(x => x.Day).ToList();
+
+                    var evts = db.Events.GetLatestNameDesc(7);
+                    data.News = evts.Select(x => new VMEODFNewspaperNews()
+                    {
+                        ID = x.event_id,
+                        Name = x.title,
+                        Description = x.description,
+                        StartDate = x.start_day.Ticks,
+                        EndDate = (x.type == Database.DA.DbEvents.DbEventType.mail_only)?x.start_day.Ticks:x.end_day.Ticks
+                    }).ToList();
+
+                    callback(data);
+                }
+            });
+        }
+
+        public void SecureTrade(VM vm, VMEODSecureTradePlayer p1, VMEODSecureTradePlayer p2, VMAsyncSecureTradeCallback callback)
+        {
+            var moneyMove = p1.MoneyOffer - p2.MoneyOffer;
+            Host.InBackground(() =>
+            {
+                var cityMessages = new List<NotifyLotRoommateChange>();
+                using (var db = DAFactory.Get())
+                {
+                    var failState = VMEODSecureTradeError.SUCCESS;
+                    var result = db.Avatars.Transaction(p1.PlayerPersist, p2.PlayerPersist, moneyMove, 9, () =>
+                    {
+                        //this is all part of the transaction. returning false in here will undo all sql queries we make.
+
+                        //try to transfer the in-inventory objects.
+                        VMEODSecureTradeObject lot1 = null;
+                        VMEODSecureTradeObject lot2 = null;
+
+                        var objs = new List<uint>();
+                        foreach (var item in p1.ObjectOffer)
+                        {
+                            if (item == null) continue;
+                            if (item.LotID > 0)
+                            {
+                                lot1 = item;
+                                continue;
+                            }
+                            objs.Add(item.PID);
+                        }
+                        var count = db.Objects.ChangeInventoryOwners(objs, p1.PlayerPersist, p2.PlayerPersist);
+                        //if the number of rows changed does not equal the number we wanted to change, the transaction is invalid.
+                        if (count != objs.Count) {
+                            failState = VMEODSecureTradeError.MISSING_OBJECT;
+                            return false;
+                        }
+
+                        objs = new List<uint>();
+                        foreach (var item in p2.ObjectOffer)
+                        {
+                            if (item == null) continue;
+                            if (item.LotID > 0)
+                            {
+                                lot2 = item;
+                                continue;
+                            }
+                            objs.Add(item.PID);
+                        }
+                        count = db.Objects.ChangeInventoryOwners(objs, p2.PlayerPersist, p1.PlayerPersist);
+                        if (count != objs.Count) {
+                            failState = VMEODSecureTradeError.MISSING_OBJECT;
+                            return false;
+                        }
+
+                        for (int i = 0; i < 2; i++)
+                        {
+                            var iLot = (i == 0) ? lot1 : lot2;
+                            var myP = (i == 0) ? p1 : p2;
+                            var otherP = (i == 0) ? p2 : p1;
+                            if (iLot != null)
+                            {
+                                var lot = db.Lots.Get((int)iLot.LotID);
+                                if (lot.owner_id != myP.PlayerPersist && (i == 0 || lot1 == null))
+                                {
+                                    failState = VMEODSecureTradeError.WRONG_OWNER_LOT;
+                                    return false;
+                                }
+                                if (lot.owner_id != null) db.Roommates.RemoveRoommate(lot.owner_id.Value, lot.lot_id);
+                                //evict this roommate from any lots they are on
+                                var otherLots = db.Roommates.GetAvatarsLots(otherP.PlayerPersist);
+                                foreach (var olot in otherLots)
+                                {
+                                    db.Roommates.RemoveRoommate(olot.avatar_id, olot.lot_id);
+                                    if (olot.permissions_level == 2)
+                                    {
+                                        if (i == 0 && lot2 != null && lot2.PID == olot.lot_id)
+                                        {
+                                            //if this lot is being traded later, leave its owner hanging until we can get it again
+                                            db.Lots.UpdateOwner(olot.lot_id, null);
+                                        }
+                                        else
+                                        {
+                                            db.Lots.ReassignOwner(olot.lot_id);
+                                        }
+                                    }
+
+                                    //our lot will be changed. update it if we're not giving them our lot (the lot may need to be deleted, and our 
+                                    //objects removed, or if we're not giving them the objects on our lot (they must be removed)
+                                    //if the lot's open then we need to tell it we're no longer the roommate. 
+                                    //we can't detect this from this side, so do it anyways.
+                                    cityMessages.Add(new NotifyLotRoommateChange()
+                                    {
+                                        LotId = olot.lot_id,
+                                        AvatarId = olot.avatar_id,
+                                        Change = ChangeType.REMOVE_ROOMMATE
+                                    });
+                                }
+                                //create the other avatar as a roommate in this lot, then assign them as owner
+                                db.Roommates.CreateOrUpdate(new DbRoommate() { avatar_id = otherP.PlayerPersist, lot_id = lot.lot_id, permissions_level = 2 });
+                                db.Lots.UpdateOwner(lot.lot_id, otherP.PlayerPersist);
+
+                                if (iLot.GUID == 2)
+                                {
+                                    //give them our objects. be extra cautious here and don't transfer the lot if the object count differs.
+                                    var objectsTransferred = db.Objects.UpdateObjectOwnerLot(myP.PlayerPersist, lot.lot_id, otherP.PlayerPersist);
+                                    if (objectsTransferred != iLot.ObjectCount)
+                                    {
+                                        failState = VMEODSecureTradeError.MISSING_OBJECT_LOT;
+                                        return false;
+                                    }
+                                }
+
+                                cityMessages.Add(new NotifyLotRoommateChange()
+                                {
+                                    LotId = lot.lot_id,
+                                    AvatarId = otherP.PlayerPersist,
+                                    Change = (iLot.GUID == 2) ? ChangeType.BECOME_OWNER_WITH_OBJECTS : ChangeType.BECOME_OWNER,
+                                    ReplaceId = (iLot.GUID == 2) ? myP.PlayerPersist : 0
+                                });
+                            }
+                        }
+
+                        return (failState == VMEODSecureTradeError.SUCCESS);
+                    });
+                    if (failState == VMEODSecureTradeError.SUCCESS && !result.success) failState = VMEODSecureTradeError.MISSING_MONEY;
+
+                    vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
+                    {
+                        Responded = true,
+                        Success = result.success,
+                        TransferAmount = result.amount,
+                        UID1 = p1.PlayerPersist,
+                        Budget1 = (uint)result.source_budget,
+                        UID2 = p2.PlayerPersist,
+                        Budget2 = (uint)result.dest_budget
+                    }));
+                    //send out updated inventories to both avatars
+                    UpdateInventoryFor(vm, p1.PlayerPersist);
+                    UpdateInventoryFor(vm, p2.PlayerPersist);
+                    callback(failState);
+
+                    if (failState == VMEODSecureTradeError.SUCCESS)
+                    {
+                        var conn = City.GetByShardId(Context.ShardId);
+                        object[] messages = cityMessages.ToArray();
+                        conn.Write(messages);
+                    }
+                }
+
+            });
+        }
+
+        public void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p)
+        {
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    var lot = db.Lots.GetByOwner(persistID);
+                    if (lot == null) p(0, 0, 0, null);
+
+                    var objects = db.Objects.GetByAvatarIdLot(persistID, (uint)lot.lot_id);
+
+                    p((uint)lot.lot_id, objects.Count, objects.Sum(x => x.value), lot.name);
                 }
             });
         }

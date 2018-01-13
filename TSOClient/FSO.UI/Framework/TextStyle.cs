@@ -110,6 +110,8 @@ namespace FSO.Client.UI.Framework
             }
         }
 
+        public int LineHeightModifier;
+
         private int? _LineHeight;
 
         public int LineHeight

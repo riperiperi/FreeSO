@@ -97,6 +97,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Utils
 
         public bool Join(VMEODClient client, short slot)
         {
+            if (slot == -1) //take first available slot
+                slot = (short)Array.IndexOf(Players, null);
             if(slot >= 0 && slot < Players.Length && Players[slot] == null)
             {
                 Players[slot] = client;

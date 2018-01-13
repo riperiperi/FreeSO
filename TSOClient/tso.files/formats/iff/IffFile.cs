@@ -67,8 +67,8 @@ namespace FSO.Files.Formats.IFF
             {"THMB", typeof(THMB) },
             {"SIMI", typeof(SIMI) },
             {"TATT", typeof(TATT) },
+            {"HOUS", typeof(HOUS) },
             //todo: FAMh (family motives ("family house"?)) field encoded.
-            //todo: HOUS (house information)
 
             {"FSOR", typeof(FSOR) },
             {"FSOM", typeof(FSOM) },

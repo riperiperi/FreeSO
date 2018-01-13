@@ -133,6 +133,39 @@ namespace FSO.Content
         {
             this.Iff = iff;
             this.Tuning = tuning;
+            Recache();
+        }
+
+        public void Recache()
+        {
+            TuningCache = new Dictionary<uint, short>();
+
+
+            var bcons = Iff.List<BCON>();
+            if (bcons != null)
+            {
+                foreach (var table in bcons)
+                {
+                    uint i = ((uint)table.ChunkID << 16);
+                    foreach (var item in table.Constants)
+                    {
+                        TuningCache[i++] = (short)item;
+                    }
+                }
+            }
+
+            if (Tuning != null)
+            {
+                foreach (var table in Tuning.Tables)
+                {
+                    if (table == null) continue;
+                    foreach (var item in table.Keys)
+                    {
+                        if (item == null) continue;
+                        TuningCache[((uint)table.ID << 16) | (uint)(item.ID)] = (short)item.Value;
+                    }
+                }
+            }
         }
 
         public override T Get<T>(ushort id)

@@ -49,6 +49,15 @@ namespace FSO.Client.UI.Panels
             Master = master;
         }
 
+        private Point GetScaledPoint(Point TapPoint)
+        {
+            var screenMiddle = new Point(
+                (int)(GameFacade.Screens.CurrentUIScreen.ScreenWidth / (2 / FSOEnvironment.DPIScaleFactor)),
+                (int)(GameFacade.Screens.CurrentUIScreen.ScreenHeight / (2 / FSOEnvironment.DPIScaleFactor))
+                );
+            return ((TapPoint - screenMiddle).ToVector2() / Master.World.BackbufferScale).ToPoint() + screenMiddle;
+        }
+
         private int LastMouseWheel;
         private bool ScrollWheelInvalid;
         private int ZoomFreezeTime;
@@ -133,8 +142,7 @@ namespace FSO.Client.UI.Panels
                             if (transitionTo == -1)
                             {
                                 Mode = -1;
-                                var screenMiddle = new Point(GameFacade.Screens.CurrentUIScreen.ScreenWidth / 2, GameFacade.Screens.CurrentUIScreen.ScreenHeight / 2);
-                                Master.ShowPieMenu(((TapPoint - screenMiddle).ToVector2() / Master.World.BackbufferScale).ToPoint() + screenMiddle, state);
+                                Master.ShowPieMenu(GetScaledPoint(TapPoint), state);
                             }
                             else
                             {
@@ -147,8 +155,7 @@ namespace FSO.Client.UI.Panels
                                 else if (++MiceDownTimer > time)
                                 {
                                     Mode = 3;
-                                    var screenMiddle = new Point(GameFacade.Screens.CurrentUIScreen.ScreenWidth / 2, GameFacade.Screens.CurrentUIScreen.ScreenHeight / 2);
-                                    Master.ShowPieMenu(((TapPoint - screenMiddle).ToVector2() / Master.World.BackbufferScale).ToPoint() + screenMiddle, state);
+                                    Master.ShowPieMenu(GetScaledPoint(TapPoint), state);
                                 }
                             }
                         }

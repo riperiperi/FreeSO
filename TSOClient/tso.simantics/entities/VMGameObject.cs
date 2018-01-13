@@ -237,7 +237,7 @@ namespace FSO.SimAntics
         public override bool PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context)
         {
             if (GetSlot(slot) == obj) return true; //already in slot
-            if (GetSlot(slot) != null || WillLoopSlot(obj)) return false; //would recursively loop slot..
+            if (GetSlot(slot) != null || WillLoopSlot(obj) || obj.Dead) return false; //would recursively loop slot..
             if (cleanOld) obj.PrePositionChange(context);
 
             if (Contained != null)

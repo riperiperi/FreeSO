@@ -6,6 +6,14 @@ sampler advLightSampler = sampler_state {
 	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
 };
 
+texture advancedDirection : Diffuse;
+sampler advDirectionSampler = sampler_state {
+	texture = <advancedDirection>;
+	AddressU = CLAMP; AddressV = CLAMP; AddressW = CLAMP;
+	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
+};
+
+
 //LIGHTING
 float4 OutsideDark;
 float2 MinAvg;
@@ -42,19 +50,21 @@ float4 lightColorI(float4 intensities, float i) {
 	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
 }
 
-float4 lightProcess(float4 inPosition) {
-	float2 orig = inPosition.x;
+float4 lightProcessLevel(float4 inPosition, float level) {
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;
 
-	inPosition.xz += 1 / MapLayout * floor(float2(Level % MapLayout.x, Level / MapLayout.x));
+	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
 	return lightColor(lTex);
 }
 
+float4 lightProcess(float4 inPosition) {
+	return lightProcessLevel(inPosition, Level);
+}
+
 float4 lightProcessFloor(float4 inPosition) {
-	float2 orig = inPosition.x;
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;
 
@@ -77,4 +87,30 @@ float4 lightInterp(float4 inPosition) {
 	lTex.rgb = lerp(lTex.rgb, tex2D(advLightSampler, iPA).rgb, max(0, (inPosition.y % 1) * 2 - 1));
 
 	return lightColorI(lTex, clamp((inPosition.y % 1) * 3, 0, 1));
+}
+
+float4 lightProcessDirectionLevel(float4 inPosition, float3 normal, float level) {
+	float2 orig = inPosition.x;
+	inPosition.xyz *= WorldToLightFactor;
+	inPosition.xz += LightOffset;
+
+	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
+
+	float4 lTex = tex2D(advLightSampler, inPosition.xz);
+	float4 color = lightColor(lTex);
+	float4 direction = tex2D(advDirectionSampler, inPosition.xz);
+
+	float dirIntensity = length(direction.xyz) + 0.0001;
+	float pctAmbient = 1 - (dirIntensity / (direction.w + 0.0001));
+
+	//((pow((dot(normal, normalize(direction.xyz)) + 1) / 2, 2) - 0.25) / 0.75) * (1-pctAmbient) + pctAmbient;
+	//pow((dot(normal, -normalize(direction.xyz)) + 1) / 2, 2);
+	float lightIntensity = (sin(dot(normal, -direction.xyz/dirIntensity)*(3.141592 / 2)) + 1) / 2;
+	lightIntensity = lightIntensity *(1 - pctAmbient) + pctAmbient;
+	color.rgb = lerp(OutsideDark.rgb, color.rgb, lightIntensity*1.40f - 0.2f);
+	return color;
+}
+
+float4 lightProcessDirection(float4 inPosition, float3 normal) {
+	return lightProcessDirectionLevel(inPosition, normal, Level);
 }

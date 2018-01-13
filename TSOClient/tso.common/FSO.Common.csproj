@@ -178,6 +178,7 @@
     <Compile Include="Rendering\Framework\Shapes\3DCube.cs" />
     <Compile Include="Rendering\Framework\UpdateHookDelegate.cs" />
     <Compile Include="Rendering\Framework\3DAbstract.cs" />
+    <Compile Include="Rendering\TextureInfo.cs" />
     <Compile Include="Security\AvatarPermissions.cs" />
     <Compile Include="Security\ISecurityContext.cs" />
     <Compile Include="Security\NullSecurityContext.cs" />

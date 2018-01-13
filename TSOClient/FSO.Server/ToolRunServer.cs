@@ -202,6 +202,9 @@ namespace FSO.Server
 
                             Kernel.Get<IGluonHostPool>().Stop();
 
+                            //force a shutdown, since threads like to stay alive
+                            Environment.Exit(2 + (int)ShutdownMode);
+
                             /*var domain = AppDomain.CreateDomain("RebootApp");
 
                             var assembly = "FSO.Server.Updater, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";

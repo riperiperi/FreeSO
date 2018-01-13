@@ -21,7 +21,10 @@ namespace FSO.Server.Database.DA.Tasks
     {
         prune_database,
         bonus,
-        shutdown
+        shutdown,
+        job_balance,
+        multi_check,
+        prune_abandoned_lots
     }
 
     public enum DbTaskStatus

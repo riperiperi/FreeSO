@@ -61,16 +61,6 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                             Verified = true;
                             vm.ForwardCommand(this);
                         }
-                        vm.SendCommand(new VMNetAsyncResponseCmd(0, new VMTransferFundsState
-                        { //update budgets on clients. id of 0 means there is no target thread.
-                        Responded = true,
-                            Success = success,
-                            TransferAmount = transferAmount,
-                            UID1 = uid1,
-                            Budget1 = budget1,
-                            UID2 = uid2,
-                            Budget2 = budget2
-                        }));
                     });
                 return false;
             }

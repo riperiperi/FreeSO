@@ -99,7 +99,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             
             if (state != null)
             {
-                CreatedGroup = state.CreateInstance(vm);
+                CreatedGroup = state.CreateInstance(vm, false);
                 CreatedGroup.ChangePosition(new LotTilePos(x, y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
                 if (CreatedGroup.Objects.Count == 0) return false;
                 if (CreatedGroup.BaseObject.Position == LotTilePos.OUT_OF_WORLD)
@@ -163,7 +163,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 !vm.TSOState.CanPlaceNewUserObject(vm))
                 return false;
 
-            vm.GlobalLink.RetrieveFromInventory(vm, ObjectPID, caller.PersistID, (uint guid, byte[] data) =>
+            vm.GlobalLink.RetrieveFromInventory(vm, ObjectPID, caller.PersistID, true, (uint guid, byte[] data) =>
             {
                 if (guid == 0) return; //todo: error feedback?
                 GUID = guid;

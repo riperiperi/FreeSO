@@ -342,17 +342,6 @@ namespace FSO.SimAntics
 
         public void Tick()
         {
-            /*
-            foreach (var smoke in smokes)
-            {
-                SendCommand(new VMNetDeleteObjectCmd
-                {
-                    CleanupAll = true,
-                    ObjectID = smoke.ObjectID
-                });
-                System.Threading.Thread.Sleep(30);
-            }*/
-
             if (BHAVDirty)
             {
                 foreach (var ent in Entities) if (ent.Thread != null) ent.Thread.RoutineDirty = true;

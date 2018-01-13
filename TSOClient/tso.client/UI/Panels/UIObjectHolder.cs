@@ -385,6 +385,15 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        private Point GetScaledPoint(Point TapPoint)
+        {
+            var screenMiddle = new Point(
+                (int)(GameFacade.Screens.CurrentUIScreen.ScreenWidth / (2 / FSOEnvironment.DPIScaleFactor)),
+                (int)(GameFacade.Screens.CurrentUIScreen.ScreenHeight / (2 / FSOEnvironment.DPIScaleFactor))
+                );
+            return ((TapPoint - screenMiddle).ToVector2() / World.BackbufferScale).ToPoint() + screenMiddle;
+        }
+
         public void Update(UpdateState state, bool scrolled)
         {
             LastState = state;
@@ -462,7 +471,8 @@ namespace FSO.Client.UI.Panels
                 }
                 else
                 {
-                    var tilePos = World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor) + Holding.TilePosOffset;
+                    var scaled = GetScaledPoint(state.MouseState.Position);
+                    var tilePos = World.EstTileAtPosWithScroll(new Vector2(scaled.X, scaled.Y) / FSOEnvironment.DPIScaleFactor) + Holding.TilePosOffset;
                     MoveSelected(tilePos, 1);
                 }
             }

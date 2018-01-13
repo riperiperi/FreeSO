@@ -46,6 +46,12 @@ namespace FSO.Client.UI.Panels
 
         public UILabel TerrainDetailLabel { get; set; }
         public UILabel Wall3DLabel { get; set; }
+        
+        public UIButton DirectionButton { get; set; }
+        public UILabel DirectionLabel { get; set; }
+
+        public UIButton CompressionButton { get; set; }
+        public UILabel CompressionLabel { get; set; }
 
         public UIButton DPIButton { get; set; }
         public UISlider LightingSlider;
@@ -53,7 +59,7 @@ namespace FSO.Client.UI.Panels
 
         public UIGraphicsOptionsDialog() : base(UIDialogStyle.OK, true)
         {
-            SetSize(460, 288);
+            SetSize(460, 300);
             var script = this.RenderScript("graphicspanel.uis");
 
             UIEffectsLabel.Caption = GameFacade.Strings.GetString("f103", "2");
@@ -93,6 +99,19 @@ namespace FSO.Client.UI.Panels
             Wall3DLabel.Visible = FSOEnvironment.Enable3D;
             Wall3DLabel.Caption = GameFacade.Strings.GetString("f103", "12");
 
+            clone = CloneCheckbox();
+            DirectionButton = clone.Item1; DirectionLabel = clone.Item2;
+            //DirectionButton.Visible = FSOEnvironment.Enable3D;
+            //DirectionLabel.Visible = FSOEnvironment.Enable3D;
+            DirectionLabel.Caption = GameFacade.Strings.GetString("f103", "18");
+
+            clone = CloneCheckbox();
+            CompressionButton = clone.Item1; CompressionLabel = clone.Item2;
+            CompressionLabel.Caption = GameFacade.Strings.GetString("f103", "23");
+            CompressionLabel.Tooltip = GameFacade.Strings.GetString("f103", "24");
+            CompressionButton.Tooltip = CompressionLabel.Tooltip;
+            CompressionButton.Disabled = !FSOEnvironment.TexCompressSupport;
+
             var toggles = new Dictionary<UIButton, UILabel>()
             {
                 { AntiAliasCheckButton, AntiAliasLabel },
@@ -100,7 +119,9 @@ namespace FSO.Client.UI.Panels
                 { LightingCheckButton, LightingLabel },
                 { UIEffectsCheckButton, UIEffectsLabel },
                 { EdgeScrollingCheckButton, EdgeScrollingLabel },
-                { Wall3DButton, Wall3DLabel }
+                { CompressionButton, CompressionLabel },
+                { DirectionButton, DirectionLabel },
+                { Wall3DButton, Wall3DLabel },
             };
 
             int i = 0;
@@ -128,7 +149,7 @@ namespace FSO.Client.UI.Panels
             DPIButton = new UIButton();
             DPIButton.Size = new Vector2(150, 35);
             DPIButton.Caption = GameFacade.Strings.GetString("f103", "13");
-            DPIButton.Position = new Vector2(40, 230);
+            DPIButton.Position = new Vector2(40, 250);
             DPIButton.OnButtonClick += DPIButton_OnButtonClick;
             Add(DPIButton);
 
@@ -195,6 +216,18 @@ namespace FSO.Client.UI.Panels
             return new Tuple<UIButton, UILabel>(check, label);
         }
 
+        private void ShowRestartWarning()
+        {
+            UIAlert alert = null;
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                Message = GameFacade.Strings.GetString("f103", "25"),
+                Buttons = UIAlertButton.Ok(x => {
+                    UIScreen.RemoveDialog(alert);
+                })
+            }, true);
+        }
+
         private void FlipSetting(UIElement button)
         {
             var settings = GlobalSettings.Default;
@@ -203,6 +236,12 @@ namespace FSO.Client.UI.Panels
             else if (button == LightingCheckButton) settings.Weather = !(settings.Weather);
             else if (button == UIEffectsCheckButton) settings.CityShadows = !(settings.CityShadows);
             else if (button == EdgeScrollingCheckButton) settings.EdgeScroll = !(settings.EdgeScroll);
+            else if (button == DirectionButton) settings.DirectionalLight3D = !(settings.DirectionalLight3D);
+            else if (button == CompressionButton)
+            {
+                settings.TexCompression = (((settings.TexCompression) & 1) ^ 1) | 2;
+                ShowRestartWarning();
+            }
             else if (button == Wall3DButton)
             {
                 if (FSOEnvironment.Enable3D) settings.CitySkybox = !settings.CitySkybox;
@@ -240,6 +279,7 @@ namespace FSO.Client.UI.Panels
             LightingCheckButton.Selected = settings.Weather;
             UIEffectsCheckButton.Selected = settings.CityShadows; //instead of being able to disable UI transparency, you can toggle City Shadows.
             EdgeScrollingCheckButton.Selected = settings.EdgeScroll;
+            DirectionButton.Selected = settings.DirectionalLight3D;
 
             // Character detail changed for city shadow detail.
             CharacterDetailLowButton.Selected = (settings.ShadowQuality <= 512);
@@ -256,6 +296,8 @@ namespace FSO.Client.UI.Panels
             InternalChange = false;
 
             Wall3DButton.Selected = (FSOEnvironment.Enable3D) ? settings.CitySkybox : settings.Shadows3D;
+            FSOEnvironment.TexCompress = (settings.TexCompression & 1) > 0;
+            CompressionButton.Selected = FSOEnvironment.TexCompress;
 
             var oldSurrounding = LotView.WorldConfig.Current.SurroundingLots;
             LotView.WorldConfig.Current = new LotView.WorldConfig()
@@ -264,7 +306,8 @@ namespace FSO.Client.UI.Panels
                 SmoothZoom = settings.SmoothZoom,
                 SurroundingLots = settings.SurroundingLotMode,
                 AA = settings.AntiAlias,
-                Weather = settings.Weather
+                Weather = settings.Weather,
+                Directional = settings.DirectionalLight3D
             };
 
             var vm = ((IGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;
@@ -292,13 +335,13 @@ namespace FSO.Client.UI.Panels
             DPISlider = new UISlider();
             DPISlider.Orientation = 0;
             DPISlider.Texture = GetTexture(0x42500000001);
-            DPISlider.MinValue = 2f;
-            DPISlider.MaxValue = 6f;
+            DPISlider.MinValue = 4f;
+            DPISlider.MaxValue = 12f;
             DPISlider.AllowDecimals = false;
             DPISlider.Position = new Vector2(25, 80);
             DPISlider.SetSize(350f, 0f);
 
-            DPISlider.Value = FSOEnvironment.DPIScaleFactor * 2;
+            DPISlider.Value = FSOEnvironment.DPIScaleFactor * 4;
             DynamicOverlay.Add(DPISlider);
 
             DPISlider.OnChange += DPISlider_OnChange;
@@ -315,7 +358,7 @@ namespace FSO.Client.UI.Panels
         {
             GameThread.NextUpdate((cb) =>
             {
-                FSOEnvironment.DPIScaleFactor = DPISlider.Value / 2f;
+                FSOEnvironment.DPIScaleFactor = DPISlider.Value / 4f;
                 GlobalSettings.Default.DPIScaleFactor = FSOEnvironment.DPIScaleFactor;
 
                 var width = Math.Max(1, GameFacade.Game.Window.ClientBounds.Width);

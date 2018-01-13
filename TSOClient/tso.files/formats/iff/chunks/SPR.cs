@@ -14,6 +14,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using FSO.Common.Utils;
 using FSO.Common;
+using FSO.Common.Rendering;
 
 namespace FSO.Files.Formats.IFF.Chunks
 {
@@ -267,19 +268,36 @@ namespace FSO.Files.Formats.IFF.Chunks
             if (PixelCache == null)
             {
                 var mip = !Parent.WallStyle && FSOEnvironment.Enable3D && FSOEnvironment.EnableNPOTMip;
-                PixelCache = new Texture2D(device, Math.Max(1,Width), Math.Max(1,Height), mip, SurfaceFormat.Color);
+                var tc = FSOEnvironment.TexCompress;
+
                 if (Width * Height > 0)
                 {
-                    if (mip)
+                    var w = Math.Max(1, Width);
+                    var h = Math.Max(1, Height);
+                    if (tc)
                     {
-                        TextureUtils.UploadWithMips(PixelCache, device, Data);
+                        PixelCache = new Texture2D(device, ((w+3)/4)*4, ((h+3)/4)*4, mip, SurfaceFormat.Dxt5);
+                        if (mip)
+                            TextureUtils.UploadDXT5WithMips(PixelCache, w, h, device, Data);
+                        else
+                            PixelCache.SetData<byte>(TextureUtils.DXT5Compress(Data, w, h).Item1);
                     }
                     else
                     {
-                        PixelCache.SetData<Color>(this.Data);
+                        PixelCache = new Texture2D(device, w, h, mip, SurfaceFormat.Color);
+                        if (mip)
+                            TextureUtils.UploadWithMips(PixelCache, device, Data);
+                        else
+                            PixelCache.SetData<Color>(this.Data);
                     }
                 }
-                else PixelCache.SetData<Color>(new Color[] { Color.Transparent });
+                else
+                {
+                    PixelCache = new Texture2D(device, Math.Max(1, Width), Math.Max(1, Height), mip, SurfaceFormat.Color);
+                    PixelCache.SetData<Color>(new Color[] { Color.Transparent });
+                }
+
+                PixelCache.Tag = new TextureInfo(PixelCache, Width, Height);
                 if (!IffFile.RETAIN_CHUNK_DATA) Data = null;
             }
             return PixelCache;

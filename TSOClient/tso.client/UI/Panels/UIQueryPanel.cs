@@ -22,6 +22,7 @@ using FSO.LotView.Components;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Common;
 using FSO.SimAntics.Model;
+using FSO.UI.Panels;
 
 namespace FSO.Client.UI.Panels
 {
@@ -101,11 +102,13 @@ namespace FSO.Client.UI.Panels
         //world required for drawing thumbnails
         public LotView.World World;
         public UIImage Thumbnail;
+        public UI3DThumb Thumb3D;
         public bool Roommate = true;
 
         private VMEntity ActiveEntity;
         private int LastSalePrice;
         private bool IAmOwner;
+        private bool Ghost;
 
         private bool _Active;
         public bool Active
@@ -161,9 +164,9 @@ namespace FSO.Client.UI.Panels
                 ForSalePrice.Visible = (value == 1);
 
                 SellBackButton.Visible = (value == 1);
-                SellBackButton.Disabled = !Roommate;
+                SellBackButton.Disabled = !Roommate || Ghost;
                 InventoryButton.Visible = (value == 1);
-                InventoryButton.Disabled = !IAmOwner;
+                InventoryButton.Disabled = !IAmOwner || Ghost;
 
                 ObjectNameText.Visible = (value == 1);
                 ObjectOwnerText.Visible = (value == 1);
@@ -174,7 +177,7 @@ namespace FSO.Client.UI.Panels
 
                 //async sale stuff, as in "once I know what this actually does I'll care"
 
-                AsyncSaleButton.Visible = (value == 1) && LastSalePrice < 0;
+                AsyncSaleButton.Visible = (value == 1) && LastSalePrice < 0 && !Ghost;
                 AsyncCancelSaleButton.Visible = (value == 1) && IAmOwner && LastSalePrice > -1;
                 AsyncCancelSaleButtonBG.Visible = AsyncCancelSaleButton.Visible;
                 AsyncEditPriceButton.Visible = (value == 1) && IAmOwner && LastSalePrice > -1;
@@ -221,7 +224,18 @@ namespace FSO.Client.UI.Panels
             }
             set
             {
-                this.Y = ((value == 0) ? 0 : -114);
+                if (value < 2)
+                {
+                    Size = QuerybackPanel.Size.ToVector2() + new Vector2(22, 42);
+                    BackOffset = new Point(22, 0);
+                }
+                else
+                {
+                    Size = QuerybackTrade.Size.ToVector2() + new Vector2(22, 42);
+                    BackOffset = new Point(40, 0);
+                }
+                this.Y = (value>0)?-114:0;
+                this.X = (value==2)?-128:0;
                 QuerybackPanel.Visible = (value == 0);
                 QuerybackCatalog.Visible = (value == 1);
                 QuerybackTrade.Visible = (value == 2);
@@ -250,20 +264,20 @@ namespace FSO.Client.UI.Panels
 
             QuerybackPanel = new UIImage(BackgroundImagePanel);
             QuerybackPanel.Y = 0;
-            QuerybackPanel.BlockInput();
             this.AddAt(0, QuerybackPanel);
 
+            ListenForMouse(new Rectangle(0, 0, QuerybackPanel.Texture.Width, QuerybackPanel.Texture.Height), (t, s) => { });
+
             Size = QuerybackPanel.Size.ToVector2() + new Vector2(22, 42);
-            BackOffset = new Point(22, 0);
+            BackOffset = new Point(40, 0);
 
             QuerybackCatalog = new UIImage(BackgroundImageCatalog);
             QuerybackCatalog.Position = new Vector2(-22, 0);
-            QuerybackCatalog.BlockInput();
             this.AddAt(1, QuerybackCatalog);
 
             QuerybackTrade = new UIImage(BackgroundImageTrade);
+            QuerybackTrade.X = -40;
             QuerybackTrade.Y = 0;
-            QuerybackTrade.BlockInput();
             this.AddAt(2, QuerybackTrade);
 
             //init general tab specific backgrounds
@@ -393,6 +407,46 @@ namespace FSO.Client.UI.Panels
                 }
             }
             base.Update(state);
+
+            if (Visible && Thumb3D != null) Invalidate();
+        }
+
+        public Tuple<string, string> GetObjName(VMEntity entity)
+        {
+            string name = null;
+            if (entity.Object.GUID == 0x3278BD34 || entity.Object.GUID == 0x5157DDF2)
+            {
+                //pet carrier name calculation
+                int skinIndex = 0;
+                if (entity.GetAttribute(24) == 0)
+                {
+                    //skin is not random - it has already been assigned
+                    skinIndex = entity.GetAttribute(2) + 1;
+                }
+                name = entity.Object.Resource.Get<STR>(330).GetString(skinIndex);
+            }
+            else
+            {
+                if (entity.MultitileGroup.Name != null && entity.MultitileGroup.Name != "") name = entity.Name;
+            }
+
+            var obj = entity.Object;
+            var def = entity.MasterDefinition;
+            if (def == null) def = entity.Object.OBJ;
+
+            var item = Content.Content.Get().WorldCatalog.GetItemByGUID(def.GUID);
+
+            CTSS catString = obj.Resource.Get<CTSS>(def.CatalogStringsID);
+            if (catString != null)
+            {
+                if (name == null) name = catString.GetString(0);
+                return new Tuple<string, string>(name, catString.GetString(1));
+            }
+            else
+            {
+                if (name == null) name = entity.ToString();
+                return new Tuple<string, string>(name, "");
+            }
         }
 
         public void SetInfo(VM vm, VMEntity entity, bool bought)
@@ -404,19 +458,13 @@ namespace FSO.Client.UI.Panels
 
             var item = Content.Content.Get().WorldCatalog.GetItemByGUID(def.GUID);
 
-            CTSS catString = obj.Resource.Get<CTSS>(def.CatalogStringsID);
-            if (catString != null)
-            {
-                DescriptionText.CurrentText = catString.GetString(0) + "\r\n" + catString.GetString(1);
-                ObjectNameText.Caption = catString.GetString(0);
-            }
-            else
-            {
-                DescriptionText.CurrentText = entity.ToString();
-                ObjectNameText.Caption = entity.ToString();
-            }
+            var ndesc = GetObjName(entity);
+
+            DescriptionText.CurrentText = ndesc.Item1 + "\r\n" + ndesc.Item2;
+            ObjectNameText.Caption = ndesc.Item1;
 
             IAmOwner = ((entity.TSOState as VMTSOObjectState)?.OwnerID ?? 0) == vm.MyUID;
+            Ghost = entity.GhostImage;
             LastSalePrice = entity.MultitileGroup.SalePrice;
 
             int price = def.Price;
@@ -464,7 +512,7 @@ namespace FSO.Client.UI.Panels
                 owner = (ownerEnt != null) ? owner = ownerEnt.Name : "(offline user)";
             }
 
-            ObjectOwnerText.Caption = GameFacade.Strings.GetString("206", "24", new string[] { owner });
+            ObjectOwnerText.Caption = (!entity.GhostImage)?GameFacade.Strings.GetString("206", "24", new string[] { owner }):"";
 
             SpecificTabButton.Disabled = !bought;
 
@@ -496,15 +544,27 @@ namespace FSO.Client.UI.Panels
                 for (int i=0; i<objects.Count; i++) {
                     objComps[i] = (ObjectComponent)objects[i].WorldUI;
                 }
-                var thumb = World.GetObjectThumb(objComps, entity.MultitileGroup.GetBasePositions(), GameFacade.GraphicsDevice);
+
                 if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
-                Thumbnail.Texture = thumb;
+                if (Thumb3D != null) Thumb3D.Dispose();
+                Thumb3D = null; Thumbnail.Texture = null;
+                if (FSOEnvironment.Enable3D)
+                {
+                    Thumb3D = new UI3DThumb(entity);
+                }
+                else
+                {
+                    var thumb = World.GetObjectThumb(objComps, entity.MultitileGroup.GetBasePositions(), GameFacade.GraphicsDevice);
+                    Thumbnail.Texture = thumb;
+                }
                 UpdateImagePosition();
             } else
             {
                 WearProgressBar.Value = 0;
                 WearValueText.Caption = "0%";
                 if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
+                if (Thumb3D != null) Thumb3D.Dispose();
+                Thumb3D = null;
                 Thumbnail.Texture = null;
             }
         }
@@ -512,6 +572,7 @@ namespace FSO.Client.UI.Panels
         public void SetInfo(Texture2D thumb, string name, string description, int price)
         {
             ActiveEntity = null;
+            Ghost = false;
             DescriptionText.CurrentText = name + "\r\n" + description;
             ObjectNameText.Caption = name;
 
@@ -523,6 +584,8 @@ namespace FSO.Client.UI.Panels
             SellBackButton.Disabled = true;
 
             if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
+            if (Thumb3D != null) Thumb3D.Dispose();
+            Thumb3D = null;
             Thumbnail.Texture = thumb;
             UpdateImagePosition();
         }
@@ -534,6 +597,28 @@ namespace FSO.Client.UI.Panels
             Thumbnail.SetSize(thumb.Width * scale, thumb.Height * scale);
             var baseLoc = (Tab == 0) ? new Vector2(24, 11) : new Vector2(64, 11);
             Thumbnail.Position = baseLoc + new Vector2(45 - (thumb.Width * scale / 2), 45 - (thumb.Height * scale / 2));
+        }
+
+        public override void InternalDraw(UISpriteBatch batch)
+        {
+            base.InternalDraw(batch);
+
+            float scale = 0.7f;
+            Texture2D thumb = null;
+            if (Thumb3D != null)
+            {
+                Thumb3D.Draw();
+                thumb = Thumb3D.Tex;
+            }
+
+            var baseLoc = (Tab == 0) ? new Vector2(24, 11) : new Vector2(64, 11);
+            baseLoc += new Vector2(45, 45);
+
+            if (thumb != null)
+            {
+                var pos = baseLoc + (new Vector2(thumb.Width * scale / -2, thumb.Height * scale / -2));
+                DrawLocalTexture(batch, thumb, null, pos, new Vector2(scale));
+            }
         }
     }
     

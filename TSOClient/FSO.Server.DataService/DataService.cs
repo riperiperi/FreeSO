@@ -63,7 +63,7 @@ namespace FSO.Common.DataService
             }
 
             foreach(var _struct in DataDefinition.Structs){
-                StructToActualFields.Add(_struct.ID, _struct.Fields);
+                StructToActualFields.Add(_struct.ID, _struct.Fields.ToArray());
             }
 
             var assembly = Assembly.GetAssembly(typeof(DataService));

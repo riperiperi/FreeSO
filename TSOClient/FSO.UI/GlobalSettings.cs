@@ -73,7 +73,8 @@ namespace FSO.Client
             { "LightingMode", "-1" },
             { "Weather", "true" },
             { "DirectionalLight3D", "true" },
-            { "DPIScaleFactor", "1" }
+            { "DPIScaleFactor", "1" },
+            { "TexCompression", "0" }
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -126,6 +127,7 @@ namespace FSO.Client
         public bool Weather { get; set; }
         public bool DirectionalLight3D { get; set; }
         public float DPIScaleFactor { get; set; }
+        public int TexCompression { get; set; } //first bit on/off, second bit is user defined or auto.
 
         public static int TARGET_COMPAT_STATE = 2;
     }

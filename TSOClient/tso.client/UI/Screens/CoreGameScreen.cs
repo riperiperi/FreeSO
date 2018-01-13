@@ -213,7 +213,7 @@ namespace FSO.Client.UI.Screens
 
         public CoreGameScreen() : base()
         {
-            DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0);
+            DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0, 0);
             StateChanges = new Queue<SimConnectStateChange>();
             /**
             * Music
@@ -461,7 +461,7 @@ namespace FSO.Client.UI.Screens
             if (vm == null) return;
 
             //clear our cache too, if the setting lets us do that
-            DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0);
+            DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0, 0);
             TimedReferenceController.Clear();
             TimedReferenceController.Clear();
             VM.ClearAssembled();
@@ -648,7 +648,8 @@ namespace FSO.Client.UI.Screens
                     vm.LotName,
                     (int)FindController<CoreGameScreenController>().GetCurrentLotID(),
                     vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0),
-                    vm.LotName.StartsWith("{job:") ? 4 : 24
+                    vm.LotName.StartsWith("{job:") ? 4 : 24,
+                    vm.TSOState.PropertyCategory
                     );
                 lastLotTitle = title;
             }

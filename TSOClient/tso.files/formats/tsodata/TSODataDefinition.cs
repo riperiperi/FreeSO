@@ -52,7 +52,7 @@ namespace FSO.Files.Formats.tsodata
                         ID = field.NameStringID,
                         Name = GetString(field.NameStringID),
                         TypeID = field.TypeStringID,
-                        Classification = (StructFieldClassification)field.Unknonw,
+                        Classification = (StructFieldClassification)field.Unknown,
                         ParentID = item.NameStringID
                     });
                 }
@@ -60,7 +60,7 @@ namespace FSO.Files.Formats.tsodata
                 Structs.Add(new Struct {
                     ID = item.NameStringID,
                     Name = GetString(item.NameStringID),
-                    Fields = fields.ToArray()
+                    Fields = fields.ToList()
                 });
             }
 
@@ -76,7 +76,7 @@ namespace FSO.Files.Formats.tsodata
                         ID = field.NameStringID,
                         Name = GetString(field.NameStringID),
                         TypeID = field.TypeStringID,
-                        Classification = (StructFieldClassification)field.Unknonw,
+                        Classification = (StructFieldClassification)field.Unknown,
                         ParentID = item.NameStringID
                     });
                 }
@@ -85,7 +85,7 @@ namespace FSO.Files.Formats.tsodata
                 {
                     ID = item.NameStringID,
                     Name = GetString(item.NameStringID),
-                    Fields = fields.ToArray()
+                    Fields = fields.ToList()
                 });
             }
 
@@ -100,7 +100,7 @@ namespace FSO.Files.Formats.tsodata
                     {
                         ID = field.NameStringID,
                         Name = GetString(field.NameStringID),
-                        Type = (DerivedStructFieldMaskType)field.Unknonw
+                        Type = (DerivedStructFieldMaskType)field.Unknown
                     });
                 }
 
@@ -120,6 +120,32 @@ namespace FSO.Files.Formats.tsodata
             {
                 StructsByName.Add(_struct.Name, _struct);
             }
+
+            InjectStructs();
+        }
+
+        private void InjectStructs()
+        {
+            //this is just an example of how to do this.
+            //todo: a format we can easily create and read from to provide these new fields
+
+            StructsByName["Lot"].Fields.Add(new StructField()
+            {
+                Name = "Lot_SkillGamemode",
+                ID = 0xaabbccdd,
+                Classification = StructFieldClassification.SingleField,
+                ParentID = StructsByName["Lot"].ID,
+                TypeID = 1768755593 //uint32
+            });
+
+            var fields = DerivedStructs[17].FieldMasks.ToList();
+            fields.Add(new DerivedStructFieldMask()
+            {
+                ID = 0xaabbccdd,
+                Name = "Lot_SkillGamemode",
+                Type = DerivedStructFieldMaskType.KEEP
+            });
+            DerivedStructs[17].FieldMasks = fields.ToArray();
         }
 
         public Struct GetStructFromValue(object value)
@@ -206,7 +232,7 @@ namespace FSO.Files.Formats.tsodata
                 {
                     var subEntry = new List1EntryEntry();
                     subEntry.NameStringID = reader.ReadUInt32();
-                    subEntry.Unknonw = reader.ReadByte();
+                    subEntry.Unknown = reader.ReadByte();
                     if (parentID == false)
                     {
                         subEntry.TypeStringID = reader.ReadUInt32();
@@ -238,7 +264,7 @@ namespace FSO.Files.Formats.tsodata
     public class List1EntryEntry
     {
         public uint NameStringID;
-        public byte Unknonw;
+        public byte Unknown;
         public uint TypeStringID;
     }
 
@@ -246,7 +272,7 @@ namespace FSO.Files.Formats.tsodata
         public uint ID;
         public string Name;
 
-        public StructField[] Fields;
+        public List<StructField> Fields;
     }
 
     public class StructField {

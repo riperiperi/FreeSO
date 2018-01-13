@@ -20,6 +20,7 @@ namespace FSO.Server.Database.DA.Lots
         public uint created_date { get; set; }
         public uint category_change_date { get; set; }
         public LotCategory category { get; set; }
+        public byte skill_mode { get; set; }
         public uint buildable_area { get; set; }
         public sbyte ring_backup_num { get; set; }
         public byte admit_mode { get; set; }

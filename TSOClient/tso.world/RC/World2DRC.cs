@@ -435,6 +435,7 @@ namespace FSO.LotView.RC
             var build = state.BuildMode;
             state.SilentBuildMode = 0;
             Blueprint.Terrain.Draw(gd, state);
+            Blueprint.Terrain.DrawMask(gd, state);
             state.SilentBuildMode = build;
 
             var effect = WorldContent.RCObject;

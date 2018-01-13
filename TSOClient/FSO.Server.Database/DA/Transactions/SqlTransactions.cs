@@ -15,7 +15,7 @@ namespace FSO.Server.Database.DA.Transactions
 
         public void Purge(int day)
         {
-            Context.Connection.Query("DELETE FROM fso_transations WHERE day < @day", new { day = day });
+            Context.Connection.Query("DELETE FROM fso_transactions WHERE day < @day", new { day = day });
         }
     }
 }

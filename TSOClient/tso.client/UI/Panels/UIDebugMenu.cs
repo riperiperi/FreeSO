@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Server.Clients;
 using Ninject;
+using System.Diagnostics;
 
 namespace FSO.Client.UI.Panels
 {
@@ -76,6 +77,40 @@ namespace FSO.Client.UI.Panels
                 }
             };
             Add(cityPainterBtn);
+
+            var benchmarkBtn = new UIButton();
+            benchmarkBtn.Caption = "VM Performance Benchmark (5k ticks)";
+            benchmarkBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 170);
+            benchmarkBtn.Width = 300;
+            benchmarkBtn.OnButtonClick += x =>
+            {
+                var core = (GameFacade.Screens.CurrentUIScreen as IGameScreen);
+                if (core == null || core.vm == null)
+                {
+                    UIScreen.GlobalShowAlert(new UIAlertOptions()
+                    {
+                        Message = "A VM must be running to benchmark performance."
+                    }, true);
+                    return;
+                }
+                var watch = new Stopwatch();
+                watch.Start();
+
+                var vm = core.vm;
+                var tick = vm.Scheduler.CurrentTickID + 1;
+                for (int i=0; i<100000; i++)
+                {
+                    vm.InternalTick(tick++);
+                }
+
+                watch.Stop();
+
+                UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Message = "Ran 100k ticks in "+watch.ElapsedMilliseconds+"ms."
+                }, true);
+            };
+            Add(benchmarkBtn);
 
             serverNameBox = new UITextBox();
             serverNameBox.X = 50;

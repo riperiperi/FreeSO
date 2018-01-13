@@ -5,6 +5,7 @@ using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Framework.Aries;
+using FSO.Server.Framework.Gluon;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Model;
 using FSO.Server.Protocol.Electron.Packets;
@@ -41,6 +42,36 @@ namespace FSO.Server.Servers.City.Handlers
         private void Status(IVoltronSession session, ChangeRoommateResponseStatus status)
         {
             session.Write(new ChangeRoommateResponse { Type = status });
+        }
+
+        public async void Handle(IGluonSession session, NotifyLotRoommateChange packet)
+        {
+            //recieved from a lot server to notify of another lot's roommate change.
+            using (var da = DAFactory.Get())
+            {
+                var lot = da.Lots.Get(packet.LotId);
+                if (lot == null) return; //lot missing
+                DataService.Invalidate<FSO.Common.DataService.Model.Lot>(lot.location);
+
+                //if online, notify the lot
+                var lotOwned = da.LotClaims.GetByLotID(lot.lot_id);
+                if (lotOwned != null)
+                {
+                    var lotServer = LotServers.GetLotServerSession(lotOwned.owner);
+                    if (lotServer != null)
+                    {
+                        //immediately notify lot of new roommate
+                        lotServer.Write(packet);
+                    }
+                }
+                else
+                {
+                    //try force the lot open
+                    //we don't need to send any packets in this case - the lot fully restores object ownership from db.
+                    var result = await Lots.TryFindOrOpen(lot.location, 0, NullSecurityContext.INSTANCE);
+                }
+            }
+
         }
 
         public async void Handle(IVoltronSession session, ChangeRoommateRequest packet)
@@ -292,8 +323,6 @@ namespace FSO.Server.Servers.City.Handlers
                         var result = await Lots.TryFindOrOpen(lot.location, 0, NullSecurityContext.INSTANCE);
                     }
 
-                    //TODO: if offline, force the lot to open so we can remove the kicked out roommate's objects.
-
                     var avatar = await DataService.Get<Avatar>(target);
                     if (avatar != null) avatar.Avatar_LotGridXY = 0;
 
@@ -334,8 +363,7 @@ namespace FSO.Server.Servers.City.Handlers
 
                 //if lot open, notify lot server of change (roommate add/remove AND new/same owner)
                 //the lot will remove objects as necessary
-
-                //future: if lot closed, special request to a lot server to quickly open an unjoinable instance of the lot to remove our objects.
+                
             }
         }
     }

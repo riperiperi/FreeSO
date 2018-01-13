@@ -192,6 +192,14 @@
       "requires": [
         "9879997a-4b16-4733-aff4-d0178ce2afa5"
       ]
+    },
+    {
+      "id": "be3164d6-442e-4eb9-8a37-5cb23cca6b43",
+      "script": "changes/0019_skillmode.sql",
+      "idempotent": false,
+      "requires": [
+        "52795d47-a25e-418f-a618-fb89300aab01"
+      ]
     }
   ]
 }

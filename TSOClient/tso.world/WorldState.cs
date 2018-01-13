@@ -274,14 +274,18 @@ namespace FSO.LotView
         public virtual void PrepareLighting()
         {
             var adv = (Light?.LightMap) ?? OutsidePx;
+            var advDir = (Light?.LightMapDirection) ?? OutsidePx;
             var amb = AmbientLight ?? TextureGenerator.GetPxWhite(Device);
 
             WorldContent._2DWorldBatchEffect.Parameters["advancedLight"].SetValue(adv);
+            //WorldContent._2DWorldBatchEffect.Parameters["advancedDirection"].SetValue(advDir);
             WorldContent.GrassEffect.Parameters["advancedLight"].SetValue(adv);
             WorldContent._2DWorldBatchEffect.Parameters["ambientLight"].SetValue(amb);
             WorldContent.RCObject.Parameters["advancedLight"].SetValue(adv);
+            WorldContent.RCObject.Parameters["advancedDirection"].SetValue(advDir);
             WorldContent.ParticleEffect.Parameters["advancedLight"]?.SetValue(adv);
             Avatar.Effect.Parameters["advancedLight"].SetValue(adv);
+            Avatar.Effect.Parameters["advancedDirection"].SetValue(advDir);
 
             var frontDir = WorldCamera.FrontDirection();
             var lightOffset = new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));

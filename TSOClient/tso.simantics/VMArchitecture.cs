@@ -181,6 +181,14 @@ namespace FSO.SimAntics
                 Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1)) + 1]; //second colour
                 double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
                 WorldUI.OutsideColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
+                if (WorldUI.OutsideWeatherTintP > 0)
+                {
+                    //tint the outside colour, usually with some darkening effect.
+                    WorldUI.OutsideColor = new Color(
+                        WorldUI.OutsideColor.ToVector4() * 
+                        Color.Lerp(Color.White, WorldUI.OutsideWeatherTint, WorldUI.OutsideWeatherTintP).ToVector4()
+                        );
+                }
                 WorldUI.OutsideTime = time;
 
                 var sky1 = m_SkyColors[(int)Math.Floor(time * (m_SkyColors.Length - 1))]; //first colour

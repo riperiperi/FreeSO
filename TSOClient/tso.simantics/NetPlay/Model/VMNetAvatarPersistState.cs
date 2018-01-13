@@ -207,7 +207,11 @@ namespace FSO.SimAntics.NetPlay.Model
         {
             avatar.SkinTone = (AppearanceType)SkinTone;
             for (int i = 0; i < PersonDataMap.Length; i++)
+            {
+                avatar.ForceEnableSkill = true;
                 avatar.SetPersonData((VMPersonDataVariable)PersonDataMap[i], PersonData[i]);
+                avatar.ForceEnableSkill = false;
+            }
             avatar.SetPersonData(VMPersonDataVariable.SkinColor, SkinTone);
             avatar.DefaultSuits = DefaultSuits;
             avatar.BodyOutfit = new VMOutfitReference(BodyOutfit);

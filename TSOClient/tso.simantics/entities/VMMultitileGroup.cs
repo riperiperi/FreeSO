@@ -340,6 +340,24 @@ namespace FSO.SimAntics.Entities
             }
         }
 
+        public void LoadGhost(VMMultitileGroupMarshal input, VMContext context, VMEntity[] objs)
+        {
+            MultiTile = input.MultiTile;
+            Name = input.Name;
+            InitialPrice = input.Price;
+            SalePrice = input.SalePrice;
+            if (SalePrice == 0) SalePrice = -1;
+            Objects = new List<VMEntity>();
+            for (int i = 0; i < input.Objects.Length; i++)
+            {
+                var obj = objs[i];
+                if (obj == null) continue;
+                Objects.Add(obj);
+                Offsets.Add(input.Offsets[i]);
+                obj.MultitileGroup = this;
+            }
+        }
+
         public VMMultitileGroup(VMMultitileGroupMarshal input, VMContext context)
         {
             Load(input, context);

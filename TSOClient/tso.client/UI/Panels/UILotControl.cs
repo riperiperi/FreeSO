@@ -488,6 +488,15 @@ namespace FSO.Client.UI.Panels
             return new Rectangle(0, 0, GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
         }
 
+        private Point GetScaledPoint(Point TapPoint)
+        {
+            var screenMiddle = new Point(
+                (int)(GameFacade.Screens.CurrentUIScreen.ScreenWidth / (2 / FSOEnvironment.DPIScaleFactor)),
+                (int)(GameFacade.Screens.CurrentUIScreen.ScreenHeight / (2 / FSOEnvironment.DPIScaleFactor))
+                );
+            return ((TapPoint - screenMiddle).ToVector2() / World.BackbufferScale).ToPoint() + screenMiddle;
+        }
+
         public void LiveModeUpdate(UpdateState state, bool scrolled)
         {
             if (MouseIsOn && !RMBScroll && ActiveEntity != null)
@@ -497,8 +506,9 @@ namespace FSO.Client.UI.Panels
                 {
                     OldMX = state.MouseState.X;
                     OldMY = state.MouseState.Y;
-                    var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, 
-                        state.MouseState.Y, 
+                    var scaled = GetScaledPoint(state.MouseState.Position);
+                    var newHover = World.GetObjectIDAtScreenPos(scaled.X, 
+                        scaled.Y, 
                         GameFacade.GraphicsDevice);
 
                     if (ObjectHover != newHover)
