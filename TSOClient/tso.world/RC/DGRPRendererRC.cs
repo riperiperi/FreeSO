@@ -50,6 +50,7 @@ namespace FSO.LotView.RC
 
             effect.Parameters["World"].SetValue(World);
             effect.Parameters["Level"].SetValue((float)(Level-0.999f));
+            var advDir = WorldConfig.Current.Directional && WorldConfig.Current.AdvancedLighting;
 
             int i = 0;
             foreach (var spr in Mesh.Geoms)
@@ -62,7 +63,7 @@ namespace FSO.LotView.RC
                         effect.Parameters["MeshTex"].SetValue(geom.Pixel);
                         var info = geom.Pixel?.Tag as TextureInfo;
                         effect.Parameters["UVScale"].SetValue(info?.UVScale ?? Vector2.One);
-                        var pass = effect.CurrentTechnique.Passes[(WorldConfig.Current.Directional && Room < 65533) ? 1:0];
+                        var pass = effect.CurrentTechnique.Passes[(advDir && Room < 65533) ? 1:0];
                         pass.Apply();
                         if (!geom.Rendered) continue;
                         device.Indices = geom.Indices;

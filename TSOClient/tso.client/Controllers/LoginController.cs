@@ -125,7 +125,14 @@ namespace FSO.Client.Controllers
             }
             else
             {
-                System.Diagnostics.Process.Start(".\\update.exe");
+                try
+                {
+                    System.Diagnostics.Process.Start(".\\update.exe");
+                }
+                catch (Exception)
+                {
+                    System.Diagnostics.Process.Start("update.exe");
+                }
             }
             GameFacade.Kill();
         }

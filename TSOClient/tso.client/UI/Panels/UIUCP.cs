@@ -425,35 +425,40 @@ namespace FSO.Client.UI.Panels
                 InboxFlashTime %= FSOEnvironment.RefreshRate;
             }
 
+            var keys = state.NewKeys;
+            var nofocus = state.InputManager.GetFocus() == null;
             base.Update(state);
             if (Game.InLot)
             {
-                if (state.NewKeys.Contains(Keys.F1) && !state.CtrlDown) SetPanel(1); // Live Mode Panel
-                if (state.NewKeys.Contains(Keys.F2)) SetPanel(2); // Buy Mode Panel
-                if (state.NewKeys.Contains(Keys.F3) && !BuildModeButton.Disabled) SetPanel(3); // Build Mode Panel
-                if (state.NewKeys.Contains(Keys.F4)) SetPanel(4); // House Mode Panel
+                if (keys.Contains(Keys.F1) && !state.CtrlDown) SetPanel(1); // Live Mode Panel
+                if (keys.Contains(Keys.F2)) SetPanel(2); // Buy Mode Panel
+                if (keys.Contains(Keys.F3) && !BuildModeButton.Disabled) SetPanel(3); // Build Mode Panel
+                if (keys.Contains(Keys.F4)) SetPanel(4); // House Mode Panel
 
-                if (FSOEnvironment.Enable3D)
+                if (nofocus)
                 {
-                    //if the zoom or rotation buttons are down, gradually change their values.
-                    if (RotateClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemPeriod)) ((WorldStateRC)Game.vm.Context.World.State).RotationX += 2f / FSOEnvironment.RefreshRate;
-                    if (RotateCounterClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemComma)) ((WorldStateRC)Game.vm.Context.World.State).RotationX -= 2f / FSOEnvironment.RefreshRate;
-                    if (ZoomInButton.IsDown || (state.KeyboardState.IsKeyDown(Keys.OemPlus) && !state.CtrlDown)) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom + 1f / FSOEnvironment.RefreshRate, 2));
-                    if (ZoomOutButton.IsDown || (state.KeyboardState.IsKeyDown(Keys.OemMinus) && !state.CtrlDown)) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom - 1f / FSOEnvironment.RefreshRate, 2));
-                }
-                else
-                {
-                    if (state.NewKeys.Contains(Keys.OemPlus) && !state.CtrlDown && !ZoomInButton.Disabled) { Game.ZoomLevel -= 1; UpdateZoomButton(); }
-                    if (state.NewKeys.Contains(Keys.OemMinus) && !state.CtrlDown && !ZoomOutButton.Disabled) { Game.ZoomLevel += 1; UpdateZoomButton(); }
-                    if (state.NewKeys.Contains(Keys.OemComma)) RotateCounterClockwise(null);
-                    if (state.NewKeys.Contains(Keys.OemPeriod)) RotateClockwise(null);
-                    if (state.NewKeys.Contains(Keys.PageDown)) FirstFloor(null);
-                    if (state.NewKeys.Contains(Keys.PageUp)) SecondFloor(null);
-                    if (state.NewKeys.Contains(Keys.Home)) UpdateWallsViewKeyHandler(1);
-                    if (state.NewKeys.Contains(Keys.End)) UpdateWallsViewKeyHandler(0);
+                    if (FSOEnvironment.Enable3D)
+                    {
+                        //if the zoom or rotation buttons are down, gradually change their values.
+                        if (RotateClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemPeriod)) ((WorldStateRC)Game.vm.Context.World.State).RotationX += 2f / FSOEnvironment.RefreshRate;
+                        if (RotateCounterClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemComma)) ((WorldStateRC)Game.vm.Context.World.State).RotationX -= 2f / FSOEnvironment.RefreshRate;
+                        if (ZoomInButton.IsDown || (state.KeyboardState.IsKeyDown(Keys.OemPlus) && !state.CtrlDown)) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom + 1f / FSOEnvironment.RefreshRate, 2));
+                        if (ZoomOutButton.IsDown || (state.KeyboardState.IsKeyDown(Keys.OemMinus) && !state.CtrlDown)) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom - 1f / FSOEnvironment.RefreshRate, 2));
+                    }
+                    else
+                    {
+                        if (keys.Contains(Keys.OemPlus) && !state.CtrlDown && !ZoomInButton.Disabled) { Game.ZoomLevel -= 1; UpdateZoomButton(); }
+                        if (keys.Contains(Keys.OemMinus) && !state.CtrlDown && !ZoomOutButton.Disabled) { Game.ZoomLevel += 1; UpdateZoomButton(); }
+                        if (keys.Contains(Keys.OemComma)) RotateCounterClockwise(null);
+                        if (keys.Contains(Keys.OemPeriod)) RotateClockwise(null);
+                        if (keys.Contains(Keys.PageDown)) FirstFloor(null);
+                        if (keys.Contains(Keys.PageUp)) SecondFloor(null);
+                        if (keys.Contains(Keys.Home)) UpdateWallsViewKeyHandler(1);
+                        if (keys.Contains(Keys.End)) UpdateWallsViewKeyHandler(0);
+                    }
                 }
             }
-            if (state.NewKeys.Contains(Keys.F5)) SetPanel(5); // Options Mode Panel
+            if (keys.Contains(Keys.F5)) SetPanel(5); // Options Mode Panel
         }
 
         public void FlashInbox(bool flash)

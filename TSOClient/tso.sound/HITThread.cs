@@ -410,7 +410,7 @@ namespace FSO.HIT
         {
             foreach (var note in Notes)
             {
-                note.instance.Pause();
+                if (note.instance.State != SoundState.Stopped) note.instance.Pause();
             }
         }
 
@@ -418,7 +418,7 @@ namespace FSO.HIT
         {
             foreach (var note in Notes)
             {
-                note.instance.Resume();
+                if (note.instance.State != SoundState.Stopped) note.instance.Resume();
             }
         }
     }

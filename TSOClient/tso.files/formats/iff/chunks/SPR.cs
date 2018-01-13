@@ -274,6 +274,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 {
                     var w = Math.Max(1, Width);
                     var h = Math.Max(1, Height);
+                    if (mip && TextureUtils.OverrideCompression(w, h)) tc = false;
                     if (tc)
                     {
                         PixelCache = new Texture2D(device, ((w+3)/4)*4, ((h+3)/4)*4, mip, SurfaceFormat.Dxt5);

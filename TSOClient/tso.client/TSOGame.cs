@@ -28,6 +28,7 @@ using FSO.HIT.Model;
 using FSO.UI.Model;
 using FSO.Files.RC;
 using System.Windows.Forms;
+using FSO.Files.Formats.IFF;
 //using System.Windows.Forms;
 
 namespace FSO.Client
@@ -141,7 +142,7 @@ namespace FSO.Client
             {
                 settings.TexCompression = 1;
             }
-            FSOEnvironment.TexCompress = (settings.TexCompression & 1) > 0;
+            FSOEnvironment.TexCompress = (!IffFile.RETAIN_CHUNK_DATA) && (settings.TexCompression & 1) > 0;
             //end settings management
 
             OperatingSystem os = Environment.OSVersion;
