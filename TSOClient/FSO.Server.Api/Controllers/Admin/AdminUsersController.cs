@@ -1,8 +1,10 @@
 ﻿using FSO.Server.Api;
 using FSO.Server.Api.Utils;
 using FSO.Server.Common;
+using FSO.Server.Database.DA.Inbox;
 using FSO.Server.Database.DA.Users;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Web;
@@ -12,9 +14,6 @@ namespace FSO.Server.Api.Controllers.Admin
 {
     public class AdminUsersController : ApiController
     {
-        private const string BAN_TYPE_IP = "ip";
-        private const string BAN_TYPE_USER = "user";
-
         //Get information about me, useful for the admin user interface to disable UI based on who you login as
         public HttpResponseMessage current()
         {
@@ -49,9 +48,131 @@ namespace FSO.Server.Api.Controllers.Admin
         }
 
         /// <summary>
-        /// Allows banning users outside of the game.
+        /// Unbans a user by IP and user.
         /// </summary>
-        /// <param name="id">ID of the user to ban.</param>
+        /// <param name="user_id">ID of user to unban.</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("admin/unban")]
+        public HttpResponseMessage UnbanUser(string user_id)
+        {
+            Api api = Api.INSTANCE;
+
+            api.DemandModerator(Request);
+
+            using (var da = api.DAFactory.Get())
+            {
+                User userModel = da.Users.GetById(uint.Parse(user_id));
+
+                if(userModel.is_banned)
+                {
+                    da.Users.UpdateBanned(uint.Parse(user_id), false);
+                }
+
+                var ban = da.Bans.GetByIP(userModel.last_ip);
+
+                if (ban!=null)
+                {
+                    da.Bans.Remove(userModel.user_id);
+                }
+
+                return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                {
+                    status = "success"
+                });
+            }
+        }
+
+        /// <summary>
+        /// Sends an in-game email message to a player.
+        /// </summary>
+        /// <param name="mail"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("admin/mail")]
+        public HttpResponseMessage SendMail(MailCreateModel mail)
+        {
+            Api api = Api.INSTANCE;
+
+            api.DemandAdmin(Request);
+
+            using (var da = api.DAFactory.Get())
+            {
+                User recipient = da.Users.GetById(uint.Parse(mail.target_id));
+
+                if (recipient == null)
+                {
+                    return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                    {
+                        status = "invalid_target_id"
+                    });
+                }
+
+                if (mail.subject.Trim() == "")
+                {
+                    return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                    {
+                        status = "subject_empty"
+                    });
+                }
+
+                if (mail.body.Trim() == "")
+                {
+                    return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                    {
+                        status = "body_empty"
+                    });
+                }
+
+                // Save mail in db
+                int message_id = da.Inbox.CreateMessage(new DbInboxMsg
+                {
+                    sender_id = 2147483648,
+                    target_id = uint.Parse(mail.target_id),
+                    subject = mail.subject,
+                    body = mail.body,
+                    sender_name = "FreeSO Staff",
+                    time = DateTime.UtcNow,
+                    msg_type = 4,
+                    msg_subtype = 0,
+                    read_state = 0,
+                });
+
+                // Try and notify the user ingame
+                api.RequestMailNotify(message_id, mail.subject, mail.body, uint.Parse(mail.target_id));
+
+                return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                {
+                    status = "success"
+                });
+            }
+        }
+
+        /// <summary>
+        /// Kicks a user out the current session.
+        /// </summary>
+        /// <param name="kick"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("admin/kick")]
+        public HttpResponseMessage KickUser(KickUserModel kick)
+        {
+            Api api = Api.INSTANCE;
+
+            api.DemandModerator(Request);
+
+            api.RequestUserDisconnect(uint.Parse(kick.user_id));
+
+            return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+            {
+                status = "success"
+            });
+        }
+
+        /// <summary>
+        /// Bans a user and kicks them.
+        /// </summary>
+        /// <param name="ban"></param>
         /// <returns></returns>
         [HttpPost]
         [Route("admin/ban")]
@@ -73,7 +194,7 @@ namespace FSO.Server.Api.Controllers.Admin
                     });
                 }
 
-                if (ban.ban_type == BAN_TYPE_IP)
+                if (ban.ban_type == "ip")
                 {
                     if (da.Bans.GetByIP(userModel.last_ip) != null)
                     {
@@ -95,12 +216,14 @@ namespace FSO.Server.Api.Controllers.Admin
 
                     api.RequestUserDisconnect(userModel.user_id);
 
+                    api.SendBanMail(userModel.username, userModel.email, int.Parse(ban.end_date));
+
                     return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
                     {
                         status = "success"
                     });
                 }
-                else if (ban.ban_type == BAN_TYPE_USER)
+                else if (ban.ban_type == "user")
                 {
                     if (userModel.is_banned)
                     {
@@ -113,6 +236,8 @@ namespace FSO.Server.Api.Controllers.Admin
                     da.Users.UpdateBanned(userModel.user_id, true);
 
                     api.RequestUserDisconnect(userModel.user_id);
+
+                    api.SendBanMail(userModel.username, userModel.email, int.Parse(ban.end_date));
 
                     return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
                     {
@@ -196,6 +321,26 @@ namespace FSO.Server.Api.Controllers.Admin
         public string user_id { get; set; }
         public string reason { get; set; }
         public string end_date { get; set; }
+    }
+
+    public class MailCreateModel
+    {
+        //public string message_id { get; set; }
+        //public uint sender_id { get; set; }
+        public string target_id { get; set; }
+        public string subject { get; set; }
+        public string body { get; set; }
+        public string sender_name { get; set; }
+        //public DateTime time { get; set; }
+        //public int msg_type { get; set; }
+        //public int msg_subtype { get; set; }
+        //public int read_state { get; set; }
+        //public int? reply_id { get; set; }
+    }
+
+    public class KickUserModel
+    {
+        public string user_id;
     }
 
     public class AdminRequestResponse

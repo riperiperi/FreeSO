@@ -5,9 +5,11 @@ using FSO.Server.Database.DA;
 using FSO.Server.DataService;
 using FSO.Server.Debug;
 using FSO.Server.Domain;
+using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Servers;
 using FSO.Server.Servers.Api;
 using FSO.Server.Servers.City;
+using FSO.Server.Servers.City.Handlers;
 using FSO.Server.Servers.Lot;
 using FSO.Server.Servers.Tasks;
 using FSO.Server.Servers.UserApi;
@@ -102,6 +104,7 @@ namespace FSO.Server
                 api.OnRequestShutdown += RequestedShutdown;
                 api.OnBroadcastMessage += BroadcastMessage;
                 api.OnRequestUserDisconnect += RequestedUserDisconnect;
+                api.OnRequestMailNotify += RequestedMailNotify;
             }
 
             foreach (var cityServer in Config.Services.Cities)
@@ -202,9 +205,6 @@ namespace FSO.Server
 
                             Kernel.Get<IGluonHostPool>().Stop();
 
-                            //force a shutdown, since threads like to stay alive
-                            Environment.Exit(2 + (int)ShutdownMode);
-
                             /*var domain = AppDomain.CreateDomain("RebootApp");
 
                             var assembly = "FSO.Server.Updater, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
@@ -256,12 +256,60 @@ namespace FSO.Server
             }
         }
 
+        /// <summary>
+        /// Disconnects a user ingame.
+        /// </summary>
+        /// <param name="user_id">ID of user to be disconnected.</param>
         private void RequestedUserDisconnect(uint user_id)
         {
             //TODO: select shard to send disconnection request
             foreach (var city in CityServers)
             {
                 city.Sessions.GetByAvatarId(user_id)?.Close();
+            }
+        }
+
+        /// <summary>
+        /// Tries to notify an ingame player of a new email.
+        /// </summary>
+        /// <param name="message_id">The email message id from db insertion.</param>
+        /// <param name="subject">The email subject.</param>
+        /// <param name="body">The email body.</param>
+        /// <param name="target_id">The recipient's user_id.</param>
+        private void RequestedMailNotify(int message_id, string subject, string body, uint target_id)
+        {
+            var messageItem = new Files.Formats.tsodata.MessageItem()
+            {
+                ID = message_id,
+                SenderID = 2147483648,
+                TargetID = target_id,
+                Subject = subject,
+                Body = body,
+                SenderName = "FreeSO Staff",
+                Time = DateTime.UtcNow.Ticks,
+                Type = 4,
+                Subtype = 0,
+                ReadState = 0,
+                ReplyID = 0
+            };
+
+            //TODO: select shard to send mail
+            foreach (var city in CityServers)
+            {
+                var session = city.Sessions.GetByAvatarId(target_id);
+
+                if (session != null)
+                {
+                    try
+                    {
+                        session.Write(new MailResponse
+                        {
+                            Type = MailResponseType.NEW_MAIL,
+                            Messages = new Files.Formats.tsodata.MessageItem[] { messageItem }
+                        });
+                    }
+                    catch { }
+                }
             }
         }
 
