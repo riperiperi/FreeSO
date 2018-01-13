@@ -141,18 +141,24 @@ namespace FSO.Common.Utils
             return newTexture;
         }
 
+        private static SpriteBatch CopyBatch;
+
         public static Texture2D Copy(GraphicsDevice gd, Texture2D texture)
         {
             if (texture.Format == SurfaceFormat.Dxt5)
             {
-                var newTexture = new Texture2D(gd, texture.Width, texture.Height, false, SurfaceFormat.Dxt5);
+                var old = gd.GetRenderTargets();
+                var rt = new RenderTarget2D(gd, texture.Width, texture.Height);
+                gd.SetRenderTarget(rt);
+                gd.Clear(Color.TransparentBlack);
+                if (CopyBatch == null) CopyBatch = new SpriteBatch(gd);
+                CopyBatch.Begin();
+                CopyBatch.Draw(texture, Vector2.Zero, Color.White);
+                CopyBatch.End();
 
-                var size = texture.Width * texture.Height;
-                byte[] buffer = new byte[size];
-                texture.GetData(buffer, 0, size);
+                gd.SetRenderTargets(old);
 
-                newTexture.SetData(buffer, 0, size);
-                return newTexture;
+                return rt;
             }
             else
             {
@@ -336,6 +342,15 @@ namespace FSO.Common.Utils
             }
         }
 
+        private static bool IsPowerOfTwo(int x)
+        {
+            return (x & (x - 1)) == 0;
+        }
+
+        public static bool OverrideCompression(int w, int h)
+        {
+            return (!FSOEnvironment.DirectX && !(IsPowerOfTwo(w) && IsPowerOfTwo(h)));
+        }
 
         public static void UploadDXT5WithMips(Texture2D Texture, int w, int h, GraphicsDevice gd, Color[] data)
         {
