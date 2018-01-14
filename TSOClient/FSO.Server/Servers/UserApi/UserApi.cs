@@ -76,11 +76,11 @@ namespace FSO.Server.Servers.UserApi
             settings.Add("updateUrl", userApiConfig.UpdateUrl);
             settings.Add("connectionString", config.Database.ConnectionString);
             settings.Add("NFSdir", config.SimNFS);
-            settings.Add("emailConfirmation", userApiConfig.EmailConfirmation ? "true" : "false");
-            settings.Add("mailerHost", userApiConfig.MailerHost);
-            settings.Add("mailerUser", userApiConfig.MailerUser);
-            settings.Add("mailerPassword", userApiConfig.MailerPassword);
-            settings.Add("mailerPort", userApiConfig.MailerPort.ToString());
+            settings.Add("forceEmailConfirmation", userApiConfig.ForceEmailConfirmation ? "true" : "false");
+            settings.Add("smtpHost", userApiConfig.SmtpHost);
+            settings.Add("smtpUser", userApiConfig.SmtpUser);
+            settings.Add("smtpPassword", userApiConfig.SmtpPassword);
+            settings.Add("smtpPort", userApiConfig.SmtpPort.ToString());
 
             var api = new FSO.Server.Api.Api();
             api.Init(settings);

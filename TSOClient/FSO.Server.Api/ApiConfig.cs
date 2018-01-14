@@ -28,15 +28,12 @@ namespace FSO.Server.Api
 
         public string NFSdir { get; set; }
 
-        public string MailerHost { get; set; }
-        public int MailerPort { get; set; }
+        public string SmtpHost { get; set; }
+        public int SmtpPort { get; set; }
+        public string SmtpPassword { get; set; }
+        public string SmtpUser { get; set; }
 
-        public string MailerPassword { get; set;  }
-
-        public string MailerUser { get; set; }
-
-        public bool MailerEnabled = false;
-
-        public bool EmailConfirmation = false;
+        public bool SmtpEnabled { get; set;  }
+        public bool ForceEmailConfirmation { get; set; }
     }
 }

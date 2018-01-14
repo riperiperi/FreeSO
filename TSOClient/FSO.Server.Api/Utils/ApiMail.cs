@@ -46,12 +46,12 @@ namespace FSO.Server.Api.Utils
         {
             Api api = Api.INSTANCE;
 
-            if(api.Config.MailerEnabled)
+            if(api.Config.SmtpEnabled)
             {
                 try
                 {
                     MailMessage message = new MailMessage();
-                    message.From = new MailAddress(api.Config.MailerUser, "FreeSO Staff");
+                    message.From = new MailAddress(api.Config.SmtpUser, "FreeSO Staff");
                     message.To.Add(to);
                     message.Subject = subject;
                     message.IsBodyHtml = true;
@@ -60,10 +60,10 @@ namespace FSO.Server.Api.Utils
                     SmtpClient client = new SmtpClient();
                     client.UseDefaultCredentials = true;
 
-                    client.Host = api.Config.MailerHost;
-                    client.Port = api.Config.MailerPort;
+                    client.Host = api.Config.SmtpHost;
+                    client.Port = api.Config.SmtpPort;
                     client.EnableSsl = true;
-                    client.Credentials = new System.Net.NetworkCredential(api.Config.MailerUser, api.Config.MailerPassword); 
+                    client.Credentials = new System.Net.NetworkCredential(api.Config.SmtpUser, api.Config.SmtpPassword); 
 
                     // Send async
                     client.SendMailAsync(message);

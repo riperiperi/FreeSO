@@ -20,5 +20,6 @@ namespace FSO.Server.Database.DA.Users
         uint Create(User user);
         void CreateAuth(UserAuthenticate auth);
         User GetByEmail(string email);
+        void UpdateAuth(UserAuthenticate auth);
     }
 }

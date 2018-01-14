@@ -51,19 +51,20 @@ namespace FSO.Server.Api
             Config.UpdateUrl = appSettings["updateUrl"];
             Config.NFSdir = appSettings["nfsdir"];
 
-            if(appSettings["mailerHost"]!=null&&
-                appSettings["mailerUser"]!=null&&
-                appSettings["mailerPassword"]!=null&&
-                appSettings["mailerPort"]!=null)
+            // new smtp config vars
+            if(appSettings["smtpHost"]!=null&&
+                appSettings["smtpUser"]!=null&&
+                appSettings["smtpPassword"]!=null&&
+                appSettings["smtpPort"]!=null)
             {
-                Config.MailerEnabled = true;
-                Config.MailerHost = appSettings["mailerHost"];
-                Config.MailerUser = appSettings["mailerUser"];
-                Config.MailerPassword = appSettings["mailerPassword"];
-                Config.MailerPort = int.Parse(appSettings["mailerPort"]);
+                Config.SmtpEnabled = true;
+                Config.SmtpHost = appSettings["smtpHost"];
+                Config.SmtpUser = appSettings["smtpUser"];
+                Config.SmtpPassword = appSettings["smtpPassword"];
+                Config.SmtpPort = int.Parse(appSettings["smtpPort"]);
             }
 
-            Config.EmailConfirmation = appSettings["emailConfirmation"]!=null&& appSettings["emailConfirmation"] == "true";
+            Config.ForceEmailConfirmation = appSettings["forceEmailConfirmation"]!=null&& appSettings["forceEmailConfirmation"] == "true";
 
             JWT = new JWTFactory(new JWTConfiguration()
             {
@@ -114,6 +115,12 @@ namespace FSO.Server.Api
             return result;
         }
 
+        /// <summary>
+        /// Sends an email to a user to tell them that they're banned. ;(
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="email"></param>
+        /// <param name="end_date"></param>
         public void SendBanMail(string username, string email, uint end_date)
         {
             ApiMail banMail = new ApiMail("MailBan");
@@ -126,6 +133,11 @@ namespace FSO.Server.Api
             banMail.Send(email, "Banned from ingame");
         }
 
+        /// <summary>
+        /// Sends an email to a user saying that the registration went OK.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="email"></param>
         public void SendEmailConfirmationOKMail(string username, string email)
         {
             ApiMail confirmOKMail = new ApiMail("MailRegistrationOK");
@@ -135,6 +147,14 @@ namespace FSO.Server.Api
             confirmOKMail.Send(email, "Welcome to FreeSO, " + username + "!");
         }
 
+        /// <summary>
+        /// Sends an email to a a new user with a token to create their user.
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="token"></param>
+        /// <param name="confirmation_url"></param>
+        /// <param name="expires"></param>
+        /// <returns></returns>
         public bool SendEmailConfirmationMail(string email, string token, string confirmation_url, uint expires)
         {
             ApiMail confirmMail = new ApiMail("MailRegistrationToken");
@@ -145,6 +165,42 @@ namespace FSO.Server.Api
             confirmMail.AddString("confirmation_url", confirmation_url);
 
             return confirmMail.Send(email, "Verify your FreeSO account");
+        }
+
+        /// <summary>
+        /// Sends an email to a user with a token to reset their password.
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="username"></param>
+        /// <param name="token"></param>
+        /// <param name="confirmation_url"></param>
+        /// <param name="expires"></param>
+        /// <returns></returns>
+        public bool SendPasswordResetMail(string email, string username, string token, string confirmation_url, uint expires)
+        {
+            ApiMail confirmMail = new ApiMail("MailPasswordReset");
+
+            confirmation_url = confirmation_url.Replace("%token%", token);
+            confirmMail.AddString("token", token);
+            confirmMail.AddString("expires", Epoch.HMSRemaining(expires));
+            confirmMail.AddString("confirmation_url", confirmation_url);
+
+            return confirmMail.Send(email, "Password Reset for " + username);
+        }
+
+        /// <summary>
+        /// Sends a password change success email to a user.
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        public bool SendPasswordResetOKMail(string email, string username)
+        {
+            ApiMail confirmMail = new ApiMail("MailPasswordResetOK");
+
+            confirmMail.AddString("username", username);
+
+            return confirmMail.Send(email, "Your account password was reset");
         }
 
         public void DemandModerator(JWTUser user)
@@ -172,11 +228,22 @@ namespace FSO.Server.Api
             OnRequestShutdown?.Invoke(time, type);
         }
 
+        /// <summary>
+        /// Asks the server to disconnect a user.
+        /// </summary>
+        /// <param name="user_id"></param>
         public void RequestUserDisconnect(uint user_id)
         {
             OnRequestUserDisconnect?.Invoke(user_id);
         }
 
+        /// <summary>
+        /// Asks the server to notify the client about the new message.
+        /// </summary>
+        /// <param name="message_id"></param>
+        /// <param name="subject"></param>
+        /// <param name="body"></param>
+        /// <param name="target_id"></param>
         public void RequestMailNotify(int message_id, string subject, string body, uint target_id)
         {
             OnRequestMailNotify(message_id, subject, body, target_id);
@@ -187,6 +254,33 @@ namespace FSO.Server.Api
             OnBroadcastMessage?.Invoke(sender, title, message);
         }
 
+        /// <summary>
+        /// Changes a user's password.
+        /// </summary>
+        /// <param name="user_id"></param>
+        /// <param name="new_password"></param>
+        public void ChangePassword(uint user_id, string new_password)
+        {
+            using (var da = DAFactory.Get())
+            {
+                var passhash = PasswordHasher.Hash(new_password);
+                var authSettings = new Database.DA.Users.UserAuthenticate();
+                authSettings.scheme_class = passhash.scheme;
+                authSettings.data = passhash.data;
+                authSettings.user_id = user_id;
+
+                da.Users.UpdateAuth(authSettings);
+            }
+        }
+
+        /// <summary>
+        /// Inserts a brand new user in db.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="email"></param>
+        /// <param name="password"></param>
+        /// <param name="ip"></param>
+        /// <returns></returns>
         public Database.DA.Users.User CreateUser(string username, string email, string password, string ip)
         {
             using (var da = DAFactory.Get())
@@ -212,10 +306,7 @@ namespace FSO.Server.Api
                     var userId = da.Users.Create(userModel);
                     authSettings.user_id = userId;
                     da.Users.CreateAuth(authSettings);
-
-                    userModel = da.Users.GetById(userId);
-                    if (userModel == null) { throw new Exception("Unable to find user"); }
-                    return userModel;
+                    return da.Users.GetById(userId);
                 }
                 catch (Exception)
                 {

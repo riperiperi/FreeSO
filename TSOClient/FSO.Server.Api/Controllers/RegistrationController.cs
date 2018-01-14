@@ -23,7 +23,7 @@ namespace FSO.Server.Api.Controllers
         /// </summary>
         private static Regex USERNAME_VALIDATION = new Regex("^([a-z0-9]){1}([a-z0-9_]){2,23}$");
 
-
+        #region Registration
         [HttpPost]
         [Route("userapi/registration")]
         public HttpResponseMessage CreateUser(RegistrationModel user)
@@ -31,7 +31,8 @@ namespace FSO.Server.Api.Controllers
             var api = Api.INSTANCE;
 
             // Check if we wanted to force email confirmation
-            if(api.Config.EmailConfirmation)
+            // smtp needs to be enabled too
+            if(api.Config.ForceEmailConfirmation && api.Config.SmtpEnabled)
             {
                 return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
                 {
@@ -116,6 +117,7 @@ namespace FSO.Server.Api.Controllers
                         error_description = "user_exists"
                     });
                 } else {
+                    api.SendEmailConfirmationOKMail(user.username, user.email);
                     return ApiResponse.Json(HttpStatusCode.OK, userModel);
                 }
             }
@@ -127,11 +129,20 @@ namespace FSO.Server.Api.Controllers
         /// <param name="email"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("userapi/registration/token_create")]
-        public HttpResponseMessage CreateToken(RegistrationCreateTokenModel model)
+        [Route("userapi/registration/request")]
+        public HttpResponseMessage CreateToken(ConfirmationCreateTokenModel model)
         {
-            // To do: check if email address is disposable.
             Api api = Api.INSTANCE;
+
+            // smtp needs to be configured for this
+            if(!api.Config.SmtpEnabled)
+            {
+                return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                {
+                    error = "registration_failed",
+                    error_description = "smtp_disabled"
+                });
+            }
 
             if(model.confirmation_url==null||model.email==null)
             {
@@ -142,6 +153,8 @@ namespace FSO.Server.Api.Controllers
                 });
             }
 
+            // verify email syntax
+            // To do: check if email address is disposable.
             try
             {
                 var addr = new System.Net.Mail.MailAddress(model.email);
@@ -157,6 +170,7 @@ namespace FSO.Server.Api.Controllers
 
             using (var da = api.DAFactory.Get())
             {
+                // email is taken
                 if(da.Users.GetByEmail(model.email)!=null)
                 {
                     return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
@@ -168,6 +182,7 @@ namespace FSO.Server.Api.Controllers
 
                 EmailConfirmation confirm = da.EmailConfirmations.GetByEmail(model.email, ConfirmationType.email);
 
+                // already waiting for confirmation
                 if(confirm!=null)
                 {
                     return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
@@ -179,6 +194,7 @@ namespace FSO.Server.Api.Controllers
 
                 uint expires = Epoch.Now + EMAIL_CONFIRMATION_EXPIRE;
 
+                // create new email confirmation
                 string token = da.EmailConfirmations.Create(new EmailConfirmation
                 {
                     type = ConfirmationType.email,
@@ -186,6 +202,7 @@ namespace FSO.Server.Api.Controllers
                     expires = expires
                 });
 
+                // send email with recently generated token
                 bool sent = api.SendEmailConfirmationMail(model.email, token, model.confirmation_url, expires);
                  
                 if(sent)
@@ -300,6 +317,7 @@ namespace FSO.Server.Api.Controllers
                     });
                 }
 
+                //create user in db
                 var userModel = api.CreateUser(user.username, user.email, user.password, ip);
 
                 if (userModel == null)
@@ -312,13 +330,219 @@ namespace FSO.Server.Api.Controllers
                 }
                 else
                 {
+                    //send OK email
                     api.SendEmailConfirmationOKMail(user.username, user.email);
+                    da.EmailConfirmations.Remove(user.token);
                     return ApiResponse.Json(HttpStatusCode.OK, userModel);
                 }
             }
         }
+
+        #endregion
+
+        #region Password reset
+        [HttpPost]
+        [Route("userapi/password")]
+        public HttpResponseMessage ChangePassword(PasswordResetModel model)
+        {
+            Api api = Api.INSTANCE;
+
+            // Check if we wanted to force email confirmation
+            // smtp needs to be enabled too
+            if (api.Config.ForceEmailConfirmation&&api.Config.SmtpEnabled)
+            {
+                return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                {
+                    error = "password_reset_failed",
+                    error_description = "missing_confirmation_token"
+                });
+            }
+
+            // No empty fields
+            if (model.username==null||model.new_password==null||model.old_password==null)
+            {
+                return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                {
+                    error = "password_reset_failed",
+                    error_description = "missing_fields"
+                });
+            }
+
+            using (var da = api.DAFactory.Get())
+            {
+                var user = da.Users.GetByUsername(model.username);
+
+                if(user==null)
+                {
+                    return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                    {
+                        error = "password_reset_failed",
+                        error_description = "user_invalid"
+                    });
+                }
+
+                var old_password_hash = PasswordHasher.Hash(model.old_password);
+
+                if (old_password_hash.data!=da.Users.GetAuthenticationSettings(user.user_id).data)
+                {
+                    return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                    {
+                        error = "password_reset_failed",
+                        error_description = "incorrect_password"
+                    });
+                }
+
+                api.ChangePassword(user.user_id, model.new_password);
+                api.SendPasswordResetOKMail(user.email, user.username);
+
+                return ApiResponse.Json(HttpStatusCode.OK, new
+                {
+                    status = "success"
+                });
+            }
+        }
+
+        /// <summary>
+        /// Resets a user's password using a confirmation token.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("userapi/password/confirm")]
+        public HttpResponseMessage ConfirmPwd(PasswordResetUseTokenModel model)
+        {
+            Api api = Api.INSTANCE;
+
+            if(model.token==null||model.new_password==null)
+            {
+                return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                {
+                    error = "password_reset_failed",
+                    error_description = "missing_fields"
+                });
+            }
+
+            using (var da = api.DAFactory.Get())
+            {
+                EmailConfirmation confirmation = da.EmailConfirmations.GetByToken(model.token);
+
+                if(confirmation==null)
+                {
+                    return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                    {
+                        error = "password_reset_failed",
+                        error_description = "invalid_token"
+                    });
+                }
+
+                var user = da.Users.GetByEmail(confirmation.email);
+
+                api.ChangePassword(user.user_id, model.new_password);
+                api.SendPasswordResetOKMail(user.email, user.username);
+                da.EmailConfirmations.Remove(model.token);
+
+                return ApiResponse.Json(HttpStatusCode.OK, new
+                {
+                    status = "success"
+                });
+            }
+        }
+
+        /// <summary>
+        /// Creates a password reset token and mails it to the user.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("userapi/password/request")]
+        public HttpResponseMessage CreatePwdToken(ConfirmationCreateTokenModel model)
+        {  
+            Api api = Api.INSTANCE;
+
+            if (model.confirmation_url == null || model.email == null)
+            {
+                return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                {
+                    error = "password_reset_failed",
+                    error_description = "missing_fields"
+                });
+            }
+
+            // verify email syntax
+            // To do: check if email address is disposable.
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(model.email);
+            }
+            catch
+            {
+                return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                {
+                    error = "password_reset_failed",
+                    error_description = "email_invalid"
+                });
+            }
+
+            using (var da = api.DAFactory.Get())
+            {
+
+                var user = da.Users.GetByEmail(model.email);
+
+                if(user==null)
+                {
+                    return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                    {
+                        error = "password_reset_failed",
+                        error_description = "email_invalid"
+                    });
+                }
+
+                EmailConfirmation confirm = da.EmailConfirmations.GetByEmail(model.email, ConfirmationType.password);
+
+                // already awaiting a confirmation
+                // to-do: resend?
+                if (confirm != null)
+                {
+                    return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                    {
+                        error = "registration_failed",
+                        error_description = "confirmation_pending"
+                    });
+                }
+
+                uint expires = Epoch.Now + EMAIL_CONFIRMATION_EXPIRE;
+
+                // create new email confirmation
+                string token = da.EmailConfirmations.Create(new EmailConfirmation
+                {
+                    type = ConfirmationType.password,
+                    email = model.email,
+                    expires = expires
+                });
+
+                // send confirmation email with generated token
+                bool sent = api.SendPasswordResetMail(model.email, user.username, token, model.confirmation_url, expires);
+
+                if (sent)
+                {
+                    return ApiResponse.Json(HttpStatusCode.OK, new
+                    {
+                        status = "success"
+                    });
+                }
+
+                return ApiResponse.Json(HttpStatusCode.OK, new
+                {
+                    // success but email shitfaced
+                    status = "email_failed"
+                });
+            }
+        }
+
+        #endregion
     }
 
+    #region Models
     public class RegistrationError
     {
         public string error_description { get; set; }
@@ -336,7 +560,7 @@ namespace FSO.Server.Api.Controllers
     /// <summary>
     /// Expected request data when trying to create a token to register.
     /// </summary>
-    public class RegistrationCreateTokenModel
+    public class ConfirmationCreateTokenModel
     {
         public string email { get; set; }
         /// <summary>
@@ -344,6 +568,13 @@ namespace FSO.Server.Api.Controllers
         /// If %token% is present in the url, it will be replaced with the user's token.
         /// </summary>
         public string confirmation_url { get; set; }
+    }
+
+    public class PasswordResetModel
+    {
+        public string username { get; set; }
+        public string old_password { get; set; }
+        public string new_password { get; set; }
     }
 
     /// <summary>
@@ -369,4 +600,12 @@ namespace FSO.Server.Api.Controllers
         /// </summary>
         public string token { get; set; }
     }
+
+    public class PasswordResetUseTokenModel
+    {
+        public string token { get; set; }
+        public string new_password { get; set; }
+    }
+
+    #endregion
 }

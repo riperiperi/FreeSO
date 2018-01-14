@@ -49,13 +49,13 @@ namespace FSO.Server.Database.DA.EmailConfirmation
         public string Create(EmailConfirmation confirm)
         {
             confirm.token = Guid.NewGuid().ToString().ToUpper();
-            Context.Connection.Query("INSERT INTO fso_email_confirm (type, email, token, expires) VALUES (@type, @email, @token, @expires)", confirm);
+            Context.Connection.Execute("INSERT INTO fso_email_confirm (type, email, token, expires) VALUES (@type, @email, @token, @expires)", confirm);
             return confirm.token;
         }
 
         public void Remove(string token)
         {
-            Context.Connection.Query("DELETE FROM fso_email_confirm WHERE token = @token", new { token = token });
+            Context.Connection.Execute("DELETE FROM fso_email_confirm WHERE token = @token", new { token = token });
         }
     }
 }

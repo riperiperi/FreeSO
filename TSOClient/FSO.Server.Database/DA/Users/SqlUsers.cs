@@ -77,5 +77,13 @@ namespace FSO.Server.Database.DA.Users
                 auth
             );
         }
+
+        public void UpdateAuth(UserAuthenticate auth)
+        {
+            Context.Connection.Execute(
+                "UPDATE fso_user_authenticate SET scheme_class = @scheme_class, data = @data WHERE user_id = @user_id;",
+                new { auth.scheme_class, auth.data, auth.user_id }
+            );
+        }
     }
 }

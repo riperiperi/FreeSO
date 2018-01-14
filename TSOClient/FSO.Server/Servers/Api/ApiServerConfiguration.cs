@@ -39,11 +39,11 @@ namespace FSO.Server.Servers.Api
         public bool Maintainance { get; set; }
         public string UpdateUrl { get; set; }
 
-        public string MailerHost { get; set; }
-        public int MailerPort { get; set; }
-        public string MailerPassword { get; set; }
-        public string MailerUser { get; set; }
-        public bool EmailConfirmation { get; set; }
+        public string SmtpHost { get; set; }
+        public int SmtpPort { get; set; }
+        public string SmtpPassword { get; set; }
+        public string SmtpUser { get; set; }
+        public bool ForceEmailConfirmation { get; set; }
     }
 
     public enum ApiServerControllers
