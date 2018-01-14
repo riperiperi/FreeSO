@@ -36,5 +36,7 @@ namespace FSO.Server.Api
         public string MailerUser { get; set; }
 
         public bool MailerEnabled = false;
+
+        public bool EmailConfirmation = false;
     }
 }

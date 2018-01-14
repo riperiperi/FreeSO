@@ -37,15 +37,13 @@ namespace FSO.Server.Servers.Api
         /// If true, only authentication from moderators and admins will be accepted
         /// </summary>
         public bool Maintainance { get; set; }
-
         public string UpdateUrl { get; set; }
 
         public string MailerHost { get; set; }
         public int MailerPort { get; set; }
-
         public string MailerPassword { get; set; }
-
         public string MailerUser { get; set; }
+        public bool EmailConfirmation { get; set; }
     }
 
     public enum ApiServerControllers

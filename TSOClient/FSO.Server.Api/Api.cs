@@ -1,4 +1,5 @@
 ﻿using FSO.Server.Api.Utils;
+using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Domain;
 using FSO.Server.Protocol.Gluon.Model;
@@ -62,6 +63,8 @@ namespace FSO.Server.Api
                 Config.MailerPort = int.Parse(appSettings["mailerPort"]);
             }
 
+            Config.EmailConfirmation = appSettings["emailConfirmation"]!=null&& appSettings["emailConfirmation"] == "true";
+
             JWT = new JWTFactory(new JWTConfiguration()
             {
                 Key = System.Text.UTF8Encoding.UTF8.GetBytes(Config.Secret)
@@ -111,16 +114,37 @@ namespace FSO.Server.Api
             return result;
         }
 
-        public void SendBanMail(string username, string email, int end_date)
+        public void SendBanMail(string username, string email, uint end_date)
         {
             ApiMail banMail = new ApiMail("MailBan");
 
-            var date = end_date == 0 ? "Permanent ban" : (new DateTime(1970, 1, 1, 0, 0, 0, 0).AddSeconds(end_date).ToLocalTime()).ToString();
+            var date = end_date == 0 ? "Permanent ban" : Epoch.ToDate(end_date).ToString();
 
             banMail.AddString("username", username);
             banMail.AddString("end", date);
 
             banMail.Send(email, "Banned from ingame");
+        }
+
+        public void SendEmailConfirmationOKMail(string username, string email)
+        {
+            ApiMail confirmOKMail = new ApiMail("MailRegistrationOK");
+
+            confirmOKMail.AddString("username", username);
+
+            confirmOKMail.Send(email, "Welcome to FreeSO, " + username + "!");
+        }
+
+        public void SendEmailConfirmationMail(string username, string email, string token, string confirmation_url, uint expires)
+        {
+            ApiMail confirmMail = new ApiMail("MailRegistrationToken");
+
+            confirmation_url = confirmation_url.Replace("%token%", token);
+            confirmMail.AddString("token", token);
+            confirmMail.AddString("expires", Epoch.ToDate(expires).ToString());
+            confirmMail.AddString("confirmation_url", confirmation_url);
+
+            confirmMail.Send(email, "Verify your FreeSO account");
         }
 
         public void DemandModerator(JWTUser user)
@@ -161,6 +185,43 @@ namespace FSO.Server.Api
         public void BroadcastMessage(string sender, string title, string message)
         {
             OnBroadcastMessage?.Invoke(sender, title, message);
+        }
+
+        public Database.DA.Users.User CreateUser(string username, string email, string password, string ip)
+        {
+            using (var da = DAFactory.Get())
+            {
+                var userModel = new Database.DA.Users.User();
+                userModel.username = username;
+                userModel.email = email;
+                userModel.is_admin = false;
+                userModel.is_moderator = false;
+                userModel.user_state = Database.DA.Users.UserState.valid;
+                userModel.register_date = Epoch.Now;
+                userModel.is_banned = false;
+                userModel.register_ip = ip;
+                userModel.last_ip = ip;
+
+                var passhash = PasswordHasher.Hash(password);
+                var authSettings = new Database.DA.Users.UserAuthenticate();
+                authSettings.scheme_class = passhash.scheme;
+                authSettings.data = passhash.data;
+
+                try
+                {
+                    var userId = da.Users.Create(userModel);
+                    authSettings.user_id = userId;
+                    da.Users.CreateAuth(authSettings);
+
+                    userModel = da.Users.GetById(userId);
+                    if (userModel == null) { throw new Exception("Unable to find user"); }
+                    return userModel;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
         }
     }
 }

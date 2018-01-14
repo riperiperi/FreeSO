@@ -28,6 +28,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FSO.Server.Database.DA.Transactions;
 using FSO.Server.Database.DA.DynPayouts;
+using FSO.Server.Database.DA.EmailConfirmation;
 
 namespace FSO.Server.Database.DA
 {
@@ -60,7 +61,7 @@ namespace FSO.Server.Database.DA
         //System tables
         IHosts Hosts { get; }
         ITasks Tasks { get; }
-
+        IEmailConfirmations EmailConfirmations { get; }
 
         void Flush();
     }

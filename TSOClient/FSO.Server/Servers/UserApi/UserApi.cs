@@ -45,8 +45,6 @@ namespace FSO.Server.Servers.UserApi
 
         public override void Start()
         {
-            string baseAddress = "http://localhost:9000/";
-
             // Start OWIN host 
             App = WebApp.Start(Config.Services.UserApi.Bindings[0], x =>
             {
@@ -58,8 +56,6 @@ namespace FSO.Server.Servers.UserApi
                 api.OnRequestMailNotify += (i, s, b, t) => { OnRequestMailNotify?.Invoke(i, s, b, t); };
                 api.HostPool = Kernel.Get<IGluonHostPool>();
             });
-
-            //Console.ReadLine();
         }
     }
 
@@ -80,6 +76,7 @@ namespace FSO.Server.Servers.UserApi
             settings.Add("updateUrl", userApiConfig.UpdateUrl);
             settings.Add("connectionString", config.Database.ConnectionString);
             settings.Add("NFSdir", config.SimNFS);
+            settings.Add("emailConfirmation", userApiConfig.EmailConfirmation ? "true" : "false");
             settings.Add("mailerHost", userApiConfig.MailerHost);
             settings.Add("mailerUser", userApiConfig.MailerUser);
             settings.Add("mailerPassword", userApiConfig.MailerPassword);
