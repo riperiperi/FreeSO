@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FSO.Server.Database.DA.Users;
+﻿using FSO.Server.Database.DA.Users;
 using FSO.Server.Database.DA.AuthTickets;
 using FSO.Server.Database.DA.Shards;
 using FSO.Server.Database.DA.Avatars;
@@ -29,6 +23,7 @@ using FSO.Server.Database.DA.DbEvents;
 using FSO.Server.Database.DA.Tuning;
 using FSO.Server.Database.DA.Transactions;
 using FSO.Server.Database.DA.DynPayouts;
+using FSO.Server.Database.DA.EmailConfirmation;
 
 namespace FSO.Server.Database.DA
 {
@@ -345,6 +340,19 @@ namespace FSO.Server.Database.DA
                     _Totals = new SqlLotVisitTotals(Context);
                 }
                 return _Totals;
+            }
+        }
+
+        private IEmailConfirmations _Confirmations;
+        public IEmailConfirmations EmailConfirmations
+        {
+            get
+            {
+                if (_Confirmations == null)
+                {
+                    _Confirmations = new SqlEmailConfirmations(Context);
+                }
+                return _Confirmations;
             }
         }
 

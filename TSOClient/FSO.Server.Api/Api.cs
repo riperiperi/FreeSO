@@ -135,16 +135,16 @@ namespace FSO.Server.Api
             confirmOKMail.Send(email, "Welcome to FreeSO, " + username + "!");
         }
 
-        public void SendEmailConfirmationMail(string username, string email, string token, string confirmation_url, uint expires)
+        public bool SendEmailConfirmationMail(string email, string token, string confirmation_url, uint expires)
         {
             ApiMail confirmMail = new ApiMail("MailRegistrationToken");
 
             confirmation_url = confirmation_url.Replace("%token%", token);
             confirmMail.AddString("token", token);
-            confirmMail.AddString("expires", Epoch.ToDate(expires).ToString());
+            confirmMail.AddString("expires", Epoch.HMSRemaining(expires));
             confirmMail.AddString("confirmation_url", confirmation_url);
 
-            confirmMail.Send(email, "Verify your FreeSO account");
+            return confirmMail.Send(email, "Verify your FreeSO account");
         }
 
         public void DemandModerator(JWTUser user)

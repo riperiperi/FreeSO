@@ -28,13 +28,11 @@ namespace FSO.Server.Database.DA.EmailConfirmation
         /// Timestamp when the confirmation token will expire.
         /// </summary>
         public uint expires { get; set; }
-
-        public bool verified = false;
     }
 
     public enum ConfirmationType
     {
-        email,
+        email = 1,
         password
     }
 }

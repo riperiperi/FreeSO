@@ -29,6 +29,10 @@ namespace FSO.Server.Database.DA.Users
             return Context.Connection.Query<User>("SELECT * FROM fso_users WHERE user_id = @user_id", new { user_id = id }).FirstOrDefault();
         }
 
+        public User GetByEmail(string email)
+        {
+            return Context.Connection.Query<User>("SELECT * FROM fso_users WHERE email = @email", new { email = email }).FirstOrDefault();
+        }
         public List<User> GetByRegisterIP(string ip)
         {
             return Context.Connection.Query<User>("SELECT * FROM fso_users WHERE register_ip = @ip ORDER BY register_date DESC", new { ip = ip }).AsList();

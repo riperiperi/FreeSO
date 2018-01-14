@@ -23,6 +23,7 @@ namespace FSO.Server.Api.Controllers
         /// </summary>
         private static Regex USERNAME_VALIDATION = new Regex("^([a-z0-9]){1}([a-z0-9_]){2,23}$");
 
+
         [HttpPost]
         [Route("userapi/registration")]
         public HttpResponseMessage CreateUser(RegistrationModel user)
@@ -51,6 +52,15 @@ namespace FSO.Server.Api.Controllers
             else if (user.username.Length > 24) failReason = "user_long";
             else if (!USERNAME_VALIDATION.IsMatch(user.username ?? "")) failReason = "user_invalid";
             else if ((user.password?.Length ?? 0) == 0) failReason = "pass_required";
+
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(user.email);
+            }
+            catch
+            {
+                failReason = "email_invalid";
+            }
 
             if (failReason != null)
             {
@@ -117,15 +127,46 @@ namespace FSO.Server.Api.Controllers
         /// <param name="email"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("userapi/registration")]
-        public HttpResponseMessage CreateToken(string email)
+        [Route("userapi/registration/token_create")]
+        public HttpResponseMessage CreateToken(RegistrationCreateTokenModel model)
         {
             // To do: check if email address is disposable.
             Api api = Api.INSTANCE;
 
+            if(model.confirmation_url==null||model.email==null)
+            {
+                return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                {
+                    error = "registration_failed",
+                    error_description = "missing_fields"
+                });
+            }
+
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(model.email);
+            }
+            catch
+            {
+                return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                {
+                    error = "registration_failed",
+                    error_description = "email_invalid"
+                });
+            }
+
             using (var da = api.DAFactory.Get())
             {
-                EmailConfirmation confirm = da.EmailConfirmations.GetByEmail(email);
+                if(da.Users.GetByEmail(model.email)!=null)
+                {
+                    return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                    {
+                        error = "registration_failed",
+                        error_description = "email_taken"
+                    });
+                }
+
+                EmailConfirmation confirm = da.EmailConfirmations.GetByEmail(model.email, ConfirmationType.email);
 
                 if(confirm!=null)
                 {
@@ -136,15 +177,30 @@ namespace FSO.Server.Api.Controllers
                     });
                 }
 
-                da.EmailConfirmations.Create(new EmailConfirmation {
+                uint expires = Epoch.Now + EMAIL_CONFIRMATION_EXPIRE;
+
+                string token = da.EmailConfirmations.Create(new EmailConfirmation
+                {
                     type = ConfirmationType.email,
-                    email = email,
-                    expires = Epoch.Now + EMAIL_CONFIRMATION_EXPIRE
+                    email = model.email,
+                    expires = expires
                 });
 
-                return ApiResponse.Json(HttpStatusCode.OK, new {
-                    status = "success"
+                bool sent = api.SendEmailConfirmationMail(model.email, token, model.confirmation_url, expires);
+                 
+                if(sent)
+                {
+                    return ApiResponse.Json(HttpStatusCode.OK, new
+                    {
+                        status = "success"
+                    });
+                }
+
+                return ApiResponse.Json(HttpStatusCode.OK, new
+                {
+                    status = "email_failed"
                 });
+               
             }
         }
 
@@ -154,10 +210,19 @@ namespace FSO.Server.Api.Controllers
         /// <param name="user"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("userapi/registration")]
-        public HttpResponseMessage CreateUser(RegistrationModelWithToken user)
+        [Route("userapi/registration/confirm")]
+        public HttpResponseMessage CreateUserWithToken(RegistrationUseTokenModel user)
         {
             Api api = Api.INSTANCE;
+
+            if (user == null)
+            {
+                return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                {
+                    error = "registration_failed",
+                    error_description = "invalid_token"
+                });
+            }
 
             using (var da = api.DAFactory.Get())
             {
@@ -169,17 +234,6 @@ namespace FSO.Server.Api.Controllers
                     {
                         error = "registration_failed",
                         error_description = "invalid_token"
-                    });
-                }
-
-                if(Epoch.Now > confirmation.expires)
-                {
-                    da.EmailConfirmations.Remove(confirmation.token);
-
-                    return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
-                    {
-                        error = "registration_failed",
-                        error_description = "token_expired"
                     });
                 }
 
@@ -195,6 +249,15 @@ namespace FSO.Server.Api.Controllers
                 else if (user.username.Length > 24) failReason = "user_long";
                 else if (!USERNAME_VALIDATION.IsMatch(user.username ?? "")) failReason = "user_invalid";
                 else if ((user.password?.Length ?? 0) == 0) failReason = "pass_required";
+
+                try
+                {
+                    var addr = new System.Net.Mail.MailAddress(user.email);
+                }
+                catch
+                {
+                    failReason = "email_invalid";
+                }
 
                 if (failReason != null)
                 {
@@ -226,9 +289,8 @@ namespace FSO.Server.Api.Controllers
                 }
 
                 //has this user registered a new account too soon after their last?
-                var now = Epoch.Now;
                 var prev = da.Users.GetByRegisterIP(ip);
-                if (now - (prev.FirstOrDefault()?.register_date ?? 0) < REGISTER_THROTTLE_SECS)
+                if (Epoch.Now - (prev.FirstOrDefault()?.register_date ?? 0) < REGISTER_THROTTLE_SECS)
                 {
                     //cannot create a new account this soon.
                     return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
@@ -272,9 +334,22 @@ namespace FSO.Server.Api.Controllers
     }
 
     /// <summary>
+    /// Expected request data when trying to create a token to register.
+    /// </summary>
+    public class RegistrationCreateTokenModel
+    {
+        public string email { get; set; }
+        /// <summary>
+        /// The link the user will have to go to in order to confirm their token.
+        /// If %token% is present in the url, it will be replaced with the user's token.
+        /// </summary>
+        public string confirmation_url { get; set; }
+    }
+
+    /// <summary>
     /// Expected request data when trying to register with a token.
     /// </summary>
-    public class RegistrationModelWithToken
+    public class RegistrationUseTokenModel
     {
         public string username { get; set; }
         /// <summary>
@@ -293,10 +368,5 @@ namespace FSO.Server.Api.Controllers
         /// The unique GUID.
         /// </summary>
         public string token { get; set; }
-        /// <summary>
-        /// The link the user will have to go to in order to confirm their token.
-        /// If %token% is present in the url, it will be replaced with the user's token.
-        /// </summary>
-        public string confirmation_url { get; set; }
     }
 }

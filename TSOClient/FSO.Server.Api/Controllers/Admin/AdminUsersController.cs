@@ -54,7 +54,7 @@ namespace FSO.Server.Api.Controllers.Admin
         /// <returns></returns>
         [HttpPost]
         [Route("admin/unban")]
-        public HttpResponseMessage UnbanUser(string user_id)
+        public HttpResponseMessage UnbanUser([FromBody] string user_id)
         {
             Api api = Api.INSTANCE;
 
@@ -76,7 +76,7 @@ namespace FSO.Server.Api.Controllers.Admin
                     da.Bans.Remove(userModel.user_id);
                 }
 
-                return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                return ApiResponse.Json(HttpStatusCode.OK, new
                 {
                     status = "success"
                 });
@@ -102,7 +102,7 @@ namespace FSO.Server.Api.Controllers.Admin
 
                 if (recipient == null)
                 {
-                    return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                    return ApiResponse.Json(HttpStatusCode.OK, new 
                     {
                         status = "invalid_target_id"
                     });
@@ -110,7 +110,7 @@ namespace FSO.Server.Api.Controllers.Admin
 
                 if (mail.subject.Trim() == "")
                 {
-                    return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                    return ApiResponse.Json(HttpStatusCode.OK, new 
                     {
                         status = "subject_empty"
                     });
@@ -118,7 +118,7 @@ namespace FSO.Server.Api.Controllers.Admin
 
                 if (mail.body.Trim() == "")
                 {
-                    return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                    return ApiResponse.Json(HttpStatusCode.OK, new 
                     {
                         status = "body_empty"
                     });
@@ -141,7 +141,7 @@ namespace FSO.Server.Api.Controllers.Admin
                 // Try and notify the user ingame
                 api.RequestMailNotify(message_id, mail.subject, mail.body, uint.Parse(mail.target_id));
 
-                return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                return ApiResponse.Json(HttpStatusCode.OK, new
                 {
                     status = "success"
                 });
@@ -155,16 +155,15 @@ namespace FSO.Server.Api.Controllers.Admin
         /// <returns></returns>
         [HttpPost]
         [Route("admin/kick")]
-        public HttpResponseMessage KickUser(KickUserModel kick)
+        public HttpResponseMessage KickUser([FromBody] string user_id)
         {
             Api api = Api.INSTANCE;
 
             api.DemandModerator(Request);
 
-            api.RequestUserDisconnect(uint.Parse(kick.user_id));
+            api.RequestUserDisconnect(uint.Parse(user_id));
 
-            return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
-            {
+            return ApiResponse.Json(HttpStatusCode.OK, new {
                 status = "success"
             });
         }
@@ -188,7 +187,7 @@ namespace FSO.Server.Api.Controllers.Admin
 
                 if (userModel == null)
                 {
-                    return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                    return ApiResponse.Json(HttpStatusCode.OK, new
                     {
                         status = "invalid_id"
                     });
@@ -198,7 +197,7 @@ namespace FSO.Server.Api.Controllers.Admin
                 {
                     if (da.Bans.GetByIP(userModel.last_ip) != null)
                     {
-                        return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                        return ApiResponse.Json(HttpStatusCode.OK, new
                         {
                             status = "already_banned"
                         });
@@ -206,7 +205,7 @@ namespace FSO.Server.Api.Controllers.Admin
 
                     if (userModel.last_ip == "127.0.0.1")
                     {
-                        return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                        return ApiResponse.Json(HttpStatusCode.OK, new
                         {
                             status = "invalid_ip"
                         });
@@ -216,9 +215,9 @@ namespace FSO.Server.Api.Controllers.Admin
 
                     api.RequestUserDisconnect(userModel.user_id);
 
-                    api.SendBanMail(userModel.username, userModel.email, int.Parse(ban.end_date));
+                    api.SendBanMail(userModel.username, userModel.email, uint.Parse(ban.end_date));
 
-                    return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                    return ApiResponse.Json(HttpStatusCode.OK, new
                     {
                         status = "success"
                     });
@@ -227,7 +226,7 @@ namespace FSO.Server.Api.Controllers.Admin
                 {
                     if (userModel.is_banned)
                     {
-                        return ApiResponse.Json(HttpStatusCode.NotFound, new AdminRequestResponse()
+                        return ApiResponse.Json(HttpStatusCode.NotFound, new
                         {
                             status = "already_banned"
                         });
@@ -237,15 +236,15 @@ namespace FSO.Server.Api.Controllers.Admin
 
                     api.RequestUserDisconnect(userModel.user_id);
 
-                    api.SendBanMail(userModel.username, userModel.email, int.Parse(ban.end_date));
+                    api.SendBanMail(userModel.username, userModel.email, uint.Parse(ban.end_date));
 
-                    return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                    return ApiResponse.Json(HttpStatusCode.OK, new
                     {
                         status = "success"
                     });
                 }
 
-                return ApiResponse.Json(HttpStatusCode.OK, new AdminRequestResponse()
+                return ApiResponse.Json(HttpStatusCode.OK, new
                 {
                     status = "invalid_ban_type"
                 });
@@ -325,27 +324,9 @@ namespace FSO.Server.Api.Controllers.Admin
 
     public class MailCreateModel
     {
-        //public string message_id { get; set; }
-        //public uint sender_id { get; set; }
         public string target_id { get; set; }
         public string subject { get; set; }
         public string body { get; set; }
         public string sender_name { get; set; }
-        //public DateTime time { get; set; }
-        //public int msg_type { get; set; }
-        //public int msg_subtype { get; set; }
-        //public int read_state { get; set; }
-        //public int? reply_id { get; set; }
-    }
-
-    public class KickUserModel
-    {
-        public string user_id;
-    }
-
-    public class AdminRequestResponse
-    {
-        //public string error_description { get; set; }
-        public string status { get; set; }
     }
 }

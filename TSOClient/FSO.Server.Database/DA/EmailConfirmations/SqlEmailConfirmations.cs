@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Dapper;
 using FSO.Server.Database.DA.Utils;
+using FSO.Server.Common;
 
 namespace FSO.Server.Database.DA.EmailConfirmation
 {
@@ -17,19 +18,39 @@ namespace FSO.Server.Database.DA.EmailConfirmation
 
         public EmailConfirmation GetByToken(string token)
         {
-            return Context.Connection.Query<EmailConfirmation>("SELECT * FROM fso_email_confirm WHERE token = @token", new { token = token }).FirstOrDefault();
+            var confirm = Context.Connection.Query<EmailConfirmation>("SELECT * FROM fso_email_confirm WHERE token = @token", new { token = token }).FirstOrDefault();
+            
+            if(confirm==null) { return null; }
+
+            if(Epoch.Now > confirm.expires)
+            {
+                Remove(confirm.token);
+                return null;
+            }
+
+            return confirm;
         }
 
-        public EmailConfirmation GetByEmail(string token)
+        public EmailConfirmation GetByEmail(string email, ConfirmationType type)
         {
-            return Context.Connection.Query<EmailConfirmation>("SELECT * FROM fso_email_confirm WHERE token = @token", new { token = token }).FirstOrDefault();
+            var confirm = Context.Connection.Query<EmailConfirmation>("SELECT * FROM fso_email_confirm WHERE email = @email AND type = @type", new { email = email, type = type }).FirstOrDefault();
+
+            if (confirm == null) { return null; }
+
+            if (Epoch.Now > confirm.expires)
+            {
+                Remove(confirm.token);
+                return null;
+            }
+
+            return confirm;
         }
 
-        public void Create(EmailConfirmation confirm)
+        public string Create(EmailConfirmation confirm)
         {
             confirm.token = Guid.NewGuid().ToString().ToUpper();
-
-            Context.Connection.Query("INSERT INTO fso_email_confirm VALUES (@type, @email, @token, @expires, @verified)", confirm);
+            Context.Connection.Query("INSERT INTO fso_email_confirm (type, email, token, expires) VALUES (@type, @email, @token, @expires)", confirm);
+            return confirm.token;
         }
 
         public void Remove(string token)
