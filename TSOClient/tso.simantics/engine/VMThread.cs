@@ -736,7 +736,7 @@ namespace FSO.SimAntics.Engine
                 if ((index > ActiveQueueBlock || Stack.LastOrDefault()?.ActionTree == false) && interaction.Mode == Engine.VMQueueMode.Normal)
                 {
                     Queue.Remove(interaction);
-                    interaction.Callee.ExecuteEntryPoint(4, Context, true); //queue skipped
+                    if (Context.VM.TS1) interaction.Callee.ExecuteEntryPoint(4, Context, true); //queue skipped
                 }
                 else
                 {

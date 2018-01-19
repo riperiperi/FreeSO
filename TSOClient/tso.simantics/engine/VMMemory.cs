@@ -389,9 +389,8 @@ namespace FSO.SimAntics.Engine.Utils
 
             short value;
             if (tuningCache.TryGetValue(targID, out value)) return value;
-            throw new Exception("Could not find tuning constant!");
-            return 0;
             //throw new Exception("Could not find tuning constant!");
+            return 0;
         }
 
 

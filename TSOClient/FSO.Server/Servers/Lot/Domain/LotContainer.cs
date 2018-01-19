@@ -212,7 +212,13 @@ namespace FSO.Server.Servers.Lot.Domain
             //if we're aborting this VM, we're getting a simantics stack trace, no matter what!
 
             List<VMStackFrame> ActiveStack = null;
-            if (!Lot.Scheduler.RunningNow) return "Not running object tick.";
+            if (!Lot.Scheduler.RunningNow)
+            {
+                var cmd = VMDriver.Executing;
+                if (cmd != null)
+                    return "Running Command of type: " + cmd.ToString();
+                return "Not running object tick or command.";
+            }
             var objID = Lot.Scheduler.CurrentObjectID;
             for (int i=0; i<100; i++)
             {

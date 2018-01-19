@@ -25,6 +25,7 @@ namespace FSO.SimAntics.NetPlay
         public abstract string GetUserIP(uint uid);
         public VMCloseNetReason CloseReason;
         private BinaryWriter RecordStream;
+        public VMNetCommand Executing;
 
         /// <summary>
         /// Indicates a VM inspired total connection shutdown. 
@@ -64,7 +65,9 @@ namespace FSO.SimAntics.NetPlay
                 }
 
                 var caller = vm.GetAvatarByPersist(cmd.Command.ActorUID);
+                Executing = cmd;
                 cmd.Command.Execute(vm, caller);
+                Executing = null;
             }
             if (tick.TickID < LastTick) System.Console.WriteLine("Tick wrong! Got " + tick.TickID + ", Missed " + ((int)tick.TickID - (LastTick + 1)));
             else if (doTick && vm.Context.Ready)
