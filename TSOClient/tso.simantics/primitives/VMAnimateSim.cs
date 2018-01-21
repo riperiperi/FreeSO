@@ -54,12 +54,11 @@ namespace FSO.SimAntics.Engine.Primitives
             var source = operand.Source;
             if (operand.IDFromParam && source == VMAnimationScope.Object) source = VMAnimationScope.StackObject; //fixes MM rollercoaster
             if (!operand.IDFromParam) {
-                var nAnim = VMMemory.GetAnimation(context, source, id);
                 var owner = (source == VMAnimationScope.Object) ? context.CodeOwner : ((source == VMAnimationScope.StackObject)? context.StackObject.Object : operand.AnimationSource);
                 if (operand.AnimationCache == null || owner != operand.AnimationSource)
                 {
                     operand.AnimationSource = owner;
-                    operand.AnimationCache = nAnim;
+                    operand.AnimationCache = VMMemory.GetAnimation(context, source, id);
                 }
                 animation = operand.AnimationCache;
             } else

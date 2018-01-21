@@ -682,6 +682,7 @@ namespace FSO.Server.Servers.Lot.Domain
                                 var mailbox = Lot.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
                                 if (mailbox != null) SimAntics.Primitives.VMFindLocationFor.FindLocationFor(ent, mailbox, Lot.Context, VMPlaceRequestFlags.UserPlacement);
                             }
+                            ent.ExecuteEntryPoint(2, Lot.Context, true);
                         }
                         else
                         {
