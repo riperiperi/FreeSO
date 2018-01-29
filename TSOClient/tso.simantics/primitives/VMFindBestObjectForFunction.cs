@@ -64,7 +64,7 @@ namespace FSO.SimAntics.Engine.Primitives
         {
             { VMStackObjectVariable.DirtyLevel, 800 },
             { VMStackObjectVariable.RepairState, 600 },
-            { VMStackObjectVariable.GardeningValue, 25 }
+            { VMStackObjectVariable.GardeningValue, 15 }
         };
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
@@ -117,7 +117,11 @@ namespace FSO.SimAntics.Engine.Primitives
                             var funcVar = ScoreVar[operand.Function];
                             score = ent.GetValue(funcVar);
                             short threshold;
-                            if (Thresholds.TryGetValue(funcVar, out threshold) && score < threshold) continue;
+                            if (context.VM.TS1 || funcVar != VMStackObjectVariable.RepairState)
+                            {
+                                if (Thresholds.TryGetValue(funcVar, out threshold) && score < threshold) continue;
+                            }
+                            else if (ent is VMAvatar || !((Model.TSOPlatform.VMTSOObjectState)ent.TSOState).Broken) continue;
                         }
 
                         LotTilePos posDiff = ent.Position - context.Caller.Position;

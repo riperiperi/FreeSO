@@ -15,6 +15,7 @@ using FSO.Vitaboy;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Utils;
 using System.IO;
+using FSO.Content;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -53,8 +54,12 @@ namespace FSO.SimAntics.Engine.Primitives
             var source = operand.Source;
             if (operand.IDFromParam && source == VMAnimationScope.Object) source = VMAnimationScope.StackObject; //fixes MM rollercoaster
             if (!operand.IDFromParam) {
-                if (operand.AnimationCache == null)
+                var owner = (source == VMAnimationScope.Object) ? context.CodeOwner : ((source == VMAnimationScope.StackObject)? context.StackObject.Object : operand.AnimationSource);
+                if (operand.AnimationCache == null || owner != operand.AnimationSource)
+                {
+                    operand.AnimationSource = owner;
                     operand.AnimationCache = VMMemory.GetAnimation(context, source, id);
+                }
                 animation = operand.AnimationCache;
             } else
             {
@@ -146,6 +151,7 @@ namespace FSO.SimAntics.Engine.Primitives
         public byte ExpectedEventCount { get; set; }
 
         public Animation AnimationCache;
+        public GameObject AnimationSource;
 
         #region VMPrimitiveOperand Members
 

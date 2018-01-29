@@ -285,6 +285,9 @@ namespace FSO.Client.UI.Screens
             Visible = World?.Visible == true && (World?.State as FSO.LotView.RC.WorldStateRC)?.CameraMode != true;
             GameFacade.Game.IsMouseVisible = Visible;
 
+            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F1) && state.CtrlDown)
+                FSOFacade.Controller.ToggleDebugMenu();
+
             base.Update(state);
             if (state.NewKeys.Contains(Keys.NumPad1)) ChangeSpeedTo(1);
             if (state.NewKeys.Contains(Keys.NumPad2)) ChangeSpeedTo(2);

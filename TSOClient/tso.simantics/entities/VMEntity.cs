@@ -1164,7 +1164,7 @@ namespace FSO.SimAntics
                 PrePositionChange(context);
                 //if we're the last object in a multitile group, and db persisted, remove us from the db.
                 //this deletes all plugin data for this object too.
-                if (context.VM.GlobalLink != null && PersistID > 0 && MultitileGroup.Objects.Count == 1)
+                if (context.VM.GlobalLink != null && PersistID >= 16777216 && MultitileGroup.Objects.Count == 1)
                     context.VM.GlobalLink.DeleteObject(context.VM, PersistID, (result) => { });
                 context.RemoveObjectInstance(this);
                 MultitileGroup.RemoveObject(this); //we're no longer part of the multitile group

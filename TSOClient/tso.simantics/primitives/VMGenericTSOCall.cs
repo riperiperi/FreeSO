@@ -161,14 +161,28 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTSOCallMode.GlobalRepairCostInTempXL0: //34
                     var mech = ((VMAvatar)context.Caller).GetPersonData(VMPersonDataVariable.MechanicalSkill);
                     var discount = (Math.Min((int)mech, 1000) * 50) / 1000 + (Math.Max(0, mech - 1000) * 2 / 100);
-                    context.Thread.TempXL[0] = ((context.StackObject.MultitileGroup.InitialPrice / 10) * (100-discount)) / 200;
+                    context.Thread.TempXL[0] = ((context.StackObject.MultitileGroup.InitialPrice / 10) * (100-discount)) / 100;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.GlobalRepairObjectState: //35
                     //repairs the stack object
                     if (context.StackObject is VMGameObject)
                     {
                         var state = (context.StackObject.MultitileGroup.BaseObject.TSOState as VMTSOObjectState);
+                        var wearRecovery = 0; //in quarter percents
+
+                        if (context.Caller is VMAvatar) {
+                            var rava = (VMAvatar)context.Caller;
+                            var logicFactor = Math.Min((ulong)rava.GetPersonData(VMPersonDataVariable.LogicSkill), 1000);
+                            if (context.Caller.PersistID > 0) {
+                                wearRecovery = (int)(((ulong)rava.GetPersonData(VMPersonDataVariable.MechanicalSkill) *
+                                    (100 + (context.VM.Context.NextRandom(80) * (1000 - logicFactor) + 100 * logicFactor) / 1000)) / 2000);
+                            } else
+                            {
+                                wearRecovery = 40; //10% recovery for repairman
+                            }
+                        }
                         state.QtrDaysSinceLastRepair = 0;
+                        state.Wear = (ushort)Math.Max(20*4, state.Wear - wearRecovery);
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.IsGlobalBroken: //36

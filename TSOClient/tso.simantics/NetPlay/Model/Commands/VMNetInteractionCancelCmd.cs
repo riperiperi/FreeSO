@@ -22,7 +22,6 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             caller.Thread.CancelAction(ActionUID);
 
             return true;
-
         }
 
         #region VMSerializable Members
