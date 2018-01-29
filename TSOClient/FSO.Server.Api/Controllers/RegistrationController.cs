@@ -30,9 +30,7 @@ namespace FSO.Server.Api.Controllers
         {
             var api = Api.INSTANCE;
 
-            // Check if we wanted to force email confirmation
-            // smtp needs to be enabled too
-            if(api.Config.ForceEmailConfirmation && api.Config.SmtpEnabled)
+            if(api.Config.SmtpEnabled)
             {
                 return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
                 {
@@ -347,9 +345,7 @@ namespace FSO.Server.Api.Controllers
         {
             Api api = Api.INSTANCE;
 
-            // Check if we wanted to force email confirmation
-            // smtp needs to be enabled too
-            if (api.Config.ForceEmailConfirmation&&api.Config.SmtpEnabled)
+            if (api.Config.SmtpEnabled)
             {
                 return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
                 {

@@ -76,7 +76,6 @@ namespace FSO.Server.Servers.UserApi
             settings.Add("updateUrl", userApiConfig.UpdateUrl);
             settings.Add("connectionString", config.Database.ConnectionString);
             settings.Add("NFSdir", config.SimNFS);
-            settings.Add("forceEmailConfirmation", userApiConfig.ForceEmailConfirmation ? "true" : "false");
             settings.Add("smtpHost", userApiConfig.SmtpHost);
             settings.Add("smtpUser", userApiConfig.SmtpUser);
             settings.Add("smtpPassword", userApiConfig.SmtpPassword);

@@ -64,8 +64,6 @@ namespace FSO.Server.Api
                 Config.SmtpPort = int.Parse(appSettings["smtpPort"]);
             }
 
-            Config.ForceEmailConfirmation = appSettings["forceEmailConfirmation"]!=null&& appSettings["forceEmailConfirmation"] == "true";
-
             JWT = new JWTFactory(new JWTConfiguration()
             {
                 Key = System.Text.UTF8Encoding.UTF8.GetBytes(Config.Secret)
