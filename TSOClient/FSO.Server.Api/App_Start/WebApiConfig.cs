@@ -74,24 +74,6 @@ namespace FSO.Server.Api
             );
 
             config.Routes.MapHttpRoute(
-                name: "Registration2",
-                routeTemplate: "userapi/registration/confirm",
-                defaults: new
-                {
-                    controller = "Registration"
-                }
-            );
-
-            config.Routes.MapHttpRoute(
-                name: "Registration3",
-                routeTemplate: "userapi/registration/token_create",
-                defaults: new
-                {
-                    controller = "Registration"
-                }
-            );
-
-            config.Routes.MapHttpRoute(
                 name: "LotThumb",
                 routeTemplate: "userapi/city/{shardid}/{id}.png",
                 defaults: new
