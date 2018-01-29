@@ -119,6 +119,9 @@
     <Compile Include="DA\DynPayouts\DbTransSummary.cs" />
     <Compile Include="DA\DynPayouts\IDynPayouts.cs" />
     <Compile Include="DA\DynPayouts\SqlDynPayouts.cs" />
+    <Compile Include="DA\EmailConfirmations\EmailConfirmation.cs" />
+    <Compile Include="DA\EmailConfirmations\IEmailConfirmations.cs" />
+    <Compile Include="DA\EmailConfirmations\SqlEmailConfirmations.cs" />
     <Compile Include="DA\Hosts\DbHost.cs" />
     <Compile Include="DA\Hosts\IHosts.cs" />
     <Compile Include="DA\Hosts\SqlHosts.cs" />
@@ -191,6 +194,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\changes\0018_dyn_payout_tuning.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0020_email_confirm.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\changes\0019_skillmode.sql">

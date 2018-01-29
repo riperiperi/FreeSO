@@ -123,6 +123,24 @@ namespace FSO.Server.Api
                 );
 
             config.Routes.MapHttpRoute(
+                name: "AdminUsers4",
+                routeTemplate: "admin/mail",
+                defaults: new
+                {
+                    controller = "AdminUsers"
+                }
+                );
+
+            config.Routes.MapHttpRoute(
+                name: "AdminUsers5",
+                routeTemplate: "admin/kick",
+                defaults: new
+                {
+                    controller = "AdminUsers"
+                }
+                );
+
+            config.Routes.MapHttpRoute(
                 name: "AdminShards",
                 routeTemplate: "admin/shards",
                 defaults: new

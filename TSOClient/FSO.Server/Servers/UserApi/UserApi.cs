@@ -27,6 +27,7 @@ namespace FSO.Server.Servers.UserApi
         public event APIRequestShutdownDelegate OnRequestShutdown;
         public event APIBroadcastMessageDelegate OnBroadcastMessage;
         public event APIRequestUserDisconnectDelegate OnRequestUserDisconnect;
+        public event APIRequestMailNotifyDelegate OnRequestMailNotify;
 
         public UserApi(ServerConfiguration config, IKernel kernel)
         {
@@ -44,8 +45,6 @@ namespace FSO.Server.Servers.UserApi
 
         public override void Start()
         {
-            string baseAddress = "http://localhost:9000/";
-
             // Start OWIN host 
             App = WebApp.Start(Config.Services.UserApi.Bindings[0], x =>
             {
@@ -54,10 +53,9 @@ namespace FSO.Server.Servers.UserApi
                 api.OnBroadcastMessage += (s, t, m) => { OnBroadcastMessage?.Invoke(s, t, m); };
                 api.OnRequestShutdown += (t, st) => { OnRequestShutdown?.Invoke(t, st); };
                 api.OnRequestUserDisconnect += (i) => { OnRequestUserDisconnect?.Invoke(i); };
+                api.OnRequestMailNotify += (i, s, b, t) => { OnRequestMailNotify?.Invoke(i, s, b, t); };
                 api.HostPool = Kernel.Get<IGluonHostPool>();
             });
-
-            //Console.ReadLine();
         }
     }
 
@@ -78,6 +76,10 @@ namespace FSO.Server.Servers.UserApi
             settings.Add("updateUrl", userApiConfig.UpdateUrl);
             settings.Add("connectionString", config.Database.ConnectionString);
             settings.Add("NFSdir", config.SimNFS);
+            settings.Add("smtpHost", userApiConfig.SmtpHost);
+            settings.Add("smtpUser", userApiConfig.SmtpUser);
+            settings.Add("smtpPassword", userApiConfig.SmtpPassword);
+            settings.Add("smtpPort", userApiConfig.SmtpPort.ToString());
 
             var api = new FSO.Server.Api.Api();
             api.Init(settings);

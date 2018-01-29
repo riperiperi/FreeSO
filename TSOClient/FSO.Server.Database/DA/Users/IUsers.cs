@@ -19,5 +19,7 @@ namespace FSO.Server.Database.DA.Users
         PagedList<User> All(int offset = 0, int limit = 20, string orderBy = "register_date");
         uint Create(User user);
         void CreateAuth(UserAuthenticate auth);
+        User GetByEmail(string email);
+        void UpdateAuth(UserAuthenticate auth);
     }
 }
