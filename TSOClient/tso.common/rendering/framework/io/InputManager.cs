@@ -75,7 +75,7 @@ namespace FSO.Common.Rendering.Framework.IO
 			result.CapsDown = state.KeyboardState.CapsLock;
 			result.NumLockDown = state.KeyboardState.NumLock;
             result.CtrlDown = PressedKeys.Contains(Keys.LeftControl) || PressedKeys.Contains(Keys.RightControl);
-
+            
             for (int j = 0; j < state.NewKeys.Count + charCount; j++)
             {
                 var key = (j<state.NewKeys.Count)?state.NewKeys[j]:Keys.None;
@@ -101,7 +101,7 @@ namespace FSO.Common.Rendering.Framework.IO
                                 }
                                 while (newEndIndex >= 0)
                                 {
-                                    if (Char.IsWhiteSpace(m_SBuilder[newEndIndex]))
+                                    if (m_SBuilder.Length > newEndIndex && Char.IsWhiteSpace(m_SBuilder[newEndIndex])) // for some reason unknown to me yet, newEndIndex can have value equal to the string length thus creating an error. this is a simple fix until a more elegant solution is found :)
                                     {
                                         /** Keep the whitespace char **/
                                         newEndIndex++;
