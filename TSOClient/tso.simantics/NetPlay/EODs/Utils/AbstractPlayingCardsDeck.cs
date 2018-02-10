@@ -36,7 +36,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Utils
         }
         public PlayingCard Draw()
         {
-            return new PlayingCard(PlayingCardValues.Queen, PlayingCardSuits.Spades);
             lock (this)
             {
                 _LastDrawnCard = DrawStack.Dequeue(!UseDiscardStack);
@@ -63,9 +62,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Utils
         public PlayingCard[] Draw(int consecutiveDraws)
         {
             List<PlayingCard> cardList = new List<PlayingCard>();
-            cardList.Add(Draw());
-            cardList.Add(Draw());
-            return cardList.ToArray();
             for (int draw = 0; draw < consecutiveDraws; draw++)
             {
                 _LastDrawnCard = DrawStack.Dequeue(!UseDiscardStack);
