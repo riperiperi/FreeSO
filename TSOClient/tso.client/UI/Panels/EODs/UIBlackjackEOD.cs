@@ -178,7 +178,8 @@ namespace FSO.Client.UI.Panels.EODs
             { (byte)VMEODBlackjackAlerts.Double_NSF, "You don't have enough money to double down." },
             { (byte)VMEODBlackjackAlerts.Split_NSF, "You don't have enough money to split." },
             { (byte)VMEODBlackjackAlerts.Observe_Once, "You can observe this round, but you must bet and play on the next one." },
-            { (byte)VMEODBlackjackAlerts.Observe_Twice, "You were removed from the table due to inactivity." }
+            { (byte)VMEODBlackjackAlerts.Observe_Twice, "You were removed from the table due to inactivity." },
+            { (byte)VMEODBlackjackAlerts.Table_NSF, "The table had to close due to insufficient balance. Perhaps you should let the owner know." }
         };
 
         public UIBlackjackEOD(UIEODController controller) : base(controller)

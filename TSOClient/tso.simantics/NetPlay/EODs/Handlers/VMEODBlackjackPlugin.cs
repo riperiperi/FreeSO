@@ -279,36 +279,48 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                         // set the table data
                                         TableBalance = (int)budget1;
 
-                                        string[] data = new string[] { "" + playerIndex, MinBet + "", MaxBet + "", "" + Dealer.ObjectID};
-
-                                        // event to show the UI to the player
-                                        client.Send("blackjack_player_show", VMEODGameCompDrawACardData.SerializeStrings(data));
-
-                                        // for some reason, subsequent NPC VMs after the first one do not talk to the plugin, so a failsafe is necessary
-                                        Dealer = GetDealerFromObject();
-
-                                        if (Dealer != null)
+                                        if (IsTableWithinLimits())
                                         {
-                                            if (GameState.Equals(VMEODBlackjackStates.Waiting_For_Player) || GameState.Equals(VMEODBlackjackStates.Closed))
-                                                EnqueueGotoState(VMEODBlackjackStates.Betting_Round);
-                                            else
+
+                                            string[] data = new string[] { "" + playerIndex, MinBet + "", MaxBet + "", "" + Dealer.ObjectID };
+
+                                            // event to show the UI to the player
+                                            client.Send("blackjack_player_show", VMEODGameCompDrawACardData.SerializeStrings(data));
+
+                                            // for some reason, subsequent NPC VMs after the first one do not talk to the plugin, so a failsafe is necessary
+                                            Dealer = GetDealerFromObject();
+
+                                            if (Dealer != null)
                                             {
-                                                SyncAllPlayers(client);
-                                                if (GameState.Equals(VMEODBlackjackStates.Betting_Round))
-                                                {
-                                                    client.Send("blackjack_toggle_betting", new byte[] { 1 }); // "Place your bets..."
-                                                }
+                                                if (GameState.Equals(VMEODBlackjackStates.Waiting_For_Player) || GameState.Equals(VMEODBlackjackStates.Closed))
+                                                    EnqueueGotoState(VMEODBlackjackStates.Betting_Round);
                                                 else
                                                 {
-                                                    client.Send("blackjack_toggle_betting", new byte[] { 0 }); // disallow betting
-                                                    if (ActivePlayerIndex > -1)
-                                                        client.Send("blackjack_late_comer", new byte[] { (byte)ActivePlayerIndex }); // "So-and-so's turn."
+                                                    SyncAllPlayers(client);
+                                                    if (GameState.Equals(VMEODBlackjackStates.Betting_Round))
+                                                    {
+                                                        client.Send("blackjack_toggle_betting", new byte[] { 1 }); // "Place your bets..."
+                                                    }
+                                                    else
+                                                    {
+                                                        client.Send("blackjack_toggle_betting", new byte[] { 0 }); // disallow betting
+                                                        if (ActivePlayerIndex > -1)
+                                                            client.Send("blackjack_late_comer", new byte[] { (byte)ActivePlayerIndex }); // "So-and-so's turn."
+                                                    }
                                                 }
                                             }
                                         }
-                                    } // couldn't verify account balance
-                                    else
+                                        else  // the table does not have enough money
+                                        {
+                                            Lobby.Broadcast("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.Table_NSF });
+                                            EnqueueGotoState(VMEODBlackjackStates.Closed);
+                                            Server.Disconnect(client);
+                                        }
+                                    }
+                                    else  // the table does not have enough money
                                     {
+                                        Lobby.Broadcast("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.Table_NSF });
+                                        EnqueueGotoState(VMEODBlackjackStates.Closed);
                                         Server.Disconnect(client);
                                     }
                             });
@@ -667,7 +679,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             {
                 // if the table doesn't have enough money for minimum, it needs to close
                 if (!IsTableWithinLimits())
+                {
+                    Lobby.Broadcast("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.Table_NSF });
                     EnqueueGotoState(VMEODBlackjackStates.Closed);
+                }
                 // if there are still players, go to next game
                 else if (!Lobby.IsEmpty())
                     EnqueueGotoState(VMEODBlackjackStates.Betting_Round);
@@ -2223,6 +2238,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         Double_NSF = 9,
         Split_NSF = 10,
         Observe_Once = 11,
-        Observe_Twice = 12
+        Observe_Twice = 12,
+        Table_NSF = 13
     }
 }
