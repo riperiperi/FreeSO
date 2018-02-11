@@ -29,7 +29,7 @@ namespace FSO.SimAntics.Primitives
 
             var owner = (operand.StackObjAsSource) ? context.StackObject : context.Caller;
             if (owner == null) return VMPrimitiveExitCode.GOTO_TRUE;
-            var lastThread = owner.SoundThreads.FirstOrDefault(x => x.Name == fwav.Name);
+            var lastThread = owner.SoundThreads.FirstOrDefault(x => x?.Name == fwav?.Name);
 
             if ((lastThread?.Sound as HITThread)?.Interruptable == true) lastThread = null;
             if (fwav != null && lastThread == null)

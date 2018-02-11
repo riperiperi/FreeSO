@@ -52,7 +52,7 @@ namespace FSO.SimAntics.Engine
                 string ActionName = "";
                 if (IsTree)
                 {
-                    ActionFlags = TTABFlags.Leapfrog;
+                    ActionFlags = TTABFlags.FSOPushHead;
                     ActionID = (ushort)Interaction;
                 }
                 else

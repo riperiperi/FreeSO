@@ -484,6 +484,7 @@ namespace FSO.LotView.Components
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
+            device.RasterizerState = RasterizerState.CullNone;
             if (ShapeDirty)
             {
                 RegenRoof(device);

@@ -334,7 +334,8 @@ namespace FSO.Files.Formats.IFF.Chunks
         TSORunCheckAlways = 1 << 18, //TODO
         TSOAvailableWhenDead = 1<<19, //COVERED
 
-        FSOPushTail = 1<<30
+        FSOPushTail = 1<<30,
+        FSOPushHead = 1<<29
     }
 
     public enum TSOFlags
