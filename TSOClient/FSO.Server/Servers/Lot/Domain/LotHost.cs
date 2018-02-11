@@ -657,6 +657,16 @@ namespace FSO.Server.Servers.Lot.Domain
             //We need to keep currentLot because we need to process the Leave action
             //session.SetAttribute("currentLot", null);
             SyncNumVisitors();
+            if (Context.JobLot)
+            {
+                //tell the matchmaker we aren't connected.
+                CityConnection.Write(new MatchmakerNotify()
+                {
+                    Mode = MatchmakerNotifyType.RemoveAvatar,
+                    AvatarID = session.AvatarId,
+                    LotID = Context.Id & 0x3FFFFFFF
+                });
+            }
 
             InBackground(() =>
             {

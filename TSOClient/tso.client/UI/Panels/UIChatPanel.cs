@@ -182,7 +182,7 @@ namespace FSO.Client.UI.Panels
             if (HistoryDialog.Visible) TextBox.Visible = false;
             else
             {
-                if (state.NewKeys.Contains(Keys.Enter) && (Owner.EODs.ActiveEOD == null ||
+                if (state.NewKeys.Contains(Keys.Enter) && (
                         lastFocus == null || lastFocus == TextBox ||
                         lastFocus == HistoryDialog.ChatEntryTextEdit
                         ))

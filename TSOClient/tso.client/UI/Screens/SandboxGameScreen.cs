@@ -289,9 +289,9 @@ namespace FSO.Client.UI.Screens
                 FSOFacade.Controller.ToggleDebugMenu();
 
             base.Update(state);
-            if (state.NewKeys.Contains(Keys.NumPad1)) ChangeSpeedTo(1);
-            if (state.NewKeys.Contains(Keys.NumPad2)) ChangeSpeedTo(2);
-            if (state.NewKeys.Contains(Keys.NumPad3)) ChangeSpeedTo(3);
+            if (state.NewKeys.Contains(Keys.D1)) ChangeSpeedTo(1);
+            if (state.NewKeys.Contains(Keys.D2)) ChangeSpeedTo(2);
+            if (state.NewKeys.Contains(Keys.D3)) ChangeSpeedTo(3);
             if (state.NewKeys.Contains(Keys.P)) ChangeSpeedTo(0);
 
             if (World != null)
@@ -574,7 +574,13 @@ namespace FSO.Client.UI.Screens
 
                 var isIff = path.EndsWith(".iff");
                 short jobLevel = -1;
-                if (isIff) jobLevel = short.Parse(path.Substring(path.Length - 6, 2));
+
+                try { 
+                    if (isIff) jobLevel = short.Parse(path.Substring(path.Length - 6, 2));
+                    else jobLevel = short.Parse(path.Substring(path.IndexOf('0'), 2));
+                }
+                catch { }
+
                 vm.SendCommand(new VMBlueprintRestoreCmd
                 {
                     JobLevel = jobLevel,

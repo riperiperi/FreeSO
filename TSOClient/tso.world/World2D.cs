@@ -309,7 +309,7 @@ namespace FSO.LotView
                     Blueprint.FloorGeom.SliceReset(gd, new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13));
                     //Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
                     Blueprint.Terrain.Draw(gd, state);
-                    Blueprint.Terrain.DrawMask(gd, state);
+                    Blueprint.Terrain.DrawMask(gd, state, state.Camera.View, state.Camera.Projection);
                     Blueprint.WallComp.Draw(gd, state);
                     _2d.Pause();
                     _2d.Resume();

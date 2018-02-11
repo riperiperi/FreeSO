@@ -257,8 +257,10 @@ namespace FSO.LotView
             WorldCamera.PreciseZoom = PreciseZoom;
         }
 
+        public bool ZeroWallOffset = false;
         public Vector2 GetWallOffset()
         {
+            if (ZeroWallOffset) return Vector2.Zero;
             var vd = Camera.View;
             vd.M41 = 0; vd.M42 = 0; vd.M43 = 0;
 

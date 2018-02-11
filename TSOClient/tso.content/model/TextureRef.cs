@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FSO.Common;
 using FSO.Common.Rendering;
+using Microsoft.Xna.Framework;
 
 namespace FSO.Content.Model
 {
@@ -37,6 +38,7 @@ namespace FSO.Content.Model
     public class InMemoryTextureRef : AbstractTextureRef
     {
         private byte[] _Data;
+        public bool Mipmap;
 
         public InMemoryTextureRef(byte[] data)
         {
@@ -46,6 +48,19 @@ namespace FSO.Content.Model
         protected override Stream GetStream()
         {
             return new MemoryStream(_Data, false);
+        }
+
+        protected override Texture2D Process(GraphicsDevice device, Stream stream)
+        {
+            var texture = base.Process(device, stream);
+            if (Mipmap)
+            {
+                var data = new Color[texture.Width * texture.Height];
+                texture.GetData(data);
+                texture = new Texture2D(device, texture.Width, texture.Height, true, SurfaceFormat.Color);
+                TextureUtils.UploadWithMips(texture, device, data);
+            }
+            return texture;
         }
     }
 

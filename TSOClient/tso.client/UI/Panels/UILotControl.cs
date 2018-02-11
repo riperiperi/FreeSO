@@ -39,6 +39,7 @@ using FSO.Common;
 using FSO.LotView.RC;
 using System.IO;
 using FSO.SimAntics.Engine.TSOTransaction;
+using FSO.LotView.Facade;
 
 namespace FSO.Client.UI.Panels
 {
@@ -841,6 +842,11 @@ namespace FSO.Client.UI.Panels
                     //save lot
                     if (LotSaveDialog == null) SaveLot();
                 }
+                else if (state.NewKeys.Contains(Keys.F) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
+                {
+                    //save facade
+                    if (LotSaveDialog == null) SaveFacade();
+                }
             }
         }
 
@@ -878,6 +884,50 @@ namespace FSO.Client.UI.Panels
                 }
             });
             LotSaveDialog.ResponseText = "house_00";
+            UIScreen.GlobalShowDialog(LotSaveDialog, true);
+        }
+
+        private void SaveFacade()
+        {
+            LotSaveDialog = new UIAlert(new UIAlertOptions
+            {
+                Title = "Save Lot Facade",
+                Message = "Enter a filename to save this lotfacade with. It will save locally to Content/Facades/<name>/ as an obj file, for use testing facades or elsewhere.",
+                TextEntry = true,
+                Width = 500,
+                Buttons = new UIAlertButton[]
+                {
+                    new UIAlertButton(UIAlertButtonType.Cancel, (b) => { UIScreen.RemoveDialog(LotSaveDialog); LotSaveDialog = null; }),
+                    new UIAlertButton(UIAlertButtonType.OK, (b) =>
+                    {
+                        try {
+                            var path = Path.Combine(FSOEnvironment.UserDir, "Facades/"+LotSaveDialog.ResponseText+"/");
+                            Directory.CreateDirectory(path);
+
+                            //turn all lights on
+                            /*
+                            foreach (var light in vm.Entities.Where(x => x.Object.Resource.SemiGlobal?.Iff?.Filename == "lightglobals.iff"))
+                            {
+                                light.SetValue(SimAntics.Model.VMStackObjectVariable.LightingContribution, 100);
+                            }
+                            vm.Context.Architecture.SignalAllDirty();
+                            vm.Context.Architecture.Tick();
+                            World.Force2DPredraw(GameFacade.GraphicsDevice);
+                            */
+
+                            var facade = new LotFacadeGenerator();
+                            facade.Generate(GameFacade.GraphicsDevice, (WorldRC)World, vm.Context.Blueprint);
+                            facade.SaveToPath(path);
+                            UIScreen.GlobalShowAlert(new UIAlertOptions { Message = "Save successful!" }, true);
+                        } catch
+                        {
+                            UIScreen.GlobalShowAlert(new UIAlertOptions { Message = "Lot failed to save. You may need to run the game as administrator." }, true);
+                        }
+                        UIScreen.RemoveDialog(LotSaveDialog); LotSaveDialog = null;
+                    })
+                }
+            });
+            LotSaveDialog.ResponseText = vm.LotName;
             UIScreen.GlobalShowDialog(LotSaveDialog, true);
         }
 

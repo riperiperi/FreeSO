@@ -29,9 +29,10 @@
         private void InitializeComponent()
         {
             this.ThumbnailBox = new System.Windows.Forms.GroupBox();
+            this.ThumbSave = new System.Windows.Forms.Button();
             this.ImportButton = new System.Windows.Forms.Button();
             this.RegenThumb = new System.Windows.Forms.Button();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.ThumbnailPic = new System.Windows.Forms.PictureBox();
             this.VisualBox = new System.Windows.Forms.GroupBox();
             this.DeprLimit = new System.Windows.Forms.NumericUpDown();
             this.label18 = new System.Windows.Forms.Label();
@@ -123,7 +124,7 @@
             this.NameEntry = new System.Windows.Forms.TextBox();
             this.GUIDButton = new System.Windows.Forms.Button();
             this.ThumbnailBox.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ThumbnailPic)).BeginInit();
             this.VisualBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.DeprLimit)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.DeprDaily)).BeginInit();
@@ -155,9 +156,10 @@
             // 
             // ThumbnailBox
             // 
+            this.ThumbnailBox.Controls.Add(this.ThumbSave);
             this.ThumbnailBox.Controls.Add(this.ImportButton);
             this.ThumbnailBox.Controls.Add(this.RegenThumb);
-            this.ThumbnailBox.Controls.Add(this.pictureBox1);
+            this.ThumbnailBox.Controls.Add(this.ThumbnailPic);
             this.ThumbnailBox.Location = new System.Drawing.Point(656, 335);
             this.ThumbnailBox.Name = "ThumbnailBox";
             this.ThumbnailBox.Size = new System.Drawing.Size(100, 118);
@@ -165,35 +167,46 @@
             this.ThumbnailBox.TabStop = false;
             this.ThumbnailBox.Text = "Thumbnail";
             // 
+            // ThumbSave
+            // 
+            this.ThumbSave.Enabled = false;
+            this.ThumbSave.Location = new System.Drawing.Point(49, 87);
+            this.ThumbSave.Name = "ThumbSave";
+            this.ThumbSave.Size = new System.Drawing.Size(43, 23);
+            this.ThumbSave.TabIndex = 3;
+            this.ThumbSave.Text = "Save";
+            this.ThumbSave.UseVisualStyleBackColor = true;
+            this.ThumbSave.Click += new System.EventHandler(this.ThumbSave_Click);
+            // 
             // ImportButton
             // 
-            this.ImportButton.Enabled = false;
             this.ImportButton.Location = new System.Drawing.Point(6, 87);
             this.ImportButton.Name = "ImportButton";
-            this.ImportButton.Size = new System.Drawing.Size(86, 23);
+            this.ImportButton.Size = new System.Drawing.Size(43, 23);
             this.ImportButton.TabIndex = 2;
-            this.ImportButton.Text = "Import";
+            this.ImportButton.Text = "Open";
             this.ImportButton.UseVisualStyleBackColor = true;
+            this.ImportButton.Click += new System.EventHandler(this.ImportButton_Click);
             // 
             // RegenThumb
             // 
-            this.RegenThumb.Enabled = false;
-            this.RegenThumb.Location = new System.Drawing.Point(6, 59);
+            this.RegenThumb.Location = new System.Drawing.Point(6, 61);
             this.RegenThumb.Name = "RegenThumb";
             this.RegenThumb.Size = new System.Drawing.Size(86, 23);
             this.RegenThumb.TabIndex = 1;
             this.RegenThumb.Text = "Regenerate";
             this.RegenThumb.UseVisualStyleBackColor = true;
+            this.RegenThumb.Click += new System.EventHandler(this.RegenThumb_Click);
             // 
-            // pictureBox1
+            // ThumbnailPic
             // 
-            this.pictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBox1.Enabled = false;
-            this.pictureBox1.Location = new System.Drawing.Point(18, 19);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(64, 32);
-            this.pictureBox1.TabIndex = 0;
-            this.pictureBox1.TabStop = false;
+            this.ThumbnailPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.ThumbnailPic.Enabled = false;
+            this.ThumbnailPic.Location = new System.Drawing.Point(11, 16);
+            this.ThumbnailPic.Name = "ThumbnailPic";
+            this.ThumbnailPic.Size = new System.Drawing.Size(76, 39);
+            this.ThumbnailPic.TabIndex = 0;
+            this.ThumbnailPic.TabStop = false;
             // 
             // VisualBox
             // 
@@ -1209,7 +1222,7 @@
             this.Name = "OBJDEditor";
             this.Size = new System.Drawing.Size(762, 459);
             this.ThumbnailBox.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ThumbnailPic)).EndInit();
             this.VisualBox.ResumeLayout(false);
             this.VisualBox.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.DeprLimit)).EndInit();
@@ -1252,7 +1265,7 @@
         private System.Windows.Forms.GroupBox ThumbnailBox;
         private System.Windows.Forms.Button ImportButton;
         private System.Windows.Forms.Button RegenThumb;
-        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.PictureBox ThumbnailPic;
         private System.Windows.Forms.GroupBox VisualBox;
         private System.Windows.Forms.NumericUpDown DeprLimit;
         private System.Windows.Forms.Label label18;
@@ -1343,5 +1356,6 @@
         private System.Windows.Forms.Label NameLabel;
         private System.Windows.Forms.TextBox NameEntry;
         private System.Windows.Forms.Button GUIDButton;
+        private System.Windows.Forms.Button ThumbSave;
     }
 }

@@ -1,4 +1,5 @@
-﻿using FSO.SimAntics.NetPlay.EODs.Model;
+﻿using FSO.SimAntics.NetPlay.EODs.Handlers;
+using FSO.SimAntics.NetPlay.EODs.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Primitives;
 using System;
@@ -162,6 +163,16 @@ namespace FSO.SimAntics.NetPlay.EODs
         {
             if (invoker == null) return;
             InvokerToEOD.Remove(invoker.ObjectID);
+        }
+
+        public T GetFirstHandler<T>() where T : VMEODHandler
+        {
+            return (T)Servers.FirstOrDefault(x => x.Handler is T)?.Handler;
+        }
+
+        public IEnumerable<T> GetHandlers<T>() where T : VMEODHandler
+        {
+            return Servers.Where(x => x.Handler is T).Select(x => (T)x.Handler);
         }
     }
 }

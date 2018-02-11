@@ -1,5 +1,6 @@
 ﻿using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
+using FSO.Server.Database.DA;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -15,8 +16,6 @@ namespace FSO.Server.Servers.City.Domain
         {
             "robotfactory",
             "restaurant",
-            "restaurant",
-            "nightclub",
             "nightclub",
         };
         public static int[][] JobGradeToLotGroup =
@@ -45,53 +44,82 @@ namespace FSO.Server.Servers.City.Domain
         public Dictionary<uint, JobEntry> InstanceForAvatar = new Dictionary<uint, JobEntry>();
 
         private IDataService DataService;
+        private IDAFactory DA;
 
-        public JobMatchmaker(IDataService dataService)
+        public JobMatchmaker(IDataService dataService, IDAFactory da)
         {
             DataService = dataService;
+            DA = da;
         }
 
-        public uint? TryGetJobLot(uint requestID, uint avatarID)
+        public Tuple<uint?, uint> TryGetJobLot(uint requestID, uint avatarID)
         {
             //todo: fail when job unavailable.
             lock (this)
             {
+                //first translate the id into job lot space
+
+                var code = requestID - 0x200;
+                var jobtype = (code - 1) / 0x10;
+                var jobgrade = (code - 1) % 0x10;
+
+                uint typeToJoin = jobtype;
+                uint gradeToJoin = jobgrade;
+                if (jobtype > 2)
+                {
+                    //nightclub
+                    typeToJoin = 2;
+                }
+                //lowest grade that shares the same lot group
+                gradeToJoin = (uint)Array.IndexOf(JobGradeToLotGroup[typeToJoin], JobGradeToLotGroup[typeToJoin][(int)jobgrade]);
+
+                uint lotTypeID = typeToJoin * 0x10 + gradeToJoin + 0x201;
+
                 JobEntry instance = null;
                 if (InstanceForAvatar.TryGetValue(avatarID, out instance))
                 {
                     //we've already been assigned an active instance.
                     //todo: maybe remove this once we leave
-                    return instance.RealID;
+                    return new Tuple<uint?, uint>(instance.RealID, lotTypeID );
                 }
 
-                var code = requestID - 0x200;
-                var jobtype = (code-1) / 0x10;
-                var jobgrade = (code - 1) % 0x10;
+
                 List<JobEntry> instances = null;
-                if (!JobTypeToInstance.TryGetValue(requestID, out instances))
+                if (!JobTypeToInstance.TryGetValue(lotTypeID, out instances))
                 {
                     instances = new List<JobEntry>();
-                    JobTypeToInstance[requestID] = instances;
+                    JobTypeToInstance[lotTypeID] = instances;
                 }
-                //check if there are existing instances still to be filled.
-                foreach (var possible in instances)
+
+                //get all our ignored avatars
+                using (var da = DA.Get())
                 {
-                    if (possible.Avatars.Count < JobPlayerLimit[jobtype])
+                    var myIgnore = da.Bookmarks.GetAvatarIgnore(avatarID);
+
+                    //check if there are existing instances still to be filled.
+                    foreach (var possible in instances)
                     {
-                        instance = possible; //we found it
-                        break;
+                        if (possible.Avatars[jobtype].Count < JobPlayerLimit[jobtype])
+                        {
+                            //if we're ignoring an avatar, we can't go to the property with them on it
+                            //if they're ignoring us, same thing.
+                            if (possible.Avatars.Any(
+                                y => y.Any(x => myIgnore.Contains(x) || da.Bookmarks.GetAvatarIgnore(x).Contains(avatarID)))) continue;
+                            instance = possible; //we found it
+                            break;
+                        }
                     }
                 }
+                
                 if (instance == null)
                 {
                     //have to make a new instance.
                     instance = new JobEntry()
                     {
                         RealID = GetRealID(),
-                        GradeType = requestID,
-                        Avatars = new List<uint>()
+                        GradeType = lotTypeID,
                     };
-                    var jobString = "{job:" + jobtype + ":" + jobgrade + "}";
+                    var jobString = "{job:" + typeToJoin + ":" + gradeToJoin + "}";
                     DataService.Invalidate(instance.RealID, new FSO.Common.DataService.Model.Lot
                     {
                         DbId = 0,
@@ -108,8 +136,57 @@ namespace FSO.Server.Servers.City.Domain
                     InstanceIDToInstance.Add(instance.RealID, instance);
                 }
                 InstanceForAvatar.Add(avatarID, instance);
-                instance.Avatars.Add(avatarID);
-                return instance.RealID;
+                instance.Avatars[jobtype].Add(avatarID);
+                return new Tuple<uint?, uint>(instance.RealID, lotTypeID);
+            }
+        }
+
+        public bool TryJoinExisting(uint instanceID, uint avatarID)
+        {
+            lock (this)
+            {
+                using (var da = DA.Get())
+                {
+                    //check if there are existing instances still to be filled.
+                    JobEntry instance = null;
+                    if (InstanceIDToInstance.TryGetValue(instanceID, out instance))
+                    {
+                        //does this job lot have room for us?
+                        var myJob = da.Avatars.GetCurrentJobLevel(avatarID);
+                        //if we have a job, check allowed avatars of each type
+                        //(don't care about avatars this job lot is not for right now)
+                        var jobValid = myJob != null && myJob.job_type <= JobPlayerLimit.Length;
+                        if (jobValid && instance.Avatars[myJob.job_type-1].Count >= JobPlayerLimit[myJob.job_type-1])
+                            return false;
+
+                        var myIgnore = da.Bookmarks.GetAvatarIgnore(avatarID);
+                        //if we're ignoring an avatar, we can't go to the property with them on it
+                        //if they're ignoring us, same thing.
+                        if (instance.Avatars.Any(
+                                y => y.Any(x => myIgnore.Contains(x) || da.Bookmarks.GetAvatarIgnore(x).Contains(avatarID))))
+                            return false;
+
+                        if (jobValid)
+                            instance.Avatars[myJob.job_type - 1].Add(avatarID);
+                    }
+                }
+                return true; //if there is no instance, we'll fail at the allocation connection step.
+            }
+        }
+
+        public void RemoveAvatar(uint lotID, uint avatarID)
+        {
+            lock (this)
+            {
+                JobEntry instance = null;
+                InstanceForAvatar.Remove(avatarID);
+                if (InstanceIDToInstance.TryGetValue(lotID, out instance))
+                {
+                    foreach (var type in instance.Avatars)
+                    {
+                        type.Remove(avatarID);
+                    }
+                }
             }
         }
 
@@ -137,9 +214,12 @@ namespace FSO.Server.Servers.City.Domain
                 {
                     InstanceIDToInstance.Remove(instanceID);
                     JobTypeToInstance[instance.GradeType].Remove(instance);
-                    foreach (var avatar in instance.Avatars)
+                    foreach (var type in instance.Avatars)
                     {
-                        InstanceForAvatar.Remove(avatar);
+                        foreach (var avatar in type)
+                        {
+                            InstanceForAvatar.Remove(avatar);
+                        }
                     }
                 }
             }
@@ -150,6 +230,14 @@ namespace FSO.Server.Servers.City.Domain
     {
         public uint RealID = 0x300;
         public uint GradeType;
-        public List<uint> Avatars;
+        public List<uint>[] Avatars = new List<uint>[5];
+
+        public JobEntry()
+        {
+            for (int i=0; i<Avatars.Length; i++)
+            {
+                Avatars[i] = new List<uint>();
+            }
+        }
     }
 }

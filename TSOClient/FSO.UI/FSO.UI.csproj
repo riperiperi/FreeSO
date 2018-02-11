@@ -131,6 +131,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UIFileIDs.cs" />
     <Compile Include="UILayer.cs" />
+    <Compile Include="Utils\CatThumbGenerator.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
     <Compile Include="Utils\MathCache.cs" />
     <Compile Include="Utils\MathUtils.cs" />

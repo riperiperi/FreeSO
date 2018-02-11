@@ -173,6 +173,12 @@ namespace FSO.SimAntics
             Redraw = true;
         }
 
+        public void SetTimeOfDay()
+        {
+            var clock = Context.Clock;
+            SetTimeOfDay(clock.Hours / 24.0 + clock.Minutes / (24.0 * 60) + clock.Seconds / (24.0 * 60 * 60));
+        }
+
         public void SetTimeOfDay(double time)
         {
             if (VM.UseWorld)
@@ -338,6 +344,7 @@ namespace FSO.SimAntics
                     IsOutside = x.IsOutside,
                     IsPool = x.IsPool,
                     WallLines = x.WallLines,
+                    FenceLines = x.FenceLines,
                     RoomID = x.RoomID,
                     Floor = x.Floor,
                     Base = x.LightBaseRoom
@@ -391,7 +398,7 @@ namespace FSO.SimAntics
             }
 
             var clock = Context.Clock;
-            SetTimeOfDay(clock.Hours/24.0 + clock.Minutes/(24.0*60) + clock.Seconds/(24.0*60*60));
+            SetTimeOfDay();
 
             FloorsDirty = false;
             Redraw = false;

@@ -144,7 +144,9 @@ namespace FSO.Server.Servers.City.Domain
             if (lotId > 0x200 && lotId < 0x300)
             {
                 //special: join available job lot instance
-                lotId = Matchmaker.TryGetJobLot(lotId, avatarId) ?? 0;
+                var result = Matchmaker.TryGetJobLot(lotId, avatarId);
+                lotId = result.Item1 ?? 0;
+                originalId = result.Item2;
                 jobLot = true;
                 if (lotId == 0) return Immediate(new TryFindLotResult
                 {
@@ -153,6 +155,13 @@ namespace FSO.Server.Servers.City.Domain
             }
             if (lotId > 0x200 && lotId < 0x10000)
             { //job lot range
+                if (!Matchmaker.TryJoinExisting(lotId, avatarId))
+                {
+                    return Immediate(new TryFindLotResult
+                    {
+                        Status = FindLotResponseStatus.NO_ADMIT
+                    });
+                }
                 lotId |= 0x40000000;
                 jobLot = true;
             }

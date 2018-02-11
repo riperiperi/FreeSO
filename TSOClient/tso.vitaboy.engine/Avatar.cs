@@ -244,6 +244,7 @@ namespace FSO.Vitaboy
         /// </summary>
         public void ReloadSkeleton()
         {
+            if (Skeleton == null) return;
             Skeleton.ComputeBonePositions(Skeleton.RootBone, Matrix.Identity);
             SkelBones = new Matrix[Skeleton.Bones.Length];
             for (int i = 0; i < Skeleton.Bones.Length; i++)

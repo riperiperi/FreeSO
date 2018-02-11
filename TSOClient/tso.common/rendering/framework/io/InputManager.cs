@@ -97,19 +97,29 @@ namespace FSO.Common.Rendering.Framework.IO
                                 int newEndIndex = cursorIndex;
                                 if (newEndIndex == -1)
                                 {
-                                    newEndIndex = m_SBuilder.Length - 1;
+                                    newEndIndex = m_SBuilder.Length;
+                                    cursorIndex = m_SBuilder.Length;
                                 }
-                                while (newEndIndex >= 0)
+                                int dir = (key == Keys.Delete) ? 1 : -1;
+                                int ws = (key == Keys.Delete) ? 0 : -1;
+                                while (newEndIndex+ws >= 0 && newEndIndex+ws < m_SBuilder.Length)
                                 {
-                                    if (Char.IsWhiteSpace(m_SBuilder[newEndIndex]))
+                                    if (Char.IsWhiteSpace(m_SBuilder[newEndIndex+ws]))
                                     {
                                         /** Keep the whitespace char **/
-                                        newEndIndex++;
                                         break;
                                     }
-                                    newEndIndex--;
+                                    newEndIndex += dir;
                                 }
-                                cursorEndIndex = newEndIndex;
+                                if (cursorIndex > newEndIndex)
+                                {
+                                    cursorEndIndex = cursorIndex;
+                                    cursorIndex = newEndIndex;
+                                }
+                                else
+                                    cursorEndIndex = newEndIndex;
+                                if (cursorEndIndex == cursorIndex)
+                                    cursorIndex = cursorEndIndex = -1;
                             }
 
                             if (cursorEndIndex == -1)
@@ -186,7 +196,6 @@ namespace FSO.Common.Rendering.Framework.IO
                     }
                     else if (result.CtrlDown)
                     {
-                        if (key != Keys.LeftControl) { }
                         switch (key)
                         {
                             case Keys.A:

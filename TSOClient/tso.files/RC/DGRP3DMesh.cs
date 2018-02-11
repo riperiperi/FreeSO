@@ -138,6 +138,7 @@ namespace FSO.Files.RC
                         for (int j = 0; j < subCount; j++)
                         {
                             var geom = new DGRP3DGeometry(io, dgrp, gd, Version);
+                            if (geom.Pixel == null && geom.PrimCount > 0) throw new Exception("Invalid Mesh! (old format)");
                             d.Add(geom.Pixel, geom);
                         }
                         Geoms.Add(d);
@@ -205,7 +206,11 @@ namespace FSO.Files.RC
                     var inv = Matrix.Invert(sprMat);
                     var tex = sprite.GetTexture(gd);
 
-                    if (tex == null) continue;
+                    if (tex == null)
+                    {
+                        curSpr++;
+                        continue;
+                    }
                     var isDynamic = sprite.SpriteID >= obj.DynamicSpriteBaseId && sprite.SpriteID < (obj.DynamicSpriteBaseId + obj.NumDynamicSprites);
                     var dynid = (isDynamic) ? (int)(1 + sprite.SpriteID - obj.DynamicSpriteBaseId) : 0;
 
@@ -515,7 +520,7 @@ namespace FSO.Files.RC
             if (dgrp == null) return;
             Name = dgrp.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff") + "_" + dgrp.ChunkID;
 
-            foreach (var obj in source.FacesByObjgroup)
+            foreach (var obj in source.FacesByObjgroup.OrderBy(x => x.Key))
             {
                 if (obj.Key == "_default") continue;
                 var split = obj.Key.Split('_');

@@ -21,6 +21,7 @@ namespace FSO.Server.Protocol.Gluon
         RequestTaskResponse,
 
         NotifyLotRoommateChange,
+        MatchmakerNotify,
 
         Unknown
     }
@@ -51,6 +52,10 @@ namespace FSO.Server.Protocol.Gluon
                     return GluonPacketType.RequestTask;
                 case 0x0010:
                     return GluonPacketType.RequestTaskResponse;
+                case 0x0011:
+                    return GluonPacketType.NotifyLotRoommateChange;
+                case 0x0012:
+                    return GluonPacketType.MatchmakerNotify;
                 default:
                     return GluonPacketType.Unknown;
             }
@@ -80,6 +85,10 @@ namespace FSO.Server.Protocol.Gluon
                     return 0x0009;
                 case GluonPacketType.RequestTaskResponse:
                     return 0x0010;
+                case GluonPacketType.NotifyLotRoommateChange:
+                    return 0x0011;
+                case GluonPacketType.MatchmakerNotify:
+                    return 0x0012;
             }
 
             return 0xFFFF;

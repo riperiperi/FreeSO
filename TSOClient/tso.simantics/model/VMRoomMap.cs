@@ -115,6 +115,7 @@ namespace FSO.SimAntics.Model
                     int rmaxY = rminY;
                     var wallObs = new List<VMObstacle>();
                     var wallLines = (VM.UseWorld)?new VMWallLineBuilder():null;
+                    var fenceLines = (VM.UseWorld) ? new VMWallLineBuilder() : null;
                     var wallDict = new Dictionary<uint, Vector2[]>();
                     var adjRooms = new HashSet<ushort>();
                     ushort area = 0;
@@ -145,7 +146,8 @@ namespace FSO.SimAntics.Model
                             wallObs.Add(new VMObstacle(obsX + 7, obsY + 3, obsX + 13, obsY + 9));
                             wallObs.Add(new VMObstacle(obsX + 3, obsY + 7, obsX + 9, obsY + 13));
                             wallObs.Add(new VMObstacle(obsX - 1, obsY + 11, obsX + 5, obsY + 17));
-                            if (mainWalls.TopRightStyle == 1) wallLines?.AddLine(obsX + 16, obsY, 2);
+                            if (mainWalls.TopRightStyle == 1) wallLines?.AddLine(obsX, obsY, 2);
+                            else fenceLines?.AddLine(obsX, obsY, 2);
                         }
 
                         if ((mainWalls.Segments & WallSegments.VerticalDiag) > 0)
@@ -155,6 +157,7 @@ namespace FSO.SimAntics.Model
                             wallObs.Add(new VMObstacle(obsX + 7, obsY + 7, obsX + 13, obsY + 13));
                             wallObs.Add(new VMObstacle(obsX + 11, obsY + 11, obsX + 17, obsY + 17));
                             if (mainWalls.TopRightStyle == 1) wallLines?.AddLine(obsX, obsY, 3);
+                            else fenceLines?.AddLine(obsX, obsY, 3);
                         }
 
                         var PXWalls = Walls[plusX + item.Y * width];
@@ -164,21 +167,25 @@ namespace FSO.SimAntics.Model
                         {
                             if (!mainWalls.TopLeftDoor) wallObs.Add(new VMObstacle(obsX - 3, obsY - 3, obsX + 6, obsY + 19));
                             if (mainWalls.TopLeftThick) wallLines?.AddLine(obsX, obsY, 0);
+                            else fenceLines?.AddLine(obsX, obsY, 0);
                         }
                         if ((mainWalls.Segments & WallSegments.TopRight) > 0)
                         {
                             if (!mainWalls.TopRightDoor) wallObs.Add(new VMObstacle(obsX - 3, obsY - 3, obsX + 19, obsY + 6));
                             if (mainWalls.TopRightThick) wallLines?.AddLine(obsX, obsY, 1);
+                            else fenceLines?.AddLine(obsX, obsY, 1);
                         }
                         if ((mainWalls.Segments & WallSegments.BottomLeft) > 0)
                         {
                             if (!PYWalls.TopRightDoor) wallObs.Add(new VMObstacle(obsX - 3, obsY + 13, obsX + 19, obsY + 19));
                             if (PYWalls.TopRightThick) wallLines?.AddLine(obsX, obsY+16, 1);
+                            else fenceLines?.AddLine(obsX, obsY + 16, 1);
                         }
                         if ((mainWalls.Segments & WallSegments.BottomRight) > 0)
                         {
                             if (!PXWalls.TopLeftDoor) wallObs.Add(new VMObstacle(obsX + 13, obsY - 3, obsX + 19, obsY + 19));
                             if (PXWalls.TopLeftThick) wallLines?.AddLine(obsX + 16, obsY, 0);
+                            else fenceLines?.AddLine(obsX + 16, obsY, 0);
                         }
 
                         bool segAllow = ((PXWalls.Segments & WallSegments.TopLeft) == 0);
@@ -229,6 +236,7 @@ namespace FSO.SimAntics.Model
                     if (VM.UseWorld && minRoom != rooms.Count)
                     {
                         rooms[minRoom].WallLines.AddRange(wallLines.Lines);
+                        rooms[minRoom].FenceLines.AddRange(fenceLines.Lines);
                     }
 
                     rooms.Add(new VMRoom
@@ -239,6 +247,7 @@ namespace FSO.SimAntics.Model
                         WallObs = wallObs,
                         RoomObs = roomObs,
                         WallLines = (deferredLit) ? null : wallLines?.Lines,
+                        FenceLines = (deferredLit) ? null : fenceLines?.Lines,
                         AdjRooms = adjRooms,
                         RoomID = myRoom,
                         LightBaseRoom = minRoom,

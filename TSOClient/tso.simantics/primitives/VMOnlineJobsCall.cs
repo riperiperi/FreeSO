@@ -38,11 +38,18 @@ namespace FSO.SimAntics.Primitives
                     context.VM.SetGlobalValue(21, (context.StackObject == null) ? (short)0 : context.StackObject.ObjectID);
                     break;
                 case VMOnlineJobsCallMode.GetRandomJob:
-                    //TODO: for now this disables: nightclub (dj, dancer), cook (not actually a job in tso)
-                    context.Thread.TempRegisters[0] = (short)(context.VM.Context.NextRandom(2) + 1);
+                    var jobs = new List<short>() { 1, 2, 4, 5 };
+                    
+                    for (int i=0; i<3; i++)
+                    {
+                        //offer 3 jobs
+                        var ind = (int)context.VM.Context.NextRandom((ulong)jobs.Count);
+                        context.Thread.TempRegisters[i] = jobs[ind];
+                        jobs.RemoveAt(ind);
+                    }
                     break;
                 case VMOnlineJobsCallMode.IsJobAvailable:
-                    return (context.Thread.TempRegisters[0] < 3)?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
+                    return (context.Thread.TempRegisters[0] < 6 && context.Thread.TempRegisters[0] != 3) ?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
                 case VMOnlineJobsCallMode.AttemptToValidateWorker:
                     var avatar = ((VMAvatar)context.Caller);
                     if (avatar.GetPersonData(VMPersonDataVariable.OnlineJobStatusFlags) == 0) avatar.SetPersonData(VMPersonDataVariable.OnlineJobStatusFlags, 1);

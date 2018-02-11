@@ -22,6 +22,7 @@ using FSO.Client.UI.Framework;
 using FSO.Client.Utils;
 using FSO.Client.Controllers.Panels;
 using FSO.Common.Utils;
+using FSO.Client.UI.Model;
 
 namespace FSO.Client.UI.Panels.EODs
 {
@@ -253,6 +254,12 @@ namespace FSO.Client.UI.Panels.EODs
             }
             if (item.Item.Name != null && item.Item.Name != "")
                 BuyItem.Name = item.Item.Name;
+            if (item.Item.DisableLevel > 1)
+            {
+                HIT.HITVM.Get().PlaySoundEvent(UISounds.Error);
+                QueryPanel.Active = false;
+                return; //can't trade this
+            }
             QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
             QueryPanel.Mode = 2;
             QueryPanel.Tab = 0;

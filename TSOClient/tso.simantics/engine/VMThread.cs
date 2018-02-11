@@ -345,8 +345,9 @@ namespace FSO.SimAntics.Engine
 
         private void EvaluateQueuePriorities()
         {
-            if (Queue.Count == 0) return;
-            int CurrentPriority = (int)Queue[0].Priority;
+            if (ActiveQueueBlock == -1 || ActiveQueueBlock >= Queue.Count) return;
+            int CurrentPriority = (int)Queue[ActiveQueueBlock].Priority;
+            var mode = Queue[ActiveQueueBlock].Mode;
             for (int i = ActiveQueueBlock + 1; i < Queue.Count; i++)
             {
                 if (Queue[i].Callee == null || Queue[i].Callee.Dead)
@@ -354,9 +355,9 @@ namespace FSO.SimAntics.Engine
                     Queue.RemoveAt(i--); //remove interactions to dead objects (not within active queue block)
                     continue;
                 }
-                if ((int)Queue[i].Priority > CurrentPriority)
+                if ((int)Queue[i].Priority > CurrentPriority)// && mode != VMQueueMode.ParentIdle)
                 {
-                    Queue[0].Cancelled = true;
+                    Queue[ActiveQueueBlock].Cancelled = true;
                     Entity.SetFlag(VMEntityFlags.InteractionCanceled, true);
                 }
             }

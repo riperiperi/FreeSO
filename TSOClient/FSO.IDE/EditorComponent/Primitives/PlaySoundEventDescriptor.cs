@@ -52,7 +52,8 @@ namespace FSO.IDE.EditorComponent.Primitives
         public override void PopulateOperandView(BHAVEditor master, EditorScope escope, TableLayoutPanel panel)
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Attempts to play the specified sound event.")));
-            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Sound: ", "EventID", new OpSoundNameProvider()));
+            panel.Controls.Add(new OpSoundControl(master, escope, Operand, "Sound:"));
+            //panel.Controls.Add(new OpComboControl(master, escope, Operand, "Sound: ", "EventID", new OpSoundNameProvider()));
 
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Volume (unused): ", "Volume", new OpStaticValueBoundsProvider(0, 100)));
 

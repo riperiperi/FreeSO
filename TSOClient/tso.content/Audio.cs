@@ -43,6 +43,7 @@ namespace FSO.Content
         public DBPFFile EP5Samps; //EP5Samps.dat
         public DBPFFile EP2; //EP2.dat
         public DBPFFile Hitlists; //HitListsTemp.dat
+        public Dictionary<uint, string> NightclubSounds = new Dictionary<uint, string>();
 
         public Dictionary<uint, Track> TracksById;
         public Dictionary<uint, Track> TracksByBackupId;
@@ -174,6 +175,23 @@ namespace FSO.Content
             RegisterEvents(tsoV2);
             RegisterEvents(tsov3);
             RegisterEvents(turkey);
+
+            //register the .xa files over in the nightclub folders.
+            var files = Directory.GetFiles(content.GetPath("sounddata/nightclubsounds/"));
+            foreach (var file in files)
+            {
+                if (!file.EndsWith(".xa")) continue;
+                var split = file.Split('_');
+                uint id = 0;
+                try
+                {
+                    var endSplit = split[split.Length - 1];
+                    id = Convert.ToUInt32("0x"+endSplit.Substring(0, endSplit.Length-3), 16);
+                }
+                catch { continue; }
+
+                NightclubSounds[id] = file;
+            }
         }
 
         /// <summary>
@@ -330,6 +348,14 @@ namespace FSO.Content
             if (data == null) data = GetAudioFrom(InstanceID, Stings, out filetype);
             if (data == null) data = GetAudioFrom(InstanceID, EP5Samps, out filetype);
             if (data == null) data = GetAudioFrom(InstanceID, EP2, out filetype);
+            if (data == null)
+            {
+                string source;
+                if (NightclubSounds.TryGetValue(InstanceID, out source))
+                {
+                    data = new XAFile(source).DecompressedData;
+                }
+            }
 
             if (data != null)
             {

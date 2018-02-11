@@ -36,7 +36,8 @@ namespace FSO.Content
                     GUID = guid,
                     Category = Category,
                     Price = Convert.ToUInt32(objectInfo.Attributes["p"].Value),
-                    Name = objectInfo.Attributes["n"].Value
+                    Name = objectInfo.Attributes["n"].Value,
+                    DisableLevel = Convert.ToByte(objectInfo.Attributes["r"]?.Value ?? "0")
                 };
                 ItemsByCategory[Category].Add(item);
                 ItemsByGUID[guid] = item;
@@ -60,7 +61,8 @@ namespace FSO.Content
                         GUID = dguid,
                         Category = dCategory,
                         Price = Convert.ToUInt32(objectInfo.Attributes["p"].Value),
-                        Name = objectInfo.Attributes["n"].Value
+                        Name = objectInfo.Attributes["n"].Value,
+                        DisableLevel = Convert.ToByte(objectInfo.Attributes["r"]?.Value ?? "0")
                     };
 
                     ItemsByCategory[dCategory].Add(ditem);

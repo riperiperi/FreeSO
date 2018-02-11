@@ -557,9 +557,11 @@ namespace FSO.Server.Servers.Lot.Domain
                 jobLevel = (short)((jobPacked - 1) & 0xF);
                 var jobType = (short)((jobPacked - 1) / 0xF);
                 var randomChance = (jobType > 2 && jobLevel > 6) ? 2 : 1;
+                var lotID = JobMatchmaker.JobGradeToLotGroup[jobType][jobLevel] + (new Random()).Next(randomChance);
+
                 path = Content.Content.Get().GetPath("housedata/blueprints/" + JobMatchmaker.JobXMLName[jobType]
-                    + JobMatchmaker.JobGradeToLotGroup[jobType][jobLevel].ToString().PadLeft(2, '0') + "_"
-                    + (new Random()).Next(randomChance).ToString().PadLeft(2, '0')
+                    + lotID.ToString().PadLeft(2, '0') + "_"
+                    + "00"
                     + ".xml");
             }
             Lot.SendCommand(new VMBlueprintRestoreCmd

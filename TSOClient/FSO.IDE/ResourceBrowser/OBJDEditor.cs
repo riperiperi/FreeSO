@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,12 @@ using System.Windows.Forms;
 using FSO.Content;
 using FSO.IDE.Common;
 using FSO.Files.Formats.IFF.Chunks;
+using System.IO;
+using FSO.UI.Utils;
+using FSO.Client;
+using System.Runtime.InteropServices;
+using FSO.Files.Formats.IFF;
+using System.Threading;
 
 namespace FSO.IDE.ResourceBrowser
 {
@@ -242,6 +249,15 @@ namespace FSO.IDE.ResourceBrowser
                 }
             }
 
+            var thumb = ActiveObj.Resource.Get<BMP>(ActiveObj.OBJ.CatalogStringsID);
+            ThumbSave.Enabled = false;
+            if (thumb != null)
+            {
+                var mem = new MemoryStream(thumb.data);
+                ThumbnailPic.Image = Image.FromStream(mem);
+                ThumbSave.Enabled = true;
+            }
+
             OwnChange = false;
         }
 
@@ -351,6 +367,8 @@ namespace FSO.IDE.ResourceBrowser
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
                 //must signal to parent
+                ActiveObj.OBJ.MasterID = newGroup;
+                ActiveObj.OBJ.SubIndex = -1;
             }, ActiveObj.OBJ));
         }
         private void OBJDCheck_CheckedChanged(object sender, EventArgs e)
@@ -380,6 +398,119 @@ namespace FSO.IDE.ResourceBrowser
                 ActiveObj.OBJ.SetPropertyByName(target, ui.Value);
             }, ActiveObj.OBJ));
         }
+
+        private void RegenThumb_Click(object sender, EventArgs e)
+        {
+            Bitmap thumbBMP = null;
+            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+            {
+                var thumb = CatThumbGenerator.GenerateThumb(ObjectView.ExtObj, ObjectView.ExtVM);
+
+                thumbBMP = new Bitmap(thumb.Width, thumb.Height, PixelFormat.Format32bppArgb);
+
+                var raw = new byte[thumb.Width * thumb.Height * 4];
+                thumb.GetData(raw, 0, (GameFacade.DirectX) ? raw.Length : raw.Length / 4);
+
+                for (int i = 0; i < raw.Length; i += 4)
+                {
+                    var swap = raw[i];
+                    raw[i] = raw[i + 2];
+                    raw[i + 2] = swap;
+                }
+
+                var bmpData = thumbBMP.LockBits(new Rectangle(0, 0, thumbBMP.Width, thumbBMP.Height), ImageLockMode.WriteOnly, thumbBMP.PixelFormat);
+                IntPtr ptr = bmpData.Scan0;
+
+                Marshal.Copy(raw, 0, ptr, bmpData.Stride * bmpData.Height);
+                thumbBMP.UnlockBits(bmpData);
+
+                thumb.Dispose();
+            }));
+
+            ThumbnailPic.Image = thumbBMP;
+            SaveThumbImg(thumbBMP);
+        }
+
+        private void SaveThumbImg(Image img)
+        {
+            ThumbSave.Enabled = true;
+            byte[] bdata;
+            using (var mem = new MemoryStream())
+            {
+                img.Save(mem, ImageFormat.Bmp);
+                bdata = mem.ToArray();
+            }
+
+            var existing = ActiveObj.Resource.Get<BMP>(ActiveObj.OBJ.CatalogStringsID);
+            var isNew = (existing == null);
+            if (isNew)
+            {
+                existing = new BMP();
+                existing.ChunkParent = ActiveObj.Resource.MainIff;
+                existing.ChunkProcessed = true;
+                existing.ChunkID = ActiveObj.OBJ.CatalogStringsID;
+                existing.ChunkLabel = "";
+            }
+
+            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+            {
+                existing.data = bdata;
+                existing.ChunkParent.AddChunk(existing);
+                if (isNew) existing.AddedByPatch = true;
+                existing.RuntimeInfo = ChunkRuntimeState.Modified;
+            }, existing));
+        }
+
+        private void ImportButton_Click(object sender, EventArgs e)
+        {
+            var dialog = new OpenFileDialog();
+            dialog.Title = "Select an object thumbnail. (bmp)";
+            SaveFile(dialog);
+            try
+            {
+                Stream str;
+                if ((str = dialog.OpenFile()) != null)
+                {
+                    var img = Bitmap.FromStream(str);
+                    ThumbnailPic.Image = img;
+                    SaveThumbImg(img);
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
+        private void ThumbSave_Click(object sender, EventArgs e)
+        {
+            var dialog = new SaveFileDialog();
+            dialog.Title = "Saving Object Thumbnail...";
+            dialog.FileName = ActiveObj.OBJ.CatalogStringsID + ".bmp";
+            SaveFile(dialog);
+
+            Stream str;
+            if ((str = dialog.OpenFile()) != null)
+            {
+                ThumbnailPic.Image.Save(str, ImageFormat.Bmp);
+                str.Close();
+            }
+        }
+
+        private void SaveFile(FileDialog dialog)
+        {
+            // ༼ つ ◕_◕ ༽つ IMPEACH STAThread ༼ つ ◕_◕ ༽つ
+            var wait = new AutoResetEvent(false);
+            var thread = new Thread(() => {
+                dialog.ShowDialog();
+                wait.Set();
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            wait.WaitOne();
+            return;
+        }
+
     }
     public class NameValueCombo
     {

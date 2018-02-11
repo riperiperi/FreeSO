@@ -28,6 +28,7 @@ using FSO.SimAntics.Model.Sound;
 using FSO.SimAntics.Primitives;
 using FSO.LotView.Utils;
 using FSO.LotView.RC;
+using System.Linq;
 
 namespace FSO.SimAntics
 {
@@ -94,6 +95,7 @@ namespace FSO.SimAntics
         {
             while (index >= Attributes.Count) Attributes.Add(0);
             Attributes[index] = value;
+            if (this is VMAvatar && index == 10) Console.WriteLine("Payout set to " + value);
         }
 
         /** Relationship variables **/
@@ -345,23 +347,35 @@ namespace FSO.SimAntics
 
                     float pan = (SoundThreads[i].Pan) ? Math.Max(-1.0f, Math.Min(1.0f, scrPos.X / worldSpace.WorldPxWidth)) : 0;
                     pan = pan * pan * ((pan > 0)?1:-1);
-                    float volume = (SoundThreads[i].Pan) ? 1 - (float)Math.Max(0, Math.Min(1, Math.Sqrt(scrPos.X * scrPos.X + scrPos.Y * scrPos.Y) / worldSpace.WorldPxWidth)) : 1;
-                    volume *= worldState.PreciseZoom;
 
-                    if (SoundThreads[i].Zoom) volume /= 4 - (int)worldState.Zoom;
-                    if (Position.Level > worldState.Level) volume /= 4;
-                    else if (Position.Level != worldState.Level) volume /= 2;
 
+                    float volume = 1f;
                     var rcs = (worldState as WorldStateRC);
                     if (rcs != null)
                     {
-                        volume *= (10 / ((rcs.Zoom3D*rcs.Zoom3D)+10));
+                        var vp = VisualPosition * 3f;
+                        var delta = rcs.Camera.Target - new Vector3(vp.X, vp.Z, vp.Y);
+                        delta.Z /= 3f;
+                        //volume = 4f / delta.Length();
+                        volume = 1.5f - delta.Length() / 40f;
+                        volume *= (10 / ((rcs.Zoom3D * rcs.Zoom3D) + 10));
+                        volume *= worldState.PreciseZoom;
                     }
+                    else
+                    {
+                        volume = (SoundThreads[i].Pan) ? 1 - (float)Math.Max(0, Math.Min(1, Math.Sqrt(scrPos.X * scrPos.X + scrPos.Y * scrPos.Y) / worldSpace.WorldPxWidth)) : 1;
+                        volume *= worldState.PreciseZoom;
+
+                        if (SoundThreads[i].Zoom) volume /= 4 - (int)worldState.Zoom;
+                    }
+                    if (Position.Level > worldState.Level) volume /= 4;
+                    else if (Position.Level != worldState.Level) volume /= 2;
+
                     volume = Math.Min(1f, Math.Max(0f, volume));
 
                     if (sound.SetVolume(volume, pan, ObjectID))
                     {
-                        if (this is VMAvatar && sound is HITThread) ((VMAvatar)this).SubmitHITVars((HITThread)sound);
+                        if (this is VMAvatar && sound is HITThread) this.SubmitHITVars((HITThread)sound);
                         if (Thread.Context.World is LotView.RC.WorldRC)
                         {
                             //3d sound
@@ -370,6 +384,15 @@ namespace FSO.SimAntics
                     }
                 }
             }
+        }
+
+        public virtual void SubmitHITVars(HITThread thread)
+        {
+            if (thread.ObjectVar == null) return;
+            var attr = new List<int>();// { 0 };
+            attr.Add(0);
+            attr.AddRange(Attributes.Select(x => (int)x));
+            thread.ObjectVar = attr.ToArray();
         }
 
         public List<VMSoundTransfer> GetActiveSounds()
@@ -1010,7 +1033,7 @@ namespace FSO.SimAntics
 
             //we've passed the wall test, now check if we intersect any objects.
             if ((flags & VMPlaceRequestFlags.AllowIntersection) > 0) return new VMPlacementResult(VMPlacementError.Success);
-            var valid = (this is VMAvatar)? context.GetAvatarPlace(this, pos, direction) : context.GetObjPlace(this, pos, direction);
+            var valid = (this is VMAvatar)? context.GetAvatarPlace(this, pos, direction, flags) : context.GetObjPlace(this, pos, direction, flags);
             if (valid.Object != null && ((flags & VMPlaceRequestFlags.AcceptSlots) == 0))
                 valid.Status = VMPlacementError.CantIntersectOtherObjects;
             return valid;

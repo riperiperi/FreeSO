@@ -107,6 +107,7 @@ namespace FSO.Client.UI.Panels
 
         private VMEntity ActiveEntity;
         private int LastSalePrice;
+        private bool CanSell = true;
         private bool IAmOwner;
         private bool Ghost;
 
@@ -177,7 +178,7 @@ namespace FSO.Client.UI.Panels
 
                 //async sale stuff, as in "once I know what this actually does I'll care"
 
-                AsyncSaleButton.Visible = (value == 1) && LastSalePrice < 0 && !Ghost;
+                AsyncSaleButton.Visible = (value == 1) && LastSalePrice < 0 && !Ghost && CanSell;
                 AsyncCancelSaleButton.Visible = (value == 1) && IAmOwner && LastSalePrice > -1;
                 AsyncCancelSaleButtonBG.Visible = AsyncCancelSaleButton.Visible;
                 AsyncEditPriceButton.Visible = (value == 1) && IAmOwner && LastSalePrice > -1;
@@ -466,6 +467,7 @@ namespace FSO.Client.UI.Panels
             IAmOwner = ((entity.TSOState as VMTSOObjectState)?.OwnerID ?? 0) == vm.MyUID;
             Ghost = entity.GhostImage;
             LastSalePrice = entity.MultitileGroup.SalePrice;
+            CanSell = (item?.DisableLevel ?? 0) < 2;
 
             int price = def.Price;
             int finalPrice = price;

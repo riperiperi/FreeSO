@@ -133,6 +133,7 @@
     <Compile Include="Gluon\Packets\HealthPing.cs" />
     <Compile Include="Gluon\Packets\HealthPingResponse.cs" />
     <Compile Include="Gluon\Packets\IGluonCall.cs" />
+    <Compile Include="Gluon\Packets\MatchmakerNotify.cs" />
     <Compile Include="Gluon\Packets\NotifyLotRoommateChange.cs" />
     <Compile Include="Gluon\Packets\RequestLotClientTermination.cs" />
     <Compile Include="Gluon\Packets\RequestTask.cs" />

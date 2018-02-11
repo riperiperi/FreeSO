@@ -13,6 +13,7 @@ using FSO.Content.Framework;
 using System.IO;
 using FSO.Common.Utils;
 using FSO.Content.Model;
+using FSO.Common;
 
 namespace FSO.Content.Codecs
 {
@@ -40,7 +41,7 @@ namespace FSO.Content.Codecs
         /// <param name="maskColors">A list of masking colors to use for this texture.</param>
         public TextureCodec(uint[] maskColors)
         {
-            this.Mask = true;
+            this.Mask = maskColors.Length > 0;
             this.MaskColors = maskColors;
         }
 
@@ -52,7 +53,7 @@ namespace FSO.Content.Codecs
         /// <param name="mips">If this texture codec should generate mipmaps.</param>
         public TextureCodec(uint[] maskColors, bool mips) : this(maskColors)
         {
-            Mipmap = mips;
+            Mipmap = FSOEnvironment.EnableNPOTMip && mips;
         }
 
 
@@ -65,7 +66,9 @@ namespace FSO.Content.Codecs
 
             if (Mask == false)
             {
-                return new InMemoryTextureRef(data);
+                var r = new InMemoryTextureRef(data);
+                r.Mipmap = Mipmap;
+                return r;
             }
             else
             {

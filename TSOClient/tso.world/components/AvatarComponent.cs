@@ -183,6 +183,7 @@ namespace FSO.LotView.Components
         public override void Draw(GraphicsDevice device, WorldState world)
         {
             Avatar.Position = WorldSpace.GetWorldFromTile(Position);
+            if (Avatar.Skeleton == null) return;
             var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition / 3.0f;
             var tHead1 = Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI)));
             var transhead = tHead1 + this.Position - new Vector3(0.5f, 0.5f, 0f);

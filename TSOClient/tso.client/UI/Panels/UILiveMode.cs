@@ -480,6 +480,25 @@ namespace FSO.Client.UI.Panels
             Background.Position = (isTrade) ? new Vector2(-22, -79) : new Vector2(0, 35);
             Background.SetSize(Background.Texture.Width, Background.Texture.Height);
 
+            var changeJobY = StatusBarMsgWinStraight.Y != (inEOD ? -18 : 2);
+            var changeJobX = StatusBarMsgWinStraight.X != (eodPresent ? 159 : 383);
+            if (Small800) changeJobX = false;
+            if (changeJobX || changeJobY)
+            {
+                //there don't seem to be any UIScript cues for this.
+                var offset = new Vector2(Small800 ? 0 : (800 - 1024), -20);
+                if (!changeJobX) offset.X = 0;
+                if (!changeJobY) offset.Y = 0;
+                if (!inEOD) offset.Y *= -1;
+                if (!eodPresent) offset.X *= -1;
+                StatusBarMsgWinStraight.Position += offset;
+                StatusBarMsgWinTextEntry.Position += offset;
+                StatusBarTimerBreakIcon.Position += offset;
+                StatusBarTimerWorkIcon.Position += offset;
+                StatusBarTimerStraight.Position += offset;
+                StatusBarTimerTextEntry.Position += offset;
+            }
+
             UpdateThumbPosition();
             Common.Utils.GameThread.NextUpdate(x =>
             {

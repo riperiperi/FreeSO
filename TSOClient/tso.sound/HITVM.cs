@@ -43,6 +43,7 @@ namespace FSO.HIT
 
         private List<FSCPlayer> FSCPlayers;
         public List<SoundEffectInstance> AmbLoops;
+        public List<HITNoteEntry> PlayQueue = new List<HITNoteEntry>();
         private float[] GroupMasterVolumes = new float[]
         {
             1.0f, 1.0f, 1.0f, 1.0f
@@ -88,12 +89,46 @@ namespace FSO.HIT
             return Globals[num];
         }
 
+        public void QueuePlay(HITNoteEntry note)
+        {
+            PlayQueue.Add(note);
+        }
+
+        public bool NightclubMode;
+
         public void Tick()
         {
+            if (NightclubMode)
+            {
+                //find the loudest nightclub sound
+                var nc = Sounds.Where(x => x.Name?.StartsWith("nc_") == true);
+                if (nc.Count() == 0) NightclubMode = false;
+                else
+                {
+                    var max = nc.OrderBy(x => x.GetVolume()).Last();
+                    var bestID = max.Name.Last();
+                    foreach (var sound in nc)
+                    {
+                        if (sound.Name.Last() != bestID) sound.Mute();
+                    }
+                }
+            }
+
             for (int i = 0; i < Sounds.Count; i++)
             {
-                if (!Sounds[i].Tick()) Sounds.RemoveAt(i--);
+                if (!Sounds[i].Tick())
+                {
+                    Sounds[i].Dispose();
+                    Sounds.RemoveAt(i--);
+                }
             }
+
+            foreach (var item in PlayQueue)
+            {
+                item.started = true;
+                item.instance.Play();
+            }
+            if (PlayQueue.Count > 0) PlayQueue.Clear();
 
             if (NextMusic != null)
             {
@@ -129,10 +164,25 @@ namespace FSO.HIT
         public HITSound PlaySoundEvent(string evt)
         {
             evt = evt.ToLowerInvariant();
+            if (evt.StartsWith("nc_")) NightclubMode = true;
+            HITThread InterruptBlocker = null; //the thread we have to wait for to finish before we begin.
             if (ActiveEvents.ContainsKey(evt))
             {
-                if (ActiveEvents[evt].Dead) ActiveEvents.Remove(evt); //if the last event is dead, remove and make a new one
-                else return ActiveEvents[evt]; //an event of this type is already alive - here, take it.
+                var aevt = ActiveEvents[evt];
+                if (aevt.Dead) ActiveEvents.Remove(evt); //if the last event is dead, remove and make a new one
+                else
+                {
+                    if ((aevt as HITThread)?.InterruptBlocker != null)
+                    {
+                        //we can stop this thread - steal its waiter
+                        (aevt as HITThread).Dead = true;
+                        InterruptBlocker = (aevt as HITThread).InterruptBlocker;
+                    } else if ((aevt as HITThread)?.Interruptable == true)
+                    {
+                        InterruptBlocker = (aevt as HITThread);
+                    }
+                    else return aevt; //an event of this type is already alive - here, take it.
+                }
             }
 
             var content = FSO.Content.Content.Get();
@@ -207,14 +257,26 @@ namespace FSO.HIT
                     thread.LoopPointer = (int)thread.PC;
                     if (TrackID != 0) thread.SetTrack(TrackID, evtent.TrackID);
                     Sounds.Add(thread);
-                    ActiveEvents.Add(evt, thread);
+                    ActiveEvents[evt] = thread;
+                    if (InterruptBlocker != null)
+                    {
+                        InterruptBlocker.Interrupt(thread);
+                        if (!InterruptBlocker.Name.StartsWith("nc_")) InterruptBlocker.KillVocals();
+                    }
+                    thread.Name = evt;
                     return thread;
                 }
                 else if (TrackID != 0 && content.Audio.GetTrack(TrackID, 0, evtent.ResGroup) != null)
                 {
                     var thread = new HITThread(TrackID, this, evtent.ResGroup);
                     Sounds.Add(thread);
-                    ActiveEvents.Add(evt, thread);
+                    ActiveEvents[evt] = thread;
+                    if (InterruptBlocker != null)
+                    {
+                        InterruptBlocker.Interrupt(thread);
+                        if (!InterruptBlocker.Name.StartsWith("nc_")) InterruptBlocker.KillVocals();
+                    }
+                    thread.Name = evt;
                     return thread;
                 }
             }

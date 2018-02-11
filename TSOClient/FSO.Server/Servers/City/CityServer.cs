@@ -65,6 +65,7 @@ namespace FSO.Server.Servers.City
             Kernel.Bind<CityServerContext>().ToConstant(context);
             Kernel.Bind<int>().ToConstant(shard.Id).Named("ShardId");
             Kernel.Bind<CityServerConfiguration>().ToConstant(Config);
+            Kernel.Bind<JobMatchmaker>().ToSelf().InSingletonScope();
             Kernel.Bind<LotServerPicker>().To<LotServerPicker>().InSingletonScope();
             Kernel.Bind<LotAllocations>().To<LotAllocations>().InSingletonScope();
 
@@ -236,7 +237,8 @@ namespace FSO.Server.Servers.City
                 typeof(ChangeRoommateHandler),
                 typeof(ModerationHandler),
                 typeof(AvatarRetireHandler),
-                typeof(MailHandler)
+                typeof(MailHandler),
+                typeof(MatchmakerNotifyHandler)
             };
         }
     }

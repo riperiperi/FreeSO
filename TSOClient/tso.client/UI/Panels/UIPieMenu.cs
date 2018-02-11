@@ -48,6 +48,7 @@ namespace FSO.Client.UI.Panels
         private SimAvatar m_Head;
 
         private TextStyle ButtonStyle;
+        private TextStyle HighlightStyle;
 
         public UIPieMenu(List<VMPieMenuInteraction> pie, VMEntity obj, VMEntity caller, UILotControl parent)
         {
@@ -65,6 +66,9 @@ namespace FSO.Client.UI.Panels
                 SelectedColor = new Color(0x00, 0xFF, 0xFF),
                 CursorColor = new Color(255, 255, 255)
             };
+
+            HighlightStyle = ButtonStyle.Clone();
+            HighlightStyle.Color = Color.Yellow;
 
             m_Bg = new UIImage(TextureGenerator.GetPieBG(GameFacade.GraphicsDevice));
             m_Bg.SetSize(0, 0); //is scaled up later
@@ -101,10 +105,20 @@ namespace FSO.Client.UI.Panels
                 }
                 //we are in the category, put the interaction in here;
 
+                var name = depth[depth.Length - 1];
+                var semiInd = name.LastIndexOf(';');
+                int colorMod = 0;
+                if (semiInd > -1)
+                {
+                    int.TryParse(name.Substring(semiInd + 1), out colorMod);
+                    name = name.Substring(0, semiInd);
+                }
+
                 var item = new UIPieMenuItem()
                 {
                     Category = false,
-                    Name = depth[depth.Length - 1],
+                    Name = name,
+                    ColorMod = colorMod,
                     ID = pie[i].ID,
                     Param0 = pie[i].Param0,
                     Global = pie[i].Global
@@ -201,7 +215,7 @@ namespace FSO.Client.UI.Panels
                 var but = new UIButton()
                 {
                     Caption = elem.Name+((elem.Category)?"...":""),
-                    CaptionStyle = ButtonStyle,
+                    CaptionStyle = (elem.ColorMod>0)?HighlightStyle:ButtonStyle,
                     ImageStates = 1,
                     Texture = TextureGenerator.GetPieButtonImg(GameFacade.GraphicsDevice)
                 };
@@ -240,7 +254,7 @@ namespace FSO.Client.UI.Panels
                 var but = new UIButton()
                 {
                     Caption = elem.Name+((elem.Category)?"...":""),
-                    CaptionStyle = ButtonStyle,
+                    CaptionStyle = (elem.ColorMod > 0) ? HighlightStyle : ButtonStyle,
                     ImageStates = 1,
                     Texture = TextureGenerator.GetPieButtonImg(GameFacade.GraphicsDevice)
                 };
@@ -259,6 +273,7 @@ namespace FSO.Client.UI.Panels
                 this.Add(but);
                 m_PieButtons.Add(but);
                 but.OnButtonClick += new ButtonClickDelegate(PieButtonClick);
+                but.OnButtonHover += new ButtonClickDelegate(PieButtonHover);
 
                 top = !top;
             }
@@ -377,6 +392,7 @@ namespace FSO.Client.UI.Panels
         public byte ID;
         public short Param0;
         public bool Global;
+        public int ColorMod;
         public string Name;
         public List<UIPieMenuItem> Children = new List<UIPieMenuItem>();
         public Dictionary<string, UIPieMenuItem> ChildrenByName = new Dictionary<string, UIPieMenuItem>();

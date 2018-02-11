@@ -198,6 +198,7 @@
     <Compile Include="Servers\City\CityServerModule.cs" />
     <Compile Include="Servers\City\Domain\EventSystem.cs" />
     <Compile Include="Servers\City\Handlers\MailHandler.cs" />
+    <Compile Include="Servers\City\Handlers\MatchmakerNotifyHandler.cs" />
     <Compile Include="Servers\City\Handlers\ModerationHandler.cs" />
     <Compile Include="Servers\City\Handlers\AvatarRetireHandler.cs" />
     <Compile Include="Servers\Tasks\Domain\JobBalanceTask.cs" />

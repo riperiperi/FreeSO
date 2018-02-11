@@ -144,9 +144,11 @@
     <Compile Include="UI\Model\UITTSContext.cs" />
     <Compile Include="UI\Panels\EODs\Archetypes\UIBasicEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIBandEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIDJStationEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIGameCompDrawACardPluginEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDebugEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDresserEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UINCDanceFloorEOD.cs" />
     <Compile Include="UI\Panels\EODs\UINewspaperEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIPaperChaseEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIAbstractRackEOD.cs" />

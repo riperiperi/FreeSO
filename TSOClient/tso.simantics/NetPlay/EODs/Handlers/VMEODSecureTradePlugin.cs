@@ -140,16 +140,23 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                     if (Array.FindIndex(myData.ObjectOffer, x => x != null && x.PID == itemID) > -1)
                                     {
                                         client.Send("trade_error", ((int)VMEODSecureTradeError.ALREADY_PRESENT).ToString());
+                                        BroadcastTradeData(false);
                                         return;
                                     }
-                                    BroadcastTradeData(false);
+                                    var item = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
+                                    if (item != null && item.Value.DisableLevel > 1)
+                                    {
+                                        client.Send("trade_error", ((int)VMEODSecureTradeError.UNTRADABLE_OBJECT).ToString());
+                                        BroadcastTradeData(false);
+                                        return;
+                                    }
                                     myData.ObjectOffer[slotID] = new VMEODSecureTradeObject(guid, itemID, odata);
                                     BroadcastTradeData(true);
                                 }
                             }
                             else
                             {
-                                client.Send("trade_error", ((int)VMEODSecureTradeError.MISSING_MONEY).ToString());
+                                client.Send("trade_error", ((int)VMEODSecureTradeError.MISSING_OBJECT).ToString());
                                 BroadcastTradeData(false);
                             }
                         });
@@ -381,6 +388,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         ALREADY_PRESENT,
         WRONG_OWNER_LOT,
         MISSING_OBJECT_LOT,
+        UNTRADABLE_OBJECT,
         UNKNOWN
     }
 }

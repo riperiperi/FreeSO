@@ -22,10 +22,10 @@ namespace FSO.LotView.RC
     public class World2DRC : World2D
     {
         public IRCSurroundings Surroundings;
-        private bool Drawn;
+        public bool Drawn;
         public RenderTarget2D LotThumbTarget;
         public RenderTarget2D ObjThumbTarget;
-        public double LastTimeOfDay;
+        public double LastTimeOfDay = -99999;
 
         public override void PreDraw(GraphicsDevice gd, WorldState state)
         {
@@ -435,7 +435,7 @@ namespace FSO.LotView.RC
             var build = state.BuildMode;
             state.SilentBuildMode = 0;
             Blueprint.Terrain.Draw(gd, state);
-            Blueprint.Terrain.DrawMask(gd, state);
+            Blueprint.Terrain.DrawMask(gd, state, state.Camera.View, state.Camera.Projection);
             state.SilentBuildMode = build;
 
             var effect = WorldContent.RCObject;

@@ -19,15 +19,28 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public short CalleeID;
         public short Param0;
         public bool Global;
+        public short CallerID;
 
         public override bool Execute(VM vm, VMAvatar caller)
         {
             VMEntity callee = vm.GetObjectById(CalleeID);
-            if (callee == null || caller == null) return false;
+            if (caller == null && CallerID > 0)
+            {
+                //try get caller from normal id;
+                caller = (vm.GetObjectById(CallerID) as VMAvatar);
+                if (caller == null) return false;
+            }
+            if (callee == null) return false;
             if (callee is VMGameObject && ((VMGameObject)callee).Disabled > 0) return false;
             if (caller.Thread.Queue.Count >= VMThread.MAX_USER_ACTIONS) return false;
             callee.PushUserInteraction(Interaction, caller, vm.Context, Global, new short[] { Param0, 0, 0, 0 });
 
+            return true;
+        }
+
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            if (caller == null && FromNet) return false;
             return true;
         }
 
@@ -40,6 +53,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             writer.Write(CalleeID);
             writer.Write(Param0);
             writer.Write(Global);
+            writer.Write(CallerID);
         }
 
         public override void Deserialize(BinaryReader reader)
@@ -49,6 +63,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             CalleeID = reader.ReadInt16();
             Param0 = reader.ReadInt16();
             Global = reader.ReadBoolean();
+            CallerID = reader.ReadInt16();
         }
 
         #endregion

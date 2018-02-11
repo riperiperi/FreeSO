@@ -882,13 +882,14 @@ namespace FSO.HIT
         /// </summary>
         public static HITResult SmartIndex(HITThread thread)
         {
-            var dest = thread.ReadVar(thread.ReadByte());
+            var destVar = thread.ReadByte();
+            //var dest = thread.ReadVar(thread.ReadByte());
             var index = thread.ReadVar(thread.ReadByte());
 
-            thread.LoadHitlist((byte)index);
+            //thread.LoadHitlist((byte)dest);
             int TrackID = (int)thread.LoadTrack(index);
 
-            thread.WriteVar(dest, TrackID);
+            thread.WriteVar(destVar, TrackID);
 
             return HITResult.CONTINUE; //Appears to be unused.
         }
@@ -897,8 +898,7 @@ namespace FSO.HIT
         {
             var dest = thread.ReadByte();
             thread.WriteVar(dest, thread.NoteLoop());
-
-            return HITResult.CONTINUE;
+            return HITResult.HALT;
         }
     }
     public delegate HITResult HITInstruction(HITThread thread);

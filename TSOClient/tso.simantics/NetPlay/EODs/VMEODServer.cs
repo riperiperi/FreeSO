@@ -47,6 +47,11 @@ namespace FSO.SimAntics.NetPlay.EODs
             { 0x0B2A6B83, typeof(VMEODRoulettePlugin) },
             { 0x897f82f5, typeof(VMEODSecureTradePlugin) },
 
+            { 0x6D113845, typeof(VMEODNCDanceFloorPlugin) },
+            { 0xEC55D705, typeof(VMEODDancePlatformPlugin) },
+            { 0x6C5C7555, typeof(VMEODDJStationPlugin) },
+            { 0xCCC5BC43, typeof(VMEODNightclubControllerPlugin) },
+
             //freeso specific
             { 0x00001000, typeof(VMEODFNewspaperPlugin)}
         };

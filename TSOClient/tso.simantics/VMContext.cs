@@ -981,7 +981,7 @@ namespace FSO.SimAntics
             return new Rectangle((int)lotBase.X, (int)lotBase.Y, dim, dim);
         }
 
-        public VMPlacementResult GetAvatarPlace(VMEntity target, LotTilePos pos, Direction dir)
+        public VMPlacementResult GetAvatarPlace(VMEntity target, LotTilePos pos, Direction dir, VMPlaceRequestFlags pflags)
         {
             //avatars cannot be placed in slots under any circumstances, so we skip a few steps.
 
@@ -995,9 +995,9 @@ namespace FSO.SimAntics
             {
                 return new VMPlacementResult(status);
             }
-
+            var allASolid = pflags.HasFlag(VMPlaceRequestFlags.AllAvatarsSolid);
             var objs = RoomInfo[room].Entities;
-            var meAllowAvatars = target.GetFlag(VMEntityFlags.AllowPersonIntersection);
+            var meAllowAvatars = target.GetFlag(VMEntityFlags.AllowPersonIntersection) && !allASolid;
             foreach (var obj in objs)
             {
                 if (obj.MultitileGroup == target.MultitileGroup) continue;
@@ -1011,6 +1011,9 @@ namespace FSO.SimAntics
                     var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
                     bool allowAvatars = (obj is VMAvatar && meAllowAvatars) || 
                         (((flags & VMEntityFlags.DisallowPersonIntersection) == 0) && ((flags & VMEntityFlags.AllowPersonIntersection) > 0));
+
+                    if (allASolid && obj is VMAvatar) allowAvatars = false;
+
                     if (!allowAvatars)
                     {
                         status = VMPlacementError.CantIntersectOtherObjects;
@@ -1023,7 +1026,7 @@ namespace FSO.SimAntics
             return new VMPlacementResult(status, statusObj);
         }
 
-        public VMPlacementResult GetObjPlace(VMEntity target, LotTilePos pos, Direction dir)
+        public VMPlacementResult GetObjPlace(VMEntity target, LotTilePos pos, Direction dir, VMPlaceRequestFlags pflags)
         {
             //ok, this might be confusing...
             short allowedHeights = target.GetValue(VMStackObjectVariable.AllowedHeightFlags);

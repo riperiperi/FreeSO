@@ -68,23 +68,23 @@ namespace FSO.SimAntics.Model
                     }
                     break;
                 case 2:
-                    LinesByLocation.TryGetValue((uint)((obsX + 16) | ((obsY - 16) << 12) | (type << 24)), out prev);
-                    LinesByLocation.TryGetValue((uint)((obsX - 16) | ((obsY + 16) << 12) | (type << 24)), out post);
+                    LinesByLocation.TryGetValue((uint)((obsX - 16) | ((obsY + 16) << 12) | (type << 24)), out prev);
+                    LinesByLocation.TryGetValue((uint)((obsX + 16) | ((obsY - 16) << 12) | (type << 24)), out post);
                     if (prev != null)
                     {
-                        prev[1].Y += 16;
-                        prev[1].X -= 16;
+                        prev[1].Y -= 16;
+                        prev[1].X += 16;
                         line = prev;
                     }
                     else if (post != null)
                     {
-                        post[0].Y -= 16;
-                        post[0].X += 16;
+                        post[0].Y += 16;
+                        post[0].X -= 16;
                         line = post;
                     }
                     else
                     {
-                        line = new Vector2[] { new Vector2(obsX, obsY), new Vector2(obsX - 16, obsY + 16) };
+                        line = new Vector2[] { new Vector2(obsX, obsY + 16), new Vector2(obsX + 16, obsY) };
                         Lines.Add(line);
                     }
                     break;

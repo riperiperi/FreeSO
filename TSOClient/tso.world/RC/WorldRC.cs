@@ -13,6 +13,7 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.LotView.Components;
 using Microsoft.Xna.Framework.Input;
 using FSO.LotView.Utils;
+using FSO.LotView.Facade;
 
 namespace FSO.LotView.RC
 {
