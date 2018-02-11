@@ -746,16 +746,22 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 typeConditional = "Roulette Tables must be able to cover 35 times any bet for 4 simultaneous players, so AT LEAST 140x the maximum bet."
                     + System.Environment.NewLine + System.Environment.NewLine + 
                     "For example: if your maximum bet is $100, you must have AT LEAST $14000 in this object.";
-                if (isMinBet)
-                {
-                    setBet = "Minimum";
-                    betTip = "(Note: Minimum bets can't be less than $1)";
-                }
-                else
-                {
-                    setBet = "Maximum";
-                    betTip = "(Note: Maximum bets can't be greater than $1000)";
-                }
+            }
+            else if (Type.Equals(ManageEODObjectTypes.Blackjack))
+            {
+                typeConditional = "A Blackjack payout is 3:2 or one and a half times any bet. Tables must be able to cover up to 4 blackjacks per round."
+                    + System.Environment.NewLine + System.Environment.NewLine + 
+                    "So you must stock at least 6 times the maximum bet.";
+            }
+            if (isMinBet)
+            {
+                setBet = "Minimum";
+                betTip = "(Note: Minimum bets can't be less than $1)";
+            }
+            else
+            {
+                setBet = "Maximum";
+                betTip = "(Note: Maximum bets can't be greater than $1000)";
             }
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {

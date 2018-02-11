@@ -42,6 +42,14 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             return PlayerUI[playerIndex].PersonButton;
         }
 
+        public UIVMPersonButton GetAvatarButton(short objectID, bool small)
+        {
+            var avatar = (VMAvatar)EOD.Controller.Lot.vm.GetObjectById((short)objectID);
+            if (avatar != null)
+                return new UIVMPersonButton((VMAvatar)avatar, EOD.Controller.Lot.vm, small);
+            return null;
+        }
+
         public void UpdatePlayers(string evt, string msg)
         {
             var players = EODLobby.ParsePlayers(msg);
