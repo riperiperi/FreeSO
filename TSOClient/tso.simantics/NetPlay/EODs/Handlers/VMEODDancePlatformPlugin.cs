@@ -143,6 +143,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             {
                 totalRating += CorrectDances[i] * ControllerPlugin.PatternRatingScale[i];
             }
+            totalRating = (int)Math.Round(Math.Sqrt(totalRating / 100f)*100);
 
             SectionRatings[currentDance] = (25 * Fresh.Freshness) + (totalRating) * 0.80f * Fresh.GoodScoreFreshness;
             CalculateFinalRating();

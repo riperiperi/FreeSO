@@ -200,6 +200,11 @@
       "requires": [
         "52795d47-a25e-418f-a618-fb89300aab01"
       ]
+    },
+    {
+      "id": "49b2791e-7e2d-4219-94d5-000ba8a53c47",
+      "script": "changes/0020_email_confirm.sql",
+      "idempotent": false
     }
   ]
 }

@@ -95,11 +95,23 @@ namespace FSO.SimAntics.NetPlay.EODs.Utils
             return true;
         }
 
+        public bool IsEmpty()
+        {
+            for (var i = 0; i < Players.Length; i++)
+            {
+                if (Players[i] != null)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         public bool Join(VMEODClient client, short slot)
         {
             if (slot == -1) //take first available slot
                 slot = (short)Array.IndexOf(Players, null);
-            if(slot >= 0 && slot < Players.Length && Players[slot] == null)
+            if (slot >= 0 && slot < Players.Length && Players[slot] == null)
             {
                 Players[slot] = client;
                 if (OnJoinSendHandler != null)

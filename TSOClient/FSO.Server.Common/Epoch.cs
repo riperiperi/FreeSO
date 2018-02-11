@@ -28,6 +28,13 @@ namespace FSO.Server.Common
             return epoch.AddSeconds(time);
         }
 
+        public static string HMSRemaining(uint date)
+        {
+            TimeSpan span = (ToDate(date) - ToDate(Epoch.Now));
+
+            return String.Format("{0} hours, {1} minutes and {2} seconds", span.Hours, span.Minutes, span.Seconds);
+        }
+
         public static uint Default
         {
             get { return 0; }

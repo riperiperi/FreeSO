@@ -145,6 +145,7 @@
     <Compile Include="UI\Panels\EODs\Archetypes\UIBasicEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIBandEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDJStationEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIBlackjackEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIGameCompDrawACardPluginEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDebugEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDresserEOD.cs" />
@@ -165,6 +166,7 @@
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobby.cs" />
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobbyController.cs" />
     <Compile Include="UI\Panels\EODs\Utils\UIManageEODObjectPanel.cs" />
+    <Compile Include="UI\Panels\EODs\Utils\UIPlayingCard.cs" />
     <Compile Include="UI\Panels\LotControls\UIAvatarDataServiceUpdater.cs" />
     <Compile Include="UI\Panels\LotControls\UIRoofer.cs" />
     <Compile Include="UI\Panels\LotControls\UITerrainFlatten.cs" />

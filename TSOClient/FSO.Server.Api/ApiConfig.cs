@@ -27,5 +27,12 @@ namespace FSO.Server.Api
         public string UpdateUrl { get; set; }
 
         public string NFSdir { get; set; }
+
+        public string SmtpHost { get; set; }
+        public int SmtpPort { get; set; }
+        public string SmtpPassword { get; set; }
+        public string SmtpUser { get; set; }
+
+        public bool SmtpEnabled { get; set;  }
     }
 }
