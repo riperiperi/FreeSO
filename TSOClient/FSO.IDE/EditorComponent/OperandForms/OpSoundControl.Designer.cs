@@ -53,7 +53,7 @@
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             this.tableLayoutPanel3.RowCount = 1;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(237, 29);
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(222, 29);
             this.tableLayoutPanel3.TabIndex = 13;
             // 
             // ObjectLabel
@@ -61,13 +61,12 @@
             this.ObjectLabel.AutoEllipsis = true;
             this.ObjectLabel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ObjectLabel.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.ObjectLabel.Location = new System.Drawing.Point(62, 0);
+            this.ObjectLabel.Location = new System.Drawing.Point(47, 0);
             this.ObjectLabel.Margin = new System.Windows.Forms.Padding(0);
             this.ObjectLabel.MinimumSize = new System.Drawing.Size(0, 26);
             this.ObjectLabel.Name = "ObjectLabel";
             this.ObjectLabel.Size = new System.Drawing.Size(135, 29);
             this.ObjectLabel.TabIndex = 3;
-            this.ObjectLabel.Text = "a20-soc-disagree";
             this.ObjectLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // TitleLabel
@@ -77,16 +76,16 @@
             this.TitleLabel.Location = new System.Drawing.Point(3, 0);
             this.TitleLabel.MinimumSize = new System.Drawing.Size(0, 26);
             this.TitleLabel.Name = "TitleLabel";
-            this.TitleLabel.Size = new System.Drawing.Size(56, 29);
+            this.TitleLabel.Size = new System.Drawing.Size(41, 29);
             this.TitleLabel.TabIndex = 1;
-            this.TitleLabel.Text = "Animation:";
+            this.TitleLabel.Text = "Sound:";
             this.TitleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.TitleLabel.Click += new System.EventHandler(this.TitleLabel_Click);
             // 
             // EditButton
             // 
             this.EditButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.EditButton.Location = new System.Drawing.Point(200, 3);
+            this.EditButton.Location = new System.Drawing.Point(185, 3);
             this.EditButton.Name = "EditButton";
             this.EditButton.Size = new System.Drawing.Size(34, 23);
             this.EditButton.TabIndex = 2;
@@ -94,14 +93,14 @@
             this.EditButton.UseVisualStyleBackColor = true;
             this.EditButton.Click += new System.EventHandler(this.EditButton_Click);
             // 
-            // OpAnimControl
+            // OpSoundControl
             // 
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Controls.Add(this.tableLayoutPanel3);
             this.Margin = new System.Windows.Forms.Padding(0);
-            this.Name = "OpAnimControl";
-            this.Size = new System.Drawing.Size(237, 29);
+            this.Name = "OpSoundControl";
+            this.Size = new System.Drawing.Size(222, 29);
             this.tableLayoutPanel3.ResumeLayout(false);
             this.tableLayoutPanel3.PerformLayout();
             this.ResumeLayout(false);
