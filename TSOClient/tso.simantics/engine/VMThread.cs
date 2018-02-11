@@ -665,7 +665,7 @@ namespace FSO.SimAntics.Engine
 
             if (Queue.Count == 0) //if empty, just queue right at the front 
                 this.Queue.Add(invocation);
-            if ((invocation.Flags & TTABFlags.FSOPushHead) > 0)
+            else if ((invocation.Flags & TTABFlags.FSOPushHead) > 0)
                 //place right after active interaction, ignoring all priorities.
                 this.Queue.Insert(ActiveQueueBlock + 1, invocation);
             else if (((invocation.Flags & TTABFlags.FSOPushTail) | (invocation.Flags & TTABFlags.Leapfrog)) > 0 && invocation.Mode != VMQueueMode.ParentExit)
