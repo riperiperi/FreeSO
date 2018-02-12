@@ -360,6 +360,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         public override void OnDisconnection(VMEODClient client)
         {
+
             var slot = Lobby.GetSlotData(client);
             int playerIndex = -1;
             // slot will be null if owner or npc disconnected
@@ -1566,6 +1567,13 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             List<string> acceptedBets = GetAllAcceptedBets();
             List<string> allCardsInPlay = GetAllActiveCardsInPlay(true);
+
+            // the very last is the dealer's second card--always.  need to make sure that card is hidden unless it's the dealer's turn or the round
+            // is already over, otherwise late-joining players can see the dealer's cards before the active players can!
+            if (!GameState.Equals(VMEODBlackjackStates.Dealer_Decision) && !GameState.Equals(VMEODBlackjackStates.Intermission))
+            {
+                allCardsInPlay[allCardsInPlay.Count - 1] = "Back";
+            }
 
             client.Send("blackjack_sync_accepted_bets", 
                 VMEODGameCompDrawACardData.SerializeStrings(acceptedBets.ToArray()));
