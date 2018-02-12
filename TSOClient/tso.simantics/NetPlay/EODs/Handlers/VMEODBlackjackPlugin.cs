@@ -2090,7 +2090,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 if (_TotalHands > 0)
                 {
                     _CurrentHand = 0;
-                    while (_CurrentHand < _TotalHands - 1)
+                    while (_CurrentHand < _TotalHands)
                     {
                         // if they also have a blackjack, they get their bet back
                         if (CurrentHandType.Equals(VMEODBlackjackHandTypes.Blackjack))
