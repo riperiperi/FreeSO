@@ -665,7 +665,10 @@ namespace FSO.SimAntics.Engine
 
             if (Queue.Count == 0) //if empty, just queue right at the front 
                 this.Queue.Add(invocation);
-            else if ((invocation.Flags & TTABFlags.FSOPushTail) > 0 && invocation.Mode != VMQueueMode.ParentExit)
+            else if ((invocation.Flags & TTABFlags.FSOPushHead) > 0)
+                //place right after active interaction, ignoring all priorities.
+                this.Queue.Insert(ActiveQueueBlock + 1, invocation);
+            else if (((invocation.Flags & TTABFlags.FSOPushTail) | (invocation.Flags & TTABFlags.Leapfrog)) > 0 && invocation.Mode != VMQueueMode.ParentExit)
             {
                 //this one's weird. start at the left til there's a lower priority. (eg. parent exit or idle)
                 bool hitParentEnd = (invocation.Mode != VMQueueMode.ParentIdle);
@@ -680,9 +683,6 @@ namespace FSO.SimAntics.Engine
                 }
                 this.Queue.Add(invocation); //right at the end! (somehow)
             }
-            else if ((invocation.Flags & TTABFlags.Leapfrog) > 0)
-                //place right after active interaction, ignoring all priorities.
-                this.Queue.Insert(ActiveQueueBlock + 1, invocation);
             else //we've got an even harder job! find a place for this interaction based on its priority
             {
                 bool hitParentEnd = (invocation.Mode != VMQueueMode.ParentIdle);

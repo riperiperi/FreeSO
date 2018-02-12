@@ -55,9 +55,9 @@ namespace FSO.SimAntics.Engine.Primitives
             if (operand.UseCustomIcon) action.IconOwner = context.VM.GetObjectById((short)context.Locals[operand.IconLocation]);
             action.Mode = mode;
             action.Priority = priority;
-            //action.Flags |= TTABFlags.MustRun;
+            action.Flags |= TTABFlags.MustRun;
             if (operand.PushTailContinuation) action.Flags |= TTABFlags.FSOPushTail;
-            if (operand.PushHeadContinuation) action.Flags |= TTABFlags.Leapfrog;
+            if (operand.PushHeadContinuation) action.Flags |= TTABFlags.FSOPushHead;
 
             context.StackObject.Thread.EnqueueAction(action);
 
