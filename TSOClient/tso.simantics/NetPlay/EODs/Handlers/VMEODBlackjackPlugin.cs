@@ -360,7 +360,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         public override void OnDisconnection(VMEODClient client)
         {
-
             var slot = Lobby.GetSlotData(client);
             int playerIndex = -1;
             // slot will be null if owner or npc disconnected
