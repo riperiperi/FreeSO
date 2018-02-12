@@ -95,7 +95,6 @@ namespace FSO.SimAntics
         {
             while (index >= Attributes.Count) Attributes.Add(0);
             Attributes[index] = value;
-            if (this is VMAvatar && index == 10) Console.WriteLine("Payout set to " + value);
         }
 
         /** Relationship variables **/
