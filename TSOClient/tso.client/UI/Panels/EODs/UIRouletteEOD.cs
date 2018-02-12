@@ -460,7 +460,6 @@ namespace FSO.Client.UI.Panels.EODs
         private void SoundEffectHandler(string evt, string soundString)
         {
             HIT.HITVM.Get().PlaySoundEvent(soundString);
-            HIT.HITVM.Get().PlaySoundEvent(soundString);
         }
         /*
          * Checking to make sure that the user has enough money to keep playing makes the UI look clean by disallowing them to interact with the bet

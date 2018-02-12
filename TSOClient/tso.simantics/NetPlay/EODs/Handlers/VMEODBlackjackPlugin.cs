@@ -92,15 +92,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             if (Controller == null)
                 return;
-            
-            Dealer = GetDealerFromObject();
-
-            // dealer is gone
-            if (Dealer == null || Dealer.Dead)
-            {
-                if (!GameState.Equals(VMEODBlackjackStates.Closed))
-                    EnqueueGotoState(VMEODBlackjackStates.Closed);
-            }
 
             // handle next state
             if (NextState != VMEODBlackjackStates.Invalid)
@@ -286,9 +277,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                                             // event to show the UI to the player
                                             client.Send("blackjack_player_show", VMEODGameCompDrawACardData.SerializeStrings(data));
-
-                                            // for some reason, subsequent NPC VMs after the first one do not talk to the plugin, so a failsafe is necessary
-                                            Dealer = GetDealerFromObject();
 
                                             if (Dealer != null)
                                             {
@@ -659,35 +647,38 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
          */
         private void DealerCallbackHandler(short evt, VMEODClient controller)
         {
-            if (!DealerIntermissionComplete)
+            if (!GameState.Equals(VMEODBlackjackStates.Waiting_For_Player))
             {
-                // if there are no more events
-                if (DealerEventsQueue.Count == 0)
+                if (!DealerIntermissionComplete)
                 {
-                    DealerIntermissionComplete = true;
-                    Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Dealer_Collect_Cards)); // still sends dealer_callback
+                    // if there are no more events
+                    if (DealerEventsQueue.Count == 0)
+                    {
+                        DealerIntermissionComplete = true;
+                        Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Dealer_Collect_Cards)); // still sends dealer_callback
+                    }
+                    // otherwise send next event
+                    else
+                    {
+                        VMEODEvent nextEvent = DealerEventsQueue[0];
+                        DealerEventsQueue.RemoveAt(0);
+                        Controller.SendOBJEvent(nextEvent);
+                    }
                 }
-                // otherwise send next event
-                else
+                else // final dealer_callback
                 {
-                    VMEODEvent nextEvent = DealerEventsQueue[0];
-                    DealerEventsQueue.RemoveAt(0);
-                    Controller.SendOBJEvent(nextEvent);
+                    // if the table doesn't have enough money for minimum, it needs to close
+                    if (!IsTableWithinLimits())
+                    {
+                        Lobby.Broadcast("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.Table_NSF });
+                        EnqueueGotoState(VMEODBlackjackStates.Closed);
+                    }
+                    // if there are still players, go to next game
+                    else if (!Lobby.IsEmpty())
+                        EnqueueGotoState(VMEODBlackjackStates.Betting_Round);
+                    else
+                        EnqueueGotoState(VMEODBlackjackStates.Waiting_For_Player);
                 }
-            }
-            else // final dealer_callback
-            {
-                // if the table doesn't have enough money for minimum, it needs to close
-                if (!IsTableWithinLimits())
-                {
-                    Lobby.Broadcast("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.Table_NSF });
-                    EnqueueGotoState(VMEODBlackjackStates.Closed);
-                }
-                // if there are still players, go to next game
-                else if (!Lobby.IsEmpty())
-                    EnqueueGotoState(VMEODBlackjackStates.Betting_Round);
-                else
-                    EnqueueGotoState(VMEODBlackjackStates.Waiting_For_Player);
             }
         }
         /*
@@ -942,7 +933,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         {
                             var players = new List<VMEODClient>(Lobby.Players);
                             foreach (var player in players)
-                                Server.Disconnect(player);
+                            {
+                                if (player != null)
+                                    Server.Disconnect(player);
+                            }
                         }
                         GameState = newState;
                         break;
@@ -1385,9 +1379,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 if (player != null)
                 {
                     var slot = Lobby.GetSlotData(player);
-                    if (slot.BetSubmitted == false)
+                    if (!slot.BetSubmitted)
                     {
-                        if (slot.WarnedForObservation == true)
+                        if (slot.WarnedForObservation)
                         {
                             // they have to leave, they were already warned last round
                             slot.Client.Send("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.Observe_Twice });
@@ -1432,7 +1426,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 var player = Lobby.Players[index];
                 if (player != null)
                 {
-                    if (Lobby.GetSlotData(player).BetSubmitted == false)
+                    if (!Lobby.GetSlotData(player).BetSubmitted)
                         return false;
                 }
             }
@@ -1446,7 +1440,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 var player = Lobby.Players[index];
                 if (player != null)
                 {
-                    if (Lobby.GetSlotData(player).PendingTransaction == true)
+                    if (Lobby.GetSlotData(player).PendingTransaction)
                         return false;
                 }
             }
@@ -1460,7 +1454,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 var player = Lobby.Players[index];
                 if (player != null)
                 {
-                    if (Lobby.GetSlotData(player).BetAccepted == true)
+                    if (Lobby.GetSlotData(player).BetAccepted)
                         return true;
                 }
             }
@@ -1474,7 +1468,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 var player = Lobby.Players[index];
                 if (player != null)
                 {
-                    if (Lobby.GetSlotData(player).PromptedForInsurance == true)
+                    if (Lobby.GetSlotData(player).PromptedForInsurance)
                         return false;
                 }
             }
@@ -1733,20 +1727,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 return true;
             return false;
         }
-
-        private VMAvatar GetDealerFromObject()
-        {
-            VMAvatar avatar = null;
-            try
-            {
-                avatar = (VMAvatar)Server.Object.MultitileGroup.Objects[1].Contained[0];
-            }
-            catch (NullReferenceException NullException)
-            {
-
-            }
-            return avatar;
-        }
         /*
          * During betting phase, when a player changes their bet, all other players should be notified in their client.
          */
@@ -1824,7 +1804,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             string value = card.Value.ToString();
                             if (value.Equals(PlayingCardValues.Ace.ToString()))
                             {
-                                if (isSoftTotal == false && handTotal + 10 < 22)
+                                if (!isSoftTotal && handTotal + 10 < 22)
                                 {
                                     isSoftTotal = true;
                                     handTotal += 10;
@@ -1833,7 +1813,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             handTotal += VMEODBlackjackPlugin.PlayingCardBlackjackValues[value];
                         }
                         // if it's over 21 from additional 10 given by an Ace, remove that 10 and the Ace is now a value of 1
-                        if (handTotal > 21 && isSoftTotal == true)
+                        if (handTotal > 21 && isSoftTotal)
                         {
                             isSoftTotal = false;
                             handTotal -= 10;
@@ -1911,7 +1891,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             string value = card.Value.ToString();
                             if (value.Equals(PlayingCardValues.Ace.ToString()))
                             {
-                                if (isSoftTotal == false && handTotal + 10 < 22)
+                                if (!isSoftTotal && handTotal + 10 < 22)
                                 {
                                     isSoftTotal = true;
                                     handTotal += 10;
@@ -1920,7 +1900,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             handTotal += VMEODBlackjackPlugin.PlayingCardBlackjackValues[value];
                         }
                         // if it's over 21 from additional 10 given by an Ace, remove that 10 and the Ace is now a value of 1
-                        if (handTotal > 21 && isSoftTotal == true)
+                        if (handTotal > 21 && isSoftTotal)
                         {
                             isSoftTotal = false;
                             handTotal -= 10;
@@ -2110,11 +2090,12 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 if (_TotalHands > 0)
                 {
                     _CurrentHand = 0;
-                    while (_CurrentHand < _TotalHands - 1)
+                    while (_CurrentHand < _TotalHands)
                     {
                         // if they also have a blackjack, they get their bet back
                         if (CurrentHandType.Equals(VMEODBlackjackHandTypes.Blackjack))
                             totalPayout += BetAmount;
+                        _CurrentHand++;
                     }
                     // now check for insurance, which cost half their bet. Since dealer did get blackjack, if they're insured they get full bet amount back
                     if (_IsInsured)
