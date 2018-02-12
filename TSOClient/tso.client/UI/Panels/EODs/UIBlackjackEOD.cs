@@ -475,7 +475,6 @@ namespace FSO.Client.UI.Panels.EODs
         {
             // play the sound
             HIT.HITVM.Get().PlaySoundEvent(soundString);
-            HIT.HITVM.Get().PlaySoundEvent(soundString);
         }
         /*
          * Updates EODTimer
@@ -559,7 +558,6 @@ namespace FSO.Client.UI.Panels.EODs
             {
                 // play the ka-ching sound
                 HIT.HITVM.Get().PlaySoundEvent("ui_object_place");
-                HIT.HITVM.Get().PlaySoundEvent("ui_object_place");
                 InsuranceAlert = ShowUIAlert(Insurance, InsuranceConfirmation.Replace("%d", spentForInsurance + ""), null);
                 // show the insured label
                 InsuredLabel.Visible = true;
@@ -598,7 +596,6 @@ namespace FSO.Client.UI.Panels.EODs
             // update displayed bet text below and above
             UpdateMyBetAmount("" + MyCurrentBetAmount);
             // play the ka-ching sound
-            HIT.HITVM.Get().PlaySoundEvent("ui_object_place");
             HIT.HITVM.Get().PlaySoundEvent("ui_object_place");
         }
         /*
@@ -821,7 +818,6 @@ namespace FSO.Client.UI.Panels.EODs
                 SetNewTip(winningString);
                 // play the ka-ching sound
                 HIT.HITVM.Get().PlaySoundEvent("ui_object_place");
-                HIT.HITVM.Get().PlaySoundEvent("ui_object_place");
             }
             else // you lose
             {
@@ -947,8 +943,6 @@ namespace FSO.Client.UI.Panels.EODs
                 }
                 // play a sound
                 HIT.HITVM.Get().PlaySoundEvent("blackjack_cards_hit");
-                HIT.HITVM.Get().PlaySoundEvent("blackjack_cards_hit");
-                HIT.HITVM.Get().PlaySoundEvent("blackjack_cards_hit");
             }
             else
                 DealTimer.Stop();
@@ -1033,13 +1027,11 @@ namespace FSO.Client.UI.Panels.EODs
                 MakeSplitLabelVisible(player[0]);
                 // play the ka-ching sound
                 HIT.HITVM.Get().PlaySoundEvent("ui_object_place");
-                HIT.HITVM.Get().PlaySoundEvent("ui_object_place");
             }
             else if (evt[11].Equals('o')) // "blackjack_double_broadcast"
             {
                 appendix = ": " + GameFacade.Strings["UIText", "263", "9"]; // "Double down"
                 // play the ka-ching sound
-                HIT.HITVM.Get().PlaySoundEvent("ui_object_place");
                 HIT.HITVM.Get().PlaySoundEvent("ui_object_place");
             }
                 // other option is 'a' for "blackjack_late_comer"

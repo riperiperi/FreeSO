@@ -314,16 +314,12 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             player.SimoleonBalance = (int)budget2;
                             client.Send("roulette_player", new byte[] { (byte)(MinBet / 255), (byte)(MinBet % 255), (byte)(MaxBet / 255),
                                 (byte)(MaxBet % 255), (byte)(player.SimoleonBalance / 255), (byte)(player.SimoleonBalance % 255) });
-
-                            // for some reason, subsequent NPC VMs after the first one do not talk to the plugin, so a failsafe is necessary
-                            Croupier = GetCroupierFromObject();
+                            
                             if (Croupier != null)
                             {
                                 if (GameState.Equals(VMEODRouletteGameStates.WaitingForPlayer) || GameState.Equals(VMEODRouletteGameStates.Closed))
                                     EnqueueGotoState(VMEODRouletteGameStates.BettingRound);
                             }
-                            if (Croupier != null && GameState.Equals(VMEODRouletteGameStates.WaitingForPlayer))
-                                EnqueueGotoState(VMEODRouletteGameStates.BettingRound);
                         }
                     });
                 }
@@ -402,13 +398,12 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             if (Controller == null)
                 return;
-            Croupier = GetCroupierFromObject();
-            if (Croupier == null)
-                CloseTable();
+
             if (NextState != VMEODRouletteGameStates.Invalid)
             {
-                GotoState(NextState);
+                var state = NextState;
                 NextState = VMEODRouletteGameStates.Invalid;
+                GotoState(state);
             }
             switch (GameState)
             {
@@ -441,20 +436,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
             }
             base.Tick();
-        }
-
-        private VMAvatar GetCroupierFromObject()
-        {
-            VMAvatar avatar = null;
-            try
-            {
-                avatar = (VMAvatar)Server.Object.MultitileGroup.Objects[0].Contained[0];
-            }
-            catch (NullReferenceException NullException)
-            {
-
-            }
-            return avatar;
         }
 
         private void RemoveBetHandler(string evt, string valueAndTypeAndNumbers, VMEODClient client)
@@ -871,12 +852,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     else // removal of null client
                         Players.Remove(player);
                 }
-                // failsafe, do we still have a croupier?
-                Croupier = GetCroupierFromObject();
-                if (Croupier == null || Croupier.Dead)
-                if (Croupier == null || Croupier.Avatar == null || Croupier.Dead)
-                    CloseTable();
-                else if (Players.Count == 0)
+                if (Players.Count == 0)
                     EnqueueGotoState(VMEODRouletteGameStates.WaitingForPlayer);
             }
         }
