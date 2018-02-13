@@ -1563,13 +1563,14 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             // is already over, otherwise late-joining players can see the dealer's cards before the active players can!
             if (!GameState.Equals(VMEODBlackjackStates.Dealer_Decision) && !GameState.Equals(VMEODBlackjackStates.Intermission))
             {
-                allCardsInPlay[allCardsInPlay.Count - 1] = "Back";
+                if (allCardsInPlay != null && allCardsInPlay.Count > 2)
+                    allCardsInPlay[allCardsInPlay.Count - 1] = "Back";
             }
 
-            client.Send("blackjack_sync_accepted_bets", 
-                VMEODGameCompDrawACardData.SerializeStrings(acceptedBets.ToArray()));
-            client.Send("blackjack_sync_all_hands",
-                VMEODGameCompDrawACardData.SerializeStrings(allCardsInPlay.ToArray()));
+            if (acceptedBets != null)
+                client.Send("blackjack_sync_accepted_bets", VMEODGameCompDrawACardData.SerializeStrings(acceptedBets.ToArray()));
+            if (allCardsInPlay != null)
+                client.Send("blackjack_sync_all_hands", VMEODGameCompDrawACardData.SerializeStrings(allCardsInPlay.ToArray()));
         }
 
         private void EnqueueSequence(VMEODClient client, VMEODBlackjackEvents sequenceType, int amount)
