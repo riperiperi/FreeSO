@@ -742,11 +742,16 @@ namespace FSO.Client.UI.Panels.EODs
             EnableBettingButtons();
 
             // hide insured and split labels
-            InsuredLabel.Visible = false;
-            Player1SplitLetter.Visible = false;
-            Player2SplitLetter.Visible = false;
-            Player3SplitLetter.Visible = false;
-            Player4SplitLetter.Visible = false;
+            if (InsuredLabel != null)
+                InsuredLabel.Visible = false;
+            if (Player1SplitLetter != null)
+                Player1SplitLetter.Visible = false;
+            if (Player2SplitLetter != null)
+                Player2SplitLetter.Visible = false;
+            if (Player3SplitLetter != null)
+                Player3SplitLetter.Visible = false;
+            if (Player4SplitLetter != null)
+                Player4SplitLetter.Visible = false;
 
             SetNewTip(GameFacade.Strings["UIText", "263", "1"]); // "Place your Bets..."
         }
@@ -2091,11 +2096,16 @@ namespace FSO.Client.UI.Panels.EODs
          */
         private void SetActiveOtherPlayerHand(CardHand activeHand)
         {
-            Player1CardContainer.SetInactive();
-            Player2CardContainer.SetInactive();
-            Player3CardContainer.SetInactive();
-            Player4CardContainer.SetInactive();
-            DealerCardContainer.SetInactive();
+            if (Player1CardContainer != null)
+                Player1CardContainer.SetInactive();
+            if (Player2CardContainer != null)
+                Player2CardContainer.SetInactive();
+            if (Player3CardContainer != null)
+                Player3CardContainer.SetInactive();
+            if (Player4CardContainer != null)
+                Player4CardContainer.SetInactive();
+            if (DealerCardContainer != null)
+                DealerCardContainer.SetInactive();
             if (activeHand != null)
                 activeHand.SetActive();
         }
