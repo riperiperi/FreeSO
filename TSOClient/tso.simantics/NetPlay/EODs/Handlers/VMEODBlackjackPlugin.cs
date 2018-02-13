@@ -433,8 +433,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
                 }
             }
-            else // wrong state, need to report this error as they should not have access to buttons during any state but Player_Decision
-                client.Send("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.State_Race });
         }
         private void StandRequestHandler(string evt, byte[] blank, VMEODClient client)
         {
@@ -462,8 +460,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
                 }
             }
-            else // wrong state, need to report this error as they should not have access to buttons during any state but Player_Decision
-                client.Send("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.State_Race });
         }
         private void DoubleRequestHandler(string evt, byte[] blank, VMEODClient client)
         {
@@ -504,8 +500,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
                 }
             }
-            else // wrong state, need to report this error as they should not have access to buttons during any state but Player_Decision
-                client.Send("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.State_Race });
         }
         private void SplitRequestHandler(string evt, byte[] blank, VMEODClient client)
         {
@@ -545,8 +539,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
                 }
             }
-            else // wrong state, need to report this error as they should not have access to buttons during any state but Player_Decision
-                client.Send("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.State_Race });
         }
         // client tries to submit bet
         private void BetChangeRequestHandler(string evt, byte[] newBet, VMEODClient client)
