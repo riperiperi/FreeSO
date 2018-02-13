@@ -1593,31 +1593,56 @@ namespace FSO.Client.UI.Panels.EODs
         private void ResetAllHands()
         {
             // reset hands from below
-            foreach (var container in MainPlayerCardContainers)
+            if (MainPlayerCardContainers != null)
             {
-                container.Reset();
+                foreach (var container in MainPlayerCardContainers)
+                {
+                    if (container != null)
+                        container.Reset();
                 }
+            }
             if (MainPlayerCardTotals != null)
-                foreach (var textEdit in MainPlayerCardTotals)
             {
-                textEdit.CurrentText = "";
+                foreach (var textEdit in MainPlayerCardTotals)
+                {
+                    if (textEdit != null)
+                        textEdit.CurrentText = "";
+                }
             }
             // reset hands from above
-            Player1CardContainer.Reset();
-            UpdateCardTotalCaption(Player1CardTotal, "");
-            Player2CardContainer.Reset();
-            UpdateCardTotalCaption(Player2CardTotal, "");
-            Player3CardContainer.Reset();
-            UpdateCardTotalCaption(Player3CardTotal, "");
-            Player4CardContainer.Reset();
-            UpdateCardTotalCaption(Player4CardTotal, "");
-            DealerCardContainer.Reset();
-            UpdateCardTotalCaption(DealerCardTotal, "");
-            
-            Player1BetAmount.Caption = "";
-            Player2BetAmount.Caption = "";
-            Player3BetAmount.Caption = "";
-            Player4BetAmount.Caption = "";
+            if (Player1CardContainer != null)
+            {
+                Player1CardContainer.Reset();
+                UpdateCardTotalCaption(Player1CardTotal, "");
+            }
+            if (Player2CardContainer != null)
+            {
+                Player2CardContainer.Reset();
+                UpdateCardTotalCaption(Player2CardTotal, "");
+            }
+            if (Player3CardContainer != null)
+            {
+                Player3CardContainer.Reset();
+                UpdateCardTotalCaption(Player3CardTotal, "");
+            }
+            if (Player4CardContainer != null)
+            {
+                Player4CardContainer.Reset();
+                UpdateCardTotalCaption(Player4CardTotal, "");
+            }
+            if (DealerCardContainer != null)
+            {
+                DealerCardContainer.Reset();
+                UpdateCardTotalCaption(DealerCardTotal, "");
+            }
+            if (Player1BetAmount != null)
+                Player1BetAmount.Caption = "";
+            if (Player2BetAmount != null)
+                Player2BetAmount.Caption = "";
+            if (Player3BetAmount != null)
+                Player3BetAmount.Caption = "";
+            if (Player4BetAmount != null)
+                Player4BetAmount.Caption = "";
 
             MainPlayerCardContainers = new List<CardHand>();
             MainPlayerCardTotals = new List<UITextEdit>();
