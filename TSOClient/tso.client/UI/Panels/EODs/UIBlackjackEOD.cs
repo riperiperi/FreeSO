@@ -1613,27 +1613,32 @@ namespace FSO.Client.UI.Panels.EODs
             if (Player1CardContainer != null)
             {
                 Player1CardContainer.Reset();
-                UpdateCardTotalCaption(Player1CardTotal, "");
+                if (Player1CardTotal != null)
+                    UpdateCardTotalCaption(Player1CardTotal, "");
             }
             if (Player2CardContainer != null)
             {
                 Player2CardContainer.Reset();
-                UpdateCardTotalCaption(Player2CardTotal, "");
+                if (Player2CardTotal != null)
+                    UpdateCardTotalCaption(Player2CardTotal, "");
             }
             if (Player3CardContainer != null)
             {
                 Player3CardContainer.Reset();
-                UpdateCardTotalCaption(Player3CardTotal, "");
+                if (Player3CardTotal != null)
+                    UpdateCardTotalCaption(Player3CardTotal, "");
             }
             if (Player4CardContainer != null)
             {
                 Player4CardContainer.Reset();
-                UpdateCardTotalCaption(Player4CardTotal, "");
+                if (Player4CardTotal != null)
+                    UpdateCardTotalCaption(Player4CardTotal, "");
             }
             if (DealerCardContainer != null)
             {
                 DealerCardContainer.Reset();
-                UpdateCardTotalCaption(DealerCardTotal, "");
+                if (DealerCardTotal != null)
+                    UpdateCardTotalCaption(DealerCardTotal, "");
             }
             if (Player1BetAmount != null)
                 Player1BetAmount.Caption = "";
