@@ -281,7 +281,7 @@ namespace FSO.LotView.RC
             var xz = ((WorldStateRC)state).GetWallOffset();
 
             gd.BlendState = BlendState.Opaque;
-            gd.RasterizerState = RasterizerState.CullCounterClockwise;
+            if (!gd.RasterizerState.ScissorTestEnable) gd.RasterizerState = RasterizerState.CullCounterClockwise;
             var baseWorld = Matrix.CreateRotationX((float)Math.PI / 2) * Matrix.CreateScale(3f, -3f, 3f);
             effect.Parameters["World"].SetValue(baseWorld);
             effect.Parameters["SideMask"].SetValue(0f);
@@ -317,7 +317,7 @@ namespace FSO.LotView.RC
                     }
                 }
             }
-            gd.RasterizerState = RasterizerState.CullNone;
+            if (!gd.RasterizerState.ScissorTestEnable) gd.RasterizerState = RasterizerState.CullNone;
         }
 
         public void DrawLMap(GraphicsDevice gd, LightData light, Matrix projection, Matrix lightTransform)

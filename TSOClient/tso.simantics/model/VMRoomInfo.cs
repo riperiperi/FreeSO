@@ -40,6 +40,7 @@ namespace FSO.SimAntics.Model
         public List<VMObstacle> WallObs;
         public List<VMObstacle> RoomObs;
         public List<Vector2[]> WallLines;
+        public List<Vector2[]> FenceLines;
         public Rectangle Bounds;
 
         public List<ushort> SupportRooms;

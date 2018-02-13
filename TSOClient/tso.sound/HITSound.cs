@@ -12,7 +12,7 @@ using System.Text;
 
 namespace FSO.HIT
 {
-    public abstract class HITSound
+    public abstract class HITSound : IDisposable
     {
         protected bool VolumeSet;
         protected float Volume = 1;
@@ -27,6 +27,7 @@ namespace FSO.HIT
         public bool Dead;
         public HITVM VM;
         public HITVolumeGroup VolGroup;
+        public string Name;
 
         public HITSound()
         {
@@ -60,6 +61,13 @@ namespace FSO.HIT
             }
         }
 
+        public void Mute()
+        {
+            InstVolume = 0;
+            Volume = 0;
+            VolumeSet = true;
+        }
+        
         public void Set3D(Microsoft.Xna.Framework.Vector3 Position)
         {
             Microsoft.Xna.Framework.Audio.SoundEffect.DistanceScale = 100f;
@@ -101,8 +109,14 @@ namespace FSO.HIT
             return Owners.Contains(id);
         }
 
+        public float GetVolume()
+        {
+            return Volume;
+        }
+
         public abstract void Pause();
 
         public abstract void Resume();
+        public abstract void Dispose();
     }
 }

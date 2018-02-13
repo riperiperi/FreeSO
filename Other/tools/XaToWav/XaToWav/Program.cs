@@ -29,7 +29,7 @@ namespace XaToWav
                 Writer.Write(XA.DecompressedData);
                 Writer.Close();
             }
-
+            /*
             UTKFunctions.UTKGenerateTables();
 
             UTKWrapper UTK = new UTKWrapper();
@@ -44,6 +44,7 @@ namespace XaToWav
                     Writer.Close();
                 }
             }
+            */
         }
     }
 }

@@ -18,7 +18,7 @@ namespace FSO.LotView.Components
         private List<RoofRect>[] RoofRects;
         private RoofDrawGroup[] Drawgroups;
         private Effect Effect;
-        private Texture2D Texture;
+        public Texture2D Texture;
 
         public uint RoofStyle;
         public float RoofPitch;
@@ -100,15 +100,10 @@ namespace FSO.LotView.Components
             MeshRects(level, device);
         }
 
-        public void MeshRects(int level, GraphicsDevice device)
+        public Tuple<TerrainVertex[], int[], int> MeshRectData(int level)
         {
             var rects = RoofRects[level - 2];
-            if (rects == null) return;
-            if (Drawgroups[level - 2] != null && Drawgroups[level - 2].NumPrimitives > 0)
-            {
-                Drawgroups[level - 2].VertexBuffer.Dispose();
-                Drawgroups[level - 2].IndexBuffer.Dispose();
-            }
+            if (rects == null) return null;
 
             var numQuads = rects.Count * 4; //4 sides for each roof rectangle
             TerrainVertex[] Geom = new TerrainVertex[numQuads * 4];
@@ -149,13 +144,13 @@ namespace FSO.LotView.Components
                 //quad as two tris
                 for (int j = 0; j < 16; j += 4)
                 {
-                    Indexes[indexOffset++] = geomOffset + j;
+                    Indexes[indexOffset++] = (geomOffset + 2) + j;
                     Indexes[indexOffset++] = (geomOffset + 1) + j;
-                    Indexes[indexOffset++] = (geomOffset + 2) + j;
-
-                    Indexes[indexOffset++] = (geomOffset + 2) + j;
-                    Indexes[indexOffset++] = (geomOffset + 3) + j;
                     Indexes[indexOffset++] = geomOffset + j;
+
+                    Indexes[indexOffset++] = geomOffset + j;
+                    Indexes[indexOffset++] = (geomOffset + 3) + j;
+                    Indexes[indexOffset++] = (geomOffset + 2) + j;
                 }
 
                 var n1 = -Vector3.Normalize(Vector3.Cross(tl - tr, tr - m_tr));
@@ -165,7 +160,7 @@ namespace FSO.LotView.Components
                 Geom[geomOffset++] = new TerrainVertex(tr, topCol.ToVector4(), new Vector2(tr.X, tr.Z * -1) * texScale, 0, n1);
                 Geom[geomOffset++] = new TerrainVertex(m_tr, topCol.ToVector4(), new Vector2(m_tr.X, m_tr.Z * -1) * texScale, 0, n1m);
                 Geom[geomOffset++] = new TerrainVertex(m_tl, topCol.ToVector4(), new Vector2(m_tl.X, m_tl.Z * -1) * texScale, 0, n1m);
-                
+
                 n1 = -Vector3.Normalize(Vector3.Cross(tr - br, br - m_br));
                 n1m = Vector3.Normalize(n1 + Vector3.Up);
                 Geom[geomOffset++] = new TerrainVertex(tr, rightCol.ToVector4(), new Vector2(tr.Z, tr.X) * texScale, 0, n1);
@@ -186,6 +181,24 @@ namespace FSO.LotView.Components
                 Geom[geomOffset++] = new TerrainVertex(tl, leftCol.ToVector4(), new Vector2(tl.Z, tl.X * -1) * texScale, 0, n1);
                 Geom[geomOffset++] = new TerrainVertex(m_tl, leftCol.ToVector4(), new Vector2(m_tl.Z, m_tl.X * -1) * texScale, 0, n1m);
                 Geom[geomOffset++] = new TerrainVertex(m_bl, leftCol.ToVector4(), new Vector2(m_bl.Z, m_bl.X * -1) * texScale, 0, n1m);
+            }
+
+            return new Tuple<TerrainVertex[], int[], int>(Geom, Indexes, numPrimitives);
+        }
+
+        public void MeshRects(int level, GraphicsDevice device)
+        {
+            var data = MeshRectData(level);
+            if (data == null) return;
+
+            var Geom = data.Item1;
+            var Indexes = data.Item2;
+            var numPrimitives = data.Item3;
+
+            if (Drawgroups[level - 2] != null && Drawgroups[level - 2].NumPrimitives > 0)
+            {
+                Drawgroups[level - 2].VertexBuffer.Dispose();
+                Drawgroups[level - 2].IndexBuffer.Dispose();
             }
 
             var result = new RoofDrawGroup();
@@ -471,6 +484,7 @@ namespace FSO.LotView.Components
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
+            device.RasterizerState = RasterizerState.CullNone;
             if (ShapeDirty)
             {
                 RegenRoof(device);

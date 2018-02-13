@@ -18,6 +18,7 @@ using FSO.LotView.Components;
 using FSO.Common.Utils;
 using FSO.Common;
 using FSO.LotView.LMap;
+using FSO.LotView.RC;
 
 namespace FSO.LotView
 {
@@ -479,7 +480,6 @@ namespace FSO.LotView
 
             if (UseBackbuffer)
             {
-
                 PPXDepthEngine.SetPPXTarget(null, null, true);
                 InternalDraw(device);
                 device.SetRenderTarget(null);
@@ -537,6 +537,12 @@ namespace FSO.LotView
             }
 
             State._2D.OutputDepth = false;
+        }
+
+        public void Force2DPredraw(GraphicsDevice device)
+        {
+            if (_2DWorld is World2DRC) ((World2DRC)_2DWorld).Drawn = true;
+            _2DWorld.PreDraw(device, State);
         }
 
         public float? BoxRC(Ray ray, BoundingBox box)

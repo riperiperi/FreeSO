@@ -112,8 +112,10 @@ namespace FSO.HIT.Events
             else
             {
                 var aud = Content.Content.Get().Audio;
-                aud.MusicModes.TryGetValue((int)id, out Station);
-                if (aud.StationPaths.ContainsKey(Station)) LoadStation(CleanPath(aud.StationPaths[Station]));
+                if (aud.MusicModes.TryGetValue((int)id, out Station))
+                {
+                    if (aud.StationPaths.ContainsKey(Station)) LoadStation(CleanPath(aud.StationPaths[Station]));
+                }
             }
         }
 
@@ -214,6 +216,10 @@ namespace FSO.HIT.Events
         public override void Resume()
         {
             Instance.Resume();
+        }
+
+        public override void Dispose()
+        {
         }
     }
 }

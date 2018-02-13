@@ -21,8 +21,8 @@ namespace FSO.IDE.Common
 {
     public class UIInteractiveDGRP : UIContainer
     {
-        private VM TempVM;
-        private VMMultitileGroup TargetOBJ;
+        public VM TempVM;
+        public VMMultitileGroup TargetOBJ;
         protected VMEntity TargetTile;
 
         private uint GUID;

@@ -13,6 +13,7 @@ using FSO.Files.HIT;
 using Microsoft.Xna.Framework.Audio;
 using FSO.Content.Interfaces;
 using FSO.Content.Model;
+using FSO.Common;
 
 namespace FSO.HIT
 {
@@ -36,6 +37,16 @@ namespace FSO.HIT
 
         private Patch Patch; //sound id
         public bool HasSetLoop;
+        public bool LoopDefined;
+        public bool ThreadDead;
+
+        public bool Interruptable
+        {
+            get { return LocalVar != null && (LocalVar[0x21] > 0 || LocalVar[0x27] > 0); }
+        }
+        public bool Interrupted;
+        public HITThread InterruptWaiter;
+        public HITThread InterruptBlocker;
 
         private List<HITNoteEntry> Notes;
         private Dictionary<SoundEffectInstance, HITNoteEntry> NotesByChannel;
@@ -57,13 +68,46 @@ namespace FSO.HIT
 
         public bool ZeroFlag; //flags set by instructions
         public bool SignFlag;
+        public int TickN;
+        public bool Paused;
 
         public Stack<int> Stack;
 
         private IAudioProvider audContent;
 
+        public void Interrupt(HITThread waiter)
+        {
+            Interrupted = true;
+            InterruptWaiter = waiter;
+            waiter.InterruptBlocker = this;
+            for (int i=0; i<Notes.Count; i++)
+            {
+                var note = Notes[i];
+                if (note.EndTick == -1)
+                {
+                    var tickDuration = (note.Duration * FSOEnvironment.RefreshRate);
+                    note.EndTick = note.StartTick + (int)(Math.Ceiling((TickN - note.StartTick) / tickDuration) * tickDuration);
+                    Notes[i] = note;
+                }
+            }
+        }
+
+        public void Unblock()
+        {
+            InterruptBlocker = null;
+        }
+
+        public override void Dispose()
+        {
+            InterruptWaiter?.Unblock();
+            foreach (var note in Notes) note.instance.Dispose();
+        }
+
         public override bool Tick() //true if continue, false if kill
         {
+            if (Paused) return true;
+            TickN++;
+            if (InterruptBlocker != null) return !Dead;
             if (EverHadOwners && Owners.Count == 0)
             {
                 KillVocals();
@@ -75,7 +119,14 @@ namespace FSO.HIT
             {
                 for (int i = 0; i < Notes.Count; i++)
                 {
-                    var inst = Notes[i].instance;
+                    var note = Notes[i];
+                    var inst = note.instance;
+                    if (note.EndTick != -1 && TickN > note.EndTick) inst.Stop();
+                    if (!note.started && inst.State == SoundState.Stopped)
+                    {
+                        if (!inst.IsDisposed) inst.Dispose();
+                        continue;
+                    }
                     if (Emitter3D == null) inst.Pan = Pan;
                     else Apply3D(inst);
                     inst.Volume = Math.Min(1.0f, Volume);
@@ -100,22 +151,36 @@ namespace FSO.HIT
             }
             else
             {
-                try {
-                    while (true)
+                if (ThreadDead)
+                {
+                    if (NoteActive(LastNote)) return true;
+                    else
                     {
-                        var opcode = Src.Data[PC++];
-                        if (opcode >= HITInterpreter.Instructions.Length) opcode = 0;
-                        var result = HITInterpreter.Instructions[opcode](this);
-                        if (result == HITResult.HALT) return true;
-                        else if (result == HITResult.KILL)
+                        Dead = true;
+                        return false;
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        while (true)
                         {
-                            Dead = true;
-                            return false;
+                            var opcode = Src.Data[PC++];
+                            if (opcode >= HITInterpreter.Instructions.Length) opcode = 0;
+                            var result = HITInterpreter.Instructions[opcode](this);
+                            if (result == HITResult.HALT) return true;
+                            else if (result == HITResult.KILL)
+                            {
+                                ThreadDead = true;
+                                return true;
+                            }
                         }
                     }
-                } catch (Exception)
-                {
-                    return false;
+                    catch (Exception)
+                    {
+                        return false;
+                    }
                 }
             }
         }
@@ -216,6 +281,17 @@ namespace FSO.HIT
                     if (ActiveTrack.SoundID == 0) ActiveTrack.SoundID = HitlistChoose();
                 }
                 Patch = audContent.GetPatch(ActiveTrack.SoundID, ResGroup);
+            } else
+            {
+                //make it up?
+                ActiveTrack = new Track() { SoundID = value, TrackID = value };
+                Patch = audContent.GetPatch(value, ResGroup);
+            }
+            if (ActiveTrack.LoopDefined)
+            {
+                Loop = ActiveTrack.Looped != 0;
+                HasSetLoop = Loop;
+                LoopDefined = true;
             }
         }
 
@@ -254,9 +330,10 @@ namespace FSO.HIT
                 instance.Volume = Volume;
                 if (Emitter3D == null) instance.Pan = Pan;
                 else Apply3D(instance);
-                instance.Play();
+                //instance.Play();
 
-                var entry = new HITNoteEntry(instance, Patch);
+                var entry = new HITNoteEntry(sound, instance, Patch, TickN);
+                VM.QueuePlay(entry);
                 Notes.Add(entry);
                 NotesByChannel.Add(instance, entry);
                 return Notes.Count - 1;
@@ -270,7 +347,7 @@ namespace FSO.HIT
         }
 
         /// <summary>
-        /// Plays the current patch and loops it.
+        /// Plays the current patch and loops it indefinitely.
         /// </summary>
         /// <returns>-1 if unsuccessful, or the id of the note played.</returns>
         public int NoteLoop() //todo, make loop again.
@@ -279,13 +356,26 @@ namespace FSO.HIT
 
             if (sound != null)
             {
+                switch (sound.Name)
+                {
+                    case "FX":
+                        VolGroup = Model.HITVolumeGroup.FX; break;
+                    case "MUSIC":
+                        VolGroup = Model.HITVolumeGroup.MUSIC; break;
+                    case "VOX":
+                        VolGroup = Model.HITVolumeGroup.VOX; break;
+                }
+                RecalculateVolume();
+
                 var instance = sound.CreateInstance();
                 instance.Volume = Volume;
                 if (Emitter3D == null) instance.Pan = Pan;
                 else Apply3D(instance);
-                instance.Play();
+                instance.IsLooped = true;
+                //instance.Play();
 
-                var entry = new HITNoteEntry(instance, Patch);
+                var entry = new HITNoteEntry(sound, instance, Patch, TickN);
+                VM.QueuePlay(entry);
                 Notes.Add(entry);
                 NotesByChannel.Add(instance, entry);
                 return Notes.Count - 1;
@@ -305,7 +395,7 @@ namespace FSO.HIT
         public bool NoteActive(int note)
         {
             if (note == -1 || note >= Notes.Count) return false;
-            return (Notes[note].instance.State != SoundState.Stopped);
+            return !Notes[note].started || (Notes[note].instance.State != SoundState.Stopped);
         }
 
         /// <summary>
@@ -408,6 +498,7 @@ namespace FSO.HIT
 
         public override void Pause()
         {
+            Paused = true;
             foreach (var note in Notes)
             {
                 if (note.instance.State != SoundState.Stopped) note.instance.Pause();
@@ -416,6 +507,7 @@ namespace FSO.HIT
 
         public override void Resume()
         {
+            Paused = false;
             foreach (var note in Notes)
             {
                 if (note.instance.State != SoundState.Stopped) note.instance.Resume();
@@ -423,17 +515,23 @@ namespace FSO.HIT
         }
     }
 
-    public struct HITNoteEntry 
+    public class HITNoteEntry 
     {
         public SoundEffectInstance instance;
         public Patch Sound; //This is for killing specific sounds, see HITInterpreter.SeqGroupKill.
-        public bool ended;
+        public bool started;
+        public int StartTick;
+        public int EndTick;
+        public float Duration;
 
-        public HITNoteEntry(SoundEffectInstance instance, Patch sound)
+        public HITNoteEntry(SoundEffect sfx, SoundEffectInstance instance, Patch sound, int startTick)
         {
             this.instance = instance;
             this.Sound = sound;
-            this.ended = false;
+            this.started = false;
+            this.EndTick = -1;
+            this.Duration = (float)sfx.Duration.TotalSeconds;
+            this.StartTick = startTick;
         }
     }
 }

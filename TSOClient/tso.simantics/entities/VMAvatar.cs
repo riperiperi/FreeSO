@@ -170,9 +170,9 @@ namespace FSO.SimAntics
             }
         }
 
-        public void SubmitHITVars(HIT.HITThread thread)
+        public override void SubmitHITVars(HITThread thread)
         {
-            if (thread.ObjectVar == null) return;
+            thread.ObjectVar = new int[29];
             var age = GetPersonData(VMPersonDataVariable.PersonsAge);
             thread.ObjectVar[0] = (age < 18 && age != 0)?2:GetPersonData(VMPersonDataVariable.Gender);
             thread.ObjectVar[2] = Math.Min(100, GetPersonData(VMPersonDataVariable.CookingSkill)/10);
@@ -399,7 +399,7 @@ namespace FSO.SimAntics
             }
 
             SetMotiveData(VMMotive.SleepState, 0); //max all motives except sleep state
-
+            if (!context.VM.TS1 && Object.GUID != 0x7fd96b54 && context.VM.GetGlobalValue(11) > -1) SetFlag(VMEntityFlags.AllowPersonIntersection, true);
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
         }
 
@@ -432,7 +432,8 @@ namespace FSO.SimAntics
             var evt = tp.Properties["xevt"];
             if (evt != null)
             {
-                var eventValue = short.Parse(evt);
+                short eventValue = 0;
+                short.TryParse(evt, out eventValue);
                 avatar.CurrentAnimationState.EventQueue.Add(eventValue);
                 if (eventValue < 100) avatar.CurrentAnimationState.EventsRun++;
             }
@@ -498,7 +499,7 @@ namespace FSO.SimAntics
             if (Thread != null)
             {
                 MotiveDecay.Tick(this, Thread.Context);
-                if (Position == LotTilePos.OUT_OF_WORLD)
+                if (Position == LotTilePos.OUT_OF_WORLD && PersistID > 0)
                 {
                     //uh oh!
                     var mailbox = Thread.Context.VM.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
@@ -748,7 +749,7 @@ namespace FSO.SimAntics
                         ((AvatarComponent)WorldUI).Scale = value / 100f;
                     break;
                 case VMPersonDataVariable.OnlineJobID:
-                    if (value > 4) return false;
+                    if (value > 5) return false;
                     if (!((VMTSOAvatarState)TSOState).JobInfo.ContainsKey(value))
                     {
                         ((VMTSOAvatarState)TSOState).JobInfo[value] = new VMTSOJobInfo();

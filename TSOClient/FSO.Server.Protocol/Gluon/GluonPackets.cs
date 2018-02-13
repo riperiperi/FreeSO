@@ -22,7 +22,8 @@ namespace FSO.Server.Protocol.Gluon
             typeof(HealthPingResponse),
             typeof(RequestTask),
             typeof(RequestTaskResponse),
-            typeof(NotifyLotRoommateChange)
+            typeof(NotifyLotRoommateChange),
+            typeof(MatchmakerNotify)
         };
 
         static GluonPackets()

@@ -385,13 +385,15 @@ namespace FSO.LotView.LMap
             return light;
         }
 
+        public RasterizerState Scissor = new RasterizerState() { ScissorTestEnable = true, CullMode = CullMode.None };
+
         public void DrawRoom(Room room, RoomLighting lighting, bool clear)
         {
             var size = Blueprint.Width - borderSize;
             LightEffect.Parameters["TargetRoom"].SetValue((float)room.RoomID);
             var bigBounds = new Rectangle(lighting.Bounds.X * resPerTile, lighting.Bounds.Y * resPerTile, lighting.Bounds.Width * resPerTile, lighting.Bounds.Height * resPerTile);
             bigBounds = Rectangle.Intersect(bigBounds, new Rectangle(0, 0, size * resPerTile, size * resPerTile));
-            GD.RasterizerState = new RasterizerState() { ScissorTestEnable = true, CullMode = CullMode.None };
+            GD.RasterizerState = Scissor;
             if (clear)
             {
                 GD.SetRenderTarget(LightMap);

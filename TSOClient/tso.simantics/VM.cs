@@ -783,7 +783,7 @@ namespace FSO.SimAntics
 
             //just a few final changes to refresh everything, and avoid signalling objects
             var clock = Context.Clock;
-            Context.Architecture.SetTimeOfDay(clock.Hours / 24.0 + clock.Minutes / (24.0 * 60) + clock.Seconds / (24.0 * 60 * 60));
+            Context.Architecture.SetTimeOfDay();
 
             Context.Architecture.SignalAllDirty();
             Context.DisableRouteInvalidation = true;

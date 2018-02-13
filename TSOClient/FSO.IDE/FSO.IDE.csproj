@@ -179,6 +179,12 @@
     <Compile Include="EditorComponent\OperandForms\DataProviders\OpTextProvider.cs" />
     <Compile Include="EditorComponent\OperandForms\DataProviders\OpValueBoundsProvider.cs" />
     <Compile Include="EditorComponent\OperandForms\IOpControl.cs" />
+    <Compile Include="EditorComponent\OperandForms\OpSoundControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpSoundControl.Designer.cs">
+      <DependentUpon>OpSoundControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditorComponent\OperandForms\OpAnimControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -257,6 +263,12 @@
     <Compile Include="EditorComponent\Primitives\SleepDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\TransferFundsDescriptor.cs" />
     <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
+    <Compile Include="EditorComponent\VarSoundSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\VarSoundSelect.Designer.cs">
+      <DependentUpon>VarSoundSelect.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditorComponent\VarAnimSelect.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -448,6 +460,9 @@
     <EmbeddedResource Include="EditorComponent\BHAVViewControl.resx">
       <DependentUpon>BHAVViewControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpSoundControl.resx">
+      <DependentUpon>OpSoundControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\OperandForms\OpAnimControl.resx">
       <DependentUpon>OpAnimControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -468,6 +483,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\OperandForms\OpUnknownControl.resx">
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\VarSoundSelect.resx">
+      <DependentUpon>VarSoundSelect.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\VarAnimSelect.resx">
       <DependentUpon>VarAnimSelect.cs</DependentUpon>

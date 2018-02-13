@@ -141,6 +141,8 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
             }
+            if (source == 0) source = uint.MaxValue;
+            if (target == 0) target = uint.MaxValue;
             //TODO: LotRoommates transactions, shared account (but that's unused...)
 
             //if we're in a check tree, transactions must be instant and test only.

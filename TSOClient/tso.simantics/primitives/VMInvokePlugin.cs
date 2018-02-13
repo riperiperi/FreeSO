@@ -67,7 +67,7 @@ namespace FSO.SimAntics.Primitives
                     context.Thread.EODConnection = null;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
-            } else if (localEvt == -2) {
+            } else if (localEvt == -2 || localEvt == -5) {
                 //not connected. initiate connection.
                 var objID = context.Locals[operand.ObjectLocal];
                 var personID = context.Locals[operand.PersonLocal];

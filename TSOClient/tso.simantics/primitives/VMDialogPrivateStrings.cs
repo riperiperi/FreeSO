@@ -86,7 +86,7 @@ namespace FSO.SimAntics.Primitives
                             //todo: filter profanity, limit name length
                             //also verify behaviour.
                             if ((curDialog.ResponseText ?? "") != "")
-                                ((VMAvatar)context.StackObject).Name = curDialog.ResponseText;
+                                context.StackObject.Name = curDialog.ResponseText;
                             return VMPrimitiveExitCode.GOTO_TRUE;
                         case VMDialogType.NumericEntry: //also downtown
                         case VMDialogType.TS1Vacation:

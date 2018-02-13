@@ -286,7 +286,7 @@ namespace FSO.Files.XA
 
         private byte HINIBBLE(byte B)
         {
-            return (byte)(((B) >> 4) & 0x0F);
+            return (byte)(((B) >> 4));
         }
 
         private byte LONIBBLE(byte B)

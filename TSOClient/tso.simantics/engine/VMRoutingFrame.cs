@@ -760,16 +760,19 @@ namespace FSO.SimAntics.Engine
                                 Caller.SetFlag(VMEntityFlags.AllowPersonIntersection, true);
                                 routeAround = true;
                             }
-
-                            if (colTopFrame != null && colTopFrame is VMRoutingFrame)
+                            else
                             {
-                                colRoute = (VMRoutingFrame)colTopFrame;
-                                routeAround = (colRoute.WaitTime > 0);
-                            } else
-                            {
-                                --Retries;
+                                if (colTopFrame != null && colTopFrame is VMRoutingFrame)
+                                {
+                                    colRoute = (VMRoutingFrame)colTopFrame;
+                                    routeAround = (colRoute.WaitTime > 0);
+                                }
+                                else
+                                {
+                                    --Retries;
+                                }
+                                if (routeAround) AvatarsToConsider.Add(colAvatar);
                             }
-                            if (routeAround) AvatarsToConsider.Add(colAvatar);
                         }
 
                         if (result.Object == null || result.Object is VMGameObject)
@@ -881,14 +884,26 @@ namespace FSO.SimAntics.Engine
         private void PreExit()
         {
             //about to exit the routing frame
-            if (ParentRoute == null && Caller.GetFlag(VMEntityFlags.AllowPersonIntersection))
+            if (ParentRoute == null)
             {
-                //reset person intersection if we set it
-                Caller.SetFlag(VMEntityFlags.AllowPersonIntersection, false);
-                if (Caller.SetPosition(Caller.Position, Direction.NORTH, VM.Context).Status != VMPlacementError.Success)
+                var obj = (VMAvatar)Caller;
+                if (obj.Animations.Count > 1)
                 {
-                    //we can't become solid right now
-                    Caller.SetFlag(VMEntityFlags.AllowPersonIntersection, true);
+                    while (obj.Animations.Count > 1)
+                    {
+                        obj.Animations.RemoveAt(obj.Animations.Count - 1);
+                    }
+                    obj.Animations[0].Weight = 1; //return to standing
+                }
+                if (Caller.PersistID > 0 && Caller.GetFlag(VMEntityFlags.AllowPersonIntersection))
+                {
+                    //reset person intersection if we set it
+                    Caller.SetFlag(VMEntityFlags.AllowPersonIntersection, false);
+                    if (Caller.SetPosition(Caller.Position, Direction.NORTH, VM.Context).Status != VMPlacementError.Success)
+                    {
+                        //we can't become solid right now
+                        Caller.SetFlag(VMEntityFlags.AllowPersonIntersection, true);
+                    }
                 }
             }
         }

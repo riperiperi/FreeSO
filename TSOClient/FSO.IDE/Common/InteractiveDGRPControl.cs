@@ -9,12 +9,31 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using FSO.Client.UI.Framework;
 using FSO.Client;
+using FSO.SimAntics;
+using FSO.SimAntics.Entities;
 
 namespace FSO.IDE.Common
 {
     public partial class InteractiveDGRPControl : FSOUIControl
     {
         private UIInteractiveDGRP Renderer;
+
+        public VM ExtVM
+        {
+            get
+            {
+                return Renderer.TempVM;
+            }
+        }
+
+        public VMMultitileGroup ExtObj
+        {
+            get
+            {
+                return Renderer.TargetOBJ;
+            }
+        }
+
         public void ShowObject(uint GUID)
         {
             if (FSOUI == null)

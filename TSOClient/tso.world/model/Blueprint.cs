@@ -265,6 +265,31 @@ namespace FSO.LotView.Model
             return (ushort)((tileY * Width) + tileX);
         }
 
+        public Rectangle GetFineBounds()
+        {
+            var minx = int.MaxValue;
+            var miny = int.MaxValue;
+            var maxx = 0;
+            var maxy = 0;
+
+            int i = 0;
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    if (FineArea[i++])
+                    {
+                        if (x < minx) minx = x;
+                        if (x > maxx) maxx = x;
+                        if (y < miny) miny = y;
+                        if (y > maxy) maxy = y;
+                    }
+                }
+            }
+
+            return new Rectangle(minx, miny, (maxx - minx) + 1, (maxy - miny) + 1);
+        }
+
         public byte[] GetIndoors()
         {
             if (Indoors != null) return Indoors;

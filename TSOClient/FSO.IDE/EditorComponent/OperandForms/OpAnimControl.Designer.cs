@@ -67,7 +67,6 @@
             this.ObjectLabel.Name = "ObjectLabel";
             this.ObjectLabel.Size = new System.Drawing.Size(135, 29);
             this.ObjectLabel.TabIndex = 3;
-            this.ObjectLabel.Text = "a20-soc-disagree";
             this.ObjectLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // TitleLabel

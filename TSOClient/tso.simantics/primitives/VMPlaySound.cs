@@ -29,7 +29,10 @@ namespace FSO.SimAntics.Primitives
 
             var owner = (operand.StackObjAsSource) ? context.StackObject : context.Caller;
             if (owner == null) return VMPrimitiveExitCode.GOTO_TRUE;
-            if (fwav != null && owner.SoundThreads.FirstOrDefault(x => x.Name == fwav.Name) == null)
+            var lastThread = owner.SoundThreads.FirstOrDefault(x => x?.Name == fwav?.Name);
+
+            if ((lastThread?.Sound as HITThread)?.Interruptable == true) lastThread = null;
+            if (fwav != null && lastThread == null)
             {
                 var thread = HITVM.Get().PlaySoundEvent(fwav.Name);
                 if (thread != null)
@@ -48,12 +51,12 @@ namespace FSO.SimAntics.Primitives
 
                     if (thread is HITThread)
                     {
-                        ((HITThread)thread).Loop = entry.Loop;
-                        ((HITThread)thread).HasSetLoop = fwav.Name == "piano_play";
-                        if (owner is VMAvatar)
+                        if (!((HITThread)thread).LoopDefined || fwav.Name == "piano_play")
                         {
-                            ((VMAvatar)owner).SubmitHITVars((HITThread)thread);
+                            ((HITThread)thread).Loop = entry.Loop;
+                            ((HITThread)thread).HasSetLoop = fwav.Name == "piano_play";
                         }
+                        owner.SubmitHITVars((HITThread)thread);
                     }
 
                     owner.SoundThreads.Add(entry);

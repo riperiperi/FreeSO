@@ -25,7 +25,7 @@ namespace FSO.SimAntics.Engine.Primitives
             var operand = (VMPushInteractionOperand)args;
             VMEntity interactionSource;
 
-            if ((operand.Flags & (1 << 1)) > 0) interactionSource = context.VM.GetObjectById((short)context.Locals[operand.ObjectLocation]);
+            if (operand.ObjectInLocal) interactionSource = context.VM.GetObjectById((short)context.Locals[operand.ObjectLocation]);
             else interactionSource = context.VM.GetObjectById((short)context.Args[operand.ObjectLocation]);
 
             short priority = 0;
@@ -57,7 +57,7 @@ namespace FSO.SimAntics.Engine.Primitives
             action.Priority = priority;
             action.Flags |= TTABFlags.MustRun;
             if (operand.PushTailContinuation) action.Flags |= TTABFlags.FSOPushTail;
-            if (operand.PushHeadContinuation) action.Flags |= TTABFlags.Leapfrog;
+            if (operand.PushHeadContinuation) action.Flags |= TTABFlags.FSOPushHead;
 
             context.StackObject.Thread.EnqueueAction(action);
 
@@ -83,7 +83,7 @@ namespace FSO.SimAntics.Engine.Primitives
             }
         }
 
-        public bool PushTailContinuation
+        public bool ObjectInLocal
         {
             get { return (Flags & 2) > 0; }
             set
@@ -100,6 +100,16 @@ namespace FSO.SimAntics.Engine.Primitives
             {
                 if (value) Flags |= 4;
                 else Flags &= unchecked((byte)~4);
+            }
+        }
+
+        public bool PushTailContinuation
+        {
+            get { return (Flags & 128) > 0; }
+            set
+            {
+                if (value) Flags |= 128;
+                else Flags &= unchecked((byte)~128);
             }
         }
 

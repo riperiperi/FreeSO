@@ -30,10 +30,18 @@ namespace FSO.Client.UI.Controls
             this.Texture = texture;
         }
 
+        public void Reset()
+        {
+            m_Width = 0;
+            m_Height = 0;
+        }
+
         public Texture2D Texture
         {
             get { return m_Texture; }
-            set { m_Texture = value;
+            set
+            {
+                m_Texture = value;
                 if (Width == 0)
                 {
                     m_Width = m_Texture.Width;

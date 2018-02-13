@@ -117,6 +117,15 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         }
                         vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Ran "+count+" quarter days."));
                         break;
+                    case "setjob":
+                        var jobsplit = args.Split(' ');
+                        if (jobsplit.Length < 2) return true;
+                        var jobid = short.Parse(jobsplit[0]);
+                        var jobgrade = short.Parse(jobsplit[1]);
+                        avatar.SetPersonData(SimAntics.Model.VMPersonDataVariable.OnlineJobID, jobid);
+                        avatar.SetPersonData(SimAntics.Model.VMPersonDataVariable.OnlineJobGrade, jobgrade);
+                        vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Set "+avatar.ToString()+" job grade/type to "+jobgrade+"/"+jobid+"."));
+                        break;
                 }
                 return true;
             }

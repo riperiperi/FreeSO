@@ -30,6 +30,10 @@ namespace FSO.Client.UI.Panels.EODs
             { 0x8ADFC7A2, typeof(UIBandEOD) },
             { 0x0B2A6B83, typeof(UIRouletteEOD) },
             { 0x897f82f5, typeof(UISecureTradeEOD) },
+            { 0x2B2FC514, typeof(UIBlackjackEOD) },
+
+            { 0xEC55D705, typeof(UINCDanceFloorEOD) },
+            { 0x6C5C7555, typeof(UIDJStationEOD) },
 
             //new for freeso
             { 0x00001000, typeof(UINewspaperEOD) }

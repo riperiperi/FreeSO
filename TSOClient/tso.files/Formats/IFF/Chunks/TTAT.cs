@@ -19,7 +19,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 io.ReadUInt32(); //pad
                 var version = io.ReadUInt32(); //zero
 
-                var TTAT = io.ReadUInt32();
+                var TTAT = io.ReadCString(4);
 
                 IOProxy iop;
                 var compressionCode = io.ReadByte();

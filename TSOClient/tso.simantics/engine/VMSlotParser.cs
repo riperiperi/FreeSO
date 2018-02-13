@@ -241,7 +241,7 @@ namespace FSO.SimAntics.Engine
             var avatarInWay = false;
             if (Slot.SnapTargetSlot < 0)
             {
-                var solid = caller.PositionValid(tpos, Direction.NORTH, context, VMPlaceRequestFlags.AcceptSlots);
+                var solid = caller.PositionValid(tpos, Direction.NORTH, context, VMPlaceRequestFlags.AcceptSlots | VMPlaceRequestFlags.AllAvatarsSolid);
                 if (solid.Status != Model.VMPlacementError.Success)
                 {
                     if (solid.Object != null)
@@ -285,13 +285,13 @@ namespace FSO.SimAntics.Engine
                             var intersects = avatar.Thread.Stack.Any(x => x is VMRoutingFrame && ((VMRoutingFrame)x).IntersectsOurDestination(result));
                             if (intersects)
                             {
-                                score = Math.Max(double.Epsilon, score);
+                                score = score / 100000;
                                 break;
                             }
                         }
                     }
                 }
-                else score = Math.Max(double.Epsilon, score);
+                else score = score / 100000;
             }
             result.Score = score;
 

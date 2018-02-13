@@ -28,6 +28,8 @@ namespace FSO.Files.HIT
         public uint Looped;
         public uint Volume;
 
+        public bool LoopDefined = false;
+
         //ts1
         public uint SubroutineID;
         public uint HitlistID;
@@ -67,11 +69,12 @@ namespace FSO.Files.HIT
                 if (Version == 2)
                     CurrentVal++;
 
-                CurrentVal += 2;
+                CurrentVal += 3; //skip two unknowns and clsid
 
                 DuckingPriority = (HITDuckingPriorities)ParseHexString(Values[CurrentVal]);
                 CurrentVal++;
                 Looped = ParseHexString(Values[CurrentVal]);
+                LoopDefined = true;
                 CurrentVal++;
                 Volume = ParseHexString(Values[CurrentVal]);
             }
