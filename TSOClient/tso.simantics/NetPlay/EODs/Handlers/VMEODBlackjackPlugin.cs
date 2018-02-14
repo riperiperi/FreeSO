@@ -433,8 +433,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
                 }
             }
-            else // wrong state, need to report this error as they should not have access to buttons during any state but Player_Decision
-                client.Send("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.State_Race });
         }
         private void StandRequestHandler(string evt, byte[] blank, VMEODClient client)
         {
@@ -462,8 +460,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
                 }
             }
-            else // wrong state, need to report this error as they should not have access to buttons during any state but Player_Decision
-                client.Send("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.State_Race });
         }
         private void DoubleRequestHandler(string evt, byte[] blank, VMEODClient client)
         {
@@ -504,8 +500,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
                 }
             }
-            else // wrong state, need to report this error as they should not have access to buttons during any state but Player_Decision
-                client.Send("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.State_Race });
         }
         private void SplitRequestHandler(string evt, byte[] blank, VMEODClient client)
         {
@@ -545,8 +539,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
                 }
             }
-            else // wrong state, need to report this error as they should not have access to buttons during any state but Player_Decision
-                client.Send("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.State_Race });
         }
         // client tries to submit bet
         private void BetChangeRequestHandler(string evt, byte[] newBet, VMEODClient client)
@@ -1567,10 +1559,18 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             List<string> acceptedBets = GetAllAcceptedBets();
             List<string> allCardsInPlay = GetAllActiveCardsInPlay(true);
 
-            client.Send("blackjack_sync_accepted_bets", 
-                VMEODGameCompDrawACardData.SerializeStrings(acceptedBets.ToArray()));
-            client.Send("blackjack_sync_all_hands",
-                VMEODGameCompDrawACardData.SerializeStrings(allCardsInPlay.ToArray()));
+            // the very last is the dealer's second card--always.  need to make sure that card is hidden unless it's the dealer's turn or the round
+            // is already over, otherwise late-joining players can see the dealer's cards before the active players can!
+            if (!GameState.Equals(VMEODBlackjackStates.Dealer_Decision) && !GameState.Equals(VMEODBlackjackStates.Intermission))
+            {
+                if (allCardsInPlay != null && allCardsInPlay.Count > 2)
+                    allCardsInPlay[allCardsInPlay.Count - 1] = "Back";
+            }
+
+            if (acceptedBets != null)
+                client.Send("blackjack_sync_accepted_bets", VMEODGameCompDrawACardData.SerializeStrings(acceptedBets.ToArray()));
+            if (allCardsInPlay != null)
+                client.Send("blackjack_sync_all_hands", VMEODGameCompDrawACardData.SerializeStrings(allCardsInPlay.ToArray()));
         }
 
         private void EnqueueSequence(VMEODClient client, VMEODBlackjackEvents sequenceType, int amount)

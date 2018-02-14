@@ -378,10 +378,12 @@ namespace FSO.Client.UI.Panels
 
                 //Message
                 EODMsgWin.Position = EODLayout.GetMessageWindowPosition(options.Height, options.Tips, options.Expanded);
+                EODMsgWin.BlockInput();
                 MsgWinTextEntry.Position = EODLayout.GetMessageWindowTextPosition(options.Height, options.Expanded);
 
                 //Timer
                 EODTimer.Position = EODLayout.GetTimerPosition(options.Height, options.Expanded);
+                EODTimer.BlockInput();
                 EODTimer.Texture = GetTexture(0x0000011300000002); // regular .\uigraphics\ucp\livepanel\eod_timerback.tga, changed for TallTall below
                 TimerTextEntry.Position = EODLayout.GetTimerTextPosition(options.Height, options.Expanded);
 
@@ -392,8 +394,11 @@ namespace FSO.Client.UI.Panels
 
                 //backgrounds
                 EODPanel.Position = EODLayout.GetPanelPosition(EODHeight.Normal);
+                EODPanel.BlockInput();
                 EODPanelTall.Position = EODLayout.GetPanelPosition(EODHeight.Tall);
+                EODPanelTall.BlockInput();
                 EODDoublePanelTall.Position = EODLayout.GetPanelPosition(EODHeight.TallTall);
+                EODDoublePanelTall.BlockInput();
 
                 if (isTrade)
                     Size = new Vector2(BackgroundEODTradeImg.Width, BackgroundEODTradeImg.Height);

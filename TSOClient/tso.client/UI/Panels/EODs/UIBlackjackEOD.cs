@@ -742,11 +742,16 @@ namespace FSO.Client.UI.Panels.EODs
             EnableBettingButtons();
 
             // hide insured and split labels
-            InsuredLabel.Visible = false;
-            Player1SplitLetter.Visible = false;
-            Player2SplitLetter.Visible = false;
-            Player3SplitLetter.Visible = false;
-            Player4SplitLetter.Visible = false;
+            if (InsuredLabel != null)
+                InsuredLabel.Visible = false;
+            if (Player1SplitLetter != null)
+                Player1SplitLetter.Visible = false;
+            if (Player2SplitLetter != null)
+                Player2SplitLetter.Visible = false;
+            if (Player3SplitLetter != null)
+                Player3SplitLetter.Visible = false;
+            if (Player4SplitLetter != null)
+                Player4SplitLetter.Visible = false;
 
             SetNewTip(GameFacade.Strings["UIText", "263", "1"]); // "Place your Bets..."
         }
@@ -1593,31 +1598,61 @@ namespace FSO.Client.UI.Panels.EODs
         private void ResetAllHands()
         {
             // reset hands from below
-            foreach (var container in MainPlayerCardContainers)
+            if (MainPlayerCardContainers != null)
             {
-                container.Reset();
+                foreach (var container in MainPlayerCardContainers)
+                {
+                    if (container != null)
+                        container.Reset();
                 }
+            }
             if (MainPlayerCardTotals != null)
-                foreach (var textEdit in MainPlayerCardTotals)
             {
-                textEdit.CurrentText = "";
+                foreach (var textEdit in MainPlayerCardTotals)
+                {
+                    if (textEdit != null)
+                        textEdit.CurrentText = "";
+                }
             }
             // reset hands from above
-            Player1CardContainer.Reset();
-            UpdateCardTotalCaption(Player1CardTotal, "");
-            Player2CardContainer.Reset();
-            UpdateCardTotalCaption(Player2CardTotal, "");
-            Player3CardContainer.Reset();
-            UpdateCardTotalCaption(Player3CardTotal, "");
-            Player4CardContainer.Reset();
-            UpdateCardTotalCaption(Player4CardTotal, "");
-            DealerCardContainer.Reset();
-            UpdateCardTotalCaption(DealerCardTotal, "");
-            
-            Player1BetAmount.Caption = "";
-            Player2BetAmount.Caption = "";
-            Player3BetAmount.Caption = "";
-            Player4BetAmount.Caption = "";
+            if (Player1CardContainer != null)
+            {
+                Player1CardContainer.Reset();
+                if (Player1CardTotal != null)
+                    UpdateCardTotalCaption(Player1CardTotal, "");
+            }
+            if (Player2CardContainer != null)
+            {
+                Player2CardContainer.Reset();
+                if (Player2CardTotal != null)
+                    UpdateCardTotalCaption(Player2CardTotal, "");
+            }
+            if (Player3CardContainer != null)
+            {
+                Player3CardContainer.Reset();
+                if (Player3CardTotal != null)
+                    UpdateCardTotalCaption(Player3CardTotal, "");
+            }
+            if (Player4CardContainer != null)
+            {
+                Player4CardContainer.Reset();
+                if (Player4CardTotal != null)
+                    UpdateCardTotalCaption(Player4CardTotal, "");
+            }
+            if (DealerCardContainer != null)
+            {
+                DealerCardContainer.Reset();
+                if (DealerCardTotal != null)
+                    UpdateCardTotalCaption(DealerCardTotal, "");
+            }
+            if (Player1BetAmount != null)
+                Player1BetAmount.Caption = "";
+            if (Player2BetAmount != null)
+                Player2BetAmount.Caption = "";
+            if (Player3BetAmount != null)
+                Player3BetAmount.Caption = "";
+            if (Player4BetAmount != null)
+                Player4BetAmount.Caption = "";
 
             MainPlayerCardContainers = new List<CardHand>();
             MainPlayerCardTotals = new List<UITextEdit>();
@@ -2061,11 +2096,16 @@ namespace FSO.Client.UI.Panels.EODs
          */
         private void SetActiveOtherPlayerHand(CardHand activeHand)
         {
-            Player1CardContainer.SetInactive();
-            Player2CardContainer.SetInactive();
-            Player3CardContainer.SetInactive();
-            Player4CardContainer.SetInactive();
-            DealerCardContainer.SetInactive();
+            if (Player1CardContainer != null)
+                Player1CardContainer.SetInactive();
+            if (Player2CardContainer != null)
+                Player2CardContainer.SetInactive();
+            if (Player3CardContainer != null)
+                Player3CardContainer.SetInactive();
+            if (Player4CardContainer != null)
+                Player4CardContainer.SetInactive();
+            if (DealerCardContainer != null)
+                DealerCardContainer.SetInactive();
             if (activeHand != null)
                 activeHand.SetActive();
         }
