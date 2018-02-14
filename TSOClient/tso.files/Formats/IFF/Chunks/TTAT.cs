@@ -50,7 +50,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 io.WriteInt32(0);
                 io.WriteInt32(0); //version
 
-                io.WriteCString("TTAT");
+                io.WriteCString("TTAT", 4);
 
                 io.WriteByte(0); //compression code
                 io.WriteInt32(TypeAttributesByGUID.Count);

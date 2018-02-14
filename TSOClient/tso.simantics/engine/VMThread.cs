@@ -509,16 +509,22 @@ namespace FSO.SimAntics.Engine
                     MoveToInstruction(frame, instruction.FalsePointer, true);
                     break;
                 case VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK:
-                    MoveToInstruction(frame, instruction.TruePointer, false);
-                    ScheduleIdleStart = Context.VM.Scheduler.CurrentTickID;
-                    Context.VM.Scheduler.ScheduleTickIn(Entity, 1);
-                    ContinueExecution = false;
+                    MoveToInstruction(frame, instruction.TruePointer, true);
+                    if (ContinueExecution)
+                    {
+                        ScheduleIdleStart = Context.VM.Scheduler.CurrentTickID;
+                        Context.VM.Scheduler.ScheduleTickIn(Entity, 1);
+                        ContinueExecution = false;
+                    }
                     break;
                 case VMPrimitiveExitCode.GOTO_FALSE_NEXT_TICK:
-                    MoveToInstruction(frame, instruction.FalsePointer, false);
-                    ScheduleIdleStart = Context.VM.Scheduler.CurrentTickID;
-                    Context.VM.Scheduler.ScheduleTickIn(Entity, 1);
-                    ContinueExecution = false;
+                    MoveToInstruction(frame, instruction.FalsePointer, true);
+                    if (ContinueExecution)
+                    {
+                        ScheduleIdleStart = Context.VM.Scheduler.CurrentTickID;
+                        Context.VM.Scheduler.ScheduleTickIn(Entity, 1);
+                        ContinueExecution = false;
+                    }
                     break;
                 case VMPrimitiveExitCode.CONTINUE:
                     ContinueExecution = true;
@@ -540,6 +546,7 @@ namespace FSO.SimAntics.Engine
                 return;
             }
 
+            ContinueExecution = continueExecution;
             switch (instruction)
             {
                 case 255:
@@ -581,7 +588,7 @@ namespace FSO.SimAntics.Engine
                     break;
             }
 
-            ContinueExecution = (ThreadBreak != VMThreadBreakMode.Pause) && continueExecution;
+            ContinueExecution = (ThreadBreak != VMThreadBreakMode.Pause) && ContinueExecution;
         }
 
         public void Breakpoint(VMStackFrame frame, string description)
@@ -610,7 +617,7 @@ namespace FSO.SimAntics.Engine
                 if (Queue.Count > 0) Queue.RemoveAt(0);
                 ContinueExecution = true; //continue where the Allow Push idle left off
                 ActiveQueueBlock--;
-                result = VMPrimitiveExitCode.CONTINUE;
+                result = (ActiveQueueBlock == -1) ? VMPrimitiveExitCode.CONTINUE_NEXT_TICK : VMPrimitiveExitCode.CONTINUE;
             }
             if (Stack.Count > 0)
             {

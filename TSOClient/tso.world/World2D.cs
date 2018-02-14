@@ -287,7 +287,7 @@ namespace FSO.LotView
             state.InvalidateCamera();
 
             var oldCenter = state.CenterTile;
-            state.CenterTile = new Vector2(Blueprint.Width/2, Blueprint.Height/2);
+            state.CenterTile = Blueprint.GetThumbCenterTile(state);
             state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((576 - state.WorldSpace.WorldPxWidth)*4, (576 - state.WorldSpace.WorldPxHeight)*4) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             state.TempDraw = true;

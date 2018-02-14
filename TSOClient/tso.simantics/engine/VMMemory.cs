@@ -118,6 +118,11 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMVariableScope.NeighborInStackObject: //24
                     if (!context.VM.TS1) throw new VMSimanticsException("Only valid in TS1.", context);
                     var neighbor = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
+                    var fam = neighbor?.PersonData?.ElementAt((int)VMPersonDataVariable.TS1FamilyNumber);
+
+                    FAMI fami = null;
+                    if (fam != null)
+                        fami = Content.Content.Get().Neighborhood.GetFamily((ushort)fam.Value);
                     if (neighbor == null) return 0;
                     switch (data)
                     {
@@ -125,7 +130,7 @@ namespace FSO.SimAntics.Engine.Utils
                             //find neighbour in the lot
                             return context.VM.Context.ObjectQueries.Avatars.FirstOrDefault(x => x.Object.GUID == neighbor.GUID)?.ObjectID ?? 0;
                         case 1: //belongs in house
-                            return 1; //uh, okay.
+                            return (short)((context.VM.CurrentFamily == fami) ? 1:0); //uh, okay.
                         case 2: //person age
                             return neighbor.PersonData?.ElementAt((int)VMPersonDataVariable.PersonsAge) ?? 0;
                         case 3: //relationship raw score
@@ -135,14 +140,14 @@ namespace FSO.SimAntics.Engine.Utils
                             return 0;
                         case 5: //friend count
                             return 0;
-                        case 6: //house number (unknown)
-                            return 0;
+                        case 6: //house number
+                            return (short)(fami?.HouseNumber ?? 0);
                         case 7: //has telephone
                             return 1;
                         case 8: //has baby
                             return 0;
                         case 9: //family friend count
-                            return 0;
+                            return (short)(fami?.FamilyFriends ?? 0);
                     }
                     throw new VMSimanticsException("Neighbor data out of bounds.", context);
                 case VMVariableScope.Local: //25
@@ -267,7 +272,7 @@ namespace FSO.SimAntics.Engine.Utils
                         case 0: return context.Caller.MyList.First.Value; //is this allowed?
                         case 1: return context.Caller.MyList.Last.Value;
                         case 2: return (short)context.Caller.MyList.Count;
-                        default: throw new VMSimanticsException("Unknown List Accessor", context);
+                        default: return context.Caller.MyList.ElementAt(context.Thread.TempRegisters[0]);
                     }
                 case VMVariableScope.StackObjectList: //47
                     if (context.StackObject == null) return 0;
@@ -276,7 +281,7 @@ namespace FSO.SimAntics.Engine.Utils
                         case 0: return context.StackObject.MyList.First.Value;
                         case 1: return context.StackObject.MyList.Last.Value;
                         case 2: return (short)context.StackObject.MyList.Count;
-                        default: throw new VMSimanticsException("Unknown List Accessor", context);
+                        default: return context.StackObject.MyList.ElementAt(context.Thread.TempRegisters[0]);
                     }
 
                 case VMVariableScope.MoneyOverHead32Bit: //48

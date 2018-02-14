@@ -408,7 +408,7 @@ namespace FSO.LotView.RC
             state.InvalidateCamera();
 
             var oldCenter = state.CenterTile;
-            state.CenterTile = new Vector2(Blueprint.Width / 2, Blueprint.Height / 2);
+            state.CenterTile = Blueprint.GetThumbCenterTile(state);
             state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((size - state.WorldSpace.WorldPxWidth) / state.PreciseZoom, (size - state.WorldSpace.WorldPxHeight) / state.PreciseZoom) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             state.TempDraw = true;

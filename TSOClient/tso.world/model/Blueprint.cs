@@ -290,6 +290,18 @@ namespace FSO.LotView.Model
             return new Rectangle(minx, miny, (maxx - minx) + 1, (maxy - miny) + 1);
         }
 
+        public Vector2 GetThumbCenterTile(WorldState state)
+        {
+            if (FineArea == null) return new Vector2(Width / 2, Height / 2);
+            else
+            {
+                var bounds = GetFineBounds();
+                var result =  new Vector2(bounds.X + bounds.Width / 2f, bounds.Y + bounds.Height / 2f);
+                result -= (InterpAltitude(new Vector3(result, 0)) / 2.95f) * state.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)state.Zoom));
+                return result;
+            }
+        }
+
         public byte[] GetIndoors()
         {
             if (Indoors != null) return Indoors;

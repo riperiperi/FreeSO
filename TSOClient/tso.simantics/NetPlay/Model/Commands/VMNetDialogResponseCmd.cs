@@ -15,7 +15,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm, VMAvatar caller)
         {
-            if (ResponseText.Length > 32) ResponseText = ResponseText.Substring(0, 32);
+            if (ResponseText.Length > 1024) ResponseText = ResponseText.Substring(0, 1024);
 
             VMEntity owner = caller;
             if (vm.TS1)
@@ -37,7 +37,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         #region VMSerializable Members
         public override void SerializeInto(BinaryWriter writer)
         {
-            if (ResponseText.Length > 32) ResponseText = ResponseText.Substring(0, 32);
+            if (ResponseText.Length > 1024) ResponseText = ResponseText.Substring(0, 1024);
             base.SerializeInto(writer);
             writer.Write(ResponseCode);
             writer.Write(ResponseText);
