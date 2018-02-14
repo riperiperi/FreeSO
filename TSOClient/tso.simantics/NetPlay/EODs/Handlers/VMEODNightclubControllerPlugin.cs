@@ -152,7 +152,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         if (RoundTicks != 0) DancePatternNum++;
                     }
 
-                    if (RoundTicks % (7+Math.Min(danceCycle/30, 30)) == 0)
+                    if (RoundTicks % (5+Math.Min(danceCycle/30, 25)) == 0)
                     {
                         //give a dancer a new dance
                         var rand = new Random();
