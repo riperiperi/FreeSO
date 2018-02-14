@@ -509,16 +509,22 @@ namespace FSO.SimAntics.Engine
                     MoveToInstruction(frame, instruction.FalsePointer, true);
                     break;
                 case VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK:
-                    MoveToInstruction(frame, instruction.TruePointer, false);
-                    ScheduleIdleStart = Context.VM.Scheduler.CurrentTickID;
-                    Context.VM.Scheduler.ScheduleTickIn(Entity, 1);
-                    ContinueExecution = false;
+                    MoveToInstruction(frame, instruction.TruePointer, true);
+                    if (ContinueExecution)
+                    {
+                        ScheduleIdleStart = Context.VM.Scheduler.CurrentTickID;
+                        Context.VM.Scheduler.ScheduleTickIn(Entity, 1);
+                        ContinueExecution = false;
+                    }
                     break;
                 case VMPrimitiveExitCode.GOTO_FALSE_NEXT_TICK:
-                    MoveToInstruction(frame, instruction.FalsePointer, false);
-                    ScheduleIdleStart = Context.VM.Scheduler.CurrentTickID;
-                    Context.VM.Scheduler.ScheduleTickIn(Entity, 1);
-                    ContinueExecution = false;
+                    MoveToInstruction(frame, instruction.FalsePointer, true);
+                    if (ContinueExecution)
+                    {
+                        ScheduleIdleStart = Context.VM.Scheduler.CurrentTickID;
+                        Context.VM.Scheduler.ScheduleTickIn(Entity, 1);
+                        ContinueExecution = false;
+                    }
                     break;
                 case VMPrimitiveExitCode.CONTINUE:
                     ContinueExecution = true;
