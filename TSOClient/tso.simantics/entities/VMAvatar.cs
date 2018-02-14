@@ -806,12 +806,18 @@ namespace FSO.SimAntics
             return true;
         }
 
-        public void InheritNeighbor(Neighbour neigh)
+        public void InheritNeighbor(Neighbour neigh, FAMI current)
         {
             var lastGender = GetPersonData(VMPersonDataVariable.Gender);
+            var lastPersonType = GetPersonData(VMPersonDataVariable.PersonType);
+            var sched = GetPersonData(VMPersonDataVariable.VisitorSchedule);
             if (neigh.PersonData != null) PersonData = neigh.PersonData.ToArray();
             SetPersonData(VMPersonDataVariable.Gender, lastGender); //fixes cats switching to children suddenly
             SetPersonData(VMPersonDataVariable.NeighborId, neigh.NeighbourID);
+            if (lastPersonType == 0) SetPersonData(VMPersonDataVariable.PersonType, (short)((GetPersonData(VMPersonDataVariable.TS1FamilyNumber) == current?.ChunkID) ? 0 : 1));
+            else SetPersonData(VMPersonDataVariable.PersonType, lastPersonType);
+            SetPersonData(VMPersonDataVariable.VisitorSchedule, sched);
+            SetPersonData(VMPersonDataVariable.GreetStatus, 0);
         }
 
         public virtual short GetMotiveData(VMMotive variable) //needs special conditions for ones like Mood.

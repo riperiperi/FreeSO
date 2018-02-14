@@ -46,7 +46,7 @@ namespace FSO.IDE.EditorComponent
             RefreshAllList();
             SelectedFWAV = oldSel;
             RefreshAnimTable();
-            if (MyList.Items.Count > 0) MyList.SelectedIndex = oldSel;
+            //if (MyList.Items.Count > 0) MyList.SelectedIndex = oldSel;
         }
 
         public void RefreshAllList()

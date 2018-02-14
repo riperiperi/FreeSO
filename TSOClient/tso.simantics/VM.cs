@@ -58,6 +58,10 @@ namespace FSO.SimAntics
 
         public bool IsServer
         {
+            get { return GlobalLink != null; }
+        }
+        public bool BlueprintRestore
+        {
             get { return GlobalLink != null || Driver is VMFSORDriver; }
         }
         public bool TS1;

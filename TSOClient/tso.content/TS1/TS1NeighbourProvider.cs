@@ -114,6 +114,11 @@ namespace FSO.Content.TS1
             return result;
         }
 
+        public FAMI GetFamily(ushort ID)
+        {
+            return MainResource.Get<FAMI>(ID);
+        }
+
         public short? GetNeighborIDForGUID(uint GUID)
         {
             short result = 0;

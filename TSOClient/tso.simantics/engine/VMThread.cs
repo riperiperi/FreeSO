@@ -540,6 +540,7 @@ namespace FSO.SimAntics.Engine
                 return;
             }
 
+            ContinueExecution = continueExecution;
             switch (instruction)
             {
                 case 255:
@@ -581,7 +582,7 @@ namespace FSO.SimAntics.Engine
                     break;
             }
 
-            ContinueExecution = (ThreadBreak != VMThreadBreakMode.Pause) && continueExecution;
+            ContinueExecution = (ThreadBreak != VMThreadBreakMode.Pause) && ContinueExecution;
         }
 
         public void Breakpoint(VMStackFrame frame, string description)
@@ -610,7 +611,7 @@ namespace FSO.SimAntics.Engine
                 if (Queue.Count > 0) Queue.RemoveAt(0);
                 ContinueExecution = true; //continue where the Allow Push idle left off
                 ActiveQueueBlock--;
-                result = VMPrimitiveExitCode.CONTINUE;
+                result = (ActiveQueueBlock == -1) ? VMPrimitiveExitCode.CONTINUE_NEXT_TICK : VMPrimitiveExitCode.CONTINUE;
             }
             if (Stack.Count > 0)
             {

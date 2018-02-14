@@ -255,7 +255,9 @@ namespace FSO.Client.UI.Panels
                     };
                     break;
                 case VMDialogType.TextEntry:
+                case VMDialogType.FSOChars:
                     options.Buttons = new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, b0Event, info.Yes) };
+                    if (type == VMDialogType.FSOChars) options.MaxChars = 99999;
                     options.TextEntry = true;
                     break;
                 case VMDialogType.NumericEntry:
@@ -404,6 +406,14 @@ namespace FSO.Client.UI.Panels
                     if (obj != null)
                     {
                         obj = obj.MultitileGroup.GetInteractionGroupLeader(obj);
+                        /*
+                        if (state.CtrlDown && state.ShiftDown)
+                        {
+                            ActiveEntity = obj;
+                            vm.MyUID = obj.PersistID;
+                            Queue.QueueOwner = ActiveEntity;
+                            Queue.DebugMode = true;
+                        }*/
                         if (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)
                         {
                             var flags = ((VMGameObject)obj).Disabled;

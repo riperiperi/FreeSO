@@ -1267,7 +1267,7 @@ namespace FSO.SimAntics
                         if (id != null)
                         {
                             var neigh = Content.Content.Get().Neighborhood.GetNeighborByID(id.Value);
-                            if (neigh != null) vmObject.InheritNeighbor(neigh);
+                            if (neigh != null) vmObject.InheritNeighbor(neigh, VM.CurrentFamily);
                         }
                     }
                  

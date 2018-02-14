@@ -163,7 +163,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 }
             }
             if (operand.UseNeighbor) {
-                ((VMAvatar)(obj)).InheritNeighbor(neigh);
+                ((VMAvatar)(obj)).InheritNeighbor(neigh, context.VM.CurrentFamily);
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;
