@@ -1,0 +1,30 @@
+﻿1 ^Roulette^
+2 ^Blackjack^
+3 ^table^
+4 ^%s busts!^
+5 ^%s has blackjack!^
+6 ^%s stands on %d.^
+7 ^%s does not have blackjack.^
+8 ^Insurance^
+9 ^Insured!^
+10 ^Error^
+11 ^Do you want insurance?^
+12 ^Insurance costs half of your bet amount, which is $%d.^
+13 ^If you buy insurance and the dealer has blackjack, you will get your whole bet amount back.^
+14 ^You bought insurance for $%d.^
+15 ^Betting Error^
+16 ^This error message should never appear. Please report this and what you did to get it!^
+17 ^It's not your turn.^
+18 ^You cannot hit on this hand.^
+19 ^You cannot double down on this hand.^
+20 ^You cannot split this hand.^
+21 ^Your bet must be at least $%d.^
+22 ^Your bet cannot be greater than $%d.^
+23 ^You don't have enough money to make that bet.^
+24 ^You don't have enough money to double down.^
+25 ^You don't have enough money to split.^
+26 ^You can observe this round, but you must bet and play on the next one.^
+27 ^You were removed from the table due to inactivity.^
+28 ^The table had to close due to insufficient balance. Perhaps you should let the owner know?^
+29 ^"X Marks the Spot" Payout Table^
+30 ^"'Jackpot' by Lucky LLC" Payout Table^

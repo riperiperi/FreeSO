@@ -1,0 +1,35 @@
+﻿1 ^Owner Transactions^
+2 ^What would you like to do?^
+3 ^Withdraw^
+4 ^Deposit^
+5 ^Simoleons^
+6 ^This object is currently stocked with: $%d^
+7 ^This object cannot hold more than: $%d^
+8 ^For players to use this object you must maintain a minimum balance of: $%d^
+9 ^How much would you like to withdraw?^
+10 ^How much would you like to deposit?^
+11 ^Minimum^
+12 ^Maximum^
+13 ^Min bet^
+14 ^Max bet^
+15 ^Edit ^
+16 ^Roulette tables must be able to cover 35 times any bet for 4 simultaneous players, so at least 140 times the maximum bet.^
+17 ^For example: if your maximum bet is $100, you must have at least $14000 in this object.^
+18 ^A Blackjack payout is 3:2 or one and a half times any bet. Tables must be able to cover up to 4 blackjacks per round.^
+19 ^You must stock at least 6 times the maximum bet.^
+20 ^(Note: Minimum bets can't be less than $%d)^
+21 ^(Note: Maximum bets can't be greater than $%d)^
+22 ^What would you like to set as your ^
+23 ^Transaction Error^
+24 ^That is not a valid number!^
+25 ^You cannot withdraw more than the balance of the machine!^
+26 ^You don't have enough simoleons to deposit: $%d^
+27 ^You cannot deposit that many simoleons because the machine can only hold: $%d^
+28 ^The minimum bet cannot be lower than $%d.^
+29 ^The maximum bet cannot be lower than the minimum bet.^
+30 ^The maximum bet cannot be higher than $%d.^
+31 ^The minimum bet cannot be higher than the maximum bet.^
+32 ^You do not have enough money in this object to cover that bet amount.^
+33 ^You must stock AT LEAST 140 times the maximum bet amount.^
+34 ^An unknown error occured.^
+35 ^Cash in object^

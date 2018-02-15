@@ -1377,6 +1377,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         {
                             // they have to leave, they were already warned last round
                             slot.Client.Send("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.Observe_Twice });
+                            slot.WarnedForObservation = false;
                             slot.ResetHands();
                             Lobby.Leave(slot.Client);
                             Server.Disconnect(slot.Client);

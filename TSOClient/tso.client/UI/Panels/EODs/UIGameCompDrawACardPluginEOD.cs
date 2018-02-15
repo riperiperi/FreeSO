@@ -70,8 +70,6 @@ namespace FSO.Client.UI.Panels.EODs
         private bool GameInfoChanged;
         public UIScript Script;
 
-        public const string DELETE_ERROR_MSG = "Server error. The card could not be deleted.";
-
         // misc texture
         public Texture2D ImagePanelDivider { get; set; }
 
@@ -106,12 +104,12 @@ namespace FSO.Client.UI.Panels.EODs
             BetterLabel.Size = new Microsoft.Xna.Framework.Vector2(300, 24);
             BetterLabel.TextStyle.Size = 10;
             BetterLabel.Mode = UITextEditMode.ReadOnly;
-            ZeroCardMessage = (GameFacade.Strings["UIText", "203", "45"]).Replace(" now", "");
+            ZeroCardMessage = GameFacade.Strings.GetString("f112", "1"); // "You have zero cards in this game deck."
             Add(BetterLabel);
             Remove(SelectCardText);
             LoadingString = GameFacade.Strings["UIText", "259", "6"]; // "Loading...";
-            ConfirmDelete = (GameFacade.Strings["UIText", "203", "9"]).Replace("(s)", "?");
-            SaveChangesPrompt = (GameFacade.Strings["UIText", "203", "44"]).Replace(" before continuing", "");
+            ConfirmDelete = GameFacade.Strings.GetString("f112", "2"); // "Delete card"
+            SaveChangesPrompt = GameFacade.Strings.GetString("f112", "3"); // "Do you want to save your changes?"
 
             // tweaks to UI--Maxis, you're killing me
             NumDrawChancesTextEdit.Mode = UITextEditMode.Editor;
@@ -131,7 +129,7 @@ namespace FSO.Client.UI.Panels.EODs
             ViewDrawInfoTextEdit.Y += 1;
             ManageGameTitleTextEdit.X += 2;
             ManageGameDescripTextEdit.X += 2;
-            DeleteBtn.Tooltip = (GameFacade.Strings["UIText", "203", "9"]).Replace("(s)", "");
+            DeleteBtn.Tooltip = GameFacade.Strings.GetString("f112", "2"); // "Delete card"
 
             // add button listeners
             EditCardPrevBtn.OnButtonClick += EditCardPrevBtnClickedHandler;
@@ -178,8 +176,8 @@ namespace FSO.Client.UI.Panels.EODs
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = GameFacade.Strings["UIText", "203", "9"],
-                Message = DELETE_ERROR_MSG,
+                Title = GameFacade.Strings["UIText", "203", "9"], // "Delete card(s)"
+                Message = GameFacade.Strings.GetString("f112", "6"), // "Server error. The card could not be deleted."
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
                 Buttons = new UIAlertButton[] {
@@ -204,7 +202,7 @@ namespace FSO.Client.UI.Panels.EODs
                     alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                     {
                         TextSize = 12,
-                        Title = GameFacade.Strings["UIText", "203", "10"],
+                        Title = GameFacade.Strings["UIText", "203", "10"], // "Save current panel"
                         Message = SaveChangesPrompt,
                         Alignment = TextAlignment.Center,
                         TextEntry = false,
@@ -229,7 +227,7 @@ namespace FSO.Client.UI.Panels.EODs
                     alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                     {
                         TextSize = 12,
-                        Title = GameFacade.Strings["UIText", "203", "10"],
+                        Title = GameFacade.Strings["UIText", "203", "10"], // "Save current panel"
                         Message = SaveChangesPrompt,
                         Alignment = TextAlignment.Center,
                         TextEntry = false,
@@ -264,7 +262,7 @@ namespace FSO.Client.UI.Panels.EODs
                     alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                     {
                         TextSize = 12,
-                        Title = GameFacade.Strings["UIText", "203", "10"],
+                        Title = GameFacade.Strings["UIText", "203", "10"], // "Save current panel"
                         Message = SaveChangesPrompt,
                         Alignment = TextAlignment.Center,
                         TextEntry = false,
@@ -289,7 +287,7 @@ namespace FSO.Client.UI.Panels.EODs
                     alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                     {
                         TextSize = 12,
-                        Title = GameFacade.Strings["UIText", "203", "10"],
+                        Title = GameFacade.Strings["UIText", "203", "10"], // "Save current panel"
                         Message = SaveChangesPrompt,
                         Alignment = TextAlignment.Center,
                         TextEntry = false,
@@ -354,8 +352,8 @@ namespace FSO.Client.UI.Panels.EODs
                 alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                 {
                     TextSize = 12,
-                    Title = ConfirmDelete.Replace("?",""),
-                    Message = ConfirmDelete,
+                    Title = ConfirmDelete, // "Delete card"
+                    Message = ConfirmDelete + "?", // "Delete card?"
                     Alignment = TextAlignment.Center,
                     TextEntry = false,
                     Buttons = new UIAlertButton[] {
@@ -377,8 +375,8 @@ namespace FSO.Client.UI.Panels.EODs
                 alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                 {
                     TextSize = 12,
-                    Title = ConfirmDelete.Replace("?", ""),
-                    Message = ConfirmDelete,
+                    Title = ConfirmDelete, // "Delete card"
+                    Message = ConfirmDelete + "?", // "Delete card?"
                     Alignment = TextAlignment.Center,
                     TextEntry = false,
                     Buttons = new UIAlertButton[] {
@@ -422,7 +420,8 @@ namespace FSO.Client.UI.Panels.EODs
                         alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                         {
                             TextSize = 12,
-                            Title = GameFacade.Strings["UIText", "203", "10"],
+                            Title = GameFacade.Strings["UIText", "203", "10"], // "Save current panel"
+                            // "Your new card has been saved.  You have saved the maximum number of individual cards."
                             Message = GameFacade.Strings["UIText", "203", "47"],
                             Alignment = TextAlignment.Center,
                             TextEntry = false,
@@ -439,12 +438,11 @@ namespace FSO.Client.UI.Panels.EODs
                     else if (TotalUniqueCards == VMEODGameCompDrawACardPlugin.MAXIMUM_UNIQUE_CARDS)
                     {
                         UIAlert alert = null;
-                        string msg = (GameFacade.Strings["UIText", "203", "47"]).Replace("Your new card has been saved.  ", "");
                         alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                         {
                             TextSize = 12,
-                            Title = GameFacade.Strings["UIText", "203", "10"],
-                            Message = msg.Replace("You have saved", "Error: You have already saved"),
+                            Title = GameFacade.Strings["UIText", "203", "10"], // "Save current panel"
+                            Message = GameFacade.Strings.GetString("f112", "5"), // "Error: You have already saved the maximum number of individual cards."
                             Alignment = TextAlignment.Center,
                             TextEntry = false,
                             Buttons = new UIAlertButton[] {
@@ -484,7 +482,7 @@ namespace FSO.Client.UI.Panels.EODs
                     alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                     {
                         TextSize = 12,
-                        Title = GameFacade.Strings["UIText", "203", "10"],
+                        Title = GameFacade.Strings["UIText", "203", "10"], // "Save current panel"
                         Message = SaveChangesPrompt,
                         Alignment = TextAlignment.Center,
                         TextEntry = false,
@@ -510,7 +508,7 @@ namespace FSO.Client.UI.Panels.EODs
                     alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                     {
                         TextSize = 12,
-                        Title = GameFacade.Strings["UIText", "203", "10"],
+                        Title = GameFacade.Strings["UIText", "203", "10"], // "Save current panel"
                         Message = SaveChangesPrompt,
                         Alignment = TextAlignment.Center,
                         TextEntry = false,
@@ -551,7 +549,7 @@ namespace FSO.Client.UI.Panels.EODs
                     alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                     {
                         TextSize = 12,
-                        Title = GameFacade.Strings["UIText", "203", "10"],
+                        Title = GameFacade.Strings["UIText", "203", "10"], // "Save current panel"
                         Message = SaveChangesPrompt,
                         Alignment = TextAlignment.Center,
                         TextEntry = false,
@@ -577,7 +575,7 @@ namespace FSO.Client.UI.Panels.EODs
                     alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                     {
                         TextSize = 12,
-                        Title = GameFacade.Strings["UIText", "203", "10"],
+                        Title = GameFacade.Strings["UIText", "203", "10"], // "Save current panel"
                         Message = SaveChangesPrompt,
                         Alignment = TextAlignment.Center,
                         TextEntry = false,
@@ -598,9 +596,6 @@ namespace FSO.Client.UI.Panels.EODs
                             }))
                         }
                     }, true);
-                    // Alert: do you want to save your changes?
-                    // yes => SaveAndSwitchToGame();
-                    // no => SwitchToGame(UIElement);
                 }
             }
             else
@@ -625,7 +620,7 @@ namespace FSO.Client.UI.Panels.EODs
                     alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                     {
                         TextSize = 12,
-                        Title = GameFacade.Strings["UIText", "203", "10"],
+                        Title = GameFacade.Strings["UIText", "203", "10"], // "Save current panel"
                         Message = SaveChangesPrompt,
                         Alignment = TextAlignment.Center,
                         TextEntry = false,
@@ -724,7 +719,7 @@ namespace FSO.Client.UI.Panels.EODs
         {
             if (cardAndFrequencyData == null)
             {
-                CurrentCardTextFromServer = GameFacade.Strings["UIText", "203", "48"];
+                CurrentCardTextFromServer = GameFacade.Strings["UIText", "203", "48"]; // "There are no cards to draw from this deck."
             }
             else {
                 BetterLabelDeckString = SelectCardText.Caption;
@@ -753,13 +748,13 @@ namespace FSO.Client.UI.Panels.EODs
                     }
                 case UIGameCompDrawACardPluginEODStates.EditGame:
                     {
-                        BetterLabel.CurrentText = GameFacade.Strings["UIText", "203", "2"];
+                        BetterLabel.CurrentText = GameFacade.Strings["UIText", "203", "2"]; // "Edit game info"
                         EnableButtons();
                         break;
                     }
                 case UIGameCompDrawACardPluginEODStates.EditSingleCard:
                     {
-                        BetterLabel.CurrentText = GameFacade.Strings["UIText", "203", "6"].Replace(" next", "");
+                        BetterLabel.CurrentText = GameFacade.Strings.GetString("f112", "4"); // "Edit card"
                         EditCardTextEdit.CurrentText = CurrentCardTextFromServer;
                         NumDrawChancesTextEdit.CurrentText = "" + CurrentCardFrequencyFromServer;
                         CurrentCardInfoChanged = false;
@@ -769,7 +764,7 @@ namespace FSO.Client.UI.Panels.EODs
                     }
                 case UIGameCompDrawACardPluginEODStates.MakeNewCard:
                     {
-                        BetterLabel.CurrentText = GameFacade.Strings["UIText", "203", "4"];
+                        BetterLabel.CurrentText = GameFacade.Strings["UIText", "203", "4"]; // "New card"
                         EnableButtons();
                         break;
                     }
@@ -1071,7 +1066,7 @@ namespace FSO.Client.UI.Panels.EODs
 
             // update text for BetterLabel
             if (!BetterLabel.CurrentText.Equals(LoadingString))
-                BetterLabel.CurrentText = GameFacade.Strings["UIText", "203", "2"];
+                BetterLabel.CurrentText = GameFacade.Strings["UIText", "203", "2"]; // "Edit game info"
 
             // hide deck info
             SelectCardBack.Visible = false;
@@ -1177,7 +1172,7 @@ namespace FSO.Client.UI.Panels.EODs
 
             // update text for BetterLabel
             if (!BetterLabel.CurrentText.Equals(LoadingString))
-                BetterLabel.CurrentText = GameFacade.Strings["UIText", "203", "6"].Replace(" next", "");
+                BetterLabel.CurrentText = GameFacade.Strings.GetString("f112", "4"); // "Edit card"
 
             // hide deck info
             SelectCardBack.Visible = false;
@@ -1228,12 +1223,11 @@ namespace FSO.Client.UI.Panels.EODs
             if (TotalUniqueCards == VMEODGameCompDrawACardPlugin.MAXIMUM_UNIQUE_CARDS)
             {
                 UIAlert alert = null;
-                string msg = (GameFacade.Strings["UIText", "203", "47"]).Replace("Your new card has been saved.  ", "");
                 alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                 {
                     TextSize = 12,
-                    Title = GameFacade.Strings["UIText", "203", "10"],
-                    Message = msg.Replace("You have saved", "You have already saved"),
+                    Title = GameFacade.Strings["UIText", "203", "10"], // "Save current panel"
+                    Message = GameFacade.Strings.GetString("f112", "5"), // "Error: You have already saved the maximum number of individual cards."
                     Alignment = TextAlignment.Center,
                     TextEntry = false,
                     Buttons = new UIAlertButton[] {
@@ -1251,7 +1245,7 @@ namespace FSO.Client.UI.Panels.EODs
 
             // update text for BetterLabel
             if (!BetterLabel.CurrentText.Equals(LoadingString))
-                BetterLabel.CurrentText = GameFacade.Strings["UIText", "203", "4"];
+                BetterLabel.CurrentText = GameFacade.Strings["UIText", "203", "4"]; // "New card"
 
             // hide deck info
             SelectCardBack.Visible = false;
@@ -1328,7 +1322,7 @@ namespace FSO.Client.UI.Panels.EODs
                 else
                 {
                     stringOffSetValue += (byte)type;
-                    replacedString = GameFacade.Strings["UIText", "203", stringOffSetValue + ""];
+                    replacedString = GameFacade.Strings["UIText", "203", stringOffSetValue + ""]; // any default card string 21-39
                 }
             }
             return replacedString;
@@ -1351,6 +1345,7 @@ namespace FSO.Client.UI.Panels.EODs
             if (gameDataByteArray == null)
             {
                 ManageGameTitleTextEdit.CurrentText = CurrentGameTitle = VMEODGameCompDrawACardPlugin.DEFAULT_GAME_TITLE;
+                // "This deck of cards is completely customizable.  You can edit this text to make your own game rules."
                 ManageGameDescripTextEdit.CurrentText = CurrentGameDescription = GameFacade.Strings["UIText", "203", "20"];
                 return;
             }
@@ -1358,6 +1353,7 @@ namespace FSO.Client.UI.Panels.EODs
             if (split.Length < 2)
             {
                 ManageGameTitleTextEdit.CurrentText = CurrentGameTitle = VMEODGameCompDrawACardPlugin.DEFAULT_GAME_TITLE;
+                // "This deck of cards is completely customizable.  You can edit this text to make your own game rules."
                 ManageGameDescripTextEdit.CurrentText = CurrentGameDescription = GameFacade.Strings["UIText", "203", "20"];
             }
             else
@@ -1372,6 +1368,7 @@ namespace FSO.Client.UI.Panels.EODs
 
                 // this means the user has not changed the description at all yet
                 if (CurrentGameTitle.Equals(VMEODGameCompDrawACardPlugin.DEFAULT_GAME_TITLE))
+                    // "This deck of cards is completely customizable.  You can edit this text to make your own game rules."
                     ManageGameDescripTextEdit.CurrentText = CurrentGameDescription = GameFacade.Strings["UIText", "203", "20"];
                 else
                     ManageGameDescripTextEdit.CurrentText = CurrentGameDescription = split[1];
