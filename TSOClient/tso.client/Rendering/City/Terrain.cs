@@ -102,6 +102,7 @@ namespace FSO.Client.Rendering.City
         private int m_ScrHeight, m_ScrWidth;
         private float m_ScrollSpeed;
         private float m_ViewOffX, m_ViewOffY, m_TargVOffX, m_TargVOffY;
+        private Vector2 LastTargOff;
         public float m_ZoomProgress = 0; //settable to avoid discontinuities
         private float m_SpotOsc = 0;
         private float m_ShadowMult = 1;
@@ -1142,6 +1143,9 @@ namespace FSO.Client.Rendering.City
 		    Texture2D img = m_Forest;
 		    float fade = Math.Max(0, Math.Min(1, (m_ZoomProgress - 0.4f) * 2));
 
+            var scrollVel = (new Vector2(m_TargVOffX, m_TargVOffY) - LastTargOff).Length();
+            Console.WriteLine(scrollVel);
+
             DrawTileBorders(iScale, spriteBatch);
 
             for (short y = (short)bounds[1]; y < bounds[3]; y++) //iterate over tiles close to the approximate tile position at the center of the screen and draw any trees/houses on them
@@ -1175,16 +1179,22 @@ namespace FSO.Client.Rendering.City
 							    PathTile(x, y, iScale, new Color(1.0f, 1.0f, 1.0f, (float)(0.3+Math.Sin(4*Math.PI*(m_SpotOsc%1))*0.15)));
 						    }
 
+                            Texture2D lotImg = null;
                             if (!m_HouseGraphics.ContainsKey(house.packed_pos)) {
-							    //no house graphic found - request one!
-                                m_HouseGraphics[house.packed_pos] = m_DefaultHouse;
-                                var controller = FindController<TerrainController>();
-                                if (controller != null) controller.RequestLotThumb((uint)house.packed_pos, loadedThumb =>
+                                if (scrollVel > 0.2f) lotImg = m_DefaultHouse;
+                                else
                                 {
-                                    m_HouseGraphics[house.packed_pos] = loadedThumb;
-                                });
+                                    //no house graphic found - request one!
+                                    m_HouseGraphics[house.packed_pos] = m_DefaultHouse;
+                                    var controller = FindController<TerrainController>();
+                                    if (controller != null) controller.RequestLotThumb((uint)house.packed_pos, loadedThumb =>
+                                    {
+                                        m_HouseGraphics[house.packed_pos] = loadedThumb;
+                                    });
+                                }
 						    }
-                            Texture2D lotImg = m_HouseGraphics[house.packed_pos];
+                            if (lotImg == null) lotImg = m_HouseGraphics[house.packed_pos];
+
 
                             var resMultiplier = (lotImg.Width > 144) ? 2 : 1;
                             var lotImgWidth = lotImg.Width / resMultiplier;
@@ -1246,6 +1256,7 @@ namespace FSO.Client.Rendering.City
 
             if (Visible)
             { //if we're not visible, do not update CityRenderer state...
+                LastTargOff = new Vector2(m_TargVOffX, m_TargVOffY);
                 Weather.TintColor = m_TintColor.ToVector4();
                 Weather.Update();
 

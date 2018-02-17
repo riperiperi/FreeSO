@@ -296,8 +296,8 @@ namespace FSO.LotView.Model
             else
             {
                 var bounds = GetFineBounds();
-                var result =  new Vector2(bounds.X + bounds.Width / 2f, bounds.Y + bounds.Height / 2f);
-                result -= (InterpAltitude(new Vector3(result, 0)) / 2.95f) * state.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)state.Zoom));
+                var result = new Vector2(bounds.X + bounds.Width / 2f, bounds.Y + bounds.Height / 2f);
+                result -= (InterpAltitude(new Vector3(bounds.X + bounds.Width, bounds.Y + bounds.Height, 0)) / 2.95f) * state.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)state.Zoom));
                 return result;
             }
         }

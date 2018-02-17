@@ -235,6 +235,7 @@
     <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\DialogDescriptors.cs" />
     <Compile Include="EditorComponent\Primitives\GenericTSOCallDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\TS1InventoryOperationsDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\InvokePluginDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\PushInteractionDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\RunTreeByNameDescriptor.cs" />

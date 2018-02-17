@@ -47,6 +47,7 @@ namespace FSO.IDE.EditorComponent
             {45, typeof(GotoRoutingSlotDescriptor) },
             {46, typeof(SnapDescriptor) },
             {49, typeof(NotifyOutOfIdleDescriptor) },
+            {51, typeof(TS1InventoryOperationsDescriptor) },
             {62, typeof(InvokePluginDescriptor) }
         };
 
@@ -88,6 +89,8 @@ namespace FSO.IDE.EditorComponent
                 65, //find best action
                 37, //test sim interacting with
                 47, //reach
+
+                51, //ts1 inventory
             } },
             {PrimitiveGroup.Object, new List<byte> {
                 42, //create new object instance

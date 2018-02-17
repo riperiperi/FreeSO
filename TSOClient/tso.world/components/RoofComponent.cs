@@ -528,6 +528,46 @@ namespace FSO.LotView.Components
             }
         }
 
+        public void DrawOne(GraphicsDevice device, Matrix view, Matrix projection, WorldState world, int i)
+        {
+            device.RasterizerState = RasterizerState.CullNone;
+            if (ShapeDirty)
+            {
+                RegenRoof(device);
+                ShapeDirty = false;
+                StyleDirty = false;
+            }
+            else if (StyleDirty)
+            {
+                RemeshRoof(device);
+                StyleDirty = false;
+            }
+            if (i > world.Level - 1) return;
+            Effect.Parameters["Level"].SetValue((float)i + 1.0001f);
+            if (Drawgroups[i] != null)
+            {
+                var dg = Drawgroups[i];
+                if (dg.NumPrimitives == 0) return;
+                Effect.Parameters["View"].SetValue(view);
+                Effect.Parameters["Projection"].SetValue(projection);
+                Effect.Parameters["World"].SetValue(Matrix.Identity);
+                Effect.Parameters["DiffuseColor"].SetValue(new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1.0f));
+                Effect.Parameters["UseTexture"].SetValue(true);
+                Effect.Parameters["BaseTex"].SetValue(Texture);
+                Effect.Parameters["IgnoreColor"].SetValue(false);
+                Effect.Parameters["TexOffset"].SetValue(Vector2.Zero);
+                Effect.Parameters["TexMatrix"].SetValue(new Vector4(1, 0, 0, 1));
+
+                device.SetVertexBuffer(dg.VertexBuffer);
+                device.Indices = dg.IndexBuffer;
+
+                Effect.CurrentTechnique = Effect.Techniques["DrawBase"];
+                var pass = Effect.CurrentTechnique.Passes[2];
+                pass.Apply();
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.NumPrimitives);
+            }
+        }
+
         public void DrawLMap(GraphicsDevice gd, LightData light, Matrix projection, Matrix lightTransform)
         {
             if (ShapeDirty)

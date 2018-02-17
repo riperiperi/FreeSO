@@ -137,7 +137,18 @@ namespace FSO.IDE.ResourceBrowser
             {
                 //todo: verify that images can be zoom synced
 
-                if (AutoZoom.Checked)
+                if (AutoRot.Checked)
+                {
+                    var dgrps = new List<DGRPImage>();
+                    for (int i=0; i<4; i++)
+                    {
+                        dgrps.Add(ActiveDGRP.GetImage(0x10, 3, (uint)i));
+                        dgrps.Add(ActiveDGRP.GetImage(0x10, 2, (uint)i));
+                        dgrps.Add(ActiveDGRP.GetImage(0x10, 1, (uint)i));
+                    }
+                    ActiveDGRPImages = dgrps.ToArray();
+                }
+                else if (AutoZoom.Checked)
                 {
                     ActiveDGRPImages = new DGRPImage[] {
                         ActiveDGRP.GetImage(0x10, 3, (uint)RotationTrack.Value),
@@ -271,6 +282,7 @@ namespace FSO.IDE.ResourceBrowser
             {
                 var id = sprSel.ChosenID;
                 var zoom = (int)(3-ActiveDGRPImages[0].Zoom);
+                var rot = (!AutoRot.Checked)?0:((ActiveDGRPImages[0].Direction + 2) % 4);
                 string name = "";
                 float zFactor = 1.0f;
 
@@ -283,11 +295,17 @@ namespace FSO.IDE.ResourceBrowser
                         var spr = ActiveIff.Get<SPR2>(id);
                         if (spr == null) continue;
                         name = spr.ChunkLabel;
-                        dgrpSpr.SpriteFrameIndex = (uint)((spr == null) ? 0 : (zoom * spr.Frames.Length / 3));
+                        dgrpSpr.SpriteFrameIndex = (uint)((spr == null) ? 0 : (zoom * spr.Frames.Length / 3) + rot);
                         AutoOffset(dgrpSpr, spr, zFactor);
 
                         zoom++;
                         zFactor /= 2;
+                        if (zoom > 2)
+                        {
+                            zoom = (int)(3 - ActiveDGRPImages[0].Zoom);
+                            zFactor = 1.0f;
+                            rot = (rot + 1) % 4;
+                        }
                     }
                 }, ActiveDGRP));
 
@@ -739,6 +757,11 @@ namespace FSO.IDE.ResourceBrowser
 
             AddNewDGRP(newDGRP);
             UpdateDGRPList(false);
+        }
+
+        private void AutoRot_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateImage();
         }
     }
 }

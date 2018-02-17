@@ -23,6 +23,7 @@ using FSO.Client.Utils;
 using FSO.Client.Controllers.Panels;
 using FSO.Common.Utils;
 using FSO.Client.UI.Model;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels.EODs
 {
@@ -254,7 +255,7 @@ namespace FSO.Client.UI.Panels.EODs
             }
             if (item.Item.Name != null && item.Item.Name != "")
                 BuyItem.Name = item.Item.Name;
-            if (item.Item.DisableLevel > 1)
+            if (item.Item.DisableLevel > 1 && ((VMTSOAvatarState)LotController.ActiveEntity.TSOState).Permissions < VMTSOAvatarPermissions.Admin)
             {
                 HIT.HITVM.Get().PlaySoundEvent(UISounds.Error);
                 QueryPanel.Active = false;

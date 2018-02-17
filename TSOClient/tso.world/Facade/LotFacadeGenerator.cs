@@ -50,6 +50,8 @@ namespace FSO.LotView.Facade
         public VertexPositionTexture[] FloorVerts;
         public int[] FloorIndices;
 
+        public bool RoofOnFloor;
+
         public void GenerateWalls(GraphicsDevice gd, WorldRC world, Blueprint bp)
         {
             //generate wall geometry and texture.
@@ -220,10 +222,17 @@ namespace FSO.LotView.Facade
             var verts = new List<VertexPositionTexture>();
             var inds = new List<int>();
             bp.RoofComp.RegenRoof(gd);
+
+            var basepos = new Vector2(bp.Width - FLOOR_TILES, bp.Height - FLOOR_TILES) * 1.5f;
+
             for (int i = 1; i < bp.Stories + 1; i++)
             {
+                var basetc = new Vector2((1 / 3f) * ((Math.Min(i, 4) % 3)+1), (1 / 2f) * ((Math.Min(i, 4) / 3) + 1));
                 var data = bp.RoofComp.MeshRectData(i + 1);
-                verts.AddRange(data.Item1.Select(x => new VertexPositionTexture(x.Position / 3f, new Vector2(x.GrassInfo.Y, x.GrassInfo.Z))));
+                if (RoofOnFloor)
+                    verts.AddRange(data.Item1.Select(x => new VertexPositionTexture(x.Position / 3f, basetc - new Vector2((x.Position.X-basepos.X) / (3f*FLOOR_TILES*3), (x.Position.Z- basepos.Y) / (3f * FLOOR_TILES * 2)))));
+                else
+                    verts.AddRange(data.Item1.Select(x => new VertexPositionTexture(x.Position / 3f, new Vector2(x.GrassInfo.Y, x.GrassInfo.Z))));
                 inds.AddRange(data.Item2.Select(x => x + baseIndex));
                 baseIndex += data.Item1.Length;
             }
@@ -273,7 +282,33 @@ namespace FSO.LotView.Facade
                     floors.Add((sbyte)i);
                     var mat = baseO * offMat;
                     bp.Terrain.DrawCustom(gd, world.State, lookat, mat, 1, floors);
-                    if (i == 0) bp.Terrain.DrawMask(gd, world.State, lookat, mat);
+                    //if (i == 0) bp.Terrain.DrawMask(gd, world.State, lookat, mat);
+
+                    var effect = WorldContent.RCObject;
+                    gd.BlendState = BlendState.NonPremultiplied;
+                    var vp = lookat * baseO * offMat;
+                    effect.Parameters["ViewProjection"].SetValue(vp);
+                    var frustrum = new BoundingFrustum(lookat * baseO);
+
+                    effect.CurrentTechnique = effect.Techniques["Draw"];
+
+                    var objs = bp.Objects.Where(o => o.Level == i+1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(vp));
+                    foreach (var obj in objs)
+                    {
+                        obj.Draw(gd, world.State);
+                    }
+
+                    if (RoofOnFloor)
+                    {
+                        //gd.DepthStencilState = DepthStencilState.None;
+                        gd.DepthStencilState = DepthStencilState.Default;
+                        if (i > 0) bp.RoofComp.DrawOne(gd, lookat, mat, world.State, i - 1);
+                        if (i == bp.Stories - 1)
+                        {
+                            bp.RoofComp.DrawOne(gd, lookat, mat, world.State, i);
+                        }
+                        gd.DepthStencilState = DepthStencilState.Default;
+                    }
                 }
             }
             world.State.SilentLevel = oldLevel;
@@ -419,6 +454,7 @@ namespace FSO.LotView.Facade
             }
             baseInd += verts.Length;
         }
+        public int? TexBase;
 
         public void SaveOBJ(Stream stream, string filename)
         {
@@ -441,24 +477,32 @@ namespace FSO.LotView.Facade
             }
             else
             {
-                SaveOBJData(io, WallVerts, WallIndices, ref indCount, LotName + "_walls");
-                SaveOBJData(io, RoofVerts, RoofIndices, ref indCount, LotName + "_roof");
+                if (TexBase == null)
+                {
+                    SaveOBJData(io, WallVerts, WallIndices, ref indCount, LotName + "_walls");
+                    SaveOBJData(io, RoofVerts, RoofIndices, ref indCount, LotName + ((RoofOnFloor) ? "_floor":"_roof"));
+                } else
+                {
+                    SaveOBJData(io, WallVerts, WallIndices, ref indCount, "TEX_"+TexBase);
+                    SaveOBJData(io, RoofVerts, RoofIndices, ref indCount, "TEX_"+(TexBase+((RoofOnFloor)?1:2)));
+                }
             }
             for (int i = 0; i < 5; i++)
             {
                 //save each floor. offset the floor for each level
+                var floorName = (TexBase == null)?(LotName + "_floor"): "TEX_" + (TexBase+1);
                 var posOffset = i * 2.95f;
                 var tcOffset = new Vector2((i % 3) / 3f, (i / 3) / 2f);
                 var o = off ?? Vector3.Zero;
                 SaveOBJData(io, FloorVerts.Select(x =>
                     new VertexPositionTexture(new Vector3(x.Position.X, x.Position.Y + posOffset, x.Position.Z) + o, x.TextureCoordinate + tcOffset)).ToArray(),
-                    FloorIndices, ref indCount, LotName + "_floor");
+                    FloorIndices, ref indCount, floorName);
 
                 if (i == 0)
                 {
                     SaveOBJData(io, FloorVerts.Select(x =>
                         new VertexPositionTexture(new Vector3(x.Position.X, x.Position.Y + 2.95f / 3f, x.Position.Z) + o, x.TextureCoordinate + new Vector2(2 / 3f, 1 / 2f))).ToArray(),
-                        FloorIndices, ref indCount, LotName + "_floor");
+                        FloorIndices, ref indCount, floorName);
                 }
             }
             LastIndex = indCount;
@@ -474,9 +518,10 @@ namespace FSO.LotView.Facade
 
         public void AppendMTL(StreamWriter io, string path)
         {
-            SaveMTLData(io, path, LotName + "_walls", WallTarget);
-            SaveMTLData(io, path, LotName + "_roof", RoofTexture);
-            SaveMTLData(io, path, LotName + "_floor", FloorTexture);
+            var tex = TexBase != null;
+            SaveMTLData(io, path, tex?("TEX_" + (TexBase)):(LotName + "_walls"), WallTarget);
+            if (!RoofOnFloor) SaveMTLData(io, path, tex ? ("TEX_" + (TexBase + 2)) : (LotName + "_roof"), RoofTexture);
+            SaveMTLData(io, path, tex ? ("TEX_" + (TexBase + 1)) : (LotName + "_floor"), FloorTexture);
         }
 
         public void SaveMTLData(StreamWriter io, string path, string oname, Texture2D tex)

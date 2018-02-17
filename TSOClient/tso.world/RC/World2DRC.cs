@@ -352,7 +352,7 @@ namespace FSO.LotView.RC
                 obj.OnZoomChanged(state);
             }
             gd.SetRenderTarget(null);
-            var bounds3d = BoundingBox.CreateFromPoints(cpoints);
+            var bounds3d = (cpoints.Count > 0)?BoundingBox.CreateFromPoints(cpoints):new BoundingBox();
             var bounds = new Rectangle((int)bounds3d.Min.X, (int)bounds3d.Min.Y, (int)(bounds3d.Max.X - bounds3d.Min.X), (int)(bounds3d.Max.Y - bounds3d.Min.Y));
 
             bounds.Inflate(1, 1);

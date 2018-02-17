@@ -407,6 +407,7 @@ namespace FSO.SimAntics.Engine
                 Callee = frame.Callee,
                 CodeOwner = codeOwner,
                 StackObject = frame.StackObject,
+                _StackObjectID = frame.StackObjectID, //pass this without doing a lookup
                 ActionTree = frame.ActionTree
             };
             childFrame.Args = new short[(routine.Arguments > 4) ? routine.Arguments : 4];

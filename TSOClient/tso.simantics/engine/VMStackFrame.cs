@@ -57,7 +57,7 @@ namespace FSO.SimAntics.Engine
         }
 
         private VMEntity _StackObject;
-        private short _StackObjectID;
+        public short _StackObjectID;
 
         /** If true, this stack frame is not a subroutine. Return with a continue. **/
         public bool DiscardResult;
