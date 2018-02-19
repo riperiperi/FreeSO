@@ -336,7 +336,7 @@ namespace FSO.Content
                                 break;
                             }
                         }
-                        if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(GetRoutine(bhav.ChunkID)));
+                        if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(SemiGlobal.GetRoutine(bhav.ChunkID)));
                     }
                 }
             }
