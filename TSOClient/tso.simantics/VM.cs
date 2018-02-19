@@ -527,7 +527,7 @@ namespace FSO.SimAntics
                 {
                     return _Assembled[bhav];
                 }
-                var routine = VMTranslator.Assemble(this, bhav);
+                var routine = VMTranslator.Assemble(bhav);
                 _Assembled.Add(bhav, routine);
                 return routine;
             }

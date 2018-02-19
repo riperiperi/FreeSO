@@ -46,20 +46,20 @@ namespace FSO.SimAntics.Engine.Primitives
 
                 if (operand.Destination == 2)
                 {
-                    context.Thread.ExecuteSubRoutine(context, tree.bhav, context.StackObject.Object, new VMSubRoutineOperand(context.Thread.TempRegisters));
+                    context.Thread.ExecuteSubRoutine(context, (VMRoutine)tree.bhav, context.StackObject.Object, new VMSubRoutineOperand(context.Thread.TempRegisters));
                     return VMPrimitiveExitCode.CONTINUE;
                     //push onto my stack - acts like a subroutine.
                 }
                 else if (operand.Destination == 0)
                 {
-                    var result = context.Thread.RunInMyStack(tree.bhav, context.StackObject.Object, context.Thread.TempRegisters, context.StackObject)
+                    var result = context.Thread.RunInMyStack((VMRoutine)tree.bhav, context.StackObject.Object, context.Thread.TempRegisters, context.StackObject)
                         ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                     return (context.VM.Aborting) ? VMPrimitiveExitCode.ERROR : result;
                     //run in my stack
                 }
                 else
                 {
-                    var result = context.StackObject.Thread.RunInMyStack(tree.bhav, context.StackObject.Object, context.Thread.TempRegisters, context.StackObject)
+                    var result = context.StackObject.Thread.RunInMyStack((VMRoutine)tree.bhav, context.StackObject.Object, context.Thread.TempRegisters, context.StackObject)
                         ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                     return (context.VM.Aborting) ? VMPrimitiveExitCode.ERROR : result;
                     //run in stack obj's stack

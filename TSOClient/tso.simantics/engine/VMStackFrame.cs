@@ -157,11 +157,10 @@ namespace FSO.SimAntics.Engine
         {
             CodeOwner = FSO.Content.Content.Get().WorldObjects.Get(input.CodeOwnerGUID);
 
-            BHAV bhav = null;
-            if (input.RoutineID >= 8192) bhav = ScopeResource.SemiGlobal.Get<BHAV>(input.RoutineID);
-            else if (input.RoutineID >= 4096) bhav = ScopeResource.Get<BHAV>(input.RoutineID);
-            else bhav = Global.Resource.Get<BHAV>(input.RoutineID);
-            Routine = VM.Assemble(bhav);
+            Routine = null;
+            if (input.RoutineID >= 8192) Routine = (VMRoutine)ScopeResource.SemiGlobal.GetRoutine(input.RoutineID);
+            else if (input.RoutineID >= 4096) Routine = (VMRoutine)ScopeResource.GetRoutine(input.RoutineID);
+            else Routine = (VMRoutine)Global.Resource.GetRoutine(input.RoutineID);
 
             InstructionPointer = input.InstructionPointer;
             Caller = context.VM.GetObjectById(input.Caller);

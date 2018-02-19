@@ -35,7 +35,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 bool Execute;
                 if (ent.EntryPoints[entry].ConditionFunction != 0) //check if we can definitely execute this...
                 {
-                    var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entry].ConditionFunction, context.VM.Context);
+                    var Behavior = ent.GetRoutineWithOwner(ent.EntryPoints[entry].ConditionFunction, context.VM.Context);
                     if (Behavior != null)
                     {
                         Execute = (VMThread.EvaluateCheck(context.VM.Context, context.Caller, new VMStackFrame()
@@ -44,7 +44,7 @@ namespace FSO.SimAntics.Engine.Primitives
                             Callee = ent,
                             CodeOwner = Behavior.owner,
                             StackObject = ent,
-                            Routine = context.VM.Assemble(Behavior.bhav),
+                            Routine = Behavior.routine,
                             Args = new short[4]
                         }) == VMPrimitiveExitCode.RETURN_TRUE);
                     }
@@ -58,9 +58,9 @@ namespace FSO.SimAntics.Engine.Primitives
                 if (Execute)
                 {
                     //push it onto our stack, except now the stack object owns our soul!
-                    var tree = ent.GetBHAVWithOwner(ent.EntryPoints[entry].ActionFunction, context.VM.Context);
+                    var tree = ent.GetRoutineWithOwner(ent.EntryPoints[entry].ActionFunction, context.VM.Context);
                     if (tree == null) return VMPrimitiveExitCode.GOTO_FALSE; //does not exist
-                    var routine = context.VM.Assemble(tree.bhav);
+                    var routine = tree.routine;
                     var childFrame = new VMStackFrame
                     {
                         Routine = routine,

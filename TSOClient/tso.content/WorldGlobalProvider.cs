@@ -136,24 +136,9 @@ namespace FSO.Content
             Recache();
         }
 
-        public void Recache()
+        public override void Recache()
         {
-            TuningCache = new Dictionary<uint, short>();
-
-
-            var bcons = Iff.List<BCON>();
-            if (bcons != null)
-            {
-                foreach (var table in bcons)
-                {
-                    uint i = ((uint)table.ChunkID << 16);
-                    foreach (var item in table.Constants)
-                    {
-                        TuningCache[i++] = (short)item;
-                    }
-                }
-            }
-
+            base.Recache();
             if (Tuning != null)
             {
                 foreach (var table in Tuning.Tables)

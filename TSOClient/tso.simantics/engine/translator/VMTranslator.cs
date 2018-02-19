@@ -15,9 +15,7 @@ namespace FSO.SimAntics.Engine
 {
     public class VMTranslator
     {
-        public static VMRoutine Assemble(VM vm, BHAV bhav){
-            var context = vm.Context;
-
+        public static VMRoutine Assemble(BHAV bhav){
             var routine = new VMRoutine();
             routine.Locals = bhav.Locals;
             routine.Arguments = bhav.Args;
@@ -51,7 +49,7 @@ namespace FSO.SimAntics.Engine
                 }
                 else
                 {
-                    var primitive = context.Primitives[instruction.Opcode];
+                    var primitive = VMContext.Primitives[instruction.Opcode];
                     if (primitive != null)
                     {
                         if (primitive.OperandModel != null)
