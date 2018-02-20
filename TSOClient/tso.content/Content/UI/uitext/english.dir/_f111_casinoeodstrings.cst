@@ -28,3 +28,8 @@
 28 ^The table had to close due to insufficient balance. Perhaps you should let the owner know?^
 29 ^"X Marks the Spot" Payout Table^
 30 ^"'Jackpot' by Lucky LLC" Payout Table^
+31 ^Don't come back until you have more Simoleons.^
+32 ^You can't place another chip onto this stack.^
+33 ^$%d of chips would be over the maximum allowed bet.^
+34 ^That would be over the maximum allowed bet.^
+35 ^An unknown error occured. Your last bet was not accepted.^
