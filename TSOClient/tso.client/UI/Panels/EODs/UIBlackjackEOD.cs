@@ -150,21 +150,21 @@ namespace FSO.Client.UI.Panels.EODs
         private readonly int MAIN_CARD_BACK_WIDTH = 246;
 
         // literal strings found in _f111_casinoeodstrings.cst
-        string Blackjack = GameFacade.Strings.GetString("f111", "2");
-        string DealerBusts = GameFacade.Strings.GetString("f111", "4");
-        string DealerHasBlackjack = GameFacade.Strings.GetString("f111", "5");
-        string DealerHasTotal = GameFacade.Strings.GetString("f111", "6");
-        string DealerDoesNotHaveBlackjack = GameFacade.Strings.GetString("f111", "7");
-        string Insurance = GameFacade.Strings.GetString("f111", "8");
-        string Insured = GameFacade.Strings.GetString("f111", "9");
-        string Error = GameFacade.Strings.GetString("f111", "10");
-        string InsuranceQuestion = GameFacade.Strings.GetString("f111", "11");
-        string InsuranceDesc1 = GameFacade.Strings.GetString("f111", "12");
-        string InsuranceDesc2 = GameFacade.Strings.GetString("f111", "13");
-        string InsuranceConfirmation = GameFacade.Strings.GetString("f111", "14");
+        private string Blackjack = GameFacade.Strings.GetString("f111", "2");
+        private string DealerBusts = GameFacade.Strings.GetString("f111", "4");
+        private string DealerHasBlackjack = GameFacade.Strings.GetString("f111", "5");
+        private string DealerHasTotal = GameFacade.Strings.GetString("f111", "6");
+        private string DealerDoesNotHaveBlackjack = GameFacade.Strings.GetString("f111", "7");
+        private string Insurance = GameFacade.Strings.GetString("f111", "8");
+        private string Insured = GameFacade.Strings.GetString("f111", "9");
+        private string Error = GameFacade.Strings.GetString("f111", "10");
+        private string InsuranceQuestion = GameFacade.Strings.GetString("f111", "11");
+        private string InsuranceDesc1 = GameFacade.Strings.GetString("f111", "12");
+        private string InsuranceDesc2 = GameFacade.Strings.GetString("f111", "13");
+        private string InsuranceConfirmation = GameFacade.Strings.GetString("f111", "14");
 
         // alert strings found in _f111_casinoeodstrings.cst
-        public Dictionary<byte, string> AlertStrings = new Dictionary<byte, string>()
+        private Dictionary<byte, string> AlertStrings = new Dictionary<byte, string>()
         {
             { (byte)VMEODBlackjackAlerts.State_Race, GameFacade.Strings.GetString("f111", "16") },
             { (byte)VMEODBlackjackAlerts.False_Start, GameFacade.Strings.GetString("f111", "17") },
@@ -178,7 +178,8 @@ namespace FSO.Client.UI.Panels.EODs
             { (byte)VMEODBlackjackAlerts.Split_NSF, GameFacade.Strings.GetString("f111", "25") },
             { (byte)VMEODBlackjackAlerts.Observe_Once, GameFacade.Strings.GetString("f111", "26") },
             { (byte)VMEODBlackjackAlerts.Observe_Twice, GameFacade.Strings.GetString("f111", "27") },
-            { (byte)VMEODBlackjackAlerts.Table_NSF, GameFacade.Strings.GetString("f111", "28") }
+            { (byte)VMEODBlackjackAlerts.Table_NSF, GameFacade.Strings.GetString("f111", "28") },
+            { (byte)VMEODBlackjackAlerts.Player_NSF, GameFacade.Strings.GetString("f111", "31") }
         };
 
         public UIBlackjackEOD(UIEODController controller) : base(controller)
@@ -279,7 +280,7 @@ namespace FSO.Client.UI.Panels.EODs
             PlaintextHandlers["blackjack_resume_manage"] = ResumeManageHandler;
 
             // other
-            DealTimer = new Timer(1000);
+            DealTimer = new Timer(1750);
             DealTimer.Elapsed += new ElapsedEventHandler(DealTimerHandler);
             DealersName = "MOMI";
             InvalidateTimer = new Timer(1000);
@@ -292,7 +293,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         public override void OnClose()
         {
-            CloseInteraction();
+            SetNewTip("");
             Send("blackjack_close", "");
             base.OnClose();
         }
@@ -1112,10 +1113,6 @@ namespace FSO.Client.UI.Panels.EODs
         {
             SetTip(newTip);
             Parent.Invalidate();
-            Parent.Invalidate();
-            Parent.Invalidate();
-            Parent.Invalidate();
-            Parent.Invalidate();
         }
         /*
          * todo: If the LiveMode & EOD invalidation issue is ever solved on the EOD-wide scale, this middle-man method will be unnecessary.
@@ -1857,7 +1854,6 @@ namespace FSO.Client.UI.Panels.EODs
                 MainPlayerCardContainers.Add(mainPlayerCardContainer);
                 MainPlayerCardTotals.Add(mainPlayerCardTotal);
                 mainPlayerCardContainer.SetActive();
-                UpdateMyOtherPlayerHand();
                 UpdateMainLayout();
             }
         }
@@ -1951,9 +1947,6 @@ namespace FSO.Client.UI.Panels.EODs
                 // reset the container with with cards sent
                 ResetTargetHand(activeContainer, activeLabel, cards);
 
-                // make my cards at the top match my new active hand
-                UpdateMyOtherPlayerHand();
-
                 // update the layout
                 UpdateMainLayout();
             }
@@ -1993,19 +1986,6 @@ namespace FSO.Client.UI.Panels.EODs
                 Player4SplitLetter.Visible = true;
         }
         /*
-         * Update the player's hand above that mirrors the active hand from the main player below. This happens when player changes active hands.
-         */
-        private void UpdateMyOtherPlayerHand()
-        {
-            var activeContainer = MainPlayerCardContainers[MainPlayerActiveHand];
-            // dump cards in current player container (above)
-            MyPlayerContainer.Reset();
-            // add cards that exist in MainPlayerActiveHand
-            foreach (var card in activeContainer.GetChildren())
-                MyPlayerContainer.AddCard(card.Tooltip);
-            UpdateCardTotalCaption(MyPlayerCardTotal, MyPlayerContainer.TotalValueOfCards.ToString());
-        }
-        /*
          * Finalise the active hand by synchronizing its contents from the server, updating the total text, and collapsing & making inactive
          * @param: cards - the cards sent from server for sync purposes
          */
@@ -2019,9 +1999,6 @@ namespace FSO.Client.UI.Panels.EODs
 
                 // reset the container with with cards sent
                 ResetTargetHand(activeContainer, activeLabel, cards);
-
-                // make my cards at the top match my new active hand
-                UpdateMyOtherPlayerHand();
 
                 // collapse to the side, also makes hand inactive by changing opacity
                 if (collapse)
