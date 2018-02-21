@@ -1019,6 +1019,12 @@
     <Content Include="Content\Patch\Event\christmastree.spf.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Content\Objects\FreeSO_Award_2018_3.iff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Objects\fso_awards_lots.iff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\Objects\painting_s1_jackpotPoster.iff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
