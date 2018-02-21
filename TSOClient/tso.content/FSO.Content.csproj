@@ -1025,9 +1025,6 @@
     <None Include="Content\Objects\fso_awards_lots.iff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Content Include="Content\Objects\oj-platform-noreact.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="Content\Objects\painting_s1_jackpotPoster.iff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -1075,6 +1072,9 @@
     </Content>
     <Content Include="Content\Patch\roulette.piff">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\oj-platform-noreact.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Content\UI\uitext\english.dir\_f110_manageeodstrings.cst">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
