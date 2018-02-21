@@ -302,21 +302,21 @@ namespace FSO.Client.UI.Panels.EODs
 
             // Customize and place payout table
             PayoutTableColumn1Row1 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(0, 0, 15, 21, 0, 0, 15, 21, 0, 0, 15, 21, true, false);
-            PayoutTableColumn1Row1.X = 125;
+            PayoutTableColumn1Row1.X = 100;
             PayoutTableColumn1Row1.Y = 120;
             Add(PayoutTableColumn1Row1);
             PayoutTableColumn1Row2 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(15, 0, 15, 21, 15, 0, 15, 21, 15, 0, 15, 21, true, false);
-            PayoutTableColumn1Row2.X = 125;
+            PayoutTableColumn1Row2.X = 100;
             PayoutTableColumn1Row2.Y = 120;
             PayoutTableColumn1Row2.Y += 21;
             Add(PayoutTableColumn1Row2);
             PayoutTableColumn1Row3 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(30, 0, 15, 21, 30, 0, 15, 21, 30, 0, 15, 21, true, false);
-            PayoutTableColumn1Row3.X = 125;
+            PayoutTableColumn1Row3.X = 100;
             PayoutTableColumn1Row3.Y = 120;
             PayoutTableColumn1Row3.Y += 42;
             Add(PayoutTableColumn1Row3);
             PayoutTableColumn1Row4 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(45, 0, 15, 21, 45, 0, 15, 21, 45, 0, 15, 21, true, false);
-            PayoutTableColumn1Row4.X = 125;
+            PayoutTableColumn1Row4.X = 100;
             PayoutTableColumn1Row4.Y = 120;
             PayoutTableColumn1Row4.Y += 63;
             Add(PayoutTableColumn1Row4);
@@ -786,7 +786,7 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTableColumn2Row2.Texture = Wheel1LegendImage;
                     PayoutTableColumn2Row3.Texture = Wheel1LegendImage;
                     PayoutTableColumn2Row4.Texture = Wheel1LegendImage;
-                    PayoutTable1.X -= 72;
+                    PayoutTable1.X -= 92;
                     PayoutTable1.Y -= 5;
                     PayoutTable2.Visible = false;
                     PayoutTable3.Visible = false;
@@ -809,7 +809,7 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTableColumn2Row2.Texture = Wheel2LegendImage;
                     PayoutTableColumn2Row3.Texture = Wheel2LegendImage;
                     PayoutTableColumn2Row4.Texture = Wheel2LegendImage;
-                    PayoutTable2.X -= 30;
+                    PayoutTable2.X -= 50;
                     PayoutTable2.Y -= 5;
                     PayoutTable1.Visible = false;
                     PayoutTable3.Visible = false;
@@ -831,7 +831,7 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTableColumn2Row2.Texture = Wheel3LegendImage;
                     PayoutTableColumn2Row3.Texture = Wheel3LegendImage;
                     PayoutTableColumn2Row4.Texture = Wheel3LegendImage;
-                    PayoutTable3.X -= 32;
+                    PayoutTable3.X -= 52;
                     PayoutTable3.Y -= 5;
                     PayoutTable1.Visible = false;
                     PayoutTable2.Visible = false;
@@ -853,7 +853,7 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTableColumn2Row2.Texture = Wheel4LegendImage;
                     PayoutTableColumn2Row3.Texture = Wheel4LegendImage;
                     PayoutTableColumn2Row4.Texture = Wheel4LegendImage;
-                    PayoutTable4.X -= 40;
+                    PayoutTable4.X -= 60;
                     PayoutTable4.Y -= 5;
                     PayoutTable1.Visible = false;
                     PayoutTable2.Visible = false;
@@ -875,7 +875,7 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTableColumn2Row2.Texture = Wheel5LegendImage;
                     PayoutTableColumn2Row3.Texture = Wheel5LegendImage;
                     PayoutTableColumn2Row4.Texture = Wheel5LegendImage;
-                    PayoutTable5.X -= 32;
+                    PayoutTable5.X -= 52;
                     PayoutTable5.Y -= 5;
                     PayoutTable1.Visible = false;
                     PayoutTable2.Visible = false;
