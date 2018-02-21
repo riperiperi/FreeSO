@@ -19,6 +19,7 @@ namespace FSO.SimAntics.Primitives
         {
             var operand = (VMGenericTS1CallOperand)args;
 
+            var inventoryInd = 10;
             switch (operand.Call)
             {
                 // 0. HOUSE TUTORIAL COMPLETE
@@ -40,17 +41,27 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTS1CallMode.SetActionIconToStackObject: //2
                     context.Thread.Queue[0].IconOwner = context.StackObject;
                     return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMGenericTS1CallMode.HouseRadioStationEqualsTemp0:
+                // 3. PullDownTaxiDialog
+                /*
+                 * AddToFamily = 4,
+                   CombineAssetsOfFamilyInTemp0 = 5,
+                   RemoveFromFamily = 6,
+                   MakeNewNeighbor = 7, //this one is "depracated"
+                   FamilyTutorialComplete = 8,
+                   ArchitectureTutorialComplete = 9,
+                   DisableBuildBuy = 10,
+                   EnableBuildBuy = 11,
+                   GetDistanceToCameraInTemp0 = 12,
+                   AbortInteractions = 13, //abort all interactions associated with the stack object
+                 **/
+                case VMGenericTS1CallMode.HouseRadioStationEqualsTemp0: //14
                     context.VM.SetGlobalValue(31, context.Thread.TempRegisters[0]);
                     return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMGenericTS1CallMode.ReturnZoningTypeOfLotInTemp0:
-                    var zones = Content.Content.Get().Neighborhood.ZoningDictionary;
-                    short result = 1;
-                    if (zones.TryGetValue(context.Thread.TempRegisters[0], out result))
-                        context.Thread.TempRegisters[0] = result;
-                    else context.Thread.TempRegisters[0] = (short)((context.Thread.TempRegisters[0] >= 81 && context.Thread.TempRegisters[0] <= 89) ? 2 : 1);
-                    return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMGenericTS1CallMode.ChangeToLotInTemp0:
+                case VMGenericTS1CallMode.MyRoutingFootprintEqualsTemp0: //15
+                    //todo: change the avatar's routing footprint (need to find out how exactly this is changed in the normal game)
+                    break;
+                // 16. Change Normal Outfit
+                case VMGenericTS1CallMode.ChangeToLotInTemp0: //17
                     //-1 is this family's home lot
                     var crossData = Content.Content.Get().Neighborhood.GameState;
                     crossData.ActiveFamily = context.VM.CurrentFamily;
@@ -58,17 +69,13 @@ namespace FSO.SimAntics.Primitives
                     crossData.LotTransitInfo = context.VM.GetGlobalValue(34);
                     context.VM.SignalLotSwitch((uint)context.Thread.TempRegisters[0]);
                     return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
-                case VMGenericTS1CallMode.SelectDowntownLot:
-                    break;
-                case VMGenericTS1CallMode.BuildTheDowntownSimAndPlaceObjIDInTemp0:
-
+                case VMGenericTS1CallMode.BuildTheDowntownSimAndPlaceObjIDInTemp0: //18
                     //spawn downtown sim out of world
 
                     var crossDataDT = Content.Content.Get().Neighborhood.GameState;
 
                     var control = context.VM.Context.CreateObjectInstance(crossDataDT.DowntownSimGUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH)?.BaseObject;
                     ((Model.TSOPlatform.VMTSOAvatarState)control.TSOState).Permissions = Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
-                    control.TSOState.Budget.Value = 1000000;
                     context.VM.SetGlobalValue(3, control.ObjectID);
                     context.VM.SendCommand(new VMNetChangeControlCmd() { TargetID = control.ObjectID });
                     crossDataDT.ActiveFamily.SelectOneMember(crossDataDT.DowntownSimGUID);
@@ -77,7 +84,35 @@ namespace FSO.SimAntics.Primitives
                     context.Thread.TempRegisters[0] = context.VM.GetGlobalValue(3);
                     if (VM.UseWorld) context.VM.Context.World.CenterTo((AvatarComponent)(context.VM.GetObjectById(context.VM.GetGlobalValue(3))?.WorldUI));
                     break;
-                case VMGenericTS1CallMode.BuildVacationFamilyPutFamilyNumInTemp0:
+                case VMGenericTS1CallMode.SpawnDowntownDateOfPersonInTemp0: //18
+                    //spawn our autofollow sim
+                    var neighbourhood = Content.Content.Get().Neighborhood;
+                    var ntarget = (VMAvatar)context.VM.GetObjectById(context.Thread.TempRegisters[0]);
+                    var neighbour = ntarget.GetPersonData(Model.VMPersonDataVariable.NeighborId);
+                    var inventory = neighbourhood.GetInventoryByNID(neighbour);
+                    if (inventory != null)
+                    {
+                        var toSpawn = inventory.FirstOrDefault(x => x.Type == 2 && x.GUID == inventoryInd)?.Count;
+                        if (toSpawn != null)
+                        {
+                            var spawntarg = neighbourhood.GetNeighborByID((short)toSpawn);
+                            var autofollow = context.VM.Context.CreateObjectInstance(spawntarg.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH)?.BaseObject;
+                            context.Thread.TempRegisters[0] = autofollow.ObjectID;
+                            inventory.RemoveAll(x => x.Type == 2 && x.GUID == inventoryInd);
+                        }
+                    }
+                    break;
+                case VMGenericTS1CallMode.SpawnTakeBackHomeDataOfPersonInTemp0:
+                    inventoryInd = 11;
+                    goto case VMGenericTS1CallMode.SpawnDowntownDateOfPersonInTemp0;
+                // 21. SpawnInventorySimDataEffects
+                case VMGenericTS1CallMode.SelectDowntownLot: //22
+                    //TODO: this is a pre-unleashed system I believe
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                // 23. GetDowntownTimeFromSOInventory (the time it was in downtown, from stack objects inventory)
+                // 24. HotDateChangeSuitsPermanentlyCall
+                // 25. SaveSimPersistentData (motives, relationships)
+                case VMGenericTS1CallMode.BuildVacationFamilyPutFamilyNumInTemp0: //26
                     //in our implementation, vacation lots build the family in the same way as normal lots.
                     var crossData2 = Content.Content.Get().Neighborhood.GameState;
                     if (crossData2.LotTransitInfo >= 1)
@@ -92,7 +127,8 @@ namespace FSO.SimAntics.Primitives
 
                         context.VM.VerifyFamily();
                         context.VM.SendCommand(new VMNetChangeControlCmd() { TargetID = context.VM.Context.ObjectQueries.GetObjectsByGUID(crossData2.DowntownSimGUID).FirstOrDefault()?.ObjectID ?? 0 });
-                    } else
+                    }
+                    else
                     {
                         var control2 = context.VM.Context.CreateObjectInstance(crossData2.DowntownSimGUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH)?.BaseObject;
                         ((Model.TSOPlatform.VMTSOAvatarState)control2.TSOState).Permissions = Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
@@ -105,11 +141,37 @@ namespace FSO.SimAntics.Primitives
                         context.Thread.TempRegisters[0] = context.VM.GetGlobalValue(3);
                     }
 
-                    context.Thread.TempRegisters[1] = (short)((crossData2.LotTransitInfo >= 1)?1:0);
+                    context.Thread.TempRegisters[1] = (short)((crossData2.LotTransitInfo >= 1) ? 1 : 0);
                     break;
-                case VMGenericTS1CallMode.TakeTaxiHook:
-                    //unused past hot date?
+                case VMGenericTS1CallMode.ReturnNumberOfAvaiableVacationLotsInTemp0: //27
+                    //TODO: vacation lots are disabled when other people have saved the game there! that's what this primitive checks.
+                    context.Thread.TempRegisters[0] = 9;
                     break;
+                case VMGenericTS1CallMode.ReturnZoningTypeOfLotInTemp0: //28
+                    var zones = Content.Content.Get().Neighborhood.ZoningDictionary;
+                    short result = 1;
+                    if (zones.TryGetValue(context.Thread.TempRegisters[0], out result))
+                        context.Thread.TempRegisters[0] = result;
+                    else context.Thread.TempRegisters[0] = (short)((context.Thread.TempRegisters[0] >= 81 && context.Thread.TempRegisters[0] <= 89) ? 2 : 1);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+
+                // 29. SetStackObjectsSuit //suit type in temp0, suit index in temp1. Returns old index in temp1. (where are these saved?)
+                // 30. GetStackObjectsSuit //suit type in temp0, suit index in temp1.
+                // 31. CountStackObjectSuits
+                // 32. CreatePurchasedPetsNearOwner
+                // 33. AddToFamilyInTemp0 
+                // 34. PromoteFameIfNeeded
+                case VMGenericTS1CallMode.TakeTaxiHook: //35
+                    //not sure where this one is called, seems to have been added for studiotown
+                    break;
+                // 36. DemoteFameIfNeeded
+                // 37. CancelPieMenu
+                // 38. GetTokensFromString (MM)
+                // 39. ChildToAdult (let's make this at least keep their skin colour, maybe)
+                // 40. PetToAdult
+                // 41. HeadFlush
+                // 42. MakeTemp0SelectedSim,
+                // 43. FamilySpellsIntoController
             }
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

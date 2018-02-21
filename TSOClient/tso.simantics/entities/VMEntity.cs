@@ -561,11 +561,11 @@ namespace FSO.SimAntics
                 }
 
                 ushort ActionID = EntryPoints[entry].ActionFunction;
-                var tree = GetBHAVWithOwner(ActionID, context);
+                var tree = GetRoutineWithOwner(ActionID, context);
 
                 if (tree != null)
                 {
-                    var routine = context.VM.Assemble(tree.bhav);
+                    var routine = tree.routine;
                     var frame = new VMStackFrame
                     {
                         Caller = this,
@@ -597,6 +597,30 @@ namespace FSO.SimAntics
             {
                 return false;
             }
+        }
+
+        public VMBHAVOwnerPair GetRoutineWithOwner(ushort ActionID, VMContext context)
+        {
+            VMRoutine routine = null;
+            GameObject CodeOwner;
+            if (ActionID < 4096)
+            { //global
+                routine = (VMRoutine)context.Globals.Resource.GetRoutine(ActionID);
+            }
+            else if (ActionID < 8192)
+            { //local
+                routine = (VMRoutine)Object.Resource.GetRoutine(ActionID);
+            }
+            else
+            { //semi-global
+                if (SemiGlobal != null)
+                    routine = (VMRoutine)SemiGlobal.GetRoutine(ActionID);
+            }
+
+            CodeOwner = Object;
+
+            if (routine == null) return null;
+            return new VMBHAVOwnerPair(routine, CodeOwner);
         }
 
         public VMBHAVOwnerPair GetBHAVWithOwner(ushort ActionID, VMContext context)
@@ -854,16 +878,16 @@ namespace FSO.SimAntics
             var Action = ttab.InteractionByIndex[(uint)interaction];
 
             ushort actionID = Action.ActionFunction;
-            var aTree = GetBHAVWithOwner(actionID, context);
+            var aTree = GetRoutineWithOwner(actionID, context);
             if (aTree == null) return null;
-            var aRoutine = context.VM.Assemble(aTree.bhav);
+            var aRoutine = aTree.routine;
 
             VMRoutine cRoutine = null;
             ushort checkID = Action.TestFunction;
             if (checkID != 0)
             {
-                var cTree = GetBHAVWithOwner(checkID, context);
-                if (cTree != null) cRoutine = context.VM.Assemble(cTree.bhav);
+                var cTree = GetRoutineWithOwner(checkID, context);
+                if (cTree != null) cRoutine = cTree.routine;
             }
 
             if (global) interaction |= unchecked((int)0x80000000);

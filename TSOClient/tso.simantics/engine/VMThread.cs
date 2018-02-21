@@ -108,7 +108,7 @@ namespace FSO.SimAntics.Engine
             return (temp.DialogCooldown > 0) ? VMPrimitiveExitCode.RETURN_FALSE : temp.LastStackExitCode;
         }
 
-        public bool RunInMyStack(BHAV bhav, GameObject CodeOwner, short[] passVars, VMEntity stackObj)
+        public bool RunInMyStack(VMRoutine routine, GameObject CodeOwner, short[] passVars, VMEntity stackObj)
         {
             //a little bit hacky. We may not need to do as serious a context switch as this.
             var OldStack = Stack;
@@ -131,7 +131,7 @@ namespace FSO.SimAntics.Engine
             if (Queue.Count > 0) Queue.Add(Queue[0]);
             IsCheck = true;
 
-            ExecuteSubRoutine(prevFrame, bhav, CodeOwner, new VMSubRoutineOperand(passVars));
+            ExecuteSubRoutine(prevFrame, routine, CodeOwner, new VMSubRoutineOperand(passVars));
             Stack.RemoveAt(0);
             if (Stack.Count == 0)
             {
@@ -232,7 +232,7 @@ namespace FSO.SimAntics.Engine
             if (RoutineDirty)
             {
                 foreach (var frame in Stack)
-                    if (frame.Routine.Chunk.RuntimeVer != frame.Routine.RuntimeVer) frame.Routine = Context.VM.Assemble(frame.Routine.Chunk);
+                    if (frame.Routine.Chunk.RuntimeVer != frame.Routine.RuntimeVer) frame.CodeOwner.Resource.Recache();
                 RoutineDirty = false;
             }
 #endif
@@ -391,15 +391,14 @@ namespace FSO.SimAntics.Engine
             return childFrame;
         }
 
-        public void ExecuteSubRoutine(VMStackFrame frame, BHAV bhav, GameObject codeOwner, VMSubRoutineOperand args)
+        public void ExecuteSubRoutine(VMStackFrame frame, VMRoutine routine, GameObject codeOwner, VMSubRoutineOperand args)
         {
-            if (bhav == null)
+            if (routine == null)
             {
                 Pop(VMPrimitiveExitCode.ERROR);
                 return;
             }
 
-            var routine = Context.VM.Assemble(bhav);
             var childFrame = new VMStackFrame
             {
                 Routine = routine,
@@ -407,6 +406,7 @@ namespace FSO.SimAntics.Engine
                 Callee = frame.Callee,
                 CodeOwner = codeOwner,
                 StackObject = frame.StackObject,
+                _StackObjectID = frame.StackObjectID, //pass this without doing a lookup
                 ActionTree = frame.ActionTree
             };
             childFrame.Args = new short[(routine.Arguments > 4) ? routine.Arguments : 4];
@@ -429,24 +429,24 @@ namespace FSO.SimAntics.Engine
 
             if (opcode >= 256)
             {
-                BHAV bhav = null;
+                VMRoutine bhav = null;
 
                 GameObject CodeOwner;
                 if (opcode >= 8192)
                 {
                     // Semi-Global sub-routine call
-                    bhav = frame.ScopeResource.SemiGlobal.Get<BHAV>(opcode);
+                    bhav = (VMRoutine)frame.ScopeResource.SemiGlobal.GetRoutine(opcode);
                 }
                 else if (opcode >= 4096)
                 {
                     // Private sub-routine call
-                    bhav = frame.ScopeResource.Get<BHAV>(opcode);
+                    bhav = (VMRoutine)frame.ScopeResource.GetRoutine(opcode);
                 }
                 else
                 {
                     // Global sub-routine call
                     //CodeOwner = frame.Global.Resource;
-                    bhav = frame.Global.Resource.Get<BHAV>(opcode);
+                    bhav = (VMRoutine)frame.Global.Resource.GetRoutine(opcode);
                 }
 
                 CodeOwner = frame.CodeOwner;
@@ -468,7 +468,7 @@ namespace FSO.SimAntics.Engine
             }
 
 
-            var primitive = Context.Primitives[opcode];
+            var primitive = VMContext.Primitives[opcode];
             if (primitive == null)
             {
                 HandleResult(frame, instruction, VMPrimitiveExitCode.GOTO_TRUE);

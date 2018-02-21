@@ -65,12 +65,11 @@ namespace FSO.SimAntics.Engine
                     ActionName = ttas.GetString((int)Action.TTAIndex);
                 }
 
-                bhav = Target.GetBHAVWithOwner(ActionID, vm.Context).bhav;
-                if (bhav == null) return; //???
-                if (IsTree) ActionName = bhav.ChunkLabel;
+                var routine = Target.GetRoutineWithOwner(ActionID, vm.Context)?.routine;
+                if (routine == null) return; //???
+                if (IsTree) ActionName = routine.Chunk.ChunkLabel;
 
                 CodeOwner = Target.Object;
-                var routine = vm.Assemble(bhav);
                 var args = new short[4];
                 if (SetParam) args[0] = cbOwner.ObjectID;
 

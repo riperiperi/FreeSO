@@ -14,6 +14,7 @@ using FSO.Server.Servers.Lot;
 using FSO.Server.Servers.Tasks;
 using FSO.Server.Servers.UserApi;
 using FSO.Server.Utils;
+using FSO.SimAntics;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
 using Ninject.Parameters;
@@ -83,6 +84,7 @@ namespace FSO.Server
             LOG.Info("Scanning content");
             Content.Content.Init(Config.GameLocation, Content.ContentMode.SERVER);
             Kernel.Bind<Content.Content>().ToConstant(Content.Content.Get());
+            VMContext.InitVMConfig();
             Kernel.Bind<MemoryCache>().ToConstant(new MemoryCache("fso_server"));
 
             LOG.Info("Loading domain logic");

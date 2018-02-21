@@ -29,6 +29,7 @@ using FSO.UI.Model;
 using FSO.Files.RC;
 using System.Windows.Forms;
 using FSO.Files.Formats.IFF;
+using FSO.SimAntics;
 //using System.Windows.Forms;
 
 namespace FSO.Client
@@ -152,6 +153,7 @@ namespace FSO.Client
             FSO.Content.Content.TS1Hybrid = GlobalSettings.Default.TS1HybridEnable;
             FSO.Content.Content.TS1HybridBasePath = GlobalSettings.Default.TS1HybridPath;
             FSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
+            VMContext.InitVMConfig();
             base.Initialize();
 
             GameFacade.GameThread = Thread.CurrentThread;

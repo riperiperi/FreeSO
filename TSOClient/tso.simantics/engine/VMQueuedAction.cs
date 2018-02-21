@@ -100,18 +100,15 @@ namespace FSO.SimAntics.Engine
         {
             CodeOwner = FSO.Content.Content.Get().WorldObjects.Get(input.CodeOwnerGUID);
 
-            BHAV bhav = null;
-            if (input.RoutineID >= 8192) bhav = CodeOwner.Resource.SemiGlobal.Get<BHAV>(input.RoutineID);
-            else if (input.RoutineID >= 4096) bhav = CodeOwner.Resource.Get<BHAV>(input.RoutineID);
-            else bhav = context.Globals.Resource.Get<BHAV>(input.RoutineID);
-            ActionRoutine = context.VM.Assemble(bhav);
+            if (input.RoutineID >= 8192) ActionRoutine = (VMRoutine)CodeOwner.Resource.SemiGlobal.GetRoutine(input.RoutineID);
+            else if (input.RoutineID >= 4096) ActionRoutine = (VMRoutine)CodeOwner.Resource.GetRoutine(input.RoutineID);
+            else ActionRoutine = (VMRoutine)context.Globals.Resource.GetRoutine(input.RoutineID);
 
             if (input.CheckRoutineID != 0)
             {
-                if (input.CheckRoutineID >= 8192) bhav = CodeOwner.Resource.SemiGlobal.Get<BHAV>(input.CheckRoutineID);
-                else if (input.CheckRoutineID >= 4096) bhav = CodeOwner.Resource.Get<BHAV>(input.CheckRoutineID);
-                else bhav = context.Globals.Resource.Get<BHAV>(input.CheckRoutineID);
-                CheckRoutine = context.VM.Assemble(bhav);
+                if (input.CheckRoutineID >= 8192) CheckRoutine = (VMRoutine)CodeOwner.Resource.SemiGlobal.GetRoutine(input.CheckRoutineID);
+                else if (input.CheckRoutineID >= 4096) CheckRoutine = (VMRoutine)CodeOwner.Resource.GetRoutine(input.CheckRoutineID);
+                else CheckRoutine = (VMRoutine)context.Globals.Resource.GetRoutine(input.CheckRoutineID);
             }
 
             Callee = context.VM.GetObjectById(input.Callee);

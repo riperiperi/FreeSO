@@ -106,6 +106,7 @@ namespace FSO.SimAntics.Primitives
                         case VMDialogType.TS1Neighborhood:
                         case VMDialogType.TS1StudioTown:
                         case VMDialogType.TS1Magictown:
+                        case VMDialogType.TS1PhoneBook:
                             int number;
                             if (!int.TryParse(curDialog.ResponseText, out number)) return VMPrimitiveExitCode.GOTO_FALSE;
 

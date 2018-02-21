@@ -18,6 +18,9 @@ using FSO.Client.Utils;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Utils;
 using FSO.Common;
+using FSO.Content;
+using FSO.SimAntics.Engine;
+using FSO.SimAntics;
 
 namespace FSO.Client.UI
 {
@@ -141,7 +144,6 @@ namespace FSO.Client.UI
 
         public UILayer(Microsoft.Xna.Framework.Game G, SpriteFont SprFontBig, SpriteFont SprFontSmall)
         {
-
             fpsStopwatch = new Stopwatch();
             fpsStopwatch.Start();
 

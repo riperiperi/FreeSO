@@ -135,11 +135,25 @@ namespace FSO.SimAntics.Engine.Utils
                             return neighbor.PersonData?.ElementAt((int)VMPersonDataVariable.PersonsAge) ?? 0;
                         case 3: //relationship raw score
                                 //to this person or from? what
-                            return 0;
+                            return 0; //unused in favor of primitive?
                         case 4: //relationship score
-                            return 0;
+                            return 0; //unused in favor of primitive?
                         case 5: //friend count
-                            return 0;
+                            return (short)neighbor.Relationships.Count(n => {
+                                if (n.Value[0] >= 50)
+                                {
+                                    var othern = Content.Content.Get().Neighborhood.GetNeighborByID((short)n.Key);
+                                    if (othern != null)
+                                    {
+                                        List<short> orels;
+                                        if (othern.Relationships.TryGetValue(context.StackObjectID, out orels))
+                                        {
+                                            return orels[0] >= 50;
+                                        }
+                                    }
+                                }
+                                return false;
+                                }); //interaction - nag friends TEST
                         case 6: //house number
                             return (short)(fami?.HouseNumber ?? 0);
                         case 7: //has telephone
@@ -180,7 +194,7 @@ namespace FSO.SimAntics.Engine.Utils
                     return Content.Content.Get().Jobs.GetJobData((ushort)context.Thread.TempRegisters[0], context.Thread.TempRegisters[1], data);
 
                 case VMVariableScope.NeighborhoodData: //34
-                    return 0;
+                    return 0; //tutorial values only
                     throw new VMSimanticsException("Should not be used, but if this shows implement an empty shell to return ideal values.", context);
 
                 case VMVariableScope.StackObjectFunction: //35

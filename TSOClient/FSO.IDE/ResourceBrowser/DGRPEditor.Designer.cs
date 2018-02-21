@@ -48,6 +48,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.DGRPBox = new System.Windows.Forms.GroupBox();
+            this.CopyButton = new System.Windows.Forms.Button();
             this.DGRPDown = new System.Windows.Forms.Button();
             this.RemoveDGRP = new System.Windows.Forms.Button();
             this.AddDGRP = new System.Windows.Forms.Button();
@@ -77,7 +78,7 @@
             this.FirstDynButton = new System.Windows.Forms.Button();
             this.AutoZoom = new System.Windows.Forms.CheckBox();
             this.DGRPEdit = new FSO.IDE.Common.InteractiveDGRPControl();
-            this.CopyButton = new System.Windows.Forms.Button();
+            this.AutoRot = new System.Windows.Forms.CheckBox();
             this.SelectSpriteBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.yPx)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.xPx)).BeginInit();
@@ -314,6 +315,16 @@
             this.DGRPBox.TabIndex = 6;
             this.DGRPBox.TabStop = false;
             this.DGRPBox.Text = "Drawgroups";
+            // 
+            // CopyButton
+            // 
+            this.CopyButton.Location = new System.Drawing.Point(79, 302);
+            this.CopyButton.Name = "CopyButton";
+            this.CopyButton.Size = new System.Drawing.Size(41, 23);
+            this.CopyButton.TabIndex = 23;
+            this.CopyButton.Text = "Copy";
+            this.CopyButton.UseVisualStyleBackColor = true;
+            this.CopyButton.Click += new System.EventHandler(this.CopyButton_Click);
             // 
             // DGRPDown
             // 
@@ -639,20 +650,22 @@
             this.DGRPEdit.Size = new System.Drawing.Size(350, 447);
             this.DGRPEdit.TabIndex = 1;
             // 
-            // CopyButton
+            // AutoRot
             // 
-            this.CopyButton.Location = new System.Drawing.Point(79, 302);
-            this.CopyButton.Name = "CopyButton";
-            this.CopyButton.Size = new System.Drawing.Size(41, 23);
-            this.CopyButton.TabIndex = 23;
-            this.CopyButton.Text = "Copy";
-            this.CopyButton.UseVisualStyleBackColor = true;
-            this.CopyButton.Click += new System.EventHandler(this.CopyButton_Click);
+            this.AutoRot.AutoSize = true;
+            this.AutoRot.Location = new System.Drawing.Point(633, 3);
+            this.AutoRot.Name = "AutoRot";
+            this.AutoRot.Size = new System.Drawing.Size(65, 17);
+            this.AutoRot.TabIndex = 18;
+            this.AutoRot.Text = "AutoRot";
+            this.AutoRot.UseVisualStyleBackColor = true;
+            this.AutoRot.CheckedChanged += new System.EventHandler(this.AutoRot_CheckedChanged);
             // 
             // DGRPEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.AutoRot);
             this.Controls.Add(this.AutoZoom);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.label2);
@@ -732,5 +745,6 @@
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Button LastDynButton;
         private System.Windows.Forms.Button CopyButton;
+        private System.Windows.Forms.CheckBox AutoRot;
     }
 }

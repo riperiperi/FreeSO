@@ -204,7 +204,7 @@ namespace FSO.SimAntics.Engine
             var avatar = (VMAvatar)Caller;
             if (CallFailureTrees && ParentRoute == null)
             {
-                var bhav = Global.Resource.Get<BHAV>(ROUTE_FAIL_TREE);
+                var bhav = (VMRoutine)Global.Resource.GetRoutine(ROUTE_FAIL_TREE);
                 Thread.ExecuteSubRoutine(this, bhav, CodeOwner, new VMSubRoutineOperand(new short[] { (short)code, (blocker==null)?(short)0:blocker.ObjectID, 0, 0 }));
             }
             avatar.SetPersonData(VMPersonDataVariable.RouteResult, (short)code);
@@ -409,7 +409,7 @@ namespace FSO.SimAntics.Engine
                 bool Execute;
                 if (ent.EntryPoints[entryPoint].ConditionFunction != 0) //check if we can definitely execute this...
                 {
-                    var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entryPoint].ConditionFunction, VM.Context);
+                    var Behavior = ent.GetRoutineWithOwner(ent.EntryPoints[entryPoint].ConditionFunction, VM.Context);
                     if (Behavior != null)
                     {
                         Execute = (VMThread.EvaluateCheck(VM.Context, Caller, new VMStackFrame()
@@ -418,7 +418,7 @@ namespace FSO.SimAntics.Engine
                             Callee = ent,
                             CodeOwner = Behavior.owner,
                             StackObject = ent,
-                            Routine = VM.Assemble(Behavior.bhav),
+                            Routine = Behavior.routine,
                             Args = new short[4]
                         }) == VMPrimitiveExitCode.RETURN_TRUE);
                     }
@@ -433,9 +433,9 @@ namespace FSO.SimAntics.Engine
                 if (Execute)
                 {
                     //push it onto our stack, except now the object owns our soul! when we are returned to we can evaluate the result and determine if the action failed.
-                    var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entryPoint].ActionFunction, VM.Context);
+                    var Behavior = ent.GetRoutineWithOwner(ent.EntryPoints[entryPoint].ActionFunction, VM.Context);
                     if (Behavior == null) return false; //invalid id
-                    var routine = VM.Assemble(Behavior.bhav);
+                    var routine = Behavior.routine;
                     var childFrame = new VMStackFrame
                     {
                         Routine = routine,
@@ -821,8 +821,8 @@ namespace FSO.SimAntics.Engine
                                             colRoute.WalkTo = null;
                                             colRoute.AvatarsToConsider.Add(avatar); //just to make sure they don't try route through us.
 
-                                            var tree = callee.GetBHAVWithOwner(SHOO_TREE, VM.Context);
-                                            result.Object.Thread.ExecuteSubRoutine(colRoute, tree.bhav, tree.owner, new VMSubRoutineOperand());
+                                            var tree = callee.GetRoutineWithOwner(SHOO_TREE, VM.Context);
+                                            result.Object.Thread.ExecuteSubRoutine(colRoute, tree.routine, tree.owner, new VMSubRoutineOperand());
                                             var frame = result.Object.Thread.Stack.LastOrDefault();
                                             frame.StackObject = callee;
                                             frame.Callee = callee;

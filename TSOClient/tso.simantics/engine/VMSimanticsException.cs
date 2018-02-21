@@ -83,7 +83,7 @@ namespace FSO.SimAntics.Engine
                     output.Append(frame.InstructionPointer);
                     output.Append(" (");
                     var opcode = frame.GetCurrentInstruction().Opcode;
-                    var primitive = (opcode > 255)?null:frame.VM.Context.Primitives[opcode];
+                    var primitive = (opcode > 255)?null:VMContext.Primitives[opcode];
                     output.Append((primitive == null)?opcode.ToString():primitive.Name);
                     output.Append(")");
                 }

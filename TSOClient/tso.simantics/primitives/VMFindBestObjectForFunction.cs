@@ -88,7 +88,7 @@ namespace FSO.SimAntics.Engine.Primitives
                     bool Execute;
                     if (ent.EntryPoints[entry].ConditionFunction != 0) {
 
-                        var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entry].ConditionFunction, context.VM.Context);
+                        var Behavior = ent.GetRoutineWithOwner(ent.EntryPoints[entry].ConditionFunction, context.VM.Context);
                         if (Behavior != null)
                         {
                             var test = VMThread.EvaluateCheck(context.VM.Context, context.Caller, new VMStackFrame()
@@ -97,7 +97,7 @@ namespace FSO.SimAntics.Engine.Primitives
                                 Callee = ent,
                                 CodeOwner = Behavior.owner,
                                 StackObject = ent,
-                                Routine = context.VM.Assemble(Behavior.bhav),
+                                Routine = Behavior.routine,
                                 Args = new short[4]
                             });
 

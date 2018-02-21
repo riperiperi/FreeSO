@@ -607,8 +607,8 @@ namespace FSO.SimAntics
                 Thread.CancelAction(action.UID);
             }
 
-            var tree = GetBHAVWithOwner(LEAVE_LOT_TREE, Thread.Context);
-            var routine = Thread.Context.VM.Assemble(tree.bhav);
+            var tree = GetRoutineWithOwner(LEAVE_LOT_TREE, Thread.Context);
+            var routine = tree.routine;
 
             Thread.EnqueueAction(
                 new FSO.SimAntics.Engine.VMQueuedAction

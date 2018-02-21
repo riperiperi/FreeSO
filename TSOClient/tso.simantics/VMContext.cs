@@ -50,7 +50,7 @@ namespace FSO.SimAntics
         public bool Ready { get { return (_Arch != null); } }
 
         public World World { get; internal set; }
-        public VMPrimitiveRegistration[] Primitives = new VMPrimitiveRegistration[256];
+        public static VMPrimitiveRegistration[] Primitives = new VMPrimitiveRegistration[256];
         public VMAmbientSound Ambience;
         public ulong RandomSeed;
 
@@ -83,14 +83,21 @@ namespace FSO.SimAntics
             GlobalTreeTable = Globals.Resource.List<TTAB>()?.FirstOrDefault();
             GlobalTTAs = Globals.Resource.List<TTAs>()?.FirstOrDefault();
             RandomSeed = (ulong)((new Random()).NextDouble() * UInt64.MaxValue); //when resuming state, this should be set.
+            
+            if (Content.Content.Get().TS1)
+                Clock.TicksPerMinute = 30; //1 minute per irl second
+            else
+                Clock.TicksPerMinute = 30 * 5; //1 minute per 5 irl second
+        }
 
+        public static void InitVMConfig()
+        {
             AddPrimitive(new VMPrimitiveRegistration(new VMSleep())
             {
                 Opcode = 0,
                 Name = "sleep",
                 OperandModel = typeof(VMSleepOperand)
             });
-
 
             //1 - generic tso call or generic ts1 call
 
@@ -234,7 +241,7 @@ namespace FSO.SimAntics
                 Name = "old_relationship",
                 OperandModel = typeof(VMOldRelationshipOperand) //same primitive, different operand
             });
-           
+
 
             AddPrimitive(new VMPrimitiveRegistration(new VMRelationship())
             {
@@ -353,7 +360,8 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMDropOntoOperand)
             });
 
-            AddPrimitive(new VMPrimitiveRegistration(new VMAnimateSim()) {
+            AddPrimitive(new VMPrimitiveRegistration(new VMAnimateSim())
+            {
                 Opcode = 44,
                 Name = "animate",
                 OperandModel = typeof(VMAnimateSimOperand)
@@ -474,11 +482,10 @@ namespace FSO.SimAntics
                     Name = "manage_inventory",
                     OperandModel = typeof(VMTS1InventoryOperationsOperand)
                 });
-                Clock.TicksPerMinute = 30; //1 minute per irl second
+
             }
             else
             {
-                Clock.TicksPerMinute = 30*5; //1 minute per 5 irl second
                 AddPrimitive(new VMPrimitiveRegistration(new VMGenericTSOCall())
                 {
                     Opcode = 1,
@@ -493,6 +500,8 @@ namespace FSO.SimAntics
                     OperandModel = typeof(VMTransferFundsOperand)
                 });
             }
+
+            GameObjectResource.BHAVAssembler = VMTranslator.Assemble;
         }
 
         /// <summary>
@@ -1321,7 +1330,7 @@ namespace FSO.SimAntics
             return new ObjectComponent(obj);
         }
 
-        public void AddPrimitive(VMPrimitiveRegistration primitive){
+        public static void AddPrimitive(VMPrimitiveRegistration primitive){
             Primitives[primitive.Opcode] = primitive;
         }
 
