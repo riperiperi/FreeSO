@@ -56,26 +56,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     var obj1 = vm.GetObjectByPersist(state.UID1);
                     if (obj1 != null)
                     {
-                        if (obj1.MultitileGroup.MultiTile)
-                        {
-                            var objects = new List<VMEntity>(obj1.MultitileGroup.Objects);
-                            foreach (var obj in objects)
-                                obj.TSOState.Budget.Value = state.Budget1;
-                        }
-                        else
-                            obj1.TSOState.Budget.Value = state.Budget1;
+                        foreach (var obj in obj1.MultitileGroup.Objects)
+                            obj.TSOState.Budget.Value = state.Budget1;
                     }
                     var obj2 = vm.GetObjectByPersist(state.UID2);
                     if (obj2 != null)
                     {
-                        if (obj2.MultitileGroup.MultiTile)
-                        {
-                            var objects = new List<VMEntity>(obj2.MultitileGroup.Objects);
-                            foreach (var obj in objects)
-                                obj.TSOState.Budget.Value = state.Budget2;
-                        }
-                        else
-                            obj2.TSOState.Budget.Value = state.Budget2;
+                        foreach (var obj in obj2.MultitileGroup.Objects)
+                            obj.TSOState.Budget.Value = state.Budget2;
                     }
                 }
             }
