@@ -1,0 +1,10 @@
+﻿1 ^You have zero cards in this game deck.^
+2 ^Delete card^
+3 ^Do you want to save your changes?^
+4 ^Edit card^
+5 ^Error: You have already saved the maximum number of individual cards.^
+6 ^Server error. The card could not be deleted.^
+7 ^Phew! This round is a draw...^
+8 ^Draw^
+9 ^Oh no! The game is a stalemate!^
+10 ^Stalemate^

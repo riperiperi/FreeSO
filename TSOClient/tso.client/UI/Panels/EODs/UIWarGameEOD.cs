@@ -64,10 +64,10 @@ namespace FSO.Client.UI.Panels.EODs
         private byte RemainingBluePieces;
         private byte RemainingRedPieces;
 
-        public const string TIE_ROUND_MESSAGE = "Phew! This round is a draw...";
-        public const string TIE_ROUND_TITLE = "Draw";
-        public const string TIE_GAME_MESSAGE = "Oh no! The game is a stalemate!";
-        public const string TIE_GAME_TITLE = "Stalemate";
+        private string TiedRoundMessage = GameFacade.Strings.GetString("f112", "7"); // "Phew! This round is a draw...";
+        private string TiedRoundTitle = GameFacade.Strings.GetString("f112", "8"); // "Draw"
+        private string TiedGameMessage = GameFacade.Strings.GetString("f112", "9"); // "Oh no! The game is a stalemate!"
+        private string TiedGameTitle = GameFacade.Strings.GetString("f112", "10"); // "Stalemate"
 
         // player pictures
         public UIVMPersonButton[] Players = new UIVMPersonButton[2];
@@ -309,8 +309,8 @@ namespace FSO.Client.UI.Panels.EODs
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = UIWarGameEOD.TIE_ROUND_TITLE,
-                Message = UIWarGameEOD.TIE_ROUND_MESSAGE,
+                Title = TiedRoundTitle,
+                Message = TiedRoundMessage,
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
                 Buttons = UIAlertButton.Ok((btn) =>
@@ -328,8 +328,8 @@ namespace FSO.Client.UI.Panels.EODs
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = UIWarGameEOD.TIE_GAME_TITLE,
-                Message = UIWarGameEOD.TIE_GAME_MESSAGE,
+                Title = TiedGameTitle,
+                Message = TiedGameMessage,
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
                 Buttons = UIAlertButton.Ok((btn) =>

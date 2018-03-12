@@ -62,6 +62,9 @@ namespace FSO.Client.UI.Panels.EODs.Utils
         public event SendMessage OnNewStringMessage;
         public event SendMessage OnNewByteMessage;
 
+        public const int MINIMUM_BET_LIMIT = 1;
+        public const int MAXIMUM_BET_LIMIT = 1000;
+
         public UIManageEODObjectPanel(ManageEODObjectTypes type, int currentBalance, int minBalance, int maxBalance, int currentOdds, bool isOn)
         {
             Type = type;
@@ -108,48 +111,66 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 return;
             }
             else if (failureReason.Equals(VMEODSlotsInputErrorTypes.Invalid.ToString()))
-                message = "That is not a valid number!";
+                message = GameFacade.Strings.GetString("f110", "24"); // "That is not a valid number!"
             else if (failureReason.Equals(VMEODSlotsInputErrorTypes.Overflow.ToString()))
             {
                 if (transactionType.Equals("w"))
-                    message = "You cannot withdraw more than the balance of the machine!";
+                    message = GameFacade.Strings.GetString("f110", "25"); // "You cannot withdraw more than the balance of the machine!"
                 else if (transactionType.Equals("d"))
-                    message = "You cannot deposit that many simoleons because the machine can only hold: $" + ObjectMaximumBalance;
+                    // "You cannot deposit that many simoleons because the machine can only hold: $%d"
+                    message = GameFacade.Strings.GetString("f110", "27").Replace("%d", "" + ObjectMaximumBalance);
                 else
-                    message = "An unknown error occured.";
+                    message = GameFacade.Strings.GetString("f110", "34"); // "An unknown error occured."
             }
             else if (failureReason.Equals(VMEODRouletteInputErrorTypes.BetTooHighForBalance.ToString()))
-                message = "You do not have enough money in this object to cover that bet amount." + System.Environment.NewLine
-                    + System.Environment.NewLine + "You must stock AT LEAST 140 times the maximum bet amount.";
+            {
+                switch (Type)
+                {
+                    case ManageEODObjectTypes.Roulette:
+                        {
+                            // "You do not have enough money in this object to cover that bet amount." \n \n
+                            message = GameFacade.Strings.GetString("f110", "32") + System.Environment.NewLine + System.Environment.NewLine +
+                                // "You must stock AT LEAST 140 times the maximum bet amount."
+                                GameFacade.Strings.GetString("f110", "33");
+                            break;
+                        }
+                    case ManageEODObjectTypes.Blackjack:
+                        {
+                            // "You do not have enough money in this object to cover that bet amount." \n \n
+                            message = GameFacade.Strings.GetString("f110", "32") + System.Environment.NewLine + System.Environment.NewLine +
+                                // "You must stock at least 6 times the maximum bet."
+                                GameFacade.Strings.GetString("f110", "19");
+                            break;
+                        }
+                }
+            }
             else if (failureReason.Equals(VMEODRouletteInputErrorTypes.BetTooLow.ToString()))
             {
                 if (transactionType.Equals("n"))
-                    message = "The minimum bet cannot be lower than $1.";
+                    message = GameFacade.Strings.GetString("f110", "28").Replace("%d", MINIMUM_BET_LIMIT + ""); // "The minimum bet cannot be lower than $%d."
                 else if (transactionType.Equals("x"))
-                    message = "The maximum bet cannot be lower than the minimum bet.";
+                    message = GameFacade.Strings.GetString("f110", "29"); // "The maximum bet cannot be lower than the minimum bet."
                 else
-                    message = "An unknown error occured.";
+                    message = GameFacade.Strings.GetString("f110", "34"); // "An unknown error occured."
             }
             else if (failureReason.Equals(VMEODRouletteInputErrorTypes.BetTooHigh.ToString()))
             {
                 if (transactionType.Equals("n"))
-                    message = "The minimum bet cannot be higher than the maximum bet.";
+                    message = GameFacade.Strings.GetString("f110", "31"); // "The minimum bet cannot be higher than the maximum bet."
                 else if (transactionType.Equals("x"))
-                    message = "The maximum bet cannot be higher than $1000.";
+                    message = GameFacade.Strings.GetString("f110", "30").Replace("%d", MAXIMUM_BET_LIMIT + ""); // "The maximum bet cannot be higher than $%d."
                 else
-                    message = "An unknown error occured.";
-            }/*
-            else if (failureReason.Equals(VMEODRouletteInputErrorTypes.ObjectMustBeClosed))
-                message = "You must first close the object before changing the betting rules or the object's balance.";*/
+                    message = GameFacade.Strings.GetString("f110", "34"); // "An unknown error occured."
+            }
             else
-                message = "An unknown error occured.";
+                message = GameFacade.Strings.GetString("f110", "34"); // "An unknown error occured."
 
             // show the alert with the error message to the user
             UIAlert alert = null;
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = "Transaction Error",
+                Title = GameFacade.Strings.GetString("f110", "23"), // "Transaction Error"
                 Message = message,
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
@@ -172,8 +193,8 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = "Transaction Error",
-                Message = "You don't have enough simoleons to deposit: $" + amountString,
+                Title = GameFacade.Strings.GetString("f110", "23"), // "Transaction Error"
+                Message = GameFacade.Strings.GetString("f110", "26").Replace("%d", "" + amountString), // "You don't have enough simoleons to deposit: $%d"
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
                 Buttons = UIAlertButton.Ok((btn) =>
@@ -232,7 +253,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             {
                 X = 63,
                 Y = 93,
-                Tooltip = GameFacade.Strings["UIText", "259", "10"]
+                Tooltip = GameFacade.Strings["UIText", "259", "10"] // "Click to cash out"
             };
             Add(CashOutButton);
             CashOutButton.OnButtonClick += OnCashoutButtonClick;
@@ -251,7 +272,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 Alignment = TextAlignment.Center,
                 Mode = UITextEditMode.ReadOnly,
                 CurrentText = "$" + ObjectBalance,
-                Tooltip = GameFacade.Strings["UIText", "259", "11"]
+                Tooltip = GameFacade.Strings.GetString("f110", "35") // "Cash in object"
             };
             var textStyle = MachineBalanceText.TextStyle.Clone();
             textStyle.Size = 12;
@@ -266,7 +287,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                         // add the on/off button, and the odds slider
                         OnOffButton = new UIButton(GetTexture(0x0000049C00000001))
                         {
-                            Tooltip = GameFacade.Strings["UIText", "259", "12"],
+                            Tooltip = GameFacade.Strings["UIText", "259", "12"], // "Current Odds"
                             X = 175,
                             Y = 60
                         };
@@ -276,12 +297,12 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                         // initiate OnOffButton
                         if (ObjectIsOn)
                         {
-                            OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "14"];
+                            OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "14"]; // "Turn Off"
                             OnOffButton.ForceState = 1;
                         }
                         else
                         {
-                            OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "13"];
+                            OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "13"]; // "Turn On"
                             OnOffButton.ForceState = 0;
                         }
 
@@ -308,7 +329,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                             X = 70,
                             Y = 55,
                             _Alignment = 1,
-                            Caption = GameFacade.Strings["UIText", "259", "20"],
+                            Caption = GameFacade.Strings["UIText", "259", "20"], // "Turn On/Off"
                             CaptionStyle = textStyle
                         };
                         Add(OnOff);
@@ -319,7 +340,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                             X = 278,
                             Y = 55,
                             _Alignment = 1,
-                            Caption = GameFacade.Strings["UIText", "259", "7"],
+                            Caption = GameFacade.Strings["UIText", "259", "7"], // "Set the Odds"
                             CaptionStyle = textStyle
                         };
                         Add(Odds);
@@ -330,7 +351,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                             X = 380,
                             Y = 94,
                             _Alignment = 1,
-                            Caption = GameFacade.Strings["UIText", "259", "9"],
+                            Caption = GameFacade.Strings["UIText", "259", "9"], // "Player"
                             CaptionStyle = textStyle
                         };
                         Add(Player);
@@ -341,7 +362,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                             X = 220,
                             Y = 94,
                             _Alignment = 1,
-                            Caption = GameFacade.Strings["UIText", "259", "8"],
+                            Caption = GameFacade.Strings["UIText", "259", "8"], // "House"
                             CaptionStyle = textStyle
                         };
                         Add(House);
@@ -373,7 +394,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                             Size = new Vector2(100, 21),
                             X = 82,
                             Y = 57,
-                            Caption = GameFacade.Strings["UIText", "259", "11"] + ":", // "Cash in machine"
+                            Caption = GameFacade.Strings.GetString("f110", "35") + ":", // "Cash in object:"
                             CaptionStyle = textStyle
                         };
                         Add(MachineBalanceLabel);
@@ -394,7 +415,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                             Mode = UITextEditMode.ReadOnly,
                             CurrentText = "$" + ObjectMinimumPlayerBet,
                             TextStyle = textStyle,
-                            Tooltip = "Min bet"
+                            Tooltip = GameFacade.Strings.GetString("f110", "13") // "Min bet"
                         };
                         Add(MinimumBetText);
 
@@ -414,7 +435,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                             Mode = UITextEditMode.ReadOnly,
                             CurrentText = "$" + ObjectMaximumPlayerBet,
                             TextStyle = textStyle,
-                            Tooltip = "Max bet"
+                            Tooltip = GameFacade.Strings.GetString("f110", "14") // "Max bet"
                         };
                         Add(MaximumBetText);
 
@@ -430,7 +451,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                         {
                             X = EditMinimumBetButtonSeat.X + 3,
                             Y = EditMinimumBetButtonSeat.Y + 3,
-                            Tooltip = "Edit Min bet",
+                            Tooltip = GameFacade.Strings.GetString("f110", "15") + GameFacade.Strings.GetString("f110", "13"), // "Edit Min bet"
                         };
                         EditMinimumBetButtonSeat.ScaleX = EditMinimumBetButtonSeat.ScaleY = (EditMinimumBetButton.Size / CashOutButton.Size).X;
                         Add(EditMinimumBetButton);
@@ -446,7 +467,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                         {
                             X = EditMaximumBetButtonSeat.X + 3,
                             Y = EditMaximumBetButtonSeat.Y + 3,
-                            Tooltip = "Edit Max bet",
+                            Tooltip = GameFacade.Strings.GetString("f110", "15") + GameFacade.Strings.GetString("f110", "14"), // "Edit Max bet"
                         };
                         EditMaximumBetButtonSeat.ScaleX = EditMaximumBetButtonSeat.ScaleY = (EditMaximumBetButton.Size / CashOutButton.Size).X;
                         Add(EditMaximumBetButton);
@@ -458,7 +479,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                             X = EditMinimumBetButtonSeat.X - 70,
                             Y = MinimumBetText.Y,
                             Alignment = TextAlignment.Right,
-                            Caption = "Min Bet:",
+                            Caption = GameFacade.Strings.GetString("f110", "13") + ":", // "Min bet:"
                             CaptionStyle = textStyle
                         };
                         Add(MinimumBetLabel);
@@ -470,7 +491,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                             X = EditMaximumBetButtonSeat.X - 70,
                             Y = MaximumBetText.Y,
                             Alignment = TextAlignment.Right,
-                            Caption = "Max Bet:",
+                            Caption = GameFacade.Strings.GetString("f110", "14") + ":", // "Max bet:"
                             CaptionStyle = textStyle
                         };
                         Add(MaximumBetLabel);
@@ -502,8 +523,8 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = "Owner Transactions",
-                Message = "What would you like to do?",
+                Title = GameFacade.Strings.GetString("f110", "1"), // "Owner Transactions"
+                Message = GameFacade.Strings.GetString("f110", "2"), // "What would you like to do?"
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
                 Buttons = new UIAlertButton[]
@@ -512,12 +533,12 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                     {
                     DepositPrompt();
                     UIScreen.RemoveDialog(alert);
-                    }), "Deposit"),
+                    }), GameFacade.Strings.GetString("f110", "4")), // "Deposit"
                     new UIAlertButton (UIAlertButtonType.Cancel, ((btn2) =>
                     {
                     WithdrawPrompt();
                     UIScreen.RemoveDialog(alert);
-                    }), "Withdraw")
+                    }), GameFacade.Strings.GetString("f110", "3")) // "Withdraw"
                 }
             }, true);
         }
@@ -529,11 +550,16 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = "Deposit Simoleons",
-                Message = "This object is currently stocked with: $" + ObjectBalance + System.Environment.NewLine +
-                System.Environment.NewLine + "For players to use this object you must maintain a minimum balance of: $" + ObjectMinimumBalance +
-                System.Environment.NewLine + System.Environment.NewLine + "How much would you like to deposit?" +
-                System.Environment.NewLine + System.Environment.NewLine + "(This machine cannot hold more than: $" + ObjectMaximumBalance + ")",
+                Title = GameFacade.Strings.GetString("f110", "4") + " " + GameFacade.Strings.GetString("f110", "5"), // "Deposit Simoleons"
+                // "This object is currently stocked with: $%d" \n \n
+                Message = GameFacade.Strings.GetString("f110", "6").Replace("%d", "" + ObjectBalance) + System.Environment.NewLine +
+                // "For players to use this object you must maintain a minimum balance of: $%d" \n \n
+                System.Environment.NewLine + GameFacade.Strings.GetString("f110", "8").Replace("%d", "" + ObjectMinimumBalance) +
+                // "How much would you like to deposit?"
+                System.Environment.NewLine + System.Environment.NewLine + GameFacade.Strings.GetString("f110", "10") +
+                // "(This object cannot hold more than: $%d)"
+                System.Environment.NewLine + System.Environment.NewLine + "(" +
+                GameFacade.Strings.GetString("f110", "7").Replace("%d", "" + ObjectMaximumBalance) + ")",
                 Alignment = TextAlignment.Left,
                 TextEntry = true,
                 MaxChars = 6,
@@ -552,10 +578,13 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = "Withdraw Simoleons",
-                Message = "This object is currently stocked with: $" + ObjectBalance + System.Environment.NewLine +
-                System.Environment.NewLine + "For players to use this object you must maintain a minimum balance of: $" + ObjectMinimumBalance +
-                System.Environment.NewLine + System.Environment.NewLine + "How much would you like to withdraw?",
+                Title = GameFacade.Strings.GetString("f110", "3") + " " + GameFacade.Strings.GetString("f110", "5"), // "Withdraw Simoleons" 
+                // "This object is currently stocked with: $%d" \n \n
+                Message = GameFacade.Strings.GetString("f110", "6").Replace("%d", "" + ObjectBalance) + System.Environment.NewLine +
+                // "For players to use this object you must maintain a minimum balance of: $%d" \n \n
+                System.Environment.NewLine + GameFacade.Strings.GetString("f110", "8").Replace("%d", "" + ObjectMinimumBalance) +
+                // "How much would you like to withdraw?"
+                System.Environment.NewLine + System.Environment.NewLine + GameFacade.Strings.GetString("f110", "9"),
                 Alignment = TextAlignment.Left,
                 TextEntry = true,
                 MaxChars = 6,
@@ -700,12 +729,12 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             ObjectIsOn = !ObjectIsOn;
             if (ObjectIsOn)
             {
-                OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "14"];
+                OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "14"]; // "Turn Off"
                 OnOffButton.ForceState = 1;
             }
             else
             {
-                OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "13"];
+                OnOffButton.Tooltip = GameFacade.Strings["UIText", "259", "13"]; // "Turn On"
                 OnOffButton.ForceState = 0;
             }
             OnNewStringMessage(new EODMessageNode("toggle_onOff", "" + OnOffButton.ForceState));
@@ -717,10 +746,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             CashOutButton.OnButtonClick -= OnCashoutButtonClick;
             EditMinimumBetButton.OnButtonClick -= OnEditMinimumClick;
             EditMaximumBetButton.OnButtonClick -= OnEditMaximumClick;
-            /*if (ObjectIsOn)
-                InputFailHandler("n", VMEODRouletteInputErrorTypes.ObjectMustBeClosed.ToString());
-            else*/
-                SetBetPrompt(true);
+            SetBetPrompt(true);
         }
 
         private void OnEditMaximumClick(UIElement target)
@@ -728,10 +754,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             CashOutButton.OnButtonClick -= OnCashoutButtonClick;
             EditMinimumBetButton.OnButtonClick -= OnEditMinimumClick;
             EditMaximumBetButton.OnButtonClick -= OnEditMaximumClick;
-            /*if (ObjectIsOn)
-                InputFailHandler("x", VMEODRouletteInputErrorTypes.ObjectMustBeClosed.ToString());
-            else*/
-                SetBetPrompt(false);
+            SetBetPrompt(false);
         }
 
         private void SetBetPrompt(bool isMinBet)
@@ -743,34 +766,39 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             string betTip = "";
             if (Type.Equals(ManageEODObjectTypes.Roulette))
             {
-                typeConditional = "Roulette Tables must be able to cover 35 times any bet for 4 simultaneous players, so AT LEAST 140x the maximum bet."
-                    + System.Environment.NewLine + System.Environment.NewLine + 
-                    "For example: if your maximum bet is $100, you must have AT LEAST $14000 in this object.";
+                // "Roulette tables must be able to cover 35 times any bet for 4 simultaneous players, so AT LEAST 140x the maximum bet." \n \n
+                typeConditional = GameFacade.Strings.GetString("f110", "16") + System.Environment.NewLine + System.Environment.NewLine +
+                    // "For example: if your maximum bet is $100, you must have AT LEAST $14000 in this object."
+                    GameFacade.Strings.GetString("f110", "17");
             }
             else if (Type.Equals(ManageEODObjectTypes.Blackjack))
             {
-                typeConditional = "A Blackjack payout is 3:2 or one and a half times any bet. Tables must be able to cover up to 4 blackjacks per round."
-                    + System.Environment.NewLine + System.Environment.NewLine + 
-                    "So you must stock at least 6 times the maximum bet.";
+                // "A Blackjack payout is 3:2 or one and a half times any bet. Tables must be able to cover up to 4 blackjacks per round." \n \n
+                typeConditional = GameFacade.Strings.GetString("f110", "18") + System.Environment.NewLine + System.Environment.NewLine +
+                    // "So you must stock at least 6 times the maximum bet."
+                    GameFacade.Strings.GetString("f110", "19");
             }
             if (isMinBet)
             {
-                setBet = "Minimum";
-                betTip = "(Note: Minimum bets can't be less than $1)";
+                setBet = GameFacade.Strings.GetString("f110", "13"); // "Min bet"
+                // "(Note: Minimum bets can't be less than $%d)"
+                betTip = GameFacade.Strings.GetString("f110", "20").Replace("%d", "" + MINIMUM_BET_LIMIT);
             }
             else
             {
-                setBet = "Maximum";
-                betTip = "(Note: Maximum bets can't be greater than $1000)";
+                setBet = GameFacade.Strings.GetString("f110", "14"); // "Max bet"
+                // "(Note: Maximum bets can't be greater than $%d)"
+                betTip = GameFacade.Strings.GetString("f110", "21").Replace("%d", "" + MAXIMUM_BET_LIMIT);
             }
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = "Set " + setBet + " Bet",
-                Message = "This object is currently stocked with: $" + ObjectBalance + System.Environment.NewLine +
+                Title = GameFacade.Strings.GetString("f110", "15") + setBet, // "Edit Min/Max bet"
+                // "This object is currently stocked with: $%d" \n \n
+                Message = GameFacade.Strings.GetString("f110", "6").Replace("%d", "" + ObjectBalance) + System.Environment.NewLine +
                 System.Environment.NewLine + typeConditional + System.Environment.NewLine + System.Environment.NewLine +
-                "What would you like to set as your " + setBet.Replace('M', 'm') + " bet?" + System.Environment.NewLine + System.Environment.NewLine
-                + betTip,
+                // "What would you like to set as your " + "Min/Max bet?" \n \n Tip
+                GameFacade.Strings.GetString("f110", "22") + setBet + "?" + System.Environment.NewLine + System.Environment.NewLine + betTip,
                 Alignment = TextAlignment.Left,
                 TextEntry = true,
                 MaxChars = 4,
