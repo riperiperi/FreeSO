@@ -350,20 +350,20 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
-            if (ThumbLock != null && WaitingForThumb && ThumbLock.Loaded)
+            if (ThumbLock != null && LastThumb != ThumbLock.LotTexture && ThumbLock.Loaded)
             {
                 LotThumbnail.SetThumbnail(ThumbLock.LotTexture, CurrentLot.Value.Id);
+                LastThumb = ThumbLock.LotTexture;
             }
             base.Update(state);
         }
 
-        private bool WaitingForThumb = true;
+        private Texture2D LastThumb = null;
         public void AsyncAPIThumb(uint lotID)
         {
             if (ThumbLock != null) ThumbLock.Held--;
-            LotThumbnail.SetThumbnail(DefaultThumb, CurrentLot.Value?.Id ?? 0);
+            //LotThumbnail.SetThumbnail(DefaultThumb, CurrentLot.Value?.Id ?? 0);
             ThumbLock = FindController<CoreGameScreenController>().Terrain.LockLotThumb(lotID);
-            WaitingForThumb = true;
         }
 
         private void RefreshUI()

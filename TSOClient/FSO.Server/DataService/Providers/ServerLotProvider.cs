@@ -232,7 +232,7 @@ namespace FSO.Server.DataService.Providers
                 case "Lot_SkillGamemode":
                     using (var db = DAFactory.Get())
                     {
-                        db.Lots.UpdateLotCategory(lot.DbId, (LotCategory)(lot.Lot_Category), lot.Lot_SkillGamemode);
+                        db.Lots.UpdateLotSkillMode(lot.DbId, lot.Lot_SkillGamemode);
                     }
                     break;
                 case "Lot_IsOnline":

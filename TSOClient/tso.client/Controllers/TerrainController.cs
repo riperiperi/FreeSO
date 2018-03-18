@@ -67,6 +67,8 @@ namespace FSO.Client.Controllers
             PurchaseRegulator.OnError -= PurchaseRegulator_OnError;
             PurchaseRegulator.OnTransition -= PurchaseRegulator_OnTransition;
             PurchaseRegulator.OnPurchased -= PurchaseRegulator_OnPurchased;
+
+            LotThumbs.Dispose();
         }
 
         public void ZoomIn(){
@@ -199,6 +201,11 @@ namespace FSO.Client.Controllers
                 if (thumb.Data == null || thumb.Data.Length == 0) return;
                 onRetrieved(ImageLoader.WinFromStreamP(GameFacade.GraphicsDevice, new MemoryStream(thumb.Data), -1));
             }); */
+        }
+
+        public void OverrideLotThumb(uint location, Texture2D tex)
+        {
+            LotThumbs.OverrideLotThumb((uint)Network.MyShard.Id, location, tex);
         }
 
         public LotThumbEntry LockLotThumb(uint location)

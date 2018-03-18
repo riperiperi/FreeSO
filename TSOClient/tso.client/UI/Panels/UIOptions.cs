@@ -181,10 +181,10 @@ namespace FSO.Client.UI.Panels
             Remove(EnableFilterCheckButton);
             Remove(ProfanityFilterTitle);
 
-            EnterWordLabel.Caption = GameFacade.Strings.GetString("f112", "5");
+            EnterWordLabel.Caption = GameFacade.Strings.GetString("f113", "5");
 
             var hbox = new UIHBoxContainer();
-            hbox.Add(new UILabel() { Caption = GameFacade.Strings.GetString("f112", "1") });
+            hbox.Add(new UILabel() { Caption = GameFacade.Strings.GetString("f113", "1") });
             var ttsMode = GlobalSettings.Default.TTSMode;
             for (int i = 0; i < 3; i++)
             {
@@ -192,7 +192,7 @@ namespace FSO.Client.UI.Panels
                 radio.RadioData = i;
                 radio.RadioGroup = "ttsOpt";
                 radio.OnButtonClick += TTSOptSet;
-                radio.Tooltip = GameFacade.Strings.GetString("f112", (2 + i).ToString());
+                radio.Tooltip = GameFacade.Strings.GetString("f113", (2 + i).ToString());
                 radio.Selected = ttsMode == i;
                 hbox.Add(radio);
                 hbox.Add(new UILabel() { Caption = radio.Tooltip });
@@ -209,7 +209,7 @@ namespace FSO.Client.UI.Panels
             ChatColor.Caption = "#" + col.R.ToString("x2") + col.G.ToString("x2") + col.B.ToString("x2");
 
             var changeBtn = new UIButton();
-            changeBtn.Caption = GameFacade.Strings.GetString("f112", "6");
+            changeBtn.Caption = GameFacade.Strings.GetString("f113", "6");
             changeBtn.Position = new Microsoft.Xna.Framework.Vector2(155 + 100, 74-7);
             Add(changeBtn);
             changeBtn.OnButtonClick += (btn1) =>
@@ -218,7 +218,7 @@ namespace FSO.Client.UI.Panels
                 alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                 {
                     Title = "",
-                    Message = GameFacade.Strings.GetString("f112", "8"),
+                    Message = GameFacade.Strings.GetString("f113", "8"),
                     Color = true,
                     Buttons = new UIAlertButton[]
                     {
@@ -235,7 +235,7 @@ namespace FSO.Client.UI.Panels
                             GlobalSettings.Default.ChatColor = VMTSOAvatarState.RandomColours[rand.Next(VMTSOAvatarState.RandomColours.Length)].PackedValue;
                             SetChatParams();
                             UIScreen.RemoveDialog(alert);
-                        }, GameFacade.Strings.GetString("f112", "7")),
+                        }, GameFacade.Strings.GetString("f113", "7")),
                         new UIAlertButton(UIAlertButtonType.Cancel)
                     }
                 }, true);

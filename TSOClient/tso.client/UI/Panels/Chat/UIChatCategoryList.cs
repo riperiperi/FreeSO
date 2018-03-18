@@ -25,10 +25,10 @@ namespace FSO.Client.UI.Panels.Chat
             Dialog = dialog;
 
             //init language for default channels
-            VMTSOChatChannel.MainChannel.Name = GameFacade.Strings.GetString("f112", "9");
-            VMTSOChatChannel.MainChannel.Description = GameFacade.Strings.GetString("f112", "10");
-            VMTSOChatChannel.AdminChannel.Name = GameFacade.Strings.GetString("f112", "11");
-            VMTSOChatChannel.AdminChannel.Description = GameFacade.Strings.GetString("f112", "12");
+            VMTSOChatChannel.MainChannel.Name = GameFacade.Strings.GetString("f113", "9");
+            VMTSOChatChannel.MainChannel.Description = GameFacade.Strings.GetString("f113", "10");
+            VMTSOChatChannel.AdminChannel.Name = GameFacade.Strings.GetString("f113", "11");
+            VMTSOChatChannel.AdminChannel.Description = GameFacade.Strings.GetString("f113", "12");
 
             Populate();
         }
@@ -94,12 +94,12 @@ namespace FSO.Client.UI.Panels.Chat
                 }
                 if (EditMode && channel.ID == 0)
                 {
-                    btn.Tooltip = GameFacade.Strings.GetString("f112", "18");
+                    btn.Tooltip = GameFacade.Strings.GetString("f113", "18");
                     btn.Disabled = true;
                 }
                 else
                 {
-                    btn.Tooltip = (EditMode) ? GameFacade.Strings.GetString("f112", "19") : channel.Description;
+                    btn.Tooltip = (EditMode) ? GameFacade.Strings.GetString("f113", "19") : channel.Description;
                 }
 
                 btn.Caption = channel.Name;
@@ -115,8 +115,8 @@ namespace FSO.Client.UI.Panels.Chat
             if (EditMode)
             {
                 var btn2 = new UIButton(btnTex);
-                btn2.Caption = GameFacade.Strings.GetString("f112", "14");
-                btn2.Tooltip = GameFacade.Strings.GetString("f112", "16");
+                btn2.Caption = GameFacade.Strings.GetString("f113", "14");
+                btn2.Tooltip = GameFacade.Strings.GetString("f113", "16");
                 btn2.CaptionStyle = btnCaption;
                 btn2.OnButtonClick += NewButton;
 
@@ -129,8 +129,8 @@ namespace FSO.Client.UI.Panels.Chat
                 }
                 
                 btn2 = new UIButton(btnTex);
-                btn2.Caption = GameFacade.Strings.GetString("f112", "15");
-                btn2.Tooltip = GameFacade.Strings.GetString("f112", "17");
+                btn2.Caption = GameFacade.Strings.GetString("f113", "15");
+                btn2.Tooltip = GameFacade.Strings.GetString("f113", "17");
                 btn2.CaptionStyle = btnCaption;
                 btn2.OnButtonClick += CancelEditButton;
 
@@ -141,8 +141,8 @@ namespace FSO.Client.UI.Panels.Chat
             else if (perm >= VMTSOAvatarPermissions.Owner)
             {
                 var btn2 = new UIButton(btnTex);
-                btn2.Caption = GameFacade.Strings.GetString("f112", "13");
-                btn2.Tooltip = GameFacade.Strings.GetString("f112", "20");
+                btn2.Caption = GameFacade.Strings.GetString("f113", "13");
+                btn2.Tooltip = GameFacade.Strings.GetString("f113", "20");
                 btn2.CaptionStyle = btnCaption;
                 btn2.OnButtonClick += EditButton;
 
@@ -187,8 +187,8 @@ namespace FSO.Client.UI.Panels.Chat
 
             var dialog = new UIChatCategoryDialog(new VMTSOChatChannel {
                 ID = (byte)freeID,
-                Name = GameFacade.Strings.GetString("f112", "41"),
-                Description = GameFacade.Strings.GetString("f112", "42")
+                Name = GameFacade.Strings.GetString("f113", "41"),
+                Description = GameFacade.Strings.GetString("f113", "42")
             }, true);
             UIScreen.GlobalShowDialog(dialog, true);
             dialog.OKButton.OnButtonClick += (btn) =>

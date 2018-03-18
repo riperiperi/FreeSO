@@ -46,7 +46,7 @@ namespace FSO.Client.UI.Panels
             //todo: this dialog is resizable. The elements use offests from each side to size and position themselves.
             //right now we're just using positions.
 
-            CloseButton.Tooltip = GameFacade.Strings.GetString("f112", "43");
+            CloseButton.Tooltip = GameFacade.Strings.GetString("f113", "43");
             Owner = owner;
             History = new List<VMChatEvent>();
 

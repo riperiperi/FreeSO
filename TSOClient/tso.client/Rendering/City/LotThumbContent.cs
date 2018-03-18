@@ -16,7 +16,7 @@ namespace FSO.Client.Rendering.City
     /// Handles loading lot thumbnails from the API, and managing them in memory. 
     /// This will also handle FSOF resources in future.
     /// </summary>
-    public class LotThumbContent
+    public class LotThumbContent : IDisposable
     {
         public Dictionary<ulong, LotThumbEntry> Entries = new Dictionary<ulong, LotThumbEntry>();
         public Texture2D DefaultThumb;
@@ -33,7 +33,7 @@ namespace FSO.Client.Rendering.City
             DefaultThumb = TextureUtils.TextureFromFile(GameFacade.GraphicsDevice, GameFacade.GameFilePath("userdata/houses/defaulthouse.bmp"));
             TextureUtils.ManualTextureMask(ref DefaultThumb, new uint[] { 0xFF000000 });
         }
-        
+
         private LotThumbEntry GetLotEntryForFrame(uint shardID, uint location)
         {
             LotThumbEntry result = null;
@@ -43,7 +43,7 @@ namespace FSO.Client.Rendering.City
                 result.LotTexture = DefaultThumb;
                 Client.GetThumbnailAsync(shardID, location, (data) =>
                 {
-                    if (data != null && !result.Dead)
+                    if (data != null && !result.Dead && !result.Loaded)
                     {
                         using (var mem = new MemoryStream(data))
                         {
@@ -76,6 +76,18 @@ namespace FSO.Client.Rendering.City
             var key = (((ulong)shardID) << 32) | location;
             if (Entries.TryGetValue(key, out result))
                 result.Held--;
+        }
+
+        public void OverrideLotThumb(uint shardID, uint location, Texture2D tex)
+        {
+            var entry = GetLotEntry(shardID, location);
+            entry.Held++; //keep this forever
+            if (entry.Loaded)
+            {
+                entry.LotTexture.Dispose();
+            }
+            entry.LotTexture = tex;
+            entry.Loaded = true;
         }
 
         public void Update()
@@ -114,6 +126,15 @@ namespace FSO.Client.Rendering.City
                         Entries.Remove(entry.Key);
                     }
                 }
+            }
+        }
+
+        public void Dispose()
+        {
+            foreach (var entry in Entries)
+            {
+                if (entry.Value.Loaded) entry.Value.LotTexture.Dispose();
+                entry.Value.Dead = true;
             }
         }
     }

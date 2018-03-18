@@ -232,7 +232,8 @@ namespace FSO.Client.Controllers
             using (var stream = new MemoryStream()) {
                 var tex = TextureUtils.Decimate(bigThumb, GameFacade.GraphicsDevice, 2, false);
                 tex.SaveAsPng(stream, bigThumb.Width / 2, bigThumb.Height / 2);
-                tex.Dispose();
+                Terrain.OverrideLotThumb(lotID, tex);
+                //tex.Dispose();
                 data = stream.ToArray();
             }
             DataService.Get<Lot>(lotID).ContinueWith(x =>
