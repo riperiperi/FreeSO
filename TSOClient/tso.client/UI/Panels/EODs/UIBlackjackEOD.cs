@@ -149,37 +149,37 @@ namespace FSO.Client.UI.Panels.EODs
         private readonly float COLLAPSED_HANDS_MARGIN = 10f;
         private readonly int MAIN_CARD_BACK_WIDTH = 246;
 
-        // literal strings to be translated later
-        string Blackjack = "Blackjack";
-        string DealerBusts = "%s busts!";
-        string DealerHasBlackjack = "%s has blackjack!";
-        string DealerHasTotal = "%s stands on %d.";
-        string DealerDoesNotHaveBlackjack = "%s does not have blackjack.";
-        string Insurance = "Insurance";
-        string Insured = "Insured!";
-        string Error = "Error";
-        string InsuranceQuestion = "Do you want insurance?";
-        string InsuranceDesc1 = "Insurance costs half of your bet amount, which is $%d.";
-        string InsuranceDesc2 = "But if the dealer has blackjack, you will get your whole bet amount back.";
-        string InsuranceConfirmation = "You bought insurance for $%d.";
+        // literal strings found in _f111_casinoeodstrings.cst
+        private string Blackjack = GameFacade.Strings.GetString("f111", "2");
+        private string DealerBusts = GameFacade.Strings.GetString("f111", "4");
+        private string DealerHasBlackjack = GameFacade.Strings.GetString("f111", "5");
+        private string DealerHasTotal = GameFacade.Strings.GetString("f111", "6");
+        private string DealerDoesNotHaveBlackjack = GameFacade.Strings.GetString("f111", "7");
+        private string Insurance = GameFacade.Strings.GetString("f111", "8");
+        private string Insured = GameFacade.Strings.GetString("f111", "9");
+        private string Error = GameFacade.Strings.GetString("f111", "10");
+        private string InsuranceQuestion = GameFacade.Strings.GetString("f111", "11");
+        private string InsuranceDesc1 = GameFacade.Strings.GetString("f111", "12");
+        private string InsuranceDesc2 = GameFacade.Strings.GetString("f111", "13");
+        private string InsuranceConfirmation = GameFacade.Strings.GetString("f111", "14");
 
-
-        // temporary solution until I learn how to put these strings into an external file to be translated
-        public Dictionary<byte, string> AlertStrings = new Dictionary<byte, string>()
+        // alert strings found in _f111_casinoeodstrings.cst
+        private Dictionary<byte, string> AlertStrings = new Dictionary<byte, string>()
         {
-            { (byte)VMEODBlackjackAlerts.State_Race, "This error message should never appear. Please report this and what you did to get it!" },
-            { (byte)VMEODBlackjackAlerts.False_Start, "It's not your turn." },
-            { (byte)VMEODBlackjackAlerts.Illegal_Hit, "You cannot hit on this hand." },
-            { (byte)VMEODBlackjackAlerts.Illegal_Double, "You cannot double down on this hand." },
-            { (byte)VMEODBlackjackAlerts.Illegal_Split, "You cannot split this hand." },
-            { (byte)VMEODBlackjackAlerts.Bet_Too_Low, "Your bet must be at least $m." },
-            { (byte)VMEODBlackjackAlerts.Bet_Too_High, "Your bet cannot be greater than $M." },
-            { (byte)VMEODBlackjackAlerts.Bet_NSF, "You don't have enough money to make that bet." },
-            { (byte)VMEODBlackjackAlerts.Double_NSF, "You don't have enough money to double down." },
-            { (byte)VMEODBlackjackAlerts.Split_NSF, "You don't have enough money to split." },
-            { (byte)VMEODBlackjackAlerts.Observe_Once, "You can observe this round, but you must bet and play on the next one." },
-            { (byte)VMEODBlackjackAlerts.Observe_Twice, "You were removed from the table due to inactivity." },
-            { (byte)VMEODBlackjackAlerts.Table_NSF, "The table had to close due to insufficient balance. Perhaps you should let the owner know." }
+            { (byte)VMEODBlackjackAlerts.State_Race, GameFacade.Strings.GetString("f111", "16") },
+            { (byte)VMEODBlackjackAlerts.False_Start, GameFacade.Strings.GetString("f111", "17") },
+            { (byte)VMEODBlackjackAlerts.Illegal_Hit, GameFacade.Strings.GetString("f111", "18") },
+            { (byte)VMEODBlackjackAlerts.Illegal_Double, GameFacade.Strings.GetString("f111", "19") },
+            { (byte)VMEODBlackjackAlerts.Illegal_Split, GameFacade.Strings.GetString("f111", "20") },
+            { (byte)VMEODBlackjackAlerts.Bet_Too_Low, GameFacade.Strings.GetString("f111", "21") },
+            { (byte)VMEODBlackjackAlerts.Bet_Too_High, GameFacade.Strings.GetString("f111", "22") },
+            { (byte)VMEODBlackjackAlerts.Bet_NSF, GameFacade.Strings.GetString("f111", "23") },
+            { (byte)VMEODBlackjackAlerts.Double_NSF, GameFacade.Strings.GetString("f111", "24") },
+            { (byte)VMEODBlackjackAlerts.Split_NSF, GameFacade.Strings.GetString("f111", "25") },
+            { (byte)VMEODBlackjackAlerts.Observe_Once, GameFacade.Strings.GetString("f111", "26") },
+            { (byte)VMEODBlackjackAlerts.Observe_Twice, GameFacade.Strings.GetString("f111", "27") },
+            { (byte)VMEODBlackjackAlerts.Table_NSF, GameFacade.Strings.GetString("f111", "28") },
+            { (byte)VMEODBlackjackAlerts.Player_NSF, GameFacade.Strings.GetString("f111", "31") }
         };
 
         public UIBlackjackEOD(UIEODController controller) : base(controller)
@@ -280,9 +280,9 @@ namespace FSO.Client.UI.Panels.EODs
             PlaintextHandlers["blackjack_resume_manage"] = ResumeManageHandler;
 
             // other
-            DealTimer = new Timer(1000);
+            DealTimer = new Timer(1750);
             DealTimer.Elapsed += new ElapsedEventHandler(DealTimerHandler);
-            DealersName = "M.O.M.I.";
+            DealersName = "MOMI";
             InvalidateTimer = new Timer(1000);
             /*
              * NOTE: If you haven't noticed how bad the EOD invalidateion problem is, just disable this timer and see how impossible it is to keep up
@@ -293,7 +293,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         public override void OnClose()
         {
-            CloseInteraction();
+            SetNewTip("");
             Send("blackjack_close", "");
             base.OnClose();
         }
@@ -534,12 +534,14 @@ namespace FSO.Client.UI.Panels.EODs
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
                 Buttons = UIAlertButton.YesNo(
-                    yes => {
+                    yes =>
+                    {
                         Send("blackjack_insurance_request", new byte[] { 1 });
                         UIScreen.RemoveDialog(InsuranceAlert);
                         InsuranceAlert = null;
                     },
-                    no => {
+                    no =>
+                    {
                         Send("blackjack_insurance_request", new byte[] { 0 });
                         UIScreen.RemoveDialog(InsuranceAlert);
                         InsuranceAlert = null;
@@ -897,7 +899,7 @@ namespace FSO.Client.UI.Panels.EODs
 
             // get the current bet text
             string currentText = TotalBetEntry.CurrentText;
-            string errorMessageTitle = "Betting Error";
+            string errorMessageTitle = GameFacade.Strings.GetString("f111", "15"); // "Betting Error"
             string errorMessage = "";
             int currentBet = -1;
 
@@ -905,14 +907,14 @@ namespace FSO.Client.UI.Panels.EODs
             if (Int32.TryParse(currentText, out currentBet))
             {
                 if (currentBet < MinBet)
-                    errorMessage = AlertStrings[(byte)VMEODBlackjackAlerts.Bet_Too_Low].Replace("$m", "$" + MinBet);
+                    errorMessage = AlertStrings[(byte)VMEODBlackjackAlerts.Bet_Too_Low].Replace("$%d", "$" + MinBet);
                 else if (currentBet > MaxBet)
-                    errorMessage = AlertStrings[(byte)VMEODBlackjackAlerts.Bet_Too_High].Replace("$M", "$" + MaxBet);
+                    errorMessage = AlertStrings[(byte)VMEODBlackjackAlerts.Bet_Too_High].Replace("$%d", "$" + MaxBet);
             }
             else
             {
                 // not a valid number
-                errorMessage = "That is not a valid number!";
+                errorMessage = GameFacade.Strings.GetString("f110", "24"); // "That is not a valid number!"
             }
             // enables betting again if an error is thrown
             if (errorMessage.Length > 0)
@@ -1111,10 +1113,6 @@ namespace FSO.Client.UI.Panels.EODs
         {
             SetTip(newTip);
             Parent.Invalidate();
-            Parent.Invalidate();
-            Parent.Invalidate();
-            Parent.Invalidate();
-            Parent.Invalidate();
         }
         /*
          * todo: If the LiveMode & EOD invalidation issue is ever solved on the EOD-wide scale, this middle-man method will be unnecessary.
@@ -1199,12 +1197,12 @@ namespace FSO.Client.UI.Panels.EODs
             btnBet.Y += 188;
 
             // tooltips
-            btnChip1.Tooltip = GameFacade.Strings["UIText", "263", "15"].Replace("%d", "1"); // Add $1 to bet
-            btnChip2.Tooltip = GameFacade.Strings["UIText", "263", "15"].Replace("%d", "5"); // Add $5 to bet
-            btnChip3.Tooltip = GameFacade.Strings["UIText", "263", "15"].Replace("%d", "10"); // Add $10 to bet
-            btnChip4.Tooltip = GameFacade.Strings["UIText", "263", "15"].Replace("%d", "25"); // Add $25 to bet
-            btnChip5.Tooltip = GameFacade.Strings["UIText", "263", "15"].Replace("%d", "100"); // Add $100 to bet
-            btnBet.Tooltip = GameFacade.Strings["UIText", "263", "14"]; // Place bet
+            btnChip1.Tooltip = GameFacade.Strings["UIText", "263", "15"].Replace("%d", "1"); // "Add $1 to bet"
+            btnChip2.Tooltip = GameFacade.Strings["UIText", "263", "15"].Replace("%d", "5"); // "Add $5 to bet"
+            btnChip3.Tooltip = GameFacade.Strings["UIText", "263", "15"].Replace("%d", "10"); // "Add $10 to bet"
+            btnChip4.Tooltip = GameFacade.Strings["UIText", "263", "15"].Replace("%d", "25"); // "Add $25 to bet"
+            btnChip5.Tooltip = GameFacade.Strings["UIText", "263", "15"].Replace("%d", "100"); // "Add $100 to bet"
+            btnBet.Tooltip = GameFacade.Strings["UIText", "263", "14"]; // "Place bet"
             btnHit.Tooltip = GameFacade.Strings["UIText", "263", "6"]; // "Hit"
             btnStand.Tooltip = GameFacade.Strings["UIText", "263", "7"]; // "Stand"
             btnSplit.Tooltip = GameFacade.Strings["UIText", "263", "8"]; // "Split"
@@ -1856,7 +1854,6 @@ namespace FSO.Client.UI.Panels.EODs
                 MainPlayerCardContainers.Add(mainPlayerCardContainer);
                 MainPlayerCardTotals.Add(mainPlayerCardTotal);
                 mainPlayerCardContainer.SetActive();
-                UpdateMyOtherPlayerHand();
                 UpdateMainLayout();
             }
         }
@@ -1932,7 +1929,6 @@ namespace FSO.Client.UI.Panels.EODs
                 else
                     cardTotal_Offset.X = 2; // from 5
                 MainPlayerCardTotals[index].Position = MainPlayerCardContainers[index].Position + cardTotal_Offset;
-                //MainPlayerCardTotals[index].CurrentText = MainPlayerCardContainers[index].TotalValueOfCards.ToString();
             }
         }
         /*
@@ -1950,9 +1946,6 @@ namespace FSO.Client.UI.Panels.EODs
 
                 // reset the container with with cards sent
                 ResetTargetHand(activeContainer, activeLabel, cards);
-
-                // make my cards at the top match my new active hand
-                UpdateMyOtherPlayerHand();
 
                 // update the layout
                 UpdateMainLayout();
@@ -1978,21 +1971,6 @@ namespace FSO.Client.UI.Panels.EODs
                     label.Visible = false;
                 else
                     label.Visible = true;
-
-                // deprecated
-                /*if (container.Label.Length > 0)
-                {
-                    if (container.Label[0].Equals('('))
-                    {
-                        label.CurrentText = container.TotalValueOfCards + container.Label;
-                        label.Size = new Vector2(56, 27);
-                    }
-                    else // blackjack
-                    {
-                        label.CurrentText = container.Label;
-                        label.Size = new Vector2(76, 27);
-                    }
-                }*/
             }
         }
         // makes the "S" available for the specified player so other players know they're splitting
@@ -2008,19 +1986,6 @@ namespace FSO.Client.UI.Panels.EODs
                 Player4SplitLetter.Visible = true;
         }
         /*
-         * Update the player's hand above that mirrors the active hand from the main player below. This happens when player changes active hands.
-         */
-        private void UpdateMyOtherPlayerHand()
-        {
-            var activeContainer = MainPlayerCardContainers[MainPlayerActiveHand];
-            // dump cards in current player container (above)
-            MyPlayerContainer.Reset();
-            // add cards that exist in MainPlayerActiveHand
-            foreach (var card in activeContainer.GetChildren())
-                MyPlayerContainer.AddCard(card.Tooltip);
-            UpdateCardTotalCaption(MyPlayerCardTotal, MyPlayerContainer.TotalValueOfCards.ToString());
-        }
-        /*
          * Finalise the active hand by synchronizing its contents from the server, updating the total text, and collapsing & making inactive
          * @param: cards - the cards sent from server for sync purposes
          */
@@ -2034,9 +1999,6 @@ namespace FSO.Client.UI.Panels.EODs
 
                 // reset the container with with cards sent
                 ResetTargetHand(activeContainer, activeLabel, cards);
-
-                // make my cards at the top match my new active hand
-                UpdateMyOtherPlayerHand();
 
                 // collapse to the side, also makes hand inactive by changing opacity
                 if (collapse)

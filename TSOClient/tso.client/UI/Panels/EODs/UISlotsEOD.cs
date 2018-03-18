@@ -183,8 +183,7 @@ namespace FSO.Client.UI.Panels.EODs
                 X = PayoutTable3.X,
                 Y = PayoutTable3.Y,
                 _Alignment = 1,
-                Caption = "\"" + VMEODSlotMachineMaximumBalances.X_Marks_the_Spot.ToString().Replace('_', ' ') + "\""
-                + GameFacade.Strings["UIText", "259", "15"].Remove(0,8),
+                Caption = GameFacade.Strings.GetString("f111", "29"), // ""X Marks the Spot" Payout Table"
                 CaptionStyle = textStyle
             };
             Add(PayoutTable4);
@@ -194,11 +193,9 @@ namespace FSO.Client.UI.Panels.EODs
                 X = PayoutTable3.X,
                 Y = PayoutTable3.Y,
                 _Alignment = 1,
-                Caption = "\"" + VMEODSlotMachineMaximumBalances.Jackpot_by_Lucky_LLC.ToString().Replace('_', ' ') + "\""
-                + GameFacade.Strings["UIText", "259", "15"].Remove(0, 8),
+                Caption = GameFacade.Strings.GetString("f111", "30"), // ""'Jackpot' by Lucky LLC" Payout Table"
                 CaptionStyle = textStyle
             };
-            PayoutTable5.Caption = PayoutTable5.Caption.Replace("\"Jackpot", "\"\'Jackpot\'");
             Add(PayoutTable5);
 
             PlaintextHandlers["slots_new_game"] = NewGameHandler;
@@ -276,7 +273,7 @@ namespace FSO.Client.UI.Panels.EODs
                 Expanded = true
             });
 
-            SetTip(GameFacade.Strings["UIText", "259", "6"]);
+            SetTip(GameFacade.Strings["UIText", "259", "6"]); // "Loading..."
 
             // hide owner UI elements
             Loading.Visible = false;
@@ -305,21 +302,21 @@ namespace FSO.Client.UI.Panels.EODs
 
             // Customize and place payout table
             PayoutTableColumn1Row1 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(0, 0, 15, 21, 0, 0, 15, 21, 0, 0, 15, 21, true, false);
-            PayoutTableColumn1Row1.X = 125;
+            PayoutTableColumn1Row1.X = 100;
             PayoutTableColumn1Row1.Y = 120;
             Add(PayoutTableColumn1Row1);
             PayoutTableColumn1Row2 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(15, 0, 15, 21, 15, 0, 15, 21, 15, 0, 15, 21, true, false);
-            PayoutTableColumn1Row2.X = 125;
+            PayoutTableColumn1Row2.X = 100;
             PayoutTableColumn1Row2.Y = 120;
             PayoutTableColumn1Row2.Y += 21;
             Add(PayoutTableColumn1Row2);
             PayoutTableColumn1Row3 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(30, 0, 15, 21, 30, 0, 15, 21, 30, 0, 15, 21, true, false);
-            PayoutTableColumn1Row3.X = 125;
+            PayoutTableColumn1Row3.X = 100;
             PayoutTableColumn1Row3.Y = 120;
             PayoutTableColumn1Row3.Y += 42;
             Add(PayoutTableColumn1Row3);
             PayoutTableColumn1Row4 = new UISlotsImage(Wheel1LegendImage).TripleTextureDraw(45, 0, 15, 21, 45, 0, 15, 21, 45, 0, 15, 21, true, false);
-            PayoutTableColumn1Row4.X = 125;
+            PayoutTableColumn1Row4.X = 100;
             PayoutTableColumn1Row4.Y = 120;
             PayoutTableColumn1Row4.Y += 63;
             Add(PayoutTableColumn1Row4);
@@ -347,56 +344,56 @@ namespace FSO.Client.UI.Panels.EODs
             // initialize payout textfields, which are currently ubiquitous across all slot machines
             PayoutText1.Y = PayoutTableColumn1Row1.Y - 1;
             PayoutText1.X = PayoutTableColumn1Row1.X + 55;
-            PayoutText1.CurrentText = GameFacade.Strings["UIText", "259", "36"];
+            PayoutText1.CurrentText = GameFacade.Strings["UIText", "259", "36"]; // "%i X Bet"
             PayoutText1.CurrentText = PayoutText1.CurrentText.Replace("%i", "" + VMEODSlotsPlugin.SIX_SIX_SIX_PAYOUT_MULTIPLIER);
             PayoutText1.Mode = UITextEditMode.ReadOnly;
             Add(PayoutText1);
 
             PayoutText2.Y = PayoutTableColumn1Row2.Y - 1;
             PayoutText2.X = PayoutTableColumn1Row2.X + 55;
-            PayoutText2.CurrentText = GameFacade.Strings["UIText", "259", "36"];
+            PayoutText2.CurrentText = GameFacade.Strings["UIText", "259", "36"]; // "%i X Bet"
             PayoutText2.CurrentText = PayoutText2.CurrentText.Replace("%i", "" + VMEODSlotsPlugin.FIVE_FIVE_FIVE_PAYOUT_MULTIPLIER);
             PayoutText2.Mode = UITextEditMode.ReadOnly;
             Add(PayoutText2);
 
             PayoutText3.Y = PayoutTableColumn1Row3.Y - 1;
             PayoutText3.X = PayoutTableColumn1Row3.X + 55;
-            PayoutText3.CurrentText = GameFacade.Strings["UIText", "259", "36"];
+            PayoutText3.CurrentText = GameFacade.Strings["UIText", "259", "36"]; // "%i X Bet"
             PayoutText3.CurrentText = PayoutText3.CurrentText.Replace("%i", "" + VMEODSlotsPlugin.FOUR_FOUR_FOUR_PAYOUT_MULTIPLIER);
             PayoutText3.Mode = UITextEditMode.ReadOnly;
             Add(PayoutText3);
 
             PayoutText4.Y = PayoutTableColumn1Row4.Y - 1;
             PayoutText4.X = PayoutTableColumn1Row4.X + 55;
-            PayoutText4.CurrentText = GameFacade.Strings["UIText", "259", "36"];
+            PayoutText4.CurrentText = GameFacade.Strings["UIText", "259", "36"]; // "%i X Bet"
             PayoutText4.CurrentText = PayoutText4.CurrentText.Replace("%i", "" + VMEODSlotsPlugin.THREE_THREE_THREE_PAYOUT_MULTIPLIER);
             PayoutText4.Mode = UITextEditMode.ReadOnly;
             Add(PayoutText4);
 
             PayoutText5.Y = PayoutTableColumn2Row1.Y - 1;
             PayoutText5.X = PayoutTableColumn2Row1.X + 55;
-            PayoutText5.CurrentText = GameFacade.Strings["UIText", "259", "36"];
+            PayoutText5.CurrentText = GameFacade.Strings["UIText", "259", "36"]; // "%i X Bet"
             PayoutText5.CurrentText = PayoutText5.CurrentText.Replace("%i", "" + VMEODSlotsPlugin.TWO_TWO_TWO_PAYOUT_MULTIPLIER);
             PayoutText5.Mode = UITextEditMode.ReadOnly;
             Add(PayoutText5);
 
             PayoutText6.Y = PayoutTableColumn2Row2.Y - 1;
             PayoutText6.X = PayoutTableColumn2Row2.X + 55;
-            PayoutText6.CurrentText = GameFacade.Strings["UIText", "259", "36"];
+            PayoutText6.CurrentText = GameFacade.Strings["UIText", "259", "36"]; // "%i X Bet"
             PayoutText6.CurrentText = PayoutText6.CurrentText.Replace("%i", "" + VMEODSlotsPlugin.THREE_TWO_ONE_PAYOUT_MULTIPLIER);
             PayoutText6.Mode = UITextEditMode.ReadOnly;
             Add(PayoutText6);
 
             PayoutText7.Y = PayoutTableColumn2Row3.Y - 1;
             PayoutText7.X = PayoutTableColumn2Row3.X + 55;
-            PayoutText7.CurrentText = GameFacade.Strings["UIText", "259", "36"];
+            PayoutText7.CurrentText = GameFacade.Strings["UIText", "259", "36"]; // "%i X Bet"
             PayoutText7.CurrentText = PayoutText7.CurrentText.Replace("%i", "" + VMEODSlotsPlugin.ONE_ONE_ANY_PAYOUT_MULTIPLIER);
             PayoutText7.Mode = UITextEditMode.ReadOnly;
             Add(PayoutText7);
 
             PayoutText8.Y = PayoutTableColumn2Row4.Y - 1;
             PayoutText8.X = PayoutTableColumn2Row4.X + 55;
-            PayoutText8.CurrentText = GameFacade.Strings["UIText", "259", "36"];
+            PayoutText8.CurrentText = GameFacade.Strings["UIText", "259", "36"]; // "%i X Bet"
             PayoutText8.CurrentText = PayoutText8.CurrentText.Replace("%i", "" + VMEODSlotsPlugin.ONE_ANY_ANY_PAYOUT_MULTIPLIER);
             PayoutText8.Mode = UITextEditMode.ReadOnly;
             Add(PayoutText8);
@@ -596,7 +593,7 @@ namespace FSO.Client.UI.Panels.EODs
                 WheelListOne.Reset();
                 WheelListTwo.Reset();
                 WheelListThree.Reset();
-                SetTip(GameFacade.Strings["UIText", "259", "18"]);
+                SetTip(GameFacade.Strings["UIText", "259", "18"]); // "Bet a coin and click Spin to play"
             }
         }
         private void BetIncreaseButtonPressedHandler(UIElement targetButton)
@@ -637,7 +634,7 @@ namespace FSO.Client.UI.Panels.EODs
             LightsTimer.Interval = 500;
 
             // update text field to mention bet amount
-            SetTip(GameFacade.Strings["UIText", "259", "21"].Replace("%i", "" + DisplayedBet));
+            SetTip(GameFacade.Strings["UIText", "259", "21"].Replace("%i", "" + DisplayedBet)); // "Your bet: $%i"
             WheelListOne.TargetStop = (VMEODSlotsStops)Enum.ToObject(typeof(VMEODSlotsStops), TargetStops[0]);
             WheelListTwo.TargetStop = (VMEODSlotsStops)Enum.ToObject(typeof(VMEODSlotsStops), TargetStops[1]);
             WheelListThree.TargetStop = (VMEODSlotsStops)Enum.ToObject(typeof(VMEODSlotsStops), TargetStops[2]);
@@ -646,7 +643,7 @@ namespace FSO.Client.UI.Panels.EODs
         private void DisplayLossHandler(string evt, string stringNumber)
         {
             LightsTimer.Interval = 666 + (2 / 3);
-            SetTip(GameFacade.Strings["UIText", "259", stringNumber]);
+            SetTip(GameFacade.Strings["UIText", "259", stringNumber]); // losing strings 30-34
         }
         private void DisplayWinHandler(string evt, string stringNumber)
         {
@@ -655,7 +652,7 @@ namespace FSO.Client.UI.Panels.EODs
             {
                 var data = stringNumber.Split('%');
                 if (data.Length > 1)
-                    SetTip(GameFacade.Strings["UIText", "259", data[0]].Replace("%i", data[1]));
+                    SetTip(GameFacade.Strings["UIText", "259", data[0]].Replace("%i", data[1])); // winning strings 25-29
             }
         }
         private void AnimateWheelsHandler(object source, ElapsedEventArgs args)
@@ -709,7 +706,7 @@ namespace FSO.Client.UI.Panels.EODs
                 LightsTimer.Stop();
                 OfflineMessageTimer.Start();
                 BetText.Visible = false;
-                SetTip(GameFacade.Strings["UIText", "259", "22"]);
+                SetTip(GameFacade.Strings["UIText", "259", "22"]); // "Closed for Maintenance"
             }
         }
         private void LightsHandler(object source, ElapsedEventArgs args)
@@ -726,10 +723,10 @@ namespace FSO.Client.UI.Panels.EODs
             Parent.Invalidate();
             if (!IsManaging)
             {
-                if (Controller.EODMessage.Equals(GameFacade.Strings["UIText", "259", "22"]))
-                SetTip(GameFacade.Strings["UIText", "259", "23"]);
-            else
-                SetTip(GameFacade.Strings["UIText", "259", "22"]);
+                if (Controller.EODMessage.Equals(GameFacade.Strings["UIText", "259", "22"])) // "Closed for Maintenance"
+                    SetTip(GameFacade.Strings["UIText", "259", "23"]); // "Please play another machine"
+                else
+                SetTip(GameFacade.Strings["UIText", "259", "22"]); // "Closed for Maintenance"
             }
         }
         private void DrawWheelStops(bool wheelOneAlreadyDone, bool wheelTwoAlreadyDone, bool wheelThreeAlreadyDone)
@@ -789,14 +786,14 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTableColumn2Row2.Texture = Wheel1LegendImage;
                     PayoutTableColumn2Row3.Texture = Wheel1LegendImage;
                     PayoutTableColumn2Row4.Texture = Wheel1LegendImage;
-                    PayoutTable1.X -= 72;
+                    PayoutTable1.X -= 92;
                     PayoutTable1.Y -= 5;
                     PayoutTable2.Visible = false;
                     PayoutTable3.Visible = false;
                     PayoutTable4.Visible = false;
                     PayoutTable5.Visible = false;
                     ActivePayoutTable = PayoutTable1;
-                    PayoutTable1.Caption = PayoutTable1.Caption.Replace("Viva PGT", "\"Viva PGT\"");
+                    PayoutTable1.Caption = PayoutTable1.Caption.Replace("Viva PGT", "\"Viva PGT\""); // add quotes for consistency
                     EachBet = 1;
                     break;
                 case 1:
@@ -812,7 +809,7 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTableColumn2Row2.Texture = Wheel2LegendImage;
                     PayoutTableColumn2Row3.Texture = Wheel2LegendImage;
                     PayoutTableColumn2Row4.Texture = Wheel2LegendImage;
-                    PayoutTable2.X -= 30;
+                    PayoutTable2.X -= 50;
                     PayoutTable2.Y -= 5;
                     PayoutTable1.Visible = false;
                     PayoutTable3.Visible = false;
@@ -834,7 +831,7 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTableColumn2Row2.Texture = Wheel3LegendImage;
                     PayoutTableColumn2Row3.Texture = Wheel3LegendImage;
                     PayoutTableColumn2Row4.Texture = Wheel3LegendImage;
-                    PayoutTable3.X -= 32;
+                    PayoutTable3.X -= 52;
                     PayoutTable3.Y -= 5;
                     PayoutTable1.Visible = false;
                     PayoutTable2.Visible = false;
@@ -856,7 +853,7 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTableColumn2Row2.Texture = Wheel4LegendImage;
                     PayoutTableColumn2Row3.Texture = Wheel4LegendImage;
                     PayoutTableColumn2Row4.Texture = Wheel4LegendImage;
-                    PayoutTable4.X -= 40;
+                    PayoutTable4.X -= 60;
                     PayoutTable4.Y -= 5;
                     PayoutTable1.Visible = false;
                     PayoutTable2.Visible = false;
@@ -878,7 +875,7 @@ namespace FSO.Client.UI.Panels.EODs
                     PayoutTableColumn2Row2.Texture = Wheel5LegendImage;
                     PayoutTableColumn2Row3.Texture = Wheel5LegendImage;
                     PayoutTableColumn2Row4.Texture = Wheel5LegendImage;
-                    PayoutTable5.X -= 32;
+                    PayoutTable5.X -= 52;
                     PayoutTable5.Y -= 5;
                     PayoutTable1.Visible = false;
                     PayoutTable2.Visible = false;
