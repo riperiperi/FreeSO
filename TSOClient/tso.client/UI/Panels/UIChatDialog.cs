@@ -233,7 +233,7 @@ namespace FSO.Client.UI.Panels
                         {
                             var tts = GetOrCreateTTS();
                             var gender = avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender) > 0;
-                            tts?.Speak(evt.Text[1], gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch);
+                            tts?.Speak(evt.Text[1].Replace('_', ' '), gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch);
                         }
                     }
                 }

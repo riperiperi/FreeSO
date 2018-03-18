@@ -164,7 +164,7 @@ namespace FSO.Client.UI.Panels
         {
             //remove newline first
             if (MessageType != Controllers.MessageType.Call || MessageTextEdit.EventSuppressed) return; //cannot send on enter for letters (or during read mode :|)
-            MessageTextEdit.CurrentText = MessageTextEdit.CurrentText.Substring(0, MessageTextEdit.CurrentText.Length - 2);
+            MessageTextEdit.CurrentText = MessageTextEdit.CurrentText.TrimEnd('\n');
             SendMessage(this);
         }
 

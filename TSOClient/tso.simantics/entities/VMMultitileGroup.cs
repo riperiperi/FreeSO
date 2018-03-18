@@ -188,7 +188,7 @@ namespace FSO.SimAntics.Entities
                         for (int j = 0; j < Objects.Count(); j++)
                         {
                             //need to restore slot we were in
-                            if (OldContainers[j] != null) {
+                            if (j <OldContainers.Length && OldContainers[j] != null) {
                                 OldContainers[j].PlaceInSlot(Objects[j], OldSlotNum[j], false, context);
                             }
                             Objects[j].PositionChange(context, false);

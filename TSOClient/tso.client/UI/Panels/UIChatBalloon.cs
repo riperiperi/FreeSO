@@ -85,7 +85,7 @@ namespace FSO.Client.UI.Panels
             Name = avatar.Name;
             Message = avatar.Message;
             Gender = avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender) > 0;
-            TTSContext?.Speak(Message, Gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch);
+            TTSContext?.Speak(Message.Replace('_', ' '), Gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch);
             
             Offscreen = false;
             if (Message == "") Name = "";
@@ -293,7 +293,7 @@ namespace FSO.Client.UI.Panels
             //draw middle
             DrawLocalTexture(batch, BTiles, new Rectangle(40, 120, 1, 1), new Vector2(DisplayRect.Left + 20, DisplayRect.Top + 20), new Vector2(DisplayRect.Width-40, DisplayRect.Height-40), bgCol);
 
-
+            
             Vector2 offpos = new Vector2(DisplayRect.X + 1, DisplayRect.Y + 1)*Scale;
             int posi = 0;
             foreach (var cmd in BodyTextLabels.DrawingCommands)

@@ -8,9 +8,35 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Web.Http;
+using System.Runtime.Caching;
 
 namespace FSO.Server.Api.Controllers
 {
+
+    public static class MemoryCacher
+    {
+        public static object GetValue(string key)
+        {
+            MemoryCache memoryCache = MemoryCache.Default;
+            return memoryCache.Get(key);
+        }
+
+        public static bool Add(string key, object value, DateTimeOffset absExpiration)
+        {
+            MemoryCache memoryCache = MemoryCache.Default;
+            return memoryCache.Add(key, value, absExpiration);
+        }
+
+        public static void Delete(string key)
+        {
+            MemoryCache memoryCache = MemoryCache.Default;
+            if (memoryCache.Contains(key))
+            {
+                memoryCache.Remove(key);
+            }
+        }
+    }
+
     public class LotThumbController : ApiController
     {
         public static ConcurrentDictionary<int, ShardLocationCache> LotLocationCache = new ConcurrentDictionary<int, ShardLocationCache>();
@@ -51,6 +77,19 @@ namespace FSO.Server.Api.Controllers
 
         public HttpResponseMessage Get(int shardid, uint id)
         {
+            var dat = (byte[])MemoryCacher.GetValue("lt" + shardid + ":" + id);
+            if (dat != null)
+            {
+                HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+                response.Content = new ByteArrayContent(dat);
+                response.Headers.CacheControl = new CacheControlHeaderValue()
+                {
+                    Public = true,
+                    MaxAge = new TimeSpan(1, 0, 0),
+                };
+                response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
+            }
+
             var api = Api.INSTANCE;
 
             using (var da = api.DAFactory.Get())
@@ -61,13 +100,15 @@ namespace FSO.Server.Api.Controllers
                 FileStream stream;
                 try
                 {
-                    stream = File.OpenRead(Path.Combine(api.Config.NFSdir, "Lots/" + lot.Value.ToString("x8") + "/thumb.png"));
+                    var ndat = File.ReadAllBytes(Path.Combine(api.Config.NFSdir, "Lots/" + lot.Value.ToString("x8") + "/thumb.png"));
+                    MemoryCacher.Add("lt" + shardid + ":" + id, ndat, DateTime.Now.Add(new TimeSpan(1, 0, 0)));
+
                     HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-                    response.Content = new StreamContent(stream);
+                    response.Content = new ByteArrayContent(ndat);
                     response.Headers.CacheControl = new CacheControlHeaderValue()
                     {
                         Public = true,
-                        MaxAge = new TimeSpan(0, 3, 0),
+                        MaxAge = new TimeSpan(1, 0, 0),
                     };
                     response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
 

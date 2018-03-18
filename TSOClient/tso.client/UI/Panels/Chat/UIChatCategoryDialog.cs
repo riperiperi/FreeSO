@@ -83,7 +83,7 @@ namespace FSO.Client.UI.Panels.Chat
                 var vbox = new UIVBoxContainer();
                 vbox.Add(new UILabel
                 {
-                    Caption = (j == 0) ? GameFacade.Strings.GetString("f113", "35") : GameFacade.Strings.GetString("f112", "36")
+                    Caption = (j == 0) ? GameFacade.Strings.GetString("f113", "35") : GameFacade.Strings.GetString("f113", "36")
                 });
                 var viewMin = (j == 0);
                 for (uint i = 0; i < 4; i++)

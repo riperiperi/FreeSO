@@ -163,6 +163,7 @@ namespace FSO.Client.UI.Panels
         public UILabel ChatColor { get; set; }
         public UILabel ProfanityFilterTitle { get; set; }
         public UILabel EnterWordLabel { get; set; }
+        public UITextEdit EntryBox { get; set; }
 
         public UISlider PitchSlider { get; set; }
         public int PitchTimer = 0;
@@ -180,6 +181,7 @@ namespace FSO.Client.UI.Panels
             Remove(SubtractButton);
             Remove(EnableFilterCheckButton);
             Remove(ProfanityFilterTitle);
+            Remove(EntryBox);
 
             EnterWordLabel.Caption = GameFacade.Strings.GetString("f113", "5");
 

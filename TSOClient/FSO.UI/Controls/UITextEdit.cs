@@ -138,7 +138,7 @@ namespace FSO.Client.UI.Controls
             {
                 if (BBCodeEnabled)
                 {
-                    CodeParser = new BBCodeParser(CurrentText.Replace("\r", ""));
+                    CodeParser = new BBCodeParser(CurrentText);
                     return CodeParser.Stripped;
                 }
                 else return CurrentText;
@@ -825,7 +825,7 @@ namespace FSO.Client.UI.Controls
             var bbIndex = 0;
 
             m_Lines.Clear();
-            txt = txt.Replace("\r", "");
+            //txt = txt.Replace("\r", "");
             var words = txt.Split(' ').ToList();
 	        var spaceWidth = TextStyle.MeasureString(" ").X;
 

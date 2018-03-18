@@ -62,7 +62,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
 
             if (Version > 27)
             {
-                ChatColor = new Color(reader.ReadByte(), reader.ReadByte(), reader.ReadByte(), (byte)0);
+                ChatColor = new Color(reader.ReadByte(), reader.ReadByte(), reader.ReadByte(), (byte)255);
                 ChatTTSPitch = reader.ReadSByte();
                 ChatChannel = reader.ReadByte();
             }

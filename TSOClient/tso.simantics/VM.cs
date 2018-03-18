@@ -625,6 +625,7 @@ namespace FSO.SimAntics
 
         public void Load(VMMarshal input)
         {
+            var lastBp = Context.Blueprint; //try keep this alive I suppose
             var clientJoin = (Context.Architecture == null);
             //var oldWorld = Context.World;
             //TS1 = input.TS1;
