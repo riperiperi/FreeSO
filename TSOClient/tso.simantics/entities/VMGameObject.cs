@@ -22,17 +22,22 @@ using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Marshals.Hollow;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.SimAntics.Model.Platform;
+using FSO.SimAntics.Model.TS1Platform;
 
 namespace FSO.SimAntics
 {
     public class VMGameObject : VMEntity
     {
         public VMGameObjectDisableFlags Disabled;
+        public VMIObjectState ObjectState;
 
         public VMGameObject(GameObject def, ObjectComponent worldUI) : base(def)
         {
             this.WorldUI = worldUI;
-            PlatformState = new VMTSOObjectState(); //todo: ts1 switch
+            var state = VM.GlobTS1?(VMAbstractEntityState)new VMTS1ObjectState():new VMTSOObjectState();
+            PlatformState = state;
+            ObjectState = (VMIObjectState)state;
         }
 
         public override void SetDynamicSpriteFlag(ushort index, bool set)
@@ -113,6 +118,7 @@ namespace FSO.SimAntics
 
         public void DisableIfTSOCategoryWrong(VMContext context)
         {
+            if (context.VM.TS1) return;
             OBJD obj = Object.OBJ;
             if (MasterDefinition != null) obj = MasterDefinition;
             var category = context.VM.TSOState.PropertyCategory;
@@ -447,6 +453,7 @@ namespace FSO.SimAntics
         public void Load(VMGameObjectMarshal input)
         {
             base.Load(input);
+            ObjectState = (VMIObjectState)PlatformState;
             Position = Position;
             Direction = input.Direction;
             Disabled = input.Disabled;

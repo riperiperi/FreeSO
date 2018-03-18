@@ -244,11 +244,11 @@ namespace FSO.SimAntics.Primitives
 
         public virtual bool UseNeighbor
         {
-            get { return (Flags & 8) == 8; }
+            get { return (Flags & 2) == 2; }
             set
             {
-                if (value) Flags |= 8;
-                else Flags &= unchecked((byte)~8);
+                if (value) Flags |= 2;
+                else Flags &= unchecked((byte)~2);
             }
         }
 

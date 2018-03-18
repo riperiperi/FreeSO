@@ -39,6 +39,14 @@ namespace FSO.LotView.RC
             return WallStyleCache[id];
         }
 
+        public static Vector2[] CutCheckDir =
+        {
+            new Vector2(-1,-1),
+            new Vector2(-1,1),
+            new Vector2(1,1),
+            new Vector2(1,-1)
+        };
+
         public void Generate(GraphicsDevice device, WorldState world, bool cutaway)
         {
             var wallContent = Content.Content.Get().WorldWalls;
@@ -51,7 +59,7 @@ namespace FSO.LotView.RC
             var wallHeight = new Vector3(0, 0, 2.95f);
             var thickness = 0.15f/2;
             var thickDiag = thickness;
-            var xz = world.GetWallOffset()*10;
+            var xz = CutCheckDir[(int)world.CutRotation] * 0.66f;
             if (float.IsNaN(xz.X)) xz = new Vector2();
 
             //draw walls

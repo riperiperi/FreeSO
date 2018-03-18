@@ -174,6 +174,13 @@ namespace FSO.Client.UI.Controls
             _InDraw = false;
         }
 
+        public void NewStyle(Color color, int size)
+        {
+            CaptionStyle = CaptionStyle.Clone();
+            CaptionStyle.Color = color;
+            CaptionStyle.Size = size;
+        }
+
         public void AutoSize()
         {
             this.Size = CaptionStyle.MeasureString(Caption);

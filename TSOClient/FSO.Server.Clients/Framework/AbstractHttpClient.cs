@@ -18,7 +18,7 @@ namespace FSO.Server.Clients.Framework
             this.BaseUrl = baseUrl;
         }
 
-        public void SetBaseUrl(string url)
+        public virtual void SetBaseUrl(string url)
         {
             BaseUrl = url;
         }

@@ -330,7 +330,6 @@ namespace FSO.Client.UI.Screens
             //clear our cache too, if the setting lets us do that
             TimedReferenceController.Clear();
             TimedReferenceController.Clear();
-            VM.ClearAssembled();
 
             vm.Context.Ambience.Kill();
             foreach (var ent in vm.Entities)
@@ -512,7 +511,7 @@ namespace FSO.Client.UI.Screens
                 if (!Downtown && ActiveFamily != null)
                 {
                     ActiveFamily.SelectWholeFamily();
-                    vm.ActivateFamily(ActiveFamily);
+                    vm.TS1State.ActivateFamily(vm, ActiveFamily);
                 }
                 BlueprintReset(lotName);
 

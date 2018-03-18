@@ -49,7 +49,7 @@ namespace FSO.SimAntics.Primitives
                 // 3. DO NOT USE
                 case VMGenericTSOCallMode.IsStackObjectARoommate: //4 
                     return (context.StackObject is VMGameObject 
-                        || ((VMTSOAvatarState)context.StackObject.TSOState).Permissions < VMTSOAvatarPermissions.Roommate)
+                        || ((VMAvatar)context.StackObject).AvatarState.Permissions < VMTSOAvatarPermissions.Roommate)
                         ? VMPrimitiveExitCode.GOTO_FALSE : VMPrimitiveExitCode.GOTO_TRUE;
                 // 5. Combine Assets of family in Temp0
                 // 6. Remove From Family
@@ -198,7 +198,7 @@ namespace FSO.SimAntics.Primitives
                     {
                         var caller = (VMAvatar)context.Caller;
                         var callee = (VMAvatar)context.Callee;
-                        if (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Owner && context.VM.TSOState.Roommates.Count < 8
+                        if (caller.AvatarState.Permissions == VMTSOAvatarPermissions.Owner && context.VM.TSOState.Roommates.Count < 8
                             && (((VMTSOAvatarState)callee.TSOState).Flags & VMTSOAvatarFlags.CanBeRoommate) > 0)
                         {
                             result = 2;

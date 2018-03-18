@@ -13,7 +13,7 @@ namespace FSO.SimAntics.Marshals
         public VMGameObjectDisableFlags Disabled;
 
         public VMGameObjectMarshal() { }
-        public VMGameObjectMarshal(int version) : base(version) { }
+        public VMGameObjectMarshal(int version, bool ts1) : base(version, ts1) { }
 
         public override void Deserialize(BinaryReader reader)
         {

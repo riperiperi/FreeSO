@@ -44,6 +44,8 @@ namespace FSO.SimAntics
         public uint RoofStyle = 16;
         public float RoofPitch = 0.66f;
 
+        public bool BuildBuyEnabled = true;
+
         public bool[][] ObjectSupport;
         public bool[][] Supported;
 
@@ -483,7 +485,7 @@ namespace FSO.SimAntics
                         {
                             cost += nwCount * lstyle.Price;
                             if (avatar != null)
-                            Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            Context.VM.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Arch,
                             avatar.Name,
                             Context.VM.GetUserIP(avatar.PersistID),
                             "placed " + nwCount + " walls."
@@ -496,7 +498,7 @@ namespace FSO.SimAntics
                         {
                             cost -= 7 * dwCount;
                             if (avatar != null)
-                            Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            Context.VM.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Arch,
                             avatar.Name,
                             Context.VM.GetUserIP(avatar.PersistID),
                             "erased " + dwCount + " walls."
@@ -511,7 +513,7 @@ namespace FSO.SimAntics
                         {
                             cost += rwCount * rstyle.Price;
                             if (avatar != null)
-                            Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            Context.VM.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Arch,
                             avatar.Name,
                             Context.VM.GetUserIP(avatar.PersistID),
                             "placed " + rwCount + " walls (rect)."
@@ -527,7 +529,7 @@ namespace FSO.SimAntics
                             cost -= pfCount.Cost - pfCount.Cost / 5;
                             cost += (pattern == null) ? 0 : pattern.Price * pfCount.Total;
                             if (avatar != null)
-                                Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                                Context.VM.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Arch,
                             avatar.Name,
                             Context.VM.GetUserIP(avatar.PersistID),
                             "pattern filled " + pfCount + " walls with pattern #" + com.pattern
@@ -557,7 +559,7 @@ namespace FSO.SimAntics
                             cost += (ffpattern == null) ? 0 : ffpattern.Price * ffCount.Total / 2;
 
                             if (avatar != null)
-                            Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            Context.VM.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Arch,
                             avatar.Name,
                             Context.VM.GetUserIP(avatar.PersistID),
                             "floor filled " + ffCount.Total / 2f + " with pattern #" + com.pattern
@@ -574,7 +576,7 @@ namespace FSO.SimAntics
                             cost += (frpattern == null) ? 0 : frpattern.Price * frCount.Total / 2;
 
                             if (avatar != null)
-                                Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                                Context.VM.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Arch,
                                 avatar.Name,
                                 Context.VM.GetUserIP(avatar.PersistID),
                                 "placed " + frCount.Total / 2f + " tiles with pattern #" + com.pattern
@@ -594,7 +596,7 @@ namespace FSO.SimAntics
                         {
                             cost += terrainCount;
                             if (avatar != null)
-                                Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                                Context.VM.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Arch,
                                 avatar.Name,
                                 Context.VM.GetUserIP(avatar.PersistID),
                                 "modified terrain by " + cost + " units."
@@ -608,7 +610,7 @@ namespace FSO.SimAntics
                 }
             }
             if (lastAvatar != null && pdCount > 0)
-                Context.VM.SignalChatEvent(new VMChatEvent(lastAvatar.PersistID, VMChatEventType.Arch,
+                Context.VM.SignalChatEvent(new VMChatEvent(lastAvatar, VMChatEventType.Arch,
                 lastAvatar.Name,
                 Context.VM.GetUserIP(lastAvatar.PersistID),
                 "pattern dotted " + pdCount + " walls with pattern #" + pdVal
@@ -896,7 +898,7 @@ namespace FSO.SimAntics
         #region VM Marshalling Functions
         public virtual VMArchitectureMarshal Save()
         {
-            return new VMArchitectureMarshal
+            var marshal = new VMArchitectureMarshal
             {
                 Width = Width,
                 Height = Height,
@@ -912,8 +914,14 @@ namespace FSO.SimAntics
 
                 RoofPitch = RoofPitch,
                 RoofStyle = RoofStyle,
-                IDMap = Context.VM.TS1 ? new VMResourceIDMarshal(Context.VM) : null
+                IDMap = Context.VM.TS1 ? new VMResourceIDMarshal(Context.VM) : null,
+
+                BuildBuyEnabled = BuildBuyEnabled
             };
+            marshal.Preserialize(); //this must be done to keep async serialization thread safe.
+            //in other places we just clone mutable state, but here there are so many deep
+            //structures that it would cause a notable performance impact.
+            return marshal;
         }
 
         public virtual void Load(VMArchitectureMarshal input)
@@ -930,6 +938,8 @@ namespace FSO.SimAntics
 
             RoofPitch = input.RoofPitch;
             RoofStyle = input.RoofStyle;
+
+            BuildBuyEnabled = input.BuildBuyEnabled;
 
             RegenWallsAt();
             SignalTerrainRedraw();

@@ -870,8 +870,7 @@ namespace FSO.Client.UI.Panels
                         outText.Append("\r\n");
                     }
                 }
-                int poolTime = currentJob.JobLevel_JobType;
-                poolTime = (poolTime > 2) ? (poolTime - 1) : poolTime;
+                int poolTime = Math.Min(2, currentJob.JobLevel_JobType - 1);
                 JobAlertText = GameFacade.Strings.GetString("189", "65", new string[] {
                     GameFacade.Strings.GetString("189", (67+currentJob.JobLevel_JobType).ToString()),
                     title,

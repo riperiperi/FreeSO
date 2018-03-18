@@ -197,7 +197,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     {
                         cmd.Deserialize(reader);
                     }
-                    cmd.Command.Execute(VMHook);
+                    cmd.Command.Execute(VMHook, VMHook.GetAvatarByPersist(cmd.Command.ActorUID));
                 }
                 catch (Exception e)
                 {

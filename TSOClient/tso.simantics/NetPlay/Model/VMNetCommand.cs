@@ -54,7 +54,9 @@ namespace FSO.SimAntics.NetPlay.Model
             { VMCommandType.ChangeControl, typeof(VMNetChangeControlCmd) },
             { VMCommandType.SetTime, typeof(VMNetSetTimeCmd) },
             { VMCommandType.Tuning, typeof(VMNetTuningCmd) },
-            { VMCommandType.BatchGraphic, typeof(VMNetBatchGraphicCmd) }
+            { VMCommandType.BatchGraphic, typeof(VMNetBatchGraphicCmd) },
+            { VMCommandType.ChatParameters, typeof(VMNetChatParamCmd) },
+            { VMCommandType.ChatEditChan, typeof(VMNetChatEditChanCmd) }
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -154,6 +156,9 @@ namespace FSO.SimAntics.NetPlay.Model
         SetTime = 36,
         Tuning = 37,
 
-        BatchGraphic = 38
+        BatchGraphic = 38,
+
+        ChatParameters = 39,
+        ChatEditChan = 40
     }
 }

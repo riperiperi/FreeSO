@@ -74,6 +74,7 @@ namespace FSO.Server.Servers.UserApi
             settings.Add("regkey", userApiConfig.Regkey);
             settings.Add("secret", config.Secret);
             settings.Add("updateUrl", userApiConfig.UpdateUrl);
+            settings.Add("cdnUrl", userApiConfig.CDNUrl);
             settings.Add("connectionString", config.Database.ConnectionString);
             settings.Add("NFSdir", config.SimNFS);
             settings.Add("smtpHost", userApiConfig.SmtpHost);

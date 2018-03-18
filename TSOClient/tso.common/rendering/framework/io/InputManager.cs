@@ -177,15 +177,15 @@ namespace FSO.Common.Rendering.Framework.IO
 
                             if (cursorIndex == -1)
                             {
-                                m_SBuilder.Append("\r\n");
+                                m_SBuilder.Append("\n");
                             }
                             else
                             {
                                 cursorIndex = Math.Min(m_SBuilder.Length, cursorIndex);
-                                m_SBuilder.Insert(cursorIndex, "\r\n");
-                                cursorIndex += 2;
+                                m_SBuilder.Insert(cursorIndex, "\n");
+                                cursorIndex += 1;
                             }
-                            result.NumInsertions += 2;
+                            result.NumInsertions += 1;
                             didChange = true;
                             result.EnterPressed = true;
                         }

@@ -1,4 +1,7 @@
 ﻿//#define THROW_SIMANTICS
+#if !Server
+    #define IDE_COMPAT
+#endif
 
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
@@ -228,12 +231,6 @@ namespace FSO.SimAntics.Engine
             else if (ThreadBreak == VMThreadBreakMode.Immediate)
             {
                 Breakpoint(Stack.LastOrDefault(), "Paused."); return;
-            }
-            if (RoutineDirty)
-            {
-                foreach (var frame in Stack)
-                    if (frame.Routine.Chunk.RuntimeVer != frame.Routine.RuntimeVer) frame.CodeOwner.Resource.Recache();
-                RoutineDirty = false;
             }
 #endif
 
@@ -779,7 +776,7 @@ namespace FSO.SimAntics.Engine
                 }
                 else if (avatar.IsPet) return null; //not allowed
 
-                var isVisitor = avatar.GetPersonData(VMPersonDataVariable.PersonType) == 1 && avatar.GetPersonData(VMPersonDataVariable.TS1FamilyNumber) != Context.VM.CurrentFamily?.ChunkID;
+                var isVisitor = avatar.GetPersonData(VMPersonDataVariable.PersonType) == 1 && avatar.GetPersonData(VMPersonDataVariable.TS1FamilyNumber) != Context.VM.TS1State.CurrentFamily?.ChunkID;
                     //avatar.ObjectID != Context.VM.GetGlobalValue(3);
 
                 TTABFlags ts1State =
@@ -859,9 +856,9 @@ namespace FSO.SimAntics.Engine
                 TSOFlags tsoState =
                     ((!(action.Callee is VMGameObject) || avatar.PersistID == ((VMTSOObjectState)action.Callee.TSOState).OwnerID)
                     ? TSOFlags.AllowObjectOwner : 0)
-                    | ((((VMTSOAvatarState)avatar.TSOState).Permissions == VMTSOAvatarPermissions.Visitor) ? TSOFlags.AllowVisitors : 0)
-                    | ((((VMTSOAvatarState)avatar.TSOState).Permissions >= VMTSOAvatarPermissions.Roommate) ? TSOFlags.AllowRoommates : 0)
-                    | ((((VMTSOAvatarState)avatar.TSOState).Permissions == VMTSOAvatarPermissions.Admin) ? TSOFlags.AllowCSRs : 0)
+                    | ((avatar.AvatarState.Permissions == VMTSOAvatarPermissions.Visitor) ? TSOFlags.AllowVisitors : 0)
+                    | ((avatar.AvatarState.Permissions >= VMTSOAvatarPermissions.Roommate) ? TSOFlags.AllowRoommates : 0)
+                    | ((avatar.AvatarState.Permissions == VMTSOAvatarPermissions.Admin) ? TSOFlags.AllowCSRs : 0)
                     | ((avatar.GetPersonData(VMPersonDataVariable.IsGhost) > 0) ? TSOFlags.AllowGhost : 0)
                     | TSOFlags.AllowFriends;
                 TSOFlags tsoCompare = action.Flags2;
@@ -922,8 +919,8 @@ namespace FSO.SimAntics.Engine
                 Stack = stack,
                 Queue = queue,
                 ActiveQueueBlock = ActiveQueueBlock,
-                TempRegisters = TempRegisters,
-                TempXL = TempXL,
+                TempRegisters = (short[])TempRegisters.Clone(),
+                TempXL = (int[])TempXL.Clone(),
                 LastStackExitCode = LastStackExitCode,
 
                 BlockingState = BlockingState,

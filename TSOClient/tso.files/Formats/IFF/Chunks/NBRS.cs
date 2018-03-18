@@ -79,6 +79,13 @@ namespace FSO.Files.Formats.IFF.Chunks
             }
             return true;
         }
+
+        public void AddNeighbor(Neighbour nb) {
+            Entries.Add(nb);
+            Entries = Entries.OrderBy(x => x.NeighbourID).ToList();
+            NeighbourByID.Add(nb.NeighbourID, nb);
+            DefaultNeighbourByGUID[nb.GUID] = nb.NeighbourID;
+        }
     }
 
     public class Neighbour

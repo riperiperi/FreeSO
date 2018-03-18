@@ -27,6 +27,7 @@ using FSO.Client.UI.Model;
 using FSO.Common;
 using FSO.Common.Utils.Cache;
 using FSO.Common.Domain.Shards;
+using FSO.Server.Clients;
 
 namespace FSO.Client.UI.Screens
 {
@@ -44,9 +45,13 @@ namespace FSO.Client.UI.Screens
         public Texture2D CityButtonTemplateImage { get; set; }
         public Texture2D CityHouseButtonAlpha { get; set; }
 
+        public UIButton FamilyButton { get; set; }
+
         public UIButton CreditsButton { get; set; }
         private List<PersonSlot> m_PersonSlots { get; set; }
         private UIButton m_ExitButton;
+
+        public ApiClient Api;
 
         public LoginRegulator LoginRegulator;
 
@@ -57,7 +62,8 @@ namespace FSO.Client.UI.Screens
             //Arrange UI
             this.LoginRegulator = loginRegulator;
             this.Cache = cache;
-            
+            Api = new ApiClient(ApiClient.CDNUrl ?? GlobalSettings.Default.GameEntryUrl);
+
             UIScript ui = null;
             ui = this.RenderScript("personselection1024.uis");
 
@@ -67,6 +73,9 @@ namespace FSO.Client.UI.Screens
 
             var numSlots = 3;
             m_PersonSlots = new List<PersonSlot>();
+
+            FamilyButton.Visible = false;
+            CreditsButton.Disabled = true;
 
             for (var i = 0; i < numSlots; i++)
             {
@@ -164,8 +173,27 @@ namespace FSO.Client.UI.Screens
             Parent.InvalidateMatrix();
         }
 
+        public void AsyncAPILotThumbnail(uint shardId, uint lotId, Action<Texture2D> callback)
+        {
+            Api.GetThumbnailAsync(shardId, lotId, (data) =>
+            {
+                if (data != null)
+                {
+                    GameThread.NextUpdate(x =>
+                    {
+                        if (UIScreen.Current != this) return;
+                        using (var mem = new MemoryStream(data))
+                        {
+                            callback(ImageLoader.FromStream(GameFacade.GraphicsDevice, mem));
+                        }
+                    });
+                }
+            });
+        }
+
         public Texture2D GetLotThumbnail(string shardName, uint lotId)
         {
+            //might reintroduce the cache at some point, though with the thumbnails behind cloudflare it's likely not an issue for now.
             var shard = LoginRegulator.Shards.GetByName(shardName);
             var shardKey = CacheKey.For("shards", shard.Id);
             var thumbKey = CacheKey.Combine(shardKey, "lot_thumbs", lotId);
@@ -381,10 +409,19 @@ namespace FSO.Client.UI.Screens
 
             if (avatar.LotId.HasValue && avatar.LotName != null) {
                 HouseNameText.Caption = avatar.LotName;
+                Screen.AsyncAPILotThumbnail((uint)shard.Id, avatar.LotLocation.Value, (tex) =>
+                {
+                    HouseThumb.Texture = tex;
+                    HouseThumb.Y += HouseThumb.Size.Y / 2;
+                    HouseThumb.SetSize(HouseThumb.Size.X, (int)(HouseThumb.Size.X * ((double)HouseThumb.Texture.Height / HouseThumb.Texture.Width)));
+                    HouseThumb.Y -= HouseThumb.Size.Y / 2;
+                });
+                /*
                 HouseThumb.Texture = Screen.GetLotThumbnail(avatar.ShardName, avatar.LotLocation.Value);
                 HouseThumb.Y += HouseThumb.Size.Y / 2;
                 HouseThumb.SetSize(HouseThumb.Size.X, (int)(HouseThumb.Size.X * ((double)HouseThumb.Texture.Height / HouseThumb.Texture.Width)));
                 HouseThumb.Y -= HouseThumb.Size.Y / 2;
+                */
             }
 
             var cityThumb = (int.Parse(shard.Map) >= 100)?

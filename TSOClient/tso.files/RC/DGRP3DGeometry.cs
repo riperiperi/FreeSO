@@ -61,13 +61,18 @@ namespace FSO.Files.RC
             if (PixelDir == 65535)
             {
                 CustomTexture = 1;
-
-                var name = source.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff");
-                name += "_TEX_" + PixelSPR + ".png";
-                Pixel = ReplTextureProvider(name);
-                if (Pixel == null)
+                if (source == null)
                 {
-                    Pixel = source.ChunkParent.Get<MTEX>(PixelSPR)?.GetTexture(gd);
+                    //temporary system for models without DGRP
+                    Pixel = ReplTextureProvider("FSO_TEX_"+ PixelSPR + ".png");
+                } else {
+                    var name = source.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff");
+                    name += "_TEX_" + PixelSPR + ".png";
+                    Pixel = ReplTextureProvider(name);
+                    if (Pixel == null)
+                    {
+                        Pixel = source.ChunkParent.Get<MTEX>(PixelSPR)?.GetTexture(gd);
+                    }
                 }
             }
             else

@@ -20,6 +20,7 @@ using FSO.Client.GameContent;
 using FSO.Client.UI;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
+using FSO.Common.Rendering.Emoji;
 
 namespace FSO.Client
 {
@@ -32,6 +33,7 @@ namespace FSO.Client
         public static UILayer Screens;
         public static _3DLayer Scenes;
         public static GraphicsDevice GraphicsDevice;
+        public static EmojiProvider Emojis;
         public static GraphicsDeviceManager GraphicsDeviceManager;
         public static Common.Rendering.Framework.Game Game;
         //public static TSOClientTools DebugWindow;

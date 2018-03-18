@@ -163,15 +163,91 @@ namespace FSO.Server.DataService.Providers
                 if (myLots.Count > 0 && myLots.FirstOrDefault()?.is_pending == 0) {
                     lot = db.Lots.Get(myLots.FirstOrDefault().lot_id);
                 }
-                List<DbJobLevel> levels = db.Avatars.GetJobLevels(key);
-                List<DbRelationship> rels = db.Relationships.GetBidirectional(key);
-                List<DbBookmark> bookmarks = db.Bookmarks.GetByAvatarId(key);
+                //List<DbJobLevel> levels = db.Avatars.GetJobLevels(key);
+                //List<DbRelationship> rels = db.Relationships.GetBidirectional(key);
+                //List<DbBookmark> bookmarks = db.Bookmarks.GetByAvatarId(key);
                 
-                var ava = HydrateOne(avatar, lot, levels, rels, bookmarks);
+                var ava = HydrateOne(avatar, lot);
                 if (oldVal != null) ava.Avatar_IsOnline = oldVal.Avatar_IsOnline;
                 return ava;
             }
         }
+
+        #region Delayed Field Providers
+        //this information is only loaded into memory when explicitly requested. This is to prevent scrolling through lists
+        //of avatars loading thousands of relationship lists.
+        public ImmutableList<Relationship> RelationshipProvider(uint avatarID)
+        {
+            using (var db = DAFactory.Get())
+            {
+                List<DbRelationship> rels = db.Relationships.GetBidirectional(avatarID);
+                var fvec = new Dictionary<Tuple<uint, bool>, Relationship>();
+                foreach (var rel in rels)
+                {
+                    bool outgoing = false;
+                    uint target = 0;
+                    if (rel.from_id == avatarID)
+                    {
+                        outgoing = true;
+                        target = rel.to_id;
+                    }
+                    else target = rel.from_id;
+
+                    var tuple = new Tuple<uint, bool>(target, outgoing);
+                    Relationship relObj = null;
+                    if (!fvec.TryGetValue(tuple, out relObj))
+                    {
+                        relObj = new Relationship
+                        {
+                            Relationship_IsOutgoing = outgoing,
+                            Relationship_TargetID = target,
+                            Relationship_CommentID = rel.comment_id ?? 0
+                        };
+                        fvec.Add(tuple, relObj);
+                    }
+
+                    if (rel.index == 0) relObj.Relationship_STR = (sbyte)rel.value;
+                    else relObj.Relationship_LTR = (sbyte)rel.value;
+                }
+                return ImmutableList.ToImmutableList(fvec.Values);
+            }
+        }
+
+        public ImmutableList<JobLevel> JobLevelProvider(uint avatarID)
+        {
+            using (var db = DAFactory.Get())
+            {
+                List<DbJobLevel> levels = db.Avatars.GetJobLevels(avatarID);
+                var jobs = new List<JobLevel>();
+                foreach (var level in levels)
+                {
+                    jobs.Add(new JobLevel
+                    {
+                        JobLevel_JobType = level.job_type,
+                        JobLevel_JobExperience = level.job_experience,
+                        JobLevel_JobGrade = level.job_level
+                    });
+                }
+                return ImmutableList.ToImmutableList(jobs);
+            }
+        }
+
+        public ImmutableList<Bookmark> BookmarkProvider(uint avatarId)
+        {
+            using (var db = DAFactory.Get())
+            {
+                List<DbBookmark> bookmarks = db.Bookmarks.GetByAvatarId(avatarId);
+                return ImmutableList.ToImmutableList(bookmarks.Select(x =>
+                {
+                    return new Bookmark
+                    {
+                        Bookmark_Type = x.type,
+                        Bookmark_TargetID = x.target_id
+                    };
+                }));
+            }
+        }
+        #endregion
 
         private static readonly uint AVATAR_RECACHE_SECONDS = 30;
 
@@ -180,7 +256,7 @@ namespace FSO.Server.DataService.Providers
             return (value != null && value.Avatar_IsOnline && Epoch.Now - value.FetchTime > AVATAR_RECACHE_SECONDS);
         }
 
-        private Avatar HydrateOne(DbAvatar dbAvatar, DbLot dbLot, List<DbJobLevel> levels, List<DbRelationship> rels, List<DbBookmark> bookmarks)
+        private Avatar HydrateOne(DbAvatar dbAvatar, DbLot dbLot)
         {
             var result = new Avatar();
             result.Avatar_Id = dbAvatar.avatar_id;
@@ -214,17 +290,7 @@ namespace FSO.Server.DataService.Providers
             result.Avatar_PrivacyMode = dbAvatar.privacy_mode;
             result.Avatar_SkillsLockPoints = (ushort)(20 + result.Avatar_Age/7);
 
-            var jobs = new List<JobLevel>();
-            foreach (var level in levels)
-            {
-                jobs.Add(new JobLevel
-                {
-                    JobLevel_JobType = level.job_type,
-                    JobLevel_JobExperience = level.job_experience,
-                    JobLevel_JobGrade = level.job_level
-                });
-            }
-            result.Avatar_JobLevelVec = ImmutableList.ToImmutableList(jobs);
+            result.JobLevelProvider = JobLevelProvider;
             result.Avatar_CurrentJob = dbAvatar.current_job;
 
             result.Avatar_Top100ListFilter = new Top100ListFilter()
@@ -233,46 +299,13 @@ namespace FSO.Server.DataService.Providers
                 Top100ListFilter_Top100ListID = 0,
             };
 
-            var fvec = new Dictionary<Tuple<uint, bool>, Relationship>();
-            foreach (var rel in rels)
-            {
-                bool outgoing = false;
-                uint target = 0;
-                if (rel.from_id == dbAvatar.avatar_id)
-                {
-                    outgoing = true;
-                    target = rel.to_id;
-                } else target = rel.from_id;
-
-                var tuple = new Tuple<uint, bool>(target, outgoing);
-                Relationship relObj = null;
-                if (!fvec.TryGetValue(tuple, out relObj))
-                {
-                    relObj = new Relationship
-                    {
-                        Relationship_IsOutgoing = outgoing,
-                        Relationship_TargetID = target,
-                        Relationship_CommentID = rel.comment_id ?? 0
-                    };
-                    fvec.Add(tuple, relObj);
-                }
-                
-                if (rel.index == 0) relObj.Relationship_STR = (sbyte)rel.value;
-                else relObj.Relationship_LTR = (sbyte)rel.value;
-            }
-            result.Avatar_FriendshipVec = ImmutableList.ToImmutableList(fvec.Values);
+            result.RelationshipProvider = RelationshipProvider;
 
             if (dbLot != null){
                 result.Avatar_LotGridXY = dbLot.location;
             }
 
-            result.Avatar_BookmarksVec = ImmutableList.ToImmutableList(bookmarks.Select(x =>
-            {
-                return new Bookmark {
-                    Bookmark_Type = x.type,
-                    Bookmark_TargetID = x.target_id
-                };
-            }));
+            result.BookmarkProvider = BookmarkProvider;
 
             return result;
         }

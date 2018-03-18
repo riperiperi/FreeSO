@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Client.UI.Controls;
+using FSO.SimAntics;
+using FSO.SimAntics.Model.TSOPlatform;
 //using System.Speech.Synthesis;
 
 namespace FSO.Client.UI.Panels
@@ -71,30 +73,43 @@ namespace FSO.Client.UI.Panels
             ShadowStyle = BodyTextStyle.Clone();
             ShadowStyle.Color = Color.Black;
 
+            /*
             if (!GameFacade.Linux && GlobalSettings.Default.EnableTTS)
             {
                 TTSContext = (ITTSContext.Provider == null) ? null : ITTSContext.Provider();
-            }
+            }*/
         }
 
-        public void SetNameMessage(string name, string message, bool gender)
+        public void SetNameMessage(VMAvatar avatar)
         {
-            Name = name;
-            Message = message;
-            TTSContext?.Speak(message, gender);
-            Gender = gender;
+            Name = avatar.Name;
+            Message = avatar.Message;
+            Gender = avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender) > 0;
+            TTSContext?.Speak(Message, Gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch);
+            
             Offscreen = false;
-            if (message == "") name = "";
+            if (Message == "") Name = "";
             TextChanged();
+        }
+
+        private string SanitizeBB(string input)
+        {
+            return input.Replace("[", "\\[");
         }
 
         private void TextChanged()
         {
-            BodyText = ((Offscreen && Message != "") ? "[" + Name + "] " : "") + Message;
+            BodyText = Message;
+            if (GlobalSettings.Default.ChatOnlyEmoji)
+            {
+                BodyText = GameFacade.Emojis.EmojiOnly(BodyText);
+            }
+            BodyText = ((Offscreen && Message != "") ? "\\[" + Name + "] " : "") + GameFacade.Emojis.EmojiToBB(SanitizeBB(BodyText));
 
             var textW = Math.Max(130, Message.Length*2);
             BodyTextLabels = TextRenderer.ComputeText(BodyText, new TextRendererOptions
             {
+                BBCode = true,
                 Alignment = TextAlignment.Center,
                 MaxWidth = textW,
                 Position = new Microsoft.Xna.Framework.Vector2(18, 16),
@@ -107,7 +122,7 @@ namespace FSO.Client.UI.Panels
 
             foreach (var cmd in BodyTextLabels.DrawingCommands)
             {
-                if (cmd is TextDrawCmd_Text) BTOffsets.Add(((TextDrawCmd_Text)cmd).Position);
+                if (cmd is INormalTextCmd) BTOffsets.Add(((INormalTextCmd)cmd).Position);
             }
 
             DisplayRect.Width = textW + 18 * 2;
@@ -283,11 +298,12 @@ namespace FSO.Client.UI.Panels
             int posi = 0;
             foreach (var cmd in BodyTextLabels.DrawingCommands)
             {
-                if (cmd is TextDrawCmd_Text)
+                if (cmd is INormalTextCmd)
                 {
-                    ((TextDrawCmd_Text)cmd).Style = ShadowStyle;
-                    ((TextDrawCmd_Text)cmd).Position = BTOffsets[posi++] + offpos;
+                    ((INormalTextCmd)cmd).Style = ShadowStyle;
+                    ((INormalTextCmd)cmd).Position = BTOffsets[posi++] + offpos;
                 }
+                if (cmd is TextDrawCmd_Emoji) ((TextDrawCmd_Emoji)cmd).Shadow = true;
             }
 
             ShadowStyle.Color = Color.Black * Alpha;
@@ -297,10 +313,11 @@ namespace FSO.Client.UI.Panels
             offpos = new Vector2(DisplayRect.X, DisplayRect.Y) * Scale;
             foreach (var cmd in BodyTextLabels.DrawingCommands)
             {
-                if (cmd is TextDrawCmd_Text) {
-                    ((TextDrawCmd_Text)cmd).Style = BodyTextStyle;
-                    ((TextDrawCmd_Text)cmd).Position = BTOffsets[posi++] + offpos;
+                if (cmd is INormalTextCmd) {
+                    ((INormalTextCmd)cmd).Style = BodyTextStyle;
+                    ((INormalTextCmd)cmd).Position = BTOffsets[posi++] + offpos;
                 }
+                if (cmd is TextDrawCmd_Emoji) ((TextDrawCmd_Emoji)cmd).Shadow = false;
             }
             BodyTextStyle.Color = this.Color * Alpha;
             TextRenderer.DrawText(BodyTextLabels.DrawingCommands, this, batch);
@@ -320,6 +337,6 @@ namespace FSO.Client.UI.Panels
     {
         public static Func<ITTSContext> Provider;
         public abstract void Dispose();
-        public abstract void Speak(string text, bool gender);
+        public abstract void Speak(string text, bool gender, int pitch);
     }
 }

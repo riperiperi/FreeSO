@@ -117,7 +117,7 @@ namespace FSO.SimAntics.Model
 
         public static int GetDiscountFor(ObjectCatalogItem item, VM vm)
         {
-            if (vm?.TSOState.PropertyCategory != 5) return 0;
+            if (vm.TS1 || vm.TSOState.PropertyCategory != 5) return 0;
             var guid = item.GUID;
             var catalog = Content.Content.Get().WorldCatalog;
             var sameItem = vm.Entities.Count(x => x == x.MultitileGroup.BaseObject && (x.Object.OBJ.GUID == guid || x.MasterDefinition?.GUID == guid));

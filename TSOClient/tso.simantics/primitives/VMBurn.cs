@@ -17,7 +17,8 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMBurnOperand)args;
-            if (!context.VM.TS1) return VMPrimitiveExitCode.GOTO_FALSE; //fire disabled for now
+            if (!context.VM.TS1 && context.VM.Tuning.GetTuning("special", 0, 0) != 1f)
+                return VMPrimitiveExitCode.GOTO_FALSE; //fire disabled for now
 
             if ((int)context.VM.Context.NextRandom(10000) >= context.VM.Context.Clock.FirePercent)
             {

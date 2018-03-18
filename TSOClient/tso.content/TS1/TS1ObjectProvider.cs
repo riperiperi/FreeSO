@@ -44,7 +44,7 @@ namespace FSO.Content.TS1
                 {
                     foreach (var obj in objects)
                     {
-                        Entries.Add(obj.GUID, new GameObjectReference(this)
+                        Entries[obj.GUID] = new GameObjectReference(this)
                         {
                             FileName = Path.GetFileName(iff.ToString().Replace('\\', '/')),
                             ID = obj.GUID,
@@ -52,7 +52,7 @@ namespace FSO.Content.TS1
                             Source = GameObjectSource.Far,
                             Group = (short)obj.MasterID,
                             SubIndex = obj.SubIndex
-                        });
+                        };
 
                         //does this object appear in the catalog?
                         if ((obj.FunctionFlags > 0 || obj.BuildModeType > 0) && obj.Disabled == 0 && (obj.MasterID == 0 || obj.SubIndex == -1))
@@ -82,32 +82,8 @@ namespace FSO.Content.TS1
                     }
                 }
             }
-            
-            var path = Path.Combine(ContentManager.Neighborhood.UserPath, "Characters/");
-            var files = Directory.EnumerateFiles(path);
-            foreach (var filename in files)
-            {
-                if (Path.GetExtension(filename) != ".iff") return;
-                var file = new IffFile(filename);
-                file.MarkThrowaway();
 
-                var objects = file.List<OBJD>();
-                if (objects != null)
-                {
-                    foreach (var obj in objects)
-                    {
-                        Entries.Add(obj.GUID, new GameObjectReference(this)
-                        {
-                            FileName = filename,
-                            ID = obj.GUID,
-                            Name = obj.ChunkLabel,
-                            Source = GameObjectSource.User,
-                            Group = (short)obj.MasterID,
-                            SubIndex = obj.SubIndex
-                        });
-                    }
-                }
-            }
+            ContentManager.Neighborhood.LoadCharacters(false);
         }
 
         protected override Func<string, GameObjectResource> GenerateResource(GameObjectReference reference)
@@ -125,7 +101,7 @@ namespace FSO.Content.TS1
                 else
                 {
                     //unused
-                    iff = new IffFile(reference.FileName);
+                    iff = new IffFile(reference.FileName, reference.Source == GameObjectSource.User);
                     iff.RuntimeInfo.Path = reference.FileName;
                     iff.RuntimeInfo.State = IffRuntimeState.Standalone;
                 }

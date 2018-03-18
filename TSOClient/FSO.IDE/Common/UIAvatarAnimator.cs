@@ -13,7 +13,9 @@ namespace FSO.IDE.Common
     {
         private Queue<string> AnimationRequests = new Queue<string>();
 
-        public UIAvatarAnimator() : base(VMAvatar.TEMPLATE_PERSON)
+        public UIAvatarAnimator() : base(Content.Content.Get().TS1?
+            (uint)Content.Content.Get().WorldObjects.Entries.FirstOrDefault(x => x.Value.Source == Content.GameObjectSource.User).Key
+            : VMAvatar.TEMPLATE_PERSON)
         {
 
         }
@@ -31,6 +33,7 @@ namespace FSO.IDE.Common
                     if (animation != null)
                     {
                         var astate = new VMAnimationState(animation, false);
+                        astate.Speed = 30/25f;
                         astate.Loop = true;
                         ((VMAvatar)TargetTile).Animations.Clear();
                         ((VMAvatar)TargetTile).Animations.Add(astate);

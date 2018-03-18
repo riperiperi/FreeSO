@@ -14,7 +14,7 @@ namespace FSO.IDE.EditorComponent.Primitives
     public class TS1InventoryOperationsDescriptor : PrimitiveDescriptor
     {
         public override PrimitiveGroup Group { get { return PrimitiveGroup.Object; } }
-        public override PrimitiveReturnTypes Returns { get { return PrimitiveReturnTypes.Done; } }
+        public override PrimitiveReturnTypes Returns { get { return PrimitiveReturnTypes.TrueFalse; } }
         public override Type OperandType { get { return typeof(VMTS1InventoryOperationsOperand); } }
 
         public override string GetBody(EditorScope scope)
@@ -33,9 +33,9 @@ namespace FSO.IDE.EditorComponent.Primitives
             }
 
             var flagStr = new StringBuilder();
-            flagStr.Append(op.Unknown3.ToString("X2") + " " + op.Unknown4.ToString("X2"));
+            flagStr.Append(op.Flags.ToString("X2") + " " + op.Flags2.ToString("X2"));
             string prepend = ", ";
-            if (op.CountInTemp0) { flagStr.Append(prepend + "Count in Temp 0"); prepend = ", "; }
+            if (op.CountInTemp) { flagStr.Append(prepend + "Count in Temp 0"); prepend = ", "; }
             if (op.UseObjectInTemp4) { flagStr.Append(prepend + "Use Object in Temp 4"); prepend = ", "; }
 
             if (flagStr.Length != 0)
@@ -57,11 +57,11 @@ namespace FSO.IDE.EditorComponent.Primitives
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Token Type:", "TokenType", new OpStaticValueBoundsProvider(0, 255)));
             panel.Controls.Add(new OpObjectControl(master, escope, Operand, "Token Object:", "GUID"));
 
-            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Flags1:", "Unknown3", new OpStaticValueBoundsProvider(0, 255)));
-            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Flags2:", "Unknown4", new OpStaticValueBoundsProvider(0, 255)));
+            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Flags1:", "Flags", new OpStaticValueBoundsProvider(0, 255)));
+            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Flags2:", "Flags2", new OpStaticValueBoundsProvider(0, 255)));
 
             panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags:", new OpFlag[] {
-                new OpFlag("Count in Temp 0", "CountInTemp0"),
+                new OpFlag("Count in Temp", "CountInTemp"),
                 new OpFlag("Use Object in Temp 4", "UseObjectInTemp4"),
                 }));
         }

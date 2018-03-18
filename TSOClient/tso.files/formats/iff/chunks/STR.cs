@@ -189,7 +189,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public STRItem GetStringEntry(int index, STRLangCode language)
         {
             var languageSet = GetLanguageSet(language);
-            if (index < (languageSet?.Strings.Length ?? 0))
+            if (index < (languageSet?.Strings.Length ?? 0) && index > -1)
             {
                 return languageSet.Strings[index];
             }

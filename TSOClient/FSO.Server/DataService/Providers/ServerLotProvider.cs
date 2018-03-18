@@ -119,6 +119,7 @@ namespace FSO.Server.DataService.Providers
         {
             var location = MapCoordinates.Unpack(lot.location);
 
+            /* **experimental** we're leaving this up to ASP.NET api for now (behind cloudflare)
             //attempt to load the lot's thumbnail.
             var path = Path.Combine(NFS.GetBaseDirectory(), "Lots/" + lot.lot_id.ToString("x8") + "/thumb.png");
             cTSOGenericData thumb = null;
@@ -135,6 +136,7 @@ namespace FSO.Server.DataService.Providers
             catch (Exception) {
                 thumb = new cTSOGenericData(new byte[0]);
             }
+            */
 
             var result = new Lot
             {
@@ -154,7 +156,7 @@ namespace FSO.Server.DataService.Providers
                 Lot_SkillGamemode = lot.skill_mode,
                 Lot_LastCatChange = lot.category_change_date,
                 Lot_Description = lot.description,
-                Lot_Thumbnail = thumb
+                Lot_Thumbnail = new cTSOGenericData(new byte[0]),
             };
 
             foreach (var roomie in roommates)
@@ -216,6 +218,7 @@ namespace FSO.Server.DataService.Providers
                     {
                         fs.Write(data.Data, 0, data.Data.Length);
                     }
+                    lot.Lot_Thumbnail = new cTSOGenericData(new byte[0]);
                     break;
                 case "Lot_Category":
                     uint minSkill;

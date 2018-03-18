@@ -82,7 +82,7 @@ namespace FSO.SimAntics.Engine
                 IconOwner = (IconOwner == null) ? (short)0 : IconOwner.ObjectID,
                 CodeOwnerGUID = CodeOwner.OBJ.GUID,
                 Name = Name,
-                Args = Args,
+                Args = (short[])Args?.Clone(),
                 InteractionNumber = InteractionNumber,
                 Cancelled = Cancelled,
                 Priority = Priority,

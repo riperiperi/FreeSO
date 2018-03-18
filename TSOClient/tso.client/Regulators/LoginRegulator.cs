@@ -86,6 +86,10 @@ namespace FSO.Client.Regulators
 
                         if (connectResult.Status == InitialConnectServletResultType.Authorized)
                         {
+                            var cdnurl = connectResult.UserAuthorized.FSOCDNUrl;
+                            if (cdnurl != null)
+                                ApiClient.CDNUrl = cdnurl;
+
                             if (RequireUpdate(connectResult.UserAuthorized))
                             {
                                 AsyncTransition("UpdateRequired", connectResult.UserAuthorized);

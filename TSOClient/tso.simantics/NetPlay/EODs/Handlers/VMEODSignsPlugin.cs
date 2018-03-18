@@ -83,7 +83,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                     if (Mode != VMEODSignsMode.OwnerWrite && Mode != VMEODSignsMode.OwnerPermissions)
                     {
-                        if (((VMTSOAvatarState)client.Avatar.TSOState).Permissions >= VMTSOAvatarPermissions.Roommate) avaFlags |= VMEODSignPermissionFlags.RoomieRead;
+                        if (client.Avatar.AvatarState.Permissions >= VMTSOAvatarPermissions.Roommate) avaFlags |= VMEODSignPermissionFlags.RoomieRead;
                         else avaFlags |= VMEODSignPermissionFlags.VisitorRead;
 
                         var inverseRead = (~(VMEODSignPermissionFlags)Data.Flags) & VMEODSignPermissionFlags.ReadFlags & avaFlags;

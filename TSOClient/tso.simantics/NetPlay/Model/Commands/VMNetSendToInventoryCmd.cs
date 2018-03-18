@@ -61,7 +61,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             var targObj = vm.GetObjectByPersist(ObjectPID);
             if (targObj == null) return false;
             if (!InternalDispatch && (caller == null || //caller must be on lot, be a roommate.
-                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate
+                caller.AvatarState.Permissions < VMTSOAvatarPermissions.Roommate
                 || targObj.PersistID == 0 || targObj is VMAvatar || targObj.IsUserMovable(vm.Context, true) != VMPlacementError.Success))
                 return false;
 

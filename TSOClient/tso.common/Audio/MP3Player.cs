@@ -32,7 +32,6 @@ namespace FSO.Common.Audio
 
             DecodeNext = new AutoResetEvent(true);
             BufferDone = new AutoResetEvent(false);
-
             Inst = new DynamicSoundEffectInstance(Stream.Frequency, AudioChannels.Stereo);
             Inst.IsLooped = false;
             Inst.BufferNeeded += SubmitBufferAsync;

@@ -10,9 +10,9 @@ namespace FSO.SimAntics.Engine.Debug
 {
     public class VMSyncTrace
     {
-        private List<VMSyncTraceTick> History = new List<VMSyncTraceTick>();
+        public List<VMSyncTraceTick> History = new List<VMSyncTraceTick>();
         private VMSyncTraceTick Current = null;
-        private static readonly int MAX_HISTORY = 30 * 5;
+        private static readonly int MAX_HISTORY = 30 * 60;
         
         public VMSyncTraceTick GetTick(uint tickID)
         {

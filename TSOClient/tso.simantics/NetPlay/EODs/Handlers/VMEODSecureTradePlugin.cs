@@ -145,7 +145,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                         return;
                                     }
                                     var item = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
-                                    if (item != null && item.Value.DisableLevel > 1 && ((VMTSOAvatarState)client.Avatar.TSOState).Permissions < VMTSOAvatarPermissions.Admin)
+                                    if (item != null && item.Value.DisableLevel > 1 && client.Avatar.AvatarState.Permissions < VMTSOAvatarPermissions.Admin)
                                     {
                                         client.Send("trade_error", ((int)VMEODSecureTradeError.UNTRADABLE_OBJECT).ToString());
                                         BroadcastTradeData(false);

@@ -117,5 +117,10 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             return new InventoryItem() { Type = Type, GUID = GUID, Count = Count };
         }
+
+        public override string ToString()
+        {
+            return "Type: "+Type+", GUID: "+GUID+", Count: "+Count;
+        }
     }
 }

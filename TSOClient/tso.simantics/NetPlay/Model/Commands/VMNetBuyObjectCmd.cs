@@ -88,7 +88,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         private bool TryPlace(VM vm, VMAvatar caller)
         {
-            if (!vm.TS1 && !vm.TSOState.CanPlaceNewUserObject(vm)) return false;
+            if (!vm.PlatformState.CanPlaceNewUserObject(vm)) return false;
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
 
@@ -112,7 +112,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             }
             CreatedGroup = group;
 
-            vm.SignalChatEvent(new VMChatEvent(caller?.PersistID ?? 0, VMChatEventType.Arch,
+            vm.SignalChatEvent(new VMChatEvent(caller, VMChatEventType.Arch,
                 caller?.Name ?? "Unknown",
                 vm.GetUserIP(caller?.PersistID ?? 0),
                 "placed " + group.BaseObject.ToString() + " at (" + x / 16f + ", " + y / 16f + ", " + level + ")"
@@ -127,8 +127,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (!vm.TS1)
             {
                 if (caller == null || //caller must be on lot, have build permissions
-                    ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate ||
-                    !vm.TSOState.CanPlaceNewUserObject(vm))
+                    caller.AvatarState.Permissions < VMTSOAvatarPermissions.Roommate ||
+                    !vm.PlatformState.CanPlaceNewUserObject(vm))
                     return false;
             }
             //get entry in catalog. first verify if it can be bought at all. (if not, error out)
@@ -138,10 +138,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             if (!vm.TS1)
             {
-                var whitelist = (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Roommate) ? RoomieWhiteList : BuilderWhiteList;
+                var whitelist = (caller.AvatarState.Permissions == VMTSOAvatarPermissions.Roommate) ? RoomieWhiteList : BuilderWhiteList;
                 if (item == null || !whitelist.Contains(item.Value.Category))
                 {
-                    if (((VMTSOAvatarState)caller.TSOState).Permissions == VMTSOAvatarPermissions.Admin) return true;
+                    if (caller.AvatarState.Permissions == VMTSOAvatarPermissions.Admin) return true;
                     return false; //not purchasable
                 }
             }

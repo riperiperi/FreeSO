@@ -217,7 +217,7 @@ namespace FSO.SimAntics.NetPlay.Model
             avatar.BodyOutfit = new VMOutfitReference(BodyOutfit);
             avatar.HeadOutfit = new VMOutfitReference(HeadOutfit);
             avatar.Name = Name;
-            ((VMTSOAvatarState)avatar.TSOState).Permissions = Permissions;
+            avatar.AvatarState.Permissions = Permissions;
             ((VMTSOAvatarState)avatar.TSOState).Flags = AvatarFlags;
             avatar.TSOState.Budget.Value = Budget;
 
@@ -250,7 +250,7 @@ namespace FSO.SimAntics.NetPlay.Model
 
             HeadOutfit = avatar.HeadOutfit.ID;
             Name = avatar.Name;
-            Permissions = ((VMTSOAvatarState)avatar.TSOState).Permissions;
+            Permissions = avatar.AvatarState.Permissions;
             AvatarFlags = ((VMTSOAvatarState)avatar.TSOState).Flags;
             Budget = avatar.TSOState.Budget.Value;
 

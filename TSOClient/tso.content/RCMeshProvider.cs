@@ -27,6 +27,7 @@ namespace FSO.Content
         public Dictionary<DGRP, DGRP3DMesh> Cache = new Dictionary<DGRP, DGRP3DMesh>();
         public HashSet<DGRP> IgnoreRCCache = new HashSet<DGRP>();
         public Dictionary<string, Texture2D> ReplacementTex = new Dictionary<string, Texture2D>();
+        public Dictionary<string, DGRP3DMesh> NameCache = new Dictionary<string, DGRP3DMesh>();
 
         public DGRP3DMesh Get(DGRP dgrp, OBJD obj)
         {
@@ -85,6 +86,29 @@ namespace FSO.Content
             return result;
         }
 
+        public DGRP3DMesh Get(string name)
+        {
+            DGRP3DMesh result = null;
+            var repldir = Path.Combine(FSOEnvironment.ContentDir, "3D/");
+            if (!NameCache.TryGetValue(name, out result))
+            {
+                //does it exist in replacements
+                try
+                {
+                    using (var file = File.OpenRead(Path.Combine(repldir, name)))
+                    {
+                        result = new DGRP3DMesh(null, file, GD);
+                    }
+                }
+                catch (Exception)
+                {
+                    result = null;
+                }
+                NameCache[name] = result;
+            }
+            return result;
+        }
+
         public void ClearCache(DGRP dgrp)
         {
             //todo: dispose old?
@@ -109,8 +133,14 @@ namespace FSO.Content
             Texture2D result = null;
             if (!ReplacementTex.TryGetValue(name, out result))
             {
+                string dir;
+                if (name.StartsWith("FSO_"))
+                {
+                    dir = Path.Combine(FSOEnvironment.ContentDir, "3D/");
+                    name = name.Substring(4);
+                }
+                else dir = Path.Combine(FSOEnvironment.ContentDir, "MeshReplace/");
                 //load from meshreplace folder
-                var dir = Path.Combine(FSOEnvironment.ContentDir, "MeshReplace/");
                 try
                 {
                     using (var file = File.OpenRead(Path.Combine(dir, name)))

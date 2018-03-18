@@ -755,7 +755,7 @@ namespace FSO.SimAntics.Engine
                                 return VMPrimitiveExitCode.CONTINUE;
                             }
                             bool jobLot = VM.GetGlobalValue(11) > -1;
-                            if (Retries <= MAX_RETRIES - 3 && jobLot)
+                            if (Retries <= MAX_RETRIES - 3 && jobLot && !VM.TS1)
                             {
                                 Caller.SetFlag(VMEntityFlags.AllowPersonIntersection, true);
                                 routeAround = true;

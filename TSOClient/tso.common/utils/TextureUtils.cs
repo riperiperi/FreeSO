@@ -791,6 +791,7 @@ namespace FSO.Common.Utils
             lock (gd)
             {
                 gd.SetRenderTarget(renderTarget);
+                gd.Clear(Color.TransparentBlack);
                 SpriteBatch batch = new SpriteBatch(gd);
                 batch.Begin();
                 batch.Draw(texture, destinationRectangle, Color.White);

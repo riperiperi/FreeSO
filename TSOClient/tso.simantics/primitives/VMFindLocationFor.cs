@@ -38,7 +38,7 @@ namespace FSO.SimAntics.Primitives
             var obj = context.StackObject;
             var flags = VMPlaceRequestFlags.AcceptSlots;
             if (operand.UserEditableTilesOnly) flags |= VMPlaceRequestFlags.UserBuildableLimit;
-            if (operand.AllowIntersection) flags |= VMPlaceRequestFlags.AllowIntersection;
+            if (operand.AllowIntersection && operand.Mode != 4 && operand.Mode != 3) flags |= VMPlaceRequestFlags.AllowIntersection;
 
             switch (operand.Mode)
             {
@@ -67,7 +67,14 @@ namespace FSO.SimAntics.Primitives
                     else return VMPrimitiveExitCode.GOTO_FALSE;
                 case 5:
                     //random
-                    return VMPrimitiveExitCode.GOTO_TRUE;
+                    var ctx = context.VM.Context;
+                    for (int i=0; i<100; i++)
+                    {
+                        var loc = LotTilePos.FromBigTile((short)(ctx.NextRandom((ulong)ctx.Architecture.Width - 2) + 1), (short)(ctx.NextRandom((ulong)ctx.Architecture.Height - 2) + 1), refObj.Position.Level);
+                        if (obj.SetPosition(loc, Direction.NORTH, ctx, flags).Status == VMPlacementError.Success)
+                            return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
+                    return VMPrimitiveExitCode.GOTO_FALSE;
             }
 
             return VMPrimitiveExitCode.GOTO_FALSE;

@@ -208,6 +208,11 @@ namespace FSO.Client.UI.Controls
             ClickHandler.Region.Inflate(x, y);
         }
 
+        public void DeregisterHandler()
+        {
+            RemoveMouseListener(ClickHandler);
+        }
+
         [UIAttribute("image")]
         public Texture2D Texture 
         {
@@ -384,7 +389,7 @@ namespace FSO.Client.UI.Controls
             var frame = m_CurrentFrame;
             if (m_Disabled)
             {
-                frame = 3;
+                frame = (m_ImageStates < 4)?0:3;
             }
             if (Selected)
             {

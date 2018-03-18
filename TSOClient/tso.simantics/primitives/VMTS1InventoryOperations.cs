@@ -44,6 +44,21 @@ namespace FSO.SimAntics.Primitives
             //1 180 4
             //3 180 4
             //
+            //weird remove request with wrong type (0 instead of 8):
+            //0x82, 0x09
+
+            //NOTES:
+            // - has token and remove token currently ignore the type, and only look for entries with the given GUID.
+            //   I haven't seen inventory items appear under multiple types, so this shouldn't affect anything right now
+            //   ...but there is probably a flag for it!
+
+            //$FamilyAssets $NameAttrib $NeighborLocal $FameTitleLocal
+
+            //=== from exe ===
+            //1. | of count | and index to Temp | . | Returning count to Temp | 0. | starting at index  | stored in Temp | from Stack Object's GUID | with object |
+            // (Using Inventory of object in Temp 4)
+            //types:
+            // SKILL   SOUVENIR    PURCHASE    SIMDATA     DATE    INGREDIENT  MAGIC   GIFT
 
             var neighbourhood = Content.Content.Get().Neighborhood;
             var inTarget = (operand.UseObjectInTemp4) ? context.VM.GetObjectById(context.Thread.TempRegisters[4]) : context.Caller;
@@ -51,14 +66,14 @@ namespace FSO.SimAntics.Primitives
             var target = (VMAvatar)(inTarget);
             var neighbour = target.GetPersonData(Model.VMPersonDataVariable.NeighborId);
             var inventory = neighbourhood.GetInventoryByNID(neighbour);
-            var count = (operand.CountInTemp0) ? context.Thread.TempRegisters[0] : 1;
-            var type = operand.TokenType;
-
+            var count = (operand.CountInTemp) ? context.Thread.TempRegisters[0] : 1;
+            var type = operand.TokenType; //type 0 on find of type indicates "any type".
+            var index = context.Thread.TempRegisters[operand.IndexTemp];
+            
             //type 4: magic town purchasables
             //type 6: vacation purchasables
-            //note: guid 0, type 5 is used for a global count for downtown objects
-            //var guid = (operand.GUID == 0) ? context.CodeOwner.GUID : operand.GUID;
-            var guid = operand.GUID;
+            var guid = (operand.GUID == 0) ? (uint)context.StackObject.Object.GUID : operand.GUID;
+            //var guid = operand.GUID;
 
             switch (operand.Mode)
             {
@@ -73,27 +88,51 @@ namespace FSO.SimAntics.Primitives
                         aitem.Count += (ushort)count;
 
                     return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMTS1InventoryMode.DecrementToken:
-                    count = 1;
-                    goto case VMTS1InventoryMode.RemoveToken;
+
                 case VMTS1InventoryMode.RemoveToken:
                     if (inventory == null) return VMPrimitiveExitCode.GOTO_FALSE; //can't remove a token that isn't there
-                    var ritem = inventory.FirstOrDefault(x => x.GUID == guid && x.Type == type);
+                    var ritem = inventory.FirstOrDefault(x => x.GUID == guid && (type == 0 || x.Type == type));
                     if (ritem == null || ritem.Count < count) return VMPrimitiveExitCode.GOTO_FALSE; //can't remove a token that isn't there
+                    if (count == -1) count = ritem.Count; //count of -1 means remove all
                     ritem.Count -= (ushort)count;
                     if (ritem.Count == 0) inventory.Remove(ritem);
+                    //todo: does this write the index?
                     return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMTS1InventoryMode.HasToken:
+
+                case VMTS1InventoryMode.RemoveTokenAtIndex:
+                    //
+                    if (inventory == null || index < 0 || index >= inventory.Count)
+                        return VMPrimitiveExitCode.GOTO_FALSE; //can't remove a token that isn't there
+
+                    ritem = inventory[index];
+                    if (count == -1) count = ritem.Count; //count of -1 means remove all
+                    ritem.Count -= (ushort)count;
+                    if (ritem.Count == 0) inventory.Remove(ritem);
+                    if (operand.NextIndexIntoTemp)
+                        context.Thread.TempRegisters[operand.IndexTemp] = (short)(index-1);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+
+                case VMTS1InventoryMode.FindToken:
                     if (inventory == null) return VMPrimitiveExitCode.GOTO_FALSE;
-                    var items = inventory.FirstOrDefault(x => x.GUID == guid && x.Type == type);
-                    var itemcount = (short)(items?.Count ?? 0);
-                    context.Thread.TempRegisters[0] = itemcount;
-                    return (itemcount >= count)? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
-                case VMTS1InventoryMode.HasTokenOfType: //ignores guid
+                    var foundindex = inventory.FindIndex(x => x.GUID == guid && (type == 0 || x.Type == type));
+                    if (foundindex == -1) return VMPrimitiveExitCode.GOTO_FALSE;
+                    var items = inventory[foundindex];
+                    var itemcount = (short)(items.Count);
+                    context.Thread.TempRegisters[operand.CountTemp] = itemcount;
+                    if (operand.FoundIndexIntoTemp) context.Thread.TempRegisters[operand.IndexTemp] = (short)foundindex;
+                    return (itemcount > 0) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                    //return (itemcount >= count)? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+
+                case VMTS1InventoryMode.SetToNextTokenOfType: //ignores guid
                     if (inventory == null) return VMPrimitiveExitCode.GOTO_FALSE;
                     var items2 = inventory.Where(x => x.Type == type).ToList();
-                    context.Thread.TempRegisters[0] = (short)items2.Sum(x => x.Count);
-                    return (items2.Count >= count) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                    context.Thread.TempRegisters[operand.CountTemp] = (short)items2.Sum(x => x.Count);
+                    var next = items2.FirstOrDefault(x => inventory.IndexOf(x) > index);
+                    if (next == null) return VMPrimitiveExitCode.GOTO_FALSE;
+                    foundindex = inventory.IndexOf(next);
+                    if (operand.NextIndexIntoTemp) context.Thread.TempRegisters[operand.IndexTemp] = (short)foundindex;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+
                 case VMTS1InventoryMode.Temp0NeighborAsAutofollow:
                     inventory = InitInventory(neighbour, inventory);
                     //if we have an existing item replace it
@@ -136,25 +175,66 @@ namespace FSO.SimAntics.Primitives
     {
         public VMTS1InventoryMode Mode { get; set; }
         public byte TokenType { get; set; } //token type
-        public byte Unknown3 { get; set; } //flags
-        //1 - unknown
-        //2 - count in temp 0
-        //4
-        //8 - result in param 0?
-        //16 - target object in temp 4 (???)
-        public byte Unknown4 { get; set; }
+        public byte Flags { get; set; } //flags
+        //1 - unknown (regularly set for find token, ONLY this is set for add token and remove)
+        //2 - count in temp
+        //4-8 - temp[num] := count (set to next related)
+        //16 - found index into temp (regularly set for find token)
+        //32 - ??
+        //64 - ??
+        //128 - index in temp (set to next)
+        public byte Flags2 { get; set; }
+        //1-2 - temp[num] := index (1 regularly set, not in set to next? would be index in temp 0)
+        //4 - (set in find token)
+        //8 - (very regularly set)
+        //16 - ??
+        //32 - object in temp 4
+        //64 - ??
+        //128 - mode 8 remove time tokens?
         public uint GUID { get; set; }
 
-        public bool CountInTemp0
+        public int CountTemp
         {
             get
             {
-                return (Unknown3 & 2) > 0;
+                return (Flags >> 2) & 3;
+            }
+        }
+
+        public int IndexTemp
+        {
+            get
+            {
+                return Flags2 & 3;
+            }
+        }
+
+        public bool NextIndexIntoTemp
+        {
+            get
+            {
+                return (Flags & 0x80) > 0;
+            }
+        }
+
+        public bool FoundIndexIntoTemp
+        {
+            get
+            {
+                return (Flags & 0x10) > 0;
+            }
+        }
+
+        public bool CountInTemp
+        {
+            get
+            {
+                return (Flags & 2) > 0;
             }
             set
             {
-                Unknown3 &= unchecked((byte)(~2));
-                if (value) Unknown3 |= 2;
+                Flags &= unchecked((byte)(~2));
+                if (value) Flags |= 2;
             }
         }
 
@@ -162,12 +242,12 @@ namespace FSO.SimAntics.Primitives
         {
             get
             {
-                return (Unknown4 & 32) > 0;
+                return (Flags2 & 32) > 0;
             }
             set
             {
-                Unknown4 &= unchecked((byte)(~32));
-                if (value) Unknown4 |= 32;
+                Flags2 &= unchecked((byte)(~32));
+                if (value) Flags2 |= 32;
             }
         }
 
@@ -178,8 +258,8 @@ namespace FSO.SimAntics.Primitives
             {
                 Mode = (VMTS1InventoryMode)io.ReadByte();
                 TokenType = io.ReadByte();
-                Unknown3 = io.ReadByte();
-                Unknown4 = io.ReadByte();
+                Flags = io.ReadByte();
+                Flags2 = io.ReadByte();
                 GUID = io.ReadUInt32();
             }
         }
@@ -190,8 +270,8 @@ namespace FSO.SimAntics.Primitives
             {
                 io.Write((byte)Mode);
                 io.Write(TokenType);
-                io.Write(Unknown3);
-                io.Write(Unknown4);
+                io.Write(Flags);
+                io.Write(Flags2);
                 io.Write(GUID);
             }
         }
@@ -201,12 +281,12 @@ namespace FSO.SimAntics.Primitives
     public enum VMTS1InventoryMode : byte
     {
         AddToken = 0, //add
-        DecrementToken = 1,
-        RemoveToken = 2,
-        HasToken = 3, //count in temp0
-        HasTokenOfType = 4, //count in temp0. ignores guid.
-        Temp0NeighborAsAutofollow = 5,
+        RemoveToken = 1,
+        RemoveTokenAtIndex = 2,
+        FindToken = 3, //count in temp0
+        SetToNextTokenOfType = 4, //count in temp0. ignores guid.
+        Temp0NeighborAsAutofollow = 5, 
         Temp0NeighborAsFollowHome = 6,
-        Unknown7 = 7
+        UnusedRemoveTimeData = 8
     }
 }

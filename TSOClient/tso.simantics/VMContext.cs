@@ -940,6 +940,7 @@ namespace FSO.SimAntics
 
         public void UpdateTSOBuildableArea()
         {
+            if (VM.TS1) return;
             VMBuildableAreaInfo.UpdateOverbudgetObjects(VM);
             var lotSInfo = VM.TSOState.Size;
             var area = GetTSOBuildableArea(lotSInfo);
@@ -1276,7 +1277,7 @@ namespace FSO.SimAntics
                         if (id != null)
                         {
                             var neigh = Content.Content.Get().Neighborhood.GetNeighborByID(id.Value);
-                            if (neigh != null) vmObject.InheritNeighbor(neigh, VM.CurrentFamily);
+                            if (neigh != null) vmObject.InheritNeighbor(neigh, VM.TS1State.CurrentFamily);
                         }
                     }
                  

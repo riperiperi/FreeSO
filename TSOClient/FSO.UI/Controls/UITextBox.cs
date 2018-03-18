@@ -31,6 +31,8 @@ namespace FSO.Client.UI.Controls
 
         static UITextBox()
         {
+            var tex = UIElement.GetTexture((ulong)FileIDs.UIFileIDs.dialog_textboxbackground);
+            if (tex.Width == 1) return;
             StandardBackground = new SlicedTextureRef(
                 UIElement.GetTexture((ulong)FileIDs.UIFileIDs.dialog_textboxbackground),
                 new Microsoft.Xna.Framework.Rectangle(13, 13, 13, 13)
@@ -50,6 +52,6 @@ namespace FSO.Client.UI.Controls
             SelectionStart = -1;
             m_SBuilder.Clear();
         }
-        
+       
     }
 }

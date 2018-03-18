@@ -165,7 +165,7 @@ namespace FSO.Client.UI.Panels.LotControls
             {
                 response += "Bad command.";
             }
-            vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, response));
+            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, response));
         }
 
         public string ObjectSummary(VMEntity obj)

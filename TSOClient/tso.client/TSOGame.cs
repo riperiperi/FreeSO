@@ -166,6 +166,7 @@ namespace FSO.Client
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
             GameFacade.GraphicsDeviceManager = Graphics;
+            GameFacade.Emojis = new Common.Rendering.Emoji.EmojiProvider(GraphicsDevice);
             GameFacade.Cursor = new CursorManager(GraphicsDevice);
             if (!GameFacade.Linux) GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""), false);
 
@@ -279,6 +280,7 @@ namespace FSO.Client
             }
             catch (Exception e)
             {
+                var test = Content.Load<Effect>("Effects/GrassShader");
                 MessageBox.Show("Content could not be loaded. Make sure that the FreeSO content has been compiled! (ContentSrc/TSOClientContent.mgcb) \r\n\r\n"+e.ToString());
                 Exit();
                 Application.Exit();

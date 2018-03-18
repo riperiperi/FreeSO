@@ -150,6 +150,14 @@
     <Compile Include="Marshals\VMMarshal.cs" />
     <Compile Include="Marshals\VMMultitileGroupMarshal.cs" />
     <Compile Include="Marshals\VMStandaloneObjectMarshal.cs" />
+    <Compile Include="Model\Platform\VMAbstractEntityState.cs" />
+    <Compile Include="Model\Platform\VMAbstractLotState.cs" />
+    <Compile Include="Model\Platform\VMIAvatarState.cs" />
+    <Compile Include="Model\Platform\VMIObjectState.cs" />
+    <Compile Include="Model\TS1Platform\VMTS1AvatarState.cs" />
+    <Compile Include="Model\TS1Platform\VMTS1EntityState.cs" />
+    <Compile Include="Model\TS1Platform\VMTS1LotState.cs" />
+    <Compile Include="Model\TS1Platform\VMTS1ObjectState.cs" />
     <Compile Include="Model\VMGenericTS1CallMode.cs" />
     <Compile Include="Model\Routing\VMRouteFailCode.cs" />
     <Compile Include="Model\Sound\VMSoundEntry.cs" />
@@ -236,6 +244,8 @@
     <Compile Include="NetPlay\Model\Commands\VMNetChangeControlCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChangeEnvironmentCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChangeLotSizeCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetChatEditChanCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetChatParamCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetEODMessageCmd.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODPluginThreadState.cs" />
     <Compile Include="NetPlay\EODs\VMEODHost.cs" />
@@ -340,6 +350,7 @@
     <Compile Include="Primitives\VMTS1Budget.cs" />
     <Compile Include="Primitives\VMTS1InventoryOperations.cs" />
     <Compile Include="Utils\TimePropertyListItemSorter.cs" />
+    <Compile Include="Utils\VMArchitectureStats.cs" />
     <Compile Include="Utils\VMArchitectureTools.cs" />
     <Compile Include="Utils\VMLotRotate.cs" />
     <Compile Include="Utils\VMLotTerrainRestoreTools.cs" />
@@ -422,9 +433,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Model\TS1Platform\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

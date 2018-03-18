@@ -55,7 +55,7 @@ namespace FSO.SimAntics.Engine
                 //run in tree:76
 
                 string callerStr = frame.Caller.ToString();
-                string calleeStr = frame.Callee.ToString();
+                string calleeStr = frame.Callee?.ToString();
 
                 if (callerStr != prevER || calleeStr != prevEE)
                 {

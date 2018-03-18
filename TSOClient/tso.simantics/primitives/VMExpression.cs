@@ -196,7 +196,10 @@ namespace FSO.SimAntics.Engine.Primitives
                             result = lhsValue == rhsValue;
                             break;
                         case VMExpressionOperator.LessThan:
-                            result = lhsValue < rhsValue;
+                            if (rhsValue == 1024 && operand.LhsData == (int)(VMStackObjectVariable.Room) && operand.LhsOwner == VMVariableScope.MyObject)
+                                //HACK: see below. ts1 needs this one
+                                result = context.Caller.Position.Level - (context.Callee.Position.Level - context.Callee.Object.OBJ.LevelOffset) <= 0;
+                            else result = lhsValue < rhsValue;
                             break;
                         case VMExpressionOperator.GreaterThan:
                             result = lhsValue > rhsValue;

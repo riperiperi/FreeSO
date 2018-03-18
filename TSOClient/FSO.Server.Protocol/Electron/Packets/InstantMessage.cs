@@ -18,6 +18,7 @@ namespace FSO.Server.Protocol.Electron.Packets
         public string Message;
         public string AckID;
         public InstantMessageFailureReason Reason = InstantMessageFailureReason.NONE;
+        public uint Color;
 
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
@@ -28,6 +29,7 @@ namespace FSO.Server.Protocol.Electron.Packets
             Message = input.GetPascalVLCString();
             AckID = input.GetPascalVLCString();
             Reason = input.GetEnum<InstantMessageFailureReason>();
+            Color = input.GetUInt32();
         }
 
         public override ElectronPacketType GetPacketType()
@@ -44,6 +46,7 @@ namespace FSO.Server.Protocol.Electron.Packets
             output.PutPascalVLCString(Message);
             output.PutPascalVLCString(AckID);
             output.PutEnum(Reason);
+            output.PutUInt32(Color);
         }
     }
     
