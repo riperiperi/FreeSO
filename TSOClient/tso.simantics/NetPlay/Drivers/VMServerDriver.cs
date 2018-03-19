@@ -133,6 +133,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
             if (LastSync == null && !SyncSerializing)
             {
+                SyncSerializing = true;
                 TicksSinceSync = new List<byte[]>(); //start saving a history.
 
                 var state = vm.Save(); //must be saved on lot thread. we can serialize elsewhere tho.

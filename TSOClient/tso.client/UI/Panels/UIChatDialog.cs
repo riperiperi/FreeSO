@@ -110,7 +110,7 @@ namespace FSO.Client.UI.Panels
         {
             if (Size == size && LastCategories == Categories.HasButtons) return;
 
-
+            var wasAtBottom = ChatHistoryText.VerticalScrollPosition == ChatHistoryText.VerticalScrollMax;
 
             var delta = size.ToPoint().ToVector2() - Size;
 
@@ -143,6 +143,8 @@ namespace FSO.Client.UI.Panels
 
             ChatEntryTextEdit.ComputeDrawingCommands();
             ChatHistoryText.ComputeDrawingCommands();
+
+            if (wasAtBottom) ChatHistoryText.VerticalScrollPosition = ChatHistoryText.VerticalScrollMax;
         }
 
         /// <summary>
@@ -331,7 +333,7 @@ namespace FSO.Client.UI.Panels
                 txt.Append(RenderEvent(evt));
             }
 
-            bool scroll = ChatHistoryText.VerticalScrollMax == ChatHistoryText.VerticalScrollPosition;
+            bool scroll = Math.Abs(ChatHistoryText.VerticalScrollMax - ChatHistoryText.VerticalScrollPosition) < 2 ;
             ChatHistoryText.CurrentText = txt.ToString();
             ChatHistoryText.ComputeDrawingCommands();
             if (scroll)

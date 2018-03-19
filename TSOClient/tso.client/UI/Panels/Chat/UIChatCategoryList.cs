@@ -75,10 +75,12 @@ namespace FSO.Client.UI.Panels.Chat
             if (perm == VMTSOAvatarPermissions.Admin)
                 channels.Add(VMTSOChatChannel.AdminChannel);
 
-            HasButtons = channels.Count(x => perm < x.ViewPermMin) > 1 || (perm >= VMTSOAvatarPermissions.Owner);
+            HasButtons = channels.Count(x => perm <= x.ViewPermMin) > 1 || (perm >= VMTSOAvatarPermissions.Owner);
             if (!HasButtons)
             {
+                LastChannels = new List<VMTSOChatChannel>(Dialog.Owner.vm.TSOState.ChatChannels);
                 LastPerm = perm;
+                Invalidate();
                 return;
             }
             var btnCaption = TextStyle.DefaultLabel.Clone();

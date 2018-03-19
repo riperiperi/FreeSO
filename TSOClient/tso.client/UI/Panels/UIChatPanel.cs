@@ -297,13 +297,15 @@ namespace FSO.Client.UI.Panels
             }
             if (state.NewKeys.Contains(Keys.Enter) && HistoryDialog.Visible)
             {
-                /*
-                if (HistoryDialog.ChatEntryTextEdit.CurrentText.Length < 1)
-                    if (lastFocus == HistoryDialog.ChatEntryTextEdit)
-                        state.InputManager.SetFocus(null);
-                    else if (lastFocus == null)
-                        state.InputManager.SetFocus(HistoryDialog.ChatEntryTextEdit);
-                        */
+                if (lastFocus == null)
+                    state.InputManager.SetFocus(HistoryDialog.ChatEntryTextEdit);
+                    /*
+    if (HistoryDialog.ChatEntryTextEdit.CurrentText.Length < 1)
+        if (lastFocus == HistoryDialog.ChatEntryTextEdit)
+            state.InputManager.SetFocus(null);
+        else if (lastFocus == null)
+            state.InputManager.SetFocus(HistoryDialog.ChatEntryTextEdit);
+            */
             }
             if (state.NewKeys.Contains(Keys.H) && state.CtrlDown)
             {
