@@ -305,18 +305,25 @@ namespace FSO.Client.UI.Controls
     {
         private int m_Width;
         private int m_Height;
+        private float m_Alpha;
 
         public UIHighlightSprite(int width, int height)
         {
             m_Width = width;
             m_Height = height;
+            m_Alpha = 0.5f;
+        }
+
+        public UIHighlightSprite(int width, int height, float alpha)
+        {
+            m_Width = width;
+            m_Height = height;
+            m_Alpha = alpha;
         }
         public override void Draw(UISpriteBatch spriteBatch)
         {
             if (Visible)
-                DrawLocalTexture(spriteBatch, TextureGenerator.GetPxWhite(spriteBatch.GraphicsDevice), null, new Vector2(), new Vector2(m_Width, m_Height), new Color(Color.Black, 0.5f));
-            //spriteBatch.Draw(TextureGenerator.GetPxWhite(spriteBatch.GraphicsDevice), new Vector2(0, 0), null, new Color(Color.Black, 0.3f), 0, new Vector2(0,0),
-                //new Vector2(m_Width, m_Height), SpriteEffects.None, 0);
+                DrawLocalTexture(spriteBatch, TextureGenerator.GetPxWhite(spriteBatch.GraphicsDevice), null, new Vector2(), new Vector2(m_Width, m_Height), new Color(Color.Black, m_Alpha));
         }
 
     }

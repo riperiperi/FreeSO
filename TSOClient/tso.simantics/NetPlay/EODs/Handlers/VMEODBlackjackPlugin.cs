@@ -25,7 +25,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private int TableBalance;
         private int Tock;
         private VMEODBlackjackStates GameState;
-        private VMEODBlackjackStates NextState;
+        private VMEODBlackjackStates NextState = VMEODBlackjackStates.Invalid;
         private bool DealerIntermissionComplete;
         private List<VMEODEvent> DealerEventsQueue;
 
@@ -35,6 +35,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private VMEODClient Owner;
 
         #region static
+
+        public static readonly int TABLE_MAX_BALANCE = 999999;
 
         public static Dictionary<string, byte> PlayingCardBlackjackValues = new Dictionary<string, byte>()
             {
@@ -369,22 +371,22 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 slot.WarnedForObservation = false;
                 slot.ResetHands();
                 Lobby.Leave(client);
-                if (Lobby.IsEmpty()) // no players
-                {
-                    if (Dealer != null)
-                    {
-                        // if the client disconnecting is NOT the dealer, go to waiting for player
-                        if (Dealer.ObjectID != client.Avatar.ObjectID)
-                            EnqueueGotoState(VMEODBlackjackStates.Waiting_For_Player);
-                        else
-                            Dealer = null;
-                    }
-                }
-                else if (playerIndex == ActivePlayerIndex)
-                {
+                if (playerIndex == ActivePlayerIndex)
                     ForceStand(true);
-                }
                 Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Delete_ID, (short)slot.PlayerIndex));
+            }
+            if (Lobby.IsEmpty()) // no players
+            {
+                if (Dealer != null && client.Avatar != null)
+                {
+                    // if the client disconnecting is NOT the dealer, go to waiting for player
+                    if (Dealer.ObjectID != client.Avatar.ObjectID)
+                        EnqueueGotoState(VMEODBlackjackStates.Waiting_For_Player);
+                    else
+                        EnqueueGotoState(VMEODBlackjackStates.Closed);
+                }
+                else
+                    GameState = VMEODBlackjackStates.Closed;
             }
             base.OnDisconnection(client);
         }
@@ -929,8 +931,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                 if (player != null && player.Avatar != null)
                                     Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Force_End_Playing, player.Avatar.ObjectID));
                             }
-                            Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Remove_Dealer));
                         }
+                        Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Remove_Dealer));
                         GameState = newState;
                         break;
                     }
@@ -1740,7 +1742,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         private bool IsTableWithinLimits()
         {
-            if (TableBalance >= MaxBet * 6)
+            if (TableBalance >= MaxBet * 6 && TableBalance <= VMEODBlackjackPlugin.TABLE_MAX_BALANCE)
                 return true;
             return false;
         }
