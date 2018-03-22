@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using FSO.SimAntics.Model.Platform;
+using Microsoft.Xna.Framework;
 
 namespace FSO.SimAntics.Model.TSOPlatform
 {
-    public class VMTSOLotState : VMPlatformState
+    public class VMTSOLotState : VMAbstractLotState
     {
         public string Name = "Lot";
         public uint LotID;
@@ -19,11 +21,12 @@ namespace FSO.SimAntics.Model.TSOPlatform
         public HashSet<uint> Roommates = new HashSet<uint>();
         public HashSet<uint> BuildRoommates = new HashSet<uint>();
         public int ObjectLimit;
-        public bool LimitExceeded;
+        public override bool LimitExceeded { get; set; }
 
         public VMTSOJobUI JobUI;
 
         public byte SkillMode;
+        public List<VMTSOChatChannel> ChatChannels = new List<VMTSOChatChannel>();
 
         public VMTSOLotState() { }
         public VMTSOLotState(int version) : base(version) { }
@@ -62,6 +65,19 @@ namespace FSO.SimAntics.Model.TSOPlatform
             {
                 SkillMode = reader.ReadByte();
             }
+
+            if (Version > 27)
+            {
+                ChatChannels.Clear();
+                var channelCount = reader.ReadByte(); //number of chat channels - currently unused
+
+                for (int i=0; i<channelCount; i++)
+                {
+                    var chan = new VMTSOChatChannel();
+                    chan.Deserialize(reader);
+                    ChatChannels.Add(chan);
+                }
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -81,9 +97,15 @@ namespace FSO.SimAntics.Model.TSOPlatform
             writer.Write(JobUI != null);
             if (JobUI != null) JobUI.SerializeInto(writer);
             writer.Write(SkillMode);
+
+            writer.Write((byte)ChatChannels.Count);
+            foreach (var channel in ChatChannels)
+            {
+                channel.SerializeInto(writer);
+            }
         }
 
-        public bool CanPlaceNewUserObject(VM vm)
+        public override bool CanPlaceNewUserObject(VM vm)
         {
             return (vm.Context.ObjectQueries.NumUserObjects < ObjectLimit);
         }
@@ -92,5 +114,93 @@ namespace FSO.SimAntics.Model.TSOPlatform
         {
             
         }
+    }
+
+    public class VMTSOChatChannel : VMSerializable
+    {
+        public byte ID;
+        public string Name = "Custom";
+        public string Description = "A Custom Chat Channel";
+        public VMTSOAvatarPermissions ViewPermMin;
+        public VMTSOAvatarPermissions SendPermMin;
+        public VMTSOChatChannelFlags Flags;
+        public Color TextColor = new Color(255, 249, 157);
+
+        public string _TextColorString;
+        public string TextColorString
+        {
+            get
+            {
+                if (_TextColorString == null) _TextColorString = "[color=#" + TextColor.R.ToString("x2") + TextColor.G.ToString("x2") + TextColor.B.ToString("x2") + "]";
+                return _TextColorString;
+            }
+        }
+
+        public static VMTSOChatChannel AdminChannel = new VMTSOChatChannel()
+        {
+            ID = 7,
+            ViewPermMin = VMTSOAvatarPermissions.Admin,
+            SendPermMin = VMTSOAvatarPermissions.Admin,
+            Name = "Admin",
+            Description = "Administrators Only",
+            TextColor = Color.White
+        };
+
+        public static VMTSOChatChannel MainChannel = new VMTSOChatChannel()
+        {
+            ID = 0,
+            ViewPermMin = VMTSOAvatarPermissions.Visitor,
+            SendPermMin = VMTSOAvatarPermissions.Visitor,
+            Name = "Chat",
+            Description = "Default Channel",
+            TextColor = Color.White,
+            Flags = VMTSOChatChannelFlags.ShowByDefault
+        };
+
+        public VMTSOChatChannel Clone()
+        {
+            return new VMTSOChatChannel()
+            {
+                ID = ID,
+                Description = Description,
+                Flags = Flags,
+                Name = Name,
+                SendPermMin = SendPermMin,
+                TextColor = TextColor,
+                ViewPermMin = ViewPermMin
+            };
+        }
+
+        public void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write(ID);
+            writer.Write(Name);
+            writer.Write(Description);
+            writer.Write((byte)ViewPermMin);
+            writer.Write((byte)SendPermMin);
+            writer.Write((byte)Flags);
+            writer.Write(TextColor.PackedValue);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            ID = reader.ReadByte();
+            Name = reader.ReadString();
+            Description = reader.ReadString();
+            ViewPermMin = (VMTSOAvatarPermissions)reader.ReadByte();
+            SendPermMin = (VMTSOAvatarPermissions)reader.ReadByte();
+            Flags = (VMTSOChatChannelFlags)reader.ReadByte();
+            TextColor = new Color(reader.ReadUInt32());
+        }
+    }
+
+    [Flags]
+    public enum VMTSOChatChannelFlags : byte
+    {
+        EnableTTS = 1,
+        ShowByDefault = 2,
+        Delete = 128,
+
+        All = 3
     }
 }

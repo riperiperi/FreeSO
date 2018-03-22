@@ -92,6 +92,11 @@ namespace FSO.Content.TS1
             items.Add(item);
         }
 
+        public List<string> ListAllAnimations()
+        {
+            return AnimHostBCF.Keys.Select(x => x+".anim").ToList();
+        }
+
         public object Get(string name, Type expected)
         {
             if (name == null) return null;

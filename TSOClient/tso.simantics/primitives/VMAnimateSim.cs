@@ -40,6 +40,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 animation = FSO.Content.Content.Get().AvatarAnimations.Get(avatar.WalkAnimations[posture] + ".anim");
                 if (animation == null) return VMPrimitiveExitCode.GOTO_TRUE;
                 var state = new VMAnimationState(animation, operand.PlayBackwards);
+                if (context.VM.TS1) state.Speed = 30 / 25f;
                 state.Loop = true;
                 avatar.Animations.Add(state);
                 avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
@@ -77,6 +78,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 case 1:
                     avatar.Animations.Clear();
                     var state = new VMAnimationState(animation, operand.PlayBackwards);
+                    if (context.VM.TS1) state.Speed = 30 / 25f;
                     state.Loop = true;
                     avatar.Animations.Add(state);
 
@@ -92,7 +94,9 @@ namespace FSO.SimAntics.Engine.Primitives
                     {
                         /** Start it **/
                         avatar.Animations.Clear();
-                        avatar.Animations.Add(new VMAnimationState(animation, operand.PlayBackwards));
+                        var astate = new VMAnimationState(animation, operand.PlayBackwards);
+                        if (context.VM.TS1) astate.Speed = 30 / 25f;
+                        avatar.Animations.Add(astate);
                     
                         avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
                         avatar.Avatar.RightHandGesture = SimHandGesture.Idle;

@@ -1180,21 +1180,12 @@ namespace FSO.Client.Rendering.City
 						    }
 
                             Texture2D lotImg = null;
-                            if (!m_HouseGraphics.ContainsKey(house.packed_pos)) {
-                                if (scrollVel > 0.2f) lotImg = m_DefaultHouse;
-                                else
-                                {
-                                    //no house graphic found - request one!
-                                    m_HouseGraphics[house.packed_pos] = m_DefaultHouse;
-                                    var controller = FindController<TerrainController>();
-                                    if (controller != null) controller.RequestLotThumb((uint)house.packed_pos, loadedThumb =>
-                                    {
-                                        m_HouseGraphics[house.packed_pos] = loadedThumb;
-                                    });
-                                }
-						    }
-                            if (lotImg == null) lotImg = m_HouseGraphics[house.packed_pos];
-
+                            if (scrollVel > 0.2f) lotImg = m_DefaultHouse;
+                            else
+                            {
+                                var controller = FindController<TerrainController>();
+                                lotImg = controller.RequestLotThumb((uint)house.packed_pos);
+                            }
 
                             var resMultiplier = (lotImg.Width > 144) ? 2 : 1;
                             var lotImgWidth = lotImg.Width / resMultiplier;

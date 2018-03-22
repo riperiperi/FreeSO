@@ -70,7 +70,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             {
                 //todo: make this get the appropriate family
                 //if multiple families are playable in the same lot
-                return (uint?)vm.CurrentFamily?.Budget ?? uint.MaxValue;
+                return (uint?)vm.TS1State.CurrentFamily?.Budget ?? uint.MaxValue;
             }
             return uint.MaxValue; //maxis has infinite money
         }
@@ -81,10 +81,10 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             {
                 //todo: make this get the appropriate family
                 //if multiple families are playable in the same lot
-                if (vm.CurrentFamily != null)
+                if (vm.TS1State.CurrentFamily != null)
                 {
-                    if (vm.CurrentFamily.Budget + delta < 0) return false;
-                    vm.CurrentFamily.Budget += delta;
+                    if (vm.TS1State.CurrentFamily.Budget + delta < 0) return false;
+                    vm.TS1State.CurrentFamily.Budget += delta;
                 }
                 return true;
             }
@@ -97,9 +97,9 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             {
                 //todo: make this get the appropriate family
                 //if multiple families are playable in the same lot
-                if (vm.CurrentFamily != null)
+                if (vm.TS1State.CurrentFamily != null)
                 {
-                    if (vm.CurrentFamily.Budget + delta < 0) return false;
+                    if (vm.TS1State.CurrentFamily.Budget + delta < 0) return false;
                 }
                 return true;
             }
@@ -177,7 +177,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
                 vm.CloseNet(VMCloseNetReason.LeaveLot);
             }
             avatar.Delete(true, vm.Context);
-            vm.Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Leave, avatar.Name));
+            vm.Context.VM.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Leave, avatar.Name));
         }
 
         public void RequestRoommate(VM vm, uint pid, int mode, byte permissions)

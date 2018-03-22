@@ -1,4 +1,5 @@
 ﻿using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Model.Platform;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,12 +8,12 @@ using System.Text;
 
 namespace FSO.SimAntics.Model.TSOPlatform
 {
-    public class VMTSOObjectState : VMTSOEntityState
+    public class VMTSOObjectState : VMTSOEntityState, VMIObjectState
     {
         public uint OwnerID;
 
         //repair state
-        public ushort Wear = 20*4; //times 4. increases by 1 per qtr day.
+        public ushort Wear { get; set; } = 20 * 4; //times 4. increases by 1 per qtr day.
         public byte QtrDaysSinceLastRepair = 0; //when > 7*4, object can break again.
         public bool Broken
         {

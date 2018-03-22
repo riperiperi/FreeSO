@@ -40,7 +40,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
                     });
                 }
-                vm.SignalChatEvent(new VMChatEvent(caller?.PersistID ?? 0, VMChatEventType.Arch,
+                vm.SignalChatEvent(new VMChatEvent(caller, VMChatEventType.Arch,
                     caller?.Name ?? "Unknown",
                     vm.GetUserIP(caller?.PersistID ?? 0),
                     "deleted " + obj.ToString()
@@ -74,7 +74,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     foreach (var o in obj.MultitileGroup.Objects) o.PersistID = 0; //no longer representative of the object in db.
                     obj.Delete(CleanupAll, vm.Context);
 
-                    vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
+                    vm.SignalChatEvent(new VMChatEvent(caller, VMChatEventType.Arch,
                         caller?.Name ?? "disconnected user",
                         vm.GetUserIP(caller.PersistID),
                         "sent " + obj.ToString() + " back to the inventory of its owner."
@@ -98,7 +98,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (!vm.TS1)
             {
                 if (caller == null) return false;
-                var permissions = ((VMTSOAvatarState)caller.TSOState).Permissions;
+                var permissions = caller.AvatarState.Permissions;
                 if (permissions < VMTSOAvatarPermissions.Roommate) return false;
                 if (obj != null && permissions == VMTSOAvatarPermissions.Admin)
                 {

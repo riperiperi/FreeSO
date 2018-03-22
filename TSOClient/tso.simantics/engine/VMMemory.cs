@@ -130,7 +130,7 @@ namespace FSO.SimAntics.Engine.Utils
                             //find neighbour in the lot
                             return context.VM.Context.ObjectQueries.Avatars.FirstOrDefault(x => x.Object.GUID == neighbor.GUID)?.ObjectID ?? 0;
                         case 1: //belongs in house
-                            return (short)((context.VM.CurrentFamily == fami) ? 1:0); //uh, okay.
+                            return (short)((context.VM.TS1State.CurrentFamily == fami) ? 1:0); //uh, okay.
                         case 2: //person age
                             return neighbor.PersonData?.ElementAt((int)VMPersonDataVariable.PersonsAge) ?? 0;
                         case 3: //relationship raw score

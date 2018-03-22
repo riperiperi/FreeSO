@@ -30,6 +30,7 @@ namespace FSO.Client.Controllers
         private IClientDataService DataService;
         private IShardRealestateDomain Realestate;
         private PurchaseLotRegulator PurchaseRegulator;
+        private LotThumbContent LotThumbs;
 
         private Binding<Lot> CurrentHoverLot;
         private Binding<City> CurrentCity;
@@ -52,6 +53,8 @@ namespace FSO.Client.Controllers
                 .WithMultiBinding(RefreshTooltip, "Lot_Price", "Lot_IsOnline", "Lot_Name", "Lot_NumOccupants", "Lot_LeaderID");
 
             CurrentCity = new Binding<City>().WithMultiBinding(RefreshCity, "City_ReservedLotInfo", "City_SpotlightsVector");
+
+            LotThumbs = new LotThumbContent();
         }
 
         private void PurchaseRegulator_OnPurchased(int newBudget)
@@ -64,6 +67,8 @@ namespace FSO.Client.Controllers
             PurchaseRegulator.OnError -= PurchaseRegulator_OnError;
             PurchaseRegulator.OnTransition -= PurchaseRegulator_OnTransition;
             PurchaseRegulator.OnPurchased -= PurchaseRegulator_OnPurchased;
+
+            LotThumbs.Dispose();
         }
 
         public void ZoomIn(){
@@ -184,7 +189,9 @@ namespace FSO.Client.Controllers
             }
         }
 
-        public void RequestLotThumb(uint location, Callback<Texture2D> onRetrieved) {
+        public Texture2D RequestLotThumb(uint location) {
+            return LotThumbs.GetLotThumbForFrame((uint)Network.MyShard.Id, location);
+            /*
             DataService.Request(MaskedStruct.MapView_NearZoom_Lot_Thumbnail, location).ContinueWith(x =>
             {
                 //happens in game thread
@@ -193,7 +200,22 @@ namespace FSO.Client.Controllers
                 var thumb = lot.Lot_Thumbnail;
                 if (thumb.Data == null || thumb.Data.Length == 0) return;
                 onRetrieved(ImageLoader.WinFromStreamP(GameFacade.GraphicsDevice, new MemoryStream(thumb.Data), -1));
-            });
+            }); */
+        }
+
+        public void OverrideLotThumb(uint location, Texture2D tex)
+        {
+            LotThumbs.OverrideLotThumb((uint)Network.MyShard.Id, location, tex);
+        }
+
+        public LotThumbEntry LockLotThumb(uint location)
+        {
+            return LotThumbs.GetLotEntry((uint)Network.MyShard.Id, location);
+        }
+
+        public void UnlockLotThumb(uint location)
+        {
+            LotThumbs.ReleaseLotThumb((uint)Network.MyShard.Id, location);
         }
 
         public void ClickLot(int x, int y)

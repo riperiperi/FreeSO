@@ -30,6 +30,7 @@ namespace FSO.Server.Servers.City.Handlers
             {
                 message.From = session.AvatarId;
                 message.FromType = FSO.Common.Enum.UserReferenceType.AVATAR;
+                message.Color |= 0xFF000000;
                 var targetSession = Sessions.GetByAvatarId(message.To);
                 if (targetSession == null)
                 {

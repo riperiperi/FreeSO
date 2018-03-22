@@ -29,6 +29,9 @@ namespace FSO.SimAntics.Marshals
 
         public VMResourceIDMarshal IDMap;
         public bool[] FineBuildableArea;
+        public bool BuildBuyEnabled = true;
+
+        public byte[] Preserialized;
 
         public int Version;
         public VMArchitectureMarshal() { }
@@ -85,10 +88,16 @@ namespace FSO.SimAntics.Marshals
                     FineBuildableArea = reader.ReadBytes(size).Select(x => x>0).ToArray();
                 }
             }
+            if (Version > 25) BuildBuyEnabled = reader.ReadBoolean();
         }
 
         public void SerializeInto(BinaryWriter writer)
         {
+            if (Preserialized != null)
+            {
+                writer.Write(Preserialized);
+                return;
+            }
             writer.Write(Width);
             writer.Write(Height);
             writer.Write(Stories);
@@ -121,6 +130,18 @@ namespace FSO.SimAntics.Marshals
 
             writer.Write(FineBuildableArea != null);
             if (FineBuildableArea != null) writer.Write(FineBuildableArea.Select(x => (byte)(x?1:0)).ToArray());
+
+            writer.Write(BuildBuyEnabled);
+        }
+
+        public void Preserialize()
+        {
+            using (var mem = new MemoryStream())
+            {
+                using (var io = new BinaryWriter(mem))
+                    SerializeInto(io);
+                Preserialized = mem.ToArray();
+            }
         }
     }
 

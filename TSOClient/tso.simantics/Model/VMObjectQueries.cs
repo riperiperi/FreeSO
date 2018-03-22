@@ -104,7 +104,7 @@ namespace FSO.SimAntics.Model
         public void RemoveMultitilePersist(VM vm, uint persistID)
         {
             MultitileByPersist.Remove(persistID);
-            if (vm.TSOState.LimitExceeded) VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
+            if (vm.PlatformState.LimitExceeded) VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
         }
 
         public void RegisterCategory(VMEntity obj, short category)
@@ -171,7 +171,7 @@ namespace FSO.SimAntics.Model
                 if (obj.Thread != null)
                 {
                     var vm = obj.Thread.Context.VM;
-                    if (vm.TSOState.LimitExceeded) VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
+                    if (vm.PlatformState.LimitExceeded) VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
                 }
             }
         }

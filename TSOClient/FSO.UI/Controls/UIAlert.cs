@@ -161,15 +161,17 @@ namespace FSO.Client.UI.Controls
                 h += 148;
             }
 
+            var buttonMaxWidth = (Buttons.Count == 0)? 0 : Buttons.Max(x => x.Width);
+            var buttonSpacing = (Buttons.Count > 2) ? 5 : 50;
             SetSize(w, h);
 
-            var btnX = (w - ((Buttons.Count * 100) + ((Buttons.Count - 1) * 45))) / 2;
+            var btnX = (w - ((Buttons.Count * buttonMaxWidth) + ((Buttons.Count - 1) * buttonSpacing))) / 2;
             var btnY = h - 58;
             foreach (UIElement button in Buttons)
             {
                 button.Y = btnY;
                 button.X = btnX;
-                btnX += 150;
+                btnX += buttonMaxWidth + buttonSpacing;
             }
         }
 

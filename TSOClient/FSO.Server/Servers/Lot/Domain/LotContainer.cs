@@ -122,7 +122,7 @@ namespace FSO.Server.Servers.Lot.Domain
             0xA4E8B034
         };
 
-        private static HashSet<uint> NoResetGUIDs = new HashSet<uint>()
+        private static HashSet<uint> PetCrateGUIDs = new HashSet<uint>()
         {
             0x3278BD34,
             0x5157DDF2
@@ -672,9 +672,19 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.TransactionIncomplete;
                     ((VMGameObject)ent).DisableIfTSOCategoryWrong(Lot.Context);
+                    if (PetCrateGUIDs.Contains(ent.Object.OBJ.GUID) && ent.GetAttribute(1) == 0)
+                    {
+                        //if this pet isn't out, but their crate is out of world, place it near the mailbox.
+                        if (ent.Position == LotTilePos.OUT_OF_WORLD)
+                        {
+                            //put it close to the mailbox
+                            var mailbox = Lot.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
+                            if (mailbox != null) SimAntics.Primitives.VMFindLocationFor.FindLocationFor(ent, mailbox, Lot.Context, VMPlaceRequestFlags.UserPlacement);
+                        }
+                    }
                     if (ent.GetFlag(VMEntityFlags.Occupied))
                     {
-                        if (NoResetGUIDs.Contains(ent.Object.OBJ.GUID))
+                        if (PetCrateGUIDs.Contains(ent.Object.OBJ.GUID))
                         {
                             //typically pet crates or other things which should never have state deleted.
                             ent.SetFlag(VMEntityFlags.Occupied, false);
@@ -684,7 +694,7 @@ namespace FSO.Server.Servers.Lot.Domain
                                 var mailbox = Lot.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
                                 if (mailbox != null) SimAntics.Primitives.VMFindLocationFor.FindLocationFor(ent, mailbox, Lot.Context, VMPlaceRequestFlags.UserPlacement);
                             }
-                            ent.ExecuteEntryPoint(2, Lot.Context, true);
+                            //ent.ExecuteEntryPoint(2, Lot.Context, true);
                         }
                         else
                         {

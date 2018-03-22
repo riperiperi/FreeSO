@@ -464,7 +464,6 @@ namespace FSO.Client.UI.Screens
             DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0, 0);
             TimedReferenceController.Clear();
             TimedReferenceController.Clear();
-            VM.ClearAssembled();
 
             if (ZoomLevel < 4) ZoomLevel = 5;
             vm.Context.Ambience.Kill();

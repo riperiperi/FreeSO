@@ -28,7 +28,7 @@ namespace FSO.Server.Clients
                             .AddQueryParameter("version", input.Version)
                             .AddQueryParameter("clientid", input.ClientID);
 
-
+            
             var response = client.Execute(request);
             var result = new AuthResult();
             result.Valid = false;

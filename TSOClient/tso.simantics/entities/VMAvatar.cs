@@ -27,6 +27,8 @@ using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model.Sound;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.Primitives;
+using FSO.SimAntics.Model.Platform;
+using FSO.SimAntics.Model.TS1Platform;
 
 namespace FSO.SimAntics
 {
@@ -34,6 +36,7 @@ namespace FSO.SimAntics
     {
         public static uint TEMPLATE_PERSON = 0x7FD96B54;
 
+        public VMIAvatarState AvatarState;
         public SimAvatar Avatar;
 
         /** Animation vars **/
@@ -220,7 +223,9 @@ namespace FSO.SimAntics
         public VMAvatar(GameObject obj)
             : base(obj)
         {
-            PlatformState = new VMTSOAvatarState(); //todo: ts1 switch
+            var state = VM.GlobTS1?(VMAbstractEntityState)new VMTS1AvatarState():new VMTSOAvatarState();
+            PlatformState = state; //todo: ts1 switch
+            AvatarState = (VMIAvatarState)state;
             BodyStrings = Object.Resource.Get<STR>(Object.OBJ.BodyStringID);
 
             SetAvatarType(BodyStrings);
@@ -676,7 +681,7 @@ namespace FSO.SimAntics
                 case VMPersonDataVariable.Priority:
                     return (Thread.Queue.Count == 0) ? (short)0 : Thread.Queue[0].Priority;
                 case VMPersonDataVariable.IsHousemate:
-                    var level = ((VMTSOAvatarState)TSOState).Permissions;
+                    var level = AvatarState.Permissions;
                     return (short)((level >= VMTSOAvatarPermissions.BuildBuyRoommate) ? 2 : ((level >= VMTSOAvatarPermissions.Roommate) ? 1 : 0));
                 case VMPersonDataVariable.NumOutgoingFriends:
                 case VMPersonDataVariable.IncomingFriends:
@@ -694,11 +699,11 @@ namespace FSO.SimAntics
         public bool ForceEnableSkill;
         public bool SkillGameplayDisabled(VM vm)
         {
-            if (ForceEnableSkill || PersistID == 0) return false;
+            if (ForceEnableSkill || PersistID == 0 || vm.TS1) return false;
             var mode = vm.TSOState.SkillMode;
             if (mode == 0) return false;
             else if (mode == 1)
-                return ((VMTSOAvatarState)TSOState).Permissions == VMTSOAvatarPermissions.Visitor;
+                return AvatarState.Permissions == VMTSOAvatarPermissions.Visitor;
             else return true;
         }
 
@@ -801,6 +806,9 @@ namespace FSO.SimAntics
                 case VMPersonDataVariable.MechanicalSkill:
                     if (Thread != null && SkillGameplayDisabled(Thread.Context.VM)) return true;
                     break;
+                case VMPersonDataVariable.CurrentOutfit:
+                    if (Thread.Context.VM.TS1) BodyOutfit = VMSuitProvider.GetPersonSuitTS1(this, (ushort)value);
+                    break;
             }
             PersonData[(ushort)variable] = value;
             return true;
@@ -860,8 +868,8 @@ namespace FSO.SimAntics
             Headline = new VMRuntimeHeadline(new VMSetBalloonHeadlineOperand
             {
                 Group = VMSetBalloonHeadlineOperandGroup.Money,
-                Flags2 = (ushort)(uval),
-                Duration = (short)(uval >> 16)
+                Flags2 = (ushort)((uint)uval),
+                Duration = (short)(((uint)uval) >> 16)
             }, this, null, 0);
             Headline.Duration = 60;
             HeadlineRenderer = Thread?.Context.VM.Headline.Get(Headline);
@@ -1021,8 +1029,8 @@ namespace FSO.SimAntics
 
                 MotiveChanges = MotiveChanges,
                 MotiveDecay = MotiveDecay,
-                PersonData = PersonData,
-                MotiveData = MotiveData,
+                PersonData = (short[])PersonData.Clone(),
+                MotiveData = (short[])MotiveData.Clone(),
                 HandObject = (HandObject == null) ? (short)0 : HandObject.ObjectID,
                 RadianDirection = RadianDirection,
                 KillTimeout = KillTimeout,
@@ -1042,7 +1050,7 @@ namespace FSO.SimAntics
         public virtual void Load(VMAvatarMarshal input)
         {
             base.Load(input);
-
+            AvatarState = (VMIAvatarState)PlatformState;
             Animations = new List<VMAnimationState>();
             foreach (var anim in input.Animations) Animations.Add(new VMAnimationState(anim));
             CarryAnimationState = (input.CarryAnimationState == null) ? null : new VMAnimationState(input.CarryAnimationState);
@@ -1099,8 +1107,18 @@ namespace FSO.SimAntics
             SetPersonData(VMPersonDataVariable.Gender, gender);
             SetPersonData(VMPersonDataVariable.RenderDisplayFlags, GetPersonData(VMPersonDataVariable.RenderDisplayFlags));
             SetPersonData(VMPersonDataVariable.IsGhost, GetPersonData(VMPersonDataVariable.IsGhost));
-            BodyOutfit = input.BodyOutfit;
-            HeadOutfit = input.HeadOutfit;
+            if (input.TS1)
+            {
+                SetPersonData(VMPersonDataVariable.CurrentOutfit, GetPersonData(VMPersonDataVariable.CurrentOutfit));
+                var bodyStr = Object.Resource.Get<STR>(Object.OBJ.BodyStringID);
+                HeadOutfit = new VMOutfitReference(bodyStr, true);
+            }
+            else
+            {
+                BodyOutfit = input.BodyOutfit;
+                HeadOutfit = input.HeadOutfit;
+            }
+            
             if (UseWorld) ((AvatarComponent)WorldUI).blueprint = context.Blueprint;
         }
         #endregion

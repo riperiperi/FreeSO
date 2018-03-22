@@ -182,6 +182,12 @@ namespace FSO.Server.Database.DA.Lots
             Context.Connection.Query("UPDATE fso_roommates SET permissions_level = 2 WHERE avatar_id = (SELECT owner_id FROM fso_lots WHERE lot_id = @id LIMIT 1) AND lot_id = @id", new { id = lot_id });
         }
 
+        public void UpdateLotSkillMode(int lot_id, uint skillMode)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET skill_mode = @skillMode WHERE lot_id = @id",
+                new { id = lot_id, skillMode = skillMode });
+        }
+
         public void UpdateLotCategory(int lot_id, LotCategory category, uint skillMode)
         {
             Context.Connection.Query("UPDATE fso_lots SET category = @category, category_change_date = @time, skill_mode = @skillMode WHERE lot_id = @id", 

@@ -29,6 +29,7 @@ namespace FSO.Content.TS1
         public Content ContentManager;
         public TS1GameState GameState = new TS1GameState();
         public string UserPath;
+        public int NextSim;
 
         public HashSet<uint> DirtyAvatars = new HashSet<uint>();
 
@@ -97,7 +98,75 @@ namespace FSO.Content.TS1
                 FamilyForHouse[(short)fam.HouseNumber] = fam;
             }
 
+            LoadCharacters(true);
+
             //todo: manage avatar iffs here
+        }
+
+        public void LoadCharacters(bool clearLast)
+        {
+            var objs = (TS1ObjectProvider)ContentManager.WorldObjects;
+            if (objs.Entries == null) return;
+            if (clearLast)
+            {
+                foreach (var obj in objs.Entries.Where(x => x.Value.Source == GameObjectSource.User))
+                    objs.RemoveObject((uint)obj.Key);
+            }
+
+            NextSim = 0;
+            var path = Path.Combine(UserPath, "Characters/");
+            var files = Directory.EnumerateFiles(path);
+            foreach (var filename in files)
+            {
+                if (Path.GetExtension(filename) != ".iff") return;
+
+                int userID;
+                var name = Path.GetFileName(filename);
+                if (name.Length > 8 && int.TryParse(name.Substring(4, 5), out userID) && userID >= NextSim)
+                {
+                    NextSim = userID + 1;
+                }
+
+                var file = new IffFile(filename);
+                file.MarkThrowaway();
+
+                var objects = file.List<OBJD>();
+                if (objects != null)
+                {
+                    foreach (var obj in objects)
+                    {
+                        objs.Entries[obj.GUID] = new GameObjectReference(objs)
+                        {
+                            FileName = filename,
+                            ID = obj.GUID,
+                            Name = obj.ChunkLabel,
+                            Source = GameObjectSource.User,
+                            Group = (short)obj.MasterID,
+                            SubIndex = obj.SubIndex
+                        };
+                    }
+                }
+            }
+        }
+
+        public void SaveNewNeighbour(GameObject obj)
+        {
+            var objs = (TS1ObjectProvider)ContentManager.WorldObjects;
+            //save to a new user iff
+            var path = Path.Combine(UserPath, "Characters/");
+            var filename = Path.Combine(path, "User" + (NextSim++).ToString().PadLeft(5, '0') + ".iff");
+            using (var stream = new FileStream(filename, FileMode.Create))
+                obj.Resource.MainIff.Write(stream);
+
+            objs.Entries[obj.OBJ.GUID] = new GameObjectReference(objs)
+            {
+                FileName = filename,
+                ID = obj.GUID,
+                Name = obj.OBJ.ChunkLabel,
+                Source = GameObjectSource.User,
+                Group = (short)obj.OBJ.MasterID,
+                SubIndex = obj.OBJ.SubIndex
+            };
         }
 
         public Neighbour GetNeighborByID(short ID)
@@ -112,6 +181,33 @@ namespace FSO.Content.TS1
             FAMI result = null;
             FamilyForHouse.TryGetValue(ID, out result);
             return result;
+        }
+
+        public int GetMagicoinsForNeighbor(short ID)
+        {
+            return GetInventoryByNID(ID)?.FirstOrDefault(x => x.GUID == 0x99E81BEC)?.Count ?? 0;
+        }
+
+        public int GetMagicoinsForFamily(FAMI family)
+        {
+            return family.FamilyGUIDs.Select(x => GetMagicoinsForNeighbor(GetNeighborIDForGUID(x) ?? -1)).Sum();
+        }
+
+        public void MoveOut(short houseID)
+        {
+            var old = GetFamilyForHouse(houseID);
+            old.HouseNumber = 0;
+            FamilyForHouse.Remove(houseID);
+        }
+
+        public void SetFamilyForHouse(short houseID, FAMI family, bool buy)
+        {
+            family.HouseNumber = houseID;
+            if (buy)
+            {
+                family.Budget -= GetHouse(houseID)?.Get<SIMI>(1)?.PurchaseValue ?? 0;
+            }
+            FamilyForHouse[houseID] = family;
         }
 
         public FAMI GetFamily(ushort ID)

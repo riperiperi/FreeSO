@@ -627,11 +627,14 @@ namespace FSO.LotView.Components
                 pass.Apply();
                 var primitives = Bp.FloorGeom.SetGrassIndices(gd, Effect, world);
                 var blendstate = gd.BlendState;
-                gd.BlendState = Multiply;
-                gd.DepthStencilState = DepthStencilState.Default;
-                gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, primitives);
-                gd.BlendState = blendstate;
-                gd.DepthStencilState = DepthStencilState.Default;
+                if (primitives > 0)
+                {
+                    gd.BlendState = Multiply;
+                    gd.DepthStencilState = DepthStencilState.Default;
+                    gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, primitives);
+                    gd.BlendState = blendstate;
+                    gd.DepthStencilState = DepthStencilState.Default;
+                }
             //});
         }
 

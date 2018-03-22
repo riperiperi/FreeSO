@@ -87,7 +87,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             else
             {
 
-                var oldState = ((VMTSOAvatarState)obj.TSOState).Permissions;
+                var oldState = obj.AvatarState.Permissions;
 
                 if (oldState >= VMTSOAvatarPermissions.Roommate)
                 {
@@ -96,7 +96,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     ((VMTSOAvatarState)obj.TSOState).Flags |= VMTSOAvatarFlags.CanBeRoommate;
                 }
                 if (oldState >= VMTSOAvatarPermissions.BuildBuyRoommate) vm.TSOState.BuildRoommates.Remove(obj.PersistID);
-                ((VMTSOAvatarState)obj.TSOState).Permissions = level;
+                obj.AvatarState.Permissions = level;
                 if (level >= VMTSOAvatarPermissions.Roommate)
                 {
                     ((VMTSOAvatarState)obj.TSOState).Flags &= ~VMTSOAvatarFlags.CanBeRoommate;
@@ -115,7 +115,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Verified) return true;
             //can only change permissions to and from build roommate. caller must be owner, and target must be roomie/build (cannot change owner or admin)
             if (caller == null || //caller must be on lot, have owner permissions
-                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Owner)
+                caller.AvatarState.Permissions < VMTSOAvatarPermissions.Owner)
                 return false;
 
             if (Level > VMTSOAvatarPermissions.BuildBuyRoommate || Level < VMTSOAvatarPermissions.Roommate) return false; //users can only switch to build roomie or back.

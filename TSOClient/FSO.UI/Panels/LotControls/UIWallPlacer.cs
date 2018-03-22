@@ -137,7 +137,7 @@ namespace FSO.Client.UI.Panels.LotControls
                             VMArchitectureCommandType.WALL_DELETE:VMArchitectureCommandType.WALL_LINE,
                         level = World.State.Level, pattern = Pattern, style = Style, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
                 }
-                if (cmds.Count > 0 && (Parent.ActiveEntity == null || vm.Context.Architecture.LastTestCost <= Parent.ActiveEntity.TSOState.Budget.Value))
+                if (cmds.Count > 0 && (Parent.ActiveEntity == null || vm.Context.Architecture.LastTestCost <= Parent.Budget))
                 {
                     vm.SendCommand(new VMNetArchitectureCmd
                     {
@@ -197,7 +197,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 var cost = vm.Context.Architecture.LastTestCost;
                 if (cost != 0)
                 {
-                    var disallowed = Parent.ActiveEntity != null && cost > Parent.ActiveEntity.TSOState.Budget.Value;
+                    var disallowed = Parent.ActiveEntity != null && cost > Parent.Budget;
                     state.UIState.TooltipProperties.Show = true;
                     state.UIState.TooltipProperties.Color = disallowed?Color.DarkRed:Color.Black;
                     state.UIState.TooltipProperties.Opacity = 1;

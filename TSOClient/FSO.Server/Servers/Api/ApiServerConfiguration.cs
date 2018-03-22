@@ -38,6 +38,7 @@ namespace FSO.Server.Servers.Api
         /// </summary>
         public bool Maintainance { get; set; }
         public string UpdateUrl { get; set; }
+        public string CDNUrl { get; set; }
 
         public string SmtpHost { get; set; }
         public int SmtpPort { get; set; }

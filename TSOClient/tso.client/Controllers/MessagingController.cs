@@ -186,7 +186,7 @@ namespace FSO.Client.Controllers
             {
                 var window = GetWindow(existing);
                 existing.Read = window.Visible;
-                window.AddMessage(existing.User, message.Message, IMEntryType.MESSAGE_IN);
+                window.AddMessage(existing.User, message.Message, message.Color, IMEntryType.MESSAGE_IN);
 
                 if (message.FromType == UserReferenceType.AVATAR && sendAck)
                 {
@@ -228,7 +228,7 @@ namespace FSO.Client.Controllers
             newMessage.Read = false;
             newWindow.Visible = false;
             UpdateTray();
-            newWindow.AddMessage(newMessage.User, message.Message, IMEntryType.MESSAGE_IN);
+            newWindow.AddMessage(newMessage.User, message.Message, message.Color, IMEntryType.MESSAGE_IN);
 
             //We need to make sure we have their name and icon
             if (message.FromType == UserReferenceType.AVATAR){

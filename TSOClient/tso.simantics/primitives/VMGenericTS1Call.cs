@@ -1,4 +1,5 @@
-﻿using FSO.Files.Utils;
+﻿using FSO.Files.Formats.IFF.Chunks;
+using FSO.Files.Utils;
 using FSO.LotView.Components;
 using FSO.LotView.Model;
 using FSO.SimAntics.Engine;
@@ -42,18 +43,45 @@ namespace FSO.SimAntics.Primitives
                     context.Thread.Queue[0].IconOwner = context.StackObject;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 // 3. PullDownTaxiDialog
+                case VMGenericTS1CallMode.AddToFamily: //4
+                    if (context.VM.TS1State.CurrentFamily == null || context.VM.TS1State.CurrentFamily.FamilyGUIDs.Length >= 8)
+                        return VMPrimitiveExitCode.GOTO_FALSE;
+                    var fneigh = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
+                    if (fneigh == null) return VMPrimitiveExitCode.GOTO_FALSE;
+                    AddToFamily(context.VM.TS1State.CurrentFamily, fneigh);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTS1CallMode.CombineAssetsOfFamilyInTemp0: //5
+                    //adds the family in temp 0's assets to our budget. (for move in)
+                    var family = Content.Content.Get().Neighborhood.GetFamily((ushort)context.Thread.TempRegisters[0]);
+                    context.VM.TS1State.CurrentFamily.Budget += family.ValueInArch + family.Budget;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTS1CallMode.RemoveFromFamily: //6
+                    if (context.VM.TS1State.CurrentFamily == null)
+                        return VMPrimitiveExitCode.GOTO_FALSE;
+                    fneigh = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
+                    if (fneigh == null) return VMPrimitiveExitCode.GOTO_FALSE;
+                    var guids = context.VM.TS1State.CurrentFamily.FamilyGUIDs.ToList();
+                    guids.Remove(fneigh.GUID);
+                    context.VM.TS1State.CurrentFamily.FamilyGUIDs = guids.ToArray();
+                    TryDeleteFamily(context.VM.TS1State.CurrentFamily);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 /*
-                 * AddToFamily = 4,
-                   CombineAssetsOfFamilyInTemp0 = 5,
-                   RemoveFromFamily = 6,
-                   MakeNewNeighbor = 7, //this one is "depracated"
-                   FamilyTutorialComplete = 8,
-                   ArchitectureTutorialComplete = 9,
-                   DisableBuildBuy = 10,
-                   EnableBuildBuy = 11,
-                   GetDistanceToCameraInTemp0 = 12,
-                   AbortInteractions = 13, //abort all interactions associated with the stack object
-                 **/
+               MakeNewNeighbor = 7, //this one is "depracated"
+               FamilyTutorialComplete = 8,
+               ArchitectureTutorialComplete = 9, */
+
+                case VMGenericTS1CallMode.DisableBuildBuy: //10
+                    context.VM.Context.Architecture.BuildBuyEnabled = false;
+                    context.VM.SignalGenericVMEvt(VMEventType.TS1BuildBuyChange, 0);
+                    break;
+                case VMGenericTS1CallMode.EnableBuildBuy: //11
+                    context.VM.Context.Architecture.BuildBuyEnabled = true;
+                    context.VM.SignalGenericVMEvt(VMEventType.TS1BuildBuyChange, 1);
+                    break;
+                /*
+                 GetDistanceToCameraInTemp0 = 12,
+                 AbortInteractions = 13, //abort all interactions associated with the stack object
+               **/
                 case VMGenericTS1CallMode.HouseRadioStationEqualsTemp0: //14
                     context.VM.SetGlobalValue(31, context.Thread.TempRegisters[0]);
                     return VMPrimitiveExitCode.GOTO_TRUE;
@@ -64,9 +92,49 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTS1CallMode.ChangeToLotInTemp0: //17
                     //-1 is this family's home lot
                     var crossData = Content.Content.Get().Neighborhood.GameState;
-                    crossData.ActiveFamily = context.VM.CurrentFamily;
+                    crossData.ActiveFamily = context.VM.TS1State.CurrentFamily;
                     crossData.DowntownSimGUID = context.Caller.Object.OBJ.GUID;
                     crossData.LotTransitInfo = context.VM.GetGlobalValue(34);
+                    var people = new List<VMAvatar>();
+
+                    people.Add((VMAvatar)context.Caller);
+                    if (crossData.LotTransitInfo >= 1)
+                    {
+                        foreach (VMAvatar person in context.VM.Context.ObjectQueries.Avatars)
+                        {
+                            if (person.GetPersonData(VMPersonDataVariable.TS1FamilyNumber) == crossData.ActiveFamily.ChunkID && person != context.Caller)
+                                people.Add(person);
+                        }
+                    }
+
+                    int pi = 0;
+                    foreach (var person in people)
+                    {
+                        var nid = person.GetPersonData(VMPersonDataVariable.NeighborId);
+                        var dtInv = InitInventory(nid);
+
+                        SaveIData(dtInv, 0, person.GetMotiveData(VMMotive.Bladder));
+                        SaveIData(dtInv, 1, person.GetMotiveData(VMMotive.Comfort));
+                        SaveIData(dtInv, 2, person.GetMotiveData(VMMotive.Energy));
+                        SaveIData(dtInv, 3, person.GetMotiveData(VMMotive.Fun));
+                        SaveIData(dtInv, 4, person.GetMotiveData(VMMotive.Hunger));
+                        SaveIData(dtInv, 5, person.GetMotiveData(VMMotive.Hygiene));
+                        SaveIData(dtInv, 6, person.GetMotiveData(VMMotive.Social));
+
+                        if (crossData.LotTransitInfo > 1)
+                            SaveIData(dtInv, 9, (short)context.VM.TS1State.CurrentFamily.FamilyGUIDs.Length);
+
+                        if (pi++ == 0)
+                        {
+                            SaveIData(dtInv, 7, (short)context.VM.Context.Clock.Hours);
+                            SaveIData(dtInv, 8, (short)context.VM.Context.Clock.Minutes);
+                        }
+                    }
+
+                    //the original game sends avatar motive data along in their inventory under type 2
+                    //this is called "inventory sim data effects"
+
+
                     context.VM.SignalLotSwitch((uint)context.Thread.TempRegisters[0]);
                     return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
                 case VMGenericTS1CallMode.BuildTheDowntownSimAndPlaceObjIDInTemp0: //18
@@ -75,19 +143,21 @@ namespace FSO.SimAntics.Primitives
                     var crossDataDT = Content.Content.Get().Neighborhood.GameState;
 
                     var control = context.VM.Context.CreateObjectInstance(crossDataDT.DowntownSimGUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH)?.BaseObject;
-                    ((Model.TSOPlatform.VMTSOAvatarState)control.TSOState).Permissions = Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
+                    ((VMAvatar)control).AvatarState.Permissions = Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
                     context.VM.SetGlobalValue(3, control.ObjectID);
                     context.VM.SendCommand(new VMNetChangeControlCmd() { TargetID = control.ObjectID });
                     crossDataDT.ActiveFamily.SelectOneMember(crossDataDT.DowntownSimGUID);
-                    context.VM.ActivateFamily(crossDataDT.ActiveFamily);
+                    context.VM.TS1State.ActivateFamily(context.VM, crossDataDT.ActiveFamily);
 
                     context.Thread.TempRegisters[0] = context.VM.GetGlobalValue(3);
                     if (VM.UseWorld) context.VM.Context.World.CenterTo((AvatarComponent)(context.VM.GetObjectById(context.VM.GetGlobalValue(3))?.WorldUI));
                     break;
                 case VMGenericTS1CallMode.SpawnDowntownDateOfPersonInTemp0: //18
                     //spawn our autofollow sim
+                    context.Thread.TempRegisters[0] = 0;
                     var neighbourhood = Content.Content.Get().Neighborhood;
                     var ntarget = (VMAvatar)context.VM.GetObjectById(context.Thread.TempRegisters[0]);
+                    if (ntarget == null) return VMPrimitiveExitCode.GOTO_FALSE; //vacation?
                     var neighbour = ntarget.GetPersonData(Model.VMPersonDataVariable.NeighborId);
                     var inventory = neighbourhood.GetInventoryByNID(neighbour);
                     if (inventory != null)
@@ -106,37 +176,64 @@ namespace FSO.SimAntics.Primitives
                     inventoryInd = 11;
                     goto case VMGenericTS1CallMode.SpawnDowntownDateOfPersonInTemp0;
                 // 21. SpawnInventorySimDataEffects
+                case VMGenericTS1CallMode.SpawnInventorySimDataEffects:
+                    //for the caller? stack object?
+                    //do caller for now
+                    var eperson = (VMAvatar)context.VM.GetObjectById(context.Thread.TempRegisters[0]);
+                    var eInv = InitInventory(eperson.GetPersonData(VMPersonDataVariable.NeighborId));
+
+                    if (eInv.Count(x => x.Type == 2) == 0)
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+
+                    eperson.SetMotiveData(VMMotive.Bladder, GetIData(eInv, 0));
+                    eperson.SetMotiveData(VMMotive.Comfort, GetIData(eInv, 1));
+                    eperson.SetMotiveData(VMMotive.Energy, GetIData(eInv, 2));
+                    eperson.SetMotiveData(VMMotive.Fun, GetIData(eInv, 3));
+                    eperson.SetMotiveData(VMMotive.Hunger, GetIData(eInv, 4));
+                    eperson.SetMotiveData(VMMotive.Hygiene, GetIData(eInv, 5));
+                    eperson.SetMotiveData(VMMotive.Social, GetIData(eInv, 6));
+
+                    //remove the effects since we've used em
+                    //7 and 8, time, were used to start the lot. they arent really used on return
+                    //9 is not used by fso
+
+                    eInv.RemoveAll(x => x.Type == 2);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTS1CallMode.SelectDowntownLot: //22
                     //TODO: this is a pre-unleashed system I believe
                     return VMPrimitiveExitCode.GOTO_TRUE;
-                // 23. GetDowntownTimeFromSOInventory (the time it was in downtown, from stack objects inventory)
+                case VMGenericTS1CallMode.GetDowntownTimeFromSOInventory: //23
+                    //eperson = (VMAvatar)context.StackObject;
+                    //eInv = InitInventory(eperson.GetPersonData(VMPersonDataVariable.NeighborId));
+                    //context.Thread.TempRegisters[0] = GetIData(eInv, 7);
+                    //context.Thread.TempRegisters[1] = GetIData(eInv, 8);
+                    return VMPrimitiveExitCode.GOTO_TRUE; //UNUSED?
                 // 24. HotDateChangeSuitsPermanentlyCall
-                // 25. SaveSimPersistentData (motives, relationships)
+                // 25. SaveSimPersistentData (motives, relationships?)
                 case VMGenericTS1CallMode.BuildVacationFamilyPutFamilyNumInTemp0: //26
                     //in our implementation, vacation lots build the family in the same way as normal lots.
                     var crossData2 = Content.Content.Get().Neighborhood.GameState;
                     if (crossData2.LotTransitInfo >= 1)
                     {
                         crossData2.ActiveFamily.SelectWholeFamily();
-                        context.VM.ActivateFamily(crossData2.ActiveFamily);
+                        context.VM.TS1State.ActivateFamily(context.VM, crossData2.ActiveFamily);
                         context.Thread.TempRegisters[0] = context.VM.GetGlobalValue(9);
 
                         //set to 1 if we spawned a whole family.
                         //seems to be from globals 34 on the lot we exited. Magic town uses 0 for a single sim, and 1 for whole family 
                         //(blimp, though 1 is still set for whole family when theres only one person in it!)
 
-                        context.VM.VerifyFamily();
+                        context.VM.TS1State.VerifyFamily(context.VM);
                         context.VM.SendCommand(new VMNetChangeControlCmd() { TargetID = context.VM.Context.ObjectQueries.GetObjectsByGUID(crossData2.DowntownSimGUID).FirstOrDefault()?.ObjectID ?? 0 });
                     }
                     else
                     {
                         var control2 = context.VM.Context.CreateObjectInstance(crossData2.DowntownSimGUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH)?.BaseObject;
-                        ((Model.TSOPlatform.VMTSOAvatarState)control2.TSOState).Permissions = Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
-                        control2.TSOState.Budget.Value = 1000000;
+                        ((VMAvatar)control2).AvatarState.Permissions = Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
                         context.VM.SetGlobalValue(3, control2.ObjectID);
                         context.VM.SendCommand(new VMNetChangeControlCmd() { TargetID = control2.ObjectID });
                         crossData2.ActiveFamily.SelectOneMember(crossData2.DowntownSimGUID);
-                        context.VM.ActivateFamily(crossData2.ActiveFamily);
+                        context.VM.TS1State.ActivateFamily(context.VM, crossData2.ActiveFamily);
 
                         context.Thread.TempRegisters[0] = context.VM.GetGlobalValue(3);
                     }
@@ -159,7 +256,14 @@ namespace FSO.SimAntics.Primitives
                 // 30. GetStackObjectsSuit //suit type in temp0, suit index in temp1.
                 // 31. CountStackObjectSuits
                 // 32. CreatePurchasedPetsNearOwner
-                // 33. AddToFamilyInTemp0 
+                case VMGenericTS1CallMode.AddToFamilyInTemp0:
+                    family = Content.Content.Get().Neighborhood.GetFamily((ushort)context.Thread.TempRegisters[0]);
+                    if (family == null || family.FamilyGUIDs.Length >= 8)
+                        return VMPrimitiveExitCode.GOTO_FALSE;
+                    fneigh = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
+                    if (fneigh == null) return VMPrimitiveExitCode.GOTO_FALSE;
+                    AddToFamily(context.VM.TS1State.CurrentFamily, fneigh);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 // 34. PromoteFameIfNeeded
                 case VMGenericTS1CallMode.TakeTaxiHook: //35
                     //not sure where this one is called, seems to have been added for studiotown
@@ -174,6 +278,64 @@ namespace FSO.SimAntics.Primitives
                 // 43. FamilySpellsIntoController
             }
             return VMPrimitiveExitCode.GOTO_TRUE;
+        }
+
+        private short GetIData(List<InventoryItem> inventory, uint guid)
+        {
+            return (short)(inventory.FirstOrDefault(x => x.Type == 2 && x.GUID == guid)?.Count ?? 0);
+        }
+
+        private void SaveIData(List<InventoryItem> inventory, uint guid, short data)
+        {
+            var replace = inventory.FirstOrDefault(x => x.Type == 2 && x.GUID == guid);
+            if (replace == null)
+            {
+                replace = new InventoryItem() { Type = 2, GUID = guid };
+                inventory.Add(replace);
+            }
+            replace.Count = (ushort)data;
+        }
+
+        private List<InventoryItem> InitInventory(short neighbour)
+        {
+            var neighbourhood = Content.Content.Get().Neighborhood;
+            var inventory = neighbourhood.GetInventoryByNID(neighbour);
+            if (inventory == null)
+            {
+                //set up this neighbour's inventory...
+                inventory = new List<InventoryItem>();
+                neighbourhood.SetInventoryForNID(neighbour, inventory);
+            }
+            return inventory;
+        }
+
+        private void TryDeleteFamily(FAMI family)
+        {
+            //delete the family if there's no people in it
+            if (family.FamilyGUIDs.Length == 0)
+            {
+                family.ChunkParent.FullRemoveChunk(family);
+            }
+        }
+
+        private void AddToFamily(FAMI family, Neighbour neigh)
+        {
+            //was the neighbor already in a family?
+            if (neigh.PersonData != null) {
+                var famID = neigh.PersonData[(int)VMPersonDataVariable.TS1FamilyNumber];
+                var oldFam = Content.Content.Get().Neighborhood.GetFamily((ushort)famID);
+                if (oldFam != null)
+                {
+                    var oguids = oldFam.FamilyGUIDs.ToList();
+                    oguids.Remove(neigh.GUID);
+                    oldFam.FamilyGUIDs = oguids.ToArray();
+                    TryDeleteFamily(oldFam);
+                }
+            }
+
+            var guids = family.FamilyGUIDs.ToList();
+            guids.Add(neigh.GUID);
+            family.FamilyGUIDs = guids.ToArray();
         }
     }
 

@@ -147,7 +147,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
                 vm.CloseNet(VMCloseNetReason.LeaveLot);
             }
             avatar.Delete(true, vm.Context);
-            vm.Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Leave, avatar.Name));
+            vm.Context.VM.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Leave, avatar.Name));
         }
 
         public void RequestRoommate(VM vm, uint pid, int mode, byte permissions)

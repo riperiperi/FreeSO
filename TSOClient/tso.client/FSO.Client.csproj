@@ -133,6 +133,7 @@
     <Compile Include="Regulators\LotConnectionRegulator.cs" />
     <Compile Include="Regulators\PurchaseLotRegulator.cs" />
     <Compile Include="Rendering\City\CityMapData.cs" />
+    <Compile Include="Rendering\City\LotThumbContent.cs" />
     <Compile Include="Rendering\City\Plugins\AbstractCityPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
     <Compile Include="UI\Controls\UISlotsImage.cs" />
@@ -142,6 +143,8 @@
     <Compile Include="UI\Controls\UISkillBar.cs" />
     <Compile Include="UI\Controls\UIValidationMessages.cs" />
     <Compile Include="UI\Model\UITTSContext.cs" />
+    <Compile Include="UI\Panels\Chat\UIChatCategoryDialog.cs" />
+    <Compile Include="UI\Panels\Chat\UIChatCategoryList.cs" />
     <Compile Include="UI\Panels\EODs\Archetypes\UIBasicEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIBandEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDJStationEOD.cs" />
@@ -173,6 +176,7 @@
     <Compile Include="UI\Panels\LotControls\UIGrassPaint.cs" />
     <Compile Include="UI\Panels\LotControls\UITerrainRaiser.cs" />
     <Compile Include="UI\Panels\MessageStore\UIMessageStore.cs" />
+    <Compile Include="UI\Panels\UIEmojiSuggestions.cs" />
     <Compile Include="UI\Panels\UIGraphicsOptionsDialog.cs" />
     <Compile Include="UI\Panels\UILotControlTouchHelper.cs" />
     <Compile Include="UI\Panels\UILotSkillModeDialog.cs" />
@@ -510,6 +514,7 @@
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
       <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
       <Name>MonoGame.Framework.WindowsGL</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\mp3sharp\mp3sharp\Mp3Sharp.csproj">
       <Project>{834cab58-648d-47cc-ac6f-d01c08c809a4}</Project>

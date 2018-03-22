@@ -52,8 +52,9 @@ namespace FSO.Client.UI.Panels
         public bool MouseIsOn;
 
         private UIPieMenu PieMenu;
-        private UIChatPanel ChatPanel;
+        public UIChatPanel ChatPanel;
         private UIAlert LotSaveDialog;
+        private bool HasInitUserProps;
 
         private bool ShowTooltip;
         private bool TipIsError;
@@ -727,6 +728,10 @@ namespace FSO.Client.UI.Panels
             {
                 ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SelectedSimID); //try and hook onto a sim if we have none selected.
                 if (ActiveEntity == null) ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID > 0);
+                else if (!HasInitUserProps)
+                {
+                    InitUserProps();
+                }
 
                 if (!FoundMe && ActiveEntity != null)
                 {
@@ -858,6 +863,31 @@ namespace FSO.Client.UI.Panels
                     if (LotSaveDialog == null) SaveFacade(state.KeyboardState.IsKeyDown(Keys.LeftAlt));
                 }
             }
+        }
+
+        private void InitUserProps()
+        {
+            if (GlobalSettings.Default.ChatColor == 0)
+            {
+                var rand = new Random();
+                GlobalSettings.Default.ChatColor = VMTSOAvatarState.RandomColours[rand.Next(VMTSOAvatarState.RandomColours.Length)].PackedValue;
+                GlobalSettings.Default.Save();
+            }
+            vm.SendCommand(new VMNetChatParamCmd()
+            {
+                Col = new Color(GlobalSettings.Default.ChatColor),
+                Pitch = (sbyte)GlobalSettings.Default.ChatTTSPitch
+            });
+
+            //init tuning vars for UI
+            var emojiOnly = vm.Tuning.GetTuning("ui", 0, 0) == 1f;
+            if (emojiOnly != GlobalSettings.Default.ChatOnlyEmoji)
+            {
+                GlobalSettings.Default.ChatOnlyEmoji = emojiOnly;
+                GlobalSettings.Default.Save();
+            }
+
+            HasInitUserProps = false;
         }
 
         private void SaveLot()

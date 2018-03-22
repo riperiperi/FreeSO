@@ -1,4 +1,5 @@
 ﻿using FSO.Common;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -61,7 +62,7 @@ namespace FSO.Client
 
             { "TargetRefreshRate", "60" },
 
-            { "EnableTTS", "false" },
+            { "TTSMode", "1" }, //disable/allow/force
             { "CompatState", "-1" },
 
             { "TS1HybridPath", "D:/Games/The Sims/" },
@@ -74,7 +75,12 @@ namespace FSO.Client
             { "Weather", "true" },
             { "DirectionalLight3D", "true" },
             { "DPIScaleFactor", "1" },
-            { "TexCompression", "0" }
+            { "TexCompression", "0" },
+
+            { "ChatColor", "0" }, //uint packed color. 0 means choose random
+            { "ChatTTSPitch", "0" }, //-100 to 100
+
+            { "ChatOnlyEmoji", "false" }
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -112,7 +118,7 @@ namespace FSO.Client
         public string CitySelectorUrl { get; set; }
 
         public int TargetRefreshRate { get; set; }
-        public bool EnableTTS { get; set; }
+        public int TTSMode { get; set; } //disable/allow/force
         public int SurroundingLotMode { get; set; }
         public int CompatState { get; set; }
 
@@ -128,6 +134,10 @@ namespace FSO.Client
         public bool DirectionalLight3D { get; set; }
         public float DPIScaleFactor { get; set; }
         public int TexCompression { get; set; } //first bit on/off, second bit is user defined or auto.
+
+        public uint ChatColor { get; set; }
+        public int ChatTTSPitch { get; set; }
+        public bool ChatOnlyEmoji { get; set; }
 
         public static int TARGET_COMPAT_STATE = 2;
     }

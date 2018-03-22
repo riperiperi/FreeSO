@@ -37,7 +37,7 @@ namespace FSO.SimAntics.Marshals
         public AppearanceType SkinTone;
 
         public VMAvatarMarshal() { }
-        public VMAvatarMarshal(int version) : base(version) { }
+        public VMAvatarMarshal(int version, bool ts1) : base(version, ts1) { }
 
         public override void Deserialize(BinaryReader reader)
         {
@@ -60,7 +60,7 @@ namespace FSO.SimAntics.Marshals
                 MotiveChanges[i] = new VMMotiveChange();
                 MotiveChanges[i].Deserialize(reader);
             }
-            MotiveDecay = new VMAvatarMotiveDecay();
+            MotiveDecay = (TS1) ? (VMIMotiveDecay)new VMTS1MotiveDecay() : new VMAvatarMotiveDecay();
             MotiveDecay.Deserialize(reader);
 
             var pdats = reader.ReadInt32();

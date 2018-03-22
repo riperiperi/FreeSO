@@ -77,6 +77,7 @@ namespace FSO.SimAntics.Utils
             if (VM.UseWorld) this.Blueprint = new Blueprint(size, size);
             VM.Entities = new List<VMEntity>();
             VM.Scheduler = new Engine.VMScheduler(VM);
+            VM.TS1State.SimulationInfo = simi;
             VM.Context = new VMContext(VM.Context.World);
             VM.Context.VM = VM;
             VM.Context.Blueprint = Blueprint;

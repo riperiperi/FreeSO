@@ -28,7 +28,7 @@ namespace FSO.SimAntics.Entities
         {
             get
             {
-                var wear = (BaseObject?.TSOState as VMTSOObjectState)?.Wear ?? (20*4);
+                var wear = (BaseObject as VMGameObject)?.ObjectState?.Wear ?? (20*4);
                 var value = Math.Max(0, Math.Min(InitialPrice, (InitialPrice * (400 - wear)) / 400));
                 return value;
             }
@@ -58,6 +58,12 @@ namespace FSO.SimAntics.Entities
         }
 
         public VMMultitileGroup() { }
+
+        public VMMultitileGroup(VMMultitileGroup baseGroup)
+        {
+            InitialPrice = baseGroup.InitialPrice;
+            MultiTile = baseGroup.MultiTile;
+        }
 
         public void AddObject(VMEntity obj)
         {
@@ -182,7 +188,7 @@ namespace FSO.SimAntics.Entities
                         for (int j = 0; j < Objects.Count(); j++)
                         {
                             //need to restore slot we were in
-                            if (OldContainers[j] != null) {
+                            if (j <OldContainers.Length && OldContainers[j] != null) {
                                 OldContainers[j].PlaceInSlot(Objects[j], OldSlotNum[j], false, context);
                             }
                             Objects[j].PositionChange(context, false);

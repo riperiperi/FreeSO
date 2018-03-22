@@ -140,14 +140,14 @@ namespace FSO.SimAntics.Engine
         {
             return new VMStackFrameMarshal
             {
-                RoutineID = Routine.ID,
+                RoutineID = Routine?.ID ?? 0,
                 InstructionPointer = InstructionPointer,
                 Caller = (Caller == null) ? (short)0 : Caller.ObjectID,
                 Callee = (Callee == null) ? (short)0 : Callee.ObjectID,
                 StackObject = StackObjectID,
                 CodeOwnerGUID = CodeOwner.OBJ.GUID,
-                Locals = Locals,
-                Args = Args,
+                Locals = (short[])Locals?.Clone(),
+                Args = (short[])Args?.Clone(),
                 DiscardResult = DiscardResult,
                 ActionTree = ActionTree,
             };

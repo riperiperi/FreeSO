@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using FSO.Files.Utils;
@@ -33,6 +34,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         };
 
         public Dictionary<ushort, List<SLOTItem>> Slots;
+        public List<SLOTItem> Chronological;
 
         public override void Read(IffFile iff, System.IO.Stream stream)
         {
@@ -43,6 +45,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 var numSlots = io.ReadUInt32();
 
                 Slots = new Dictionary<ushort, List<SLOTItem>>();
+                Chronological = new List<SLOTItem>();
 
                 /** The span for version 4 is 34. 
                  * The span for version 6 is 54. 
@@ -84,6 +87,8 @@ namespace FSO.Files.Formats.IFF.Chunks
                         item.MinProximity = minproximity;
                         item.MaxProximity = maxproximity;
                         item.OptimalProximity = optimalproximity;
+                        item.I9 = i9;
+                        item.I10 = i10;
                     }
 
                     if (version <= 9) {
@@ -96,10 +101,6 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                     if (version >= 8) item.Height = io.ReadInt32();
 
-                    //the below cases are just here for breakpoint purposes
-                    //TODO: find use cases?
-                    if (item.Height == 9) item.Height = 9;
-
                     if (item.Height == 0) item.Height = 5; //use offset height, nonstandard.
 
                     if (version >= 9) item.Facing = (SLOTFacing)io.ReadInt32();
@@ -108,8 +109,45 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                     if (!Slots.ContainsKey(item.Type)) Slots.Add(item.Type, new List<SLOTItem>());
                     Slots[item.Type].Add(item);
+                    Chronological.Add(item);
                 }
             }
+        }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteInt32(0);
+                io.WriteInt32(10); //version
+                io.WriteCString("TOLS", 4);
+                io.WriteUInt32((uint)Chronological.Count);
+                foreach (var slot in Chronological)
+                {
+                    io.WriteUInt16(slot.Type);
+                    io.WriteFloat(slot.Offset.X);
+                    io.WriteFloat(slot.Offset.Y);
+                    io.WriteFloat(slot.Offset.Z);
+
+                    io.WriteInt32(slot.Standing);
+                    io.WriteInt32(slot.Sitting);
+                    io.WriteInt32(slot.Ground);
+                    io.WriteInt32((int)slot.Rsflags);
+                    io.WriteInt32(slot.SnapTargetSlot);
+
+                    io.WriteInt32(slot.MinProximity);
+                    io.WriteInt32(slot.MaxProximity);
+                    io.WriteInt32(slot.OptimalProximity);
+                    io.WriteInt32(slot.I9);
+                    io.WriteInt32(slot.I10);
+
+                    io.WriteFloat(slot.Gradient);
+                    io.WriteInt32(slot.Height);
+                    io.WriteInt32((int)slot.Facing);
+                    io.WriteInt32(slot.Resolution);
+                }
+            }
+            return true;
         }
     }
 
@@ -154,6 +192,8 @@ namespace FSO.Files.Formats.IFF.Chunks
         public int MinProximity;
         public int MaxProximity = 0;
         public int OptimalProximity = 0;
+        public int I9;
+        public int I10;
         public float Gradient;
         public SLOTFacing Facing = SLOTFacing.FaceTowardsObject;
         public int Resolution = 16;

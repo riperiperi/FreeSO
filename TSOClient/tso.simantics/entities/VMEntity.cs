@@ -147,6 +147,14 @@ namespace FSO.SimAntics
             }
         }
 
+        private bool DynamicMultitile
+        {
+            get
+            {
+                return EntryPoints[8].ActionFunction >= 256;
+            }
+        }
+
         public override string ToString()
         {
             if (MultitileGroup.Name != "") return MultitileGroup.Name;
@@ -460,6 +468,7 @@ namespace FSO.SimAntics
             }
 
             ExecuteEntryPoint(0, context, true); //Init
+            ExecuteEntryPoint(8, context, true, null, new short[] { 0, 0, 0, 0 }); //dynamic multitile - say we don't have any adjacent objects to start
 
             if (!GhostImage)
             {
@@ -695,6 +704,9 @@ namespace FSO.SimAntics
         {
             switch (var) //special cases
             {
+                case VMStackObjectVariable.Room:
+                    if (Position == LotTilePos.OUT_OF_WORLD) return -5;
+                    break;
                 case VMStackObjectVariable.ObjectId:
                     return ObjectID;
                 case VMStackObjectVariable.Direction:
@@ -1175,7 +1187,7 @@ namespace FSO.SimAntics
 
         public void Delete(bool cleanupAll, VMContext context)
         {
-            if (cleanupAll) MultitileGroup.Delete(context);
+            if (cleanupAll && !DynamicMultitile) MultitileGroup.Delete(context);
             else
             {
                 if (Dead) return;
@@ -1227,6 +1239,10 @@ namespace FSO.SimAntics
                     }
                 }
 
+                if (!MultitileGroup.MultiTile)
+                {
+                    foreach (var obj in MultitileGroup.Objects) obj.UpdateDynamicMultitileFlags(context);
+                }
             }
         }
 
@@ -1245,12 +1261,32 @@ namespace FSO.SimAntics
         
         public VMPlacementResult SetPosition(LotTilePos pos, Direction direction, VMContext context)
         {
-            return MultitileGroup.ChangePosition(pos, direction, context, VMPlaceRequestFlags.Default);
+            return SetPosition(pos, direction, context, VMPlaceRequestFlags.Default);
         }
 
         public VMPlacementResult SetPosition(LotTilePos pos, Direction direction, VMContext context, VMPlaceRequestFlags flags)
         {
-            return MultitileGroup.ChangePosition(pos, direction, context, flags);
+            if (DynamicMultitile && MultitileGroup.Objects.Count > 1)
+            {
+                //trying to move an individual item of a dynamic multitile object breaks it out.
+                var oldGroup = MultitileGroup;
+                oldGroup.RemoveObject(this);
+                var newGroup = new VMMultitileGroup(MultitileGroup);
+                newGroup.AddObject(this);
+                MultitileGroup = newGroup;
+                var result = MultitileGroup.ChangePosition(pos, direction, context, flags);
+
+                //tell our old group
+                foreach (var obj in oldGroup.Objects)
+                {
+                    obj.UpdateDynamicMultitileFlags(context);
+                }
+                return result;
+            } else
+            {
+                return MultitileGroup.ChangePosition(pos, direction, context, flags);
+            }
+            
         }
 
         public virtual void SetIndivPosition(LotTilePos pos, Direction direction, VMContext context, VMPlacementResult info)
@@ -1312,7 +1348,7 @@ namespace FSO.SimAntics
             {
                 if (ent == this) continue;
                 var diff = ent.Position - Position;
-                if (ent.Object.OBJ.GUID == this.Object.OBJ.GUID && Math.Abs(diff.TileX) < 2 && Math.Abs(diff.TileY) < 2)
+                if (ent.Object.OBJ.GUID == this.Object.OBJ.GUID && Math.Abs(diff.TileX) < 2 && Math.Abs(diff.TileY) < 2 && (Math.Abs(diff.TileY) + Math.Abs(diff.TileX) < 2))
                 {
                     if (ent.MultitileGroup != MultitileGroup)
                     {
@@ -1324,6 +1360,25 @@ namespace FSO.SimAntics
                     var direction = DirectionUtils.Normalize(Math.Atan2(ent.Position.x - Position.x, Position.y - ent.Position.y));
                     var result = (int)Math.Round((DirectionUtils.PosMod(direction, Math.PI * 2) / Math.PI) * 4);
 
+                    var dirDiff = (int)DirectionUtils.PosMod(result - DirectionToWallOff(Direction) * 2, 8);
+
+                    flags |= 1 << dirDiff;
+                }
+            }
+            ExecuteEntryPoint(8, context, true, null, new short[] { (short)flags, 0, 0, 0 });
+        }
+
+        public void UpdateDynamicMultitileFlags(VMContext context)
+        {
+            int flags = 0;
+            foreach (var ent in MultitileGroup.Objects)
+            {
+                if (ent == this) continue;
+                var diff = ent.Position - Position;
+                if (ent.Object.OBJ.GUID == this.Object.OBJ.GUID && Math.Abs(diff.TileX) < 2 && Math.Abs(diff.TileY) < 2 && (Math.Abs(diff.TileY) + Math.Abs(diff.TileX) < 2))
+                {
+                    var direction = DirectionUtils.Normalize(Math.Atan2(ent.Position.x - Position.x, Position.y - ent.Position.y));
+                    var result = (int)Math.Round((DirectionUtils.PosMod(direction, Math.PI * 2) / Math.PI) * 4);
                     var dirDiff = (int)DirectionUtils.PosMod(result - DirectionToWallOff(Direction) * 2, 8);
 
                     flags |= 1 << dirDiff;
@@ -1357,7 +1412,7 @@ namespace FSO.SimAntics
             target.ObjectID = ObjectID;
             target.PersistID = PersistID;
             target.PlatformState = PlatformState;
-            target.ObjectData = ObjectData;
+            target.ObjectData = (short[])ObjectData.Clone();
             target.MyList = newList;
 
             target.Headline = (Headline == null) ? null : Headline.Save();

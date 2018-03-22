@@ -16,7 +16,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm, VMAvatar caller)
         {
-            if (caller == null || ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate) return false;
+            if (caller == null || caller.AvatarState.Permissions < VMTSOAvatarPermissions.Roommate) return false;
             VMEntity obj = vm.GetObjectByPersist(ObjectPID);
             //object must not be in use to set it for sale (will be disabled).
             if (obj == null || (obj is VMAvatar) || (NewPrice > 0 && obj.IsUserMovable(vm.Context, true) != VMPlacementError.Success)) return false;

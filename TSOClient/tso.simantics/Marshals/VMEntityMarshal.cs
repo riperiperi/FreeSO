@@ -10,6 +10,8 @@ using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
+using FSO.SimAntics.Model.TS1Platform;
+using FSO.SimAntics.Model.Platform;
 
 namespace FSO.SimAntics.Marshals
 {
@@ -45,17 +47,18 @@ namespace FSO.SimAntics.Marshals
         public Color LightColor = Color.White;
 
         public int Version;
+        public bool TS1;
 
         public VMEntityMarshal() { }
-        public VMEntityMarshal(int version) { Version = version; }
+        public VMEntityMarshal(int version, bool ts1) { Version = version; TS1 = ts1; }
 
         public virtual void Deserialize(BinaryReader reader)
         {
             ObjectID = reader.ReadInt16();
             PersistID = reader.ReadUInt32();
 
-            if (this is VMGameObjectMarshal) PlatformState = new VMTSOObjectState(Version);
-            else PlatformState = new VMTSOAvatarState(Version);
+            if (this is VMGameObjectMarshal) PlatformState = (TS1)? (VMAbstractEntityState)new VMTS1ObjectState(Version):new VMTSOObjectState(Version);
+            else PlatformState = (TS1) ? (VMAbstractEntityState)new VMTS1AvatarState(Version):new VMTSOAvatarState(Version);
 
             PlatformState.Deserialize(reader);
 

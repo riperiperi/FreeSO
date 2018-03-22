@@ -131,6 +131,7 @@ namespace FSO.SimAntics.Primitives
                 switch (operand.SearchType)
                 {
                     case VMSetToNextSearchType.ObjectOnSameTile:
+                        if (Pointer == null) Pointer = context.Caller;
                         entities = context.VM.Context.ObjectQueries.GetObjectsAt(Pointer.Position); break;
                     case VMSetToNextSearchType.Person:
                     case VMSetToNextSearchType.FamilyMember:
@@ -162,7 +163,7 @@ namespace FSO.SimAntics.Primitives
                                 return VMPrimitiveExitCode.GOTO_FALSE;
                                 throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.FamilyMember:
-                                found = context.VM.CurrentFamily?.FamilyGUIDs?.Contains(((VMAvatar)temp).Object.OBJ.GUID) ?? false;
+                                found = context.VM.TS1State.CurrentFamily?.FamilyGUIDs?.Contains(((VMAvatar)temp).Object.OBJ.GUID) ?? false;
                                 break;
                             default:
                                 //set to next object, or cached search.

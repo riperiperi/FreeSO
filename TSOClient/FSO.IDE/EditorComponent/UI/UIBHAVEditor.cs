@@ -295,6 +295,7 @@ namespace FSO.IDE.EditorComponent.UI
                     cmd.Execute(BHAVView.EditTarget, this);
                     UndoStack.Push(cmd);
                 }
+                if (Commands.Count > 0) BHAVView.Scope.Object.Resource.Recache();
                 Commands.Clear();
             }
 

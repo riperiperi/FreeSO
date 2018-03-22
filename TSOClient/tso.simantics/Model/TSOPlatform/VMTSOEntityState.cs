@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.SimAntics.Model.Platform;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Text;
 
 namespace FSO.SimAntics.Model.TSOPlatform
 {
-    public class VMTSOEntityState : VMPlatformState
+    public class VMTSOEntityState : VMAbstractEntityState
     {
         public VMBudget Budget = new VMBudget();
 

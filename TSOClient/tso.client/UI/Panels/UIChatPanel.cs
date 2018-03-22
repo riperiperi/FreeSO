@@ -22,6 +22,7 @@ using FSO.Common.Utils;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.Common;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.Common.Rendering.Framework.IO;
 
 namespace FSO.Client.UI.Panels
 {
@@ -49,18 +50,9 @@ namespace FSO.Client.UI.Panels
         private UILotControl Owner;
         private UIChatDialog HistoryDialog;
         private UIPropertyLog PropertyLog;
+        private InputManager Inputs;
 
-        private Color[] Colours = new Color[] {
-            new Color(255, 255, 255),
-            new Color(125, 255, 255),
-            new Color(255, 125, 255),
-            new Color(255, 255, 125),
-            new Color(125, 125, 255),
-            new Color(255, 125, 125),
-            new Color(125, 255, 125),
-            new Color(0, 255, 255),
-            new Color(255, 255, 0)
-        };
+        public int ActiveChannel = 0;
 
         public UIChatPanel(VM vm, UILotControl owner)
         {
@@ -93,6 +85,12 @@ namespace FSO.Client.UI.Panels
             TextBox.Position = new Vector2(25, 25);
             TextBox.SetSize(GlobalSettings.Default.GraphicsWidth - 50, 25);
 
+            var emojis = new UIEmojiSuggestions(TextBox);
+            Add(emojis);
+            emojis.Parent = this;
+
+            TextBox.OnEnterPress += TextBox_OnEnterPress;
+
             SelectionFillColor = new Color(0, 25, 70);
 
             //-- populate invalid areas --
@@ -106,18 +104,29 @@ namespace FSO.Client.UI.Panels
             InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 20, 200000 +GlobalSettings.Default.GraphicsWidth, 100020)); //bottom
             InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 230, 100230, 100230)); //ucp
 
-            HistoryDialog = new UIChatDialog();
+            HistoryDialog = new UIChatDialog(owner);
             HistoryDialog.Position = new Vector2(20, 20);
-            HistoryDialog.Visible = false;
-            HistoryDialog.Opacity = 0.75f;
+            HistoryDialog.Visible = true;
+            HistoryDialog.Opacity = 0.8f;
             HistoryDialog.OnSendMessage += SendMessage;
             this.Add(HistoryDialog);
 
             PropertyLog = new UIPropertyLog();
             PropertyLog.Position = new Vector2(400, 20);
             PropertyLog.Visible = false;
-            PropertyLog.Opacity = 0.75f;
+            PropertyLog.Opacity = 0.8f;
             this.Add(PropertyLog);
+        }
+
+        private bool JustHidTextbox;
+        private void TextBox_OnEnterPress(UIElement element)
+        {
+            if (TextBox.EventSuppressed) return;
+            SendMessageElem(TextBox);
+            TextBox.Visible = !TextBox.Visible;
+
+            Inputs.SetFocus(null);
+            JustHidTextbox = true;
         }
 
         public override void GameResized()
@@ -134,7 +143,17 @@ namespace FSO.Client.UI.Panels
 
         private void SendMessage(string message)
         {
-            message = message.Replace("\r\n", "");
+            if (GlobalSettings.Default.ChatOnlyEmoji && message != "")
+            {
+                message = GameFacade.Emojis.EmojiOnly(message);
+                if (message == "")
+                {
+                    HistoryDialog.ReceiveEvent
+                        (new VMChatEvent(null, VMChatEventType.Generic,
+                        ":no_good_man: :keyboard: :no_entry_sign: :arrow_forward: :grinning: :ok_hand: "));
+                }
+            }
+            message = message.Replace("\n", "");
             if (message != "" && Owner.ActiveEntity != null)
             {
                 if (message[0] == '!')
@@ -143,10 +162,16 @@ namespace FSO.Client.UI.Panels
                 }
                 else
                 {
+                    if (message == "/trace")
+                    {
+                        vm.UseSchedule = false;
+                        vm.Trace = new SimAntics.Engine.Debug.VMSyncTrace();
+                    }
                     vm.SendCommand(new VMNetChatCmd
                     {
                         ActorUID = Owner.ActiveEntity.PersistID,
-                        Message = message
+                        Message = message,
+                        ChannelID = (byte)ActiveChannel
                     });
                 }
             }
@@ -172,72 +197,13 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
+            Inputs = state.InputManager;
             if (!VM.UseWorld) return;
 
             var botRect = InvalidAreas[3];
             botRect.Y = GlobalSettings.Default.GraphicsHeight - ((Owner.PanelActive) ? 135 : 20);
 
             InvalidAreas[3] = botRect;
-            var lastFocus = state.InputManager.GetFocus();
-            if (HistoryDialog.Visible) TextBox.Visible = false;
-            else
-            {
-                if (state.NewKeys.Contains(Keys.Enter) && (
-                        lastFocus == null || lastFocus == TextBox ||
-                        lastFocus == HistoryDialog.ChatEntryTextEdit
-                        ))
-                {
-                    if (!TextBox.Visible) TextBox.Clear();
-                    else SendMessageElem(TextBox);
-                    TextBox.Visible = !TextBox.Visible;
-
-                    if (TextBox.Visible) state.InputManager.SetFocus(TextBox);
-                    else if (lastFocus == TextBox) state.InputManager.SetFocus(null);
-                }
-            }
-            if (state.NewKeys.Contains(Keys.Escape))
-            {
-                if (TextBox.Visible)
-                {
-                    TextBox.Clear();
-                    TextBox.Visible = !TextBox.Visible;
-                }
-                if (HistoryDialog.Visible)
-                    if (HistoryDialog.ChatEntryTextEdit.CurrentText.Length > 0)
-                    {
-                        HistoryDialog.ChatEntryTextEdit.CurrentText = "";
-                        HistoryDialog.OKButton.Disabled = true;
-                    }
-                    else if (lastFocus == HistoryDialog.ChatEntryTextEdit)
-                        state.InputManager.SetFocus(null);
-            }
-            if (state.NewKeys.Contains(Keys.Enter) && HistoryDialog.Visible)
-            {
-                if (HistoryDialog.ChatEntryTextEdit.CurrentText.Length < 1)
-                    if (lastFocus == HistoryDialog.ChatEntryTextEdit)
-                        state.InputManager.SetFocus(null);
-                    else if (lastFocus == null)
-                        state.InputManager.SetFocus(HistoryDialog.ChatEntryTextEdit);
-            }
-            if (state.NewKeys.Contains(Keys.H) && state.CtrlDown)
-            {
-                HistoryDialog.Visible = !HistoryDialog.Visible;
-                if (HistoryDialog.Visible) state.InputManager.SetFocus(HistoryDialog.ChatEntryTextEdit);
-                else state.InputManager.SetFocus(null);
-            }
-
-            if (state.NewKeys.Contains(Keys.OemPlus) && state.CtrlDown && HistoryDialog.Visible) {
-                HistoryDialog.ResizeChatDialogByDelta(1);
-            }
-
-            if (state.NewKeys.Contains(Keys.OemMinus) && state.CtrlDown && HistoryDialog.Visible) {
-                HistoryDialog.ResizeChatDialogByDelta(-1);
-            }
-
-            if (state.NewKeys.Contains(Keys.P) && state.CtrlDown)
-            {
-                PropertyLog.Visible = !PropertyLog.Visible;
-            }
 
             var avatars = vm.Entities.Where(x => (x is VMAvatar)).ToList();
             while (avatars.Count < Labels.Count)
@@ -247,9 +213,8 @@ namespace FSO.Client.UI.Panels
                 Labels.RemoveAt(Labels.Count - 1);
             }
             while (avatars.Count > Labels.Count)
-            { 
+            {
                 var balloon = new UIChatBalloon(this);
-                balloon.Color = Colours[Labels.Count % Colours.Length];
                 AddAt(Children.Count - 2, balloon); //behind chat dialog and text box
                 Labels.Add(balloon);
             }
@@ -257,13 +222,16 @@ namespace FSO.Client.UI.Panels
             var myAvatar = vm.GetAvatarByPersist(vm.MyUID);
             var myIgnoring = ((VMTSOAvatarState)myAvatar?.TSOState)?.IgnoredAvatars ?? new HashSet<uint>();
 
-            for (int i=0; i<Labels.Count; i++)
+            for (int i = 0; i < Labels.Count; i++)
             {
                 var label = Labels[i];
                 var avatar = (VMAvatar)avatars[i];
+                var tstate = ((VMTSOAvatarState)avatar.TSOState);
 
                 if (label.Message != avatar.Message)
-                    label.SetNameMessage(avatar.Name, avatar.Message, avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender)>0);
+                    label.SetNameMessage(avatar);
+                if (label.Color != tstate.ChatColor)
+                    label.Color = tstate.ChatColor;
                 if (myIgnoring.Contains(avatar.PersistID))
                 {
                     label.Alpha = 0;
@@ -291,6 +259,73 @@ namespace FSO.Client.UI.Panels
 
             }
             base.Update(state);
+
+            var lastFocus = state.InputManager.GetFocus();
+            if (HistoryDialog.Visible) TextBox.Visible = false;
+            else
+            {
+                if (state.NewKeys.Contains(Keys.Enter) && (
+                        lastFocus == null || lastFocus == TextBox ||
+                        lastFocus == HistoryDialog.ChatEntryTextEdit
+                        ))
+                {
+                    if (!TextBox.Visible && !JustHidTextbox) {
+                        TextBox.Clear();
+                        TextBox.Visible = !TextBox.Visible;
+
+                        if (TextBox.Visible) state.InputManager.SetFocus(TextBox);
+                        else if (lastFocus == TextBox) state.InputManager.SetFocus(null);
+                    }
+                }
+            }
+            JustHidTextbox = false;
+            if (state.NewKeys.Contains(Keys.Escape))
+            {
+                if (TextBox.Visible)
+                {
+                    TextBox.Clear();
+                    TextBox.Visible = !TextBox.Visible;
+                }
+                if (HistoryDialog.Visible)
+                    if (HistoryDialog.ChatEntryTextEdit.CurrentText.Length > 0)
+                    {
+                        HistoryDialog.ChatEntryTextEdit.CurrentText = "";
+                        HistoryDialog.OKButton.Disabled = true;
+                    }
+                    else if (lastFocus == HistoryDialog.ChatEntryTextEdit)
+                        state.InputManager.SetFocus(null);
+            }
+            if (state.NewKeys.Contains(Keys.Enter) && HistoryDialog.Visible)
+            {
+                if (lastFocus == null)
+                    state.InputManager.SetFocus(HistoryDialog.ChatEntryTextEdit);
+                    /*
+    if (HistoryDialog.ChatEntryTextEdit.CurrentText.Length < 1)
+        if (lastFocus == HistoryDialog.ChatEntryTextEdit)
+            state.InputManager.SetFocus(null);
+        else if (lastFocus == null)
+            state.InputManager.SetFocus(HistoryDialog.ChatEntryTextEdit);
+            */
+            }
+            if (state.NewKeys.Contains(Keys.H) && state.CtrlDown)
+            {
+                HistoryDialog.Visible = !HistoryDialog.Visible;
+                if (HistoryDialog.Visible) state.InputManager.SetFocus(HistoryDialog.ChatEntryTextEdit);
+                else state.InputManager.SetFocus(null);
+            }
+
+            if (state.NewKeys.Contains(Keys.OemPlus) && state.CtrlDown && HistoryDialog.Visible) {
+                HistoryDialog.ResizeChatDialogByDelta(1);
+            }
+
+            if (state.NewKeys.Contains(Keys.OemMinus) && state.CtrlDown && HistoryDialog.Visible) {
+                HistoryDialog.ResizeChatDialogByDelta(-1);
+            }
+
+            if (state.NewKeys.Contains(Keys.P) && state.CtrlDown)
+            {
+                PropertyLog.Visible = !PropertyLog.Visible;
+            }
         }
 
         public override void Draw(UISpriteBatch batch)

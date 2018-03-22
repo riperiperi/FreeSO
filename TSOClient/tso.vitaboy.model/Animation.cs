@@ -33,6 +33,14 @@ namespace FSO.Vitaboy
         public Quaternion[] Rotations;
         public AnimationMotion[] Motions;
 
+        public int FramesPerSecond
+        {
+            get
+            {
+                return (int)Math.Round(NumFrames / (Duration / 1000));
+            }
+        }
+
         /// <summary>
         /// Total number of frames in this animation.
         /// </summary>

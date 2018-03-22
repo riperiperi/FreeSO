@@ -59,7 +59,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     var activator = new VMTS1Activator(vm, vm.Context.World, JobLevel);
                     var blueprint = activator.LoadFromIff(iff);
                 }
-                vm.VerifyFamily();
+                vm.TS1State.VerifyFamily(vm);
             }
             else
             {

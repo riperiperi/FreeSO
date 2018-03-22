@@ -276,7 +276,7 @@ namespace FSO.LotView
         public virtual void PrepareLighting()
         {
             var adv = (Light?.LightMap) ?? OutsidePx;
-            var advDir = (Light?.LightMapDirection) ?? OutsidePx;
+            var advDir = (Light?.LightMapDirection) ?? TextureGenerator.GetDefaultAdv(Device);
             var amb = AmbientLight ?? TextureGenerator.GetPxWhite(Device);
 
             WorldContent._2DWorldBatchEffect.Parameters["advancedLight"].SetValue(adv);
