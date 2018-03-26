@@ -448,7 +448,7 @@ namespace FSO.Client.UI.Panels.EODs
                 if (Int32.TryParse(split[0], out tempBalance) & Int32.TryParse(split[1], out tempMinBet) & Int32.TryParse(split[2], out tempMaxBet))
                 {
                     OwnerPanel = new UIManageEODObjectPanel(
-                        ManageEODObjectTypes.Blackjack, tempBalance, tempMaxBet * 6, 999999, tempMinBet, tempMaxBet);
+                        ManageEODObjectTypes.Blackjack, tempBalance, tempMaxBet * 6, VMEODBlackjackPlugin.TABLE_MAX_BALANCE, tempMinBet, tempMaxBet);
                     Add(OwnerPanel);
                     // subscribe in order to send events based on type
                     OwnerPanel.OnNewByteMessage += SendByteMessage;
@@ -609,7 +609,7 @@ namespace FSO.Client.UI.Panels.EODs
             if (MainPlayerCardContainers.Count > 1 && MainPlayerActiveHand < MainPlayerCardContainers.Count - 1)
                 collapse = true;
             string[] cards = VMEODGameCompDrawACardData.DeserializeStrings(serializedCardArray);
-            CloseActiveHand(collapse, "", cards);
+            CloseActiveHand(collapse, cards);
         }
         /*
          * This event occurs when a blackjack event occurs from the server, or automatically if the server detects bust or blackjack. Does not enable input.
@@ -620,7 +620,7 @@ namespace FSO.Client.UI.Panels.EODs
             if (MainPlayerCardContainers.Count > 1 && MainPlayerActiveHand < MainPlayerCardContainers.Count - 1)
                 collapse = true;
             string[] cards = VMEODGameCompDrawACardData.DeserializeStrings(serializedCardArray);
-            CloseActiveHand(collapse, Blackjack + "!", cards);
+            CloseActiveHand(collapse, cards);
         }
         /*
          * This event occurs when the user successfully doubles or double busts.
@@ -631,7 +631,7 @@ namespace FSO.Client.UI.Panels.EODs
             if (MainPlayerCardContainers.Count > 1 && MainPlayerActiveHand < MainPlayerCardContainers.Count - 1)
                 collapse = true;
             string[] cards = VMEODGameCompDrawACardData.DeserializeStrings(serializedCardArray);
-            CloseActiveHand(collapse, "($$)", cards);
+            CloseActiveHand(collapse, cards);
         }
         /*
          * Occurs whenever a new card is drawn. Allows input from user.
@@ -1989,13 +1989,12 @@ namespace FSO.Client.UI.Panels.EODs
          * Finalise the active hand by synchronizing its contents from the server, updating the total text, and collapsing & making inactive
          * @param: cards - the cards sent from server for sync purposes
          */
-        private void CloseActiveHand(bool collapse, string message, params string[] cards)
+        private void CloseActiveHand(bool collapse, params string[] cards)
         {
             if (MainPlayerActiveHand < MainPlayerCardContainers.Count)
             {
                 var activeContainer = MainPlayerCardContainers[MainPlayerActiveHand];
                 var activeLabel = MainPlayerCardTotals[MainPlayerActiveHand];
-                activeContainer.Label = message;
 
                 // reset the container with with cards sent
                 ResetTargetHand(activeContainer, activeLabel, cards);
@@ -2197,17 +2196,15 @@ namespace FSO.Client.UI.Panels.EODs
     internal class CardHand : UIContainer
     {
         private float CurrentOpacity = 1f;
-        private float _CurrentScale = 1.0f;
+        internal float _CurrentScale = 1.0f;
         private UIImage PreviousCard;
         private int TotalCardsHidden;
         private int _TotalNumberOfCards;
         private int _TotalValueOfCards;
         private Boolean _IsCollapsed;
-        private String _Label;
 
         public CardHand()
         {
-            Label = "";
         }
         public CardHand(float scale)
         {
@@ -2233,11 +2230,6 @@ namespace FSO.Client.UI.Panels.EODs
         {
             _CurrentScale = newScale;
             UpdateChildren();
-        }
-        public string Label
-        {
-            get { return _Label; }
-            set { _Label = value; }
         }
         internal void SetInactive()
         {
