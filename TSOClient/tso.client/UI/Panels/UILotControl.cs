@@ -278,7 +278,7 @@ namespace FSO.Client.UI.Panels
                     break;
             }
 
-            var alert = UIScreen.GlobalShowAlert(options, true);
+            var alert = UIScreen.GlobalShowAlert(options, false);
 
             if (info.Block)
             {

@@ -323,6 +323,7 @@ namespace FSO.SimAntics
 
         public void Tick()
         {
+
             if (BHAVDirty)
             {
                 foreach (var ent in Entities)

@@ -30,7 +30,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private List<VMEODEvent> DealerEventsQueue;
 
         private VMEODClient Controller;
-        private VMAvatar Dealer;
+        private VMEODClient Dealer;
         private BlackjackPlayer DealerPlayer;
         private VMEODClient Owner;
 
@@ -273,7 +273,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                         if (IsTableWithinLimits())
                                         {
 
-                                            string[] data = new string[] { "" + playerIndex, MinBet + "", MaxBet + "", "" + Dealer.ObjectID };
+                                            string[] data = new string[] { "" + playerIndex, MinBet + "", MaxBet + "", "" + Dealer.Avatar.ObjectID };
 
                                             // event to show the UI to the player
                                             client.Send("blackjack_player_show", VMEODGameCompDrawACardData.SerializeStrings(data));
@@ -347,7 +347,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     else // not the owner, just the dealer
                     {
                         // The dealer's client is only used for animations. They literally have no other function.
-                        Dealer = client.Avatar;
+                        Dealer = client;
                         if (GameState.Equals(VMEODBlackjackStates.Closed))
                             EnqueueGotoState(VMEODBlackjackStates.Waiting_For_Player);
                     }
@@ -374,7 +374,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     if (Dealer != null)
                     {
                         // if the client disconnecting is NOT the dealer, go to waiting for player
-                        if (Dealer.ObjectID != client.Avatar.ObjectID)
+                        if (Dealer.Avatar.ObjectID != client.Avatar.ObjectID)
                             EnqueueGotoState(VMEODBlackjackStates.Waiting_For_Player);
                         else
                             Dealer = null;
@@ -1085,7 +1085,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         if (momiHandtotal < 17) // hit below 17
                         {
                             DealerPlayer.Hit(CardDeck.Draw());
-                            Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Dealer_Hit_Self_Sequence, Dealer.ObjectID));
+                            Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Dealer_Hit_Self_Sequence, Dealer.Avatar.ObjectID));
                             EnqueueGotoState(VMEODBlackjackStates.Entre_Act);
                         }
                         else
@@ -1096,7 +1096,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                 if (DealerPlayer.SoftTotal)
                                 {
                                     DealerPlayer.Hit(CardDeck.Draw());
-                                    Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Dealer_Hit_Self_Sequence, Dealer.ObjectID));
+                                    Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Dealer_Hit_Self_Sequence, Dealer.Avatar.ObjectID));
                                     EnqueueGotoState(VMEODBlackjackStates.Entre_Act);
                                 }
                                 else
@@ -1260,7 +1260,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             BettingTimer = 30;
             // send the name of the dealer along with the new game event
             Lobby.Broadcast("blackjack_new_game",
-                VMEODGameCompDrawACardData.SerializeStrings(Dealer.Name));
+                VMEODGameCompDrawACardData.SerializeStrings(Dealer.Avatar.Name));
         }
         // ends the insurance prompting
         private void EndInsuranceRound()

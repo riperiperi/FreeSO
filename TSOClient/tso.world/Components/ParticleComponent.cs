@@ -53,7 +53,6 @@ namespace FSO.LotView.Components
 
         public void InitParticleVolume(GraphicsDevice gd, BoundingBox area, int particleCount)
         {
-            Console.WriteLine("initVolume " + ((Vertices == null) ? "null" : ""));
             if (Vertices != null) Vertices.Dispose();
             if (Indices != null) Indices.Dispose();
             if (Mode == ParticleType.SNOW)
