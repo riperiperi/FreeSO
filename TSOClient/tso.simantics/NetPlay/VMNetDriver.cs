@@ -34,7 +34,7 @@ namespace FSO.SimAntics.NetPlay
         public delegate void VMNetClosedHandler(VMCloseNetReason reason);
 
         public uint DesyncTick = 0;
-        private int DesyncCooldown = 0;
+        private int DesyncCooldown = 30;
         public uint LastTick = 0;
         public uint GreatestTick = 0;
         public uint CurrentTick = 0;
@@ -62,7 +62,7 @@ namespace FSO.SimAntics.NetPlay
                     DesyncCooldown = 30 * 30;
                 } else
                 {
-                    System.Console.WriteLine("WARN - DESYNC - Too soon to try again!");
+                    System.Console.WriteLine("WARN - DESYNC - Expected "+tick.RandomSeed+", was at "+ vm.Context.RandomSeed);
                 }
             }
 

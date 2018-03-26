@@ -383,6 +383,7 @@ namespace FSO.Client.UI.Panels
                 case VMChatEventType.Arch:
                     return colorBefore + "<" + avatar + " (" + evt.Text[1] + ")" + "> " + evt.Text[2] + colorAfter;
                 case VMChatEventType.Generic:
+                case VMChatEventType.Debug:
                     return colorBefore + GameFacade.Emojis.EmojiToBB(evt.Text[0]) + colorAfter;
                 default:
                     return "";

@@ -29,6 +29,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
         private List<VMNetTick> TickBuffer;
 
         // Networking Abstractions
+        private uint LastDesyncTick;
+        private List<float> LastDesyncPcts = new List<float>();
+        private const int DESYNC_LOOP_FREQ = 90 * 30; //less than 1.5 mins between desyncs indicates there ight be a problem.
 
         private Dictionary<uint, VMNetClient> Clients;
 
@@ -59,6 +62,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
         public delegate void VMServerRemoveClientHandler(VMNetClient target);
 
         public BanList SandboxBans;
+        public bool SelfResync;
 
         private uint TickID = 1;
 
@@ -123,6 +127,10 @@ namespace FSO.SimAntics.NetPlay.Drivers
             if (ResyncClients.Count != 0 && LastSync == null && !SyncSerializing)
             {
                 //only add resync clients when we can give them a (near) clean sync.
+                if (TickID - LastDesyncTick > DESYNC_LOOP_FREQ) LastDesyncPcts.Clear();
+                LastDesyncTick = TickID;
+                LastDesyncPcts.Add(ResyncClients.Count / (float)vm.Context.ObjectQueries.AvatarsByPersist.Count);
+                
                 foreach (var cli in ResyncClients) //under clientstosync lock
                 {
                     ClientsToSync.Add(cli);
@@ -218,6 +226,22 @@ namespace FSO.SimAntics.NetPlay.Drivers
             tick.RandomSeed = vm.Context.RandomSeed;
             cmdQueue.Clear();
             InternalTick(vm, tick);
+            
+            if (LastDesyncPcts.Count == 6 && LastDesyncPcts.Average() > 0.5f)
+            {
+                vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, 
+                    "Automatic self resync - "+ LastDesyncPcts.Count+" desyncs close by with an average of "+
+                    (LastDesyncPcts.Average()*100) + "% affected."));
+                LastDesyncPcts.Clear();
+                SelfResync = true;
+            }
+            if (SelfResync)
+            {
+                SelfResync = false;
+                var save = vm.Save();
+                vm.Load(save);
+                vm.EODHost.SelfResync();
+            }
 
             TickBuffer.Add(tick);
 
@@ -413,7 +437,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     ProblemTick = ((VMRequestResyncCmd)cmd.Command).TickID;
                     ResyncClients.Add(client); //under clientstosync lock
                 }
-            } else
+            } else if (cmd.Type != VMCommandType.ChatParameters)
             {
                 client.InactivityTicks = 0;
             }

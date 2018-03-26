@@ -25,7 +25,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private int Roundtimer;
         private int Tock;
         private VMEODClient Controller;
-        private VMAvatar Croupier;
+        private VMEODClient Croupier;
         private VMEODClient Owner;
         private List<RoulettePlayer> Players;
         private Random NextBall = new Random();
@@ -355,7 +355,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     else // not the owner, just the croupier
                     {
                         // The cropuier's client is only used for animations. They literally have no other function.
-                        Croupier = client.Avatar;
+                        Croupier = client;
                         if (Players.Count == 0)
                             EnqueueGotoState(VMEODRouletteGameStates.WaitingForPlayer);
                         else
@@ -779,7 +779,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         Tock = 0;
                         GameState = state;
                         // send event for croupier to collect chips
-                        Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.CroupierCollectChips, Croupier.ObjectID));
+                        Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.CroupierCollectChips, Croupier.Avatar.ObjectID));
                         // pay the payouts
                         SettleAccounts(false);
                         break;
@@ -790,7 +790,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         GameState = state;
 
                         // send event for croupier to spin the wheel
-                        Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.CroupierSpinWheel, Croupier.ObjectID));
+                        Controller.SendOBJEvent(new VMEODEvent((short)VMEODRouletteEvents.CroupierSpinWheel, Croupier.Avatar.ObjectID));
 
                         int winningNumber = NextBall.Next(0, 38);
                         if (winningNumber == 37)

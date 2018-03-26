@@ -215,6 +215,15 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             }
         }
 
+        public override void SelfResync()
+        {
+            base.SelfResync();
+            if (Dancers != null)
+            {
+                Dancers = Dancers.Select(x => (VMAvatar)Server.vm.GetObjectById(x.ObjectID)).ToList();
+            }
+        }
+
         private void RoundEndHandler(short evt, VMEODClient client)
         {
             RoundTicks = -1;

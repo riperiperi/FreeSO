@@ -47,8 +47,7 @@ namespace FSO.SimAntics.Model
                 tile = new List<VMEntity>();
                 TileToObjects.Add(off, tile);
             }
-            if (!tile.Contains(ent)) VM.AddToObjList(tile, ent); //shouldn't be a problem any more, but just in case check first.
-            else { }
+            VM.AddToObjList(tile, ent); //if it's already on this tile, this will do nothing
         }
 
         public void UnregisterObjectPos(VMEntity ent)

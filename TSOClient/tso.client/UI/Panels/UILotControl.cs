@@ -887,7 +887,7 @@ namespace FSO.Client.UI.Panels
                 GlobalSettings.Default.Save();
             }
 
-            HasInitUserProps = false;
+            HasInitUserProps = true;
         }
 
         private void SaveLot()

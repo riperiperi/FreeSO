@@ -134,6 +134,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         vm.UseSchedule = false;
                         vm.Trace = new Engine.Debug.VMSyncTrace();
                         break;
+                    case "reload":
+                        //enables desync tracing
+                        var servD = vm.Driver as VMServerDriver;
+                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, "Manually requested self resync."));
+                        if (servD != null) servD.SelfResync = true;
+                        break;
                 }
                 return true;
             }

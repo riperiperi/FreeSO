@@ -42,9 +42,9 @@ namespace FSO.SimAntics.Engine.TSOTransaction
                         Success = result,
                         TransferAmount = finalAmount,
                         UID1 = uid1,
-                        Budget1 = (obj1 == null) ? 0 : obj1.TSOState.Budget.Value,
+                        Budget1 = (obj1 == null) ? 0 : GetBudgetForFamily(vm, obj1),
                         UID2 = uid2,
-                        Budget2 = (obj2 == null) ? 0 : obj2.TSOState.Budget.Value
+                        Budget2 = (obj2 == null) ? 0 : GetBudgetForFamily(vm, obj2)
                     }));
 
                     callback(result, finalAmount,

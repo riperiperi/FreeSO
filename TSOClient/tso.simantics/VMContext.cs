@@ -794,7 +794,7 @@ namespace FSO.SimAntics
             //add object to room
 
             var room = GetObjectRoom(obj);
-            VM.AddToObjList(RoomInfo[room].Entities, obj);
+            VM.AddToObjList(RoomInfo[room].Entities, obj); //if it's already in this room, this will do nothing
             if (obj.EntryPoints[15].ActionFunction != 0)
             { //portal
                 AddRoomPortal(obj, room);
@@ -1145,7 +1145,7 @@ namespace FSO.SimAntics
         public short GetRoomScore(ushort room)
         {
             if (room >= RoomInfo.Length) return 0;
-            return RoomInfo[room].Light.RoomScore;
+            return RoomInfo[RoomInfo[room].Room.LightBaseRoom].Light.RoomScore;
         }
 
         public VMMultitileGroup GhostCopyGroup(VMMultitileGroup group)

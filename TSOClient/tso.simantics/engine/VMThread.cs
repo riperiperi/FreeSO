@@ -612,6 +612,11 @@ namespace FSO.SimAntics.Engine
                 if (interaction.Mode != VMQueueMode.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
                 if (interaction.Callback != null) interaction.Callback.Run(Entity);
                 if (Queue.Count > 0) Queue.RemoveAt(0);
+                if (Entity is VMAvatar)
+                {
+                    //motive deltas reset between interactions
+                    ((VMAvatar)Entity).ClearMotiveChanges();
+                }
                 ContinueExecution = true; //continue where the Allow Push idle left off
                 ActiveQueueBlock--;
                 result = (ActiveQueueBlock == -1) ? VMPrimitiveExitCode.CONTINUE_NEXT_TICK : VMPrimitiveExitCode.CONTINUE;

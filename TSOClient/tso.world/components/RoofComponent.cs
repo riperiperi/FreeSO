@@ -403,7 +403,14 @@ namespace FSO.LotView.Components
 
         public bool IndoorsOrFloor(int x, int y, int level)
         {
-            return level <= blueprint.Stories && (TileIndoors(x, y, level) || blueprint.GetFloor((short)x, (short)y, (sbyte)level).Pattern != 0);
+            if (level <= blueprint.Stories)
+            {
+                if (TileIndoors(x, y, level)) return true;
+                if (blueprint.GetFloor((short)x, (short)y, (sbyte)level).Pattern != 0) return true;
+                var wall = blueprint.GetWall((short)x, (short)y, (sbyte)level);
+                if ((wall.Segments & WallSegments.AnyDiag) > 0) return true;
+            }
+            return false;
         }
 
         public bool IsRoofable(LotTilePos pos)
@@ -413,6 +420,7 @@ namespace FSO.LotView.Components
             var tileY = pos.TileY;
             var level = pos.Level;
             if (tileX <= 0 || tileX >= blueprint.Width - 1 || tileY <= 0 || tileY >= blueprint.Height - 1) return false;
+            var fDiag = false;
             //must be over indoors
             var halftile = false;
             if (!TileIndoors(tileX, tileY, level - 1))
@@ -437,7 +445,11 @@ namespace FSO.LotView.Components
                     if (TileIndoors(tileX, tileY - 1, level - 1)) found = true;
                 }
 
-                if (TileIndoors(tileX + ((pos.x % 16 == 8) ? 1 : -1), tileY + ((pos.y % 16 == 8) ? 1 : -1), level - 1)) found = true;
+                if (TileIndoors(tileX + ((pos.x % 16 == 8) ? 1 : -1), tileY + ((pos.y % 16 == 8) ? 1 : -1), level - 1))
+                {
+                    if (!found) fDiag = true;
+                    found = true;
+                }
                 if (!found) return false;
                 halftile = true;
             }
@@ -463,8 +475,8 @@ namespace FSO.LotView.Components
                 {
                     if (IndoorsOrFloor(tileX, tileY - 1, level)) return false;
                 }
-
-                if (IndoorsOrFloor(tileX + ((pos.x % 16 == 8) ? 1 : -1), tileY + ((pos.y % 16 == 8) ? 1 : -1), level)) return false;
+                
+                if (fDiag && IndoorsOrFloor(tileX + ((pos.x % 16 == 8) ? 1 : -1), tileY + ((pos.y % 16 == 8) ? 1 : -1), level)) return false;
             }
 
             return true;

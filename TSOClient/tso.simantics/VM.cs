@@ -323,7 +323,6 @@ namespace FSO.SimAntics
 
         public void Tick()
         {
-
             if (BHAVDirty)
             {
                 foreach (var ent in Entities)
@@ -427,17 +426,19 @@ namespace FSO.SimAntics
         public static void AddToObjList(List<VMEntity> list, VMEntity entity)
         {
             if (list.Count == 0) { list.Add(entity); return; }
-            int id = entity.ObjectID-1;
-            int max = list.Count-1;
+            int id = entity.ObjectID;
+            int max = list.Count;
             int min = 0;
-            while (max-1>min)
+            while (max>min)
             {
                 int mid = (max+min) / 2;
                 int nid = list[mid].ObjectID;
                 if (id < nid) max = mid;
-                else min = mid;
+                else if (id == nid) return; //do not add dupes
+                else min = mid+1;
             }
-            list.Insert((list[min].ObjectID>id)?min:((list[max].ObjectID > id)?max:max+1), entity);
+            list.Insert(min, entity);
+            // list.Insert((list[min].ObjectID>id)?min:((list[max].ObjectID > id)?max:max+1), entity);
         }
 
         /// <summary>

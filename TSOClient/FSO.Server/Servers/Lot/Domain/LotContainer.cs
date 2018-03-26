@@ -605,6 +605,7 @@ namespace FSO.Server.Servers.Lot.Domain
             }
 
             Lot = new VM(new VMContext(null), VMDriver, new VMNullHeadlineProvider());
+            Lot.OnChatEvent += Lot_OnChatEvent;
             Lot.Init();
 
             bool isNew = false;
@@ -720,6 +721,14 @@ namespace FSO.Server.Servers.Lot.Domain
                     State = Lot.Save(),
                     Run = false,
                 });
+            }
+        }
+
+        private void Lot_OnChatEvent(VMChatEvent evt)
+        {
+            if (evt.Type == VMChatEventType.Debug)
+            {
+                LOG.Info("LOT " + Context.DbId + ": " + evt.Text[0]);
             }
         }
 

@@ -48,7 +48,13 @@ namespace FSO.Client.Rendering.City
                         using (var mem = new MemoryStream(data))
                         {
                             result.Loaded = true;
-                            result.LotTexture = ImageLoader.FromStream(GameFacade.GraphicsDevice, mem);
+                            try
+                            {
+                                result.LotTexture = ImageLoader.FromStream(GameFacade.GraphicsDevice, mem);
+                            } catch
+                            {
+                                result.LotTexture = new Texture2D(GameFacade.GraphicsDevice, 1, 1);
+                            }
                         }
                     }
                 });

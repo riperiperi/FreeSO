@@ -52,7 +52,7 @@ namespace FSO.Content
         {
             /** There is a small handful of floors in a global file for some reason **/
             ushort floorID = 1;
-            var floorStrs = BuildGlobals.Get<STR>(0x83);
+            var floorStrs = BuildGlobals.Get<STR>(0x82);
             for (ushort i = 1; i < (floorStrs.Length / 3); i++)
             {
                 var far = FloorGlobals.Get<SPR2>(i);
