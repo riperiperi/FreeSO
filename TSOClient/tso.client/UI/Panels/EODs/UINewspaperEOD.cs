@@ -57,8 +57,6 @@ namespace FSO.Client.UI.Panels.EODs
 
         protected override void InitUI()
         {
-            base.InitUI();
-
             BarGraphs = new UINewspaperPctBar[8];
             for (int i = 0; i < 8; i++)
             {
