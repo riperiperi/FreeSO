@@ -612,7 +612,7 @@ namespace FSO.SimAntics.Engine
                 if (interaction.Mode != VMQueueMode.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
                 if (interaction.Callback != null) interaction.Callback.Run(Entity);
                 if (Queue.Count > 0) Queue.RemoveAt(0);
-                if (Entity is VMAvatar)
+                if (Entity is VMAvatar && !IsCheck && ActiveQueueBlock == 0)
                 {
                     //motive deltas reset between interactions
                     ((VMAvatar)Entity).ClearMotiveChanges();
