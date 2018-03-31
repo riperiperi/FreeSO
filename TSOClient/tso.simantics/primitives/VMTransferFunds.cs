@@ -102,6 +102,7 @@ namespace FSO.SimAntics.Primitives
             switch (operand.TransferType)
             {
                 case VMTransferFundsType.MeToMaxis:
+                case VMTransferFundsType.DEPRICATED_ADD:
                     source = context.Caller.PersistID; break;
                 case VMTransferFundsType.MaxisToMe:
                     target = context.Caller.PersistID; break;
@@ -207,9 +208,9 @@ namespace FSO.SimAntics.Primitives
 
     public class VMTransferFundsOperand : VMPrimitiveOperand
     {
-        public VMTransferFundsOldOwner OldAmountOwner;
-        public VMVariableScope AmountOwner;
-        public ushort AmountData;
+        public VMTransferFundsOldOwner OldAmountOwner { get; set; }
+        public VMVariableScope AmountOwner { get; set; }
+        public ushort AmountData { get; set; }
         public VMTransferFundsFlags Flags;
         public VMTransferFundsExpenseType ExpenseType { get; set; }
         public VMTransferFundsType TransferType { get; set; }
@@ -226,6 +227,20 @@ namespace FSO.SimAntics.Primitives
                 else Flags &= ~VMTransferFundsFlags.JustTest;
             }
         }
+
+        public bool Subtract
+        {
+            get
+            {
+                return (Flags & VMTransferFundsFlags.Subtract) > 0;
+            }
+            set
+            {
+                if (value) Flags |= VMTransferFundsFlags.Subtract;
+                else Flags &= ~VMTransferFundsFlags.Subtract;
+            }
+        }
+
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -245,7 +260,9 @@ namespace FSO.SimAntics.Primitives
             {
                 io.Write((byte)OldAmountOwner);
                 io.Write((byte)AmountOwner);
-                io.Write((uint)Flags);
+                io.Write((ushort)AmountData);
+                io.Write((byte)Flags);
+                io.Write((byte)0);
                 io.Write((byte)ExpenseType);
                 io.Write((byte)TransferType);
             }

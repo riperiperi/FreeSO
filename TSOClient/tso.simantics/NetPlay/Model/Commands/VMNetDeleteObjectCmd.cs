@@ -100,7 +100,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 if (caller == null) return false;
                 var permissions = caller.AvatarState.Permissions;
                 if (permissions < VMTSOAvatarPermissions.Roommate) return false;
-                if (obj != null && permissions == VMTSOAvatarPermissions.Admin)
+                if (obj != null && obj is VMGameObject && permissions == VMTSOAvatarPermissions.Admin)
                 {
                     VMNetLockCmd.LockObj(vm, obj);
                     return true; //admins can always deete

@@ -350,7 +350,7 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
-            if (ThumbLock != null && LastThumb != ThumbLock.LotTexture && ThumbLock.Loaded)
+            if (ThumbLock != null && CurrentLot?.Value != null && LastThumb != ThumbLock.LotTexture && ThumbLock.Loaded)
             {
                 LotThumbnail.SetThumbnail(ThumbLock.LotTexture, CurrentLot.Value.Id);
                 LastThumb = ThumbLock.LotTexture;

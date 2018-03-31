@@ -252,7 +252,12 @@ namespace FSO.Client.UI.Controls
 
         private void ComputeText()
         {
-            m_MessageText = TextRenderer.ComputeText(m_Options.Message, new TextRendererOptions
+            var msg = m_Options.Message;
+            if (m_Options.AllowEmojis)
+            {
+                msg = GameFacade.Emojis.EmojiToBB(BBCodeParser.SanitizeBB(msg));
+            }
+            m_MessageText = TextRenderer.ComputeText(msg, new TextRendererOptions
             {
                 Alignment = m_Options.Alignment,
                 MaxWidth = m_Options.Width - 64,
@@ -260,7 +265,8 @@ namespace FSO.Client.UI.Controls
                 Scale = _Scale,
                 TextStyle = m_TextStyle,
                 WordWrap = true,
-                TopLeftIconSpace = IconSpace
+                TopLeftIconSpace = IconSpace,
+                BBCode = m_Options.AllowEmojis
             }, this);
 
             m_TextDirty = false;
@@ -290,6 +296,7 @@ namespace FSO.Client.UI.Controls
         public int TextSize = 10;
         public bool ProgressBar;
         public bool Color;
+        public bool AllowEmojis;
 
         public bool TextEntry = false;
         public UIAlertButton[] Buttons = new UIAlertButton[] { new UIAlertButton() };

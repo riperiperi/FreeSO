@@ -192,7 +192,8 @@ namespace FSO.IDE.EditorComponent
             switch (scope)
             {
                 case VMVariableScope.Tuning:
-                    return GetTuningVariableLabel((ushort)data) + " ("+GetTuningVariable((ushort)data)+")";
+                    return GetTuningVariableLabel((ushort)data) + " (" +(ushort)(data >> 7)+", "
+                        + (ushort)(data & 0x7F) + ": "+ GetTuningVariable((ushort)data)+")";
                 case VMVariableScope.MyMotives:
                 case VMVariableScope.StackObjectMotives:
                     return Behaviour.Get<STR>(134).GetString(data);
@@ -381,6 +382,7 @@ namespace FSO.IDE.EditorComponent
                 case ScopeSource.Private:
                     return Object.Resource.Get<T>(id);
                 case ScopeSource.SemiGlobal:
+                    if (SemiGlobal == null) return default(T);
                     return SemiGlobal.Get<T>(id);
                 case ScopeSource.Global:
                     return Globals.Resource.Get<T>(id);

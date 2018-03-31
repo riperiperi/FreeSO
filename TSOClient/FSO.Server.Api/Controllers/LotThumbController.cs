@@ -193,10 +193,25 @@ namespace FSO.Server.Api.Controllers
 
         [HttpPost]
         [Route("userapi/city/{shardid}/uploadfacade/{id}")]
-        public HttpResponseMessage UploadFacade(int shardid, uint id, [FromBody]byte[] data)
+        public HttpResponseMessage UploadFacade(int shardid, uint id)
         {
             var api = Api.INSTANCE;
             api.DemandModerator(Request);
+
+            if (!Request.Content.IsMimeMultipartContent())
+                throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
+
+            var provider = new MultipartMemoryStreamProvider();
+            var files = Request.Content.ReadAsMultipartAsync(provider).Result;
+
+            byte[] data = null;
+            foreach (var file in provider.Contents)
+            {
+                var filename = file.Headers.ContentDisposition.FileName.Trim('\"');
+                data = file.ReadAsByteArrayAsync().Result;
+            }
+
+            if (data == null) return new HttpResponseMessage(HttpStatusCode.NotFound);
 
             using (var da = api.DAFactory.Get())
             {

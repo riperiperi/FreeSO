@@ -170,31 +170,7 @@ namespace FSO.Files.RC
 
         public void GenerateNormals(bool invert)
         {
-            GenerateNormals(invert, SVerts, SIndices);
-        }
-
-        public static void GenerateNormals(bool invert, List<DGRP3DVert> verts, List<int> indices)
-        {
-            for (int i = 0; i < indices.Count; i += 3)
-            {
-                var v1 = verts[indices[i + 1]].Position - verts[indices[i]].Position;
-                var v2 = verts[indices[i + 2]].Position - verts[indices[i + 1]].Position;
-                var cross = invert ? Vector3.Cross(v2, v1) : Vector3.Cross(v1, v2);
-                for (int j = 0; j < 3; j++)
-                {
-                    var id = indices[i + j];
-                    var v = verts[id];
-                    v.Normal += cross;
-                    verts[id] = v;
-                }
-            }
-
-            for (int i = 0; i < verts.Count; i++)
-            {
-                var v = verts[i];
-                v.Normal.Normalize();
-                verts[i] = v;
-            }
+            DGRP3DVert.GenerateNormals(invert, SVerts, SIndices);
         }
 
         public void Save(IoWriter io)
@@ -301,7 +277,7 @@ namespace FSO.Files.RC
             return result;
         }
 
-        public static byte[] ToByteArray<T>(T[] input)
+        private static byte[] ToByteArray<T>(T[] input)
         {
             var result = new byte[input.Length * Marshal.SizeOf(typeof(T))];
             Buffer.BlockCopy(input, 0, result, 0, result.Length);

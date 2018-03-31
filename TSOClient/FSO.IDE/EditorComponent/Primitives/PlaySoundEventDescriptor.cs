@@ -29,6 +29,8 @@ namespace FSO.IDE.EditorComponent.Primitives
 
             result.Append("Play \"");
             var fwav = scope.GetResource<FWAV>(op.EventID, ScopeSource.Private);
+            if (fwav == null) fwav = scope.GetResource<FWAV>(op.EventID, ScopeSource.SemiGlobal);
+            if (fwav == null) fwav = scope.GetResource<FWAV>(op.EventID, ScopeSource.Global);
             result.Append((fwav == null)?"*Event Missing!*":fwav.Name);
             result.Append("\"");
 

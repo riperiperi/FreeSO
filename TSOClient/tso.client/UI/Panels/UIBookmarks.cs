@@ -82,7 +82,8 @@ namespace FSO.Client.UI.Panels
             BookmarkListBox.Items = items.Select(x =>
             {
                 return new UIListBoxItem(x, new object[] { null, new ValuePointer(x.Avatar, "Avatar_Name") }) {
-                    CustomStyle = BookmarkListBoxColors
+                    CustomStyle = BookmarkListBoxColors,
+                    UseDisabledStyleByDefault = new ValuePointer(x.Avatar, "Avatar_IsOffline")
                 };
             }).ToList();
         }

@@ -105,11 +105,12 @@ namespace FSO.SimAntics.Engine.Utils
                     //returns information on the selected room. Right now we don't have a room system, so always return the same values. (everywhere is indoors, not a pool)
                     var roomID = Math.Max(0, Math.Min(context.VM.Context.RoomInfo.Length-1, context.Thread.TempRegisters[0]));
                     var room = context.VM.Context.RoomInfo[roomID];
+                    var baseroom = context.VM.Context.RoomInfo[room.Room.LightBaseRoom];
 
                     if (data == 0) return 100; //ambient light 0-100
-                    else if (data == 1) return (short)((room.Room.IsOutside)?1:0); //outside
-                    else if (data == 2) return 0; //level
-                    else if (data == 3) return (short)room.Room.Area; //area (???)
+                    else if (data == 1) return (short)((baseroom.Room.IsOutside)?1:0); //outside
+                    else if (data == 2) return (short)(baseroom.Room.Floor); //level
+                    else if (data == 3) return (short)baseroom.Room.Area; //area (???)
                     else if (data == 4) return (short)(room.Room.IsPool?1:0); //is pool
                     else throw new VMSimanticsException("Invalid room data!", context);
 

@@ -1,4 +1,6 @@
-﻿using FSO.LotView.Model;
+﻿using FSO.Common.Utils;
+using FSO.Files.RC;
+using FSO.LotView.Model;
 using FSO.LotView.RC;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -7,6 +9,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,7 +26,7 @@ namespace FSO.LotView.Facade
     public class LotFacadeGenerator
     {
         public static int WALL_WIDTH = 8;
-        public static int WALL_HEIGHT = 8 * 3;
+        public static int WALL_HEIGHT = 22;
         public static int MAX_WALL_WIDTH = 64; //above this tile width the pixel width for the wall will not increase.
         public static int GAP = 1;
 
@@ -52,20 +55,23 @@ namespace FSO.LotView.Facade
 
         public bool RoofOnFloor;
 
-        public void GenerateWalls(GraphicsDevice gd, WorldRC world, Blueprint bp)
+        public void GenerateWalls(GraphicsDevice gd, WorldRC world, Blueprint bp, bool justTexture)
         {
             //generate wall geometry and texture.
-            foreach (var room in bp.Rooms)
+            if (!justTexture)
             {
-                //add walls for each outside room.
-                if (room.Base == room.RoomID && room.IsOutside)
+                foreach (var room in bp.Rooms)
                 {
-                    var walls = new List<Vector2[]>(room.WallLines);
-                    walls.AddRange(room.FenceLines);
-                    foreach (var wall in walls)
+                    //add walls for each outside room.
+                    if (room.Base == room.RoomID && room.IsOutside)
                     {
-                        var facadeWall = new LotFacadeWall(wall, room);
-                        AddToBin(facadeWall);
+                        var walls = new List<Vector2[]>(room.WallLines);
+                        walls.AddRange(room.FenceLines);
+                        foreach (var wall in walls)
+                        {
+                            var facadeWall = new LotFacadeWall(wall, room);
+                            AddToBin(facadeWall);
+                        }
                     }
                 }
             }
@@ -180,27 +186,30 @@ namespace FSO.LotView.Facade
                     var rect = new Rectangle(xInt + (wall.EffectiveLength - (wall.Length + GAP)), yInt, wall.Length, WALL_HEIGHT);
                     BleedRect(data, rect, tex.Width, tex.Height);
 
-                    var ctr = (wall.Points[0] + wall.Points[1]) / (2 * 16);
-                    var off = (wall.EffectiveLength - (wall.Length + GAP)) / (float)tex.Width;
-                    var height1 = ((wall.Room.Floor) * 2.95f + bp.InterpAltitude(new Vector3(ctr, 0)));
-                    var height2 = height1 + 2.95f;
-                    var pt1 = wall.Points[0] / 16f;
-                    var pt2 = wall.Points[1] / 16f;
-                    verts[verti++] = new VertexPositionTexture(new Vector3(pt1.X, height2, pt1.Y), new Vector2(xPos + off, yPos));
-                    verts[verti++] = new VertexPositionTexture(new Vector3(pt2.X, height2, pt2.Y), new Vector2(xPos + off + wall.Length / (float)tex.Width, yPos));
-                    verts[verti++] = new VertexPositionTexture(new Vector3(pt2.X, height1, pt2.Y), new Vector2(xPos + off + wall.Length / (float)tex.Width, (yPos + div)));
-                    verts[verti++] = new VertexPositionTexture(new Vector3(pt1.X, height1, pt1.Y), new Vector2(xPos + off, (yPos + div)));
+                    if (!justTexture)
+                    {
+                        var ctr = (wall.Points[0] + wall.Points[1]) / (2 * 16);
+                        var off = (wall.EffectiveLength - (wall.Length + GAP)) / (float)tex.Width;
+                        var height1 = ((wall.Room.Floor) * 2.95f + bp.InterpAltitude(new Vector3(ctr, 0)));
+                        var height2 = height1 + 2.95f;
+                        var pt1 = wall.Points[0] / 16f;
+                        var pt2 = wall.Points[1] / 16f;
+                        verts[verti++] = new VertexPositionTexture(new Vector3(pt1.X, height2, pt1.Y), new Vector2(xPos + off, yPos));
+                        verts[verti++] = new VertexPositionTexture(new Vector3(pt2.X, height2, pt2.Y), new Vector2(xPos + off + wall.Length / (float)tex.Width, yPos));
+                        verts[verti++] = new VertexPositionTexture(new Vector3(pt2.X, height1, pt2.Y), new Vector2(xPos + off + wall.Length / (float)tex.Width, (yPos + div)));
+                        verts[verti++] = new VertexPositionTexture(new Vector3(pt1.X, height1, pt1.Y), new Vector2(xPos + off, (yPos + div)));
 
-                    indices[indi++] = verti - 2;
-                    indices[indi++] = verti - 3;
-                    indices[indi++] = verti - 4;
+                        indices[indi++] = verti - 2;
+                        indices[indi++] = verti - 3;
+                        indices[indi++] = verti - 4;
 
-                    indices[indi++] = verti - 4;
-                    indices[indi++] = verti - 1;
-                    indices[indi++] = verti - 2;
+                        indices[indi++] = verti - 4;
+                        indices[indi++] = verti - 1;
+                        indices[indi++] = verti - 2;
 
-                    xInt += wall.EffectiveLength;
-                    xPos += wall.EffectiveLength / (float)tex.Width;
+                        xInt += wall.EffectiveLength;
+                        xPos += wall.EffectiveLength / (float)tex.Width;
+                    }
                 }
                 bini++;
             }
@@ -210,9 +219,12 @@ namespace FSO.LotView.Facade
 
             tex.SetData(data);
 
-            WallTarget = tex;
-            WallVerts = verts;
-            WallIndices = indices;
+            if (!justTexture)
+            {
+                WallTarget = tex;
+                WallVerts = verts;
+                WallIndices = indices;
+            }
         }
 
         public void GenerateRoof(GraphicsDevice gd, WorldRC world, Blueprint bp)
@@ -241,7 +253,7 @@ namespace FSO.LotView.Facade
             RoofIndices = inds.ToArray();
         }
 
-        public void GenerateFloor(GraphicsDevice gd, WorldRC world, Blueprint bp)
+        public void GenerateFloor(GraphicsDevice gd, WorldRC world, Blueprint bp, bool justTexture)
         {
             var dim = FLOOR_RES_PER_TILE * FLOOR_TILES;
             var tex = new RenderTarget2D(gd, dim * 3, dim * 2, false, SurfaceFormat.Color, DepthFormat.Depth24);
@@ -282,7 +294,7 @@ namespace FSO.LotView.Facade
                     floors.Add((sbyte)i);
                     var mat = baseO * offMat;
                     bp.Terrain.DrawCustom(gd, world.State, lookat, mat, 1, floors);
-                    //if (i == 0) bp.Terrain.DrawMask(gd, world.State, lookat, mat);
+                    if (i == 0) bp.Terrain.DrawMask(gd, world.State, lookat, mat);
 
                     var effect = WorldContent.RCObject;
                     gd.BlendState = BlendState.NonPremultiplied;
@@ -316,53 +328,111 @@ namespace FSO.LotView.Facade
             //using (var fs = new FileStream(@"C:\Users\Rhys\Desktop\floor.png", FileMode.Create, FileAccess.Write))
             //    tex.SaveAsPng(fs, tex.Width, tex.Height);
 
-            var vertDiv = GROUND_SUBDIV + 1;
-            var inc = FLOOR_TILES / (float)GROUND_SUBDIV;
-            var invDiv = 1 / (float)GROUND_SUBDIV;
-            var basepos = new Vector2(bp.Width - FLOOR_TILES, bp.Height - FLOOR_TILES) / 2;
-            var basetc = new Vector2(1 / 3f, 1 / 2f);
-            FloorVerts = new VertexPositionTexture[vertDiv * vertDiv];
-
-            //output vertices
-            int verti = 0;
-            for (int y = 0; y < vertDiv; y++)
+            if (!justTexture)
             {
-                for (int x = 0; x < vertDiv; x++)
+                var vertDiv = GROUND_SUBDIV + 1;
+                var inc = FLOOR_TILES / (float)GROUND_SUBDIV;
+                var invDiv = 1 / (float)GROUND_SUBDIV;
+                var basepos = new Vector2(bp.Width - FLOOR_TILES, bp.Height - FLOOR_TILES) / 2;
+                var basetc = new Vector2(1 / 3f, 1 / 2f);
+                FloorVerts = new VertexPositionTexture[vertDiv * vertDiv];
+
+                //output vertices
+                int verti = 0;
+                for (int y = 0; y < vertDiv; y++)
                 {
-                    var pos = basepos + new Vector2(x * inc, y * inc);
-                    var height = bp.InterpAltitude(new Vector3(pos, 0));
-                    FloorVerts[verti++] = new VertexPositionTexture(new Vector3(pos.X, height, pos.Y), basetc - new Vector2(x * invDiv / 3, y * invDiv / 2));
+                    for (int x = 0; x < vertDiv; x++)
+                    {
+                        var pos = basepos + new Vector2(x * inc, y * inc);
+                        var height = bp.InterpAltitude(new Vector3(pos, 0));
+                        FloorVerts[verti++] = new VertexPositionTexture(new Vector3(pos.X, height, pos.Y), basetc - new Vector2(x * invDiv / 3, y * invDiv / 2));
+                    }
                 }
-            }
 
-            //output indices
-            int indi = 0;
+                //output indices
+                int indi = 0;
 
-            FloorIndices = new int[GROUND_SUBDIV * GROUND_SUBDIV * 6];
-            for (int y = 0; y < GROUND_SUBDIV; y++)
-            {
-                for (int x = 0; x < GROUND_SUBDIV; x++)
+                FloorIndices = new int[GROUND_SUBDIV * GROUND_SUBDIV * 6];
+                for (int y = 0; y < GROUND_SUBDIV; y++)
                 {
-                    var baseVert = x + y * vertDiv;
-                    FloorIndices[indi++] = baseVert + 1 + vertDiv;
-                    FloorIndices[indi++] = baseVert + 1;
-                    FloorIndices[indi++] = baseVert;
+                    for (int x = 0; x < GROUND_SUBDIV; x++)
+                    {
+                        var baseVert = x + y * vertDiv;
+                        FloorIndices[indi++] = baseVert + 1 + vertDiv;
+                        FloorIndices[indi++] = baseVert + 1;
+                        FloorIndices[indi++] = baseVert;
 
-                    FloorIndices[indi++] = baseVert;
-                    FloorIndices[indi++] = baseVert + vertDiv;
-                    FloorIndices[indi++] = baseVert + 1 + vertDiv;
+                        FloorIndices[indi++] = baseVert;
+                        FloorIndices[indi++] = baseVert + vertDiv;
+                        FloorIndices[indi++] = baseVert + 1 + vertDiv;
+                    }
                 }
-            }
 
+            }
             FloorTexture = tex;
-
             gd.SetRenderTarget(null);
+        }
+
+        private byte[] TexToData(Texture2D tex, bool compressed)
+        {
+            var data = new Color[tex.Width * tex.Height];
+            tex.GetData(data);
+            if (compressed)
+            {
+                //let's assume the width and height didn't change. the default settings should always result in textures divisible by 4.
+                return TextureUtils.DXT5Compress(data, tex.Width, tex.Height).Item1; 
+            }
+            return ToByteArray(data.Select(x => x.PackedValue).ToArray());
+        }
+
+        private static byte[] ToByteArray<T>(T[] input)
+        {
+            var result = new byte[input.Length * Marshal.SizeOf(typeof(T))];
+            Buffer.BlockCopy(input, 0, result, 0, result.Length);
+            return result;
+        }
+
+        public FSOF GetFSOF(GraphicsDevice gd, WorldRC world, Blueprint bp, Action onNight, bool compressed)
+        {
+            var result = new FSOF();
+            RoofOnFloor = true;
+            GenerateWalls(gd, world, bp, false);
+            GenerateFloor(gd, world, bp, false);
+
+            result.TexCompressionType = (compressed) ? 1 : 0;
+            result.FloorWidth = FloorTexture.Width;
+            result.FloorHeight = FloorTexture.Height;
+            result.WallWidth = WallTarget.Width;
+            result.WallHeight = WallTarget.Height;
+
+            result.FloorTextureData = TexToData(FloorTexture, compressed);
+            result.WallTextureData = TexToData(WallTarget, compressed);
+
+            var tempVerts = FloorVerts.Select(x => new DGRP3DVert(x.Position, Vector3.Zero, x.TextureCoordinate)).ToList();
+            DGRP3DVert.GenerateNormals(false, tempVerts, FloorIndices);
+            result.FloorVertices = tempVerts.ToArray();
+            result.FloorIndices = FloorIndices;
+
+            tempVerts = WallVerts.Select(x => new DGRP3DVert(x.Position, Vector3.Zero, x.TextureCoordinate)).ToList();
+            DGRP3DVert.GenerateNormals(false, tempVerts, WallIndices);
+            result.WallVertices = tempVerts.ToArray();
+            result.WallIndices = WallIndices;
+
+            onNight();
+            GenerateWalls(gd, world, bp, true);
+            GenerateFloor(gd, world, bp, true);
+
+            result.NightFloorTextureData = TexToData(FloorTexture, compressed);
+            result.NightWallTextureData = TexToData(WallTarget, compressed);
+            result.NightLightColor = bp.OutsideColor;
+
+            return result;
         }
 
         public void Generate(GraphicsDevice gd, WorldRC world, Blueprint bp)
         {
-            GenerateWalls(gd, world, bp);
-            GenerateFloor(gd, world, bp);
+            GenerateWalls(gd, world, bp, false);
+            GenerateFloor(gd, world, bp, false);
             GenerateRoof(gd, world, bp);
         }
 

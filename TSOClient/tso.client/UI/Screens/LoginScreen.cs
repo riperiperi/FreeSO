@@ -86,7 +86,7 @@ namespace FSO.Client.UI.Screens
             this.Add(LoginProgress);
 
             /** Login dialog **/
-            LoginDialog = new UILoginDialog(this);
+            LoginDialog = new UILoginDialog(Login);
             LoginDialog.Opacity = 0.9f;
             //Center
             LoginDialog.X = (ScreenWidth - LoginDialog.Width) / 2;

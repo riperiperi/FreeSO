@@ -17,12 +17,12 @@ namespace FSO.Client.UI.Panels
     public class UILoginDialog : UIDialog
     {
         private UITextEdit m_TxtAccName, m_TxtPass;
-        private LoginScreen m_LoginScreen;
+        private Action Login;
 
-        public UILoginDialog(LoginScreen loginScreen)
+        public UILoginDialog(Action login)
             : base(UIDialogStyle.Standard, true)
         {
-            this.m_LoginScreen = loginScreen;
+            this.Login = login;
             this.Caption = GameFacade.Strings.GetString("UIText", "209", "1");
 
             SetSize(350, 225);
@@ -163,7 +163,7 @@ namespace FSO.Client.UI.Panels
 
         void loginBtn_OnButtonClick(UIElement button)
         {
-            m_LoginScreen.Login();
+            Login();
             //FSOFacade.Controller.ShowPersonSelection();
         }
 

@@ -216,9 +216,12 @@ namespace FSO.Client.Controllers
         {
             DataService.Get<Avatar>(avatarId).ContinueWith(x =>
             {
-                var msg = Chat.WriteLetter(UserReference.Wrap(x.Result));
-                Chat.SetEmailMessage(msg, new MessageItem() { Subject = subject, Body = "" });
-                if (msg != null) Chat.ShowWindow(msg);
+                GameThread.InUpdate(() =>
+                {
+                    var msg = Chat.WriteLetter(UserReference.Wrap(x.Result));
+                    Chat.SetEmailMessage(msg, new MessageItem() { Subject = subject, Body = "" });
+                    if (msg != null) Chat.ShowWindow(msg);
+                });
             });
         }
 

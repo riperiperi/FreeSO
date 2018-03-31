@@ -225,7 +225,9 @@ namespace FSO.Client.UI.Panels
                 Message = info.Message,
                 Width = 325 + (int)(info.Message.Length / 3.5f),
                 Alignment = TextAlignment.Left,
-                TextSize = 12 };
+                TextSize = 12,
+                AllowEmojis = true
+            };
 
             if (info.Block && vm.TS1) vm.SpeedMultiplier = 0;
             var b0Event = (info.Block) ? new ButtonClickDelegate(DialogButton0) : null;

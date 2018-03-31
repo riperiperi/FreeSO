@@ -139,6 +139,11 @@ namespace FSO.Common.DataService.Model
             set { _Avatar_IsOnline = value; NotifyPropertyChanged("Avatar_IsOnline"); }
         }
 
+        public bool Avatar_IsOffline
+        {
+            get { return !Avatar_IsOnline; }
+        }
+
         private uint _Avatar_LotGridXY;
         public uint Avatar_LotGridXY
         {

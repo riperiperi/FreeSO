@@ -473,7 +473,7 @@ namespace FSO.Files.RC
                                 var bID = geom.SVerts.Count;
                                 foreach (var id in indices) geom.SIndices.Add(id + bID);
                                 var verts2 = verts.Select(v => new DGRP3DVert(v.Position, Vector3.Zero, v.TextureCoordinate)).ToList();
-                                DGRP3DGeometry.GenerateNormals(!sprite.Flip, verts2, indices);
+                                DGRP3DVert.GenerateNormals(!sprite.Flip, verts2, indices);
                                 geom.SVerts.AddRange(verts2);
 
                                 lock (this)
@@ -495,7 +495,7 @@ namespace FSO.Files.RC
                                 var baseID = geom.SVerts.Count;
                                 foreach (var id in indices) geom.SIndices.Add(id + baseID);
                                 var verts2 = verts.Select(v => new DGRP3DVert(v.Position, Vector3.Zero, v.TextureCoordinate)).ToList();
-                                DGRP3DGeometry.GenerateNormals(!sprite.Flip, verts2, indices);
+                                DGRP3DVert.GenerateNormals(!sprite.Flip, verts2, indices);
                                 geom.SVerts.AddRange(verts2);
                                 lock (this)
                                 {

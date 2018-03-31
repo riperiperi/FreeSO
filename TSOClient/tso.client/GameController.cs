@@ -73,6 +73,13 @@ namespace FSO.Client
             */
         }
 
+        public void ShowFSOF()
+        {
+            var screen = Kernel.Get<RenderFSOFScreen>();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
+
         /// <summary>
         /// Go to the person selection page
         /// </summary>
