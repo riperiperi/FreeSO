@@ -899,9 +899,6 @@
     <Content Include="Content\Patch\piano_rejoin.piff">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Patch\personglobals_wakeup.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Content\Patch\pondduck.str.piff">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -1124,7 +1121,9 @@
     <Content Include="Content\Patch\Pizza\socialinteractions.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Content\Patch\personglobals.piff" />
+    <Content Include="Content\Patch\personglobals_wakeup.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Content\UI\uitext\english.dir\_f110_manageeodstrings.cst">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
