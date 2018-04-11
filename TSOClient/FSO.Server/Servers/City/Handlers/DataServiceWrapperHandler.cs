@@ -161,7 +161,7 @@ namespace FSO.Server.Servers.City.Handlers
             {
                 //SerializePath throws generic exceptions.
                 //plus we don't want weird special cases crashing the whole server.
-                LOG.Error(e, "Voltron DataService request failed!");
+                LOG.Error(e, "Voltron DataService request failed: from avatar "+session.AvatarId+", \n"+e.ToString());
             }
         }
     }
