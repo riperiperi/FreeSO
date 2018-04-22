@@ -42,6 +42,24 @@ namespace FSO.Server.Api.Controllers
                 return ApiResponse.Json(HttpStatusCode.OK, LastModel);
             }
         }
+
+        [HttpGet]
+        [Route("userapi/city/thumbwork.json")]
+        public HttpResponseMessage ThumbWork()
+        {
+            var api = Api.INSTANCE;
+            api.DemandModerator(Request);
+
+            using (var da = api.DAFactory.Get())
+            {
+                var work = da.Lots.Get3DWork();
+                if (work == null) return ApiResponse.Plain(HttpStatusCode.OK, "");
+                else
+                {
+                    return ApiResponse.Json(HttpStatusCode.OK, work);
+                }
+            }
+        }
     }
 
     class CityInfoModel

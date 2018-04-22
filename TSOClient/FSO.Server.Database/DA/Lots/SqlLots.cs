@@ -117,6 +117,20 @@ namespace FSO.Server.Database.DA.Lots
             Context.Connection.Query("UPDATE fso_lots SET name = @name WHERE lot_id = @id", new { name = newName, id = id });
         }
 
+        public void SetDirty(int id, byte dirty)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET thumb3d_dirty = @dirty AND thumb3d_time = @time WHERE lot_id = @id", new { time = Epoch.Now, dirty = dirty, id = id });
+        }
+
+        public DbLot Get3DWork()
+        {
+            var item = Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE thumb3d_dirty = 1 AND thumb3d_time < @time ORDER BY thumb3d_time LIMIT 1", new { time = Epoch.Now - 300 }).FirstOrDefault();
+            if (item != null)
+            {
+                SetDirty(item.lot_id, 0);
+            }
+            return item;
+        }
 
         public List<DbLot> SearchExact(int shard_id, string name, int limit)
         {

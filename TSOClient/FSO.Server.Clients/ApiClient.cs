@@ -39,6 +39,24 @@ namespace FSO.Server.Clients
             });
         }
 
+        public void GetFacadeAsync(uint shardID, uint location, Action<byte[]> callback)
+        {
+            var client = Client();
+            var request = new RestRequest("userapi/city/" + shardID + "/" + location + ".fsof");
+
+            client.ExecuteAsync(request, (resp, h) =>
+            {
+                GameThread.NextUpdate(x =>
+                {
+                    if (resp.StatusCode != System.Net.HttpStatusCode.OK)
+                        callback(null);
+                    else
+                        callback(resp.RawBytes);
+                });
+            });
+        }
+
+
         public void AdminLogin(string username, string password, Action<bool> callback)
         {
             var client = Client();

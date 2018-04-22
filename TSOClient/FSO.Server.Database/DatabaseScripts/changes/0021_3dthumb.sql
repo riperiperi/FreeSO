@@ -1,0 +1,3 @@
+﻿ALTER TABLE `fso_lots` 
+ADD COLUMN `thumb3d_dirty` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0 AFTER `skill_mode`,
+ADD COLUMN `thumb3d_time` INT(10) UNSIGNED NOT NULL DEFAULT 0 AFTER `thumb3d_dirty`;

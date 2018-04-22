@@ -20,6 +20,8 @@ namespace FSO.Server.Database.DA.Lots
         bool Delete(int id);
 
         void RenameLot(int id, string newName);
+        void SetDirty(int id, byte dirty);
+        DbLot Get3DWork();
 
         List<DbLot> SearchExact(int shard_id, string name, int limit);
         List<DbLot> SearchWildcard(int shard_id, string name, int limit);

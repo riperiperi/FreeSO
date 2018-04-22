@@ -214,6 +214,11 @@ namespace FSO.Server.DataService.Providers
                     var imgpath = Path.Combine(NFS.GetBaseDirectory(), "Lots/" + lot.DbId.ToString("x8") + "/thumb.png");
                     var data = (cTSOGenericData)value;
 
+                    using (var db = DAFactory.Get())
+                    {
+                        db.Lots.SetDirty(lot.DbId, 1);
+                    }
+
                     using (FileStream fs = File.Open(imgpath, FileMode.Create, FileAccess.Write, FileShare.None))
                     {
                         fs.Write(data.Data, 0, data.Data.Length);

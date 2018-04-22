@@ -9,6 +9,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Web.Http;
 using System.Runtime.Caching;
+using FSO.Server.Api.Utils;
+using FSO.Common.Enum;
 
 namespace FSO.Server.Api.Controllers
 {
@@ -37,7 +39,7 @@ namespace FSO.Server.Api.Controllers
         }
     }
 
-    public class LotThumbController : ApiController
+    public class LotInfoController : ApiController
     {
         public static ConcurrentDictionary<int, ShardLocationCache> LotLocationCache = new ConcurrentDictionary<int, ShardLocationCache>();
 
@@ -118,6 +120,38 @@ namespace FSO.Server.Api.Controllers
                 {
                     return new HttpResponseMessage(HttpStatusCode.NotFound);
                 }
+            }
+        }
+
+        [HttpGet]
+        [Route("userapi/city/{shardid}/i{id}.json")]
+        public HttpResponseMessage GetJSON(int shardid, uint id)
+        {
+            var api = Api.INSTANCE;
+
+            using (var da = api.DAFactory.Get())
+            {
+                var lot = da.Lots.GetByLocation(shardid, id);
+                if (lot == null) return new HttpResponseMessage(HttpStatusCode.NotFound);
+
+                var roomies = da.Roommates.GetLotRoommates(lot.lot_id).Where(x => x.is_pending == 0).Select(x => x.avatar_id).ToArray();
+
+                var jlot = new JSONLot
+                {
+                    admit_mode = lot.admit_mode,
+                    category = lot.category,
+                    created_date = lot.created_date,
+                    description = lot.description,
+                    location = lot.location,
+                    name = lot.name,
+                    neighborhood_id = lot.neighborhood_id,
+                    owner_id = lot.owner_id,
+                    shard_id = lot.shard_id,
+                    skill_mode = lot.skill_mode,
+                    roommates = roomies
+                };
+
+                return ApiResponse.Json(HttpStatusCode.OK, jlot);
             }
         }
 
@@ -248,5 +282,22 @@ namespace FSO.Server.Api.Controllers
         {
             Dict = dict;
         }
+    }
+
+    public class JSONLot
+    {
+        public int shard_id { get; set; }
+        public uint? owner_id { get; set; }
+
+        public uint[] roommates { get; set; }
+
+        public string name { get; set; }
+        public string description { get; set; }
+        public uint location { get; set; }
+        public uint neighborhood_id { get; set; }
+        public uint created_date { get; set; }
+        public LotCategory category { get; set; }
+        public byte skill_mode { get; set; }
+        public byte admit_mode { get; set; }
     }
 }
