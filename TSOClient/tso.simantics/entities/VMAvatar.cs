@@ -691,20 +691,21 @@ namespace FSO.SimAntics
                     // this variable contains a bitmask of skills which should not decay. our skill disable system sets them all,
                     // but perhaps in the original they were used by events
                     if (Thread == null) return 0;
-                    return (short)(SkillGameplayDisabled(Thread.Context.VM)?0x7FFF:0);
+                    return (short)((SkillGameplayMul(Thread.Context.VM) == 0)?0x7FFF:0);
             }
             return PersonData[(ushort)variable];
         }
 
         public bool ForceEnableSkill;
-        public bool SkillGameplayDisabled(VM vm)
+        public int SkillGameplayMul(VM vm)
         {
-            if (ForceEnableSkill || PersistID == 0 || vm.TS1) return false;
+            if (ForceEnableSkill || PersistID == 0 || vm.TS1) return 1;
             var mode = vm.TSOState.SkillMode;
-            if (mode == 0) return false;
+            if (vm.TSOState.PropertyCategory == 7 && ((VMTSOAvatarState)TSOState).Flags.HasFlag(VMTSOAvatarFlags.NewPlayer)) return 2; //welcome category: 2x for visitors under a week old
+            else if (mode == 0) return 1;
             else if (mode == 1)
-                return AvatarState.Permissions == VMTSOAvatarPermissions.Visitor;
-            else return true;
+                return (AvatarState.Permissions == VMTSOAvatarPermissions.Visitor) ? 0 : 1;
+            else return 0;
         }
 
         public virtual void SetMotiveChange(VMMotive motive, short PerHourChange, short MaxValue)
@@ -804,7 +805,21 @@ namespace FSO.SimAntics
                 case VMPersonDataVariable.CreativitySkill:
                 case VMPersonDataVariable.LogicSkill:
                 case VMPersonDataVariable.MechanicalSkill:
-                    if (Thread != null && SkillGameplayDisabled(Thread.Context.VM)) return true;
+                    int skillMul = 1;
+                    if (Thread != null)
+                    {
+                        skillMul = SkillGameplayMul(Thread.Context.VM);
+                    }
+                    if (skillMul == 0) return true;
+                    else if (skillMul != 1)
+                    {
+                        var delta = value - PersonData[(ushort)variable];
+                        if (delta > 0)
+                        {
+                            delta *= skillMul;
+                            value = (short)(PersonData[(ushort)variable] + delta);
+                        }
+                    }
                     break;
                 case VMPersonDataVariable.CurrentOutfit:
                     if (Thread.Context.VM.TS1) BodyOutfit = VMSuitProvider.GetPersonSuitTS1(this, (ushort)value);

@@ -90,6 +90,12 @@ namespace FSO.Client
                             case "3d":
                                 FSOEnvironment.Enable3D = true;
                                 break;
+                            case "touch":
+                                FSOEnvironment.SoftwareKeyboard = true;
+                                break;
+                            case "nosound":
+                                FSOEnvironment.NoSound = true;
+                                break;
                         }
                     }
                 }
@@ -117,6 +123,7 @@ namespace FSO.Client
 
             if (path != null)
             {
+                FSOEnvironment.Args = string.Join(" ", args);
                 FSOEnvironment.ContentDir = "Content/";
                 FSOEnvironment.GFXContentDir = "Content/" + (UseDX ? "DX/" : "OGL/");
                 FSOEnvironment.Linux = linux;

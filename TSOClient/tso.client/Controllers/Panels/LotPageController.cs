@@ -50,6 +50,7 @@ namespace FSO.Client.Controllers.Panels
             View.Visible = true;
             View.AsyncAPIThumb(lotId);
             ChangeTopic();
+            FSOFacade.Hints.TriggerHint("ui:lot_page");
         }
 
         public void SaveDescription(Lot target)

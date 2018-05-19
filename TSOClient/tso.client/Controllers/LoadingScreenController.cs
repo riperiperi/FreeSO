@@ -2,6 +2,7 @@
 using FSO.Common.Content;
 using FSO.Common.Utils.Cache;
 using FSO.Content;
+using FSO.SimAntics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,16 +19,24 @@ namespace FSO.Client.Controllers
         {
             Loader = new ContentPreloader();
 
+            Loader.MainContentAction = (Action donePart) =>
+            {
+                FSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GameFacade.GraphicsDevice);
+                VMContext.InitVMConfig();
+            };
+
             /** Init cache **/
             Loader.Add(new CacheInit((FileSystemCache)cache));
 
-            /** UI Textures **/
+            /*
+            // UI Textures
             Loader.Add(content.UIGraphics.List());
-            /** Sim stuff **/
+            //Sim stuff
             Loader.Add(content.AvatarOutfits.List());
             Loader.Add(content.AvatarAppearances.List());
             Loader.Add(content.AvatarPurchasables.List());
             Loader.Add(content.AvatarThumbnails.List());
+            */
         }
 
         public void Preload()

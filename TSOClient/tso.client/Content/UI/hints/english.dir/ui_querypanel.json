@@ -1,0 +1,8 @@
+{
+    "guid": "cfd4645a-5e2f-46f5-b278-9432a8165d95", 
+    "trigger": "ui:querypanel",
+    "title": "The Query Panel",
+    "category": "Basics",
+    "image": "@hint_buildmode.bmp",
+    "body": "When you click a placed object in buy mode, the Query Panel is opened. From this page, you can sell an object, return it to your inventory, set it for sale (on a store lot) and check its wear level. Each buy mode object is owned by one specific roommate - the query panel will show who. You can move your roommate's objects, but you cannot sell them... you may attempt to, though the object will simply be sent back to the owner's inventory. If you move to a new property, your objects will move with you."
+}

@@ -1,0 +1,8 @@
+{
+    "guid": "c3ed0062-af55-412b-a3ac-af5c4eb49498", 
+    "trigger": "vm:firstvisitor",
+    "title": "Visitors",
+    "category": "Basics",
+    "image": "@hint_moneyfilter.bmp",
+    "body": "Great. You've had your first visitor. Did you know you get paid for the amount of time people spend on your property? Each night the amount of time people spent on your lot is calculated, and if it's above a certain benchmark, you'll get a daily payout: the more time, the more bonus. If you have roommates, each roommate will get the full amount of the visitor bonus! The properties with the most visitor hours will also show up on the 'Top 100 Properties' on Gizmo, so you can strive to be the best."
+}

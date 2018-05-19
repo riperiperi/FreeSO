@@ -108,6 +108,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
     [Flags]
     public enum VMTSOAvatarFlags : uint
     {
-        CanBeRoommate = 1 //TODO: update on becoming roomie of another lot, while on this lot.
+        CanBeRoommate = 1, //TODO: update on becoming roomie of another lot, while on this lot.
+        NewPlayer = 2, //under a week old
     }
 }

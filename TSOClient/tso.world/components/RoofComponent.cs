@@ -524,6 +524,7 @@ namespace FSO.LotView.Components
                         Effect.Parameters["DiffuseColor"].SetValue(new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1.0f));
                         Effect.Parameters["UseTexture"].SetValue(true);
                         Effect.Parameters["BaseTex"].SetValue(Texture);
+                        Effect.Parameters["Alpha"].SetValue(1f);
                         Effect.Parameters["IgnoreColor"].SetValue(false);
                         Effect.Parameters["TexOffset"].SetValue(Vector2.Zero);
                         Effect.Parameters["TexMatrix"].SetValue(new Vector4(1, 0, 0, 1));
@@ -566,9 +567,13 @@ namespace FSO.LotView.Components
                 Effect.Parameters["DiffuseColor"].SetValue(new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1.0f));
                 Effect.Parameters["UseTexture"].SetValue(true);
                 Effect.Parameters["BaseTex"].SetValue(Texture);
+                Effect.Parameters["Alpha"].SetValue(1f);
                 Effect.Parameters["IgnoreColor"].SetValue(false);
                 Effect.Parameters["TexOffset"].SetValue(Vector2.Zero);
                 Effect.Parameters["TexMatrix"].SetValue(new Vector4(1, 0, 0, 1));
+
+                Effect.Parameters["FadeRectangle"].SetValue(new Vector4(-1000, -1000, 2000, 2000));
+                Effect.Parameters["FadeWidth"].SetValue(35f * 3);
 
                 device.SetVertexBuffer(dg.VertexBuffer);
                 device.Indices = dg.IndexBuffer;

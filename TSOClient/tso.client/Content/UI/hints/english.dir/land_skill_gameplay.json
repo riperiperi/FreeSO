@@ -1,0 +1,8 @@
+{
+    "guid": "1380ae82-4f41-4e4e-a0ed-b7e94a826db2", 
+    "trigger": "land:skilldisabled",
+    "title": "Skill Gameplay Disabled",
+    "category": "Advanced",
+    "image": "hint_skilldisabled.png",
+    "body": "The property you just joined has skill gameplay disabled. This means that unlocked skills will not decay while you are on this property, but in turn you cannot gain skills or make any money from single or group money objects. Note that if you're a roommate, depending on the setting shown on the Property Page you may be exempt to this effect."
+}

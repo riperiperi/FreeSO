@@ -152,8 +152,8 @@ namespace FSO.Client
 
             FSO.Content.Content.TS1Hybrid = GlobalSettings.Default.TS1HybridEnable;
             FSO.Content.Content.TS1HybridBasePath = GlobalSettings.Default.TS1HybridPath;
-            FSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
-            VMContext.InitVMConfig();
+            FSO.Content.Content.InitBasic(GlobalSettings.Default.StartupPath, GraphicsDevice);
+            //VMContext.InitVMConfig();
             base.Initialize();
 
             GameFacade.GameThread = Thread.CurrentThread;
@@ -162,6 +162,7 @@ namespace FSO.Client
             SceneMgr.Initialize(GraphicsDevice);
 
             FSOFacade.Controller = kernel.Get<GameController>();
+            FSOFacade.Hints = new UI.Hints.UIHintManager();
             GameFacade.Screens = uiLayer;
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
@@ -199,7 +200,7 @@ namespace FSO.Client
 
             WorldContent.Init(this.Services, Content.RootDirectory);
             DGRP3DMesh.InitRCWorkers();
-            if (!FSOEnvironment.SoftwareKeyboard) AddTextInput();
+            if (!(FSOEnvironment.SoftwareKeyboard && FSOEnvironment.SoftwareDepth)) AddTextInput();
             base.Screen.Layers.Add(SceneMgr);
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
@@ -280,12 +281,11 @@ namespace FSO.Client
             }
             catch (Exception e)
             {
-                var test = Content.Load<Effect>("Effects/GrassShader");
                 MessageBox.Show("Content could not be loaded. Make sure that the FreeSO content has been compiled! (ContentSrc/TSOClientContent.mgcb) \r\n\r\n"+e.ToString());
                 Exit();
                 Application.Exit();
             }
-
+            
             FSO.Vitaboy.Avatar.setVitaboyEffect(vitaboyEffect);
         }
 

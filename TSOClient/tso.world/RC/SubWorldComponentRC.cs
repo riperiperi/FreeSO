@@ -26,6 +26,7 @@ namespace FSO.LotView.RC
         public override void PreDraw(GraphicsDevice gd, WorldState state)
         {
             if (Blueprint == null) return;
+            Blueprint.Terrain.SubworldOff = GlobalPosition * 3;
             var damage = Blueprint.Damage;
             var oldLevel = state.Level;
             var oldBuild = state.BuildMode;

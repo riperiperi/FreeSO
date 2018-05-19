@@ -37,6 +37,7 @@ namespace FSO.LotView.Components
         private IndexBuffer GridIndexBuffer;
         private IndexBuffer TGridIndexBuffer;
         private VertexBuffer VertexBuffer;
+        public float Alpha = 1f;
 
         private TerrainType LightType = TerrainType.GRASS;
         private TerrainType DarkType = TerrainType.GRASS;
@@ -49,6 +50,8 @@ namespace FSO.LotView.Components
         private int GrassHeight;
         private float GrassDensityScale = 1f;
         public bool DepthMode;
+
+        public Vector2 SubworldOff = Vector2.Zero;
 
         private Effect Effect;
         public bool DrawGrid = false;
@@ -377,6 +380,8 @@ namespace FSO.LotView.Components
             if (TerrainDirty || VertexBuffer == null) RegenTerrain(device, Bp);
             if (VertexBuffer == null) return;
             if (world.Light != null) LightVec = world.Light.LightVec;
+            var transitionIntensity = (world.Camera as WorldCamera3D)?.FromIntensity ?? 0f;
+            Alpha = 1 - (float)Math.Pow(transitionIntensity, 150f);
 
             device.DepthStencilState = DepthStencilState.Default;
             device.BlendState = BlendState.NonPremultiplied;
@@ -396,10 +401,13 @@ namespace FSO.LotView.Components
             Effect.Parameters["TerrainNoiseMip"].SetValue(TextureGenerator.GetTerrainNoise(device));
             Effect.Parameters["GrassFadeMul"].SetValue((float)Math.Sqrt(device.Viewport.Width/1920f));
 
+            Effect.Parameters["FadeRectangle"].SetValue(new Vector4(77*3/2f + SubworldOff.X, 77*3/ 2f + SubworldOff.Y, 77*3, 77*3));
+            Effect.Parameters["FadeWidth"].SetValue(35f*3);
 
             Effect.Parameters["TileSize"].SetValue(new Vector2(1f / Bp.Width, 1f / Bp.Height));
             Effect.Parameters["RoomMap"].SetValue(world.Rooms.RoomMaps[0]);
             Effect.Parameters["RoomLight"].SetValue(world.AmbientLight);
+            Effect.Parameters["Alpha"].SetValue(Alpha);
             //Effect.Parameters["depthOutMode"].SetValue(DepthMode && (!FSOEnvironment.UseMRT));
 
             var offset = -world.WorldSpace.GetScreenOffset();
@@ -461,6 +469,7 @@ namespace FSO.LotView.Components
 
             if (primitives > 0 && _3D == _3d)
             {
+                Effect.Parameters["Alpha"].SetValue((Alpha-0.75f) * 4);
                 Effect.Parameters["Level"].SetValue((float)0.0001f);
                 Effect.Parameters["RoomMap"].SetValue(world.Rooms.RoomMaps[0]);
                 Effect.CurrentTechnique = Effect.Techniques["DrawBlades"];
@@ -617,10 +626,10 @@ namespace FSO.LotView.Components
                 Effect.Parameters["IgnoreColor"].SetValue(false);
                 Effect.CurrentTechnique = Effect.Techniques["DrawMask"];
 
-                Effect.Parameters["LightVec"]?.SetValue(LightVec);
-                Effect.Parameters["MulRange"]?.SetValue(3f);
-                Effect.Parameters["MulBase"]?.SetValue(0.15f);
-                Effect.Parameters["BlurBounds"]?.SetValue(new Vector4(6, 6, 68, 68));
+                Effect.Parameters["LightVec"].SetValue(LightVec);
+                Effect.Parameters["MulRange"].SetValue(3f);
+                Effect.Parameters["MulBase"].SetValue(0.15f);
+                Effect.Parameters["BlurBounds"].SetValue(new Vector4(6, 6, 68, 68));
 
 
                 var pass = Effect.CurrentTechnique.Passes[0];
@@ -630,7 +639,7 @@ namespace FSO.LotView.Components
                 if (primitives > 0)
                 {
                     gd.BlendState = Multiply;
-                    gd.DepthStencilState = DepthStencilState.Default;
+                    if (!gd.RasterizerState.ScissorTestEnable) gd.DepthStencilState = DepthStencilState.Default;
                     gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, primitives);
                     gd.BlendState = blendstate;
                     gd.DepthStencilState = DepthStencilState.Default;
@@ -666,9 +675,13 @@ namespace FSO.LotView.Components
             Effect.Parameters["TerrainNoiseMip"].SetValue(TextureGenerator.GetTerrainNoise(device));
             Effect.Parameters["GrassFadeMul"].SetValue((float)Math.Sqrt(device.Viewport.Width / 1920f));
 
+            Effect.Parameters["FadeRectangle"].SetValue(new Vector4(77 * 3 / 2f + SubworldOff.X, 77 * 3 / 2f + SubworldOff.Y, 77 * 3, 77 * 3));
+            Effect.Parameters["FadeWidth"].SetValue(35f * 3);
+
             Effect.Parameters["TileSize"].SetValue(new Vector2(1f / Bp.Width, 1f / Bp.Height));
             Effect.Parameters["RoomMap"].SetValue(world.Rooms.RoomMaps[0]);
             Effect.Parameters["RoomLight"].SetValue(world.AmbientLight);
+            Effect.Parameters["Alpha"].SetValue(1f);
 
             var offset = -world.WorldSpace.GetScreenOffset();
 

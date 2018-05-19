@@ -5,7 +5,7 @@ using System.Text;
 
 namespace FSO.Client.Utils.GameLocator
 {
-    interface ILocator
+    public interface ILocator
     {
         string FindTheSimsOnline();
     }

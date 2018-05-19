@@ -1,0 +1,8 @@
+{
+    "guid": "23596f6b-f330-4a80-9638-cfdbe0d8dedd", 
+    "trigger": "land:job0",
+    "title": "How to Play: Robot Factory",
+    "category": "Jobs",
+    "image": "@hint_robotfactory.bmp",
+    "body": "Welcome to Heckhol Industrial Golem Fabrications! Your job is to produce high-tech coal-powered robots. [s][color=white]ACTIVATE[/color][/s] each work station along the assembly line to allow the robot to advance.\n\nThese work stations were built out of soda cans, spare tires, and old refrigerator parts, so they tend to break. You'll see when this occurs, 'cause the light at the top will blink. When that happens, use your logic skill to [s][color=white]DIAGNOSE[/color][/s] the problem and learn which tool will fix the workstation.  Scamper to a tool cabinet to get the right tool, and scurry back to the workstation. Now, use your mechanical skill to [s][color=white]REPAIR[/color][/s] it.\n\nYour mood plays a factor in whether you succeed or fail. Just so you know.\n\nAll of this scampering and scurrying may be a bit inefficient for one person to do on their own. Fortunately, you have a few coworkers there to help you out. Try specializing in different tasks to see what works the best.\n\nYou get paid for every robot you complete. Good luck!"
+}

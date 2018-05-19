@@ -52,7 +52,10 @@ namespace FSO.LotView.Model
         public List<SubWorldComponent> SubWorlds = new List<SubWorldComponent>();
         public TerrainComponent Terrain;
 
+        public HashSet<EntityComponent> HeadlineObjects = new HashSet<EntityComponent>();
+
         public List<ParticleComponent> Particles = new List<ParticleComponent>();
+        public List<ParticleComponent> ObjectParticles = new List<ParticleComponent>();
 
         /// <summary>
         /// Walls Cutaway sections. Remember to manage these correctly - i.e remove when you're finished with them!
@@ -259,6 +262,13 @@ namespace FSO.LotView.Model
         {
             Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_MOVE, component.TileX, component.TileY, component.Level) { Component = component });
             Objects.Remove(component);
+            HeadlineObjects.Remove(component);
+            //remove all of this object's particles, and make sure we dispose their vertex buffers.
+            foreach (var part in component.Particles)
+            {
+                part.Dispose();
+                ObjectParticles.Remove(part);
+            }
         }
 
         private ushort GetOffset(int tileX, int tileY){

@@ -1,4 +1,5 @@
-﻿using FSO.SimAntics.Engine.Debug;
+﻿using FSO.Common.Utils;
+using FSO.SimAntics.Engine.Debug;
 using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Utils;
 using System;
@@ -7,6 +8,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -25,8 +27,27 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             vm.Driver.DesyncTick = 0;
             if (!Run) return true;
-            vm.Load(State);
-            if (VM.UseWorld && vm.Context.Blueprint.SubWorlds.Count == 0) VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+
+            if (vm.FSOVDoAsyncLoad)
+            {
+                vm.FSOVDoAsyncLoad = false;
+                vm.FSOVAsyncLoading = true;
+                Task.Run(() =>
+                {
+                    vm.FSOVClientJoin = (vm.Context.Architecture == null);
+                    vm.LoadAsync(State);
+                    if (VM.UseWorld && vm.Context.Blueprint.SubWorlds.Count == 0) VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+                    GameThread.InUpdate(() =>
+                    {
+                        vm.LoadComplete();
+                    });
+                });
+            }
+            else
+            {
+                vm.Load(State);
+                if (VM.UseWorld && vm.Context.Blueprint.SubWorlds.Count == 0) VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+            }
             return true;
         }
 

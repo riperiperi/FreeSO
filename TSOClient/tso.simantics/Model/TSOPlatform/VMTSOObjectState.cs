@@ -75,6 +75,11 @@ namespace FSO.SimAntics.Model.TSOPlatform
                 {
                     //break the object
                     QtrDaysSinceLastRepair = 255;
+                    //apply the broken object particle to all parts
+                    foreach (var item in owner.MultitileGroup.Objects)
+                    {
+                        ((VMGameObject)item).EnableParticle(256);
+                    }
                 }
             }
         }

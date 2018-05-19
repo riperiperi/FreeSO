@@ -64,6 +64,7 @@ namespace FSO.Files.RC
         public static Queue<Action> QueuedRC = new Queue<Action>();
         public static AutoResetEvent NewRecon = new AutoResetEvent(false);
 
+        public static bool Sync;
         public static void InitRCWorkers()
         {
             var cores = Math.Max(1, Environment.ProcessorCount-1); //maybe detect hyperthreading somehow
@@ -78,8 +79,12 @@ namespace FSO.Files.RC
 
         public static void QueueWork(Action work)
         {
-            lock (QueuedRC) QueuedRC.Enqueue(work);
-            NewRecon.Set();
+            if (Sync) work();
+            else
+            {
+                lock (QueuedRC) QueuedRC.Enqueue(work);
+                NewRecon.Set();
+            }
         }
 
         public static void RCWorkerLoop()

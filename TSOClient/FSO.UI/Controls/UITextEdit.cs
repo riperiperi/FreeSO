@@ -361,7 +361,7 @@ namespace FSO.Client.UI.Controls
             {
                 m_cursorBlink = true;
                 m_cursorBlinkLastTime = GameFacade.LastUpdateState.Time.TotalGameTime.Ticks;
-                if (FSOEnvironment.SoftwareKeyboard)
+                if (FSOEnvironment.SoftwareKeyboard && FSOEnvironment.SoftwareDepth)
                 {
                     try
                     {
@@ -410,7 +410,7 @@ namespace FSO.Client.UI.Controls
                     if (OnChange != null) OnChange(this);
                 }
             }
-            if (FSOEnvironment.SoftwareKeyboard && state.InputManager.GetFocus() == this) state.InputManager.SetFocus(null);
+            if (FSOEnvironment.SoftwareKeyboard && FSOEnvironment.SoftwareDepth && state.InputManager.GetFocus() == this) state.InputManager.SetFocus(null);
             if (m_IsReadOnly) { return; }
 
             if (FlashOnEmpty)
@@ -855,6 +855,7 @@ namespace FSO.Client.UI.Controls
 
             var yPosition = topLeft.Y;
             var numLinesAdded = 0;
+            var shadowApplied = false;
             for (var i = 0; i < m_Lines.Count - m_VScroll; i++)
             {
                 var line = m_Lines[m_VScroll + i];
@@ -923,8 +924,16 @@ namespace FSO.Client.UI.Controls
                                 }
                                 break;
                             case BBCodeCommandType.s:
-                                if (cmd.Close) m_DrawCmds.Add(new TextDrawCmd_Shadow(TextStyle, false));
-                                else m_DrawCmds.Add(new TextDrawCmd_Shadow(TextStyle, true));
+                                if (cmd.Close)
+                                {
+                                    m_DrawCmds.Add(new TextDrawCmd_Shadow(TextStyle, false));
+                                    shadowApplied = false;
+                                }
+                                else
+                                {
+                                    m_DrawCmds.Add(new TextDrawCmd_Shadow(TextStyle, true));
+                                    shadowApplied = true;
+                                }
                                 break;
                             case BBCodeCommandType.emoji:
                                 if (segment.BBCatchup) break;
@@ -935,6 +944,8 @@ namespace FSO.Client.UI.Controls
 
                 }
 
+
+
                 yPosition += m_LineHeight;
                 position.Y += m_LineHeight;
 
@@ -944,6 +955,7 @@ namespace FSO.Client.UI.Controls
                     break;
                 }
             }
+            if (shadowApplied) m_DrawCmds.Add(new TextDrawCmd_Shadow(TextStyle, false));
 
             while (bbColorStack.Count > 0)
             {

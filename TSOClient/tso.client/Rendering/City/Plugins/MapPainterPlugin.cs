@@ -217,7 +217,7 @@ namespace FSO.Client.Rendering.City.Plugins
                     {
                         if (strength > 0) City.PathTile((int)LastPos.X + x, (int)LastPos.Y + y, iScale, new Color(selColor, 0.5f));
                     });
-                    City.Draw2DPoly();
+                    City.Draw2DPoly(false);
                     break;
                 case PainterMode.ELEVATION_CIRCLE:
                     

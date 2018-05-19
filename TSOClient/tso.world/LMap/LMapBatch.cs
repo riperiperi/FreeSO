@@ -44,7 +44,7 @@ namespace FSO.LotView.LMap
         private Effect LightEffect;
         Matrix Projection;
 
-        private Blueprint Blueprint;
+        public Blueprint Blueprint;
         private LightData OutdoorsLight;
         public Vector3 SunVector;
         public bool Night;

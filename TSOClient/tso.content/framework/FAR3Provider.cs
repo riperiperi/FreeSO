@@ -139,10 +139,13 @@ namespace FSO.Content.Framework
             });
         }
 
+        public bool Initialized;
         #region IContentProvider<T> Members
-
+        
         public void Init()
         {
+            if (Initialized) return;
+            Initialized = true;
             Cache = new TimedReferenceCache<ulong, T>();
             lock (Cache)
             {

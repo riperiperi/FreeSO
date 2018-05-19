@@ -1,0 +1,8 @@
+{
+    "guid": "09f1196a-056b-4297-922b-87b3a1695feb", 
+    "trigger": "ui:lot_page",
+    "title": "The Property Page",
+    "category": "Basics",
+    "image": "hint_lotpage.bmp",
+    "body": "The property page allows you to learn more about a property before entering. Click the Sim's picture in the expanded property page to find out more about the people that host the property. (A gray thumbnail means that roommate is not online.) To join the property, just click the big arrow or its picture. The lot category is also displayed, the neighbourhood it is part of, and whether or not skill/money gameplay has been disabled on this property. For more information on these things, check out the other help topics."
+}

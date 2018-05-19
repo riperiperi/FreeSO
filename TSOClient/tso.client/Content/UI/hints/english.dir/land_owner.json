@@ -1,0 +1,8 @@
+{
+    "guid": "e76b4537-e226-4942-b3fd-129fe3084259", 
+    "trigger": "land:owner",
+    "title": "Owning a Property",
+    "category": "Basics",
+    "image": "@hint6.bmp",
+    "body": "When you first buy a property, limited space will be buildable. The more roommates you get, the more you can upgrade the buildable space without penalty. Additionally, you'll want to set yourself a property category on the lot page. Each property category has different benefits for the hosts and the visitors - you'll be able to find more information on these in the Help window. You should review it before making a decision, as the category cannot be changed for a week after it is set!"
+}

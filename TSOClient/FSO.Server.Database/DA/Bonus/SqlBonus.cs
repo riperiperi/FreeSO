@@ -25,11 +25,13 @@ namespace FSO.Server.Database.DA.Bonus
                 @"SELECT * FROM (
 		            SELECT a.avatar_id, 
 				             r.lot_id,
+                           l.category,
 			             (SELECT lvt.minutes from fso_lot_visit_totals lvt where lvt.lot_id = r.lot_id AND lvt.date = CAST(@p_date as DATE)) as visitor_minutes,
 			             (SELECT rank from fso_lot_top_100 lt100 WHERE lt100.lot_id = r.lot_id) as property_rank,
 			             NULL as sim_rank
 		            FROM fso_avatars a
 			            LEFT JOIN fso_roommates r ON r.avatar_id = a.avatar_id
+                        LEFT JOIN fso_lots l ON r.lot_id = l.lot_id
 		            WHERE a.shard_id = @p_shard_id
 	            ) as bonusPayments 
 		            WHERE visitor_minutes IS NOT NULL

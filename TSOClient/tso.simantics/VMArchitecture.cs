@@ -25,6 +25,7 @@ namespace FSO.SimAntics
         public int Stories = 5;
 
         public int LastTestCost;
+        public int LastFailReason = 0;
 
         public bool DisableClip;
         public Rectangle BuildableArea;
@@ -62,7 +63,7 @@ namespace FSO.SimAntics
 
         private Blueprint WorldUI;
 
-        private bool RealMode;
+        public bool RealMode;
 
         private bool WallsDirty;
         private bool FloorsDirty;
@@ -204,7 +205,11 @@ namespace FSO.SimAntics
                 if (sky1 == 1f && sky2 == 0f) Progress = 0;
                 WorldUI.OutsideSkyP = (float)Progress * sky2 + (1 - (float)Progress) * sky1;
 
-                Context.World.State?.Light?.BuildOutdoorsLight(time);
+                if (Context.World.State?.Light != null)
+                {
+                    Context.World.State.Light.Blueprint = WorldUI;
+                    Context.World.State.Light.BuildOutdoorsLight(time);
+                }
             }
         }
 
@@ -389,6 +394,7 @@ namespace FSO.SimAntics
 
             if (VM.UseWorld && Redraw)
             {
+                LastFailReason = 0;
                 LastTestCost = SimulateCommands(Commands, true);
                 WorldUI.SignalWallChange();
                 WorldUI.SignalFloorChange();

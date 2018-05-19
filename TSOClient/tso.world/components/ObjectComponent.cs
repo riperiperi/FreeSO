@@ -33,6 +33,7 @@ namespace FSO.LotView.Components
         public WorldObjectRenderInfo renderInfo;
         public int DynamicCounter; //how long this sprite has been dynamic without changing sprite
         public List<SLOTItem> ContainerSlots;
+        public List<ParticleComponent> Particles = new List<ParticleComponent>();
 
         public bool HideForCutaway;
         public WallSegments AdjacentWall;
@@ -331,10 +332,21 @@ namespace FSO.LotView.Components
             }
         }
 
-        public override void Draw(GraphicsDevice device, WorldState world){
-//#if !DEBUG 
+        public override float GetHeadlineScale()
+        {
+            return 0.5f;
+        }
+
+        public override Vector3 GetHeadlinePos()
+        {
+            return new Vector3(0, 0, -0.33f);
+        }
+
+        public override void Draw(GraphicsDevice device, WorldState world)
+        {
+            //#if !DEBUG 
             if (!Visible || (!world.DrawOOB && (Position.X < -2043 && Position.Y < -2043))) return;
-//#endif
+            //#endif
             if (CutawayHidden) return;
             if (this.DrawGroup != null) dgrp.Draw(world);
 
@@ -351,10 +363,67 @@ namespace FSO.LotView.Components
                 item.WorldPosition = headOff;
                 var off = PosCenterOffsets[(int)world.Zoom - 1];
                 item.DestRect = new Rectangle(
-                    ((int)headPx.X-Headline.Width/2) + (int)off.X, 
-                    ((int)headPx.Y-Headline.Height/2)+ (int)off.Y, Headline.Width, Headline.Height);
+                    ((int)headPx.X - Headline.Width / 2) + (int)off.X,
+                    ((int)headPx.Y - Headline.Height / 2) + (int)off.Y, Headline.Width, Headline.Height);
                 world._2D.Draw(item);
             }
+            
+            for (int i = 0; i < Particles.Count; i++)
+            {
+                var part = Particles[i];
+                if (part.BoundsDirty && part.AutoBounds && dgrp != null)
+                {
+                    //this particle needs updated bounds.
+                    BoundingBox bounds;
+                    if (ShadowComponent != null)
+                        bounds = ShadowComponent.GetParticleBounds();
+                    else
+                        bounds = GetParticleBounds();
+                    part.Volume = bounds;
+                    part.BoundsDirty = false;
+                    part.Dispose();
+                }
+                part.Level = Level;
+                part.OwnerWorld = Matrix.CreateScale(3) * World * Matrix.CreateTranslation(1.5f, 0, 1.5f) * Matrix.CreateScale(2);
+                if (part.Dead) Particles.RemoveAt(i--);
+            }
+        }
+
+        public virtual BoundingBox GetParticleBounds()
+        {
+            //make an estimation based off of the sprite height
+            if (DGRP == null) return new BoundingBox(new Vector3(-0.4f, 0.1f, -0.4f), new Vector3(0.4f, 0.9f, 0.4f));
+            else
+            {
+                var image = DGRP.GetImage(1, 3, 1);
+                var maxY = int.MinValue;
+                var minY = int.MaxValue;
+                var objOffset = 0f;
+
+                if (image.Sprites.Length == 0) return new BoundingBox(new Vector3(-0.4f, 0.1f, -0.4f), new Vector3(0.4f, 0.9f, 0.4f));
+
+                foreach (var spr in image.Sprites)
+                {
+                    var dim = spr.GetDimensions();
+
+                    var top = spr.SpriteOffset.Y;
+                    var btm = top + dim.Y;
+
+                    if (top < minY) minY = (int)top;
+                    if (btm > maxY) maxY = (int)btm;
+                    objOffset += spr.ObjectOffset.Z * 1f / 5f;
+                }
+                objOffset /= image.Sprites.Length;
+                //128 is a height of zero
+                var topY = Math.Max(0, Math.Min(2.95f, (100 - minY) / 95f));
+                var btmY = Math.Max(0, Math.Min(2.95f, (100 - maxY) / 95f));
+                return new BoundingBox(new Vector3(-0.4f, btmY, -0.4f), new Vector3(0.4f, topY, 0.4f));
+            }
+        }
+
+        public override void Preload(GraphicsDevice device, WorldState world)
+        {
+            if (this.DrawGroup != null) dgrp.Preload(world);
         }
 
         public virtual void DrawLMap(GraphicsDevice device, sbyte level)

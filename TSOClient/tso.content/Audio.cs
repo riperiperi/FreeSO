@@ -30,6 +30,7 @@ namespace FSO.Content
     public class Audio : IAudioProvider
     {
         private Content ContentManager;
+        public bool Initialized;
 
         /** Stations **/
         private List<AudioReference> Stations;
@@ -125,6 +126,7 @@ namespace FSO.Content
         /// </summary>
         public void Init()
         {
+            if (Initialized) return;
             this.Stations = new List<AudioReference>();
             this.StationsById = new Dictionary<uint, AudioReference>();
             this.Modes = new List<AudioReference>();
@@ -192,6 +194,8 @@ namespace FSO.Content
 
                 NightclubSounds[id] = file;
             }
+
+            Initialized = true;
         }
 
         /// <summary>

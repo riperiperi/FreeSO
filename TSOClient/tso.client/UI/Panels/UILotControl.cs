@@ -40,6 +40,7 @@ using FSO.LotView.RC;
 using System.IO;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.LotView.Facade;
+using FSO.Common.Enum;
 
 namespace FSO.Client.UI.Panels
 {
@@ -190,10 +191,21 @@ namespace FSO.Client.UI.Panels
 
         private void Vm_OnChatEvent(VMChatEvent evt)
         {
-            evt.Visitors = vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0);
+            UpdateChatTitle();
             if (evt.Type == VMChatEventType.Message && evt.SenderUID == SelectedSimID) evt.Type = VMChatEventType.MessageMe;
-            ChatPanel.SetLotName(vm.LotName);
             ChatPanel.ReceiveEvent(evt);
+        }
+
+        private int LastVisitorCount = 0;
+        private void UpdateChatTitle()
+        {
+            var visitors = vm.Context.ObjectQueries.Avatars.Count(x => x.PersistID != 0);
+            if (LastVisitorCount != visitors)
+            {
+                ChatPanel.SetVisitorCount(visitors);
+                ChatPanel.SetLotName(vm.LotName);
+                LastVisitorCount = visitors;
+            }
         }
 
         private void Vm_OnBreakpoint(VMEntity entity)
@@ -641,6 +653,39 @@ namespace FSO.Client.UI.Panels
             return GameFacade.Strings.GetString("217", prefixNum.ToString()) + ava.ToString();
         }
 
+        public void Landed()
+        {
+            //hints for landing
+            var hints = FSOFacade.Hints;
+            hints.TriggerHint("land");
+
+            if (vm.MyUID == vm.TSOState.OwnerID)
+            {
+                hints.TriggerHint("land:owner");
+                hints.TriggerHint("land:owner:" + ((LotCategory)vm.TSOState.PropertyCategory).ToString());
+            }
+            else if (vm.TSOState.Roommates.Contains(vm.MyUID))
+            {
+                hints.TriggerHint("land:roomie");
+            }
+            else if (vm.GetGlobalValue(11) > -1)
+            {
+                var split = vm.LotName.Substring(1, vm.LotName.Length - 2).Split(':');
+                if (split.Length > 1 && split[0] == "job")
+                {
+                    hints.TriggerHint("land:job" + split[1]);
+                }
+            }
+            else
+            {
+                hints.TriggerHint("land:" + ((LotCategory)vm.TSOState.PropertyCategory).ToString());
+            }
+
+            //todo: land special objects
+
+            if (vm.TSOState.SkillMode > 1) hints.TriggerHint("land:skilldisabled");
+        }
+
         public void RefreshCut()
         {
             LastFloor = -1;
@@ -689,6 +734,16 @@ namespace FSO.Client.UI.Panels
             if (FSOEnvironment.Enable3D)
             {
                 var s3d = ((WorldStateRC)World.State);
+                if (TargetZoom < -0.65f)
+                {
+                    //switch to city
+                    (UIScreen.Current as Screens.CoreGameScreen)?.ZoomToCity();
+                    TargetZoom -= (TargetZoom - 0.25f) * (1f - (float)Math.Pow(0.975f, 60f / FSOEnvironment.RefreshRate));
+                }
+                else if (TargetZoom < -0.25f)
+                {
+                    TargetZoom -= (TargetZoom - 0.25f) * (1f - (float)Math.Pow(0.975f, 60f / FSOEnvironment.RefreshRate));
+                }
                 s3d.Zoom3D += ((9.75f - (TargetZoom - 0.25f) * 5.7f) - s3d.Zoom3D) / 10;
 
             }
@@ -759,6 +814,7 @@ namespace FSO.Client.UI.Panels
 
             if (Visible)
             {
+                UpdateChatTitle();
                 if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
 
                 bool scrolled = false;
@@ -967,6 +1023,7 @@ namespace FSO.Client.UI.Panels
                                     facade.TexBase = int.Parse(LotSaveDialog.ResponseText.Substring(numInd)) * 4 + i*2;
                                     facade.RoofOnFloor = true;
                                 }
+                                facade.RoofOnFloor = true;
                                 facade.Generate(GameFacade.GraphicsDevice, (WorldRC)World, vm.Context.Blueprint);
                                 facade.SaveToPath(path);
                                 UIScreen.GlobalShowAlert(new UIAlertOptions { Message = "Save successful!" }, true);

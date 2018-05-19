@@ -122,7 +122,9 @@ namespace FSO.SimAntics
             OBJD obj = Object.OBJ;
             if (MasterDefinition != null) obj = MasterDefinition;
             var category = context.VM.TSOState.PropertyCategory;
-            if (category != 255 && obj.LotCategories > 0 && (obj.LotCategories & (1 << category)) == 0)
+            var flag = (1 << category);
+            if (category == 7) flag |= 2; //money objects are allowed on welcome lots too. (fso change, disabling this is todo)
+            if (category != 255 && obj.LotCategories > 0 && (obj.LotCategories & flag) == 0)
                 Disabled |= VMGameObjectDisableFlags.LotCategoryWrong;
             else
                 Disabled &= ~VMGameObjectDisableFlags.LotCategoryWrong; 
@@ -441,6 +443,45 @@ namespace FSO.SimAntics
             base.PositionChange(context, noEntryPoint);
         }
 
+        #region FSO Particles
+        public void EnableParticle(ushort id)
+        {
+            if (UseWorld)
+            {
+                var parts = ((ObjectComponent)WorldUI).Particles;
+                var relevant = parts.FirstOrDefault(x => x.Resource?.ChunkID == id && float.IsPositiveInfinity(x.StopTime));
+                if (relevant == null)
+                {
+                    var part = new ParticleComponent(WorldUI.blueprint, WorldUI.blueprint.ObjectParticles);
+                    //for now there is only one particle resource. In future get from iff.
+                    part.Resource = PART.BROKEN;
+                    part.Mode = ParticleType.GENERIC_BOX;
+                    GameThread.InUpdate(() =>
+                    {
+                        part.Tex = Content.Content.Get().RCMeshes.GetTex("FSO_smoke.png");
+                    });
+                    ((ObjectComponent)WorldUI).Particles.Add(part);
+                    WorldUI.blueprint.ObjectParticles.Add(part);
+                    WorldUI.blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, WorldUI.TileX, WorldUI.TileY, WorldUI.Level, WorldUI));
+                }
+            }
+        }
+
+        public void DisableParticle(ushort id)
+        {
+            if (UseWorld)
+            {
+                var parts = ((ObjectComponent)WorldUI).Particles;
+                var relevant = parts.FirstOrDefault(x => x.Resource?.ChunkID == id);
+                if (relevant != null)
+                {
+                    relevant.Stop();
+                }
+            }
+        }
+
+        #endregion
+
 
         #region VM Marshalling Functions
         public VMGameObjectMarshal Save()
@@ -465,6 +506,11 @@ namespace FSO.SimAntics
                 SetValue(VMStackObjectVariable.Flags, GetValue(VMStackObjectVariable.Flags));
                 RefreshGraphic();
             }
+        }
+
+        public override void LoadCrossRef(VMEntityMarshal input, VMContext context)
+        {
+            base.LoadCrossRef(input, context);
         }
 
         public VMHollowGameObjectMarshal HollowSave()

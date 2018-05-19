@@ -657,7 +657,7 @@ namespace FSO.SimAntics.Utils
             var current = target.GetTerrainGrass((short)pos.X, (short)pos.Y);
             var n = (byte)Math.Max(0, Math.Min(255, current + mod));
             target.SetTerrainGrass((short)pos.X, (short)pos.Y, n);
-            return (Math.Abs(current - n) + 31) / 32;
+            return (Math.Abs(current - n) + 63) / 64;
         }
 
         public static int RaiseTerrain(VMArchitecture target, Rectangle pos, short height, bool smoothMode)
@@ -677,6 +677,7 @@ namespace FSO.SimAntics.Utils
             var considered = new Dictionary<Point, short>();
             var stack = new Stack<Point>();
 
+            var tr = target.Terrain;
             for (int x=0; x<=pos.Width; x++)
             {
                 for (int y=0; y<=pos.Height; y++)
@@ -684,10 +685,16 @@ namespace FSO.SimAntics.Utils
                     var p = pos.Location + new Point(x, y);
                     stack.Push(p);
                     considered.Add(p, height);
-                    if (!(target.DisableClip || target.Context.SlopeVertexCheck(p.X, p.Y))) return 0;
+                    var ht = tr.Heights[p.Y * tr.Width + p.X];
+                    var ignoreSlope = !(x == 0 || x == pos.Width || y == 0 || y == pos.Height);
+                    if (ht != height && !(target.DisableClip || ignoreSlope || target.Context.SlopeVertexCheck(p.X, p.Y)))
+                    {
+                        target.LastFailReason = 1;
+                        return 0;
+                    }
                 }
             }
-            var tr = target.Terrain;
+            
             var firstDiff = tr.Heights[pos.Y * tr.Width + pos.X] - height;
 
             while (stack.Count > 0)
@@ -711,16 +718,25 @@ namespace FSO.SimAntics.Utils
                 // - else queue its height to be changed and check its adjacent.
 
                 foreach (var a in adj) {
-                    if (a.X < 0 || a.Y < 0 || a.X >= tr.Width || a.Y >= tr.Height) return 0;
+                    if (a.X < 0 || a.Y < 0 || a.X >= tr.Width || a.Y >= tr.Height)
+                    {
+                        target.LastFailReason = 3;
+                        return 0;
+                    }
                     short ht;
                     if (!considered.TryGetValue(a, out ht))
                         ht = tr.Heights[a.Y * tr.Width + a.X];
+                    short oht = ht;
                     var diff = myHeight - ht;
                     var first = height - ht;
 
                     if (!target.TerrainLimit.Contains(a))
                     {
-                        if (!target.DisableClip && Math.Abs(diff) > 100 * 10) return 0;
+                        if (!target.DisableClip && Math.Abs(diff) > 100 * 10)
+                        {
+                            target.LastFailReason = 2;
+                            return 0;
+                        }
                         else continue;
                     }
 
@@ -740,7 +756,11 @@ namespace FSO.SimAntics.Utils
                     }
                     else continue;
 
-                    if (!(target.DisableClip || target.Context.SlopeVertexCheck(a.X, a.Y))) return 0;
+                    if (!(target.DisableClip || target.Context.SlopeVertexCheck(a.X, a.Y)) && ht != oht)
+                    {
+                        target.LastFailReason = 1;
+                        return 0;
+                    }
 
                     //we needed to change the height. verify that that is a legal move. (walls, floors, objects demand no slope change)
                     //todo
@@ -752,14 +772,37 @@ namespace FSO.SimAntics.Utils
 
             //actually change the terrain
             int cost = 0;
+            var changedTile = new HashSet<Point>();
             foreach (var change in considered)
             {
                 var changedBy = Math.Abs(target.GetTerrainHeight((short)change.Key.X, (short)change.Key.Y) - change.Value);
-                cost += (changedBy + 9) / 10;
+                cost += (changedBy + 19) / 20;
                 target.SetTerrainHeight((short)change.Key.X, (short)change.Key.Y, change.Value);
+                if (target.RealMode && VM.UseWorld)
+                {
+                    changedTile.Add(new Point(change.Key.X, change.Key.Y));
+                    changedTile.Add(new Point(change.Key.X-1, change.Key.Y));
+                    changedTile.Add(new Point(change.Key.X-1, change.Key.Y-1));
+                    changedTile.Add(new Point(change.Key.X, change.Key.Y-1));
+                }
                 if (change.Key.X > 0 && change.Key.Y > 0)
                     target.SetTerrainGrass((short)(change.Key.X-1), (short)(change.Key.Y-1), 
                         (byte)Math.Min(255, target.GetTerrainGrass((short)(change.Key.X - 1), (short)(change.Key.Y - 1)) + changedBy*6));
+            }
+
+            foreach (var change in changedTile)
+            {
+                for (sbyte i = 1; i <= target.Stories; i++)
+                {
+                    var objs = target.Context.ObjectQueries.GetObjectsAt(LotTilePos.FromBigTile((short)change.X, (short)change.Y, i));
+                    if (objs != null)
+                    {
+                        foreach (var obj in objs)
+                        {
+                            obj.Position = obj.Position;
+                        }
+                    }
+                }
             }
 
             return cost;

@@ -219,5 +219,10 @@ namespace FSO.LotView.Utils
                 world._2D.Draw(item.Sprite);
             }
         }
+
+        public virtual void Preload(WorldState world)
+        {
+            ValidateSprite(world);
+        }
     }
 }

@@ -159,6 +159,11 @@ namespace FSO.Client.UI.Screens
              */
 
             HITVM.Get().PlaySoundEvent(UIMusic.SAS);
+
+            GameThread.NextUpdate(x =>
+            {
+                FSOFacade.Hints.TriggerHint("screen:sas");
+            });
         }
 
         private UIImage Background;

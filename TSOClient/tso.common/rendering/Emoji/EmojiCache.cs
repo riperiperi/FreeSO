@@ -14,7 +14,7 @@ namespace FSO.Common.Rendering.Emoji
 {
     public class EmojiCache
     {
-        public string Source = "https://twemoji.maxcdn.com/2/72x72/";
+        public string Source = "http://twemoji.maxcdn.com/2/72x72/";
         public int DefaultRes = 24;
         public int Width = 32;
         
@@ -34,6 +34,8 @@ namespace FSO.Common.Rendering.Emoji
             EmojiBatch = new SpriteBatch(gd);
             
             EmojiTex = new RenderTarget2D(gd, Width * DefaultRes, Width * DefaultRes, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11;
         }
 
         public void ExpandIfNeeded()

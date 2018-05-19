@@ -45,7 +45,7 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        private List<UIChatBalloon> Labels;
+        public List<UIChatBalloon> Labels;
         public List<Rectangle> InvalidAreas;
         private UILotControl Owner;
         private UIChatDialog HistoryDialog;
@@ -116,6 +116,11 @@ namespace FSO.Client.UI.Panels
             PropertyLog.Visible = false;
             PropertyLog.Opacity = 0.8f;
             this.Add(PropertyLog);
+        }
+
+        public void SetVisitorCount(int visitors)
+        {
+            HistoryDialog.Visitors = visitors;
         }
 
         private bool JustHidTextbox;
@@ -198,7 +203,7 @@ namespace FSO.Client.UI.Panels
         public override void Update(UpdateState state)
         {
             Inputs = state.InputManager;
-            if (!VM.UseWorld) return;
+            if (!VM.UseWorld || vm.FSOVAsyncLoading) return;
 
             var botRect = InvalidAreas[3];
             botRect.Y = GlobalSettings.Default.GraphicsHeight - ((Owner.PanelActive) ? 135 : 20);
@@ -352,6 +357,7 @@ namespace FSO.Client.UI.Panels
         public void SetLotName(string name)
         {
             HistoryDialog.LotName = name;
+            HistoryDialog.RenderTitle();
         }
     }
 }

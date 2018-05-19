@@ -26,6 +26,7 @@ using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Utils;
 using FSO.Common.Rendering.Framework;
 using FSO.LotView.RC;
+using FSO.Client.UI.Hints;
 
 namespace FSO.Client.UI.Panels
 {
@@ -43,6 +44,7 @@ namespace FSO.Client.UI.Panels
         public Texture2D BackgroundGameImage { get; set; }
         public Texture2D BackgroundMatchmakerImage { get; set; }
         public UIButton PhoneButton { get; set; }
+        public UIButton HelpButton { get; set; }
 
         /// <summary>
         /// Mode buttons
@@ -151,6 +153,7 @@ namespace FSO.Client.UI.Panels
             ZoomOutButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
             ZoomInButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
             PhoneButton.OnButtonClick += new ButtonClickDelegate(PhoneButton_OnButtonClick);
+            HelpButton.OnButtonClick += HelpButton_OnButtonClick;
 
             CloseZoomButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
             MediumZoomButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
@@ -192,6 +195,11 @@ namespace FSO.Client.UI.Panels
             SetMode(UCPMode.CityMode);
             Focus = UCPFocusMode.UCP;
             SetFocus(UCPFocusMode.Game);
+        }
+
+        private void HelpButton_OnButtonClick(UIElement button)
+        {
+            UIScreen.ShowDialog(new UIHintWindow(), true);
         }
 
         private void FriendshipWebButton_OnButtonClick(UIElement button)
@@ -593,6 +601,8 @@ namespace FSO.Client.UI.Panels
                         DynamicOverlay.Add(Panel);
                         BuildModeButton.Selected = true;
                         SetFocus(UCPFocusMode.ActiveTab);
+
+                        FSOFacade.Hints.TriggerHint("ui:buildmode");
                         break;
                     case 4:
                         if (!Game.InLot) break; //not ingame

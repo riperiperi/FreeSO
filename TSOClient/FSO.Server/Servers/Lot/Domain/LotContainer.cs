@@ -1175,6 +1175,10 @@ namespace FSO.Server.Servers.Lot.Domain
 
             if (myRoomieLots.Count == 0)
                 state.AvatarFlags |= VMTSOAvatarFlags.CanBeRoommate; //we're not roommate anywhere, so we can be here.
+
+            if (age < 7)
+                state.AvatarFlags |= VMTSOAvatarFlags.NewPlayer;
+
             var roomieStatus = myRoomieLots.FindAll(x => x.lot_id == Context.DbId).FirstOrDefault();
             if (roomieStatus != null && roomieStatus.is_pending == 0)
             {

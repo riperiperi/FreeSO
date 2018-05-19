@@ -23,11 +23,14 @@ namespace FSO.Common
         public static float UIZoomFactor = 1f;
         public static float DPIScaleFactor = 1;
         public static bool SoftwareKeyboard = false;
+        public static bool NoSound = false;
         public static int RefreshRate = 60;
 
         public static bool Enable3D;
         public static bool EnableNPOTMip = true;
         public static bool TexCompress = true;
         public static bool TexCompressSupport = true;
+
+        public static string Args = "";
     }
 }

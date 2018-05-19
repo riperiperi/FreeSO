@@ -175,11 +175,20 @@ namespace FSO.SimAntics.Primitives
                 {
                     //might have to zero out the money earned
                     var destObj = context.VM.GetAvatarByPersist(target);
-                    if (destObj != null && destObj.SkillGameplayDisabled(context.VM))
+                    var skillGameplay = destObj?.SkillGameplayMul(context.VM) ?? 1;
+                    if (skillGameplay == 0)
                     {
                         context.Thread.TempXL[0] = 0;
                         context.Thread.BlockingState = null;
                         return VMPrimitiveExitCode.GOTO_TRUE;
+                    } else
+                    {
+                        amount *= skillGameplay;
+                        //HACK: this is the best hack ever. You read me? the best.
+                        //For single money objects, overwrite temp 0 with our modified payout value.
+                        //this is where the calculated payout is. It's read again from here later to show the money amount over head.
+                        //Useful for skill disable and double (on welcome lots)
+                        context.Thread.TempRegisters[0] = (short)amount;
                     }
                 }
 

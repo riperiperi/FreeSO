@@ -140,6 +140,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, "Manually requested self resync."));
                         if (servD != null) servD.SelfResync = true;
                         break;
+                    case "time":
+                        var timesplit = args.Split(' ');
+                        if (timesplit.Length < 2) return true;
+                        vm.Context.Clock.Hours = int.Parse(timesplit[0]);
+                        vm.Context.Clock.Minutes = int.Parse(timesplit[1]);
+                        vm.Context.Clock.MinuteFractions = 0;
+                        break;
                 }
                 return true;
             }

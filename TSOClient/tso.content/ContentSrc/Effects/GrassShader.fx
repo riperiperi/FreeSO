@@ -22,6 +22,7 @@ float2 TileSize;
 bool depthOutMode;
 float3 CamPos;
 float3 LightVec;
+float Alpha;
 float GrassShininess;
 bool UseTexture;
 bool IgnoreColor;
@@ -298,6 +299,7 @@ void BladesPS3D(GrassPSVTX input, out float4 color:COLOR0)
 	float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
 	color = lerp(green, brown, input.GrassInfo.x) * lightProcessFloor(input.ModelPos) * LightDot(input.Normal) + LightSpecular(input.Normal, input.ModelPos);
 	color.a = a;
+	color.a *= Alpha;
 }
 
 void GridPS(GrassPSVTX input, out float4 color:COLOR0)
@@ -325,7 +327,7 @@ void GridPS3D(GrassPSVTX input, out float4 color:COLOR0)
 		discard;
 	}
 	else {
-		color = DiffuseColor;
+		color = DiffuseColor * Alpha;
 	}
 }
 
@@ -420,6 +422,13 @@ void BasePSMul(GrassPSVTX input, out float4 color:COLOR0)
 	color = float4(1, 1, 1, 1)*max(0, min(1, (diff - MulBase) * MulRange)) * edgeDist;
 }
 
+float4 FadeRectangle;
+float FadeWidth;
+float RectangleFade(float2 xz, float extend) {
+	float dx = max(abs(xz.x - FadeRectangle.x) - (FadeRectangle.z + extend), 0.0);
+	float dy = max(abs(xz.y - FadeRectangle.y) - (FadeRectangle.w + extend), 0.0);
+	return min(sqrt(dx * dx + dy * dy) / (FadeWidth-extend), 1.0);
+}
 
 void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 {
@@ -433,6 +442,7 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 		color *= tex2Dgrad(AnisoTexSampler, LoopUV(input.GrassInfo.yz), ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz));
 #endif
 		if (color.a < 0.5) discard;
+		color.a *= (1 - RectangleFade(input.ModelPos.xz, FadeWidth / 2));
 	}
 	else {
 		float a = 1 - (2 - sqrt(input.ScreenPos.z / (25 * GrassFadeMul)));
@@ -451,7 +461,10 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 			float4 bladecolor = lerp(green, brown, input.GrassInfo.x) * lightProcessFloor(input.ModelPos) * LightDot(input.Normal);
 			color = lerp(color, bladecolor, multex);
 		}
+		color.a *= (1 - RectangleFade(input.ModelPos.xz, 0.0));
+		color.a *= Alpha;
 	}
+	
 }
 
 void BasePSLMap(GrassPSVTX input, out float4 color:COLOR0)

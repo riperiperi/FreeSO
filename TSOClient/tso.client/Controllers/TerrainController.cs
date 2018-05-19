@@ -11,6 +11,7 @@ using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Utils;
 using FSO.Files;
+using FSO.Files.RC;
 using FSO.Server.DataService.Model;
 using FSO.Server.Protocol.Electron.Packets;
 using Microsoft.Xna.Framework;
@@ -185,22 +186,17 @@ namespace FSO.Client.Controllers
                             else DataService.Request(MaskedStruct.MapView_RollOverInfo_Lot_Price, id);
                         }
                     });
-                }, 500);
+                }, 250);
             }
         }
 
         public Texture2D RequestLotThumb(uint location) {
             return LotThumbs.GetLotThumbForFrame((uint)Network.MyShard.Id, location);
-            /*
-            DataService.Request(MaskedStruct.MapView_NearZoom_Lot_Thumbnail, location).ContinueWith(x =>
-            {
-                //happens in game thread
-                var lot = (Lot)x.Result;
-                if (lot == null) return;
-                var thumb = lot.Lot_Thumbnail;
-                if (thumb.Data == null || thumb.Data.Length == 0) return;
-                onRetrieved(ImageLoader.WinFromStreamP(GameFacade.GraphicsDevice, new MemoryStream(thumb.Data), -1));
-            }); */
+        }
+
+        public FSOF RequestLotFacade(uint location)
+        {
+            return LotThumbs.GetLotFacadeForFrame((uint)Network.MyShard.Id, location);
         }
 
         public void OverrideLotThumb(uint location, Texture2D tex)
@@ -210,12 +206,22 @@ namespace FSO.Client.Controllers
 
         public LotThumbEntry LockLotThumb(uint location)
         {
-            return LotThumbs.GetLotEntry((uint)Network.MyShard.Id, location);
+            return LotThumbs.GetLotEntry((uint)Network.MyShard.Id, location, false);
         }
 
         public void UnlockLotThumb(uint location)
         {
-            LotThumbs.ReleaseLotThumb((uint)Network.MyShard.Id, location);
+            LotThumbs.ReleaseLotThumb((uint)Network.MyShard.Id, location, false);
+        }
+
+        public LotThumbEntry LockLotFacade(uint location)
+        {
+            return LotThumbs.GetLotEntry((uint)Network.MyShard.Id, location, true);
+        }
+
+        public void UnlockLotFacade(uint location)
+        {
+            LotThumbs.ReleaseLotThumb((uint)Network.MyShard.Id, location, true);
         }
 
         public void ClickLot(int x, int y)
@@ -227,7 +233,7 @@ namespace FSO.Client.Controllers
 
                 if (occupied)
                 {
-                    Parent.ShowLotPage(id);
+                    GameThread.InUpdate(() => { Parent.ShowLotPage(id); });
                 }
                 else if (!Realestate.IsPurchasable((ushort)x, (ushort)y))
                     return;

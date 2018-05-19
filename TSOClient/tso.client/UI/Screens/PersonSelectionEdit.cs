@@ -207,6 +207,11 @@ namespace FSO.Client.UI.Screens
             RefreshCollections();
 
             SearchCollectionForInitID(GlobalSettings.Default.DebugHead, GlobalSettings.Default.DebugBody);
+
+            GameThread.NextUpdate(x =>
+            {
+                FSOFacade.Hints.TriggerHint("screen:cas");
+            });
         }
 
         private UIImage Background;

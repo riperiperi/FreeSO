@@ -24,6 +24,7 @@ using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
 using FSO.Client.UI.Panels;
 using FSO.Common;
+using FSO.Content;
 
 namespace FSO.Client.UI.Screens
 {
@@ -34,10 +35,10 @@ namespace FSO.Client.UI.Screens
         private UILabel ProgressLabel2;
 
         private Timer CheckProgressTimer;
+        private bool PlayedLoadLoop = false;
 
         public LoadingScreen() : base()
         {
-            HITVM.Get().PlaySoundEvent(UIMusic.LoadLoop);
 
             Background = new UISetupBackground();
 
@@ -123,10 +124,16 @@ namespace FSO.Client.UI.Screens
                     {
                         /** No more labels to show! Preload must be complete :) **/
                         CheckProgressTimer.Stop();
-                        //FSOFacade.Controller.ShowFSOF();
                         FSOFacade.Controller.ShowLogin();
+                        return;
                     }
                 }
+            }
+            if (percentDone >= 1)
+            {
+                CheckProgressTimer.Stop();
+                FSOFacade.Controller.ShowLogin();
+                return;
             }
         }
 
@@ -140,13 +147,13 @@ namespace FSO.Client.UI.Screens
             ProgressLabel2.X = 800;
             ProgressLabel2.Caption = newLabel;
 
-            var tween = GameFacade.Screens.Tween.To(ProgressLabel1, 1.0f, new Dictionary<string, float>() 
+            var tween = GameFacade.Screens.Tween.To(ProgressLabel1, 0.5f, new Dictionary<string, float>() 
             {
                 {"X", -800.0f}
             });
             tween.OnComplete += new TweenEvent(tween_OnComplete);
 
-            GameFacade.Screens.Tween.To(ProgressLabel2, 1.0f, new Dictionary<string, float>() 
+            GameFacade.Screens.Tween.To(ProgressLabel2, 0.5f, new Dictionary<string, float>() 
             {
                 {"X", 0.0f}
             });
@@ -156,6 +163,16 @@ namespace FSO.Client.UI.Screens
         {
             InTween = false;
             CheckPreloadLabel();
+        }
+
+        public override void Update(UpdateState state)
+        {
+            if (!PlayedLoadLoop && ((Audio)Content.Content.Get().Audio).Initialized)
+            {
+                HITVM.Get().PlaySoundEvent(UIMusic.LoadLoop);
+                PlayedLoadLoop = true;
+            }
+            base.Update(state);
         }
 
         public override void Draw(UISpriteBatch batch)

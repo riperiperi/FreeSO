@@ -215,7 +215,6 @@ namespace FSO.Client.UI.Panels
 
         public void ReceiveEvent(VMChatEvent evt)
         {
-            Visitors = evt.Visitors;
             History.Add(evt);
 
             //play TTS for this event?
@@ -311,9 +310,13 @@ namespace FSO.Client.UI.Panels
             Invalidate();
         }
 
-        public void RenderEvents()
+        public void RenderTitle()
         {
             Caption = GameFacade.Strings.GetString("261", "1", new string[] { Visitors.ToString(), LotName });
+        }
+
+        public void RenderEvents()
+        {
 
             StringBuilder txt = new StringBuilder();
             bool first = true;

@@ -15,6 +15,7 @@ namespace FSO.SimAntics.Engine
 {
     public class VMAmbientSound
     {
+        public static bool ForceDisable;
         public static Dictionary<uint, Ambience> AmbienceByGUID = new Dictionary<uint, Ambience>() //may want to load this from ambience.ini in future...
         {
             {0x3dd887a6, new Ambience("sounddata/ambience/daybirds/daybirds.fsc", false)},
@@ -143,6 +144,7 @@ namespace FSO.SimAntics.Engine
 
         public void SetAmbience(byte id, bool active)
         {
+            if (ForceDisable || HITVM.DISABLE_SOUND) return;
             if (id > SoundByBitField.Count) return;
             if (active)
             {

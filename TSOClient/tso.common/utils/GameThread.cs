@@ -103,10 +103,12 @@ namespace FSO.Common.Utils
     public class GameThread
     {
         public static bool Killed;
+        public static bool NoGame;
         public static EventWaitHandle OnKilled = new EventWaitHandle(false, EventResetMode.ManualReset);
         public static bool UpdateExecuting;
         private static List<UpdateHook> _UpdateHooks = new List<UpdateHook>();
         private static Queue<Callback<UpdateState>> _UpdateCallbacks = new Queue<Callback<UpdateState>>();
+        public static AutoResetEvent OnWork = new AutoResetEvent(false);
 
         public static GameThreadTimeout SetTimeout(Callback callback, long delay)
         {
@@ -143,6 +145,7 @@ namespace FSO.Common.Utils
             {
                 _UpdateCallbacks.Enqueue(callback);
             }
+            OnWork.Set();
         }
 
         public static void InUpdate(Callback callback)
@@ -157,7 +160,7 @@ namespace FSO.Common.Utils
         public static bool IsInGameThread()
         {
             var thread = Thread.CurrentThread;
-            if(thread != null && thread.Name == "Game")
+            if(NoGame || (thread != null && thread.Name == "Game"))
             {
                 return true;
             }

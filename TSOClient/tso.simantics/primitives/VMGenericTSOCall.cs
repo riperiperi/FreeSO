@@ -182,7 +182,11 @@ namespace FSO.SimAntics.Primitives
                             }
                         }
                         state.QtrDaysSinceLastRepair = 0;
-                        state.Wear = (ushort)Math.Max(20*4, state.Wear - wearRecovery);
+                        foreach (var objr in context.StackObject.MultitileGroup.Objects)
+                        {
+                            ((VMGameObject)objr).DisableParticle(256);
+                        }
+                        state.Wear = (ushort)Math.Max(20 * 4, state.Wear - wearRecovery);
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.IsGlobalBroken: //36

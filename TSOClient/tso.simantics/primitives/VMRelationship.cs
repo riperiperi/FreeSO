@@ -126,19 +126,22 @@ namespace FSO.SimAntics.Primitives
                 }
             }
 
+            //todo: move to tuning?
+            var diffMultiplier = context.VM.Tuning.GetTuning("category_mul", 0, context.VM.TSOState.PropertyCategory) ?? 1f; //0: relationship, 1: skill/money, 2: visitor hour scale
+
             if (operand.SetMode == 0)
             {
                 VMMemory.SetVariable(context, operand.VarScope, operand.VarData, relToTarg[operand.RelVar]);
             }
             else if (operand.SetMode == 1)
-            { //todo, special system for server persistent avatars and pets
+            {
                 var value = VMMemory.GetVariable(context, operand.VarScope, operand.VarData);
                 relToTarg[operand.RelVar] = Math.Max((short)-100, Math.Min((short)100, value));
             }
             else if (operand.SetMode == 2)
             {
                 var value = VMMemory.GetVariable(context, operand.VarScope, operand.VarData);
-                relToTarg[operand.RelVar] += value;
+                relToTarg[operand.RelVar] += (short)(value * diffMultiplier);
                 relToTarg[operand.RelVar] = Math.Max((short)-100, Math.Min((short)100, relToTarg[operand.RelVar]));
             }
 

@@ -210,11 +210,13 @@ namespace FSO.Vitaboy
 
             instance.Mesh.Prepare(Skeleton.RootBone);
 
-            if (GPUMode)
+            
+            /*if (GPUMode)
             {
                 instance.Mesh.StoreOnGPU(GPUDevice);
                 instance.Texture.Get(GPUDevice);
-            }
+            }*/
+            
             lock (Bindings)
             {
                 Bindings.Add(instance);
@@ -299,7 +301,8 @@ namespace FSO.Vitaboy
                     {
                         if (binding.Texture != null)
                         {
-                            effect.Parameters["MeshTex"].SetValue(binding.Texture.Get(device));
+                            var tex = binding.Texture.Get(device);
+                            effect.Parameters["MeshTex"].SetValue(tex);
                         }
                         else
                         {

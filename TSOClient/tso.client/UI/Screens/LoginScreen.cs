@@ -150,6 +150,10 @@ namespace FSO.Client.UI.Screens
                     };
                 });
             }
+            GameThread.NextUpdate(x =>
+            {
+                FSOFacade.Hints.TriggerHint("screen:login");
+            });
         }
 
         public override void Update(UpdateState state)

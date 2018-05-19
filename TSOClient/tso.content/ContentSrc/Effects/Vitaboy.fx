@@ -21,7 +21,6 @@ sampler TexSampler = sampler_state {
 };
 
 texture depthMap : Diffuse;
-
 sampler depthMapSampler = sampler_state {
     texture = <depthMap>;
     AddressU = CLAMP; AddressV = CLAMP; AddressW = CLAMP;

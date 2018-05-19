@@ -132,16 +132,30 @@
     <Compile Include="Network\TopicSubscription.cs" />
     <Compile Include="Regulators\LotConnectionRegulator.cs" />
     <Compile Include="Regulators\PurchaseLotRegulator.cs" />
+    <Compile Include="Rendering\City\CityCamera2D.cs" />
+    <Compile Include="Rendering\City\CityCamera3D.cs" />
+    <Compile Include="Rendering\City\CityContent.cs" />
+    <Compile Include="Rendering\City\CityFacadeLock.cs" />
+    <Compile Include="Rendering\City\CityFoliage.cs" />
+    <Compile Include="Rendering\City\CityGeometry.cs" />
     <Compile Include="Rendering\City\CityMapData.cs" />
+    <Compile Include="Rendering\City\CityNeighGeom.cs" />
+    <Compile Include="Rendering\City\Graph\VoronoiCellGraph.cs" />
+    <Compile Include="Rendering\City\ICityCamera.cs" />
     <Compile Include="Rendering\City\LotThumbContent.cs" />
     <Compile Include="Rendering\City\Plugins\AbstractCityPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
+    <Compile Include="Rendering\City\TLayerVertex.cs" />
     <Compile Include="UI\Controls\UISlotsImage.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UILotButton.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />
     <Compile Include="UI\Controls\UISkillBar.cs" />
     <Compile Include="UI\Controls\UIValidationMessages.cs" />
+    <Compile Include="UI\Hints\UIHint.cs" />
+    <Compile Include="UI\Hints\UIHintListItem.cs" />
+    <Compile Include="UI\Hints\UIHintManager.cs" />
+    <Compile Include="UI\Hints\UIHintWindow.cs" />
     <Compile Include="UI\Model\UITTSContext.cs" />
     <Compile Include="UI\Panels\Chat\UIChatCategoryDialog.cs" />
     <Compile Include="UI\Panels\Chat\UIChatCategoryList.cs" />
@@ -178,6 +192,7 @@
     <Compile Include="UI\Panels\MessageStore\UIMessageStore.cs" />
     <Compile Include="UI\Panels\UIEmojiSuggestions.cs" />
     <Compile Include="UI\Panels\UIGraphicsOptionsDialog.cs" />
+    <Compile Include="UI\Hints\UIHintAlert.cs" />
     <Compile Include="UI\Panels\UILotControlTouchHelper.cs" />
     <Compile Include="UI\Panels\UILotSkillModeDialog.cs" />
     <Compile Include="UI\Panels\UISandboxSelector.cs" />
@@ -216,7 +231,6 @@
     <Compile Include="UI\Panels\WorldUI\UIHeadlineRenderer.cs" />
     <Compile Include="UI\Panels\WorldUI\UIMoneyHeadline.cs" />
     <Compile Include="UI\Screens\IGameScreen.cs" />
-    <Compile Include="UI\Screens\RenderFSOFScreen.cs" />
     <Compile Include="UI\Screens\SandboxGameScreen.cs" />
     <Compile Include="UI\UIRelationshipBar.cs" />
     <Compile Include="Utils\ControllerUtils.cs" />
@@ -341,7 +355,6 @@
     <Compile Include="Regulators\LoginRegulator.cs" />
     <Compile Include="Regulators\RegulatorsModule.cs" />
     <Compile Include="Rendering\City\Blend.cs" />
-    <Compile Include="Rendering\City\CityDataRetriever.cs" />
     <Compile Include="Rendering\City\LotTileEntry.cs" />
     <Compile Include="Rendering\City\MeshVertex.cs" />
     <Compile Include="Rendering\City\Terrain.cs" />
@@ -394,10 +407,95 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Content Include="Content\UI\hints\images\hint_city.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\images\hint_help.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\images\hint_moneytrio.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="fso.ico" />
     <EmbeddedResource Include="IconNormal.bmp" />
     <EmbeddedResource Include="Icon.bmp" />
+    <Content Include="MIConvexHull.xml" />
     <Content Include="soft_oal.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_money.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_money_2.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_skill_gameplay.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\screen_city_1.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\ui_lot_page.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_job0.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_job1.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_job2.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_entertainment.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_games.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_offbeat.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_owner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_residence.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_romance.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_services.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_shopping.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_skills.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\land_welcome.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\screen_cas.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\screen_login.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\screen_sas.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\screen_sascity.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\ui_buildmode.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\ui_querypanel.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\vm_firstvisitor.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\Icon.bmp" />
@@ -414,6 +512,14 @@
     <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="MIConvexHull, Version=1.0.17.1019, Culture=neutral, PublicKeyToken=bdc96d69606221fd, processorArchitecture=MSIL">
+      <HintPath>..\packages\MIConvexHull.1.1.17.1019\lib\netstandard1.0\MIConvexHull.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Ninject.3.2.2.0\lib\net40\Ninject.dll</HintPath>
@@ -507,19 +613,18 @@
       <Project>{6d6009f4-0afb-4806-89d7-7945f20270f5}</Project>
       <Name>MonoGame.Framework.Net.WindowsGL</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
-      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
-      <Name>MonoGame.Framework.Windows</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
       <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
       <Name>MonoGame.Framework.WindowsGL</Name>
-      <Private>False</Private>
+      <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\mp3sharp\mp3sharp\Mp3Sharp.csproj">
       <Project>{834cab58-648d-47cc-ac6f-d01c08c809a4}</Project>
       <Name>Mp3Sharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\VoronoiLib\VoronoiLib.csproj">
+      <Project>{5d6b850b-3084-4c45-a8d7-7ccf67260b21}</Project>
+      <Name>VoronoiLib</Name>
     </ProjectReference>
     <ProjectReference Include="..\FSO.Common.DatabaseService\FSO.Common.DatabaseService.csproj">
       <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>

@@ -342,6 +342,20 @@ namespace FSO.Common.Utils
             }
         }
 
+        public static void UploadWithAvgMips(Texture2D Texture, GraphicsDevice gd, Color[] data)
+        {
+            int level = 0;
+            int w = Texture.Width;
+            int h = Texture.Height;
+            while (data != null)
+            {
+                Texture.SetData(level++, null, data, 0, data.Length);
+                data = AvgDecimate(data, w, h);
+                w /= 2;
+                h /= 2;
+            }
+        }
+
         private static bool IsPowerOfTwo(int x)
         {
             return (x & (x - 1)) == 0;
@@ -720,6 +734,64 @@ namespace FSO.Common.Utils
             }
             return buffer;
         }
+
+        public static Color[] AvgDecimate(Color[] old, int w, int h)
+        {
+            var nw = w / 2;
+            var nh = h / 2;
+            bool linex = false, liney = false;
+            if (nw == 0 && nh == 0) return null;
+            if (nw == 0) { nw = 1; liney = true; }
+            if (nh == 0) { nh = 1; linex = true; }
+            var size = nw * nh;
+            Color[] buffer = new Color[size];
+
+            int tind = 0;
+            int fyind = 0;
+            for (int y = 0; y < nh; y++)
+            {
+                var yb = y * 2 == h || linex;
+                int find = fyind;
+                for (int x = 0; x < nw; x++)
+                {
+                    var xb = x * 2 == h || liney;
+                    var c1 = old[find];
+                    var c2 = (xb) ? Color.Transparent : old[find + 1];
+                    var c3 = (yb) ? Color.Transparent : old[find + w];
+                    var c4 = (xb || yb) ? Color.Transparent : old[find + 1 + w];
+
+                    int r = 0, g = 0, b = 0, a=0, t = 0;
+                    if (c1.A > 0)
+                    {
+                        r += c1.R; g += c1.G; b += c1.B; a += c1.A; t++;
+                    }
+                    if (c2.A > 0)
+                    {
+                        r += c2.R; g += c2.G; b += c2.B; a += c2.A; t++;
+                    }
+                    if (c3.A > 0)
+                    {
+                        r += c3.R; g += c3.G; b += c3.B; a += c3.A; t++;
+                    }
+                    if (c4.A > 0)
+                    {
+                        r += c4.R; g += c4.G; b += c4.B; a += c4.A; t++;
+                    }
+                    if (t == 0) t = 1;
+
+                    buffer[tind++] = new Color(
+                        (byte)(r / t),
+                        (byte)(g / t),
+                        (byte)(b / t),
+                        (byte)(a / t)
+                        );
+                    find += 2;
+                }
+                fyind += w * 2;
+            }
+            return buffer;
+        }
+
 
         /// <summary>
         /// Combines multiple textures into a single texture

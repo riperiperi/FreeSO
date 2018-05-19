@@ -708,6 +708,11 @@ namespace FSO.LotView
                     obj.Draw(gd, state);
                 }
             }
+
+            foreach (var op in Blueprint.ObjectParticles)
+            {
+                op.Draw(gd, state);
+            }
         }
 
         public void ClearDrawBuffer(List<_2DDrawBuffer> buf)

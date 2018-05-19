@@ -82,11 +82,11 @@ namespace FSO.Server.Api
                 });
 
             config.Routes.MapHttpRoute(
-                name: "LotThumb",
+                name: "LotInfo",
                 routeTemplate: "userapi/city/{shardid}/{id}.png",
                 defaults: new
                 {
-                    controller = "LotThumb"
+                    controller = "LotInfo"
                 });
 
             //ADMIN API

@@ -79,6 +79,28 @@ namespace FSO.Server.Clients
             });
         }
 
+        public void GetWork(Action<int, uint> callback)
+        {
+            var client = Client();
+            var request = new RestRequest("userapi/city/thumbwork.json", Method.GET);
+            request.AddHeader("authorization", "bearer " + AuthKey);
+
+            client.ExecuteAsync(request, (resp, h) =>
+            {
+                var ok = resp.StatusCode == System.Net.HttpStatusCode.OK;
+                
+                GameThread.NextUpdate(x =>
+                {
+                    if (!ok || resp.Content == "") callback(-1, (ok)?0:uint.MaxValue);
+                    else
+                    {
+                        dynamic obj = JsonConvert.DeserializeObject(resp.Content);
+                        callback(Convert.ToInt32(obj.shard_id), Convert.ToUInt32(obj.location));
+                    }
+                });
+            });
+        }
+
         public void GetFSOV(uint shardID, uint lotLocation, Action<byte[]> callback)
         {
             var client = Client();

@@ -496,14 +496,15 @@ namespace FSO.LotView.RC
 
         SkyDomeComponent Dome;
 
-        public void DrawBg(GraphicsDevice gd, WorldState state, BoundingBox[] skyBounds)
+        public void DrawBg(GraphicsDevice gd, WorldState state, BoundingBox[] skyBounds, bool forceSurround)
         {
             var frustrum = new BoundingFrustum(state.Camera.View * state.Camera.Projection);
 
             //frustrum.Contains(skyBounds)
-            if ((state.Camera as WorldCamera3D)?.FromIntensity > 0 || skyBounds?.Any(x => x.Intersects(frustrum)) != false)
+            if (forceSurround || (state.Camera as WorldCamera3D)?.FromIntensity > 0 || skyBounds?.Any(x => x.Intersects(frustrum)) != false)
             {
                 if (Dome == null) Dome = new SkyDomeComponent(gd, Blueprint);
+                Dome.BP = Blueprint;
                 Dome.Draw(gd, state);
 
                 Surroundings?.DrawSurrounding(gd, state.Camera, Blueprint.Weather.FogColor, (Blueprint.SubWorlds.Count>0)?1:0);
@@ -548,9 +549,12 @@ namespace FSO.LotView.RC
                 obj.Draw(gd, state);
             }
 
-            foreach (var ava in Blueprint.Avatars)
+            foreach (var ava in Blueprint.HeadlineObjects)
             {
-                if (ava.Level < state.Level) ava.DrawHeadline3D(gd, state);
+                var level = ava.Level;
+                //for some reason avatars have a level 1 lower than it should be?
+
+                if (ava.Level <= state.Level) ava.DrawHeadline3D(gd, state);
             }
             Drawn = true;
         }

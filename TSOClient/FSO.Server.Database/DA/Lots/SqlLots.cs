@@ -119,7 +119,13 @@ namespace FSO.Server.Database.DA.Lots
 
         public void SetDirty(int id, byte dirty)
         {
-            Context.Connection.Query("UPDATE fso_lots SET thumb3d_dirty = @dirty AND thumb3d_time = @time WHERE lot_id = @id", new { time = Epoch.Now, dirty = dirty, id = id });
+            if (dirty == 0)
+            {
+                Context.Connection.Query("UPDATE fso_lots SET thumb3d_dirty = @dirty, thumb3d_time = @time WHERE lot_id = @id", new { time = Epoch.Now, dirty = dirty, id = id });
+            } else
+            {
+                Context.Connection.Query("UPDATE fso_lots SET thumb3d_dirty = @dirty WHERE lot_id = @id", new { dirty = dirty, id = id });
+            }
         }
 
         public DbLot Get3DWork()

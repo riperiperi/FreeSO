@@ -67,6 +67,11 @@ namespace FSO.Client.UI.Panels
             base.Update(state);
             bool rotated = false;
 
+            if (!Master.Visible || !UIScreen.Current.Visible)
+            {
+                ScrollWheelInvalid = true;
+            }
+
             if (!FSOEnvironment.SoftwareKeyboard)
             {
                 if (!state.WindowFocused) ScrollWheelInvalid = true;
@@ -80,7 +85,7 @@ namespace FSO.Client.UI.Panels
                     var diff = state.MouseState.ScrollWheelValue - LastMouseWheel;
                     Master.TargetZoom = Master.TargetZoom + diff / 1600f;
                     LastMouseWheel = state.MouseState.ScrollWheelValue;
-                    Master.TargetZoom = Math.Max(0.25f, Math.Min(Master.TargetZoom, 2));
+                    Master.TargetZoom = Math.Max(FSOEnvironment.Enable3D?-0.75f: 0.25f, Math.Min(Master.TargetZoom, 2f));
                     ZoomFreezeTime = (10 * FSOEnvironment.RefreshRate) / 60;
                 }
             }

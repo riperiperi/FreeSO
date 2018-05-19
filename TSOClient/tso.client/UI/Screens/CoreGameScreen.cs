@@ -66,6 +66,7 @@ namespace FSO.Client.UI.Screens
 
         public UILotControl LotControl { get; set; } //world, lotcontrol and vm will be null if we aren't in a lot.
         private LotView.World World;
+        private bool WorldLoaded;
         public FSO.SimAntics.VM vm { get; set; }
         public VMClientDriver Driver;
         public uint VisualBudget { get; set; }
@@ -110,8 +111,10 @@ namespace FSO.Client.UI.Screens
                     if (vm == null) ZoomLevel = 4; //call this again but set minimum cityrenderer view
                     else
                     {
+                        CityTooltipHitArea.HideTooltip();
                         SetTitle();
                         var targ = (WorldZoom)(4 - value); //near is 3 for some reason... will probably revise
+                        LotControl.SetTargetZoom(targ);
                         if (m_ZoomLevel > 3)
                         {
                             HITVM.Get().PlaySoundEvent(UIMusic.None);
@@ -122,7 +125,6 @@ namespace FSO.Client.UI.Screens
                             ucp.SetMode(UIUCP.UCPMode.LotMode);
                         } else
                         {
-                            LotControl.SetTargetZoom(targ);
                             if (!FSOEnvironment.Enable3D)
                             {
                                 if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
@@ -134,7 +136,8 @@ namespace FSO.Client.UI.Screens
                 }
                 else //cityrenderer! we'll need to recreate this if it doesn't exist...
                 {
-                    CityTooltipHitArea.HideTooltip();
+                    if (value == 5) CityTooltipHitArea.HideTooltip();
+                    else CityTooltipHitArea.ShowTooltip();
                     if (CityRenderer == null) m_ZoomLevel = value; //set to far zoom... again, we should eventually create this.
                     else
                     {
@@ -296,6 +299,7 @@ namespace FSO.Client.UI.Screens
         public override void GameResized()
         {
             base.GameResized();
+            CityRenderer.Camera.ProjectionDirty();
             Title.SetTitle(Title.Label.Caption);
             ucp.Y = ScreenHeight - 210;
             gizmo.X = ScreenWidth - 430;
@@ -305,10 +309,7 @@ namespace FSO.Client.UI.Screens
             var oldPanel = ucp.CurrentPanel;
             ucp.SetPanel(-1);
             ucp.SetPanel(oldPanel);
-            if (MouseHitAreaEventRef != null)
-            {
-                MouseHitAreaEventRef.Region = new Rectangle(0, 0, ScreenWidth, ScreenHeight);
-            }
+            CityTooltipHitArea.SetSize(ScreenWidth, ScreenHeight);
         }
 
         public void Initialize(string cityName, int cityMap, TerrainController terrainController)
@@ -325,6 +326,11 @@ namespace FSO.Client.UI.Screens
 
             terrainController.Init(CityRenderer);
             CityRenderer.SetController(terrainController);
+
+            GameThread.NextUpdate(x =>
+            {
+                FSOFacade.Hints.TriggerHint("screen:city");
+            });
         }
 
         private void InitializeMap(int cityMap)
@@ -340,22 +346,19 @@ namespace FSO.Client.UI.Screens
             CityTooltip = new UICustomTooltip();
             Add(CityTooltip);
             CityTooltipHitArea = new UICustomTooltipContainer(CityTooltip);
+            CityTooltipHitArea.OnMouseExt = new UIMouseEvent(MouseHandler);
             CityTooltipHitArea.SetSize(ScreenWidth, ScreenHeight);
             AddAt(0, CityTooltipHitArea);
         }
 
         private void InitializeMouse(){
-            /** City Scene **/
-            UIContainer mouseHitArea = new UIContainer();
-            MouseHitAreaEventRef = mouseHitArea.ListenForMouse(new Rectangle(0, 0, ScreenWidth, ScreenHeight), new UIMouseEvent(MouseHandler));
-            AddAt(0, mouseHitArea);
         }
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
-            GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
+            //GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
-            Visible = World?.Visible == false || (World?.State as FSO.LotView.RC.WorldStateRC)?.CameraMode != true;
+            Visible = ((World?.Visible == false || (World?.State as FSO.LotView.RC.WorldStateRC)?.CameraMode != true) && !CityRenderer.Camera.HideUI);
             GameFacade.Game.IsMouseVisible = Visible;
 
             base.Update(state);
@@ -407,11 +410,19 @@ namespace FSO.Client.UI.Screens
                         }
                         World.Opacity = Math.Max(0, (CityRenderer.m_LotZoomProgress - 0.5f) * 2);
 
-                        var scale =
-                            1/((CityRenderer.m_LotZoomProgress * (1/CityRenderer.m_LotZoomSize) + (1 - CityRenderer.m_LotZoomProgress) * (1/(Terrain.NEAR_ZOOM_SIZE*CityRenderer.m_WheelZoom))))
-                            / CityRenderer.m_LotZoomSize;
+                        float scale = 1;
+                        if (CityRenderer.Camera is CityCamera2D)
+                        {
+                            var cam = (CityCamera2D)CityRenderer.Camera;
+                            scale =
+                                1 / ((cam.LotZoomProgress * (1 / cam.m_LotZoomSize) + (1 - cam.LotZoomProgress) * (1 / (Terrain.NEAR_ZOOM_SIZE * cam.m_WheelZoom))))
+                                / cam.m_LotZoomSize;
+                        }
 
                         World.State.PreciseZoom = scale;
+                    } else
+                    {
+                        World.Opacity = (CityRenderer.m_Zoomed == TerrainZoomMode.Lot)?1f:0f;
                     }
                 }
 
@@ -434,7 +445,16 @@ namespace FSO.Client.UI.Screens
                 }
             }
 
-            if (vm != null) vm.Update();
+            if (vm != null)
+            {
+                if (vm.FSOVAsyncLoading)
+                {
+                    if (vm.FSOVObjTotal != 0) ClientStateChange(4, vm.FSOVObjLoaded / (float)vm.FSOVObjTotal);
+                } else
+                {
+                    vm.Update();
+                }
+            }
 
             var joinAttempt = DiscordRpcEngine.Secret;
             if (joinAttempt != null)
@@ -453,7 +473,42 @@ namespace FSO.Client.UI.Screens
         public override void PreDraw(UISpriteBatch batch)
         {
             base.PreDraw(batch);
-            vm?.PreDraw();
+            if (vm != null)
+            {
+                if (vm.FSOVAsyncLoading) { }
+                else if (!WorldLoaded && vm.Context.Blueprint != null)
+                {
+                    var result = World.Preload(GameFacade.GraphicsDevice);
+                    if (result)
+                    {
+                        WorldLoaded = true;
+                        ClientStateChange(6, 1);
+                    }
+                    else
+                    {
+                        ClientStateChange(5, World.PreloadObjProgress / (float)vm.FSOVObjTotal);
+                    }
+                } else
+                {
+                    vm.PreDraw();
+                }
+            }
+        }
+
+        public override void Draw(UISpriteBatch batch)
+        {
+            base.Draw(batch);
+            if (!Visible)
+            {
+                var chatballoons = LotControl?.ChatPanel?.GetChildren();
+                if (chatballoons != null)
+                {
+                    foreach (var balloon in chatballoons)
+                    {
+                        if (balloon is UIChatBalloon) balloon.Draw(batch);
+                    }
+                }
+            }
         }
 
         public void CleanupLastWorld()
@@ -488,6 +543,7 @@ namespace FSO.Client.UI.Screens
             World = null;
             Driver = null;
             LotControl = null;
+            CityRenderer.DisposeOnLot();
         }
 
         public void InitiateLotSwitch()
@@ -544,14 +600,37 @@ namespace FSO.Client.UI.Screens
         }
 
         public void ClientStateChangeProcess(int state, float progress)
-        {     
-            switch (state)
+        {
+            if (vm == null) return;
+            switch (state) 
             {
-                case 2:
-                    JoinLotProgress.ProgressCaption = GameFacade.Strings.GetString("211", "27");
-                    JoinLotProgress.Progress = 100f*(0.5f+progress*0.5f);
+                case 4: //loading vm (25%-75%)
+                    JoinLotProgress.ProgressCaption = "Loading Objects... (" + vm.FSOVObjLoaded + "/" + vm.FSOVObjTotal + ")";
+                    JoinLotProgress.Progress = 100f * (0.25f + progress * 0.5f);
                     break;
-                case 3:
+                case 5: //loading world (75%-90%)
+                    if (World.PreloadProgress > 0)
+                    {
+                        JoinLotProgress.ProgressCaption = "Loading Surrounding Lots... (" + World.PreloadProgress + "/" + 9 + ")";
+                        JoinLotProgress.Progress = 100f * (0.9f);
+                    } else
+                    {
+                        JoinLotProgress.ProgressCaption = "Loading Graphics... (" + World.PreloadObjProgress + "/" + vm.FSOVObjTotal + ")";
+                        JoinLotProgress.Progress = 100f * (0.75f + progress * 0.15f);
+                    }
+                    break;
+                case 2: //catching up (90%-100%)
+                    if (WorldLoaded)
+                    {
+                        JoinLotProgress.ProgressCaption = GameFacade.Strings.GetString("211", "27");
+                        JoinLotProgress.Progress = 100f * (0.9f + progress * 0.1f);
+                    }
+                    break;
+
+                case 3: //done update sync (disabled due to async world load)
+                    break;
+
+                case 6: //done world load
                     GameFacade.Cursor.SetCursor(CursorType.Normal);
                     UIScreen.RemoveDialog(JoinLotProgress);
                     ZoomLevel = 1;
@@ -572,6 +651,7 @@ namespace FSO.Client.UI.Screens
             }
             else World = new World(GameFacade.GraphicsDevice);
 
+            WorldLoaded = false;
             World.Opacity = 0;
             GameFacade.Scenes.Add(World);
             Driver = new VMClientDriver(ClientStateChange);
@@ -579,6 +659,7 @@ namespace FSO.Client.UI.Screens
             Driver.OnShutdown += VMShutdown;
 
             vm = new VM(new VMContext(World), Driver, new UIHeadlineRendererProvider());
+            vm.FSOVDoAsyncLoad = true;
             vm.ListenBHAVChanges();
             vm.Init();
 
@@ -657,6 +738,11 @@ namespace FSO.Client.UI.Screens
         private void VMRefreshed()
         {
             if (vm == null) return;
+            //try to signal landed hints
+            GameThread.NextUpdate(x =>
+            {
+                LotControl.Landed();
+            });
             LotControl.ActiveEntity = null;
             LotControl.RefreshCut();
         }
@@ -714,6 +800,16 @@ namespace FSO.Client.UI.Screens
         {
             if (CityRenderer != null) CityRenderer.UIMouseEvent(type.ToString()); //all the city renderer needs are events telling it if the mouse is over it or not.
             //if the mouse is over it, the city renderer will handle the rest.
+        }
+
+        public void ZoomToCity()
+        {
+            //zooming back to city using mouse wheel.
+            ZoomLevel = 4;
+            if (FSOEnvironment.Enable3D)
+            {
+                ((CityCamera3D)CityRenderer.Camera).TargetZoom = 2.2f;
+            }
         }
     }
 

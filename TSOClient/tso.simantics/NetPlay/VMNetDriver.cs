@@ -48,6 +48,8 @@ namespace FSO.SimAntics.NetPlay
             }
         }
 
+        public bool AsyncBreak; //if 
+
         protected void InternalTick(VM vm, VMNetTick tick)
         {
             CurrentTick = tick.TickID;
@@ -60,15 +62,16 @@ namespace FSO.SimAntics.NetPlay
                     if (DesyncTick == 0) DesyncTick = CurrentTick - 1;
                     vm.SendCommand(new VMRequestResyncCmd());
                     DesyncCooldown = 30 * 30;
-                } else
+                }
+                else
                 {
-                    System.Console.WriteLine("WARN - DESYNC - Expected "+tick.RandomSeed+", was at "+ vm.Context.RandomSeed);
+                    System.Console.WriteLine("WARN - DESYNC - Expected " + tick.RandomSeed + ", was at " + vm.Context.RandomSeed);
                 }
             }
 
             if (RecordStream != null) RecordTick(tick);
-
             vm.Context.RandomSeed = tick.RandomSeed;
+            AsyncBreak = false;
             bool doTick = !tick.ImmediateMode;
             foreach(var cmd in tick.Commands)
             {
@@ -83,7 +86,14 @@ namespace FSO.SimAntics.NetPlay
                 Executing = cmd;
                 cmd.Command.Execute(vm, caller);
                 Executing = null;
+                if (vm.FSOVAsyncLoading)
+                {
+                    tick.Commands.Remove(cmd); //don't worry about modifying an enumerated collection - we are exiting anyways.
+                    AsyncBreak = true;
+                    return;
+                }
             }
+
             if (tick.TickID < LastTick) System.Console.WriteLine("Tick wrong! Got " + tick.TickID + ", Missed " + ((int)tick.TickID - (LastTick + 1)));
             else if (doTick && vm.Context.Ready)
             {

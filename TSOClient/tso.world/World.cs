@@ -19,6 +19,7 @@ using FSO.Common.Utils;
 using FSO.Common;
 using FSO.LotView.LMap;
 using FSO.LotView.RC;
+using System.Diagnostics;
 
 namespace FSO.LotView
 {
@@ -34,6 +35,13 @@ namespace FSO.LotView
         public World(GraphicsDevice Device)
             : base(Device)
         {
+            var e = WorldContent.Grad2DEffect;
+            e = WorldContent.GrassEffect;
+            e = WorldContent.Light2DEffect;
+            e = WorldContent.ParticleEffect;
+            e = WorldContent.RCObject;
+            e = WorldContent.SSAA;
+            e = WorldContent._2DWorldBatchEffect;
         }
 
         /** How many pixels from each edge of the screen before we start scrolling the view **/
@@ -57,6 +65,8 @@ namespace FSO.LotView
         protected World3D _3DWorld = new World3D();
         protected LMapBatch Light;
         protected Blueprint Blueprint;
+
+        public event Action OnFullZoomOut;
 
         public sbyte Stories
         {
@@ -113,8 +123,11 @@ namespace FSO.LotView
             this.Blueprint = blueprint;
             _2DWorld.Init(blueprint);
             _3DWorld.Init(blueprint);
-            Light?.Init(blueprint);
-            State.Rooms.Init(blueprint);
+            GameThread.InUpdate(() =>
+            {
+                Light?.Init(blueprint);
+                State.Rooms.Init(blueprint);
+            });
 
             HasInitBlueprint = true;
             HasInit = HasInitGPU & HasInitBlueprint;
@@ -400,6 +413,12 @@ namespace FSO.LotView
             {
                 if (!Content.Content.Get().TS1) Blueprint.Weather?.Update();
                 var partiCopy = new List<ParticleComponent>(Blueprint.Particles);
+                foreach (var particle in partiCopy)
+                {
+                    particle.Update(null, State);
+                }
+
+                partiCopy = new List<ParticleComponent>(Blueprint.ObjectParticles);
                 foreach (var particle in partiCopy)
                 {
                     particle.Update(null, State);
@@ -769,6 +788,58 @@ namespace FSO.LotView
 
         }
 
+        public int PreloadProgress;
+        public int PreloadObjProgress;
+
+        public bool Preload(GraphicsDevice gd)
+        {
+            var watch = new Stopwatch();
+            watch.Start();
+
+            if (PreloadProgress == 0) {
+                for (int i = PreloadObjProgress; i < Blueprint.Objects.Count; i++)
+                {
+                    var obj = Blueprint.Objects[i];
+                    obj.Preload(gd, State);
+                    PreloadObjProgress++;
+                    if (watch.ElapsedMilliseconds > 16)
+                    {
+                        watch.Stop();
+                        return false;
+                    }
+                }
+
+                for (int i=0; i<Blueprint.Avatars.Count; i++)
+                {
+                    Blueprint.Avatars[i].Preload(gd, State);
+                }
+
+                PreloadProgress = 1;
+                PreloadObjProgress = 0;
+            }
+
+            for (int i= PreloadProgress-1; i<Blueprint.SubWorlds.Count; i++)
+            {
+                var world = Blueprint.SubWorlds[i];
+                for (int j = PreloadObjProgress; j < world.Blueprint.Objects.Count; j++)
+                {
+                    var obj = world.Blueprint.Objects[j];
+                    obj.Preload(gd, State);
+                    PreloadObjProgress++;
+                    if (watch.ElapsedMilliseconds > 16)
+                    {
+                        watch.Stop();
+                        return false;
+                    }
+                }
+
+                PreloadProgress++;
+                PreloadObjProgress = 0;
+            }
+
+            return true;
+        }
+
         public override void Dispose()
         {
             base.Dispose();
@@ -785,6 +856,10 @@ namespace FSO.LotView
                     world.Dispose();
                 }
                 foreach (var particle in Blueprint.Particles)
+                {
+                    particle.Dispose();
+                }
+                foreach (var particle in Blueprint.ObjectParticles)
                 {
                     particle.Dispose();
                 }

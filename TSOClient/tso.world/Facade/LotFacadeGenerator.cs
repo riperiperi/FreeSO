@@ -1,4 +1,5 @@
-﻿using FSO.Common.Utils;
+﻿using FSO.Common.MeshSimplify;
+using FSO.Common.Utils;
 using FSO.Files.RC;
 using FSO.LotView.Model;
 using FSO.LotView.RC;
@@ -325,8 +326,10 @@ namespace FSO.LotView.Facade
             }
             world.State.SilentLevel = oldLevel;
 
-            //using (var fs = new FileStream(@"C:\Users\Rhys\Desktop\floor.png", FileMode.Create, FileAccess.Write))
-            //    tex.SaveAsPng(fs, tex.Width, tex.Height);
+            /*
+            using (var fs = new FileStream(@"C:\Users\Rhys\Desktop\floor.png", FileMode.Create, FileAccess.Write))
+                tex.SaveAsPng(fs, tex.Width, tex.Height);
+                */
 
             if (!justTexture)
             {
@@ -392,12 +395,43 @@ namespace FSO.LotView.Facade
             return result;
         }
 
+        public void SimplifyFloor()
+        {
+            var simple = new Simplify();
+            simple.vertices = FloorVerts.Select(x => new MSVertex() { p = x.Position, t = x.TextureCoordinate }).ToList();
+            for (int t = 0; t < FloorIndices.Length; t += 3)
+            {
+                simple.triangles.Add(new MSTriangle()
+                {
+                    v = new int[] { FloorIndices[t], FloorIndices[t + 1], FloorIndices[t + 2] }
+                });
+            }
+            simple.simplify_mesh(2, agressiveness: 3, iterations: 300);
+
+            FloorVerts = simple.vertices.Select(x =>
+            {
+                //DGRP3DVert
+                return new VertexPositionTexture(x.p, x.t);
+            }).ToArray();
+            var indices = new List<int>();
+            foreach (var t in simple.triangles)
+            {
+                indices.Add(t.v[0]);
+                indices.Add(t.v[1]);
+                indices.Add(t.v[2]);
+            }
+            FloorIndices = indices.ToArray();
+        }
+
         public FSOF GetFSOF(GraphicsDevice gd, WorldRC world, Blueprint bp, Action onNight, bool compressed)
         {
             var result = new FSOF();
             RoofOnFloor = true;
             GenerateWalls(gd, world, bp, false);
+            //GROUND_SUBDIV = 64;
             GenerateFloor(gd, world, bp, false);
+            //SimplifyFloor();
+            GenerateRoof(gd, world, bp);
 
             result.TexCompressionType = (compressed) ? 1 : 0;
             result.FloorWidth = FloorTexture.Width;
@@ -408,12 +442,40 @@ namespace FSO.LotView.Facade
             result.FloorTextureData = TexToData(FloorTexture, compressed);
             result.WallTextureData = TexToData(WallTarget, compressed);
 
-            var tempVerts = FloorVerts.Select(x => new DGRP3DVert(x.Position, Vector3.Zero, x.TextureCoordinate)).ToList();
-            DGRP3DVert.GenerateNormals(false, tempVerts, FloorIndices);
-            result.FloorVertices = tempVerts.ToArray();
-            result.FloorIndices = FloorIndices;
+            var tVerts = new List<DGRP3DVert>();
+            var tInd = new List<int>();
+            var indOff = 0;
+            for (int i = 0; i < 5; i++)
+            {
+                var tcOffset = new Vector2((i % 3) / 3f, (i / 3) / 2f);
+                //save each floor. offset the floor for each level
+                var posOffset = i * 2.95f;
+                var fVerts = FloorVerts.Select(x => new DGRP3DVert(new Vector3(x.Position.X, x.Position.Y+posOffset, x.Position.Z), Vector3.Zero, x.TextureCoordinate + tcOffset));
+                tVerts.AddRange(fVerts);
+                tInd.AddRange(FloorIndices.Select(x => x + indOff));
 
-            tempVerts = WallVerts.Select(x => new DGRP3DVert(x.Position, Vector3.Zero, x.TextureCoordinate)).ToList();
+                indOff = tVerts.Count;
+
+                if (i == 0)
+                {
+                    tcOffset = new Vector2((5 % 3) / 3f, (5 / 3) / 2f);
+                    //save each floor. offset the floor for each level
+                    posOffset = 0.5f * 2.95f;
+                    fVerts = FloorVerts.Select(x => new DGRP3DVert(new Vector3(x.Position.X, x.Position.Y + posOffset, x.Position.Z), Vector3.Zero, x.TextureCoordinate + tcOffset));
+                    tVerts.AddRange(fVerts);
+                    tInd.AddRange(FloorIndices.Select(x => x + indOff));
+                    indOff = tVerts.Count;
+                }
+            }
+
+            tVerts.AddRange(RoofVerts.Select(x => new DGRP3DVert(x.Position, Vector3.Zero, x.TextureCoordinate)));
+            tInd.AddRange(RoofIndices.Select(x => x + indOff));
+
+            DGRP3DVert.GenerateNormals(false, tVerts, FloorIndices);
+            result.FloorVertices = tVerts.ToArray();
+            result.FloorIndices = tInd.ToArray();
+
+            var tempVerts = WallVerts.Select(x => new DGRP3DVert(x.Position, Vector3.Zero, x.TextureCoordinate)).ToList();
             DGRP3DVert.GenerateNormals(false, tempVerts, WallIndices);
             result.WallVertices = tempVerts.ToArray();
             result.WallIndices = WallIndices;
@@ -424,7 +486,7 @@ namespace FSO.LotView.Facade
 
             result.NightFloorTextureData = TexToData(FloorTexture, compressed);
             result.NightWallTextureData = TexToData(WallTarget, compressed);
-            result.NightLightColor = bp.OutsideColor;
+            result.NightLightColor = world.State.OutsideColor;
 
             return result;
         }
@@ -432,7 +494,9 @@ namespace FSO.LotView.Facade
         public void Generate(GraphicsDevice gd, WorldRC world, Blueprint bp)
         {
             GenerateWalls(gd, world, bp, false);
+            //GROUND_SUBDIV = 64;
             GenerateFloor(gd, world, bp, false);
+            //SimplifyFloor();
             GenerateRoof(gd, world, bp);
         }
 

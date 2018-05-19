@@ -19,10 +19,20 @@ namespace FSO.Content
     public class RCMeshProvider
     {
         public GraphicsDevice GD;
+        public HashSet<string> CacheFiles;
+        public HashSet<string> ReplaceFiles;
+
         public RCMeshProvider(GraphicsDevice gd)
         {
             GD = gd;
             DGRP3DGeometry.ReplTextureProvider = GetTex;
+
+            var repldir = Path.Combine(FSOEnvironment.ContentDir, "MeshReplace/");
+            var dir = Path.Combine(FSOEnvironment.UserDir, "MeshCache/");
+            Directory.CreateDirectory(dir);
+            Directory.CreateDirectory(repldir);
+            CacheFiles = new HashSet<string>(Directory.GetFiles(dir).Select(x => Path.GetFileName(x).ToLowerInvariant()));
+            ReplaceFiles = new HashSet<string>(Directory.GetFiles(repldir).Select(x => Path.GetFileName(x).ToLowerInvariant()));
         }
         public Dictionary<DGRP, DGRP3DMesh> Cache = new Dictionary<DGRP, DGRP3DMesh>();
         public HashSet<DGRP> IgnoreRCCache = new HashSet<DGRP>();
@@ -37,17 +47,20 @@ namespace FSO.Content
             if (!Cache.TryGetValue(dgrp, out result))
             {
                 //does it exist in replacements
-                var name = obj.ChunkParent.Filename.Replace('.', '_') + "_" + dgrp.ChunkID + ".fsom";
-                try
+                var name = obj.ChunkParent.Filename.Replace('.', '_').ToLowerInvariant() + "_" + dgrp.ChunkID + ".fsom";
+                if (ReplaceFiles.Contains(name))
                 {
-                    using (var file = File.OpenRead(Path.Combine(repldir, name)))
+                    try
                     {
-                        result = new DGRP3DMesh(dgrp, file, GD);
+                        using (var file = File.OpenRead(Path.Combine(repldir, name)))
+                        {
+                            result = new DGRP3DMesh(dgrp, file, GD);
+                        }
                     }
-                }
-                catch (Exception)
-                {
-                    result = null;
+                    catch (Exception)
+                    {
+                        result = null;
+                    }
                 }
 
                 if (result == null)
@@ -63,24 +76,34 @@ namespace FSO.Content
                     }
                 }
 
-                if (result == null && !IgnoreRCCache.Contains(dgrp))
+                if (CacheFiles.Contains(name))
                 {
-                    //does it exist in rc cache
-                    try
+                    if (result == null && !IgnoreRCCache.Contains(dgrp))
                     {
-                        using (var file = File.OpenRead(Path.Combine(dir, name)))
+                        //does it exist in rc cache
+                        try
                         {
-                            result = new DGRP3DMesh(dgrp, file, GD);
+                            using (var file = File.OpenRead(Path.Combine(dir, name)))
+                            {
+                                result = new DGRP3DMesh(dgrp, file, GD);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            result = null;
                         }
                     }
-                    catch (Exception)
-                    {
-                        result = null;
-                    }
+                } else
+                {
+
                 }
 
                 //create it anew
-                if (result == null) result = new DGRP3DMesh(dgrp, obj, GD, dir);
+                if (result == null)
+                {
+                    result = new DGRP3DMesh(dgrp, obj, GD, dir);
+                    CacheFiles.Add(name);
+                }
                 Cache[dgrp] = result;
             }
             return result;
@@ -120,8 +143,9 @@ namespace FSO.Content
         {
             //todo: dispose old?
 
-            var name = dgrp.ChunkParent.Filename.Replace('.', '_') + "_" + dgrp.ChunkID + ".fsom";
+            var name = dgrp.ChunkParent.Filename.Replace('.', '_').ToLowerInvariant() + "_" + dgrp.ChunkID + ".fsom";
             var repldir = Path.Combine(FSOEnvironment.ContentDir, "MeshReplace/");
+            ReplaceFiles.Add(name);
             mesh.SaveDirectory = repldir;
             mesh.Save();
 

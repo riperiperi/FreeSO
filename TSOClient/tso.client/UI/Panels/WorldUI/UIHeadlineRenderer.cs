@@ -55,22 +55,9 @@ namespace FSO.Client.UI.Panels.WorldUI
             }
         }
 
+        private bool Inited = false;
         public UIHeadlineRenderer(VMRuntimeHeadline headline) : base(headline)
         {
-            if (Sprites == null)
-            {
-                Sprites = new Files.Formats.IFF.IffFile(Content.Content.Get().GetPath("objectdata/globals/sprites.iff"));
-                WhitePx = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
-            }
-
-            if (Headline.Operand.Group != VMSetBalloonHeadlineOperandGroup.Algorithmic)
-                Sprite = Sprites.Get<SPR>((ushort)(GroupOffsets[(int)Headline.Operand.Group] + Headline.Index));
-
-            if (Headline.Operand.Type != 255 && Headline.Operand.Type != 3)
-                BGSprite = Sprites.Get<SPR>((ushort)(GroupOffsets[(int)VMSetBalloonHeadlineOperandGroup.Balloon]+Headline.Operand.Type));
-
-            LastZoom = WorldZoom.Near;
-            RecalculateTarget();
         }
 
         public void RecalculateTarget()
@@ -120,7 +107,7 @@ namespace FSO.Client.UI.Panels.WorldUI
             if (e1 < 0 || e1 > 100) return; //invalid skill
             var skillValue = avatar.GetPersonData((VMPersonDataVariable)(e1));
             var speedValue = (eff & 0xFF);
-            if (avatar.SkillGameplayDisabled(avatar.Thread.Context.VM)) speedValue = 0;
+            speedValue *= avatar.SkillGameplayMul(avatar.Thread.Context.VM);
             
             if (skillValue != SkillValue || SpeedValue != speedValue)
             {
@@ -134,6 +121,25 @@ namespace FSO.Client.UI.Panels.WorldUI
 
         public override Texture2D DrawFrame(World world)
         { 
+            if (!Inited)
+            {
+                if (Sprites == null)
+                {
+                    Sprites = new Files.Formats.IFF.IffFile(Content.Content.Get().GetPath("objectdata/globals/sprites.iff"));
+                    WhitePx = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
+                }
+
+                if (Headline.Operand.Group != VMSetBalloonHeadlineOperandGroup.Algorithmic)
+                    Sprite = Sprites.Get<SPR>((ushort)(GroupOffsets[(int)Headline.Operand.Group] + Headline.Index));
+
+                if (Headline.Operand.Type != 255 && Headline.Operand.Type != 3)
+                    BGSprite = Sprites.Get<SPR>((ushort)(GroupOffsets[(int)VMSetBalloonHeadlineOperandGroup.Balloon] + Headline.Operand.Type));
+
+                LastZoom = WorldZoom.Near;
+                RecalculateTarget();
+                Inited = true;
+            }
+
             if (LastZoom != world.State.Zoom || Texture == null)
             {
                 Invalidated = true;

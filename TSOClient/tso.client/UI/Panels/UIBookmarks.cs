@@ -79,7 +79,7 @@ namespace FSO.Client.UI.Panels
 
         public void SetResults(List<BookmarkListItem> items)
         {
-            BookmarkListBox.Items = items.Select(x =>
+            BookmarkListBox.Items = items.OrderBy(x => x.Avatar.Avatar_IsOnline ? 0 : 1).Select(x =>
             {
                 return new UIListBoxItem(x, new object[] { null, new ValuePointer(x.Avatar, "Avatar_Name") }) {
                     CustomStyle = BookmarkListBoxColors,

@@ -70,6 +70,7 @@ namespace FSO.Client.UI.Framework
             var bbIndex = 0;
             var bbColorStack = new Stack<Color>();
             var lastColor = TextStyle.Color;
+            var shadowApplied = false;
 
             for (var i = 0; i < m_Lines.Count; i++)
             {
@@ -132,8 +133,16 @@ namespace FSO.Client.UI.Framework
                                 }
                                 break;
                             case BBCodeCommandType.s:
-                                if (cmd.Close) drawCommands.Add(new TextDrawCmd_Shadow(TextStyle, false));
-                                else drawCommands.Add(new TextDrawCmd_Shadow(TextStyle, true));
+                                if (cmd.Close)
+                                {
+                                    drawCommands.Add(new TextDrawCmd_Shadow(TextStyle, false));
+                                    shadowApplied = false;
+                                }
+                                else
+                                {
+                                    drawCommands.Add(new TextDrawCmd_Shadow(TextStyle, true));
+                                    shadowApplied = true;
+                                }
                                 break;
                             case BBCodeCommandType.emoji:
                                 if (segment.BBCatchup) break;
@@ -159,6 +168,14 @@ namespace FSO.Client.UI.Framework
 
                 yPosition += m_LineHeight;
                 position.Y += m_LineHeight;
+            }
+
+            if (shadowApplied) drawCommands.Add(new TextDrawCmd_Shadow(TextStyle, false));
+
+            while (bbColorStack.Count > 0)
+            {
+                lastColor = bbColorStack.Pop();
+                drawCommands.Add(new TextDrawCmd_Color(TextStyle, lastColor));
             }
 
             result.BoundingBox = new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)options.MaxWidth, (int)(yPosition-(m_LineHeight + topLeft.Y)));

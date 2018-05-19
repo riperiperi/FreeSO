@@ -111,8 +111,33 @@ namespace FSO.LotView.RC
             if (!Visible || (!world.DrawOOB && (Position.X < -2043 && Position.Y < -2043)) || Level < 1) return;
             if (CutawayHidden) return;
             //#endif
-            ((DGRPRendererRC)dgrp).World = World;
+            var mworld = World;
+            ((DGRPRendererRC)dgrp).World = mworld;
             if (this.DrawGroup != null) dgrp.Draw(world);
+
+            if (((WorldCamera3D)world.Camera).FromIntensity == 0)
+            {
+                for (int i = 0; i < Particles.Count; i++)
+                {
+                    var part = Particles[i];
+                    if (part.BoundsDirty && part.AutoBounds && dgrp != null)
+                    {
+                        //this particle needs updated bounds.
+                        part.Volume = GetParticleBounds();
+                        part.BoundsDirty = false;
+                        part.Dispose();
+                    }
+                    part.Level = Level;
+                    part.OwnerWorld = mworld * Matrix.CreateScale(2);
+                    part.Draw(device, world);
+                    if (part.Dead) Particles.RemoveAt(i--);
+                }
+            }
+        }
+
+        public override BoundingBox GetParticleBounds()
+        {
+            return ((DGRPRendererRC)dgrp).GetBounds() ?? new BoundingBox();
         }
 
         public override void DrawLMap(GraphicsDevice device, sbyte level)
@@ -122,6 +147,11 @@ namespace FSO.LotView.RC
             //#endif
             ((DGRPRendererRC)dgrp).World = World;
             if (this.DrawGroup != null) ((DGRPRendererRC)dgrp).DrawLMap(device, level);
+        }
+
+        public override void Update(GraphicsDevice device, WorldState world)
+        {
+            base.Update(device, world);
         }
     }
 }

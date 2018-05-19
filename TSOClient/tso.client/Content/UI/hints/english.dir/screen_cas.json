@@ -1,0 +1,9 @@
+{
+    "guid": "5e8046af-bd51-4d5b-837c-1b89e6f8b48a", 
+    "trigger": "screen:cas",
+    "title": "Create A Sim",
+    "category": "Basics",
+    "catorder": -2,
+    "image": "@hint3.bmp",
+    "body": "Create an alter-ego to represent you in The Sims Online. You can have up to three Sims, but you can only play one at a time. The name and head you select here will be mostly permanent and will be the identity other players know you by. You will be able to change clothes using various costume trunks and edit your Sim profile later."
+}

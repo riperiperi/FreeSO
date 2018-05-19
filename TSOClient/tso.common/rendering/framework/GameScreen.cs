@@ -66,7 +66,7 @@ namespace FSO.Common.Rendering.Framework
 
             if (touchMode)
             {
-                State.KeyboardState = new KeyboardState();
+                if (FSOEnvironment.SoftwareDepth) State.KeyboardState = new KeyboardState();
                 TouchCollection touches = TouchPanel.GetState();
 
                 var missing = new HashSet<MultiMouse>(State.MouseStates);

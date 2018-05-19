@@ -344,6 +344,11 @@ namespace FSO.SimAntics.Entities
                 Offsets.Add(input.Offsets[i]);
                 obj.MultitileGroup = this;
             }
+
+            if (VM.UseWorld && (BaseObject?.PlatformState as VMTSOObjectState)?.Broken == true)
+            {
+                for (int i = 0; i < input.Objects.Length; i++) ((VMGameObject)Objects[i]).EnableParticle(256);
+            }
         }
 
         public void LoadGhost(VMMultitileGroupMarshal input, VMContext context, VMEntity[] objs)

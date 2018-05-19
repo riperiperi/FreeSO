@@ -38,6 +38,7 @@ using FSO.HIT;
 using FSO.Common.Model;
 using FSO.SimAntics.Model.TS1Platform;
 using FSO.SimAntics.Model.Platform;
+using FSO.Common.Utils;
 
 namespace FSO.SimAntics
 {
@@ -323,6 +324,7 @@ namespace FSO.SimAntics
 
         public void Tick()
         {
+            if (FSOVAsyncLoading) return;
             if (BHAVDirty)
             {
                 foreach (var ent in Entities)
@@ -625,10 +627,24 @@ namespace FSO.SimAntics
             };
         }
 
+        public bool FSOVAsyncLoading;
+        public bool FSOVDoAsyncLoad;
+        public bool FSOVClientJoin;
+        public int FSOVObjLoaded;
+        public int FSOVObjTotal;
+
         public void Load(VMMarshal input)
         {
+            FSOVClientJoin = (Context.Architecture == null);
+            FSOVAsyncLoading = true;
+            LoadAsync(input);
+            LoadComplete();
+        }
+
+        public void LoadAsync(VMMarshal input)
+        {
+            FSOVAsyncLoading = true;
             var lastBp = Context.Blueprint; //try keep this alive I suppose
-            var clientJoin = (Context.Architecture == null);
             //var oldWorld = Context.World;
             //TS1 = input.TS1;
             Context = new VMContext(input.Context, Context);
@@ -652,7 +668,16 @@ namespace FSO.SimAntics
                 foreach (var obj in Entities)
                 {
                     obj.Dead = true;
-                    if (obj.HeadlineRenderer != null) obj.HeadlineRenderer.Dispose();
+                    if (obj.HeadlineRenderer != null)
+                    {
+                        if (UseWorld)
+                        {
+                            GameThread.InUpdate(() =>
+                            {
+                                obj.HeadlineRenderer.Dispose();
+                            });
+                        }
+                    }
                     oldSounds.AddRange(obj.GetActiveSounds());
                 }
             }
@@ -661,6 +686,7 @@ namespace FSO.SimAntics
             Entities = new List<VMEntity>();
             Scheduler.Reset();
             ObjectsById = new Dictionary<short, VMEntity>();
+            FSOVObjTotal = input.Entities.Length;
             foreach (var ent in input.Entities)
             {
                 VMEntity realEnt;
@@ -689,6 +715,7 @@ namespace FSO.SimAntics
                 Entities.Add(realEnt);
                 Context.ObjectQueries.NewObject(realEnt);
                 ObjectsById.Add(ent.ObjectID, realEnt);
+                FSOVObjLoaded++;
             }
 
             int i = 0;
@@ -754,19 +781,34 @@ namespace FSO.SimAntics
 
             Context.Architecture.WallDirtyState(input.Context.Architecture);
 
-            foreach (var snd in oldSounds)
+            if (oldSounds.Count > 0)
             {
-                //find new owners
-                var obj = GetObjectById(snd.SourceID);
-                if (obj == null || obj.Object.GUID != snd.SourceGUID) snd.SFX.Sound.RemoveOwner(snd.SourceID);
-                else
+                GameThread.InUpdate(() =>
                 {
-                    SoundEntities.Add(obj);
-                    obj.SoundThreads.Add(snd.SFX); // successfully transfer sound to new object
-                }
+                    foreach (var snd in oldSounds)
+                    {
+                        //find new owners
+                        var obj = GetObjectById(snd.SourceID);
+                        if (obj == null || obj.Object.GUID != snd.SourceGUID) snd.SFX.Sound.RemoveOwner(snd.SourceID);
+                        else
+                        {
+                            SoundEntities.Add(obj);
+                            obj.SoundThreads.Add(snd.SFX); // successfully transfer sound to new object
+                        }
+                    }
+                });
             }
+            
+            Context.UpdateTSOBuildableArea();
+            Tuning = input.Tuning;
+            UpdateTuning();
+            if (OnFullRefresh != null) OnFullRefresh();
+        }
 
-            if (clientJoin)
+        public void LoadComplete()
+        {
+            FSOVAsyncLoading = false;
+            if (FSOVClientJoin)
             {
                 //run clientJoin functions to play object sounds, update some gfx.
                 foreach (var obj in Entities)
@@ -774,10 +816,6 @@ namespace FSO.SimAntics
                     obj.ExecuteEntryPoint(30, Context, true);
                 }
             }
-            Context.UpdateTSOBuildableArea();
-            Tuning = input.Tuning;
-            UpdateTuning();
-            if (OnFullRefresh != null) OnFullRefresh();
         }
 
         public void HollowLoad(VMHollowMarshal input)

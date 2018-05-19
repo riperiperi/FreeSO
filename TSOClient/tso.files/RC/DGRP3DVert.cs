@@ -88,5 +88,24 @@ namespace Microsoft.Xna.Framework.Graphics
                 verts[i] = v;
             }
         }
+
+        public static List<int> StripToTri(List<int> ind)
+        {
+            var result = new List<int>();
+            for (int i = 0; i < ind.Count; i += 2)
+            {
+                if (i>0)
+                {
+                    result.Add(ind[i - 2]);
+                    result.Add(ind[i - 1]);
+                    result.Add(ind[i]);
+
+                    result.Add(ind[i - 1]);
+                    result.Add(ind[i + 1]);
+                    result.Add(ind[i]);
+                }
+            }
+            return result;
+        }
     }
 }

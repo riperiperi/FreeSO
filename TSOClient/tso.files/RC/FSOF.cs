@@ -43,9 +43,11 @@ namespace FSO.Files.RC
 
         public VertexBuffer FloorVGPU;
         public IndexBuffer FloorIGPU;
+        public int FloorPrims;
 
         public VertexBuffer WallVGPU;
         public IndexBuffer WallIGPU;
+        public int WallPrims;
 
         public static int CURRENT_VERSION = 1;
         public int Version = CURRENT_VERSION;
@@ -144,6 +146,52 @@ namespace FSO.Files.RC
                 WallVertices = wall.Item1;
                 WallIndices = wall.Item2;
             }
+        }
+
+        private SurfaceFormat GetTexFormat()
+        {
+            return (TexCompressionType == 1) ? SurfaceFormat.Dxt5 : SurfaceFormat.Color;
+        }
+
+        public void LoadGPU(GraphicsDevice gd)
+        {
+            var format = GetTexFormat();
+            FloorTexture = new Texture2D(gd, FloorWidth, FloorHeight, false, format);
+            FloorTexture.SetData(FloorTextureData);
+            WallTexture = new Texture2D(gd, WallWidth, WallHeight, false, format);
+            WallTexture.SetData(WallTextureData);
+
+            if (NightFloorTextureData != null)
+            {
+                NightFloorTexture = new Texture2D(gd, FloorWidth, FloorHeight, false, format);
+                NightFloorTexture.SetData(NightFloorTextureData);
+                NightWallTexture = new Texture2D(gd, WallWidth, WallHeight, false, format);
+                NightWallTexture.SetData(NightWallTextureData);
+            }
+
+            FloorVGPU = new VertexBuffer(gd, typeof(DGRP3DVert), FloorVertices.Length, BufferUsage.None);
+            FloorVGPU.SetData(FloorVertices);
+            FloorIGPU = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, FloorIndices.Length, BufferUsage.None);
+            FloorIGPU.SetData(FloorIndices);
+            FloorPrims = FloorIndices.Length / 3;
+
+            WallVGPU = new VertexBuffer(gd, typeof(DGRP3DVert), WallVertices.Length, BufferUsage.None);
+            WallVGPU.SetData(WallVertices);
+            WallIGPU = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, WallIndices.Length, BufferUsage.None);
+            WallIGPU.SetData(WallIndices);
+            WallPrims = WallIndices.Length / 3;
+        }
+
+        public void Dispose()
+        {
+            FloorTexture?.Dispose();
+            WallTexture?.Dispose();
+            NightFloorTexture?.Dispose();
+            NightWallTexture?.Dispose();
+            FloorVGPU?.Dispose();
+            FloorIGPU?.Dispose();
+            WallVGPU?.Dispose();
+            WallIGPU?.Dispose();
         }
 
         private Tuple<DGRP3DVert[], int[]> ReadVerts(IoBuffer io)

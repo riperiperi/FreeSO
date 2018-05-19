@@ -133,6 +133,11 @@ namespace FSO.Client.UI.Panels
             if (shards.Count > 0){
                 CityListBox.SelectedIndex = 0;
             }
+
+            GameThread.NextUpdate(x =>
+            {
+                FSOFacade.Hints.TriggerHint("screen:sascity");
+            });
         }
 
 
