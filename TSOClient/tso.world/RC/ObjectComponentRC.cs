@@ -115,7 +115,7 @@ namespace FSO.LotView.RC
             ((DGRPRendererRC)dgrp).World = mworld;
             if (this.DrawGroup != null) dgrp.Draw(world);
 
-            if (((WorldCamera3D)world.Camera).FromIntensity == 0)
+            if ((world.Camera as WorldCamera3D)?.FromIntensity == 0)
             {
                 for (int i = 0; i < Particles.Count; i++)
                 {
