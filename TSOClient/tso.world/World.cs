@@ -552,8 +552,7 @@ namespace FSO.LotView
 
             foreach (var particle in Blueprint.Particles)
             {
-                if (particle.Level <= State.Level)
-                    particle.Draw(device, State);
+                particle.Draw(device, State);
             }
 
             State._2D.OutputDepth = false;

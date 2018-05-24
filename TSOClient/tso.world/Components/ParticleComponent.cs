@@ -33,6 +33,7 @@ namespace FSO.LotView.Components
         public List<ParticleComponent> Particles;
         public Color Tint = Color.White;
         public PART Resource;
+        public EntityComponent Owner;
 
         /*
         public static Dictionary<ParticleType, Vector4[]> Params = new Dictionary<ParticleType, Vector4[]>()

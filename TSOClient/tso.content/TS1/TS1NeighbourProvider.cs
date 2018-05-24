@@ -190,6 +190,7 @@ namespace FSO.Content.TS1
 
         public int GetMagicoinsForFamily(FAMI family)
         {
+            if (family == null) return 0;
             return family.FamilyGUIDs.Select(x => GetMagicoinsForNeighbor(GetNeighborIDForGUID(x) ?? -1)).Sum();
         }
 
@@ -253,6 +254,12 @@ namespace FSO.Content.TS1
         public bool SaveNeighbourhood(bool withSims)
         {
             //todo: save iffs for dirty avatars. 
+            foreach (var ava in DirtyAvatars)
+            {
+                var obj = ContentManager.WorldObjects.Get(ava);
+                using (var stream = new FileStream(obj.Resource.Name, FileMode.Create))
+                    obj.Resource.MainIff.Write(stream);
+            }
             DirtyAvatars.Clear();
 
             using (var stream = new FileStream(Path.Combine(UserPath, "Neighborhood.iff"), FileMode.Create, FileAccess.Write, FileShare.None))

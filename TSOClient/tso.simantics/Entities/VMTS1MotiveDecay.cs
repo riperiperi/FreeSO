@@ -50,7 +50,7 @@ namespace FSO.SimAntics.Entities
         {
             var roomScore = context.GetRoomScore(context.GetRoomAt(avatar.Position));
             avatar.SetMotiveData(VMMotive.Room, roomScore);
-            if (context.Clock.Minutes/2 == LastMinute) return;
+            if (context.Clock.Minutes/2 == LastMinute || avatar.GetValue(VMStackObjectVariable.Hidden) > 0) return;
             LastMinute = context.Clock.Minutes/2;
             var sleeping = (avatar.GetMotiveData(VMMotive.SleepState) != 0);
 

@@ -76,8 +76,14 @@ namespace FSO.Files.Formats.IFF.Chunks
                 {
                     FamilyGUIDs[i] = io.ReadUInt32();
                 }
-                for (int i = 0; i < 4; i++)
-                    io.ReadInt32();
+                try
+                {
+                    for (int i = 0; i < 4; i++)
+                        io.ReadInt32();
+                } catch
+                {
+                    //for some reason FAMI "Default" only has 3 zeroes after it, but only if saved by base game.
+                }
             }
         }
 

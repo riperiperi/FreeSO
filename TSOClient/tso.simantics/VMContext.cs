@@ -462,6 +462,13 @@ namespace FSO.SimAntics
                     OperandModel = typeof(VMGenericTS1CallOperand)
                 });
 
+                AddPrimitive(new VMPrimitiveRegistration(new VMTS1MakeNewCharacter())
+                {
+                    Opcode = 19,
+                    Name = "make_new_character",
+                    OperandModel = typeof(VMTS1MakeNewCharacterOperand)
+                });
+
                 AddPrimitive(new VMPrimitiveRegistration(new VMTS1Budget())
                 {
                     Opcode = 25,
@@ -1250,6 +1257,7 @@ namespace FSO.SimAntics
 
                 group.Init(this);
                 VMPlacementError couldPlace = group.ChangePosition(pos, direction, this, VMPlaceRequestFlags.Default).Status;
+                SetBirthTime(group);
                 return group;
             }
             else
@@ -1280,7 +1288,8 @@ namespace FSO.SimAntics
                             if (neigh != null) vmObject.InheritNeighbor(neigh, VM.TS1State.CurrentFamily);
                         }
                     }
-                 
+                    SetBirthTime(group);
+
                     return group;
                 }
                 else
@@ -1301,10 +1310,26 @@ namespace FSO.SimAntics
 
                     group.Init(this);
                     var result = vmObject.SetPosition(pos, direction, this);
+                    SetBirthTime(group);
                     
                     return group;
                 }
             }
+        }
+
+        public void SetBirthTime(VMEntity ent)
+        {
+            ent.SetValue(VMStackObjectVariable.BirthYear, (short)Clock.Year);
+            ent.SetValue(VMStackObjectVariable.BirthMonth, (short)Clock.Month);
+            ent.SetValue(VMStackObjectVariable.BirthDay, (short)Clock.DayOfMonth);
+
+            ent.SetValue(VMStackObjectVariable.BirthMinutes, (short)Clock.Minutes);
+            ent.SetValue(VMStackObjectVariable.BirthHour, (short)Clock.Hours);
+        }
+
+        public void SetBirthTime(VMMultitileGroup group)
+        {
+            foreach (var obj in group.Objects) SetBirthTime(obj);
         }
 
         public void RemoveObjectInstance(VMEntity target)

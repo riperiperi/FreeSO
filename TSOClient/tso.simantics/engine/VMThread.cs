@@ -204,19 +204,29 @@ namespace FSO.SimAntics.Engine
 
         public void TryRunImmediately()
         {
-            //check if we have a run immediately interaction, and inject it if we do.
-            var ind = Queue.FindIndex(x => (x.Flags & TTABFlags.RunImmediately) > 0);
-            if ((ind > ActiveQueueBlock || (!(Stack.Count > 0 && Stack.LastOrDefault().ActionTree) && ind > -1)))
+            //check if we have a run immediately interaction, and inject it if we do.#
+            while (true)
             {
-                //not already running (if no action we are still not running if we're queue[0], so go for it)
-                //swap current item with ind.
-                var temp = Queue[ind];
-                Queue.RemoveAt(ind);
-                Queue.Insert(0, temp);
-                var frame = temp.ToStackFrame(Entity);
-                frame.DiscardResult = true;
-                Push(frame);
-                ActiveQueueBlock++; //both the run immediately interaction and the active interaction must be protected.
+                var ind = Queue.FindIndex(x => (x.Flags & TTABFlags.RunImmediately) > 0);
+                if ((ind > ActiveQueueBlock || (!(Stack.Count > 0 && Stack.LastOrDefault().ActionTree) && ind > -1)))
+                {
+                    //not already running (if no action we are still not running if we're queue[0], so go for it)
+                    //swap current item with ind.
+                    var temp = Queue[ind];
+                    Queue.RemoveAt(ind);
+                    if (CheckAction(temp) != null)
+                    {
+                        Queue.Insert(0, temp);
+                        var frame = temp.ToStackFrame(Entity);
+                        frame.DiscardResult = true;
+                        Push(frame);
+                        ActiveQueueBlock++; //both the run immediately interaction and the active interaction must be protected.
+                        break;
+                    }
+                } else
+                {
+                    break;
+                }
             }
         }
 

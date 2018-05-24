@@ -127,7 +127,7 @@ namespace FSO.SimAntics.Primitives
             }
 
             //todo: move to tuning?
-            var diffMultiplier = context.VM.Tuning.GetTuning("category_mul", 0, context.VM.TSOState.PropertyCategory) ?? 1f; //0: relationship, 1: skill/money, 2: visitor hour scale
+            var diffMultiplier = context.VM.Tuning?.GetTuning("category_mul", 0, context.VM.TSOState.PropertyCategory) ?? 1f; //0: relationship, 1: skill/money, 2: visitor hour scale
 
             if (operand.SetMode == 0)
             {

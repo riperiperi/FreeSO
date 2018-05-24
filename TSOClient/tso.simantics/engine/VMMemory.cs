@@ -229,22 +229,6 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMVariableScope.TempXL: //42
                     //this needs a really intricate special case for specific operations.
                     throw new VMSimanticsException("Caller function does not support TempXL!", context);
-
-                case VMVariableScope.CityTime: //43
-                    //return GetCityTime(data)
-                    switch (data)
-                    {
-                        case 0:
-                            return (short)context.VM.Context.Clock.Seconds;
-                        case 1:
-                            return (short)context.VM.Context.Clock.Minutes;
-                        case 2:
-                            return (short)context.VM.Context.Clock.Hours;
-                        case 3:
-                            return (short)context.VM.Context.Clock.TimeOfDay;
-
-                    };
-                    break;
                 case VMVariableScope.TSOStandardTime: //44
                     //return GetTSOStandardTime(data)
                     var time = context.VM.Context.Clock.UTCNow;
@@ -266,6 +250,7 @@ namespace FSO.SimAntics.Engine.Utils
                     };
                     return 0;
 
+                case VMVariableScope.CityTime: //43
                 case VMVariableScope.GameTime: //45
                     switch (data)
                     {
@@ -277,6 +262,12 @@ namespace FSO.SimAntics.Engine.Utils
                             return (short)context.VM.Context.Clock.Hours;
                         case 3:
                             return (short)context.VM.Context.Clock.TimeOfDay;
+                        case 4:
+                            return (short)context.VM.Context.Clock.DayOfMonth;
+                        case 5:
+                            return (short)context.VM.Context.Clock.Month;
+                        case 6:
+                            return (short)context.VM.Context.Clock.Year;
 
                     };
                     break;

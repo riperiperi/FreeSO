@@ -145,7 +145,12 @@ namespace FSO.Client.Rendering.City
             BigWNormal = RTToMip(LoadTex(terrainpath + "bigwnormal.jpg"), gd);
             SmallWNormal = RTToMip(LoadTex(terrainpath + "smallwnormal.jpg"), gd);
             using (var strm = new FileStream(terrainpath + "trees.png", FileMode.Open, FileAccess.Read, FileShare.Read))
-                TreeTex = RTToMip(ImageLoader.FromStream(gd, strm), gd);
+            {
+                TreeTex = ImageLoader.FromStream(gd, strm);
+                if (FSOEnvironment.EnableNPOTMip)
+                    TreeTex = RTToMip(TreeTex, gd);
+            }
+                
 
             for (int i=0; i<3; i++)
             {
@@ -191,9 +196,24 @@ namespace FSO.Client.Rendering.City
         {
             var data = new Color[texture.Width * texture.Height];
             texture.GetData(data);
-            texture.Dispose();
-            texture = new Texture2D(device, texture.Width, texture.Height, true, SurfaceFormat.Color);
-            TextureUtils.UploadWithAvgMips(texture, device, data);
+            
+            Texture2D newTex = null;
+            try
+            {
+                newTex = new Texture2D(device, texture.Width, texture.Height, true, SurfaceFormat.Color);
+                TextureUtils.UploadWithAvgMips(newTex, device, data);
+                texture.Dispose();
+                texture = newTex;
+            } catch
+            {
+                try
+                {
+                    newTex?.Dispose();
+                } catch
+                {
+
+                }
+            }
             return texture;
         }
 
@@ -249,7 +269,10 @@ namespace FSO.Client.Rendering.City
             spriteBatch.End();
             gd.SetRenderTarget(null);
 
-            TransAtlas[type] = RTToMip(RTarget, gd);
+            if (FSOEnvironment.EnableNPOTMip)
+                TransAtlas[type] = RTToMip(RTarget, gd);
+            else
+                TransAtlas[type] = RTarget;
         }
 
         public void CreateRoadAtlas(GraphicsDevice gd, SpriteBatch spriteBatch)
@@ -282,7 +305,10 @@ namespace FSO.Client.Rendering.City
             spriteBatch.End();
             gd.SetRenderTarget(null);
 
-            RoadAtlas = RTToMip(RTarget, gd);
+            if (FSOEnvironment.EnableNPOTMip)
+                RoadAtlas = RTToMip(RTarget, gd);
+            else
+                RoadAtlas = RTarget;
         }
 
         public void Dispose()

@@ -349,6 +349,8 @@
     <Compile Include="Primitives\VMTransferFunds.cs" />
     <Compile Include="Primitives\VMTS1Budget.cs" />
     <Compile Include="Primitives\VMTS1InventoryOperations.cs" />
+    <Compile Include="Primitives\VMTS1MakeNewCharacter.cs" />
+    <Compile Include="Utils\SimitoneNeighbourGenerator.cs" />
     <Compile Include="Utils\TimePropertyListItemSorter.cs" />
     <Compile Include="Utils\VMArchitectureStats.cs" />
     <Compile Include="Utils\VMArchitectureTools.cs" />

@@ -711,7 +711,8 @@ namespace FSO.LotView
 
             foreach (var op in Blueprint.ObjectParticles)
             {
-                op.Draw(gd, state);
+                if (op.Level <= state.Level && op.Owner.Visible && (op.Owner.Position.X > -2043 || op.Owner.Position.Y > -2043))
+                    op.Draw(gd, state);
             }
         }
 

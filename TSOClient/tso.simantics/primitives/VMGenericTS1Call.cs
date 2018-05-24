@@ -48,7 +48,10 @@ namespace FSO.SimAntics.Primitives
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     var fneigh = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
                     if (fneigh == null) return VMPrimitiveExitCode.GOTO_FALSE;
-                    AddToFamily(context.VM.TS1State.CurrentFamily, fneigh);
+                    AddToFamily(context.VM.TS1State.CurrentFamily, fneigh, context.VM);
+                    var runtime = context.VM.TS1State.CurrentFamily.RuntimeSubset.ToList();
+                    runtime.Add(fneigh.GUID);
+                    context.VM.TS1State.CurrentFamily.RuntimeSubset = runtime.ToArray();
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTS1CallMode.CombineAssetsOfFamilyInTemp0: //5
                     //adds the family in temp 0's assets to our budget. (for move in)
@@ -60,13 +63,17 @@ namespace FSO.SimAntics.Primitives
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     fneigh = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
                     if (fneigh == null) return VMPrimitiveExitCode.GOTO_FALSE;
+                    fneigh.PersonData[(int)VMPersonDataVariable.TS1FamilyNumber] = 0;
+                    var runtimef = GetRuntimeNeigh(context.VM, (ushort)context.StackObjectID);
+                    runtimef?.SetPersonData(VMPersonDataVariable.TS1FamilyNumber, 0);
+
                     var guids = context.VM.TS1State.CurrentFamily.FamilyGUIDs.ToList();
                     guids.Remove(fneigh.GUID);
                     context.VM.TS1State.CurrentFamily.FamilyGUIDs = guids.ToArray();
                     TryDeleteFamily(context.VM.TS1State.CurrentFamily);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 /*
-               MakeNewNeighbor = 7, //this one is "depracated"
+               MakeNewNeighbor = 7, //this one is "depracated". there's a dedicated primitive for this.
                FamilyTutorialComplete = 8,
                ArchitectureTutorialComplete = 9, */
 
@@ -175,7 +182,6 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTS1CallMode.SpawnTakeBackHomeDataOfPersonInTemp0:
                     inventoryInd = 11;
                     goto case VMGenericTS1CallMode.SpawnDowntownDateOfPersonInTemp0;
-                // 21. SpawnInventorySimDataEffects
                 case VMGenericTS1CallMode.SpawnInventorySimDataEffects:
                     //for the caller? stack object?
                     //do caller for now
@@ -200,7 +206,7 @@ namespace FSO.SimAntics.Primitives
                     eInv.RemoveAll(x => x.Type == 2);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTS1CallMode.SelectDowntownLot: //22
-                    //TODO: this is a pre-unleashed system I believe
+                    //TODO: this is a pre-unleashed system I believe. likely need to add this if we want to support older TS1 versions (need testers)
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTS1CallMode.GetDowntownTimeFromSOInventory: //23
                     //eperson = (VMAvatar)context.StackObject;
@@ -210,6 +216,8 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_TRUE; //UNUSED?
                 // 24. HotDateChangeSuitsPermanentlyCall
                 // 25. SaveSimPersistentData (motives, relationships?)
+                case VMGenericTS1CallMode.SaveSimPersistentData:
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTS1CallMode.BuildVacationFamilyPutFamilyNumInTemp0: //26
                     //in our implementation, vacation lots build the family in the same way as normal lots.
                     var crossData2 = Content.Content.Get().Neighborhood.GameState;
@@ -262,7 +270,7 @@ namespace FSO.SimAntics.Primitives
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     fneigh = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
                     if (fneigh == null) return VMPrimitiveExitCode.GOTO_FALSE;
-                    AddToFamily(context.VM.TS1State.CurrentFamily, fneigh);
+                    AddToFamily(context.VM.TS1State.CurrentFamily, fneigh, context.VM);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 // 34. PromoteFameIfNeeded
                 case VMGenericTS1CallMode.TakeTaxiHook: //35
@@ -318,24 +326,34 @@ namespace FSO.SimAntics.Primitives
             }
         }
 
-        private void AddToFamily(FAMI family, Neighbour neigh)
+        private void AddToFamily(FAMI family, Neighbour neigh, VM vm)
         {
             //was the neighbor already in a family?
             if (neigh.PersonData != null) {
                 var famID = neigh.PersonData[(int)VMPersonDataVariable.TS1FamilyNumber];
                 var oldFam = Content.Content.Get().Neighborhood.GetFamily((ushort)famID);
-                if (oldFam != null)
+                if (oldFam != null && oldFam.ChunkID != 0)
                 {
                     var oguids = oldFam.FamilyGUIDs.ToList();
                     oguids.Remove(neigh.GUID);
                     oldFam.FamilyGUIDs = oguids.ToArray();
                     TryDeleteFamily(oldFam);
                 }
+                neigh.PersonData[(int)VMPersonDataVariable.TS1FamilyNumber] = (short)family.ChunkID;
             }
 
             var guids = family.FamilyGUIDs.ToList();
             guids.Add(neigh.GUID);
             family.FamilyGUIDs = guids.ToArray();
+
+            //if the sim is on the lot, change their runtime person data to reflect the new family id.
+            var runtime = (VMAvatar)vm.Context.ObjectQueries.Avatars.FirstOrDefault(x => ((VMAvatar)x).GetPersonData(VMPersonDataVariable.NeighborId) == neigh.NeighbourID);
+            runtime?.SetPersonData(VMPersonDataVariable.TS1FamilyNumber, (short)family.ChunkID);
+        }
+
+        private VMAvatar GetRuntimeNeigh(VM vm, ushort neighborID)
+        {
+            return (VMAvatar)vm.Context.ObjectQueries.Avatars.FirstOrDefault(x => ((VMAvatar)x).GetPersonData(VMPersonDataVariable.NeighborId) == neighborID);
         }
     }
 

@@ -354,12 +354,8 @@ namespace FSO.SimAntics
             {
                 var lastHour = Context.Clock.Hours;
                 Context.Clock.Tick();
-                GlobalState[6] = (short)Context.Clock.Seconds;
-                GlobalState[5] = (short)Context.Clock.Minutes;
-                GlobalState[0] = (short)Context.Clock.Hours;
-                GlobalState[4] = (short)Context.Clock.TimeOfDay;
 
-                if (lastHour != GlobalState[0] && GlobalState[0]%6 == 0)
+                if (lastHour != Context.Clock.Hours && Context.Clock.Hours % 6 == 0)
                 {
                     ProcessQTRDay();
                 }
@@ -480,6 +476,24 @@ namespace FSO.SimAntics
         {
             // should this be in VMContext?
             if (var >= GlobalState.Length) throw new Exception("Global Access out of bounds!");
+            
+            switch (var)
+            {
+                case 0:
+                    return (short)Context.Clock.Hours;
+                case 1:
+                    return (short)Context.Clock.DayOfMonth;
+                case 4:
+                    return (short)Context.Clock.TimeOfDay;
+                case 5:
+                    return (short)Context.Clock.Minutes;
+                case 6:
+                    return (short)Context.Clock.Seconds;
+                case 7:
+                    return (short)Context.Clock.Month;
+                case 8:
+                    return (short)Context.Clock.Year;
+            }
             return GlobalState[var];
         }
 
