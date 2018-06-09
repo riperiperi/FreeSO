@@ -222,7 +222,7 @@ namespace FSO.Client.UI.Panels.EODs
         {
             var appearanceType = GetAppearanceType();
             var dataProvider = new List<object>();
-            foreach (var outfit in outfits.Outfits)
+            foreach (var outfit in outfits.Outfits.OrderBy(x => x.Price))
             {
                 if (outfit.Gender != SelectedGender) { continue; }
 

@@ -22,7 +22,7 @@ namespace FSO.Client.Rendering.City
         bool HideUI { get; }
 
         void Update(UpdateState state, Terrain city);
-        void MouseOut();
+        void MouseEvent(FSO.Common.Rendering.Framework.IO.UIMouseEventType type, UpdateState state);
         float GetIsoScale();
         Vector2 CalculateR();
         Vector2 CalculateRShadow();

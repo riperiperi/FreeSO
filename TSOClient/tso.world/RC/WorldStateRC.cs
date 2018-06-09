@@ -12,13 +12,20 @@ using FSO.LotView.Utils;
 
 namespace FSO.LotView.RC
 {
+
+    public interface I3DRotate
+    {
+        float RotationX { get; set; }
+        float RotationY { get; set; }
+    }
+
     /// <summary>
     /// An alternate implenentation of WorldState that renders the game with a 3D camera.
     /// This changes the camera to use a 3D one, and remaps some of the old functionality to work with it.
     /// 
     /// RC stands for reconstruction, the primary method used to render game objects in 3D.
     /// </summary>
-    public class WorldStateRC : WorldState
+    public class WorldStateRC : WorldState, I3DRotate
     {
         public WorldStateRC(GraphicsDevice device, float worldPxWidth, float worldPxHeight, World world) : base(device, worldPxWidth, worldPxHeight, world)
         {

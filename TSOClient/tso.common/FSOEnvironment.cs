@@ -20,6 +20,7 @@ namespace FSO.Common
         /// True if system does not support gl_FragDepth (eg. iOS). Uses alternate pipeline that abuses stencil buffer.
         /// </summary>
         public static bool SoftwareDepth = false;
+        public static int GLVer = 3;
         public static float UIZoomFactor = 1f;
         public static float DPIScaleFactor = 1;
         public static bool SoftwareKeyboard = false;

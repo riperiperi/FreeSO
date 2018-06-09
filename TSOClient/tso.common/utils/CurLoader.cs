@@ -19,6 +19,8 @@ namespace FSO.Common.Utils
             return MouseCursor.FromTexture2D(cur.Item1, cur.Item2.X, cur.Item2.Y);
         }
 
+        public static Func<GraphicsDevice, Stream, Texture2D> BmpLoaderFunc;
+
         public static Tuple<Texture2D, Point> LoadCursor(GraphicsDevice gd, Stream stream)
         {
             using (var io = new BinaryReader(stream))
@@ -53,7 +55,7 @@ namespace FSO.Common.Utils
                 outIO.Write(data);
 
                 tempbmp.Seek(0, SeekOrigin.Begin);
-                var tex = Texture2D.FromStream(gd, tempbmp);
+                var tex = BmpLoaderFunc(gd, tempbmp);
 
                 //our mask is on top. the image is on bottom.
                 var odata = new byte[tex.Width * tex.Height * 4];

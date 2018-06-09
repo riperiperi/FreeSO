@@ -32,6 +32,8 @@ using FSO.LotView.Utils;
 using FSO.LotView.Components;
 using FSO.LotView.Model;
 using FSO.Files.RC;
+using FSO.Common.Rendering.Framework.IO;
+using FSO.Client.UI.Panels;
 
 namespace FSO.Client.Rendering.City
 {
@@ -892,14 +894,52 @@ namespace FSO.Client.Rendering.City
             return new Vector2((temp.X) * iScale + width / 2, (-(temp.Y) * iScale) + height / 2);
         }
 
-        public void UIMouseEvent(String type)
+        public void UIMouseEvent(UIMouseEventType type, UpdateState state)
         {
-            if (type.Equals("MouseOver", StringComparison.InvariantCultureIgnoreCase)) m_HandleMouse = true;
-            if (type.Equals("MouseOut", StringComparison.InvariantCultureIgnoreCase))
+            Camera.MouseEvent(type, state);
+            if (type == UIMouseEventType.MouseOver) m_HandleMouse = true;
+            if (type == UIMouseEventType.MouseOut)
             {
-                Camera.MouseOut();
                 m_HandleMouse = false;
             }
+        }
+
+        public void Click(Point pt, UpdateState state)
+        {
+            var currentTile = GetHoverSquare();
+            var curTileInt = (currentTile == null) ? new int[] { -1, -1 } : new int[] { (int)currentTile.Value.X, (int)currentTile.Value.Y };
+            m_SelTile = curTileInt;
+            m_VecSelTile = currentTile;
+
+            if (Camera.Zoomed == TerrainZoomMode.Far)
+            {
+                FindController<TerrainController>().ZoomIn();
+
+                Camera.Zoomed = TerrainZoomMode.Near;
+                double ResScale = 768.0 / m_ScrHeight;
+                double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10) * ResScale;
+                double hb = m_ScrWidth * isoScale;
+                double vb = m_ScrHeight * isoScale;
+
+                if (Camera is CityCamera2D)
+                {
+                    ((CityCamera2D)Camera).m_TargVOffX = (float)(-hb + pt.X * isoScale * 2);
+                    ((CityCamera2D)Camera).m_TargVOffY = (float)(vb - pt.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
+                }
+            }
+            else
+            {
+                Plugin?.TileMouseUp(m_VecSelTile);
+                if (Plugin == null)
+                {
+                    if (m_SelTile[0] != -1 && m_SelTile[1] != -1)
+                    {
+                        FindController<TerrainController>().ClickLot(m_SelTile[0], m_SelTile[1]);
+                    }
+                }
+            }
+
+            ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).ucp.UpdateZoomButton();
         }
 
         private int ITime;
@@ -964,36 +1004,9 @@ namespace FSO.Client.Rendering.City
                     if (m_MouseState.RightButton == ButtonState.Pressed && m_LastMouseState.RightButton == ButtonState.Released)
                     {
                     }
-                    else if (m_MouseState.LeftButton == ButtonState.Released && m_LastMouseState.LeftButton == ButtonState.Pressed) //if clicked...
+                    else if (m_MouseState.LeftButton == ButtonState.Released && m_LastMouseState.LeftButton == ButtonState.Pressed && !(Camera is ITouchable)) //if clicked...
                     {
-                        if (Camera.Zoomed == TerrainZoomMode.Far)
-                        {
-                            FindController<TerrainController>().ZoomIn();
-
-                            Camera.Zoomed = TerrainZoomMode.Near;
-                            double ResScale = 768.0 / m_ScrHeight;
-                            double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10) * ResScale;
-                            double hb = m_ScrWidth * isoScale;
-                            double vb = m_ScrHeight * isoScale;
-
-                            if (Camera is CityCamera2D) {
-                                ((CityCamera2D)Camera).m_TargVOffX = (float)(-hb + m_MouseState.X * isoScale * 2);
-                                ((CityCamera2D)Camera).m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
-                            }
-                        }
-                        else
-                        {
-                            Plugin?.TileMouseUp(m_VecSelTile);
-                            if (Plugin == null)
-                            {
-                                if (m_SelTile[0] != -1 && m_SelTile[1] != -1)
-                                {
-                                    FindController<TerrainController>().ClickLot(m_SelTile[0], m_SelTile[1]);
-                                }
-                            }
-                        }
-
-                        CurrentUIScr.ucp.UpdateZoomButton();
+                        Click(m_MouseState.Position, state);
                     }
 
                     if (m_VecSelTile != null && m_MouseState.LeftButton == ButtonState.Pressed && m_LastMouseState.LeftButton == ButtonState.Released) //if mousedown...

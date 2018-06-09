@@ -647,9 +647,6 @@
     <Content Include="Content\DX\Effects\LightMap2D.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Patch\petparrot_cleanfix.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Content\Patch\gamecompdrawacard.piff">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -1276,6 +1273,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Patch\TSOPorts\windowslodge.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\cannonball_fix.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\petparrot_cleanfix.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Content\UI\uitext\english.dir\_f110_manageeodstrings.cst">

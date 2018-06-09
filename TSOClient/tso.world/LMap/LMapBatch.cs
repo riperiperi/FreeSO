@@ -146,6 +146,8 @@ namespace FSO.LotView.LMap
             var ultra = WorldConfig.Current.UltraLighting;
             var directional = WorldConfig.Current.Directional;
 
+            if (w > 64 && FSOEnvironment.SoftwareDepth) ultra = false;
+
             resPerTile = ultra?16:8;
 
             var wl = resPerTile * (w - borderSize);

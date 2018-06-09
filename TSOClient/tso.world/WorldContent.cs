@@ -31,7 +31,7 @@ namespace FSO.LotView
 
         public static string EffectSuffix
         {
-            get { return ((FSOEnvironment.SoftwareDepth)?"iOS":""); }
+            get { return ((FSOEnvironment.GLVer == 2) ?"iOS":""); }
         }
 
         public static Effect _2DWorldBatchEffect

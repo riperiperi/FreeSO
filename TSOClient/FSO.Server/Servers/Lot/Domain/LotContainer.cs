@@ -12,6 +12,7 @@ using FSO.Server.Database.DA.LotVisitors;
 using FSO.Server.Database.DA.Objects;
 using FSO.Server.Database.DA.Relationships;
 using FSO.Server.Database.DA.Roommates;
+using FSO.Server.Database.DA.Users;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
@@ -990,10 +991,11 @@ namespace FSO.Server.Servers.Lot.Domain
                 var inventory = da.Objects.GetAvatarInventory(session.AvatarId);
                 var myRoomieLots = da.Roommates.GetAvatarsLots(session.AvatarId); //might want to use other entries to update the roomies table entirely.
                 var myIgnored = da.Bookmarks.GetAvatarIgnore(session.AvatarId);
+                var user = da.Users.GetById(avatar.user_id);
                 LOG.Info("Avatar " + avatar.name + " ("+session.AvatarId+") has joined lot "+Context.DbId);
 
                 //Load all the avatars data
-                var state = StateFromDB(avatar, rels, jobinfo, myRoomieLots, myIgnored);
+                var state = StateFromDB(avatar, user, rels, jobinfo, myRoomieLots, myIgnored);
 
                 var client = new VMNetClient();
                 client.AvatarState = state;
@@ -1120,7 +1122,7 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
-        private VMNetAvatarPersistState StateFromDB(DbAvatar avatar, List<DbRelationship> rels, List<DbJobLevel> jobs, List<DbRoommate> myRoomieLots, List<uint> ignored)
+        private VMNetAvatarPersistState StateFromDB(DbAvatar avatar, User user, List<DbRelationship> rels, List<DbJobLevel> jobs, List<DbRoommate> myRoomieLots, List<uint> ignored)
         {
             var state = new VMNetAvatarPersistState();
             state.Name = avatar.name;
@@ -1136,7 +1138,7 @@ namespace FSO.Server.Servers.Lot.Domain
             state.SkinTone = avatar.skin_tone;
 
             var now = Epoch.Now;
-            var age = (uint)((now - avatar.date) / ((long)60 * 60 * 24));
+            var age = (uint)((now - user.register_date) / ((long)60 * 60 * 24));
 
             state.SkillLock = (short)(20 + age / 7);
             state.SkillLockBody = (short)(avatar.lock_body*100);

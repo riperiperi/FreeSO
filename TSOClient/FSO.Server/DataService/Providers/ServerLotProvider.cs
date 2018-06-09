@@ -32,6 +32,7 @@ namespace FSO.Server.DataService.Providers
             { LotCategory.entertainment, 1 },
             { LotCategory.services, 1 },
             { LotCategory.romance, 1 },
+            { LotCategory.welcome, 1 },
         };
 
         private Dictionary<string, Lot> LotsByName = new Dictionary<string, Lot>();

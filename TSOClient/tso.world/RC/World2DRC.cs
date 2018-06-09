@@ -517,6 +517,7 @@ namespace FSO.LotView.RC
                 if (bounds.Intersects(frustrum))
                     surround.DrawArch(gd, state);
             }
+            if (((WorldCamera3D)state.Camera).FromIntensity > 0) state.CenterTile = state.CenterTile;
 
             gd.BlendState = BlendState.NonPremultiplied;
             if (Blueprint.Terrain != null)

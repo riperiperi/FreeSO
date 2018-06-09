@@ -792,7 +792,8 @@ namespace FSO.SimAntics.Engine
                 else if (avatar.IsPet) return null; //not allowed
 
                 var isVisitor = avatar.GetPersonData(VMPersonDataVariable.PersonType) == 1 && avatar.GetPersonData(VMPersonDataVariable.TS1FamilyNumber) != Context.VM.TS1State.CurrentFamily?.ChunkID;
-                    //avatar.ObjectID != Context.VM.GetGlobalValue(3);
+                //avatar.ObjectID != Context.VM.GetGlobalValue(3);
+                var debugTrees = false;
 
                 TTABFlags ts1State =
                       ((isVisitor) ? TTABFlags.AllowVisitors : 0)
@@ -802,7 +803,7 @@ namespace FSO.SimAntics.Engine
                 //DEBUG: enable debug interction for all CSRs.
                 if ((action.Flags & TTABFlags.Debug) > 0)
                 {
-                    if (!isVisitor)
+                    if (!isVisitor && debugTrees)
                         return result; //do not bother running check
                     else
                         return null; //disable debug for everyone else.

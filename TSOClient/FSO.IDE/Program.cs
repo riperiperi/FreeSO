@@ -26,11 +26,12 @@ namespace FSO.IDE
         /// </summary>
         static void Main(string[] args)
         {
+            FSO.Windows.Program.InitWindows();
             TimedReferenceController.SetMode(CacheType.PERMANENT);
 
             try
             {
-                var asm = Assembly.LoadFile(Path.GetFullPath(@"FreeSO.exe"));
+                var asm = Assembly.LoadFile(Path.GetFullPath(@"FSO.Client.dll"));
                 var type = asm.GetType("FSO.Client.FSOProgram");
                 FSOProgram = Activator.CreateInstance(type) as IFSOProgram;
                 type = asm.GetType("FSO.Client.GameStartProxy");

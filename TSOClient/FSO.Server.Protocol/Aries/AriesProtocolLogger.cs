@@ -17,7 +17,7 @@ namespace FSO.Server.Protocol.Aries
 {
     public class AriesProtocolLogger : IoFilterAdapter
     {
-        private static Logger LOG = LogManager.GetCurrentClassLogger();
+        //private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         private IPacketLogger PacketLogger;
         private ISerializationContext Context;

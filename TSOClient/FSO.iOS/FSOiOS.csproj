@@ -42,12 +42,12 @@
     <CodesignKey>iPhone Developer</CodesignKey>
     <MtouchUseSGen>True</MtouchUseSGen>
     <MtouchUseRefCounting>True</MtouchUseRefCounting>
-    <MtouchFloat32>False</MtouchFloat32>
+    <MtouchFloat32>true</MtouchFloat32>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
     <MtouchLink>Full</MtouchLink>
     <MtouchArch>ARMv7, ARM64</MtouchArch>
     <MtouchDebug>True</MtouchDebug>
-    <MtouchUseLlvm>True</MtouchUseLlvm>
+    <MtouchUseLlvm>true</MtouchUseLlvm>
     <BuildIpa>True</BuildIpa>
     <IpaIncludeArtwork>False</IpaIncludeArtwork>
     <IpaPackageName>FreeSO</IpaPackageName>
@@ -59,7 +59,8 @@
     <DeviceSpecificBuild>true</DeviceSpecificBuild>
     <MtouchI18n>west</MtouchI18n>
     <IpaMetadata>iTunesMetadata.plist</IpaMetadata>
-    <MtouchExtraArgs>--linkskip=MonoGame.Framework --linkskip=FSO.Files --linkskip=FSO.SimAntics --linkskip=FSO.Content --linkskip=FSO.Client --linkskip=Ninject -v -v -v -v</MtouchExtraArgs>
+    <MtouchExtraArgs>--linkskip=MonoGame.Framework --linkskip=FSO.Files --linkskip=FSO.SimAntics --linkskip=FSO.Content --linkskip=Ninject --linkskip=FSO.Client --linkskip=FSO.Server.Protocol --linkskip=FSO.Common.Domain --linkskip=FSO.Common.DatabaseService --linkskip=FSO.Common.DataService --linkskip=FSO.UI --linkskip=System.Collections.Immutable --nolinkaway -v -v -v -v</MtouchExtraArgs>
+    <MtouchEnableSGenConc>true</MtouchEnableSGenConc>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
     <Optimize>true</Optimize>
@@ -90,21 +91,29 @@
     <MtouchFastDev>true</MtouchFastDev>
     <MtouchUseSGen>true</MtouchUseSGen>
     <MtouchUseRefCounting>true</MtouchUseRefCounting>
-    <MtouchFloat32>true</MtouchFloat32>
+    <MtouchFloat32>false</MtouchFloat32>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
-    <MtouchLink>SdkOnly</MtouchLink>
+    <MtouchLink>Full</MtouchLink>
     <MtouchArch>ARMv7, ARM64</MtouchArch>
     <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
     <MtouchTlsProvider>Default</MtouchTlsProvider>
+    <MtouchExtraArgs>--linkskip=MonoGame.Framework --linkskip=FSO.Files --linkskip=FSO.SimAntics --linkskip=FSO.Content --linkskip=Ninject --linkskip=FreeSO --linkskip=FSO.Server.Protocol --linkskip=FSO.Common.Domain --linkskip=FSO.Common.DatabaseService --linkskip=FSO.Common.DataService --linkskip=FSO.UI --linkskip=System.Collections.Immutable --nolinkaway -v -v -v -v</MtouchExtraArgs>
+    <MtouchI18n>west</MtouchI18n>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Default' ">
+    <AppExtensionDebugBundleId />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Common.Logging.Core, Version=3.4.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\Common.Logging.Core.dll</HintPath>
+    <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.3.4.1\lib\netstandard1.3\Common.Logging.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Common.Logging.Portable, Version=3.4.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\Common.Logging.Portable.dll</HintPath>
+    <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\netstandard1.0\Common.Logging.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSO.Client">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Client.dll</HintPath>
     </Reference>
     <Reference Include="FSO.Common.DatabaseService">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Common.DatabaseService.dll</HintPath>
@@ -131,21 +140,32 @@
       <HintPath>..\packages\JWT.3.0.2\lib\netstandard1.3\JWT.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Lidgren.Network">
+      <HintPath>..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\iOS\iPhone\Lidgren.Network.dll</HintPath>
+    </Reference>
+    <Reference Include="MIConvexHull, Version=1.0.17.1019, Culture=neutral, PublicKeyToken=bdc96d69606221fd, processorArchitecture=MSIL">
+      <HintPath>..\packages\MIConvexHull.1.1.17.1019\lib\netstandard1.0\MIConvexHull.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Mina.NET">
       <HintPath>..\tso.client\bin\WindowsGL\Release\Mina.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework">
+      <HintPath>..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\iOS\iPhone\MonoGame.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework.Net">
+      <HintPath>..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\iOS\iPhone\MonoGame.Framework.Net.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\netstandard1.3\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Ninject, Version=4.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Ninject.4.0.0-beta-0134\lib\netstandard1.5\Ninject.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Portable.Ninject.3.3.1\lib\Xamarin.iOS\Ninject.dll</HintPath>
     </Reference>
-    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.3.11\lib\Xamarin.iOS10\NLog.dll</HintPath>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.5.5\lib\xamarinios10\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
@@ -157,12 +177,10 @@
       <HintPath>..\packages\System.Collections.Immutable.1.3.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="Xamarin.iOS" />
-    <Reference Include="FreeSO">
-      <HintPath>..\tso.client\bin\WindowsGL\Release\FreeSO.exe</HintPath>
-    </Reference>
     <Reference Include="FSO.Common">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Common.dll</HintPath>
     </Reference>
@@ -209,286 +227,12 @@
     <Compile Include="FSOInstallViewController.designer.cs">
       <DependentUpon>FSOInstallViewController.cs</DependentUpon>
     </Compile>
+    <Compile Include="iOSImageLoader.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <BundleResource Include="Content\Globals\readme.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Objects\readme.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\splashSeg.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road00.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road01.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road02.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road03.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road04.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road05.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road06.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road07.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road08.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road09.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road10.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road11.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road12.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road13.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road14.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\road15.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner00.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner01.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner02.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner03.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner04.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner05.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner06.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner07.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner08.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner09.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner10.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner11.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner12.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner13.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner14.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Textures\terrain\roadcorner15.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
     <InterfaceDefinition Include="Installer.storyboard" />
-    <BundleResource Include="Content\DX\Effects\2DWorldBatch.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\DX\Effects\colorpoly2D.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\DX\Effects\GrassShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\DX\Effects\PixShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\DX\Effects\VerShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\DX\Effects\Vitaboy.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\DX\Fonts\FreeSO_10px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\DX\Fonts\FreeSO_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\DX\Fonts\FreeSO_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\DX\Fonts\FreeSO_16px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\DX\Fonts\Trebuchet_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\DX\Fonts\Trebuchet_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Effects\2DWorldBatch.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Effects\2DWorldBatchiOS.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Effects\colorpoly2D.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Effects\Effects.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Effects\GrassShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Effects\GrassShaderiOS.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Effects\PixShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Effects\VerShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Effects\Vitaboy.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Fonts\FreeSO_10px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Fonts\FreeSO_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Fonts\FreeSO_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Fonts\FreeSO_16px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Fonts\Trebuchet_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Fonts\Trebuchet_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\iOS\Textures\gridTexture.xnb" />
-    <BundleResource Include="Content\OGL\Effects\2DWorldBatch.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Effects\2DWorldBatchiOS.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Effects\colorpoly2D.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Effects\GrassShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Effects\GrassShaderiOS.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Effects\PixShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Effects\VerShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Effects\Vitaboy.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Fonts\FreeSO_10px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Fonts\FreeSO_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Fonts\FreeSO_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Fonts\FreeSO_16px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Fonts\Trebuchet_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\OGL\Fonts\Trebuchet_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\craftingworkbench_nodebug.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\dfcontroller_optimise.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\foodcounter_ea.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\koipond.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\oj-rest-controller_uninit_local.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\onlinejobsglobals_30fps.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\pizzamaker_animfix.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\pondduck_fixref.piff" />
-    <BundleResource Include="Content\Patch\poolslide.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\skillobjects_10xmultiplier.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\soccerball.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\soccerball.spf.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\soccerball.str.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\timeaccumulator_30fps.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\trees3_objf.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Patch\WORKAROUND_poolladder.piff">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </BundleResource>
     <None Include="app.config" />
     <None Include="Entitlements.plist" />
     <None Include="Info.plist" />
@@ -502,18 +246,6 @@
     </BundleResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.iOS.csproj">
-      <Project>{DB8508BB-9849-4CC2-BC0F-8EB5DACB3C47}</Project>
-      <Name>MonoGame.Framework.iOS</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Lidgren.Network\Lidgren.Network.iOS.csproj">
-      <Project>{734EAA48-F1CA-481A-B391-0285BC0E8B40}</Project>
-      <Name>Lidgren.Network.iOS</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Net.iOS.csproj">
-      <Project>{D4838656-8545-4DC5-8822-D4AD313E17AC}</Project>
-      <Name>MonoGame.Framework.Net.iOS</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\TargaImagePCL\TargaImagePCL.csproj">
       <Project>{d8232422-9d79-4200-a981-eb70ed82ccf3}</Project>
       <Name>TargaImagePCL</Name>
@@ -521,6 +253,30 @@
   </ItemGroup>
   <ItemGroup>
     <BundleResource Include="FreeSO.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="..\tso.client\Content\**\*.*">
+      <Link>Content\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="..\tso.content\Content\**\*.*">
+      <Link>Content\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="..\tso.client\bin\WindowsGL\Release\Content\Objects\**\*.*">
+      <Link>Content\Objects\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="..\FSO.Windows\bin\Release\Content\MeshReplace\**\*.*">
+      <Link>Content\MeshReplace\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </BundleResource>
   </ItemGroup>
   <ItemGroup>
     <BundleResource Include="Resources\Default%402x.png" />
@@ -547,25 +303,10 @@
     <BundleResource Include="Default-667h%402x.png" />
   </ItemGroup>
   <ItemGroup>
-    <BundleResource Include="Content\Blueprints\empty_lot.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </BundleResource>
-    <BundleResource Include="Content\Blueprints\empty_lot_fso.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </BundleResource>
-    <Content Include="Common.Logging.Core.dll" />
-    <Content Include="Common.Logging.Core.pdb" />
-    <Content Include="Common.Logging.Core.xml" />
-    <Content Include="Common.Logging.Portable.dll" />
-    <Content Include="Common.Logging.Portable.pdb" />
-    <Content Include="Common.Logging.Portable.XML" />
     <Content Include="LICENSE.txt" />
-    <Content Include="Ninject.dll" />
-    <Content Include="Ninject.xml" />
+    <Content Include="MIConvexHull.xml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Content\DX\Textures\" />
-    <Folder Include="Content\OGL\Textures\" />
     <Folder Include="extensions\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />

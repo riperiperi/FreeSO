@@ -1,4 +1,5 @@
 ﻿using FSO.Client.Utils;
+using FSO.Common;
 using FSO.Common.Domain.Shards;
 using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
@@ -90,7 +91,7 @@ namespace FSO.Client.Regulators
                             if (cdnurl != null)
                                 ApiClient.CDNUrl = cdnurl;
 
-                            if (RequireUpdate(connectResult.UserAuthorized))
+                            if (RequireUpdate(connectResult.UserAuthorized) && !FSOEnvironment.SoftwareKeyboard)
                             {
                                 AsyncTransition("UpdateRequired", connectResult.UserAuthorized);
                             }

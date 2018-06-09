@@ -3,6 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using Ninject.Injection;
+using Common.Logging;
+using System.Threading;
+using FSO.Files;
+//using Ninject;
 #if MONOMAC
 using MonoMac.AppKit;
 using MonoMac.Foundation;
@@ -24,8 +29,11 @@ namespace FSOiOS
 #endif
 	{
 
+        public static Action<string> MainOrg;
+
 		internal static void RunGame()
 		{
+            ImageLoader.BaseFunction = iOSImageLoader.iOSFromStream;
             var iPad = UIDevice.CurrentDevice.Model.Contains("iPad");
             //TODO: disable iPad retina somehow
             FSOEnvironment.ContentDir = "Content/";
@@ -35,12 +43,47 @@ namespace FSOiOS
 			FSOEnvironment.DirectX = false;
 			FSOEnvironment.SoftwareKeyboard = true;
 			FSOEnvironment.SoftwareDepth = true;
+            FSOEnvironment.EnableNPOTMip = true;
+            FSOEnvironment.GLVer = 2;
             FSOEnvironment.UseMRT = false;
 			FSOEnvironment.UIZoomFactor = iPad?1:2;
             FSOEnvironment.DPIScaleFactor = iPad ? 2 : 1;
+            FSOEnvironment.TexCompress = false;
+            FSOEnvironment.TexCompressSupport = false;
+
+            FSOEnvironment.GameThread = Thread.CurrentThread;
+            FSOEnvironment.Enable3D = true;
+
             FSO.Files.ImageLoader.UseSoftLoad = false;
 
+            /*
+            var settings = new NinjectSettings();
+            settings.LoadExtensions = false;
+            */
+
+            if (MainOrg != null)
+            {
+                var cont = new FSO.Client.GameController(null);
+            }
+            MainOrg = FSO.Client.FSOProgram.ShowDialog;
+
             GlobalSettings.Default.CityShadows = false;
+
+
+            var set = GlobalSettings.Default;
+            set.TargetRefreshRate = 60;
+            set.CurrentLang = "english";
+            set.Lighting = true;
+            set.SmoothZoom = true;
+            set.AntiAlias = false;
+            set.LightingMode = 3;
+            set.AmbienceVolume = 10;
+            set.FXVolume = 10;
+            set.MusicVolume = 10;
+            set.VoxVolume = 10;
+            set.GraphicsWidth = (int)UIScreen.MainScreen.Bounds.Width;
+            set.DirectionalLight3D = false;
+            set.GraphicsHeight = (int)UIScreen.MainScreen.Bounds.Height;
 
             if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "The Sims Online.zip")))
                 File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "The Sims Online.zip"));
@@ -51,7 +94,7 @@ namespace FSOiOS
             TSOGame game = new TSOGame();
             GameFacade.DirectX = false;
             FSO.LotView.World.DirectX = false;
-            game.Run();
+            game.Run(Microsoft.Xna.Framework.GameRunBehavior.Asynchronous);
 
 #if !__IOS__ && !__TVOS__
 			game.Dispose();

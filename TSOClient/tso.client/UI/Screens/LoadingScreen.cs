@@ -34,7 +34,7 @@ namespace FSO.Client.UI.Screens
         private UILabel ProgressLabel1;
         private UILabel ProgressLabel2;
 
-        private Timer CheckProgressTimer;
+        private GameThreadInterval CheckProgressTimer;
         private bool PlayedLoadLoop = false;
 
         public LoadingScreen() : base()
@@ -84,17 +84,15 @@ namespace FSO.Client.UI.Screens
             CurrentPreloadLabel = 0;
             AnimateLabel("", PreloadLabels[0]);
 
-            CheckProgressTimer = new Timer();
-            CheckProgressTimer.Interval = 5;
-            CheckProgressTimer.Elapsed += new ElapsedEventHandler(CheckProgressTimer_Elapsed);
-            CheckProgressTimer.Start();
+            
+            CheckProgressTimer = GameThread.SetInterval(CheckProgressTimer_Elapsed, 5);
 
             //GameFacade.Screens.Tween.To(rect, 10.0f, new Dictionary<string, float>() {
             //    {"X", 500.0f}
             //}, TweenQuad.EaseInOut);
         }
 
-        void CheckProgressTimer_Elapsed(object sender, ElapsedEventArgs e)
+        void CheckProgressTimer_Elapsed()
         {
             CheckPreloadLabel();
         }
@@ -123,7 +121,7 @@ namespace FSO.Client.UI.Screens
                     else
                     {
                         /** No more labels to show! Preload must be complete :) **/
-                        CheckProgressTimer.Stop();
+                        CheckProgressTimer.Clear();
                         FSOFacade.Controller.ShowLogin();
                         return;
                     }
@@ -131,7 +129,7 @@ namespace FSO.Client.UI.Screens
             }
             if (percentDone >= 1)
             {
-                CheckProgressTimer.Stop();
+                CheckProgressTimer.Clear();
                 FSOFacade.Controller.ShowLogin();
                 return;
             }

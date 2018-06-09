@@ -13,14 +13,18 @@ using FSO.Common;
 using FSO.Common.Rendering.Framework;
 using Microsoft.Xna.Framework.Input;
 using FSO.Client.UI.Framework;
+using FSO.LotView.RC;
+using FSO.Client.UI.Panels;
+using FSO.Common.Rendering.Framework.IO;
 
 namespace FSO.Client.Rendering.City
 {
-    public class CityCamera3D : BasicCamera, ICityCamera
+    public class CityCamera3D : BasicCamera, ICityCamera, I3DRotate, ITouchable
     {
         public Vector2 CenterTile = new Vector2(184, 328);
         private Point LastMouse;
         private bool MouseWasDown;
+        private UILotControlTouchHelper Touch;
 
         public float LotZoomProgress
         {
@@ -97,6 +101,9 @@ namespace FSO.Client.Rendering.City
         public CityCamera3D() : base(GameFacade.GraphicsDevice, new Vector3(256, 0, 256), new Vector3(256, 0, 256), Vector3.Up)
         {
             NearPlane = 0.25f;
+            Touch = new UILotControlTouchHelper(this);
+            Touch.MinZoom = 0.25f;
+            Touch.MaxZoom = 2.5f;
         }
 
         public Vector2 CalculateR()
@@ -163,9 +170,20 @@ namespace FSO.Client.Rendering.City
             }
         }
 
-        public void MouseOut()
+        public void MouseEvent(UIMouseEventType type, UpdateState state)
         {
-            LastWheelPos = null;
+            if (type == UIMouseEventType.MouseDown)
+            {
+                Touch.MiceDown.Add(state.CurrentMouseID);
+            }
+            else if (type == UIMouseEventType.MouseUp)
+            {
+                Touch.MiceDown.Remove(state.CurrentMouseID);
+            }
+            else if (type == UIMouseEventType.MouseOut)
+            {
+                LastWheelPos = null;
+            }
         }
 
         public Vector2[] GetScrollBasis(bool multiplied)
@@ -178,7 +196,8 @@ namespace FSO.Client.Rendering.City
             };
         }
 
-        public float TargetZoom = 0.25f;
+        public float TargetZoom { get; set; } = 0.25f;
+        public bool UserModZoom { get; set; }
         public int? LastWheelPos;
 
         private bool RMBScroll;
@@ -186,9 +205,13 @@ namespace FSO.Client.Rendering.City
         private int RMBScrollY;
         private bool LastFP;
         private Vector3 FPCamVelocity;
+        private Terrain Parent;
 
         public void Update(UpdateState state, Terrain city)
         {
+            Focused = state.WindowFocused;
+            Parent = city;
+            Touch.Update(state);
             var inCity = Zoomed != TerrainZoomMode.Lot;
             if (TargetZoom > 2.3f)
             {
@@ -211,11 +234,13 @@ namespace FSO.Client.Rendering.City
             }
             if (TargetZoom > 2f && inCity) TargetZoom -= (TargetZoom - 2f) * (1f - (float)Math.Pow(0.975f, 60f / FSOEnvironment.RefreshRate));
             Zoom3D += ((12f - (TargetZoom - 0.25f) * 6.8571428571428571428571428571429f) - Zoom3D) / 10;
-            var userModZoom = false;
 
+            /*
+             * replaced by touch helper
+             * 
             if (LastWheelPos != null && state.WindowFocused && state.MouseState.ScrollWheelValue != 0 && Zoomed != TerrainZoomMode.Lot) {
                 var diff = state.MouseState.ScrollWheelValue - LastWheelPos.Value;
-                userModZoom = diff != 0;
+                UserModZoom = diff != 0;
                 TargetZoom = TargetZoom + diff / 1600f;
                 TargetZoom = Math.Max(0.25f, Math.Min(TargetZoom, 2.5f));
             }
@@ -226,6 +251,7 @@ namespace FSO.Client.Rendering.City
             {
                 LastWheelPos = null;
             }
+            */
 
             //rmb scroll
             if (state.MouseState.RightButton == ButtonState.Pressed)
@@ -356,7 +382,7 @@ namespace FSO.Client.Rendering.City
                 LastFP = false;
                 var md = state.MouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
 
-                if (_Zoomed != TerrainZoomMode.Lot && userModZoom)
+                if (_Zoomed != TerrainZoomMode.Lot && UserModZoom)
                 {
                     var zoom = (Zoom3D > 4.5f) ? TerrainZoomMode.Far : TerrainZoomMode.Near;
                     if (_Zoomed != zoom)
@@ -372,6 +398,7 @@ namespace FSO.Client.Rendering.City
                     RotationY += (mpos.Y - LastMouse.Y) / 150f;
                 }
 
+                UserModZoom = false;
                 if (md)
                 {
                     LastMouse = state.MouseState.Position;
@@ -489,6 +516,32 @@ namespace FSO.Client.Rendering.City
             }
         }
 
+        public float BBScale
+        {
+            get
+            {
+                return 1;
+            }
+        }
+
+        public I3DRotate Rotate
+        {
+            get
+            {
+                return this;
+            }
+        }
+
+        public bool TVisible
+        {
+            get
+            {
+                return Focused;
+            }
+        }
+
+        public bool Focused;
+
         public void InvalidateCamera()
         {
             if (_SwitchingMode) return;
@@ -525,6 +578,16 @@ namespace FSO.Client.Rendering.City
                 Vector3.Transform(new Vector3(z * 1.30f, z * 1f, 0), panMatFar)
                 , mat);
 
+        }
+
+        public void Click(Point pt, UpdateState state)
+        {
+            Parent?.Click(pt, state);
+        }
+
+        public void Scroll(Vector2 vec)
+        {
+            Scroll(vec, true);
         }
     }
 }

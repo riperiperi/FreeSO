@@ -47,7 +47,7 @@ namespace FSO.Client.UI.Panels
     /// <summary>
     /// Generates pie menus when the player clicks on objects.
     /// </summary>
-    public class UILotControl : UIContainer, IDisposable
+    public class UILotControl : UIContainer, IDisposable, ITouchable
     {
         private UIMouseEventRef MouseEvt;
         public bool MouseIsOn;
@@ -101,7 +101,17 @@ namespace FSO.Client.UI.Panels
 
         //1 = near, 0.5 = med, 0.25 = far
         //"target" because we rescale the game target to fit this zoom level.
-        public float TargetZoom = 1;
+        public float TargetZoom { get; set; } = 1;
+
+        public float BBScale { get { return World.BackbufferScale; } }
+        public I3DRotate Rotate { get { return (I3DRotate)World.State; } }
+        public bool TVisible { get { return Visible; } }
+        public bool UserModZoom { get; set; }
+
+        public void Scroll(Vector2 vec)
+        {
+            World.Scroll(vec, false);
+        }
 
         // NOTE: Blocking dialog system assumes that nothing goes wrong with data transmission (which it shouldn't, because we're using TCP)
         // and that the code actually blocks further dialogs from appearing while waiting for a response.
@@ -121,6 +131,7 @@ namespace FSO.Client.UI.Panels
         private bool[] LastCuts; //cached roomcuts, to apply rect cut to.
         private int LastWallMode = -1; //invalidates last roomcuts
         private bool LastRectCutNotable = false; //set if the last rect cut made a noticable change to the cuts array. If true refresh regardless of new cut effect.
+        private bool HasLanded = false;
 
         /// <summary>
         /// Creates a new UILotControl instance.
@@ -382,7 +393,7 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        public void ShowPieMenu(Point pt, UpdateState state)
+        public void Click(Point pt, UpdateState state)
         {
             if (!LiveMode)
             {
@@ -683,7 +694,11 @@ namespace FSO.Client.UI.Panels
 
             //todo: land special objects
 
-            if (vm.TSOState.SkillMode > 1) hints.TriggerHint("land:skilldisabled");
+            if (vm.TSOState.SkillMode > 1 && 
+                !(vm.TSOState.PropertyCategory == (byte)LotCategory.welcome 
+                && ((ActiveEntity?.TSOState as VMTSOAvatarState)?.Flags ?? 0).HasFlag(VMTSOAvatarFlags.NewPlayer)))
+                hints.TriggerHint("land:skilldisabled");
+            HasLanded = true;
         }
 
         public void RefreshCut()
@@ -814,6 +829,7 @@ namespace FSO.Client.UI.Panels
 
             if (Visible)
             {
+                if (!HasLanded) Landed();
                 UpdateChatTitle();
                 if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
 

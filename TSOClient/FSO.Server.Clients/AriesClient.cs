@@ -39,7 +39,7 @@ namespace FSO.Server.Clients
 
     public class AriesClient : IoHandler
     {
-        private static Logger LOG = LogManager.GetCurrentClassLogger();
+        //private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         private IoConnector Connector;
         private IoSession Session;
@@ -165,7 +165,7 @@ namespace FSO.Server.Clients
         public void ExceptionCaught(IoSession session, Exception cause)
         {
             if (cause is System.Net.Sockets.SocketException) session.Close(true);
-            else LOG.Error(cause);
+            //else LOG.Error(cause);
         }
 
         public void MessageReceived(IoSession session, object message)

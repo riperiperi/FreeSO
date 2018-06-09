@@ -16,9 +16,20 @@ using FSO.Client.UI.Screens;
 
 namespace FSO.Client.UI.Panels
 {
+    public interface ITouchable
+    {
+        void Click(Point pt, UpdateState state);
+        void Scroll(Vector2 vec);
+        float TargetZoom { get; set; }
+        float BBScale { get; }
+        I3DRotate Rotate { get; }
+        bool TVisible { get; }
+        bool UserModZoom { get; set; }
+    }
+
     public class UILotControlTouchHelper : UIElement
     {
-        private UILotControl Master;
+        private ITouchable Master;
         public HashSet<int> MiceDown = new HashSet<int>();
         private int UpdatesSinceDraw;
         private Vector2 ScrollVelocity;
@@ -29,7 +40,7 @@ namespace FSO.Client.UI.Panels
         private const int TAP_POINT_DIST = 30; //current px distance for a tap to move to become a scroll. TODO: dpi scale?
         private List<Vector2> ScrollVelocityHistory = new List<Vector2>();
 
-        private int Mode = 0; //-1: none, 0: touch, 1: scroll, 2: zoomscroll, 3: touched
+        private int Mode = -1; //-1: none, 0: touch, 1: scroll, 2: zoomscroll, 3: touched
         //you can't revert back to touch after activating it
         private Vector2 BaseVector;
         private float StartScale;
@@ -44,7 +55,7 @@ namespace FSO.Client.UI.Panels
             1f
         };
 
-        public UILotControlTouchHelper(UILotControl master)
+        public UILotControlTouchHelper(ITouchable master)
         {
             Master = master;
         }
@@ -55,19 +66,23 @@ namespace FSO.Client.UI.Panels
                 (int)(GameFacade.Screens.CurrentUIScreen.ScreenWidth / (2 / FSOEnvironment.DPIScaleFactor)),
                 (int)(GameFacade.Screens.CurrentUIScreen.ScreenHeight / (2 / FSOEnvironment.DPIScaleFactor))
                 );
-            return ((TapPoint - screenMiddle).ToVector2() / Master.World.BackbufferScale).ToPoint() + screenMiddle;
+            return ((TapPoint - screenMiddle).ToVector2() / Master.BBScale).ToPoint() + screenMiddle;
         }
 
         private int LastMouseWheel;
-        private bool ScrollWheelInvalid;
+        private bool ScrollWheelInvalid = true;
         private int ZoomFreezeTime;
+
+        public float MinZoom = FSOEnvironment.Enable3D?-0.75f: 0.25f;
+        public float MaxZoom = 2f;
+
         public override void Update(UpdateState state)
         {
             var _3d = FSOEnvironment.Enable3D;
             base.Update(state);
             bool rotated = false;
 
-            if (!Master.Visible || !UIScreen.Current.Visible)
+            if (!Master.TVisible || !UIScreen.Current.Visible || !state.ProcessMouseEvents)
             {
                 ScrollWheelInvalid = true;
             }
@@ -85,7 +100,8 @@ namespace FSO.Client.UI.Panels
                     var diff = state.MouseState.ScrollWheelValue - LastMouseWheel;
                     Master.TargetZoom = Master.TargetZoom + diff / 1600f;
                     LastMouseWheel = state.MouseState.ScrollWheelValue;
-                    Master.TargetZoom = Math.Max(FSOEnvironment.Enable3D?-0.75f: 0.25f, Math.Min(Master.TargetZoom, 2f));
+                    Master.TargetZoom = Math.Max(MinZoom, Math.Min(Master.TargetZoom, MaxZoom));
+                    Master.UserModZoom = true;
                     ZoomFreezeTime = (10 * FSOEnvironment.RefreshRate) / 60;
                 }
             }
@@ -147,7 +163,7 @@ namespace FSO.Client.UI.Panels
                             if (transitionTo == -1)
                             {
                                 Mode = -1;
-                                Master.ShowPieMenu(GetScaledPoint(TapPoint), state);
+                                Master.Click(GetScaledPoint(TapPoint), state);
                             }
                             else
                             {
@@ -160,7 +176,7 @@ namespace FSO.Client.UI.Panels
                                 else if (++MiceDownTimer > time)
                                 {
                                     Mode = 3;
-                                    Master.ShowPieMenu(GetScaledPoint(TapPoint), state);
+                                    Master.Click(GetScaledPoint(TapPoint), state);
                                 }
                             }
                         }
@@ -208,6 +224,7 @@ namespace FSO.Client.UI.Panels
                         TapPoint = newTap;
 
                         Master.TargetZoom = (vector.Length() / BaseVector.Length()) * StartScale;
+                        Master.UserModZoom = true;
 
                         //clockwise if dot product b against a rotated 90 degrees clockwise is positive
                         var a = BaseVector;
@@ -219,8 +236,16 @@ namespace FSO.Client.UI.Panels
 
                         if (_3d)
                         {
-                            if (LastAngleX != null) ((WorldStateRC)Master.World.State).RotationX -= (float)DirectionUtils.Difference(RotateAngle, LastAngleX.Value);
+                            var rcState = Master.Rotate;
+                            if (LastAngleX != null)
+                            {
+                                float rot = rcState.RotationX - (float)DirectionUtils.Difference(RotateAngle, LastAngleX.Value);
+                                if (!float.IsNaN(rot))
+                                    rcState.RotationX = rot;
+                            }
                             LastAngleX = RotateAngle;
+                            rcState.RotationY += ScrollVelocity.Y / 200;
+                            ScrollVelocity = Vector2.Zero;
                         }
                         else
                         {
@@ -276,6 +301,7 @@ namespace FSO.Client.UI.Panels
                 ScrollVelocity *= 0.95f * Math.Min(ScrollVelocity.Length(), 1);
                 if (Master.TargetZoom < 1.25f && ZoomFreezeTime == 0 && !_3d)
                 {
+                    Master.UserModZoom = true;
                     float snapZoom = 1f;
                     float dist = 200f;
                     foreach (var snappable in SnapZooms)
@@ -300,7 +326,7 @@ namespace FSO.Client.UI.Panels
                 }
                 if (ZoomFreezeTime > 0) ZoomFreezeTime--;
             }
-            if (ScrollVelocity.Length() > 0.001f) Master.World.Scroll(-ScrollVelocity / (Master.TargetZoom * 128), false);
+            if (ScrollVelocity.Length() > 0.001f) Master.Scroll(-ScrollVelocity / (Master.TargetZoom * 128));
 
             UpdatesSinceDraw++;
         }

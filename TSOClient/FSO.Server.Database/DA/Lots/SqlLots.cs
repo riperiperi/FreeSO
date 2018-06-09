@@ -68,7 +68,7 @@ namespace FSO.Server.Database.DA.Lots
                     t.Commit();
                     return result;
                 }
-            } catch (SqlException)
+            } catch (Exception)
             {
             }
             t.Rollback();

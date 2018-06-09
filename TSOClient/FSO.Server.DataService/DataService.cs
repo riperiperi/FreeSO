@@ -328,6 +328,7 @@ namespace FSO.Common.DataService
                 }
             } catch (Exception e)
             {
+                
                 if (e is SecurityException)
                 {
                     LOG.Error("Unauthorised data service update:" + e.Message);
@@ -335,6 +336,7 @@ namespace FSO.Common.DataService
                 {
                     LOG.Error(e, "Data service update failed.");
                 }
+                
             }
         }
 

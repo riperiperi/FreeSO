@@ -8,7 +8,6 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Threading;
-using LogThis;
 using FSO.Common.Rendering.Framework;
 using FSO.LotView;
 using FSO.HIT;
@@ -27,7 +26,6 @@ using Microsoft.Xna.Framework.Audio;
 using FSO.HIT.Model;
 using FSO.UI.Model;
 using FSO.Files.RC;
-using System.Windows.Forms;
 using FSO.Files.Formats.IFF;
 using FSO.SimAntics;
 //using System.Windows.Forms;
@@ -50,19 +48,19 @@ namespace FSO.Client
             Graphics.SynchronizeWithVerticalRetrace = true;
 
             FSOEnvironment.DPIScaleFactor = GlobalSettings.Default.DPIScaleFactor;
-            Graphics.PreferredBackBufferWidth = (int)(GlobalSettings.Default.GraphicsWidth * FSOEnvironment.DPIScaleFactor);
-            Graphics.PreferredBackBufferHeight = (int)(GlobalSettings.Default.GraphicsHeight * FSOEnvironment.DPIScaleFactor);
-            TargetElapsedTime = new TimeSpan(10000000 / GlobalSettings.Default.TargetRefreshRate);
-            FSOEnvironment.RefreshRate = GlobalSettings.Default.TargetRefreshRate;
-
-            Graphics.HardwareModeSwitch = false;
-            Graphics.ApplyChanges();
+            if (!FSOEnvironment.SoftwareDepth)
+            {
+                Graphics.PreferredBackBufferWidth = (int)(GlobalSettings.Default.GraphicsWidth * FSOEnvironment.DPIScaleFactor);
+                Graphics.PreferredBackBufferHeight = (int)(GlobalSettings.Default.GraphicsHeight * FSOEnvironment.DPIScaleFactor);
+                //Graphics.PreferMultiSampling = true;
+                TargetElapsedTime = new TimeSpan(10000000 / GlobalSettings.Default.TargetRefreshRate);
+                FSOEnvironment.RefreshRate = GlobalSettings.Default.TargetRefreshRate;
+                Graphics.HardwareModeSwitch = false;
+                Graphics.ApplyChanges();
+            }
 
             this.Window.AllowUserResizing = true;
             this.Window.ClientSizeChanged += new EventHandler<EventArgs>(Window_ClientSizeChanged);
-
-            //might want to disable for linux
-            if (!FSOEnvironment.Linux) Log.UseSensibleDefaults();
 
             Thread.CurrentThread.Name = "Game";
         }
@@ -168,6 +166,7 @@ namespace FSO.Client
             GameFacade.GraphicsDevice = GraphicsDevice;
             GameFacade.GraphicsDeviceManager = Graphics;
             GameFacade.Emojis = new Common.Rendering.Emoji.EmojiProvider(GraphicsDevice);
+            CurLoader.BmpLoaderFunc = Files.ImageLoader.FromStream;
             GameFacade.Cursor = new CursorManager(GraphicsDevice);
             if (!GameFacade.Linux) GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""), false);
 
@@ -192,7 +191,7 @@ namespace FSO.Client
                 audioTest.CreateInstance().Play();
             } catch (Exception e)
             {
-                //MessageBox.Show("Failed to initialize audio: \r\n\r\n" + e.StackTrace);
+                FSOProgram.ShowDialog("Failed to initialize audio: \r\n\r\n" + e.StackTrace);
             }
 
             this.IsMouseVisible = true;
@@ -276,14 +275,14 @@ namespace FSO.Client
                 GameFacade.EdithFont.AddSize(12, Content.Load<SpriteFont>("Fonts/Trebuchet_12px"));
                 GameFacade.EdithFont.AddSize(14, Content.Load<SpriteFont>("Fonts/Trebuchet_14px"));
 
-                vitaboyEffect = Content.Load<Effect>("Effects/Vitaboy");
+                vitaboyEffect = Content.Load<Effect>((FSOEnvironment.GLVer == 2)?"Effects/VitaboyiOS":"Effects/Vitaboy");
                 uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/FreeSO_12px"), Content.Load<SpriteFont>("Fonts/FreeSO_16px"));
             }
             catch (Exception e)
             {
-                MessageBox.Show("Content could not be loaded. Make sure that the FreeSO content has been compiled! (ContentSrc/TSOClientContent.mgcb) \r\n\r\n"+e.ToString());
+                FSOProgram.ShowDialog("Content could not be loaded. Make sure that the FreeSO content has been compiled! (ContentSrc/TSOClientContent.mgcb) \r\n\r\n"+e.ToString());
                 Exit();
-                Application.Exit();
+                Environment.Exit(0);
             }
             
             FSO.Vitaboy.Avatar.setVitaboyEffect(vitaboyEffect);

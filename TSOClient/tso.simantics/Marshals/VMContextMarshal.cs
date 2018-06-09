@@ -50,6 +50,11 @@ namespace FSO.SimAntics.Marshals
         public int TicksPerMinute;
         public int Minutes;
         public int Hours;
+
+        public int DayOfMonth = 1;
+        public int Month = 6;
+        public int Year = 1997;
+
         public int FirePercent = 20000;
         public long UTCStart;
 
@@ -64,6 +69,12 @@ namespace FSO.SimAntics.Marshals
             TicksPerMinute = reader.ReadInt32();
             Minutes = reader.ReadInt32();
             Hours = reader.ReadInt32();
+            if (Version > 28)
+            {
+                DayOfMonth = reader.ReadInt32();
+                Month = reader.ReadInt32();
+                Year = reader.ReadInt32();
+            }
             if (Version > 17) FirePercent = reader.ReadInt32();
             if (Version > 20) UTCStart = reader.ReadInt64();
             else UTCStart = DateTime.UtcNow.Ticks;
@@ -76,6 +87,11 @@ namespace FSO.SimAntics.Marshals
             writer.Write(TicksPerMinute);
             writer.Write(Minutes);
             writer.Write(Hours);
+
+            writer.Write(DayOfMonth);
+            writer.Write(Month);
+            writer.Write(Year);
+
             writer.Write(FirePercent);
             writer.Write(UTCStart);
         }

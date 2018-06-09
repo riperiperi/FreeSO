@@ -108,7 +108,7 @@ namespace FSO.Content
             this.Device = device;
             this.Mode = mode;
 
-            ImageLoader.PremultiplyPNG = (FSOEnvironment.DirectX)?0:1;
+            ImageLoader.PremultiplyPNG = 1;// (FSOEnvironment.DirectX)?0:1;
 
             if (device != null)
             {

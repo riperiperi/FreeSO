@@ -486,7 +486,7 @@ namespace FSO.Client.UI
 
             SpriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
             this.PreDraw(SpriteBatch);
-            SpriteBatch.End();
+            try { SpriteBatch.End(); } catch { }
         }
 
         public void Draw(GraphicsDevice device)

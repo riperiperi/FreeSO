@@ -11,6 +11,7 @@ using System.Text;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -88,7 +89,7 @@ namespace FSO.Client.UI.Panels
                 Y = 106
             });
 
-            GameFacade.Screens.inputManager.SetFocus(m_TxtAccName);
+            if (!FSOEnvironment.SoftwareKeyboard) GameFacade.Screens.inputManager.SetFocus(m_TxtAccName);
             RefreshBlink();
         }
 

@@ -104,13 +104,16 @@ namespace FSO.Client.UI.Screens
                 }
             }
 
-            if (usernamePopulated)
+            if (!FSOEnvironment.SoftwareKeyboard)
             {
-                LoginDialog.FocusPassword();
-            }
-            else
-            {
-                LoginDialog.FocusUsername();
+                if (usernamePopulated)
+                {
+                    LoginDialog.FocusPassword();
+                }
+                else
+                {
+                    LoginDialog.FocusUsername();
+                }
             }
 
             var gameplayButton = new UIButton()
@@ -205,7 +208,7 @@ namespace FSO.Client.UI.Screens
         {
             if (error is Exception)
             {
-                error = ErrorMessage.FromLiteral(GameFacade.Strings.GetString("210", "17"));
+                error = ErrorMessage.FromLiteral(error.ToString());// GameFacade.Strings.GetString("210", "17"));
             }
 
             if (error is ErrorMessage)

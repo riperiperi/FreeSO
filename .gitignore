@@ -19,6 +19,7 @@ TSOClient/TSOClient/Content/obj/x86/Debug/ContentPipeline.xml
 pdclient/
 TSOClient/FSO.Benchmark/*
 TSOClient/FSOFacadeWorker/*
+TSOClient/.vs/*
 # User-specific files
 *.suo
 *.user

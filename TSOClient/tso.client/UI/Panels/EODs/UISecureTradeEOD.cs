@@ -592,6 +592,7 @@ namespace FSO.Client.UI.Panels.EODs
             int timeNum;
             if (!int.TryParse(txt, out timeNum)) return;
             AcceptButton.Disabled = (timeNum != 0);
+            AcceptButton.ForceState = (timeNum != 0)?0:-1;
 
             LockoutTimerLabel.Visible = (timeNum != 0);
             LockoutTimerLabel.Caption = "("+timeNum+")";

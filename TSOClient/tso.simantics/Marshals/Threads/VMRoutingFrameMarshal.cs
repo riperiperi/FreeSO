@@ -50,6 +50,8 @@ namespace FSO.SimAntics.Marshals.Threads
         public VMFindLocationResultMarshal[] Choices; //NULLable
         public VMFindLocationResultMarshal CurRoute; //NULLable
 
+        public short LastWalkStyle = -1;
+
         public VMRoutingFrameMarshal() { }
         public VMRoutingFrameMarshal(int version) : base(version) { }
 
@@ -124,6 +126,11 @@ namespace FSO.SimAntics.Marshals.Threads
                 CurRoute = new VMFindLocationResultMarshal();
                 CurRoute.Deserialize(reader);
             }
+
+            if (Version > 29)
+            {
+                LastWalkStyle = reader.ReadInt16();
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -185,6 +192,8 @@ namespace FSO.SimAntics.Marshals.Threads
             }
             writer.Write(CurRoute != null);
             if (CurRoute != null) CurRoute.SerializeInto(writer);
+
+            writer.Write(LastWalkStyle);
         }
     }
 

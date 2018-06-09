@@ -29,6 +29,8 @@ namespace FSO.SimAntics.Engine.Primitives
             Animation animation = null;
             var id = (operand.IDFromParam) ? (ushort)(context.Args[operand.AnimationID]) : operand.AnimationID;
 
+            var newMode = (context.VM.Tuning?.GetTuning("feature", 0, 0) ?? 0) != 0; //might need to disable this suddenly - too many things to test
+
             if (id == 0)
             { //reset
                 avatar.Animations.Clear();
@@ -40,7 +42,8 @@ namespace FSO.SimAntics.Engine.Primitives
                 animation = FSO.Content.Content.Get().AvatarAnimations.Get(avatar.WalkAnimations[posture] + ".anim");
                 if (animation == null) return VMPrimitiveExitCode.GOTO_TRUE;
                 var state = new VMAnimationState(animation, operand.PlayBackwards);
-                if (context.VM.TS1) state.Speed = 30 / 25f;
+                if (context.VM.TS1 || newMode)
+                    state.Speed = 30 / 25f;
                 state.Loop = true;
                 avatar.Animations.Add(state);
                 avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
@@ -78,7 +81,9 @@ namespace FSO.SimAntics.Engine.Primitives
                 case 1:
                     avatar.Animations.Clear();
                     var state = new VMAnimationState(animation, operand.PlayBackwards);
-                    if (context.VM.TS1) state.Speed = 30 / 25f;
+                    if (context.VM.TS1 || newMode)
+                        state.Speed = 30 / 25f;
+                    if (avatar.GetValue(VMStackObjectVariable.WalkStyle) == 1 && operand.Hurryable) state.Speed *= 2;
                     state.Loop = true;
                     avatar.Animations.Add(state);
 
@@ -95,7 +100,9 @@ namespace FSO.SimAntics.Engine.Primitives
                         /** Start it **/
                         avatar.Animations.Clear();
                         var astate = new VMAnimationState(animation, operand.PlayBackwards);
-                        if (context.VM.TS1) astate.Speed = 30 / 25f;
+                        if (context.VM.TS1 || newMode)
+                            astate.Speed = 30 / 25f;
+                        if (avatar.GetValue(VMStackObjectVariable.WalkStyle) == 1 && operand.Hurryable) astate.Speed *= 2;
                         avatar.Animations.Add(astate);
                     
                         avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
@@ -193,6 +200,19 @@ namespace FSO.SimAntics.Engine.Primitives
         }
 
         #endregion
+
+        public bool Hurryable
+        {
+            get
+            {
+                return (Flags & 64) == 64;
+            }
+            set
+            {
+                if (value) Flags |= 64;
+                else Flags &= unchecked((byte)~64);
+            }
+        }
 
         public bool StoreFrameInLocal
         {

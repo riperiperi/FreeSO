@@ -459,6 +459,9 @@ namespace FSO.Client.Controllers
                     case PurchaseLotFailureReason.LOT_NOT_PURCHASABLE:
                         error = GameFacade.Strings.GetString("211", "46");
                         break;
+                    case PurchaseLotFailureReason.NAME_TAKEN:
+                        error = GameFacade.Strings.GetString("247", "15");
+                        break;
                     default:
                         error = GameFacade.Strings.GetString("211", "55") + " ("+reason.ToString()+")";
                         break;

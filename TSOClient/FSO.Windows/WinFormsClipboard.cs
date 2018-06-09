@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FSO.Client.Utils
+namespace FSO.Windows
 {
     public class WinFormsClipboard : ClipboardHandler
     {
@@ -14,6 +14,7 @@ namespace FSO.Client.Utils
         {
             var wait = new AutoResetEvent(false);
             string clipboardText = "";
+            
             var clipThread = new Thread(x =>
             {
                 clipboardText = System.Windows.Forms.Clipboard.GetText(System.Windows.Forms.TextDataFormat.Text);
@@ -21,7 +22,9 @@ namespace FSO.Client.Utils
             });
             clipThread.SetApartmentState(ApartmentState.STA);
             clipThread.Start();
+            
             wait.WaitOne();
+            
             return clipboardText;
         }
 

@@ -12,6 +12,7 @@ using Microsoft.Xna.Framework.Input;
 using FSO.Common.Rendering.Framework;
 using FSO.LotView;
 using FSO.Client.Controllers;
+using FSO.Common.Rendering.Framework.IO;
 
 namespace FSO.Client.Rendering.City
 {
@@ -77,9 +78,10 @@ namespace FSO.Client.Rendering.City
             return (1 - LotZoomProgress) * IsoScale + LotZoomProgress * LisoScale;
         }
 
-        public void MouseOut()
+        public void MouseEvent(UIMouseEventType type, UpdateState state)
         {
-            m_LastWheelPos = null;
+            if (type == UIMouseEventType.MouseOut)
+                m_LastWheelPos = null;
         }
 
         public float AspectRatioMultiplier

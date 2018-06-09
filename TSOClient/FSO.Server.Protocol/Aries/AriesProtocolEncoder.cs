@@ -16,7 +16,7 @@ namespace FSO.Server.Protocol.Aries
 {
     public class AriesProtocolEncoder : IProtocolEncoder
     {
-        private static Logger LOG = LogManager.GetCurrentClassLogger();
+        //private static Logger LOG = LogManager.GetCurrentClassLogger();
         private ISerializationContext Context;
 
         public AriesProtocolEncoder(ISerializationContext context)

@@ -17,7 +17,7 @@ namespace FSO.Common.Rendering.Framework
         public _3DTargetScene(GraphicsDevice device, Point size, int multisample) : base(device)
         {
             Device = device;
-            Multisample = FSOEnvironment.DirectX?0:multisample;
+            Multisample = multisample;
             SetSize(size);
         }
 

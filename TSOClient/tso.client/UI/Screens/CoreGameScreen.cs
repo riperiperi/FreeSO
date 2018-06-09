@@ -734,15 +734,10 @@ namespace FSO.Client.UI.Screens
                 lastLotTitle = title;
             }
         }
-
+        
         private void VMRefreshed()
         {
             if (vm == null) return;
-            //try to signal landed hints
-            GameThread.NextUpdate(x =>
-            {
-                LotControl.Landed();
-            });
             LotControl.ActiveEntity = null;
             LotControl.RefreshCut();
         }
@@ -798,7 +793,7 @@ namespace FSO.Client.UI.Screens
 
         private void MouseHandler(UIMouseEventType type, UpdateState state)
         {
-            if (CityRenderer != null) CityRenderer.UIMouseEvent(type.ToString()); //all the city renderer needs are events telling it if the mouse is over it or not.
+            if (CityRenderer != null) CityRenderer.UIMouseEvent(type, state); //all the city renderer needs are events telling it if the mouse is over it or not.
             //if the mouse is over it, the city renderer will handle the rest.
         }
 

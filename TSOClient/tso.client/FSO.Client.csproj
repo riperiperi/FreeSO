@@ -6,10 +6,10 @@
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{635E68FA-3905-4943-B4F5-D463A8C02E87}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>FSO.Client</RootNamespace>
-    <AssemblyName>FreeSO</AssemblyName>
+    <AssemblyName>FSO.Client</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
@@ -156,7 +156,6 @@
     <Compile Include="UI\Hints\UIHintListItem.cs" />
     <Compile Include="UI\Hints\UIHintManager.cs" />
     <Compile Include="UI\Hints\UIHintWindow.cs" />
-    <Compile Include="UI\Model\UITTSContext.cs" />
     <Compile Include="UI\Panels\Chat\UIChatCategoryDialog.cs" />
     <Compile Include="UI\Panels\Chat\UIChatCategoryList.cs" />
     <Compile Include="UI\Panels\EODs\Archetypes\UIBasicEOD.cs" />
@@ -240,7 +239,6 @@
     <Compile Include="Utils\GameLocator\WindowsLocator.cs" />
     <Compile Include="Utils\MonogameLinker.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
-    <Compile Include="Utils\WinFormsClipboard.cs" />
     <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll">
       <Link>Monogame\Linux\MonoGame.Framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -253,91 +251,67 @@
       <Link>Monogame\Windows\MonoGame.Framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.D3DCompiler.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\SharpDX.D3DCompiler.dll">
       <Link>Monogame\Windows\SharpDX.D3DCompiler.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.D3DCompiler.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\SharpDX.D3DCompiler.xml">
       <Link>Monogame\Windows\SharpDX.D3DCompiler.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct2D1.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\SharpDX.Direct2D1.dll">
       <Link>Monogame\Windows\SharpDX.Direct2D1.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct2D1.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\SharpDX.Direct2D1.xml">
       <Link>Monogame\Windows\SharpDX.Direct2D1.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D11.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\SharpDX.Direct3D11.dll">
       <Link>Monogame\Windows\SharpDX.Direct3D11.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D11.Effects.dll">
-      <Link>Monogame\Windows\SharpDX.Direct3D11.Effects.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D11.Effects.xml">
-      <Link>Monogame\Windows\SharpDX.Direct3D11.Effects.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D11.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\SharpDX.Direct3D11.xml">
       <Link>Monogame\Windows\SharpDX.Direct3D11.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D9.dll">
-      <Link>Monogame\Windows\SharpDX.Direct3D9.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D9.xml">
-      <Link>Monogame\Windows\SharpDX.Direct3D9.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\net40\SharpDX.dll">
       <Link>Monogame\Windows\SharpDX.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.DXGI.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\SharpDX.DXGI.dll">
       <Link>Monogame\Windows\SharpDX.DXGI.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.DXGI.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\SharpDX.DXGI.xml">
       <Link>Monogame\Windows\SharpDX.DXGI.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.MediaFoundation.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\net40\SharpDX.MediaFoundation.dll">
       <Link>Monogame\Windows\SharpDX.MediaFoundation.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.MediaFoundation.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\net40\SharpDX.MediaFoundation.xml">
       <Link>Monogame\Windows\SharpDX.MediaFoundation.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.RawInput.dll">
-      <Link>Monogame\Windows\SharpDX.RawInput.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.RawInput.xml">
-      <Link>Monogame\Windows\SharpDX.RawInput.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.XAudio2.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\net40\SharpDX.XAudio2.dll">
       <Link>Monogame\Windows\SharpDX.XAudio2.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.XAudio2.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\net40\SharpDX.XAudio2.xml">
       <Link>Monogame\Windows\SharpDX.XAudio2.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.XInput.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\net40\SharpDX.XInput.dll">
       <Link>Monogame\Windows\SharpDX.XInput.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.XInput.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\net40\SharpDX.XInput.xml">
       <Link>Monogame\Windows\SharpDX.XInput.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\net40\SharpDX.xml">
       <Link>Monogame\Windows\SharpDX.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -400,7 +374,6 @@
     <Compile Include="UI\Screens\PersonSelectionEdit.cs" />
     <Compile Include="Utils\ErrorMessage.cs" />
     <Compile Include="TSOGame.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -509,10 +482,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
-    </Reference>
     <Reference Include="MIConvexHull, Version=1.0.17.1019, Culture=neutral, PublicKeyToken=bdc96d69606221fd, processorArchitecture=MSIL">
       <HintPath>..\packages\MIConvexHull.1.1.17.1019\lib\netstandard1.0\MIConvexHull.dll</HintPath>
       <Private>True</Private>
@@ -521,9 +490,8 @@
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Ninject.3.2.2.0\lib\net40\Ninject.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Portable.Ninject.3.3.1\lib\net40-client\Ninject.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.3.11\lib\net45\NLog.dll</HintPath>
@@ -539,8 +507,6 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System" />
-    <Reference Include="System.Speech" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="GOLDEngine">
       <HintPath>Dependencies\GOLDEngine.dll</HintPath>
@@ -580,7 +546,9 @@
     <Content Include="Resources\folder-horizontal.png" />
     <Content Include="Resources\magnifier-left.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\OpenTK.dll.config">
       <Link>OpenTK.dll.config</Link>
@@ -613,10 +581,15 @@
       <Project>{6d6009f4-0afb-4806-89d7-7945f20270f5}</Project>
       <Name>MonoGame.Framework.Net.WindowsGL</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
+      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
+      <Name>MonoGame.Framework.Windows</Name>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
       <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
       <Name>MonoGame.Framework.WindowsGL</Name>
-      <Private>True</Private>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\mp3sharp\mp3sharp\Mp3Sharp.csproj">
       <Project>{834cab58-648d-47cc-ac6f-d01c08c809a4}</Project>
@@ -712,6 +685,9 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="UI\Model\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

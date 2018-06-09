@@ -17,6 +17,7 @@ namespace FSO.Client.UI.Panels
             { LotCategory.entertainment, 1 },
             { LotCategory.services, 1 },
             { LotCategory.romance, 1 },
+            { LotCategory.welcome, 1 }
         };
 
         public UILabel DescLabel;

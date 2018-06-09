@@ -29,8 +29,14 @@ namespace FSO.Content
 
             var repldir = Path.Combine(FSOEnvironment.ContentDir, "MeshReplace/");
             var dir = Path.Combine(FSOEnvironment.UserDir, "MeshCache/");
-            Directory.CreateDirectory(dir);
-            Directory.CreateDirectory(repldir);
+            try
+            {
+                Directory.CreateDirectory(dir);
+                Directory.CreateDirectory(repldir);
+            } catch
+            {
+
+            }
             CacheFiles = new HashSet<string>(Directory.GetFiles(dir).Select(x => Path.GetFileName(x).ToLowerInvariant()));
             ReplaceFiles = new HashSet<string>(Directory.GetFiles(repldir).Select(x => Path.GetFileName(x).ToLowerInvariant()));
         }

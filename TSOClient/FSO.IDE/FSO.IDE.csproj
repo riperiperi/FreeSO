@@ -613,6 +613,10 @@
       <Project>{73e2ad5b-720b-4ef3-9b7c-55931d0ec693}</Project>
       <Name>FSO.UI</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FSO.Windows\FSO.Windows.csproj">
+      <Project>{39201960-f96f-4039-84b1-1331d5dde3c2}</Project>
+      <Name>FSO.Windows</Name>
+    </ProjectReference>
     <ProjectReference Include="..\tso.client\FSO.Client.csproj">
       <Project>{635e68fa-3905-4943-b4f5-d463a8c02e87}</Project>
       <Name>FSO.Client</Name>

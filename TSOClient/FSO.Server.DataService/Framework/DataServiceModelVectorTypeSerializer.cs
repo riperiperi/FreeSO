@@ -57,9 +57,21 @@ namespace FSO.Common.DataService.Framework
                     //still need to make the list!
                     var listType = typeof(ImmutableList);
                     var consMethod = listType.GetMethods().Where(method => method.IsGenericMethod).FirstOrDefault();
-                    var generic = consMethod.MakeGenericMethod(item.GetType());
-
-                    result = generic.Invoke(null, new object[] { }); //listType.MakeGenericType(item.GetType());
+                    if (consMethod == null)
+                    {
+                        Console.WriteLine("No Generic Methods!");
+                        return null;
+                    }
+                    else
+                    {
+                        var generic = consMethod.MakeGenericMethod(item.GetType());
+                        if (generic == null)
+                        {
+                            Console.WriteLine("No Generic: "+item.GetType().ToString());
+                            return null;
+                        }
+                        result = generic.Invoke(null, new object[] { }); //listType.MakeGenericType(item.GetType());
+                    }
 
                     //result = Activator.CreateInstance(constructedListType);
                     for (int j=0; j<leadingNulls; j++)

@@ -19,7 +19,9 @@ namespace FSO.SimAntics.Marshals
         // 26 - add build/buy disable
         // 27 - TS1 platform state
         // 28 - chat update state
-        public static readonly int LATEST_VERSION = 28;
+        // 29 - TS1 clock
+        // 30 - LastWalkStyle (for auto run)
+        public static readonly int LATEST_VERSION = 30;
 
         public int Version = LATEST_VERSION;
         public bool Compressed = true;

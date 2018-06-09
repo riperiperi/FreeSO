@@ -60,7 +60,7 @@ namespace FSO.Client.UI.Framework
                     }
                 }
 
-                batch.End();
+                try { batch.End(); } catch { }
                 gd.SetRenderTarget(Target);
                 gd.Clear(ClearColor);
                 var pos = LocalPoint(0, 0);

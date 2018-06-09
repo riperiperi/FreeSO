@@ -1,4 +1,6 @@
-﻿using FSO.Files.Utils;
+﻿using FSO.Common;
+using FSO.Common.Utils;
+using FSO.Files.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -156,17 +158,34 @@ namespace FSO.Files.RC
         public void LoadGPU(GraphicsDevice gd)
         {
             var format = GetTexFormat();
-            FloorTexture = new Texture2D(gd, FloorWidth, FloorHeight, false, format);
-            FloorTexture.SetData(FloorTextureData);
-            WallTexture = new Texture2D(gd, WallWidth, WallHeight, false, format);
-            WallTexture.SetData(WallTextureData);
-
-            if (NightFloorTextureData != null)
+            if (format == SurfaceFormat.Dxt5 && !FSOEnvironment.TexCompressSupport)
             {
-                NightFloorTexture = new Texture2D(gd, FloorWidth, FloorHeight, false, format);
-                NightFloorTexture.SetData(NightFloorTextureData);
-                NightWallTexture = new Texture2D(gd, WallWidth, WallHeight, false, format);
-                NightWallTexture.SetData(NightWallTextureData);
+                //todo: software decode DXT5
+                FloorTexture = new Texture2D(gd, FloorWidth, FloorHeight, false, SurfaceFormat.Color);
+                FloorTexture.SetData(TextureUtils.DXT5Decompress(FloorTextureData, FloorWidth, FloorHeight));
+                WallTexture = new Texture2D(gd, WallWidth, WallHeight, false, SurfaceFormat.Color);
+                WallTexture.SetData(TextureUtils.DXT5Decompress(WallTextureData, WallWidth, WallHeight));
+                if (NightFloorTextureData != null)
+                {
+                    NightFloorTexture = new Texture2D(gd, FloorWidth, FloorHeight, false, SurfaceFormat.Color);
+                    NightFloorTexture.SetData(TextureUtils.DXT5Decompress(NightFloorTextureData, FloorWidth, FloorHeight));
+                    NightWallTexture = new Texture2D(gd, WallWidth, WallHeight, false, SurfaceFormat.Color);
+                    NightWallTexture.SetData(TextureUtils.DXT5Decompress(NightWallTextureData, WallWidth, WallHeight));
+                }
+            }
+            else
+            {
+                FloorTexture = new Texture2D(gd, FloorWidth, FloorHeight, false, format);
+                FloorTexture.SetData(FloorTextureData);
+                WallTexture = new Texture2D(gd, WallWidth, WallHeight, false, format);
+                WallTexture.SetData(WallTextureData);
+                if (NightFloorTextureData != null)
+                {
+                    NightFloorTexture = new Texture2D(gd, FloorWidth, FloorHeight, false, format);
+                    NightFloorTexture.SetData(NightFloorTextureData);
+                    NightWallTexture = new Texture2D(gd, WallWidth, WallHeight, false, format);
+                    NightWallTexture.SetData(NightWallTextureData);
+                }
             }
 
             FloorVGPU = new VertexBuffer(gd, typeof(DGRP3DVert), FloorVertices.Length, BufferUsage.None);

@@ -3,12 +3,10 @@ using FSO.Common.Utils;
 using Microsoft.Xna.Framework.Audio;
 using System;
 
-namespace FSO.Client.UI.Model
+namespace FSO.Windows
 {
     public class UITTSContext : ITTSContext
     {
-        private System.Speech.Synthesis.SpeechSynthesizer Synth;
-
         public static UITTSContext PlatformProvider()
         {
             return new UITTSContext();
@@ -25,7 +23,14 @@ namespace FSO.Client.UI.Model
         public override void Speak(string text, bool gender, int ipitch)
         {
             var Synth = new System.Speech.Synthesis.SpeechSynthesizer();
-            Synth.SelectVoiceByHints((gender) ? System.Speech.Synthesis.VoiceGender.Female : System.Speech.Synthesis.VoiceGender.Male);
+            try
+            {
+                Synth.SelectVoiceByHints((gender) ? System.Speech.Synthesis.VoiceGender.Female : System.Speech.Synthesis.VoiceGender.Male);
+            } catch
+            {
+                //couldnt find any tts voices...
+                return;
+            }
             if (text == "") return;
             var voci = Synth.GetInstalledVoices();
             var stream = new System.IO.MemoryStream();
@@ -37,8 +42,7 @@ namespace FSO.Client.UI.Model
             Synth.SetOutputToWaveStream(stream);
             Synth.SpeakAsync(text);
 
-            EventHandler<System.Speech.Synthesis.SpeakCompletedEventArgs> OnComplete = null;
-            OnComplete = (obj, evt) =>
+            void OnComplete(object obj, System.Speech.Synthesis.SpeakCompletedEventArgs evt)
             {
                 GameThread.NextUpdate((u) =>
                 {
@@ -60,7 +64,7 @@ namespace FSO.Client.UI.Model
                     Synth.Dispose();
                 });
                 Synth.SpeakCompleted -= OnComplete;
-            };
+            }
 
             Synth.SpeakCompleted += OnComplete;
         }

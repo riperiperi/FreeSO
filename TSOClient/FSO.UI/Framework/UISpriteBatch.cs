@@ -129,7 +129,7 @@ namespace FSO.Client.UI.Framework
 
         public void Pause()
         {
-            this.End();
+            try { this.End(); } catch { }
         }
 
         public void Resume()
