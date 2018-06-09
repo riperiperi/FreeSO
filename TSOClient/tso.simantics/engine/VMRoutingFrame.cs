@@ -310,7 +310,7 @@ namespace FSO.SimAntics.Engine
             if (LastWalkStyle != -1) WalkStyle = LastWalkStyle;
             CurRoute = route;
 
-            if (!VM.TS1 && Callee?.Object?.GUID != GOTO_GUID)
+            if (Caller.PersistID > 0 && !VM.TS1 && Callee?.Object?.GUID != GOTO_GUID)
             {
                 AutoWalkSpeed();
             }
