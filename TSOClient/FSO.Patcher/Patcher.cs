@@ -20,8 +20,6 @@ namespace FSO.Patcher
         {
             //"updater.exe",
             "Content/config.ini",
-            "Ninject.dll", //til I add dynamic linking for these
-            "Ninject.xml",
             "NLog.config"
         };
 

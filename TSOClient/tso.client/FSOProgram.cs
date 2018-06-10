@@ -121,6 +121,13 @@ namespace FSO.Client
 
             if (path != null)
             {
+                //check if this path has tso in it. tuning.dat should be a good indication.
+                if (!File.Exists(Path.Combine(path, "tuning.dat")))
+                {
+                    ShowDialog("The Sims Online appears to be missing. The game expects TSO at '"+path+"', but some core files are missing from that folder. If you know you installed TSO into a different directory, please move it into the directory specified.");
+                    return false;
+                }
+
                 FSOEnvironment.Args = string.Join(" ", args);
                 FSOEnvironment.ContentDir = "Content/";
                 FSOEnvironment.GFXContentDir = "Content/" + (UseDX ? "DX/" : "OGL/");
@@ -149,7 +156,7 @@ namespace FSO.Client
                 var assembly = Assembly.LoadFrom(assemblyPath);
                 return assembly;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 return null;
             }

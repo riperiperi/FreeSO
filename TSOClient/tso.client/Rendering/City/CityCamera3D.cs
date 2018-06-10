@@ -267,7 +267,7 @@ namespace FSO.Client.Rendering.City
             else
             {
                 RMBScroll = false;
-                GameFacade.Cursor.SetCursor(CursorType.Normal);
+                if (inCity) GameFacade.Cursor.SetCursor(CursorType.Normal);
             }
 
             if (RMBScroll && inCity)

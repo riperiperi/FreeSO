@@ -241,6 +241,16 @@ namespace FSO.Client.UI.Screens
                 return;
             }
 
+            //save the last username
+            try
+            {
+                GlobalSettings.Default.LastUser = LoginDialog.Username;
+                GlobalSettings.Default.Save();
+            } catch
+            {
+
+            }
+
             Regulator.Login(new AuthRequest
             {
                 Username = LoginDialog.Username,

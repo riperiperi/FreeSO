@@ -931,7 +931,9 @@ namespace FSO.Client.UI.Panels
                     BodySkillBar.LockLevel = skills.AvatarSkills_LockLv_Body;
                     CreativitySkillBar.LockLevel = skills.AvatarSkills_LockLv_Creativity;
                 }
-                TotalLocks = CurrentAvatar.Value.Avatar_SkillsLockPoints;
+                //skill lock total currently hardcoded, since data service doesnt remove it yet.
+                //TODO: when custom data service is in, send this with skills page.Cac
+                TotalLocks = isMe?CurrentAvatar.Value.Avatar_SkillsLockPoints:(20+(int)CurrentAvatar.Value.Avatar_Age/7);
                 privacyOn = CurrentAvatar.Value.Avatar_PrivacyMode > 0;
                 UpdateLockCounts();
                 PopulateJobsText(CurrentAvatar.Value);

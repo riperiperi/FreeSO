@@ -47,6 +47,7 @@ namespace FSO.Windows
                 GameThread.NextUpdate((u) =>
                 {
                     stream.Seek(0, System.IO.SeekOrigin.Begin);
+                    if (stream.Length <= 46) return; //empty wav
                     var sfx = SoundEffect.FromStream(stream);
                     var inst = sfx.CreateInstance();
                     inst.Pitch = pitch - 1f;

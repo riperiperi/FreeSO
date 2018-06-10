@@ -41,6 +41,10 @@ namespace FSO.Client.UI.Hints
 
             var langdir = GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir";
             HintDir = "Content/UI/hints/"+langdir+"/";
+            if (!Directory.Exists(HintDir))
+            {
+                HintDir = "Content/UI/hints/english.dir/";
+            }
 
             //scan hints
             var dir = Directory.GetFiles(HintDir);

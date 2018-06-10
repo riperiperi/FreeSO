@@ -1,4 +1,5 @@
-﻿using FSO.Common.Utils;
+﻿using FSO.Common;
+using FSO.Common.Utils;
 using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -360,6 +361,7 @@ namespace FSO.LotView.Components
                     }
 
                     pass.Apply();
+                    if (!FSOEnvironment.DirectX) gd.SamplerStates[1] = SamplerState.LinearWrap; //opengl bug: floors randomly set to clamp
                     gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
 
                     if (id == 0)

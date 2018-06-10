@@ -258,9 +258,9 @@ namespace FSO.Client.Controllers
 
         private void ShowLotBuyDialog(Lot lot)
         {
-            GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Hourglass);
             GameThread.InUpdate(() =>
             {
+                GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Hourglass);
                 if (_LotBuyAlert != null) { return; }
                 _LotBuyAlert = new UIAlert(new UIAlertOptions() { Title = "", Message = "" }); //just fill this space til we spawn the dialog.
                 _BuyLot = lot;
