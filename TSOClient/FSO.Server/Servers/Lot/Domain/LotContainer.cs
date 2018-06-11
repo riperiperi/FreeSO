@@ -1138,7 +1138,8 @@ namespace FSO.Server.Servers.Lot.Domain
             state.SkinTone = avatar.skin_tone;
 
             var now = Epoch.Now;
-            var age = (uint)((now - user.register_date) / ((long)60 * 60 * 24));
+            var rage = (uint)((now - user.register_date) / ((long)60 * 60 * 24));
+            var age = (uint)((now - avatar.date) / ((long)60 * 60 * 24));
 
             state.SkillLock = (short)(20 + age / 7);
             state.SkillLockBody = (short)(avatar.lock_body*100);
@@ -1178,7 +1179,7 @@ namespace FSO.Server.Servers.Lot.Domain
             if (myRoomieLots.Count == 0)
                 state.AvatarFlags |= VMTSOAvatarFlags.CanBeRoommate; //we're not roommate anywhere, so we can be here.
 
-            if (age < 7)
+            if (rage < 7)
                 state.AvatarFlags |= VMTSOAvatarFlags.NewPlayer;
 
             var roomieStatus = myRoomieLots.FindAll(x => x.lot_id == Context.DbId).FirstOrDefault();
