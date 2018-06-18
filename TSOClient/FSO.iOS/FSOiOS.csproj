@@ -223,6 +223,7 @@
     <Reference Include="OpenTK-1.0" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppleTTSContext.cs" />
     <Compile Include="FSOInstallViewController.cs" />
     <Compile Include="FSOInstallViewController.designer.cs">
       <DependentUpon>FSOInstallViewController.cs</DependentUpon>

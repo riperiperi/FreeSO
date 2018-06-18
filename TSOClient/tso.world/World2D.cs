@@ -16,6 +16,7 @@ using FSO.Common.Rendering.Framework;
 using FSO.LotView.Components;
 using System.IO;
 using FSO.LotView.Utils;
+using FSO.Common;
 
 namespace FSO.LotView
 {
@@ -394,13 +395,24 @@ namespace FSO.LotView
 
             foreach (var item in damage){
                 switch (item.Type){
+                    case BlueprintDamageType.OPENGL_SECOND_DRAW:
+                        recacheFloors = true;
+                        break;
                     case BlueprintDamageType.ROTATE:
                     case BlueprintDamageType.ZOOM:
                     case BlueprintDamageType.LEVEL_CHANGED:
                         recacheObjects = true;
                         recacheWalls = true;
                         recacheFloors = true;
-                        //recacheTerrain = true;
+                        if (item.Type != BlueprintDamageType.OPENGL_SECOND_DRAW && !FSOEnvironment.DirectX)
+                        {
+                            //need to draw one frame after this in opengl.
+                            //to mitigate a problem with floor content not setting to "wrap" mode
+                            GameThread.NextUpdate(x =>
+                            {
+                                Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OPENGL_SECOND_DRAW));
+                            });
+                        }
                         break;
                     case BlueprintDamageType.SCROLL:
                         if (StaticObjects == null || StaticObjects.PxOffset != GetScrollIncrement(pxOffset, state))

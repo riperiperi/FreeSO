@@ -35,5 +35,6 @@ namespace FSO.Server.Api
         public string SmtpUser { get; set; }
 
         public bool SmtpEnabled { get; set;  }
+        public bool UseProxy { get; set; }
     }
 }

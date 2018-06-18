@@ -45,6 +45,7 @@ namespace FSO.Server.Servers.Api
         public string SmtpPassword { get; set; }
         public string SmtpUser { get; set; }
         public bool ForceEmailConfirmation { get; set; }
+        public bool UseProxy { get; set; } = true;
     }
 
     public enum ApiServerControllers

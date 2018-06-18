@@ -404,7 +404,8 @@ namespace FSO.LotView.Model
         OUTDOORS_LIGHTING_CHANGED,
         ROOM_CHANGED,
         ROOF_STYLE_CHANGED,
-        ROOM_MAP_CHANGED
+        ROOM_MAP_CHANGED,
+        OPENGL_SECOND_DRAW
     }
 
     public class BlueprintObjectList {

@@ -51,6 +51,7 @@ namespace FSO.Server.Api
             Config.UpdateUrl = appSettings["updateUrl"];
             Config.CDNUrl = appSettings["cdnUrl"];
             Config.NFSdir = appSettings["nfsdir"];
+            Config.UseProxy = bool.Parse(appSettings["useProxy"]);
 
             // new smtp config vars
             if(appSettings["smtpHost"]!=null&&

@@ -34,6 +34,7 @@ sampler TexSampler = sampler_state {
 	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
 };
 
+#if !SM4
 sampler AnisoTexSampler = sampler_state {
 	texture = <BaseTex>;
 	AddressU = Wrap;
@@ -44,6 +45,7 @@ sampler AnisoTexSampler = sampler_state {
 	MinFilter = Anisotropic;
 	MaxAnisotropy = 16;
 };
+#endif
 
 texture RoomMap : Diffuse;
 sampler RoomMapSampler = sampler_state {
@@ -439,7 +441,11 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 #if SIMPLE
 		color *= tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
 #else
+#if SM4
 		color *= tex2Dgrad(AnisoTexSampler, LoopUV(input.GrassInfo.yz), ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz));
+#else
+		color *= tex2Dgrad(TexSampler, LoopUV(input.GrassInfo.yz), ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz));
+#endif
 #endif
 		if (color.a < 0.5) discard;
 		color.a *= (1 - RectangleFade(input.ModelPos.xz, FadeWidth / 2));

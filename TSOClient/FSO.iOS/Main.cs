@@ -7,6 +7,7 @@ using Ninject.Injection;
 using Common.Logging;
 using System.Threading;
 using FSO.Files;
+using FSO.Client.UI.Panels;
 //using Ninject;
 #if MONOMAC
 using MonoMac.AppKit;
@@ -53,6 +54,7 @@ namespace FSOiOS
 
             FSOEnvironment.GameThread = Thread.CurrentThread;
             FSOEnvironment.Enable3D = true;
+            ITTSContext.Provider = AppleTTSContext.PlatformProvider;
 
             FSO.Files.ImageLoader.UseSoftLoad = false;
 

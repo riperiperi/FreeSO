@@ -99,7 +99,7 @@ namespace FSO.Client.UI.Panels
 
         private ITTSContext GetOrCreateTTS()
         {
-            if (TTSContext == null && !GameFacade.Linux)
+            if (TTSContext == null && ITTSContext.Provider != null)
             {
                 TTSContext = ITTSContext.Provider();
             }

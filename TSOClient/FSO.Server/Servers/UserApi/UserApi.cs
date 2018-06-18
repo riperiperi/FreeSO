@@ -81,6 +81,7 @@ namespace FSO.Server.Servers.UserApi
             settings.Add("smtpUser", userApiConfig.SmtpUser);
             settings.Add("smtpPassword", userApiConfig.SmtpPassword);
             settings.Add("smtpPort", userApiConfig.SmtpPort.ToString());
+            settings.Add("useProxy", userApiConfig.UseProxy.ToString());
 
             var api = new FSO.Server.Api.Api();
             api.Init(settings);

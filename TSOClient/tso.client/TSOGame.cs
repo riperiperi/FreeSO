@@ -62,7 +62,13 @@ namespace FSO.Client
             this.Window.AllowUserResizing = true;
             this.Window.ClientSizeChanged += new EventHandler<EventArgs>(Window_ClientSizeChanged);
 
-            Thread.CurrentThread.Name = "Game";
+            try
+            {
+                Thread.CurrentThread.Name = "Game";
+            } catch
+            {
+                //fails on android
+            }
         }
 
         bool newChange = false;
