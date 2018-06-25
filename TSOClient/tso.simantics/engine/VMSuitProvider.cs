@@ -110,11 +110,9 @@ namespace FSO.SimAntics.Engine
                     toHandCopy = new VMOutfitReference("n"+code+"_01,BODY="+"n"+code+skn+"_01", false);
                     break;
                 case VMPersonSuits.DefaultSwimwear:
-                    if (IsValid(bodyStrings.GetString(31))) goto case VMPersonSuits.TS1ExpandedSwimsuit;
                     toHandCopy = new VMOutfitReference("n" + code + "_01,BODY=" + "u" + code + skn + "_"+((male && !child)?"briefs":"undies")+"01", false);
                     break;
                 case VMPersonSuits.TS1Formal:
-                    if (IsValid(bodyStrings.GetString(30))) goto case VMPersonSuits.TS1ExpandedFormal;
                     toHandCopy = new VMOutfitReference("f" + code + "_01,BODY=" + "f" + code + skn + "_01", false);
                     break;
                 case VMPersonSuits.JobOutfit:
@@ -134,7 +132,6 @@ namespace FSO.SimAntics.Engine
                     toHandCopy = new VMOutfitReference(bskn+",BODY=" + btex, false);
                     break;
                 case VMPersonSuits.DefaultSleepwear:
-                    if (IsValid(bodyStrings.GetString(32))) goto case VMPersonSuits.TS1ExpandedPajamas;
                     var pj = (child ? "pjs" : "pajama");
                     var gen = (child ? (male ? "m" : "f") : (code));
                     var gen2 = (male ? "m" : "f");
@@ -181,11 +178,6 @@ namespace FSO.SimAntics.Engine
                 else toHandCopy.OftData.LiteralHandgroup = avatar.DefaultSuits.Daywear.OftData?.LiteralHandgroup;
             }
             return toHandCopy;
-        }
-
-        private static bool IsValid(string suitName)
-        {
-            return !(suitName == null || suitName == "" || suitName == "ADDED");
         }
 
         public static object GetSuit(VMStackFrame context, VMSuitScope scope, ushort id)

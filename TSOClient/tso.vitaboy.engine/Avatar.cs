@@ -269,7 +269,6 @@ namespace FSO.Vitaboy
         }
 
         public static int DefaultTechnique = 0;
-        public Vector4 AmbientLight = Vector4.One;
 
         /// <summary>
         /// Draws the meshes making up this Avatar instance.
@@ -281,7 +280,7 @@ namespace FSO.Vitaboy
             Effect.Parameters["View"].SetValue(View);
             Effect.Parameters["Projection"].SetValue(Projection);
             Effect.Parameters["World"].SetValue(World);
-            Effect.Parameters["AmbientLight"].SetValue(AmbientLight);
+            Effect.Parameters["AmbientLight"].SetValue(new Vector4(1, 1, 1, 1));
 
             var test = Vector4.Transform(new Vector4(0, 5.2f, 0, 1), World * View * Projection);
 

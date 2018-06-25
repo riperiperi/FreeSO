@@ -5,7 +5,6 @@ using FSO.LotView.Model;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
-using FSO.SimAntics.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -162,9 +161,9 @@ namespace FSO.SimAntics.Primitives
                     break;
                 case VMGenericTS1CallMode.SpawnDowntownDateOfPersonInTemp0: //18
                     //spawn our autofollow sim
+                    context.Thread.TempRegisters[0] = 0;
                     var neighbourhood = Content.Content.Get().Neighborhood;
                     var ntarget = (VMAvatar)context.VM.GetObjectById(context.Thread.TempRegisters[0]);
-                    context.Thread.TempRegisters[0] = -1;
                     if (ntarget == null) return VMPrimitiveExitCode.GOTO_FALSE; //vacation?
                     var neighbour = ntarget.GetPersonData(Model.VMPersonDataVariable.NeighborId);
                     var inventory = neighbourhood.GetInventoryByNID(neighbour);
@@ -215,16 +214,7 @@ namespace FSO.SimAntics.Primitives
                     //context.Thread.TempRegisters[0] = GetIData(eInv, 7);
                     //context.Thread.TempRegisters[1] = GetIData(eInv, 8);
                     return VMPrimitiveExitCode.GOTO_TRUE; //UNUSED?
-                case VMGenericTS1CallMode.HotDateChangeSuitsPermanentlyCall:
-                    //temp 0: outfit type
-                    //temp 1: outfit index
-                    context.Thread.TempRegisters[1] = VMTS1PurchasableOutfitHelper.SetSuit(
-                        (VMAvatar)context.Caller, 
-                        context.Thread.TempRegisters[0],
-                        context.Thread.TempRegisters[1]);
-
-                    return VMPrimitiveExitCode.GOTO_TRUE;
-
+                // 24. HotDateChangeSuitsPermanentlyCall
                 // 25. SaveSimPersistentData (motives, relationships?)
                 case VMGenericTS1CallMode.SaveSimPersistentData:
                     return VMPrimitiveExitCode.GOTO_TRUE;
@@ -270,24 +260,10 @@ namespace FSO.SimAntics.Primitives
                     else context.Thread.TempRegisters[0] = (short)((context.Thread.TempRegisters[0] >= 81 && context.Thread.TempRegisters[0] <= 89) ? 2 : 1);
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
-                case VMGenericTS1CallMode.SetStackObjectsSuit:
-                    context.Thread.TempRegisters[1] = VMTS1PurchasableOutfitHelper.SetSuit(
-                        (VMAvatar)context.StackObject, 
-                        context.Thread.TempRegisters[0],
-                        context.Thread.TempRegisters[1]);
-                    return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMGenericTS1CallMode.GetStackObjectsSuit:
-                    context.Thread.TempRegisters[1] = VMTS1PurchasableOutfitHelper.GetSuitIndex((VMAvatar)context.StackObject, context.Thread.TempRegisters[0]);
-                    return VMPrimitiveExitCode.GOTO_TRUE;
-                case VMGenericTS1CallMode.CountStackObjectSuits:
-                    var validSuits = VMTS1PurchasableOutfitHelper.GetValidOutfits((VMAvatar)context.StackObject, context.Thread.TempRegisters[0]);
-                    context.Thread.TempRegisters[0] = (short)validSuits.Length;
-                    return VMPrimitiveExitCode.GOTO_TRUE;
+                // 29. SetStackObjectsSuit //suit type in temp0, suit index in temp1. Returns old index in temp1. (where are these saved?)
+                // 30. GetStackObjectsSuit //suit type in temp0, suit index in temp1.
+                // 31. CountStackObjectSuits
                 // 32. CreatePurchasedPetsNearOwner
-                case VMGenericTS1CallMode.CreatePurchasedPetsNearOwner:
-                    context.VM.TS1State.CurrentFamily.SelectWholeFamily();
-                    context.VM.TS1State.VerifyFamily(context.VM);
-                    return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTS1CallMode.AddToFamilyInTemp0:
                     family = Content.Content.Get().Neighborhood.GetFamily((ushort)context.Thread.TempRegisters[0]);
                     if (family == null || family.FamilyGUIDs.Length >= 8)

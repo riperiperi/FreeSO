@@ -7,11 +7,10 @@ using Microsoft.Xna.Framework.Audio;
 using System.IO;
 using Microsoft.Xna.Framework.Media;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace FSO.Common.Audio
 {
-    public class MP3Player : ISFXInstanceLike
+    public class MP3Player
     {
         private Mp3Stream Stream;
         public DynamicSoundEffectInstance Inst;
@@ -26,54 +25,23 @@ namespace FSO.Common.Audio
         private bool EndOfStream;
         private Thread MainThread; //keep track of this, terminate when it closes.
 
-        private SoundState _State = SoundState.Stopped;
-        private bool Disposed = false;
-
-        private float _Volume = 1f;
-        private float _Pan;
-
-        private object ControlLock = new object();
-        private string Path;
-
         public MP3Player(string path)
         {
-            Path = path;
-            // //let's get started...
+            Stream = new Mp3Stream(path);
+            Stream.DecodeFrames(1); //let's get started...
 
             DecodeNext = new AutoResetEvent(true);
             BufferDone = new AutoResetEvent(false);
+            Inst = new DynamicSoundEffectInstance(Stream.Frequency, AudioChannels.Stereo);
+            Inst.IsLooped = false;
+            Inst.BufferNeeded += SubmitBufferAsync;
+            SubmitBuffer(null, null);
+            SubmitBuffer(null, null);
+
+            NextBuffers = new List<byte[]>();
+            NextSizes = new List<int>();
+            Requests = 1;
             MainThread = Thread.CurrentThread;
-
-            Task.Run((Action)Start);
-        }
-
-        public void Start()
-        {
-            Stream = new Mp3Stream(Path);
-            Stream.DecodeFrames(1);
-            lock (ControlLock)
-            {
-                if (Disposed) return;
-                Inst = new DynamicSoundEffectInstance(Stream.Frequency, AudioChannels.Stereo);
-                Inst.IsLooped = false;
-                Inst.BufferNeeded += SubmitBufferAsync;
-                if (_State == SoundState.Playing) Inst.Play();
-                else if (_State == SoundState.Paused)
-                {
-                    Inst.Play();
-                    Inst.Pause();
-                }
-                Inst.Volume = _Volume;
-                Inst.Pan = _Pan;
-
-                NextBuffers = new List<byte[]>();
-                NextSizes = new List<int>();
-                Requests = 1;
-            }
-
-            //SubmitBuffer(null, null);
-            //SubmitBuffer(null, null);
-
             DecoderThread = new Thread(() =>
             {
                 try
@@ -110,110 +78,39 @@ namespace FSO.Common.Audio
 
         public void Play()
         {
-            lock (ControlLock)
-            {
-                _State = SoundState.Playing;
-                Inst?.Play();
-            }
+            Inst.Play();
         }
 
         public void Stop()
         {
-            lock (ControlLock)
-            {
-                _State = SoundState.Stopped;
-                Inst?.Stop();
-            }
-        }
-
-        public void Pause()
-        {
-            lock (ControlLock)
-            {
-                _State = SoundState.Paused;
-                Inst?.Pause();
-            }
-        }
-
-        public void Resume()
-        {
-            lock (ControlLock)
-            {
-                _State = SoundState.Playing;
-                Inst?.Resume();
-            }
+            Inst.Stop();
         }
 
         public void Dispose()
         {
-            lock (ControlLock)
+            lock (this)
             {
-                Disposed = true;
-                Inst?.Dispose();
-                Stream?.Dispose();
-                DecoderThread?.Abort();
+                Inst.Dispose();
+                Stream.Dispose();
+                DecoderThread.Abort();
                 EndOfStream = true;
             }
         }
-
+        
         public bool IsEnded()
         {
             return EndOfStream && Inst.PendingBufferCount == 0;
         }
 
-        public float Volume
+        public void SetVolume(float volume)
         {
-            get
-            {
-                lock (ControlLock)
-                {
-                    if (Inst != null) return Inst.Volume;
-                    else return _Volume;
-                }
-            }
-            set
-            {
-                lock (ControlLock)
-                {
-                    _Volume = value;
-                    if (Inst != null) Inst.Volume = value;
-                }
-            }
+            Inst.Volume = volume;
         }
 
-        public float Pan
+        public void SetPan(float pan)
         {
-            get
-            {
-                lock (ControlLock)
-                {
-                    if (Inst != null) return Inst.Pan;
-                    else return _Pan;
-                }
-            }
-            set
-            {
-                lock (ControlLock)
-                {
-                    _Pan = value;
-                    if (Inst != null) Inst.Pan = value;
-                }
-            }
+            Inst.Pan = pan;
         }
-
-        public SoundState State
-        {
-            get
-            {
-                lock (ControlLock)
-                {
-                    if (Inst != null) return Inst.State;
-                    else return _State;
-                }
-            }
-        }
-
-        public bool IsLooped { get; set; }
 
         private void SubmitBuffer(object sender, EventArgs e)
         {
@@ -235,7 +132,7 @@ namespace FSO.Common.Audio
             while (true)
             {
                 if (EndOfStream) return;
-                //BufferDone.WaitOne(128);
+                BufferDone.WaitOne(128);
                 lock (this)
                 {
                     if (NextBuffers.Count > 0)
@@ -252,18 +149,5 @@ namespace FSO.Common.Audio
                 }
             }
         }
-    }
-
-    public interface ISFXInstanceLike
-    {
-        float Volume { get; set; }
-        float Pan { get; set; }
-        SoundState State { get; }
-        bool IsLooped { get; set; }
-        void Play();
-        void Stop();
-        void Pause();
-        void Resume();
-        void Dispose();
     }
 }

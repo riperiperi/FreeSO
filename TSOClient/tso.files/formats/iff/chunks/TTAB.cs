@@ -335,8 +335,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         TSOAvailableWhenDead = 1<<19, //COVERED
 
         FSOPushTail = 1<<30,
-        FSOPushHead = 1<<29,
-        FSOSkipPermissions = 1<<28
+        FSOPushHead = 1<<29
     }
 
     public enum TSOFlags

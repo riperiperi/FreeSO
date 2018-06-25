@@ -28,7 +28,7 @@ namespace FSO.SimAntics.Primitives
             context.Args[operand.StackVarToDec] -= (short)((idleStart != 0 && idleStart < context.VM.Scheduler.CurrentTickID) ? (context.VM.Scheduler.CurrentTickID - idleStart) : 1);
             
             //if we're main, attempt to run a queued interaction. We just idle if this fails.
-            if (operand.AllowPush == 1 && (context.VM.TS1 || !context.ActionTree) && context.Thread.AttemptPush())
+            if (operand.AllowPush == 1 && !context.ActionTree && context.Thread.AttemptPush())
             {
                 return VMPrimitiveExitCode.CONTINUE; //control handover 
                 //TODO: does this forcefully end the rest of the idle? (force a true return, must loop back to run again)

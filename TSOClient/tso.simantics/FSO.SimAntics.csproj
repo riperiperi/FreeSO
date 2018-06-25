@@ -357,7 +357,6 @@
     <Compile Include="Utils\VMLotRotate.cs" />
     <Compile Include="Utils\VMLotTerrainRestoreTools.cs" />
     <Compile Include="Utils\VMTS1Activator.cs" />
-    <Compile Include="Utils\VMTS1PurchasableOutfitHelper.cs" />
     <Compile Include="Utils\VMWorldActivator.cs" />
     <Compile Include="Utils\VMWorldExporter.cs" />
     <Compile Include="VM.cs" />

@@ -183,24 +183,20 @@ namespace FSO.SimAntics.Engine
         /// </summary>
         public bool AttemptPush()
         {
-            int priorityCompare = int.MinValue;
-            if (ActiveQueueBlock > -1) priorityCompare = this.Queue[ActiveQueueBlock].Priority;
             QueueDirty = true;
-            while (Queue.Count > ActiveQueueBlock+1)
+            while (Queue.Count > 0)
             {
-                var item = Queue[ActiveQueueBlock+1];
-                if (item.Priority <= priorityCompare) return false;
-                if (item.Cancelled) Entity.SetFlag(VMEntityFlags.InteractionCanceled, item.Cancelled);
+                var item = Queue[0];
+                if (item.Cancelled) Entity.SetFlag(VMEntityFlags.InteractionCanceled, true);
                 if (IsCheck || ((item.Mode != VMQueueMode.ParentIdle || !Entity.GetFlag(VMEntityFlags.InteractionCanceled)) && CheckAction(item) != null))
                 {
-                    Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
                     ExecuteAction(item);
                     ActiveQueueBlock++;
                     return true;
                 }
                 else
                 {
-                    Queue.RemoveAt(ActiveQueueBlock + 1); //keep going.
+                    Queue.RemoveAt(0); //keep going.
                 }
             }
             return false;
@@ -621,11 +617,11 @@ namespace FSO.SimAntics.Engine
             if (discardResult) //interaction switching back to main (it cannot be the other way...)
             {
                 QueueDirty = true;
-                var interaction = Queue[ActiveQueueBlock];
+                var interaction = Queue[0];
                 //clear "interaction cancelled" since we are leaving the interaction
                 if (interaction.Mode != VMQueueMode.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
                 if (interaction.Callback != null) interaction.Callback.Run(Entity);
-                if (Queue.Count > 0) Queue.RemoveAt(ActiveQueueBlock);
+                if (Queue.Count > 0) Queue.RemoveAt(0);
                 if (Entity is VMAvatar && !IsCheck && ActiveQueueBlock == 0)
                 {
                     //motive deltas reset between interactions
@@ -633,8 +629,7 @@ namespace FSO.SimAntics.Engine
                 }
                 ContinueExecution = true; //continue where the Allow Push idle left off
                 ActiveQueueBlock--;
-                if (ActiveQueueBlock > -1) Queue[ActiveQueueBlock].Cancelled = interaction.Cancelled;
-                result = (!interaction.Flags.HasFlag(TTABFlags.RunImmediately)) ? VMPrimitiveExitCode.CONTINUE_NEXT_TICK : VMPrimitiveExitCode.CONTINUE;
+                result = (ActiveQueueBlock == -1) ? VMPrimitiveExitCode.CONTINUE_NEXT_TICK : VMPrimitiveExitCode.CONTINUE;
             }
             if (Stack.Count > 0)
             {
@@ -782,7 +777,7 @@ namespace FSO.SimAntics.Engine
         {
             var result = new List<VMPieMenuInteraction>();
 
-            if (Entity is VMAvatar && !action.Flags.HasFlag(TTABFlags.FSOSkipPermissions)) //just let everyone use the CSR interactions
+            if (Entity is VMAvatar) //just let everyone use the CSR interactions
             {
                 var avatar = (VMAvatar)Entity;
 
