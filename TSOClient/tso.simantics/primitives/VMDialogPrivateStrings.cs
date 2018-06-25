@@ -123,6 +123,10 @@ namespace FSO.SimAntics.Primitives
                             context.Thread.TempRegisters[1] = (byte)(number2 >> 8);
                             context.Thread.TempRegisters[2] = (byte)(number2);
                             return VMPrimitiveExitCode.GOTO_TRUE;
+                        case VMDialogType.TS1PetChoice:
+                        case VMDialogType.TS1Clothes:
+                            if (curDialog.ResponseCode == 0) return VMPrimitiveExitCode.GOTO_FALSE;
+                            goto case VMDialogType.NumericEntry;
                     }
                 }
                 else

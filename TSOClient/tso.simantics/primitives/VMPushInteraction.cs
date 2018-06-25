@@ -56,6 +56,7 @@ namespace FSO.SimAntics.Engine.Primitives
             action.Mode = mode;
             action.Priority = priority;
             if (!context.VM.TS1) action.Flags |= TTABFlags.MustRun;
+            else action.Flags |= TTABFlags.FSOSkipPermissions;
             if (operand.PushTailContinuation) action.Flags |= TTABFlags.FSOPushTail;
             if (operand.PushHeadContinuation) action.Flags |= TTABFlags.FSOPushHead;
 

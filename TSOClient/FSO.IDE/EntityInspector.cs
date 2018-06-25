@@ -89,6 +89,7 @@ namespace FSO.IDE
 
         private void SetBreak(VMEntity entity)
         {
+            HookedVM.Scheduler.RescheduleInterrupt(entity);
             entity.Thread.ThreadBreak = SimAntics.Engine.VMThreadBreakMode.Immediate;
         }
 

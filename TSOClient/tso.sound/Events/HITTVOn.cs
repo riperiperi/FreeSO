@@ -27,7 +27,7 @@ namespace FSO.HIT.Events
         private Dictionary<string, SoundEffect> SFXCache = new Dictionary<string, SoundEffect>();
         private List<string> Sounds = new List<string>();
 
-        private SoundEffectInstance Instance;
+        private ISFXInstanceLike Instance;
         private MP3Player MusicInstance;
         private bool IsMusic;
 
@@ -104,7 +104,7 @@ namespace FSO.HIT.Events
                 var sfx = Content.Content.Get().Audio.GetSFX(new Patch(0x00004f85));
                 if (sfx == null) return;
                 SFXCache.Add("loadloop", sfx);
-                Instance = sfx.CreateInstance();
+                Instance = (ISFXInstanceLike)sfx.CreateInstance();
                 Instance.Volume = GetVolFactor();
                 Instance.IsLooped = true;
                 Instance.Play();
@@ -192,7 +192,7 @@ namespace FSO.HIT.Events
             if (IsMusic)
             {
                 MusicInstance = new MP3Player(sound);
-                Instance = MusicInstance.Inst;
+                Instance = MusicInstance;
             }
             else
             {
@@ -200,7 +200,7 @@ namespace FSO.HIT.Events
                     SFXCache[sound] = SoundEffect.FromStream(new XAFile(sound).DecompressedStream);
                 var sfx = SFXCache[sound];
 
-                Instance = sfx.CreateInstance();
+                Instance = (ISFXInstanceLike)sfx.CreateInstance();
             }
             Instance.Volume = InstVolume * GetVolFactor();
             if (!IsMusic && Pan != 0) Instance.Pan = Pan;

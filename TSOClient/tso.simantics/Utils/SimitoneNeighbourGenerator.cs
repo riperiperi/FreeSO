@@ -11,7 +11,7 @@ namespace FSO.SimAntics.Utils
 {
     public static class SimitoneNeighbourGenerator
     {
-        //Template Person: 0x7FD96B54
+        //Template Person GUID
         public static uint TEMPLATE_GUID = 0x7FD96B54;
 
         //process of creating a family
@@ -33,7 +33,7 @@ namespace FSO.SimAntics.Utils
             //userid
             var userid = neigh.NextSim;
 
-            var tempObj = Content.Content.Get().WorldObjects.Get(TEMPLATE_GUID);
+            var tempObj = Content.Content.Get().WorldObjects.Get(info.CustomGUID ?? TEMPLATE_GUID);
             tempObj.OBJ.ChunkParent.RetainChunkData = true;
             tempObj.OBJ.GUID = guid;
             tempObj.OBJ.ChunkLabel = "user" + userid.ToString().PadLeft(5, '0') + " - " + info.Name;
@@ -192,6 +192,7 @@ namespace FSO.SimAntics.Utils
         public bool Child;
         public short FamilyID;
         public short[] PersonalityPoints = new short[5];
+        public uint? CustomGUID;
 
         public Dictionary<int, string> BodyStringReplace;
 
@@ -232,6 +233,21 @@ namespace FSO.SimAntics.Utils
                 case "drk":
                     SkinTone = 2; break;
             }
+        }
+
+        public SimTemplateCreateInfo(string petType, bool gender)
+        {
+            //kat/dog. 
+            Child = false;
+            BodyStringReplace = new Dictionary<int, string>()
+            {
+                {0, petType },
+                {12, ((petType == "kat")?"cat":"dog") + ((!gender)?"male":"female") },
+                {13, Child?"9":"27" },
+            };
+
+            Gender = (short)((gender) ? 1 : 0);
+            SkinTone = 0;
         }
 
         public short[] MakePersonData()
