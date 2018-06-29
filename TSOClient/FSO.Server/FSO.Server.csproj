@@ -285,7 +285,7 @@
     <None Include="Admin\src\app\login\login.scss" />
     <None Include="Admin\src\app\vendor.scss" />
     <None Include="App.config" />
-    <None Include="config.json">
+    <None Include="config.sample.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
