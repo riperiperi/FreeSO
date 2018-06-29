@@ -21,6 +21,7 @@ TSOClient/FSO.Benchmark/*
 TSOClient/FSOFacadeWorker/*
 TSOClient/.vs/*
 # User-specific files
+.vs/
 *.suo
 *.user
 *.userosscache
