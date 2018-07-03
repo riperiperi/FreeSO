@@ -288,7 +288,7 @@
     <None Include="Admin\src\app\login\login.scss" />
     <None Include="Admin\src\app\vendor.scss" />
     <None Include="App.config" />
-    <None Include="config.sample.json">
+    <None Include="*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
@@ -439,7 +439,8 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(ProjectDir)config.json $(TargetDir)</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
