@@ -789,19 +789,15 @@
     <Content Include="Content\UI\customemojis.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\MeshReplace\*.fsom">
+    <Content Include="Content\MeshReplace\**\*.fsom">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Objects\*.iff">
+    <Content Include="Content\Objects\**\*.iff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Patch\*.piff">
+    <Content Include="Content\Patch\**\*.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Patch\*\*.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
