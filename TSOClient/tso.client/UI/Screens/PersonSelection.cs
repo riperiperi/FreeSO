@@ -189,7 +189,13 @@ namespace FSO.Client.UI.Screens
                         if (UIScreen.Current != this) return;
                         using (var mem = new MemoryStream(data))
                         {
-                            callback(ImageLoader.FromStream(GameFacade.GraphicsDevice, mem));
+                            try
+                            {
+                                callback(ImageLoader.FromStream(GameFacade.GraphicsDevice, mem));
+                            } catch
+                            {
+
+                            }
                         }
                     });
                 }
