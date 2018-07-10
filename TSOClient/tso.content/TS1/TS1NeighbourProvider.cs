@@ -251,16 +251,27 @@ namespace FSO.Content.TS1
             return (short)(Neighbors.Entries.FirstOrDefault(x => x.NeighbourID > current && x.GUID == guid)?.NeighbourID ?? -1);
         }
 
+        public void AvatarChanged(uint guid)
+        {
+            DirtyAvatars.Add(guid);
+        }
+
         public bool SaveNeighbourhood(bool withSims)
         {
             //todo: save iffs for dirty avatars. 
-            foreach (var ava in DirtyAvatars)
+            if (withSims)
             {
-                var obj = ContentManager.WorldObjects.Get(ava);
-                using (var stream = new FileStream(obj.Resource.Name, FileMode.Create))
-                    obj.Resource.MainIff.Write(stream);
+                foreach (var ava in DirtyAvatars)
+                {
+                    var obj = ContentManager.WorldObjects.Get(ava);
+                    if (obj != null)
+                    {
+                        using (var stream = new FileStream(obj.Resource.Name, FileMode.Create))
+                            obj.Resource.MainIff.Write(stream);
+                    }
+                }
+                DirtyAvatars.Clear();
             }
-            DirtyAvatars.Clear();
 
             using (var stream = new FileStream(Path.Combine(UserPath, "Neighborhood.iff"), FileMode.Create, FileAccess.Write, FileShare.None))
                 MainResource.Write(stream);

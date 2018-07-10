@@ -32,68 +32,95 @@ namespace FSO.SimAntics.Primitives
             var age = context.Locals[operand.AgeLocal];
             var gender = context.Locals[operand.GenderLocal];
 
-            var simtype = ((gender > 0)?"f":"m")+((age<18)?"c":"m");
-            var skin = ColorNames[color];
-            var code = simtype;
 
-            var heads = Content.Content.Get().BCFGlobal.CollectionsByName["c"].ClothesByAvatarType[simtype];
-            if (simtype[1] == 'c') simtype += "chd";
-            var bodies = Content.Content.Get().BCFGlobal.CollectionsByName["b"].ClothesByAvatarType[simtype];
+            SimTemplateCreateInfo info;
 
-            //pick a random head and body.
-
-            var tex = (TS1AvatarTextureProvider)Content.Content.Get().AvatarTextures;
-            var texnames = tex.GetAllNames();
-
-            var headTex = heads.Select(x => RemoveExt(texnames.FirstOrDefault(y => y.StartsWith(ExtractID(x, skin))))).ToList();
-            var bodyTex = bodies.Select(x => RemoveExt(texnames.FirstOrDefault(y => y.StartsWith(ExtractID(x, skin))))).ToList();
-            var handgroupTex = bodies.Select(x => (RemoveExt(texnames.FirstOrDefault(y => y == "huao" + FindHG(x))) ?? "huao" + skin).Substring(4)).ToList();
-
-            for (int i = 0; i < heads.Count; i++)
+            if (operand.AvatarType == 0)
             {
-                if (headTex[i] == null)
-                {
-                    headTex.RemoveAt(i);
-                    heads.RemoveAt(i--);
-                }
-            }
+                var simtype = ((gender > 0) ? "f" : "m") + ((age < 18) ? "c" : "m");
+                var skin = ColorNames[color];
+                var code = simtype;
 
-            for (int i = 0; i < bodies.Count; i++)
+                var heads = Content.Content.Get().BCFGlobal.CollectionsByName["c"].ClothesByAvatarType[simtype];
+                if (simtype[1] == 'c') simtype += "chd";
+                var bodies = Content.Content.Get().BCFGlobal.CollectionsByName["b"].ClothesByAvatarType[simtype];
+
+                //pick a random head and body.
+
+                var tex = (TS1AvatarTextureProvider)Content.Content.Get().AvatarTextures;
+                var texnames = tex.GetAllNames();
+
+                var headTex = heads.Select(x => RemoveExt(texnames.FirstOrDefault(y => y.StartsWith(ExtractID(x, skin))))).ToList();
+                var bodyTex = bodies.Select(x => RemoveExt(texnames.FirstOrDefault(y => y.StartsWith(ExtractID(x, skin))))).ToList();
+                var handgroupTex = bodies.Select(x => (RemoveExt(texnames.FirstOrDefault(y => y == "huao" + FindHG(x))) ?? "huao" + skin).Substring(4)).ToList();
+
+                for (int i = 0; i < heads.Count; i++)
+                {
+                    if (headTex[i] == null)
+                    {
+                        headTex.RemoveAt(i);
+                        heads.RemoveAt(i--);
+                    }
+                }
+
+                for (int i = 0; i < bodies.Count; i++)
+                {
+                    if (bodyTex[i] == null)
+                    {
+                        bodyTex.RemoveAt(i);
+                        handgroupTex.RemoveAt(i);
+                        bodies.RemoveAt(i--);
+                    }
+                }
+
+                var headInd = (int)context.VM.Context.NextRandom((ulong)heads.Count);
+                var bodyInd = (int)context.VM.Context.NextRandom((ulong)bodies.Count);
+
+                var body = bodies[bodyInd];
+
+                var ind = body.IndexOf("_");
+                var bodyType = body.Substring(ind - 3, 3);
+                code += bodyType;
+                info = new SimTemplateCreateInfo(code, skin);
+
+                info.BodyStringReplace[1] = body + ",BODY=" + bodyTex[bodyInd];
+                info.BodyStringReplace[2] = heads[headInd] + ",HEAD-HEAD=" + headTex[headInd];
+
+                var hand = (simtype[1] == 'c') ? 'u' : simtype[0];
+                var hg = handgroupTex[bodyInd];
+                info.BodyStringReplace[17] = "H" + hand + "LO,HAND=" + "huao" + hg;
+                info.BodyStringReplace[18] = "H" + hand + "RO,HAND=" + "huao" + hg;
+                info.BodyStringReplace[19] = "H" + hand + "LP,HAND=" + "huao" + hg;
+                info.BodyStringReplace[20] = "H" + hand + "RP,HAND=" + "huao" + hg;
+                info.BodyStringReplace[21] = "H" + hand + "LO,HAND=" + "huao" + hg;
+                info.BodyStringReplace[22] = "H" + hand + "RC,HAND=" + "huao" + hg;
+            } else
             {
-                if (bodyTex[i] == null)
+                //index
+                var index = context.StackObject.GetAttribute(8);
+
+                Tuple<string, string>[] outfits;
+                if (operand.AvatarType == 1)
                 {
-                    bodyTex.RemoveAt(i);
-                    handgroupTex.RemoveAt(i);
-                    bodies.RemoveAt(i--);
+                    //dog
+                    info = new SimTemplateCreateInfo("dog", gender > 0);
+                    info.CustomGUID = 0x4A70DF92;
+                    outfits = VMTS1PurchasableOutfitHelper.GetValidOutfits(null, -1);
+                } else
+                {
+                    info = new SimTemplateCreateInfo("kat", gender > 0);
+                    info.CustomGUID = 0x7BEA0977;
+                    outfits = VMTS1PurchasableOutfitHelper.GetValidOutfits(null, -2);
                 }
+
+
+                info.BodyStringReplace[1] = outfits[index].Item1;
             }
-
-            var headInd = (int)context.VM.Context.NextRandom((ulong)heads.Count);
-            var bodyInd = (int)context.VM.Context.NextRandom((ulong)bodies.Count);
-
-            var body = bodies[bodyInd];
-
-            var ind = body.IndexOf("_");
-            var bodyType = body.Substring(ind - 3, 3);
-            code += bodyType;
-            var info = new SimTemplateCreateInfo(code, skin);
 
             info.Name = context.StackObject.Name;
             info.Bio = "";
-            for (int i=0; i<5; i++)
-                info.PersonalityPoints[i] = 500;
-
-            info.BodyStringReplace[1] = body + ",BODY=" + bodyTex[bodyInd];
-            info.BodyStringReplace[2] = heads[headInd] + ",HEAD-HEAD=" + headTex[headInd];
-
-            var hand = (simtype[1] == 'c') ? 'u' : simtype[0];
-            var hg = handgroupTex[bodyInd];
-            info.BodyStringReplace[17] = "H" + hand + "LO,HAND=" + "huao" + hg;
-            info.BodyStringReplace[18] = "H" + hand + "RO,HAND=" + "huao" + hg;
-            info.BodyStringReplace[19] = "H" + hand + "LP,HAND=" + "huao" + hg;
-            info.BodyStringReplace[20] = "H" + hand + "RP,HAND=" + "huao" + hg;
-            info.BodyStringReplace[21] = "H" + hand + "LO,HAND=" + "huao" + hg;
-            info.BodyStringReplace[22] = "H" + hand + "RC,HAND=" + "huao" + hg;
+            for (int i = 0; i < 5; i++)
+                info.PersonalityPoints[i] = 500; //todo: randomize
 
             var n = SimitoneNeighbourGenerator.CreateNeighbor(guid, info);
 
@@ -129,6 +156,7 @@ namespace FSO.SimAntics.Primitives
         public byte ColorLocal { get; set; }
         public byte AgeLocal { get; set; }
         public byte GenderLocal { get; set; }
+        public byte AvatarType { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -138,6 +166,8 @@ namespace FSO.SimAntics.Primitives
                 ColorLocal = io.ReadByte();
                 AgeLocal = io.ReadByte();
                 GenderLocal = io.ReadByte();
+
+                AvatarType = io.ReadByte();
             }
         }
 
@@ -148,6 +178,8 @@ namespace FSO.SimAntics.Primitives
                 io.Write(ColorLocal);
                 io.Write(AgeLocal);
                 io.Write(GenderLocal);
+
+                io.Write(AvatarType);
             }
         }
         #endregion
