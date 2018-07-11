@@ -27,7 +27,7 @@ namespace FSO.HIT.Events
         private Dictionary<string, SoundEffect> SFXCache = new Dictionary<string, SoundEffect>();
         private List<string> Sounds = new List<string>();
 
-        private SoundEffectInstance Instance;
+        private ISFXInstanceLike Instance;
         private MP3Player MusicInstance;
         private bool IsMusic;
 
@@ -104,7 +104,7 @@ namespace FSO.HIT.Events
                 var sfx = Content.Content.Get().Audio.GetSFX(new Patch(0x00004f85));
                 if (sfx == null) return;
                 SFXCache.Add("loadloop", sfx);
-                Instance = sfx.CreateInstance();
+                Instance = new SFXDecor(sfx.CreateInstance());
                 Instance.Volume = GetVolFactor();
                 Instance.IsLooped = true;
                 Instance.Play();
@@ -192,7 +192,7 @@ namespace FSO.HIT.Events
             if (IsMusic)
             {
                 MusicInstance = new MP3Player(sound);
-                Instance = MusicInstance.Inst;
+                Instance = MusicInstance;
             }
             else
             {
@@ -200,7 +200,7 @@ namespace FSO.HIT.Events
                     SFXCache[sound] = SoundEffect.FromStream(new XAFile(sound).DecompressedStream);
                 var sfx = SFXCache[sound];
 
-                Instance = sfx.CreateInstance();
+                Instance = new SFXDecor(sfx.CreateInstance());
             }
             Instance.Volume = InstVolume * GetVolFactor();
             if (!IsMusic && Pan != 0) Instance.Pan = Pan;
@@ -220,6 +220,48 @@ namespace FSO.HIT.Events
 
         public override void Dispose()
         {
+        }
+    }
+
+    public class SFXDecor : ISFXInstanceLike
+    {
+        public SoundEffectInstance Inst;
+
+        public float Volume { get => Inst.Volume; set => Inst.Volume = value; }
+        public float Pan { get => Inst.Pan; set => Inst.Pan = value; }
+
+        public SoundState State => Inst.State;
+
+        public bool IsLooped { get => Inst.IsLooped; set => Inst.IsLooped = value; }
+
+        public SFXDecor(SoundEffectInstance sfx)
+        {
+            Inst = sfx;
+        }
+
+        public void Dispose()
+        {
+            Inst.Dispose();
+        }
+
+        public void Pause()
+        {
+            Inst.Pause();
+        }
+
+        public void Play()
+        {
+            Inst.Play();
+        }
+
+        public void Resume()
+        {
+            Inst.Resume();
+        }
+
+        public void Stop()
+        {
+            Inst.Stop();
         }
     }
 }
