@@ -108,7 +108,7 @@ namespace FSO.Content
             this.Device = device;
             this.Mode = mode;
 
-            ImageLoader.PremultiplyPNG = (FSOEnvironment.DirectX)?0:1;
+            ImageLoader.PremultiplyPNG = 1;// (FSOEnvironment.DirectX)?0:1;
 
             if (device != null)
             {
@@ -206,6 +206,18 @@ namespace FSO.Content
             _ScanFiles("Content/", contentFiles, "Content/");
             ContentFiles = contentFiles.ToArray();
             CustomUI.Init();
+            if (!TS1)
+            {
+                var allFiles = new List<string>();
+                _ScanFiles(BasePath, allFiles, BasePath);
+                AllFiles = allFiles.ToArray();
+                UIGraphics?.Init();
+                DataDefinition = new TSODataDefinition();
+                using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
+                {
+                    DataDefinition.Read(stream);
+                }
+            }
         }
 
         /// <summary>
@@ -214,13 +226,17 @@ namespace FSO.Content
         private void Init()
         {
             Inited = true;
+            if (!TS1) Audio.Init();
             /** Scan system for files **/
-            LoadProgress = ContentLoadingProgress.ScanningFiles;
-            var allFiles = new List<string>();
-            if (Target != FSOEngineMode.TS1)
+            if (AllFiles == null)
             {
-                _ScanFiles(BasePath, allFiles, BasePath);
-                AllFiles = allFiles.ToArray();
+                LoadProgress = ContentLoadingProgress.ScanningFiles;
+                var allFiles = new List<string>();
+                if (Target != FSOEngineMode.TS1)
+                {
+                    _ScanFiles(BasePath, allFiles, BasePath);
+                    AllFiles = allFiles.ToArray();
+                }
             }
 
             var ts1AllFiles = new List<string>();
@@ -267,17 +283,11 @@ namespace FSO.Content
                 ((AvatarMeshProvider)AvatarMeshes)?.Init();
                 CityMaps.Init();
                 RackOutfits.Init();
-
-                DataDefinition = new TSODataDefinition();
-                using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
-                {
-                    DataDefinition.Read(stream);
-                }
                 Ini.Init();
             }
 
             LoadProgress = ContentLoadingProgress.InitAudio;
-            Audio.Init();
+            if (TS1) Audio.Init();
 
             InitWorld();
         }

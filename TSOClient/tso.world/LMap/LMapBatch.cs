@@ -44,7 +44,7 @@ namespace FSO.LotView.LMap
         private Effect LightEffect;
         Matrix Projection;
 
-        private Blueprint Blueprint;
+        public Blueprint Blueprint;
         private LightData OutdoorsLight;
         public Vector3 SunVector;
         public bool Night;
@@ -145,6 +145,8 @@ namespace FSO.LotView.LMap
             var h = blueprint.Height;
             var ultra = WorldConfig.Current.UltraLighting;
             var directional = WorldConfig.Current.Directional;
+
+            if (w > 64 && FSOEnvironment.SoftwareDepth) ultra = false;
 
             resPerTile = ultra?16:8;
 
@@ -425,7 +427,7 @@ namespace FSO.LotView.LMap
                     GD.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
                 }
             }
-            var outFactor = 1 - (Blueprint.MinOut.A / 255f);
+            var outFactor = Vector4.One - Blueprint.MinOut.ToVector4();
 
             var factor = 16f / resPerTile;
 
@@ -457,7 +459,7 @@ namespace FSO.LotView.LMap
                 GD.SetRenderTarget(LightMap);
                 DrawRect.Offset(ScissorBase);
                 GD.ScissorRectangle = DrawRect;
-                LightEffect.Parameters["LightColor"].SetValue(Color.White.ToVector4() * outFactor);
+                LightEffect.Parameters["LightColor"].SetValue(Color.White.ToVector4() * outFactor.W);
                 LightEffect.Parameters["ShadowPowers"].SetValue(new Vector2(0.75f, 0.6f) * light.ShadowMultiplier);
                 LightEffect.Parameters["LightHeight"].SetValue(1f/(float)Blueprint.Width);
 
@@ -525,7 +527,8 @@ namespace FSO.LotView.LMap
                 LightEffect.Parameters["LightSize"].SetValue(light.LightSize / (size * 16f)); //in position space (0,1)
                 var l = light.LightColor.ToVector4();
                 l.W = (l.X + l.Y + l.Z) / 3;
-                if (light.OutdoorsColor) l *= outFactor;
+                
+                if (light.OutdoorsColor) l = Vector4.Multiply(l, outFactor);
                 else l *= 0.70f;
                 LightEffect.Parameters["LightColor"].SetValue(l);
                 LightEffect.Parameters["IsOutdoors"]?.SetValue(light.OutdoorsColor);

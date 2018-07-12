@@ -101,6 +101,14 @@ namespace FSO.SimAntics.NetPlay.EODs
             }
         }
 
+        public void SelfResync()
+        {
+            foreach (var server in Servers)
+            {
+                server.Handler.SelfResync();
+            }
+        }
+
         public void ForceDisconnectObj(VMEntity invoker)
         {
             VMEODServer server = null;

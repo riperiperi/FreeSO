@@ -25,6 +25,7 @@ namespace FSO.Server.Api
         public string Secret { get; set; }
 
         public string UpdateUrl { get; set; }
+        public string CDNUrl { get; set; }
 
         public string NFSdir { get; set; }
 
@@ -34,5 +35,6 @@ namespace FSO.Server.Api
         public string SmtpUser { get; set; }
 
         public bool SmtpEnabled { get; set;  }
+        public bool UseProxy { get; set; }
     }
 }

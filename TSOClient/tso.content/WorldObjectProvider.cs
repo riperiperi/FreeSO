@@ -211,6 +211,7 @@ namespace FSO.Content
         public abstract T Get<T>(ushort id);
         public abstract List<T> List<T>();
         public Dictionary<uint, short> TuningCache;
+        public Dictionary<ushort, object> RoutineCache;
 
         public T[] ListArray<T>()
         {
@@ -219,6 +220,45 @@ namespace FSO.Content
             return result.ToArray();
         }
         public GameGlobalResource SemiGlobal;
+
+        public static Func<BHAV, object> BHAVAssembler;
+
+        public virtual void Recache()
+        {
+            RoutineCache = new Dictionary<ushort, object>();
+            var bhavs = MainIff.List<BHAV>();
+            if (bhavs != null)
+            {
+                foreach (var bhav in bhavs)
+                {
+                    RoutineCache[bhav.ChunkID] = BHAVAssembler(bhav);
+                }
+            }
+
+            TuningCache = new Dictionary<uint, short>();
+
+            var bcons = MainIff.List<BCON>();
+            if (bcons != null)
+            {
+                foreach (var table in bcons)
+                {
+                    uint i = ((uint)table.ChunkID << 16);
+                    foreach (var item in table.Constants)
+                    {
+                        TuningCache[i++] = (short)item;
+                    }
+                }
+            }
+        }
+
+        public object GetRoutine(ushort id)
+        {
+            object result;
+            if (RoutineCache.TryGetValue(id, out result))
+                return result;
+            else
+                return null;
+        }
     }
 
     /// <summary>
@@ -257,8 +297,9 @@ namespace FSO.Content
             Recache();
         }
 
-        public void Recache()
+        public override void Recache()
         {
+            base.Recache();
             TreeByName = new Dictionary<string, VMTreeByNameTableEntry>();
             var bhavs = List<BHAV>();
             if (bhavs != null)
@@ -274,7 +315,7 @@ namespace FSO.Content
                             break;
                         }
                     }
-                    if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(bhav));
+                    if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(GetRoutine(bhav.ChunkID)));
                 }
             }
             //also add semiglobals
@@ -295,22 +336,7 @@ namespace FSO.Content
                                 break;
                             }
                         }
-                        if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(bhav));
-                    }
-                }
-            }
-
-            TuningCache = new Dictionary<uint, short>();
-
-            var bcons = Iff.List<BCON>();
-            if (bcons != null)
-            {
-                foreach (var table in bcons)
-                {
-                    uint i = ((uint)table.ChunkID << 16);
-                    foreach (var item in table.Constants)
-                    {
-                        TuningCache[i++] = (short)item;
+                        if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(SemiGlobal.GetRoutine(bhav.ChunkID)));
                     }
                 }
             }
@@ -380,9 +406,9 @@ namespace FSO.Content
 
     public class VMTreeByNameTableEntry
     {
-        public BHAV bhav;
+        public object bhav;
 
-        public VMTreeByNameTableEntry(BHAV bhav)
+        public VMTreeByNameTableEntry(object bhav)
         {
             this.bhav = bhav;
         }

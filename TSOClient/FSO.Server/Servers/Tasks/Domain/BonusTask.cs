@@ -7,6 +7,7 @@ using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.LotTop100;
 using FSO.Server.Database.DA.LotVisitTotals;
 using FSO.Server.Database.DA.Tasks;
+using FSO.Server.Database.DA.Tuning;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,6 +54,7 @@ namespace FSO.Server.Servers.Tasks.Domain
                 var startTime = endTime.Subtract(TimeSpan.FromDays(4));
                 var shardId = context.ShardId;
 
+                var vistorHourScale = db.Tuning.AllCategory("category_mul", 2).ToDictionary(x => x.tuning_index); //0: relationship, 1: skill/money, 2: visitor hour scale
 
                 while (startTime < endTime)
                 {
@@ -99,8 +101,15 @@ namespace FSO.Server.Servers.Tasks.Domain
                     int? bonus_visitor = null;
                     int? bonus_sim = null;
 
+                    float multiplier = 1;
+                    DbTuning cattuning;
+                    if (vistorHourScale.TryGetValue((int)x.category, out cattuning))
+                    {
+                        multiplier = cattuning.value;
+                    }
+
                     if(x.visitor_minutes != null && x.visitor_minutes >= 60){
-                        bonus_visitor = (int)Math.Floor((double)x.visitor_minutes / (double)60) * tuning.visitor_bonus.per_unit;
+                        bonus_visitor = (int)(Math.Floor((double)x.visitor_minutes / (double)60) * tuning.visitor_bonus.per_unit * multiplier);
                     }
 
                     if(x.property_rank != null){

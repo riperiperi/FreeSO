@@ -569,6 +569,8 @@ namespace FSO.Client.UI.Panels
                 Thumb3D = null;
                 Thumbnail.Texture = null;
             }
+
+            if (bought) FSOFacade.Hints.TriggerHint("ui:querypanel");
         }
 
         public void SetInfo(Texture2D thumb, string name, string description, int price)

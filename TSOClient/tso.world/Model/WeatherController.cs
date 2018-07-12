@@ -114,7 +114,7 @@ namespace FSO.LotView.Model
 
         private int GetWeatherIntensity(DateTime time)
         {
-            var distance = time - new DateTime(2017, 12, 1);
+            var distance = time - new DateTime(2018, 5, 18);
             var halfDay = (int)distance.TotalHours;
 
             var rand = new Random(389457023);
@@ -122,7 +122,7 @@ namespace FSO.LotView.Model
             {
                 rand.Next();
             }
-            return Math.Max(2, rand.Next(5)) + 1;
+            return Math.Max(3, rand.Next(7)-4);
         }
         
     }

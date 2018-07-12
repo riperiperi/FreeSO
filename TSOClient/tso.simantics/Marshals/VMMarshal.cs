@@ -9,15 +9,23 @@ using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using System.IO.Compression;
 using FSO.Common.Model;
+using FSO.SimAntics.Model.Platform;
+using FSO.SimAntics.Model.TS1Platform;
 
 namespace FSO.SimAntics.Marshals
 {
     public class VMMarshal : VMSerializable
     {
-        public static readonly int LATEST_VERSION = 25;
+        // 26 - add build/buy disable
+        // 27 - TS1 platform state
+        // 28 - chat update state
+        // 29 - TS1 clock
+        // 30 - LastWalkStyle (for auto run)
+        public static readonly int LATEST_VERSION = 30;
 
         public int Version = LATEST_VERSION;
         public bool Compressed = true;
+        public bool TS1;
         public VMContextMarshal Context;
 
         public VMEntityMarshal[] Entities;
@@ -25,7 +33,7 @@ namespace FSO.SimAntics.Marshals
         public VMMultitileGroupMarshal[] MultitileGroups;
 
         public short[] GlobalState;
-        public VMPlatformState PlatformState;
+        public VMAbstractLotState PlatformState;
         public short ObjectId = 1;
 
         public DynamicTuning Tuning;
@@ -51,6 +59,7 @@ namespace FSO.SimAntics.Marshals
                 zipStream.Close();
             }
 
+            if (Version > 26) TS1 = reader.ReadBoolean();
             Context = new VMContextMarshal(Version);
             Context.Deserialize(reader);
 
@@ -59,7 +68,7 @@ namespace FSO.SimAntics.Marshals
             for (int i=0; i<ents; i++)
             {
                 var type = reader.ReadByte();
-                var ent = (type == 1) ? (VMEntityMarshal) new VMAvatarMarshal(Version) : new VMGameObjectMarshal(Version);
+                var ent = (type == 1) ? (VMEntityMarshal) new VMAvatarMarshal(Version, TS1) : new VMGameObjectMarshal(Version, TS1);
                 ent.Deserialize(reader);
                 Entities[i] = ent;
             }
@@ -87,8 +96,8 @@ namespace FSO.SimAntics.Marshals
                 GlobalState[i] = reader.ReadInt16();
             }
 
-            //assume TSO for now
-            PlatformState = new VMTSOLotState(Version);
+
+            PlatformState = (TS1)?(VMAbstractLotState)new VMTS1LotState(Version):new VMTSOLotState(Version);
             PlatformState.Deserialize(reader);
 
             ObjectId = reader.ReadInt16();
@@ -122,6 +131,7 @@ namespace FSO.SimAntics.Marshals
             var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
 
+            writer.Write(TS1);
             Context.SerializeInto(writer);
             //Console.WriteLine("== SERIAL: Context done... " + timer.ElapsedMilliseconds + " ms ==");
 

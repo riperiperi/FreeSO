@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.NetPlay.EODs.Handlers
 {
@@ -144,7 +145,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                         return;
                                     }
                                     var item = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
-                                    if (item != null && item.Value.DisableLevel > 1)
+                                    if (item != null && item.Value.DisableLevel > 1 && client.Avatar.AvatarState.Permissions < VMTSOAvatarPermissions.Admin)
                                     {
                                         client.Send("trade_error", ((int)VMEODSecureTradeError.UNTRADABLE_OBJECT).ToString());
                                         BroadcastTradeData(false);

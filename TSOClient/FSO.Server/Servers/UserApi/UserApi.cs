@@ -74,12 +74,14 @@ namespace FSO.Server.Servers.UserApi
             settings.Add("regkey", userApiConfig.Regkey);
             settings.Add("secret", config.Secret);
             settings.Add("updateUrl", userApiConfig.UpdateUrl);
+            settings.Add("cdnUrl", userApiConfig.CDNUrl);
             settings.Add("connectionString", config.Database.ConnectionString);
             settings.Add("NFSdir", config.SimNFS);
             settings.Add("smtpHost", userApiConfig.SmtpHost);
             settings.Add("smtpUser", userApiConfig.SmtpUser);
             settings.Add("smtpPassword", userApiConfig.SmtpPassword);
             settings.Add("smtpPort", userApiConfig.SmtpPort.ToString());
+            settings.Add("useProxy", userApiConfig.UseProxy.ToString());
 
             var api = new FSO.Server.Api.Api();
             api.Init(settings);

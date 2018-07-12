@@ -455,6 +455,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
                 y++;
             }
+            if (!IffFile.RETAIN_CHUNK_DATA) PalData = null;
             if (Parent.ZAsAlpha) CopyZToAlpha();
             if (Parent.FloorCopy == 1) FloorCopy();
             if (Parent.FloorCopy == 2) FloorCopyWater();

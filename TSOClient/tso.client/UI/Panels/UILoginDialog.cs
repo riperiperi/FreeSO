@@ -11,18 +11,19 @@ using System.Text;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
     public class UILoginDialog : UIDialog
     {
         private UITextEdit m_TxtAccName, m_TxtPass;
-        private LoginScreen m_LoginScreen;
+        private Action Login;
 
-        public UILoginDialog(LoginScreen loginScreen)
+        public UILoginDialog(Action login)
             : base(UIDialogStyle.Standard, true)
         {
-            this.m_LoginScreen = loginScreen;
+            this.Login = login;
             this.Caption = GameFacade.Strings.GetString("UIText", "209", "1");
 
             SetSize(350, 225);
@@ -88,7 +89,7 @@ namespace FSO.Client.UI.Panels
                 Y = 106
             });
 
-            GameFacade.Screens.inputManager.SetFocus(m_TxtAccName);
+            if (!FSOEnvironment.SoftwareKeyboard) GameFacade.Screens.inputManager.SetFocus(m_TxtAccName);
             RefreshBlink();
         }
 
@@ -163,7 +164,7 @@ namespace FSO.Client.UI.Panels
 
         void loginBtn_OnButtonClick(UIElement button)
         {
-            m_LoginScreen.Login();
+            Login();
             //FSOFacade.Controller.ShowPersonSelection();
         }
 

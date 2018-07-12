@@ -26,6 +26,7 @@ namespace FSO.LotView.RC
         public override void PreDraw(GraphicsDevice gd, WorldState state)
         {
             if (Blueprint == null) return;
+            Blueprint.Terrain.SubworldOff = GlobalPosition * 3;
             var damage = Blueprint.Damage;
             var oldLevel = state.Level;
             var oldBuild = state.BuildMode;
@@ -96,9 +97,12 @@ namespace FSO.LotView.RC
             parentState.ClearLighting(true);
             
             var level = parentState.SilentLevel;
+            var build = parentState.SilentBuildMode;
             parentState.SilentLevel = 5;
+            parentState.SilentBuildMode = 0;
             Blueprint.Terrain._3D = true;
             Blueprint.Terrain.Draw(gd, parentState);
+            parentState.SilentBuildMode = build;
             var effect = WorldContent.RCObject;
             gd.BlendState = BlendState.NonPremultiplied;
             parentState.DrawOOB = false;

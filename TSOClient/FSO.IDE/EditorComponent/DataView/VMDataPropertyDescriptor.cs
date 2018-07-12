@@ -90,6 +90,7 @@ namespace FSO.IDE.EditorComponent.DataView
                 case VMExtDataType.StackObject:
                     return (Frame.StackObject == null)?0:(int)Frame.StackObject.ObjectID;
                 case VMExtDataType.Parameter:
+                    if (ID >= Frame.Args.Length) return 0;
                     return (int)Frame.Args[ID];
                 case VMExtDataType.Local:
                     return (int)Frame.Locals[ID];

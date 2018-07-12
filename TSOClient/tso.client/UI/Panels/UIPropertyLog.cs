@@ -66,7 +66,6 @@ namespace FSO.Client.UI.Panels
 
         public void ReceiveEvent(VMChatEvent evt)
         {
-            Visitors = evt.Visitors;
             History.Add(evt);
             if (History.Count > 100) History.RemoveAt(0);
             RenderEvents();

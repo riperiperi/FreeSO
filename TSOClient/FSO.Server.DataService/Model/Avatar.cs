@@ -61,27 +61,87 @@ namespace FSO.Common.DataService.Model
             set { _Avatar_CurrentJob = value; NotifyPropertyChanged("Avatar_CurrentJob"); }
         }
 
+        #region Loaded from DB on Get
+
+        //These require extra sql queries to set up, so we want to avoid loading these when the user only wants to load
+        //a list of avatar names or icons, for example (lot roommates, relationship web).
+        //(note that while avatar lot is technically an extra query, it is common enough that we're likely better off
+        // loading it immediately in the first place.)
+        //It would be a nightmare making these fully async, so they are loaded sync when the user requests them.
+
+        public Func<uint, ImmutableList<JobLevel>> JobLevelProvider;
         private ImmutableList<JobLevel> _Avatar_JobLevelVec { get; set; }
         [ClientSourced]
         public ImmutableList<JobLevel> Avatar_JobLevelVec
         {
-            get { return _Avatar_JobLevelVec; }
+            get {
+                if (_Avatar_JobLevelVec == null && JobLevelProvider != null)
+                {
+                    lock(this)
+                    {
+                        if (_Avatar_JobLevelVec == null) //lock to prevent getting the same data twice
+                            _Avatar_JobLevelVec = JobLevelProvider(this.Avatar_Id);
+                    }
+                }
+                return _Avatar_JobLevelVec;
+            }
             set { _Avatar_JobLevelVec = value; NotifyPropertyChanged("Avatar_JobLevelVec"); }
         }
-        
-        //todo: this can be client sourced... but it also needs to be completely mixed with new values.
+
+        //todo: client sourced. (incoming relationships will be really tricky)
+        public Func<uint, ImmutableList<Relationship>> RelationshipProvider;
         private ImmutableList<Relationship> _Avatar_FriendshipVec { get; set; }
         public ImmutableList<Relationship> Avatar_FriendshipVec
         {
-            get { return _Avatar_FriendshipVec; }
+            get {
+                if (_Avatar_FriendshipVec == null && RelationshipProvider != null)
+                {
+                    lock(this)
+                    {
+                        if (_Avatar_FriendshipVec == null) //lock to prevent getting the same data twice
+                            _Avatar_FriendshipVec = RelationshipProvider(this.Avatar_Id);
+                    }
+                }
+                return _Avatar_FriendshipVec;
+            }
             set { _Avatar_FriendshipVec = value; NotifyPropertyChanged("Avatar_FriendshipVec"); }
         }
+
+        public Func<uint, ImmutableList<Bookmark>> BookmarkProvider;
+        private ImmutableList<Bookmark> _Avatar_BookmarksVec;
+        [Persist]
+        public ImmutableList<Bookmark> Avatar_BookmarksVec
+        {
+            get {
+                if (_Avatar_BookmarksVec == null && BookmarkProvider != null)
+                {
+                    lock (this)
+                    {
+                        if (_Avatar_BookmarksVec == null) //lock to prevent getting the same data twice
+                            _Avatar_BookmarksVec = BookmarkProvider(this.Avatar_Id);
+                    }
+                }
+                return _Avatar_BookmarksVec;
+            }
+            set
+            {
+                _Avatar_BookmarksVec = value;
+                NotifyPropertyChanged("Avatar_BookmarksVec");
+            }
+        }
+
+        #endregion
 
         private bool _Avatar_IsOnline { get; set; }
         public bool Avatar_IsOnline
         {
             get { return _Avatar_IsOnline; }
             set { _Avatar_IsOnline = value; NotifyPropertyChanged("Avatar_IsOnline"); }
+        }
+
+        public bool Avatar_IsOffline
+        {
+            get { return !Avatar_IsOnline; }
         }
 
         private uint _Avatar_LotGridXY;
@@ -126,19 +186,6 @@ namespace FSO.Common.DataService.Model
             {
                 _Avatar_Skills = value;
                 NotifyPropertyChanged("Avatar_Skills");
-            }
-        }
-
-        private ImmutableList<Bookmark> _Avatar_BookmarksVec;
-
-        [Persist]
-        public ImmutableList<Bookmark> Avatar_BookmarksVec
-        {
-            get { return _Avatar_BookmarksVec; }
-            set
-            {
-                _Avatar_BookmarksVec = value;
-                NotifyPropertyChanged("Avatar_BookmarksVec");
             }
         }
 

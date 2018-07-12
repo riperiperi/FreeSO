@@ -18,10 +18,13 @@ float4x4 InvXZRotation;
 float BaseAlt;
 float Time;
 float TimeRate;
+float StopTime; //NANI
+float Frequency;
 
 float4 Parameters1;
 float4 Parameters2;
 float4 Parameters3;
+float4 Parameters4;
 
 float Stories;
 float ClipLevel;
@@ -50,7 +53,7 @@ struct ParticleInput
 {
 	float4 Position : SV_POSITION;
 	float3 ModelPosition : TEXCOORD0;
-	float2 TexCoord : TEXCOORD1;
+	float3 TexCoord : TEXCOORD1;
 };
 
 struct ParticleOutput
@@ -105,7 +108,7 @@ ParticleOutput SnowVS(in ParticleInput input)
 	float4 realCtr = float4(xz.x, newY + boxCtr.y, xz.y, 1);
 	float4 realPos = Billboard(realCtr, float4(RotateXY(input.ModelPosition, rotSpeed*realTime) * flakeSize, 1));
 
-	output.TexCoord = input.TexCoord;
+	output.TexCoord = input.TexCoord.xy;
 	output.ModelPos = realPos / 2; //not sure why i need to do this
 	output.ModelPos.y -= BaseAlt;
 	output.Position = mul(realPos, mul(View, Projection));
@@ -151,11 +154,62 @@ ParticleOutput RainVS(in ParticleInput input)
 
 	realPos.xz += input.ModelPosition.y * delta.xz;
 
-	output.TexCoord = input.TexCoord;
+	output.TexCoord = input.TexCoord.xy;
 	output.ModelPos = realPos / 2; //not sure why i need to do this
 	output.ModelPos.y -= BaseAlt;
 	output.Position = mul(realPos, mul(View, Projection));
 	output.Color = float4(1, 1, 1, 1) * min(1, (0.5 - abs(yFrac - 0.5)) * 20) * min(1, ClipLevel*(2.95 * 3) - output.ModelPos.y) * Color;
+
+	return output;
+}
+
+//Parameters:
+//(deltax, deltay, deltaz, gravity)
+//(deltavar, rotdeltavar, size, sizevel)
+//(duration, fadein, fadeout, sizevar)
+ParticleOutput GenericBoxVS(in ParticleInput input)
+{
+	ParticleOutput output = (ParticleOutput)0;
+
+	float4 boxCtr = mul(float4(0, 0, 0, 1), World);
+	float repeatTime = Parameters3.x;
+	//if all particles created and died at the same time things would be pretty stupid.
+	//calculate a "random" delta to phase offset this particle's animation.
+	float3 rands = float3(sin(input.Position.x * 1000), sin(input.Position.y * 1000), sin(input.Position.z * 1000));
+
+	float timeDelta = input.TexCoord.z * Frequency;
+	float ltTime = ((Time + timeDelta) / Frequency) % 1.0;
+	ltTime *= Frequency / repeatTime;
+
+	float realTime = ltTime * repeatTime;
+
+	float3 positionMod = (Parameters1.xyz + Parameters2.x*rands) * realTime;
+	positionMod.y += Parameters1.w * realTime*realTime;
+
+	float rotSpeed = sin(input.Position.y * 1000) * Parameters2.y;
+
+	float flakeSize = sin(input.Position.y * 1245)*Parameters2.z + Parameters3.w + realTime * Parameters2.w;
+	float4 realCtr = mul((input.Position + float4(positionMod, 0)), World);
+	if (ltTime > 1) flakeSize = 0;
+	float4 realPos = Billboard(realCtr, float4(RotateXY(input.ModelPosition, (rands.x*3.14)+rotSpeed*realTime) * flakeSize, 1));
+
+	output.TexCoord = input.TexCoord.xy;
+	output.ModelPos = realPos / 2; //not sure why i need to do this
+	output.ModelPos.y -= BaseAlt;
+	output.Position = mul(realPos, mul(View, Projection));
+
+	float opacity;
+	float startTime = Time - realTime;
+	if (startTime > StopTime || startTime < 0.0) { //if we started after this emitter stopped, then don't show us at all.
+		opacity = 0.0;
+	} else if (ltTime < Parameters3.y) {
+		opacity = min(1.0, ltTime / Parameters3.y);
+	} else {
+		opacity = min(1.0, (1-ltTime) / Parameters3.z);
+	}
+
+	float baseColInt = Parameters4.w * rands.z;
+	output.Color = opacity * float4(lerp(Color.xyz, Parameters4.xyz, baseColInt + ltTime*(1.0-baseColInt)), Color.w);
 
 	return output;
 }
@@ -192,7 +246,13 @@ float4 RainSimplePS(ParticleOutput input) : COLOR
 	return ((1 - cos(input.TexCoord.y*3.1415 * 2)) * (1 - cos(input.TexCoord.x*3.1415 * 2)) / 4) * input.Color - SubColor;
 }
 
+float4 ParticlePS(ParticleOutput input) : COLOR
+{
+	if (input.Color.a == 0) discard;
+	return tex2D(TexSampler, input.TexCoord)*input.Color*lightProcess(input.ModelPos) - SubColor;
+}
 
+//snow particles that follow the camera
 technique SnowParticle
 {
 	pass P0
@@ -211,6 +271,7 @@ technique SnowParticleSimple
 	}
 };
 
+//rain particles that follow the camera
 technique RainParticle
 {
 	pass P0
@@ -226,5 +287,15 @@ technique RainSimpleParticle
 	{
 		VertexShader = compile VS_SHADERMODEL RainVS();
 		PixelShader = compile PS_SHADERMODEL RainSimplePS();
+	}
+};
+
+//particles with fixed start location, but various deltas and duration. eg. smoke, fire
+technique GenericBoxParticle
+{
+	pass P0
+	{
+		VertexShader = compile VS_SHADERMODEL GenericBoxVS();
+		PixelShader = compile PS_SHADERMODEL ParticlePS();
 	}
 };

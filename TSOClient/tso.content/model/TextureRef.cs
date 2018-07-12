@@ -57,6 +57,7 @@ namespace FSO.Content.Model
             {
                 var data = new Color[texture.Width * texture.Height];
                 texture.GetData(data);
+                texture.Dispose();
                 texture = new Texture2D(device, texture.Width, texture.Height, true, SurfaceFormat.Color);
                 TextureUtils.UploadWithMips(texture, device, data);
             }

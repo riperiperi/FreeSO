@@ -169,7 +169,7 @@ namespace FSO.IDE.EditorComponent.UI
             {
                 if (cmd is TextDrawCmd_Text)
                 {
-                    ((TextDrawCmd_Text)cmd).Position.X += shift;
+                    ((TextDrawCmd_Text)cmd).Position += new Vector2(shift, 0);
                 }
             } 
 
@@ -228,7 +228,7 @@ namespace FSO.IDE.EditorComponent.UI
                 {
                     if (cmd is TextDrawCmd_Text)
                     {
-                        ((TextDrawCmd_Text)cmd).Position.X += shift;
+                        ((TextDrawCmd_Text)cmd).Position += new Vector2(shift, 0);
                     }
                 }
             }

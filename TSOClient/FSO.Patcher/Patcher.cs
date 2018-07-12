@@ -20,14 +20,15 @@ namespace FSO.Patcher
         {
             //"updater.exe",
             "Content/config.ini",
-            "Ninject.dll", //til I add dynamic linking for these
-            "Ninject.xml",
             "NLog.config"
         };
 
-        public Patcher()
+        private string[] Args;
+
+        public Patcher(string[] args)
         {
             InitializeComponent();
+            Args = args;
         }
 
         private void Patcher_Load(object sender, EventArgs e)
@@ -91,12 +92,25 @@ namespace FSO.Patcher
             foreach (var entry in entries)
             {
                 if (IgnoreFiles.Contains(entry.FullName)) continue;
-                var result = await ExtractEntry(entry, 0);
-                if (!result)
+                while (true)
                 {
-                    MessageBox.Show("Couldn't replace a file. Make sure you are not running an instance of FreeSO!");
-                    Application.Exit();
-                    return;
+                    var result = await ExtractEntry(entry, 0);
+                    if (!result)
+                    {
+                        var dresult = MessageBox.Show("Couldn't replace a file. Make sure you are not running an instance of FreeSO! If this is discord-rpc.dll, you can safely ignore this.", "Error", MessageBoxButtons.AbortRetryIgnore);
+                        if (dresult == DialogResult.Abort)
+                        {
+                            Cleanup();
+                            Application.Exit();
+                            return;
+                        } else if (dresult == DialogResult.Ignore)
+                        {
+                            break;
+                        }
+                    } else
+                    {
+                        break;
+                    }
                 }
             }
             archive.Dispose();
@@ -125,23 +139,43 @@ namespace FSO.Patcher
                 }
                 else
                 {
-                    MessageBox.Show("Could not update FreeSO as write access could not be gained to the game files. Try running update.exe as an administrator.");
-                    Application.Exit();
+                    var result = MessageBox.Show("Could not update FreeSO as write access could not be gained to the game files. Try running update.exe as an administrator.", "Error", MessageBoxButtons.RetryCancel);
+                    if (result == DialogResult.Cancel)
+                    {
+                        Cleanup();
+                        Application.Exit();
+                    } else
+                    {
+                        RenameRetry = 0;
+                    }
                     return;
                 }
             }
             Extract();
         }
 
+        public void Cleanup()
+        {
+            try
+            {
+                if (File.Exists("FreeSO.exe.old"))
+                    File.Move("FreeSO.exe.old", "FreeSO.exe");
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
         public void StartFreeSO()
         {
             if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
             {
-                System.Diagnostics.Process.Start("mono", "FreeSO.exe");
+                System.Diagnostics.Process.Start("mono", "FreeSO.exe "+string.Join(" ", Args));
             }
             else
             {
-                System.Diagnostics.Process.Start("FreeSO.exe");
+                System.Diagnostics.Process.Start("FreeSO.exe", string.Join(" ", Args));
             }
             Application.Exit();
         }

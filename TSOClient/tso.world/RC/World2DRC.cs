@@ -352,7 +352,7 @@ namespace FSO.LotView.RC
                 obj.OnZoomChanged(state);
             }
             gd.SetRenderTarget(null);
-            var bounds3d = BoundingBox.CreateFromPoints(cpoints);
+            var bounds3d = (cpoints.Count > 0)?BoundingBox.CreateFromPoints(cpoints):new BoundingBox();
             var bounds = new Rectangle((int)bounds3d.Min.X, (int)bounds3d.Min.Y, (int)(bounds3d.Max.X - bounds3d.Min.X), (int)(bounds3d.Max.Y - bounds3d.Min.Y));
 
             bounds.Inflate(1, 1);
@@ -408,7 +408,7 @@ namespace FSO.LotView.RC
             state.InvalidateCamera();
 
             var oldCenter = state.CenterTile;
-            state.CenterTile = new Vector2(Blueprint.Width / 2, Blueprint.Height / 2);
+            state.CenterTile = Blueprint.GetThumbCenterTile(state);
             state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((size - state.WorldSpace.WorldPxWidth) / state.PreciseZoom, (size - state.WorldSpace.WorldPxHeight) / state.PreciseZoom) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             state.TempDraw = true;
@@ -496,14 +496,15 @@ namespace FSO.LotView.RC
 
         SkyDomeComponent Dome;
 
-        public void DrawBg(GraphicsDevice gd, WorldState state, BoundingBox[] skyBounds)
+        public void DrawBg(GraphicsDevice gd, WorldState state, BoundingBox[] skyBounds, bool forceSurround)
         {
             var frustrum = new BoundingFrustum(state.Camera.View * state.Camera.Projection);
 
             //frustrum.Contains(skyBounds)
-            if ((state.Camera as WorldCamera3D)?.FromIntensity > 0 || skyBounds?.Any(x => x.Intersects(frustrum)) != false)
+            if (forceSurround || (state.Camera as WorldCamera3D)?.FromIntensity > 0 || skyBounds?.Any(x => x.Intersects(frustrum)) != false)
             {
                 if (Dome == null) Dome = new SkyDomeComponent(gd, Blueprint);
+                Dome.BP = Blueprint;
                 Dome.Draw(gd, state);
 
                 Surroundings?.DrawSurrounding(gd, state.Camera, Blueprint.Weather.FogColor, (Blueprint.SubWorlds.Count>0)?1:0);
@@ -516,6 +517,7 @@ namespace FSO.LotView.RC
                 if (bounds.Intersects(frustrum))
                     surround.DrawArch(gd, state);
             }
+            if (((WorldCamera3D)state.Camera).FromIntensity > 0) state.CenterTile = state.CenterTile;
 
             gd.BlendState = BlendState.NonPremultiplied;
             if (Blueprint.Terrain != null)
@@ -548,9 +550,12 @@ namespace FSO.LotView.RC
                 obj.Draw(gd, state);
             }
 
-            foreach (var ava in Blueprint.Avatars)
+            foreach (var ava in Blueprint.HeadlineObjects)
             {
-                if (ava.Level < state.Level) ava.DrawHeadline3D(gd, state);
+                var level = ava.Level;
+                //for some reason avatars have a level 1 lower than it should be?
+
+                if (ava.Level <= state.Level) ava.DrawHeadline3D(gd, state);
             }
             Drawn = true;
         }

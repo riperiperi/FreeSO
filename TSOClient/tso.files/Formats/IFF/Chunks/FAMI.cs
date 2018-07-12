@@ -21,7 +21,7 @@ namespace FSO.Files.Formats.IFF.Chunks
     /// </summary>
     public class FAMI : IffChunk
     {
-        public uint Version;
+        public uint Version = 0x9;
 
         public int HouseNumber;
         //this is not a typical family number - it is unique between user created families, but -1 for townies.
@@ -29,12 +29,18 @@ namespace FSO.Files.Formats.IFF.Chunks
         //(in comparison with the ChunkID as family that is used ingame, which appears to fill spaces as they are left)
         public int FamilyNumber;
         public int Budget;
-        public int NetWorth;
+        public int ValueInArch;
         public int FamilyFriends;
-        public int Unknown; //19, 17 or 1? could be flags, (1, 16, 2) ... 0 for townies
-        public uint[] FamilyGUIDs;
+        public int Unknown; //19, 17 or 1? could be flags, (1, 16, 2) ... 0 for townies. 24 for CAS created (new 16+8?)
+                            //1: in house
+                            //2: unknown, but is set sometimes
+                            //4: unknown
+                            //8: user created?
+                            //16: in cas
 
-        public uint[] RuntimeSubset; //the members of this family currently active. don't save!
+        public uint[] FamilyGUIDs = new uint[] { };
+
+        public uint[] RuntimeSubset = new uint[] { }; //the members of this family currently active. don't save!
 
         public void SelectWholeFamily()
         {
@@ -62,13 +68,21 @@ namespace FSO.Files.Formats.IFF.Chunks
                 HouseNumber = io.ReadInt32();
                 FamilyNumber = io.ReadInt32();
                 Budget = io.ReadInt32();
-                NetWorth = io.ReadInt32();
+                ValueInArch = io.ReadInt32();
                 FamilyFriends = io.ReadInt32();
                 Unknown = io.ReadInt32();
                 FamilyGUIDs = new uint[io.ReadInt32()];
                 for (int i=0; i<FamilyGUIDs.Length; i++)
                 {
                     FamilyGUIDs[i] = io.ReadUInt32();
+                }
+                try
+                {
+                    for (int i = 0; i < 4; i++)
+                        io.ReadInt32();
+                } catch
+                {
+                    //for some reason FAMI "Default" only has 3 zeroes after it, but only if saved by base game.
                 }
             }
         }
@@ -83,7 +97,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 io.WriteInt32(HouseNumber);
                 io.WriteInt32(FamilyNumber);
                 io.WriteInt32(Budget);
-                io.WriteInt32(NetWorth);
+                io.WriteInt32(ValueInArch);
                 io.WriteInt32(FamilyFriends);
                 io.WriteInt32(Unknown);
                 io.WriteInt32(FamilyGUIDs.Length);

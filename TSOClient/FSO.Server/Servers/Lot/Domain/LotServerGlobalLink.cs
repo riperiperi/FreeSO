@@ -52,7 +52,7 @@ namespace FSO.Server.Servers.Lot.Domain
         public void LeaveLot(VM vm, VMAvatar avatar)
         {
             avatar.Delete(true, vm.Context);
-            vm.Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Leave, avatar.Name));
+            vm.Context.VM.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Leave, avatar.Name));
         }
 
         public void PerformTransaction(VM vm, bool testOnly, uint uid1, uint uid2, int amount, VMAsyncTransactionCallback callback)

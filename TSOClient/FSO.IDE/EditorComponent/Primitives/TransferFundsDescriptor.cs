@@ -27,8 +27,15 @@ namespace FSO.IDE.EditorComponent.Primitives
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand,
                 new OpStaticTextProvider("Transfers funds from one object to another (either can be 'maxis', essentially an infinite bank). Both must be in the database.")));
+            panel.Controls.Add(new OpScopeControl(master, escope, Operand, "Amount Source: ", "AmountOwner", "AmountData"));
+
             panel.Controls.Add(new OpComboControl(master, escope, Operand, "Transfer Type:", "TransferType", new OpStaticNamedPropertyProvider(typeof(VMTransferFundsType))));
             panel.Controls.Add(new OpComboControl(master, escope, Operand, "Expense Type:", "ExpenseType", new OpStaticNamedPropertyProvider(typeof(VMTransferFundsExpenseType))));
+
+            panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags:", new OpFlag[] {
+                new OpFlag("Just Test", "JustTest"),
+                new OpFlag("Subtract", "Subtract"),
+            }));
         }
     }
 }

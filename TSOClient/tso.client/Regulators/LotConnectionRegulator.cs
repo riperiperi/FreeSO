@@ -220,7 +220,6 @@ namespace FSO.Client.Regulators
 
         public void SessionClosed(AriesClient client)
         {
-            Console.WriteLine("close");
             AsyncProcessMessage(new AriesDisconnected());
         }
 
@@ -231,7 +230,6 @@ namespace FSO.Client.Regulators
 
         public void InputClosed(AriesClient session)
         {
-            Console.WriteLine("close2");
             AsyncProcessMessage(new AriesDisconnected());
         }
     }

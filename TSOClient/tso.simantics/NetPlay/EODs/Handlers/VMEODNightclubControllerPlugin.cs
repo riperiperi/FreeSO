@@ -152,7 +152,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         if (RoundTicks != 0) DancePatternNum++;
                     }
 
-                    if (RoundTicks % (5+Math.Min(danceCycle/30, 20)) == 0)
+                    if (RoundTicks % (5+Math.Min(danceCycle/30, 25)) == 0)
                     {
                         //give a dancer a new dance
                         var rand = new Random();
@@ -212,6 +212,15 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 {
                     Dancers.Insert(rand.Next(Dancers.Count+1), (VMAvatar)avatar);
                 }
+            }
+        }
+
+        public override void SelfResync()
+        {
+            base.SelfResync();
+            if (Dancers != null)
+            {
+                Dancers = Dancers.Select(x => (VMAvatar)Server.vm.GetObjectById(x.ObjectID)).ToList();
             }
         }
 

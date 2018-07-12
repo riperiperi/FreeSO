@@ -1,4 +1,5 @@
-﻿using FSO.Common.Utils;
+﻿using FSO.Common;
+using FSO.Common.Utils;
 using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -212,6 +213,21 @@ namespace FSO.LotView.Components
             return dat.IndexCount/3;
         }
 
+        public SamplerState CustomWrap = new SamplerState()
+        {
+            Filter = TextureFilter.Linear,
+            AddressU = TextureAddressMode.Wrap,
+            AddressV = TextureAddressMode.Wrap,
+            AddressW = TextureAddressMode.Wrap,
+        };
+
+        public DepthStencilState NoDS = new DepthStencilState()
+        {
+            DepthBufferWriteEnable = false
+        };
+
+        private bool Alt;
+
         public void DrawFloor(GraphicsDevice gd, Effect e, WorldZoom zoom, WorldRotation rot, List<Texture2D> roommaps, HashSet<sbyte> floors, EffectPass pass, 
             Matrix? lightWorld = null, WorldState state = null, int minFloor = 0)
         {
@@ -248,6 +264,8 @@ namespace FSO.LotView.Components
                     gd.Indices = dat;
 
                     var id = type.Key;
+                    var doubleDraw = false;
+                    Texture2D SPR = null;
 
                     if (id == 0)
                     {
@@ -256,8 +274,6 @@ namespace FSO.LotView.Components
                     }
                     else
                     {
-
-                        Texture2D SPR = null;
                         if (id >= 65503)
                         {
                             if (id == 65503)
@@ -356,11 +372,24 @@ namespace FSO.LotView.Components
                         }
 
                         //e.Parameters["UseTexture"].SetValue(SPR != null);
-                        e.Parameters["BaseTex"].SetValue(SPR);
+
                     }
 
+                    e.Parameters["BaseTex"].SetValue(SPR);
+                    if (SPR != null && SPR.Name == null)
+                    {
+                        doubleDraw = true;
+                        SPR.Name = Alt.ToString();
+                    }
                     pass.Apply();
+                    if (Alt && !FSOEnvironment.DirectX)
+                    {
+                        //opengl bug workaround. For some reason, the texture is set to clamp mode by some outside force on first draw. 
+                        //Monogame then thinks the texture is wrapping.
+                        gd.SamplerStates[1] = CustomWrap;
+                    }
                     gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
+                    //gd.SamplerStates[1] = SamplerState.LinearWrap;
 
                     if (id == 0)
                     {
@@ -376,6 +405,7 @@ namespace FSO.LotView.Components
                 }
             }
             e.Parameters["Water"].SetValue(false);
+            Alt = !Alt;
         }
 
         /*

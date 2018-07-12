@@ -12,5 +12,6 @@ namespace FSO.UI.Panels.LotControls
     {
         VMEntity ActiveEntity { get; }
         World World { get; }
+        int Budget { get; }
     }
 }

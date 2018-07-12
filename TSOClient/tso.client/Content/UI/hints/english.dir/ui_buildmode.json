@@ -1,0 +1,8 @@
+{
+    "guid": "d4bc3267-0030-4253-b2e9-689b020b96ae", 
+    "trigger": "ui:buildmode",
+    "title": "Build Mode",
+    "category": "Basics",
+    "image": "@hint_buildtools.bmp",
+    "body": "Build Mode lets you take control of your property's archetecture and terrain. To learn how to use any of the build tools, click the tool thumbnail and hold your cursor over it to bring up a help panel. Build Mode is inaccessible to roommates by default - if you want help constructing your property then you'll have to manually give your trusted roommates build permissions from House Mode.\n\nBuyer beware: any build-roommate can delete architecture, regardless of who placed it. This applies to all non-objects in build mode: walls, floors, pools, terrain, etc... If a roommate covers over your prized floral wallpaper, you won't get a refund."
+}

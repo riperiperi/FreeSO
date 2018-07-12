@@ -28,7 +28,8 @@ namespace FSO.IDE.EditorComponent.Primitives
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand,
                 new OpStaticTextProvider("Run a TSO specific function. Can use state from this scope to perform an action.")));
-            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Call:", "Call", new OpStaticNamedPropertyProvider(typeof(VMGenericTSOCallMode))));
+            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Call:", "Call", new OpStaticNamedPropertyProvider(
+                Content.Content.Get().TS1?typeof(VMGenericTS1CallMode):typeof(VMGenericTSOCallMode))));
         }
     }
 }

@@ -61,12 +61,14 @@ namespace FSO.Content.TS1
             foreach (var item in SkinHostBCF.Keys)
             {
                 if (char.IsDigit(item[1]) && char.IsDigit(item[2]) && char.IsDigit(item[3])) {
-                    if (item[0] == 'b' || item[0] == 'c')
+                    var uindex = item.IndexOf('_');
+                    if (uindex == -1) uindex = item.Length;
+                    var type = item.Substring(4, uindex - 4);
+                    if (type.EndsWith("lgt") || type.EndsWith("med") || type.EndsWith("drk")) type = type.Substring(0, type.Length - 3);
+                    AddItem(item[0].ToString(), type, item);
+                    if ((item[0] == 'b') && (type.EndsWith("fat") || type.EndsWith("fit") || type.EndsWith("skn")))
                     {
-                        var uindex = item.IndexOf('_');
-                        if (uindex == -1) uindex = item.Length;
-                        var type = item.Substring(4, uindex - 4);
-                        if (type.EndsWith("fat") || type.EndsWith("fit") || type.EndsWith("skn")) type = type.Substring(0, type.Length - 3);
+                        type = type.Substring(0, type.Length - 3);
                         AddItem(item[0].ToString(), type, item);
                     }
                 }
@@ -90,6 +92,11 @@ namespace FSO.Content.TS1
             }
 
             items.Add(item);
+        }
+
+        public List<string> ListAllAnimations()
+        {
+            return AnimHostBCF.Keys.Select(x => x+".anim").ToList();
         }
 
         public object Get(string name, Type expected)

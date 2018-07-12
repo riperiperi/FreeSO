@@ -86,7 +86,7 @@ namespace FSO.Client.UI.Screens
             this.Add(LoginProgress);
 
             /** Login dialog **/
-            LoginDialog = new UILoginDialog(this);
+            LoginDialog = new UILoginDialog(Login);
             LoginDialog.Opacity = 0.9f;
             //Center
             LoginDialog.X = (ScreenWidth - LoginDialog.Width) / 2;
@@ -104,13 +104,16 @@ namespace FSO.Client.UI.Screens
                 }
             }
 
-            if (usernamePopulated)
+            if (!FSOEnvironment.SoftwareKeyboard)
             {
-                LoginDialog.FocusPassword();
-            }
-            else
-            {
-                LoginDialog.FocusUsername();
+                if (usernamePopulated)
+                {
+                    LoginDialog.FocusPassword();
+                }
+                else
+                {
+                    LoginDialog.FocusUsername();
+                }
             }
 
             var gameplayButton = new UIButton()
@@ -150,6 +153,10 @@ namespace FSO.Client.UI.Screens
                     };
                 });
             }
+            GameThread.NextUpdate(x =>
+            {
+                FSOFacade.Hints.TriggerHint("screen:login");
+            });
         }
 
         public override void Update(UpdateState state)
@@ -201,7 +208,7 @@ namespace FSO.Client.UI.Screens
         {
             if (error is Exception)
             {
-                error = ErrorMessage.FromLiteral(GameFacade.Strings.GetString("210", "17"));
+                error = ErrorMessage.FromLiteral(error.ToString());// GameFacade.Strings.GetString("210", "17"));
             }
 
             if (error is ErrorMessage)
@@ -232,6 +239,16 @@ namespace FSO.Client.UI.Screens
                     LoginScreen.RemoveDialog(LastAlert);
                 }
                 return;
+            }
+
+            //save the last username
+            try
+            {
+                GlobalSettings.Default.LastUser = LoginDialog.Username;
+                GlobalSettings.Default.Save();
+            } catch
+            {
+
             }
 
             Regulator.Login(new AuthRequest

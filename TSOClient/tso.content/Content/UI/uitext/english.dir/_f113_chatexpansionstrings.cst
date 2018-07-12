@@ -1,0 +1,61 @@
+﻿//Chat Panel
+
+1 ^Text To Speech: ^
+2 ^Disable^
+3 ^Allow^
+4 ^Force^
+
+5 ^TTS Pitch:^
+6 ^Change...^
+7 ^Random^
+
+8 ^Select a Text Color.^
+
+//default channels
+9 ^Chat^
+10 ^Defualt Channel^
+11 ^Admin^
+12 ^Administrators Only^
+
+//channel management buttons (strings here should be VERY SHORT)
+13 ^Edit^
+14 ^+^
+15 ^Done^
+
+//tooltips
+16 ^Add a new channel.^
+17 ^Exit edit mode.^
+18 ^Cannot modify default channel.^
+19 ^Click to modify this channel.^
+20 ^Add or modify chat channels.^
+
+//edit dialog
+21 ^Editing Channel ^
+22 ^Name:^
+23 ^Description:^
+24 ^Options:^
+
+25 ^Enable TTS^
+26 ^Show by Default^
+//
+//
+//
+//
+//
+//
+
+33 ^Delete^
+34 ^Set Color^
+
+35 ^View Permissions:^
+36 ^Send Permissions:^
+
+37 ^Visitors^
+38 ^Roommates^
+39 ^Build-Roommates^
+40 ^Owner Only^
+
+41 ^Custom^
+42 ^A Custom Chat Channel.^
+
+43 ^Hide Chat. Reopen with Ctrl-H^

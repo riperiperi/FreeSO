@@ -11,6 +11,7 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.Server.Clients;
 using Ninject;
 using System.Diagnostics;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.Client.UI.Panels
 {
@@ -79,7 +80,7 @@ namespace FSO.Client.UI.Panels
             Add(cityPainterBtn);
 
             var benchmarkBtn = new UIButton();
-            benchmarkBtn.Caption = "VM Performance Benchmark (5k ticks)";
+            benchmarkBtn.Caption = "VM Performance Benchmark (100k ticks)";
             benchmarkBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 170);
             benchmarkBtn.Width = 300;
             benchmarkBtn.OnButtonClick += x =>
@@ -111,6 +112,25 @@ namespace FSO.Client.UI.Panels
                 }, true);
             };
             Add(benchmarkBtn);
+
+            var resyncBtn = new UIButton();
+            resyncBtn.Caption = "Force Resync";
+            resyncBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 210);
+            resyncBtn.Width = 300;
+            resyncBtn.OnButtonClick += x =>
+            {
+                var core = (GameFacade.Screens.CurrentUIScreen as IGameScreen);
+                if (core == null || core.vm == null)
+                {
+                    UIScreen.GlobalShowAlert(new UIAlertOptions()
+                    {
+                        Message = "A VM must be running to force a resync."
+                    }, true);
+                    return;
+                }
+                core.vm.SendCommand(new VMRequestResyncCmd());
+            };
+            Add(resyncBtn);
 
             serverNameBox = new UITextBox();
             serverNameBox.X = 50;

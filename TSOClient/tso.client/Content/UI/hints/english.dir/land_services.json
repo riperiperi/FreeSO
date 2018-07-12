@@ -1,0 +1,8 @@
+{
+    "guid": "2bc52874-e371-4fa6-a8f1-bc455e03eeea", 
+    "trigger": "land:services",
+    "title": "At Your Service",
+    "category": "Lot Types",
+    "image": "hint_services.png",
+    "body": "Ever woke up so refreshed that you could work for a day afterwards? As unrealistic as that sounds, Service lots aim to give your sim this exact feeling. On this property type, your motives will not only increase faster, but surpass their normal limit to give you an endurance boost when you return to another property. This is called [s][color=white]Overfill[/color][/s], and is indicated by a white bar covering your full motive bar. Services lots are also the only place you can use the Crafting Table - a tool for very skilled sims that lets them make rare objects, usually much better than those you can purchase from the catalog. \n\nMotives: [s][color=#FFA64D]Average[/color][/s], Speciality: [s]Crafting Table, Love Beds, Heart Hot Tub.[/s] \n[s][color=white]Overfill: 50% Hunger, Energy, Hygiene & Bladder[/color][/s]\n[s][color=#FF9999]Skills are always disabled on this property category for visitors.[/color][/s]"
+}

@@ -4,6 +4,7 @@ using FSO.Common.Utils;
 using FSO.Files.Formats.tsodata;
 using FSO.Server.DataService.Model;
 using FSO.Server.Protocol.Electron.Packets;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +38,10 @@ namespace FSO.Client.Controllers
 
         public void SendIM(string body){
             var cref = Network.MyCharacterRef;
-            View.AddMessage(cref, body, IMEntryType.MESSAGE_OUT);
+            var color = GlobalSettings.Default.ChatColor;
+            if (GlobalSettings.Default.ChatOnlyEmoji)
+                body = GameFacade.Emojis.EmojiOnly(body);
+            View.AddMessage(cref, body, color, IMEntryType.MESSAGE_OUT);
 
             if (View.MyUser.Value == null)
             {
@@ -61,7 +65,8 @@ namespace FSO.Client.Controllers
                 Message = body,
                 To = Message.User.Id,
                 Type = InstantMessageType.MESSAGE,
-                AckID = Guid.NewGuid().ToString()
+                AckID = Guid.NewGuid().ToString(),
+                Color = color
             });
         }
 

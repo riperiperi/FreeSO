@@ -12,13 +12,11 @@ using System.Threading.Tasks;
 
 namespace FSO.SimAntics.Primitives
 {
-    // Generally something bad has happened when this is called.
-
+    //inventory operations for TSO
     public class VMInventoryOperations : VMPrimitiveHandler
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            //todo: check condition
             var operand = (VMInventoryOperationsOperand)args;
 
             //first of all... are we in an async wait state?

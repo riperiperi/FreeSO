@@ -34,6 +34,7 @@ namespace FSO.Client.UI.Panels
         public VMEntity QueueOwner;
         public VM vm;
         public Vector2 PieMenuClickPos = new Vector2(-1, -1);
+        public bool DebugMode;
 
         public UIInteractionQueue(VMEntity QueueOwner, VM vm)
         {
@@ -92,7 +93,7 @@ namespace FSO.Client.UI.Panels
                         }
                         break;
                     }
-                    if (elem.Mode != VMQueueMode.Idle && (j == 0 || elem.Mode != VMQueueMode.ParentExit) && (!skipParentIdle || elem.Mode != VMQueueMode.ParentIdle)) position++;
+                    if ((elem.Mode != VMQueueMode.Idle && (j == 0 || elem.Mode != VMQueueMode.ParentExit) && (!skipParentIdle || elem.Mode != VMQueueMode.ParentIdle)) || DebugMode) position++;
                     if (elem.Mode == VMQueueMode.ParentIdle) skipParentIdle = true;
                 }
                 if (!found)
@@ -111,7 +112,7 @@ namespace FSO.Client.UI.Panels
                 int position = 0;
                 var elem = queue[i];
 
-                if (elem.Mode != VMQueueMode.Idle && (i == 0 || elem.Mode != VMQueueMode.ParentExit) && (!skipParentIdle || elem.Mode != VMQueueMode.ParentIdle))
+                if ((elem.Mode != VMQueueMode.Idle && (i == 0 || elem.Mode != VMQueueMode.ParentExit) && (!skipParentIdle || elem.Mode != VMQueueMode.ParentIdle)) || DebugMode)
                 {
                     bool found = false; //is this interaction in the queue? if not, add it
                     for (int j = 0; j < QueueItems.Count; j++)

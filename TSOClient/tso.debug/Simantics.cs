@@ -142,7 +142,7 @@ namespace FSO.Debug
             var bhav = (BHAV)bhavList.SelectedItem;
             if (bhav != null)
             {
-                new VMRoutineInspector(vm.Assemble(bhav)).Show();
+                //new VMRoutineInspector(vm.Assemble(bhav)).Show();
             }
         }
 
@@ -150,6 +150,7 @@ namespace FSO.Debug
             var bhav = (BHAV)bhavList.SelectedItem;
             if (bhav != null)
             {
+                /*
                 ActiveEntity.Thread.EnqueueAction(new FSO.SimAntics.Engine.VMQueuedAction() {
                     ActionRoutine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
@@ -157,6 +158,7 @@ namespace FSO.Debug
                     CodeOwner = SelectedEntity.Object,
                     Priority = (short)VMQueuePriority.UserDriven
                 });
+                */
             }
         }
 
@@ -185,6 +187,7 @@ namespace FSO.Debug
 
             if (bhav != null)
             {
+                /*
                 ActiveEntity.Thread.EnqueueAction(new VMQueuedAction()
                 {
                     ActionRoutine = vm.Assemble(bhav),
@@ -195,6 +198,7 @@ namespace FSO.Debug
                     InteractionNumber = (int)interaction.TTAIndex, //interactions are referenced by their tta index
                     Priority = (short)VMQueuePriority.UserDriven
                 });
+                */
             }
         }
 

@@ -19,10 +19,10 @@
     <AndroidSupportedAbis>armeabi-v7a%3bx86</AndroidSupportedAbis>
     <AndroidStoreUncompressedFileExtensions>.m4a</AndroidStoreUncompressedFileExtensions>
     <MandroidI18n />
-    <TargetFrameworkVersion>v6.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v8.1</TargetFrameworkVersion>
     <MonoGamePlatform>Android</MonoGamePlatform>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
-    <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
+    <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -35,11 +35,13 @@
     <AndroidUseSharedRuntime>True</AndroidUseSharedRuntime>
     <AndroidLinkMode>None</AndroidLinkMode>
     <EmbedAssembliesIntoApk>False</EmbedAssembliesIntoApk>
-    <BundleAssemblies>False</BundleAssemblies>
+    <BundleAssemblies>false</BundleAssemblies>
     <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
     <Debugger>Xamarin</Debugger>
     <AndroidEnableMultiDex>False</AndroidEnableMultiDex>
     <UseVSHostingProcess>true</UseVSHostingProcess>
+    <AotAssemblies>false</AotAssemblies>
+    <EnableLLVM>false</EnableLLVM>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -49,27 +51,42 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
-    <AndroidLinkMode>None</AndroidLinkMode>
+    <AndroidLinkMode>Full</AndroidLinkMode>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
-    <BundleAssemblies>False</BundleAssemblies>
+    <BundleAssemblies>false</BundleAssemblies>
     <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
     <Debugger>Xamarin</Debugger>
-    <AotAssemblies>False</AotAssemblies>
-    <EnableLLVM>False</EnableLLVM>
+    <AotAssemblies>false</AotAssemblies>
+    <EnableLLVM>false</EnableLLVM>
     <AndroidEnableMultiDex>False</AndroidEnableMultiDex>
     <EnableProguard>False</EnableProguard>
     <DebugSymbols>False</DebugSymbols>
     <AndroidSupportedAbis>armeabi-v7a,x86,arm64-v8a</AndroidSupportedAbis>
+    <AndroidLinkSkip>MonoGame.Framework;FSO.Files;FSO.SimAntics;FSO.Content;Ninject;FSO.Client;FSO.Server.Protocol;FSO.Common.Domain;FSO.Common.DatabaseService;FSO.Common.DataService;FSO.UI;System.Collections.Immutable;</AndroidLinkSkip>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FreeSO, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\tso.client\bin\WindowsGL\Release\FreeSO.dll</HintPath>
+    <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.3.4.1\lib\netstandard1.3\Common.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\netstandard1.0\Common.Logging.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.Client">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Client.dll</HintPath>
     </Reference>
     <Reference Include="FSO.Common">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.Common.DatabaseService">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Common.DatabaseService.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.Common.DataService">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Common.DataService.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.Common.Domain">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Common.Domain.dll</HintPath>
     </Reference>
     <Reference Include="FSO.Content">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Content.dll</HintPath>
@@ -83,8 +100,20 @@
     <Reference Include="FSO.LotView">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.LotView.dll</HintPath>
     </Reference>
+    <Reference Include="FSO.Server.Clients">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Server.Clients.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.Server.Common">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Server.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.Server.Protocol">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Server.Protocol.dll</HintPath>
+    </Reference>
     <Reference Include="FSO.SimAntics">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.SimAntics.dll</HintPath>
+    </Reference>
+    <Reference Include="FSO.UI">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.UI.dll</HintPath>
     </Reference>
     <Reference Include="FSO.Vitaboy">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Vitaboy.dll</HintPath>
@@ -95,32 +124,55 @@
     <Reference Include="GOLDEngine">
       <HintPath>..\tso.client\bin\WindowsGL\Release\GOLDEngine.dll</HintPath>
     </Reference>
-    <Reference Include="GonzoNet">
-      <HintPath>..\tso.client\bin\WindowsGL\Release\GonzoNet.dll</HintPath>
+    <Reference Include="Java.Interop" />
+    <Reference Include="JWT, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\JWT.4.0.0\lib\netstandard1.3\JWT.dll</HintPath>
     </Reference>
     <Reference Include="Lidgren.Network, Version=3.5.1.1679, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\tso.client\bin\WindowsGL\Release\Lidgren.Network.dll</HintPath>
+      <HintPath>..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Android\AnyCPU\Release\Lidgren.Network.dll</HintPath>
     </Reference>
+    <Reference Include="MIConvexHull">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\MIConvexHull.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Mono.Android" />
+    <Reference Include="MonoGame.Framework, Version=3.5.1.1679, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Android\AnyCPU\Release\MonoGame.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework.Net, Version=3.5.1.1679, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Android\AnyCPU\Release\MonoGame.Framework.Net.dll</HintPath>
+    </Reference>
     <Reference Include="Mp3Sharp">
       <HintPath>..\tso.client\bin\WindowsGL\Release\Mp3Sharp.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
-    <Reference Include="OpenTK">
-      <HintPath>..\tso.client\bin\WindowsGL\Release\OpenTK.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\netstandard2.0\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="OpenTK-1.0" />
-    <Reference Include="ProtocolAbstractionLibraryD">
-      <HintPath>..\tso.client\bin\WindowsGL\Release\ProtocolAbstractionLibraryD.dll</HintPath>
+    <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Portable.Ninject.3.3.1\lib\monoandroid\Ninject.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.5.6\lib\monoandroid44\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.5.0\lib\netstandard2.0\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
     <Reference Include="TargaImagePCL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\tso.client\bin\WindowsGL\Release\TargaImagePCL.dll</HintPath>
+    </Reference>
+    <Reference Include="VoronoiLib">
+      <HintPath>..\tso.client\bin\WindowsGL\Release\VoronoiLib.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -132,81 +184,34 @@
     <Compile Include="StartupActivity.cs" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidAsset Include="Content\iOS\Effects\2DWorldBatch.xnb">
+    <AndroidAsset Include="..\tso.client\Content\**\*.*">
+      <Link>Content\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Effects\2DWorldBatchiOS.xnb">
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="..\tso.content\Content\**\*.*">
+      <Link>Content\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Effects\colorpoly2D.xnb">
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="..\tso.client\bin\WindowsGL\Release\Content\Objects\**\*.*">
+      <Link>Content\Objects\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Effects\Effects.zip">
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="..\FSO.Windows\bin\Release\Content\MeshReplace\**\*.*">
+      <Link>Content\MeshReplace\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Effects\GrassShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Effects\GrassShaderiOS.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Effects\PixShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Effects\VerShader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Effects\Vitaboy.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Fonts\FreeSO_10px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Fonts\FreeSO_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Fonts\FreeSO_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Fonts\FreeSO_16px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Fonts\Trebuchet_12px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Fonts\Trebuchet_14px.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\iOS\Textures\gridTexture.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\Patch\craftingworkbench_nodebug.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\Patch\dfcontroller_optimise.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\Patch\foodcounter_ea.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\Patch\koipond.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\Patch\pizzamaker_animfix.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\Patch\poolslide.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\Patch\trees3_objf.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
-    <AndroidAsset Include="Content\Patch\WORKAROUND_poolladder.piff">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidAsset>
+  </ItemGroup>
+  <ItemGroup>
     <AndroidAsset Include="Content\Blueprints\blueprint.dtd">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </AndroidAsset>
+    <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
@@ -236,20 +241,6 @@
     <None Include="Properties\AndroidManifest.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Android.csproj">
-      <Project>{ba9476cf-99ba-4d03-92f2-73d2c5e58883}</Project>
-      <Name>MonoGame.Framework.Android</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Net.Android.csproj">
-      <Project>{713ee5ca-c850-42ad-ac67-b6546ac8bffb}</Project>
-      <Name>MonoGame.Framework.Net.Android</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\System.Drawing\System.Drawing.csproj">
-      <Project>{08a4f593-43f0-4845-b0c3-7b42584c2fe7}</Project>
-      <Name>System.Drawing</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <AndroidAsset Include="Content\Blueprints\empty_lot.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidAsset>
@@ -265,7 +256,6 @@
     <AndroidAsset Include="Content\Textures\splashSeg.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidAsset>
-    <Content Include="System.Drawing.dll" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />

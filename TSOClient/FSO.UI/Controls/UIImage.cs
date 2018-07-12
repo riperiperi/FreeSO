@@ -70,13 +70,16 @@ namespace FSO.Client.UI.Controls
             set
             {
                 m_Texture = value;
-                if (Width == 0)
+                if (value != null)
                 {
-                    m_Width = m_Texture.Width;
-                }
-                if (Height == 0)
-                {
-                    m_Height = m_Texture.Height;
+                    if (Width == 0)
+                    {
+                        m_Width = m_Texture.Width;
+                    }
+                    if (Height == 0)
+                    {
+                        m_Height = m_Texture.Height;
+                    }
                 }
             }
         }

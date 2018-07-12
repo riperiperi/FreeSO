@@ -20,7 +20,9 @@ namespace FSO.IDE.EditorComponent.Primitives
         public override PrimitiveReturnTypes Returns {
             get {
                 var op = (VMExpressionOperand)Operand;
-                return OpReturn[op.Operator];
+                var rt = PrimitiveReturnTypes.TrueFalse;
+                OpReturn.TryGetValue(op.Operator, out rt);
+                return rt;
             }
         }
         public override Type OperandType { get { return typeof(VMExpressionOperand); } }

@@ -61,13 +61,18 @@ namespace FSO.Files.RC
             if (PixelDir == 65535)
             {
                 CustomTexture = 1;
-
-                var name = source.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff");
-                name += "_TEX_" + PixelSPR + ".png";
-                Pixel = ReplTextureProvider(name);
-                if (Pixel == null)
+                if (source == null)
                 {
-                    Pixel = source.ChunkParent.Get<MTEX>(PixelSPR)?.GetTexture(gd);
+                    //temporary system for models without DGRP
+                    Pixel = ReplTextureProvider("FSO_TEX_"+ PixelSPR + ".png");
+                } else {
+                    var name = source.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff");
+                    name += "_TEX_" + PixelSPR + ".png";
+                    Pixel = ReplTextureProvider(name);
+                    if (Pixel == null)
+                    {
+                        Pixel = source.ChunkParent.Get<MTEX>(PixelSPR)?.GetTexture(gd);
+                    }
                 }
             }
             else
@@ -101,7 +106,8 @@ namespace FSO.Files.RC
             var indexCount = io.ReadInt32();
             SIndices = ToTArray<int>(io.ReadBytes(indexCount * 4)).ToList();
 
-            /* bottom up triangle ordering. useful for trees.
+            // bottom up triangle ordering. useful for trees.
+            /*
             var triBase = new int[SIndices.Count / 3][];
             for (int i = 0; i < triBase.Length; i++) triBase[i] = new int[] { SIndices[i * 3], SIndices[i*3 + 1], SIndices[i * 3 + 2] };
 
@@ -109,6 +115,7 @@ namespace FSO.Files.RC
             SIndices.Clear();
             foreach (var item in ordered) SIndices.AddRange(item);
             */
+            
 
             if (Version < 2) GenerateNormals(false);
 
@@ -159,37 +166,22 @@ namespace FSO.Files.RC
             }
 
             GenerateNormals(false);
+            
+            /*
+            var triBase = new int[SIndices.Count / 3][];
+            for (int i = 0; i < triBase.Length; i++) triBase[i] = new int[] { SIndices[i * 3], SIndices[i * 3 + 1], SIndices[i * 3 + 2] };
+
+            var ordered = triBase.OrderBy(x => SVerts[x[0]].Position.Y + SVerts[x[1]].Position.Y + SVerts[x[2]].Position.Y);
+            SIndices.Clear();
+            foreach (var item in ordered) SIndices.AddRange(item);
+            */
 
             SComplete(gd);
         }
 
         public void GenerateNormals(bool invert)
         {
-            GenerateNormals(invert, SVerts, SIndices);
-        }
-
-        public static void GenerateNormals(bool invert, List<DGRP3DVert> verts, List<int> indices)
-        {
-            for (int i = 0; i < indices.Count; i += 3)
-            {
-                var v1 = verts[indices[i + 1]].Position - verts[indices[i]].Position;
-                var v2 = verts[indices[i + 2]].Position - verts[indices[i + 1]].Position;
-                var cross = invert ? Vector3.Cross(v2, v1) : Vector3.Cross(v1, v2);
-                for (int j = 0; j < 3; j++)
-                {
-                    var id = indices[i + j];
-                    var v = verts[id];
-                    v.Normal += cross;
-                    verts[id] = v;
-                }
-            }
-
-            for (int i = 0; i < verts.Count; i++)
-            {
-                var v = verts[i];
-                v.Normal.Normalize();
-                verts[i] = v;
-            }
+            DGRP3DVert.GenerateNormals(invert, SVerts, SIndices);
         }
 
         public void Save(IoWriter io)
@@ -296,7 +288,7 @@ namespace FSO.Files.RC
             return result;
         }
 
-        public static byte[] ToByteArray<T>(T[] input)
+        private static byte[] ToByteArray<T>(T[] input)
         {
             var result = new byte[input.Length * Marshal.SizeOf(typeof(T))];
             Buffer.BlockCopy(input, 0, result, 0, result.Length);

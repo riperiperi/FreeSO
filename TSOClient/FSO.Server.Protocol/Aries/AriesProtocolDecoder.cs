@@ -18,7 +18,7 @@ namespace FSO.Server.Protocol.Aries
 {
     public class AriesProtocolDecoder : CustomCumulativeProtocolDecoder
     {
-        private static Logger LOG = LogManager.GetCurrentClassLogger();
+        //private static Logger LOG = LogManager.GetCurrentClassLogger();
         private ISerializationContext Context;
 
         public AriesProtocolDecoder(ISerializationContext context)
@@ -50,7 +50,7 @@ namespace FSO.Server.Protocol.Aries
             }
 
             //LOG.Info("[ARIES] " + packetType + " (" + payloadSize + ")");
-
+            
             if(packetType == AriesPacketType.Voltron.GetPacketCode())
             {
                 DecodeVoltronStylePackets(buffer, ref payloadSize, output, VoltronPackets.GetByPacketCode);
@@ -70,7 +70,7 @@ namespace FSO.Server.Protocol.Aries
                 {
                     byte[] data = new byte[(int)payloadSize];
                     buffer.Get(data, 0, (int)payloadSize);
-
+                    
                     IAriesPacket packet = (IAriesPacket)Activator.CreateInstance(packetClass);
                     packet.Deserialize(IoBuffer.Wrap(data), Context);
                     output.Write(packet);
@@ -99,7 +99,7 @@ namespace FSO.Server.Protocol.Aries
 
                 byte[] data = new byte[(int)innerPayloadSize];
                 buffer.Get(data, 0, (int)innerPayloadSize);
-
+                
                 var packetClass = typeResolver(type);
                 if (packetClass != null)
                 {

@@ -55,7 +55,7 @@ namespace FSO.SimAntics.Engine
                 //run in tree:76
 
                 string callerStr = frame.Caller.ToString();
-                string calleeStr = frame.Callee.ToString();
+                string calleeStr = frame.Callee?.ToString();
 
                 if (callerStr != prevER || calleeStr != prevEE)
                 {
@@ -83,7 +83,7 @@ namespace FSO.SimAntics.Engine
                     output.Append(frame.InstructionPointer);
                     output.Append(" (");
                     var opcode = frame.GetCurrentInstruction().Opcode;
-                    var primitive = (opcode > 255)?null:frame.VM.Context.Primitives[opcode];
+                    var primitive = (opcode > 255)?null:VMContext.Primitives[opcode];
                     output.Append((primitive == null)?opcode.ToString():primitive.Name);
                     output.Append(")");
                 }

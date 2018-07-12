@@ -17,7 +17,9 @@ namespace FSO.Common.DatabaseService
 {
     public class DatabaseService : IDatabaseService, IAriesMessageSubscriber
     {
-        private static Logger LOG = LogManager.GetCurrentClassLogger();
+        //private static Logger LOG = LogManager.GetCurrentClassLogger();
+
+        public static object Sync = new object();
 
         private uint messageId;
         private AriesClient CityClient;
@@ -47,37 +49,41 @@ namespace FSO.Common.DatabaseService
         }
         
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
+        //[MethodImpl(MethodImplOptions.Synchronized)]
         private Task<T> Request<T>(DBRequestType type, DBResponseType responseType, uint? parameter, object complexParameter)
         {
-            var id = NextMessageId();
-            var taskSource = new TaskCompletionSource<T>();
-
-            var pending = new PendingRequest();
-            pending.Callback = x => {
-                taskSource.SetResult((T)x);
-            };
-            pending.RequestType = type;
-            pending.ResponseType = responseType;
-            PendingRequests.Add(id, pending);
-
-            this.CityClient.Write(new DBRequestWrapperPDU()
+            lock (Sync)
             {
-                Sender = new Sender
-                {
-                    AriesID = "0",
-                    MasterAccountID = "0",
-                },
-                SendingAvatarID = id,
-                Body = new cTSONetMessageStandard()
-                {
-                    DatabaseType = type.GetRequestID(),
-                    Parameter = parameter,
-                    ComplexParameter = complexParameter
-                }
-            });
+                var id = NextMessageId();
+                var taskSource = new TaskCompletionSource<T>();
 
-            return (Task<T>)taskSource.Task;
+                var pending = new PendingRequest();
+                pending.Callback = x =>
+                {
+                    taskSource.SetResult((T)x);
+                };
+                pending.RequestType = type;
+                pending.ResponseType = responseType;
+                PendingRequests.Add(id, pending);
+
+                this.CityClient.Write(new DBRequestWrapperPDU()
+                {
+                    Sender = new Sender
+                    {
+                        AriesID = "0",
+                        MasterAccountID = "0",
+                    },
+                    SendingAvatarID = id,
+                    Body = new cTSONetMessageStandard()
+                    {
+                        DatabaseType = type.GetRequestID(),
+                        Parameter = parameter,
+                        ComplexParameter = complexParameter
+                    }
+                });
+
+                return (Task<T>)taskSource.Task;
+            }
         }
 
         public void MessageReceived(AriesClient client, object message)
@@ -107,7 +113,7 @@ namespace FSO.Common.DatabaseService
                         }
                         catch (Exception ex)
                         {
-                            LOG.Error(ex);
+                            //LOG.Error(ex);
                         }
                     });
                 }

@@ -68,6 +68,7 @@ namespace FSO.Client.UI.Controls
         public event KeyPressDelegate OnEnterPress;
         public event KeyPressDelegate OnTabPress;
         public event KeyPressDelegate OnShiftTabPress;
+        public bool EventSuppressed;
 
         private UITextEditMode m_Mode = UITextEditMode.Editor;
         private bool m_IsReadOnly = false;
@@ -118,6 +119,7 @@ namespace FSO.Client.UI.Controls
             set
             {
                 if (value == null) value = "";
+                CodeParser = null;
                 m_SBuilder = new StringBuilder(value);
                 SelectionStart = Math.Max(0, Math.Min(SelectionStart, value.Length - 1));
                 SelectionEnd = -1; //todo: move along maybe?
@@ -126,6 +128,22 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+        //formatted mode abstractions
+
+        public bool BBCodeEnabled;
+        private BBCodeParser CodeParser;
+        public string CurrentTextParsed
+        {
+            get
+            {
+                if (BBCodeEnabled)
+                {
+                    CodeParser = new BBCodeParser(CurrentText);
+                    return CodeParser.Stripped;
+                }
+                else return CurrentText;
+            }
+        }
 
         private bool m_Password = false;
         public bool Password
@@ -239,7 +257,7 @@ namespace FSO.Client.UI.Controls
         }
 
         [UIAttribute("size")]
-        public new Vector2 Size
+        public override Vector2 Size
         {
             get
             {
@@ -321,6 +339,17 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+        public void SelectionToEnd()
+        {
+            SelectionEnd = -1;
+            SelectionStart = m_SBuilder.Length;
+        }
+
+        public int GetSelectedInd()
+        {
+            return Control_GetSelectionStart();
+        }
+
         #region IFocusableUI Members
 
         private bool IsFocused;
@@ -332,7 +361,7 @@ namespace FSO.Client.UI.Controls
             {
                 m_cursorBlink = true;
                 m_cursorBlinkLastTime = GameFacade.LastUpdateState.Time.TotalGameTime.Ticks;
-                if (FSOEnvironment.SoftwareKeyboard)
+                if (FSOEnvironment.SoftwareKeyboard && FSOEnvironment.SoftwareDepth)
                 {
                     try
                     {
@@ -381,7 +410,7 @@ namespace FSO.Client.UI.Controls
                     if (OnChange != null) OnChange(this);
                 }
             }
-            if (FSOEnvironment.SoftwareKeyboard && state.InputManager.GetFocus() == this) state.InputManager.SetFocus(null);
+            if (FSOEnvironment.SoftwareKeyboard && FSOEnvironment.SoftwareDepth && state.InputManager.GetFocus() == this) state.InputManager.SetFocus(null);
             if (m_IsReadOnly) { return; }
 
             if (FlashOnEmpty)
@@ -509,6 +538,7 @@ namespace FSO.Client.UI.Controls
                         }
                     }
 
+                    EventSuppressed = false;
                     if (inputResult.EnterPressed && OnEnterPress != null) OnEnterPress(this);
                     if (inputResult.TabPressed && OnTabPress != null) OnTabPress(this);
                     if (inputResult.ShiftDown && inputResult.TabPressed && OnShiftTabPress != null) OnShiftTabPress(this);
@@ -523,6 +553,7 @@ namespace FSO.Client.UI.Controls
                     {
                         if (position.Y < TextMargin.Y)
                         {
+                            VerticalScrollPosition = m_VScroll;
                             index = m_Lines[m_VScroll].StartIndex;
                         }
                         else
@@ -784,14 +815,17 @@ namespace FSO.Client.UI.Controls
             }
             else
             {
-                txt = m_SBuilder.ToString();
+                txt = CurrentTextParsed;
             }
 
             var lineWidth = m_Width - (TextMargin.Left + TextMargin.Height);
             m_LineHeight = TextStyle.MeasureString("W").Y + TextStyle.LineHeightModifier;
 
+            var bbCommands = BBCodeEnabled ? CodeParser.Commands : new List<BBCodeCommand>();
+            var bbIndex = 0;
+
             m_Lines.Clear();
-            txt = txt.Replace("\r", "");
+            //txt = txt.Replace("\r", "");
             var words = txt.Split(' ').ToList();
 	        var spaceWidth = TextStyle.MeasureString(" ").X;
 
@@ -816,13 +850,17 @@ namespace FSO.Client.UI.Controls
                 m_Slider.Value = VerticalScrollPosition;
             }
 
+            var bbColorStack = new Stack<Color>();
+            var lastColor = TextStyle.Color;
+
             var yPosition = topLeft.Y;
             var numLinesAdded = 0;
+            var shadowApplied = false;
             for (var i = 0; i < m_Lines.Count - m_VScroll; i++)
             {
                 var line = m_Lines[m_VScroll + i];
 
-                var segments = CalculateSegments(line);
+                var segments = CalculateSegments(line, bbCommands, ref bbIndex);
                 var xPosition = topLeft.X;
                 segments.ForEach(x => x.Size = TextStyle.MeasureString(x.Text));
                 var thisLineWidth = segments.Sum(x => x.Size.X);
@@ -850,16 +888,63 @@ namespace FSO.Client.UI.Controls
                         });
                     }
 
-                    m_DrawCmds.Add(new TextDrawCmd_Text
+                    if (segment.Text.Length > 0)
                     {
-                        Selected = segment.Selected,
-                        Text = segment.Text,
-                        Style = TextStyle,
-                        Position = segmentPosition,
-                        Scale = txtScale
-                    });
-                    xPosition += segmentSize.X;
+                        m_DrawCmds.Add(new TextDrawCmd_Text
+                        {
+                            Selected = segment.Selected,
+                            Text = segment.Text,
+                            Style = TextStyle,
+                            Position = segmentPosition,
+                            Scale = txtScale
+                        });
+                        xPosition += segmentSize.X;
+                    }
+
+                    if (segment.StartCommand != null)
+                    {
+                        var cmd = segment.StartCommand;
+                        switch (cmd.Type)
+                        {
+                            case BBCodeCommandType.color:
+                                if (cmd.Close)
+                                {
+                                    //pop a color off our stack
+                                    if (bbColorStack.Count > 0)
+                                    {
+                                        lastColor = bbColorStack.Pop();
+                                        m_DrawCmds.Add(new TextDrawCmd_Color(TextStyle, lastColor));
+                                    }
+                                }
+                                else
+                                {
+                                    bbColorStack.Push(lastColor);
+                                    lastColor = cmd.ParseColor();
+                                    m_DrawCmds.Add(new TextDrawCmd_Color(TextStyle, lastColor));
+                                }
+                                break;
+                            case BBCodeCommandType.s:
+                                if (cmd.Close)
+                                {
+                                    m_DrawCmds.Add(new TextDrawCmd_Shadow(TextStyle, false));
+                                    shadowApplied = false;
+                                }
+                                else
+                                {
+                                    m_DrawCmds.Add(new TextDrawCmd_Shadow(TextStyle, true));
+                                    shadowApplied = true;
+                                }
+                                break;
+                            case BBCodeCommandType.emoji:
+                                if (segment.BBCatchup) break;
+                                m_DrawCmds.Add(new TextDrawCmd_Emoji(TextStyle, cmd.Parameter, LocalPoint(new Vector2(xPosition, yPosition)), _Scale));
+                                break;
+                        }
+                    }
+
                 }
+
+
 
                 yPosition += m_LineHeight;
                 position.Y += m_LineHeight;
@@ -869,6 +954,13 @@ namespace FSO.Client.UI.Controls
                 {
                     break;
                 }
+            }
+            if (shadowApplied) m_DrawCmds.Add(new TextDrawCmd_Shadow(TextStyle, false));
+
+            while (bbColorStack.Count > 0)
+            {
+                lastColor = bbColorStack.Pop();
+                m_DrawCmds.Add(new TextDrawCmd_Color(TextStyle, lastColor));
             }
 
             /** No cursor in read only mode **/
@@ -914,122 +1006,108 @@ namespace FSO.Client.UI.Controls
         /// in order to draw selection boxes
         /// </summary>
         /// <returns></returns>
-        protected List<UITextEditLineSegment> CalculateSegments(UITextEditLine line)
+        protected List<UITextEditLineSegment> CalculateSegments(UITextEditLine line, List<BBCodeCommand> bbcmds, ref int bbind)
         {
             var result = new List<UITextEditLineSegment>();
 
-            if (SelectionEnd != -1)
+            var points = new List<Tuple<int, BBCodeCommand>>();
+
+            var hasSelection = (SelectionEnd != -1);
+            var start = SelectionStart == -1 ? m_SBuilder.Length : SelectionStart;
+            var end = SelectionEnd == -1 ? m_SBuilder.Length : SelectionEnd;
+            if (start > end)
             {
-                /** There is a selection **/
-                var start = SelectionStart == -1 ? m_SBuilder.Length : SelectionStart;
-                var end = SelectionEnd == -1 ? m_SBuilder.Length : SelectionEnd;
-                if (end < start)
-                {
-                    var temp = start;
-                    start = end;
-                    end = temp;
-                }
-
-                var lineStart = line.StartIndex;
-                var lineEnd = lineStart + line.Text.Length;
-
-                /**
-                 * Options:
-                 *  This line has no selection,
-                 *  Selection starts on this line
-                 *  Selection ends on this line
-                 *  The whole line is selected
-                 */
-
-                if (start >= lineStart && start < lineEnd)
-                {
-                    /** Selection starts on this line, we need a prefix **/
-                    var prefixEnd = start - lineStart;
-                    if (prefixEnd != 0)
-                    {
-                        result.Add(new UITextEditLineSegment
-                        {
-                            Selected = false,
-                            Text = line.Text.Substring(0, prefixEnd)
-                        });
-                    }
-
-                    /** Up until the end **/
-                    var selectionEnd = line.Text.Length;
-                    if (end + 1 < lineEnd)
-                    {
-                        selectionEnd -= (lineEnd - end);
-                    }
-                    
-                    result.Add(new UITextEditLineSegment
-                    {
-                        Selected = true,
-                        Text = line.Text.Substring(prefixEnd, selectionEnd - prefixEnd)
-                    });
-
-                    /** Suffix? **/
-                    if (end + 1 < lineEnd)
-                    {
-                        result.Add(new UITextEditLineSegment
-                        {
-                            Selected = false,
-                            Text = line.Text.Substring(selectionEnd)
-                        });
-                    }
-                }
-                else if (start < lineStart && end >= lineStart && end <= lineEnd)
-                {
-                    /** Selection ends on this line **/
-                    /** Up until the end **/
-                    var selectionEnd = line.Text.Length;
-                    if (end + 1 < lineEnd)
-                    {
-                        selectionEnd -= (lineEnd - end);
-                    }
-
-                    result.Add(new UITextEditLineSegment
-                    {
-                        Selected = true,
-                        Text = line.Text.Substring(0, selectionEnd)
-                    });
-
-                    /** Suffix? **/
-                    if (end + 1 < lineEnd)
-                    {
-                        result.Add(new UITextEditLineSegment
-                        {
-                            Selected = false,
-                            Text = line.Text.Substring(selectionEnd)
-                        });
-                    }
-                }
-                else if (start < lineStart && end > lineEnd)
-                {
-                    /** The whole line is selected **/
-                    result.Add(new UITextEditLineSegment
-                    {
-                        Text = line.Text,
-                        Selected = true
-                    });
-                }
-                else
-                {
-                    result.Add(new UITextEditLineSegment
-                    {
-                        Text = line.Text,
-                        Selected = false
-                    });
-                }
+                var temp = start;
+                start = end;
+                end = temp;
             }
-            else
+            var lineStart = line.StartIndex;
+            var lineEnd = lineStart + line.Text.Length;
+
+            var selected = hasSelection && (start < lineStart && end >= lineStart);
+            var lastMod = 0;
+            while (true)
             {
-                result.Add(new UITextEditLineSegment
+                //check for selection first
+                var nextBB = (bbind == bbcmds.Count) ? lineEnd : bbcmds[bbind].Index;
+                if (hasSelection)
                 {
-                    Text = line.Text,
-                    Selected = false
-                });
+                    if (!selected)
+                    {
+                        //look for selection start. is it before our next bbcommand?
+                        if (start >= lastMod+lineStart && start <= nextBB)
+                        {
+                            selected = true;
+                            if (start != nextBB || nextBB == lineEnd)
+                            {
+                                //
+                                result.Add(new UITextEditLineSegment
+                                {
+                                    Selected = false, //prefix before we select the text
+                                    Text = line.Text.Substring(lastMod, (start - lineStart) - lastMod),
+                                });
+                            }
+                            lastMod = start - lineStart;
+                        }
+                    }
+                    if (selected)
+                    {
+                        //look for selection end. is it before our next bbcommand?
+                        var selE = end - lineStart;
+                        if (end >= lastMod+lineStart && end <= nextBB)
+                        {
+                            selected = false;
+                            if (end != nextBB || nextBB == lineEnd)
+                            {
+                                result.Add(new UITextEditLineSegment
+                                {
+                                    Selected = true, //the remainder of the selected string
+                                    Text = line.Text.Substring(lastMod, (end - lineStart) - lastMod),
+                                });
+                            }
+                            lastMod = end - lineStart;
+                        }
+                    }
+                }
+
+                if (nextBB < lineEnd)
+                {
+                    //this bbcmd happens on this line (or before we even drew anything (scroll))
+                    //
+                    if (bbcmds[bbind].Index - lineStart < 0)
+                    {
+                        result.Add(new UITextEditLineSegment
+                        {
+                            Selected = selected,
+                            Text = "",
+                            BBCatchup = true,
+                            StartCommand = bbcmds[bbind++]
+                        });
+                    }
+                    else
+                    {
+                        result.Add(new UITextEditLineSegment
+                        {
+                            Selected = selected,
+                            Text = line.Text.Substring(lastMod, (bbcmds[bbind].Index - lineStart) - lastMod),
+                            StartCommand = bbcmds[bbind++]
+                        });
+                        lastMod = (bbcmds[bbind - 1].Index - lineStart);
+                    }
+                } else
+                {
+                    //remainder of the line
+                    result.Add(new UITextEditLineSegment
+                    {
+                        Selected = selected,
+                        Text = line.Text.Substring(lastMod, (lineEnd - lineStart) - lastMod),
+                    });
+                    break;
+                }
             }
             return result;
+
+            
         }
 
         /// <summary>
@@ -1086,17 +1164,18 @@ namespace FSO.Client.UI.Controls
             }
             set
             {
-                if (m_VScroll != value)
+                var oldValue = m_VScroll;
+                m_VScroll = value;
+                if (m_VScroll < 0)
                 {
-                    m_VScroll = value;
-                    if (m_VScroll < 0)
-                    {
-                        m_VScroll = 0;
-                    }
-                    if (m_VScroll > VerticalScrollMax)
-                    {
-                        m_VScroll = VerticalScrollMax;
-                    }
+                    m_VScroll = 0;
+                }
+                if (m_VScroll > VerticalScrollMax)
+                {
+                    m_VScroll = VerticalScrollMax;
+                }
+                if (oldValue != m_VScroll)
+                {
                     m_DrawDirty = true;
                     Invalidate();
                 }
@@ -1120,7 +1199,7 @@ namespace FSO.Client.UI.Controls
 
             foreach (var line in m_Lines)
             {
-                if (index >= line.StartIndex && index < line.StartIndex + (line.Text.Length - 1) + line.WhitespaceSuffix)
+                if (index >= line.StartIndex && index < line.StartIndex + line.Text.Length + line.WhitespaceSuffix)
                 {
                     return line;
                 }
@@ -1256,6 +1335,8 @@ namespace FSO.Client.UI.Controls
     {
         public string Text;
         public bool Selected;
+        public bool BBCatchup;
+        public BBCodeCommand StartCommand;
         public Vector2 Size;
     }
 
@@ -1274,14 +1355,107 @@ namespace FSO.Client.UI.Controls
         void Init();
     }
 
-    public class TextDrawCmd_Text : ITextDrawCmd
+    public class TextDrawCmd_Color : ITextDrawCmd
+    {
+        public TextStyle Style;
+        public Color ReplColor;
+
+        public TextDrawCmd_Color(TextStyle style, Color color)
+        {
+            Style = style;
+            ReplColor = color;
+        }
+
+        #region ITextDrawCmd Members
+        public virtual void Draw(UIElement ui, SpriteBatch batch)
+        {
+            Style.Color = ReplColor;
+        }
+
+        public void Init()
+        {
+        }
+        #endregion
+    }
+
+    public class TextDrawCmd_Shadow : ITextDrawCmd
+    {
+        public TextStyle Style;
+        public bool ReplShadow;
+
+        public TextDrawCmd_Shadow(TextStyle style, bool shad)
+        {
+            Style = style;
+            ReplShadow = shad;
+        }
+
+        #region ITextDrawCmd Members
+        public virtual void Draw(UIElement ui, SpriteBatch batch)
+        {
+            Style.Shadow = ReplShadow;
+        }
+
+        public void Init()
+        {
+        }
+        #endregion
+    }
+
+
+
+    public class TextDrawCmd_Emoji : ITextDrawCmd, INormalTextCmd
+    {
+        public TextStyle Style { get; set; }
+        public Texture2D EmojiTarget;
+        public Vector2 Position { get; set; }
+        public Rectangle Slice;
+        public Vector2 Scale;
+        public bool Shadow;
+
+        public TextDrawCmd_Emoji(TextStyle style, string emojiID, Vector2 position, Vector2 scale)
+        {
+            Position = position;
+            Style = style;
+            var emoj = GameFacade.Emojis.GetEmoji(emojiID);
+            EmojiTarget = emoj.Item1;
+            Slice = emoj.Item2;
+            Scale = scale;
+        }
+
+        #region ITextDrawCmd Members
+        public virtual void Draw(UIElement ui, SpriteBatch batch)
+        {
+            batch.Draw(
+                EmojiTarget, 
+                Position.ToPoint().ToVector2() + new Vector2(1, 0), 
+                Slice, 
+                (Shadow?Color.Black:Color.White) * (Style.Color.A / 255f), 
+                0f, 
+                Vector2.Zero, 
+                Scale * (Style.Size / 12f), 
+                SpriteEffects.None, 
+                0f);
+        }
+
+        public void Init()
+        {
+        }
+        #endregion
+    }
+
+    public interface INormalTextCmd
+    {
+        TextStyle Style { get; set; }
+        Vector2 Position { get; set; }
+    }
+
+    public class TextDrawCmd_Text : ITextDrawCmd, INormalTextCmd
     {
         public bool Selected;
-        public Vector2 Position;
+        public Vector2 Position { get; set; }
         public string Text;
-        public TextStyle Style;
+        public TextStyle Style { get; set; }
         public Vector2 Scale;
-
 
         public void Init()
         {
@@ -1300,7 +1474,6 @@ namespace FSO.Client.UI.Controls
                 if (Style.Shadow)
                     batch.DrawString(Style.SpriteFont, Text, Position + new Vector2(0, 1), Color.Black, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
                 batch.DrawString(Style.SpriteFont, Text, Position, Style.Color, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
-               
             }
         }
         #endregion

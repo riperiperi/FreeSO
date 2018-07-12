@@ -151,3 +151,15 @@
 /processorParam:DebugMode=Auto
 /build:Effects/RCObjectiOS.fx
 
+#begin Effects/ParticleShader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/ParticleShader.fx
+
+#begin Effects/SSAA.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/SSAA.fx
+

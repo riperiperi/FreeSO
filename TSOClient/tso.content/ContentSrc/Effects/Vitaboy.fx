@@ -21,7 +21,6 @@ sampler TexSampler = sampler_state {
 };
 
 texture depthMap : Diffuse;
-
 sampler depthMapSampler = sampler_state {
     texture = <depthMap>;
     AddressU = CLAMP; AddressV = CLAMP; AddressW = CLAMP;
@@ -37,6 +36,13 @@ struct VitaVertexIn
     float3 normal : NORMAL0;
 };
 
+struct FSOMVertexIn
+{
+	float4 position : SV_Position0;
+	float2 texCoord : TEXCOORD0;
+	float3 normal : TEXCOORD1;
+};
+
 struct VitaVertexOut
 {
     float4 position : SV_Position0;
@@ -45,6 +51,11 @@ struct VitaVertexOut
 	float3 normal : TEXCOORD2;
 	float4 modelPos : TEXCOORD3;
 };
+
+//head object parameters
+float HOToonSpecThresh;
+float3 HOToonSpecColor;
+float3 HOCameraPosition;
 
 float4 packObjID(float d) {
     float4 enc = float4(1.0, 255.0, 65025.0, 0.0) * d;
@@ -76,6 +87,21 @@ VitaVertexOut vsVitaboy(VitaVertexIn v) {
     return result;
 }
 
+
+VitaVertexOut vsHeadObject(FSOMVertexIn v) {
+	VitaVertexOut result;
+	//float4 position = mul(v.position, HOWorld) + float4(mul(float4(0, 0, 0, 1), SkelBindings[int(HOBone)]).xyz, 0);
+	result.texCoord = v.texCoord;
+
+	float4 wPos = mul(v.position, World);
+	float4 finalPos = mul(wPos, mul(View, Projection));
+	result.position = finalPos;
+	result.modelPos = wPos;
+	result.normal = mul(v.normal, (float3x3)(World));
+	result.screenPos = float4(finalPos.xy*float2(0.5, -0.5) + float2(0.5, 0.5), finalPos.zw);
+
+	return result;
+}
 
 float4 aaTex(VitaVertexOut v) {
 #if SIMPLE
@@ -171,6 +197,41 @@ float4 psVitaboyDir(VitaVertexOut v) : COLOR0
 float4 psObjID(VitaVertexOut v) : COLOR0
 {
     return packObjID(ObjectID);
+}
+
+float4 psHeadObject(VitaVertexOut v) : COLOR0
+{
+	float depth = v.screenPos.z / v.screenPos.w;
+	if (depthOutMode == true) {
+		return packObjID(depth);
+	}
+	else {
+	#if SIMPLE
+		//SOFTWARE DEPTH
+		if (SoftwareDepth == true && depthOutMode == false && unpackDepth(tex2D(depthMapSampler, v.screenPos.xy)) < depth) discard;
+	#endif
+		float4 color = tex2D(TexSampler, v.texCoord)*AmbientLight;
+		//specular component
+
+		float4 inPosition = v.modelPos;
+		float3 normal = normalize(v.normal);
+		float level = Level;
+
+		float2 orig = inPosition.x;
+		inPosition.xyz *= WorldToLightFactor;
+		inPosition.xz += LightOffset;
+
+		inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
+		float4 direction = tex2D(advDirectionSampler, inPosition.xz);
+		float3 light = normalize(direction.xyz);
+
+		float3 r = normalize(2 * dot(light, normal) * normal - light);
+		float3 ve = normalize(v.modelPos.xyz - HOCameraPosition);
+
+		float dotProduct = dot(r, ve);
+		color.rgb += (saturate((dotProduct-HOToonSpecThresh)*50) + dotProduct * 0.15) * HOToonSpecColor;
+		return color;
+	}
 }
 
 technique NoSSAA
@@ -351,6 +412,21 @@ technique AdvancedLightingDirection
 #else
 		VertexShader = compile vs_3_0 vsVitaboy();
 		PixelShader = compile ps_3_0 psVitaboyDir();
+#endif;
+	}
+}
+
+
+technique HeadObject
+{
+	pass Pass1
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 vsHeadObject();
+		PixelShader = compile ps_4_0_level_9_3 psHeadObject();
+#else
+		VertexShader = compile vs_3_0 vsHeadObject();
+		PixelShader = compile ps_3_0 psHeadObject();
 #endif;
 	}
 }

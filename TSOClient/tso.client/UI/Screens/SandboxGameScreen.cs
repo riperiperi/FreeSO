@@ -330,7 +330,6 @@ namespace FSO.Client.UI.Screens
             //clear our cache too, if the setting lets us do that
             TimedReferenceController.Clear();
             TimedReferenceController.Clear();
-            VM.ClearAssembled();
 
             vm.Context.Ambience.Kill();
             foreach (var ent in vm.Entities)
@@ -512,7 +511,7 @@ namespace FSO.Client.UI.Screens
                 if (!Downtown && ActiveFamily != null)
                 {
                     ActiveFamily.SelectWholeFamily();
-                    vm.ActivateFamily(ActiveFamily);
+                    vm.TS1State.ActivateFamily(vm, ActiveFamily);
                 }
                 BlueprintReset(lotName);
 
@@ -523,6 +522,7 @@ namespace FSO.Client.UI.Screens
                     new Common.Model.DynTuningEntry() { tuning_type = "overfill", tuning_table = 255, tuning_index = 7, value = 200 },
                     new Common.Model.DynTuningEntry() { tuning_type = "overfill", tuning_table = 255, tuning_index = 8, value = 200 },
                     new Common.Model.DynTuningEntry() { tuning_type = "overfill", tuning_table = 255, tuning_index = 9, value = 200 },
+                    new Common.Model.DynTuningEntry() { tuning_type = "feature", tuning_table = 0, tuning_index = 0, value = 1 }, //ts1/tso engine animation timings (1.2x faster)
                 });
                 vm.ForwardCommand(new VMNetTuningCmd { Tuning = experimentalTuning });
 

@@ -342,6 +342,20 @@ namespace FSO.Common.Utils
             }
         }
 
+        public static void UploadWithAvgMips(Texture2D Texture, GraphicsDevice gd, Color[] data)
+        {
+            int level = 0;
+            int w = Texture.Width;
+            int h = Texture.Height;
+            while (data != null)
+            {
+                Texture.SetData(level++, null, data, 0, data.Length);
+                data = AvgDecimate(data, w, h);
+                w /= 2;
+                h /= 2;
+            }
+        }
+
         private static bool IsPowerOfTwo(int x)
         {
             return (x & (x - 1)) == 0;
@@ -408,6 +422,84 @@ namespace FSO.Common.Utils
             return DXT5Compress(data, width, height, (width + 3) / 4, (height + 3) / 4);
         }
 
+        public static Color[] DXT5Decompress(byte[] data, int width, int height)
+        {
+            var result = new Color[width * height];
+            var blockW = width >> 2;
+            var blockH = height >> 2;
+            var blockI = 0;
+            var targI = 0;
+
+            for (int by = 0; by < blockH; by++)
+            {
+                for (int bx = 0; bx < blockW; bx++)
+                {
+                    //
+                    var maxA = data[blockI++];
+                    var minA = data[blockI++];
+
+                    var targ2I = targI;
+                    ulong alpha = data[blockI++];
+                    alpha |= (ulong)data[blockI++] << 8;
+                    alpha |= (ulong)data[blockI++] << 16;
+                    alpha |= (ulong)data[blockI++] << 24;
+                    alpha |= (ulong)data[blockI++] << 32;
+                    alpha |= (ulong)data[blockI++] << 40;
+
+                    var maxCI = (uint)data[blockI++];
+                    maxCI |= (uint)data[blockI++] << 8;
+
+                    var minCI = (uint)data[blockI++];
+                    minCI |= (uint)data[blockI++] << 8;
+                    
+                    var maxCol = new Color((int)((maxCI >> 11) & 31), (int)((maxCI >> 6) & 31), (int)(maxCI & 31)) * (255f/31f);
+                    var minCol = new Color((int)((minCI >> 11) & 31), (int)((minCI >> 6) & 31), (int)(minCI & 31)) * (255f / 31f);
+
+                    uint col = data[blockI++];
+                    col |= (uint)data[blockI++] << 8;
+                    col |= (uint)data[blockI++] << 16;
+                    col |= (uint)data[blockI++] << 24;
+
+                    var i = 0;
+                    for (int y=0; y<4; y++)
+                    {
+                        for (int x=0; x<4; x++)
+                        {
+                            var abit = (alpha >> (i*3)) & 0x7;
+                            var cbit = (col >> (i * 2)) & 0x3;
+                            i++;
+                            Color col2;
+                            switch (cbit)
+                            {
+                                case 1:
+                                    col2 = minCol;break;
+                                case 2:
+                                    col2 = Color.Lerp(minCol, maxCol, 2/3f); break;
+                                case 3:
+                                    col2 = Color.Lerp(minCol, maxCol, 1 / 3f); break;
+                                default:
+                                    col2 = maxCol; break;
+                            }
+                            if (abit == 0) col2.A = maxA;
+                            else if (abit == 1) col2.A = minA;
+                            else
+                            {
+                                var a = (8 - abit) / 7f;
+                                col2.A = (byte)(maxA*a + minA * (1-a));
+                            }
+                            
+                            result[targ2I++] = col2;
+                        }
+                        targ2I += width - 4;
+                    }
+                    targI += 4;
+                }
+                targI += width * 3;
+            }
+
+            return result;
+        }
+
         public static Tuple<byte[], Point> DXT5Compress(Color[] data, int width, int height, int blockW, int blockH)
         {
             var result = new byte[blockW * blockH * 16];
@@ -423,6 +515,7 @@ namespace FSO.Common.Utils
                         var realy = ((by << 2) + y);
                         if (realy >= height) break;
                         var i = realy * width + (bx<<2);
+
                         
                         for (int x = 0; x < 4; x++)
                         {
@@ -721,6 +814,64 @@ namespace FSO.Common.Utils
             return buffer;
         }
 
+        public static Color[] AvgDecimate(Color[] old, int w, int h)
+        {
+            var nw = w / 2;
+            var nh = h / 2;
+            bool linex = false, liney = false;
+            if (nw == 0 && nh == 0) return null;
+            if (nw == 0) { nw = 1; liney = true; }
+            if (nh == 0) { nh = 1; linex = true; }
+            var size = nw * nh;
+            Color[] buffer = new Color[size];
+
+            int tind = 0;
+            int fyind = 0;
+            for (int y = 0; y < nh; y++)
+            {
+                var yb = y * 2 == h || linex;
+                int find = fyind;
+                for (int x = 0; x < nw; x++)
+                {
+                    var xb = x * 2 == h || liney;
+                    var c1 = old[find];
+                    var c2 = (xb) ? Color.Transparent : old[find + 1];
+                    var c3 = (yb) ? Color.Transparent : old[find + w];
+                    var c4 = (xb || yb) ? Color.Transparent : old[find + 1 + w];
+
+                    int r = 0, g = 0, b = 0, a=0, t = 0;
+                    if (c1.A > 0)
+                    {
+                        r += c1.R; g += c1.G; b += c1.B; a += c1.A; t++;
+                    }
+                    if (c2.A > 0)
+                    {
+                        r += c2.R; g += c2.G; b += c2.B; a += c2.A; t++;
+                    }
+                    if (c3.A > 0)
+                    {
+                        r += c3.R; g += c3.G; b += c3.B; a += c3.A; t++;
+                    }
+                    if (c4.A > 0)
+                    {
+                        r += c4.R; g += c4.G; b += c4.B; a += c4.A; t++;
+                    }
+                    if (t == 0) t = 1;
+
+                    buffer[tind++] = new Color(
+                        (byte)(r / t),
+                        (byte)(g / t),
+                        (byte)(b / t),
+                        (byte)(a / t)
+                        );
+                    find += 2;
+                }
+                fyind += w * 2;
+            }
+            return buffer;
+        }
+
+
         /// <summary>
         /// Combines multiple textures into a single texture
         /// </summary>
@@ -791,6 +942,7 @@ namespace FSO.Common.Utils
             lock (gd)
             {
                 gd.SetRenderTarget(renderTarget);
+                gd.Clear(Color.TransparentBlack);
                 SpriteBatch batch = new SpriteBatch(gd);
                 batch.Begin();
                 batch.Draw(texture, destinationRectangle, Color.White);

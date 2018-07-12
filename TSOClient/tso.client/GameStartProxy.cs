@@ -27,5 +27,7 @@ namespace FSO.Client
 			GlobalSettings.Default.StartupPath = path;
             GlobalSettings.Default.Windowed = false;
 		}
+
+
 	}
 }

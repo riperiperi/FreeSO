@@ -24,6 +24,7 @@ using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
 using FSO.Client.UI.Panels;
 using FSO.Common;
+using FSO.Content;
 
 namespace FSO.Client.UI.Screens
 {
@@ -33,11 +34,11 @@ namespace FSO.Client.UI.Screens
         private UILabel ProgressLabel1;
         private UILabel ProgressLabel2;
 
-        private Timer CheckProgressTimer;
+        private GameThreadInterval CheckProgressTimer;
+        private bool PlayedLoadLoop = false;
 
         public LoadingScreen() : base()
         {
-            HITVM.Get().PlaySoundEvent(UIMusic.LoadLoop);
 
             Background = new UISetupBackground();
 
@@ -83,17 +84,15 @@ namespace FSO.Client.UI.Screens
             CurrentPreloadLabel = 0;
             AnimateLabel("", PreloadLabels[0]);
 
-            CheckProgressTimer = new Timer();
-            CheckProgressTimer.Interval = 5;
-            CheckProgressTimer.Elapsed += new ElapsedEventHandler(CheckProgressTimer_Elapsed);
-            CheckProgressTimer.Start();
+            
+            CheckProgressTimer = GameThread.SetInterval(CheckProgressTimer_Elapsed, 5);
 
             //GameFacade.Screens.Tween.To(rect, 10.0f, new Dictionary<string, float>() {
             //    {"X", 500.0f}
             //}, TweenQuad.EaseInOut);
         }
 
-        void CheckProgressTimer_Elapsed(object sender, ElapsedEventArgs e)
+        void CheckProgressTimer_Elapsed()
         {
             CheckPreloadLabel();
         }
@@ -122,10 +121,17 @@ namespace FSO.Client.UI.Screens
                     else
                     {
                         /** No more labels to show! Preload must be complete :) **/
-                        CheckProgressTimer.Stop();
+                        CheckProgressTimer.Clear();
                         FSOFacade.Controller.ShowLogin();
+                        return;
                     }
                 }
+            }
+            if (percentDone >= 1)
+            {
+                CheckProgressTimer.Clear();
+                FSOFacade.Controller.ShowLogin();
+                return;
             }
         }
 
@@ -139,13 +145,13 @@ namespace FSO.Client.UI.Screens
             ProgressLabel2.X = 800;
             ProgressLabel2.Caption = newLabel;
 
-            var tween = GameFacade.Screens.Tween.To(ProgressLabel1, 1.0f, new Dictionary<string, float>() 
+            var tween = GameFacade.Screens.Tween.To(ProgressLabel1, 0.5f, new Dictionary<string, float>() 
             {
                 {"X", -800.0f}
             });
             tween.OnComplete += new TweenEvent(tween_OnComplete);
 
-            GameFacade.Screens.Tween.To(ProgressLabel2, 1.0f, new Dictionary<string, float>() 
+            GameFacade.Screens.Tween.To(ProgressLabel2, 0.5f, new Dictionary<string, float>() 
             {
                 {"X", 0.0f}
             });
@@ -155,6 +161,16 @@ namespace FSO.Client.UI.Screens
         {
             InTween = false;
             CheckPreloadLabel();
+        }
+
+        public override void Update(UpdateState state)
+        {
+            if (!PlayedLoadLoop && ((Audio)Content.Content.Get().Audio).Initialized)
+            {
+                HITVM.Get().PlaySoundEvent(UIMusic.LoadLoop);
+                PlayedLoadLoop = true;
+            }
+            base.Update(state);
         }
 
         public override void Draw(UISpriteBatch batch)

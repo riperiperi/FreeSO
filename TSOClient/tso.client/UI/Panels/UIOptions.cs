@@ -15,6 +15,10 @@ using FSO.Common;
 using FSO.HIT;
 using FSO.HIT.Model;
 using FSO.Client.UI.Screens;
+using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.SimAntics.Model.TSOPlatform;
+using Microsoft.Xna.Framework;
+using FSO.Common.Rendering.Framework.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -148,11 +152,153 @@ namespace FSO.Client.UI.Panels
 
     public class UIProfanityOptions : UIContainer
     {
+        public UIButton AddButton { get; set; }
+        public UIButton SubtractButton { get; set; }
+        public UIButton EnableFilterCheckButton { get; set; }
+
+        public UIButton PrevColorButton { get; set; }
+        public UIButton NextColorButton { get; set; }
+
+        public UILabel ChatColorLabel { get; set; }
+        public UILabel ChatColor { get; set; }
+        public UILabel ProfanityFilterTitle { get; set; }
+        public UILabel EnterWordLabel { get; set; }
+        public UITextEdit EntryBox { get; set; }
+
+        public UISlider PitchSlider { get; set; }
+        public int PitchTimer = 0;
+
         public UIProfanityOptions()
         {
-            var alert = UIScreen.GlobalShowAlert(new UIAlertOptions { Title = "Not Implemented", Message = "This feature is not implemented yet!" }, true);
-            //this.RenderScript("profanitypanel.uis");
+            //var alert = UIScreen.GlobalShowAlert(new UIAlertOptions { Title = "Not Implemented", Message = "This feature is not implemented yet!" }, true);
+            var uis = this.RenderScript("profanitypanel.uis");
             //don't draw, this currently breaks the uis parser
+            //var bg = uis.Create<UIImage>("Background");
+            //AddAt(0, bg);
+            Remove(PrevColorButton);
+            Remove(NextColorButton);
+            Remove(AddButton);
+            Remove(SubtractButton);
+            Remove(EnableFilterCheckButton);
+            Remove(ProfanityFilterTitle);
+            Remove(EntryBox);
+
+            EnterWordLabel.Caption = GameFacade.Strings.GetString("f113", "5");
+
+            var hbox = new UIHBoxContainer();
+            hbox.Add(new UILabel() { Caption = GameFacade.Strings.GetString("f113", "1") });
+            var ttsMode = GlobalSettings.Default.TTSMode;
+            for (int i = 0; i < 3; i++)
+            {
+                var radio = new UIRadioButton();
+                radio.RadioData = i;
+                radio.RadioGroup = "ttsOpt";
+                radio.OnButtonClick += TTSOptSet;
+                radio.Tooltip = GameFacade.Strings.GetString("f113", (2 + i).ToString());
+                radio.Selected = ttsMode == i;
+                hbox.Add(radio);
+                hbox.Add(new UILabel() { Caption = radio.Tooltip });
+            }
+
+            hbox.Position = new Vector2(10, 10);
+            Add(hbox);
+            hbox.AutoSize();
+
+            var col = new Color(GlobalSettings.Default.ChatColor);
+            ChatColor.CaptionStyle = ChatColor.CaptionStyle.Clone();
+            ChatColor.CaptionStyle.Color = col;
+            ChatColor.CaptionStyle.Shadow = true;
+            ChatColor.Caption = "#" + col.R.ToString("x2") + col.G.ToString("x2") + col.B.ToString("x2");
+
+            var changeBtn = new UIButton();
+            changeBtn.Caption = GameFacade.Strings.GetString("f113", "6");
+            changeBtn.Position = new Microsoft.Xna.Framework.Vector2(155 + 100, 74-7);
+            Add(changeBtn);
+            changeBtn.OnButtonClick += (btn1) =>
+            {
+                UIAlert alert = null;
+                alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Title = "",
+                    Message = GameFacade.Strings.GetString("f113", "8"),
+                    Color = true,
+                    Buttons = new UIAlertButton[]
+                    {
+                        new UIAlertButton(UIAlertButtonType.OK, (btn) => {
+                            //set the color
+                            var col2 = int.Parse(alert.ResponseText);
+                            GlobalSettings.Default.ChatColor = new Color(col2>>16, (byte)(col2>>8), (byte)col2).PackedValue;
+                            SetChatParams();
+                            UIScreen.RemoveDialog(alert);
+                        }),
+                        new UIAlertButton(UIAlertButtonType.No, (btn) => {
+                            //set the color
+                            var rand = new Random();
+                            GlobalSettings.Default.ChatColor = VMTSOAvatarState.RandomColours[rand.Next(VMTSOAvatarState.RandomColours.Length)].PackedValue;
+                            SetChatParams();
+                            UIScreen.RemoveDialog(alert);
+                        }, GameFacade.Strings.GetString("f113", "7")),
+                        new UIAlertButton(UIAlertButtonType.Cancel)
+                    }
+                }, true);
+            };
+
+            PitchSlider = new UISlider();
+            PitchSlider.Orientation = 0;
+            PitchSlider.Texture = GetTexture(0x42500000001);
+            PitchSlider.MinValue = -100f;
+            PitchSlider.MaxValue = 100f;
+            PitchSlider.AllowDecimals = false;
+            PitchSlider.Position = EnterWordLabel.Position + new Vector2(115, 3);
+            PitchSlider.Value = GlobalSettings.Default.ChatTTSPitch;
+            PitchSlider.SetSize(150f, 0f);
+            Add(PitchSlider);
+
+            PitchSlider.OnChange += PitchSlider_OnChange;
+        }
+
+        private void TTSOptSet(UIElement button)
+        {
+            GlobalSettings.Default.TTSMode = (int)((UIRadioButton)button).RadioData;
+            GlobalSettings.Default.Save();
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            if (PitchTimer > 0)
+            {
+                PitchTimer--;
+                if (PitchTimer == 0)
+                {
+                    SetChatParams();
+                }
+            }
+        }
+
+        public override void Removed()
+        {
+            base.Removed();
+            if (PitchTimer > 0) SetChatParams();
+        }
+
+        private void PitchSlider_OnChange(UIElement element)
+        {
+            GlobalSettings.Default.ChatTTSPitch = (int)PitchSlider.Value;
+            PitchTimer = FSOEnvironment.RefreshRate / 2;
+        }
+
+        private void SetChatParams()
+        {
+            var col = new Color(GlobalSettings.Default.ChatColor);
+            ChatColor.CaptionStyle.Color = col;
+            ChatColor.Caption = "#" + col.R.ToString("x2") + col.G.ToString("x2") + col.B.ToString("x2");
+            (UIScreen.Current as IGameScreen)?.vm?.SendCommand(new VMNetChatParamCmd()
+            {
+                Col = new Color(GlobalSettings.Default.ChatColor),
+                Pitch = (sbyte)GlobalSettings.Default.ChatTTSPitch
+            });
+            GlobalSettings.Default.Save();
         }
     }
 

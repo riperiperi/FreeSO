@@ -27,7 +27,7 @@ namespace FSO.Client.UI.Panels.EODs
         private readonly int[] RedNumbersArray = { 1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36 };
         private List<ChipStack> MyChipsInPlay = new List<ChipStack>();
         private List<ChipStack> NeighborChipsInPlay = new List<ChipStack>(); // other players' chips
-        private UIRouletteEODStates GameState = UIRouletteEODStates.Initializing;
+        private UIRouletteEODStates GameUIState = UIRouletteEODStates.Initializing;
         private int MinBet;
         private int MaxBet;
         private int PlayerBalance;
@@ -94,10 +94,17 @@ namespace FSO.Client.UI.Panels.EODs
         // buttons
         public UIButton btnShowAllBets { get; set; }
 
+        // alert strings found in _f111_casinoeodstrings.cst
+        public Dictionary<byte, string> AlertStrings = new Dictionary<byte, string>()
+        {
+            { (byte)VMEODRouletteInputErrorTypes.ObjectNSF, GameFacade.Strings.GetString("f111", "28") }
+        };
+        
         public UIRouletteEOD(UIEODController controller) : base(controller)
         {
             InitUI();
             // player
+            BinaryHandlers["roulette_alert"] = AlertHandler;
             BinaryHandlers["roulette_new_game"] = NewGameHandler;
             BinaryHandlers["roulette_player"] = ShowPlayerUIHandler;
             BinaryHandlers["roulette_stack_overflow"] = ChipStackOverFlowHandler;
@@ -131,7 +138,7 @@ namespace FSO.Client.UI.Panels.EODs
          */
         public override void Update(UpdateState state)
         {
-            if (GameState.Equals(UIRouletteEODStates.Dragging))
+            if (GameUIState.Equals(UIRouletteEODStates.Dragging))
             {
                 Parent.Invalidate();
                 if (CurrentDraggingChip != null)
@@ -181,14 +188,15 @@ namespace FSO.Client.UI.Panels.EODs
         public override void OnClose()
         {
             SetTip("");
-            Send("roulette_UI_close", "");
-            CloseInteraction();
+            byte isOwner = GameUIState.Equals(UIRouletteEODStates.Managing) ? (byte)1 : (byte)0;
+            Send("roulette_UI_close", new byte[] { isOwner });
+            //CloseInteraction();
             base.OnClose();
         }
         // Server sends EOD time remaining as a string. Ignore this if in Managing State.
         private void TimeHandler(string evt, string timeString)
         {
-            if (!GameState.Equals(UIRouletteEODStates.Managing))
+            if (!GameUIState.Equals(UIRouletteEODStates.Managing) && !GameUIState.Equals(UIRouletteEODStates.GameOver))
             {
                 RoundTimeRemaining = 0;
                 int.TryParse(timeString, out RoundTimeRemaining);
@@ -196,13 +204,13 @@ namespace FSO.Client.UI.Panels.EODs
                 // goto spinning if not already there
                 if (RoundTimeRemaining == 0)
                 {
-                    if (!GameState.Equals(UIRouletteEODStates.Spinning) && !GameState.Equals(UIRouletteEODStates.Results))
+                    if (!GameUIState.Equals(UIRouletteEODStates.Spinning) && !GameUIState.Equals(UIRouletteEODStates.Results))
                         GotoState(UIRouletteEODStates.Spinning);
                 }
                 // goto idle (betting) if not already there
                 else
                 {
-                    if (GameState.Equals(UIRouletteEODStates.Initializing) || GameState.Equals(UIRouletteEODStates.Results))
+                    if (GameUIState.Equals(UIRouletteEODStates.Initializing) || GameUIState.Equals(UIRouletteEODStates.Results))
                         GotoState(UIRouletteEODStates.Idle);
                 }
             }
@@ -269,6 +277,7 @@ namespace FSO.Client.UI.Panels.EODs
          */
         private void ShowManageUIHandler(string evt, string balanceMinMaxBet)
         {
+            GameUIState = UIRouletteEODStates.Managing;
             if (balanceMinMaxBet == null)
                 return;
             int tempBalance;
@@ -336,6 +345,23 @@ namespace FSO.Client.UI.Panels.EODs
                 OwnerPanel.InputFailHandler(evt.Remove(0, 9), message); // truncate "roulette_"
             }
         }
+        private void AlertHandler(string evt, byte[] alertCode)
+        {
+            UIAlert alert = null;
+            string alertMessage = AlertStrings[alertCode[0]];
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                TextSize = 12,
+                Title = GameFacade.Strings.GetString("f111", "10"), // "Error"
+                Message = alertMessage, // "The table had to close due to insufficient balance. Perhaps you should let the owner know?"
+                Alignment = TextAlignment.Center,
+                TextEntry = false,
+                Buttons = UIAlertButton.Ok((btn) =>
+                {
+                    UIScreen.RemoveDialog(alert);
+                }),
+            }, true);
+        }
         private void ChipStackOverFlowHandler(string evt, byte[] attemptedBet)
         {
             // show an alert that tells the user that they can't have that many chips on the stack
@@ -343,8 +369,8 @@ namespace FSO.Client.UI.Panels.EODs
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = "Betting Error",
-                Message = "You can't place another chip onto this stack.",
+                Title = GameFacade.Strings.GetString("f111", "15"), // "Betting Error"
+                Message = GameFacade.Strings.GetString("f111", "32"), // "You can't place another chip onto this stack."
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
                 Buttons = UIAlertButton.Ok((btn) =>
@@ -367,8 +393,8 @@ namespace FSO.Client.UI.Panels.EODs
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = "Game Over",
-                Message = "You don't have enough money to meet the minimum bet of $" + ((sentMinBet != null) ? "" + sentMinBet : "" + MinBet) + ".",
+                Title = GameFacade.Strings.GetString("f111", "10"), // "Error"
+                Message = GameFacade.Strings.GetString("f111", "31"), // "Don't come back until you have more Simoleons."
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
                 Buttons = UIAlertButton.Ok((btn) =>
@@ -390,9 +416,10 @@ namespace FSO.Client.UI.Panels.EODs
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = "Betting Error",
-                Message = GameFacade.Strings["UIText", "258", "25"].Replace("$%d",
-                        ((attemptedBet != null) ? "$" + attemptedBet + " of" : "That/Those")) +".",
+                Title = GameFacade.Strings.GetString("f111", "15"), // "Betting Error"
+                // "$%d of chips would be over the maximum allowed bet." or "That would be over the maximum allowed bet."
+                Message = ((attemptedBet != null) ?
+                    GameFacade.Strings.GetString("f111", "33").Replace("%d", "" + attemptedBet) : GameFacade.Strings.GetString("f111", "34")),
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
                 Buttons = UIAlertButton.Ok((btn) =>
@@ -408,8 +435,8 @@ namespace FSO.Client.UI.Panels.EODs
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = "Betting Error",
-                Message = "You don't have enough money to place that bet.",
+                Title = GameFacade.Strings.GetString("f111", "15"), // "Betting Error"
+                Message = GameFacade.Strings.GetString("f111", "23"), // "You don't have enough money to make that bet."
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
                 Buttons = UIAlertButton.Ok((btn) =>
@@ -430,8 +457,8 @@ namespace FSO.Client.UI.Panels.EODs
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = "Betting Error",
-                Message = "An unknown error occured. Your last bet was not accepted.",
+                Title = GameFacade.Strings.GetString("f111", "15"), // "Betting Error"
+                Message = GameFacade.Strings.GetString("f111", "35"), // "An unknown error occured. Your last bet was not accepted."
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
                 Buttons = UIAlertButton.Ok((btn) =>
@@ -447,8 +474,8 @@ namespace FSO.Client.UI.Panels.EODs
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = "Betting Error",
-                Message = "Your bet of $" + lowBet + " did not meet the table's minimum bet of $" + MinBet + ".",
+                Title = GameFacade.Strings.GetString("f111", "15"), // "Betting Error"
+                Message = GameFacade.Strings.GetString("f111", "21").Replace("%d","" + MinBet), // "Your bet must be at least $%d."
                 Alignment = TextAlignment.Center,
                 TextEntry = false,
                 Buttons = UIAlertButton.Ok((btn) =>
@@ -491,24 +518,29 @@ namespace FSO.Client.UI.Panels.EODs
                 if (winningNumber == 0 || winningNumber == 100) // green number
                 {
                     UltimateStopColor = 2;
-                    RouletteBall.X = 74;
+                    if (RouletteBall != null)
+                        RouletteBall.X = 74;
                 }
                 else if (BlackNumbersArray.Contains(winningNumber)) // black number
                 {
                     UltimateStopColor = 0;
-                    RouletteBall.X = 77; // grahpical curiosity
+                    if (RouletteBall != null)
+                        RouletteBall.X = 77; // graphical curiosity
                 }
 
                 else // red number
                 {
                     UltimateStopColor = 1;
-                    RouletteBall.X = 74;
+                    if (RouletteBall != null)
+                        RouletteBall.X = 74;
                 }
 
                 // update the label with the winning number
-                labelNumber.Visible = false;
-                labelNumber.Caption = ((winningNumber == 100) ? "00" : "" + winningNumber);
-
+                if (labelNumber != null)
+                {
+                    labelNumber.Visible = false;
+                    labelNumber.Caption = ((winningNumber == 100) ? "00" : "" + winningNumber);
+                }
                 /*
                  * Prepare the string for SetTip once the wheel stops spinning. NOTE: If the player wins ANYTHING, the win is displayed, regardless if the
                  * winnings is less than the total amount bet in the round. The loss message is only displayed if the user did not win anything from any bet.
@@ -522,11 +554,11 @@ namespace FSO.Client.UI.Panels.EODs
                     else
                         ResultsString = GameFacade.Strings["UIText", "258", "17"]; // "Wait to bet"
                 }
-
                 // start the timer for the spinning animation
-                WheelSpinTimer.Start();
+                if (WheelSpinTimer != null)
+                    WheelSpinTimer.Start();
                 // failsafe
-                if (!GameState.Equals(UIRouletteEODStates.Spinning))
+                if (!GameUIState.Equals(UIRouletteEODStates.Spinning))
                     GotoState(UIRouletteEODStates.Spinning);
             }
         }
@@ -535,7 +567,7 @@ namespace FSO.Client.UI.Panels.EODs
          */
         private void ButtonChip1ClickedHandler(UIElement btn)
         {
-            if (GameState.Equals(UIRouletteEODStates.Idle))
+            if (GameUIState.Equals(UIRouletteEODStates.Idle))
             {
                 PickUpChip(1, btnChip1, imageChip_001);
                 GotoState(UIRouletteEODStates.Dragging);
@@ -548,7 +580,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void ButtonChip2ClickedHandler(UIElement btn)
         {
-            if (GameState.Equals(UIRouletteEODStates.Idle))
+            if (GameUIState.Equals(UIRouletteEODStates.Idle))
             {
                 PickUpChip(5, btnChip2, imageChip_005);
                 GotoState(UIRouletteEODStates.Dragging);
@@ -561,7 +593,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void ButtonChip3ClickedHandler(UIElement btn)
         {
-            if (GameState.Equals(UIRouletteEODStates.Idle))
+            if (GameUIState.Equals(UIRouletteEODStates.Idle))
             {
                 PickUpChip(10, btnChip3, imageChip_010);
                 GotoState(UIRouletteEODStates.Dragging);
@@ -574,7 +606,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void ButtonChip4ClickedHandler(UIElement btn)
         {
-            if (GameState.Equals(UIRouletteEODStates.Idle))
+            if (GameUIState.Equals(UIRouletteEODStates.Idle))
             {
                 PickUpChip(25, btnChip4, imageChip_025);
                 GotoState(UIRouletteEODStates.Dragging);
@@ -587,7 +619,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void ButtonChip5ClickedHandler(UIElement btn)
         {
-            if (GameState.Equals(UIRouletteEODStates.Idle))
+            if (GameUIState.Equals(UIRouletteEODStates.Idle))
             {
                 PickUpChip(100, btnChip5, imageChip_100);
                 GotoState(UIRouletteEODStates.Dragging);
@@ -604,7 +636,7 @@ namespace FSO.Client.UI.Panels.EODs
          */
         private void OnTableMouseEvent(UIMouseEventType type, UpdateState update)
         {
-            if (GameState.Equals(UIRouletteEODStates.Dragging))
+            if (GameUIState.Equals(UIRouletteEODStates.Dragging))
             {
                 switch (type)
                 {
@@ -623,7 +655,7 @@ namespace FSO.Client.UI.Panels.EODs
                         }
                 }
             }
-            else if (GameState.Equals(UIRouletteEODStates.Idle))
+            else if (GameUIState.Equals(UIRouletteEODStates.Idle))
             {
                 if (type.Equals(UIMouseEventType.MouseUp)) // user clicks somewhere during the betting period while NOT dragging a chip
                 {
@@ -938,7 +970,7 @@ namespace FSO.Client.UI.Panels.EODs
                         DropChip();
                         RemoveAllShade();
                         SetTime(RoundTimeRemaining);
-                        GameState = UIRouletteEODStates.Idle;
+                        GameUIState = UIRouletteEODStates.Idle;
                         EnableChipButtons();
                         break;
                     }
@@ -947,7 +979,7 @@ namespace FSO.Client.UI.Panels.EODs
                         SetTip(GameFacade.Strings["UIText", "258", "22"] + " " + GameFacade.Strings["UIText", "258", "21"]);
                         DisableChipButtons();
                         AddAllShade();
-                        GameState = UIRouletteEODStates.Dragging;
+                        GameUIState = UIRouletteEODStates.Dragging;
                         break;
                     }
                 case UIRouletteEODStates.Spinning: // Spinning State
@@ -958,7 +990,7 @@ namespace FSO.Client.UI.Panels.EODs
                         RemoveAllShade();
                         RoundTimeRemaining = 0;
                         SetTime(RoundTimeRemaining);
-                        GameState = UIRouletteEODStates.Spinning;
+                        GameUIState = UIRouletteEODStates.Spinning;
                         labelNumber.Visible = false;
                         RouletteBall.Visible = false;
                         break;
@@ -966,7 +998,7 @@ namespace FSO.Client.UI.Panels.EODs
                 case UIRouletteEODStates.Results:
                     {
                         SetTip(ResultsString);
-                        GameState = UIRouletteEODStates.Results;
+                        GameUIState = UIRouletteEODStates.Results;
                         WheelSpinElapsedCounter = 0;
                         labelNumber.Visible = true;
                         RouletteBall.Visible = true;
@@ -1122,7 +1154,7 @@ namespace FSO.Client.UI.Panels.EODs
             // check the game timer to determine what state to set the EOD
             if (RoundTimeRemaining == 0)
             {
-                if (!GameState.Equals(UIRouletteEODStates.Spinning) && !GameState.Equals(UIRouletteEODStates.Results))
+                if (!GameUIState.Equals(UIRouletteEODStates.Spinning) && !GameUIState.Equals(UIRouletteEODStates.Results))
                     GotoState(UIRouletteEODStates.Spinning);
             }
             else
@@ -1790,8 +1822,8 @@ namespace FSO.Client.UI.Panels.EODs
             }
             else
             {
-                // massive error
-                result = new Vector2(100, 100);
+                // massive error, put it on 0 for fail safe.
+                result = new Vector2(1, 35);
             }
             return result + new Vector2(RouletteTable.X, RouletteTable.Y); // add the offset for the roulette table
         }
@@ -2046,7 +2078,7 @@ namespace FSO.Client.UI.Panels.EODs
         // Don't allow the player to click a bet button if they can't afford the bet amount, or doing so would be over the table Max limit
         private void EnableChipButtons()
         {
-            if (GameState.Equals(UIRouletteEODStates.Idle)) // only in betting phase
+            if (GameUIState.Equals(UIRouletteEODStates.Idle)) // only in betting phase
             {
                 btnChip1.Visible = true;
                 btnChip2.Visible = true;
@@ -2101,7 +2133,7 @@ namespace FSO.Client.UI.Panels.EODs
             DisableChipButtons();
 
             // setting the state to managing will avoid the updates the EOD timer or unwanted state changes
-            GameState = UIRouletteEODStates.Managing;
+            GameUIState = UIRouletteEODStates.GameOver;
         }
     }
     /*
@@ -2351,6 +2383,7 @@ namespace FSO.Client.UI.Panels.EODs
             Dragging = 2,
             Results = 3,
             Initializing = 4,
-            Managing = 5
+            Managing = 5,
+            GameOver = 6
     }
 }

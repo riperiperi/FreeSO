@@ -110,17 +110,14 @@ namespace FSO.Common.Rendering.Framework
         {
             var map = GenMap();
 
-            if (!FSOEnvironment.DirectX)
+            foreach (var item in map)
             {
-                foreach (var item in map)
-                {
-                    var curPath = "UIGraphics/Shared/cursors/" + item.Value;
-                    if (!ts1) curPath = curPath.ToLowerInvariant();
-                    m_CursorMap.Add(item.Key,
-                        LoadCustomCursor(
-                            Path.Combine(basepath, curPath)
-                        ));
-                }
+                var curPath = "UIGraphics/Shared/cursors/" + item.Value;
+                if (!ts1) curPath = curPath.ToLowerInvariant();
+                m_CursorMap.Add(item.Key,
+                    LoadCustomCursor(
+                        Path.Combine(basepath, curPath)
+                    ));
             }
             
             m_CursorMap.Add(CursorType.IBeam, MouseCursor.IBeam);

@@ -33,27 +33,45 @@ namespace FSO.SimAntics.NetPlay
         public event VMNetClosedHandler OnShutdown;
         public delegate void VMNetClosedHandler(VMCloseNetReason reason);
 
-        private int DesyncCooldown = 0;
+        public uint DesyncTick = 0;
+        private int DesyncCooldown = 30;
         public uint LastTick = 0;
+        public uint GreatestTick = 0;
+        public uint CurrentTick = 0;
+        public bool InResync
+        {
+            get
+            {
+                //if the current tick is less than our greatest tick
+                //then the client has already seen this tick.
+                return GreatestTick > CurrentTick;
+            }
+        }
+
+        public bool AsyncBreak; //if 
 
         protected void InternalTick(VM vm, VMNetTick tick)
         {
+            CurrentTick = tick.TickID;
+            if (CurrentTick > GreatestTick) GreatestTick = CurrentTick;
             if (!tick.ImmediateMode && (tick.Commands.Count == 0 || !(tick.Commands[0].Command is VMStateSyncCmd)) && vm.Context.RandomSeed != tick.RandomSeed)
             {
                 if (DesyncCooldown == 0)
                 {
                     System.Console.WriteLine("DESYNC - Requested state from host");
+                    if (DesyncTick == 0) DesyncTick = CurrentTick - 1;
                     vm.SendCommand(new VMRequestResyncCmd());
                     DesyncCooldown = 30 * 30;
-                } else
+                }
+                else
                 {
-                    System.Console.WriteLine("WARN - DESYNC - Too soon to try again!");
+                    System.Console.WriteLine("WARN - DESYNC - Expected " + tick.RandomSeed + ", was at " + vm.Context.RandomSeed);
                 }
             }
 
             if (RecordStream != null) RecordTick(tick);
-
             vm.Context.RandomSeed = tick.RandomSeed;
+            AsyncBreak = false;
             bool doTick = !tick.ImmediateMode;
             foreach(var cmd in tick.Commands)
             {
@@ -68,14 +86,19 @@ namespace FSO.SimAntics.NetPlay
                 Executing = cmd;
                 cmd.Command.Execute(vm, caller);
                 Executing = null;
+                if (vm.FSOVAsyncLoading)
+                {
+                    tick.Commands.Remove(cmd); //don't worry about modifying an enumerated collection - we are exiting anyways.
+                    AsyncBreak = true;
+                    return;
+                }
             }
+
             if (tick.TickID < LastTick) System.Console.WriteLine("Tick wrong! Got " + tick.TickID + ", Missed " + ((int)tick.TickID - (LastTick + 1)));
             else if (doTick && vm.Context.Ready)
             {
                 if (tick.TickID > LastTick + 1) System.Console.WriteLine("Tick wrong! Got " + tick.TickID + ", Missed " + ((int)tick.TickID - (LastTick + 1)));
-#if VM_DESYNC_DEBUG
-                vm.Trace.NewTick(tick.TickID);
-#endif
+                vm.Trace?.NewTick(tick.TickID);
                 vm.InternalTick(tick.TickID);
                 if (DesyncCooldown > 0) DesyncCooldown--;
             }

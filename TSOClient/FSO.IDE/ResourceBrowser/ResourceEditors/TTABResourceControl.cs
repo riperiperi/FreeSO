@@ -135,6 +135,8 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                 Strings.ChunkLabel = chunk.ChunkLabel;
                 Strings.ChunkID = chunk.ChunkID;
                 Strings.ChunkProcessed = true;
+                Strings.ChunkType = "TTAs";
+                Strings.AddedByPatch = true;
                 res.MainIff.AddChunk(Strings);
             }
 

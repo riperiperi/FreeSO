@@ -32,6 +32,7 @@ namespace FSO.Server.DataService.Providers
             { LotCategory.entertainment, 1 },
             { LotCategory.services, 1 },
             { LotCategory.romance, 1 },
+            { LotCategory.welcome, 1 },
         };
 
         private Dictionary<string, Lot> LotsByName = new Dictionary<string, Lot>();
@@ -119,6 +120,7 @@ namespace FSO.Server.DataService.Providers
         {
             var location = MapCoordinates.Unpack(lot.location);
 
+            /* **experimental** we're leaving this up to ASP.NET api for now (behind cloudflare)
             //attempt to load the lot's thumbnail.
             var path = Path.Combine(NFS.GetBaseDirectory(), "Lots/" + lot.lot_id.ToString("x8") + "/thumb.png");
             cTSOGenericData thumb = null;
@@ -135,6 +137,7 @@ namespace FSO.Server.DataService.Providers
             catch (Exception) {
                 thumb = new cTSOGenericData(new byte[0]);
             }
+            */
 
             var result = new Lot
             {
@@ -154,7 +157,7 @@ namespace FSO.Server.DataService.Providers
                 Lot_SkillGamemode = lot.skill_mode,
                 Lot_LastCatChange = lot.category_change_date,
                 Lot_Description = lot.description,
-                Lot_Thumbnail = thumb
+                Lot_Thumbnail = new cTSOGenericData(new byte[0]),
             };
 
             foreach (var roomie in roommates)
@@ -212,10 +215,16 @@ namespace FSO.Server.DataService.Providers
                     var imgpath = Path.Combine(NFS.GetBaseDirectory(), "Lots/" + lot.DbId.ToString("x8") + "/thumb.png");
                     var data = (cTSOGenericData)value;
 
+                    using (var db = DAFactory.Get())
+                    {
+                        db.Lots.SetDirty(lot.DbId, 1);
+                    }
+
                     using (FileStream fs = File.Open(imgpath, FileMode.Create, FileAccess.Write, FileShare.None))
                     {
                         fs.Write(data.Data, 0, data.Data.Length);
                     }
+                    lot.Lot_Thumbnail = new cTSOGenericData(new byte[0]);
                     break;
                 case "Lot_Category":
                     uint minSkill;
@@ -229,7 +238,7 @@ namespace FSO.Server.DataService.Providers
                 case "Lot_SkillGamemode":
                     using (var db = DAFactory.Get())
                     {
-                        db.Lots.UpdateLotCategory(lot.DbId, (LotCategory)(lot.Lot_Category), lot.Lot_SkillGamemode);
+                        db.Lots.UpdateLotSkillMode(lot.DbId, lot.Lot_SkillGamemode);
                     }
                     break;
                 case "Lot_IsOnline":

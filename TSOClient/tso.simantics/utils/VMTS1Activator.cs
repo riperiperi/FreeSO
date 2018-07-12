@@ -77,6 +77,7 @@ namespace FSO.SimAntics.Utils
             if (VM.UseWorld) this.Blueprint = new Blueprint(size, size);
             VM.Entities = new List<VMEntity>();
             VM.Scheduler = new Engine.VMScheduler(VM);
+            VM.TS1State.SimulationInfo = simi;
             VM.Context = new VMContext(VM.Context.World);
             VM.Context.VM = VM;
             VM.Context.Blueprint = Blueprint;
@@ -92,9 +93,12 @@ namespace FSO.SimAntics.Utils
 
             VM.SetGlobalValue(10, HouseNumber); //set house number
             VM.SetGlobalValue(32, 0); //simless build mode
-            VM.Context.Clock.Hours = VM.GetGlobalValue(0);
-            VM.Context.Clock.Minutes = VM.GetGlobalValue(5);
-            VM.Context.Clock.MinuteFractions = (VM.GetGlobalValue(6) * VM.Context.Clock.TicksPerMinute);
+            VM.Context.Clock.Hours = VM.GlobalState[0];
+            VM.Context.Clock.DayOfMonth = VM.GlobalState[1];
+            VM.Context.Clock.Minutes = VM.GlobalState[5];
+            VM.Context.Clock.MinuteFractions = (VM.GlobalState[6] * VM.Context.Clock.TicksPerMinute);
+            VM.Context.Clock.Month = VM.GlobalState[7];
+            VM.Context.Clock.Year = VM.GlobalState[8];
 
             TerrainType ttype = TerrainType.GRASS;
             if (!HouseNumToType.TryGetValue(HouseNumber, out ttype))

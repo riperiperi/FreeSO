@@ -57,6 +57,15 @@ namespace FSODroid.Resources.Layout
             var url = "http://" + IPText.Text + "/The%20Sims%20Online.zip";
             var dest = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), "The Sims Online.zip");
 
+            if (File.Exists(dest))
+            {
+                var str = File.Open(dest, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                if (str.Length < 1024*1024*500)
+                {
+                    ReDownload = true;
+                }
+                str.Close();
+            } else ReDownload = true;
             if (ReDownload || !File.Exists(dest))
             {
                 DownloadClient = new WebClient();

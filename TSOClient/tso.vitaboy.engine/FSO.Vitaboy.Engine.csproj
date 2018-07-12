@@ -125,6 +125,10 @@
       <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
       <Name>FSO.Content</Name>
     </ProjectReference>
+    <ProjectReference Include="..\tso.files\FSO.Files.csproj">
+      <Project>{18583453-a970-4ac5-83b1-2d6bfdf94c24}</Project>
+      <Name>FSO.Files</Name>
+    </ProjectReference>
     <ProjectReference Include="..\tso.vitaboy.model\FSO.Vitaboy.csproj">
       <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
       <Name>FSO.Vitaboy</Name>

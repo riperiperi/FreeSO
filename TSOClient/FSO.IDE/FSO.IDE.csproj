@@ -36,7 +36,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -235,6 +235,7 @@
     <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\DialogDescriptors.cs" />
     <Compile Include="EditorComponent\Primitives\GenericTSOCallDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\TS1InventoryOperationsDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\InvokePluginDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\PushInteractionDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\RunTreeByNameDescriptor.cs" />
@@ -611,6 +612,10 @@
     <ProjectReference Include="..\FSO.UI\FSO.UI.csproj">
       <Project>{73e2ad5b-720b-4ef3-9b7c-55931d0ec693}</Project>
       <Name>FSO.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Windows\FSO.Windows.csproj">
+      <Project>{39201960-f96f-4039-84b1-1331d5dde3c2}</Project>
+      <Name>FSO.Windows</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.client\FSO.Client.csproj">
       <Project>{635e68fa-3905-4943-b4f5-d463a8c02e87}</Project>

@@ -37,7 +37,7 @@ namespace FSO.Client.UI.Model
         public static readonly string Remove = "ui_remove"; //idk; i think moneyback is used for buy mode
 
         public static readonly string CreateCharacterCycleBody = "ui_cac_cycleparts";
-        public static readonly string CreateCharacterPersonality = " ui_cac_personpts"; //unused in tso?
+        public static readonly string CreateCharacterPersonality = "ui_cac_personpts"; //unused in tso?
         public static readonly string CreateCharacterCycleHead = "ui_cac_cyclehead"; //actually caps in the file; but our system makes all names lowercase anyways.
 
         public static readonly string ObjectMoneyBack = "ui_object_moneyback";

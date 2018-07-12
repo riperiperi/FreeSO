@@ -65,7 +65,8 @@ namespace FSO.Server.Api.Controllers
                 {
                     FSOBranch = shardOne.VersionName,
                     FSOVersion = shardOne.VersionNumber,
-                    FSOUpdateUrl = api.Config.UpdateUrl
+                    FSOUpdateUrl = api.Config.UpdateUrl,
+                    FSOCDNUrl = api.Config.CDNUrl
                 });
 
                 var cookie = new CookieHeaderValue("fso", token.Token);

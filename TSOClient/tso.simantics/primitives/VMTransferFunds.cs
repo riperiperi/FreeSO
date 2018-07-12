@@ -102,6 +102,7 @@ namespace FSO.SimAntics.Primitives
             switch (operand.TransferType)
             {
                 case VMTransferFundsType.MeToMaxis:
+                case VMTransferFundsType.DEPRICATED_ADD:
                     source = context.Caller.PersistID; break;
                 case VMTransferFundsType.MaxisToMe:
                     target = context.Caller.PersistID; break;
@@ -174,11 +175,20 @@ namespace FSO.SimAntics.Primitives
                 {
                     //might have to zero out the money earned
                     var destObj = context.VM.GetAvatarByPersist(target);
-                    if (destObj != null && destObj.SkillGameplayDisabled(context.VM))
+                    var skillGameplay = destObj?.SkillGameplayMul(context.VM) ?? 1;
+                    if (skillGameplay == 0)
                     {
                         context.Thread.TempXL[0] = 0;
                         context.Thread.BlockingState = null;
                         return VMPrimitiveExitCode.GOTO_TRUE;
+                    } else
+                    {
+                        amount *= skillGameplay;
+                        //HACK: this is the best hack ever. You read me? the best.
+                        //For single money objects, overwrite temp 0 with our modified payout value.
+                        //this is where the calculated payout is. It's read again from here later to show the money amount over head.
+                        //Useful for skill disable and double (on welcome lots)
+                        context.Thread.TempRegisters[0] = (short)amount;
                     }
                 }
 
@@ -207,9 +217,9 @@ namespace FSO.SimAntics.Primitives
 
     public class VMTransferFundsOperand : VMPrimitiveOperand
     {
-        public VMTransferFundsOldOwner OldAmountOwner;
-        public VMVariableScope AmountOwner;
-        public ushort AmountData;
+        public VMTransferFundsOldOwner OldAmountOwner { get; set; }
+        public VMVariableScope AmountOwner { get; set; }
+        public ushort AmountData { get; set; }
         public VMTransferFundsFlags Flags;
         public VMTransferFundsExpenseType ExpenseType { get; set; }
         public VMTransferFundsType TransferType { get; set; }
@@ -226,6 +236,20 @@ namespace FSO.SimAntics.Primitives
                 else Flags &= ~VMTransferFundsFlags.JustTest;
             }
         }
+
+        public bool Subtract
+        {
+            get
+            {
+                return (Flags & VMTransferFundsFlags.Subtract) > 0;
+            }
+            set
+            {
+                if (value) Flags |= VMTransferFundsFlags.Subtract;
+                else Flags &= ~VMTransferFundsFlags.Subtract;
+            }
+        }
+
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -245,7 +269,9 @@ namespace FSO.SimAntics.Primitives
             {
                 io.Write((byte)OldAmountOwner);
                 io.Write((byte)AmountOwner);
-                io.Write((uint)Flags);
+                io.Write((ushort)AmountData);
+                io.Write((byte)Flags);
+                io.Write((byte)0);
                 io.Write((byte)ExpenseType);
                 io.Write((byte)TransferType);
             }

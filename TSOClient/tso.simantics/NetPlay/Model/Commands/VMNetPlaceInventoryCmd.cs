@@ -140,7 +140,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 if (index != -1) vm.MyInventory.RemoveAt(index);
             }
 
-            vm.SignalChatEvent(new VMChatEvent(caller.PersistID, VMChatEventType.Arch,
+            vm.SignalChatEvent(new VMChatEvent(caller, VMChatEventType.Arch,
                 caller.Name,
                 vm.GetUserIP(caller.PersistID),
                 "placed (from inventory) " + CreatedGroup.BaseObject.ToString() + " at (" + x / 16f + ", " + y / 16f + ", " + level + ")"
@@ -159,7 +159,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             if (Verified) return true; //set internally when transaction succeeds. trust that the verification happened.
             if (caller == null || //caller must be on lot, be a roommate.
-                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate ||
+                caller.AvatarState.Permissions < VMTSOAvatarPermissions.Roommate ||
                 !vm.TSOState.CanPlaceNewUserObject(vm))
                 return false;
 

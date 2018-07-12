@@ -117,5 +117,14 @@ namespace FSO.LotView.RC
                 i++;
             }
         }
+
+        public override void Preload(WorldState world)
+        {
+            if (_Dirty)
+            {
+                Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
+                _Dirty = false;
+            }
+        }
     }
 }

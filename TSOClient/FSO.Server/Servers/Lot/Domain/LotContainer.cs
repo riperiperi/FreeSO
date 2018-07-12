@@ -12,6 +12,7 @@ using FSO.Server.Database.DA.LotVisitors;
 using FSO.Server.Database.DA.Objects;
 using FSO.Server.Database.DA.Relationships;
 using FSO.Server.Database.DA.Roommates;
+using FSO.Server.Database.DA.Users;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
@@ -122,7 +123,7 @@ namespace FSO.Server.Servers.Lot.Domain
             0xA4E8B034
         };
 
-        private static HashSet<uint> NoResetGUIDs = new HashSet<uint>()
+        private static HashSet<uint> PetCrateGUIDs = new HashSet<uint>()
         {
             0x3278BD34,
             0x5157DDF2
@@ -605,6 +606,7 @@ namespace FSO.Server.Servers.Lot.Domain
             }
 
             Lot = new VM(new VMContext(null), VMDriver, new VMNullHeadlineProvider());
+            Lot.OnChatEvent += Lot_OnChatEvent;
             Lot.Init();
 
             bool isNew = false;
@@ -672,9 +674,19 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.TransactionIncomplete;
                     ((VMGameObject)ent).DisableIfTSOCategoryWrong(Lot.Context);
+                    if (PetCrateGUIDs.Contains(ent.Object.OBJ.GUID) && ent.GetAttribute(1) == 0)
+                    {
+                        //if this pet isn't out, but their crate is out of world, place it near the mailbox.
+                        if (ent.Position == LotTilePos.OUT_OF_WORLD)
+                        {
+                            //put it close to the mailbox
+                            var mailbox = Lot.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
+                            if (mailbox != null) SimAntics.Primitives.VMFindLocationFor.FindLocationFor(ent, mailbox, Lot.Context, VMPlaceRequestFlags.UserPlacement);
+                        }
+                    }
                     if (ent.GetFlag(VMEntityFlags.Occupied))
                     {
-                        if (NoResetGUIDs.Contains(ent.Object.OBJ.GUID))
+                        if (PetCrateGUIDs.Contains(ent.Object.OBJ.GUID))
                         {
                             //typically pet crates or other things which should never have state deleted.
                             ent.SetFlag(VMEntityFlags.Occupied, false);
@@ -684,7 +696,7 @@ namespace FSO.Server.Servers.Lot.Domain
                                 var mailbox = Lot.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
                                 if (mailbox != null) SimAntics.Primitives.VMFindLocationFor.FindLocationFor(ent, mailbox, Lot.Context, VMPlaceRequestFlags.UserPlacement);
                             }
-                            ent.ExecuteEntryPoint(2, Lot.Context, true);
+                            //ent.ExecuteEntryPoint(2, Lot.Context, true);
                         }
                         else
                         {
@@ -710,6 +722,14 @@ namespace FSO.Server.Servers.Lot.Domain
                     State = Lot.Save(),
                     Run = false,
                 });
+            }
+        }
+
+        private void Lot_OnChatEvent(VMChatEvent evt)
+        {
+            if (evt.Type == VMChatEventType.Debug)
+            {
+                LOG.Info("LOT " + Context.DbId + ": " + evt.Text[0]);
             }
         }
 
@@ -971,10 +991,11 @@ namespace FSO.Server.Servers.Lot.Domain
                 var inventory = da.Objects.GetAvatarInventory(session.AvatarId);
                 var myRoomieLots = da.Roommates.GetAvatarsLots(session.AvatarId); //might want to use other entries to update the roomies table entirely.
                 var myIgnored = da.Bookmarks.GetAvatarIgnore(session.AvatarId);
+                var user = da.Users.GetById(avatar.user_id);
                 LOG.Info("Avatar " + avatar.name + " ("+session.AvatarId+") has joined lot "+Context.DbId);
 
                 //Load all the avatars data
-                var state = StateFromDB(avatar, rels, jobinfo, myRoomieLots, myIgnored);
+                var state = StateFromDB(avatar, user, rels, jobinfo, myRoomieLots, myIgnored);
 
                 var client = new VMNetClient();
                 client.AvatarState = state;
@@ -1101,7 +1122,7 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
-        private VMNetAvatarPersistState StateFromDB(DbAvatar avatar, List<DbRelationship> rels, List<DbJobLevel> jobs, List<DbRoommate> myRoomieLots, List<uint> ignored)
+        private VMNetAvatarPersistState StateFromDB(DbAvatar avatar, User user, List<DbRelationship> rels, List<DbJobLevel> jobs, List<DbRoommate> myRoomieLots, List<uint> ignored)
         {
             var state = new VMNetAvatarPersistState();
             state.Name = avatar.name;
@@ -1117,6 +1138,7 @@ namespace FSO.Server.Servers.Lot.Domain
             state.SkinTone = avatar.skin_tone;
 
             var now = Epoch.Now;
+            var rage = (uint)((now - user.register_date) / ((long)60 * 60 * 24));
             var age = (uint)((now - avatar.date) / ((long)60 * 60 * 24));
 
             state.SkillLock = (short)(20 + age / 7);
@@ -1156,6 +1178,10 @@ namespace FSO.Server.Servers.Lot.Domain
 
             if (myRoomieLots.Count == 0)
                 state.AvatarFlags |= VMTSOAvatarFlags.CanBeRoommate; //we're not roommate anywhere, so we can be here.
+
+            if (rage < 7)
+                state.AvatarFlags |= VMTSOAvatarFlags.NewPlayer;
+
             var roomieStatus = myRoomieLots.FindAll(x => x.lot_id == Context.DbId).FirstOrDefault();
             if (roomieStatus != null && roomieStatus.is_pending == 0)
             {

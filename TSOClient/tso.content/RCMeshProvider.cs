@@ -19,14 +19,31 @@ namespace FSO.Content
     public class RCMeshProvider
     {
         public GraphicsDevice GD;
+        public HashSet<string> CacheFiles;
+        public HashSet<string> ReplaceFiles;
+
         public RCMeshProvider(GraphicsDevice gd)
         {
             GD = gd;
             DGRP3DGeometry.ReplTextureProvider = GetTex;
+
+            var repldir = Path.Combine(FSOEnvironment.ContentDir, "MeshReplace/");
+            var dir = Path.Combine(FSOEnvironment.UserDir, "MeshCache/");
+            try
+            {
+                Directory.CreateDirectory(dir);
+                Directory.CreateDirectory(repldir);
+            } catch
+            {
+
+            }
+            CacheFiles = new HashSet<string>(Directory.GetFiles(dir).Select(x => Path.GetFileName(x).ToLowerInvariant()));
+            ReplaceFiles = new HashSet<string>(Directory.GetFiles(repldir).Select(x => Path.GetFileName(x).ToLowerInvariant()));
         }
         public Dictionary<DGRP, DGRP3DMesh> Cache = new Dictionary<DGRP, DGRP3DMesh>();
         public HashSet<DGRP> IgnoreRCCache = new HashSet<DGRP>();
         public Dictionary<string, Texture2D> ReplacementTex = new Dictionary<string, Texture2D>();
+        public Dictionary<string, DGRP3DMesh> NameCache = new Dictionary<string, DGRP3DMesh>();
 
         public DGRP3DMesh Get(DGRP dgrp, OBJD obj)
         {
@@ -36,17 +53,20 @@ namespace FSO.Content
             if (!Cache.TryGetValue(dgrp, out result))
             {
                 //does it exist in replacements
-                var name = obj.ChunkParent.Filename.Replace('.', '_') + "_" + dgrp.ChunkID + ".fsom";
-                try
+                var name = obj.ChunkParent.Filename.Replace('.', '_').ToLowerInvariant() + "_" + dgrp.ChunkID + ".fsom";
+                if (ReplaceFiles.Contains(name))
                 {
-                    using (var file = File.OpenRead(Path.Combine(repldir, name)))
+                    try
                     {
-                        result = new DGRP3DMesh(dgrp, file, GD);
+                        using (var file = File.OpenRead(Path.Combine(repldir, name)))
+                        {
+                            result = new DGRP3DMesh(dgrp, file, GD);
+                        }
                     }
-                }
-                catch (Exception)
-                {
-                    result = null;
+                    catch (Exception)
+                    {
+                        result = null;
+                    }
                 }
 
                 if (result == null)
@@ -62,25 +82,58 @@ namespace FSO.Content
                     }
                 }
 
-                if (result == null && !IgnoreRCCache.Contains(dgrp))
+                if (CacheFiles.Contains(name))
                 {
-                    //does it exist in rc cache
-                    try
+                    if (result == null && !IgnoreRCCache.Contains(dgrp))
                     {
-                        using (var file = File.OpenRead(Path.Combine(dir, name)))
+                        //does it exist in rc cache
+                        try
                         {
-                            result = new DGRP3DMesh(dgrp, file, GD);
+                            using (var file = File.OpenRead(Path.Combine(dir, name)))
+                            {
+                                result = new DGRP3DMesh(dgrp, file, GD);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            result = null;
                         }
                     }
-                    catch (Exception)
-                    {
-                        result = null;
-                    }
+                } else
+                {
+
                 }
 
                 //create it anew
-                if (result == null) result = new DGRP3DMesh(dgrp, obj, GD, dir);
+                if (result == null)
+                {
+                    result = new DGRP3DMesh(dgrp, obj, GD, dir);
+                    CacheFiles.Add(name);
+                }
                 Cache[dgrp] = result;
+            }
+            return result;
+        }
+
+        public DGRP3DMesh Get(string name)
+        {
+            DGRP3DMesh result = null;
+            var repldir = Path.Combine(FSOEnvironment.ContentDir, "3D/");
+            if (!NameCache.TryGetValue(name, out result))
+            {
+                //does it exist in replacements
+                try
+                {
+                    using (var file = File.OpenRead(Path.Combine(repldir, name)))
+                    {
+                        result = new DGRP3DMesh(null, file, GD);
+                    }
+                }
+                catch (Exception)
+                {
+                    result = null;
+                }
+                NameCache[name] = result;
             }
             return result;
         }
@@ -96,8 +149,9 @@ namespace FSO.Content
         {
             //todo: dispose old?
 
-            var name = dgrp.ChunkParent.Filename.Replace('.', '_') + "_" + dgrp.ChunkID + ".fsom";
+            var name = dgrp.ChunkParent.Filename.Replace('.', '_').ToLowerInvariant() + "_" + dgrp.ChunkID + ".fsom";
             var repldir = Path.Combine(FSOEnvironment.ContentDir, "MeshReplace/");
+            ReplaceFiles.Add(name);
             mesh.SaveDirectory = repldir;
             mesh.Save();
 
@@ -109,8 +163,14 @@ namespace FSO.Content
             Texture2D result = null;
             if (!ReplacementTex.TryGetValue(name, out result))
             {
+                string dir;
+                if (name.StartsWith("FSO_"))
+                {
+                    dir = Path.Combine(FSOEnvironment.ContentDir, "3D/");
+                    name = name.Substring(4);
+                }
+                else dir = Path.Combine(FSOEnvironment.ContentDir, "MeshReplace/");
                 //load from meshreplace folder
-                var dir = Path.Combine(FSOEnvironment.ContentDir, "MeshReplace/");
                 try
                 {
                     using (var file = File.OpenRead(Path.Combine(dir, name)))

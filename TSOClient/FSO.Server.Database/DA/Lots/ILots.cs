@@ -20,6 +20,8 @@ namespace FSO.Server.Database.DA.Lots
         bool Delete(int id);
 
         void RenameLot(int id, string newName);
+        void SetDirty(int id, byte dirty);
+        DbLot Get3DWork();
 
         List<DbLot> SearchExact(int shard_id, string name, int limit);
         List<DbLot> SearchWildcard(int shard_id, string name, int limit);
@@ -27,6 +29,7 @@ namespace FSO.Server.Database.DA.Lots
         void UpdateRingBackup(int lot_id, sbyte ring_backup_num);
         void UpdateDescription(int lot_id, string description);
         void UpdateLotCategory(int lot_id, LotCategory category, uint skillMode);
+        void UpdateLotSkillMode(int lot_id, uint skillMode);
         void UpdateLotAdmitMode(int lot_id, byte admit_mode);
         bool UpdateLocation(int lot_id, uint location, bool startFresh);
         void UpdateOwner(int lot_id, uint? avatar_id);

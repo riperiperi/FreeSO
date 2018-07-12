@@ -137,6 +137,19 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 ExecutedAnything = true;
                 var tick = TickBuffer.Dequeue();
                 InternalTick(vm, tick);
+                if (vm.FSOVAsyncLoading)
+                {
+                    //we ran the load async, but not anything else
+
+                    //right now we assume the sync tick is by itself, and sets "runTick" to false anyways
+                    //so it does not need to be requeued
+                    /* requeue code
+                    var temp = new List<VMNetTick>(TickBuffer);
+                    temp.Insert(0, tick);
+                    TickBuffer = new Queue<VMNetTick>(temp);
+                    */
+                    return false;
+                }
                 if (timer.ElapsedMilliseconds > 66)
                 {
                     timer.Stop();
@@ -197,7 +210,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     {
                         cmd.Deserialize(reader);
                     }
-                    cmd.Command.Execute(VMHook);
+                    cmd.Command.Execute(VMHook, VMHook.GetAvatarByPersist(cmd.Command.ActorUID));
                 }
                 catch (Exception e)
                 {

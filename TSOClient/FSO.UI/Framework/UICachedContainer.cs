@@ -20,6 +20,7 @@ namespace FSO.Client.UI.Framework
         public Color ClearColor = Color.TransparentBlack;
         public bool UseMip;
         public bool UseZ;
+        public bool InternalBefore;
 
         public UICachedContainer()
         {
@@ -59,7 +60,7 @@ namespace FSO.Client.UI.Framework
                     }
                 }
 
-                batch.End();
+                try { batch.End(); } catch { }
                 gd.SetRenderTarget(Target);
                 gd.Clear(ClearColor);
                 var pos = LocalPoint(0, 0);
@@ -70,6 +71,7 @@ namespace FSO.Client.UI.Framework
                     Microsoft.Xna.Framework.Matrix.CreateTranslation(BackOffset.X, BackOffset.Y, 0)
                     , blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
                 batch.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+                if (InternalBefore) InternalDraw(batch);
                 lock (Children)
                 {
                     foreach (var child in Children)
@@ -78,7 +80,7 @@ namespace FSO.Client.UI.Framework
                         child.Draw(batch);
                     }
                 }
-                InternalDraw(batch);
+                if (!InternalBefore) InternalDraw(batch);
                 batch.End();
                 gd.SetRenderTarget(null);
                 Invalidated = false;

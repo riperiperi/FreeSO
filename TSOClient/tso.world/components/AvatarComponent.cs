@@ -24,7 +24,7 @@ namespace FSO.LotView.Components
         public Avatar Avatar;
         public bool IsPet;
         public float Scale = 1;
-        public int Level = 0;
+        public int ALevel = 0;
 
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -93,7 +93,7 @@ namespace FSO.LotView.Components
             set
             {
                 _Position = value;
-                Level = (int)(value.Z / 2.94f);
+                ALevel = (int)(value.Z / 2.94f);
                 if (blueprint != null) AltitudeOff = new Vector3(0, 0, blueprint.InterpAltitude(_Position));
                 OnPositionChanged();
                 _WorldDirty = true;
@@ -152,32 +152,10 @@ namespace FSO.LotView.Components
             return result.OrderBy(x => x.Item1).Select(x => x.Item2).Take(4).ToList();
         }
 
-        public void DrawHeadline3D(GraphicsDevice device, WorldState world)
+        public override Vector3 GetHeadlinePos()
         {
-            if (Headline == null || Headline.IsDisposed) return;
-            var gd = world.Device;
-            var effect = WorldContent.GetBE(gd);
-
-            effect.TextureEnabled = true;
-            effect.VertexColorEnabled = false;
-
-            Vector3 scale;
-            Quaternion rotation;
-            Vector3 translation;
-            world.Camera.View.Decompose(out scale, out rotation, out translation);
             var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition / 3.0f;
-            var tHead1 = Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI)));
-            var newWorld = Matrix.CreateScale(Headline.Width / 64f, Headline.Height / -64f, 1) * Matrix.Invert(Matrix.CreateFromQuaternion(rotation)) * Matrix.CreateTranslation(new Vector3(tHead1.X * 3, 1.6f + tHead1.Z * 3, tHead1.Y * 3)) * this.World;
-
-            effect.DiffuseColor = Color.White.ToVector3();
-            effect.World = newWorld;
-            effect.Texture = Headline;
-            effect.View = world.Camera.View;
-            effect.Projection = world.Camera.Projection;
-            effect.CurrentTechnique.Passes[0].Apply();
-
-            gd.SetVertexBuffer(WorldContent.GetTextureVerts(gd));
-            gd.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+            return Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI)));
         }
 
         public override void Draw(GraphicsDevice device, WorldState world)
@@ -199,7 +177,7 @@ namespace FSO.LotView.Components
                 Avatar.LightPositions = (WorldConfig.Current.AdvancedLighting)?CloseLightPositions(Position):null;
                 var newWorld = Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World;
                 if (Scale != 1f) newWorld = Matrix.CreateScale(Scale) * newWorld;
-                world._3D.DrawMesh(newWorld, Avatar, (short)ObjectID, (Room>65532 || Room == 0)?Room:blueprint.Rooms[Room].Base, col, Level); 
+                world._3D.DrawMesh(newWorld, Avatar, (short)ObjectID, (Room>65530 || Room == 0)?Room:blueprint.Rooms[Room].Base, col, ALevel); 
             }
 
             if (Headline != null && !Headline.IsDisposed)
@@ -227,6 +205,11 @@ namespace FSO.LotView.Components
                     world._2D.Draw(item);
                 }
             }
+        }
+
+        public override void Preload(GraphicsDevice device, WorldState world)
+        {
+            //nothing important to do here
         }
     }
 }

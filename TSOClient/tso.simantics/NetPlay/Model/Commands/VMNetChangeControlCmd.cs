@@ -35,6 +35,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             vm.Context.ObjectQueries.RegisterAvatarPersist((VMAvatar)target, target.PersistID);
             vm.SetGlobalValue(3, target.ObjectID);
 
+            if (VM.UseWorld)
+            {
+                vm.Context.World.CenterTo(target.WorldUI);
+            }
+
             return true;
         }
 

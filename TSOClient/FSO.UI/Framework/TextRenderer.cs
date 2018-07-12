@@ -11,6 +11,7 @@ using System.Text;
 using FSO.Client.UI.Controls;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using FSO.Common.Utils;
 
 namespace FSO.Client.UI.Framework
 {
@@ -42,6 +43,13 @@ namespace FSO.Client.UI.Framework
             var spaceWidth = TextStyle.MeasureString(" ").X;
 
             text = text.Replace("\r", "");
+            var bbCommands = new List<BBCodeCommand>();
+            if (options.BBCode)
+            {
+                var parsed = new BBCodeParser(text);
+                text = parsed.Stripped;
+                bbCommands = parsed.Commands;
+            }
             var words = text.Split(' ').ToList();
             var newWordsArray = TextRenderer.ExtractLineBreaks(words);
 
@@ -58,20 +66,93 @@ namespace FSO.Client.UI.Framework
             var yPosition = topLeft.Y;
             var numLinesAdded = 0;
             var realMaxWidth = 0;
+
+            var bbIndex = 0;
+            var bbColorStack = new Stack<Color>();
+            var lastColor = TextStyle.Color;
+            var shadowApplied = false;
+
             for (var i = 0; i < m_Lines.Count; i++)
             {
                 var lineOffset = (i*m_LineHeight < options.TopLeftIconSpace.Y) ? options.TopLeftIconSpace.X : 0;
                 var line = m_Lines[i];
+                var segments = CalculateSegments(line, bbCommands, ref bbIndex);
+
                 var xPosition = topLeft.X+lineOffset;
 
-                if (line.LineWidth > realMaxWidth) realMaxWidth = (int)line.LineWidth;
+                segments.ForEach(x => x.Size = TextStyle.MeasureString(x.Text));
+                var thisLineWidth = segments.Sum(x => x.Size.X);
+
+                if (thisLineWidth > realMaxWidth) realMaxWidth = (int)thisLineWidth;
 
                 /** Alignment **/
                 if (options.Alignment == TextAlignment.Center)
                 {
-                    xPosition += (int)Math.Round(((options.MaxWidth-lineOffset) - line.LineWidth) / 2);
+                    xPosition += (int)Math.Round(((options.MaxWidth-lineOffset) - thisLineWidth) / 2);
                 }
 
+
+                foreach (var segment in segments)
+                {
+                    var segmentSize = segment.Size;
+                    var segmentPosition = target.LocalPoint(new Vector2(xPosition, yPosition));
+
+                    if (segment.Text.Length > 0)
+                    {
+                        drawCommands.Add(new TextDrawCmd_Text
+                        {
+                            Selected = segment.Selected,
+                            Text = segment.Text,
+                            Style = TextStyle,
+                            Position = segmentPosition,
+                            Scale = txtScale
+                        });
+                        xPosition += segmentSize.X;
+                    }
+
+                    if (segment.StartCommand != null)
+                    {
+                        var cmd = segment.StartCommand;
+                        switch (cmd.Type)
+                        {
+                            case BBCodeCommandType.color:
+                                if (cmd.Close)
+                                {
+                                    //pop a color off our stack
+                                    if (bbColorStack.Count > 0)
+                                    {
+                                        lastColor = bbColorStack.Pop();
+                                        drawCommands.Add(new TextDrawCmd_Color(TextStyle, lastColor));
+                                    }
+                                }
+                                else
+                                {
+                                    bbColorStack.Push(lastColor);
+                                    lastColor = cmd.ParseColor();
+                                    drawCommands.Add(new TextDrawCmd_Color(TextStyle, lastColor));
+                                }
+                                break;
+                            case BBCodeCommandType.s:
+                                if (cmd.Close)
+                                {
+                                    drawCommands.Add(new TextDrawCmd_Shadow(TextStyle, false));
+                                    shadowApplied = false;
+                                }
+                                else
+                                {
+                                    drawCommands.Add(new TextDrawCmd_Shadow(TextStyle, true));
+                                    shadowApplied = true;
+                                }
+                                break;
+                            case BBCodeCommandType.emoji:
+                                if (segment.BBCatchup) break;
+                                drawCommands.Add(new TextDrawCmd_Emoji(TextStyle, cmd.Parameter, target.LocalPoint(new Vector2(xPosition, yPosition)), _Scale));
+                                break;
+                        }
+                    }
+                }
+
+                /*
                 var segmentPosition = target.LocalPoint(new Vector2(xPosition, yPosition));
                 drawCommands.Add(new TextDrawCmd_Text
                 {
@@ -81,11 +162,20 @@ namespace FSO.Client.UI.Framework
                     Position = segmentPosition,
                     Scale = txtScale
                 });
-                numLinesAdded++;
+                */
 
+                numLinesAdded++;
 
                 yPosition += m_LineHeight;
                 position.Y += m_LineHeight;
+            }
+
+            if (shadowApplied) drawCommands.Add(new TextDrawCmd_Shadow(TextStyle, false));
+
+            while (bbColorStack.Count > 0)
+            {
+                lastColor = bbColorStack.Pop();
+                drawCommands.Add(new TextDrawCmd_Color(TextStyle, lastColor));
             }
 
             result.BoundingBox = new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)options.MaxWidth, (int)(yPosition-(m_LineHeight + topLeft.Y)));
@@ -96,6 +186,67 @@ namespace FSO.Client.UI.Framework
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Creates a list of segments to split the line into
+        /// in order to draw selection boxes
+        /// </summary>
+        /// <returns></returns>
+        protected static List<UITextEditLineSegment> CalculateSegments(UITextEditLine line, List<BBCodeCommand> bbcmds, ref int bbind)
+        {
+            var result = new List<UITextEditLineSegment>();
+
+            var points = new List<Tuple<int, BBCodeCommand>>();
+
+            var lineStart = line.StartIndex;
+            var lineEnd = lineStart + line.Text.Length;
+
+            var lastMod = 0;
+            while (true)
+            {
+                //check for selection first
+                var nextBB = (bbind == bbcmds.Count) ? lineEnd : bbcmds[bbind].Index;
+
+                if (nextBB < lineEnd)
+                {
+                    //this bbcmd happens on this line (or before we even drew anything (scroll))
+                    //
+                    if (bbcmds[bbind].Index - lineStart < 0)
+                    {
+                        result.Add(new UITextEditLineSegment
+                        {
+                            Selected = false,
+                            Text = "",
+                            BBCatchup = true,
+                            StartCommand = bbcmds[bbind++]
+                        });
+                    }
+                    else
+                    {
+                        result.Add(new UITextEditLineSegment
+                        {
+                            Selected = false,
+                            Text = line.Text.Substring(lastMod, (bbcmds[bbind].Index - lineStart) - lastMod),
+                            StartCommand = bbcmds[bbind++]
+                        });
+                        lastMod = (bbcmds[bbind - 1].Index - lineStart);
+                    }
+                }
+                else
+                {
+                    //remainder of the line
+                    result.Add(new UITextEditLineSegment
+                    {
+                        Selected = false,
+                        Text = line.Text.Substring(lastMod, (lineEnd - lineStart) - lastMod),
+                    });
+                    break;
+                }
+            }
+            return result;
+
+
         }
 
         public static void CalculateLines(List<UITextEditLine> m_Lines, List<string> newWordsArray, TextStyle TextStyle, float lineWidth, float spaceWidth, Vector2 topLeftIconSpace, float lineHeight)
@@ -117,7 +268,7 @@ namespace FSO.Client.UI.Framework
                         Text = currentLine.ToString(),
                         LineWidth = currentLineWidth,
                         LineNumber = currentLineNum,
-                        WhitespaceSuffix = 2
+                        WhitespaceSuffix = 0
                     });
                     currentLineNum++;
                     currentLine = new StringBuilder();
@@ -172,7 +323,7 @@ namespace FSO.Client.UI.Framework
                                 Text = currentLine.ToString(),
                                 LineWidth = currentLineWidth,
                                 LineNumber = currentLineNum,
-                                WhitespaceSuffix = 1
+                                WhitespaceSuffix = 0
                             });
 
                             currentLineNum++;
@@ -194,7 +345,7 @@ namespace FSO.Client.UI.Framework
                                 Text = currentLine.ToString(),
                                 LineWidth = currentLineWidth,
                                 LineNumber = currentLineNum,
-                                WhitespaceSuffix = 1
+                                WhitespaceSuffix = 0
                             });
                             currentLineNum++;
                             currentLine = new StringBuilder();
@@ -218,7 +369,7 @@ namespace FSO.Client.UI.Framework
             foreach (var line in m_Lines)
             {
                 line.StartIndex = currentIndex;
-                currentIndex += (line.Text.Length - 1) + line.WhitespaceSuffix;
+                currentIndex += line.Text.Length + line.WhitespaceSuffix;
             }
         }
 
@@ -259,6 +410,7 @@ namespace FSO.Client.UI.Framework
     public class TextRendererOptions
     {
         public bool WordWrap;
+        public bool BBCode;
         public int MaxWidth;
         public TextStyle TextStyle;
         public Vector2 Position;

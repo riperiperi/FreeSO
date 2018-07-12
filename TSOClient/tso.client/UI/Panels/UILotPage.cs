@@ -1,6 +1,7 @@
 ﻿using FSO.Client.Controllers;
 using FSO.Client.Controllers.Panels;
 using FSO.Client.Model;
+using FSO.Client.Rendering.City;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
@@ -17,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Common.Rendering.Framework.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -76,6 +78,8 @@ namespace FSO.Client.UI.Panels
         private UIPersonButton OwnerButton { get; set; }
         private Texture2D DefaultThumb;
         private string OriginalDescription;
+
+        private LotThumbEntry ThumbLock;
 
         public Binding<Lot> CurrentLot;
         public override Vector2 Size { get; set; }
@@ -344,6 +348,24 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        public override void Update(UpdateState state)
+        {
+            if (ThumbLock != null && CurrentLot?.Value != null && LastThumb != ThumbLock.LotTexture && ThumbLock.Loaded)
+            {
+                LotThumbnail.SetThumbnail(ThumbLock.LotTexture, CurrentLot.Value.Id);
+                LastThumb = ThumbLock.LotTexture;
+            }
+            base.Update(state);
+        }
+
+        private Texture2D LastThumb = null;
+        public void AsyncAPIThumb(uint lotID)
+        {
+            if (ThumbLock != null) ThumbLock.Held--;
+            //LotThumbnail.SetThumbnail(DefaultThumb, CurrentLot.Value?.Id ?? 0);
+            ThumbLock = FindController<CoreGameScreenController>().Terrain.LockLotThumb(lotID);
+        }
+
         private void RefreshUI()
         {
             var isOpen = _Open == true;
@@ -366,11 +388,11 @@ namespace FSO.Client.UI.Panels
                 SkillGameplayLabel.Visible = isOpen;
                 SkillGameplayLabel.CaptionStyle.Color = isMyProperty ? Color.LightBlue : TextStyle.DefaultLabel.Color;
 
-                var thumb = CurrentLot.Value.Lot_Thumbnail.Data;
-                if (((thumb?.Length) ?? 0) == 0)
-                    LotThumbnail.SetThumbnail(DefaultThumb, 0);
-                else
-                    LotThumbnail.SetThumbnail(ImageLoader.FromStream(GameFacade.GraphicsDevice, new MemoryStream(thumb)), CurrentLot.Value.Id);
+                //var thumb = CurrentLot.Value.Lot_Thumbnail.Data;
+                //if (((thumb?.Length) ?? 0) == 0)
+                //LotThumbnail.SetThumbnail(DefaultThumb, 0);
+                //else
+                //    LotThumbnail.SetThumbnail(ImageLoader.FromStream(GameFacade.GraphicsDevice, new MemoryStream(thumb)), CurrentLot.Value.Id);
 
                 if (OriginalDescription != CurrentLot.Value.Lot_Description)
                 {
@@ -504,7 +526,7 @@ namespace FSO.Client.UI.Panels
 
         public void SetThumbnail(Texture2D thumbnail, uint lot)
         {
-            if (Thumbnail.Texture != thumbnail && CurrentLotThumb != 0) Thumbnail.Texture.Dispose(); 
+            //if (Thumbnail.Texture != thumbnail && CurrentLotThumb != 0) Thumbnail.Texture.Dispose(); 
             Thumbnail.Texture = thumbnail;
             Thumbnail.SetSize((thumbnail.Width > 144) ? thumbnail.Width / 2 : thumbnail.Width, (thumbnail.Height > 144) ? thumbnail.Height / 2 : thumbnail.Height);
             Thumbnail.Y = (95 - Thumbnail.Height) / 2.0f;

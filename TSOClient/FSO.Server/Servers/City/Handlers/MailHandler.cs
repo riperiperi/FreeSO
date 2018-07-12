@@ -1,4 +1,5 @@
 ﻿using FSO.Common.DataService;
+using FSO.Common.Utils;
 using FSO.Files.Formats.tsodata;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Inbox;
@@ -90,6 +91,10 @@ namespace FSO.Server.Servers.City.Handlers
                                 message.Item.SenderName = you.Avatar_Name;
                             }
                             message.Item.ReplyID = null; //currently unused, but may be used in future to track conversations.
+
+                            var body = BBCodeParser.SanitizeBB(message.Item.Body);
+                            if (body.Length > 1500) body = body.Substring(0, 1500);
+                            message.Item.Body = body;
 
                             if (SendEmail(message.Item, true))
                             {

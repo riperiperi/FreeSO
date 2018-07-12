@@ -68,7 +68,7 @@ namespace FSO.Server.Database.DA.Lots
                     t.Commit();
                     return result;
                 }
-            } catch (SqlException)
+            } catch (Exception)
             {
             }
             t.Rollback();
@@ -117,6 +117,26 @@ namespace FSO.Server.Database.DA.Lots
             Context.Connection.Query("UPDATE fso_lots SET name = @name WHERE lot_id = @id", new { name = newName, id = id });
         }
 
+        public void SetDirty(int id, byte dirty)
+        {
+            if (dirty == 0)
+            {
+                Context.Connection.Query("UPDATE fso_lots SET thumb3d_dirty = @dirty, thumb3d_time = @time WHERE lot_id = @id", new { time = Epoch.Now, dirty = dirty, id = id });
+            } else
+            {
+                Context.Connection.Query("UPDATE fso_lots SET thumb3d_dirty = @dirty WHERE lot_id = @id", new { dirty = dirty, id = id });
+            }
+        }
+
+        public DbLot Get3DWork()
+        {
+            var item = Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE thumb3d_dirty = 1 AND thumb3d_time < @time ORDER BY thumb3d_time LIMIT 1", new { time = Epoch.Now - 300 }).FirstOrDefault();
+            if (item != null)
+            {
+                SetDirty(item.lot_id, 0);
+            }
+            return item;
+        }
 
         public List<DbLot> SearchExact(int shard_id, string name, int limit)
         {
@@ -180,6 +200,12 @@ namespace FSO.Server.Database.DA.Lots
         {
             Context.Connection.Query("UPDATE fso_lots SET owner_id = (SELECT avatar_id FROM fso_roommates WHERE is_pending = 0 AND lot_id = @id LIMIT 1) WHERE lot_id = @id", new { id = lot_id });
             Context.Connection.Query("UPDATE fso_roommates SET permissions_level = 2 WHERE avatar_id = (SELECT owner_id FROM fso_lots WHERE lot_id = @id LIMIT 1) AND lot_id = @id", new { id = lot_id });
+        }
+
+        public void UpdateLotSkillMode(int lot_id, uint skillMode)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET skill_mode = @skillMode WHERE lot_id = @id",
+                new { id = lot_id, skillMode = skillMode });
         }
 
         public void UpdateLotCategory(int lot_id, LotCategory category, uint skillMode)

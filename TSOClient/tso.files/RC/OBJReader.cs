@@ -57,6 +57,7 @@ namespace FSO.Files.RC
                         for (int i=0; i<3; i++)
                         {
                             var split2 = split[i + 1].Split('/');
+                            if (split2.Length != 2) continue;
                             indices.Add(new int[] { int.Parse(split2[0]), int.Parse(split2[1]) });
                         }
                         break;

@@ -39,7 +39,7 @@ namespace FSO.LotView
             var _2d = state._2D;
             foreach (var avatar in Blueprint.Avatars)
             {
-                if (avatar.Level < state.Level)
+                if (avatar.ALevel < state.Level)
                 {
                     _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(avatar.Position));
                     _2d.OffsetTile(avatar.Position);

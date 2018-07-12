@@ -304,7 +304,7 @@ namespace FSO.Server.Servers.Lot.Domain
                             ClaimId = claimId,
                             ShardId = lot.shard_id,
                             Action = openAction,
-                            HighMax = lot.admit_mode == 5
+                            HighMax = lot.admit_mode > 4
                         });
                         LOG.Info("Bootstrapped lot with dbid = " + lotId + "!");
                         return true;

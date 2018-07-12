@@ -105,11 +105,12 @@ namespace FSO.SimAntics.Engine.Utils
                     //returns information on the selected room. Right now we don't have a room system, so always return the same values. (everywhere is indoors, not a pool)
                     var roomID = Math.Max(0, Math.Min(context.VM.Context.RoomInfo.Length-1, context.Thread.TempRegisters[0]));
                     var room = context.VM.Context.RoomInfo[roomID];
+                    var baseroom = context.VM.Context.RoomInfo[room.Room.LightBaseRoom];
 
                     if (data == 0) return 100; //ambient light 0-100
-                    else if (data == 1) return (short)((room.Room.IsOutside)?1:0); //outside
-                    else if (data == 2) return 0; //level
-                    else if (data == 3) return (short)room.Room.Area; //area (???)
+                    else if (data == 1) return (short)((baseroom.Room.IsOutside)?1:0); //outside
+                    else if (data == 2) return (short)(baseroom.Room.Floor); //level
+                    else if (data == 3) return (short)baseroom.Room.Area; //area (???)
                     else if (data == 4) return (short)(room.Room.IsPool?1:0); //is pool
                     else throw new VMSimanticsException("Invalid room data!", context);
 
@@ -118,6 +119,11 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMVariableScope.NeighborInStackObject: //24
                     if (!context.VM.TS1) throw new VMSimanticsException("Only valid in TS1.", context);
                     var neighbor = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
+                    var fam = neighbor?.PersonData?.ElementAt((int)VMPersonDataVariable.TS1FamilyNumber);
+
+                    FAMI fami = null;
+                    if (fam != null)
+                        fami = Content.Content.Get().Neighborhood.GetFamily((ushort)fam.Value);
                     if (neighbor == null) return 0;
                     switch (data)
                     {
@@ -125,24 +131,38 @@ namespace FSO.SimAntics.Engine.Utils
                             //find neighbour in the lot
                             return context.VM.Context.ObjectQueries.Avatars.FirstOrDefault(x => x.Object.GUID == neighbor.GUID)?.ObjectID ?? 0;
                         case 1: //belongs in house
-                            return 1; //uh, okay.
+                            return (short)((context.VM.TS1State.CurrentFamily == fami) ? 1:0); //uh, okay.
                         case 2: //person age
                             return neighbor.PersonData?.ElementAt((int)VMPersonDataVariable.PersonsAge) ?? 0;
                         case 3: //relationship raw score
                                 //to this person or from? what
-                            return 0;
+                            return 0; //unused in favor of primitive?
                         case 4: //relationship score
-                            return 0;
+                            return 0; //unused in favor of primitive?
                         case 5: //friend count
-                            return 0;
-                        case 6: //house number (unknown)
-                            return 0;
+                            return (short)neighbor.Relationships.Count(n => {
+                                if (n.Value[0] >= 50)
+                                {
+                                    var othern = Content.Content.Get().Neighborhood.GetNeighborByID((short)n.Key);
+                                    if (othern != null)
+                                    {
+                                        List<short> orels;
+                                        if (othern.Relationships.TryGetValue(context.StackObjectID, out orels))
+                                        {
+                                            return orels[0] >= 50;
+                                        }
+                                    }
+                                }
+                                return false;
+                                }); //interaction - nag friends TEST
+                        case 6: //house number
+                            return (short)(fami?.HouseNumber ?? 0);
                         case 7: //has telephone
                             return 1;
                         case 8: //has baby
                             return 0;
                         case 9: //family friend count
-                            return 0;
+                            return (short)(fami?.FamilyFriends ?? 0);
                     }
                     throw new VMSimanticsException("Neighbor data out of bounds.", context);
                 case VMVariableScope.Local: //25
@@ -175,7 +195,7 @@ namespace FSO.SimAntics.Engine.Utils
                     return Content.Content.Get().Jobs.GetJobData((ushort)context.Thread.TempRegisters[0], context.Thread.TempRegisters[1], data);
 
                 case VMVariableScope.NeighborhoodData: //34
-                    return 0;
+                    return 0; //tutorial values only
                     throw new VMSimanticsException("Should not be used, but if this shows implement an empty shell to return ideal values.", context);
 
                 case VMVariableScope.StackObjectFunction: //35
@@ -209,22 +229,6 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMVariableScope.TempXL: //42
                     //this needs a really intricate special case for specific operations.
                     throw new VMSimanticsException("Caller function does not support TempXL!", context);
-
-                case VMVariableScope.CityTime: //43
-                    //return GetCityTime(data)
-                    switch (data)
-                    {
-                        case 0:
-                            return (short)context.VM.Context.Clock.Seconds;
-                        case 1:
-                            return (short)context.VM.Context.Clock.Minutes;
-                        case 2:
-                            return (short)context.VM.Context.Clock.Hours;
-                        case 3:
-                            return (short)context.VM.Context.Clock.TimeOfDay;
-
-                    };
-                    break;
                 case VMVariableScope.TSOStandardTime: //44
                     //return GetTSOStandardTime(data)
                     var time = context.VM.Context.Clock.UTCNow;
@@ -246,6 +250,7 @@ namespace FSO.SimAntics.Engine.Utils
                     };
                     return 0;
 
+                case VMVariableScope.CityTime: //43
                 case VMVariableScope.GameTime: //45
                     switch (data)
                     {
@@ -257,6 +262,12 @@ namespace FSO.SimAntics.Engine.Utils
                             return (short)context.VM.Context.Clock.Hours;
                         case 3:
                             return (short)context.VM.Context.Clock.TimeOfDay;
+                        case 4:
+                            return (short)context.VM.Context.Clock.DayOfMonth;
+                        case 5:
+                            return (short)context.VM.Context.Clock.Month;
+                        case 6:
+                            return (short)context.VM.Context.Clock.Year;
 
                     };
                     break;
@@ -267,7 +278,7 @@ namespace FSO.SimAntics.Engine.Utils
                         case 0: return context.Caller.MyList.First.Value; //is this allowed?
                         case 1: return context.Caller.MyList.Last.Value;
                         case 2: return (short)context.Caller.MyList.Count;
-                        default: throw new VMSimanticsException("Unknown List Accessor", context);
+                        default: return context.Caller.MyList.ElementAt(context.Thread.TempRegisters[0]);
                     }
                 case VMVariableScope.StackObjectList: //47
                     if (context.StackObject == null) return 0;
@@ -276,7 +287,7 @@ namespace FSO.SimAntics.Engine.Utils
                         case 0: return context.StackObject.MyList.First.Value;
                         case 1: return context.StackObject.MyList.Last.Value;
                         case 2: return (short)context.StackObject.MyList.Count;
-                        default: throw new VMSimanticsException("Unknown List Accessor", context);
+                        default: return context.StackObject.MyList.ElementAt(context.Thread.TempRegisters[0]);
                     }
 
                 case VMVariableScope.MoneyOverHead32Bit: //48

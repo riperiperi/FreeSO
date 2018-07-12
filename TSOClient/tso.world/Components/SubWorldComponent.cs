@@ -41,8 +41,11 @@ namespace FSO.LotView.Components
              * state settings for the world and helper functions
              */
             State = new WorldState(device, device.Viewport.Width, device.Viewport.Height, this);
-            State.AmbientLight = new Texture2D(device, 256, 256);
-            State.OutsidePx = new Texture2D(device, 1, 1);
+            GameThread.InUpdate(() =>
+            {
+                State.AmbientLight = new Texture2D(device, 256, 256);
+                State.OutsidePx = new Texture2D(device, 1, 1);
+            });
 
             HasInitGPU = true;
             HasInit = HasInitGPU & HasInitBlueprint;

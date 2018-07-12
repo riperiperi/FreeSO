@@ -4,6 +4,7 @@ If a copy of the MPL was not distributed with this file, You can obtain one at
 http://mozilla.org/MPL/2.0/.
 */
 
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,8 @@ namespace FSO.Client.Rendering.City
 {
     public struct Blend
     {
-        public double[] AtlasPosition;
+        public int Binary;
+        public Vector2 AtlasPosition;
         public int MaxEdge;
     }
 }

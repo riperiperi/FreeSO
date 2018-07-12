@@ -89,6 +89,10 @@ namespace FSO.SimAntics.Engine
             {
                 return (InPool)?(short)0:Caller.GetValue(VMStackObjectVariable.WalkStyle);
             }
+            set
+            {
+                Caller.SetValue(VMStackObjectVariable.WalkStyle, value);
+            }
         }
 
         private bool InPool
@@ -112,6 +116,7 @@ namespace FSO.SimAntics.Engine
         private VMEntity Target;
         private List<VMFindLocationResult> Choices;
         private VMFindLocationResult CurRoute;
+        private short LastWalkStyle = -1;
 
         public VMRoutingFrame() { }
         
@@ -204,7 +209,7 @@ namespace FSO.SimAntics.Engine
             var avatar = (VMAvatar)Caller;
             if (CallFailureTrees && ParentRoute == null)
             {
-                var bhav = Global.Resource.Get<BHAV>(ROUTE_FAIL_TREE);
+                var bhav = (VMRoutine)Global.Resource.GetRoutine(ROUTE_FAIL_TREE);
                 Thread.ExecuteSubRoutine(this, bhav, CodeOwner, new VMSubRoutineOperand(new short[] { (short)code, (blocker==null)?(short)0:blocker.ObjectID, 0, 0 }));
             }
             avatar.SetPersonData(VMPersonDataVariable.RouteResult, (short)code);
@@ -300,10 +305,15 @@ namespace FSO.SimAntics.Engine
         }
 
         private VMRouteFailCode AttemptRoute(VMFindLocationResult route) { //returns false if there is no room portal route to the destination room.
-            //if route is not null, we are on a DIRECT route, where either the SLOT has been resolved or a route has already been passed to us.
-            //resets some variables either way, so that the route can start again.
-
+                                                                           //if route is not null, we are on a DIRECT route, where either the SLOT has been resolved or a route has already been passed to us.
+                                                                           //resets some variables either way, so that the route can start again.
+            if (LastWalkStyle != -1) WalkStyle = LastWalkStyle;
             CurRoute = route;
+
+            if (Caller.PersistID > 0 && !VM.TS1 && Callee?.Object?.GUID != GOTO_GUID)
+            {
+                AutoWalkSpeed();
+            }
 
             WalkTo = null; //reset routing state
             AttemptedChair = false;
@@ -409,7 +419,7 @@ namespace FSO.SimAntics.Engine
                 bool Execute;
                 if (ent.EntryPoints[entryPoint].ConditionFunction != 0) //check if we can definitely execute this...
                 {
-                    var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entryPoint].ConditionFunction, VM.Context);
+                    var Behavior = ent.GetRoutineWithOwner(ent.EntryPoints[entryPoint].ConditionFunction, VM.Context);
                     if (Behavior != null)
                     {
                         Execute = (VMThread.EvaluateCheck(VM.Context, Caller, new VMStackFrame()
@@ -418,7 +428,7 @@ namespace FSO.SimAntics.Engine
                             Callee = ent,
                             CodeOwner = Behavior.owner,
                             StackObject = ent,
-                            Routine = VM.Assemble(Behavior.bhav),
+                            Routine = Behavior.routine,
                             Args = new short[4]
                         }) == VMPrimitiveExitCode.RETURN_TRUE);
                     }
@@ -433,9 +443,9 @@ namespace FSO.SimAntics.Engine
                 if (Execute)
                 {
                     //push it onto our stack, except now the object owns our soul! when we are returned to we can evaluate the result and determine if the action failed.
-                    var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entryPoint].ActionFunction, VM.Context);
+                    var Behavior = ent.GetRoutineWithOwner(ent.EntryPoints[entryPoint].ActionFunction, VM.Context);
                     if (Behavior == null) return false; //invalid id
-                    var routine = VM.Assemble(Behavior.bhav);
+                    var routine = Behavior.routine;
                     var childFrame = new VMStackFrame
                     {
                         Routine = routine,
@@ -755,7 +765,7 @@ namespace FSO.SimAntics.Engine
                                 return VMPrimitiveExitCode.CONTINUE;
                             }
                             bool jobLot = VM.GetGlobalValue(11) > -1;
-                            if (Retries <= MAX_RETRIES - 3 && jobLot)
+                            if (Retries <= MAX_RETRIES - 3 && jobLot && !VM.TS1)
                             {
                                 Caller.SetFlag(VMEntityFlags.AllowPersonIntersection, true);
                                 routeAround = true;
@@ -821,8 +831,8 @@ namespace FSO.SimAntics.Engine
                                             colRoute.WalkTo = null;
                                             colRoute.AvatarsToConsider.Add(avatar); //just to make sure they don't try route through us.
 
-                                            var tree = callee.GetBHAVWithOwner(SHOO_TREE, VM.Context);
-                                            result.Object.Thread.ExecuteSubRoutine(colRoute, tree.bhav, tree.owner, new VMSubRoutineOperand());
+                                            var tree = callee.GetRoutineWithOwner(SHOO_TREE, VM.Context);
+                                            result.Object.Thread.ExecuteSubRoutine(colRoute, tree.routine, tree.owner, new VMSubRoutineOperand());
                                             var frame = result.Object.Thread.Stack.LastOrDefault();
                                             frame.StackObject = callee;
                                             frame.Callee = callee;
@@ -906,6 +916,7 @@ namespace FSO.SimAntics.Engine
                     }
                 }
             }
+            if (LastWalkStyle != -1) WalkStyle = LastWalkStyle;
         }
 
         private bool CanShooAvatar(VMAvatar avatar)
@@ -966,6 +977,16 @@ namespace FSO.SimAntics.Engine
             var rf = ParentRoute;
             if (rf == null) rf = this;
             return (rf.State != VMRoutingFrameState.ROOM_PORTAL || rf.PortalTurns++ == 0);
+        }
+
+        private void AutoWalkSpeed()
+        {
+            LastWalkStyle = WalkStyle;
+            var dist = ((CurRoute?.Position ?? Target.Position) - Caller.Position).ToVector3().Length();
+            if (dist > 10)
+            {
+                WalkStyle = 1;
+            }
         }
 
         private void BeginWalk()
@@ -1150,7 +1171,7 @@ namespace FSO.SimAntics.Engine
                 Rooms = Rooms.ToArray(),
                 CurrentPortal = CurrentPortal,
 
-                WalkTo = (WalkTo==null)?null:WalkTo.ToArray(),
+                WalkTo = (WalkTo == null) ? null : WalkTo.ToArray(),
                 WalkDirection = WalkDirection,
                 TargetDirection = TargetDirection,
                 IgnoreRooms = IgnoreRooms,
@@ -1181,7 +1202,8 @@ namespace FSO.SimAntics.Engine
                 Slot = Slot, //NULLable
                 Target = (Target == null) ? (short)0 : Target.ObjectID, //object id
                 Choices = choices, //NULLable
-                CurRoute = (CurRoute == null)?null:CurRoute.Save() //NULLable
+                CurRoute = (CurRoute == null) ? null : CurRoute.Save(), //NULLable
+                LastWalkStyle = LastWalkStyle
             };
         }
 
@@ -1238,6 +1260,7 @@ namespace FSO.SimAntics.Engine
             else Choices = null;
             CurRoute = (inR.CurRoute == null)?null:new VMFindLocationResult(inR.CurRoute, context); //NULLable
 
+            LastWalkStyle = inR.LastWalkStyle;
         }
 
         public VMRoutingFrame(VMStackFrameMarshal input, VMContext context, VMThread thread)

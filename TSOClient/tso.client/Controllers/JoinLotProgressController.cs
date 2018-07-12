@@ -121,7 +121,7 @@ namespace FSO.Client.Controllers
                         progress = 4;
                         break;
                 }
-                var progressPercent = (((float)progress) / 6.0f) * 100;
+                var progressPercent = (((float)progress) / 12.0f) * 100;
                 if (progress < 4) View.Progress = progressPercent;
                 switch (progress)
                 {

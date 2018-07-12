@@ -23,6 +23,7 @@ using FSO.Common.Rendering.Framework.IO;
 using FSO.HIT;
 using FSO.Client.UI.Model;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Client.Rendering.City;
 
 namespace FSO.Client.UI.Controls
 {
@@ -38,6 +39,7 @@ namespace FSO.Client.UI.Controls
         //Mixing concerns here but binding avatar id is much nicer than lots of plumbing each time
         private IClientDataService DataService;
         private UIMouseEventRef ClickHandler;
+        private LotThumbEntry Thumb;
 
         public UILotButton()
         {
@@ -55,13 +57,6 @@ namespace FSO.Client.UI.Controls
 
             Target = new Binding<Lot>()
                 .WithBinding(this, "NameLabel.Caption", "Lot_Name")
-                .WithBinding(this, "ThumbImg", "Lot_Thumbnail", x =>
-                {
-                    if (ThumbImg != null) ThumbImg.Dispose();
-                    var thumb = ((cTSOGenericData)x)?.Data;
-                    if (((thumb?.Length) ?? 0) == 0) return null;
-                    return (ImageLoader.FromStream(GameFacade.GraphicsDevice, new MemoryStream(thumb)));
-                })
                 .WithBinding(this, "BgImg", "Lot_IsOnline", x =>
                 {
                     var online = (bool)x;
@@ -135,6 +130,8 @@ namespace FSO.Client.UI.Controls
 
                 Position = pos - new Vector2(40, 110);
                 AvoidOther();
+
+                Thumb = FindController<CoreGameScreenController>().Terrain.LockLotThumb(value);
             }
         }
 
@@ -235,6 +232,7 @@ namespace FSO.Client.UI.Controls
         public override void Draw(UISpriteBatch batch)
         {
             if (!Visible) return;
+            var ThumbImg = Thumb.LotTexture;
             if (ThumbImg != null && BgImg != null && HoverImg != null)
             {
                 UITerrainHighlight.DrawArrow(batch, ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer, Position + new Vector2(40, 25), (int)LotId);

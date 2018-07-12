@@ -54,7 +54,17 @@ namespace FSO.Files
                 try
                 {
                     //it's a bitmap. 
-                    var tex = Texture2D.FromStream(gd, str);
+                    Texture2D tex;
+                    if (ImageLoaderHelpers.BitmapFunction != null)
+                    {
+                        var bmp = ImageLoaderHelpers.BitmapFunction(str);
+                        if (bmp == null) return null;
+                        tex = new Texture2D(gd, bmp.Item2, bmp.Item3);
+                        tex.SetData(bmp.Item1);
+                    } else
+                    {
+                        tex = Texture2D.FromStream(gd, str);
+                    }
                     ManualTextureMaskSingleThreaded(ref tex, MASK_COLORS.ToArray());
                     return tex;
                 }

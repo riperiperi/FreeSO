@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -69,10 +69,6 @@
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net40\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Ninject.3.2.2.0\lib\net40\Ninject.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -112,6 +108,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Portable.Ninject.3.3.1\lib\net40-client\Ninject.dll</HintPath>
+    </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.3.11\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
@@ -127,6 +126,7 @@
     </Reference>
     <Reference Include="System.Core">
     </Reference>
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq">
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
@@ -143,7 +143,6 @@
     <Compile Include="Enum\Top100Category.cs" />
     <Compile Include="FSOEnvironment.cs" />
     <Compile Include="IniConfig.cs" />
-    <Compile Include="Log.cs" />
     <Compile Include="Enum\UserReferenceType.cs" />
     <Compile Include="MeshSimplify\MSRef.cs" />
     <Compile Include="MeshSimplify\MSTriangle.cs" />
@@ -155,6 +154,9 @@
     <Compile Include="Model\IntersectRectSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rendering\CachableTexture2D.cs" />
+    <Compile Include="Rendering\Emoji\EmojiCache.cs" />
+    <Compile Include="Rendering\Emoji\EmojiDictionary.cs" />
+    <Compile Include="Rendering\Emoji\EmojiProvider.cs" />
     <Compile Include="Rendering\Framework\3DComponent.cs" />
     <Compile Include="Rendering\Framework\3DLayer.cs" />
     <Compile Include="Rendering\Framework\3DScene.cs" />
@@ -210,6 +212,7 @@
     <Compile Include="Serialization\TypeSerializers\cTSOValueUInt64.cs" />
     <Compile Include="Utils\AssemblyUtils.cs" />
     <Compile Include="Utils\Base64JsonConverter.cs" />
+    <Compile Include="Utils\BBCodeParser.cs" />
     <Compile Include="Utils\Binding.cs" />
     <Compile Include="Utils\Cache\CacheKey.cs" />
     <Compile Include="Utils\Cache\FileSystemCache.cs" />
@@ -285,6 +288,7 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

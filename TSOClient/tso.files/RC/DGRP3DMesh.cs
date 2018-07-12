@@ -64,6 +64,7 @@ namespace FSO.Files.RC
         public static Queue<Action> QueuedRC = new Queue<Action>();
         public static AutoResetEvent NewRecon = new AutoResetEvent(false);
 
+        public static bool Sync;
         public static void InitRCWorkers()
         {
             var cores = Math.Max(1, Environment.ProcessorCount-1); //maybe detect hyperthreading somehow
@@ -78,8 +79,12 @@ namespace FSO.Files.RC
 
         public static void QueueWork(Action work)
         {
-            lock (QueuedRC) QueuedRC.Enqueue(work);
-            NewRecon.Set();
+            if (Sync) work();
+            else
+            {
+                lock (QueuedRC) QueuedRC.Enqueue(work);
+                NewRecon.Set();
+            }
         }
 
         public static void RCWorkerLoop()
@@ -473,7 +478,7 @@ namespace FSO.Files.RC
                                 var bID = geom.SVerts.Count;
                                 foreach (var id in indices) geom.SIndices.Add(id + bID);
                                 var verts2 = verts.Select(v => new DGRP3DVert(v.Position, Vector3.Zero, v.TextureCoordinate)).ToList();
-                                DGRP3DGeometry.GenerateNormals(!sprite.Flip, verts2, indices);
+                                DGRP3DVert.GenerateNormals(!sprite.Flip, verts2, indices);
                                 geom.SVerts.AddRange(verts2);
 
                                 lock (this)
@@ -495,7 +500,7 @@ namespace FSO.Files.RC
                                 var baseID = geom.SVerts.Count;
                                 foreach (var id in indices) geom.SIndices.Add(id + baseID);
                                 var verts2 = verts.Select(v => new DGRP3DVert(v.Position, Vector3.Zero, v.TextureCoordinate)).ToList();
-                                DGRP3DGeometry.GenerateNormals(!sprite.Flip, verts2, indices);
+                                DGRP3DVert.GenerateNormals(!sprite.Flip, verts2, indices);
                                 geom.SVerts.AddRange(verts2);
                                 lock (this)
                                 {

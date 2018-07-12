@@ -18,7 +18,8 @@ namespace FSO.Server.Protocol.Voltron.DataService
     /// </summary>
     public class cTSOSerializer
     {
-        private static Logger LOG = LogManager.GetCurrentClassLogger();
+        
+        //private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         public static cTSOSerializer INSTANCE = null;
         public static cTSOSerializer Get(){

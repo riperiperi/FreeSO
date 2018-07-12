@@ -48,7 +48,9 @@ namespace FSO.Client.Controllers.Panels
             });
             View.Parent.Add(View);
             View.Visible = true;
+            View.AsyncAPIThumb(lotId);
             ChangeTopic();
+            FSOFacade.Hints.TriggerHint("ui:lot_page");
         }
 
         public void SaveDescription(Lot target)

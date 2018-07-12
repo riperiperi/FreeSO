@@ -20,7 +20,9 @@ namespace FSO.SimAntics.Engine
     {
         //should use a Trie for this in future, for performance reasons
         private static string[] valid = {
-            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:", "FixedLocal:", "DynamicObjectName", "MoneyXL:", "JobOffer:", "Job:", "JobDesc:", "Param:", "\r\n"
+            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:",
+            "FixedLocal:", "DynamicObjectName", "MoneyXL:", "JobOffer:", "Job:", "JobDesc:", "Param:", "Neighbor", "\r\n", "ListObject",
+            "CatalogLocal:"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -218,6 +220,22 @@ namespace FSO.SimAntics.Engine
                                     output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Parameters, values[0]).ToString()); break;
                                 case "NameLocal:":
                                     output.Append(context.VM.GetObjectById(VMMemory.GetVariable(context, Scopes.VMVariableScope.Local, values[0])).ToString()); break;
+                                case "Neighbor":
+                                    //neighbour in stack object id
+                                    if (!context.VM.TS1) break;
+                                    var guid = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID)?.GUID ?? 0;
+                                    var gobj = Content.Content.Get().WorldObjects.Get(guid);
+                                    if (gobj == null) output.Append("Unknown");
+                                    else output.Append(gobj.Resource.Get<FSO.Files.Formats.IFF.Chunks.CTSS>(gobj.OBJ.CatalogStringsID)?.GetString(0) ?? "Unknown");
+                                    break;
+                                case "ListObject":
+                                    output.Append(new string(context.StackObject.MyList.Select(x => (char)x).ToArray()));
+                                    break;
+                                case "CatalogLocal:":
+                                    var catObj = context.VM.GetObjectById(VMMemory.GetVariable(context, Scopes.VMVariableScope.Local, values[0]));
+                                    var cat = catObj.Object.Resource.Get<CTSS>(catObj.Object.OBJ.CatalogStringsID)?.GetString(1);
+                                    output.Append(cat ?? "");
+                                    break;
                                 default:
                                     output.Append(cmdString);
                                     break;

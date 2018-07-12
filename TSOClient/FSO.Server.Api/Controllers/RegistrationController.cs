@@ -377,9 +377,14 @@ namespace FSO.Server.Api.Controllers
                     });
                 }
 
-                var old_password_hash = PasswordHasher.Hash(model.old_password);
+                var authSettings = da.Users.GetAuthenticationSettings(user.user_id);
+                var correct = PasswordHasher.Verify(model.old_password, new PasswordHash
+                {
+                    data = authSettings.data,
+                    scheme = authSettings.scheme_class
+                });
 
-                if (old_password_hash.data!=da.Users.GetAuthenticationSettings(user.user_id).data)
+                if (!correct)
                 {
                     return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
                     {

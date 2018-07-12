@@ -99,7 +99,7 @@ namespace FSO.LotView.RC
                     for (int i = 0; i < FSOEnvironment.RefreshRate / 60; i++)
                         FPCamVelocity *= 0.9f;
                 }
-                else
+                else if (Visible)
                 {
                     LastFP = false;
                     var md = state.MouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
@@ -172,7 +172,7 @@ namespace FSO.LotView.RC
 
             State._2D.PreciseZoom = State.PreciseZoom;
             State.OutsideColor = Blueprint.OutsideColor;
-            FSO.Common.Rendering.Framework.GameScreen.ClearColor = new Color(new Color(0x72, 0x72, 0x72).ToVector4() * State.OutsideColor.ToVector4());
+            FSO.Common.Rendering.Framework.GameScreen.ClearColor = new Color(State.OutsideColor.ToVector4()); //new Color(0x72, 0x72, 0x72).ToVector4() * 
 
             foreach (var sub in Blueprint.SubWorlds) sub.PreDraw(device, State);
             if (Blueprint != null)
@@ -195,7 +195,7 @@ namespace FSO.LotView.RC
             if (UseBackbuffer)
             {
 
-                PPXDepthEngine.SetPPXTarget(null, null, true);
+                PPXDepthEngine.SetPPXTarget(null, null, true, State.OutsideColor);
                 InternalDraw(device);
                 device.SetRenderTarget(null);
             }
@@ -213,7 +213,7 @@ namespace FSO.LotView.RC
 
             var pxOffset = -State.WorldSpace.GetScreenOffset();
             //State._2D.ResetMatrices(device.Viewport.Width, device.Viewport.Height);
-            ((World2DRC)_2DWorld).DrawBg(device, State, SkyBounds);
+            ((World2DRC)_2DWorld).DrawBg(device, State, SkyBounds, (Opacity < 1));
             _3DWorld.DrawBefore2D(device, State);
             _3DWorld.DrawAfter2D(device, State);
             State._3D.End();

@@ -13,6 +13,7 @@ namespace FSO.Content
 {
     public class ContentPreloader
     {
+        public Action<Action> MainContentAction;
         private List<IContentReference> Pending = new List<IContentReference>();
         private int Total;
         private int Completed;
@@ -32,7 +33,7 @@ namespace FSO.Content
         {
             Graphics = gd;
 
-            Total = Pending.Count;
+            Total = Pending.Count + (int)ContentLoadingProgress.Done;
             Completed = 0;
 
             Thread T = new Thread(new ThreadStart(LoadContent));
@@ -47,7 +48,7 @@ namespace FSO.Content
         {
             get
             {
-                return ((double)Completed) / ((double)Total);
+                return ((double)Completed + (int)Content.LoadProgress) / ((double)Total);
             }
         }
 
@@ -55,14 +56,16 @@ namespace FSO.Content
         {
             get
             {
-                return Completed < Total;
+                return (Completed + (int)Content.LoadProgress) < Total;
             }
         }
 
         private void LoadContent()
         {
             Pending.Shuffle();
-            
+
+            MainContentAction(() => Completed++);
+
             while (Pending.Count > 0)
             {
                 var item = Pending[0];

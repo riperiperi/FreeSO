@@ -43,7 +43,7 @@ namespace FSO.SimAntics.Marshals
             Entities = new VMEntityMarshal[ents];
             for (int i = 0; i < ents; i++)
             {
-                var ent = new VMGameObjectMarshal(Version);
+                var ent = new VMGameObjectMarshal(Version, false);
                 ent.Deserialize(reader);
                 Entities[i] = ent;
             }

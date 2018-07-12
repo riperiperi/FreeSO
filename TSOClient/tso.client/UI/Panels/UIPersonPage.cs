@@ -870,8 +870,7 @@ namespace FSO.Client.UI.Panels
                         outText.Append("\r\n");
                     }
                 }
-                int poolTime = currentJob.JobLevel_JobType;
-                poolTime = (poolTime > 2) ? (poolTime - 1) : poolTime;
+                int poolTime = Math.Min(2, currentJob.JobLevel_JobType - 1);
                 JobAlertText = GameFacade.Strings.GetString("189", "65", new string[] {
                     GameFacade.Strings.GetString("189", (67+currentJob.JobLevel_JobType).ToString()),
                     title,
@@ -932,7 +931,9 @@ namespace FSO.Client.UI.Panels
                     BodySkillBar.LockLevel = skills.AvatarSkills_LockLv_Body;
                     CreativitySkillBar.LockLevel = skills.AvatarSkills_LockLv_Creativity;
                 }
-                TotalLocks = CurrentAvatar.Value.Avatar_SkillsLockPoints;
+                //skill lock total currently hardcoded, since data service doesnt remove it yet.
+                //TODO: when custom data service is in, send this with skills page.Cac
+                TotalLocks = isMe?CurrentAvatar.Value.Avatar_SkillsLockPoints:(20+(int)CurrentAvatar.Value.Avatar_Age/7);
                 privacyOn = CurrentAvatar.Value.Avatar_PrivacyMode > 0;
                 UpdateLockCounts();
                 PopulateJobsText(CurrentAvatar.Value);

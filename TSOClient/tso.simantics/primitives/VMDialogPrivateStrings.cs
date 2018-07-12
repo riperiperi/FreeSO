@@ -86,13 +86,27 @@ namespace FSO.SimAntics.Primitives
                             //todo: filter profanity, limit name length
                             //also verify behaviour.
                             if ((curDialog.ResponseText ?? "") != "")
+                            {
+                                if (curDialog.ResponseText.Length > 32) curDialog.ResponseText = curDialog.ResponseText.Substring(0, 32);
                                 context.StackObject.Name = curDialog.ResponseText;
+                            }
+                                
+                            return VMPrimitiveExitCode.GOTO_TRUE;
+                        case VMDialogType.FSOChars:
+                            context.StackObject.MyList.Clear();
+                            var charR = (curDialog.ResponseText ?? "");
+                            if (charR != "") {
+                                context.StackObject.MyList.Clear();
+                                foreach (var c in charR)
+                                    context.StackObject.MyList.AddLast((short)c);
+                            }
                             return VMPrimitiveExitCode.GOTO_TRUE;
                         case VMDialogType.NumericEntry: //also downtown
                         case VMDialogType.TS1Vacation:
                         case VMDialogType.TS1Neighborhood:
                         case VMDialogType.TS1StudioTown:
                         case VMDialogType.TS1Magictown:
+                        case VMDialogType.TS1PhoneBook:
                             int number;
                             if (!int.TryParse(curDialog.ResponseText, out number)) return VMPrimitiveExitCode.GOTO_FALSE;
 
@@ -109,6 +123,10 @@ namespace FSO.SimAntics.Primitives
                             context.Thread.TempRegisters[1] = (byte)(number2 >> 8);
                             context.Thread.TempRegisters[2] = (byte)(number2);
                             return VMPrimitiveExitCode.GOTO_TRUE;
+                        case VMDialogType.TS1PetChoice:
+                        case VMDialogType.TS1Clothes:
+                            if (curDialog.ResponseCode == 0) return VMPrimitiveExitCode.GOTO_FALSE;
+                            goto case VMDialogType.NumericEntry;
                     }
                 }
                 else
@@ -252,7 +270,8 @@ namespace FSO.SimAntics.Primitives
         TS1TransformMe = 14,
         TS1Cookbook = 15,
         
-        FSOColor = 128
+        FSOColor = 128,
+        FSOChars = 129
     }
 
     public class VMDialogResult : VMAsyncState

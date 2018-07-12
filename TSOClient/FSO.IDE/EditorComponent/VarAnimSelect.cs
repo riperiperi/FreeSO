@@ -32,7 +32,7 @@ namespace FSO.IDE.EditorComponent
             RefreshAnimTable();
             if (MyList.Items.Count > 0) MyList.SelectedIndex = oldSel;
 
-            Text = "Select Animation - " + AnimTable.ChunkLabel + " (#" + AnimTable.ChunkID + ")";
+            Text = "Select Animation - " + (AnimTable?.ChunkLabel ?? "Missing") + " (#" + ((AnimTable?.ChunkID)?.ToString() ?? "?") + ")";
         }
 
         public void RefreshAllList()
@@ -40,12 +40,14 @@ namespace FSO.IDE.EditorComponent
             var searchString = new Regex(".*" + SearchBox.Text.ToLowerInvariant() + ".*");
 
             AllList.Items.Clear();
-            var anims = (Content.Content.Get().AvatarAnimations as AvatarAnimationProvider)?.AnimationsByName;
+            var anims = (Content.Content.Get().AvatarAnimations as AvatarAnimationProvider)?.AnimationsByName.Keys.ToList();
+            if (anims == null)
+                anims = (Content.Content.Get().AvatarAnimations as Content.TS1.TS1BCFAnimationProvider)?.BaseProvider.ListAllAnimations();
             if (anims != null)
             {
                 foreach (var anim in anims)
                 {
-                    var name = anim.Key.Substring(0, anim.Key.Length - 5).ToLowerInvariant();
+                    var name = anim.Substring(0, anim.Length - 5).ToLowerInvariant();
                     if (searchString.IsMatch(name)) AllList.Items.Add(name); //keys are names
                 }
             }

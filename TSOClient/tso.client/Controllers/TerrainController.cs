@@ -11,6 +11,7 @@ using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Utils;
 using FSO.Files;
+using FSO.Files.RC;
 using FSO.Server.DataService.Model;
 using FSO.Server.Protocol.Electron.Packets;
 using Microsoft.Xna.Framework;
@@ -30,6 +31,7 @@ namespace FSO.Client.Controllers
         private IClientDataService DataService;
         private IShardRealestateDomain Realestate;
         private PurchaseLotRegulator PurchaseRegulator;
+        private LotThumbContent LotThumbs;
 
         private Binding<Lot> CurrentHoverLot;
         private Binding<City> CurrentCity;
@@ -52,6 +54,8 @@ namespace FSO.Client.Controllers
                 .WithMultiBinding(RefreshTooltip, "Lot_Price", "Lot_IsOnline", "Lot_Name", "Lot_NumOccupants", "Lot_LeaderID");
 
             CurrentCity = new Binding<City>().WithMultiBinding(RefreshCity, "City_ReservedLotInfo", "City_SpotlightsVector");
+
+            LotThumbs = new LotThumbContent();
         }
 
         private void PurchaseRegulator_OnPurchased(int newBudget)
@@ -64,6 +68,8 @@ namespace FSO.Client.Controllers
             PurchaseRegulator.OnError -= PurchaseRegulator_OnError;
             PurchaseRegulator.OnTransition -= PurchaseRegulator_OnTransition;
             PurchaseRegulator.OnPurchased -= PurchaseRegulator_OnPurchased;
+
+            LotThumbs.Dispose();
         }
 
         public void ZoomIn(){
@@ -180,20 +186,42 @@ namespace FSO.Client.Controllers
                             else DataService.Request(MaskedStruct.MapView_RollOverInfo_Lot_Price, id);
                         }
                     });
-                }, 500);
+                }, 250);
             }
         }
 
-        public void RequestLotThumb(uint location, Callback<Texture2D> onRetrieved) {
-            DataService.Request(MaskedStruct.MapView_NearZoom_Lot_Thumbnail, location).ContinueWith(x =>
-            {
-                //happens in game thread
-                var lot = (Lot)x.Result;
-                if (lot == null) return;
-                var thumb = lot.Lot_Thumbnail;
-                if (thumb.Data == null || thumb.Data.Length == 0) return;
-                onRetrieved(ImageLoader.WinFromStreamP(GameFacade.GraphicsDevice, new MemoryStream(thumb.Data), -1));
-            });
+        public Texture2D RequestLotThumb(uint location) {
+            return LotThumbs.GetLotThumbForFrame((uint)Network.MyShard.Id, location);
+        }
+
+        public FSOF RequestLotFacade(uint location)
+        {
+            return LotThumbs.GetLotFacadeForFrame((uint)Network.MyShard.Id, location);
+        }
+
+        public void OverrideLotThumb(uint location, Texture2D tex)
+        {
+            LotThumbs.OverrideLotThumb((uint)Network.MyShard.Id, location, tex);
+        }
+
+        public LotThumbEntry LockLotThumb(uint location)
+        {
+            return LotThumbs.GetLotEntry((uint)Network.MyShard.Id, location, false);
+        }
+
+        public void UnlockLotThumb(uint location)
+        {
+            LotThumbs.ReleaseLotThumb((uint)Network.MyShard.Id, location, false);
+        }
+
+        public LotThumbEntry LockLotFacade(uint location)
+        {
+            return LotThumbs.GetLotEntry((uint)Network.MyShard.Id, location, true);
+        }
+
+        public void UnlockLotFacade(uint location)
+        {
+            LotThumbs.ReleaseLotThumb((uint)Network.MyShard.Id, location, true);
         }
 
         public void ClickLot(int x, int y)
@@ -205,7 +233,7 @@ namespace FSO.Client.Controllers
 
                 if (occupied)
                 {
-                    Parent.ShowLotPage(id);
+                    GameThread.InUpdate(() => { Parent.ShowLotPage(id); });
                 }
                 else if (!Realestate.IsPurchasable((ushort)x, (ushort)y))
                     return;
@@ -230,9 +258,9 @@ namespace FSO.Client.Controllers
 
         private void ShowLotBuyDialog(Lot lot)
         {
-            GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Hourglass);
             GameThread.InUpdate(() =>
             {
+                GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Hourglass);
                 if (_LotBuyAlert != null) { return; }
                 _LotBuyAlert = new UIAlert(new UIAlertOptions() { Title = "", Message = "" }); //just fill this space til we spawn the dialog.
                 _BuyLot = lot;
@@ -430,6 +458,9 @@ namespace FSO.Client.Controllers
                     case PurchaseLotFailureReason.LOT_TAKEN:
                     case PurchaseLotFailureReason.LOT_NOT_PURCHASABLE:
                         error = GameFacade.Strings.GetString("211", "46");
+                        break;
+                    case PurchaseLotFailureReason.NAME_TAKEN:
+                        error = GameFacade.Strings.GetString("247", "15");
                         break;
                     default:
                         error = GameFacade.Strings.GetString("211", "55") + " ("+reason.ToString()+")";

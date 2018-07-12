@@ -61,6 +61,7 @@ namespace FSO.Server.Clients
                 throw new Exception("Unknown error during AvatarDataServlet");
             }
 
+            var aotDummy = new XMLList<AvatarData>();
             List<AvatarData> result = (List<AvatarData>)XMLUtils.Parse<XMLList<AvatarData>>(response.Content);
             return result;
         }
@@ -78,6 +79,7 @@ namespace FSO.Server.Clients
                 throw new Exception("Unknown error during ShardStatus");
             }
 
+            var aotDummy = new XMLList<ShardStatusItem>();
             List<ShardStatusItem> result = (List<ShardStatusItem>)XMLUtils.Parse<XMLList<ShardStatusItem>>(response.Content);
             return result;
         }

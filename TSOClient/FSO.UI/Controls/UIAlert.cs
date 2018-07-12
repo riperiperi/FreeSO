@@ -27,7 +27,7 @@ namespace FSO.Client.UI.Controls
         
         private UIProgressBar _ProgressBar;
 
-        private UIImage Icon;
+        protected UIImage Icon;
         private Vector2 IconSpace;
 
         private List<UIButton> Buttons;
@@ -49,6 +49,18 @@ namespace FSO.Client.UI.Controls
             set
             {
                 if (TextBox != null) TextBox.CurrentText = value;
+            }
+        }
+
+        public string Body
+        {
+            get
+            {
+                return m_Options.Message;
+            }
+            set
+            {
+                m_Options.Message = value;
             }
         }
 
@@ -161,15 +173,17 @@ namespace FSO.Client.UI.Controls
                 h += 148;
             }
 
+            var buttonMaxWidth = (Buttons.Count == 0)? 0 : Buttons.Max(x => x.Width);
+            var buttonSpacing = (Buttons.Count > 2) ? 5 : 50;
             SetSize(w, h);
 
-            var btnX = (w - ((Buttons.Count * 100) + ((Buttons.Count - 1) * 45))) / 2;
+            var btnX = (w - ((Buttons.Count * buttonMaxWidth) + ((Buttons.Count - 1) * buttonSpacing))) / 2;
             var btnY = h - 58;
             foreach (UIElement button in Buttons)
             {
                 button.Y = btnY;
                 button.X = btnX;
-                btnX += 150;
+                btnX += buttonMaxWidth + buttonSpacing;
             }
         }
 
@@ -178,9 +192,17 @@ namespace FSO.Client.UI.Controls
             Icon.Texture = img;
             IconSpace = new Vector2(width+15, height);
 
-            float scale = Math.Min(1, Math.Min((float)height / (float)img.Height, (float)width / (float)img.Width));
-            Icon.SetSize(img.Width * scale, img.Height * scale);
-            Icon.Position = new Vector2(32, 38) + new Vector2(width/2 - (img.Width * scale / 2), height/2 - (img.Height * scale / 2));
+            if (img == null)
+            {
+                IconSpace = new Vector2();
+                Icon.SetSize(0,0);
+            }
+            else
+            {
+                float scale = Math.Min(1, Math.Min((float)height / (float)img.Height, (float)width / (float)img.Width));
+                Icon.SetSize(img.Width * scale, img.Height * scale);
+                Icon.Position = new Vector2(32, 38) + new Vector2(width / 2 - (img.Width * scale / 2), height / 2 - (img.Height * scale / 2));
+            }
 
             ComputeText();
             RefreshSize();
@@ -250,7 +272,15 @@ namespace FSO.Client.UI.Controls
 
         private void ComputeText()
         {
-            m_MessageText = TextRenderer.ComputeText(m_Options.Message, new TextRendererOptions
+            var msg = m_Options.Message;
+            if (m_Options.AllowEmojis)
+            {
+                msg = GameFacade.Emojis.EmojiToBB(BBCodeParser.SanitizeBB(msg));
+            } else if (m_Options.AllowBB)
+            {
+                msg = GameFacade.Emojis.EmojiToBB(msg);
+            }
+            m_MessageText = TextRenderer.ComputeText(msg, new TextRendererOptions
             {
                 Alignment = m_Options.Alignment,
                 MaxWidth = m_Options.Width - 64,
@@ -258,7 +288,8 @@ namespace FSO.Client.UI.Controls
                 Scale = _Scale,
                 TextStyle = m_TextStyle,
                 WordWrap = true,
-                TopLeftIconSpace = IconSpace
+                TopLeftIconSpace = IconSpace,
+                BBCode = m_Options.AllowEmojis || m_Options.AllowBB
             }, this);
 
             m_TextDirty = false;
@@ -288,6 +319,8 @@ namespace FSO.Client.UI.Controls
         public int TextSize = 10;
         public bool ProgressBar;
         public bool Color;
+        public bool AllowEmojis;
+        public bool AllowBB;
 
         public bool TextEntry = false;
         public UIAlertButton[] Buttons = new UIAlertButton[] { new UIAlertButton() };

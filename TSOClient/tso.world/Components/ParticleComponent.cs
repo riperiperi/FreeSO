@@ -11,6 +11,7 @@ using FSO.Files;
 using System.IO;
 using FSO.LotView.Model;
 using FSO.Common.Utils;
+using FSO.Files.Formats.IFF.Chunks;
 
 namespace FSO.LotView.Components
 {
@@ -20,13 +21,19 @@ namespace FSO.LotView.Components
         public IndexBuffer Indices;
         public int Primitives;
         public BoundingBox Volume;
+        public Matrix OwnerWorld;
+        public int NumParticles;
         public ParticleType Mode = ParticleType.SNOW;
         public Texture2D Tex;
         public Texture2D Indoors;
         public byte[] IndoorsDat;
+        public bool AutoBounds = true;
+        public bool BoundsDirty = true;
         public Blueprint Bp;
         public List<ParticleComponent> Particles;
         public Color Tint = Color.White;
+        public PART Resource;
+        public EntityComponent Owner;
 
         /*
         public static Dictionary<ParticleType, Vector4[]> Params = new Dictionary<ParticleType, Vector4[]>()
@@ -44,6 +51,13 @@ namespace FSO.LotView.Components
 
         public float WeatherIntensity;
         public float? FadeProgress = null;
+        public float Duration
+        {
+            get
+            {
+                return Resource?.Duration ?? 0f;
+            }
+        }
 
         public ParticleComponent(Blueprint bp, List<ParticleComponent> particles)
         {
@@ -53,7 +67,6 @@ namespace FSO.LotView.Components
 
         public void InitParticleVolume(GraphicsDevice gd, BoundingBox area, int particleCount)
         {
-            Console.WriteLine("initVolume " + ((Vertices == null) ? "null" : ""));
             if (Vertices != null) Vertices.Dispose();
             if (Indices != null) Indices.Dispose();
             if (Mode == ParticleType.SNOW)
@@ -76,10 +89,12 @@ namespace FSO.LotView.Components
                 indices.Add(v); indices.Add(v+1); indices.Add(v+2);
                 indices.Add(v+2); indices.Add(v+3); indices.Add(v);
 
-                verts.Add(new ParticleVertex(pos, new Vector3(-0.5f, -0.5f, 0), new Vector2(0, 0)));
-                verts.Add(new ParticleVertex(pos, new Vector3(-0.5f, 0.5f, 0), new Vector2(0, 1)));
-                verts.Add(new ParticleVertex(pos, new Vector3(0.5f, 0.5f, 0), new Vector2(1, 1)));
-                verts.Add(new ParticleVertex(pos, new Vector3(0.5f, -0.5f, 0), new Vector2(1, 0)));
+                var r = (float)rand.NextDouble();
+
+                verts.Add(new ParticleVertex(pos, new Vector3(-0.5f, -0.5f, 0), new Vector3(0, 0, r)));
+                verts.Add(new ParticleVertex(pos, new Vector3(-0.5f, 0.5f, 0), new Vector3(0, 1, r)));
+                verts.Add(new ParticleVertex(pos, new Vector3(0.5f, 0.5f, 0), new Vector3(1, 1, r)));
+                verts.Add(new ParticleVertex(pos, new Vector3(0.5f, -0.5f, 0), new Vector3(1, 0, r)));
             }
 
             Vertices = new VertexBuffer(gd, typeof(ParticleVertex), verts.Count, BufferUsage.None);
@@ -98,11 +113,21 @@ namespace FSO.LotView.Components
         }
 
         public float Time;
+        public float StopTime = float.PositiveInfinity;
+        public bool Dead;
 
         public override void Update(GraphicsDevice device, WorldState world)
         {
             base.Update(device, world);
-            Time += 0.001f / FSOEnvironment.RefreshRate;
+            Time += (Mode < ParticleType.GENERIC_BOX)?(0.001f / FSOEnvironment.RefreshRate):(1f / FSOEnvironment.RefreshRate);
+
+            if (Time > StopTime + Duration)
+            {
+                Particles?.Remove(this);
+                Dispose();
+                Dead = true;
+                return;
+            }
 
             if (FadeProgress != null) { 
                 if (FadeProgress.Value < 0)
@@ -114,11 +139,16 @@ namespace FSO.LotView.Components
                     FadeProgress += 0.01f/4;
                     if (FadeProgress.Value >= 1)
                     {
-                        Particles.Remove(this);
+                        Particles?.Remove(this);
                         Dispose();
                     }
                 }
             }
+        }
+
+        public void Stop()
+        {
+            StopTime = Time;
         }
 
         public WorldZoom LastZoom;
@@ -126,27 +156,47 @@ namespace FSO.LotView.Components
         public override void Draw(GraphicsDevice device, WorldState world)
         {
             var scale2d = (1 << (3 - (int)world.Zoom));
-            if (Vertices == null || LastZoom != world.Zoom)
+            var weather = (Mode < ParticleType.GENERIC_BOX);
+            if (Vertices == null || (LastZoom != world.Zoom && weather))
             {
                 LastZoom = world.Zoom;
-                if (FSOEnvironment.Enable3D)
-                    Volume = new BoundingBox(new Vector3(-50, -50, -50), new Vector3(50, 50, 50));
-                else
+                if (weather)
                 {
-                    Volume = new BoundingBox(new Vector3(-100, 0, -100)*scale2d, new Vector3(100 * scale2d, 2.95f*3*5 * 2, 100 * scale2d));
+                    if (FSOEnvironment.Enable3D)
+                        Volume = new BoundingBox(new Vector3(-50, -50, -50), new Vector3(50, 50, 50));
+                    else
+                    {
+                        Volume = new BoundingBox(new Vector3(-100, 0, -100) * scale2d, new Vector3(100 * scale2d, 2.95f * 3 * 5 * 2, 100 * scale2d));
+                    }
+                    if (Indoors == null)
+                        Indoors = new Texture2D(device, Bp.Width, Bp.Height, false, SurfaceFormat.Alpha8);
+                    InitParticleVolume(device, Volume, (int)(12500 * WeatherIntensity));
+                } else
+                {
+                    var volVec = Volume.Max - Volume.Min;
+                    if (volVec.X < 0.1f) volVec.X = 0.1f;
+                    if (volVec.Y < 0.1f) volVec.Y = 0.1f;
+                    if (volVec.Z < 0.1f) volVec.Z = 0.1f;
+
+                    var maxDim = Math.Max(volVec.X, Math.Max(volVec.Y, volVec.Z));
+                    NumParticles = (int)(maxDim * Resource.Particles);
+
+                    if (NumParticles == 0) NumParticles = 1;// return;
+                    InitParticleVolume(device, Volume, NumParticles);
                 }
-                if (Indoors == null)
-                    Indoors = new Texture2D(device, Bp.Width, Bp.Height, false, SurfaceFormat.Alpha8);
-                InitParticleVolume(device, Volume, (int)(12500*WeatherIntensity));
+                
                 //return;
             }
             //get our billboard
 
-            var indoors = Bp.GetIndoors();
-            if (IndoorsDat != indoors)
+            if (weather)
             {
-                IndoorsDat = indoors;
-                Indoors.SetData(indoors);
+                var indoors = Bp.GetIndoors();
+                if (IndoorsDat != indoors)
+                {
+                    IndoorsDat = indoors;
+                    Indoors.SetData(indoors);
+                }
             }
 
             var rot = world.Camera.View;
@@ -160,20 +210,35 @@ namespace FSO.LotView.Components
             var pos = Vector3.Transform(Vector3.Zero, Matrix.Invert(world.Camera.View));
             Vector3 transp;
 
-            if (FSOEnvironment.Enable3D) {
-                transp = (pos + forward * -20f + new Vector3(Volume.Max.X, 0, Volume.Max.Z)) * 2;
+            float opacity = 1;
+            if (weather)
+            {
+                if (FSOEnvironment.Enable3D)
+                {
+                    transp = (pos + forward * -20f + new Vector3(Volume.Max.X, 0, Volume.Max.Z)) * 2;
+                }
+                else
+                {
+                    transp = new Vector3(world.CenterTile.X * 3 + Volume.Max.X, basealt * 3, world.CenterTile.Y * 3 + Volume.Max.Z) * 2;
+                }
+                trans = Matrix.CreateTranslation(transp);
+                effect.Parameters["World"].SetValue(trans);
+
+                var velocity = (FSOEnvironment.Enable3D) ? transp - LastPosition : new Vector3();
+                effect.Parameters["CameraVelocity"].SetValue(velocity);
+                opacity = Math.Min(1, (3f / velocity.Length() + 0.001f));
+                LastPosition = transp;
+                effect.Parameters["Level"].SetValue((float)(Math.Min((world.Level + 1), Bp.Stories) - 0.999f));
+            } else
+            {
+                effect.Parameters["World"].SetValue(OwnerWorld);// Matrix.CreateScale(3,3,3));
+                effect.Parameters["Level"].SetValue(Level-0.999f);
             }
-            else {
-                transp = new Vector3(world.CenterTile.X * 3 + Volume.Max.X, basealt * 3, world.CenterTile.Y * 3 + Volume.Max.Z) *2;
-            }
-            trans = Matrix.CreateTranslation(transp);
-            effect.Parameters["World"].SetValue(trans);
-            var velocity = (FSOEnvironment.Enable3D)?transp - LastPosition:new Vector3();
-            effect.Parameters["CameraVelocity"].SetValue(velocity);
+
             effect.Parameters["View"].SetValue(world.Camera.View);
             effect.Parameters["Projection"].SetValue(world.Camera.Projection);
             effect.Parameters["InvRotation"].SetValue(inv * Matrix.CreateScale(0.5f));
-            float opacity = Math.Min(1, (3f/velocity.Length() + 0.001f));
+            
             Tint = Color.White * opacity;
             if (Mode == ParticleType.RAIN)
             {
@@ -187,13 +252,11 @@ namespace FSO.LotView.Components
             {
                 effect.Parameters["SubColor"].SetValue(Vector4.Zero);
             }
-            effect.Parameters["Level"].SetValue((float)(Math.Min((world.Level + 1), Bp.Stories) - 0.999f));
             effect.Parameters["ClipLevel"].SetValue(FSOEnvironment.Enable3D ? float.MaxValue : world.Level);
             effect.Parameters["BaseAlt"].SetValue(basealt * 3);
             effect.Parameters["BpSize"].SetValue(new Vector2(Bp.Width * 3, Bp.Height * 3));
             effect.Parameters["Stories"].SetValue((float)(Bp.Stories + 1));
             InternalDraw(device, effect, scale2d, true);
-            LastPosition = transp;
         }
 
         private Vector3 LastPosition;
@@ -270,6 +333,20 @@ namespace FSO.LotView.Components
                     effect.Parameters["Parameters2"].SetValue(new Vector4(30f, 10f, 10f, ((FSOEnvironment.Enable3D || Indoors == null)? 0.3f:1f)));
                     effect.Parameters["Parameters3"].SetValue(new Vector4(Volume.Min.X, Volume.Max.X - Volume.Min.X, Volume.Min.Z, Volume.Max.Z - Volume.Min.Z));
                     break;
+                //(deltax, deltay, deltaz, gravity)
+                //(deltavar, rotdeltavar, size, sizevel)
+                //(duration, fadein, fadeout, sizevar)
+                case ParticleType.GENERIC_BOX:
+                    if (Resource.Parameters == null) Resource.BakeParameters();
+                    var p = Resource.Parameters;
+                    effect.Parameters["Parameters1"].SetValue(p[0]);
+                    effect.Parameters["Parameters2"].SetValue(p[1]);
+                    effect.Parameters["Parameters3"].SetValue(p[2]);
+                    effect.Parameters["Parameters4"].SetValue(p[3]);
+
+                    effect.Parameters["Frequency"].SetValue(Resource.Frequency);
+                    effect.Parameters["StopTime"].SetValue(StopTime);
+                    break;
             }
 
             effect.CurrentTechnique = effect.Techniques[(int)Mode * 2 + (useDepth?0:1)];
@@ -288,13 +365,17 @@ namespace FSO.LotView.Components
             }
 
             device.BlendState = BlendState.NonPremultiplied;
+            device.DepthStencilState = DepthStencilState.Default;
         }
 
         public void Dispose()
         {
             Vertices?.Dispose();
             Indices?.Dispose();
-            Tex?.Dispose();
+            Vertices = null;
+            Indices = null;
+
+            if (Mode < ParticleType.GENERIC_BOX) Tex?.Dispose();
             Indoors?.Dispose();
         }
     }
@@ -302,6 +383,7 @@ namespace FSO.LotView.Components
     public enum ParticleType : int
     {
         SNOW = 0,
-        RAIN = 1
+        RAIN = 1,
+        GENERIC_BOX = 2
     }
 }

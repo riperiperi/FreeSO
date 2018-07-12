@@ -22,6 +22,11 @@ using FSO.Client.UI;
 using FSO.Common.DatabaseService.Model;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.Client.Utils;
+using FSO.Server.Protocol.Voltron.Packets;
+using FSO.Client.Controllers.Panels;
+using System.Collections.Immutable;
+using FSO.Common.DataService.Model;
+using FSO.Common.Serialization.Primitives;
 
 namespace FSO.Client
 {
@@ -33,10 +38,12 @@ namespace FSO.Client
         private object CurrentController;
         private UIScreen CurrentView;
         private IKernel Kernel;
+        private static bool DummyLinker;
 
         public GameController(IKernel kernel)
         {
             this.Kernel = kernel;
+            if (DummyLinker) LinkEveryController();
         }
 
         public void DebugShowTypeFaceScreen()
@@ -94,6 +101,97 @@ namespace FSO.Client
             //screen.SelectedCity = selectedCity;
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
+        }
+
+        public void LinkEveryController()
+        {
+            //obvious question - "why":
+            //this is for mono ahead of time compilation. By referencing everything here,
+            //we make sure these classes and generic variants are AOT compiled
+
+            var load = new LoadingScreen();
+            var loadc = new LoadingScreenController(null, null, null);
+
+            
+            var screen = new PersonSelectionEdit();
+            var t = new TerrainController(null, null, null, null, null);
+            var n = new Network.Network(null, null, null, null);
+            var v = new Credits();
+            var cd = new Common.DataService.ClientDataService(null, null, null);
+            var c = new CoreGameScreen();
+            var cc = new CoreGameScreenController(null, null, null, null, null);
+            var s = new SandboxGameScreen();
+            var ps = new PersonSelection(null, null);
+            var psc = new PersonSelectionController(null, null, null, null);
+            var cl1 = new Server.Clients.AuthClient("");
+            var cl2 = new Server.Clients.CityClient("");
+            var cl3 = new Server.Clients.ApiClient("");
+            var ls = new LoginScreen(null);
+            var lc = new LoginController(null, null);
+            var lr = new Regulators.LoginRegulator(null, null, null);
+
+            var seled = new PersonSelectionEditController(null, null);
+            var casr = new Regulators.CreateASimRegulator(null);
+            var purch = new Regulators.PurchaseLotRegulator(null);
+            var conn = new Regulators.LotConnectionRegulator(null, null, null);
+            var t2 = new Regulators.CityConnectionRegulator(null, null, null, null, Kernel, null);
+            var regu = new Regulators.RegulatorsModule();
+
+            var prov = new CacheProvider();
+            var clip = new AuthClientProvider(null);
+            var citp = new CityClientProvider(null);
+            var ar = new Server.Clients.AriesClient(null);
+            var tso = new cTSOSerializerProvider(null);
+            var ser = new Server.Protocol.Voltron.DataService.cTSOSerializer(null);
+            var mods = new ModelSerializerProvider(null);
+            var dbs = new Common.DatabaseService.DatabaseService(null);
+            var cds = new Common.DataService.ClientDataService(null, null, null);
+
+            var arp = new Server.Protocol.Aries.AriesProtocolDecoder(null);
+            var are = new Server.Protocol.Aries.AriesProtocolEncoder(null);
+            var serc = new Common.Serialization.SerializationContext(null, null);
+
+            var packets = new object[]
+            {
+                new ClientOnlinePDU(),
+                new HostOnlinePDU(),
+                new SetIgnoreListPDU(),
+                new SetIgnoreListResponsePDU(),
+                new SetInvinciblePDU(),
+                new RSGZWrapperPDU(),
+                new TransmitCreateAvatarNotificationPDU(),
+                new DataServiceWrapperPDU(),
+                new DBRequestWrapperPDU(),
+                new OccupantArrivedPDU(),
+                new ClientByePDU(),
+                new ServerByePDU(),
+                new FindPlayerPDU(),
+                new FindPlayerResponsePDU(),
+                new ChatMsgPDU(),
+                new AnnouncementMsgPDU(),
+
+                new MessagingWindowController(null, null, null),
+                new Controllers.Panels.SecureTradeController(null,null),
+                new GizmoSearchController(null, null, null),
+                new GizmoTop100Controller(null, null, null, null, null),
+                new LotAdmitController(null, null, null),
+                new GizmoController(null, null, null),
+                new PersonPageController(null,null,null),
+                new LotPageController(null, null),
+                new BookmarksController(null, null, null),
+                new RelationshipDialogController(null, null, null, null),
+                new InboxController(null, null, null, null),
+                new JoinLotProgressController(null, null),
+                new DisconnectController(null, null, null, null, null),
+
+                ImmutableList.Create<uint>(),
+                ImmutableList.Create<JobLevel>(),
+                ImmutableList.Create<Relationship>(),
+                ImmutableList.Create<Bookmark>(),
+                ImmutableList.Create<bool>(),
+                
+                new cTSOGenericData(),
+            };
         }
 
 

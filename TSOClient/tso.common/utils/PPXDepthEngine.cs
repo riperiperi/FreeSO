@@ -42,6 +42,11 @@ namespace FSO.Common.Utils
 
         public static void SetPPXTarget(RenderTarget2D color, RenderTarget2D depth, bool clear)
         {
+            SetPPXTarget(color, depth, clear, Color.TransparentBlack);
+        }
+
+        public static void SetPPXTarget(RenderTarget2D color, RenderTarget2D depth, bool clear, Color clearColor)
+        {
             if (color == null && depth == null && Backbuffer != null) color = Backbuffer;
             ActiveColor = color;
             if (color == Backbuffer && depth == null && BackbufferDepth != null) depth = BackbufferDepth;
@@ -53,7 +58,8 @@ namespace FSO.Common.Utils
             if (clear)
             {
                 StencilValue = 1;
-                gd.Clear(Color.TransparentBlack);
+
+                gd.Clear(clearColor);// FSO.Common.Rendering.Framework.GameScreen.ClearColor);
                 if (depth != null)
                 {
                     gd.SetRenderTarget(depth);

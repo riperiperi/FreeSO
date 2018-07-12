@@ -1,0 +1,9 @@
+{
+    "guid": "f2c4cfad-9060-40ec-9958-a48c57b95023", 
+    "trigger": "screen:city",
+    "title": "Welcome To FreeSO!",
+    "category": "Basics",
+    "image": "hint_city.png",
+    "order": -2,
+    "body": "Now that you've made your sim and picked a city, you're free to do whatever you want... except you probably don't know where to start! You'll want to land on an open property and say hello, so let's go though that.\n\nThe window you see on the bottom right is called 'Gizmo', and lets you filter out the most popular properties and search for ones you know the name of. Properties in the game have different categories - a good place to start is on a Welcome property, if any are open. You can see the open Welcome lots with the most visitors through the 'Welcome' property filter in Gizmo. If you're under 2 weeks old, this filter should be triggered already!\n\nYou can also explore the city to find open properties by location. Open properties will show as flashing red dots on the map - simply click to zoom in, then click any of the flashing lots to get started."
+}

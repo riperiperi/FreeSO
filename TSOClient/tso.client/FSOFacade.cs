@@ -1,4 +1,5 @@
-﻿using FSO.Client.UI.Panels;
+﻿using FSO.Client.UI.Hints;
+using FSO.Client.UI.Panels;
 using Ninject;
 using System;
 using System.Collections.Generic;
@@ -13,5 +14,7 @@ namespace FSO.Client
         public static KernelBase Kernel;
         public static GameController Controller;
         public static UIMessageController MessageController = new UIMessageController();
+
+        public static UIHintManager Hints;
     }
 }

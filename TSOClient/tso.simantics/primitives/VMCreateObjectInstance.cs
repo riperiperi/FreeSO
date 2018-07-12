@@ -32,15 +32,17 @@ namespace FSO.SimAntics.Engine.Primitives
                 case VMCreateObjectPosition.UnderneathMe:
                 case VMCreateObjectPosition.OnTopOfMe:
                     tpos = new LotTilePos(context.Caller.Position);
-                    dir = Direction.NORTH;
+                    dir = context.Caller.Direction;
                     break;
                 case VMCreateObjectPosition.BelowObjectInLocal:
-                    tpos = new LotTilePos(context.VM.GetObjectById((short)context.Locals[operand.LocalToUse]).Position);
-                    dir = Direction.NORTH;
+                    var lObj = context.VM.GetObjectById((short)context.Locals[operand.LocalToUse]);
+                    tpos = new LotTilePos(lObj.Position);
+                    dir = lObj.Direction;
                     break;
                 case VMCreateObjectPosition.BelowObjectInStackParam0:
-                    tpos = new LotTilePos(context.VM.GetObjectById((short)context.Args[0]).Position);
-                    dir = Direction.NORTH;
+                    var pObj = context.VM.GetObjectById((short)context.Args[0]);
+                    tpos = new LotTilePos(pObj.Position);
+                    dir = pObj.Direction;
                     break;
                 case VMCreateObjectPosition.OutOfWorld:
                     dir = Direction.NORTH;
@@ -163,7 +165,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 }
             }
             if (operand.UseNeighbor) {
-                ((VMAvatar)(obj)).InheritNeighbor(neigh);
+                ((VMAvatar)(obj)).InheritNeighbor(neigh, context.VM.TS1State.CurrentFamily);
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;

@@ -22,17 +22,22 @@ using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Marshals.Hollow;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.SimAntics.Model.Platform;
+using FSO.SimAntics.Model.TS1Platform;
 
 namespace FSO.SimAntics
 {
     public class VMGameObject : VMEntity
     {
         public VMGameObjectDisableFlags Disabled;
+        public VMIObjectState ObjectState;
 
         public VMGameObject(GameObject def, ObjectComponent worldUI) : base(def)
         {
             this.WorldUI = worldUI;
-            PlatformState = new VMTSOObjectState(); //todo: ts1 switch
+            var state = VM.GlobTS1?(VMAbstractEntityState)new VMTS1ObjectState():new VMTSOObjectState();
+            PlatformState = state;
+            ObjectState = (VMIObjectState)state;
         }
 
         public override void SetDynamicSpriteFlag(ushort index, bool set)
@@ -106,17 +111,20 @@ namespace FSO.SimAntics
                     WorldUI.Room = ((flags & VMEntityFlags2.GeneratesLight) > 0 &&
                         GetValue(VMStackObjectVariable.LightingContribution) > 0 &&
                         (flags & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) == 0)
-                        ? (ushort)65535 : (ushort)GetValue(VMStackObjectVariable.Room);
+                        ? (ushort)65535 : (ushort)ObjectData[(int)VMStackObjectVariable.Room];
                 }
             }
         }
 
         public void DisableIfTSOCategoryWrong(VMContext context)
         {
+            if (context.VM.TS1) return;
             OBJD obj = Object.OBJ;
             if (MasterDefinition != null) obj = MasterDefinition;
             var category = context.VM.TSOState.PropertyCategory;
-            if (category != 255 && obj.LotCategories > 0 && (obj.LotCategories & (1 << category)) == 0)
+            var flag = (1 << category);
+            if (category == 7) flag |= 2; //money objects are allowed on welcome lots too. (fso change, disabling this is todo)
+            if (category != 255 && obj.LotCategories > 0 && (obj.LotCategories & flag) == 0)
                 Disabled |= VMGameObjectDisableFlags.LotCategoryWrong;
             else
                 Disabled &= ~VMGameObjectDisableFlags.LotCategoryWrong; 
@@ -435,6 +443,46 @@ namespace FSO.SimAntics
             base.PositionChange(context, noEntryPoint);
         }
 
+        #region FSO Particles
+        public void EnableParticle(ushort id)
+        {
+            if (UseWorld)
+            {
+                var parts = ((ObjectComponent)WorldUI).Particles;
+                var relevant = parts.FirstOrDefault(x => x.Resource?.ChunkID == id && float.IsPositiveInfinity(x.StopTime));
+                if (relevant == null)
+                {
+                    var part = new ParticleComponent(WorldUI.blueprint, WorldUI.blueprint.ObjectParticles);
+                    //for now there is only one particle resource. In future get from iff.
+                    part.Resource = PART.BROKEN;
+                    part.Mode = ParticleType.GENERIC_BOX;
+                    GameThread.InUpdate(() =>
+                    {
+                        part.Tex = Content.Content.Get().RCMeshes.GetTex("FSO_smoke.png");
+                        WorldUI.blueprint.ObjectParticles.Add(part);
+                    });
+                    ((ObjectComponent)WorldUI).Particles.Add(part);
+                    part.Owner = WorldUI;
+                    WorldUI.blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, WorldUI.TileX, WorldUI.TileY, WorldUI.Level, WorldUI));
+                }
+            }
+        }
+
+        public void DisableParticle(ushort id)
+        {
+            if (UseWorld)
+            {
+                var parts = ((ObjectComponent)WorldUI).Particles;
+                var relevant = parts.FirstOrDefault(x => x.Resource?.ChunkID == id);
+                if (relevant != null)
+                {
+                    relevant.Stop();
+                }
+            }
+        }
+
+        #endregion
+
 
         #region VM Marshalling Functions
         public VMGameObjectMarshal Save()
@@ -447,6 +495,7 @@ namespace FSO.SimAntics
         public void Load(VMGameObjectMarshal input)
         {
             base.Load(input);
+            ObjectState = (VMIObjectState)PlatformState;
             Position = Position;
             Direction = input.Direction;
             Disabled = input.Disabled;
@@ -458,6 +507,11 @@ namespace FSO.SimAntics
                 SetValue(VMStackObjectVariable.Flags, GetValue(VMStackObjectVariable.Flags));
                 RefreshGraphic();
             }
+        }
+
+        public override void LoadCrossRef(VMEntityMarshal input, VMContext context)
+        {
+            base.LoadCrossRef(input, context);
         }
 
         public VMHollowGameObjectMarshal HollowSave()

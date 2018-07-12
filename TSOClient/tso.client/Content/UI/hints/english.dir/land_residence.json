@@ -1,0 +1,8 @@
+{
+    "guid": "c0926279-b6af-458e-b730-951683152edf", 
+    "trigger": "land:residence",
+    "title": "Home Invasion",
+    "category": "Lot Types",
+    "image": "hint_residence.png",
+    "body": "You are currently trespassing! :scream:\nNot really - this is a Residence lot, essentially a player's home, but they have opened it so that you can join. This lot type is usually more personal than others - you'll generally see groups of friends hanging out and playing games here. This lot type does not currently offer much apart from that, though this may be set to change in the future. \n\nMotives: [s][color=#FFA64D]Average[/color][/s], Speciality: [s]Love Beds, Heart Hot Tub, being Where the Heart is.[/s]"
+}

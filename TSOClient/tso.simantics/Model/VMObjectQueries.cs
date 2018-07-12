@@ -47,8 +47,7 @@ namespace FSO.SimAntics.Model
                 tile = new List<VMEntity>();
                 TileToObjects.Add(off, tile);
             }
-            if (!tile.Contains(ent)) VM.AddToObjList(tile, ent); //shouldn't be a problem any more, but just in case check first.
-            else { }
+            VM.AddToObjList(tile, ent); //if it's already on this tile, this will do nothing
         }
 
         public void UnregisterObjectPos(VMEntity ent)
@@ -104,7 +103,7 @@ namespace FSO.SimAntics.Model
         public void RemoveMultitilePersist(VM vm, uint persistID)
         {
             MultitileByPersist.Remove(persistID);
-            if (vm.TSOState.LimitExceeded) VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
+            if (vm.PlatformState.LimitExceeded) VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
         }
 
         public void RegisterCategory(VMEntity obj, short category)
@@ -171,7 +170,7 @@ namespace FSO.SimAntics.Model
                 if (obj.Thread != null)
                 {
                     var vm = obj.Thread.Context.VM;
-                    if (vm.TSOState.LimitExceeded) VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
+                    if (vm.PlatformState.LimitExceeded) VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
                 }
             }
         }

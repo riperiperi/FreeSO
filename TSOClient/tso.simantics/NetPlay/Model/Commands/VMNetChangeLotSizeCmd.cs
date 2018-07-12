@@ -31,7 +31,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Verified) return true; //set internally when transaction succeeds. trust that the verification happened.
 
             if (caller == null || //caller must be on lot, have owner permissions
-                ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Owner)
+                caller.AvatarState.Permissions < VMTSOAvatarPermissions.Owner)
                 return false;
 
             var exState = vm.TSOState.Size;

@@ -14,6 +14,8 @@ using FSO.Content;
 using Microsoft.Xna.Framework;
 using FSO.Content.Model;
 using FSO.Vitaboy.Model;
+using FSO.Common;
+using FSO.Files.RC;
 
 namespace FSO.Vitaboy
 {
@@ -27,6 +29,9 @@ namespace FSO.Vitaboy
         public Skeleton Skeleton { get; set; }
         public Skeleton BaseSkeleton { get; set; }
         public List<Vector2> LightPositions;
+        public DGRP3DMesh HeadObject;
+        public float HeadObjectRotation;
+        public float HeadObjectSpeedyVel;
         protected Matrix[] SkelBones;
 
         public static void setVitaboyEffect(Effect e) {
@@ -205,11 +210,13 @@ namespace FSO.Vitaboy
 
             instance.Mesh.Prepare(Skeleton.RootBone);
 
-            if (GPUMode)
+            
+            /*if (GPUMode)
             {
                 instance.Mesh.StoreOnGPU(GPUDevice);
                 instance.Texture.Get(GPUDevice);
-            }
+            }*/
+            
             lock (Bindings)
             {
                 Bindings.Add(instance);
@@ -262,6 +269,7 @@ namespace FSO.Vitaboy
         }
 
         public static int DefaultTechnique = 0;
+        public Vector4 AmbientLight = Vector4.One;
 
         /// <summary>
         /// Draws the meshes making up this Avatar instance.
@@ -273,7 +281,7 @@ namespace FSO.Vitaboy
             Effect.Parameters["View"].SetValue(View);
             Effect.Parameters["Projection"].SetValue(Projection);
             Effect.Parameters["World"].SetValue(World);
-            Effect.Parameters["AmbientLight"].SetValue(new Vector4(1, 1, 1, 1));
+            Effect.Parameters["AmbientLight"].SetValue(AmbientLight);
 
             var test = Vector4.Transform(new Vector4(0, 5.2f, 0, 1), World * View * Projection);
 
@@ -294,7 +302,8 @@ namespace FSO.Vitaboy
                     {
                         if (binding.Texture != null)
                         {
-                            effect.Parameters["MeshTex"].SetValue(binding.Texture.Get(device));
+                            var tex = binding.Texture.Get(device);
+                            effect.Parameters["MeshTex"].SetValue(tex);
                         }
                         else
                         {
@@ -345,6 +354,46 @@ namespace FSO.Vitaboy
                 effect.CurrentTechnique = oldTech;
                 device.DepthStencilState = DepthStencilState.Default;
             }
+
+            DrawHeadObject(device, effect);
+        }
+
+        public void DrawHeadObject(GraphicsDevice device, Effect effect)
+        {
+            //0: high reflective
+            //1: light reflective
+            //2: outline
+            if (effect.Techniques[1] == effect.CurrentTechnique) return;
+            var headObj = HeadObject;
+            if (headObj == null) return;
+            var oldTech = effect.CurrentTechnique;
+            effect.CurrentTechnique = Avatar.Effect.Techniques[6];
+            device.RasterizerState = RasterizerState.CullClockwise;
+
+            var trans = Matrix.Invert(effect.Parameters["View"].GetValueMatrix()).Translation;
+            effect.Parameters["HOCameraPosition"].SetValue(trans);
+            effect.Parameters["World"].SetValue(Matrix.CreateScale(1.33f) * Matrix.CreateRotationY(HeadObjectRotation) * Matrix.CreateTranslation(Skeleton.GetBone("HEAD").AbsoluteMatrix.Translation + new Vector3(0, 3.25f, 0)) * effect.Parameters["World"].GetValueMatrix());
+
+            for (int i=0; i<headObj.Geoms.Count; i++)
+            {
+                var multi = 0.5f / (headObj.Geoms.Count - 1);
+                var geom = headObj.Geoms[i];
+                foreach (var item in geom)
+                {
+                    effect.Parameters["MeshTex"].SetValue(item.Key);
+                    effect.Parameters["HOToonSpecThresh"].SetValue(0.5f);
+                    effect.Parameters["HOToonSpecColor"].SetValue(new Vector3(multi * ((headObj.Geoms.Count-1) - i)));
+
+                    effect.CurrentTechnique.Passes[0].Apply();
+                    //if (i != 1) device.RasterizerState = RasterizerState.CullClockwise;
+                    device.SetVertexBuffer(item.Value.Verts);
+                    device.Indices = item.Value.Indices;
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, item.Value.PrimCount);
+                    //if (i != 1) device.RasterizerState = RasterizerState.CullCounterClockwise;
+                }
+            }
+            device.RasterizerState = RasterizerState.CullCounterClockwise;
+            effect.CurrentTechnique = oldTech;
         }
 
         private static VertexBuffer ShadBuf;

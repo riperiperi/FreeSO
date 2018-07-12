@@ -14,11 +14,13 @@ using FSO.Content;
 using System.IO;
 using FSO.HIT.Events;
 using Microsoft.Xna.Framework.Audio;
+using FSO.Common;
 
 namespace FSO.HIT
 {
     public class HITVM
     {
+        public static bool DISABLE_SOUND = false;
         private static HITVM INSTANCE;
 
         public static HITVM Get()
@@ -28,6 +30,7 @@ namespace FSO.HIT
 
         public static void Init()
         {
+            DISABLE_SOUND = FSOEnvironment.NoSound;
             INSTANCE = new HITVM();
         }
 
@@ -163,6 +166,7 @@ namespace FSO.HIT
 
         public HITSound PlaySoundEvent(string evt)
         {
+            if (DISABLE_SOUND) return null;
             evt = evt.ToLowerInvariant();
             if (evt.StartsWith("nc_")) NightclubMode = true;
             HITThread InterruptBlocker = null; //the thread we have to wait for to finish before we begin.

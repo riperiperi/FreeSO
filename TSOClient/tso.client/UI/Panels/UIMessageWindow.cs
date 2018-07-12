@@ -104,18 +104,28 @@ namespace FSO.Client.UI.Panels
             MessageTextEdit.AttachSlider(MessageSlider);
             MessageTextEdit.OnChange += new ChangeDelegate(MessageTextEdit_OnChange);
             SendMessageButton.OnButtonClick += new ButtonClickDelegate(SendMessage);
+
+            var emojis = new UIEmojiSuggestions(MessageTextEdit);
+            Add(emojis);
+            emojis.Parent = this;
             MessageTextEdit.OnEnterPress += new KeyPressDelegate(SendMessageEnter);
+
             SendMessageButton.Disabled = true;
 
             LetterSlider.AttachButtons(LetterScrollUpButton, LetterScrollDownButton, 1);
             LetterTextEdit.AttachSlider(LetterSlider);
             LetterTextEdit.MaxChars = 1000;
+
+            var emojis2 = new UIEmojiSuggestions(LetterTextEdit);
+            Add(emojis2);
+            emojis2.Parent = this;
+
             RespondLetterButton.OnButtonClick += new ButtonClickDelegate(RespondLetterButton_OnButtonClick);
             SendLetterButton.OnButtonClick += new ButtonClickDelegate(SendLetter);
 
             HistorySlider.AttachButtons(HistoryScrollUpButton, HistoryScrollDownButton, 1);
             HistoryTextEdit.AttachSlider(HistorySlider);
-
+            HistoryTextEdit.BBCodeEnabled = true;
             HistoryTextEdit.TextStyle = HistoryTextEdit.TextStyle.Clone();
             HistoryTextEdit.TextStyle.Size = 8;
             HistoryTextEdit.TextMargin = new Microsoft.Xna.Framework.Rectangle(3, 3, 3, 3);
@@ -153,8 +163,8 @@ namespace FSO.Client.UI.Panels
         private void SendMessageEnter(UIElement element)
         {
             //remove newline first
-            if (MessageType != Controllers.MessageType.Call) return; //cannot send on enter for letters (or during read mode :|)
-            MessageTextEdit.CurrentText = MessageTextEdit.CurrentText.Substring(0, MessageTextEdit.CurrentText.Length - 2);
+            if (MessageType != Controllers.MessageType.Call || MessageTextEdit.EventSuppressed) return; //cannot send on enter for letters (or during read mode :|)
+            MessageTextEdit.CurrentText = MessageTextEdit.CurrentText.TrimEnd('\n');
             SendMessage(this);
         }
 
@@ -205,16 +215,16 @@ namespace FSO.Client.UI.Panels
             SendMessageButton.Disabled = (edit.CurrentText.Length == 0);
         }
 
-        public void AddMessage(UserReference user, string message, IMEntryType type)
+        public void AddMessage(UserReference user, string message, uint color, IMEntryType type)
         {
-            Messages.Add(new IMEntry(user, message, type));
+            Messages.Add(new IMEntry(user, message, new Color(color), type));
             RenderMessages();
         }
 
         public void SetEmail(string subject, string message, bool to)
         {
             LetterSubjectTextEdit.CurrentText = subject;
-            LetterTextEdit.CurrentText = message;
+            LetterTextEdit.CurrentText = GameFacade.Emojis.EmojiToBB(message);
 
             if (to)
             {
@@ -226,14 +236,19 @@ namespace FSO.Client.UI.Panels
         public void RenderMessages()
         {
             var sb = new StringBuilder();
+            var emojis = GameFacade.Emojis;
             for (int i = 0; i < Messages.Count; i++)
             {
                 var elem = Messages.ElementAt(i);
-                sb.Append("[");
-                sb.Append(elem.User.Name);
-                sb.Append("]: ");
-                sb.Append(elem.MessageBody);
-                if (i != Messages.Count - 1) sb.Append("\r\n");
+                sb.Append("[color=lightgray]<");
+
+                var avatarColor = "[color=#" + elem.Color.R.ToString("x2") + elem.Color.G.ToString("x2") + elem.Color.B.ToString("x2") + "][s]";
+                var colorAfter = "[/s][/color]";
+
+                sb.Append(avatarColor+elem.User.Name+colorAfter);
+                sb.Append(">:[/color] ");
+                sb.Append(emojis.EmojiToBB(BBCodeParser.SanitizeBB(elem.MessageBody)));
+                if (i != Messages.Count - 1) sb.Append("\n");
             }
             HistoryTextEdit.CurrentText = sb.ToString();
             HistoryTextEdit.ComputeDrawingCommands();
@@ -269,6 +284,7 @@ namespace FSO.Client.UI.Panels
 
             LetterSubjectTextEdit.Mode = (type == Controllers.MessageType.ReadLetter) ? UITextEditMode.ReadOnly : UITextEditMode.Editor;
             LetterTextEdit.Mode = (type == Controllers.MessageType.ReadLetter) ? UITextEditMode.ReadOnly : UITextEditMode.Editor;
+            LetterTextEdit.BBCodeEnabled = (type == Controllers.MessageType.ReadLetter);
 
             if (type == Controllers.MessageType.WriteLetter)
             {
@@ -299,12 +315,14 @@ namespace FSO.Client.UI.Panels
         public UserReference User;
         public string MessageBody;
         public IMEntryType Type;
+        public Color Color;
 
-        public IMEntry(UserReference user, string message, IMEntryType type)
+        public IMEntry(UserReference user, string message, Color color, IMEntryType type)
         {
             User = user;
             MessageBody = message;
             Type = type;
+            Color = color;
         }
     }
 

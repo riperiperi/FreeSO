@@ -18,6 +18,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     public class VMNetChatCmd : VMNetCommandBodyAbstract
     {
         public string Message;
+        public byte ChannelID;
+        public bool SayWithSim;
+        public bool Verified;
 
         public override bool Execute(VM vm, VMAvatar avatar)
         {
@@ -29,7 +32,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             {
                 var spaceIndex = Message.IndexOf(' ');
                 if (spaceIndex == -1) spaceIndex = Message.Length;
-                if ((FromNet && ((VMTSOAvatarState)avatar.TSOState).Permissions < VMTSOAvatarPermissions.Admin) || !(vm.Driver is VMServerDriver)) return false;
+                if ((FromNet && avatar.AvatarState.Permissions < VMTSOAvatarPermissions.Admin) || !(vm.Driver is VMServerDriver)) return false;
                 //commands are only run from the server sim right now
                 var cmd = Message.Substring(1, spaceIndex - 1);
                 var args = Message.Substring(Math.Min(Message.Length, spaceIndex + 1), Math.Max(0, Message.Length - (spaceIndex + 1)));
@@ -42,16 +45,16 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         break;
                     case "banip":
                         server.BanIP(args);
-                        vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Added " + args + " to the IP ban list."));
+                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Added " + args + " to the IP ban list."));
                         break;
                     case "unban":
                         server.SandboxBans.Remove(args.ToLowerInvariant().Trim(' '));
-                        vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Removed " + args + " from the IP ban list."));
+                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Removed " + args + " from the IP ban list."));
                         break;
                     case "banlist":
                         string result = "";
                         foreach (var ban in server.SandboxBans.List()) result += ban + "\r\n";
-                        vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "==== BANNED IPS: ==== \r\n"+result));
+                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "==== BANNED IPS: ==== \r\n"+result));
                         break;
                     case "builder":
                         sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
@@ -63,7 +66,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                                 Level = VMTSOAvatarPermissions.BuildBuyRoommate,
                                 Verified = true
                             });
-                            vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Made " + sim.Name + " a build-roommate."));
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Made " + sim.Name + " a build-roommate."));
                         }
                         break;
                     case "admin":
@@ -76,7 +79,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                                 Level = VMTSOAvatarPermissions.Admin,
                                 Verified = true
                             });
-                            vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Made " + sim.Name + " an admin."));
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Made " + sim.Name + " an admin."));
                         }
                         break;
                     case "roomie":
@@ -89,7 +92,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                                 Level = VMTSOAvatarPermissions.Roommate,
                                 Verified = true
                             });
-                            vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Made " + sim.Name + " a roommate."));
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Made " + sim.Name + " a roommate."));
                         }
                         break;
                     case "visitor":
@@ -102,7 +105,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                                 Level = VMTSOAvatarPermissions.Visitor,
                                 Verified = true
                             });
-                            vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Made " + sim.Name + " a visitor."));
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Made " + sim.Name + " a visitor."));
                         }
                         break;
                     case "close":
@@ -115,7 +118,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         {
                             vm.ProcessQTRDay();
                         }
-                        vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Ran "+count+" quarter days."));
+                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Ran "+count+" quarter days."));
                         break;
                     case "setjob":
                         var jobsplit = args.Split(' ');
@@ -124,16 +127,62 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         var jobgrade = short.Parse(jobsplit[1]);
                         avatar.SetPersonData(SimAntics.Model.VMPersonDataVariable.OnlineJobID, jobid);
                         avatar.SetPersonData(SimAntics.Model.VMPersonDataVariable.OnlineJobGrade, jobgrade);
-                        vm.SignalChatEvent(new VMChatEvent(0, VMChatEventType.Generic, "Set "+avatar.ToString()+" job grade/type to "+jobgrade+"/"+jobid+"."));
+                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Set "+avatar.ToString()+" job grade/type to "+jobgrade+"/"+jobid+"."));
+                        break;
+                    case "trace":
+                        //enables desync tracing
+                        vm.UseSchedule = false;
+                        vm.Trace = new Engine.Debug.VMSyncTrace();
+                        break;
+                    case "reload":
+                        //enables desync tracing
+                        var servD = vm.Driver as VMServerDriver;
+                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, "Manually requested self resync."));
+                        if (servD != null) servD.SelfResync = true;
+                        break;
+                    case "time":
+                        var timesplit = args.Split(' ');
+                        if (timesplit.Length < 2) return true;
+                        vm.Context.Clock.Hours = int.Parse(timesplit[0]);
+                        vm.Context.Clock.Minutes = int.Parse(timesplit[1]);
+                        vm.Context.Clock.MinuteFractions = 0;
                         break;
                 }
                 return true;
             }
             else
             {
-                vm.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Message, avatar.Name, Message));
-                avatar.Message = Message;
+                vm.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Message, (byte)(ChannelID & 0x7f), avatar.Name, Message));
+                if ((ChannelID & 0x80) == 0) avatar.Message = Message;
                 return true;
+            }
+        }
+
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            if (Verified || ChannelID == 0) return true; //normal
+            else
+            {
+                //custom channel. look up the permissions - we might have to send this directly to the other sims
+                var channel = vm.TSOState.ChatChannels.FirstOrDefault(x => x.ID == ChannelID);
+                if (ChannelID == 7) channel = VMTSOChatChannel.AdminChannel;
+                if (channel == null) return false;
+
+                //can we send to this channel?
+                if (caller.AvatarState.Permissions < channel.SendPermMin) return false;
+
+                if (channel.ViewPermMin > VMTSOAvatarPermissions.Visitor)
+                {
+                    //need to direct send to eligible sims
+                    ChannelID |= 0x80; //do not play in VM, only send the chat event
+                    Verified = true;
+                    foreach (var avatar in vm.Context.ObjectQueries.AvatarsByPersist) {
+                        if (avatar.Value.AvatarState.Permissions >= channel.ViewPermMin)
+                            vm.Driver.SendDirectCommand(avatar.Key, this);
+                    }
+                    return false; //direct sending will handle this
+                }
+                else return true; //send to everyone
             }
         }
 
@@ -143,12 +192,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             Message = Message.Substring(0, Math.Min(Message.Length, 200));
             base.SerializeInto(writer);
             writer.Write(Message);
+            writer.Write(ChannelID);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
             Message = reader.ReadString();
+            ChannelID = reader.ReadByte();
         }
         #endregion
     }

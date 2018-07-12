@@ -11,7 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+//using System.Windows.Forms;
 
 namespace FSO.Client
 {
@@ -19,14 +19,19 @@ namespace FSO.Client
     {
         public bool UseDX { get; set; }
 
+        public static Action<string> ShowDialog = DefaultShowDialog;
+
+        public static void DefaultShowDialog(string text)
+        {
+            Console.WriteLine(text);
+        }
+
         public bool InitWithArguments(string[] args)
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             Directory.SetCurrentDirectory(baseDir);
             AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
-            //Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
-            ClipboardHandler.Default = new WinFormsClipboard();
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
@@ -90,6 +95,12 @@ namespace FSO.Client
                             case "3d":
                                 FSOEnvironment.Enable3D = true;
                                 break;
+                            case "touch":
+                                FSOEnvironment.SoftwareKeyboard = true;
+                                break;
+                            case "nosound":
+                                FSOEnvironment.NoSound = true;
+                                break;
                         }
                     }
                 }
@@ -106,17 +117,18 @@ namespace FSO.Client
 
             UseDX = MonogameLinker.Link(useDX);
 
-            /*if (GlobalSettings.Default.Windowed == false && !UseDX)
-            {
-                //temporary while SDL issues are fixed
-                MessageBox.Show("Fullscreen is currently disabled on OpenGL. Please switch to DirectX (-dx flag) if you really need to use fullscreen.");
-            }*/
-
             var path = gameLocator.FindTheSimsOnline();
-            if (!linux) UI.Panels.ITTSContext.Provider = UI.Model.UITTSContext.PlatformProvider;
 
             if (path != null)
             {
+                //check if this path has tso in it. tuning.dat should be a good indication.
+                if (!File.Exists(Path.Combine(path, "tuning.dat")))
+                {
+                    ShowDialog("The Sims Online appears to be missing. The game expects TSO at '"+path+"', but some core files are missing from that folder. If you know you installed TSO into a different directory, please move it into the directory specified.");
+                    return false;
+                }
+
+                FSOEnvironment.Args = string.Join(" ", args);
                 FSOEnvironment.ContentDir = "Content/";
                 FSOEnvironment.GFXContentDir = "Content/" + (UseDX ? "DX/" : "OGL/");
                 FSOEnvironment.Linux = linux;
@@ -131,7 +143,7 @@ namespace FSO.Client
             }
             else
             {
-                //MessageBox.Show("The Sims Online was not found on your system. FreeSO will not be able to run without access to the original game files.");
+                ShowDialog("The Sims Online was not found on your system. FreeSO will not be able to run without access to the original game files.");
                 return false;
             }
         }
@@ -144,7 +156,7 @@ namespace FSO.Client
                 var assembly = Assembly.LoadFrom(assemblyPath);
                 return assembly;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 return null;
             }
@@ -154,14 +166,6 @@ namespace FSO.Client
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             Console.WriteLine(e.ExceptionObject.ToString());
-            MessageBox.Show("Exception: \r\n" + e.ExceptionObject.ToString());
-        }
-
-        private void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
-        {
-            Console.WriteLine(e.Exception.ToString());
-            LogThis.Log.LogThis("Exception: " + e.Exception.ToString(), LogThis.eloglevel.error);
-            MessageBox.Show("Exception: \r\n" + e.Exception.ToString());
         }
 
         private string GetClientVersion()

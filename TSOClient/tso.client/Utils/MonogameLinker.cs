@@ -24,7 +24,7 @@ namespace FSO.Client.Utils
 
             if (linux && preferDX11)
             {
-                //MessageBox.Show("DirectX is only available on Windows, dummy!");
+                FSOProgram.ShowDialog("DirectX is only available on Windows, dummy!");
                 preferDX11 = false;
             }
 
@@ -56,7 +56,7 @@ namespace FSO.Client.Utils
                 AssemblyDir = monogameDir;
             } catch (Exception e)
             {
-                //MessageBox.Show("Unable to link Monogame. Continuing... ("+e.ToString()+")");
+                FSOProgram.ShowDialog("Unable to link Monogame. Continuing... ("+e.ToString()+")");
             }
 
             return preferDX11;

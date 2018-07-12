@@ -64,17 +64,24 @@ namespace FSO.Client.UI.Controls
     {
         public UICustomTooltip Tooltip;
         private Rectangle Bounds;
+        public UIMouseEvent OnMouseExt;
+        public UIMouseEventRef Mouse;
 
         public UICustomTooltipContainer(UICustomTooltip tooltip){
             this.Tooltip = tooltip;
 
             Bounds = new Rectangle(0, 0, 0, 0);
-            ListenForMouse(Bounds, new Common.Rendering.Framework.IO.UIMouseEvent(OnMouse));
+            Mouse = ListenForMouse(Bounds, new Common.Rendering.Framework.IO.UIMouseEvent(OnMouse));
         }
 
         public void HideTooltip()
         {
             Tooltip.Visible = false;
+        }
+
+        public void ShowTooltip()
+        {
+            Tooltip.Visible = true;
         }
 
         private void OnMouse(UIMouseEventType type, UpdateState state){
@@ -87,6 +94,7 @@ namespace FSO.Client.UI.Controls
                     Tooltip.Visible = false;
                     break;
             }
+            OnMouseExt(type, state);
         }
 
         public override void Update(UpdateState state)
@@ -103,6 +111,7 @@ namespace FSO.Client.UI.Controls
         {
             Bounds.Width = width;
             Bounds.Height = height;
+            Mouse.Region = Bounds;
         }
 
         public override Rectangle GetBounds()

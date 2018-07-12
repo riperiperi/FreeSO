@@ -12,6 +12,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FSO.Patcher;
+using System.Diagnostics;
+using System.IO;
 
 namespace FSO.Client.Controllers
 {
@@ -121,17 +123,20 @@ namespace FSO.Client.Controllers
         {
             if (FSOEnvironment.Linux)
             {
-                System.Diagnostics.Process.Start("mono", "update.exe");
+                System.Diagnostics.Process.Start("mono", "update.exe "+FSOEnvironment.Args);
             }
             else
             {
+                var args = new ProcessStartInfo(".\\update.exe", FSOEnvironment.Args);
                 try
                 {
-                    System.Diagnostics.Process.Start(".\\update.exe");
+
+                    System.Diagnostics.Process.Start(args);
                 }
                 catch (Exception)
                 {
-                    System.Diagnostics.Process.Start("update.exe");
+                    args.FileName = "update.exe";
+                    System.Diagnostics.Process.Start(args);
                 }
             }
             GameFacade.Kill();

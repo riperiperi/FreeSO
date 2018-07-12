@@ -57,8 +57,6 @@ namespace FSO.Client.UI.Panels.EODs
 
         protected override void InitUI()
         {
-            base.InitEOD();
-
             BarGraphs = new UINewspaperPctBar[8];
             for (int i = 0; i < 8; i++)
             {
@@ -128,7 +126,8 @@ namespace FSO.Client.UI.Panels.EODs
             string dateString;
             if ((end - start).TotalDays < 1) dateString = "(" + start.ToShortDateString() + ")";
             else dateString = "(" + start.ToShortDateString() + " - " + end.ToShortDateString() + ")";
-            TopText.CurrentText = news.Name + " " + dateString + "\r\n" + news.Description;
+            TopText.BBCodeEnabled = true;
+            TopText.CurrentText = GameFacade.Emojis.EmojiToBB(news.Name + " " + dateString + "\r\n" + news.Description);
 
             //force the eod expanded.
             var opt = GetEODOptions();
@@ -698,7 +697,8 @@ namespace FSO.Client.UI.Panels.EODs
         {
             News = n;
             Title.Caption = n.Name;
-            Body.CurrentText = n.Description;
+            Body.BBCodeEnabled = true;
+            Body.CurrentText = GameFacade.Emojis.EmojiToBB(n.Description);
         }
 
         public void SetSize(int width, int height)

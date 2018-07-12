@@ -40,20 +40,22 @@ using FSO.LotView.RC;
 using System.IO;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.LotView.Facade;
+using FSO.Common.Enum;
 
 namespace FSO.Client.UI.Panels
 {
     /// <summary>
     /// Generates pie menus when the player clicks on objects.
     /// </summary>
-    public class UILotControl : UIContainer, IDisposable
+    public class UILotControl : UIContainer, IDisposable, ITouchable
     {
         private UIMouseEventRef MouseEvt;
         public bool MouseIsOn;
 
         private UIPieMenu PieMenu;
-        private UIChatPanel ChatPanel;
+        public UIChatPanel ChatPanel;
         private UIAlert LotSaveDialog;
+        private bool HasInitUserProps;
 
         private bool ShowTooltip;
         private bool TipIsError;
@@ -99,7 +101,17 @@ namespace FSO.Client.UI.Panels
 
         //1 = near, 0.5 = med, 0.25 = far
         //"target" because we rescale the game target to fit this zoom level.
-        public float TargetZoom = 1;
+        public float TargetZoom { get; set; } = 1;
+
+        public float BBScale { get { return World.BackbufferScale; } }
+        public I3DRotate Rotate { get { return (I3DRotate)World.State; } }
+        public bool TVisible { get { return Visible; } }
+        public bool UserModZoom { get; set; }
+
+        public void Scroll(Vector2 vec)
+        {
+            World.Scroll(vec, false);
+        }
 
         // NOTE: Blocking dialog system assumes that nothing goes wrong with data transmission (which it shouldn't, because we're using TCP)
         // and that the code actually blocks further dialogs from appearing while waiting for a response.
@@ -119,6 +131,7 @@ namespace FSO.Client.UI.Panels
         private bool[] LastCuts; //cached roomcuts, to apply rect cut to.
         private int LastWallMode = -1; //invalidates last roomcuts
         private bool LastRectCutNotable = false; //set if the last rect cut made a noticable change to the cuts array. If true refresh regardless of new cut effect.
+        private bool HasLanded = false;
 
         /// <summary>
         /// Creates a new UILotControl instance.
@@ -189,10 +202,21 @@ namespace FSO.Client.UI.Panels
 
         private void Vm_OnChatEvent(VMChatEvent evt)
         {
-            evt.Visitors = vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0);
+            UpdateChatTitle();
             if (evt.Type == VMChatEventType.Message && evt.SenderUID == SelectedSimID) evt.Type = VMChatEventType.MessageMe;
-            ChatPanel.SetLotName(vm.LotName);
             ChatPanel.ReceiveEvent(evt);
+        }
+
+        private int LastVisitorCount = 0;
+        private void UpdateChatTitle()
+        {
+            var visitors = vm.Context.ObjectQueries.Avatars.Count(x => x.PersistID != 0);
+            if (LastVisitorCount != visitors)
+            {
+                ChatPanel.SetVisitorCount(visitors);
+                ChatPanel.SetLotName(vm.LotName);
+                LastVisitorCount = visitors;
+            }
         }
 
         private void Vm_OnBreakpoint(VMEntity entity)
@@ -224,7 +248,9 @@ namespace FSO.Client.UI.Panels
                 Message = info.Message,
                 Width = 325 + (int)(info.Message.Length / 3.5f),
                 Alignment = TextAlignment.Left,
-                TextSize = 12 };
+                TextSize = 12,
+                AllowEmojis = true
+            };
 
             if (info.Block && vm.TS1) vm.SpeedMultiplier = 0;
             var b0Event = (info.Block) ? new ButtonClickDelegate(DialogButton0) : null;
@@ -255,7 +281,9 @@ namespace FSO.Client.UI.Panels
                     };
                     break;
                 case VMDialogType.TextEntry:
+                case VMDialogType.FSOChars:
                     options.Buttons = new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, b0Event, info.Yes) };
+                    if (type == VMDialogType.FSOChars) options.MaxChars = 99999;
                     options.TextEntry = true;
                     break;
                 case VMDialogType.NumericEntry:
@@ -275,7 +303,7 @@ namespace FSO.Client.UI.Panels
                     break;
             }
 
-            var alert = UIScreen.GlobalShowAlert(options, true);
+            var alert = UIScreen.GlobalShowAlert(options, false);
 
             if (info.Block)
             {
@@ -365,7 +393,7 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        public void ShowPieMenu(Point pt, UpdateState state)
+        public void Click(Point pt, UpdateState state)
         {
             if (!LiveMode)
             {
@@ -404,6 +432,14 @@ namespace FSO.Client.UI.Panels
                     if (obj != null)
                     {
                         obj = obj.MultitileGroup.GetInteractionGroupLeader(obj);
+                        /*
+                        if (state.CtrlDown && state.ShiftDown)
+                        {
+                            ActiveEntity = obj;
+                            vm.MyUID = obj.PersistID;
+                            Queue.QueueOwner = ActiveEntity;
+                            Queue.DebugMode = true;
+                        }*/
                         if (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)
                         {
                             var flags = ((VMGameObject)obj).Disabled;
@@ -628,6 +664,43 @@ namespace FSO.Client.UI.Panels
             return GameFacade.Strings.GetString("217", prefixNum.ToString()) + ava.ToString();
         }
 
+        public void Landed()
+        {
+            //hints for landing
+            var hints = FSOFacade.Hints;
+            hints.TriggerHint("land");
+
+            if (vm.MyUID == vm.TSOState.OwnerID)
+            {
+                hints.TriggerHint("land:owner");
+                hints.TriggerHint("land:owner:" + ((LotCategory)vm.TSOState.PropertyCategory).ToString());
+            }
+            else if (vm.TSOState.Roommates.Contains(vm.MyUID))
+            {
+                hints.TriggerHint("land:roomie");
+            }
+            else if (vm.GetGlobalValue(11) > -1)
+            {
+                var split = vm.LotName.Substring(1, vm.LotName.Length - 2).Split(':');
+                if (split.Length > 1 && split[0] == "job")
+                {
+                    hints.TriggerHint("land:job" + split[1]);
+                }
+            }
+            else
+            {
+                hints.TriggerHint("land:" + ((LotCategory)vm.TSOState.PropertyCategory).ToString());
+            }
+
+            //todo: land special objects
+
+            if (vm.TSOState.SkillMode > 1 && 
+                !(vm.TSOState.PropertyCategory == (byte)LotCategory.welcome 
+                && ((ActiveEntity?.TSOState as VMTSOAvatarState)?.Flags ?? 0).HasFlag(VMTSOAvatarFlags.NewPlayer)))
+                hints.TriggerHint("land:skilldisabled");
+            HasLanded = true;
+        }
+
         public void RefreshCut()
         {
             LastFloor = -1;
@@ -676,6 +749,16 @@ namespace FSO.Client.UI.Panels
             if (FSOEnvironment.Enable3D)
             {
                 var s3d = ((WorldStateRC)World.State);
+                if (TargetZoom < -0.65f)
+                {
+                    //switch to city
+                    (UIScreen.Current as Screens.CoreGameScreen)?.ZoomToCity();
+                    TargetZoom -= (TargetZoom - 0.25f) * (1f - (float)Math.Pow(0.975f, 60f / FSOEnvironment.RefreshRate));
+                }
+                else if (TargetZoom < -0.25f)
+                {
+                    TargetZoom -= (TargetZoom - 0.25f) * (1f - (float)Math.Pow(0.975f, 60f / FSOEnvironment.RefreshRate));
+                }
                 s3d.Zoom3D += ((9.75f - (TargetZoom - 0.25f) * 5.7f) - s3d.Zoom3D) / 10;
 
             }
@@ -717,6 +800,10 @@ namespace FSO.Client.UI.Panels
             {
                 ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SelectedSimID); //try and hook onto a sim if we have none selected.
                 if (ActiveEntity == null) ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID > 0);
+                else if (!HasInitUserProps)
+                {
+                    InitUserProps();
+                }
 
                 if (!FoundMe && ActiveEntity != null)
                 {
@@ -742,6 +829,8 @@ namespace FSO.Client.UI.Panels
 
             if (Visible)
             {
+                if (!HasLanded) Landed();
+                UpdateChatTitle();
                 if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
 
                 bool scrolled = false;
@@ -845,9 +934,34 @@ namespace FSO.Client.UI.Panels
                 else if (state.NewKeys.Contains(Keys.F) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
                 {
                     //save facade
-                    if (LotSaveDialog == null) SaveFacade();
+                    if (LotSaveDialog == null) SaveFacade(state.KeyboardState.IsKeyDown(Keys.LeftAlt));
                 }
             }
+        }
+
+        private void InitUserProps()
+        {
+            if (GlobalSettings.Default.ChatColor == 0)
+            {
+                var rand = new Random();
+                GlobalSettings.Default.ChatColor = VMTSOAvatarState.RandomColours[rand.Next(VMTSOAvatarState.RandomColours.Length)].PackedValue;
+                GlobalSettings.Default.Save();
+            }
+            vm.SendCommand(new VMNetChatParamCmd()
+            {
+                Col = new Color(GlobalSettings.Default.ChatColor),
+                Pitch = (sbyte)GlobalSettings.Default.ChatTTSPitch
+            });
+
+            //init tuning vars for UI
+            var emojiOnly = vm.Tuning.GetTuning("ui", 0, 0) == 1f;
+            if (emojiOnly != GlobalSettings.Default.ChatOnlyEmoji)
+            {
+                GlobalSettings.Default.ChatOnlyEmoji = emojiOnly;
+                GlobalSettings.Default.Save();
+            }
+
+            HasInitUserProps = true;
         }
 
         private void SaveLot()
@@ -887,7 +1001,7 @@ namespace FSO.Client.UI.Panels
             UIScreen.GlobalShowDialog(LotSaveDialog, true);
         }
 
-        private void SaveFacade()
+        private void SaveFacade(bool toObject)
         {
             LotSaveDialog = new UIAlert(new UIAlertOptions
             {
@@ -901,24 +1015,35 @@ namespace FSO.Client.UI.Panels
                     new UIAlertButton(UIAlertButtonType.OK, (b) =>
                     {
                         try {
-                            var path = Path.Combine(FSOEnvironment.UserDir, "Facades/"+LotSaveDialog.ResponseText+"/");
-                            Directory.CreateDirectory(path);
+                            for (int i=0; i<(toObject?2:1); i++) {
+                                var path = Path.Combine(FSOEnvironment.UserDir, "Facades/"+LotSaveDialog.ResponseText+"/");
+                                Directory.CreateDirectory(path);
 
-                            //turn all lights on
-                            /*
-                            foreach (var light in vm.Entities.Where(x => x.Object.Resource.SemiGlobal?.Iff?.Filename == "lightglobals.iff"))
-                            {
-                                light.SetValue(SimAntics.Model.VMStackObjectVariable.LightingContribution, 100);
+                                //turn all lights on
+                                if (i == 1) {
+                                    foreach (var light in vm.Entities.Where(x => x.Object.Resource.SemiGlobal?.Iff?.Filename == "lightglobals.iff"))
+                                    {
+                                        light.SetValue(SimAntics.Model.VMStackObjectVariable.LightingContribution, 100);
+                                    }
+                                    vm.Context.Architecture.SignalAllDirty();
+                                    vm.Context.Architecture.Tick();
+                                }
+                                SetOutsideTime(GameFacade.GraphicsDevice, vm, World, (1-i)*0.5f, false);
+
+                                var facade = new LotFacadeGenerator();
+                                if (toObject)
+                                {
+                                    LotFacadeGenerator.WALL_HEIGHT = 6*3;
+                                    LotFacadeGenerator.WALL_WIDTH = 6;
+                                    var numInd = LotSaveDialog.ResponseText.ToList().FindIndex(x => char.IsDigit(x));
+                                    facade.TexBase = int.Parse(LotSaveDialog.ResponseText.Substring(numInd)) * 4 + i*2;
+                                    facade.RoofOnFloor = true;
+                                }
+                                facade.RoofOnFloor = true;
+                                facade.Generate(GameFacade.GraphicsDevice, (WorldRC)World, vm.Context.Blueprint);
+                                facade.SaveToPath(path);
+                                UIScreen.GlobalShowAlert(new UIAlertOptions { Message = "Save successful!" }, true);
                             }
-                            vm.Context.Architecture.SignalAllDirty();
-                            vm.Context.Architecture.Tick();
-                            World.Force2DPredraw(GameFacade.GraphicsDevice);
-                            */
-
-                            var facade = new LotFacadeGenerator();
-                            facade.Generate(GameFacade.GraphicsDevice, (WorldRC)World, vm.Context.Blueprint);
-                            facade.SaveToPath(path);
-                            UIScreen.GlobalShowAlert(new UIAlertOptions { Message = "Save successful!" }, true);
                         } catch
                         {
                             UIScreen.GlobalShowAlert(new UIAlertOptions { Message = "Lot failed to save. You may need to run the game as administrator." }, true);
@@ -929,6 +1054,13 @@ namespace FSO.Client.UI.Panels
             });
             LotSaveDialog.ResponseText = vm.LotName;
             UIScreen.GlobalShowDialog(LotSaveDialog, true);
+        }
+
+        private static void SetOutsideTime(GraphicsDevice gd, VM vm, World world, float time, bool lightsOn)
+        {
+            vm.Context.Architecture.SetTimeOfDay(time);
+            world.Force2DPredraw(gd);
+            vm.Context.Architecture.SetTimeOfDay();
         }
 
         private void UpdateCutaway(UpdateState state)

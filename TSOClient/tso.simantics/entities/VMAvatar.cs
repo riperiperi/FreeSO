@@ -27,6 +27,8 @@ using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model.Sound;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.Primitives;
+using FSO.SimAntics.Model.Platform;
+using FSO.SimAntics.Model.TS1Platform;
 
 namespace FSO.SimAntics
 {
@@ -34,6 +36,7 @@ namespace FSO.SimAntics
     {
         public static uint TEMPLATE_PERSON = 0x7FD96B54;
 
+        public VMIAvatarState AvatarState;
         public SimAvatar Avatar;
 
         /** Animation vars **/
@@ -220,7 +223,9 @@ namespace FSO.SimAntics
         public VMAvatar(GameObject obj)
             : base(obj)
         {
-            PlatformState = new VMTSOAvatarState(); //todo: ts1 switch
+            var state = VM.GlobTS1?(VMAbstractEntityState)new VMTS1AvatarState():new VMTSOAvatarState();
+            PlatformState = state; //todo: ts1 switch
+            AvatarState = (VMIAvatarState)state;
             BodyStrings = Object.Resource.Get<STR>(Object.OBJ.BodyStringID);
 
             SetAvatarType(BodyStrings);
@@ -499,7 +504,7 @@ namespace FSO.SimAntics
             if (Thread != null)
             {
                 MotiveDecay.Tick(this, Thread.Context);
-                if (Position == LotTilePos.OUT_OF_WORLD && PersistID > 0)
+                if (Position == LotTilePos.OUT_OF_WORLD && (PersistID > 0 || IsPet) && !Content.Content.Get().TS1)
                 {
                     //uh oh!
                     var mailbox = Thread.Context.VM.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
@@ -607,8 +612,8 @@ namespace FSO.SimAntics
                 Thread.CancelAction(action.UID);
             }
 
-            var tree = GetBHAVWithOwner(LEAVE_LOT_TREE, Thread.Context);
-            var routine = Thread.Context.VM.Assemble(tree.bhav);
+            var tree = GetRoutineWithOwner(LEAVE_LOT_TREE, Thread.Context);
+            var routine = tree.routine;
 
             Thread.EnqueueAction(
                 new FSO.SimAntics.Engine.VMQueuedAction
@@ -676,7 +681,7 @@ namespace FSO.SimAntics
                 case VMPersonDataVariable.Priority:
                     return (Thread.Queue.Count == 0) ? (short)0 : Thread.Queue[0].Priority;
                 case VMPersonDataVariable.IsHousemate:
-                    var level = ((VMTSOAvatarState)TSOState).Permissions;
+                    var level = AvatarState.Permissions;
                     return (short)((level >= VMTSOAvatarPermissions.BuildBuyRoommate) ? 2 : ((level >= VMTSOAvatarPermissions.Roommate) ? 1 : 0));
                 case VMPersonDataVariable.NumOutgoingFriends:
                 case VMPersonDataVariable.IncomingFriends:
@@ -686,20 +691,21 @@ namespace FSO.SimAntics
                     // this variable contains a bitmask of skills which should not decay. our skill disable system sets them all,
                     // but perhaps in the original they were used by events
                     if (Thread == null) return 0;
-                    return (short)(SkillGameplayDisabled(Thread.Context.VM)?0x7FFF:0);
+                    return (short)((SkillGameplayMul(Thread.Context.VM) == 0)?0x7FFF:0);
             }
             return PersonData[(ushort)variable];
         }
 
         public bool ForceEnableSkill;
-        public bool SkillGameplayDisabled(VM vm)
+        public int SkillGameplayMul(VM vm)
         {
-            if (ForceEnableSkill || PersistID == 0) return false;
+            if (ForceEnableSkill || PersistID == 0 || vm.TS1) return 1;
             var mode = vm.TSOState.SkillMode;
-            if (mode == 0) return false;
+            if (vm.TSOState.PropertyCategory == 7 && ((VMTSOAvatarState)TSOState).Flags.HasFlag(VMTSOAvatarFlags.NewPlayer)) return 2; //welcome category: 2x for visitors under a week old
+            else if (mode == 0) return 1;
             else if (mode == 1)
-                return ((VMTSOAvatarState)TSOState).Permissions == VMTSOAvatarPermissions.Visitor;
-            else return true;
+                return (AvatarState.Permissions == VMTSOAvatarPermissions.Visitor) ? 0 : 1;
+            else return 0;
         }
 
         public virtual void SetMotiveChange(VMMotive motive, short PerHourChange, short MaxValue)
@@ -799,19 +805,42 @@ namespace FSO.SimAntics
                 case VMPersonDataVariable.CreativitySkill:
                 case VMPersonDataVariable.LogicSkill:
                 case VMPersonDataVariable.MechanicalSkill:
-                    if (Thread != null && SkillGameplayDisabled(Thread.Context.VM)) return true;
+                    int skillMul = 1;
+                    if (Thread != null)
+                    {
+                        skillMul = SkillGameplayMul(Thread.Context.VM);
+                    }
+                    if (skillMul == 0) return true;
+                    else if (skillMul != 1)
+                    {
+                        var delta = value - PersonData[(ushort)variable];
+                        if (delta > 0)
+                        {
+                            delta *= skillMul;
+                            value = (short)(PersonData[(ushort)variable] + delta);
+                        }
+                    }
+                    break;
+                case VMPersonDataVariable.CurrentOutfit:
+                    if (Thread.Context.VM.TS1) BodyOutfit = VMSuitProvider.GetPersonSuitTS1(this, (ushort)value);
                     break;
             }
             PersonData[(ushort)variable] = value;
             return true;
         }
 
-        public void InheritNeighbor(Neighbour neigh)
+        public void InheritNeighbor(Neighbour neigh, FAMI current)
         {
             var lastGender = GetPersonData(VMPersonDataVariable.Gender);
+            var lastPersonType = GetPersonData(VMPersonDataVariable.PersonType);
+            var sched = GetPersonData(VMPersonDataVariable.VisitorSchedule);
             if (neigh.PersonData != null) PersonData = neigh.PersonData.ToArray();
             SetPersonData(VMPersonDataVariable.Gender, lastGender); //fixes cats switching to children suddenly
             SetPersonData(VMPersonDataVariable.NeighborId, neigh.NeighbourID);
+            if (lastPersonType == 0) SetPersonData(VMPersonDataVariable.PersonType, (short)((GetPersonData(VMPersonDataVariable.TS1FamilyNumber) == current?.ChunkID) ? 0 : 1));
+            else SetPersonData(VMPersonDataVariable.PersonType, lastPersonType);
+            SetPersonData(VMPersonDataVariable.VisitorSchedule, sched);
+            SetPersonData(VMPersonDataVariable.GreetStatus, 0);
         }
 
         public virtual short GetMotiveData(VMMotive variable) //needs special conditions for ones like Mood.
@@ -854,8 +883,8 @@ namespace FSO.SimAntics
             Headline = new VMRuntimeHeadline(new VMSetBalloonHeadlineOperand
             {
                 Group = VMSetBalloonHeadlineOperandGroup.Money,
-                Flags2 = (ushort)(uval),
-                Duration = (short)(uval >> 16)
+                Flags2 = (ushort)((uint)uval),
+                Duration = (short)(((uint)uval) >> 16)
             }, this, null, 0);
             Headline.Duration = 60;
             HeadlineRenderer = Thread?.Context.VM.Headline.Get(Headline);
@@ -1015,8 +1044,8 @@ namespace FSO.SimAntics
 
                 MotiveChanges = MotiveChanges,
                 MotiveDecay = MotiveDecay,
-                PersonData = PersonData,
-                MotiveData = MotiveData,
+                PersonData = (short[])PersonData.Clone(),
+                MotiveData = (short[])MotiveData.Clone(),
                 HandObject = (HandObject == null) ? (short)0 : HandObject.ObjectID,
                 RadianDirection = RadianDirection,
                 KillTimeout = KillTimeout,
@@ -1036,7 +1065,7 @@ namespace FSO.SimAntics
         public virtual void Load(VMAvatarMarshal input)
         {
             base.Load(input);
-
+            AvatarState = (VMIAvatarState)PlatformState;
             Animations = new List<VMAnimationState>();
             foreach (var anim in input.Animations) Animations.Add(new VMAnimationState(anim));
             CarryAnimationState = (input.CarryAnimationState == null) ? null : new VMAnimationState(input.CarryAnimationState);
@@ -1093,8 +1122,18 @@ namespace FSO.SimAntics
             SetPersonData(VMPersonDataVariable.Gender, gender);
             SetPersonData(VMPersonDataVariable.RenderDisplayFlags, GetPersonData(VMPersonDataVariable.RenderDisplayFlags));
             SetPersonData(VMPersonDataVariable.IsGhost, GetPersonData(VMPersonDataVariable.IsGhost));
-            BodyOutfit = input.BodyOutfit;
-            HeadOutfit = input.HeadOutfit;
+            if (input.TS1)
+            {
+                SetPersonData(VMPersonDataVariable.CurrentOutfit, GetPersonData(VMPersonDataVariable.CurrentOutfit));
+                var bodyStr = Object.Resource.Get<STR>(Object.OBJ.BodyStringID);
+                HeadOutfit = new VMOutfitReference(bodyStr, true);
+            }
+            else
+            {
+                BodyOutfit = input.BodyOutfit;
+                HeadOutfit = input.HeadOutfit;
+            }
+            
             if (UseWorld) ((AvatarComponent)WorldUI).blueprint = context.Blueprint;
         }
         #endregion

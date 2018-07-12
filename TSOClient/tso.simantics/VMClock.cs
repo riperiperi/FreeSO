@@ -20,6 +20,11 @@ namespace FSO.SimAntics
         public int TicksPerMinute;
         public int Minutes;
         public int Hours;
+
+        public int DayOfMonth = 1;
+        public int Month = 6;
+        public int Year = 1997;
+
         public int FirePercent;
         public long UTCStart = DateTime.UtcNow.Ticks;
 
@@ -57,6 +62,15 @@ namespace FSO.SimAntics
                     if (++Hours >= 24)
                     {
                         Hours = 0;
+                        if (++DayOfMonth > 30)
+                        {
+                            DayOfMonth = 1;
+                            if (++Month > 12)
+                            {
+                                Month = 1;
+                                Year++;
+                            }
+                        }
                     }
                 }
             }
@@ -75,6 +89,9 @@ namespace FSO.SimAntics
                 TicksPerMinute = TicksPerMinute,
                 Minutes = Minutes,
                 Hours = Hours,
+                DayOfMonth = DayOfMonth,
+                Month = Month,
+                Year = Year,
                 FirePercent = FirePercent,
                 UTCStart = UTCStart
             };
@@ -87,6 +104,9 @@ namespace FSO.SimAntics
             TicksPerMinute = input.TicksPerMinute;
             Minutes = input.Minutes;
             Hours = input.Hours;
+            DayOfMonth = input.DayOfMonth;
+            Month = input.Month;
+            Year = input.Year;
             FirePercent = input.FirePercent;
             UTCStart = input.UTCStart;
         }

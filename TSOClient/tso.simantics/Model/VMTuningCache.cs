@@ -12,6 +12,7 @@ namespace FSO.SimAntics.Model
 
         public void UpdateTuning(VM vm)
         {
+            if (vm.TS1) return;
             var table = vm.Tuning?.GetTable("overfill", vm.TSOState.PropertyCategory);
             if (table != null) MotiveOverfill = table;
         }

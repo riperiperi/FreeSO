@@ -17,6 +17,7 @@ namespace FSO.Client.UI.Panels
             { LotCategory.entertainment, 1 },
             { LotCategory.services, 1 },
             { LotCategory.romance, 1 },
+            { LotCategory.welcome, 1 }
         };
 
         public UILabel DescLabel;
@@ -32,7 +33,7 @@ namespace FSO.Client.UI.Panels
 
             Caption = GameFacade.Strings.GetString("f109", "5");
             DescLabel = new UILabel();
-            DescLabel.Caption = GameFacade.Strings.GetString("f109", "6") + ((min > 0)?("\r\n\r\n"+ GameFacade.Strings.GetString("f109", "7")) : "");
+            DescLabel.Caption = GameFacade.Strings.GetString("f109", "6") + ((min > 0)?("\n\n"+ GameFacade.Strings.GetString("f109", "7")) : "");
             DescLabel.Position = new Vector2(25, 40);
             DescLabel.Wrapped = true;
             DescLabel.Size = new Vector2(350, 200);

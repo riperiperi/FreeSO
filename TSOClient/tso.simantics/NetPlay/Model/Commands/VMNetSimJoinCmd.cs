@@ -13,6 +13,7 @@ using FSO.LotView.Model;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
+using Microsoft.Xna.Framework;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -32,9 +33,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             if (vm.TS1)
             {
-                if (vm.CurrentFamily == null) return true;
+                if (vm.TS1State.CurrentFamily == null) return true;
                 var gameState = Content.Content.Get().Neighborhood.GameState;
-                var control = vm.Entities.FirstOrDefault(x => x is VMAvatar && !((VMAvatar)x).IsPet && ((VMAvatar)x).GetPersonData(VMPersonDataVariable.TS1FamilyNumber) == vm.CurrentFamily?.ChunkID);
+                var control = vm.Entities.FirstOrDefault(x => x is VMAvatar && !((VMAvatar)x).IsPet && ((VMAvatar)x).GetPersonData(VMPersonDataVariable.TS1FamilyNumber) == vm.TS1State.CurrentFamily?.ChunkID);
                 if (control == null)
                 {
                     control = vm.Context.CreateObjectInstance((gameState.DowntownSimGUID == 0)?0x32AA2056:gameState.DowntownSimGUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH)?.BaseObject;
@@ -44,8 +45,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 {
                     var ava = (VMAvatar)control;
                     ava.PersistID = ActorUID;
-                    ((VMTSOAvatarState)(ava.TSOState)).Permissions = VMTSOAvatarPermissions.Admin;
-                    ava.TSOState.Budget.Value = 1000000;
+                    ava.AvatarState.Permissions = VMTSOAvatarPermissions.Admin;
                     vm.Context.ObjectQueries.RegisterAvatarPersist(ava, ava.PersistID);
                     vm.SetGlobalValue(3, control.ObjectID);
                 }
@@ -111,8 +111,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 avatar.SetFlag(VMEntityFlags.HasZeroExtent, true);
                 avatar.SetPersonData(VMPersonDataVariable.IsGhost, 1); //oooooOOooooOo
             }
-            
-            vm.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Join, avatar.Name));
+
+            vm.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Join, avatar.Name));
 
             return true;
         }

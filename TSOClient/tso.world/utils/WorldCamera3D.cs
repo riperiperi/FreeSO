@@ -44,12 +44,17 @@ namespace FSO.LotView.Utils
                 Vector3 scale2; Quaternion quat2; Vector3 translation2;
                 FromView.Decompose(out scale2, out quat2, out translation2);
 
+                m_View = Matrix.CreateTranslation(-trans) * Matrix.Lerp(m_View, FromView, FromIntensity);
+
+                /*
                 m_View = Matrix.CreateScale(Vector3.Lerp(scale, scale2, FromIntensity))
                     * Matrix.CreateFromQuaternion(Quaternion.Slerp(quat, quat2, FromIntensity))
                     * Matrix.CreateTranslation(Vector3.Lerp(translation, translation2, FromIntensity));
 
                 m_View = Matrix.CreateTranslation(-trans) * m_View;
+                */
             }
+            m_Translation = trans;
         }
 
         protected override void CalculateProjection()

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define VM_DESYNC_DEBUG
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,6 +36,9 @@ using FSO.SimAntics.Primitives;
 using FSO.LotView.Model;
 using FSO.HIT;
 using FSO.Common.Model;
+using FSO.SimAntics.Model.TS1Platform;
+using FSO.SimAntics.Model.Platform;
+using FSO.Common.Utils;
 
 namespace FSO.SimAntics
 {
@@ -42,7 +47,7 @@ namespace FSO.SimAntics
     /// </summary>
     public class VM
     {
-        public static bool UseSchedule = true;
+        public bool UseSchedule = true;
         private static bool _UseWorld = true;
         public static bool SignalBreaks = false;
         public static bool UseWorld
@@ -58,9 +63,15 @@ namespace FSO.SimAntics
 
         public bool IsServer
         {
+            get { return GlobalLink != null; }
+        }
+        public bool BlueprintRestore
+        {
             get { return GlobalLink != null || Driver is VMFSORDriver; }
         }
         public bool TS1;
+        public static bool GlobTS1; //I don't like this, but we don't pass VM to some things and this needs to be fast
+        //we can assume one application won't be running TS1 and TSO at the same time.
         public bool Aborting = false;
 
         private const long TickInterval = 33 * TimeSpan.TicksPerMillisecond;
@@ -71,20 +82,25 @@ namespace FSO.SimAntics
         public List<VMEntity> Entities = new List<VMEntity>();
         public HashSet<VMEntity> SoundEntities = new HashSet<VMEntity>();
         public short[] GlobalState;
-        public VMPlatformState PlatformState;
-        public FAMI CurrentFamily;
+        public VMAbstractLotState PlatformState;
 
         public VMScheduler Scheduler;
 
         public VMTSOLotState TSOState
         {
-            get { return (PlatformState != null && PlatformState is VMTSOLotState) ? (VMTSOLotState)PlatformState : null; }
+            get { return PlatformState as VMTSOLotState; }
         }
+
+        public VMTS1LotState TS1State
+        {
+            get { return PlatformState as VMTS1LotState; }
+        }
+
         public string LotName
         {
             get
             {
-                return TSOState.Name;
+                return TSOState?.Name ?? "";
             }
         }
 
@@ -144,6 +160,7 @@ namespace FSO.SimAntics
             GameTickRate = FSOEnvironment.RefreshRate;
 
             TS1 = Content.Content.Get().TS1;
+            GlobTS1 = TS1;
         }
 
         private void VM_OnBHAVChange()
@@ -182,15 +199,12 @@ namespace FSO.SimAntics
         /// </summary>
         public void Init()
         {
-            PlatformState = new VMTSOLotState();
+            PlatformState = (TS1)?(VMAbstractLotState)new VMTS1LotState():new VMTSOLotState();
             GlobalState = new short[38];
             GlobalState[20] = 255; //Game Edition. Basically, what "expansion packs" are running. Let's just say all of them.
             GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
             if (Driver is VMServerDriver) EODHost = new VMEODHost();
-            #if VM_DESYNC_DEBUG
-                Trace = new VMSyncTrace();
-            #endif
         }
 
         public void Reset()
@@ -295,6 +309,7 @@ namespace FSO.SimAntics
 
         public void CloseNet(VMCloseNetReason reason)
         {
+            if (reason == VMCloseNetReason.LeaveLot && !Ready) return;
             Driver.CloseReason = reason;
             Driver.Shutdown();
         }
@@ -307,44 +322,19 @@ namespace FSO.SimAntics
             }
         }
 
-        public void ActivateFamily(FAMI family)
-        {
-            if (family == null) return;
-            SetGlobalValue(9, (short)family.ChunkID);
-            CurrentFamily = family;
-        }
-
-        /// <summary>
-        /// Ensure all members of the family are present on the lot.
-        /// Spawns missing family members at the mailbox.
-        /// </summary>
-        public void VerifyFamily()
-        {
-            if (CurrentFamily == null) return;
-            SetGlobalValue(9, (short)CurrentFamily.ChunkID);
-            var missingMembers = new HashSet<uint>(CurrentFamily.RuntimeSubset);
-            foreach (var avatar in Context.ObjectQueries.Avatars)
-            {
-                missingMembers.Remove(avatar.Object.OBJ.GUID);
-            }
-
-            foreach (var member in missingMembers)
-            {
-                var sim = Context.CreateObjectInstance(member, LotView.Model.LotTilePos.OUT_OF_WORLD, LotView.Model.Direction.NORTH).Objects[0];
-                ((VMAvatar)sim).SetPersonData(VMPersonDataVariable.TS1FamilyNumber, (short)CurrentFamily.ChunkID);
-                sim.TSOState.Budget.Value = 1000000;
-                var mailbox = Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
-                if (mailbox != null) VMFindLocationFor.FindLocationFor(sim, mailbox, Context, VMPlaceRequestFlags.Default);
-                ((Model.TSOPlatform.VMTSOAvatarState)sim.TSOState).Permissions = Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
-            }
-
-        }
-
         public void Tick()
         {
+            if (FSOVAsyncLoading) return;
             if (BHAVDirty)
             {
-                foreach (var ent in Entities) if (ent.Thread != null) ent.Thread.RoutineDirty = true;
+                foreach (var ent in Entities)
+                {
+                    if (ent.Thread != null)
+                    {
+                        foreach (var frame in ent.Thread.Stack)
+                            if (frame.Routine.Chunk.RuntimeVer != frame.Routine.RuntimeVer) frame.CodeOwner.Resource.Recache();
+                    }
+                }
                 BHAVDirty = false;
             }
 
@@ -364,12 +354,8 @@ namespace FSO.SimAntics
             {
                 var lastHour = Context.Clock.Hours;
                 Context.Clock.Tick();
-                GlobalState[6] = (short)Context.Clock.Seconds;
-                GlobalState[5] = (short)Context.Clock.Minutes;
-                GlobalState[0] = (short)Context.Clock.Hours;
-                GlobalState[4] = (short)Context.Clock.TimeOfDay;
 
-                if (lastHour != GlobalState[0] && GlobalState[0]%6 == 0)
+                if (lastHour != Context.Clock.Hours && Context.Clock.Hours % 6 == 0)
                 {
                     ProcessQTRDay();
                 }
@@ -378,30 +364,28 @@ namespace FSO.SimAntics
             Context.Architecture.Tick();
 
             if (SpeedMultiplier < 0) return;
-            if (!UseSchedule) {
+            if (!UseSchedule) { //scheduleless mode is still useful for desync debug.
                 var entCpy = Entities.ToArray();
                 foreach (var obj in entCpy)
                 {
-                    Context.NextRandom(1);
+                    //Context.NextRandom(1);
                     obj.Tick(); //run object specific tick behaviors, like lockout count decrement
-#if VM_DESYNC_DEBUG
-                if (obj.Thread != null) {
-                    foreach (var item in obj.Thread.Stack)
-                    {
-                        Context.NextRandom(1);
-                        if (item is VMRoutingFrame)
+                    if (obj.Thread != null && Trace != null) {
+                        foreach (var item in obj.Thread.Stack)
                         {
-                            Trace.Trace(obj.ObjectID + "("+Context.RandomSeed+"): "+"VMRoutingFrame with state: "+ ((VMRoutingFrame)item).State.ToString());
-                        }
-                        else
-                        {
-                            var opcode = item.GetCurrentInstruction().Opcode;
-                            var primitive = (opcode > 255) ? null : Context.Primitives[opcode];
-                            Trace.Trace(obj.ObjectID + "(" + Context.RandomSeed + "): " + item.Routine.Rti.Name.TrimEnd('\0')+':'+item.InstructionPointer+" ("+ ((primitive == null) ? opcode.ToString() : primitive.Name) + ")");
+                            Context.NextRandom(1);
+                            if (item is VMRoutingFrame)
+                            {
+                                Trace.Trace(obj.ObjectID + "("+Context.RandomSeed+"): "+"VMRoutingFrame with state: "+ ((VMRoutingFrame)item).State.ToString());
+                            }
+                            else
+                            {
+                                var opcode = item.GetCurrentInstruction().Opcode;
+                                var primitive = (opcode > 255) ? null : VMContext.Primitives[opcode];
+                                Trace.Trace(obj.ObjectID + "(" + Context.RandomSeed + "): " + item.Routine.Rti.Name.TrimEnd('\0')+':'+item.InstructionPointer+" ("+ ((primitive == null) ? opcode.ToString() : primitive.Name) + ")");
+                            }
                         }
                     }
-                }
-#endif
                 }
             } else
             {
@@ -415,7 +399,7 @@ namespace FSO.SimAntics
         {
             foreach (var ent in Entities)
             {
-                (ent.TSOState as VMTSOObjectState)?.ProcessQTRDay(this, ent);
+                (ent.PlatformState as VMIObjectState)?.ProcessQTRDay(this, ent);
             }
         }
 
@@ -440,17 +424,19 @@ namespace FSO.SimAntics
         public static void AddToObjList(List<VMEntity> list, VMEntity entity)
         {
             if (list.Count == 0) { list.Add(entity); return; }
-            int id = entity.ObjectID-1;
-            int max = list.Count-1;
+            int id = entity.ObjectID;
+            int max = list.Count;
             int min = 0;
-            while (max-1>min)
+            while (max>min)
             {
                 int mid = (max+min) / 2;
                 int nid = list[mid].ObjectID;
                 if (id < nid) max = mid;
-                else min = mid;
+                else if (id == nid) return; //do not add dupes
+                else min = mid+1;
             }
-            list.Insert((list[min].ObjectID>id)?min:((list[max].ObjectID > id)?max:max+1), entity);
+            list.Insert(min, entity);
+            // list.Insert((list[min].ObjectID>id)?min:((list[max].ObjectID > id)?max:max+1), entity);
         }
 
         /// <summary>
@@ -490,6 +476,24 @@ namespace FSO.SimAntics
         {
             // should this be in VMContext?
             if (var >= GlobalState.Length) throw new Exception("Global Access out of bounds!");
+            
+            switch (var)
+            {
+                case 0:
+                    return (short)Context.Clock.Hours;
+                case 1:
+                    return (short)Context.Clock.DayOfMonth;
+                case 4:
+                    return (short)Context.Clock.TimeOfDay;
+                case 5:
+                    return (short)Context.Clock.Minutes;
+                case 6:
+                    return (short)Context.Clock.Seconds;
+                case 7:
+                    return (short)Context.Clock.Month;
+                case 8:
+                    return (short)Context.Clock.Year;
+            }
             return GlobalState[var];
         }
 
@@ -505,45 +509,10 @@ namespace FSO.SimAntics
             GlobalState[var] = value;
             return true;
         }
-
-        private static Dictionary<BHAV, VMRoutine> _Assembled = new Dictionary<BHAV, VMRoutine>();
         private static event VMBHAVChangeDelegate OnBHAVChange;
-
-        /// <summary>
-        /// Assembles a set of instructions.
-        /// </summary>
-        /// <param name="bhav">The instruction set to assemble.</param>
-        /// <returns>A VMRoutine instance.</returns>
-        public VMRoutine Assemble(BHAV bhav)
-        {
-            if (_Assembled.ContainsKey(bhav)) return _Assembled[bhav];
-            lock (_Assembled)
-            {
-                if (_Assembled.ContainsKey(bhav))
-                {
-                    return _Assembled[bhav];
-                }
-                var routine = VMTranslator.Assemble(this, bhav);
-                _Assembled.Add(bhav, routine);
-                return routine;
-            }
-        }
-
-        public static void ClearAssembled()
-        {
-            lock (_Assembled)
-            {
-                _Assembled.Clear();
-            }
-        }
 
         public static void BHAVChanged(BHAV bhav)
         {
-            lock (_Assembled)
-            {
-                bhav.RuntimeVer++;
-                if (_Assembled.ContainsKey(bhav)) _Assembled.Remove(bhav);
-            }
             OnBHAVChange?.Invoke();
         }
 
@@ -553,6 +522,7 @@ namespace FSO.SimAntics
         /// <param name="info">The dialog info to pass along.</param>
         public void SignalDialog(VMDialogInfo info)
         {
+            if (Driver.InResync) return;
             OnDialog?.Invoke(info);
         }
 
@@ -562,6 +532,7 @@ namespace FSO.SimAntics
         /// <param name="info">The chat event to pass along.</param>
         public void SignalChatEvent(VMChatEvent evt)
         {
+            if (Driver.InResync) return;
             OnChatEvent?.Invoke(evt);
         }
 
@@ -630,10 +601,11 @@ namespace FSO.SimAntics
             return new VMMarshal
             {
                 Context = Context.Save(),
+                TS1 = TS1,
                 Entities = ents,
                 Threads = threads,
                 MultitileGroups = mult.ToArray(),
-                GlobalState = GlobalState,
+                GlobalState = (short[])GlobalState.Clone(),
                 PlatformState = PlatformState,
                 ObjectId = ObjectId,
                 Tuning = Tuning
@@ -669,10 +641,26 @@ namespace FSO.SimAntics
             };
         }
 
+        public bool FSOVAsyncLoading;
+        public bool FSOVDoAsyncLoad;
+        public bool FSOVClientJoin;
+        public int FSOVObjLoaded;
+        public int FSOVObjTotal;
+
         public void Load(VMMarshal input)
         {
-            var clientJoin = (Context.Architecture == null);
+            FSOVClientJoin = (Context.Architecture == null);
+            FSOVAsyncLoading = true;
+            LoadAsync(input);
+            LoadComplete();
+        }
+
+        public void LoadAsync(VMMarshal input)
+        {
+            FSOVAsyncLoading = true;
+            var lastBp = Context.Blueprint; //try keep this alive I suppose
             //var oldWorld = Context.World;
+            //TS1 = input.TS1;
             Context = new VMContext(input.Context, Context);
             Context.VM = this;
             var idMap = input.Context.Architecture.IDMap;
@@ -694,7 +682,16 @@ namespace FSO.SimAntics
                 foreach (var obj in Entities)
                 {
                     obj.Dead = true;
-                    if (obj.HeadlineRenderer != null) obj.HeadlineRenderer.Dispose();
+                    if (obj.HeadlineRenderer != null)
+                    {
+                        if (UseWorld)
+                        {
+                            GameThread.InUpdate(() =>
+                            {
+                                obj.HeadlineRenderer.Dispose();
+                            });
+                        }
+                    }
                     oldSounds.AddRange(obj.GetActiveSounds());
                 }
             }
@@ -703,6 +700,7 @@ namespace FSO.SimAntics
             Entities = new List<VMEntity>();
             Scheduler.Reset();
             ObjectsById = new Dictionary<short, VMEntity>();
+            FSOVObjTotal = input.Entities.Length;
             foreach (var ent in input.Entities)
             {
                 VMEntity realEnt;
@@ -731,6 +729,7 @@ namespace FSO.SimAntics
                 Entities.Add(realEnt);
                 Context.ObjectQueries.NewObject(realEnt);
                 ObjectsById.Add(ent.ObjectID, realEnt);
+                FSOVObjLoaded++;
             }
 
             int i = 0;
@@ -778,6 +777,10 @@ namespace FSO.SimAntics
             }
 
             GlobalState = input.GlobalState;
+            if (TS1)
+            {
+                ((VMTS1LotState)input.PlatformState).CurrentFamily = TS1State.CurrentFamily;
+            }
             PlatformState = input.PlatformState;
             ObjectId = input.ObjectId;
 
@@ -792,19 +795,34 @@ namespace FSO.SimAntics
 
             Context.Architecture.WallDirtyState(input.Context.Architecture);
 
-            foreach (var snd in oldSounds)
+            if (oldSounds.Count > 0)
             {
-                //find new owners
-                var obj = GetObjectById(snd.SourceID);
-                if (obj == null || obj.Object.GUID != snd.SourceGUID) snd.SFX.Sound.RemoveOwner(snd.SourceID);
-                else
+                GameThread.InUpdate(() =>
                 {
-                    SoundEntities.Add(obj);
-                    obj.SoundThreads.Add(snd.SFX); // successfully transfer sound to new object
-                }
+                    foreach (var snd in oldSounds)
+                    {
+                        //find new owners
+                        var obj = GetObjectById(snd.SourceID);
+                        if (obj == null || obj.Object.GUID != snd.SourceGUID) snd.SFX.Sound.RemoveOwner(snd.SourceID);
+                        else
+                        {
+                            SoundEntities.Add(obj);
+                            obj.SoundThreads.Add(snd.SFX); // successfully transfer sound to new object
+                        }
+                    }
+                });
             }
+            
+            Context.UpdateTSOBuildableArea();
+            Tuning = input.Tuning;
+            UpdateTuning();
+            if (OnFullRefresh != null) OnFullRefresh();
+        }
 
-            if (clientJoin)
+        public void LoadComplete()
+        {
+            FSOVAsyncLoading = false;
+            if (FSOVClientJoin)
             {
                 //run clientJoin functions to play object sounds, update some gfx.
                 foreach (var obj in Entities)
@@ -812,10 +830,6 @@ namespace FSO.SimAntics
                     obj.ExecuteEntryPoint(30, Context, true);
                 }
             }
-            Context.UpdateTSOBuildableArea();
-            Tuning = input.Tuning;
-            UpdateTuning();
-            if (OnFullRefresh != null) OnFullRefresh();
         }
 
         public void HollowLoad(VMHollowMarshal input)
@@ -910,5 +924,6 @@ namespace FSO.SimAntics
         TSOUnignore,
         TSOTimeout,
         TS1LotChange,
+        TS1BuildBuyChange
     }
 }

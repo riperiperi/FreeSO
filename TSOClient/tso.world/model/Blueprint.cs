@@ -52,7 +52,10 @@ namespace FSO.LotView.Model
         public List<SubWorldComponent> SubWorlds = new List<SubWorldComponent>();
         public TerrainComponent Terrain;
 
+        public HashSet<EntityComponent> HeadlineObjects = new HashSet<EntityComponent>();
+
         public List<ParticleComponent> Particles = new List<ParticleComponent>();
+        public List<ParticleComponent> ObjectParticles = new List<ParticleComponent>();
 
         /// <summary>
         /// Walls Cutaway sections. Remember to manage these correctly - i.e remove when you're finished with them!
@@ -259,6 +262,13 @@ namespace FSO.LotView.Model
         {
             Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_MOVE, component.TileX, component.TileY, component.Level) { Component = component });
             Objects.Remove(component);
+            HeadlineObjects.Remove(component);
+            //remove all of this object's particles, and make sure we dispose their vertex buffers.
+            foreach (var part in component.Particles)
+            {
+                part.Dispose();
+                ObjectParticles.Remove(part);
+            }
         }
 
         private ushort GetOffset(int tileX, int tileY){
@@ -288,6 +298,18 @@ namespace FSO.LotView.Model
             }
 
             return new Rectangle(minx, miny, (maxx - minx) + 1, (maxy - miny) + 1);
+        }
+
+        public Vector2 GetThumbCenterTile(WorldState state)
+        {
+            if (FineArea == null) return new Vector2(Width / 2, Height / 2);
+            else
+            {
+                var bounds = GetFineBounds();
+                var result = new Vector2(bounds.X + bounds.Width / 2f, bounds.Y + bounds.Height / 2f);
+                result -= (InterpAltitude(new Vector3(bounds.X + bounds.Width, bounds.Y + bounds.Height, 0)) / 2.95f) * state.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)state.Zoom));
+                return result;
+            }
         }
 
         public byte[] GetIndoors()
@@ -382,7 +404,8 @@ namespace FSO.LotView.Model
         OUTDOORS_LIGHTING_CHANGED,
         ROOM_CHANGED,
         ROOF_STYLE_CHANGED,
-        ROOM_MAP_CHANGED
+        ROOM_MAP_CHANGED,
+        OPENGL_SECOND_DRAW
     }
 
     public class BlueprintObjectList {

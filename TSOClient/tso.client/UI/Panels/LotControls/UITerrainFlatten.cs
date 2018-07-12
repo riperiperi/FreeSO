@@ -181,8 +181,22 @@ namespace FSO.Client.UI.Panels.LotControls
                 }
                 else
                 {
-                    state.UIState.TooltipProperties.Show = false;
-                    state.UIState.TooltipProperties.Opacity = 0;
+                    var failed = vm.Context.Architecture.LastFailReason;
+                    if (failed > 0)
+                    {
+                        if (failed == 1)
+                            ShowErrorAtMouse(state, VMPlacementError.CantPlaceOnSlope, state.MouseState.Position);
+                        else if (failed == 2)
+                            ShowErrorAtMouse(state, VMPlacementError.LocationOutOfBounds, state.MouseState.Position);
+                        else
+                            ShowErrorAtMouse(state, VMPlacementError.LocationOutOfBounds, state.MouseState.Position);
+                        vm.Context.Architecture.SignalTerrainRedraw();
+                    }
+                    else
+                    {
+                        state.UIState.TooltipProperties.Show = false;
+                        state.UIState.TooltipProperties.Opacity = 0;
+                    }
                 }
                 LastCmd = cmds[0];
             }
@@ -201,6 +215,17 @@ namespace FSO.Client.UI.Panels.LotControls
 
             SetCursorGraphic(3, WallCursor);
             SetCursorGraphic(3, WallCursor2);
+        }
+
+        private void ShowErrorAtMouse(UpdateState state, VMPlacementError error, Point pos)
+        {
+            state.UIState.TooltipProperties.Show = true;
+            state.UIState.TooltipProperties.Color = Color.Black;
+            state.UIState.TooltipProperties.Opacity = 1;
+            state.UIState.TooltipProperties.Position = pos.ToVector2();
+            state.UIState.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + error.ToString());
+            state.UIState.TooltipProperties.UpdateDead = false;
+            HITVM.Get().PlaySoundEvent(UISounds.Error);
         }
 
         public void Release()

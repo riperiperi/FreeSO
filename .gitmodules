@@ -1,6 +1,6 @@
 [submodule "Other/libs/FSOMonoGame"]
 	path = Other/libs/FSOMonoGame
-	url = https://github.com/RHY3756547/FSOMonoGame.git
+	url = https://github.com/riperiperi/FSOMonoGame.git
 [submodule "Other/libs/FSOMina.NET"]
 	path = Other/libs/FSOMina.NET
-	url = https://github.com/RHY3756547/FSOMina.NET.git
+	url = https://github.com/riperiperi/FSOMina.NET.git

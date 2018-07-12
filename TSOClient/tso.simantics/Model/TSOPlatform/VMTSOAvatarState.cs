@@ -4,15 +4,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using FSO.SimAntics.Model.Platform;
+using Microsoft.Xna.Framework;
 
 namespace FSO.SimAntics.Model.TSOPlatform
 {
-    public class VMTSOAvatarState : VMTSOEntityState
+    public class VMTSOAvatarState : VMTSOEntityState, VMIAvatarState
     {
-        public VMTSOAvatarPermissions Permissions = VMTSOAvatarPermissions.Visitor;
+        public VMTSOAvatarPermissions Permissions { get; set; } = VMTSOAvatarPermissions.Visitor;
         public HashSet<uint> IgnoredAvatars = new HashSet<uint>();
         public Dictionary<short, VMTSOJobInfo> JobInfo = new Dictionary<short, VMTSOJobInfo>();
         public VMTSOAvatarFlags Flags;
+        public Color ChatColor = Color.White;
+        public sbyte ChatTTSPitch; //-100 to 100. 
+        public byte ChatChannel = 255; //the chat channel this avatar is viewing. 255 = all.
+
+        public static Color[] RandomColours = new Color[] {
+            new Color(255, 255, 255),
+            new Color(125, 255, 255),
+            new Color(255, 125, 255),
+            new Color(255, 255, 125),
+            new Color(125, 125, 255),
+            new Color(255, 125, 125),
+            new Color(125, 255, 125),
+            new Color(0, 255, 255),
+            new Color(255, 255, 0)
+        };
 
         public VMTSOAvatarState() { }
 
@@ -42,6 +59,13 @@ namespace FSO.SimAntics.Model.TSOPlatform
             }
             if (Version > 9)
                 Flags = (VMTSOAvatarFlags)reader.ReadUInt32();
+
+            if (Version > 27)
+            {
+                ChatColor = new Color(reader.ReadByte(), reader.ReadByte(), reader.ReadByte(), (byte)255);
+                ChatTTSPitch = reader.ReadSByte();
+                ChatChannel = reader.ReadByte();
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -58,6 +82,12 @@ namespace FSO.SimAntics.Model.TSOPlatform
                 item.Value.SerializeInto(writer);
             }
             writer.Write((uint)Flags);
+
+            writer.Write(ChatColor.R);
+            writer.Write(ChatColor.G);
+            writer.Write(ChatColor.B);
+            writer.Write(ChatTTSPitch);
+            writer.Write(ChatChannel);
         }
 
         public override void Tick(VM vm, object owner)
@@ -78,6 +108,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
     [Flags]
     public enum VMTSOAvatarFlags : uint
     {
-        CanBeRoommate = 1 //TODO: update on becoming roomie of another lot, while on this lot.
+        CanBeRoommate = 1, //TODO: update on becoming roomie of another lot, while on this lot.
+        NewPlayer = 2, //under a week old
     }
 }
