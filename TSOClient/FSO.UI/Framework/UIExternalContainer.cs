@@ -94,7 +94,7 @@ namespace FSO.Client.UI.Framework
                 {
                     RawImage = new byte[expectedSize];
                 }
-                Target.GetData(RawImage, 0, (GameFacade.DirectX) ? RawImage.Length : RawImage.Length / 4);
+                Target.GetData(RawImage, 0, (GameFacade.DirectX) ? RawImage.Length : RawImage.Length);
 
                 for (int i = 0; i < RawImage.Length; i += 4)
                 {
