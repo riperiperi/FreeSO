@@ -65,11 +65,18 @@ namespace FSO.IDE.EditorComponent.Primitives
                 new OpFlag("Pass Object IDs", "PassObjectIds"),
                 new OpFlag("Pass Temp 0 to Main", "PassTemp0"),
                 new OpFlag("Persist in DB", "PersistInDB"),
+
+                new OpFlag("Return Immediately", "ReturnImmediately"),
+                new OpFlag("Fail if Non-Empty", "FailIfNonEmpty"),
+                new OpFlag("Face StackOBJ Dir", "FaceStackObjDir"),
+                new OpFlag("Use Neighbor (TS1)", "UseNeighbor"),
                 }));
 
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider(
                 "Pass Object IDs provides the option to pass both the Stack Object and the Caller Object to the newly "+
-                "created object's main routine, as its Stack Object and Temp 0 (ID) respectively.")));
+                "created object's main routine, as its Stack Object and Temp 0 (ID) respectively.\r\n\r\n"+
+                "Return Immediately returns from this interaction and immediately runs it again with the created "+
+                "object's ID in parameter 0.")));
         }
     }
 }
