@@ -749,10 +749,25 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             {
                 case VMEODRouletteGameStates.BettingRound:
                     {
-                        NewGame();
-                        Roundtimer = 30;
-                        Tock = 0;
-                        GameState = state;
+                        // did the object break?
+                        var broken = ((VMTSOEntityState)Controller.Invoker.PlatformState as VMTSOObjectState).Broken;
+                        if (broken)
+                        {
+                            var playersToMessage = new List<RoulettePlayer>(Players);
+                            foreach (var player in playersToMessage)
+                            {
+                                if (player.Client != null)
+                                    player.Client.Send("roulette_alert", new byte[] { (byte)VMEODRouletteInputErrorTypes.ObjectBroken });
+                            }
+                            EnqueueGotoState(VMEODRouletteGameStates.Closed);
+                        }
+                        else
+                        {
+                            NewGame();
+                            Roundtimer = 30;
+                            Tock = 0;
+                            GameState = state;
+                        }
                         break;
                     }
                 case VMEODRouletteGameStates.Closed:
@@ -1444,6 +1459,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         BetTooHigh = 1,
         BetTooHighForBalance = 2,
         ObjectMustBeClosed = 3,
-        ObjectNSF = 4
+        ObjectNSF = 4,
+        ObjectBroken = 5
     }
 }

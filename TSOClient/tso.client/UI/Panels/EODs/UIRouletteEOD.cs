@@ -97,7 +97,8 @@ namespace FSO.Client.UI.Panels.EODs
         // alert strings found in _f111_casinoeodstrings.cst
         public Dictionary<byte, string> AlertStrings = new Dictionary<byte, string>()
         {
-            { (byte)VMEODRouletteInputErrorTypes.ObjectNSF, GameFacade.Strings.GetString("f111", "28") }
+            { (byte)VMEODRouletteInputErrorTypes.ObjectNSF, GameFacade.Strings.GetString("f111", "28") },
+            { (byte)VMEODRouletteInputErrorTypes.ObjectBroken, GameFacade.Strings.GetString("f111", "90") }
         };
         
         public UIRouletteEOD(UIEODController controller) : base(controller)
@@ -190,7 +191,6 @@ namespace FSO.Client.UI.Panels.EODs
             SetTip("");
             byte isOwner = GameUIState.Equals(UIRouletteEODStates.Managing) ? (byte)1 : (byte)0;
             Send("roulette_UI_close", new byte[] { isOwner });
-            //CloseInteraction();
             base.OnClose();
         }
         // Server sends EOD time remaining as a string. Ignore this if in Managing State.
@@ -221,7 +221,7 @@ namespace FSO.Client.UI.Panels.EODs
         private void WheelSpinTimerHandler(object source, ElapsedEventArgs args)
         {
             var newX = 0;
-            // ~10 seconds for now, as a guess
+            // ~10 seconds originally
             if (++WheelSpinElapsedCounter >= 30)
             {
                 var targetX = UltimateStopsArray[UltimateStopColor].X;

@@ -13,14 +13,17 @@ namespace FSO.Client.UI.Panels.EODs.Utils
 {
     public class UIManageEODObjectPanel : UIContainer
     {
-        private ManageEODObjectTypes Type;
+        private bool InputAllowed;
         private int ObjectBalance;
         private int ObjectOdds;
         private int ObjectMinimumBalance;
         private int ObjectMaximumBalance;
         private int ObjectMinimumPlayerBet;
         private int ObjectMaximumPlayerBet;
+        private int ObjectMaximumPlayerSideBet;
         private bool ObjectIsOn;
+        private int ObjectPayoutRatio;
+        private ManageEODObjectTypes Type;
         /*
          * Slot Machine Assets
          */
@@ -39,14 +42,19 @@ namespace FSO.Client.UI.Panels.EODs.Utils
         private UIButton EditMinimumBetButton;
         private UIImage EditMinimumBetButtonSeat;
         private UIButton EditMaximumBetButton;
+        private UIButton EditMaximumSideBetButton;
         private UIImage EditMaximumBetButtonSeat;
+        private UIImage EditMaximumSideBetButtonSeat;
         private UIImage MaximumBetTextBack;
         private UITextEdit MaximumBetText;
+        private UIImage MaximumSideBetTextBack;
+        private UITextEdit MaximumSideBetText;
         private UIImage MinimumBetTextBack;
         private UITextEdit MinimumBetText;
         private UILabel MachineBalanceLabel;
         private UILabel MinimumBetLabel;
         private UILabel MaximumBetLabel;
+        private UILabel MaximumSideBetLabel;
         /*
          * Shared Object Assets
          */
@@ -75,9 +83,9 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             ObjectIsOn = isOn;
             InitUIAssets();
         }
-
         public UIManageEODObjectPanel(ManageEODObjectTypes type, int currentBalance, int minBalance, int maxBalance, int minBet, int maxBet)
         {
+            ObjectPayoutRatio = (type.Equals(ManageEODObjectTypes.Roulette)) ? 140 : 6; // worst case payout ratio is 140 for roulette, 6 for blackjack
             Type = type;
             ObjectBalance = currentBalance;
             ObjectMinimumBalance = minBalance;
@@ -86,7 +94,18 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             ObjectMaximumPlayerBet = maxBet;
             InitUIAssets();
         }
-
+        public UIManageEODObjectPanel(ManageEODObjectTypes type, int currentBalance, int minBalance, int maxBalance, int minBet, int maxBet, int maxSideBet)
+        {
+            ObjectPayoutRatio = 84; // holdem worst case payout ratio on ante bet is 84, side bet is 104
+            Type = type;
+            ObjectBalance = currentBalance;
+            ObjectMinimumBalance = minBalance;
+            ObjectMaximumBalance = maxBalance;
+            ObjectMinimumPlayerBet = minBet;
+            ObjectMaximumPlayerBet = maxBet;
+            ObjectMaximumPlayerSideBet = maxSideBet;
+            InitUIAssets();
+        }
         public void SetObjectOnOff(bool isNowOn)
         {
             ObjectIsOn = isNowOn;
@@ -108,6 +127,8 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                     ResumeFromBetAmount("max_bet", "" + ObjectMaximumPlayerBet);
                 else if (transactionType.Equals("n"))
                     ResumeFromBetAmount("min_bet", "" + ObjectMinimumPlayerBet);
+                else if (transactionType.Equals("s"))
+                    ResumeFromBetAmount("side_bet", "" + ObjectMaximumPlayerSideBet);
                 return;
             }
             else if (failureReason.Equals(VMEODSlotsInputErrorTypes.Invalid.ToString()))
@@ -142,6 +163,14 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                                 GameFacade.Strings.GetString("f110", "19");
                             break;
                         }
+                    case ManageEODObjectTypes.HoldEmCasino:
+                        {
+                            // "You do not have enough money in this object to cover that bet amount." \n \n
+                            message = GameFacade.Strings.GetString("f110", "32") + System.Environment.NewLine + System.Environment.NewLine +
+                                // "You must stock at least 84 times the maximum ante bet and 104 times the maximum side bet."
+                                GameFacade.Strings.GetString("f110", "41");
+                            break;
+                        }
                 }
             }
             else if (failureReason.Equals(VMEODRouletteInputErrorTypes.BetTooLow.ToString()))
@@ -150,6 +179,8 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                     message = GameFacade.Strings.GetString("f110", "28").Replace("%d", MINIMUM_BET_LIMIT + ""); // "The minimum bet cannot be lower than $%d."
                 else if (transactionType.Equals("x"))
                     message = GameFacade.Strings.GetString("f110", "29"); // "The maximum bet cannot be lower than the minimum bet."
+                else if (transactionType.Equals("s"))
+                    message = GameFacade.Strings.GetString("f110", "45"); // "The side bet cannot be lower than $0."
                 else
                     message = GameFacade.Strings.GetString("f110", "34"); // "An unknown error occured."
             }
@@ -159,6 +190,8 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                     message = GameFacade.Strings.GetString("f110", "31"); // "The minimum bet cannot be higher than the maximum bet."
                 else if (transactionType.Equals("x"))
                     message = GameFacade.Strings.GetString("f110", "30").Replace("%d", MAXIMUM_BET_LIMIT + ""); // "The maximum bet cannot be higher than $%d."
+                else if (transactionType.Equals("s"))
+                    message = GameFacade.Strings.GetString("f110", "44").Replace("%d", MAXIMUM_BET_LIMIT + ""); // "The side bet cannot be higher than $%d."
                 else
                     message = GameFacade.Strings.GetString("f110", "34"); // "An unknown error occured."
             }
@@ -182,6 +215,9 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                         ResumeFromBetAmount("max_bet", "" + ObjectMaximumPlayerBet);
                     else if (transactionType.Equals("n"))
                         ResumeFromBetAmount("min_bet", "" + ObjectMinimumPlayerBet);
+                    else if (transactionType.Equals("s"))
+                        ResumeFromBetAmount("side_bet", "" + ObjectMaximumPlayerSideBet);
+
                     UIScreen.RemoveDialog(alert);
                 }),
             }, true);
@@ -211,33 +247,34 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             if (result)
                 ObjectBalance = newBalance;
             MachineBalanceText.CurrentText = "$" + ObjectBalance;
-            CashOutButton.OnButtonClick += OnCashoutButtonClick;
-            if (!Type.Equals(ManageEODObjectTypes.SlotMachine))
-            {
-                EditMinimumBetButton.OnButtonClick += OnEditMinimumClick;
-                EditMaximumBetButton.OnButtonClick += OnEditMaximumClick;
-            }
+            InputAllowed = true;
         }
-        public void ResumeFromBetAmount(string evt, string minOrMaxBet)
+        public void ResumeFromBetAmount(string evt, string betAmountString)
         {
             int betAmount;
-            var result = Int32.TryParse(minOrMaxBet, out betAmount);
+            var result = Int32.TryParse(betAmountString, out betAmount);
             if (evt != null && evt.Length > 3 && result)
             {
                 if (evt[2].Equals('x')) // "max_bet"
                 {
                     ObjectMaximumPlayerBet = betAmount;
                     MaximumBetText.CurrentText = "$" + ObjectMaximumPlayerBet;
+                    ObjectMinimumBalance = ObjectPayoutRatio * ObjectMaximumPlayerBet;
                 }
-                else // "min_bet"
+                else if (evt[2].Equals('n')) // "min_bet"
                 {
                     ObjectMinimumPlayerBet = betAmount;
                     MinimumBetText.CurrentText = "$" + ObjectMinimumPlayerBet;
                 }
+                else // "side_bet"
+                {
+                    ObjectMaximumPlayerSideBet = betAmount;
+                    MaximumSideBetText.CurrentText = "$" + ObjectMaximumPlayerSideBet;
+                    ObjectMinimumBalance = ObjectMaximumPlayerBet * VMEODHoldEmCasinoPlugin.WORST_CASE_ANTE_PAYOUT_RATIO +
+                         ObjectMaximumPlayerSideBet * VMEODHoldEmCasinoPlugin.WORST_CASE_SIDE_PAYOUT_RATIO;
+                }
             }
-            CashOutButton.OnButtonClick += OnCashoutButtonClick;
-            EditMinimumBetButton.OnButtonClick += OnEditMinimumClick;
-            EditMaximumBetButton.OnButtonClick += OnEditMaximumClick;
+            InputAllowed = true;
         }
 
         private void InitUIAssets()
@@ -499,48 +536,127 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                         // liseners for editing bet buttons
                         EditMinimumBetButton.OnButtonClick += OnEditMinimumClick;
                         EditMaximumBetButton.OnButtonClick += OnEditMaximumClick;
+
+                        // tweak for Hold'em Casino
+                        if (Type.Equals(ManageEODObjectTypes.HoldEmCasino))
+                        {
+                            MinimumBetTextBack.Y -= 18;
+                            MinimumBetTextBack.X += 6;
+                            MinimumBetText.Y -= 18;
+                            MinimumBetText.X += 6;
+                            MinimumBetLabel.Y -= 18;
+                            MinimumBetLabel.X += 6;
+                            EditMinimumBetButtonSeat.Y -= 18;
+                            EditMinimumBetButtonSeat.X += 6;
+                            EditMinimumBetButton.Y -= 18;
+                            EditMinimumBetButton.X += 6;
+
+                            MaximumBetTextBack.Y -= 18;
+                            MaximumBetTextBack.X += 6;
+                            MaximumBetText.Y -= 18;
+                            MaximumBetText.X += 6;
+                            MaximumBetLabel.Y -= 18;
+                            MaximumBetLabel.X += 6;
+                            EditMaximumBetButtonSeat.Y -= 18;
+                            EditMaximumBetButtonSeat.X += 6;
+                            EditMaximumBetButton.Y -= 18;
+                            EditMaximumBetButton.X += 6;
+
+                            MachineBalanceTextBack.X -= 20;
+                            MachineBalanceText.X -= 20;
+                            CashOutButton.X -= 20;
+                            CashOutButtonSeat.X -= 20;
+                            MachineBalanceLabel.X -= 20;
+
+                            MinimumBetLabel.Caption = GameFacade.Strings.GetString("f110", "36") + ":"; // "Min Ante Bet"
+                            MaximumBetLabel.Caption = GameFacade.Strings.GetString("f110", "37") + ":"; // "Max Ante Bet"
+                            EditMinimumBetButton.Tooltip = GameFacade.Strings.GetString("f110", "15") +
+                                GameFacade.Strings.GetString("f110", "36") + ":"; // "Edit Min Ante Bet"
+                            EditMaximumBetButton.Tooltip = GameFacade.Strings.GetString("f110", "15") +
+                                GameFacade.Strings.GetString("f110", "37") + ":"; // "Edit Min Ante Bet"
+                            
+                            /* Add Max Side Bet stuff */
+                            // label for maximum side bet
+                            MaximumSideBetTextBack = new UIImage(TextBackTexture)
+                            {
+                                X = MaximumBetTextBack.X,
+                                Y = MaximumBetTextBack.Y + 33
+                            };
+                            Add(MaximumSideBetTextBack);
+                            MaximumSideBetText = new UITextEdit()
+                            {
+                                Size = new Vector2(65, 20),
+                                X = MaximumSideBetTextBack.X + 14,
+                                Y = MaximumSideBetTextBack.Y + 4,
+                                Alignment = TextAlignment.Center,
+                                Mode = UITextEditMode.ReadOnly,
+                                CurrentText = "$" + ObjectMaximumPlayerSideBet,
+                                TextStyle = textStyle,
+                                Tooltip = GameFacade.Strings.GetString("f110", "38") // "Max Side Bet"
+                            };
+                            Add(MaximumSideBetText);
+                            EditMaximumSideBetButtonSeat = new UIImage(ButtonSeatTexture)
+                            {
+                                X = MaximumSideBetTextBack.X - 32,
+                                Y = MaximumSideBetTextBack.Y,
+                            };
+                            Add(EditMaximumSideBetButtonSeat);
+                            EditMaximumSideBetButton = new UIButton(EditAmountTexture)
+                            {
+                                X = EditMaximumSideBetButtonSeat.X + 3,
+                                Y = EditMaximumSideBetButtonSeat.Y + 3,
+                                Tooltip = GameFacade.Strings.GetString("f110", "15") + GameFacade.Strings.GetString("f110", "38"), // "Edit Max Side Bet"
+                            };
+                            EditMaximumSideBetButtonSeat.ScaleX = EditMaximumSideBetButtonSeat.ScaleY = (EditMaximumSideBetButton.Size / CashOutButton.Size).X;
+                            Add(EditMaximumSideBetButton);
+                            MaximumSideBetLabel = new UILabel()
+                            {
+                                Size = new Vector2(60, 21),
+                                X = EditMaximumSideBetButtonSeat.X - 70,
+                                Y = MaximumSideBetText.Y,
+                                Alignment = TextAlignment.Right,
+                                Caption = GameFacade.Strings.GetString("f110", "38") + ":", // "Max Side Bet:"
+                                CaptionStyle = textStyle
+                            };
+                            Add(MaximumSideBetLabel);
+
+                            EditMaximumSideBetButton.OnButtonClick += OnEditSideClick;
+                        }
                         break;
                     }
             }
-
-        } // InitUIAssets()
-
+            InputAllowed = true;
+        }
         private void OnCashoutButtonClick(UIElement targetButton)
         {
-            CashOutButton.OnButtonClick -= OnCashoutButtonClick;
-            if (!Type.Equals(ManageEODObjectTypes.SlotMachine))
+            if (InputAllowed)
             {
-                EditMinimumBetButton.OnButtonClick -= OnEditMinimumClick;
-                EditMaximumBetButton.OnButtonClick -= OnEditMaximumClick;
-                /*if (ObjectIsOn)
+                InputAllowed = false;
+
+                // show an alert that asks the user if they want to make a desposit or a withdrawal
+                UIAlert alert = null;
+                alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
                 {
-                    InputFailHandler("w", VMEODRouletteInputErrorTypes.ObjectMustBeClosed.ToString());
-                    return;
-                }*/
+                    TextSize = 12,
+                    Title = GameFacade.Strings.GetString("f110", "1"), // "Owner Transactions"
+                    Message = GameFacade.Strings.GetString("f110", "2"), // "What would you like to do?"
+                    Alignment = TextAlignment.Center,
+                    TextEntry = false,
+                    Buttons = new UIAlertButton[]
+                    {
+                        new UIAlertButton (UIAlertButtonType.OK, ((btn1) =>
+                        {
+                            DepositPrompt();
+                            UIScreen.RemoveDialog(alert);
+                        }), GameFacade.Strings.GetString("f110", "4")), // "Deposit"
+                        new UIAlertButton (UIAlertButtonType.Cancel, ((btn2) =>
+                        {
+                            WithdrawPrompt();
+                            UIScreen.RemoveDialog(alert);
+                        }), GameFacade.Strings.GetString("f110", "3")) // "Withdraw"
+                    }
+                }, true);
             }
-            // show an alert that asks the user if they want to make a desposit or a withdrawal
-            UIAlert alert = null;
-            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
-            {
-                TextSize = 12,
-                Title = GameFacade.Strings.GetString("f110", "1"), // "Owner Transactions"
-                Message = GameFacade.Strings.GetString("f110", "2"), // "What would you like to do?"
-                Alignment = TextAlignment.Center,
-                TextEntry = false,
-                Buttons = new UIAlertButton[]
-                {
-                    new UIAlertButton (UIAlertButtonType.OK, ((btn1) =>
-                    {
-                    DepositPrompt();
-                    UIScreen.RemoveDialog(alert);
-                    }), GameFacade.Strings.GetString("f110", "4")), // "Deposit"
-                    new UIAlertButton (UIAlertButtonType.Cancel, ((btn2) =>
-                    {
-                    WithdrawPrompt();
-                    UIScreen.RemoveDialog(alert);
-                    }), GameFacade.Strings.GetString("f110", "3")) // "Withdraw"
-                }
-            }, true);
         }
 
         private void DepositPrompt()
@@ -599,7 +715,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
         private void UserInputHandler(string type, string userInput)
         {
             int amount = 0;
-            userInput.Replace("-", ""); // in case any jokesters try to input a negative number (validated on server)
+            userInput.Replace("-", ""); // in case any jokesters try to input a negative number (validated on server, too)
             string eventName = null;
             string eventMessage = "";
             // try to parse the user's input
@@ -607,7 +723,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             {
                 amount = Int32.Parse(userInput);
                 // input is valid, now check it against MachineBalance
-                if (amount == 0)
+                if (amount == 0 && !type.Equals("s")) // only side bets can be 0
                 {
                     eventMessage = VMEODSlotsInputErrorTypes.Null.ToString();
                 }
@@ -649,7 +765,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                     else
                     {
                         // does the machine have enough money to cover this bet amount?
-                        if (amount > ObjectBalance * 140)
+                        if (amount * ObjectPayoutRatio > ObjectBalance) // roulette 140, blackjack 6, holdem 84
                             eventMessage = VMEODRouletteInputErrorTypes.BetTooHighForBalance.ToString();
                         else
                         {
@@ -666,18 +782,40 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                         eventMessage = VMEODRouletteInputErrorTypes.BetTooLow.ToString();
                     }
                     // proposed maximum bet must not be greater than $1000
-                    else if (amount > VMEODRoulettePlugin.GLOBAL_MAXIMUM_ROULETTE_ROUND_BET)
+                    else if (amount > UIManageEODObjectPanel.MAXIMUM_BET_LIMIT)
                     {
                         eventMessage = VMEODRouletteInputErrorTypes.BetTooHigh.ToString();
                     }
                     else
                     {
                         // does the machine have enough money to cover this bet amount?
-                        if (amount > ObjectBalance * 140)
+                        if (amount * ObjectPayoutRatio > ObjectBalance) // roulette 140, blackjack 6, holdem 84
                             eventMessage = VMEODRouletteInputErrorTypes.BetTooHighForBalance.ToString();
                         else
                         {
                             eventName = "new_maximum";
+                            eventMessage = "" + amount;
+                        }
+                    }
+                }
+                else if (type.Equals("s")) // side bet
+                {
+                    // proposed maximum side bet must not be greater than maximum allowed for short data type constraints
+                    if (amount < 0)
+                        eventMessage = VMEODRouletteInputErrorTypes.BetTooLow.ToString();
+                    else if (amount > UIManageEODObjectPanel.MAXIMUM_BET_LIMIT)
+                    {
+                        eventMessage = VMEODRouletteInputErrorTypes.BetTooHigh.ToString();
+                    }
+                    else
+                    {
+                        // does the machine have enough money to cover this bet amount?
+                        if (amount * VMEODHoldEmCasinoPlugin.WORST_CASE_SIDE_PAYOUT_RATIO +
+                            ObjectMaximumPlayerBet * VMEODHoldEmCasinoPlugin.WORST_CASE_ANTE_PAYOUT_RATIO > ObjectBalance)
+                            eventMessage = VMEODRouletteInputErrorTypes.BetTooHighForBalance.ToString();
+                        else
+                        {
+                            eventName = "new_side";
                             eventMessage = "" + amount;
                         }
                     }
@@ -740,33 +878,42 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             OnNewStringMessage(new EODMessageNode("toggle_onOff", "" + OnOffButton.ForceState));
             OnOffButton.OnButtonClick += OnOffButtonClick;
         }
-
         private void OnEditMinimumClick(UIElement target)
         {
-            CashOutButton.OnButtonClick -= OnCashoutButtonClick;
-            EditMinimumBetButton.OnButtonClick -= OnEditMinimumClick;
-            EditMaximumBetButton.OnButtonClick -= OnEditMaximumClick;
-            SetBetPrompt(true);
+            if (InputAllowed)
+            {
+                InputAllowed = false;
+                SetBetPrompt(ManageEODBetTypes.MinBet);
+            }
         }
-
         private void OnEditMaximumClick(UIElement target)
         {
-            CashOutButton.OnButtonClick -= OnCashoutButtonClick;
-            EditMinimumBetButton.OnButtonClick -= OnEditMinimumClick;
-            EditMaximumBetButton.OnButtonClick -= OnEditMaximumClick;
-            SetBetPrompt(false);
+            if (InputAllowed)
+            {
+                InputAllowed = false;
+                SetBetPrompt(ManageEODBetTypes.MaxBet);
+            }
         }
-
-        private void SetBetPrompt(bool isMinBet)
+        private void OnEditSideClick(UIElement target)
+        {
+            if (InputAllowed)
+            {
+                InputAllowed = false;
+                SetBetPrompt(ManageEODBetTypes.MaxSide);
+            }
+        }
+        private void SetBetPrompt(ManageEODBetTypes betType)
         {
             // show an alert that asks the user how much to set the min/max bet
             UIAlert alert = null;
             string typeConditional = "";
             string setBet = "";
             string betTip = "";
+            string shortCode = "";
+            int tempMax = 0;
             if (Type.Equals(ManageEODObjectTypes.Roulette))
             {
-                // "Roulette tables must be able to cover 35 times any bet for 4 simultaneous players, so AT LEAST 140x the maximum bet." \n \n
+                // "Roulette tables must be able to cover 35 times any bet for 4 simultaneous players, so at least 140 times the maximum bet." \n \n
                 typeConditional = GameFacade.Strings.GetString("f110", "16") + System.Environment.NewLine + System.Environment.NewLine +
                     // "For example: if your maximum bet is $100, you must have AT LEAST $14000 in this object."
                     GameFacade.Strings.GetString("f110", "17");
@@ -775,36 +922,64 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             {
                 // "A Blackjack payout is 3:2 or one and a half times any bet. Tables must be able to cover up to 4 blackjacks per round." \n \n
                 typeConditional = GameFacade.Strings.GetString("f110", "18") + System.Environment.NewLine + System.Environment.NewLine +
-                    // "So you must stock at least 6 times the maximum bet."
+                    // "You must stock at least 6 times the maximum bet."
                     GameFacade.Strings.GetString("f110", "19");
+                tempMax = MAXIMUM_BET_LIMIT;
             }
-            if (isMinBet)
+            else if (Type.Equals(ManageEODObjectTypes.HoldEmCasino))
             {
-                setBet = GameFacade.Strings.GetString("f110", "13"); // "Min bet"
-                // "(Note: Minimum bets can't be less than $%d)"
-                betTip = GameFacade.Strings.GetString("f110", "20").Replace("%d", "" + MINIMUM_BET_LIMIT);
+                // "Holdem Casino tables must cover the payout of up to four players, each of which have an ante and side bet." \n \n
+                typeConditional = GameFacade.Strings.GetString("f110", "42") + System.Environment.NewLine + System.Environment.NewLine +
+                    // "While the probability is very low, this could mean paying out for a Royal Flush, Straight Flush, 4 of a kind,
+                    // and a Flush in the same hand, therefore:"  \n \n
+                    GameFacade.Strings.GetString("f110", "43") + System.Environment.NewLine + System.Environment.NewLine +
+                    // "You must stock at least 84 times the maximum ante bet and 104 times the maximum side bet."
+                    GameFacade.Strings.GetString("f110", "41");
+                tempMax = MAXIMUM_BET_LIMIT;
             }
-            else
+            switch (betType)
             {
-                setBet = GameFacade.Strings.GetString("f110", "14"); // "Max bet"
-                // "(Note: Maximum bets can't be greater than $%d)"
-                betTip = GameFacade.Strings.GetString("f110", "21").Replace("%d", "" + MAXIMUM_BET_LIMIT);
+                case ManageEODBetTypes.MinBet:
+                    {
+                        setBet = GameFacade.Strings.GetString("f110", "13"); // "Min bet"
+                        shortCode = setBet[2] + "";
+                        // "(Note: Minimum bets can't be less than $%d)"
+                        betTip = GameFacade.Strings.GetString("f110", "20").Replace("%d", "" + MINIMUM_BET_LIMIT);
+                        break;
+                    }
+                case ManageEODBetTypes.MaxBet:
+                    {
+                        setBet = GameFacade.Strings.GetString("f110", "14"); // "Max bet"
+                        shortCode = setBet[2] + "";
+                        // "(Note: Maximum bets can't be greater than $%d)"
+                        betTip = GameFacade.Strings.GetString("f110", "21").Replace("%d", "" + tempMax);
+                        break;
+                    }
+                default:
+                    //case ManageEODBetTypes.MaxSide:
+                    {
+                        setBet = GameFacade.Strings.GetString("f110", "39"); // "Side bet"
+                        shortCode = "s";
+                        // "(Note: Holdem casino bets can't be greater than $%d)"
+                        betTip = GameFacade.Strings.GetString("f110", "40").Replace("%d", "" + tempMax);
+                        break;
+                    }
             }
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 TextSize = 12,
-                Title = GameFacade.Strings.GetString("f110", "15") + setBet, // "Edit Min/Max bet"
+                Title = GameFacade.Strings.GetString("f110", "15") + setBet, // "Edit Min/Max/Side bet"
                 // "This object is currently stocked with: $%d" \n \n
                 Message = GameFacade.Strings.GetString("f110", "6").Replace("%d", "" + ObjectBalance) + System.Environment.NewLine +
                 System.Environment.NewLine + typeConditional + System.Environment.NewLine + System.Environment.NewLine +
-                // "What would you like to set as your " + "Min/Max bet?" \n \n Tip
+                // "What would you like to set as your " + "Min/Max/Side bet?" \n \n Tip
                 GameFacade.Strings.GetString("f110", "22") + setBet + "?" + System.Environment.NewLine + System.Environment.NewLine + betTip,
                 Alignment = TextAlignment.Left,
                 TextEntry = true,
                 MaxChars = 4,
                 Buttons = UIAlertButton.Ok((btn) =>
                 {
-                    UserInputHandler(setBet[2] + "", alert.ResponseText.Trim()); // 'x' for maximum, 'n' for minimum
+                    UserInputHandler(shortCode, alert.ResponseText.Trim()); // "x" for maximum, "n" for minimum, "s" for side
                     UIScreen.RemoveDialog(alert);
                 }),
             }, true);
@@ -834,6 +1009,13 @@ namespace FSO.Client.UI.Panels.EODs.Utils
         SlotMachine = 0,
         Roulette = 1,
         Blackjack = 2,
+        HoldEmCasino = 3,
         VideoPoker = 4
+    }
+    public enum ManageEODBetTypes: byte
+    {
+        MinBet = 0,
+        MaxBet = 1,
+        MaxSide = 2
     }
 }
