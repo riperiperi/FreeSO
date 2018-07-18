@@ -1082,7 +1082,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     {
                         GameState = newState;
 
-                        // broadcast events to reveal everyone's hands, if someone called
+                        // broadcast events to reveal the dealer's hand, if someone called
                         if (CommunityHand.GetCurrentCards().Count == 5) // everyone folded if there are only 3 community cards here
                         {
                             List<string> allCardsInPlay = GetAllActiveCardsInPlay();
@@ -1367,7 +1367,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 {
                     var slot = Lobby.GetSlotData(index);
                     var alteredCards = new List<string>(allCardsInPlay);
-                    // change all cards not belonging to target slot's client into "Back"
+                    /* change all cards not belonging to target slot's client into "Back"
                     for (int dealIndex = 0; dealIndex < allCardsInPlay.Count - 3; dealIndex++)
                     {
                         // ignore my cards
@@ -1377,7 +1377,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             if (!alteredCards[dealIndex].Equals(""))
                                 alteredCards[dealIndex] = "Back";
                         }
-                    }
+                    }*/
                     // send the dealing events
                     slot.Client.Send("holdemcasino_deal_sequence", VMEODGameCompDrawACardData.SerializeStrings(alteredCards.ToArray()));
 
