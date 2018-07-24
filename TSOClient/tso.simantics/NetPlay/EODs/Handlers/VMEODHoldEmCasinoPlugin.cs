@@ -1999,14 +1999,12 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             String boardString = "";
             foreach (var card in board)
                 boardString += AbstractPlayingCardsDeck.CardShortHand[card] + " ";
-            Console.WriteLine("BoardString short-hand: " + boardString);
 
             // my pocket/hole cards
             var myRawCards = GetCurrentCards();
             String pocketCardsString = "";
             foreach (var card in myRawCards)
                 pocketCardsString += AbstractPlayingCardsDeck.CardShortHand[card] + " ";
-            Console.WriteLine("My Pocket Cards short-hand: " + pocketCardsString);
 
             // evaluate the 7 card hand
             MySevenCardHoldemHand = new HoldemHand.Hand(pocketCardsString, boardString);
@@ -2025,10 +2023,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             }
             else if (SidePayoutRatios.ContainsKey(handType)) // is better than a Pair, e.g. NOT HighCard
                 _HandQualified = true;
-
-            Console.WriteLine("WOW:");
-            Console.WriteLine(MySevenCardHoldemHand.Description);
-            Console.WriteLine(MySevenCardHoldemHand.HandTypeValue);
         }
         public void EvaluateSideBet(List<string> board)
         {
@@ -2036,7 +2030,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             String boardString = "";
             foreach (var card in board)
                 boardString += AbstractPlayingCardsDeck.CardShortHand[card] + " ";
-            Console.WriteLine("(Side) BoardString short-hand: " + boardString);
 
             // my pocket/hole cards
             var myRawCards = GetCurrentCards();
@@ -2046,10 +2039,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             
             // evaluate the 5 card hand, save the type
             MyFiveCardSideBetHand = new HoldemHand.Hand(pocketCardsString, boardString);
-
-            Console.WriteLine("Side:");
-            Console.WriteLine(MyFiveCardSideBetHand.Description);
-            Console.WriteLine(MyFiveCardSideBetHand.HandTypeValue);
         }
         public short CalculateSideBetPayout()
         {
