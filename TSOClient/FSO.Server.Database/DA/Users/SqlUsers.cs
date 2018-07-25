@@ -53,6 +53,11 @@ namespace FSO.Server.Database.DA.Users
             Context.Connection.Execute("UPDATE fso_users SET is_banned = @ban WHERE user_id = @user_id", new { user_id = id, ban = banned });
         }
 
+        public void UpdateLastLogin(uint id, uint last_login)
+        {
+            Context.Connection.Execute("UPDATE fso_users SET last_login = @last_login WHERE user_id = @user_id", new { user_id = id, last_login = last_login });
+        }
+
         public PagedList<User> All(int offset = 1, int limit = 20, string orderBy = "register_date")
         {
             var connection = Context.Connection;
