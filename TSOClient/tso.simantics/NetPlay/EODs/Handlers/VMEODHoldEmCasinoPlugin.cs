@@ -28,6 +28,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private VMEODHoldEmCasinoStates NextState = VMEODHoldEmCasinoStates.Invalid;
         private bool DealerIntermissionComplete;
         private List<VMEODEvent> DealerEventsQueue;
+        private List<VMEODClient> SyncQueue;
 
         private HoldEmCasinoPlayer CommunityHand;
         private VMEODClient Controller;
@@ -64,12 +65,21 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
             DealerIntermissionComplete = true;
             DealerEventsQueue = new List<VMEODEvent>();
+            SyncQueue = new List<VMEODClient>();
         }
         #region Public
         public override void Tick()
         {
             if (Controller == null)
                 return;
+
+            // sync any latecomers' UIEODs
+            if (SyncQueue.Count > 0)
+            {
+                for (int index = 0; index < SyncQueue.Count; index++)
+                    SyncAllPlayers(SyncQueue[index]);
+                SyncQueue = new List<VMEODClient>();
+            }
 
             // handle next state
             if (NextState != VMEODHoldEmCasinoStates.Invalid)
@@ -149,7 +159,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                 else
                                 {
                                     // todo: failsafe give people their money back and reset
-
+                                    RefundAllPlayers();
+                                    EnqueueGotoState(VMEODHoldEmCasinoStates.Closed);
                                 }
                             }
                         }
@@ -193,6 +204,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                 else
                                 {
                                     // todo: failsafe give people their money back and reset
+                                    RefundAllPlayers();
+                                    EnqueueGotoState(VMEODHoldEmCasinoStates.Closed);
                                 }
                             }
                             else // 5 cards, so checking final hands for ante/call payouts
@@ -202,6 +215,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                 else
                                 {
                                     // todo: failsafe give people their money back and reset
+                                    RefundAllPlayers();
+                                    EnqueueGotoState(VMEODHoldEmCasinoStates.Closed);
                                 }
                             }
                         }
@@ -235,6 +250,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 MaxSideBet = args[4];
                 if (args[2] == 0) // is a player
                 {
+                    // get bets accepted from other players
+                    List<string> acceptedBets = GetAllAcceptedBets();
+
                     // using their position at the table, put them in the proper index/slot
                     short playerIndex = args[3]; // args[3] is 1, 2, 3, or 4
                     playerIndex--;
@@ -268,9 +286,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                         slot.OnPlayerSideBetChange += BroadcastSingleSideBet;
 
                                         // set the table data
-                                        TableBalance = (int)budget1;
+                                        var balance = (int)budget1;
+                                        TableBalance = balance;
 
-                                        if (IsTableWithinLimits())
+                                        if (balance >= (MaxAnteBet * WORST_CASE_ANTE_PAYOUT_RATIO + MaxSideBet * WORST_CASE_SIDE_PAYOUT_RATIO)
+                                            && balance <= VMEODBlackjackPlugin.TABLE_MAX_BALANCE)
                                         {
                                             string[] data = new string[] { "" + playerIndex, MinAnteBet + "", MaxAnteBet + "", MaxSideBet + "",
                                                 "" + Dealer.Avatar.ObjectID };
@@ -286,15 +306,14 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                                 {
                                                     if (GameState.Equals(VMEODHoldEmCasinoStates.Betting_Round))
                                                     {
-                                                        // sync all ante and side bets
-                                                        List<string> acceptedBets = GetAllAcceptedBets();
-                                                        if (acceptedBets != null)
+                                                        // send all ante and side bets
+                                                        if (acceptedBets != null && acceptedBets.Count > 0)
                                                             client.Send("holdemcasino_sync_accepted_bets", VMEODGameCompDrawACardData.SerializeStrings(acceptedBets.ToArray()));
                                                         client.Send("holdemcasino_toggle_betting", new byte[] { 1 }); // "Place your bets..."
                                                     }
                                                     else
                                                     {
-                                                        SyncAllPlayers(client);
+                                                        SyncQueue.Add(client);
                                                         client.Send("holdemcasino_toggle_betting", new byte[] { 0 }); // disallow betting
                                                         if (ActivePlayerIndex > -1)
                                                             client.Send("holdemcasino_late_comer", new byte[] { (byte)ActivePlayerIndex }); // "So-and-so's turn."
@@ -304,14 +323,14 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                         }
                                         else  // the table does not have enough money
                                         {
-                                            Lobby.Broadcast("holdemcasino_alert", new byte[] { (byte)VMEODHoldEmCasinoAlerts.Table_NSF });
-                                            EnqueueGotoState(VMEODHoldEmCasinoStates.Closed);
+                                            client.Send("holdemcasino_alert", new byte[] { (byte)VMEODHoldEmCasinoAlerts.Table_NSF });
+                                            Controller.SendOBJEvent(new VMEODEvent((short)VMEODHoldEmCasinoEvents.Force_End_Playing, client.Avatar.ObjectID));
                                         }
                                     }
                                     else  // the table does not have enough money or transaction failed for some reason
                                     {
-                                        Lobby.Broadcast("holdemcasino_alert", new byte[] { (byte)VMEODHoldEmCasinoAlerts.Table_NSF });
-                                        EnqueueGotoState(VMEODHoldEmCasinoStates.Closed);
+                                        client.Send("holdemcasino_alert", new byte[] { (byte)VMEODHoldEmCasinoAlerts.Table_NSF });
+                                        Controller.SendOBJEvent(new VMEODEvent((short)VMEODHoldEmCasinoEvents.Force_End_Playing, client.Avatar.ObjectID));
                                     }
                                 });
                         } // slot was null, should never happen
@@ -377,7 +396,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 Lobby.Leave(client);
                 if (playerIndex == ActivePlayerIndex)
                     ForceFold(true);
-                Controller.SendOBJEvent(new VMEODEvent((short)VMEODHoldEmCasinoEvents.Failsafe_Delete_ID, (short)slot.PlayerIndex));
+                Controller.SendOBJEvent(new VMEODEvent((short)VMEODHoldEmCasinoEvents.Failsafe_Delete_ID, (short)(slot.PlayerIndex + 1)));
             }
             if (Lobby.IsEmpty()) // no players
             {
@@ -553,7 +572,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 // attempt to credit the owner by debiting the object
                 var VM = client.vm;
                 VM.GlobalLink.PerformTransaction(VM, false, Server.Object.PersistID, client.Avatar.PersistID, withdrawAmount,
-
                 (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                 {
                     if (success)
@@ -628,6 +646,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         #endregion // dealer events
         #region Events
         // client closes UI
+        // if the data sent equals 0, the client is a player. if it's 1, the client is the owner and closed the managing window
         private void UIClosedHandler(string evt, byte[] data, VMEODClient client)
         {
             if (client != null && client.Avatar != null)
@@ -635,7 +654,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 if (data[0] == 0)
                     Controller.SendOBJEvent(new VMEODEvent((short)VMEODHoldEmCasinoEvents.Force_End_Playing, client.Avatar.ObjectID));
                 else
-
                     Controller.SendOBJEvent(new VMEODEvent((short)VMEODHoldEmCasinoEvents.Failsafe_Remove_Dealer, client.Avatar.ObjectID));
             }
         }
@@ -737,7 +755,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 }
             }
         }
-        // this semantics event occurs after any animation sequence during gamestate = entre'act
+        // this simantics event occurs after any animation sequence during gamestate = entre'act
         private void AnimationCompleteHandler(short evt, VMEODClient controller)
         {
             if (OneOrMoreBetsAccepted() || (!AllPendingTransactionFinal() && AllPlayersHaveSubmitted()))
@@ -805,6 +823,26 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         }
         #endregion
         #region Private
+        /*
+         * Ideally this never happens, but in the event of an unrecoverable error with bets or hand evaluations, rather than having the table
+         * be stuck forever, return all bets to players, invoked before table closes.
+         */
+        private void RefundAllPlayers()
+        {
+            int cumulativeRefund = 0;
+            var players = new List<VMEODClient>(Lobby.Players);
+            foreach (var player in players)
+            {
+                var slot = Lobby.GetSlotData(player);
+                if (slot != null && slot.BetAccepted)
+                {
+                    cumulativeRefund += slot.AnteBetAmount;
+                    cumulativeRefund += slot.SideBetAmount;
+                    if (cumulativeRefund > 0)
+                        EnqueuePayout(cumulativeRefund, player);
+                }  
+            }
+        }
         /*
          * Returns a value of 1 in the index of the player if that player has an accepted bet and is therefore playing this hand.
          */
@@ -1085,7 +1123,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         // broadcast events to reveal the dealer's hand, if someone called
                         if (CommunityHand.GetCurrentCards().Count == 5) // everyone folded if there are only 3 community cards here
                         {
-                            List<string> allCardsInPlay = GetAllActiveCardsInPlay();
+                            List<string> allCardsInPlay = GetAllActiveCardsInPlay(true);
                             if (allCardsInPlay != null)
                                 Lobby.Broadcast("holdemcasino_sync_hands_up", VMEODGameCompDrawACardData.SerializeStrings(allCardsInPlay.ToArray()));
 
@@ -1367,17 +1405,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 {
                     var slot = Lobby.GetSlotData(index);
                     var alteredCards = new List<string>(allCardsInPlay);
-                    /* change all cards not belonging to target slot's client into "Back"
-                    for (int dealIndex = 0; dealIndex < allCardsInPlay.Count - 3; dealIndex++)
-                    {
-                        // ignore my cards
-                        if (dealIndex != slot.PlayerIndex * 2 && dealIndex != slot.PlayerIndex * 2 + 1)
-                        {
-                            // ignore non-players
-                            if (!alteredCards[dealIndex].Equals(""))
-                                alteredCards[dealIndex] = "Back";
-                        }
-                    }*/
                     // send the dealing events
                     slot.Client.Send("holdemcasino_deal_sequence", VMEODGameCompDrawACardData.SerializeStrings(alteredCards.ToArray()));
 
@@ -1397,20 +1424,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             if (acceptedBets != null)
                 client.Send("holdemcasino_sync_accepted_bets", VMEODGameCompDrawACardData.SerializeStrings(acceptedBets.ToArray()));
 
-            // if player has joined after final deal, cards can be dealt face up
-            if (GameState.Equals(VMEODHoldEmCasinoStates.Finale))
-            {
-                List<string> allCardsInPlay = GetAllActiveCardsInPlay();
-                if (allCardsInPlay != null)
-                    client.Send("holdemcasino_sync_hands_up", VMEODGameCompDrawACardData.SerializeStrings(allCardsInPlay.ToArray()));
-            }
-            // otherwise, cards are always face down so we simply need to know which players are playing this round
-            else
-            {
-                byte[] playersPlaying = GetAllActivePlayers();
-                if (playersPlaying != null)
-                    client.Send("holdemcasino_sync_hands", playersPlaying);
-            }
+            // player cards need to be sync'd
+            List<string> allCardsInPlay = GetAllActiveCardsInPlay(false);
+            if (allCardsInPlay != null)
+                client.Send("holdemcasino_sync_hands_up", VMEODGameCompDrawACardData.SerializeStrings(allCardsInPlay.ToArray()));
+
             // sync the community cards: there will be 3 or 5
             List<string> communityCards = CommunityHand.GetCurrentCards();
             if (communityCards != null)
@@ -1440,7 +1458,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         /*
          * This method returns all cards in each player's hand. It does not return community cards.
          */
-        private List<string> GetAllActiveCardsInPlay()
+        private List<string> GetAllActiveCardsInPlay(bool showDealerCards)
         {
             List<string> allCardsInPlay = new List<string>();
 
@@ -1476,7 +1494,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 }
             }
             // add the dealer's cards
-            var dealersCards = DealerPlayer.GetCurrentCards();
+            List<string> dealersCards = new List<String>();
+            if (showDealerCards)
+                dealersCards = DealerPlayer.GetCurrentCards();
+            else
+                dealersCards = new List<String>() { "Back", "Back" };
             allCardsInPlay.AddRange(dealersCards);
 
             return allCardsInPlay;

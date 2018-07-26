@@ -540,27 +540,18 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                         // tweak for Hold'em Casino
                         if (Type.Equals(ManageEODObjectTypes.HoldEmCasino))
                         {
-                            MinimumBetTextBack.Y -= 18;
-                            MinimumBetTextBack.X += 6;
-                            MinimumBetText.Y -= 18;
-                            MinimumBetText.X += 6;
-                            MinimumBetLabel.Y -= 18;
-                            MinimumBetLabel.X += 6;
-                            EditMinimumBetButtonSeat.Y -= 18;
-                            EditMinimumBetButtonSeat.X += 6;
-                            EditMinimumBetButton.Y -= 18;
-                            EditMinimumBetButton.X += 6;
+                            var offset = new Vector2(6, -18);
+                            MinimumBetTextBack.Position += offset;
+                            MinimumBetText.Position += offset;
+                            MinimumBetLabel.Position += offset;
+                            EditMinimumBetButtonSeat.Position += offset;
+                            EditMinimumBetButton.Position += offset;
 
-                            MaximumBetTextBack.Y -= 18;
-                            MaximumBetTextBack.X += 6;
-                            MaximumBetText.Y -= 18;
-                            MaximumBetText.X += 6;
-                            MaximumBetLabel.Y -= 18;
-                            MaximumBetLabel.X += 6;
-                            EditMaximumBetButtonSeat.Y -= 18;
-                            EditMaximumBetButtonSeat.X += 6;
-                            EditMaximumBetButton.Y -= 18;
-                            EditMaximumBetButton.X += 6;
+                            MaximumBetTextBack.Position += offset;
+                            MaximumBetText.Position += offset;
+                            MaximumBetLabel.Position += offset;
+                            EditMaximumBetButtonSeat.Position += offset;
+                            EditMaximumBetButton.Position += offset;
 
                             MachineBalanceTextBack.X -= 20;
                             MachineBalanceText.X -= 20;

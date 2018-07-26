@@ -373,7 +373,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 Lobby.Leave(client);
                 if (playerIndex == ActivePlayerIndex)
                     ForceStand(true);
-                Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Delete_ID, (short)slot.PlayerIndex));
+                Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Delete_ID, (short)(slot.PlayerIndex + 1)));
             }
             if (Lobby.IsEmpty()) // no players
             {
@@ -1262,7 +1262,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         else
                         {
                             Lobby.Leave(slot.Client);
-                            Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Delete_ID, (short)slot.PlayerIndex));
+                            Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Delete_ID, (short)(slot.PlayerIndex + 1)));
                         }
                     }
                 }

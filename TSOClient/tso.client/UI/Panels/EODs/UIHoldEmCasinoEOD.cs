@@ -432,8 +432,8 @@ namespace FSO.Client.UI.Panels.EODs
                     var anteBet = newBet[0];
                     if (anteBet.Equals("0") || anteBet.Equals(""))
                         anteBet = "Ante";
-                    var playerIndex = (int)Char.GetNumericValue(evt, evt.Length - 1);
-                    SetPlayerAnteBet(playerIndex, anteBet);
+                    var playerIndex = (int)evt.Last() - '0';
+                    SetPlayerBet(true, playerIndex, anteBet);
                 }
             }
         }
@@ -450,8 +450,8 @@ namespace FSO.Client.UI.Panels.EODs
                     var sideBet = newBet[0];
                     if (sideBet.Equals("0") || sideBet.Equals(""))
                         sideBet = "Side";
-                    var playerIndex = (int)Char.GetNumericValue(evt, evt.Length - 1);
-                    SetPlayerSideBet(playerIndex, sideBet);
+                    var playerIndex = (int)evt.Last() - '0';
+                    SetPlayerBet(false, playerIndex, sideBet);
                 }
             }
         }
@@ -724,37 +724,15 @@ namespace FSO.Client.UI.Panels.EODs
                 string[] bets = VMEODGameCompDrawACardData.DeserializeStrings(data);
                 if (bets != null & bets.Length > 0)
                 {
-                    //player 1
-                    int dummy = 0;
-                    Int32.TryParse(bets[0], out dummy);
-                    SetPlayerAnteBet(1, (dummy == 0) ? "Ante" : dummy + "");
-                    dummy = 0;
-                    Int32.TryParse(bets[1], out dummy);
-                    SetPlayerSideBet(1, (dummy == 0) ? "Side" : dummy + "");
-
-                    //player 2
-                    dummy = 0;
-                    Int32.TryParse(bets[2], out dummy);
-                    SetPlayerAnteBet(2, (dummy == 0) ? "Ante" : dummy + "");
-                    dummy = 0;
-                    Int32.TryParse(bets[3], out dummy);
-                    SetPlayerSideBet(2, (dummy == 0) ? "Side" : dummy + "");
-
-                    //player 3
-                    dummy = 0;
-                    Int32.TryParse(bets[4], out dummy);
-                    SetPlayerAnteBet(3, (dummy == 0) ? "Ante" : dummy + "");
-                    dummy = 0;
-                    Int32.TryParse(bets[5], out dummy);
-                    SetPlayerSideBet(3, (dummy == 0) ? "Side" : dummy + "");
-
-                    //player 4
-                    dummy = 0;
-                    Int32.TryParse(bets[6], out dummy);
-                    SetPlayerAnteBet(4, (dummy == 0) ? "Ante" : dummy + "");
-                    dummy = 0;
-                    Int32.TryParse(bets[7], out dummy);
-                    SetPlayerSideBet(4, (dummy == 0) ? "Side" : dummy + "");
+                    for (int index = 0; index < 4; index++)
+                    {
+                        int dummy = 0;
+                        Int32.TryParse(bets[index * 2], out dummy);
+                        SetPlayerBet(true, index + 1, (dummy == 0) ? "Ante" : dummy + "");
+                        dummy = 0;
+                        Int32.TryParse(bets[index * 2 + 1], out dummy);
+                        SetPlayerBet(false, index + 1, (dummy == 0) ? "Side" : dummy + "");
+                    }
                 }
             }
         }
@@ -853,8 +831,9 @@ namespace FSO.Client.UI.Panels.EODs
                         if (winningsString[0] == 'q')
                         {
                             winningsString = winningsString.Remove(0, 1);
-                            // "Dealer did not quality. You win $% d"
-                            SetNewTip(GameFacade.Strings.GetString("f111", "72").Replace("%d", winningsString) + ".");
+                            winningsString += ".";
+                            // "Dealer did not quality. You win $%d"
+                            SetNewTip(GameFacade.Strings.GetString("f111", "72", new string[] { winningsString }));
                         }
                         // if the first char of the first string is 'p' then the player pushed with the dealer, who qualified
                         else if (winningsString[0] == 'p')
@@ -899,7 +878,7 @@ namespace FSO.Client.UI.Panels.EODs
                 SetNewTip(GameFacade.Strings.GetString("f111", "88"));
             }
         }
-        // makes visible certain cards, first 2 byte argument indices are for MyCardsCotainer, latter 5 are for Community cards.
+        // makes visible certain cards, first 2 byte argument indices are for MyCardsContainer, latter 5 are for Community cards.
         private void LightUpWinningHandHandler(string evt, byte[] handsToLight)
         {
             if (handsToLight != null && handsToLight.Length == 7)
@@ -1185,8 +1164,7 @@ namespace FSO.Client.UI.Panels.EODs
             Add(FoldButton);
             FoldButtonBack = new UIImage(ButtonSeat)
             {
-                Position = FoldButton.Position - ButtonSeatOffset,
-                //Disabled = true
+                Position = FoldButton.Position - ButtonSeatOffset
             };
             AddAt(1, FoldButtonBack);
             CallAndFoldHelpButtonBack = new UIImage(ButtonSeat)
@@ -1721,14 +1699,14 @@ namespace FSO.Client.UI.Panels.EODs
             Add(DealerBetAmount);
 
             // set the default captions and positioning for the bet labels
-            SetPlayerAnteBet(1, "Ante");
-            SetPlayerAnteBet(2, "Ante");
-            SetPlayerAnteBet(3, "Ante");
-            SetPlayerAnteBet(4, "Ante");
-            SetPlayerSideBet(1, "Side");
-            SetPlayerSideBet(2, "Side");
-            SetPlayerSideBet(3, "Side");
-            SetPlayerSideBet(4, "Side");
+            SetPlayerBet(true, 1, "Ante");
+            SetPlayerBet(true, 2, "Ante");
+            SetPlayerBet(true, 3, "Ante");
+            SetPlayerBet(true, 4, "Ante");
+            SetPlayerBet(false, 1, "Side");
+            SetPlayerBet(false, 2, "Side");
+            SetPlayerBet(false, 3, "Side");
+            SetPlayerBet(false, 4, "Side");
         }
         private void ClearAnteBet()
         {
@@ -1740,14 +1718,14 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void ResetAllHands()
         {
-            SetPlayerAnteBet(1, "Ante");
-            SetPlayerAnteBet(2, "Ante");
-            SetPlayerAnteBet(3, "Ante");
-            SetPlayerAnteBet(4, "Ante");
-            SetPlayerSideBet(1, "Side");
-            SetPlayerSideBet(2, "Side");
-            SetPlayerSideBet(3, "Side");
-            SetPlayerSideBet(4, "Side");
+            SetPlayerBet(true, 1, "Ante");
+            SetPlayerBet(true, 2, "Ante");
+            SetPlayerBet(true, 3, "Ante");
+            SetPlayerBet(true, 4, "Ante");
+            SetPlayerBet(false, 1, "Side");
+            SetPlayerBet(false, 2, "Side");
+            SetPlayerBet(false, 3, "Side");
+            SetPlayerBet(false, 4, "Side");
             UpdateUpperPlayerHand(1, null);
             UpdateUpperPlayerHand(2, null);
             UpdateUpperPlayerHand(3, null);
@@ -1761,65 +1739,33 @@ namespace FSO.Client.UI.Panels.EODs
          */
         private void UpdateUpperPlayerHand(int playerNumber, params string[] cards)
         {
-            if (playerNumber == 1) {
-                if (cards != null)
-                {
-                    foreach (var card in cards)
-                        Player1CardsContainer.AddCard(card);
-                }
-                else
-                    Player1CardsContainer.AddCard(null);
-            }
-            if (playerNumber == 2)
+            TwoCardHand cardsContainer;
+            switch (playerNumber)
             {
-                if (cards != null)
-                {
-                    foreach (var card in cards)
-                        Player2CardsContainer.AddCard(card);
-                }
-                else
-                    Player2CardsContainer.AddCard(null);
+                case 1: cardsContainer = Player1CardsContainer; break;
+                case 2: cardsContainer = Player2CardsContainer; break;
+                case 3: cardsContainer = Player3CardsContainer; break;
+                case 4: cardsContainer = Player4CardsContainer; break;
+                case 5: cardsContainer = DealerCardsContainer; break;
+                default:
+                    {
+                        if (cards != null)
+                        {
+                            foreach (var card in cards)
+                                CommunityHand.AddCard(card);
+                        }
+                        else
+                            CommunityHand.AddCard(null);
+                        return;
+                    }
             }
-            if (playerNumber == 3)
+            if (cards != null)
             {
-                if (cards != null)
-                {
-                    foreach (var card in cards)
-                        Player3CardsContainer.AddCard(card);
-                }
-                else
-                    Player3CardsContainer.AddCard(null);
+                foreach (var card in cards)
+                    cardsContainer.AddCard(card);
             }
-            if (playerNumber == 4)
-            {
-                if (cards != null)
-                {
-                    foreach (var card in cards)
-                        Player4CardsContainer.AddCard(card);
-                }
-                else
-                    Player4CardsContainer.AddCard(null);
-            }
-            if (playerNumber == 5)
-            {
-                if (cards != null)
-                {
-                    foreach (var card in cards)
-                        DealerCardsContainer.AddCard(card);
-                }
-                else
-                    DealerCardsContainer.AddCard(null);
-            }
-            if (playerNumber == 6)
-            {
-                if (cards != null)
-                {
-                    foreach (var card in cards)
-                        CommunityHand.AddCard(card);
-                }
-                else
-                    CommunityHand.AddCard(null);
-            }
+            else
+                cardsContainer.AddCard(null);
         }
         /*
          * Shows a UI alert and even allows an action with zero arguments for when the window is closed using "OK" button.
@@ -1870,7 +1816,7 @@ namespace FSO.Client.UI.Panels.EODs
             CurrentAlert = alert;
             return alert;
         }
-        private void SetPlayerAnteBet(int player, string newBet)
+        private void SetPlayerBet(bool isAnte, int player, string newBet)
         {
             float offsetX = 0f;
             if (newBet == null || newBet.Length < 1 || newBet.Length > 4 || player < 1 || player > 4)
@@ -1883,62 +1829,36 @@ namespace FSO.Client.UI.Panels.EODs
                 offsetX = 11f;
             else
                 offsetX = 16f;
+            if (!isAnte)
+                offsetX += 51f;
 
-            if (player == 1)
+            UILabel label;
+            float x = 0f;
+            switch (player)
             {
-                Player1AnteBetLabel.X = Player1Head.X + offsetX;
-                Player1AnteBetLabel.Caption = newBet;
+                case 1:
+                    {
+                        x = Player1Head.X;
+                        label = (isAnte) ? Player1AnteBetLabel : Player1SideBetLabel; break;
+                    }
+                case 2:
+                    {
+                        x = Player2Head.X;
+                        label = (isAnte) ? Player2AnteBetLabel : Player2SideBetLabel; break;
+                    }
+                case 3:
+                    {
+                        x = Player3Head.X;
+                        label = (isAnte) ? Player3AnteBetLabel : Player3SideBetLabel; break;
+                    }
+                default:
+                    {
+                        x = Player4Head.X;
+                        label = (isAnte) ? Player4AnteBetLabel : Player4SideBetLabel; break;
+                    }
             }
-            else if (player == 2)
-            {
-                Player2AnteBetLabel.X = Player2Head.X + offsetX;
-                Player2AnteBetLabel.Caption = newBet;
-            }
-            else if (player == 3)
-            {
-                Player3AnteBetLabel.X = Player3Head.X + offsetX;
-                Player3AnteBetLabel.Caption = newBet;
-            }
-            else
-            {
-                Player4AnteBetLabel.X = Player4Head.X + offsetX;
-                Player4AnteBetLabel.Caption = newBet;
-            }
-        }
-        private void SetPlayerSideBet(int player, string newBet)
-        {
-            float offsetX = 51f;
-            if (newBet == null || newBet.Length < 1 || newBet.Length > 4 || player < 1 || player > 4)
-                return;
-            else if (newBet.Length == 4)
-                offsetX += 3f;
-            else if (newBet.Length == 3)
-                offsetX += 7f;
-            else if (newBet.Length == 2)
-                offsetX += 11f;
-            else
-                offsetX += 16f;
-
-            if (player == 1)
-            {
-                Player1SideBetLabel.X = Player1Head.X + offsetX;
-                Player1SideBetLabel.Caption = newBet;
-            }
-            else if (player == 2)
-            {
-                Player2SideBetLabel.X = Player2Head.X + offsetX;
-                Player2SideBetLabel.Caption = newBet;
-            }
-            else if (player == 3)
-            {
-                Player3SideBetLabel.X = Player3Head.X + offsetX;
-                Player3SideBetLabel.Caption = newBet;
-            }
-            else
-            {
-                Player4SideBetLabel.X = Player4Head.X + offsetX;
-                Player4SideBetLabel.Caption = newBet;
-            }
+            label.X = x + offsetX;
+            label.Caption = newBet;
         }
         private void SetMyAnteBet(string newBet)
         {
@@ -2058,7 +1978,7 @@ namespace FSO.Client.UI.Panels.EODs
             _CurrentScale = Background.ScaleX = Background.ScaleY = targetScale;
             Background.Reset();
             Add(Background);
-
+            
             // add the cards
             Card1.ScaleX = Card1.ScaleY = _CurrentScale;
             Card1.Position = _CurrentScale * CardStartOffset;
