@@ -74,11 +74,14 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 return;
 
             // sync any latecomers' UIEODs
-            if (SyncQueue.Count > 0)
+            lock (SyncQueue)
             {
-                for (int index = 0; index < SyncQueue.Count; index++)
-                    SyncAllPlayers(SyncQueue[index]);
-                SyncQueue = new List<VMEODClient>();
+                if (SyncQueue.Count > 0)
+                {
+                    for (int index = 0; index < SyncQueue.Count; index++)
+                        SyncAllPlayers(SyncQueue[index]);
+                    SyncQueue.Clear();
+                }
             }
 
             // handle next state
@@ -313,7 +316,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                                     }
                                                     else
                                                     {
-                                                        SyncQueue.Add(client);
+                                                        lock (SyncQueue)
+                                                            SyncQueue.Add(client);
                                                         client.Send("holdemcasino_toggle_betting", new byte[] { 0 }); // disallow betting
                                                         if (ActivePlayerIndex > -1)
                                                             client.Send("holdemcasino_late_comer", new byte[] { (byte)ActivePlayerIndex }); // "So-and-so's turn."
@@ -1988,11 +1992,15 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         var split = description.Split(new string[] { "'s" }, StringSplitOptions.RemoveEmptyEntries);
 
                         // add first card
-                        var splitCardOne = split[0].Split(','); // splitCardOne[0] is useless
-                        relevantCardNames.Add(splitCardOne[1].Trim());
-
+                        if (split != null && split.Length > 0)
+                        {
+                            var splitCardOne = split[0].Split(','); // splitCardOne[0] is useless
+                            if (splitCardOne != null && splitCardOne.Length > 1)
+                                relevantCardNames.Add(splitCardOne[1].Trim());
+                        }
                         // add second card
-                        relevantCardNames.Add(split[1].Replace(" and ", "").Trim());
+                        if (split.Length > 1)
+                            relevantCardNames.Add(split[1].Replace(" and ", "").Trim());
 
                         /* add third card? twopair only
                         if (split.Length > 2)

@@ -90,6 +90,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HandEvaluator, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FreeSO.HandEvaluator.1.2.0\lib\net20\HandEvaluator.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
@@ -382,10 +385,6 @@
       <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
       <Name>MonoGame.Framework.Windows</Name>
       <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\HandEvaluator\HandEvaluator.csproj">
-      <Project>{57836673-fe81-4367-a4eb-aaa46fb954d2}</Project>
-      <Name>HandEvaluator</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.world\FSO.LotView.csproj">
       <Project>{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}</Project>
