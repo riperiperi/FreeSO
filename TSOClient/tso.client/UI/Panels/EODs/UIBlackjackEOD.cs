@@ -179,7 +179,8 @@ namespace FSO.Client.UI.Panels.EODs
             { (byte)VMEODBlackjackAlerts.Observe_Once, GameFacade.Strings.GetString("f111", "26") },
             { (byte)VMEODBlackjackAlerts.Observe_Twice, GameFacade.Strings.GetString("f111", "27") },
             { (byte)VMEODBlackjackAlerts.Table_NSF, GameFacade.Strings.GetString("f111", "28") },
-            { (byte)VMEODBlackjackAlerts.Player_NSF, GameFacade.Strings.GetString("f111", "31") }
+            { (byte)VMEODBlackjackAlerts.Player_NSF, GameFacade.Strings.GetString("f111", "31") },
+            { (byte)VMEODBlackjackAlerts.Object_Broken, GameFacade.Strings.GetString("f111", "90") }
         };
 
         public UIBlackjackEOD(UIEODController controller) : base(controller)
@@ -280,7 +281,7 @@ namespace FSO.Client.UI.Panels.EODs
             PlaintextHandlers["blackjack_resume_manage"] = ResumeManageHandler;
 
             // other
-            DealTimer = new Timer(1750);
+            DealTimer = new Timer(1400);
             DealTimer.Elapsed += new ElapsedEventHandler(DealTimerHandler);
             DealersName = "MOMI";
             InvalidateTimer = new Timer(1000);
@@ -2298,6 +2299,19 @@ namespace FSO.Client.UI.Panels.EODs
                 foreach (var card in cardList)
                 {
                     card.Opacity = CurrentOpacity;
+                    card.InvalidateOpacity();
+                }
+            }
+        }
+        internal void UpdateChildrenOpacity(params float[] opacities)
+        {
+            var cardList = GetChildren();
+            if (cardList != null && opacities != null && cardList.Count == opacities.Length)
+            {
+                for (int index = 0; index < cardList.Count; index++)
+                {
+                    var card = cardList[index];
+                    card.Opacity = opacities[index];
                     card.InvalidateOpacity();
                 }
             }
