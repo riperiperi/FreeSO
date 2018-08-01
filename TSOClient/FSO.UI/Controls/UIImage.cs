@@ -12,6 +12,7 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Framework.Parser;
 using FSO.Client.UI.Model;
+using FSO.Client.Utils;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 
@@ -26,6 +27,7 @@ namespace FSO.Client.UI.Controls
         private Texture2D m_Texture;
         /** Used for complex textures that resize etc **/
         private ITextureRef m_TextureRef;
+        private UITooltipHandler m_TooltipHandler;
 
         private bool NineSlice;
         private NineSliceMargins NineSliceMargins;
@@ -35,16 +37,19 @@ namespace FSO.Client.UI.Controls
 
         public UIImage()
         {
+            m_TooltipHandler = UIUtils.GiveTooltip(this); //images can have tooltips, too
         }
 
         public UIImage(Texture2D Texture)
         {
             this.Texture = Texture;
+            m_TooltipHandler = UIUtils.GiveTooltip(this); //images can have tooltips, too
         }
 
         public UIImage(ITextureRef Texture)
         {
             this.m_TextureRef = Texture;
+            m_TooltipHandler = UIUtils.GiveTooltip(this); //images can have tooltips, too
         }
 
         public void Reset()
