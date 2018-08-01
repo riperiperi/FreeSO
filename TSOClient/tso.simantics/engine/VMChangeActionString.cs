@@ -44,7 +44,7 @@ namespace FSO.SimAntics.Primitives
                         Param0 = context.StackObjectID
                     });
                 } else
-                    context.Thread.Queue[0].Name = newName;
+                    context.Thread.ActiveAction.Name = newName;
             }
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

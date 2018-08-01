@@ -19,7 +19,7 @@ namespace FSO.SimAntics.Primitives
         {
             //if caller's active interaction is with stack object, return true.
             var callerActive = context.Caller.Thread.Stack.LastOrDefault();
-            return (callerActive != null && callerActive.ActionTree && context.Caller.Thread.Queue[0].Callee == context.StackObject) 
+            return (callerActive != null && callerActive.ActionTree && context.Caller.Thread.ActiveAction.Callee == context.StackObject) 
                 ? VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;
         }
     }

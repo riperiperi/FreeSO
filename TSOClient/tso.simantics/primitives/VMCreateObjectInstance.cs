@@ -77,6 +77,8 @@ namespace FSO.SimAntics.Engine.Primitives
                 case VMCreateObjectPosition.NextToMeInDirectionOfLocal:
                     tpos = new LotTilePos(context.Caller.Position);
                     var udir = context.Locals[operand.LocalToUse];
+                    udir += (short)((context.Caller.GetValue(Model.VMStackObjectVariable.Direction) / 2)*2);
+                    udir %= 8;
                     dir = Direction.NORTH;
                     switch (udir)
                     {
@@ -135,7 +137,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 short interaction = operand.InteractionCallback;
                 if (interaction == 254 && context.ActionTree)
                 {
-                    var temp = context.Thread.Queue[0].InteractionNumber;
+                    var temp = context.Thread.ActiveAction.InteractionNumber;
                     if (temp == -1) throw new VMSimanticsException("Set callback as 'this interaction' when queue item has no interaction number!", context);
                     interaction = (short)temp;
                     if (temp < 0) interaction |= unchecked((short)0x8000); //cascade global flag

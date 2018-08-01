@@ -47,6 +47,13 @@ namespace FSO.SimAntics.Engine
         private bool ContinueExecution;
 
         public List<VMQueuedAction> Queue;
+        public VMQueuedAction ActiveAction
+        {
+            get
+            {
+                return (ActiveQueueBlock>-1)?Queue[ActiveQueueBlock]:null;
+            }
+        }
         /// <summary>
         /// Set when a change to the queue or an item's priority is changed. Internal functions set this, but since you can modify the queue 
         /// from other classes MAKE SURE you set this when such a change is made. (eg. priority set from VMAvatar)
@@ -220,7 +227,7 @@ namespace FSO.SimAntics.Engine
                     Queue.RemoveAt(ind);
                     if (CheckAction(temp) != null)
                     {
-                        Queue.Insert(0, temp);
+                        Queue.Insert(ActiveQueueBlock+1, temp);
                         var frame = temp.ToStackFrame(Entity);
                         frame.DiscardResult = true;
                         Push(frame);
@@ -870,7 +877,7 @@ namespace FSO.SimAntics.Engine
                     if (avatar.IsCat && (action.Flags & TTABFlags.AllowCats) == 0) return null;
                     if (avatar.IsDog && (action.Flags & TTABFlags.AllowDogs) == 0) return null;
                 }
-                else if (avatar.IsPet) return null; //not allowed
+                else if (avatar.IsPet && avatar.AvatarState.Permissions < VMTSOAvatarPermissions.Admin) return null; //not allowed
 
                 if ((action.Flags & TTABFlags.TSOIsRepair) > 0 != ((action.Callee.MultitileGroup.BaseObject?.TSOState as VMTSOObjectState)?.Broken ?? false)) return null;
 
