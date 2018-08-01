@@ -44,7 +44,7 @@ namespace FSO.SimAntics.Primitives
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.SetActionIconToStackObject: //2
-                    context.Thread.Queue[0].IconOwner = context.StackObject;
+                    context.Thread.ActiveAction.IconOwner = context.StackObject;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 // 3. DO NOT USE
                 case VMGenericTSOCallMode.IsStackObjectARoommate: //4 
@@ -70,7 +70,7 @@ namespace FSO.SimAntics.Primitives
                     //if our current interaction result is -1, then we need to start the process.
                     if (context.ActionTree && context.Caller is VMAvatar && ((VMAvatar)context.Caller).PersistID != 0)
                     {
-                        var interaction = context.Thread.Queue[0];
+                        var interaction = context.Thread.ActiveAction;
                         if (interaction.InteractionResult == -1) interaction.InteractionResult = 0;
                         else interaction.ResultCheckCounter++;
 

@@ -70,7 +70,7 @@ namespace FSO.SimAntics.Engine.Primitives
                         StackObject = ent,
                         ActionTree = context.ActionTree
                     };
-                    if (operand.Flags > 0 && context.ActionTree) context.Thread.Queue[0].IconOwner = context.StackObject;
+                    if (operand.Flags > 0 && context.ActionTree) context.Thread.ActiveAction.IconOwner = context.StackObject;
                     childFrame.Args = new short[routine.Arguments];
                     context.Thread.Push(childFrame);
                     return VMPrimitiveExitCode.CONTINUE;
