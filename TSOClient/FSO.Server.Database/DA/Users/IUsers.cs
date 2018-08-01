@@ -21,5 +21,6 @@ namespace FSO.Server.Database.DA.Users
         void CreateAuth(UserAuthenticate auth);
         User GetByEmail(string email);
         void UpdateAuth(UserAuthenticate auth);
+        void UpdateLastLogin(uint id, uint last_login);
     }
 }

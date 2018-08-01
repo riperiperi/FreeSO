@@ -39,7 +39,9 @@ namespace FSO.Client.UI.Panels.EODs.Utils
 
         public UIVMPersonButton GetPlayerButton(int playerIndex)
         {
-            return PlayerUI[playerIndex].PersonButton;
+            if (playerIndex != -1)
+                return PlayerUI[playerIndex].PersonButton;
+            return null;
         }
 
         public UIVMPersonButton GetAvatarButton(short objectID, bool small)

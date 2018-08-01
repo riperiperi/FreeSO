@@ -102,6 +102,38 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 return null;
         }
         /*
+         * Get the short hand name of the card value and suit, to be used for hand ranking with HandEvaluator
+         */
+        public static string GetShortHandName(string valueUnderscoreSuit)
+        {
+            string shortHand = null;
+            CardShortHand.TryGetValue(valueUnderscoreSuit, out shortHand);
+            return shortHand;
+        }
+        public static string GetShortHandName(UInt64 cardAsset)
+        {
+            // try the full assetID
+            string cardName = GetInternalFullCardName(cardAsset);
+            if (cardName == "") // try the partial assetID
+                GetInternalPartialCardName(cardAsset);
+            return GetShortHandName(cardName);
+        }
+        /*
+         * Card names using the internal name, not the string table names
+         */
+        public static string GetInternalFullCardName(UInt64 cardAsset)
+        {
+            if (Enum.IsDefined(typeof(FullPlayCardAssets), cardAsset))
+                return Enum.GetName(typeof(FullPlayCardAssets), cardAsset); // e.g. Ace_Spades
+            return "";
+        }
+        public static string GetInternalPartialCardName(UInt64 cardAsset)
+        {
+            if (Enum.IsDefined(typeof(PartialPlayCardAssets), cardAsset))
+                return Enum.GetName(typeof(PartialPlayCardAssets), cardAsset);// e.g. Two_Hearts
+            return "";
+        }
+        /*
          * Card names using the string table, allowing for proper translation to other languages
          */
         public static string GetFullCardName(UInt64 cardAsset)
@@ -151,6 +183,63 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 return (int)suit;
             return 200; // index too high for string table
         }
+        /*
+         * Gets the compatible short-hand name of the card in order that it may be parsed by the HandEvaluator Project
+         */
+        public static Dictionary<string, string> CardShortHand = new Dictionary<string, string>() {
+            { "Ace_Clubs", "ac" },
+            { "Ace_Diamonds", "ad" },
+            { "Ace_Hearts", "ah" },
+            { "Ace_Spades", "as" },
+            { "Two_Clubs", "2c" },
+            { "Two_Diamonds", "2d" },
+            { "Two_Hearts", "2h" },
+            { "Two_Spades", "2s" },
+            { "Three_Clubs", "3c" },
+            { "Three_Diamonds", "3d" },
+            { "Three_Hearts", "3h" },
+            { "Three_Spades", "3s" },
+            { "Four_Clubs", "4c" },
+            { "Four_Diamonds", "4d" },
+            { "Four_Hearts", "4h" },
+            { "Four_Spades", "4s" },
+            { "Five_Clubs", "5c" },
+            { "Five_Diamonds", "5d" },
+            { "Five_Hearts", "5h" },
+            { "Five_Spades", "5s" },
+            { "Six_Clubs", "6c" },
+            { "Six_Diamonds", "6d" },
+            { "Six_Hearts", "6h" },
+            { "Six_Spades", "6s" },
+            { "Seven_Clubs", "7c" },
+            { "Seven_Diamonds", "7d" },
+            { "Seven_Hearts", "7h" },
+            { "Seven_Spades", "7s" },
+            { "Eight_Clubs", "8c" },
+            { "Eight_Diamonds", "8d" },
+            { "Eight_Hearts", "8h" },
+            { "Eight_Spades", "8s" },
+            { "Nine_Clubs", "9c" },
+            { "Nine_Diamonds", "9d" },
+            { "Nine_Hearts", "9h" },
+            { "Nine_Spades", "9s" },
+            { "Ten_Clubs", "tc" },
+            { "Ten_Diamonds", "td" },
+            { "Ten_Hearts", "th" },
+            { "Ten_Spades", "ts" },
+            { "Jack_Clubs", "jc" },
+            { "Jack_Diamonds", "jd" },
+            { "Jack_Hearts", "jh" },
+            { "Jack_Spades", "js" },
+            { "Queen_Clubs", "qc" },
+            { "Queen_Diamonds", "qd" },
+            { "Queen_Hearts", "qh" },
+            { "Queen_Spades", "qs" },
+            { "King_Clubs", "kc" },
+            { "King_Diamonds", "kd" },
+            { "King_Hearts", "kh" },
+            { "King_Spades =", "ks" }
+        };
     }
     [Flags]
     public enum PlayingCardValueStringIndexes : int
@@ -291,5 +380,38 @@ namespace FSO.Client.UI.Panels.EODs.Utils
         King_Hearts = 0x00000C8B00000001,
         King_Spades = 0x00000C8C00000001,
         Back = 0x00000C8400000001
+    }
+    [Flags]
+    public enum PokerHandTypeStringIndeces: int // in "_f111_casinoeodstrings.cst"
+    {
+        RoyalFlush = 60,
+        StraightFlush = 61,
+        FourOfAKind = 62,
+        FullHouse = 63,
+        Flush = 64,
+        Straight = 65,
+        Trips = 66, // 3 of a kind
+        TwoPair = 67,
+        Pair = 69,
+        HighCard = 70,
+        Kicker = 71,
+        Ace = 91,
+        King = 92,
+        Queen = 93,
+        Jack = 94,
+        Ten = 95,
+        Nine = 96,
+        Eight = 97,
+        Seven = 98,
+        Six = 99,
+        Five = 100,
+        Four = 101,
+        Three = 102,
+        Two = 103,
+        Clubs = 104,
+        Diamonds = 105,
+        Hearts = 106,
+        Spades = 107,
+        High = 108
     }
 }

@@ -33,3 +33,13 @@
 33 ^You must stock AT LEAST 140 times the maximum bet amount.^
 34 ^An unknown error occured.^
 35 ^Cash in object^
+36 ^Min Ante Bet^
+37 ^Max Ante Bet^
+38 ^Max Side Bet^
+39 ^Side bet^
+40 ^(Note: Holdem casino bets can't be greater than $%d)^
+41 ^You must stock at least 84 times the maximum ante bet and 104 times the maximum side bet.^
+42 ^Holdem Casino tables must cover the payout of up to four players, each of which have an ante and side bet.^
+43 ^While the probability is very low, this could mean paying out for a Royal Flush, Straight Flush, 4 of a kind, and a Flush in the same hand, therefore:^
+44 ^The side side bet cannot be higher than $%d.^
+45 ^The side bet cannot be lower than $0.^

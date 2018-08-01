@@ -90,6 +90,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HandEvaluator, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FreeSO.HandEvaluator.1.2.0\lib\net20\HandEvaluator.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
@@ -210,6 +213,7 @@
     <Compile Include="NetPlay\EODs\Handlers\VMEODBandPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDancePlatformPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDJStationPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODHoldEmCasinoPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODNCDanceFloorPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODBlackjackPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDresserPlugin.cs" />
