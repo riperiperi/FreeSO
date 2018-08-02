@@ -15,7 +15,7 @@ namespace FSO.SimAntics.Primitives
         {
             var operand = (VMGosubFoundActionOperand)args;
 
-            if (context.Thread.Queue.Count > 0) context.StackObject = context.Thread.Queue[0].Callee;
+            if (context.Thread.ActiveAction != null) context.StackObject = context.Thread.ActiveAction.Callee;
             //if we're main, attempt to run a queued interaction. We just idle if this fails.
             if (!context.ActionTree && context.Thread.AttemptPush())
             {

@@ -98,7 +98,7 @@ namespace FSO.Server.Api.Controllers.Admin
 
             using (var da = api.DAFactory.Get())
             {
-                User recipient = da.Users.GetById(uint.Parse(mail.target_id));
+                Database.DA.Avatars.DbAvatar recipient = da.Avatars.Get(uint.Parse(mail.target_id));
 
                 if (recipient == null)
                 {

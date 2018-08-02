@@ -19,6 +19,7 @@ namespace FSO.Server.Database.DA.Users
         public string register_ip { get; set; }
         public string last_ip { get; set; }
         public string client_id { get; set; }
+        public uint last_login { get; set; }
     }
 
     public enum UserState
