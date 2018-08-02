@@ -35,10 +35,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public static readonly int MAX_ROWS = 8;
         public static readonly int MAX_COLUMNS = 36;
         public readonly int MAX_COLORS = 14;
-        public readonly int MIN_MOVES_TO_EXIT = 8;
-        public readonly int MAX_MOVES_TO_EXIT = 15;
+        public readonly int MIN_MOVES_TO_EXIT = 20;
+        public readonly int MAX_MOVES_TO_EXIT = 40;
         public readonly int ReactionSeconds = 10;
-        public readonly int RoundSeconds = 120;
+        public readonly int RoundSeconds = 300;
 
         public VMEODTwoPersonJobObjectMazePlugin(VMEODServer server) : base(server)
         {
@@ -496,6 +496,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
     public enum VMEODTwoPersonObjectMazePluginEvents : short
     {
         Failure = 1,    
-        Success = 2
+        Success = 2,
+        ForceDisconnect = 3
     }
 }

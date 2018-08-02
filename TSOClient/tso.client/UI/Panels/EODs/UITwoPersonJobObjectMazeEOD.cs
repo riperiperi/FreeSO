@@ -103,20 +103,17 @@ namespace FSO.Client.UI.Panels.EODs
             BinaryHandlers["TSOMaze_Update_Timer"] = UpdateTimerHandler;
             BinaryHandlers["TSOMaze_Show_Result"] = ShowResultAlertHandler;
         }
+        public override void OnClose()
+        {
+            CloseInteraction();
+            base.OnClose();
+        }
         private void ShowCharismaPlayerHandler(string evt, byte[] data)
         {
             Script = RenderScript("twopersonjobobjectmazecharisma.uis");
             // background images
             UIPlayBackground = Script.Create<UIImage>("UIPlayBackground");
             AddAt(0, UIPlayBackground);
-            /*NorthBack = Script.Create<UIImage>("NorthBack");
-            AddAt(1, NorthBack);
-            SouthBack = Script.Create<UIImage>("SouthBack");
-            AddAt(2, SouthBack);
-            EastBack = Script.Create<UIImage>("EastBack");
-            AddAt(3, EastBack);
-            WestBack = Script.Create<UIImage>("WestBack");
-            AddAt(4, WestBack);*/
 
             // all walls
             NorthWall = Script.Create<UIImage>("HWall");
@@ -693,9 +690,13 @@ namespace FSO.Client.UI.Panels.EODs
         private void EnableAllButtons()
         {
             North.Disabled = false;
+            North.CurrentFrame = 0;
             West.Disabled = false;
+            West.CurrentFrame = 0;
             East.Disabled = false;
+            East.CurrentFrame = 0;
             South.Disabled = false;
+            South.CurrentFrame = 0;
         }
         /*
          * Charisma Player only: disables all buttons when at the final solution/exit cell
