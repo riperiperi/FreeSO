@@ -12,10 +12,68 @@ namespace FSO.SimAntics.NetPlay.EODs.Utils
         private PlayingCard _LastDrawnCard;
         private CardQueue DiscardStack;
         private bool UseDiscardStack;
+        
         /*
-         * A discard stack may be used in order to keep track of the remaining unused cards, otherwise drawn cards return to the bottom of play stack.
-         */ 
-        public AbstractPlayingCardsDeck(int numberOfDecks, bool useDiscardStack)
+         * Gets the compatible short-hand name of the card in order that it may be parsed by the HandEvaluator Project
+         */
+        public static Dictionary<string, string> CardShortHand = new Dictionary<string, string>() {
+            { "Ace_Clubs", "ac" },
+            { "Ace_Diamonds", "ad" },
+            { "Ace_Hearts", "ah" },
+            { "Ace_Spades", "as" },
+            { "Two_Clubs", "2c" },
+            { "Two_Diamonds", "2d" },
+            { "Two_Hearts", "2h" },
+            { "Two_Spades", "2s" },
+            { "Three_Clubs", "3c" },
+            { "Three_Diamonds", "3d" },
+            { "Three_Hearts", "3h" },
+            { "Three_Spades", "3s" },
+            { "Four_Clubs", "4c" },
+            { "Four_Diamonds", "4d" },
+            { "Four_Hearts", "4h" },
+            { "Four_Spades", "4s" },
+            { "Five_Clubs", "5c" },
+            { "Five_Diamonds", "5d" },
+            { "Five_Hearts", "5h" },
+            { "Five_Spades", "5s" },
+            { "Six_Clubs", "6c" },
+            { "Six_Diamonds", "6d" },
+            { "Six_Hearts", "6h" },
+            { "Six_Spades", "6s" },
+            { "Seven_Clubs", "7c" },
+            { "Seven_Diamonds", "7d" },
+            { "Seven_Hearts", "7h" },
+            { "Seven_Spades", "7s" },
+            { "Eight_Clubs", "8c" },
+            { "Eight_Diamonds", "8d" },
+            { "Eight_Hearts", "8h" },
+            { "Eight_Spades", "8s" },
+            { "Nine_Clubs", "9c" },
+            { "Nine_Diamonds", "9d" },
+            { "Nine_Hearts", "9h" },
+            { "Nine_Spades", "9s" },
+            { "Ten_Clubs", "tc" },
+            { "Ten_Diamonds", "td" },
+            { "Ten_Hearts", "th" },
+            { "Ten_Spades", "ts" },
+            { "Jack_Clubs", "jc" },
+            { "Jack_Diamonds", "jd" },
+            { "Jack_Hearts", "jh" },
+            { "Jack_Spades", "js" },
+            { "Queen_Clubs", "qc" },
+            { "Queen_Diamonds", "qd" },
+            { "Queen_Hearts", "qh" },
+            { "Queen_Spades", "qs" },
+            { "King_Clubs", "kc" },
+            { "King_Diamonds", "kd" },
+            { "King_Hearts", "kh" },
+            { "King_Spades", "ks" }
+        };
+    /*
+     * A discard stack may be used in order to keep track of the remaining unused cards, otherwise drawn cards return to the bottom of play stack.
+     */
+    public AbstractPlayingCardsDeck(int numberOfDecks, bool useDiscardStack)
         {
             DrawStack = new CardQueue(numberOfDecks);
             if (useDiscardStack)

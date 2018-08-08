@@ -41,7 +41,7 @@ namespace FSO.SimAntics.Primitives
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTS1CallMode.SetActionIconToStackObject: //2
-                    context.Thread.Queue[0].IconOwner = context.StackObject;
+                    context.Thread.ActiveAction.IconOwner = context.StackObject;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 // 3. PullDownTaxiDialog
                 case VMGenericTS1CallMode.AddToFamily: //4

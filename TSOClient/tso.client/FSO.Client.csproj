@@ -165,6 +165,7 @@
     <Compile Include="UI\Panels\EODs\UIGameCompDrawACardPluginEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDebugEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDresserEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIHoldEmCasinoEOD.cs" />
     <Compile Include="UI\Panels\EODs\UINCDanceFloorEOD.cs" />
     <Compile Include="UI\Panels\EODs\UINewspaperEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIPaperChaseEOD.cs" />

@@ -34,7 +34,7 @@ namespace FSO.SimAntics.Engine.Primitives
             {
                 case VMPushPriority.Inherited:
                     short oldPrio = 1;
-                    if (context.ActionTree) oldPrio = context.Thread.Queue[0].Priority;
+                    if (context.ActionTree) oldPrio = context.Thread.ActiveAction.Priority;
                     priority = Math.Max((short)1, oldPrio); break;
                 case VMPushPriority.Maximum:
                     priority = (short)VMQueuePriority.Maximum; break;
@@ -61,6 +61,13 @@ namespace FSO.SimAntics.Engine.Primitives
             if (operand.PushHeadContinuation) action.Flags |= TTABFlags.FSOPushHead;
 
             context.StackObject.Thread.EnqueueAction(action);
+            if (context.StackObject is VMAvatar && context.Caller is VMAvatar && context.StackObject != context.Caller)
+            {
+                //if this is an interaction between two sims, and this interaction is being pushed onto someone else,
+                //show the interaction result chooser for that sim immediately, rather than force them to wait.
+                //(erroneously shows up for "talk to" and "whisper to". there may be a better way to do this.
+                action.InteractionResult = 0;
+            }
 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

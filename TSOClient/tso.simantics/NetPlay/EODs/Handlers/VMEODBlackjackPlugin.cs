@@ -373,7 +373,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 Lobby.Leave(client);
                 if (playerIndex == ActivePlayerIndex)
                     ForceStand(true);
-                Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Delete_ID, (short)slot.PlayerIndex));
+                Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Delete_ID, (short)(slot.PlayerIndex + 1)));
             }
             if (Lobby.IsEmpty()) // no players
             {
@@ -938,8 +938,18 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     }
                 case VMEODBlackjackStates.Betting_Round:
                     {
-                        NewGame();
-                        GameState = newState;
+                        // did the object break?
+                        var broken = ((VMTSOEntityState)Controller.Invoker.PlatformState as VMTSOObjectState).Broken;
+                        if (broken)
+                        {
+                            Lobby.Broadcast("blackjack_alert", new byte[] { (byte)VMEODBlackjackAlerts.Object_Broken });
+                            EnqueueGotoState(VMEODBlackjackStates.Closed);
+                        }
+                        else
+                        {
+                            NewGame();
+                            GameState = newState;
+                        }
                         break;
                     }
                 case VMEODBlackjackStates.Player_Decision:
@@ -1252,7 +1262,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         else
                         {
                             Lobby.Leave(slot.Client);
-                            Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Delete_ID, (short)slot.PlayerIndex));
+                            Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Delete_ID, (short)(slot.PlayerIndex + 1)));
                         }
                     }
                 }
@@ -2248,6 +2258,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         Observe_Once = 11,
         Observe_Twice = 12,
         Table_NSF = 13,
-        Player_NSF = 14
+        Player_NSF = 14,
+        Object_Broken = 15
     }
 }

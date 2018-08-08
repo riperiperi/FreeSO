@@ -36,7 +36,8 @@ namespace FSO.Client.UI.Panels.EODs
             { 0x6C5C7555, typeof(UIDJStationEOD) },
 
             //new for freeso
-            { 0x00001000, typeof(UINewspaperEOD) }
+            { 0x00001000, typeof(UINewspaperEOD) },
+            { 0x00001001, typeof(UIHoldEmCasinoEOD) }
         };
 
         //this class is a container so that it can hold EODs without them being active in Live Mode.

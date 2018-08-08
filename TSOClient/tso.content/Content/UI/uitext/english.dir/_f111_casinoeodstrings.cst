@@ -33,3 +33,76 @@
 33 ^$%d of chips would be over the maximum allowed bet.^
 34 ^That would be over the maximum allowed bet.^
 35 ^An unknown error occured. Your last bet was not accepted.^
+36 ^Call^
+37 ^Fold^
+38 ^You must make an Ante Bet to play. If you beat the dealer, it pays you based on the hand you have (see: Learn To Use...Payouts). But beware: your Call Bet is always 2x your Ante Bet, and you have to call to win your Ante Bet!^
+39 ^Ante Bet^
+40 ^Add $%d to Ante Bet^
+41 ^Add $%d to Side Bet^
+42 ^Side Bet^
+43 ^Optional Side Bets are paid as soon as the first 3 community cards (the flop) are dealt and the payout is based on the 5 card hand you make with the flop and your 2 hole cards. You don't have to call to win your Side Bet, but you must have a Pair of Aces or better to win it!^
+44 ^Clear Ante Bet^
+45 ^Clear Side Bet^
+46 ^Place your bets. Min Ante: $%d^
+47 ^Wait until the next hand to bet.^
+48 ^%s folds, forfeiting their Ante Bet.^
+49 ^%s calls.^
+50 ^Hold 'em Casino^
+51 ^Your Ante Bet must be at least $%d.^
+52 ^Your Ante Bet cannot be greater than $%d.^
+53 ^Your Side Bet cannot be greater than $%d.^
+54 ^You don't have enough money to call. In order to call, you must put down two times your Ante Bet.^
+55 ^Your Ante Bet is not valid.^
+56 ^Your Side Bet is not valid, but your Ante Bet is valid. Proceed with $0 Side Bet?^
+57 ^That is not a valid number! Your bet was reset to $0.^
+58 ^Your turn. It's $%d to call.^
+59 ^Side Bet: $%d for ^
+60 ^Royal Flush^
+61 ^Straight Flush^
+62 ^4 of a kind^
+63 ^Full House^
+64 ^Flush^
+65 ^Straight^
+66 ^3 of a Kind^
+67 ^2 Pair^
+68 ^Kicker^
+69 ^1 Pair^
+70 ^High Card^
+71 ^(Min: $%n Max: $%x)^
+72 ^Dealer did not qualify. You win $%d^
+73 ^Push! You split the pot: ^
+74 ^Dealer wins: ^
+75 ^You win $%d with: ^
+76 ^Before the final 2 community cards are dealt (the turn and the river), you have to CALL. Your Call Bet is always 2x your Ante Bet. After calling, if the dealer qualifies (a Pair of Fours or better) then you win a Call Bet Payout of 1:1 and your Ante Bet is paid based on your hand. You can also FOLD and forfeit your Ante Bet if you don't think your hand will be strong.^
+77 ^5 Card Draw^
+78 ^5 Card Stud^
+79 ^7 Card Draw^
+80 ^7 Card Stud^
+81 ^cards are Wild^
+82 ^Hold^
+83 ^Ante Bet Help^
+84 ^Side Bet Help^
+85 ^Call or Fold Button Help^
+86 ^Video Poker^
+87 ^it's $%d to Call.^
+88 ^You did not win your side bet.^
+89 ^You folded.^
+90 ^Wow. That last round was hot. Too hot. It seems it broke the table. Maybe you should let the owner know?^
+91 ^Ace^
+92 ^King^
+93 ^Queen^
+94 ^Jack^
+95 ^Ten^
+96 ^Nine^
+97 ^Eight^
+98 ^Seven^
+99 ^Six^
+100 ^Five^
+101 ^Four^
+102 ^Three^
+103 ^Two^
+104 ^Clubs^
+105 ^Diamonds^
+106 ^Hearts^
+107 ^Spades^
+108 ^high^

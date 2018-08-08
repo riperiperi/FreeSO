@@ -22,7 +22,7 @@ namespace FSO.SimAntics.Engine
         private static string[] valid = {
             "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:",
             "FixedLocal:", "DynamicObjectName", "MoneyXL:", "JobOffer:", "Job:", "JobDesc:", "Param:", "Neighbor", "\r\n", "ListObject",
-            "CatalogLocal:"
+            "CatalogLocal:", "\\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -235,6 +235,9 @@ namespace FSO.SimAntics.Engine
                                     var catObj = context.VM.GetObjectById(VMMemory.GetVariable(context, Scopes.VMVariableScope.Local, values[0]));
                                     var cat = catObj.Object.Resource.Get<CTSS>(catObj.Object.OBJ.CatalogStringsID)?.GetString(1);
                                     output.Append(cat ?? "");
+                                    break;
+                                case "\\n":
+                                    output.Append("\n");
                                     break;
                                 default:
                                     output.Append(cmdString);

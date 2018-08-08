@@ -94,6 +94,7 @@ namespace FSO.Server.Api.Controllers
                 ticket.ip = ip;
 
                 db.AuthTickets.Create(ticket);
+                db.Users.UpdateLastLogin(user.user_id, Epoch.Now);
             }
             var content = "Valid=TRUE\r\nTicket=" + ticket.ticket_id.ToString() + "\r\n";
             return ApiResponse.Plain(HttpStatusCode.OK, content);
