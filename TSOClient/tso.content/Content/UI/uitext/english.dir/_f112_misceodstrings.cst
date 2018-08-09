@@ -8,3 +8,21 @@
 8 ^Draw^
 9 ^Oh no! The game is a stalemate!^
 10 ^Stalemate^
+11 ^Cell color: ^
+12 ^Blue^
+13 ^Green^
+14 ^Red^
+15 ^Yellow^
+16 ^None^
+17 ^Oh no! A herd of llamas stampeded past and smashed the compass. Better luck next trip!^
+18 ^No luck in this maze, perhaps your treasure is in another castle!^
+19 ^You hear a thud and the radio goes dead. Don’t worry... I’m sure the explorer is FINE!^
+20 ^Your map spontaneously combusts! The Curse of the Llama is only a story... right?^
+21 ^Blast, looks like someone beat you to the bounty this time round!^
+22 ^Hoorah, you found a solid gold llama! I’m sure someone out there needs one.^
+23 ^The treasure is yours! Don’t forget to tip your friendly neighbourhood explorer.^
+24 ^WOW an eerily glowing purple skull with gems in it! I’m sure it’s not cursed at all.^
+25 ^In a last second scuffle, you elbow a rival explorer out of the way and claim the prize!^
+26 ^A treasure chest! You’d be rich if it were not for the fact that you aren’t actually in the maze.^
+27 ^Failure^
+28 ^Success^

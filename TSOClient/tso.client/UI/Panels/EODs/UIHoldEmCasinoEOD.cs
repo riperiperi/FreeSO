@@ -859,9 +859,11 @@ namespace FSO.Client.UI.Panels.EODs
             if (data != null && data.Length > 0)
             {
                 var stringData = VMEODGameCompDrawACardData.DeserializeStrings(data);
-                if (stringData != null)
+                if (stringData != null && stringData.Length > 0)
                 {
-                    var handType = GameFacade.Strings.GetString("f111", (int)Enum.Parse(typeof(PokerHandTypeStringIndeces), stringData[1]) + "");
+                    string handType = "";
+                    if (stringData.Length > 1)
+                        handType = GameFacade.Strings.GetString("f111", (int)Enum.Parse(typeof(PokerHandTypeStringIndeces), stringData[1]) + "");
                     String relevantCards = " (";
                     for (int index = 2; index < stringData.Length; index++)
                         relevantCards += " " + stringData[index] + " &";
