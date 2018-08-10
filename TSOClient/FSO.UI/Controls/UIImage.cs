@@ -36,19 +36,21 @@ namespace FSO.Client.UI.Controls
         private float m_Height;
 
         public UIImage()
-        {
-            m_TooltipHandler = UIUtils.GiveTooltip(this); //images can have tooltips, too
+        { 
         }
 
         public UIImage(Texture2D Texture)
         {
             this.Texture = Texture;
-            m_TooltipHandler = UIUtils.GiveTooltip(this); //images can have tooltips, too
         }
 
         public UIImage(ITextureRef Texture)
         {
             this.m_TextureRef = Texture;
+        }
+
+        public void UseTooltip()
+        {
             m_TooltipHandler = UIUtils.GiveTooltip(this); //images can have tooltips, too
         }
 
