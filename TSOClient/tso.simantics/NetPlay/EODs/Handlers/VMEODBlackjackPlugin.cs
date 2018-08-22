@@ -2177,6 +2177,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                 // if player has blackjack, it still beats dealer's 21, which we know cannot be here
                                 if (CurrentHandType.Equals(VMEODBlackjackHandTypes.Blackjack))
                                     totalPayout += BetAmount + (int)(1.5 * BetAmount); // 3:2 or 1.5 times bet + original bet back
+                                // if they doubled down, they get the full bet back
+                                else if (CurrentHandType.Equals(VMEODBlackjackHandTypes.Doubled_Down))
+                                    totalPayout += BetAmount * 2;
                                 else
                                     totalPayout += BetAmount; // original bet back for push
                             }
