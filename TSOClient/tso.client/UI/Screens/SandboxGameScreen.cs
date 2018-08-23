@@ -175,6 +175,16 @@ namespace FSO.Client.UI.Screens
 
             WindowContainer = new UIContainer();
             Add(WindowContainer);
+            
+            SaveHouseButton = new UIButton()
+            {
+                Caption = "Save House",
+                Y = 10,
+                Width = 100,
+                X = GlobalSettings.Default.GraphicsWidth - 110
+            };
+            SaveHouseButton.OnButtonClick += new ButtonClickDelegate(SaveHouseButton_OnButtonClick);
+            this.Add(SaveHouseButton);
 
             if (Content.Content.Get().TS1)
             {
@@ -638,7 +648,7 @@ namespace FSO.Client.UI.Screens
             if (vm == null) return;
 
             var exporter = new VMWorldExporter();
-            exporter.SaveHouse(vm, GameFacade.GameFilePath("housedata/blueprints/house_00.xml"));
+            exporter.SaveHouse(vm, Path.Combine(FSOEnvironment.UserDir, "LocalHouse/house_00.xml"));
             var marshal = vm.Save();
             Directory.CreateDirectory(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/"));
             using (var output = new FileStream(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/house_00.fsov"), FileMode.Create))
