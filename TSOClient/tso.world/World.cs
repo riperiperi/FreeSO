@@ -564,6 +564,35 @@ namespace FSO.LotView
             _2DWorld.PreDraw(device, State);
         }
 
+        public float? BoxRC2(Ray ray, float tileSize)
+        {
+            var px = (ray.Direction.X > 0);
+            var py = (ray.Direction.Z > 0);
+            //find current tile
+            int x = (!px) ? (int)Math.Ceiling(ray.Position.X / tileSize) :
+                           (int)(ray.Position.X / tileSize);
+            int y = (!py) ? (int)Math.Ceiling(ray.Position.Z / tileSize) :
+                           (int)(ray.Position.Z / tileSize);
+
+            //find next tile boundary
+            float nx = ((px) ? (x + 1) : (x - 1)) * 3;
+            float ny = ((py) ? (y + 1) : (y - 1)) * 3;
+
+            const float Epsilon = 1e-6f;
+            float? min = null;
+            if (Math.Abs(ray.Direction.X) > Epsilon)
+            {
+                min = (nx - ray.Position.X) / ray.Direction.X;
+            }
+
+            if (Math.Abs(ray.Direction.Z) > Epsilon)
+            {
+                var min2 = (ny - ray.Position.Z) / ray.Direction.Z;
+                if (min == null || min.Value > min2) min = min2;
+            }
+            return min;
+        }
+
         public float? BoxRC(Ray ray, BoundingBox box)
         {
             const float Epsilon = 1e-6f;
@@ -586,7 +615,7 @@ namespace FSO.LotView
                     tMin = tMax;
                     tMax = temp;
                 }
-                if (tMin < 0) tMin = tMax;
+                if (tMin <= 0 || (ray.Direction.X >= 0 && tMin == 0)) tMin = tMax;
             }
 
             if (Math.Abs(ray.Direction.Z) < Epsilon)
@@ -605,13 +634,13 @@ namespace FSO.LotView
                     tMinZ = tMaxZ;
                     tMaxZ = temp;
                 }
-                if (tMinZ < 0) tMinZ = tMaxZ;
+                if (tMinZ < 0 || (ray.Direction.Z >= 0 && tMinZ == 0)) tMinZ = tMaxZ;
 
                 //if ((tMin.HasValue && tMin > tMaxZ) || (tMax.HasValue && tMinZ > tMax))
                 //    return null;
 
-                if (!tMin.HasValue || tMinZ > tMin) tMin = tMinZ;
-                if (!tMax.HasValue || tMaxZ < tMax) tMax = tMaxZ;
+                if (!tMin.HasValue || tMin > tMinZ) tMin = tMinZ;
+                if (!tMax.HasValue || tMaxZ > tMax) tMax = tMaxZ;
             }
 
             // a negative tMin means that the intersection point is behind the ray's origin
@@ -649,29 +678,59 @@ namespace FSO.LotView
             var mx = (int)ray.Position.X / 3;
             var my = (int)ray.Position.Z / 3;
 
+            var px = (ray.Direction.X > 0);
+            var py = (ray.Direction.Z > 0);
+
             int iteration = 0;
-            while (mx > 0 && mx < Blueprint.Width && my > 0 && my<Blueprint.Width)
+            while (mx >= 0 && mx < Blueprint.Width && my >= 0 && my<Blueprint.Width)
             {
+                //test triangle 1. (centre of tile down xz, we lean towards positive x)
                 var plane = new Plane(
-                    new Vector3(mx * 3, Blueprint.Altitude[my * Blueprint.Width + mx] * Blueprint.TerrainFactor*3, my * 3),
-                    new Vector3(mx * 3+3, Blueprint.Altitude[my * Blueprint.Width + ((mx+1)%Blueprint.Width)] * Blueprint.TerrainFactor*3, my * 3),
-                    new Vector3(mx * 3+3, Blueprint.Altitude[((my+1)%Blueprint.Height) * Blueprint.Width + ((mx+1)%Blueprint.Width)] * Blueprint.TerrainFactor*3, my * 3+3)
+                    new Vector3(mx * 3, Blueprint.GetAltPoint(mx, my) * Blueprint.TerrainFactor*3, my * 3),
+                    new Vector3(mx * 3+3, Blueprint.GetAltPoint(mx+1, my) * Blueprint.TerrainFactor*3, my * 3),
+                    new Vector3(mx * 3+3, Blueprint.GetAltPoint(mx+1, my+1) * Blueprint.TerrainFactor*3, my * 3+3)
                     );
                 var tBounds = new BoundingBox(new Vector3(mx*3, -5000, my*3), new Vector3(mx*3+3, 5000, my*3+3));
 
                 var t1 = ray.Intersects(plane);
-                var t2 = BoxRC(ray, tBounds);
+                var t2 = BoxRC2(ray, 3);
+                //var t2 = BoxRC(ray, tBounds);
                 if (plane.DotCoordinate(ray.Position) > 0) t1 = 0;
                 if (t1 != null && t2 != null && t1.Value < t2.Value)
                 {
                     //hit the ground...
-                    ray.Position += ray.Direction * (t1.Value + 0.00001f);
-                    return new Vector2(ray.Position.X / 3, ray.Position.Z / 3);
+                    var tentative = ray.Position + ray.Direction * (t1.Value + 0.00001f);
+
+                    //did it hit the correct side of the triangle?
+                    var mySide = ((tentative.X / 3)%1) - ((tentative.Z / 3)%1);
+                    if (mySide >= 0)
+                    {
+                        return new Vector2(tentative.X / 3, tentative.Z / 3);
+                    } else
+                    {
+                        //test the other side (positive z)
+                        plane = new Plane(
+                            new Vector3(mx * 3, Blueprint.GetAltPoint(mx, my) * Blueprint.TerrainFactor * 3, my * 3),
+                            new Vector3(mx * 3, Blueprint.GetAltPoint(mx, my + 1) * Blueprint.TerrainFactor * 3, my * 3 + 3),
+                            new Vector3(mx * 3 + 3, Blueprint.GetAltPoint(mx + 1, my + 1) * Blueprint.TerrainFactor * 3, my * 3 + 3)
+                            );
+                        t1 = ray.Intersects(plane);
+                        if (t1 != null && t2 != null && t1.Value < t2.Value)
+                        {
+                            //hit the other side
+                            tentative = ray.Position + ray.Direction * (t1.Value + 0.00001f);
+                            return new Vector2(tentative.X / 3, tentative.Z / 3);
+                        }
+                    }
                 }
                 if (t2 == null) break;
                 ray.Position += ray.Direction * (t2.Value + 0.00001f);
-                mx = (int)ray.Position.X / 3;
-                my = (int)ray.Position.Z / 3;
+
+                mx = (!px) ? ((int)Math.Ceiling(ray.Position.X / 3) - 1) :
+                               (int)(ray.Position.X / 3);
+                my = (!py) ? ((int)Math.Ceiling(ray.Position.Z / 3) - 1) :
+                               (int)(ray.Position.Z / 3);
+
                 if (iteration++ > 1000) break;
             }
 

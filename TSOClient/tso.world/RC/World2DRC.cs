@@ -300,7 +300,8 @@ namespace FSO.LotView.RC
 
             gd.SetRenderTarget(ObjThumbTarget);
             var cpoints = new List<Vector3>();
-            var vp = state.Camera.View * state.Camera.Projection;
+            var view = state.Camera.View;
+            var vp = view * state.Camera.Projection;
             gd.BlendState = BlendState.NonPremultiplied;
             gd.RasterizerState = RasterizerState.CullNone;
             gd.DepthStencilState = DepthStencilState.Default;
@@ -310,7 +311,7 @@ namespace FSO.LotView.RC
             state.ClearLighting(false);
             Blueprint.SetLightColor(WorldContent.RCObject, Color.White, Color.White);
 
-            var objs = objects.OrderBy(x => ((ObjectComponentRC)x).SortDepth(vp)).ToList();
+            var objs = objects.OrderBy(x => ((ObjectComponentRC)x).SortDepth(view)).ToList();
 
             gd.Clear(Color.Transparent);
             for (int i = 0; i < objs.Count; i++)
@@ -440,7 +441,8 @@ namespace FSO.LotView.RC
 
             var effect = WorldContent.RCObject;
             gd.BlendState = BlendState.NonPremultiplied;
-            var vp = state.Camera.View * state.Camera.Projection;
+            var view = state.Camera.View;
+            var vp = view * state.Camera.Projection;
             effect.Parameters["ViewProjection"].SetValue(vp);
 
             var cuts = Blueprint.Cutaway;
@@ -455,7 +457,7 @@ namespace FSO.LotView.RC
 
             effect.CurrentTechnique = effect.Techniques["Draw"];
             var frustrum = new BoundingFrustum(vp);
-            var objs = Blueprint.Objects.OrderBy(x => ((ObjectComponentRC)x).SortDepth(vp));
+            var objs = Blueprint.Objects.OrderBy(x => ((ObjectComponentRC)x).SortDepth(view));
             var fine = Blueprint.FineArea;
             foreach (var obj in objs)
             {
@@ -532,7 +534,8 @@ namespace FSO.LotView.RC
         {
             var effect = WorldContent.RCObject;
             gd.BlendState = BlendState.NonPremultiplied;
-            var vp = state.Camera.View * state.Camera.Projection;
+            var view = state.Camera.View;
+            var vp = view * state.Camera.Projection;
             effect.Parameters["ViewProjection"].SetValue(vp);
 
 
@@ -544,7 +547,7 @@ namespace FSO.LotView.RC
             effect.CurrentTechnique = effect.Techniques["Draw"];
             var frustrum = new BoundingFrustum(vp);
             var objs = Blueprint.Objects.Where(x => x.Level <= state.Level && frustrum.Intersects(((ObjectComponentRC)x).GetBounds()))
-                .OrderBy(x => ((ObjectComponentRC)x).SortDepth(vp));
+                .OrderBy(x => ((ObjectComponentRC)x).SortDepth(view));
             foreach (var obj in objs)
             {
                 obj.Draw(gd, state);

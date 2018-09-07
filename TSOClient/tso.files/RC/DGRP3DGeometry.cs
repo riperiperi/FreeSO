@@ -130,7 +130,7 @@ namespace FSO.Files.RC
                 PixelDir = ushort.Parse(splitName[2].Substring(3));
                 Pixel = source.GetImage(1, 3, PixelDir).Sprites[PixelSPR].GetTexture(gd);
             }
-            else
+            else if (splitName[1] != "MASK")
             {
                 PixelSPR = ushort.Parse(splitName[2]);
                 CustomTexture = 1;
