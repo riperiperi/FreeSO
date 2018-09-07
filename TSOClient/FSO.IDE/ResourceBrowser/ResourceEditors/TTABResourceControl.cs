@@ -424,8 +424,13 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             var sel = Selected;
             int TTAIndex = 0;
+            int MaxTTAIndex = (ActiveTTAB.Interactions.Length == 0)?-1:ActiveTTAB.Interactions.Max(x => (int)x.TTAIndex);
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
+                while (Strings.Length <= MaxTTAIndex)
+                {
+                    Strings.InsertString(Strings.Length, new STRItem { Value = "---" });
+                }
                 TTAIndex = Strings.Length;
                 Strings.InsertString(Strings.Length, new STRItem { Value = "New Interaction" });
             }, Strings));

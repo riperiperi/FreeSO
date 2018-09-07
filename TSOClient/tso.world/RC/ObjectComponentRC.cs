@@ -92,8 +92,10 @@ namespace FSO.LotView.RC
         {
             if (!Visible) return 0;
             var w = World;
-            var t = w.Translation;
-            return Vector3.Dot(t, vp.Forward);
+            var ctr = w.Translation;
+            var forward = vp.Forward;
+            if (forward.Z > 0) forward.Y = -forward.Y;
+            return Vector3.Dot(ctr, forward);
         }
 
         public override Vector2 GetScreenPos(WorldState world)
@@ -146,7 +148,15 @@ namespace FSO.LotView.RC
             if (!Visible || (Position.X < -2043 && Position.Y < -2043) || Level < 1) return;
             //#endif
             ((DGRPRendererRC)dgrp).World = World;
-            if (this.DrawGroup != null) ((DGRPRendererRC)dgrp).DrawLMap(device, level);
+            if (this.DrawGroup != null)
+            {
+                float yOff = 0;
+                if (this.Container != null)
+                {
+                    yOff = this.Position.Z - this.Container.Position.Z;
+                }
+                ((DGRPRendererRC)dgrp).DrawLMap(device, level, yOff);
+            }
         }
 
         public override void Update(GraphicsDevice device, WorldState world)

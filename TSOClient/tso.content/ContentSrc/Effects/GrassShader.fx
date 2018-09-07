@@ -34,7 +34,7 @@ sampler TexSampler = sampler_state {
 	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
 };
 
-#if !SM4
+#if SM4
 sampler AnisoTexSampler = sampler_state {
 	texture = <BaseTex>;
 	AddressU = Wrap;
