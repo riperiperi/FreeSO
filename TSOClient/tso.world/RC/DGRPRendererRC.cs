@@ -44,11 +44,19 @@ namespace FSO.LotView.RC
         {
             StencilEnable = true,
             StencilFunction = CompareFunction.Always,
-            StencilFail = StencilOperation.Keep,
-            StencilPass = StencilOperation.Replace,
+
+            TwoSidedStencilMode = true,
+
+            CounterClockwiseStencilFail = StencilOperation.Keep,
+            CounterClockwiseStencilPass = StencilOperation.Replace,
+            CounterClockwiseStencilDepthBufferFail = StencilOperation.Keep,
+
             StencilDepthBufferFail = StencilOperation.Keep,
+            StencilPass = StencilOperation.Zero,
+            StencilFail = StencilOperation.Keep,
+
             ReferenceStencil = 1,
-            DepthBufferWriteEnable = false
+            DepthBufferWriteEnable = true
         };
 
         public static DepthStencilState DepthClear2 = new DepthStencilState()
@@ -60,6 +68,42 @@ namespace FSO.LotView.RC
             StencilDepthBufferFail = StencilOperation.Zero,
             ReferenceStencil = 1,
             DepthBufferWriteEnable = true,
+            DepthBufferFunction = CompareFunction.Always
+        };
+
+        public static DepthStencilState DepthClear2Strict = new DepthStencilState()
+        {
+            StencilEnable = true,
+            StencilFunction = CompareFunction.Equal,
+            StencilFail = StencilOperation.Keep,
+            StencilPass = StencilOperation.Keep,
+            StencilDepthBufferFail = StencilOperation.Keep,
+            ReferenceStencil = 1,
+            DepthBufferWriteEnable = true,
+            DepthBufferFunction = CompareFunction.Always
+        };
+
+
+        public static DepthStencilState Portal = new DepthStencilState()
+        {
+            StencilEnable = true,
+            StencilFunction = CompareFunction.Equal,
+            StencilFail = StencilOperation.Keep,
+            StencilPass = StencilOperation.Keep,
+            StencilDepthBufferFail = StencilOperation.Keep,
+            ReferenceStencil = 1,
+            DepthBufferWriteEnable = true,
+        };
+
+        public static DepthStencilState StencilClearOnly = new DepthStencilState()
+        {
+            StencilEnable = true,
+            StencilFunction = CompareFunction.Equal,
+            StencilFail = StencilOperation.Keep,
+            StencilPass = StencilOperation.Zero,
+            StencilDepthBufferFail = StencilOperation.Keep,
+            ReferenceStencil = 1,
+            DepthBufferWriteEnable = false,
             DepthBufferFunction = CompareFunction.Always
         };
 
@@ -89,24 +133,26 @@ namespace FSO.LotView.RC
             {
                 var geom = Mesh.DepthMask;
                 //depth mask for drawing into a surface or wall
-                //
-                effect.CurrentTechnique = effect.Techniques["DepthClear"];
-                effect.CurrentTechnique.Passes[0].Apply();
+                if (geom.Verts != null)
+                {
+                    effect.CurrentTechnique = effect.Techniques["DepthClear"];
+                    effect.CurrentTechnique.Passes[0].Apply();
 
-                device.DepthStencilState = DepthClear1;
-                device.Indices = geom.Indices;
-                device.SetVertexBuffer(geom.Verts);
+                    device.DepthStencilState = DepthClear1;
+                    device.Indices = geom.Indices;
+                    device.SetVertexBuffer(geom.Verts);
+                    
+                    device.BlendState = NoColor;
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
 
-                device.BlendState = NoColor;
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
+                    device.DepthStencilState = (Mesh.MaskType == DGRP3DMaskType.Portal) ? DepthClear2Strict : DepthClear2;
+                    effect.CurrentTechnique.Passes[1].Apply();
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
 
-                device.DepthStencilState = DepthClear2;
-                effect.CurrentTechnique.Passes[1].Apply();
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
-
-                device.DepthStencilState = DepthStencilState.Default;
-                device.BlendState = BlendState.NonPremultiplied;
-                effect.CurrentTechnique = effect.Techniques["Draw"];
+                    device.DepthStencilState = DepthStencilState.Default;
+                    device.BlendState = BlendState.NonPremultiplied;
+                    effect.CurrentTechnique = effect.Techniques["Draw"];
+                }
             }
 
             if (Room == 65533) effect.CurrentTechnique = effect.Techniques["DisabledDraw"];
@@ -115,25 +161,51 @@ namespace FSO.LotView.RC
             foreach (var spr in Mesh.Geoms)
             {
                 if (i == 0 || (((i-1) > 63) ? ((DynamicSpriteFlags2 & ((ulong)0x1 << ((i-1) - 64))) > 0) :
-                    ((DynamicSpriteFlags & ((ulong)0x1 << (i-1))) > 0))) { 
+                    ((DynamicSpriteFlags & ((ulong)0x1 << (i-1))) > 0)) || (Mesh.MaskType == DGRP3DMaskType.Portal && i == Mesh.Geoms.Count - 1)) { 
                     foreach (var geom in spr.Values)
                     {
                         if (geom.PrimCount == 0) continue;
+                        if (Mesh.MaskType == DGRP3DMaskType.Portal && i == Mesh.Geoms.Count - 1)
+                            device.DepthStencilState = Portal;
                         effect.Parameters["MeshTex"].SetValue(geom.Pixel);
                         var info = geom.Pixel?.Tag as TextureInfo;
                         effect.Parameters["UVScale"].SetValue(info?.UVScale ?? Vector2.One);
                         var pass = effect.CurrentTechnique.Passes[(advDir && Room < 65533) ? 1:0];
                         pass.Apply();
-                        if (!geom.Rendered) continue;
-                        device.Indices = geom.Indices;
-                        device.SetVertexBuffer(geom.Verts);
+                        if (geom.Rendered)
+                        {
+                            device.Indices = geom.Indices;
+                            device.SetVertexBuffer(geom.Verts);
 
-                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
+                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
+                        }
+                        if (Mesh.MaskType == DGRP3DMaskType.Portal && i == Mesh.Geoms.Count - 1)
+                            device.DepthStencilState = DepthStencilState.Default;
                     }
                 }
                 i++;
             }
 
+            if (Mesh.MaskType == DGRP3DMaskType.Portal)
+            {
+                var geom = Mesh.DepthMask;
+                //clear the stencil, so it doesn't interfere with future portals.
+                if (geom.Verts != null)
+                {
+                    effect.CurrentTechnique = effect.Techniques["DepthClear"];
+                    effect.CurrentTechnique.Passes[1].Apply();
+
+                    device.DepthStencilState = StencilClearOnly;
+                    device.Indices = geom.Indices;
+                    device.SetVertexBuffer(geom.Verts);
+
+                    device.BlendState = NoColor;
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
+                    device.BlendState = BlendState.NonPremultiplied;
+                }
+                device.DepthStencilState = DepthStencilState.Default;
+                effect.CurrentTechnique = effect.Techniques["Draw"];
+            }
             if (Room == 65533) effect.CurrentTechnique = effect.Techniques["Draw"];
         }
 
@@ -146,6 +218,7 @@ namespace FSO.LotView.RC
                 _Dirty = false;
             }
 
+            if (Mesh.MaskType == DGRP3DMaskType.Portal) return;
             //immedately draw the mesh.
             var effect = WorldContent.RCObject;
 

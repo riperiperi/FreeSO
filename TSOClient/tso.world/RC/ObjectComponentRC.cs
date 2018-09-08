@@ -94,7 +94,8 @@ namespace FSO.LotView.RC
             var w = World;
             var ctr = w.Translation;
             var forward = vp.Forward;
-            if (forward.Z > 0) forward.Y = -forward.Y;
+            forward.Z *= -1;
+            if (forward.Z < 0) forward.Y = -forward.Y;
             return Vector3.Dot(ctr, forward);
         }
 
