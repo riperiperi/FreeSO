@@ -140,6 +140,15 @@ namespace FSO.LotView.Model
             return (AltitudeCenters[((y % Height) * Width + (x % Width))] - BaseAlt) * TerrainFactor;
         }
 
+
+        public float GetAltPoint(int x, int y)
+        {
+            //x += 1; y += 1;
+            if (x <= 0 || y <= 0) return 0f;
+            return (Altitude[((y % Height) * Width + (x % Width))]);
+        }
+
+
         public float InterpAltitude(Vector3 Position)
         {
             if (Altitude == null) return 0f;
