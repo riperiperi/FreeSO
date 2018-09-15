@@ -83,6 +83,16 @@ float4 psDirRC(VertexOut v) : COLOR0
 	return color;
 }
 
+float4 psDummy(VertexOut v) : COLOR0
+{
+	return float4(1,1,1,1);
+}
+
+float4 psDepthClear(VertexOut v, out float depth : DEPTH0) : COLOR0
+{
+	depth = 1;
+	return float4(1,1,1,1);
+}
 
 float4 psLMapRC(VertexOut v) : COLOR0
 {
@@ -230,6 +240,31 @@ technique Draw
 #else
 		VertexShader = compile vs_3_0 vsRC();
 		PixelShader = compile ps_3_0 psDirRC();
+#endif;
+	}
+}
+
+technique DepthClear
+{
+	pass Pass1
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_3 vsRC();
+		PixelShader = compile ps_4_0_level_9_3 psDummy();
+#else
+		VertexShader = compile vs_3_0 vsRC();
+		PixelShader = compile ps_3_0 psDummy();
+#endif;
+	}
+
+	pass Pass1
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_3 vsRC();
+		PixelShader = compile ps_4_0_level_9_3 psDepthClear();
+#else
+		VertexShader = compile vs_3_0 vsRC();
+		PixelShader = compile ps_3_0 psDepthClear();
 #endif;
 	}
 }

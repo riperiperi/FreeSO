@@ -18,7 +18,10 @@ namespace FSO.Files.RC
 {
     public class DGRP3DMesh
     {
-        public static int CURRENT_VERSION = 2;
+        //1: initial 3d format
+        //2: normals
+        //3: depth mask (for sinks, fireplaces)
+        public static int CURRENT_VERSION = 3;
         public static int CURRENT_RECONSTRUCT = 2;
 
         public static DGRPRCParams DefaultParams = new DGRPRCParams();
@@ -111,6 +114,8 @@ namespace FSO.Files.RC
         public int ReconstructVersion;
         public string Name;
         public List<Dictionary<Texture2D, DGRP3DGeometry>> Geoms;
+        public DGRP3DMaskType MaskType = DGRP3DMaskType.None;
+        public DGRP3DGeometry DepthMask;
         public BoundingBox? Bounds;
 
 
@@ -147,6 +152,13 @@ namespace FSO.Files.RC
                             d.Add(geom.Pixel, geom);
                         }
                         Geoms.Add(d);
+                    }
+
+                    if (Version > 2)
+                    {
+                        MaskType = (DGRP3DMaskType)io.ReadInt32();
+                        if (MaskType > DGRP3DMaskType.None)
+                            DepthMask = new DGRP3DGeometry(io, dgrp, gd, Version);
                     }
 
                     var x = io.ReadFloat();
@@ -529,12 +541,35 @@ namespace FSO.Files.RC
             {
                 if (obj.Key == "_default") continue;
                 var split = obj.Key.Split('_');
-                //0: dynsprite id, 1: SPR or custom, 2: rotation, 3: index
-                var id = int.Parse(split[0]);
-                while (Geoms.Count <= id) Geoms.Add(new Dictionary<Texture2D, DGRP3DGeometry>());
-                var dict = Geoms[id];
-                var geom = new DGRP3DGeometry(split, source, obj.Value, dgrp, gd);
-                dict[geom.Pixel] = geom;
+                if (split[0] == "DEPTH")
+                {
+                    DepthMask = new DGRP3DGeometry(split, source, obj.Value, dgrp, gd);
+                    if (split.Length > 2 && split[2] == "PORTAL")
+                    {
+                        MaskType = DGRP3DMaskType.Portal;
+
+                        var verts = new List<Vector3>();
+                        foreach (var tri in obj.Value)
+                        {
+                            foreach (var ind in tri)
+                            {
+                                verts.Add(source.Vertices[ind]);
+                            }
+                        }
+                        Bounds = BoundingBox.CreateFromPoints(verts);
+                    }
+                    else
+                        MaskType = DGRP3DMaskType.Normal;
+                }
+                else
+                {
+                    //0: dynsprite id, 1: SPR or custom, 2: rotation, 3: index
+                    var id = int.Parse(split[0]);
+                    while (Geoms.Count <= id) Geoms.Add(new Dictionary<Texture2D, DGRP3DGeometry>());
+                    var dict = Geoms[id];
+                    var geom = new DGRP3DGeometry(split, source, obj.Value, dgrp, gd);
+                    dict[geom.Pixel] = geom;
+                }
             }
         }
 
@@ -579,6 +614,12 @@ namespace FSO.Files.RC
                     {
                         m.Save(io);
                     }
+                }
+
+                io.WriteInt32((int)MaskType);
+                if (DepthMask != null)
+                {
+                    DepthMask.Save(io);
                 }
 
                 var b = Bounds.Value;
@@ -649,5 +690,12 @@ namespace FSO.Files.RC
             if (dict.TryGetValue(pt, out result)) return result;
             return null;
         }
+    }
+
+    public enum DGRP3DMaskType
+    {
+        None = 0,
+        Normal = 1,
+        Portal = 2
     }
 }

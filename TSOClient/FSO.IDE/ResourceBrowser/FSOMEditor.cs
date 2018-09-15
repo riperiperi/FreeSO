@@ -216,7 +216,7 @@ namespace FSO.IDE.ResourceBrowser
                     foreach (var mtl in obj.FacesByObjgroup.Keys)
                     {
                         var split = mtl.Split('_');
-                        if (split.Length < 3 || split[1] == "SPR") continue;
+                        if (split.Length < 3 || split[1] == "SPR" || split[0] == "DEPTH") continue;
 
                         var baseDir = Path.GetDirectoryName(dialog.FileName);
                         var copyname = "TEX_" + split[2] + ".png";

@@ -814,7 +814,7 @@ namespace FSO.SimAntics
                     else if (skillMul != 1)
                     {
                         var delta = value - PersonData[(ushort)variable];
-                        if (delta > 0)
+                        if (delta > 0 && (skillMul != 0 || delta == 1)) //only improve gradual increases. do not affect decreases.
                         {
                             delta *= skillMul;
                             value = (short)(PersonData[(ushort)variable] + delta);

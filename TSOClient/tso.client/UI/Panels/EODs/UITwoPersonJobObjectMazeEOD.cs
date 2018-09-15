@@ -146,6 +146,7 @@ namespace FSO.Client.UI.Panels.EODs
             for (int index = 0; index < ColoredBoxes.Length; index++)
             {
                 var box = ColoredBoxes[index];
+                box.UseTooltip();
                 box.ScaleX = box.ScaleY = 5.0f;
                 box.Position = UIPlayBackground.Position + boxOffset;
                 box.Visible = false;
@@ -374,6 +375,7 @@ namespace FSO.Client.UI.Panels.EODs
                 for (int x = 0; x < coords.Length - 1; x++)
                 {
                     var color = Script.Create<UIImage>(evt);
+                    color.UseTooltip();
                     color.Position = NWCellOriginOffset;
                     color.Y += coords[x++] * CellOffsetY;
                     color.X += coords[x] * CellOffsetX;
@@ -476,6 +478,7 @@ namespace FSO.Client.UI.Panels.EODs
                 }
                 // the first two coordinates are the origin
                 var origin = Script.Create<UIImage>(colorString);
+                origin.UseTooltip();
                 origin.Position = NWCellOriginOffset;
                 origin.Y += solutionPathCoords[1] * CellOffsetY;
                 origin.X += solutionPathCoords[2] * CellOffsetX;
