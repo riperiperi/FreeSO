@@ -401,6 +401,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 if (playerIndex == ActivePlayerIndex)
                     ForceFold(true);
                 Controller.SendOBJEvent(new VMEODEvent((short)VMEODHoldEmCasinoEvents.Failsafe_Delete_ID, (short)(slot.PlayerIndex + 1)));
+                slot.Client = null;
             }
             if (Lobby.IsEmpty()) // no players
             {
@@ -1069,12 +1070,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         {
                             for (int index = 0; index < 4; index++)
                             {
-                                var slot = Lobby.GetSlotData(index);
-                                short playerObjectID = 0;
-                                var playerClient = slot.Client;
+                                var playerClient = Lobby.Players[index];
                                 if (playerClient != null)
                                 {
-                                    playerObjectID = playerClient.Avatar.ObjectID;
+                                    var slot = Lobby.GetSlotData(index);
+                                    var playerObjectID = playerClient.Avatar.ObjectID;
                                     if (slot.BetAccepted)
                                         winnings = slot.CalculateSideBetPayout();
 

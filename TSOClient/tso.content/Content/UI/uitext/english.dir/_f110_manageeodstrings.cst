@@ -15,8 +15,8 @@
 15 ^Edit ^
 16 ^Roulette tables must be able to cover 35 times any bet for 4 simultaneous players, so at least 140 times the maximum bet.^
 17 ^For example: if your maximum bet is $100, you must have at least $14000 in this object.^
-18 ^A Blackjack payout is 3:2 or one and a half times any bet. Tables must be able to cover up to 4 blackjacks per round.^
-19 ^You must stock at least 6 times the maximum bet.^
+18 ^A Blackjack payout is 3:2 or one and a half times any bet. Tables must be able to cover up to 4 blackjacks per player each round.^
+19 ^You must stock at least 8 times the maximum bet.^
 20 ^(Note: Minimum bets can't be less than $%d)^
 21 ^(Note: Maximum bets can't be greater than $%d)^
 22 ^What would you like to set as your ^

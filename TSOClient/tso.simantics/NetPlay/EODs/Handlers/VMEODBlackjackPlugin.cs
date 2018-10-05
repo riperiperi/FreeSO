@@ -374,6 +374,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 if (playerIndex == ActivePlayerIndex)
                     ForceStand(true);
                 Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Delete_ID, (short)(slot.PlayerIndex + 1)));
+                slot.Client = null;
             }
             if (Lobby.IsEmpty()) // no players
             {
@@ -713,7 +714,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         #region owner events
         /*
-         * 
+         * Update 08/2018 - Needed to rethink the minimum balance. If players can split and win blackjacks on split, then the balance must cover that. So worst
+         * case scenario is 4 players with 4 blackjacks, less 4 times their initial bet: 1 for the original bet and 3 for each split.
+         * MinimumBet * (3:2 BlackjackWinRatio) * 4(Hands) * 4(Players) - MinimumBet * 4(Hands) * 4(Players) = 8*MinimumBet = TableMinBalance
          */
         private void NewMinimumBetHandler(string evt, string newMinString, VMEODClient client)
         {
@@ -734,7 +737,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 else
                 {
                     // does the object have enough money to cover this bet amount?
-                    if (newMinBet > TableBalance / 6)
+                    if (newMinBet > TableBalance / 8)
                         failureReason = VMEODRouletteInputErrorTypes.BetTooHighForBalance.ToString();
                     else
                     {
@@ -756,7 +759,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             // send the fail reason
             client.Send("blackjack_n_bet_fail", failureReason);
         }
-
+        /*
+         * Update 08/2018 - Needed to rethink the minimum balance. If players can split and win blackjacks on split, then the balance must cover that. So worst
+         * case scenario is 4 players with 4 blackjacks, less 4 times their initial bet: 1 for the original bet and 3 for each split.
+         * MaximumBet * (3:2 BlackjackWinRatio) * 4(Hands) * 4(Players) - MaximumBet * 4(Hands) * 4(Players) = 8*MaximumBet = TableMinBalance
+         */
         private void NewMaximumBetHandler(string evt, string newMaxString, VMEODClient client)
         {
             string failureReason = "";
@@ -776,7 +783,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 else
                 {
                     // does the object have enough money to cover this bet amount?
-                    if (newMaxBet > TableBalance / 6)
+                    if (newMaxBet > TableBalance / 8)
                         failureReason = VMEODRouletteInputErrorTypes.BetTooHighForBalance.ToString();
                     else
                     {
@@ -1263,6 +1270,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         {
                             Lobby.Leave(slot.Client);
                             Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Failsafe_Delete_ID, (short)(slot.PlayerIndex + 1)));
+                            slot.Client = null;
                         }
                     }
                 }
@@ -1749,10 +1757,14 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 });
             }
         }
-
+        /*
+         * Update 08/2018 - Needed to rethink the minimum balance. If players can split and win blackjacks on split, then the balance must cover that. So worst
+         * case scenario is 4 players with 4 blackjacks, less 4 times their initial bet: 1 for the original bet and 3 for each split.
+         * MinimumBet * (3:2 BlackjackWinRatio) * 4(Hands) * 4(Players) - MinimumBet * 4(Hands) * 4(Players) = 8*MinimumBet = TableMinBalance
+         */
         private bool IsTableWithinLimits()
         {
-            if (TableBalance >= MaxBet * 6 && TableBalance <= VMEODBlackjackPlugin.TABLE_MAX_BALANCE)
+            if (TableBalance >= MaxBet * 8 && TableBalance <= VMEODBlackjackPlugin.TABLE_MAX_BALANCE)
                 return true;
             return false;
         }
@@ -2177,6 +2189,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                 // if player has blackjack, it still beats dealer's 21, which we know cannot be here
                                 if (CurrentHandType.Equals(VMEODBlackjackHandTypes.Blackjack))
                                     totalPayout += BetAmount + (int)(1.5 * BetAmount); // 3:2 or 1.5 times bet + original bet back
+                                // if they doubled down, they get the full bet back
+                                else if (CurrentHandType.Equals(VMEODBlackjackHandTypes.Doubled_Down))
+                                    totalPayout += BetAmount * 2;
                                 else
                                     totalPayout += BetAmount; // original bet back for push
                             }

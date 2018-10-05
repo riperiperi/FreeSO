@@ -159,7 +159,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                         {
                             // "You do not have enough money in this object to cover that bet amount." \n \n
                             message = GameFacade.Strings.GetString("f110", "32") + System.Environment.NewLine + System.Environment.NewLine +
-                                // "You must stock at least 6 times the maximum bet."
+                                // "You must stock at least 8 times the maximum bet."
                                 GameFacade.Strings.GetString("f110", "19");
                             break;
                         }
@@ -911,9 +911,9 @@ namespace FSO.Client.UI.Panels.EODs.Utils
             }
             else if (Type.Equals(ManageEODObjectTypes.Blackjack))
             {
-                // "A Blackjack payout is 3:2 or one and a half times any bet. Tables must be able to cover up to 4 blackjacks per round." \n \n
+                // "A Blackjack payout is 3:2 or one and a half times any bet. Tables must be able to cover up to 4 blackjacks per player each round." \n \n
                 typeConditional = GameFacade.Strings.GetString("f110", "18") + System.Environment.NewLine + System.Environment.NewLine +
-                    // "You must stock at least 6 times the maximum bet."
+                    // "You must stock at least 8 times the maximum bet."
                     GameFacade.Strings.GetString("f110", "19");
                 tempMax = MAXIMUM_BET_LIMIT;
             }
