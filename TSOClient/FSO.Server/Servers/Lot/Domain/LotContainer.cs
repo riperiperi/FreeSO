@@ -660,10 +660,13 @@ namespace FSO.Server.Servers.Lot.Domain
                 UTCStart = DateTime.UtcNow.Ticks
             });
 
-            Lot.ForwardCommand(new VMNetTuningCmd()
+            if ((Lot.Tuning.GetTuning("forcedTuning", 0, 0) ?? 0f) > 0f)
             {
-                Tuning = Tuning
-            });
+                Lot.ForwardCommand(new VMNetTuningCmd()
+                {
+                    Tuning = Tuning
+                });
+            }
 
             Lot.Context.UpdateTSOBuildableArea();
 

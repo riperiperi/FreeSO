@@ -401,7 +401,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 if (playerIndex == ActivePlayerIndex)
                     ForceFold(true);
                 Controller.SendOBJEvent(new VMEODEvent((short)VMEODHoldEmCasinoEvents.Failsafe_Delete_ID, (short)(slot.PlayerIndex + 1)));
-                slot.Client = null;
+                //slot.Client = null;
             }
             if (Lobby.IsEmpty()) // no players
             {

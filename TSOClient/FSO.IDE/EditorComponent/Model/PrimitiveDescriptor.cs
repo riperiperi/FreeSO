@@ -27,7 +27,6 @@ namespace FSO.IDE.EditorComponent.Model
         public virtual void PopulateOperandView(BHAVEditor master, EditorScope escope, TableLayoutPanel panel)
         {
             panel.Controls.Add(new OpUnknownControl());
-            
         }
 
         //TODO: modifiable operand models, special form controls for specific types.

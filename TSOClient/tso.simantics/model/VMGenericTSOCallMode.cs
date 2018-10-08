@@ -82,6 +82,7 @@ namespace FSO.SimAntics.Model
         BroadcastDevice = 64,
 
         //FSO functions
-        FSOLightRGBFromTemp012 = 128
+        FSOLightRGBFromTemp012 = 128,
+        FSOAbortAllInteractions = 129
     }
 }

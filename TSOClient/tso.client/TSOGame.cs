@@ -53,6 +53,7 @@ namespace FSO.Client
                 Graphics.PreferredBackBufferWidth = (int)(GlobalSettings.Default.GraphicsWidth * FSOEnvironment.DPIScaleFactor);
                 Graphics.PreferredBackBufferHeight = (int)(GlobalSettings.Default.GraphicsHeight * FSOEnvironment.DPIScaleFactor);
                 //Graphics.PreferMultiSampling = true;
+                Graphics.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
                 TargetElapsedTime = new TimeSpan(10000000 / GlobalSettings.Default.TargetRefreshRate);
                 FSOEnvironment.RefreshRate = GlobalSettings.Default.TargetRefreshRate;
                 Graphics.HardwareModeSwitch = false;

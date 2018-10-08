@@ -64,6 +64,7 @@ namespace FSO.LotView.Model
         public bool[] Cutaway;
 
         private Color _OutsideColor = Color.White;
+        public float MinOutMul = (150 / 400f);
         public Color MinOut;
         public Color OutsideColor
         {
@@ -74,7 +75,11 @@ namespace FSO.LotView.Model
             set
             {
                 _OutsideColor = value;
-                MinOut = value * (150 / 400f);
+                MinOut = value * MinOutMul;
+                if (MinOut.R == 0) MinOut.R = 1;
+                if (MinOut.G == 0) MinOut.G = 1;
+                if (MinOut.B == 0) MinOut.B = 1;
+                if (MinOut.A == 0) MinOut.A = 1;
                 //MinOut = value * (float)(150 / Math.Sqrt(value.R * value.R + value.G * value.G + value.B * value.B));
             }
         }

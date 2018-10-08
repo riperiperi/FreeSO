@@ -370,6 +370,8 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 }
                 foreach (var client in ClientsToDC)
                 {
+                    if (client.FatalDCMessage != null)
+                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, client.FatalDCMessage));
                     DropClient(client);
                 }
             }
@@ -404,9 +406,10 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     if (!cmd.TryDeserialize(reader, false)) return; //ignore things that should never be sent to the server
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 //corrupt commands are currently a death sentence for the client. nothing should be corrupt over TCP except in rare cases.
+                client.FatalDCMessage = "RECEIVED BAD COMMAND: " + e.ToString();
                 ClientsToDC.Add(client);
                 return;
             }

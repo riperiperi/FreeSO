@@ -60,6 +60,9 @@ namespace FSO.SimAntics.Primitives
                 // 11. Enable Build/Buy
                 // 12. Distance to camera in Temp0
                 // 13. Abort Interactions
+                case VMGenericTSOCallMode.AbortInteractions:
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+
                 // 14. House Radio Station equals Temp0 (TODO)
                 case VMGenericTSOCallMode.HouseRadioStationEqualsTemp0:
                     context.VM.SetGlobalValue(31, context.Thread.TempRegisters[0]);
@@ -303,8 +306,22 @@ namespace FSO.SimAntics.Primitives
                     if (context.StackObject.GetValue(VMStackObjectVariable.LightingContribution) > 0)
                         context.VM.Context.RefreshLighting(context.VM.Context.GetObjectRoom(context.StackObject), true, new HashSet<ushort>());
                     return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.FSOAbortAllInteractions: //129
+                    //aborts all of the interactions of the stack object
+                    //a few rules:
+                    //if we're interacting with the go here object, set us as interruptable (since by default, go here is not)
+                    var sthread = context.StackObject.Thread;
+                    if (sthread.ActiveAction?.Callee?.Object?.GUID == 0x000007C4)
+                    {
+                        (context.StackObject as VMAvatar)?.SetPersonData(VMPersonDataVariable.NonInterruptable, 0);
+                    }
 
-                //TODO: may need to update in global server
+                    var actionClone = new List<VMQueuedAction>(sthread.Queue);
+                    foreach (var action in actionClone)
+                    {
+                        sthread.CancelAction(action.UID);
+                    }
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
             }

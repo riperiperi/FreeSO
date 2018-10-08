@@ -147,6 +147,21 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         vm.Context.Clock.Minutes = int.Parse(timesplit[1]);
                         vm.Context.Clock.MinuteFractions = 0;
                         break;
+                    case "tuning":
+                        var tuningsplit = args.Split(' ');
+                        if (tuningsplit.Length < 4) return true;
+                        vm.Tuning.AddTuning(new Common.Model.DynTuningEntry()
+                        {
+                            tuning_type = tuningsplit[0],
+                            tuning_table = int.Parse(tuningsplit[1]),
+                            tuning_index = int.Parse(tuningsplit[2]),
+                            value = float.Parse(tuningsplit[3]),
+                        });
+                        vm.SendCommand(new VMNetTuningCmd()
+                        {
+                            Tuning = vm.Tuning
+                        });
+                        break;
                 }
                 return true;
             }
