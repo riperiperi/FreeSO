@@ -18,8 +18,8 @@ namespace FSO.Common.Audio
         private int LastChunkSize = 1; //don't die immediately..
         private Thread DecoderThread;
 
-        private List<byte[]> NextBuffers;
-        private List<int> NextSizes;
+        private List<byte[]> NextBuffers = new List<byte[]>();
+        private List<int> NextSizes = new List<int>();
         private int Requests;
         private AutoResetEvent DecodeNext;
         private AutoResetEvent BufferDone;
@@ -65,9 +65,6 @@ namespace FSO.Common.Audio
                 }
                 Inst.Volume = _Volume;
                 Inst.Pan = _Pan;
-
-                NextBuffers = new List<byte[]>();
-                NextSizes = new List<int>();
                 Requests = 1;
             }
 

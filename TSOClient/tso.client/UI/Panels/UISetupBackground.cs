@@ -32,7 +32,7 @@ namespace FSO.Client.UI.Panels
             Texture2D setupTex;
             if (File.Exists("Content/setup.png"))
             {
-                using (var logostrm = File.Open("Content/setup.png", FileMode.Open))
+                using (var logostrm = File.Open("Content/setup.png", FileMode.Open, FileAccess.Read, FileShare.Read))
                     setupTex = ImageLoader.FromStream(GameFacade.GraphicsDevice, logostrm);
             }
             else setupTex = GetTexture((ulong)FileIDs.UIFileIDs.setup);

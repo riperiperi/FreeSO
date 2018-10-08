@@ -36,7 +36,8 @@ namespace FSO.Client.UI.Controls
         private float m_Height;
 
         public UIImage()
-        { 
+        {
+
         }
 
         public UIImage(Texture2D Texture)

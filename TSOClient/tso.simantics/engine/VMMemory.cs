@@ -316,7 +316,19 @@ namespace FSO.SimAntics.Engine.Utils
                     //all of them are enabled, dont really care right now
 
                 case VMVariableScope.MyAvatarID: //59
-                    return 0;
+                    uint myPID;
+                    if (data < 2) myPID = context.Caller.PersistID;
+                    else myPID = context.StackObject.PersistID;
+                    switch (data)
+                    {
+                        case 0:
+                        case 2:
+                            return (short)myPID;
+                        case 1:
+                        case 3:
+                            return (short)(myPID >> 16);
+                        default: return 0;
+                    }
 
             }
             throw new VMSimanticsException("Unknown get variable", context);

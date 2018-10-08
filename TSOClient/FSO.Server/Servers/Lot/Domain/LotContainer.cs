@@ -652,18 +652,27 @@ namespace FSO.Server.Servers.Lot.Domain
             if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(Lot);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(Lot);
 
-            Lot.ForwardCommand(new VMNetSetTimeCmd()
+            try
             {
-                Hours = tsoTime.Item1,
-                Minutes = tsoTime.Item2,
-                Seconds = tsoTime.Item3,
-                UTCStart = DateTime.UtcNow.Ticks
-            });
+                Lot.ForwardCommand(new VMNetSetTimeCmd()
+                {
+                    Hours = tsoTime.Item1,
+                    Minutes = tsoTime.Item2,
+                    Seconds = tsoTime.Item3,
+                    UTCStart = DateTime.UtcNow.Ticks
+                });
 
-            Lot.ForwardCommand(new VMNetTuningCmd()
+                if (Lot.Tuning == null || (Lot.Tuning.GetTuning("forcedTuning", 0, 0) ?? 0f) > 0f)
+                {
+                    Lot.ForwardCommand(new VMNetTuningCmd()
+                    {
+                        Tuning = Tuning
+                    });
+                }
+            } catch (Exception e)
             {
-                Tuning = Tuning
-            });
+                LOG.Info("MYSTERY ERROR "+e.ToString());
+            }
 
             Lot.Context.UpdateTSOBuildableArea();
 

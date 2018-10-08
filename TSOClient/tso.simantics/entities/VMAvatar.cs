@@ -404,7 +404,8 @@ namespace FSO.SimAntics
             }
 
             SetMotiveData(VMMotive.SleepState, 0); //max all motives except sleep state
-            if (!context.VM.TS1 && Object.GUID != 0x7fd96b54 && context.VM.GetGlobalValue(11) > -1) SetFlag(VMEntityFlags.AllowPersonIntersection, true);
+            if (context.DisableAvatarCollision || (!context.VM.TS1 && Object.GUID != 0x7fd96b54 && context.VM.GetGlobalValue(11) > -1))
+                SetFlag(VMEntityFlags.AllowPersonIntersection, true);
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
         }
 
