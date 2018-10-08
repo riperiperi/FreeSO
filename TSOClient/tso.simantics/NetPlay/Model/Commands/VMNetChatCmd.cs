@@ -157,7 +157,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                             tuning_index = int.Parse(tuningsplit[2]),
                             value = float.Parse(tuningsplit[3]),
                         });
-                        vm.SendCommand(new VMNetTuningCmd()
+                        vm.ForwardCommand(new VMNetTuningCmd()
                         {
                             Tuning = vm.Tuning
                         });

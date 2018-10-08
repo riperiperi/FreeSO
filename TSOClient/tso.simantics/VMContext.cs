@@ -529,6 +529,7 @@ namespace FSO.SimAntics
         public bool DisableAvatarCollision;
         public void InitSpecialTuning()
         {
+            if (VM?.Tuning == null) return;
             DisableAvatarCollision = (VM.Tuning.GetTuning("special", 0, 1) ?? 0f) > 0;
             var minLight = VM.Tuning.GetTuning("special", 0, 2);
 
