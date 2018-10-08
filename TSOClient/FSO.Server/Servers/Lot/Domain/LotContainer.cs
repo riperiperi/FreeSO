@@ -660,7 +660,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 UTCStart = DateTime.UtcNow.Ticks
             });
 
-            if ((Lot.Tuning.GetTuning("forcedTuning", 0, 0) ?? 0f) > 0f)
+            if (Lot.Tuning == null || (Lot.Tuning.GetTuning("forcedTuning", 0, 0) ?? 0f) > 0f)
             {
                 Lot.ForwardCommand(new VMNetTuningCmd()
                 {
