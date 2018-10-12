@@ -47,6 +47,7 @@ namespace FSO.IDE.EditorComponent
             {45, typeof(GotoRoutingSlotDescriptor) },
             {46, typeof(SnapDescriptor) },
             {49, typeof(NotifyOutOfIdleDescriptor) },
+            {50, typeof(ChangeActionStringDescriptor) },
             {51, typeof(TS1InventoryOperationsDescriptor) },
             {62, typeof(InvokePluginDescriptor) }
         };
