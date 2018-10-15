@@ -31,7 +31,7 @@ namespace FSO.Client.Utils.GameLocator
                     }
                 }
             }
-            return @"C:\Program Files\Maxis\The Sims Online\TSOClient\".Replace('\\', '/');
+            return @"The Sims Online\TSOClient\".Replace('\\', '/');
         }
 
         private static bool is64BitProcess = (IntPtr.Size == 8);
