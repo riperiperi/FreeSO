@@ -202,6 +202,12 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
+            if (this.HistoryDialog.Opacity != GlobalSettings.Default.ChatWindowsOpacity)
+            {
+                var opacity = GlobalSettings.Default.ChatWindowsOpacity;
+                this.HistoryDialog.Opacity = opacity;
+                this.PropertyLog.Opacity = opacity;
+            }
             Inputs = state.InputManager;
             if (!VM.UseWorld || vm.FSOVAsyncLoading) return;
 

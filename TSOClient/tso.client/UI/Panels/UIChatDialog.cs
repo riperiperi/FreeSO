@@ -366,28 +366,30 @@ namespace FSO.Client.UI.Panels
         public string RenderEvent(VMChatEvent evt)
         {
             var colorBefore = "[color=lightgray]";
-            var avatarColor = "[color=#"+evt.Color.R.ToString("x2") + evt.Color.G.ToString("x2") + evt.Color.B.ToString("x2")+"][s]";
+            var avatarColor = "[color=#" + evt.Color.R.ToString("x2") + evt.Color.G.ToString("x2") + evt.Color.B.ToString("x2") + "][s]";
             var colorAfter = "[/s][/color]";
+            var timestamp = evt.Timestamp;
+            var showTimestamp = GlobalSettings.Default.ChatShowTimestamp;
             var avatar = avatarColor + evt.Text[0] + colorAfter; //avatar names cannot normally contain bbcode
             switch (evt.Type)
             {
                 case VMChatEventType.Message:
-                    return colorBefore + ((evt.Channel == null) ? "" : ("(" + evt.Channel.Name + ") "))
-                        + GameFacade.Strings.GetString("261", "8").Replace("%", avatar) 
+                    return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + ((evt.Channel == null) ? "" : ("(" + evt.Channel.Name + ") "))
+                        + GameFacade.Strings.GetString("261", "8").Replace("%", avatar)
                         + colorAfter + CleanUserMessage(evt.Text[1], evt);
                 case VMChatEventType.MessageMe:
-                    return colorBefore + ((evt.Channel == null) ? "" : ("(" + evt.Channel.Name + ") "))
-                        + GameFacade.Strings.GetString("261", "9") 
+                    return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + ((evt.Channel == null) ? "" : ("(" + evt.Channel.Name + ") "))
+                        + GameFacade.Strings.GetString("261", "9")
                         + colorAfter + CleanUserMessage(evt.Text[1], evt);
                 case VMChatEventType.Join:
-                    return colorBefore + GameFacade.Strings.GetString("261", "6").Replace("%", avatar) + colorAfter;
+                    return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + GameFacade.Strings.GetString("261", "6").Replace("%", avatar) + colorAfter;
                 case VMChatEventType.Leave:
-                    return colorBefore + GameFacade.Strings.GetString("261", "7").Replace("%", avatar) + colorAfter;
+                    return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + GameFacade.Strings.GetString("261", "7").Replace("%", avatar) + colorAfter;
                 case VMChatEventType.Arch:
-                    return colorBefore + "<" + avatar + " (" + evt.Text[1] + ")" + "> " + evt.Text[2] + colorAfter;
+                    return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + "<" + avatar + " (" + evt.Text[1] + ")" + "> " + evt.Text[2] + colorAfter;
                 case VMChatEventType.Generic:
                 case VMChatEventType.Debug:
-                    return colorBefore + GameFacade.Emojis.EmojiToBB(evt.Text[0]) + colorAfter;
+                    return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + GameFacade.Emojis.EmojiToBB(evt.Text[0]) + colorAfter;
                 default:
                     return "";
             }
