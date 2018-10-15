@@ -55,7 +55,7 @@ namespace FSO.SimAntics.Model
         EatingSurfaceValue = 38,
         DirtyLevel = 39,
         FlagField2 = 40,
-        Unused41 = 41,
+        CurrentValue = 41,
         PlacementFlags = 42,
         MovementFlags = 43, //players can move it, players can delete it, stays after evict
         MaximumGrade = 44,

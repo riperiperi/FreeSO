@@ -51,6 +51,7 @@ namespace FSO.LotView
         public static bool DirectX = false;
         public float Opacity = 1f;
         public float BackbufferScale = 1f;
+        public bool ForceAdvLight;
 
         public float SmoothZoomTimer = -1;
         public float SmoothZoomFrom = 1f;
@@ -783,6 +784,10 @@ namespace FSO.LotView
             //destroy any features that are no longer enabled.
 
             var config = WorldConfig.Current;
+            if (ForceAdvLight)
+            {
+                config.LightingMode = Math.Max(config.LightingMode, 1);
+            }
 
             if (config.AdvancedLighting)
             {

@@ -60,6 +60,11 @@ namespace FSO.Files.RC
             {"fencecarnival.iff", new DGRPRCParams() { CounterFix = true } },
             {"fencesspellbound.iff", new DGRPRCParams() { CounterFix = true } },
             {"columnarchmagic.iff", new DGRPRCParams() { CounterFix = true } },
+
+            {"awnings.iff", new DGRPRCParams() { CounterFix = true } },
+            {"awnings3.iff", new DGRPRCParams() { CounterFix = true } },
+            {"awnings4.iff", new DGRPRCParams() { CounterFix = true } },
+            {"awningthatch.iff", new DGRPRCParams() { CounterFix = true } }
         };
 
         //STATIC: multithreading for 
