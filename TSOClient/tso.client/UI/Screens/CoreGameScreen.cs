@@ -216,7 +216,7 @@ namespace FSO.Client.UI.Screens
 
         public CoreGameScreen() : base()
         {
-            DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0, 0);
+            DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0, 0, GlobalSettings.Default.PrivacyOn);
             StateChanges = new Queue<SimConnectStateChange>();
             /**
             * Music
@@ -724,12 +724,15 @@ namespace FSO.Client.UI.Screens
             Title.SetTitle(title);
             if (lastLotTitle != title)
             {
+                bool isPrivate = false;
+                if (GlobalSettings.Default.PrivacyOn) isPrivate = true;
                 DiscordRpcEngine.SendFSOPresence(
                     vm.LotName,
                     (int)FindController<CoreGameScreenController>().GetCurrentLotID(),
                     vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0),
                     vm.LotName.StartsWith("{job:") ? 4 : 24,
-                    vm.TSOState.PropertyCategory
+                    vm.TSOState.PropertyCategory,
+                    isPrivate
                     );
                 lastLotTitle = title;
             }
