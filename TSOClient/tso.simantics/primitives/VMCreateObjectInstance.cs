@@ -111,10 +111,12 @@ namespace FSO.SimAntics.Engine.Primitives
                 guid = neigh.GUID;
             }
 
-            if (operand.NoDuplicate) {
+            if (operand.NoDuplicate && operand.Position != VMCreateObjectPosition.InMyHand && operand.Position != VMCreateObjectPosition.InSlot0OfStackObject) {
                 var objs = context.VM.Context.ObjectQueries.GetObjectsAt(tpos);
                 if (objs != null && objs.Any(x => x.Object.GUID == guid))
+                {
                     return VMPrimitiveExitCode.GOTO_FALSE;
+                }
             }
 
             var mobj = context.VM.Context.CreateObjectInstance(guid, tpos, dir,
