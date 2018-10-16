@@ -49,40 +49,50 @@ namespace FSO.UI.Model
             }
         }
 
-        public static void SendFSOPresence(string lotName, int lotID, int players, int maxSize, int catID)
+        public static void SendFSOPresence(string lotName, int lotID, int players, int maxSize, int catID, bool isPrivate = false)
         {
             if (!Active) return;
             var presence = new DiscordRpc.RichPresence();
-            if (lotName?.StartsWith("{job:") == true)
+
+            if (!isPrivate)
             {
-                var split = lotName.Split(':');
-                if (split.Length > 2)
+                if (lotName?.StartsWith("{job:") == true)
                 {
-                    switch (split[1])
+                    var split = lotName.Split(':');
+                    if (split.Length > 2)
                     {
-                        case "0":
-                            presence.state = "Playing Robot Factory Job";
-                            break;
-                        case "1":
-                            presence.state = "Playing Restaurant Job";
-                            break;
-                        default:
-                            presence.state = "Playing A Job Lot";
-                            break;
+                        switch (split[1])
+                        {
+                            case "0":
+                                presence.state = "Playing Robot Factory Job";
+                                break;
+                            case "1":
+                                presence.state = "Playing Restaurant Job";
+                                break;
+                            default:
+                                presence.state = "Playing A Job Lot";
+                                break;
+                        }
+                        presence.details = "Level " + split[2];
                     }
-                    presence.details = "Level " + split[2];
+                    else
+                    {
+                        presence.state = "Playing a Job Lot";
+                    }
                 }
-                else
-                {
-                    presence.state = "Playing a Job Lot";
-                }
+                else presence.state = (lotName == null) ? "Idle in city" : "In Lot: " + lotName;
             }
-            else presence.state = (lotName == null) ? "Idle in city" : "In Lot: " + lotName;
+            else
+            {
+                presence.state = "Online";
+                presence.details = "Privacy On";
+            }
+            
 
             presence.largeImageKey = "sunrise_crater";
             presence.largeImageText = "Sunrise Crater";
 
-            if (lotName != null)
+            if (lotName != null && !isPrivate)
             {
                 presence.joinSecret = lotID + "#" + lotName;
                 //presence.matchSecret = lotID + "#" + lotName+".";
