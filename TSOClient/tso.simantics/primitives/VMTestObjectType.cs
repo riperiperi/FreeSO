@@ -23,7 +23,7 @@ namespace FSO.SimAntics.Primitives
             var operand = (VMTestObjectTypeOperand)args;
             var objectID = VMMemory.GetVariable(context, operand.IdOwner, operand.IdData);
 
-            var obj = context.VM.GetObjectById(objectID);
+            var obj = (operand.IdOwner == VMVariableScope.StackObjectID)?context.StackObject:context.VM.GetObjectById(objectID);
             //var obj = context.StackObject;
             if (obj == null){
                 return VMPrimitiveExitCode.ERROR;

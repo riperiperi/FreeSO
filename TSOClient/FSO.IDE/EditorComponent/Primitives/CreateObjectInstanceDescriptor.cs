@@ -39,6 +39,7 @@ namespace FSO.IDE.EditorComponent.Primitives
 
             var flagStr = new StringBuilder();
             string prepend = "";
+            if (op.NoDuplicate) { flagStr.Append(prepend + "Do not Duplicate"); prepend = ", "; }
             if (op.PassObjectIds) { flagStr.Append(prepend + "Pass Object IDs to main"); prepend = ", "; }
             if (op.PassTemp0) { flagStr.Append(prepend + "Pass Temp 0 to main"); prepend = ", "; }
             if (op.PersistInDB) { flagStr.Append(prepend + "Persist in Database");  prepend = ", "; }
