@@ -7,6 +7,7 @@ using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.Electron.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.UI.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -666,12 +667,37 @@ namespace FSO.Client.UI.Panels
                             if (CurrentAvatar.Value != null) {
                                 CurrentAvatar.Value.Avatar_PrivacyMode = toggleValue;
                                 FindController<PersonPageController>().SaveValue(CurrentAvatar.Value, "Avatar_PrivacyMode");
+                                GlobalSettings.Default.PrivacyOn = (toggleValue > 0) ? true : false;
+                                GlobalSettings.Default.Save();
+                                UpdatePresence();
+                                //vm?.LotName
                             }
                             UIScreen.RemoveDialog(alert);
                             }),
                         new UIAlertButton(UIAlertButtonType.No, (btn) => UIScreen.RemoveDialog(alert))
                         },
                 }, true);
+            }
+        }
+
+        private void UpdatePresence()
+        {
+            var gc = FindController<CoreGameScreenController>();
+            var privacyOn = GlobalSettings.Default.PrivacyOn;
+            try
+            {
+
+                DiscordRpcEngine.SendFSOPresence(
+                    gc.Screen.vm.LotName,
+                    (int)gc.GetCurrentLotID(),
+                    gc.Screen.vm.Entities.Count(x => x is SimAntics.VMAvatar && x.PersistID != 0),
+                    gc.Screen.vm.LotName.StartsWith("{job:") ? 4 : 24,
+                    gc.Screen.vm.TSOState.PropertyCategory,
+                    privacyOn);
+            }
+            catch
+            {
+                DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0, 0, privacyOn);
             }
         }
 
@@ -968,6 +994,12 @@ namespace FSO.Client.UI.Panels
             {
                 FindSimButton.Texture = (privacyOn) ? FindPrivacyOnButtonImage : FindPrivacyOffButtonImage;
                 FindSimButton.Tooltip = GameFacade.Strings.GetString("189", (privacyOn) ? "57" : "56");
+                if (GlobalSettings.Default.PrivacyOn != privacyOn)
+                {
+                    GlobalSettings.Default.PrivacyOn = privacyOn;
+                    GlobalSettings.Default.Save();
+                    UpdatePresence();
+                }
             }
             FriendRimImage.Visible = isOnline && isFriend;
             EnemyRimImage.Visible = isOnline && isEnemy;
