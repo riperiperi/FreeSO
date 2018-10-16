@@ -82,7 +82,8 @@ namespace FSO.Client
 
             { "ChatOnlyEmoji", "false" },
             { "ChatShowTimestamp", "false" },
-            { "ChatWindowsOpacity", "0.8" }
+            { "ChatWindowsOpacity", "0.8" },
+            { "PrivacyOn", "false" }
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -142,6 +143,7 @@ namespace FSO.Client
         public bool ChatOnlyEmoji { get; set; }
         public bool ChatShowTimestamp { get; set; }
         public float ChatWindowsOpacity { get; set; }
+        public bool PrivacyOn { get; set; }
 
         public static int TARGET_COMPAT_STATE = 2;
     }
