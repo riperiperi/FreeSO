@@ -541,9 +541,14 @@ namespace FSO.SimAntics
                 }
             }
 
-            if (minLight != null && VM.UseWorld)
+            if (VM.UseWorld)
             {
-                Blueprint.MinOutMul = minLight.Value;
+                World.ForceAdvLight = (VM.Tuning.GetTuning("special", 0, 3) ?? 0f) > 0;
+                if (World.ForceAdvLight && WorldConfig.Current.LightingMode == 0) World.ChangedWorldConfig(World.State.Device);
+                if (minLight != null && VM.UseWorld)
+                {
+                    Blueprint.MinOutMul = minLight.Value;
+                }
             }
         }
 

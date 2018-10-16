@@ -10,6 +10,7 @@ namespace FSO.SimAntics.Model
     public class VMHeadlineRenderer
     {
         protected VMRuntimeHeadline Headline;
+        public virtual bool IsMoney { get => false; }
 
         public VMHeadlineRenderer(VMRuntimeHeadline headline) {
             Headline = headline;

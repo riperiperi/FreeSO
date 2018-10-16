@@ -109,7 +109,7 @@ namespace FSO.SimAntics.Engine
             temp.ActionStrings = actionStrings; //generate and place action strings in here
             temp.Push(initFrame);
             if (action != null) temp.Queue.Add(action); //this check runs an action. We may need its interaction number, etc.
-            while (temp.Stack.Count > 0 && temp.DialogCooldown == 0) //keep going till we're done! idling is for losers!
+            while (temp.Stack.Count > 0 && temp.DialogCooldown == 0 && !temp.Entity.Dead) //keep going till we're done! idling is for losers!
             {
                 temp.Tick();
                 temp.ThreadBreak = VMThreadBreakMode.Active; //cannot breakpoint in check trees

@@ -11,6 +11,7 @@ using System.Text;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Content;
 using FSO.SimAntics.Marshals.Threads;
+using FSO.SimAntics.Primitives;
 
 namespace FSO.SimAntics.Engine
 {
@@ -41,7 +42,8 @@ namespace FSO.SimAntics.Engine
 
         //type 2 will be function callback.
 
-        public void Run(VMEntity cbOwner) {
+        public bool Run(VMEntity cbOwner) {
+            if (Target == null) return false;
             if (type == 1) {
                 BHAV bhav;
                 GameObject CodeOwner = null;
@@ -66,28 +68,55 @@ namespace FSO.SimAntics.Engine
                 }
 
                 var routine = Target.GetRoutineWithOwner(ActionID, vm.Context)?.routine;
-                if (routine == null) return; //???
+                if (routine == null) return false; //???
                 if (IsTree) ActionName = routine.Chunk.ChunkLabel;
 
                 CodeOwner = Target.Object;
                 var args = new short[4];
                 if (SetParam) args[0] = cbOwner.ObjectID;
 
-                Caller.Thread.EnqueueAction(
-                    new FSO.SimAntics.Engine.VMQueuedAction
-                    {
-                        Callee = Target,
-                        CodeOwner = CodeOwner,
-                        ActionRoutine = routine,
-                        Name = ActionName,
-                        StackObject = this.StackObject,
-                        Args = args,
-                        InteractionNumber = Interaction,
-                        Priority = (short)VMQueuePriority.Maximum, //not sure if this is meant to be the case!
+
+                if (true)
+                {
+                    //we can't rely on objects to run their callback functions, as they don't usually allow push
+                    //plus objects shouldn't really be able to run interactions in ts1 anyways, that's a freeso thing
+
+                    //we should probably find a better way to do this. here's a list of what we know:
+                    // - routine MUST be ran with the same caller.
+                    // - temp[0] in caller must contain the created object ID.
+                    // - object shouldn't have to wait for allow push to run the callback (so probably not an interaction)
+                    // (from below examples)
+                    // - args are passed in as requested. arg[0] also contains the created object ID.
+                    // - i can't remember, but the callback may need to run over multiple ticks. we need to list all occurances of this
+                    //   and study them carefully.
+                    Caller.Thread.TempRegisters[0] = cbOwner.ObjectID;
+
+                    Caller.Thread.ExecuteSubRoutine(Caller.Thread.Stack.Last(), routine, CodeOwner, new VMSubRoutineOperand(args));
+
+                    return true;
+                    //Caller.Thread.RunInMyStack(routine, CodeOwner, args, StackObject);
+                }
+                else
+                {
+
+                    Caller.Thread.EnqueueAction(
+                        new FSO.SimAntics.Engine.VMQueuedAction
+                        {
+                            Callee = Target,
+                            CodeOwner = CodeOwner,
+                            ActionRoutine = routine,
+                            Name = ActionName,
+                            StackObject = this.StackObject,
+                            Args = args,
+                            InteractionNumber = Interaction,
+                            Priority = (short)VMQueuePriority.Maximum, //not sure if this is meant to be the case!
                         Flags = ActionFlags
-                    }
-                );
+                        }
+                    );
+                    return false;
+                }
             }
+            return false;
         }
 
         #region VM Marshalling Functions
