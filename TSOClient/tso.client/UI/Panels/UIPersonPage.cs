@@ -684,10 +684,12 @@ namespace FSO.Client.UI.Panels
         {
             var gc = FindController<CoreGameScreenController>();
             var privacyOn = GlobalSettings.Default.PrivacyOn;
+            var avatarName = gc.Screen.gizmo.CurrentAvatar.Value.Avatar_Name;
             try
             {
 
                 DiscordRpcEngine.SendFSOPresence(
+                    avatarName,
                     gc.Screen.vm.LotName,
                     (int)gc.GetCurrentLotID(),
                     gc.Screen.vm.Entities.Count(x => x is SimAntics.VMAvatar && x.PersistID != 0),
@@ -697,7 +699,7 @@ namespace FSO.Client.UI.Panels
             }
             catch
             {
-                DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0, 0, privacyOn);
+                DiscordRpcEngine.SendFSOPresence(avatarName, null, 0, 0, 0, 0, privacyOn);
             }
         }
 

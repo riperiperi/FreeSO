@@ -216,7 +216,6 @@ namespace FSO.Client.UI.Screens
 
         public CoreGameScreen() : base()
         {
-            DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0, 0, GlobalSettings.Default.PrivacyOn);
             StateChanges = new Queue<SimConnectStateChange>();
             /**
             * Music
@@ -516,7 +515,7 @@ namespace FSO.Client.UI.Screens
             if (vm == null) return;
 
             //clear our cache too, if the setting lets us do that
-            DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0, 0);
+            DiscordRpcEngine.SendFSOPresence(null, null, 0, 0, 0, 0);
             TimedReferenceController.Clear();
             TimedReferenceController.Clear();
 
@@ -727,6 +726,7 @@ namespace FSO.Client.UI.Screens
                 bool isPrivate = false;
                 if (GlobalSettings.Default.PrivacyOn) isPrivate = true;
                 DiscordRpcEngine.SendFSOPresence(
+                    gizmo.CurrentAvatar.Value.Avatar_Name,
                     vm.LotName,
                     (int)FindController<CoreGameScreenController>().GetCurrentLotID(),
                     vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0),

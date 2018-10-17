@@ -49,7 +49,7 @@ namespace FSO.UI.Model
             }
         }
 
-        public static void SendFSOPresence(string lotName, int lotID, int players, int maxSize, int catID, bool isPrivate = false)
+        public static void SendFSOPresence(string activeSim, string lotName, int lotID, int players, int maxSize, int catID, bool isPrivate = false)
         {
             if (!Active) return;
             var presence = new DiscordRpc.RichPresence();
@@ -64,13 +64,13 @@ namespace FSO.UI.Model
                         switch (split[1])
                         {
                             case "0":
-                                presence.state = "Playing Robot Factory Job";
+                                presence.state = activeSim + " - Playing Robot Factory Job";
                                 break;
                             case "1":
-                                presence.state = "Playing Restaurant Job";
+                                presence.state = activeSim + " - Playing Restaurant Job";
                                 break;
                             default:
-                                presence.state = "Playing A Job Lot";
+                                presence.state = activeSim + " - Playing A Job Lot";
                                 break;
                         }
                         presence.details = "Level " + split[2];
@@ -80,7 +80,7 @@ namespace FSO.UI.Model
                         presence.state = "Playing a Job Lot";
                     }
                 }
-                else presence.state = (lotName == null) ? "Idle in city" : "In Lot: " + lotName;
+                else presence.state = activeSim + " - " + ((lotName == null) ? "Idle in city" : "In Lot: " + lotName);
             }
             else
             {
