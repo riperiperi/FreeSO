@@ -31,7 +31,7 @@ namespace FSO.Client.Controllers
             {
                 if (!x.IsFaulted){
                     Gizmo.CurrentAvatar.Value = x.Result;
-                    FSO.UI.Model.DiscordRpcEngine.SendFSOPresence(Gizmo.CurrentAvatar.Value.Avatar_Name, null, 0, 0, 0, 0, GlobalSettings.Default.PrivacyOn);
+                    FSO.UI.Model.DiscordRpcEngine.SendFSOPresence(x.Result.Avatar_Name, null, 0, 0, 0, 0, x.Result.Avatar_PrivacyMode > 0);
                 }
             });
         }

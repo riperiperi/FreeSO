@@ -667,10 +667,7 @@ namespace FSO.Client.UI.Panels
                             if (CurrentAvatar.Value != null) {
                                 CurrentAvatar.Value.Avatar_PrivacyMode = toggleValue;
                                 FindController<PersonPageController>().SaveValue(CurrentAvatar.Value, "Avatar_PrivacyMode");
-                                GlobalSettings.Default.PrivacyOn = (toggleValue > 0) ? true : false;
-                                GlobalSettings.Default.Save();
-                                UpdatePresence();
-                                //vm?.LotName
+                                UpdatePresence(toggleValue > 0);
                             }
                             UIScreen.RemoveDialog(alert);
                             }),
@@ -680,27 +677,21 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        private void UpdatePresence()
+        private void UpdatePresence( bool enabled)
         {
-            var gc = FindController<CoreGameScreenController>();
-            var privacyOn = GlobalSettings.Default.PrivacyOn;
-            var avatarName = gc.Screen.gizmo.CurrentAvatar.Value.Avatar_Name;
-            try
-            {
-
+            var vm = FindController<CoreGameScreenController>().Screen.vm;
+            var avatarName = CurrentAvatar.Value.Avatar_Name;
+           if (vm != null) {
                 DiscordRpcEngine.SendFSOPresence(
                     avatarName,
-                    gc.Screen.vm.LotName,
-                    (int)gc.GetCurrentLotID(),
-                    gc.Screen.vm.Entities.Count(x => x is SimAntics.VMAvatar && x.PersistID != 0),
-                    gc.Screen.vm.LotName.StartsWith("{job:") ? 4 : 24,
-                    gc.Screen.vm.TSOState.PropertyCategory,
-                    privacyOn);
+                    vm.LotName,
+                    (int)FindController<CoreGameScreenController>().GetCurrentLotID(),
+                    vm.Entities.Count(x => x is SimAntics.VMAvatar && x.PersistID != 0),
+                    vm.LotName.StartsWith("{job:") ? 4 : 24,
+                    vm.TSOState.PropertyCategory,
+                    enable);
             }
-            catch
-            {
-                DiscordRpcEngine.SendFSOPresence(avatarName, null, 0, 0, 0, 0, privacyOn);
-            }
+            else DiscordRpcEngine.SendFSOPresence(avatarName, null, 0, 0, 0, 0, enabled);
         }
 
         private void ShowJobInfo(UIElement button)
@@ -996,12 +987,6 @@ namespace FSO.Client.UI.Panels
             {
                 FindSimButton.Texture = (privacyOn) ? FindPrivacyOnButtonImage : FindPrivacyOffButtonImage;
                 FindSimButton.Tooltip = GameFacade.Strings.GetString("189", (privacyOn) ? "57" : "56");
-                if (GlobalSettings.Default.PrivacyOn != privacyOn)
-                {
-                    GlobalSettings.Default.PrivacyOn = privacyOn;
-                    GlobalSettings.Default.Save();
-                    UpdatePresence();
-                }
             }
             FriendRimImage.Visible = isOnline && isFriend;
             EnemyRimImage.Visible = isOnline && isEnemy;

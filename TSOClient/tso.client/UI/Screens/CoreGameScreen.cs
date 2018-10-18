@@ -724,7 +724,7 @@ namespace FSO.Client.UI.Screens
             if (lastLotTitle != title)
             {
                 bool isPrivate = false;
-                if (GlobalSettings.Default.PrivacyOn) isPrivate = true;
+                if (gizmo.CurrentAvatar.Value.Avatar_PrivacyMode > 0) isPrivate = true;
                 DiscordRpcEngine.SendFSOPresence(
                     gizmo.CurrentAvatar.Value.Avatar_Name,
                     vm.LotName,
