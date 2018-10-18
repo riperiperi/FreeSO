@@ -92,7 +92,7 @@ namespace FSO.UI.Model
                                 jobStr = "Job Lot";
                                 break;
                         }
-                        jobStr += " | Level " + split[2].Substring(0,1);
+                        jobStr += " | Level " + split[2].Trim('}');
                     }
                     else
                         jobStr = "Job Lot";
