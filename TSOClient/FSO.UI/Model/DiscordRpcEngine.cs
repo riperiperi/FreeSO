@@ -85,11 +85,14 @@ namespace FSO.UI.Model
                             case "1": // Restaurant
                                 jobStr = "Restaurant";
                                 break;
+                            case "2": // Nightclub
+                                jobStr = "Nightclub";
+                                break;
                             default: // Other
                                 jobStr = "Job Lot";
                                 break;
                         }
-                        jobStr += " | Level " + split[2];
+                        jobStr += " | Level " + split[2].Substring(0,1);
                     }
                     else
                         jobStr = "Job Lot";
