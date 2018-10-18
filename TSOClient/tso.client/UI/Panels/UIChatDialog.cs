@@ -30,7 +30,7 @@ namespace FSO.Client.UI.Panels
 
         public byte ShowChannels = 255;
 
-        private int chatSize = 8;
+        private int chatSize = GlobalSettings.Default.ChatDeltaScale;
 
         public int Visitors;
         public string LotName = "Test Lot";
@@ -95,6 +95,7 @@ namespace FSO.Client.UI.Panels
             Categories = new UIChatCategoryList(this);
             Categories.Position = new Vector2(31, 29);
             Add(Categories);
+            ChangeSizeTo(new Vector2(GlobalSettings.Default.ChatSizeX, GlobalSettings.Default.ChatSizeY));
         }
 
         private ITTSContext GetOrCreateTTS()
@@ -172,6 +173,11 @@ namespace FSO.Client.UI.Panels
                     m_doDrag = false;
                     m_doResizeX = false;
                     m_doResizeY = false;
+                    GlobalSettings.Default.ChatSizeX = this.Size.X;
+                    GlobalSettings.Default.ChatSizeY = this.Size.Y;
+                    GlobalSettings.Default.ChatLocationX = this.X;
+                    GlobalSettings.Default.ChatLocationY = this.Y;
+                    GlobalSettings.Default.Save();
                     break;
             }
         }
@@ -296,7 +302,7 @@ namespace FSO.Client.UI.Panels
 
         public void ResizeChatDialogByDelta(int delta)
         {
-            if (chatSize + delta < 7 || chatSize + delta > 11)
+            if (chatSize + delta < 7 || chatSize + delta > 14)
             {
                 return;
             }
@@ -308,6 +314,8 @@ namespace FSO.Client.UI.Panels
             ChatEntryTextEdit.ComputeDrawingCommands();
             ChatHistoryText.ComputeDrawingCommands();
             Invalidate();
+            GlobalSettings.Default.ChatDeltaScale = chatSize;
+            GlobalSettings.Default.Save();
         }
 
         public void RenderTitle()

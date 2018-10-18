@@ -79,9 +79,13 @@ namespace FSO.Client
 
             { "ChatColor", "0" }, //uint packed color. 0 means choose random
             { "ChatTTSPitch", "0" }, //-100 to 100
-
             { "ChatOnlyEmoji", "false" },
             { "ChatShowTimestamp", "false" },
+            { "ChatSizeX", "400" },
+            { "ChatSizeY", "255" },
+            {"ChatLocationX", "20" },
+            {"ChatLocationY", "20" },
+            {"ChatDeltaScale", "8" },
             { "ChatWindowsOpacity", "0.8" }
         };
         public override Dictionary<string, string> DefaultValues
@@ -141,6 +145,11 @@ namespace FSO.Client
         public int ChatTTSPitch { get; set; }
         public bool ChatOnlyEmoji { get; set; }
         public bool ChatShowTimestamp { get; set; }
+        public float ChatSizeX { get; set; }
+        public float ChatSizeY { get; set; }
+        public float ChatLocationX { get; set; }
+        public float ChatLocationY { get; set; }
+        public int ChatDeltaScale { get; set; }
         public float ChatWindowsOpacity { get; set; }
 
         public static int TARGET_COMPAT_STATE = 2;
