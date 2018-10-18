@@ -681,7 +681,7 @@ namespace FSO.Client.UI.Panels
         {
             var vm = FindController<CoreGameScreenController>().Screen.vm;
             var avatarName = CurrentAvatar.Value.Avatar_Name;
-           if (vm != null) {
+            if (vm != null) {
                 DiscordRpcEngine.SendFSOPresence(
                     avatarName,
                     vm.LotName,
@@ -689,7 +689,7 @@ namespace FSO.Client.UI.Panels
                     vm.Entities.Count(x => x is SimAntics.VMAvatar && x.PersistID != 0),
                     vm.LotName.StartsWith("{job:") ? 4 : 24,
                     vm.TSOState.PropertyCategory,
-                    enable);
+                    enabled);
             }
             else DiscordRpcEngine.SendFSOPresence(avatarName, null, 0, 0, 0, 0, enabled);
         }
