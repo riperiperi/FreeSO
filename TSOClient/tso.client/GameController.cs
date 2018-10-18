@@ -239,7 +239,7 @@ namespace FSO.Client
 
         public void GotoCAS(){
             ChangeState<PersonSelectionEdit, PersonSelectionEditController>((view, controller) => {
-                DiscordRpcEngine.SendFSOPresence("Creating a New Sim");
+                
             });
         }
 
