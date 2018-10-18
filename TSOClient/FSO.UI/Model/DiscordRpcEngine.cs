@@ -48,7 +48,22 @@ namespace FSO.UI.Model
                 Disable = true;
             }
         }
+        // Method for other game screens
+        public static void SendFSOPresence(string state, string details = null)
+        {
 
+            if (!Active) return; // RPC not active
+            var presence = new DiscordRpc.RichPresence();
+            
+            presence.largeImageKey = "sunrise_crater";
+            presence.largeImageText = "Sunrise Crater";
+
+            presence.state = state;
+            presence.details = details == null ? "" : details;
+
+            DiscordRpc.UpdatePresence(ref presence);
+        }
+        // Standard DiscordRpc presence method
         public static void SendFSOPresence(string activeSim, string lotName, int lotID, int players, int maxSize, int catID, bool isPrivate = false)
         {
             if (!Active) return;
@@ -58,34 +73,48 @@ namespace FSO.UI.Model
             {
                 if (lotName?.StartsWith("{job:") == true)
                 {
+                    var jobStr = "";
                     var split = lotName.Split(':');
                     if (split.Length > 2)
                     {
                         switch (split[1])
                         {
-                            case "0":
-                                presence.state = activeSim + " - Playing Robot Factory Job";
+                            case "0": // Robot Factory
+                                jobStr = "Robot Factory";
                                 break;
-                            case "1":
-                                presence.state = activeSim + " - Playing Restaurant Job";
+                            case "1": // Restaurant
+                                jobStr = "Restaurant";
                                 break;
-                            default:
-                                presence.state = activeSim + " - Playing A Job Lot";
+                            default: // Other
+                                jobStr = "Job Lot";
                                 break;
                         }
-                        presence.details = "Level " + split[2];
+                        jobStr += " | Level " + split[2];
                     }
                     else
-                    {
-                        presence.state = "Playing a Job Lot";
-                    }
+                        jobStr = "Job Lot";
+                    if (activeSim != null) presence.details = "Playing as " + activeSim;
+                    presence.state = jobStr;
                 }
-                else presence.state = activeSim + " - " + ((lotName == null) ? "Idle in city" : "In Lot: " + lotName);
+                else
+                {
+                    if (activeSim == null)
+                    {
+                        presence.state = lotName ?? "Idle in City";
+                        presence.details = "";
+                    }                       
+                    else
+                    {
+                        presence.details = "Playing as " + activeSim;
+                        presence.state = lotName ?? "Idle in City";
+                    }
+                }                
+                
             }
             else
             {
                 presence.state = "Online";
-                presence.details = "Privacy On";
+                presence.details = "Privacy Enabled";
             }
             
 
