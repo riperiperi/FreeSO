@@ -301,7 +301,7 @@ namespace FSO.Server.Servers.Lot.Domain
                         CleanLot();
                         Lot.Reset();
 
-                        if (File.GetCreationTimeUtc(path) < new DateTime(2018, 10, 19, 12, 00, 00))
+                        if (File.GetCreationTimeUtc(path) < new DateTime(2018, 10, 20, 12, 00, 00))
                         {
                             ResetObjectValues();
                         } 
@@ -395,7 +395,8 @@ namespace FSO.Server.Servers.Lot.Domain
                     //though we don't want to return value to objects with 0
                     //the best we can do is reset them to maximum sale price
                     
-                    var item = catalog.GetItemByGUID(obj.Object.OBJ.GUID);
+                    
+                    var item = catalog.GetItemByGUID((obj.MasterDefinition ?? obj.Object.OBJ).GUID);
                     if (item != null)
                     {
                         var price = (int)item.Value.Price;
