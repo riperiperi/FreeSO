@@ -515,7 +515,7 @@ namespace FSO.Client.UI.Screens
             if (vm == null) return;
 
             //clear our cache too, if the setting lets us do that
-            DiscordRpcEngine.SendFSOPresence(null, null, 0, 0, 0, 0);
+            DiscordRpcEngine.SendFSOPresence(gizmo.CurrentAvatar.Value.Avatar_Name, null, 0, 0, 0, 0, gizmo.CurrentAvatar.Value.Avatar_PrivacyMode > 0);
             TimedReferenceController.Clear();
             TimedReferenceController.Clear();
 
