@@ -15,8 +15,10 @@ namespace FSO.Client.UI.Panels
 {
     public class UILotPurchaseDialog : UIDialog
     {
-        private Regex VALIDATE_NUMERIC = new Regex(".*[0-9]+.*");
-        private Regex VALIDATE_SPECIAL_CHARS = new Regex("[a-z|A-Z|-| |']*");
+        private Regex VALIDATE_NUMERIC = new Regex("[^0-9]+");
+        private Regex VALIDATE_SPECIAL_CHARS = new Regex("[a-zA-Z '-]*");
+        private Regex VALIDATE_APOSTROPHES = new Regex("[^']*'?[^']*");
+        private Regex VALIDATE_DASHES = new Regex("[^-]*-?[^-]*");
 
         public UITextEdit NameTextEdit { get; set; }
         public UIValidationMessages<string> NameTextEditValidation { get; set; }
@@ -53,9 +55,9 @@ namespace FSO.Client.UI.Panels
             NameTextEditValidation = new UIValidationMessages<string>()
                 .WithValidation(InvalidNameErrorShort, x => x.Length < 3)
                 .WithValidation(InvalidNameErrorLong, x => x.Length > 24)
-                .WithValidation(InvalidNameErrorNumeric, x => VALIDATE_NUMERIC.IsMatch(x))
-                .WithValidation(InvalidNameErrorApostrophe, x => x.Split(new char[] { '\'' }).Length > 1)
-                .WithValidation(InvalidNameErrorDash, x => x.Split(new char[] { '-' }).Length > 1)
+                .WithValidation(InvalidNameErrorNumeric, x => !VALIDATE_NUMERIC.IsMatch(x))
+                .WithValidation(InvalidNameErrorApostrophe, x => !VALIDATE_APOSTROPHES.IsMatch(x))
+                .WithValidation(InvalidNameErrorDash, x => !VALIDATE_DASHES.IsMatch(x))
                 .WithValidation(InvalidNameErrorSpecial, x => !VALIDATE_SPECIAL_CHARS.IsMatch(x));
 
             NameTextEditValidation.ErrorPrefix = InvalidNameErrorTitle;
