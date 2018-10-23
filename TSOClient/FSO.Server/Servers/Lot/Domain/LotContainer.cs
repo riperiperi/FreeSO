@@ -301,7 +301,7 @@ namespace FSO.Server.Servers.Lot.Domain
                         CleanLot();
                         Lot.Reset();
 
-                        if (File.GetCreationTimeUtc(path) < new DateTime(2018, 10, 20, 12, 00, 00))
+                        if (File.GetCreationTimeUtc(path) < new DateTime(2018, 10, 23, 12, 00, 00))
                         {
                             ResetObjectValues();
                         } 
