@@ -25,6 +25,7 @@ namespace FSO.Client.UI.Panels.EODs
         Normal,
         Tall,
         TallTall,
+        ExtraTall,
         Trade
     }
 

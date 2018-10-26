@@ -20,6 +20,7 @@ using FSO.SimAntics.NetPlay.EODs.Model;
 using FSO.LotView.Components;
 using FSO.LotView;
 using FSO.Common;
+using FSO.Content.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
@@ -53,10 +54,12 @@ namespace FSO.Client.UI.Panels
         public Texture2D EODPanelImg { get; set; }
         public Texture2D EODPanelTallImg { get; set; }
         public Texture2D EODDoublePanelTallImg { get; set; }
+        private Texture2D EODPanelExtraTallImg;
 
         public UIImage EODPanel { get; set; }
         public UIImage EODPanelTall { get; set; }
         public UIImage EODDoublePanelTall { get; set; }
+        private UIImage EODPanelExtraTall;
 
         public UIImage EODButtonLayout { get; set; }
         public UIImage EODTopButtonLayout { get; set; }
@@ -114,6 +117,7 @@ namespace FSO.Client.UI.Panels
         public UIImage EODImage;
         public Texture2D DefaultBGImage;
         private bool Small800;
+        private bool ExtraTallInitialized;
 
         public UILiveMode (UILotControl lotController) {
             Small800 = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
@@ -166,12 +170,26 @@ namespace FSO.Client.UI.Panels
             EODPanelTall = new UIImage(EODPanelTallImg);
             EODDoublePanelTall = new UIImage(EODDoublePanelTallImg);
 
+            // get extra tall
+            try
+            {
+                var gd = EODDoublePanelTallImg.GraphicsDevice;
+                AbstractTextureRef extraTallRef = new FileTextureRef("Content/Textures/EOD/lpanel_eodpanelextratall.png");
+                EODPanelExtraTallImg = extraTallRef.Get(gd);
+                ExtraTallInitialized = true;
+            }
+            catch (Exception e)
+            {
+                EODPanelExtraTallImg = EODDoublePanelTallImg;
+            }
+            EODPanelExtraTall = new UIImage(EODPanelExtraTallImg);
+
             Size = new Vector2(Background.Size.X, EODPanelTall.Size.Y);
 
             AddAt(0, EODDoublePanelTall);
             AddAt(0, EODPanel);
             AddAt(0, EODPanelTall);
-
+            AddAt(0, EODPanelExtraTall);
 
             EODButtonLayout = new UIImage();
             EODSub = new UIImage();
@@ -278,6 +296,9 @@ namespace FSO.Client.UI.Panels
             bool inEOD = eodPresent && !HideEOD;
             if (ActiveEOD != null) DynamicOverlay.Remove(ActiveEOD);
 
+            if (!ExtraTallInitialized && options.Height == EODHeight.ExtraTall)
+                options.Height = EODHeight.TallTall;
+
             LastEODConfig = options;
             ActiveEOD = eod;
 
@@ -288,6 +309,7 @@ namespace FSO.Client.UI.Panels
 
             bool isTall = inEOD && (options.Height == EODHeight.Tall || options.Height == EODHeight.TallTall);
             bool isDoubleTall = inEOD && options.Height == EODHeight.TallTall;
+            bool isExtraTall = inEOD && options.Height == EODHeight.ExtraTall;
             bool isTrade = inEOD && options.Height == EODHeight.Trade;
 
 
@@ -295,8 +317,8 @@ namespace FSO.Client.UI.Panels
              * Reset / hide standard and eod UI
              */
             MoodPanelButton.Position = (eodPresent) ? EODLayout.Baseline + new Vector2(20, 7) : new Vector2(31, 63);
-            EODButtonLayout.Visible = inEOD;
-            EODSub.Visible = inEOD;
+            EODButtonLayout.Visible = inEOD && !isExtraTall;
+            EODSub.Visible = inEOD && !isExtraTall;
             EODMsgWin.Visible = inEOD && options.Tips != EODTextTips.None;
 
             EODHelpButton.Visible = inEOD;
@@ -309,9 +331,10 @@ namespace FSO.Client.UI.Panels
             EODTopSub.Visible = inEOD && options.Expandable && options.Expanded;
             EODTopButtonLayout.Visible = inEOD && options.Expandable && options.Expanded;
 
-            EODPanel.Visible = inEOD && !isTall && !isTrade;
+            EODPanel.Visible = inEOD && !isTall && !isTrade && !isExtraTall;
             EODPanelTall.Visible = inEOD && isTall;
             EODDoublePanelTall.Visible = inEOD && isDoubleTall && options.Expanded;
+            EODPanelExtraTall.Visible = inEOD && isExtraTall;
 
             EODTimer.Visible = inEOD && options.Timer == EODs.EODTimer.Normal;
             MsgWinTextEntry.Visible = inEOD && options.Tips != EODTextTips.None;
@@ -360,6 +383,7 @@ namespace FSO.Client.UI.Panels
 
                 //Close button
                 EODCloseButton.Position = EODLayout.GetChromePosition("EODCloseButton", options.Height);
+                // todo extratall
 
                 //Help button
                 EODHelpButton.Position = EODLayout.HelpButtonPosition;
@@ -399,16 +423,18 @@ namespace FSO.Client.UI.Panels
                 EODPanelTall.BlockInput();
                 EODDoublePanelTall.Position = EODLayout.GetPanelPosition(EODHeight.TallTall);
                 EODDoublePanelTall.BlockInput();
+                EODPanelExtraTall.Position = EODLayout.GetPanelPosition(EODHeight.ExtraTall);
+                EODPanelExtraTall.BlockInput();
 
                 if (isTrade)
                     Size = new Vector2(BackgroundEODTradeImg.Width, BackgroundEODTradeImg.Height);
                 else
                     Size = new Vector2(Background.Size.X, ((options.Height == EODHeight.TallTall && options.Expanded) ? (EODDoublePanelTall.Size.Y + (EODDoublePanelTall.Y - EODMsgWin.Y)) : EODPanelTall.Size.Y) - (int)EODMsgWin.Position.Y);
-                BackOffset = new Point(isTrade?22:0, -(int)EODMsgWin.Position.Y);
-                
+                BackOffset = new Point(isTrade ? 22 : 0, -(int)EODMsgWin.Position.Y);
+
 
                 //Double tall panel chrome
-                if (options.Height == EODHeight.TallTall)
+                if (options.Height == EODHeight.TallTall || options.Height == EODHeight.ExtraTall)
                 {
                     //BackOffset = new Point(0, -(int)EODDoublePanelTall.Y);
                     EODTopSub.Reset();
@@ -624,10 +650,6 @@ namespace FSO.Client.UI.Panels
             MotiveDisplay.MotiveValues[6] = SelectedAvatar.GetMotiveData(VMMotive.Social);
             MotiveDisplay.MotiveValues[7] = SelectedAvatar.GetMotiveData(VMMotive.Room);
         }
-
-
-
-
     }
 
 
@@ -637,6 +659,9 @@ namespace FSO.Client.UI.Panels
         public float ScreenBottom { get; internal set; }
         public Vector2 Baseline { get; internal set; }
         private UIScript Script;
+
+        private readonly Vector2 EODBackgroundOffsetExtraTall = new Vector2(0, 57);
+        private readonly Vector2 ExtraTallChromeOffset = new Vector2 (0, -155);
 
         public UIEODLayout(UIScript script)
         {
@@ -685,6 +710,9 @@ namespace FSO.Client.UI.Panels
                     return (Vector2)Script.GetControlProperty("EODActiveOffsetTrade");
                 case EODHeight.TallTall:
                     return (Vector2)Script.GetControlProperty("EODActiveOffsetTallTall");
+                case EODHeight.ExtraTall:
+                    return new Vector2(0, 243); // testing same as TallTall
+
             }
             throw new Exception("Unknown eod height");
         }
@@ -704,7 +732,9 @@ namespace FSO.Client.UI.Panels
             switch (height)
             {
                 case EODHeight.TallTall:
-                    return GetTopLeft(EODHeight.TallTall) + (Vector2)Script.GetControlProperty("EODBackgroundOffsetTallTall");
+                    return GetTopLeft(height) + (Vector2)Script.GetControlProperty("EODBackgroundOffsetTallTall");
+                case EODHeight.ExtraTall:
+                    return GetTopLeft(height) + EODBackgroundOffsetExtraTall;
                 default:
                     return GetTopLeft(height);
             }
@@ -733,11 +763,11 @@ namespace FSO.Client.UI.Panels
         public Vector2 GetTimerPosition(EODHeight height, bool expanded)
         {
             var topLeftHeight = height;
-            if (height == EODHeight.TallTall)
+            if (height == EODHeight.TallTall || height == EODHeight.ExtraTall)
             {
                 topLeftHeight = EODHeight.Tall;
                 var position = GetTopLeft(topLeftHeight) + (Vector2)Script.GetControlProperty("EODTimer", "position");
-                if (expanded)
+                if (expanded || height == EODHeight.ExtraTall)
                     position += (Vector2)Script.GetControlProperty("EODDoublePanelMsgOffset");
                 return position;
             }
@@ -748,11 +778,11 @@ namespace FSO.Client.UI.Panels
         public Vector2 GetTimerTextPosition(EODHeight height, bool expanded)
         {
             var topLeftHeight = height;
-            if (height == EODHeight.TallTall)
+            if (height == EODHeight.TallTall || height == EODHeight.ExtraTall)
             {
                 topLeftHeight = EODHeight.Tall;
                 var position = GetTopLeft(topLeftHeight) + (Vector2)Script.GetControlProperty("TimerTextEntry", "position");
-                if (expanded)
+                if (expanded || height == EODHeight.ExtraTall)
                     position += (Vector2)Script.GetControlProperty("EODDoublePanelMsgOffset");
                 return position;
             }
@@ -763,7 +793,7 @@ namespace FSO.Client.UI.Panels
         public Vector2 GetMessageWindowPosition(EODHeight height, EODTextTips tips, bool expanded)
         {
             var topLeftHeight = height;
-            if(height == EODHeight.TallTall)
+            if(height == EODHeight.TallTall || height == EODHeight.ExtraTall)
             {
                 topLeftHeight = EODHeight.Tall;
             }
@@ -774,7 +804,7 @@ namespace FSO.Client.UI.Panels
                 position += (Vector2)Script.GetControlProperty("EODMsgWinShort", "position");
             }
 
-            if(height == EODHeight.TallTall && expanded)
+            if(height == EODHeight.TallTall && expanded || height == EODHeight.ExtraTall)
             {
                 position += (Vector2)Script.GetControlProperty("EODDoublePanelMsgOffset");
             }
@@ -784,12 +814,12 @@ namespace FSO.Client.UI.Panels
         public Vector2 GetMessageWindowTextPosition(EODHeight height, bool expanded)
         {
             var topLeftHeight = height;
-            if (height == EODHeight.TallTall)
+            if (height == EODHeight.TallTall || height == EODHeight.ExtraTall)
             {
                 topLeftHeight = EODHeight.Tall;
             }
             var position = GetTopLeft(topLeftHeight) + (Vector2)Script.GetControlProperty("MsgWinTextEntry", "position");
-            if (height == EODHeight.TallTall && expanded)
+            if (height == EODHeight.TallTall && expanded || height == EODHeight.ExtraTall)
             {
                 position += (Vector2)Script.GetControlProperty("EODDoublePanelMsgOffset");
             }
@@ -803,6 +833,8 @@ namespace FSO.Client.UI.Panels
                 case EODHeight.Tall:
                 case EODHeight.TallTall:
                     return new Vector2(0, -20);
+                case EODHeight.ExtraTall:
+                    return ExtraTallChromeOffset;
             }
             return Vector2.Zero;
         }
