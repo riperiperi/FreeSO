@@ -905,7 +905,8 @@ namespace FSO.SimAntics.Engine
                     }
                     obj.Animations[0].Weight = 1; //return to standing
                 }
-                if (Caller.PersistID > 0 && Caller.GetFlag(VMEntityFlags.AllowPersonIntersection))
+                if (Caller.PersistID > 0 && Caller.GetFlag(VMEntityFlags.AllowPersonIntersection)
+                    && !VM.Context.DisableAvatarCollision)
                 {
                     //reset person intersection if we set it
                     Caller.SetFlag(VMEntityFlags.AllowPersonIntersection, false);
