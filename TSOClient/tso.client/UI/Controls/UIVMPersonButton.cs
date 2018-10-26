@@ -27,7 +27,6 @@ namespace FSO.Client.UI.Controls
         private Texture2D Icon;
         private Texture2D Target;
         private bool RMB;
-        private bool RMBscroll;
 
         public UIVMPersonButton(VMAvatar ava, VM vm, bool small)
         {
@@ -66,9 +65,14 @@ namespace FSO.Client.UI.Controls
             {
                 UpdateAvatarState(perm);
             }
-            RMB = state.MouseState.RightButton == ButtonState.Pressed;
-            RMBscroll = GameFacade.Cursor.CurrentCursor != Common.Rendering.Framework.CursorType.Normal;
-            if (RMB && Hovered && !RMBscroll) CenterPerson(this);
+            var rmb = state.MouseState.RightButton == ButtonState.Pressed;
+            if (rmb && !RMB) //clicked
+            {
+                RMB = rmb;
+                if (Hovered) CenterPerson(this);
+            }
+
+            RMB = rmb;
         }
 
         public void UpdateAvatarState(VMTSOAvatarPermissions perm)
