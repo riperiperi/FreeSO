@@ -108,5 +108,9 @@ namespace FSO.Client.Controllers
         {
             Parent.ToggleWindow(Message);
         }
+        public void UpdateOpacity()
+        {
+            View.Opacity = GlobalSettings.Default.ChatWindowsOpacity;
+        }
     }
 }

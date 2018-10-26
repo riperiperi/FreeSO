@@ -105,7 +105,7 @@ namespace FSO.Client.UI.Panels
             InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 230, 100230, 100230)); //ucp
 
             HistoryDialog = new UIChatDialog(owner);
-            HistoryDialog.Position = new Vector2(20, 20);
+            HistoryDialog.Position = new Vector2(GlobalSettings.Default.ChatLocationX, GlobalSettings.Default.ChatLocationY);
             HistoryDialog.Visible = true;
             HistoryDialog.Opacity = 0.8f;
             HistoryDialog.OnSendMessage += SendMessage;
@@ -202,6 +202,12 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
+            if (this.HistoryDialog.Opacity != GlobalSettings.Default.ChatWindowsOpacity)
+            {
+                var opacity = GlobalSettings.Default.ChatWindowsOpacity;
+                this.HistoryDialog.Opacity = opacity;
+                this.PropertyLog.Opacity = opacity;
+            }
             Inputs = state.InputManager;
             if (!VM.UseWorld || vm.FSOVAsyncLoading) return;
 

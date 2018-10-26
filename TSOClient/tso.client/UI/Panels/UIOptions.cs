@@ -19,6 +19,7 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Model.TSOPlatform;
 using Microsoft.Xna.Framework;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.SimAntics.NetPlay.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -185,8 +186,8 @@ namespace FSO.Client.UI.Panels
 
             EnterWordLabel.Caption = GameFacade.Strings.GetString("f113", "5");
 
-            var hbox = new UIHBoxContainer();
-            hbox.Add(new UILabel() { Caption = GameFacade.Strings.GetString("f113", "1") });
+            var ttsToggleContainer = new UIHBoxContainer();
+            ttsToggleContainer.Add(new UILabel() { Caption = GameFacade.Strings.GetString("f113", "1") });
             var ttsMode = GlobalSettings.Default.TTSMode;
             for (int i = 0; i < 3; i++)
             {
@@ -196,13 +197,13 @@ namespace FSO.Client.UI.Panels
                 radio.OnButtonClick += TTSOptSet;
                 radio.Tooltip = GameFacade.Strings.GetString("f113", (2 + i).ToString());
                 radio.Selected = ttsMode == i;
-                hbox.Add(radio);
-                hbox.Add(new UILabel() { Caption = radio.Tooltip });
+                ttsToggleContainer.Add(radio);
+                ttsToggleContainer.Add(new UILabel() { Caption = radio.Tooltip });
             }
 
-            hbox.Position = new Vector2(10, 10);
-            Add(hbox);
-            hbox.AutoSize();
+            ttsToggleContainer.Position = new Vector2(10, 10);
+            Add(ttsToggleContainer);
+            ttsToggleContainer.AutoSize();
 
             var col = new Color(GlobalSettings.Default.ChatColor);
             ChatColor.CaptionStyle = ChatColor.CaptionStyle.Clone();
@@ -242,6 +243,48 @@ namespace FSO.Client.UI.Panels
                     }
                 }, true);
             };
+            var chatTimestampContainer = new UIHBoxContainer();
+            chatTimestampContainer.Add(new UILabel() { Caption = GameFacade.Strings.GetString("f113", "44") });
+            var chatShowTimestamp = GlobalSettings.Default.ChatShowTimestamp;
+            var radioChatTSOff = new UIRadioButton();
+            radioChatTSOff.RadioData = false;
+            radioChatTSOff.RadioGroup = "chatTSToggle";
+            radioChatTSOff.OnButtonClick += ChatTsOptSet;
+            radioChatTSOff.Tooltip = GameFacade.Strings.GetString("f113", "45");
+            radioChatTSOff.Selected = chatShowTimestamp == false;
+            chatTimestampContainer.Add(radioChatTSOff);
+            chatTimestampContainer.Add(new UILabel() { Caption = radioChatTSOff.Tooltip });
+
+            var radioChatTSOn = new UIRadioButton();
+            radioChatTSOn.RadioData = true;
+            radioChatTSOn.RadioGroup = "chatTSToggle";
+            radioChatTSOn.OnButtonClick += ChatTsOptSet;
+            radioChatTSOn.Tooltip = GameFacade.Strings.GetString("f113", "46");
+            radioChatTSOn.Selected = chatShowTimestamp == true;
+            chatTimestampContainer.Add(radioChatTSOn);
+            chatTimestampContainer.Add(new UILabel() { Caption = radioChatTSOn.Tooltip });
+
+            chatTimestampContainer.Position = new Vector2(368, 10);
+            Add(chatTimestampContainer);
+            chatTimestampContainer.AutoSize();
+
+            var chatOpacityContainer = new UIHBoxContainer();
+            chatOpacityContainer.Position = new Vector2(368, 32);
+            var chatOpacityLabel = new UILabel() { Caption = GameFacade.Strings.GetString("f113", "47") };
+            chatOpacityContainer.Add(chatOpacityLabel);
+            var chatOpacity = GlobalSettings.Default.ChatWindowsOpacity;
+            var chatOpacitySlider = new UISlider();
+            chatOpacitySlider.Orientation = 0;
+            chatOpacitySlider.Texture = GetTexture(0x42500000001);
+            chatOpacitySlider.MinValue = 20;
+            chatOpacitySlider.MaxValue = 100;
+            chatOpacitySlider.AllowDecimals = false;
+            chatOpacitySlider.Position = chatOpacityLabel.Position + new Vector2(115, 24);
+            chatOpacitySlider.Value = GlobalSettings.Default.ChatWindowsOpacity*100;
+            chatOpacitySlider.SetSize(140f, 0f);
+            chatOpacityContainer.Add(chatOpacitySlider);
+            Add(chatOpacityContainer);
+            chatOpacityContainer.AutoSize();
 
             PitchSlider = new UISlider();
             PitchSlider.Orientation = 0;
@@ -254,7 +297,30 @@ namespace FSO.Client.UI.Panels
             PitchSlider.SetSize(150f, 0f);
             Add(PitchSlider);
 
+            chatOpacitySlider.OnChange += chatOpacitySlider_OnChange;
             PitchSlider.OnChange += PitchSlider_OnChange;
+        }
+
+        private void chatOpacitySlider_OnChange(UIElement element)
+        {
+            var data = (int)((UISlider)element).Value/100f;
+            GlobalSettings.Default.ChatWindowsOpacity = data;
+            GlobalSettings.Default.Save();
+
+        }
+
+        private void ChatTsOptSet(UIElement button)
+        {
+            var data = (bool)((UIRadioButton)button).RadioData;
+            if (GlobalSettings.Default.ChatShowTimestamp == data) return;
+
+            GlobalSettings.Default.ChatShowTimestamp = data;
+            GlobalSettings.Default.Save();
+
+            var response = "Chat timestamps " + ((data) ? "enabled" : "disabled") + ".";
+
+            var vm = ((IGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;
+            if (vm != null) vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, response));
         }
 
         private void TTSOptSet(UIElement button)

@@ -27,6 +27,7 @@ using FSO.Client.Controllers.Panels;
 using System.Collections.Immutable;
 using FSO.Common.DataService.Model;
 using FSO.Common.Serialization.Primitives;
+using FSO.UI.Model;
 
 namespace FSO.Client
 {
@@ -72,6 +73,8 @@ namespace FSO.Client
         {
             ChangeState<LoginScreen, LoginController>((view, controller) =>
             {
+
+                DiscordRpcEngine.SendFSOPresence("In Main Menu");
             });
             /*
             var screen = Kernel.Get<LoginScreen>();
@@ -92,6 +95,8 @@ namespace FSO.Client
             }
             ChangeState<PersonSelection, PersonSelectionController>((view, controller) =>
             {
+
+                DiscordRpcEngine.SendFSOPresence("In Select A Sim");
             });
         }
 
@@ -234,6 +239,7 @@ namespace FSO.Client
 
         public void GotoCAS(){
             ChangeState<PersonSelectionEdit, PersonSelectionEditController>((view, controller) => {
+                
             });
         }
 
@@ -351,6 +357,7 @@ namespace FSO.Client
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
             screen.Initialize(lotName, external);
+            DiscordRpcEngine.SendFSOPresence("Playing Sandbox Mode");
         }
 
         public void ShowCredits()
@@ -358,6 +365,7 @@ namespace FSO.Client
             var screen = Kernel.Get<Credits>();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
+            DiscordRpcEngine.SendFSOPresence("Viewing Credits");
         }
 
         public void StartDebugTools()

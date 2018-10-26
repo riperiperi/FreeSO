@@ -208,6 +208,8 @@ namespace FSO.Client.UI.Screens
 
             SearchCollectionForInitID(GlobalSettings.Default.DebugHead, GlobalSettings.Default.DebugBody);
 
+            FSO.UI.Model.DiscordRpcEngine.SendFSOPresence("In Create A Sim");
+
             GameThread.NextUpdate(x =>
             {
                 FSOFacade.Hints.TriggerHint("screen:cas");

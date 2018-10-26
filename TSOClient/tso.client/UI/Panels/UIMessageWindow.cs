@@ -23,7 +23,7 @@ using FSO.Files.Formats.tsodata;
 
 namespace FSO.Client.UI.Panels
 {
-    public class UIMessageWindow : UIContainer
+    public class UIMessageWindow : UICachedContainer
     {
         public Texture2D backgroundMessageImage { get; set; }
         public Texture2D backgroundLetterComposeImage { get; set; }
@@ -145,6 +145,17 @@ namespace FSO.Client.UI.Panels
 
             User.ValueChanged += (x) => PersonButton.User.Value = x;
             Size = Background.Size.ToVector2();
+
+
+            this.Opacity = GlobalSettings.Default.ChatWindowsOpacity;
+            this.AddUpdateHook(ChatOpacityChangedListener);
+        }
+
+        private void ChatOpacityChangedListener(UpdateState state)
+        {
+            if (this.Opacity == GlobalSettings.Default.ChatWindowsOpacity) return;
+
+            FindController<MessagingWindowController>().UpdateOpacity();
         }
 
         private void MinimizeButton_OnButtonClick(UIElement button)

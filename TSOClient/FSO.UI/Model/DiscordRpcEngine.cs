@@ -48,41 +48,83 @@ namespace FSO.UI.Model
                 Disable = true;
             }
         }
+        // Method for other game screens
+        public static void SendFSOPresence(string state, string details = null)
+        {
 
-        public static void SendFSOPresence(string lotName, int lotID, int players, int maxSize, int catID)
+            if (!Active) return; // RPC not active
+            var presence = new DiscordRpc.RichPresence();
+            
+            presence.largeImageKey = "sunrise_crater";
+            presence.largeImageText = "Sunrise Crater";
+
+            presence.state = state;
+            presence.details = details == null ? "" : details;
+
+            DiscordRpc.UpdatePresence(ref presence);
+        }
+        // Standard DiscordRpc presence method
+        public static void SendFSOPresence(string activeSim, string lotName, int lotID, int players, int maxSize, int catID, bool isPrivate = false)
         {
             if (!Active) return;
             var presence = new DiscordRpc.RichPresence();
-            if (lotName?.StartsWith("{job:") == true)
+
+            if (!isPrivate)
             {
-                var split = lotName.Split(':');
-                if (split.Length > 2)
+                if (lotName?.StartsWith("{job:") == true)
                 {
-                    switch (split[1])
+                    var jobStr = "";
+                    var split = lotName.Split(':');
+                    if (split.Length > 2)
                     {
-                        case "0":
-                            presence.state = "Playing Robot Factory Job";
-                            break;
-                        case "1":
-                            presence.state = "Playing Restaurant Job";
-                            break;
-                        default:
-                            presence.state = "Playing A Job Lot";
-                            break;
+                        switch (split[1])
+                        {
+                            case "0": // Robot Factory
+                                jobStr = "Robot Factory";
+                                break;
+                            case "1": // Restaurant
+                                jobStr = "Restaurant";
+                                break;
+                            case "2": // Nightclub
+                                jobStr = "Nightclub";
+                                break;
+                            default: // Other
+                                jobStr = "Job Lot";
+                                break;
+                        }
+                        jobStr += " | Level " + split[2].Trim('}');
                     }
-                    presence.details = "Level " + split[2];
+                    else
+                        jobStr = "Job Lot";
+                    if (activeSim != null) presence.details = "Playing as " + activeSim;
+                    presence.state = jobStr;
                 }
                 else
                 {
-                    presence.state = "Playing a Job Lot";
-                }
+                    if (activeSim == null)
+                    {
+                        presence.state = lotName ?? "Idle in City";
+                        presence.details = "";
+                    }                       
+                    else
+                    {
+                        presence.details = "Playing as " + activeSim;
+                        presence.state = lotName ?? "Idle in City";
+                    }
+                }                
+                
             }
-            else presence.state = (lotName == null) ? "Idle in city" : "In Lot: " + lotName;
+            else
+            {
+                presence.state = "Online";
+                presence.details = "Privacy Enabled";
+            }
+            
 
             presence.largeImageKey = "sunrise_crater";
             presence.largeImageText = "Sunrise Crater";
 
-            if (lotName != null)
+            if (lotName != null && !isPrivate)
             {
                 presence.joinSecret = lotID + "#" + lotName;
                 //presence.matchSecret = lotID + "#" + lotName+".";
