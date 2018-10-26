@@ -63,13 +63,22 @@ namespace FSO.Client.UI.Panels.EODs
         public void CloseInteraction()
         {
             var me = Controller.Lot.ActiveEntity;
-            if (me != null) {
-                var action = me.Thread.Queue.First(x => x.Mode != SimAntics.Engine.VMQueueMode.Idle);
-                if (action != null) {
-                    Controller.Lot.vm.SendCommand(new VMNetInteractionCancelCmd
+            if (me != null)
+            {
+                try
+                {
+                    var action = me.Thread.Queue.First(x => x.Mode != SimAntics.Engine.VMQueueMode.Idle);
+                    if (action != null)
                     {
-                        ActionUID = action.UID
-                    });
+                        Controller.Lot.vm.SendCommand(new VMNetInteractionCancelCmd
+                        {
+                            ActionUID = action.UID
+                        });
+                    }
+                }
+                catch (System.InvalidOperationException error)
+                {
+                    //Console.WriteLine("UIEOD: An invalid operation was supressed...");
                 }
             }
         }
