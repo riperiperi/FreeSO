@@ -16,6 +16,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
     public class VMEODTrunkPlugin : VMEODHandler
     {
         Collection TrunkOutfits { get; set; }
+        private bool IsCostumeTrunk;
 
         public VMEODTrunkPlugin(VMEODServer server) : base(server)
         {
@@ -28,14 +29,18 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             base.OnConnection(client);
             var args = client.Invoker.Thread.TempRegisters;
+            var trunkTypeShort = args[0];
 
             // check if the passed params match a trunk
-            bool isValidTrunkParam = Enum.IsDefined(typeof(VMEODTrunkPluginCollections), args[0]);
+            bool isValidTrunkParam = Enum.IsDefined(typeof(VMEODTrunkPluginCollections), trunkTypeShort);
 
             if (!isValidTrunkParam)
                 Server.Disconnect(client);
 
-            var typeString = Enum.GetName(typeof(VMEODTrunkPluginCollections), args[0]);
+            if (trunkTypeShort == (short)VMEODTrunkPluginCollections.costumes)
+                IsCostumeTrunk = true;
+
+            var typeString = Enum.GetName(typeof(VMEODTrunkPluginCollections), trunkTypeShort);
 
             // avatar gender affects collection & path
             var avatar = (VMAvatar)client.Avatar;
@@ -61,12 +66,14 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             // make sure the requested item is valid and is found in the collection
             ulong parsedID;
-            ulong assetID;
+            ulong assetID = 0;
             var valid = ulong.TryParse(costumeID, out parsedID);
             if (valid)
                 assetID = FindInCollection(parsedID);
-            else
-                assetID = 0;
+
+            // change added 23.10.18 for Halloween event: skeleton body added to costume trunk bypassing collections/purchasebles
+            if (assetID == 0 && IsCostumeTrunk)
+                    assetID = 6000069312525;
 
             // send event to assign costume to avatar's dynamic costume and disconnect client
             if (assetID != 0)
