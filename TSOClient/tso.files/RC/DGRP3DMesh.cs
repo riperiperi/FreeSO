@@ -60,6 +60,11 @@ namespace FSO.Files.RC
             {"fencecarnival.iff", new DGRPRCParams() { CounterFix = true } },
             {"fencesspellbound.iff", new DGRPRCParams() { CounterFix = true } },
             {"columnarchmagic.iff", new DGRPRCParams() { CounterFix = true } },
+
+            {"awnings.iff", new DGRPRCParams() { CounterFix = true } },
+            {"awnings3.iff", new DGRPRCParams() { CounterFix = true } },
+            {"awnings4.iff", new DGRPRCParams() { CounterFix = true } },
+            {"awningthatch.iff", new DGRPRCParams() { CounterFix = true } }
         };
 
         //STATIC: multithreading for 
@@ -549,13 +554,15 @@ namespace FSO.Files.RC
                         MaskType = DGRP3DMaskType.Portal;
 
                         var verts = new List<Vector3>();
-                        foreach (var tri in obj.Value)
+                        var objs = source.FacesByObjgroup.Where(x => !x.Key.StartsWith("DEPTH_MASK_PORTAL")).Select(x => x.Value);
+                        foreach (var obj2 in objs)
                         {
-                            foreach (var ind in tri)
+                            foreach (var tri in obj2)
                             {
-                                verts.Add(source.Vertices[ind]);
+                                verts.Add(source.Vertices[tri[0] - 1]);
                             }
                         }
+                        
                         Bounds = BoundingBox.CreateFromPoints(verts);
                     }
                     else

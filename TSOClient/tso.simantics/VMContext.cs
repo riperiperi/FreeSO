@@ -525,6 +525,33 @@ namespace FSO.SimAntics
             return (RandomSeed * (ulong)(2685821657736338717)) % max;
         }
 
+        //TODO: move special tuning handles to another class?
+        public bool DisableAvatarCollision;
+        public void InitSpecialTuning()
+        {
+            if (VM?.Tuning == null) return;
+            DisableAvatarCollision = (VM.Tuning.GetTuning("special", 0, 1) ?? 0f) > 0;
+            var minLight = VM.Tuning.GetTuning("special", 0, 2);
+
+            if (DisableAvatarCollision)
+            {
+                foreach (var ava in ObjectQueries.Avatars)
+                {
+                    ava.SetFlag(VMEntityFlags.AllowPersonIntersection, true);
+                }
+            }
+
+            if (VM.UseWorld)
+            {
+                World.ForceAdvLight = (VM.Tuning.GetTuning("special", 0, 3) ?? 0f) > 0;
+                if (World.ForceAdvLight && WorldConfig.Current.LightingMode == 0) World.ChangedWorldConfig(World.State.Device);
+                if (minLight != null && VM.UseWorld)
+                {
+                    Blueprint.MinOutMul = minLight.Value;
+                }
+            }
+        }
+
         private void WallsChanged(VMArchitecture caller)
         {
             RegeneratePortalInfo();
@@ -920,6 +947,7 @@ namespace FSO.SimAntics
             return (pos.x < 0 || pos.y < 0 || pos.Level < 1 || pos.TileX >= _Arch.Width || pos.TileY >= _Arch.Height || pos.Level > _Arch.Stories);
         }
 
+
         /// <summary>
         /// Returns if the area is "out of bounds" for user placement.
         /// </summary>
@@ -1019,10 +1047,11 @@ namespace FSO.SimAntics
             {
                 if (obj.MultitileGroup == target.MultitileGroup) continue;
                 var oFoot = obj.Footprint;
+                var ghost = (short)((target.GhostImage || obj.GhostImage) ? 1 : 0);
 
                 if (oFoot != null && oFoot.Intersects(footprint)
-                        && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, 0, 0, 0 })
-                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, 0, 0, 0 })))
+                        && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, ghost, 0, 0 })
+                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, ghost, 0, 0 })))
                     )
                 {
                     var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
@@ -1070,10 +1099,11 @@ namespace FSO.SimAntics
                 if (obj.MultitileGroup == target.MultitileGroup || (obj is VMAvatar && allowAvatars) 
                     || (target.IgnoreIntersection != null && target.IgnoreIntersection.Objects.Contains(obj))) continue;
                 var oFoot = obj.Footprint;
+                var ghost = (short)((target.GhostImage || obj.GhostImage) ? 1 : 0);
 
                 if (oFoot != null && oFoot.Intersects(footprint)
-                    && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, 0, 0, 0 })
-                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, 0, 0, 0 })))
+                    && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, ghost, 0, 0 })
+                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, ghost, 0, 0 })))
                     )
                 {
                     statusObj = obj; 

@@ -271,7 +271,7 @@ namespace FSO.SimAntics.Primitives
             set
             {
                 Flags &= unchecked((byte)~36);
-                Flags |= (byte)((value&1) << 1);
+                Flags |= (byte)((value&1) << 2);
                 Flags |= (byte)((value & 2) << 4);
             }
         }

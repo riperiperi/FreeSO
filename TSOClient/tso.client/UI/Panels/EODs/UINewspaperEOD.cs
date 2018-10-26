@@ -400,7 +400,7 @@ namespace FSO.Client.UI.Panels.EODs
         public UINewspaperGraph() : base()
         {
             WhitePx = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
-            UseMip = true;
+            //UseMip = true;
             Size = new Vector2(299, 105);
         }
 

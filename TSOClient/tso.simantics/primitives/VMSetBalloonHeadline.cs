@@ -21,8 +21,12 @@ namespace FSO.SimAntics.Primitives
         {
             var operand = (VMSetBalloonHeadlineOperand)args;
             var obj = (operand.OfStackOBJ) ? context.StackObject : context.Caller;
-
-            if (obj.HeadlineRenderer != null) obj.HeadlineRenderer.Dispose();
+            
+            if (obj.HeadlineRenderer != null)
+            {
+                if (operand.Duration == 0 && obj.HeadlineRenderer.IsMoney) return VMPrimitiveExitCode.GOTO_TRUE;
+                obj.HeadlineRenderer.Dispose();
+            }
 
             if (operand.Index == -1 || operand.Duration == 0)
             {

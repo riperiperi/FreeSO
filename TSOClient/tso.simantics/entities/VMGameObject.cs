@@ -207,7 +207,7 @@ namespace FSO.SimAntics
             }
             set
             {
-                Direction = (Direction)(1 << (int)(Math.Round(DirectionUtils.PosMod(value, (float)Math.PI * 2) / 8) % 8));
+                Direction = (Direction)(1 << (int)(Math.Round(DirectionUtils.PosMod(value / ((float)Math.PI * 2), 1f) * 8) % 8));
             }
         }
 

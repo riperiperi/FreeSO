@@ -726,6 +726,8 @@ namespace FSO.SimAntics
                     var count = ObjectData[(short)var];
                     if (TimestampLockoutCount > Thread.Context.VM.Scheduler.CurrentTickID) TimestampLockoutCount = 0; //lockout counts in the future are invalid.
                     return (short)((Thread == null) ? count : Math.Max((long)count - (Thread.Context.VM.Scheduler.CurrentTickID - TimestampLockoutCount), 0));
+                case VMStackObjectVariable.CurrentValue:
+                    return (short)MultitileGroup.InitialPrice;
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
@@ -766,6 +768,9 @@ namespace FSO.SimAntics
                         Thread.Context.ObjectQueries.RemoveCategory(this, ObjectData[(short)var]);
                         Thread.Context.ObjectQueries.RegisterCategory(this, value);
                     }
+                    break;
+                case VMStackObjectVariable.CurrentValue:
+                    MultitileGroup.InitialPrice = value;
                     break;
             }
 
@@ -1068,7 +1073,10 @@ namespace FSO.SimAntics
 
             //we've passed the wall test, now check if we intersect any objects.
             if ((flags & VMPlaceRequestFlags.AllowIntersection) > 0) return new VMPlacementResult(VMPlacementError.Success);
-            var valid = (this is VMAvatar)? context.GetAvatarPlace(this, pos, direction, flags) : context.GetObjPlace(this, pos, direction, flags);
+            var oldRadDir = RadianDirection;
+            Direction = direction; //allow intersect tree may need the new direction
+            var valid = (this is VMAvatar) ? context.GetAvatarPlace(this, pos, direction, flags) : context.GetObjPlace(this, pos, direction, flags);
+            RadianDirection = oldRadDir;
             if (valid.Object != null && ((flags & VMPlaceRequestFlags.AcceptSlots) == 0))
                 valid.Status = VMPlacementError.CantIntersectOtherObjects;
             return valid;
@@ -1163,16 +1171,21 @@ namespace FSO.SimAntics
             int rotate = (8 - (DirectionToWallOff(Direction) + 1)) % 4;
             byte rotPart = (byte)RotateWallSegs((WallSegments)((int)placeFlags % 15), rotate);
 
+            if (EntryPoints[6].ActionFunction != 0)
+            {
+                var mainSegs = (WallSegments)RotateWallSegs(wall.Segments, (4 - rotate) % 4);
+                var wallAdj = (VMWallAdjacencyFlags)0; //wall adjacency uses a weird bit order. TODO: Wall in front of left/right (used by stairs)
+                if ((mainSegs & WallSegments.TopLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallInFront;
+                if ((mainSegs & WallSegments.TopRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnRight;
+                if ((mainSegs & WallSegments.BottomRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallBehind;
+                if ((mainSegs & WallSegments.BottomLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnLeft;
+
+                SetValue(VMStackObjectVariable.WallAdjacencyFlags, (short)wallAdj);
+
+                if (Thread != null) ExecuteEntryPoint(6, Thread.Context, true, this);
+            }
+
             if (rotPart == 0) return;
-
-            var mainSegs = (WallSegments)RotateWallSegs(wall.Segments, (4 - rotate) % 4);
-            var wallAdj = (VMWallAdjacencyFlags)0; //wall adjacency uses a weird bit order. TODO: Wall in front of left/right (used by stairs)
-            if ((mainSegs & WallSegments.TopLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnLeft;
-            if ((mainSegs & WallSegments.TopRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallInFront;
-            if ((mainSegs & WallSegments.BottomRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnRight;
-            if ((mainSegs & WallSegments.BottomLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallBehind;
-
-            SetValue(VMStackObjectVariable.WallAdjacencyFlags, (short)wallAdj);
 
             if (exclusive)
             {

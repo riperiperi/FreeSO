@@ -52,9 +52,9 @@ namespace FSO.SimAntics.Primitives
 
     public class VMChangeActionStringOperand : VMPrimitiveOperand
     {
-        public ushort StringTable;
-        public ushort Scope;
-        public byte StringID;
+        public ushort StringTable { get; set; }
+        public ushort Scope { get; set; }
+        public byte StringID { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

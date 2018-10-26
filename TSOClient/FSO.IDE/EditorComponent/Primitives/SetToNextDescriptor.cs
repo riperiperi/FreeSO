@@ -31,6 +31,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             if (op.SearchType == VMSetToNextSearchType.ObjectOfType) {
                 var obj = Content.Content.Get().WorldObjects.Get(op.GUID);
 
+                result.Append(" ");
                 result.Append((obj == null) ? ("0x" + Convert.ToString(op.GUID.ToString("x8"))) : obj.OBJ.ChunkLabel);
             }
             else if (op.SearchType == VMSetToNextSearchType.ObjectAdjacentToObjectInLocal) { result.Append(" "); result.Append(op.Local.ToString()); }
