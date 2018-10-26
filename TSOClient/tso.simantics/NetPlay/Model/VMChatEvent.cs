@@ -26,6 +26,7 @@ namespace FSO.SimAntics.NetPlay.Model
         public int Visitors = 0;
         public uint SenderUID = 0;
         public byte ChannelID = 0;
+        public string Timestamp;
         public VMTSOChatChannel Channel;
 
         public VMChatEvent(VMAvatar ava, VMChatEventType type, byte channelID, params string[] text) : this(ava, type, text)
@@ -38,6 +39,7 @@ namespace FSO.SimAntics.NetPlay.Model
             SenderUID = ava?.PersistID ?? 0;
             Type = type;
             Text = text;
+            Timestamp = DateTime.Now.ToShortTimeString();
             Color = (ava?.TSOState as VMTSOAvatarState)?.ChatColor ?? Color.LightGray;
         }
     }

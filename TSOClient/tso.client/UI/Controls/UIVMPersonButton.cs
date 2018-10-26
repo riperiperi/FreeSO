@@ -65,8 +65,14 @@ namespace FSO.Client.UI.Controls
             {
                 UpdateAvatarState(perm);
             }
-            RMB = state.MouseState.RightButton == ButtonState.Pressed;
-            if (RMB && Hovered) CenterPerson(this);
+            var rmb = state.MouseState.RightButton == ButtonState.Pressed;
+            if (rmb && !RMB) //clicked
+            {
+                RMB = rmb;
+                if (Hovered) CenterPerson(this);
+            }
+
+            RMB = rmb;
         }
 
         public void UpdateAvatarState(VMTSOAvatarPermissions perm)
