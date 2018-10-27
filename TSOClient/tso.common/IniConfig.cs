@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -23,7 +24,9 @@ namespace FSO.Common
             {
                 try
                 {
-                    if (prop.PropertyType != typeof(string))
+                    if (prop.PropertyType == typeof(decimal) || prop.PropertyType == typeof(double) || prop.PropertyType == typeof(float))
+                        prop.SetValue(this, Convert.ChangeType(AdjustNumberCulture(value, prop.PropertyType), prop.PropertyType));
+                    else if (prop.PropertyType != typeof(string))
                         prop.SetValue(this, Convert.ChangeType(value, prop.PropertyType));
                     else prop.SetValue(this, value);
                 }
@@ -81,6 +84,20 @@ namespace FSO.Common
                 }
             }
             catch (Exception) { }
+        }
+        // Prevents unintended truncation of non-whole numbers due to different user culture settings for number seperators.
+        private string AdjustNumberCulture(string value, Type type)
+        {
+            string ret;
+            if (type == typeof(decimal))
+                ret = value
+                    .Replace(".", CultureInfo.CurrentCulture.NumberFormat.CurrencyDecimalSeparator)
+                    .Replace(",", CultureInfo.CurrentCulture.NumberFormat.CurrencyDecimalSeparator);
+            else // float or double
+                ret = value
+                    .Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator)
+                    .Replace(",", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            return ret;
         }
     }
 }
