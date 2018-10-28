@@ -835,6 +835,13 @@ namespace FSO.LotView
                     Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
                 }
             }
+
+            if (!FSOEnvironment.Enable3D)
+            {
+                var last = PPXDepthEngine.MSAA;
+                PPXDepthEngine.MSAA = (WorldConfig.Current.AA ? 8 : 0);
+                if (last != PPXDepthEngine.MSAA) PPXDepthEngine.InitScreenTargets();
+            }
         }
 
         public virtual ObjectComponent MakeObjectComponent(Content.GameObject obj)

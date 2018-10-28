@@ -66,7 +66,7 @@ namespace FSO.Client.UI.Screens
 
         public UILotControl LotControl { get; set; } //world, lotcontrol and vm will be null if we aren't in a lot.
         private LotView.World World;
-        private bool WorldLoaded;
+        public bool WorldLoaded;
         public FSO.SimAntics.VM vm { get; set; }
         public VMClientDriver Driver;
         public uint VisualBudget { get; set; }

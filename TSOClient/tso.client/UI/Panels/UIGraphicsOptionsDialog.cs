@@ -112,6 +112,8 @@ namespace FSO.Client.UI.Panels
             CompressionButton.Tooltip = CompressionLabel.Tooltip;
             CompressionButton.Disabled = !FSOEnvironment.TexCompressSupport;
 
+            AntiAliasCheckButton.Disabled = !FSOEnvironment.MSAASupport;
+
             var toggles = new Dictionary<UIButton, UILabel>()
             {
                 { AntiAliasCheckButton, AntiAliasLabel },

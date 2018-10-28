@@ -66,7 +66,7 @@ namespace FSO.Client.UI.Panels.LotControls
             {
                 HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolDown);
 
-                var tilePos = World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+                var tilePos = World.EstTileAtPosWithScroll(Parent.GetScaledPoint(state.MouseState.Position).ToVector2() / FSOEnvironment.DPIScaleFactor);
                 LastPosition = new Point(-2, -2);
                 Drawing = true;
             }
@@ -95,7 +95,7 @@ namespace FSO.Client.UI.Panels.LotControls
 
         public void Update(UpdateState state, bool scrolled)
         {
-            var tilePos = World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+            var tilePos = World.EstTileAtPosWithScroll(Parent.GetScaledPoint(state.MouseState.Position).ToVector2() / FSOEnvironment.DPIScaleFactor);
             Point cursor = new Point((int)Math.Round(tilePos.X), (int)Math.Round(tilePos.Y));
             bool redraw = false;
 
