@@ -296,7 +296,7 @@ namespace FSO.Client.UI.Panels
             bool inEOD = eodPresent && !HideEOD;
             if (ActiveEOD != null) DynamicOverlay.Remove(ActiveEOD);
 
-            if (!ExtraTallInitialized && options.Height == EODHeight.ExtraTall)
+            if (!ExtraTallInitialized && options?.Height == EODHeight.ExtraTall)
                 options.Height = EODHeight.TallTall;
 
             LastEODConfig = options;
