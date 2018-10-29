@@ -839,7 +839,7 @@ namespace FSO.LotView
             if (!FSOEnvironment.Enable3D)
             {
                 var last = PPXDepthEngine.MSAA;
-                PPXDepthEngine.MSAA = (WorldConfig.Current.AA ? 8 : 0);
+                PPXDepthEngine.MSAA = (WorldConfig.Current.AA ? 4 : 0);
                 if (last != PPXDepthEngine.MSAA) PPXDepthEngine.InitScreenTargets();
             }
         }
