@@ -24,6 +24,12 @@ namespace FSO.Client
                         defaultInstance.DPIScaleFactor = 1; //sanity check
                     if (defaultInstance.ChatWindowsOpacity == 0 || defaultInstance.ChatWindowsOpacity > 1)
                         defaultInstance.ChatWindowsOpacity = 1; //sanity check
+                    if (defaultInstance.GameEntryUrl == "http://api.freeso.org")
+                    {
+                        defaultInstance.GameEntryUrl = "https://api.freeso.org";
+                        defaultInstance.CitySelectorUrl = "https://api.freeso.org";
+                    }
+
                 }
                 return defaultInstance;
             }

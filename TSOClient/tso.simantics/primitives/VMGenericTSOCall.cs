@@ -322,6 +322,10 @@ namespace FSO.SimAntics.Primitives
                         sthread.CancelAction(action.UID);
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.FSOClearStackObjRelationships:
+                    context.StackObject.MeToObject.Clear();
+                    context.StackObject.MeToPersist.Clear();
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
             }
