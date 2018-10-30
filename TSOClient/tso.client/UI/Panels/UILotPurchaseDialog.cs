@@ -19,6 +19,7 @@ namespace FSO.Client.UI.Panels
         private Regex VALIDATE_SPECIAL_CHARS = new Regex("[^a-zA-Z '-]");
         private Regex VALIDATE_APOSTROPHES = new Regex("^[^']*'?[^']*$");
         private Regex VALIDATE_DASHES = new Regex("^[^-]*-?[^-]*$");
+        private Regex VALIDATE_SPACES = new Regex("^[^ ]* ?[^ ]+ ?[^ ]*$");
 
         public UITextEdit NameTextEdit { get; set; }
         public UIValidationMessages<string> NameTextEditValidation { get; set; }
@@ -58,6 +59,7 @@ namespace FSO.Client.UI.Panels
                 .WithValidation(InvalidNameErrorNumeric, x => VALIDATE_NUMERIC.IsMatch(x))
                 .WithValidation(InvalidNameErrorApostrophe, x => !VALIDATE_APOSTROPHES.IsMatch(x))
                 .WithValidation(InvalidNameErrorDash, x => !VALIDATE_DASHES.IsMatch(x))
+                .WithValidation(InvalidNameErrorSpace, x => !VALIDATE_SPACES.IsMatch(x))
                 .WithValidation(InvalidNameErrorSpecial, x => VALIDATE_SPECIAL_CHARS.IsMatch(x));
 
             NameTextEditValidation.ErrorPrefix = InvalidNameErrorTitle;
