@@ -891,7 +891,7 @@ namespace FSO.SimAntics
         {
             var ttab = global ? context.GlobalTreeTable : TreeTable;
             var ttas = global ? context.GlobalTTAs : TreeTableStrings;
-            if (!ttab.InteractionByIndex.ContainsKey((uint)interaction)) return null;
+            if (ttab?.InteractionByIndex?.ContainsKey((uint)interaction) != true) return null;
             var Action = ttab.InteractionByIndex[(uint)interaction];
 
             ushort actionID = Action.ActionFunction;
