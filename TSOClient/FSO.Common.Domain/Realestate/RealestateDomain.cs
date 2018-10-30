@@ -16,8 +16,10 @@ namespace FSO.Common.Domain.Realestate
         // No need to check redundant regex conditions until you have to throw various errors
         // (vide tso.client/UI/Panels/UILotPurchaseDialog.cs)
         // I tried to combine conditions to reduce redundancy
-        private Regex VALIDATE_APOSTROPHES = new Regex("^[a-zA-Z -]*'?[a-zA-Z -]*$");
-        private Regex VALIDATE_DASHES = new Regex("^[a-zA-Z ']*-?[a-zA-Z ']*$");
+        private Regex VALIDATE_SPECIAL_CHARS = new Regex("[^a-zA-Z '-]");
+        private Regex VALIDATE_APOSTROPHES = new Regex("^[^']*'?[^']*$");
+        private Regex VALIDATE_DASHES = new Regex("^[^-]*-?[^-]*$");
+        private Regex VALIDATE_SPACES = new Regex("^[^ ]* ?[^ ]+ ?[^ ]*$");
 
         private Dictionary<int, ShardRealestateDomain> _ByShard;
         private IShardsDomain _Shards;
@@ -55,8 +57,10 @@ namespace FSO.Common.Domain.Realestate
             if (string.IsNullOrEmpty(name) ||
                 name.Length < 3 ||
                 name.Length > 24 ||
+                VALIDATE_SPACIAL_CHARS.IsMatch(name) ||
                 !VALIDATE_APOSTROPHES.IsMatch(name) ||
-                !VALIDATE_DASHES.IsMatch(name))
+                !VALIDATE_DASHES.IsMatch(name)) ||
+                !VALIDATE_SPACES.IsMatch(name))
             {
                 return false;
             }
