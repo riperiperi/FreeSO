@@ -57,9 +57,9 @@ namespace FSO.Common.Domain.Realestate
             if (string.IsNullOrEmpty(name) ||
                 name.Length < 3 ||
                 name.Length > 24 ||
-                VALIDATE_SPACIAL_CHARS.IsMatch(name) ||
+                VALIDATE_SPECIAL_CHARS.IsMatch(name) ||
                 !VALIDATE_APOSTROPHES.IsMatch(name) ||
-                !VALIDATE_DASHES.IsMatch(name)) ||
+                !VALIDATE_DASHES.IsMatch(name) ||
                 !VALIDATE_SPACES.IsMatch(name))
             {
                 return false;
