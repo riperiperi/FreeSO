@@ -68,12 +68,23 @@ namespace FSO.LotView.RC
                         var mpos = state.MouseState.Position;
                         if (LastFP)
                         {
-                            rcState.RotationX -= (mpos.X - mx) / 500f;
-                            rcState.RotationY += (mpos.Y - my) / 500f;
+                            rcState.RotationX -= (mpos.X - mx) / 100f;
+                            rcState.RotationY += (mpos.Y - my) / 100f;
                         }
                         Mouse.SetPosition(mx, my);
 
                         var speed = (state.KeyboardState.IsKeyDown(Keys.LeftShift)) ? 1.5f : 0.5f;
+
+
+                        // FOV CONTROL (in tab camera)
+                        if (BasicCamera.FOV < 40f)
+                            if (state.KeyboardState.IsKeyDown(Keys.Z))
+                                BasicCamera.FOV += .5f;
+
+                        if (BasicCamera.FOV > 2f)
+                            if (state.KeyboardState.IsKeyDown(Keys.X))
+                                BasicCamera.FOV -= .5f;
+
 
                         if (state.KeyboardState.IsKeyDown(Keys.W))
                             FPCamVelocity.Z -= speed;
@@ -103,6 +114,7 @@ namespace FSO.LotView.RC
                 {
                     LastFP = false;
                     var md = state.MouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                    BasicCamera.FOV = 5; //reset camera FOV
 
                     if (MouseWasDown)
                     {

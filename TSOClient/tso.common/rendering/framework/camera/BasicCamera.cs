@@ -12,6 +12,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.ComponentModel;
 
+
+
 namespace FSO.Common.Rendering.Framework.Camera
 {
     /// <summary>
@@ -29,7 +31,7 @@ namespace FSO.Common.Rendering.Framework.Camera
         protected Vector3 m_Target;
         protected Vector3 m_Up;
         protected GraphicsDevice m_Device;
-        
+
         /// <summary>
         /// Creates a new BasicCamera instance. Assumes projection is full screen!
         /// </summary>
@@ -102,8 +104,8 @@ namespace FSO.Common.Rendering.Framework.Camera
             }
         }
 
-        public float FOV = (float)Math.PI / 4f;
-
+        public static float FOV = 4f; // FOV VALUE
+        
         protected virtual void CalculateProjection()
         {
             var device = m_Device;
@@ -115,7 +117,7 @@ namespace FSO.Common.Rendering.Framework.Camera
             var projectionX = 0.0f - (1.0f * ratioX);
             var projectionY = (1.0f * ratioY);
 
-            m_Projection = Matrix.CreatePerspectiveFieldOfView(FOV, aspect, NearPlane, FarPlane);
+            m_Projection = Matrix.CreatePerspectiveFieldOfView((float)Math.PI / FOV, aspect, NearPlane, FarPlane);
 
             /*m_Projection = Matrix.CreatePerspectiveOffCenter(
                 projectionX, projectionX + 1.0f,
@@ -151,7 +153,6 @@ namespace FSO.Common.Rendering.Framework.Camera
             }
         }
 
-        
         protected float m_Zoom = 1.0f;
 
         /// <summary>
