@@ -76,16 +76,24 @@ namespace FSO.Windows
             try
             {
                 // Fix up the Image to match the expected format
-                image = (Bitmap)image.RGBToBGR();
+                //image = (Bitmap)image.RGBToBGR();
 
                 var data = new byte[image.Width * image.Height * 4];
 
                 BitmapData bitmapData = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
                     ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
                 if (bitmapData.Stride != image.Width * 4)
                     throw new NotImplementedException();
                 Marshal.Copy(bitmapData.Scan0, data, 0, data.Length);
                 image.UnlockBits(bitmapData);
+
+                for (int i = 0; i < data.Length; i += 4)
+                {
+                    var temp = data[i];
+                    data[i] = data[i + 2];
+                    data[i + 2] = temp;
+                }
 
                 return new Tuple<byte[], int, int>(data, image.Width, image.Height);
             }

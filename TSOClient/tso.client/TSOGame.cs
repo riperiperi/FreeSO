@@ -65,6 +65,7 @@ namespace FSO.Client
 
             try
             {
+                GameThread.Game = Thread.CurrentThread;
                 Thread.CurrentThread.Name = "Game";
             } catch
             {

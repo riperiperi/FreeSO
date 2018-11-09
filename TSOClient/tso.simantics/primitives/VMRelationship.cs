@@ -115,6 +115,7 @@ namespace FSO.SimAntics.Primitives
                     else rels.Add(targId, new List<short>());
                 }
                 relToTarg = rels[targId];
+                obj2.MayHaveRelToMe.Add((ushort)obj1.ObjectID);
             }
 
             if (relToTarg.Count <= operand.RelVar)

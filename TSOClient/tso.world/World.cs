@@ -868,12 +868,13 @@ namespace FSO.LotView
             watch.Start();
 
             if (PreloadProgress == 0) {
+                var done = 0;
                 for (int i = PreloadObjProgress; i < Blueprint.Objects.Count; i++)
                 {
                     var obj = Blueprint.Objects[i];
                     obj.Preload(gd, State);
                     PreloadObjProgress++;
-                    if (watch.ElapsedMilliseconds > 16)
+                    if (watch.ElapsedMilliseconds > 16 && done++ >= 5)
                     {
                         watch.Stop();
                         return false;

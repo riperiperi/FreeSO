@@ -100,6 +100,11 @@ namespace FSO.SimAntics
         /** Relationship variables **/
         public Dictionary<ushort, List<short>> MeToObject;
         public Dictionary<uint, List<short>> MeToPersist;
+        //a runtime cache for objects that have relationships to us. Used to get a quick reference to objects
+        //that may need to delete a relationship to us.
+        //note this can point to false positives, but the worst case is a slow deletion if somehow every object is added.
+        public HashSet<ushort> MayHaveRelToMe = new HashSet<ushort>();
+
         //signals which relationships have changed since the last time this was reset
         //used to partial update relationships when doing an avatar save to db
         public HashSet<uint> ChangedRels = new HashSet<uint>();
@@ -208,10 +213,6 @@ namespace FSO.SimAntics
         public VMEntity(GameObject obj)
         {
             this.Object = obj;
-            /** 
-             * For some reason, in the aquarium object (maybe others) the numAttributes is set to 0
-             * but it should be 4. There are 4 entries in the label table. Go figure?
-             */
             ObjectData = new short[80];
             MeToObject = new Dictionary<ushort, List<short>>();
             MeToPersist = new Dictionary<uint, List<short>>();
@@ -1214,6 +1215,14 @@ namespace FSO.SimAntics
                 Dead = true; //if a reset tries to delete this object it is wasting its time
                 var threads = SoundThreads;
 
+                //clear any short term relations the target object has to us
+                foreach (var objID in MayHaveRelToMe)
+                {
+                    var obj = context.VM.GetObjectById((short)objID);
+                    if (obj != null)
+                        obj.MeToObject.Remove((ushort)ObjectID);
+                }
+
                 for (int i = 0; i < threads.Count; i++)
                 {
                     threads[i].Sound.RemoveOwner(ObjectID);
@@ -1506,6 +1515,14 @@ namespace FSO.SimAntics
             {
                 Headline = new VMRuntimeHeadline(input.Headline, context);
                 HeadlineRenderer = context.VM.Headline.Get(Headline);
+            }
+
+            var keyCopy = MeToObject.Keys.ToList();
+            foreach (var objID in keyCopy)
+            {
+                var obj = context.VM.GetObjectById((short)objID);
+                if (obj != null) obj.MayHaveRelToMe.Add((ushort)ObjectID);
+                else MeToObject.Remove(objID); //cleanup refs to missing objects
             }
         }
         #endregion
