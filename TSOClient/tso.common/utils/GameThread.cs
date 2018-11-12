@@ -105,6 +105,7 @@ namespace FSO.Common.Utils
         public static bool Killed;
         public static bool NoGame;
         public static EventWaitHandle OnKilled = new EventWaitHandle(false, EventResetMode.ManualReset);
+        public static Thread Game;
         public static bool UpdateExecuting;
         private static List<UpdateHook> _UpdateHooks = new List<UpdateHook>();
         private static Queue<Callback<UpdateState>> _UpdateCallbacks = new Queue<Callback<UpdateState>>();
@@ -160,7 +161,7 @@ namespace FSO.Common.Utils
         public static bool IsInGameThread()
         {
             var thread = Thread.CurrentThread;
-            if(NoGame || (thread != null && thread.Name == "Game"))
+            if (thread == Game || NoGame)
             {
                 return true;
             }

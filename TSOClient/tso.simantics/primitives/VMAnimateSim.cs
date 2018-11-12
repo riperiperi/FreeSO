@@ -29,7 +29,7 @@ namespace FSO.SimAntics.Engine.Primitives
             Animation animation = null;
             var id = (operand.IDFromParam) ? (ushort)(context.Args[operand.AnimationID]) : operand.AnimationID;
 
-            var newMode = (context.VM.Tuning?.GetTuning("feature", 0, 0) ?? 0) != 0; //might need to disable this suddenly - too many things to test
+            var newMode = true; // (context.VM.Tuning?.GetTuning("feature", 0, 0) ?? 0) != 0; //might need to disable this suddenly - too many things to test
 
             if (id == 0)
             { //reset

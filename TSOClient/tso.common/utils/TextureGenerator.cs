@@ -29,6 +29,7 @@ namespace FSO.Common.Utils
         private static Texture2D[] AirTiles;
         private static Texture2D MotiveArrow; //actually a diamond, clip to get required direction
         private static Texture2D TerrainNoise;
+        private static Texture2D UniformNoise;
 
         public static Texture2D GetPxWhite(GraphicsDevice gd)
         {
@@ -137,6 +138,28 @@ namespace FSO.Common.Utils
                 else TerrainNoise.SetData(data);
             }
             return TerrainNoise;
+        }
+
+        public static Texture2D GetUniformNoise(GraphicsDevice gd)
+        {
+            if (UniformNoise == null)
+            {
+                UniformNoise = new Texture2D(gd, 512, 512, FSOEnvironment.Enable3D, SurfaceFormat.Color);
+                Color[] data = new Color[512 * 512];
+
+                var rd = new Random();
+                for (int i = 0; i < data.Length; i++)
+                {
+                    //distribution is an average of two noise functions.
+                    data[i].R = (byte)(rd.Next(255));
+                    data[i].G = (byte)(rd.Next(255));
+                    data[i].B = (byte)(rd.Next(255));
+                    data[i].A = (byte)(rd.Next(255));
+                }
+                if (FSOEnvironment.Enable3D) TextureUtils.UploadWithMips(UniformNoise, gd, data);
+                else UniformNoise.SetData(data);
+            }
+            return UniformNoise;
         }
 
         public static float FLAT_Z_INC = 1.525f;

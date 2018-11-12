@@ -106,8 +106,7 @@ namespace FSO.Client.UI.Panels
             SendMessageButton.OnButtonClick += new ButtonClickDelegate(SendMessage);
 
             var emojis = new UIEmojiSuggestions(MessageTextEdit);
-            Add(emojis);
-            emojis.Parent = this;
+            DynamicOverlay.Add(emojis);
             MessageTextEdit.OnEnterPress += new KeyPressDelegate(SendMessageEnter);
 
             SendMessageButton.Disabled = true;
@@ -117,8 +116,7 @@ namespace FSO.Client.UI.Panels
             LetterTextEdit.MaxChars = 1000;
 
             var emojis2 = new UIEmojiSuggestions(LetterTextEdit);
-            Add(emojis2);
-            emojis2.Parent = this;
+            DynamicOverlay.Add(emojis2);
 
             RespondLetterButton.OnButtonClick += new ButtonClickDelegate(RespondLetterButton_OnButtonClick);
             SendLetterButton.OnButtonClick += new ButtonClickDelegate(SendLetter);
