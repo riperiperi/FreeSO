@@ -874,11 +874,12 @@ namespace FSO.LotView
                     var obj = Blueprint.Objects[i];
                     obj.Preload(gd, State);
                     PreloadObjProgress++;
-                    if (watch.ElapsedMilliseconds > 16 && done++ >= 5)
+                    if (watch.ElapsedMilliseconds > 16 && done >= 6)
                     {
                         watch.Stop();
                         return false;
                     }
+                    done++;
                 }
 
                 for (int i=0; i<Blueprint.Avatars.Count; i++)
