@@ -83,6 +83,7 @@ namespace FSO.SimAntics.Model
 
         //FSO functions
         FSOLightRGBFromTemp012 = 128,
-        FSOAbortAllInteractions = 129
+        FSOAbortAllInteractions = 129,
+        FSOClearStackObjRelationships = 130
     }
 }

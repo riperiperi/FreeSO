@@ -15,6 +15,7 @@ namespace FSO.Client.UI.Panels.EODs
 {
     class UITrunkEOD : UIEOD
     {
+        private bool IsCostumeTrunk;
         private Collection TrunkOutfits { get; set; }
         private CollectionItem SelectedOutfit { get; set; }
         private ulong SelectedOutfitID;
@@ -58,6 +59,11 @@ namespace FSO.Client.UI.Panels.EODs
             var avatar = (VMAvatar)LotController.ActiveEntity;
             UserAppearanceType = avatar.Avatar.Appearance;
 
+            // added 23.10.18 for skeleton body for Halloween Event
+            var substr = collectionPath.Substring(0, 8);
+            if (substr == "costumes")
+                IsCostumeTrunk = true;
+
             // setup the collection view
             CostumeOptions.DataProvider = CollectionToDataProvider(TrunkOutfits);
         }
@@ -77,8 +83,22 @@ namespace FSO.Client.UI.Panels.EODs
         private void CostumeOptionsChangeHandler(UIElement element)
         {
             SelectedOutfit = (CollectionItem)((UIGridViewerItem)CostumeOptions.SelectedItem).Data;
-            var costumePurchasable = Content.Content.Get().AvatarPurchasables.Get(SelectedOutfit.PurchasableOutfitId);
-            SelectedOutfitID = costumePurchasable.OutfitID;
+            // if null, it's the skeleton outfit
+            if (SelectedOutfit == null)
+            {
+                if (IsCostumeTrunk)
+                    SelectedOutfitID = 6000069312525;
+                else
+                {
+                    // oh no
+                    return;
+                }
+            }
+            else
+            {
+                var costumePurchasable = Content.Content.Get().AvatarPurchasables.Get(SelectedOutfit.PurchasableOutfitId);
+                SelectedOutfitID = costumePurchasable.OutfitID;
+            }
             LargeThumbnail.Texture = ((UIGridViewerItem)CostumeOptions.SelectedItem).Thumb.Get();
         }
         private void AddListeners()
@@ -103,6 +123,20 @@ namespace FSO.Client.UI.Panels.EODs
                 {
                     Data = outfit,
                     Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID).Get(GameFacade.GraphicsDevice))
+                });
+            }
+            // special case for skeleton costume added 23.10.18
+            if (IsCostumeTrunk)
+            {
+                var skeletonBodyPurchaseable = Content.Content.Get().AvatarPurchasables.Get(6000069312525);
+                var skeletonBodyOutfit = Content.Content.Get().AvatarOutfits.Get(6000069312525);
+                Appearance TempAppearance = Content.Content.Get().AvatarAppearances.Get(skeletonBodyOutfit.GetAppearance(UserAppearanceType));
+                FSO.Common.Content.ContentID thumbnailID = TempAppearance.ThumbnailID;
+
+                dataProvider.Add(new UIGridViewerItem
+                {
+                    Data = skeletonBodyPurchaseable,
+                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbnailID).Get(GameFacade.GraphicsDevice))
                 });
             }
             return dataProvider;

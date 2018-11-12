@@ -134,6 +134,10 @@ namespace FSO.Client
                 settings.Save();
             }
 
+            FeatureLevelTest.UpdateFeatureLevel(GraphicsDevice);
+            if (!FSOEnvironment.MSAASupport)
+                settings.AntiAlias = false;
+
             LotView.WorldConfig.Current = new LotView.WorldConfig()
             {
                 LightingMode = settings.LightingMode,
@@ -141,8 +145,6 @@ namespace FSO.Client
                 SurroundingLots = settings.SurroundingLotMode,
                 AA = settings.AntiAlias,
             };
-
-            FeatureLevelTest.UpdateFeatureLevel(GraphicsDevice);
 
             if (!FSOEnvironment.TexCompressSupport) settings.TexCompression = 0;
             else if ((settings.TexCompression & 2) == 0)

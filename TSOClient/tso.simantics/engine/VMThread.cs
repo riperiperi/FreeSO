@@ -765,7 +765,9 @@ namespace FSO.SimAntics.Engine
                     }
                 }
 
-                if ((index > ActiveQueueBlock || Stack.LastOrDefault()?.ActionTree == false) && interaction.Mode == Engine.VMQueueMode.Normal)
+                var canQueueSkip = !interaction.Flags.HasFlag(TTABFlags.MustRun);
+
+                if (canQueueSkip && (index > ActiveQueueBlock || Stack.LastOrDefault()?.ActionTree == false) && interaction.Mode == Engine.VMQueueMode.Normal)
                 {
                     Queue.Remove(interaction);
                     if (Context.VM.TS1) interaction.Callee.ExecuteEntryPoint(4, Context, true); //queue skipped
@@ -862,8 +864,8 @@ namespace FSO.SimAntics.Engine
             if (action == null) return null;
             if (Context.VM.TS1) return CheckTS1Action(action);
             var result = new List<VMPieMenuInteraction>();
-
-            if (((action.Flags & TTABFlags.MustRun) == 0) && Entity is VMAvatar) //just let everyone use the CSR interactions
+            
+            if (!action.Flags.HasFlag(TTABFlags.FSOSkipPermissions) && Entity is VMAvatar) //just let everyone use the CSR interactions
             {
                 var avatar = (VMAvatar)Entity;
 
@@ -916,7 +918,7 @@ namespace FSO.SimAntics.Engine
                     if ((tsoCompare & TSOFlags.AllowCSRs) > 0 && (tsoState & TSOFlags.AllowCSRs) == 0) return null; // only admins can run csr.
                 }
             }
-            if (((action.Flags & TTABFlags.MustRun) == 0 || ((action.Flags & TTABFlags.TSORunCheckAlways) > 0))
+            if ((!action.Flags.HasFlag(TTABFlags.FSOSkipPermissions) || ((action.Flags & TTABFlags.TSORunCheckAlways) > 0))
                 && action.CheckRoutine != null && EvaluateCheck(Context, Entity, new VMStackFrame()
                 {
                     Caller = Entity,

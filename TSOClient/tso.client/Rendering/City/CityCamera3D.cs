@@ -217,7 +217,7 @@ namespace FSO.Client.Rendering.City
             {
                 //to lot view
                 var screen = (GameFacade.Screens.CurrentUIScreen as UI.Screens.CoreGameScreen);
-                if (screen.vm != null)
+                if (screen.vm != null && screen.vm.Ready && screen.WorldLoaded)
                 {
                     var controller = screen.FindController<CoreGameScreenController>();
                     var id = controller.GetCurrentLotID();

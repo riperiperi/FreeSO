@@ -66,7 +66,7 @@ namespace FSO.Client.UI.Screens
 
         public UILotControl LotControl { get; set; } //world, lotcontrol and vm will be null if we aren't in a lot.
         private LotView.World World;
-        private bool WorldLoaded;
+        public bool WorldLoaded;
         public FSO.SimAntics.VM vm { get; set; }
         public VMClientDriver Driver;
         public uint VisualBudget { get; set; }
@@ -216,7 +216,6 @@ namespace FSO.Client.UI.Screens
 
         public CoreGameScreen() : base()
         {
-            DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0, 0);
             StateChanges = new Queue<SimConnectStateChange>();
             /**
             * Music
@@ -516,7 +515,7 @@ namespace FSO.Client.UI.Screens
             if (vm == null) return;
 
             //clear our cache too, if the setting lets us do that
-            DiscordRpcEngine.SendFSOPresence(null, 0, 0, 0, 0);
+            DiscordRpcEngine.SendFSOPresence(gizmo.CurrentAvatar.Value.Avatar_Name, null, 0, 0, 0, 0, gizmo.CurrentAvatar.Value.Avatar_PrivacyMode > 0);
             TimedReferenceController.Clear();
             TimedReferenceController.Clear();
 
@@ -724,12 +723,16 @@ namespace FSO.Client.UI.Screens
             Title.SetTitle(title);
             if (lastLotTitle != title)
             {
+                bool isPrivate = false;
+                if (gizmo.CurrentAvatar.Value.Avatar_PrivacyMode > 0) isPrivate = true;
                 DiscordRpcEngine.SendFSOPresence(
+                    gizmo.CurrentAvatar.Value.Avatar_Name,
                     vm.LotName,
                     (int)FindController<CoreGameScreenController>().GetCurrentLotID(),
                     vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0),
                     vm.LotName.StartsWith("{job:") ? 4 : 24,
-                    vm.TSOState.PropertyCategory
+                    vm.TSOState.PropertyCategory,
+                    isPrivate
                     );
                 lastLotTitle = title;
             }

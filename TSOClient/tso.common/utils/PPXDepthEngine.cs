@@ -20,6 +20,7 @@ namespace FSO.Common.Utils
         private static RenderTarget2D Backbuffer;
         private static SpriteBatch SB;
         public static int SSAA = 1;
+        public static int MSAA = 0;
 
         public static void InitGD(GraphicsDevice gd)
         {
@@ -28,12 +29,13 @@ namespace FSO.Common.Utils
         }
         public static void InitScreenTargets()
         {
+            if (GD == null) return;
             if (BackbufferDepth != null) BackbufferDepth.Dispose();
             if (Backbuffer != null) Backbuffer.Dispose();
             var scale = 1;//FSOEnvironment.DPIScaleFactor;
             if (!FSOEnvironment.Enable3D)
-                BackbufferDepth = CreateRenderTarget(GD, 1, 0, SurfaceFormat.Color, SSAA*GD.Viewport.Width/scale, SSAA * GD.Viewport.Height / scale, DepthFormat.None);
-            Backbuffer = CreateRenderTarget(GD, 1, 0, SurfaceFormat.Color, SSAA * GD.Viewport.Width / scale, SSAA * GD.Viewport.Height / scale, DepthFormat.Depth24Stencil8);
+                BackbufferDepth = CreateRenderTarget(GD, 1, (FSOEnvironment.DirectX)?0:MSAA, SurfaceFormat.Color, SSAA*GD.Viewport.Width/scale, SSAA * GD.Viewport.Height / scale, DepthFormat.None);
+            Backbuffer = CreateRenderTarget(GD, 1, MSAA, SurfaceFormat.Color, SSAA * GD.Viewport.Width / scale, SSAA * GD.Viewport.Height / scale, DepthFormat.Depth24Stencil8);
         }
 
         private static RenderTarget2D ActiveColor;

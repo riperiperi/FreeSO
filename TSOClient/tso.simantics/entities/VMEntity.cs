@@ -726,6 +726,8 @@ namespace FSO.SimAntics
                     var count = ObjectData[(short)var];
                     if (TimestampLockoutCount > Thread.Context.VM.Scheduler.CurrentTickID) TimestampLockoutCount = 0; //lockout counts in the future are invalid.
                     return (short)((Thread == null) ? count : Math.Max((long)count - (Thread.Context.VM.Scheduler.CurrentTickID - TimestampLockoutCount), 0));
+                case VMStackObjectVariable.CurrentValue:
+                    return (short)MultitileGroup.InitialPrice;
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
@@ -889,7 +891,7 @@ namespace FSO.SimAntics
         {
             var ttab = global ? context.GlobalTreeTable : TreeTable;
             var ttas = global ? context.GlobalTTAs : TreeTableStrings;
-            if (!ttab.InteractionByIndex.ContainsKey((uint)interaction)) return null;
+            if (ttab?.InteractionByIndex?.ContainsKey((uint)interaction) != true) return null;
             var Action = ttab.InteractionByIndex[(uint)interaction];
 
             ushort actionID = Action.ActionFunction;

@@ -18,7 +18,19 @@ namespace FSO.Client
             get
             {
                 if (defaultInstance == null)
+                {
                     defaultInstance = new GlobalSettings(Path.Combine(FSOEnvironment.UserDir, "config.ini"));
+                    if (defaultInstance.DPIScaleFactor > 4 || defaultInstance.DPIScaleFactor == 0)
+                        defaultInstance.DPIScaleFactor = 1; //sanity check
+                    if (defaultInstance.ChatWindowsOpacity == 0 || defaultInstance.ChatWindowsOpacity > 1)
+                        defaultInstance.ChatWindowsOpacity = 1; //sanity check
+                    if (defaultInstance.GameEntryUrl == "http://api.freeso.org")
+                    {
+                        defaultInstance.GameEntryUrl = "https://api.freeso.org";
+                        defaultInstance.CitySelectorUrl = "https://api.freeso.org";
+                    }
+
+                }
                 return defaultInstance;
             }
         }
@@ -79,8 +91,14 @@ namespace FSO.Client
 
             { "ChatColor", "0" }, //uint packed color. 0 means choose random
             { "ChatTTSPitch", "0" }, //-100 to 100
-
-            { "ChatOnlyEmoji", "false" }
+            { "ChatOnlyEmoji", "false" },
+            { "ChatShowTimestamp", "false" },
+            { "ChatSizeX", "400" },
+            { "ChatSizeY", "255" },
+            {"ChatLocationX", "20" },
+            {"ChatLocationY", "20" },
+            {"ChatDeltaScale", "8" },
+            { "ChatWindowsOpacity", "0.8" }
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -138,6 +156,13 @@ namespace FSO.Client
         public uint ChatColor { get; set; }
         public int ChatTTSPitch { get; set; }
         public bool ChatOnlyEmoji { get; set; }
+        public bool ChatShowTimestamp { get; set; }
+        public float ChatSizeX { get; set; }
+        public float ChatSizeY { get; set; }
+        public float ChatLocationX { get; set; }
+        public float ChatLocationY { get; set; }
+        public int ChatDeltaScale { get; set; }
+        public float ChatWindowsOpacity { get; set; }
 
         public static int TARGET_COMPAT_STATE = 2;
     }

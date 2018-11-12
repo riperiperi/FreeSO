@@ -63,9 +63,11 @@ namespace FSO.Client.UI.Panels.EODs
         public void CloseInteraction()
         {
             var me = Controller.Lot.ActiveEntity;
-            if (me != null) {
-                var action = me.Thread.Queue.First(x => x.Mode != SimAntics.Engine.VMQueueMode.Idle);
-                if (action != null) {
+            if (me != null)
+            {
+                var action = me.Thread.Queue.FirstOrDefault(x => x.Mode != SimAntics.Engine.VMQueueMode.Idle);
+                if (action != null)
+                {
                     Controller.Lot.vm.SendCommand(new VMNetInteractionCancelCmd
                     {
                         ActionUID = action.UID

@@ -526,7 +526,7 @@ namespace FSO.Client.UI.Panels
             return new Rectangle(0, 0, GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
         }
 
-        private Point GetScaledPoint(Point TapPoint)
+        public Point GetScaledPoint(Point TapPoint)
         {
             var screenMiddle = new Point(
                 (int)(GameFacade.Screens.CurrentUIScreen.ScreenWidth / (2 / FSOEnvironment.DPIScaleFactor)),
@@ -1069,7 +1069,7 @@ namespace FSO.Client.UI.Panels
             {
                 World.State.DynamicCutaway = (WallsMode == 1);
                 //first we need to cycle the rooms that are being cutaway. Keep this up even if we're in all-cut mode.
-                var mouseTilePos = World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+                var mouseTilePos = World.EstTileAtPosWithScroll(GetScaledPoint(state.MouseState.Position).ToVector2() / FSOEnvironment.DPIScaleFactor);
                 var roomHover = vm.Context.GetRoomAt(LotTilePos.FromBigTile((short)(mouseTilePos.X), (short)(mouseTilePos.Y), World.State.Level));
                 var outside = (vm.Context.RoomInfo[roomHover].Room.IsOutside);
                 if (!outside && !CutRooms.Contains(roomHover))

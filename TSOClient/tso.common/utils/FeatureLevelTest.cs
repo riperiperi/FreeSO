@@ -46,6 +46,28 @@ namespace FSO.Common.Utils
                 FSOEnvironment.TexCompressSupport = false;
             }
 
+            //msaa test
+            try
+            {
+                var msaaTarg = new RenderTarget2D(gd, 1, 1, false, SurfaceFormat.Color, DepthFormat.None, 8, RenderTargetUsage.PreserveContents);
+                gd.SetRenderTarget(msaaTarg);
+                gd.Clear(Color.Red);
+
+                var tex = TextureUtils.CopyAccelerated(gd, msaaTarg);
+
+                var result = new Color[1];
+                tex.GetData(result);
+                FSOEnvironment.MSAASupport = result[0] == Color.Red;
+                gd.SetRenderTarget(null);
+                msaaTarg.Dispose();
+                tex.Dispose();
+            }
+            catch
+            {
+                gd.SetRenderTarget(null);
+                FSOEnvironment.MSAASupport = false;
+            }
+
             return true;
         }
     }

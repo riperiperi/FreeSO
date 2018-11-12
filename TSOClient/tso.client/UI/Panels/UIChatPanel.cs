@@ -105,7 +105,7 @@ namespace FSO.Client.UI.Panels
             InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 230, 100230, 100230)); //ucp
 
             HistoryDialog = new UIChatDialog(owner);
-            HistoryDialog.Position = new Vector2(20, 20);
+            HistoryDialog.Position = new Vector2(GlobalSettings.Default.ChatLocationX, GlobalSettings.Default.ChatLocationY);
             HistoryDialog.Visible = true;
             HistoryDialog.Opacity = 0.8f;
             HistoryDialog.OnSendMessage += SendMessage;
@@ -202,6 +202,12 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
+            if (this.HistoryDialog.Opacity != GlobalSettings.Default.ChatWindowsOpacity)
+            {
+                var opacity = GlobalSettings.Default.ChatWindowsOpacity;
+                this.HistoryDialog.Opacity = opacity;
+                this.PropertyLog.Opacity = opacity;
+            }
             Inputs = state.InputManager;
             if (!VM.UseWorld || vm.FSOVAsyncLoading) return;
 
@@ -259,7 +265,7 @@ namespace FSO.Client.UI.Panels
                 var off2 = new Vector2(world.WorldSpace.WorldPxWidth, world.WorldSpace.WorldPxHeight);
                 off2 = (off2 / world.PreciseZoom - off2) / 2;
 
-                label.TargetPt = ((avatar.WorldUI.GetScreenPos(vm.Context.World.State) + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom)))
+                label.TargetPt = ((ZoomCorrect(avatar.WorldUI.GetScreenPos(vm.Context.World.State)) + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom)))
                    + off2) * world.PreciseZoom / FSOEnvironment.DPIScaleFactor;
 
             }
@@ -331,6 +337,16 @@ namespace FSO.Client.UI.Panels
             {
                 PropertyLog.Visible = !PropertyLog.Visible;
             }
+        }
+
+        private Vector2 ZoomCorrect(Vector2 vec)
+        {
+            var screenMiddle = new Vector2(
+            (int)(GameFacade.Screens.CurrentUIScreen.ScreenWidth / (2 / FSOEnvironment.DPIScaleFactor)),
+            (int)(GameFacade.Screens.CurrentUIScreen.ScreenHeight / (2 / FSOEnvironment.DPIScaleFactor))
+            );
+
+            return ((vec - screenMiddle) * Owner.BBScale) + screenMiddle;
         }
 
         public override void Draw(UISpriteBatch batch)
