@@ -714,6 +714,8 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.TransactionIncomplete;
                     ((VMGameObject)ent).DisableIfTSOCategoryWrong(Lot.Context);
+                    if (ent.Object.OBJ.GUID == 0x34D777C3 && ent.GetValue(VMStackObjectVariable.Hidden) > 0)
+                        ent.SetValue(VMStackObjectVariable.Hidden, 0);
                     if (PetCrateGUIDs.Contains(ent.Object.OBJ.GUID) && ent.GetAttribute(1) == 0)
                     {
                         //if this pet isn't out, but their crate is out of world, place it near the mailbox.

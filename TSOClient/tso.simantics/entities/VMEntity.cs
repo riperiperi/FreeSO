@@ -1257,6 +1257,8 @@ namespace FSO.SimAntics
                     {
                         this.Position = obj.Position;
                         obj.SetPosition(LotTilePos.OUT_OF_WORLD, obj.Direction, context);
+                        if (obj.GetValue(VMStackObjectVariable.Hidden) > 0)
+                            obj.SetValue(VMStackObjectVariable.Hidden, 0); //failsafe: hidden held objects (replaced by mesh) should unhide on forced drop.
                         if (this.Position != LotTilePos.OUT_OF_WORLD) VMFindLocationFor.FindLocationFor(obj, this, context, VMPlaceRequestFlags.Default);
                     }
                 }
