@@ -10,6 +10,7 @@ namespace FSO.Server.Database.DA.Lots
     public interface ILots
     {
         IEnumerable<DbLot> All(int shard_id);
+        List<uint> GetLocationsInNhood(uint nhood_id);
         List<DbLot> AllLocations(int shard_id);
         DbLot GetByLocation(int shard_id, uint location);
         List<DbLot> GetAdjToLocation(int shard_id, uint location);
@@ -39,5 +40,7 @@ namespace FSO.Server.Database.DA.Lots
         void DeleteLotServerTicket(string id);
         DbLotServerTicket GetLotServerTicket(string id);
         List<DbLotServerTicket> GetLotServerTicketsForClaimedAvatar(int claim_id);
+
+        int UpdateAllNeighborhoods(int shard_id);
     }
 }

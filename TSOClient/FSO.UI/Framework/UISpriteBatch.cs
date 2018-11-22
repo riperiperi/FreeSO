@@ -48,6 +48,7 @@ namespace FSO.Client.UI.Framework
         public UISpriteBatch(GraphicsDevice gd, int numBuffers, int width, int height) : this(gd, numBuffers, width, height, 0) { }
 
         public static bool Invalidated = false;
+        public Stack<Matrix> BatchMatrixStack = new Stack<Matrix>();
 
         private int _Width;
         public int Width

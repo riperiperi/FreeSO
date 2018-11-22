@@ -1,5 +1,6 @@
 ﻿using FSO.LotView.Model;
 using FSO.SimAntics.Entities;
+using FSO.SimAntics.Model.TSOPlatform;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,20 @@ namespace FSO.SimAntics.Model
         {
             get
             {
-                return MultitileByPersist.Count;
+                //if we're not a community lot, we can short ciruit this.
+                if (!Context.VM.TSOState.CommunityLot) return MultitileByPersist.Count;
+
+                return MultitileByPersist.Count(x => (((x.Value.BaseObject.TSOState as VMTSOObjectState)
+                    ?.ObjectFlags ?? 0) & VMTSOObjectFlags.FSODonated) == 0);
+            }
+        }
+
+        public int NumDonatedObjects
+        {
+            get
+            {
+                return MultitileByPersist.Count(x => (((x.Value.BaseObject.TSOState as VMTSOObjectState)
+                    ?.ObjectFlags ?? 0) & VMTSOObjectFlags.FSODonated) > 0);
             }
         }
 

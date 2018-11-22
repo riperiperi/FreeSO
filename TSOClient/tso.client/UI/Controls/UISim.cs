@@ -40,6 +40,7 @@ namespace FSO.Client.UI.Controls
         public float RotationStartAngle = 45;
         public float RotationSpeed = new TimeSpan(0, 0, 10).Ticks;
         public bool AutoRotate = true;
+        public float TimeOffset;
         
         protected string m_Timestamp;
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
@@ -113,6 +114,12 @@ namespace FSO.Client.UI.Controls
             Camera.ProjectionDirty();
         }
 
+        public override void Removed()
+        {
+            GameFacade.Scenes.RemoveExternal(Scene);
+            Scene.Dispose();
+        }
+
         public UISim(bool AddScene)
         {
             UISimInit();
@@ -131,7 +138,7 @@ namespace FSO.Client.UI.Controls
             if (AutoRotate)
             {
                 var startAngle = RotationStartAngle;
-                var time = state.Time.TotalGameTime.Ticks;
+                var time = state.Time.TotalGameTime.Ticks + TimeOffset;
                 var phase = (time % RotationSpeed) / RotationSpeed;
                 var multiplier = Math.Sin((Math.PI * 2) * phase);
                 var newAngle = startAngle + (RotationRange * multiplier);
@@ -141,6 +148,7 @@ namespace FSO.Client.UI.Controls
 
         public override void PreDraw(UISpriteBatch batch)
         {
+            if (!Visible) return;
             base.PreDraw(batch);
             if (!UISpriteBatch.Invalidated)
             {
@@ -156,6 +164,7 @@ namespace FSO.Client.UI.Controls
 
         public override void Draw(UISpriteBatch batch)
         {
+            if (!Visible) return;
             DrawLocalTexture(batch, Scene.Target, null, new Vector2((_Size.X - 140 * _SimScale.X) /2, 0), new Vector2(1f/FSOEnvironment.DPIScaleFactor, 1f/FSOEnvironment.DPIScaleFactor)*_SimScale);
         }
     }

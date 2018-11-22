@@ -71,14 +71,14 @@ VertexOut vsRC(VertexIn v) {
 
 float4 psRC(VertexOut v) : COLOR0
 {
-	float4 color = tex2D(TexSampler, v.texCoord) * lightProcess(v.modelPos);
+	float4 color = gammaMul(tex2D(TexSampler, v.texCoord), lightProcess(v.modelPos));
 	if (color.a < 0.01) discard;
 	return color;
 }
 
 float4 psDirRC(VertexOut v) : COLOR0
 {
-	float4 color = tex2D(TexSampler, v.texCoord) * lightProcessDirection(v.modelPos, normalize(v.normal));
+	float4 color = gammaMul(tex2D(TexSampler, v.texCoord), lightProcessDirection(v.modelPos, normalize(v.normal)));
 	if (color.a < 0.01) discard;
 	return color;
 }
@@ -101,7 +101,7 @@ float4 psLMapRC(VertexOut v) : COLOR0
 
 float4 psDisabledRC(VertexOut v) : COLOR0
 {
-	float4 color = tex2D(TexSampler, v.texCoord) * lightProcess(v.modelPos);
+	float4 color = gammaMul(tex2D(TexSampler, v.texCoord), lightProcess(v.modelPos));
 	float gray = dot(color.xyz, float3(0.2989, 0.5870, 0.1140));
 	color = float4(gray, gray, gray, color.a);
 	return color;
@@ -157,9 +157,9 @@ float4 psWallRC(WallVertexOut v) : COLOR0
 	texC.x = frac(texC.x);
 	texC.y = frac(((v.texCoord.y % 1)-1/240)/-1.04);
 #if SIMPLE
-	float4 color = v.color * tex2D(TexSampler, texC) * lightInterp(mPos); // version for no mipmaps
+	float4 color = gammaMul(v.color * tex2D(TexSampler, texC), lightInterp(mPos)); // version for no mipmaps
 #else
-	float4 color = v.color * tex2Dgrad(AnisoSampler, texC, ddx(v.texCoord), ddy(v.texCoord)) * lightInterp(mPos);
+	float4 color = gammaMul(v.color * tex2Dgrad(AnisoSampler, texC, ddx(v.texCoord), ddy(v.texCoord)), lightInterp(mPos));
 #endif
 	if (SideMask != 0) {
 		//our mask is actually a texture of a top right wall.

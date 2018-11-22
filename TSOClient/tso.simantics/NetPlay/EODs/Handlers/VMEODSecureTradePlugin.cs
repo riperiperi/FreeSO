@@ -390,6 +390,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         WRONG_OWNER_LOT,
         MISSING_OBJECT_LOT,
         UNTRADABLE_OBJECT,
+        CANNOT_TRADE_COMMUNITY_LOT,
         UNKNOWN
     }
 }

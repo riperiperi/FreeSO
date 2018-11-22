@@ -68,6 +68,7 @@ namespace FSO.Server.Servers.City
             Kernel.Bind<JobMatchmaker>().ToSelf().InSingletonScope();
             Kernel.Bind<LotServerPicker>().To<LotServerPicker>().InSingletonScope();
             Kernel.Bind<LotAllocations>().To<LotAllocations>().InSingletonScope();
+            Kernel.Bind<Neighborhoods>().ToSelf().InSingletonScope();
 
             Liveness = Kernel.Get<CityLivenessEngine>();
 
@@ -238,7 +239,8 @@ namespace FSO.Server.Servers.City
                 typeof(ModerationHandler),
                 typeof(AvatarRetireHandler),
                 typeof(MailHandler),
-                typeof(MatchmakerNotifyHandler)
+                typeof(MatchmakerNotifyHandler),
+                typeof(NhoodHandler)
             };
         }
     }

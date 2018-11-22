@@ -61,6 +61,7 @@ namespace FSO.Client.UI.Panels
             this.ButtonStyle = new TextStyle
             {
                 Font = GameFacade.MainFont,
+                VFont = GameFacade.VectorFont,
                 Size = 12,
                 Color = new Color(0xA5, 0xC3, 0xD6),
                 SelectedColor = new Color(0x00, 0xFF, 0xFF),
@@ -142,8 +143,10 @@ namespace FSO.Client.UI.Panels
         {
             HeadCamera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
 
-            HeadCamera.Position = new Vector3(0, 5.2f, 12.5f);
-            HeadCamera.Target = new Vector3(0, 5.2f, 0.0f);
+            var pos2 = m_Head.Skeleton.GetBone("HEAD").AbsolutePosition;
+
+            HeadCamera.Position = new Vector3(0, pos2.Y, 12.5f);
+            HeadCamera.Target = pos2;
 
             HeadScene = new _3DTargetScene(GameFacade.GraphicsDevice, HeadCamera, new Point((int)(200*TrueScale),(int)(200*TrueScale)), (GlobalSettings.Default.AntiAlias) ? 8 : 0);
             HeadScene.ID = "UIPieMenuHead";

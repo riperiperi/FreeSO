@@ -92,6 +92,14 @@ namespace FSO.Common.Domain.Realestate
             var terrain = _Map.GetTerrain(x, y);
             if (terrain == TerrainType.WATER) { return false; }
 
+            var slope = GetSlope(x, y);
+
+            //10 is threshold for now
+            return (slope < 10);
+        }
+
+        public int GetSlope(ushort x, ushort y)
+        {
             x += 1;
             //Check elevation is ok, get all 4 corners and then decide
             var tl = _Map.GetElevation(x, y);
@@ -105,8 +113,7 @@ namespace FSO.Common.Domain.Realestate
             int max = Math.Max(tl, Math.Max(tr, Math.Max(bl, br)));
             int min = Math.Min(tl, Math.Min(tr, Math.Min(bl, br)));
 
-            //10 is threshold for now
-            return (max - min < 10);
+            return (max - min);
         }
 
         public CityMap GetMap()

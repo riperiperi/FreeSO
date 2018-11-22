@@ -477,6 +477,22 @@ namespace FSO.SimAntics
                     owner.TickSounds();
                 }
             }
+
+            var dress = tp.Properties["dress"];
+            if (dress != null)
+            {
+                var apr = (VM.UseWorld) ? FSO.Content.Content.Get().AvatarAppearances.Get(dress + ".apr") : null;
+                avatar.BoundAppearances.Add(dress);
+                if (VM.UseWorld && apr != null) avatar.Avatar.AddAccessory(apr);
+            }
+
+            var undress = tp.Properties["undress"];
+            if (undress != null)
+            {
+                var apr = (VM.UseWorld) ? FSO.Content.Content.Get().AvatarAppearances.Get(undress + ".apr") : null;
+                avatar.BoundAppearances.Remove(undress);
+                if (VM.UseWorld && apr != null) avatar.Avatar.RemoveAccessory(apr);
+            }
         }
 
         public override void Tick()
@@ -1024,6 +1040,10 @@ namespace FSO.SimAntics
             var ico = FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
 
             //todo: better dispose handling for these icons
+            if (ico == null)
+            {
+                ico = MissingIconProvider(this);
+            }
             return (store > 0 && ico != null)?TextureUtils.Decimate(ico, gd, 1<<(2-store), false):ico;
         }
 

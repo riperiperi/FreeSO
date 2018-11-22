@@ -24,6 +24,7 @@ namespace FSO.Common.Audio
         private AutoResetEvent DecodeNext;
         private AutoResetEvent BufferDone;
         private bool EndOfStream;
+        private bool Active = true;
         private Thread MainThread; //keep track of this, terminate when it closes.
 
         private SoundState _State = SoundState.Stopped;
@@ -34,6 +35,7 @@ namespace FSO.Common.Audio
 
         private object ControlLock = new object();
         private string Path;
+        public int SendExtra = 2;
 
         public MP3Player(string path)
         {
@@ -68,7 +70,7 @@ namespace FSO.Common.Audio
 
                 NextBuffers = new List<byte[]>();
                 NextSizes = new List<int>();
-                Requests = 1;
+                Requests = 2;
             }
 
             //SubmitBuffer(null, null);
@@ -78,14 +80,14 @@ namespace FSO.Common.Audio
             {
                 try
                 {
-                    while (MainThread.IsAlive)
+                    while (Active && MainThread.IsAlive)
                     {
                         DecodeNext.WaitOne(128);
                         bool go;
                         lock (this) go = Requests > 0;
                         while (go)
                         {
-                            var buf = new byte[524288];
+                            var buf = new byte[262144];// 524288];
                             var read = Stream.Read(buf, 0, buf.Length);
                             lock (this)
                             {
@@ -95,6 +97,7 @@ namespace FSO.Common.Audio
                                 if (read == 0)
                                 {
                                     EndOfStream = true;
+                                    BufferDone.Set();
                                     return;
                                 }
                                 BufferDone.Set();
@@ -151,7 +154,10 @@ namespace FSO.Common.Audio
                 Disposed = true;
                 Inst?.Dispose();
                 Stream?.Dispose();
-                DecoderThread?.Abort();
+
+                Active = true;
+                DecodeNext.Set(); //end the mp3 thread immediately
+
                 EndOfStream = true;
             }
         }
@@ -235,7 +241,6 @@ namespace FSO.Common.Audio
             while (true)
             {
                 if (EndOfStream) return;
-                //BufferDone.WaitOne(128);
                 lock (this)
                 {
                     if (NextBuffers.Count > 0)
@@ -245,7 +250,15 @@ namespace FSO.Common.Audio
                         NextSizes.RemoveAt(0);
                         Requests++;
                         DecodeNext.Set();
+                        if (SendExtra > 0)
+                        {
+                            SendExtra--;
+                            continue;
+                        }
                         return;
+                    } else
+                    {
+                        BufferDone.WaitOne(128);
                     }
 
                     if (EndOfStream) return;

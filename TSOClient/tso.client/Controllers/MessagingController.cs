@@ -1,6 +1,7 @@
 ﻿using FSO.Client.Model;
 using FSO.Client.UI.Panels;
 using FSO.Client.Utils;
+using FSO.Common;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Framework;
 using FSO.Common.DataService.Model;
@@ -79,10 +80,60 @@ namespace FSO.Client.Controllers
             UpdateTray();
         }
 
+        public static Tuple<string, string, string, uint> CSTReplace(string sender, string subject, string body)
+        {
+            if (sender == null || sender.Length == 0 || sender[0] != ';')
+                return new Tuple<string, string, string, uint>(sender, subject, body, 0);
+
+            if (sender == ";default") //default name
+                sender = "The Sims Online";
+            else
+                sender = CSTReplaceString(sender, false);
+
+            if (subject.Length > 0 && subject[0] == ';')
+                subject = CSTReplaceString(subject, false);
+
+            uint expire = 0;
+            if (body.Length > 0 && body[0] == ';') {
+                var ind = body.IndexOf(';', 1);
+                if (ind != -1)
+                    uint.TryParse(body.Substring(1, ind - 1), out expire);
+                body = CSTReplaceString(body, true);
+            }
+
+            return new Tuple<string, string, string, uint>(sender, subject, body, expire);
+        }
+
+        public static string CSTReplaceString(string data, bool hasExpire)
+        {
+            var split = data.Substring(1).Split(';');
+            if (split.Length < (hasExpire ? 3 : 2)) return data;
+
+            var args = split.Skip((hasExpire)?3:2).ToArray();
+            if (hasExpire)
+            {
+                uint expire;
+                if (uint.TryParse(split[0], out expire) && expire > 0)
+                {
+                    var date = ClientEpoch.ToDate(expire);
+                    date = date.ToLocalTime();
+                    var dateString = date.ToShortTimeString() + " " + date.ToShortDateString();
+                    for (int i=0; i<args.Length; i++)
+                    {
+                        if (args[i] == split[0]) args[i] = dateString;
+                    }
+                }
+            }
+            int off = hasExpire ? 1 : 0;
+
+            return GameFacade.Strings.GetString(split[off], split[1+off], args);
+        }
+
         public void SetEmailMessage(Message message, MessageItem item)
         {
             var window = GetWindow(message);
-            window.SetEmail(item.Subject, item.Body, item.SenderID == item.TargetID);
+            var tuple = CSTReplace(item.SenderName, item.Subject, item.Body);
+            window.SetEmail(tuple.Item2, tuple.Item3, item.SenderID == item.TargetID, (MessageSpecialType)item.Subtype, tuple.Item4);
         }
 
         public void ShowWindow(Message message)

@@ -71,7 +71,7 @@ namespace FSO.SimAntics.Model
                 if (VMMotive.Comfort == type) return rate;
                 var ind = Array.IndexOf(VMAvatarMotiveDecay.DecrementMotives, type);
                 var cat = vm.TSOState.PropertyCategory;
-                if (cat == 255) cat = 0;
+                if (cat > 10) cat = 0;
                 string category = VMAvatarMotiveDecay.CategoryNames[cat];
                 var weight = ToFixed1000(LotMotives.Value.GetNum(category + "_" + VMAvatarMotiveDecay.LotMotiveNames[ind] + "Weight"));
                 return (rate * 1000) / weight;

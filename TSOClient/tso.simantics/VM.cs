@@ -205,6 +205,7 @@ namespace FSO.SimAntics
             GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
             if (Driver is VMServerDriver) EODHost = new VMEODHost();
+            PlatformState.ActivateValidator(this);
         }
 
         public void Reset()
@@ -242,6 +243,7 @@ namespace FSO.SimAntics
                 forward.X *= -1f;
                 forward.Normalize();
                 listener.Forward = forward;
+                Context.World.State.SimSpeed = SpeedMultiplier;
             }
 
             if (LastFrameSpeed != SpeedMultiplier)
@@ -782,6 +784,7 @@ namespace FSO.SimAntics
                 ((VMTS1LotState)input.PlatformState).CurrentFamily = TS1State.CurrentFamily;
             }
             PlatformState = input.PlatformState;
+            PlatformState.ActivateValidator(this);
             ObjectId = input.ObjectId;
 
             //just a few final changes to refresh everything, and avoid signalling objects

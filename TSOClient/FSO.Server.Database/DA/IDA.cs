@@ -29,6 +29,8 @@ using System.Threading.Tasks;
 using FSO.Server.Database.DA.Transactions;
 using FSO.Server.Database.DA.DynPayouts;
 using FSO.Server.Database.DA.EmailConfirmation;
+using FSO.Server.Database.DA.Neighborhoods;
+using FSO.Server.Database.DA.Elections;
 
 namespace FSO.Server.Database.DA
 {
@@ -45,6 +47,8 @@ namespace FSO.Server.Database.DA
         ILots Lots { get; }
         ILotAdmit LotAdmit { get; }
         ILotClaims LotClaims { get; }
+        INeighborhoods Neighborhoods { get; }
+        IElections Elections { get; }
         IAvatarClaims AvatarClaims { get; }
         IBookmarks Bookmarks { get; }
         IOutfits Outfits { get; }

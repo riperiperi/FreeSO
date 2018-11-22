@@ -108,10 +108,14 @@
     <Compile Include="Controllers\GizmoController.cs" />
     <Compile Include="Controllers\GizmoSearchController.cs" />
     <Compile Include="Controllers\LoadingScreenController.cs" />
+    <Compile Include="Controllers\NeighborhoodActionController.cs" />
     <Compile Include="Controllers\Panels\BookmarksController.cs" />
+    <Compile Include="Controllers\Panels\GenericSearchController.cs" />
     <Compile Include="Controllers\Panels\LotAdmitController.cs" />
     <Compile Include="Controllers\Panels\LotPageController.cs" />
+    <Compile Include="Controllers\Panels\NeighPageController.cs" />
     <Compile Include="Controllers\Panels\PersonPageController.cs" />
+    <Compile Include="Controllers\Panels\RatingSummaryController.cs" />
     <Compile Include="Controllers\Panels\RelationshipDialogController.cs" />
     <Compile Include="Controllers\Panels\SecureTradeController.cs" />
     <Compile Include="Controllers\RoommateRequestController.cs" />
@@ -130,7 +134,9 @@
     <Compile Include="Network\Sandbox\FSOSandboxServer.cs" />
     <Compile Include="Network\Topics.cs" />
     <Compile Include="Network\TopicSubscription.cs" />
+    <Compile Include="Network\VMDataServiceNameCache.cs" />
     <Compile Include="Regulators\LotConnectionRegulator.cs" />
+    <Compile Include="Regulators\NeighborhoodActionRegulator.cs" />
     <Compile Include="Regulators\PurchaseLotRegulator.cs" />
     <Compile Include="Rendering\City\CityCamera2D.cs" />
     <Compile Include="Rendering\City\CityCamera3D.cs" />
@@ -143,9 +149,12 @@
     <Compile Include="Rendering\City\Graph\VoronoiCellGraph.cs" />
     <Compile Include="Rendering\City\ICityCamera.cs" />
     <Compile Include="Rendering\City\LotThumbContent.cs" />
+    <Compile Include="Rendering\City\Model\CityNeighbourhood.cs" />
     <Compile Include="Rendering\City\Plugins\AbstractCityPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
+    <Compile Include="Rendering\City\Plugins\NeighbourhoodEditPlugin.cs" />
     <Compile Include="Rendering\City\TLayerVertex.cs" />
+    <Compile Include="UI\Controls\UIRatingDisplay.cs" />
     <Compile Include="UI\Controls\UISlotsImage.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UILotButton.cs" />
@@ -156,6 +165,7 @@
     <Compile Include="UI\Hints\UIHintListItem.cs" />
     <Compile Include="UI\Hints\UIHintManager.cs" />
     <Compile Include="UI\Hints\UIHintWindow.cs" />
+    <Compile Include="UI\Model\UIIconCache.cs" />
     <Compile Include="UI\Panels\Chat\UIChatCategoryDialog.cs" />
     <Compile Include="UI\Panels\Chat\UIChatCategoryList.cs" />
     <Compile Include="UI\Panels\EODs\Archetypes\UIBasicEOD.cs" />
@@ -189,6 +199,17 @@
     <Compile Include="UI\Panels\LotControls\UIGrassPaint.cs" />
     <Compile Include="UI\Panels\LotControls\UITerrainRaiser.cs" />
     <Compile Include="UI\Panels\MessageStore\UIMessageStore.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIBigPersonButton.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIDonatorDialog.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIManageDonatorDialog.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UINeighBanner.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UINeighPage.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UINominationSelectContainer.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIRatingContainer.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIRatingSummaryPanel.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UITop10Pedestal.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIVoteCandidate.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIVoteContainer.cs" />
     <Compile Include="UI\Panels\UIEmojiSuggestions.cs" />
     <Compile Include="UI\Panels\UIGraphicsOptionsDialog.cs" />
     <Compile Include="UI\Hints\UIHintAlert.cs" />
@@ -196,6 +217,7 @@
     <Compile Include="UI\Panels\UILotSkillModeDialog.cs" />
     <Compile Include="UI\Panels\UISandboxSelector.cs" />
     <Compile Include="UI\Panels\UINeighborhoodSelectionPanel.cs" />
+    <Compile Include="UI\Panels\UISortedContainer.cs" />
     <Compile Include="UI\Panels\UITimeOutDialog.cs" />
     <Compile Include="UI\Panels\UIAsyncPriceDialog.cs" />
     <Compile Include="UI\Panels\UIBonusDialog.cs" />
@@ -238,6 +260,7 @@
     <Compile Include="Utils\GameLocator\LinuxLocator.cs" />
     <Compile Include="Utils\GameLocator\WindowsLocator.cs" />
     <Compile Include="Utils\MonogameLinker.cs" />
+    <Compile Include="Utils\PalMapper.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
     <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll">
       <Link>Monogame\Linux\MonoGame.Framework.dll</Link>
@@ -486,6 +509,7 @@
       <HintPath>..\packages\MIConvexHull.1.1.17.1019\lib\netstandard1.0\MIConvexHull.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -494,19 +518,22 @@
       <HintPath>..\packages\Portable.Ninject.3.3.1\lib\net40-client\Ninject.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.3.11\lib\net45\NLog.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\NLog.4.5.7\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Collections.Immutable.1.3.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.5.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
     </Reference>
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Xml" />
     <Reference Include="GOLDEngine">
       <HintPath>Dependencies\GOLDEngine.dll</HintPath>
@@ -581,11 +608,6 @@
       <Project>{6d6009f4-0afb-4806-89d7-7945f20270f5}</Project>
       <Name>MonoGame.Framework.Net.WindowsGL</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
-      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
-      <Name>MonoGame.Framework.Windows</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
       <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
       <Name>MonoGame.Framework.WindowsGL</Name>
@@ -594,6 +616,10 @@
     <ProjectReference Include="..\..\Other\libs\mp3sharp\mp3sharp\Mp3Sharp.csproj">
       <Project>{834cab58-648d-47cc-ac6f-d01c08c809a4}</Project>
       <Name>Mp3Sharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\MSDFData\MSDFData.csproj">
+      <Project>{eabea510-3e53-4f19-9f0b-75c5ca9dfa3b}</Project>
+      <Name>MSDFData</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\VoronoiLib\VoronoiLib.csproj">
       <Project>{5d6b850b-3084-4c45-a8d7-7ccf67260b21}</Project>
@@ -686,9 +712,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="UI\Model\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

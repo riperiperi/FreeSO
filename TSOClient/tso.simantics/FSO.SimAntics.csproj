@@ -90,9 +90,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -107,6 +106,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Engine\Debug\VMSyncTrace.cs" />
+    <Compile Include="Engine\Routing\VMIPathSegment.cs" />
+    <Compile Include="Engine\Routing\VMPathBezierSegment.cs" />
+    <Compile Include="Engine\Routing\VMPathLineSegment.cs" />
     <Compile Include="Engine\Routing\VMRectRouter.cs" />
     <Compile Include="Engine\TSOGlobalLink\IVMTSOGlobalLink.cs" />
     <Compile Include="Engine\TSOGlobalLink\Model\VMGLOutfit.cs" />
@@ -152,12 +154,16 @@
     <Compile Include="Marshals\VMStandaloneObjectMarshal.cs" />
     <Compile Include="Model\Platform\VMAbstractEntityState.cs" />
     <Compile Include="Model\Platform\VMAbstractLotState.cs" />
+    <Compile Include="Model\Platform\VMDefaultValidator.cs" />
+    <Compile Include="Model\Platform\VMFSOCommunityValidator.cs" />
     <Compile Include="Model\Platform\VMIAvatarState.cs" />
     <Compile Include="Model\Platform\VMIObjectState.cs" />
+    <Compile Include="Model\Platform\VMAbstractValidator.cs" />
     <Compile Include="Model\TS1Platform\VMTS1AvatarState.cs" />
     <Compile Include="Model\TS1Platform\VMTS1EntityState.cs" />
     <Compile Include="Model\TS1Platform\VMTS1LotState.cs" />
     <Compile Include="Model\TS1Platform\VMTS1ObjectState.cs" />
+    <Compile Include="Model\TSOPlatform\IVMAvatarNameCache.cs" />
     <Compile Include="Model\VMGenericTS1CallMode.cs" />
     <Compile Include="Model\Routing\VMRouteFailCode.cs" />
     <Compile Include="Model\Sound\VMSoundEntry.cs" />
@@ -377,11 +383,6 @@
       <Project>{28abbf94-0584-4254-a8b4-4843e6f4e867}</Project>
       <Name>Mina.NET</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
-      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
-      <Name>MonoGame.Framework.Windows</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\tso.world\FSO.LotView.csproj">
       <Project>{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}</Project>
       <Name>FSO.LotView</Name>
@@ -434,6 +435,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />

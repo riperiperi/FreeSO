@@ -64,7 +64,7 @@ namespace FSO.Client.Rendering.City
 
         public Dictionary<Vector2, LotTileEntry> LotTileLookup = new Dictionary<Vector2, LotTileEntry>();
 
-        private bool m_HandleMouse = false;
+        public bool HandleMouse = false;
         public CityMapData MapData { get
             {
                 return Content.MapData;
@@ -221,7 +221,7 @@ namespace FSO.Client.Rendering.City
             Geometry = new CityGeometry();
             SubdivGeometry = new CityGeometry();
             Foliage = new CityFoliage();
-            NeighGeom = new CityNeighGeom();
+            NeighGeom = new CityNeighGeom(this);
             NeighGeom.Generate(GfxDevice);
 
             m_GraphicsDevice = GfxDevice;
@@ -380,8 +380,10 @@ namespace FSO.Client.Rendering.City
 
         }
 
-        private Vector2? GetHoverSquare()
+        public Vector2? GetHoverSquare(double[] bounds)
         {
+            return EstTileAtPosWithScroll(m_MouseState.Position.ToVector2(), null);
+
             var isoScale = GetIsoScale();
             double width = m_ScrWidth;
             float iScale = (float)(1/(isoScale*2));
@@ -389,7 +391,7 @@ namespace FSO.Client.Rendering.City
             Vector2 mid = Camera.CalculateR();
             mid.X -= 6;
             mid.Y += 6;
-            double[] bounds = new double[] {Math.Round(mid.X-19), Math.Round(mid.Y-19), Math.Round(mid.X+19), Math.Round(mid.Y+19)};
+            if (bounds == null) bounds = new double[] {Math.Round(mid.X-19), Math.Round(mid.Y-19), Math.Round(mid.X+19), Math.Round(mid.Y+19)};
             double[] pos = new double[] { m_MouseState.X, m_MouseState.Y };
 
             Vector2? best = null;
@@ -433,6 +435,138 @@ namespace FSO.Client.Rendering.City
         {
             return new Vector2(v.X, v.Y);
         }
+
+
+        #region Helper Utilities
+        public Vector2 EstTileAtPosWithScroll(Vector2 pos, List<Point> hits)
+        {
+            pos *= new Vector2(FSOEnvironment.DPIScaleFactor);
+            var sPos = new Vector3(pos, 0);
+
+            var p1 = GameFacade.GraphicsDevice.Viewport.Unproject(sPos, Camera.Projection, Camera.View, Matrix.Identity);
+            sPos.Z = 1;
+            var p2 = GameFacade.GraphicsDevice.Viewport.Unproject(sPos, Camera.Projection, Camera.View, Matrix.Identity);
+            var dir = p2 - p1;
+            dir.Normalize();
+            var ray = new Ray(p1, p2 - p1);
+            ray.Direction.Normalize();
+
+            var width = 512;
+            var height = 512;
+            var tileSize = 1;
+
+            var baseBox = new BoundingBox(new Vector3(0, -5000, 0), new Vector3(width, 5000, height));
+            if (baseBox.Contains(ray.Position) != ContainmentType.Contains)
+            {
+                //move ray start inside box
+                var i = baseBox.Intersects(ray);
+                if (i != null)
+                {
+                    ray.Position += ray.Direction * (i.Value + 0.01f);
+                }
+            }
+
+            var mx = (int)ray.Position.X / tileSize;
+            var my = (int)ray.Position.Z / tileSize;
+
+            var px = (ray.Direction.X > 0);
+            var py = (ray.Direction.Z > 0);
+
+            int iteration = 0;
+            while (mx >= 0 && mx < width && my >= 0 && my < height)
+            {
+                if (hits != null) hits.Add(new Point(mx, my));
+                var plane = new Plane(
+                    new Vector3(mx * tileSize, GetElevationVert(mx, my), my * tileSize),
+                    new Vector3(mx * tileSize + tileSize, GetElevationVert(mx + 1, my), my * tileSize),
+                    new Vector3(mx * tileSize + tileSize, GetElevationVert(mx + 1, my + 1), my * tileSize + tileSize)
+                    );
+                var tBounds = new BoundingBox(new Vector3(mx * tileSize, -5000, my * tileSize), new Vector3(mx * tileSize + tileSize, 5000, my * tileSize + tileSize));
+
+                var t1 = ray.Intersects(plane);
+                var t2 = BoxRC2(ray, tileSize);
+                //var t2 = BoxRC(ray, tBounds);
+                if (plane.DotCoordinate(ray.Position) > 0) t1 = 0;
+                if (t1 != null && t2 != null && t1.Value < t2.Value)
+                {
+                    //hit the ground...
+                    var tentative = ray.Position + ray.Direction * (t1.Value + 0.00001f);
+
+                    //did it hit the correct side of the triangle?
+                    var mySide = ((tentative.X / tileSize) % 1) - ((tentative.Z / tileSize) % 1);
+                    if (mySide >= 0)
+                    {
+                        return new Vector2(tentative.X / tileSize, tentative.Z / tileSize);
+                    }
+                    else
+                    {
+                        plane = new Plane(
+                        new Vector3(mx * tileSize, GetElevationVert(mx, my), my * tileSize),
+                        new Vector3(mx * tileSize, GetElevationVert(mx, my + 1), my * tileSize + tileSize),
+                        new Vector3(mx * tileSize + tileSize, GetElevationVert(mx + 1, my + 1), my * tileSize + tileSize)
+                        );
+                        t1 = ray.Intersects(plane);
+                        if (t1 != null && t2 != null && t1.Value < t2.Value)
+                        {
+                            //hit the other side
+                            tentative = ray.Position + ray.Direction * (t1.Value + 0.00001f);
+                            return new Vector2(tentative.X / tileSize, tentative.Z / tileSize);
+                        }
+                    }
+                }
+                if (t2 == null) break;
+                ray.Position += ray.Direction * (t2.Value + 0.00001f);
+
+                mx = (!px) ? ((int)Math.Ceiling(ray.Position.X / tileSize) - 1) :
+                               (int)(ray.Position.X / tileSize);
+                my = (!py) ? ((int)Math.Ceiling(ray.Position.Z / tileSize) - 1) :
+                               (int)(ray.Position.Z / tileSize);
+
+                if (iteration++ > 1000) break;
+            }
+
+            //fall back to base positioning
+            var bplane = new Plane(new Vector3(0, 0, 0), new Vector3(width * tileSize, 0, 0), new Vector3(0, 0, height * tileSize));
+            var cast = ray.Intersects(bplane);
+            if (cast != null)
+            {
+                ray.Position += ray.Direction * (cast.Value + 0.01f);
+                return new Vector2(ray.Position.X / tileSize, ray.Position.Z / tileSize);
+            }
+
+            return new Vector2(-1, -1);
+        }
+
+
+        public float? BoxRC2(Ray ray, float tileSize)
+        {
+            var px = (ray.Direction.X > 0);
+            var py = (ray.Direction.Z > 0);
+            //find current tile
+            int x = (!px) ? (int)Math.Ceiling(ray.Position.X / tileSize) :
+                           (int)(ray.Position.X / tileSize);
+            int y = (!py) ? (int)Math.Ceiling(ray.Position.Z / tileSize) :
+                           (int)(ray.Position.Z / tileSize);
+
+            //find next tile boundary
+            float nx = ((px) ? (x + 1) : (x - 1)) * tileSize;
+            float ny = ((py) ? (y + 1) : (y - 1)) * tileSize;
+
+            const float Epsilon = 1e-6f;
+            float? min = null;
+            if (Math.Abs(ray.Direction.X) > Epsilon)
+            {
+                min = (nx - ray.Position.X) / ray.Direction.X;
+            }
+
+            if (Math.Abs(ray.Direction.Z) > Epsilon)
+            {
+                var min2 = (ny - ray.Position.Z) / ray.Direction.Z;
+                if (min == null || min.Value > min2) min = min2;
+            }
+            return min;
+        }
+        #endregion
 
         private bool IsInsidePoly(double[] Poly, double[] Pos)
         {
@@ -756,7 +890,7 @@ namespace FSO.Client.Rendering.City
             var spriteBatch = m_Batch;
             spriteBatch.Begin(sortMode: SpriteSortMode.Texture);
 
-            if (Camera.Zoomed == TerrainZoomMode.Far && m_HandleMouse)
+            if (Camera.Zoomed == TerrainZoomMode.Far && HandleMouse)
             {
                 //draw rectangle to indicate zoom position
                 DrawLine(Content.WhiteLine, new Vector2(m_MouseState.X - 15, m_MouseState.Y - 11), new Vector2(m_MouseState.X - 15, m_MouseState.Y + 11), spriteBatch, 2, 1);
@@ -897,34 +1031,58 @@ namespace FSO.Client.Rendering.City
         public void UIMouseEvent(UIMouseEventType type, UpdateState state)
         {
             Camera.MouseEvent(type, state);
-            if (type == UIMouseEventType.MouseOver) m_HandleMouse = true;
+            if (type == UIMouseEventType.MouseOver) HandleMouse = true;
             if (type == UIMouseEventType.MouseOut)
             {
-                m_HandleMouse = false;
+                HandleMouse = false;
             }
         }
 
         public void Click(Point pt, UpdateState state)
         {
-            var currentTile = GetHoverSquare();
+            var currentTile = GetHoverSquare(null);
             var curTileInt = (currentTile == null) ? new int[] { -1, -1 } : new int[] { (int)currentTile.Value.X, (int)currentTile.Value.Y };
             m_SelTile = curTileInt;
             m_VecSelTile = currentTile;
 
-            if (Camera.Zoomed == TerrainZoomMode.Far)
+            var farClickMode = NeighGeom.HoverNHood > -1 || Camera.Zoomed == TerrainZoomMode.Far;
+
+            if (farClickMode && Plugin == null)
             {
                 FindController<TerrainController>().ZoomIn();
-
-                Camera.Zoomed = TerrainZoomMode.Near;
-                double ResScale = 768.0 / m_ScrHeight;
-                double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10) * ResScale;
-                double hb = m_ScrWidth * isoScale;
-                double vb = m_ScrHeight * isoScale;
-
-                if (Camera is CityCamera2D)
+                if (NeighGeom.HoverNHood > -1 && Camera.CenterCam == null)
                 {
-                    ((CityCamera2D)Camera).m_TargVOffX = (float)(-hb + pt.X * isoScale * 2);
-                    ((CityCamera2D)Camera).m_TargVOffY = (float)(vb - pt.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
+                    UIScreen.Current.FindController<CoreGameScreenController>()?.ShowNeighPage((uint)NeighGeom.ToDBID(NeighGeom.HoverNHood));
+                    NeighGeom.CenterNHood(NeighGeom.ToDBID(NeighGeom.HoverNHood));
+                }
+                else
+                {
+                    Camera.Zoomed = TerrainZoomMode.Near;
+                    Camera.ClearCenter();
+                    double ResScale = 768.0 / m_ScrHeight;
+                    double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10) * ResScale;
+                    double hb = m_ScrWidth * isoScale;
+                    double vb = m_ScrHeight * isoScale;
+
+                    if (Camera is CityCamera2D)
+                    {
+                        if (currentTile != null)
+                        {
+                            var c2d = currentTile.Value;
+                            var c3d = new Vector3(c2d.X, InterpElevationAt(c2d), c2d.Y);
+                            var pos = Vector3.Transform(c3d, Camera.View);
+                            ((CityCamera2D)Camera).m_TargVOffX = pos.X;
+                            ((CityCamera2D)Camera).m_TargVOffY = pos.Y;
+
+                        }
+
+                        //((CityCamera2D)Camera).m_TargVOffX = (float)(-hb + pt.X * isoScale * 2);
+                        //((CityCamera2D)Camera).m_TargVOffY = (float)(vb - pt.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
+                    } else
+                    {
+                        if (currentTile != null) ((CityCamera3D)Camera).CenterTile = currentTile.Value;
+                        ((CityCamera3D)Camera).TargetZoom = 1.7f;
+                    }
                 }
             }
             else
@@ -981,11 +1139,11 @@ namespace FSO.Client.Rendering.City
                 m_LastMouseState = m_MouseState;
                 m_MouseState = Mouse.GetState();
 
-                if (m_HandleMouse && state.ProcessMouseEvents)
+                if (HandleMouse && state.ProcessMouseEvents)
                 {
                     if (Camera.Zoomed == TerrainZoomMode.Near)
                     {
-                        var currentTile = GetHoverSquare();
+                        var currentTile = GetHoverSquare(null);
                         var curTileInt = (currentTile == null) ? new int[] { -1, -1 } : new int[] { (int)currentTile.Value.X, (int)currentTile.Value.Y};
 
                         if (Plugin == null)
@@ -1023,7 +1181,20 @@ namespace FSO.Client.Rendering.City
                 Camera.Update(state, this);
 
                 Plugin?.Update(state);
+
+                NeighGeom.Update(state);
             }
+        }
+
+
+        private Color PowColor(Color col, float pow)
+        {
+            var vec = col.ToVector4();
+            vec.X = (float)Math.Pow(vec.X, pow);
+            vec.Y = (float)Math.Pow(vec.Y, pow);
+            vec.Z = (float)Math.Pow(vec.Z, pow);
+
+            return new Color(vec);
         }
 
         private float Time;
@@ -1035,7 +1206,7 @@ namespace FSO.Client.Rendering.City
             Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))+1]; //second colour
             double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
 
-            m_TintColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
+            m_TintColor = PowColor(Color.Lerp(col1, col2, (float)Progress), 1f); //linearly interpolate between the two colours for this specific time.
             if (Weather.Darken > 0)
             {
                 //tint the outside colour, usually with some darkening effect.
@@ -1073,11 +1244,11 @@ namespace FSO.Client.Rendering.City
 
             if (Math.Abs(modTime) < 0.05) //Near the horizon, shadows should gracefully fade out into the opposite shadows (moonlight/sunlight)
             {
-                m_ShadowMult = (float)(1-(Math.Abs(modTime)*20))*0.50f+0.50f;
+                m_ShadowMult = (float)(1-(Math.Abs(modTime)*20))*0.75f+0.25f;
             }
             else
             {
-                m_ShadowMult = 0.50f; //Shadow strength. Remember to change the above if you alter this.
+                m_ShadowMult = 0.25f; //Shadow strength. Remember to change the above if you alter this.
             }
         }
 
@@ -1086,6 +1257,13 @@ namespace FSO.Client.Rendering.City
         public void InheritPosition(World lotWorld, CoreGameScreenController controller)
         {
             Camera.InheritPosition(this, lotWorld, controller);
+        }
+
+        public float GetElevationVert(int x, int y)
+        {
+            x = ((x % 512) + 512)%512;
+            y = ((y % 512) + 512)%512;
+            return MapData.ElevationData[(y * 512 + x)] / 12.0f;
         }
 
         public float GetElevationAt(int x, int y)
@@ -1323,7 +1501,6 @@ namespace FSO.Client.Rendering.City
                 Geometry.DrawSlice(m_GraphicsDevice, Content, VertexShader, PixelShader, (fog) ? 3 : 2, (fog) ? 3 : 2, SubdivGeometry.Ready, 16);
             }
 
-
             var pass = (ShadowsEnabled ? ((fog) ? 4 : 0) : ((fog) ? 3 : 2));
             m_MovMatrix = ViewMatrix * ProjectionMatrix;
 
@@ -1333,7 +1510,8 @@ namespace FSO.Client.Rendering.City
             {
                 m_2DVerts = new ArrayList(); //refresh list for tris under houses
                 DrawSprites(HB, VB); //draw near view trees and houses
-            } else
+            }
+            else
             {
                 if (((CityCamera3D)Camera).Zoom3D < 7f || Camera.HideUI)
                     Foliage.Draw(this, m_GraphicsDevice, Content, VertexShader, PixelShader, pass, 2, frustum);
@@ -1348,9 +1526,9 @@ namespace FSO.Client.Rendering.City
                     Draw2DPoly(true);
                 }
             }
-
             
-            //NeighGeom.Draw(m_GraphicsDevice, VertexShader, PixelShader, (ShadowsEnabled ? ((fog) ? 4 : 0) : ((fog) ? 3 : 2)), Content);
+            NeighGeom.DrawHover(m_GraphicsDevice, m_Batch, VertexShader, PixelShader, Content);
+            if (Plugin is NeighbourhoodEditPlugin) NeighGeom.Draw(m_GraphicsDevice, VertexShader, PixelShader, Content);
 
             m_2DVerts = new ArrayList(); //refresh list for spotlights
             DrawSpotlights(HB); //draw far view spotlights

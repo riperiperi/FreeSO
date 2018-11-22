@@ -178,8 +178,16 @@ namespace FSO.Client.Model
                 var outfit = content.AvatarOutfits.Get(_HeadOutfitId);
                 var appearanceId = outfit.GetAppearance((Vitaboy.AppearanceType)avatar.Avatar_Appearance.AvatarAppearance_SkinTone);
                 var appearance = content.AvatarAppearances.Get(appearanceId);
-                var thumbnail = content.AvatarThumbnails.Get(appearance.ThumbnailID);
-                Icon = thumbnail;
+                if (appearance.ThumbnailID.FileID == 0)
+                {
+                    var tex = UI.Model.UIIconCache.GenHeadTex(_HeadOutfitId, 0);
+                    Icon = new LoadedTextureRef(tex);
+                }
+                else
+                {
+                    var thumbnail = content.AvatarThumbnails.Get(appearance.ThumbnailID);
+                    Icon = thumbnail;
+                }
             }
             else
             {

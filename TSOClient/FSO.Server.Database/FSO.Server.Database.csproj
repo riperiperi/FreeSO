@@ -69,9 +69,8 @@
       <HintPath>..\packages\MySql.Data.6.9.7\lib\net45\MySql.Data.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Portable.Ninject.3.3.1\lib\net40-client\Ninject.dll</HintPath>
@@ -118,6 +117,13 @@
     <Compile Include="DA\DynPayouts\DbTransSummary.cs" />
     <Compile Include="DA\DynPayouts\IDynPayouts.cs" />
     <Compile Include="DA\DynPayouts\SqlDynPayouts.cs" />
+    <Compile Include="DA\Elections\DbElectionCandidate.cs" />
+    <Compile Include="DA\Elections\DbElectionCycle.cs" />
+    <Compile Include="DA\Elections\DbElectionCycleMail.cs" />
+    <Compile Include="DA\Elections\DbElectionVote.cs" />
+    <Compile Include="DA\Elections\DbMayorRating.cs" />
+    <Compile Include="DA\Elections\IElections.cs" />
+    <Compile Include="DA\Elections\SqlElections.cs" />
     <Compile Include="DA\EmailConfirmations\EmailConfirmation.cs" />
     <Compile Include="DA\EmailConfirmations\IEmailConfirmations.cs" />
     <Compile Include="DA\EmailConfirmations\SqlEmailConfirmations.cs" />
@@ -143,6 +149,7 @@
     <Compile Include="DA\LotTop100\ILotTop100.cs" />
     <Compile Include="DA\LotTop100\DbLotTop100.cs" />
     <Compile Include="DA\LotTop100\SqlLotTop100.cs" />
+    <Compile Include="DA\LotVisits\LotVisitUtils.cs" />
     <Compile Include="DA\LotVisitTotals\DbLotVisitTotal.cs" />
     <Compile Include="DA\LotVisitTotals\ILotVisitTotals.cs" />
     <Compile Include="DA\LotVisits\DbLotVisit.cs" />
@@ -150,6 +157,10 @@
     <Compile Include="DA\LotVisits\SqlLotVisits.cs" />
     <Compile Include="DA\LotVisitTotals\SqlLotVisitTotals.cs" />
     <Compile Include="DA\MySqlContext.cs" />
+    <Compile Include="DA\Neighborhoods\DbNeighborhood.cs" />
+    <Compile Include="DA\Neighborhoods\DbNhoodBan.cs" />
+    <Compile Include="DA\Neighborhoods\INeighborhoods.cs" />
+    <Compile Include="DA\Neighborhoods\SqlNeighborhoods.cs" />
     <Compile Include="DA\Objects\DbObject.cs" />
     <Compile Include="DA\Objects\IObjects.cs" />
     <Compile Include="DA\Objects\SqlObjects.cs" />

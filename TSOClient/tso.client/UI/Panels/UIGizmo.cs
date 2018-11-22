@@ -44,12 +44,23 @@ namespace FSO.Client.UI.Panels
             { "Games", LotCategory.games },
             { "Offbeat", LotCategory.offbeat },
             { "Residence", LotCategory.residence },
+            { "Community", LotCategory.community },
+            { "WhereIveBeen", LotCategory.recent },
         };
 
         public UIGizmoPropertyFilters(UIScript script, UIGizmo parent)
         {
             Background = script.Create<UIImage>("BackgroundImageFilters");
             this.Add(Background);
+
+            var ui = Content.Content.Get().CustomUI;
+            var commFilter = new UIButton(ui.Get("lotp_community_large.png").Get(GameFacade.GraphicsDevice));
+            commFilter.ID = "PropertyFilterButton_Community";
+            var where = parent.GetChildren().First(x => x.ID == "PropertyFilterButton_WhereIveBeen");
+            commFilter.Position = where.Position - new Microsoft.Xna.Framework.Vector2(1, 3);
+            commFilter.Tooltip = GameFacade.Strings.GetString("f115", "92");
+            parent.Add(commFilter);
+            where.X += 47;
 
             var filterChildren = parent.GetChildren().Where(x => x.ID != null && x.ID.StartsWith("PropertyFilterButton_")).ToList();
             foreach (var child in filterChildren)
@@ -400,7 +411,8 @@ namespace FSO.Client.UI.Panels
     public enum UIGizmoTab
     {
         People,
-        Property
+        Property,
+        Neighborhood
     }
 
     public enum UIGizmoView
@@ -427,13 +439,15 @@ namespace FSO.Client.UI.Panels
         
         public UIImage PeopleTabBackground { get; set; }
         public UIImage HousesTabBackground { get; set; }
+        public UIImage NHoodTabBackground { get; set; }
 
         public UIImage PeopleTab { get; set; }
         public UIImage HousesTab { get; set; }
+        public UIImage NHoodTab { get; set; }
 
         public UIButton PeopleTabButton { get; set; }
         public UIButton HousesTabButton { get; set; }
-
+        public UIButton NHoodTabButton { get; set; }
 
         public UIGizmoPropertyFilters FiltersProperty;
         public UIGizmoSearch Search;
@@ -491,6 +505,7 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        
         public override void Update(UpdateState state)
         {
             base.Update(state);
@@ -498,9 +513,12 @@ namespace FSO.Client.UI.Panels
             {
                 var gamescreen = (GameFacade.Screens.CurrentUIScreen as CoreGameScreen);
                 bool visible = true;
-                if (gamescreen != null && gamescreen.ZoomLevel != 5)
+                if (gamescreen != null)
                 {
-                    visible = false;
+                    if (FSOEnvironment.Enable3D)
+                        visible = gamescreen.ZoomLevel >= 4;
+                    else
+                        visible = gamescreen.ZoomLevel >= 5 || gamescreen.CityRenderer.Camera.CenterCam != null;
                 }
                 foreach (var btn in Btns) btn.Visible = visible;
             }
@@ -514,9 +532,20 @@ namespace FSO.Client.UI.Panels
 
             AddAt(0, (PeopleTab = ui.Create<UIImage>("PeopleTab")));
             AddAt(0, (HousesTab = ui.Create<UIImage>("HousesTab")));
-            
+            AddAt(0, (NHoodTab = ui.Create<UIImage>("HousesTab")));
+
             AddAt(0, (PeopleTabBackground = ui.Create<UIImage>("PeopleTabBackground")));
             AddAt(0, (HousesTabBackground = ui.Create<UIImage>("HousesTabBackground")));
+
+            //additional tab: nhood tab
+            
+            AddAt(0, (NHoodTabBackground = ui.Create<UIImage>("HousesTabBackground")));
+            Add((NHoodTabButton = ui.Create<UIButton>("HousesTabButton")));
+
+            NHoodTab.X += 42;
+            NHoodTabBackground.X += 42;
+            NHoodTabButton.X += 42;
+            NHoodTabButton.Tooltip = "Neighborhoods";
 
             BackgroundImageGizmo = ui.Create<UIImage>("BackgroundImageGizmo");
             this.AddAt(0, BackgroundImageGizmo);
@@ -566,6 +595,7 @@ namespace FSO.Client.UI.Panels
 
             PeopleTabButton.OnButtonClick += new ButtonClickDelegate(PeopleTabButton_OnButtonClick);
             HousesTabButton.OnButtonClick += new ButtonClickDelegate(HousesTabButton_OnButtonClick);
+            NHoodTabButton.OnButtonClick += NHoodTabButton_OnButtonClick;
 
             FiltersButton.OnButtonClick += new ButtonClickDelegate(FiltersButton_OnButtonClick);
             SearchButton.OnButtonClick += new ButtonClickDelegate(SearchButton_OnButtonClick);
@@ -586,7 +616,13 @@ namespace FSO.Client.UI.Panels
             View = UIGizmoView.Filters;
             SetOpen(true);
         }
-        
+
+        private void NHoodTabButton_OnButtonClick(UIElement button)
+        {
+            Tab = UIGizmoTab.Neighborhood;
+            Redraw();
+        }
+
         void Top100ListsButton_OnButtonClick(UIElement button)
         {
             View = UIGizmoView.Top100;
@@ -669,11 +705,15 @@ namespace FSO.Client.UI.Panels
 
             PeopleTab.Visible = isOpen && Tab == UIGizmoTab.People;
             HousesTab.Visible = isOpen && Tab == UIGizmoTab.Property;
+            NHoodTab.Visible = isOpen && Tab == UIGizmoTab.Neighborhood;
             PeopleTabButton.Selected = Tab == UIGizmoTab.People;
             HousesTabButton.Selected = Tab == UIGizmoTab.Property;
+            NHoodTabButton.Selected = Tab == UIGizmoTab.Neighborhood;
+            NHoodTabButton.Disabled = View == UIGizmoView.Top100;
 
             PeopleTabBackground.Visible = isOpen;
             HousesTabBackground.Visible = isOpen;
+            NHoodTabBackground.Visible = isOpen;
 
             PeopleTabButton.Disabled = View == UIGizmoView.Filters;
             FiltersButton.Selected = isOpen && View == UIGizmoView.Filters;
@@ -695,6 +735,19 @@ namespace FSO.Client.UI.Panels
 
             PeopleTabButton.Visible = isOpen;
             HousesTabButton.Visible = isOpen;
+            NHoodTabButton.Visible = isOpen;
+
+            var coreScreen = (UIScreen.Current as CoreGameScreen);
+            if (coreScreen != null) {
+                if (Tab == UIGizmoTab.Neighborhood)
+                {
+                    coreScreen.CityRenderer.NeighGeom.TargetBannerPct = 1f;
+                }
+                else
+                {
+                    coreScreen.CityRenderer.NeighGeom.TargetBannerPct = 0f;
+                }
+            }
 
             if (Tab == UIGizmoTab.People && View == UIGizmoView.Filters)
             {
@@ -706,7 +759,7 @@ namespace FSO.Client.UI.Panels
                 switch (View)
                 {
                     case UIGizmoView.Filters:
-                        FiltersProperty.Visible = true;
+                        FiltersProperty.Visible = Tab != UIGizmoTab.Neighborhood;
                         break;
 
                     case UIGizmoView.Search:

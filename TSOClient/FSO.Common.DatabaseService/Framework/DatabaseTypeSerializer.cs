@@ -14,34 +14,42 @@ namespace FSO.Common.DatabaseService.Framework
     {
         protected override void ScanAssembly(Assembly assembly)
         {
-            foreach (Type type in assembly.GetTypes())
+            try
             {
-                System.Attribute[] attributes = System.Attribute.GetCustomAttributes(type);
-
-                foreach (Attribute attribute in attributes)
+                foreach (Type type in assembly.GetTypes())
                 {
-                    if (attribute is DatabaseRequest)
-                    {
-                        var request = (DatabaseRequest)attribute;
-                        uint requestId = DBRequestTypeUtils.GetRequestID(request.Type);
+                    System.Attribute[] attributes = System.Attribute.GetCustomAttributes(type);
 
-                        ClsIdToType.Add(requestId, type);
-                        if (!TypeToClsId.ContainsKey(type))
+                    foreach (Attribute attribute in attributes)
+                    {
+                        if (attribute is DatabaseRequest)
                         {
-                            TypeToClsId.Add(type, requestId);
-                        }
-                    }else if (attribute is DatabaseResponse)
-                    {
-                        var response = (DatabaseResponse)attribute;
-                        uint responseId = DBResponseTypeUtils.GetResponseID(response.Type);
+                            var request = (DatabaseRequest)attribute;
+                            uint requestId = DBRequestTypeUtils.GetRequestID(request.Type);
 
-                        ClsIdToType.Add(responseId, type);
-                        if (!TypeToClsId.ContainsKey(type)){
-                            TypeToClsId.Add(type, responseId);
+                            ClsIdToType.Add(requestId, type);
+                            if (!TypeToClsId.ContainsKey(type))
+                            {
+                                TypeToClsId.Add(type, requestId);
+                            }
                         }
-                        
+                        else if (attribute is DatabaseResponse)
+                        {
+                            var response = (DatabaseResponse)attribute;
+                            uint responseId = DBResponseTypeUtils.GetResponseID(response.Type);
+
+                            ClsIdToType.Add(responseId, type);
+                            if (!TypeToClsId.ContainsKey(type))
+                            {
+                                TypeToClsId.Add(type, responseId);
+                            }
+
+                        }
                     }
                 }
+            } catch (Exception)
+            {
+
             }
         }
     }

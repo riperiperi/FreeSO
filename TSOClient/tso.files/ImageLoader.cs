@@ -11,7 +11,6 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
 using Microsoft.Xna.Framework;
-using System.Drawing;
 using System.Runtime.InteropServices;
 
 namespace FSO.Files
@@ -98,12 +97,30 @@ namespace FSO.Files
                     //anything else
                     try
                     {
-                        var tex = Texture2D.FromStream(gd, str);
+                        Texture2D tex;
+                        Color[] buffer = null;
+                        if (ImageLoaderHelpers.BitmapFunction != null)
+                        {
+                            var bmp = ImageLoaderHelpers.BitmapFunction(str);
+                            if (bmp == null) return null;
+                            tex = new Texture2D(gd, bmp.Item2, bmp.Item3);
+                            tex.SetData(bmp.Item1);
+
+                            //buffer = bmp.Item1;
+                        }
+                        else
+                        {
+                            tex = Texture2D.FromStream(gd, str);
+                        }
+
                         premult += PremultiplyPNG;
                         if (premult == 1)
                         {
-                            var buffer = new Color[tex.Width * tex.Height];
-                            tex.GetData<Color>(buffer);
+                            if (buffer == null)
+                            {
+                                buffer = new Color[tex.Width * tex.Height];
+                                tex.GetData<Color>(buffer);
+                            }
 
                             for (int i = 0; i < buffer.Length; i++)
                             {
@@ -113,8 +130,11 @@ namespace FSO.Files
                             tex.SetData(buffer);
                         } else if (premult == -1) //divide out a premultiply... currently needed for dx since it premultiplies pngs without reason
                         {
-                            var buffer = new Color[tex.Width * tex.Height];
-                            tex.GetData<Color>(buffer);
+                            if (buffer == null)
+                            {
+                                buffer = new Color[tex.Width * tex.Height];
+                                tex.GetData<Color>(buffer);
+                            }
 
                             for (int i = 0; i < buffer.Length; i++)
                             {

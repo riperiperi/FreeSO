@@ -246,6 +246,10 @@ namespace FSO.Client.UI.Framework
                 }
                 return _BlendColor;
             }
+            set
+            {
+                _BlendColor = value;
+            }
         }
 
         /// <summary>
@@ -613,6 +617,8 @@ namespace FSO.Client.UI.Framework
         /// <param name="style">The text style</param>
         public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style)
         {
+            DrawLocalString(batch, text, to, style, Rectangle.Empty, 0);
+            /*
             var scale = _Scale;
             if (style.Scale != 1.0f)
             {
@@ -623,6 +629,7 @@ namespace FSO.Client.UI.Framework
             to.Y = (float)Math.Floor(to.Y);
             if (style.Shadow) batch.DrawString(style.SpriteFont, text, LocalPoint(to) + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
             batch.DrawString(style.SpriteFont, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            */
         }
 
         /// <summary>
@@ -684,8 +691,7 @@ namespace FSO.Client.UI.Framework
             }
 
             /** Work out how big the text will be so we can align it **/
-            var textSize = style.SpriteFont.MeasureString(text);
-            Vector2 size = textSize * style.Scale;
+            var size = (align == 0)? Vector2.Zero : style.MeasureString(text);
 
             /** Apply margins **/
             if (margin != Rectangle.Empty)
@@ -724,8 +730,29 @@ namespace FSO.Client.UI.Framework
             /** Draw the string **/
             pos = FlooredLocalPoint(pos);
 
-            if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
-            batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state)*Opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            if (style.VFont != null)
+            {
+                batch.End();
+                Matrix? mat = null;
+                var ui = (batch as UISpriteBatch);
+                if (ui != null && ui.BatchMatrixStack.Count > 0)
+                    mat = ui.BatchMatrixStack.Peek();
+
+                if (style.Shadow)
+                    style.VFont.Draw(batch.GraphicsDevice, text, pos + new Vector2(1, 1), Color.Black, scale, mat);
+                style.VFont.Draw(batch.GraphicsDevice, text, pos, style.GetColor(state) * Opacity, scale, mat);
+                
+                if (mat != null)
+                    batch.Begin(transformMatrix: mat);
+                else
+                    batch.Begin();
+            } else
+            {
+                if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+                batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state) * Opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            }
+
+
         }
 
         /// <summary>
@@ -740,7 +767,7 @@ namespace FSO.Client.UI.Framework
             //if (!m_IsInvalidated)
             //{
             batch.Draw(texture, FlooredLocalPoint(to), null, _BlendColor, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale, SprEffects, 0.0f);
             //}
         }
 
@@ -757,7 +784,7 @@ namespace FSO.Client.UI.Framework
             //if (!m_IsInvalidated)
             //{
             batch.Draw(texture, FlooredLocalPoint(to), from, _BlendColor, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale, SprEffects, 0.0f);
             //}
         }
 
@@ -775,7 +802,7 @@ namespace FSO.Client.UI.Framework
             //if (!m_IsInvalidated)
             //{
             batch.Draw(texture, FlooredLocalPoint(to), from, _BlendColor, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale * scale, SprEffects, 0.0f);
             //}
         }
 
@@ -793,7 +820,7 @@ namespace FSO.Client.UI.Framework
             //if (!m_IsInvalidated)
             //{
             batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale * scale, SprEffects, 0.0f);
             //}
         }
 
@@ -809,8 +836,10 @@ namespace FSO.Client.UI.Framework
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation, Vector2 origin)
         {
             batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
-                        origin, _Scale * scale, SpriteEffects.None, 0.0f);
+                        origin, _Scale * scale, SprEffects, 0.0f);
         }
+
+        protected SpriteEffects SprEffects = SpriteEffects.None;
 
         /// <summary>
         /// Draws a texture to the UIElement. This method will deal with
@@ -827,7 +856,7 @@ namespace FSO.Client.UI.Framework
             //if (!m_IsInvalidated)
             //{
             batch.Draw(texture, FlooredLocalPoint(to), from, new Color(_BlendColor.ToVector4()*blend.ToVector4()), 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale * scale, SprEffects, 0.0f);
             //}
         }
 
@@ -861,6 +890,7 @@ namespace FSO.Client.UI.Framework
         {
             if (!Visible) { return false; }
 
+            return area.Contains(GlobalPoint(state.Position.ToVector2()));
 
             var globalLeft = 0.0f;
             var globalTop = 0.0f;
@@ -967,6 +997,19 @@ namespace FSO.Client.UI.Framework
             try
             {
                 return Content.Content.Get().UIGraphics.Get(id).Get(GameFacade.GraphicsDevice);
+            }
+            catch (Exception e)
+            {
+            }
+            //TODO: darren wants to return null here. that might break some existing code
+            return new Texture2D(GameFacade.GraphicsDevice, 1, 1);
+        }
+
+        public static Texture2D GetTexture(string path)
+        {
+            try
+            {
+                return Content.Content.Get().CustomUI.Get(Path.GetFileName(path)).Get(GameFacade.GraphicsDevice);
             }
             catch (Exception e)
             {

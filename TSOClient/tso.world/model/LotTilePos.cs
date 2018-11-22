@@ -37,10 +37,15 @@ namespace FSO.LotView.Model
             return new LotTilePos((short)((x << 4) + 8), (short)((y << 4) + 8), level);
         }
 
-        //TODO: uses of the below indicate unsafe operations. We shouldn't have any of these by the time we go live.
+        //TODO: below operations can desync if float behaviour is different.
         public static LotTilePos FromVec3(Vector3 pos)
         {
             return new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), (sbyte)(Math.Round(pos.Z / 2.95) + 1));
+        }
+
+        public static LotTilePos FromVec2(Vector2 pos)
+        {
+            return new LotTilePos((short)Math.Round(pos.X), (short)Math.Round(pos.Y), 0);
         }
 
         public static int Distance(LotTilePos a, LotTilePos b)
@@ -117,6 +122,11 @@ namespace FSO.LotView.Model
         public Vector3 ToVector3()
         {
             return new Vector3(x / 16f, y / 16f, (Level - 1) * 2.95f);
+        }
+
+        public Point ToPoint()
+        {
+            return new Point(x, y);
         }
 
         public static LotTilePos OUT_OF_WORLD = new LotTilePos(-32768, -32768, 1);

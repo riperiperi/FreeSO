@@ -99,8 +99,25 @@ namespace FSO.Content.TS1
             }
 
             LoadCharacters(true);
-
             //todo: manage avatar iffs here
+        }
+
+        public void AddMissingNeighbors()
+        {
+            var objs = (TS1ObjectProvider)ContentManager.WorldObjects;
+            var missing = objs.PersonGUIDs.Where(x => !Neighbors.Entries.Any(y => y.GUID == x)).Select(x => objs.Get(x));
+            foreach (var obj in missing)
+            {
+                var id = Neighbors.GetFreeID();
+                Neighbors.AddNeighbor(new Neighbour()
+                {
+                    NeighbourID = id,
+                    GUID = (uint)obj.GUID,
+                    Name = Path.GetFileName(obj.Resource.Name).ToLowerInvariant().Replace(".iff", ""),
+                    PersonMode = 9,
+                    Relationships = new Dictionary<int, List<short>>()
+                });
+            }
         }
 
         public void LoadCharacters(bool clearLast)
@@ -110,7 +127,10 @@ namespace FSO.Content.TS1
             if (clearLast)
             {
                 foreach (var obj in objs.Entries.Where(x => x.Value.Source == GameObjectSource.User))
+                {
                     objs.RemoveObject((uint)obj.Key);
+                    objs.PersonGUIDs.Add((uint)obj.Key);
+                }
             }
 
             NextSim = 0;
@@ -144,6 +164,7 @@ namespace FSO.Content.TS1
                             Group = (short)obj.MasterID,
                             SubIndex = obj.SubIndex
                         };
+                        if (obj.ObjectType == OBJDType.Person) objs.PersonGUIDs.Add(obj.GUID);
                     }
                 }
             }

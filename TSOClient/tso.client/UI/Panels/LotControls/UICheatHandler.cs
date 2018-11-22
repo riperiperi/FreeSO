@@ -157,6 +157,11 @@ namespace FSO.Client.UI.Panels.LotControls
                         });
                         response += "Sent deletion command.";
                         break;
+                    case "debugroutes":
+                        var on = args.ToLowerInvariant() == "true" || args == "1";
+                        SimAntics.Engine.VMRoutingFrame.DEBUG_DRAW = on;
+                        response += "Debug Routes Set: " + on;
+                        break;
                     default:
                         response += "Unknown command.";
                         break;
@@ -170,7 +175,9 @@ namespace FSO.Client.UI.Panels.LotControls
 
         public string ObjectSummary(VMEntity obj)
         {
-            return obj.ToString() + " | " + obj.ObjectID + " | " + "container: " + obj.Container;
+            return obj.ToString() + " | " + obj.ObjectID + " | " + "container: " + obj.Container 
+                + "owner: " + ((obj.TSOState as SimAntics.Model.TSOPlatform.VMTSOObjectState)?.OwnerID ?? 0);
+
         }
     }
 }

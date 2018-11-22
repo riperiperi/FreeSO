@@ -39,6 +39,7 @@ using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.Common;
 using FSO.Common.Utils;
 using FSO.UI.Model;
+using FSO.Client.UI.Panels.Neighborhoods;
 
 namespace FSO.Client.UI.Screens
 {
@@ -49,9 +50,11 @@ namespace FSO.Client.UI.Screens
         public UIInbox Inbox;
         public UIGameTitle Title;
 
+        public UISortedContainer CityFloatingContainer;
         public UIContainer WindowContainer;
         public UIPersonPage PersonPage;
         public UILotPage LotPage;
+        public UINeighPage NeighPage;
         public UIBookmarks Bookmarks;
         public UIRelationshipDialog Relationships;
 
@@ -117,7 +120,7 @@ namespace FSO.Client.UI.Screens
                         LotControl.SetTargetZoom(targ);
                         if (m_ZoomLevel > 3)
                         {
-                            HITVM.Get().PlaySoundEvent(UIMusic.None);
+                            if (!ucp.SpecialMusic) HITVM.Get().PlaySoundEvent(UIMusic.None);
                             if (CityRenderer != null) CityRenderer.m_Zoomed = TerrainZoomMode.Lot;
                             gizmo.Visible = false;
                             LotControl.Visible = true;
@@ -145,7 +148,7 @@ namespace FSO.Client.UI.Screens
                         { //coming from lot view... snap zoom % to 0 or 1
                             Title.SetTitle(GameFacade.CurrentCityName);
                             CityRenderer.m_ZoomProgress = 1;
-                            HITVM.Get().PlaySoundEvent(UIMusic.Map); //play the city music as well
+                            if (!ucp.SpecialMusic) HITVM.Get().PlaySoundEvent(UIMusic.Map); //play the city music as well
                             CityRenderer.Visible = true;
                             gizmo.Visible = true;
                             if (World != null)
@@ -154,7 +157,9 @@ namespace FSO.Client.UI.Screens
                             }
                             ucp.SetMode(UIUCP.UCPMode.CityMode);
                         }
+                        if (m_ZoomLevel == 4) CityRenderer.Camera.ClearCenter();
                         m_ZoomLevel = value;
+                        
                         CityRenderer.m_Zoomed = (value == 4)?TerrainZoomMode.Near:TerrainZoomMode.Far;
                     }
                 }
@@ -267,6 +272,9 @@ namespace FSO.Client.UI.Screens
             MessageTray.Y = 12;
             this.Add(MessageTray);
 
+            CityFloatingContainer = new UISortedContainer();
+            Add(CityFloatingContainer);
+
             WindowContainer = new UIContainer();
             Add(WindowContainer);
 
@@ -279,6 +287,11 @@ namespace FSO.Client.UI.Screens
             LotPage.Visible = false;
             ControllerUtils.BindController<LotPageController>(LotPage);
             WindowContainer.Add(LotPage);
+
+            NeighPage = new UINeighPage();
+            NeighPage.Visible = false;
+            ControllerUtils.BindController<NeighPageController>(NeighPage);
+            WindowContainer.Add(NeighPage);
 
             Bookmarks = new UIBookmarks();
             Bookmarks.Visible = false;
@@ -294,6 +307,18 @@ namespace FSO.Client.UI.Screens
             Inbox.Visible = false;
             ControllerUtils.BindController<InboxController>(Inbox);
             WindowContainer.Add(Inbox);
+
+            GameThread.NextUpdate(x =>
+            {
+                var test = new UIVoteContainer();
+                UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Title = "Vote for your mayor!",
+                    GenericAddition = test,
+                    Width = 600,
+                    Message = "Please select which candidate you want to vote for."
+                }, false);
+            });
         }
 
         public override void GameResized()

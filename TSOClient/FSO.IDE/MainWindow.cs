@@ -1,5 +1,6 @@
 ﻿using FSO.Files.Formats.IFF;
 using FSO.IDE.Common;
+using FSO.IDE.ContentEditors;
 using FSO.IDE.Managers;
 using FSO.SimAntics;
 using FSO.SimAntics.NetPlay.Model.Commands;
@@ -303,6 +304,12 @@ namespace FSO.IDE
                 else
                     MessageBox.Show("Object creation cancelled! Iff will not be created.");
             }
+        }
+
+        private void dataServiceEditorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var ds = new TSODataDefinitionEditor();
+            ds.Show();
         }
     }
 

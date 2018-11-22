@@ -23,12 +23,13 @@ using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Common;
 using FSO.SimAntics.Model;
 using FSO.UI.Panels;
+using FSO.SimAntics.Model.Platform;
 
 namespace FSO.Client.UI.Panels
 {
     public class UIQueryPanel : UICachedContainer
     {
-
+        public UILotControl LotParent;
         public Texture2D BackgroundImageCatalog { get; set; }
         public Texture2D BackgroundImageTrade { get; set; }
         public Texture2D BackgroundImagePanel { get; set; }
@@ -85,6 +86,7 @@ namespace FSO.Client.UI.Panels
         public UIButton AsyncCancelSaleButton { get; set; }
         public UIButton AsyncEditPriceButton { get; set; }
         public UIButton AsyncBuyButton { get; set; }
+        public UIImage AsyncSaleButtonBG { get; set; }
         public UIImage AsyncCancelSaleButtonBG { get; set; }
 
         public Texture2D GeneralOwnerPriceBack { get; set; }
@@ -164,10 +166,13 @@ namespace FSO.Client.UI.Panels
 
                 ForSalePrice.Visible = (value == 1);
 
+                var validator = LotParent.vm.PlatformState.Validator;
                 SellBackButton.Visible = (value == 1);
-                SellBackButton.Disabled = !Roommate || Ghost;
+                var delMode = validator.GetDeleteMode(DeleteMode.Delete, (VMAvatar)LotParent.ActiveEntity, ActiveEntity);
+                SellBackButton.Disabled = delMode == DeleteMode.Disallowed || Ghost;
                 InventoryButton.Visible = (value == 1);
-                InventoryButton.Disabled = !IAmOwner || Ghost;
+                var sendbackMode = validator.GetDeleteMode(DeleteMode.Sendback, (VMAvatar)LotParent.ActiveEntity, ActiveEntity);
+                InventoryButton.Disabled = sendbackMode != DeleteMode.Sendback || Ghost;
 
                 ObjectNameText.Visible = (value == 1);
                 ObjectOwnerText.Visible = (value == 1);
@@ -175,9 +180,7 @@ namespace FSO.Client.UI.Panels
                 ObjectCrafterText.Visible = (value == 1);
 
                 WearProgressBar.Visible = (value == 1);
-
-                //async sale stuff, as in "once I know what this actually does I'll care"
-
+                
                 AsyncSaleButton.Visible = (value == 1) && LastSalePrice < 0 && !Ghost && CanSell;
                 AsyncCancelSaleButton.Visible = (value == 1) && IAmOwner && LastSalePrice > -1;
                 AsyncCancelSaleButtonBG.Visible = AsyncCancelSaleButton.Visible;
@@ -188,6 +191,8 @@ namespace FSO.Client.UI.Panels
                 {
                     bg.Visible = (value == 1);
                 }
+
+                AsyncSaleButtonBG.Visible = AsyncSaleButton.Visible || LastSalePrice > -1;
 
                 //uh..
                 OwnerPriceBack.Visible = (value == 1) && IAmOwner && LastSalePrice > -1;
@@ -244,7 +249,8 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        public UIQueryPanel(LotView.World world) {
+        public UIQueryPanel(UILotControl parent, LotView.World world) {
+            LotParent = parent;
             World = world;
             Active = false;
             Opacity = 0;
@@ -341,7 +347,8 @@ namespace FSO.Client.UI.Panels
             SpecificBtnBGs = new List<UIImage>();
             SpecificBtnBGs.Add(AddButtonBackground(SellBackButton, btnBg));
             SpecificBtnBGs.Add(AddButtonBackground(InventoryButton, btnBg));
-            SpecificBtnBGs.Add(AddButtonBackground(AsyncSaleButton, btnBg));
+            AsyncSaleButtonBG = AddButtonBackground(AsyncSaleButton, btnBg);
+            SpecificBtnBGs.Add(AsyncSaleButtonBG);
             AsyncCancelSaleButtonBG = AddButtonBackground(AsyncCancelSaleButton, btnBg);
 
             var progressBG = new UIImage(ImageWearBack);
@@ -467,7 +474,9 @@ namespace FSO.Client.UI.Panels
             IAmOwner = ((entity.TSOState as VMTSOObjectState)?.OwnerID ?? 0) == vm.MyUID;
             Ghost = entity.GhostImage;
             LastSalePrice = entity.MultitileGroup.SalePrice;
-            CanSell = (item?.DisableLevel ?? 0) < 2;
+            CanSell = 
+                vm.PlatformState.Validator.CanManageAsyncSale((VMAvatar)LotParent.ActiveEntity, ActiveEntity as VMGameObject)
+                && (item?.DisableLevel ?? 0) < 2;
 
             int price = def.Price;
             int finalPrice = price;
@@ -507,14 +516,20 @@ namespace FSO.Client.UI.Panels
             MotivesText.CurrentText = motivesString.ToString();
 
             string owner = "Nobody";
+            var ownerTable = "206";
+            var ownerEntry = "24";
             if (entity is VMGameObject && ((VMTSOObjectState)entity.TSOState).OwnerID > 0)
             {
                 var ownerID = ((VMTSOObjectState)entity.TSOState).OwnerID;
-                var ownerEnt = vm.GetAvatarByPersist(ownerID);
-                owner = (ownerEnt != null) ? owner = ownerEnt.Name : "(offline user)";
+                owner = (vm.TSOState.Names.GetNameForID(vm, ownerID));
+                if (((VMTSOObjectState)entity.TSOState).ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated))
+                {
+                    ownerTable = "f114";
+                    ownerEntry = "1";
+                }
             }
 
-            ObjectOwnerText.Caption = (!entity.GhostImage)?GameFacade.Strings.GetString("206", "24", new string[] { owner }):"";
+            ObjectOwnerText.Caption = (!entity.GhostImage)?GameFacade.Strings.GetString(ownerTable, ownerEntry, new string[] { owner }):"";
 
             SpecificTabButton.Disabled = !bought;
 

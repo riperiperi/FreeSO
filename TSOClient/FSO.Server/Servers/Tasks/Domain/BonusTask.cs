@@ -5,6 +5,7 @@ using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Bonus;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.LotTop100;
+using FSO.Server.Database.DA.LotVisits;
 using FSO.Server.Database.DA.LotVisitTotals;
 using FSO.Server.Database.DA.Tasks;
 using FSO.Server.Database.DA.Tuning;
@@ -47,7 +48,7 @@ namespace FSO.Server.Servers.Tasks.Domain
 
             using (var db = DAFactory.Get())
             {
-                var endTime = Midnight();
+                var endTime = LotVisitUtils.Midnight();
                 var endDay = endTime.Subtract(TimeSpan.FromMilliseconds(1));
                 endDay = new DateTime(endDay.Year, endDay.Month, endDay.Day);
                 
@@ -69,7 +70,7 @@ namespace FSO.Server.Servers.Tasks.Domain
                     while (Running && enumerator.MoveNext())
                     {
                         var visit = enumerator.Current;
-                        var span = CalculateDateOverlap(dayStart, dayEnd, visit.time_created, visit.time_closed.Value);
+                        var span = LotVisitUtils.CalculateDateOverlap(dayStart, dayEnd, visit.time_created, visit.time_closed.Value);
                         if (hours.ContainsKey(visit.lot_id))
                         {
                             hours[visit.lot_id] += span.TotalMinutes;
@@ -131,44 +132,6 @@ namespace FSO.Server.Servers.Tasks.Domain
                     };
                 }));
             }
-        }
-
-        /// <summary>
-        /// Calculates the overlap between two date ranges
-        /// </summary>
-        /// <param name="day"></param>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
-        private TimeSpan CalculateDateOverlap(DateTime r1_start, DateTime r1_end, DateTime r2_start, DateTime r2_end)
-        {
-            var startsInRange = r2_start >= r1_start && r2_start <= r1_end;
-            var endsInRange = r2_end <= r1_end && r2_end >= r1_start;
-
-            if (startsInRange && endsInRange)
-            {
-                //Within the range / equal
-                return r2_end.Subtract(r2_start);
-            }
-            else if (startsInRange)
-            {
-                //Starts within range but does not end in range
-                return r1_end.Subtract(r2_start);
-            }
-            else if (endsInRange)
-            {
-                //Ends in range but does not start in range
-                return r2_end.Subtract(r1_start);
-            }
-            else
-            {
-                return new TimeSpan(0);
-            }
-        }
-
-        private DateTime Midnight()
-        {
-            var now = DateTime.Now;
-            return new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
         }
 
         public void Abort()

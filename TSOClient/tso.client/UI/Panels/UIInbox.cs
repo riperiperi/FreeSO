@@ -138,6 +138,14 @@ namespace FSO.Client.UI.Panels
             }
 
             Dropdown = new UIInboxDropdown();
+            Dropdown.OnSearch += (query) =>
+            {
+                (Parent.Controller as InboxController)?.Search(query, false);
+            };
+            Dropdown.OnSelect += (id, name) =>
+            {
+                FindController<CoreGameScreenController>()?.WriteEmail(id, "");
+            };
             Dropdown.X = 162;
             Dropdown.Y = 13;
             this.Add(Dropdown);
@@ -211,7 +219,8 @@ namespace FSO.Client.UI.Panels
                     var time = new DateTime(it.Time);
                     time = time.ToLocalTime();
                     var dateformat = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern;
-                    var item = new UIListBoxItem(it, "", "", TypeIcons[it.Type], "", time.ToString("HH:mm ddd "+dateformat), "", it.Subject, "", it.SenderName);
+                    var tuple = MessagingController.CSTReplace(it.SenderName, it.Subject, it.Body);
+                    var item = new UIListBoxItem(it, "", "", TypeIcons[it.Type], "", time.ToString("HH:mm ddd "+dateformat), "", tuple.Item2, "", tuple.Item1);
                     item.CustomStyle = TypeStyles[it.Type];
                     item.UseDisabledStyleByDefault = it.ReadState > 0;
                     InboxListBox.Items.Add(item);
@@ -280,6 +289,9 @@ namespace FSO.Client.UI.Panels
 
         UIScript Script;
 
+        public event Action<string> OnSearch;
+        public event Action<uint, string> OnSelect;
+
         public UIInboxDropdown()
         {
             Script = this.RenderScript("messageinboxmenu.uis");
@@ -303,7 +315,8 @@ namespace FSO.Client.UI.Panels
         {
             var selected = MenuListBox.SelectedItem;
             if (selected == null) return;
-            FindController<CoreGameScreenController>()?.WriteEmail(((Common.DatabaseService.Model.SearchResponseItem)selected.Data).EntityId, "");
+            var data = ((Common.DatabaseService.Model.SearchResponseItem)selected.Data);
+            OnSelect(data.EntityId, data.Name);
         }
 
         private void MenuTextEdit_OnChange(UIElement element)
@@ -314,7 +327,7 @@ namespace FSO.Client.UI.Panels
         private void Search(UIElement element)
         {
             if (element != null && !open) ToggleOpen();
-            else ((InboxController)Parent.Controller).Search(MenuTextEdit.CurrentText, false);
+            else OnSearch(MenuTextEdit.CurrentText);
         }
 
         void DropDownButton_OnButtonClick(UIElement button)

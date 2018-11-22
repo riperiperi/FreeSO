@@ -234,6 +234,7 @@ namespace FSO.Client.UI.Controls
         {
             var bounds = this.GetBounds();
             NumVisibleRows = m_VisibleRows != -1 ? m_VisibleRows : (int)Math.Floor((double)bounds.Height / (double)RowHeight);
+            CalculateHitArea();
             var numRows = this.Items.Count;
 
             if (m_Slider != null)
@@ -259,9 +260,9 @@ namespace FSO.Client.UI.Controls
             {
                 foreach (var col in item.Columns)
                 {
-                    if (col is UIContainer)
+                    if (col is UIElement)
                     {
-                        var container = ((UIContainer)col);
+                        var container = ((UIElement)col);
                         container.Visible = i >= ScrollOffset && i < ScrollOffset + NumVisibleRows;
                         if (container.Visible)
                         {
@@ -416,10 +417,13 @@ namespace FSO.Client.UI.Controls
                 gd.Clear(Color.Transparent);
                 var pos = LocalPoint(0, 0);
 
-                batch.Begin(transformMatrix: Microsoft.Xna.Framework.Matrix.CreateTranslation(-pos.X, -pos.Y, 0), blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
+                var trans = Microsoft.Xna.Framework.Matrix.CreateTranslation(-pos.X, -pos.Y, 0);
+                batch.BatchMatrixStack.Push(trans);
+                batch.Begin(transformMatrix: trans, blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
                 batch.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
                 _Draw(batch);
                 batch.End();
+                batch.BatchMatrixStack.Pop();
                 gd.SetRenderTarget(null);
             }
         }
@@ -448,7 +452,7 @@ namespace FSO.Client.UI.Controls
             for (var i = 0; i < NumVisibleRows; i++)
             {
                 var rowIndex = i + ScrollOffset;
-                if (!(rowIndex < m_Items.Count))
+                if ((rowIndex >= m_Items.Count) || rowIndex < 0)
                 {
                     /** Out of bounds **/
                     continue;
@@ -579,11 +583,33 @@ namespace FSO.Client.UI.Controls
 
                         DrawLocalTexture(batch, (Texture2D)columnValue, from, to, new Vector2((float)destWidth / (float)texWidthDiv4, (float)destHeight / (float)tex.Height));
                     }
-                    else if (columnValue is UIContainer)
+                    else if (columnValue is UIElement)
                     {
-                        var container = (UIContainer)columnValue;
-                        container.Position = this.Position + new Vector2(columnX, rowY);
+                        var container = (UIElement)columnValue;
+
+                        var to = new Vector2(columnX, rowY);
+                        var bounds = container.GetBounds();
+                        if ((columnSpec.Alignment & TextAlignment.Middle) == TextAlignment.Middle)
+                        {
+                            to.Y = rowY + ((RowHeight - bounds.Height) / 2);
+                        }
+                        else if ((columnSpec.Alignment & TextAlignment.Bottom) == TextAlignment.Bottom)
+                        {
+                            to.Y = rowY + ((RowHeight - bounds.Height));
+                        }
+
+                        if ((columnSpec.Alignment & TextAlignment.Center) == TextAlignment.Center)
+                        {
+                            to.X = columnX + ((columnBounds.Width - bounds.Width) / 2);
+                        }
+                        else if ((columnSpec.Alignment & TextAlignment.Right) == TextAlignment.Right)
+                        {
+                            to.X = columnX + (columnBounds.Width - bounds.Width);
+                        }
+
+                        container.Position = this.Position + to;
                         container.Parent = this.Parent;
+                        container.InvalidationParent = this.InvalidationParent;
                         container.InvalidateMatrix();
                         container.PreDraw(batch);
                         container.Draw(batch);

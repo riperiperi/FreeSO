@@ -255,7 +255,7 @@ void BladesPS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COL
         float bladeCol = rand.x*0.6;
         float4 green = lerp(LightGreen, DarkGreen, bladeCol);
         float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-		color = lerp(green, brown, input.GrassInfo.x) * lightProcessFloor(input.ModelPos) * LightDot(input.Normal);//DiffuseColor;
+		color = gammaMul(lerp(green, brown, input.GrassInfo.x), lightProcessFloor(input.ModelPos) * LightDot(input.Normal));//DiffuseColor;
     }
 }
 
@@ -284,7 +284,7 @@ void BladesPSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB
 		float bladeCol = rand.x*0.6;
 		float4 green = lerp(LightGreen, DarkGreen, bladeCol);
 		float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-		color = lerp(green, brown, input.GrassInfo.x) * SimpleLight(input.ModelPos.xz) * LightDot(input.Normal);
+		color = gammaMul(lerp(green, brown, input.GrassInfo.x), SimpleLight(input.ModelPos.xz) * LightDot(input.Normal));
 	}
 }
 
@@ -299,7 +299,7 @@ void BladesPS3D(GrassPSVTX input, out float4 color:COLOR0)
 	float bladeCol = rand.x*0.6;
 	float4 green = lerp(LightGreen, DarkGreen, bladeCol);
 	float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-	color = lerp(green, brown, input.GrassInfo.x) * lightProcessFloor(input.ModelPos) * LightDot(input.Normal) + LightSpecular(input.Normal, input.ModelPos);
+	color = gammaMad(lerp(green, brown, input.GrassInfo.x), lightProcessFloor(input.ModelPos) * LightDot(input.Normal), LightSpecular(input.Normal, input.ModelPos));
 	color.a = a;
 	color.a *= Alpha;
 }
@@ -366,12 +366,13 @@ void BasePS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR
 		//software depth
 		if (unpackDepth(tex2D(depthMapSampler, input.ScreenPos.xy / ScreenSize)) < d) discard;
 #endif
-        color = lightProcessFloor(input.ModelPos) * LightDot(input.Normal);//*DiffuseColor;
+        color = float4(1,1,1,1);//*DiffuseColor;
 		if (IgnoreColor == false) color *= input.Color;
 		if (UseTexture == true) {
 			color *= tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
 			if (color.a < 0.5) discard;
 		}
+		color = gammaMul(color, lightProcessFloor(input.ModelPos) * LightDot(input.Normal));
     }
 }
 
@@ -435,7 +436,7 @@ float RectangleFade(float2 xz, float extend) {
 void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 {
 	float d = input.GrassInfo.w;
-	color = lightProcessFloor(input.ModelPos) * LightDot(input.Normal) + LightSpecular(input.Normal, input.ModelPos);
+	color = float4(1,1,1,1);
 	if (IgnoreColor == false) color *= input.Color;
 	if (UseTexture == true) {
 #if SIMPLE
@@ -448,9 +449,11 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 #endif
 #endif
 		if (color.a < 0.5) discard;
+		color = gammaMad(color, lightProcessFloor(input.ModelPos) * LightDot(input.Normal), LightSpecular(input.Normal, input.ModelPos));
 		color.a *= (1 - RectangleFade(input.ModelPos.xz, FadeWidth / 2));
 	}
 	else {
+		color = gammaMad(color, lightProcessFloor(input.ModelPos) * LightDot(input.Normal), LightSpecular(input.Normal, input.ModelPos));
 		float a = 1 - (2 - sqrt(input.ScreenPos.z / (25 * GrassFadeMul)));
 		if (a > 0) {
 			a = min(1, a);
@@ -464,7 +467,7 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 			float bladeCol = rand.y*0.6;
 			float4 green = lerp(LightGreen, DarkGreen, bladeCol);
 			float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-			float4 bladecolor = lerp(green, brown, input.GrassInfo.x) * lightProcessFloor(input.ModelPos) * LightDot(input.Normal);
+			float4 bladecolor = gammaMul(lerp(green, brown, input.GrassInfo.x), lightProcessFloor(input.ModelPos) * LightDot(input.Normal));
 			color = lerp(color, bladecolor, multex);
 		}
 		color.a *= (1 - RectangleFade(input.ModelPos.xz, 0.0));

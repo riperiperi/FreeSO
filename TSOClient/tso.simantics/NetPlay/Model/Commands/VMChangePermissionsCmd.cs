@@ -52,7 +52,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         }
                         var wasDisabled = (((VMGameObject)ent).Disabled & VMGameObjectDisableFlags.PendingRoommateDeletion) > 0;
 
-                        var toBeDisabled = !roomies.Contains(owner);
+                        var toBeDisabled = !roomies.Contains(owner) && !((VMTSOObjectState)ent.TSOState).ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated);
 
                         if (wasDisabled != toBeDisabled)
                         {
@@ -71,6 +71,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             var obj = vm.GetAvatarByPersist(pid);
             var roomieChange = false;
+            var playerOwned = (!vm.TSOState.CommunityLot);
             if (obj == null)
             {
                 vm.TSOState.BuildRoommates.Remove(pid);
@@ -80,26 +81,28 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 {
                     roomieChange = !roomieChange;
                     vm.TSOState.Roommates.Add(pid);
+                    vm.TSOState.Names.Precache(vm, pid);
                     if (level > VMTSOAvatarPermissions.Roommate) vm.TSOState.BuildRoommates.Add(pid);
                     if (level == VMTSOAvatarPermissions.Owner) vm.TSOState.OwnerID = pid;
                 }
             }
             else
             {
-
                 var oldState = obj.AvatarState.Permissions;
 
                 if (oldState >= VMTSOAvatarPermissions.Roommate)
                 {
                     vm.TSOState.Roommates.Remove(obj.PersistID);
                     roomieChange = !roomieChange;
-                    ((VMTSOAvatarState)obj.TSOState).Flags |= VMTSOAvatarFlags.CanBeRoommate;
+                    if (playerOwned)
+                        ((VMTSOAvatarState)obj.TSOState).Flags |= VMTSOAvatarFlags.CanBeRoommate;
                 }
                 if (oldState >= VMTSOAvatarPermissions.BuildBuyRoommate) vm.TSOState.BuildRoommates.Remove(obj.PersistID);
                 obj.AvatarState.Permissions = level;
                 if (level >= VMTSOAvatarPermissions.Roommate)
                 {
-                    ((VMTSOAvatarState)obj.TSOState).Flags &= ~VMTSOAvatarFlags.CanBeRoommate;
+                    if (playerOwned)
+                        ((VMTSOAvatarState)obj.TSOState).Flags &= ~VMTSOAvatarFlags.CanBeRoommate;
                     roomieChange = !roomieChange; //flips roomie change back
                     vm.TSOState.Roommates.Add(obj.PersistID);
                 }
@@ -107,7 +110,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 if (level == VMTSOAvatarPermissions.Owner) vm.TSOState.OwnerID = pid;
                 else if (vm.TSOState.OwnerID == pid) vm.TSOState.OwnerID = 0;
             }
-            return roomieChange;
+            return roomieChange && playerOwned;
         }
 
         public override bool Verify(VM vm, VMAvatar caller)
@@ -118,19 +121,35 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 caller.AvatarState.Permissions < VMTSOAvatarPermissions.Owner)
                 return false;
 
-            if (Level > VMTSOAvatarPermissions.BuildBuyRoommate || Level < VMTSOAvatarPermissions.Roommate) return false; //users can only switch to build roomie or back.
+            if (vm.TSOState.CommunityLot)
+            {
+                //can change roomie freely. limit is 100 roomies, don't tell city server.
+                if (vm.TSOState.OwnerID == TargetUID) return false; //cannot change own permissions level
+                if (!vm.TSOState.Roommates.Contains(TargetUID) && Level >= VMTSOAvatarPermissions.Roommate
+                    && vm.TSOState.Roommates.Count >= 100)
+                {
+                    //cannot add any more roommates.
+                    return false;
+                }
+                return true;
+            }
+            else
+            {
 
-            if (!vm.TSOState.Roommates.Contains(TargetUID) || vm.TSOState.OwnerID == TargetUID) return false;
+                if (Level > VMTSOAvatarPermissions.BuildBuyRoommate || Level < VMTSOAvatarPermissions.Roommate) return false; //users can only switch to build roomie or back.
 
-            /*
-            var obj = vm.GetAvatarByPersist(TargetUID);
-            if (obj == null
-                || ((VMTSOAvatarState)caller.TSOState).Permissions > VMTSOAvatarPermissions.BuildBuyRoommate
-                || ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate
-                || ((VMTSOAvatarState)caller.TSOState).Permissions == Level) return false;
-                */
+                if (!vm.TSOState.Roommates.Contains(TargetUID) || vm.TSOState.OwnerID == TargetUID) return false;
 
-            vm.GlobalLink.RequestRoommate(vm, TargetUID, 3, (byte)((Level == VMTSOAvatarPermissions.Roommate) ? 0 : 1));
+                /*
+                var obj = vm.GetAvatarByPersist(TargetUID);
+                if (obj == null
+                    || ((VMTSOAvatarState)caller.TSOState).Permissions > VMTSOAvatarPermissions.BuildBuyRoommate
+                    || ((VMTSOAvatarState)caller.TSOState).Permissions < VMTSOAvatarPermissions.Roommate
+                    || ((VMTSOAvatarState)caller.TSOState).Permissions == Level) return false;
+                    */
+
+                vm.GlobalLink.RequestRoommate(vm, TargetUID, 3, (byte)((Level == VMTSOAvatarPermissions.Roommate) ? 0 : 1));
+            }
 
             return false;
         }

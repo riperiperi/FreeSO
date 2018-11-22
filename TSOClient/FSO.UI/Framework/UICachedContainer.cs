@@ -62,14 +62,17 @@ namespace FSO.Client.UI.Framework
 
                 try { batch.End(); } catch { }
                 gd.SetRenderTarget(Target);
+
                 gd.Clear(ClearColor);
                 var pos = LocalPoint(0, 0);
 
-                batch.Begin(transformMatrix:
-                    Microsoft.Xna.Framework.Matrix.CreateTranslation(-(pos.X), -(pos.Y), 0) *
+                var mat = Microsoft.Xna.Framework.Matrix.CreateTranslation(-(pos.X), -(pos.Y), 0) *
                     Microsoft.Xna.Framework.Matrix.CreateScale(1f / FSOEnvironment.DPIScaleFactor) *
-                    Microsoft.Xna.Framework.Matrix.CreateTranslation(BackOffset.X, BackOffset.Y, 0)
-                    , blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
+                    Microsoft.Xna.Framework.Matrix.CreateTranslation(BackOffset.X, BackOffset.Y, 0);
+
+                batch.BatchMatrixStack.Push(mat);
+
+                batch.Begin(transformMatrix: mat, blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
                 batch.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
                 if (InternalBefore) InternalDraw(batch);
                 lock (Children)
@@ -81,6 +84,7 @@ namespace FSO.Client.UI.Framework
                     }
                 }
                 if (!InternalBefore) InternalDraw(batch);
+                batch.BatchMatrixStack.Pop();
                 batch.End();
                 gd.SetRenderTarget(null);
                 Invalidated = false;

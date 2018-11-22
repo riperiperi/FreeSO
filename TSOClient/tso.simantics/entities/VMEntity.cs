@@ -42,7 +42,7 @@ namespace FSO.SimAntics
     /// </summary>
     public abstract class VMEntity
     {
-
+        public static Func<VMEntity, Texture2D> MissingIconProvider;
         public static bool UseWorld = true;
 
         public VMEntityRTTI RTTI;
@@ -126,13 +126,14 @@ namespace FSO.SimAntics
         {
             get
             {
-                if (Container != null) return true;
+                if (Container != null && Container is VMAvatar) return true;
                 if (Slots == null) return false;
                 if (!Slots.Slots.ContainsKey(3)) return false;
                 var slots = Slots.Slots[3];
-                return (slots.Count > 7);
+                return MovedSelf;
             }
         }
+        public bool MovedSelf;
 
         public string Name
         {

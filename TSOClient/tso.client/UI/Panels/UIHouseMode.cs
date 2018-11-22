@@ -117,6 +117,8 @@ namespace FSO.Client.UI.Panels
             {
                 if (Panel is IDisposable)
                     ((IDisposable)Panel)?.Dispose();
+                if (Panel is UIDialog)
+                    UIScreen.RemoveDialog(Panel);
                 this.Remove(Panel);
             }
             if (newPanel != CurrentPanel)
@@ -128,7 +130,7 @@ namespace FSO.Client.UI.Panels
                         Panel = new UIStatsPanel(LotControl);
                         break;
                     case 2:
-                        Panel = new UIRoommatesPanel(LotControl);
+                        Panel = new Panels.Neighborhoods.UIManageDonatorDialog(LotControl);
                         break;
                     case 3:
                         Panel = new UILogPanel(LotControl);
@@ -151,12 +153,19 @@ namespace FSO.Client.UI.Panels
                 }
                 if (Panel != null)
                 {
-                    if (newPanel != 5)
+                    if (Panel is UIDialog)
                     {
-                        Panel.X = 225; //TODO: use uiscript positions
-                        Panel.Y = 9;
+                        UIScreen.GlobalShowDialog(Panel, false);
                     }
-                    this.Add(Panel);
+                    else
+                    {
+                        if (newPanel != 5)
+                        {
+                            Panel.X = 225; //TODO: use uiscript positions
+                            Panel.Y = 9;
+                        }
+                        this.Add(Panel);
+                    }
                     CurrentPanel = newPanel;
                 }
             }

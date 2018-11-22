@@ -53,17 +53,26 @@ namespace FSO.Server.Database.DA.Lots
                                             category = lot.category.ToString(),
                                             buildable_area = lot.buildable_area
                                         }).First();
-                failReason = "ROOMIE";
-                var roomie = new DbRoommate()
+                failReason = "NHOOD";
+                UpdateNeighborhood((int)result);
+                if (lot.category != LotCategory.community)
                 {
-                    avatar_id = lot.owner_id ?? 0,
-                    is_pending = 0,
-                    lot_id = (int)result,
-                    permissions_level = 2
-                };
-                var result2 = Context.Connection.Execute("INSERT INTO fso_roommates (avatar_id, lot_id, permissions_level, is_pending) " +
-                    " VALUES (@avatar_id, @lot_id, @permissions_level, @is_pending);", roomie) > 0;
-                if (result2)
+                    failReason = "ROOMIE";
+                    var roomie = new DbRoommate()
+                    {
+                        avatar_id = lot.owner_id ?? 0,
+                        is_pending = 0,
+                        lot_id = (int)result,
+                        permissions_level = 2
+                    };
+                    var result2 = Context.Connection.Execute("INSERT INTO fso_roommates (avatar_id, lot_id, permissions_level, is_pending) " +
+                        " VALUES (@avatar_id, @lot_id, @permissions_level, @is_pending);", roomie) > 0;
+                    if (result2)
+                    {
+                        t.Commit();
+                        return result;
+                    }
+                } else
                 {
                     t.Commit();
                     return result;
@@ -82,7 +91,7 @@ namespace FSO.Server.Database.DA.Lots
 
         public DbLot GetByOwner(uint owner_id)
         {
-            return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE owner_id = @id", new { id = owner_id }).FirstOrDefault();
+            return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE owner_id = @id && category != 'community'", new { id = owner_id }).FirstOrDefault();
         }
 
         public IEnumerable<DbLot> All(int shard_id)
@@ -93,6 +102,11 @@ namespace FSO.Server.Database.DA.Lots
         public List<DbLot> AllLocations(int shard_id)
         {
             return Context.Connection.Query<DbLot>("SELECT location, name FROM fso_lots WHERE shard_id = @shard_id", new { shard_id = shard_id }).ToList();
+        }
+
+        public List<uint> GetLocationsInNhood(uint nhood_id)
+        {
+            return Context.Connection.Query<uint>("SELECT location FROM fso_lots WHERE neighborhood_id = @nhood_id", new { nhood_id = nhood_id }).ToList();
         }
 
         public List<string> AllNames(int shard_id)
@@ -221,7 +235,35 @@ namespace FSO.Server.Database.DA.Lots
 
         public bool UpdateLocation(int lot_id, uint location, bool startFresh)
         {
-            return Context.Connection.Execute("UPDATE fso_lots SET location = @location, move_flags = @move WHERE lot_id = @id", new { id = lot_id, location = location, move = (byte)(startFresh?2:1) }) > 0;
+            var success = Context.Connection.Execute("UPDATE fso_lots SET location = @location, move_flags = @move WHERE lot_id = @id", new { id = lot_id, location = location, move = (byte)(startFresh?2:1) }) > 0;
+            if (success)
+                UpdateNeighborhood(lot_id);
+            return success;
+        }
+
+        private static string NHoodQuery = 
+                "UPDATE fso.fso_lots l " +
+                "SET neighborhood_id = " +
+                "COALESCE((SELECT neighborhood_id " +
+                "FROM fso.fso_neighborhoods n " +
+                "ORDER BY(POWER(((l.location & 65535) + 0.0) - ((n.location & 65535) + 0.0), 2) + " +
+                "POWER((FLOOR(l.location / 65536) + 0.0) - (FLOOR(n.location / 65536) + 0.0), 2)) " +
+                "LIMIT 1), 0) ";
+
+        public int UpdateAllNeighborhoods(int shard_id)
+        {
+            return Context.Connection.Execute(
+                NHoodQuery +
+                "WHERE l.shard_id = @shard_id"
+                , new { shard_id = shard_id });
+        }
+
+        public bool UpdateNeighborhood(int lot_id)
+        {
+            return (Context.Connection.Execute(
+                NHoodQuery +
+                "WHERE l.lot_id = @lot_id"
+                , new { lot_id = lot_id })) > 0;
         }
     }
 }

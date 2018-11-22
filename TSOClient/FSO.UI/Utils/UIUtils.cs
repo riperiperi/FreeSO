@@ -36,7 +36,7 @@ namespace FSO.Client.Utils
             return handler;
         }
 
-        public static UIWordWrapOutput WordWrap(string text, int width, TextStyle style, Vector2 scale)
+        public static UIWordWrapOutput WordWrap(string text, int width, TextStyle style)
         {
             var result = new UIWordWrapOutput();
             result.Lines = new List<string>();
@@ -53,13 +53,13 @@ namespace FSO.Client.Utils
 				    for (i=0; i<words.Count; i++) {
                         lineBuffer.Add(words[i]);
 					    var str = JoinWordList(lineBuffer);      //(lineBuffer.concat([words[i]])).join(" ");
-                        int w = (int)(style.SpriteFont.MeasureString(str).X * scale.X);
+                        int w = (int)(style.MeasureString(str).X);
 					    if (w > width) {
                             lineBuffer.RemoveAt(lineBuffer.Count-1);
 						    if (lineBuffer.Count == 0) {
 							    for (var j=words[i].Length-1; j>0; j--) {
 								    var str2 = words[i].Substring(0, j);
-                                    var w2 = (int)(style.SpriteFont.MeasureString(str2).X * scale.X);
+                                    var w2 = (int)(style.MeasureString(str2).X);
 								    if (w2 <= width) {
 									    curpos += j;
 									    lineBuffer.Add(words[i].Substring(0, j));

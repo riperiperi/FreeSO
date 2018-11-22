@@ -314,7 +314,10 @@ namespace FSO.Client.UI.Panels
             if (vm != null)
             {
                 vm.Context.World.ChangedWorldConfig(GameFacade.GraphicsDevice);
-                if (oldSurrounding != settings.SurroundingLotMode) SimAntics.Utils.VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+                if (oldSurrounding != settings.SurroundingLotMode)
+                {
+                    SimAntics.Utils.VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+                }
             }
         }
 

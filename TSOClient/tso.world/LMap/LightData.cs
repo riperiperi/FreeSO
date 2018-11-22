@@ -23,6 +23,7 @@ namespace FSO.LotView.LMap
 
         public float LightSize; //the size of the light's impact in 16th tiles.
         public Rectangle LightBounds; //based off of LightPos and LightSize. limits shadow and lightmap render bounds
+        public float Height = 2.95f * 3 / 4f;
         public float ShadowMultiplier; //outdoors type only. informs strength of shadows.
 
         public sbyte Level;
@@ -41,6 +42,21 @@ namespace FSO.LotView.LMap
             Room = room;
             Level = level;
             LightColor = color;
+        }
+
+        public LightData(Vector2 pos, bool outdoors, int size, ushort room, sbyte level, Color color, Components.ObjectComponent comp)
+            : this(pos, outdoors, size, room, level, color)
+        {
+            if (comp != null)
+            {
+                var bounds = comp.GetParticleBounds();
+                var mid = (bounds.Min + bounds.Max) / 2;
+                mid.X = Math.Min(0.35f, Math.Max(-0.35f, mid.X));
+                mid.Z = Math.Min(0.35f, Math.Max(-0.35f, mid.Z));
+                mid = Vector3.Transform(mid, Matrix.CreateRotationY(-comp.RadianDirection));
+                LightPos += new Vector2(mid.X, mid.Z) * 16;
+                Height = Math.Max(mid.Y, bounds.Max.Y - 0.25f) + comp.Position.Z - comp.GetBottomContainer().Position.Z;
+            }
         }
 
         public void UpdateBounds()

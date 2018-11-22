@@ -35,6 +35,7 @@ namespace FSO.Server.Utils
         internal IKernel Kernel;
 
         private GluonHostPoolMonitor Monitor;
+        private AutoResetEvent StoppedEvent = new AutoResetEvent(false);
 
         private Dictionary<string, GluonHost> Pool;
         private Thread PoolHealthWatcher;
@@ -72,13 +73,7 @@ namespace FSO.Server.Utils
             LOG.Info("stopping gluon host pool");
 
             PoolRunning = false;
-            if (PoolHealthWatcher != null)
-            {
-                try{
-                    PoolHealthWatcher.Abort();
-                }catch (Exception ex){
-                }
-            }
+            StoppedEvent.Set();
         }
 
         private void HealthCheckLoop()
@@ -99,7 +94,8 @@ namespace FSO.Server.Utils
                 if (!hashSame){
                     ForcePoolRefresh = true;
                 }
-                Thread.Sleep(POOL_HEALTH_CHECK_FREQUENCY);
+
+                StoppedEvent.WaitOne(POOL_HEALTH_CHECK_FREQUENCY);
             }
         }
 

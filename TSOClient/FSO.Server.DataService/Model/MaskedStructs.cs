@@ -58,6 +58,15 @@ namespace FSO.Server.DataService.Model
         ServerNeighborhood,
         MapView_FarZoom_Lot,
 
+        NeighPage_Info,
+        NeighPage_TopLots,
+        NeighPage_TopAvatars,
+        NeighPage_Mayor,
+        MayorInfo_Avatar,
+        NeighPage_Description,
+        Rating_User,
+        City_NeighLayout,
+
         Unknown
     }
 
@@ -116,7 +125,16 @@ namespace FSO.Server.DataService.Model
                 case MaskedStruct.ServerDataUpdateEventList: return 4204965376;
                 case MaskedStruct.ServerNeighborhood: return 4236962517;
                 case MaskedStruct.MapView_FarZoom_Lot: return 4249159840;
-                
+
+                case MaskedStruct.NeighPage_Info: return 0x2A27B3DE;
+                case MaskedStruct.NeighPage_TopLots: return 0x29068EC2;
+                case MaskedStruct.NeighPage_TopAvatars: return 0x129A1F00;
+                case MaskedStruct.NeighPage_Mayor: return 0x1B26FF67;
+                case MaskedStruct.MayorInfo_Avatar: return 0x553F4D63;
+                case MaskedStruct.NeighPage_Description: return 0x695AC7CC;
+                case MaskedStruct.Rating_User: return 0x40347674;
+                case MaskedStruct.City_NeighLayout: return 0x66082A2F;
+
                 default:
                     throw new Exception("Unknown masked struct");
             }
@@ -176,6 +194,15 @@ namespace FSO.Server.DataService.Model
                 case 4204965376: return MaskedStruct.ServerDataUpdateEventList;
                 case 4236962517: return MaskedStruct.ServerNeighborhood;
                 case 4249159840: return MaskedStruct.MapView_FarZoom_Lot;
+
+                case 0x2A27B3DE: return MaskedStruct.NeighPage_Info;
+                case 0x29068EC2: return MaskedStruct.NeighPage_TopLots;
+                case 0x129A1F00: return MaskedStruct.NeighPage_TopAvatars;
+                case 0x1B26FF67: return MaskedStruct.NeighPage_Mayor;
+                case 0x553F4D63: return MaskedStruct.MayorInfo_Avatar;
+                case 0x695AC7CC: return MaskedStruct.NeighPage_Description;
+                case 0x40347674: return MaskedStruct.Rating_User;
+                case 0x66082A2F: return MaskedStruct.City_NeighLayout;
 
                 default:
                     return MaskedStruct.Unknown;

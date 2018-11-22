@@ -51,7 +51,7 @@ namespace FSO.Client.UI.Controls
                     if (_WrappedOutput == null)
                     {
                         var scale = new Vector2(CaptionStyle.Scale);
-                        _WrappedOutput = UIUtils.WordWrap(m_Text, m_Size.Width, CaptionStyle, scale);
+                        _WrappedOutput = UIUtils.WordWrap(m_Text, m_Size.Width, CaptionStyle);
                     }
                     return _WrappedOutput.Lines.Count;
                 }
@@ -136,7 +136,7 @@ namespace FSO.Client.UI.Controls
                         if (_WrappedOutput == null)
                         {
                             var scale = new Vector2(CaptionStyle.Scale);
-                            _WrappedOutput = UIUtils.WordWrap(m_Text, m_Size.Width, CaptionStyle, scale);
+                            _WrappedOutput = UIUtils.WordWrap(m_Text, m_Size.Width, CaptionStyle);
                         }
 
                         if(_WrappedOutput == null || _WrappedOutput.Lines == null){

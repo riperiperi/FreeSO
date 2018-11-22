@@ -188,15 +188,20 @@ namespace FSO.Client.UI.Panels.WorldUI
                 {
                     batch.Draw(WhitePx, new Rectangle(88, 4, 71, 41), new Color(92, 92, 92));
                     var font = GameFacade.MainFont.GetNearest(14).Font;
+                    var vfont = GameFacade.VectorFont;
+                    batch.End();
 
-                    Vector2 fontOrigin = font.MeasureString(SkillString) / 2;
-                    batch.DrawString(font, SkillString, new Vector2(88 + 35, 15) - fontOrigin * 0.60f, new Color(255, 249, 157), 0, new Vector2(), 0.60f, SpriteEffects.None, 0);
+                    Vector2 fontOrigin = vfont.MeasureString(SkillString) / 2;
+                    vfont.Draw(GD, SkillString, new Vector2(88 + 35, 15) - fontOrigin * 0.72f, new Color(255, 249, 157), new Vector2(0.72f), null);
+                    //batch.DrawString(font, SkillString, new Vector2(88 + 35, 15) - fontOrigin * 0.60f, new Color(255, 249, 157), 0, new Vector2(), 0.60f, SpriteEffects.None, 0);
 
-                    fontOrigin = font.MeasureString(SpeedString) / 2;
-                    batch.DrawString(font, SpeedString, new Vector2(88 + 35, 34) - fontOrigin * 0.60f, new Color(255, 249, 157), 0, new Vector2(), 0.60f, SpriteEffects.None, 0);
+                    fontOrigin = vfont.MeasureString(SpeedString) / 2;
+                    vfont.Draw(GD, SpeedString, new Vector2(88 + 35, 34) - fontOrigin * 0.72f, new Color(255, 249, 157), new Vector2(0.72f), null);
+                    //batch.DrawString(font, SpeedString, new Vector2(88 + 35, 34) - fontOrigin * 0.60f, new Color(255, 249, 157), 0, new Vector2(), 0.60f, SpriteEffects.None, 0);
+                } else
+                {
+                    batch.End();
                 }
-
-                batch.End();
                 GD.SetRenderTarget(null);
                 Invalidated = false;
             }

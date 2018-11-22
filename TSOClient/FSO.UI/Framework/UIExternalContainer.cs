@@ -96,12 +96,14 @@ namespace FSO.Client.UI.Framework
                 }
                 Target.GetData(RawImage, 0, (GameFacade.DirectX) ? RawImage.Length : RawImage.Length);
 
+                
                 for (int i = 0; i < RawImage.Length; i += 4)
                 {
                     var swap = RawImage[i];
                     RawImage[i] = RawImage[i + 2];
                     RawImage[i + 2] = swap;
                 }
+
                 if (OnFrame != null) OnFrame();
             }
             //    if (BatchDirty) WidthHeightChange(Width, Height);

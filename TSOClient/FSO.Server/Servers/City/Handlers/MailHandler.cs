@@ -136,6 +136,26 @@ namespace FSO.Server.Servers.City.Handlers
             }
         }
 
+        public bool SendSystemEmail(string cst, int subjectIndex, int msgIndex, int type, MessageSpecialType specialType,
+            uint expireDate, uint targetID, params string[] args)
+        {
+            for (int i=0; i<args.Length; i++)
+            {
+                args[i] = args[i].Replace(';', ':');
+            }
+            var item = new MessageItem()
+            {
+                Subject = ";" + cst + ";" + subjectIndex,
+                Body = ";" + expireDate + ";" + cst + ";" + msgIndex + ';' + string.Join(";", args),
+                Type = type,
+                Subtype = (int)specialType,
+                SenderID = uint.MaxValue,
+                TargetID = targetID,
+                SenderName = ";default"
+            };
+            return SendEmail(item, true);
+        }
+
         public bool SendEmail(MessageItem item, bool sendToSession)
         {
             //put it in the database first
@@ -206,5 +226,56 @@ namespace FSO.Server.Servers.City.Handlers
             };
             return result;
         }
+    }
+
+    public enum NeighMailStrings : int
+    {
+        NominateSubject = 1,
+        Nominate = 2,
+
+        VoteSubject = 3,
+        Vote = 4,
+
+        ElectionOverSubject = 5,
+        ElectionOver = 6,
+
+        NominationQuerySubject = 7,
+        NominationQuery = 8,
+
+        NominationAcceptedSubject = 9,
+        NominationAccepted = 10,
+
+        RunningForMayorSubject = 11,
+        RunningForMayor = 12,
+
+        TooFewNominationsSubject = 13,
+        TooFewNominations = 14,
+
+        NeighGameplayBanSubject = 15,
+        NeighGameplayBan = 16,
+
+        TermLengthSubject = 17,
+        TermLength = 18,
+
+        NoLongerMayorSubject = 19,
+        NoLongerMayor = 20,
+
+        NoLongerMayorModSubject = 21,
+        NoLongerMayorMod = 22,
+
+        NominationCountedSubject = 23,
+        NominationCounted = 24,
+
+        VoteCountedSubject = 25,
+        VoteCounted = 26,
+
+        YouWinSubject = 27,
+        YouWin = 28,
+
+        CancelledSubject = 29,
+        Cancelled = 30,
+
+        FailsafeSubject = 31,
+        Failsafe = 32
     }
 }

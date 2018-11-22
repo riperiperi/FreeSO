@@ -182,6 +182,16 @@ namespace FSO.SimAntics
             SetTimeOfDay(clock.Hours / 24.0 + clock.Minutes / (24.0 * 60) + clock.Seconds / (24.0 * 60 * 60));
         }
 
+        private Color PowColor(Color col, float pow)
+        {
+            var vec = col.ToVector4();
+            vec.X = (float)Math.Pow(vec.X, pow);
+            vec.Y = (float)Math.Pow(vec.Y, pow);
+            vec.Z = (float)Math.Pow(vec.Z, pow);
+
+            return new Color(vec);
+        }
+
         public void SetTimeOfDay(double time)
         {
             if (VM.UseWorld)
@@ -189,7 +199,7 @@ namespace FSO.SimAntics
                 Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
                 Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1)) + 1]; //second colour
                 double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
-                WorldUI.OutsideColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
+                WorldUI.OutsideColor = PowColor(Color.Lerp(col1, col2, (float)Progress), 2.2f); //linearly interpolate between the two colours for this specific time.
                 if (WorldUI.OutsideWeatherTintP > 0)
                 {
                     //tint the outside colour, usually with some darkening effect.
@@ -307,6 +317,37 @@ namespace FSO.SimAntics
         public void SignalTerrainRedraw()
         {
             TerrainDirty = true;
+        }
+
+        public void EmptyRoomMap()
+        {
+            RoomData = new List<VMRoom>();
+
+            var allOutside = new uint[Width * Height];
+            for (int j = 0; j < Width * Height; j++)
+            {
+                allOutside[j] = 1 | (1<<16);
+            }
+
+            RoomData.Add(new VMRoom()); //dummy at index 0
+            RoomData.Add(new VMRoom()
+            {
+                LightBaseRoom = 1,
+                IsOutside = true,
+                AdjRooms = new HashSet<ushort>(),
+                RoomID = 1,
+                SupportRooms = new List<ushort>() { 1 },
+                WallLines = new List<Vector2[]>(),
+                WallObs = new List<Model.Routing.VMObstacle>()
+            }); //dummy at index 1
+            for (int i = 0; i < Stories; i++)
+            {
+                Rooms[i].Map = allOutside;
+                if (VM.UseWorld)
+                {
+                    WorldUI.RoomMap[i] = Rooms[i].Map;
+                }
+            }
         }
 
         public void RegenRoomMap()
@@ -462,6 +503,12 @@ namespace FSO.SimAntics
                 RealMode = true;
             }
             return cost;
+        }
+
+        public void ClearDirty()
+        {
+            WallsDirty = false;
+            FloorsDirty = false;
         }
 
         public int RunCommands(List<VMArchitectureCommand> commands, bool transient)

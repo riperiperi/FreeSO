@@ -230,7 +230,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     return obj.ToString() + " Running ("+i+"): \r\n\r\n" + VMSimanticsException.GetStackTrace(ActiveStack);
                 } catch (Exception)
                 {
-
+                    //try to get the trace. we might a collection enumerated exception, in which case we should try again
                 }
             }
 
@@ -429,9 +429,13 @@ namespace FSO.Server.Servers.Lot.Domain
                         {
                             foreach (var e in ent.MultitileGroup.Objects) ((VMTSOObjectState)e.TSOState).OwnerID = info.owner_id ?? 0;
                         }
+
+                        //send back if they arent meant to be here
+                        //or if the object is not donated and the owner is not a roomie
                         if (info.lot_id != Context.DbId)
                             deleteMode = 2;
-                        else if (removeAll || !Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID))
+                        else if (removeAll || !(Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID) 
+                            || ((VMTSOObjectState)ent.TSOState).ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated)))
                             deleteMode = 1;
                     }
 
@@ -624,20 +628,42 @@ namespace FSO.Server.Servers.Lot.Domain
 
             Lot.TSOState.Terrain = Terrain;
             Lot.TSOState.Name = LotPersist.name;
-            Lot.TSOState.OwnerID = LotPersist.owner_id ?? 0;
-            Lot.TSOState.Roommates = new HashSet<uint>();
-            Lot.TSOState.BuildRoommates = new HashSet<uint>();
-            Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
             Lot.TSOState.SkillMode = LotPersist.skill_mode;
-            foreach (var roomie in LotRoommates)
+            Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
+
+            if (LotPersist.category == LotCategory.community)
             {
-                if (roomie.is_pending > 0) continue;
-                Lot.TSOState.Roommates.Add(roomie.avatar_id);
-                if (roomie.permissions_level > 0)
-                    Lot.TSOState.BuildRoommates.Add(roomie.avatar_id);
-                if (roomie.permissions_level > 1)
-                    Lot.TSOState.OwnerID = roomie.avatar_id;
+                var owner = LotPersist.owner_id ?? 0;
+                if (Lot.TSOState.OwnerID != owner)
+                {
+                    //a new mayor owns this property.
+                    //clear the donators lists (roomies lists)
+
+                    Lot.TSOState.Roommates.Clear();
+                    Lot.TSOState.BuildRoommates.Clear();
+
+                    Lot.TSOState.Roommates.Add(owner);
+                    Lot.TSOState.BuildRoommates.Add(owner);
+                    Lot.TSOState.OwnerID = owner;
+                }
             }
+            else
+            {
+                Lot.TSOState.OwnerID = LotPersist.owner_id ?? 0;
+                Lot.TSOState.Roommates = new HashSet<uint>();
+                Lot.TSOState.BuildRoommates = new HashSet<uint>();
+                foreach (var roomie in LotRoommates)
+                {
+                    if (roomie.is_pending > 0) continue;
+                    Lot.TSOState.Roommates.Add(roomie.avatar_id);
+                    if (roomie.permissions_level > 0)
+                        Lot.TSOState.BuildRoommates.Add(roomie.avatar_id);
+                    if (roomie.permissions_level > 1)
+                        Lot.TSOState.OwnerID = roomie.avatar_id;
+                }
+            }
+
+            Lot.TSOState.ActivateValidator(Lot);
 
             var time = DateTime.UtcNow;
             var tsoTime = TSOTime.FromUTC(time);
@@ -810,7 +836,8 @@ namespace FSO.Server.Servers.Lot.Domain
                     //sometimes avatars can be killed immediately after their kill timer starts (this frame will run the leave lot interaction)
                     //this works around that possibility. 
                     var preTickAvatars = Lot.Context.ObjectQueries.AvatarsByPersist.Values.Select(x => x).ToList();
-                    var noRoomies = !(preTickAvatars.Any(x => ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor)) && LotPersist.admit_mode < 4;
+                    var noRoomies = !(preTickAvatars.Any(x => ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor)) 
+                        && (LotPersist.admit_mode < 4 && LotPersist.category != LotCategory.community);
 
                     try
                     {
@@ -1136,6 +1163,7 @@ namespace FSO.Server.Servers.Lot.Domain
             state.Gender = (short)avatar.gender;
             state.Budget = (uint)avatar.budget;
             state.SkinTone = avatar.skin_tone;
+            state.CustomGUID = avatar.custom_guid ?? 0;
 
             var now = Epoch.Now;
             var rage = (uint)((now - user.register_date) / ((long)60 * 60 * 24));
@@ -1176,26 +1204,36 @@ namespace FSO.Server.Servers.Lot.Domain
                 };
             }
 
-            if (myRoomieLots.Count == 0)
+            if (myRoomieLots.Count == 0 && LotPersist.category != LotCategory.community)
                 state.AvatarFlags |= VMTSOAvatarFlags.CanBeRoommate; //we're not roommate anywhere, so we can be here.
 
             if (rage < 7)
                 state.AvatarFlags |= VMTSOAvatarFlags.NewPlayer;
 
-            var roomieStatus = myRoomieLots.FindAll(x => x.lot_id == Context.DbId).FirstOrDefault();
-            if (roomieStatus != null && roomieStatus.is_pending == 0)
+            if (LotPersist.category == LotCategory.community)
             {
-                switch (roomieStatus.permissions_level)
+                if (LotPersist.owner_id == avatar.avatar_id)
                 {
-                    case 0:
-                        state.Permissions = VMTSOAvatarPermissions.Roommate; break;
-                    case 1:
-                        state.Permissions = VMTSOAvatarPermissions.BuildBuyRoommate; break;
-                    case 2:
-                        state.Permissions = VMTSOAvatarPermissions.Owner; break;
-                }
+                    state.Permissions = VMTSOAvatarPermissions.Owner;
+                } else state.Permissions = VMTSOAvatarPermissions.Visitor; //needs to be set by the VM.
             }
-            else state.Permissions = VMTSOAvatarPermissions.Visitor;
+            else
+            {
+                var roomieStatus = myRoomieLots.FindAll(x => x.lot_id == Context.DbId).FirstOrDefault();
+                if (roomieStatus != null && roomieStatus.is_pending == 0)
+                {
+                    switch (roomieStatus.permissions_level)
+                    {
+                        case 0:
+                            state.Permissions = VMTSOAvatarPermissions.Roommate; break;
+                        case 1:
+                            state.Permissions = VMTSOAvatarPermissions.BuildBuyRoommate; break;
+                        case 2:
+                            state.Permissions = VMTSOAvatarPermissions.Owner; break;
+                    }
+                }
+                else state.Permissions = VMTSOAvatarPermissions.Visitor;
+            }
 
             if (avatar.moderation_level > 0) state.Permissions = VMTSOAvatarPermissions.Admin;
 

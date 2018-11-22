@@ -53,7 +53,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             }
             
             var name = AvatarState.Name.Substring(0, Math.Min(AvatarState.Name.Length, 64));
-            var sim = vm.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, LotTilePos.OUT_OF_WORLD, Direction.NORTH).Objects[0];
+            var guid = (AvatarState.CustomGUID == 0) ? VMAvatar.TEMPLATE_PERSON : AvatarState.CustomGUID;
+
+            var sim = vm.Context.CreateObjectInstance(guid, LotTilePos.OUT_OF_WORLD, Direction.NORTH).Objects[0];
             var mailbox = vm.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
 
             if (VM.UseWorld) FSO.HIT.HITVM.Get().PlaySoundEvent("lot_enter");
@@ -62,6 +64,22 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             sim.PersistID = ActorUID;
 
             VMAvatar avatar = (VMAvatar)sim;
+
+            if (vm.TSOState.CommunityLot && AvatarState.Permissions < VMTSOAvatarPermissions.Owner)
+            {
+                if (vm.TSOState.Roommates.Contains(AvatarState.PersistID))
+                {
+                    if (vm.TSOState.BuildRoommates.Contains(AvatarState.PersistID))
+                    {
+                        AvatarState.Permissions = VMTSOAvatarPermissions.BuildBuyRoommate;
+                    }
+                    else
+                    {
+                        AvatarState.Permissions = VMTSOAvatarPermissions.Roommate;
+                    }
+                }
+            }
+
             AvatarState.Apply(avatar);
 
             var oldRoomCount = vm.TSOState.Roommates.Count;

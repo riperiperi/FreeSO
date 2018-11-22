@@ -1,0 +1,66 @@
+﻿//mail
+
+//nominations starting [event] (nhood name, end date, award sum)
+1 ^Nominate your Mayor!^
+2 ^The election cycle for %s has started, and we're looking for nominations for which resident should become Mayor. To submit a nomination, click the button below. You have until %s!^
+
+//elections starting [event] (nhood name, end date, award sum)
+3 ^Vote for your Mayor!^
+4 ^The candidates have been selected, and final voting for the Mayor of %s has started. To view the candidates and cast your vote, click the button below. You have until %s!^
+
+//elections over [sent to voters] (winner, nhood name, other placements)
+5 ^Your new Mayor!^
+6 ^The votes are in - %s is now the mayor of %s! Why not celebrate at your town hall? Your new mayor should be getting set up there. 
+The runners up: 
+%s^
+
+//player nominated [sent to nominated player] (nhood name, deadline)
+7 ^Nominated for Mayor^
+8 ^Congratulations! You have been nominated by 3 or more players to become the Mayor of the neighborhood you are a resident of: %s. If you wish to run in the election, click the button below before the end of nominations on %s - when the top nominated sims will run for election. If not, simply ignore this message.^
+
+//nomination accepted [after accepting a nomination] (nhood name, end date)
+9 ^Nomination Accepted^
+10 ^This email is just to confirm that you have accepted your nominations to run for Mayor of %s. We'll let you know if you made it into the final election on %s.^
+
+//player running confirmation [sent to player running for election] (nhood name, comment, end date)
+11 ^Running for Mayor^
+12 ^Congratulations! You are now running for Mayor in your neighborhood, %s, as you were among the top nominated sims! Your campaign comment was "%s", and you'll find out if you won on %s.^
+
+//player nominated but not enough [sent once candidates are chosen, and nominated player is not in top] (nhood name, end date)
+13 ^Not enough Nominations!^
+14 ^Unfortunately, you were not nominated enough times to run in the final election for %s. You can still vote for any of the candidates, and help decide who will become Mayor on %s.^
+
+//neighborhood gameplay ban (reason, duration)
+15 ^NEIGHBORHOOD GAMEPLAY BAN^
+16 ^This email is to inform you that you have been banned from neighborhood gameplay for abuse. 
+Reason: %s
+Duration: %s
+For more information on the rules surrounding neighborhood gameplay, see http://freeso.org/nhoodrules.^
+
+//mayor term ending warning (sim name, nhood name)
+17 ^Term Length Reminder^
+18 ^Hello Mayor %s! This message is just to inform you that another election cycle is starting in %s. If you wish to continue being the mayor of this neighborhood, you should run for re-election. You'll lose control of the Town Hall if you don't get re-elected, so make sure you've done everything you want to!^
+
+//mayor term ended
+19 ^Out with the Old^ (new mayor name, nhood name)
+20 ^The people have spoken, and you're out! %s is the new mayor of %s. If you had any non-donated objects on the town hall, they have been returned to your inventory. The donator whitelist has also been reset.^
+
+21 ^No Longer Mayor^ (nhood name)
+22 ^You are no longer the mayor of %s. If you had any non-donated objects on the town hall, they have been returned to your inventory. The donator whitelist has also been reset.^
+
+23 ^Thank You!^ (avatar name, nhood name)
+24 ^Your nomination for %s to become mayor of %s has been counted. Remember that this vote is final - you also cannot vote again on this sim, another sim or even a relative's account.^
+
+25 ^Thank You!^(avatar name, nhood name)
+26 ^Your vote for %s to become mayor of %s has been counted. Remember that this vote is final - you also cannot vote again on this sim, another sim or even a relative's account.^
+
+27 ^Congratulations!^ (nhood name, vote count - always plural)
+28 ^You have become the mayor of %s!! With a whopping %s votes, you came out on top of all the other candidates. To check out your new powers in the neighborhood go to the Mayor tab on its page - you will see some unique controls in place of the usual voting panel, mostly to do with the Town Hall. You'll also find you can make prioritised posts on the Bulletin Board, and will show up as mayor on properties within your neighborhood. Go and show off or something.
+
+Until next month, have fun!^
+
+29 ^Election Cancelled^ (nhood name)
+30 ^We regret to inform you that your neighborhood, %s, has fallen too far in the rankings to be eligible for elections. However, this means that whole new opportunities have arisen in other neighborhoods... just, uh, not for you. The current Mayor will be removed at the end of this month, but its Town Hall should still remain openable (but -uneditable-). You may wish to have a farewell party for your mayor, and make sure the property is still usable with only the donated objects left!^
+
+31 ^Your, uh, new Mayor^ (nhood name)
+32 ^So apparently, every important person in %s has disappeared overnight, leaving absolutely nobody to become Mayor. Only one person showed up to the polling station, a llama. Yes, we know that doesn't count as a person - but we were desperate so let it run anyways. It's now the mayor, and its only ordinance is to be fed hourly. Strangely, this is clearly the best life for everyone. Thanks.^

@@ -17,6 +17,7 @@ namespace FSO.Content.Interfaces
         protected Content ContentManager;
 
         public Dictionary<ulong, GameObjectReference> Entries;
+        public List<GameObjectReference> ControllerObjects = new List<GameObjectReference>();
 
         public AbstractObjectProvider(Content contentManager)
         {

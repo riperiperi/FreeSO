@@ -19,6 +19,7 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Model.TSOPlatform;
 using Microsoft.Xna.Framework;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.UI.Controls;
 
 namespace FSO.Client.UI.Panels
 {
@@ -221,7 +222,7 @@ namespace FSO.Client.UI.Panels
                 {
                     Title = "",
                     Message = GameFacade.Strings.GetString("f113", "8"),
-                    Color = true,
+                    GenericAddition = new UIColorPicker(),
                     Buttons = new UIAlertButton[]
                     {
                         new UIAlertButton(UIAlertButtonType.OK, (btn) => {
@@ -527,7 +528,10 @@ namespace FSO.Client.UI.Panels
             if (vm != null)
             {
                 vm.Context.World.ChangedWorldConfig(GameFacade.GraphicsDevice);
-                if (oldSurrounding != settings.SurroundingLotMode) SimAntics.Utils.VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+                if (oldSurrounding != settings.SurroundingLotMode)
+                {
+                    SimAntics.Utils.VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+                }
             }
         }
     }

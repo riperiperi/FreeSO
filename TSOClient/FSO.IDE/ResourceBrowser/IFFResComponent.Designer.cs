@@ -84,24 +84,24 @@
             // CopyRes
             // 
             this.CopyRes.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.CopyRes.Enabled = false;
             this.CopyRes.Location = new System.Drawing.Point(105, 435);
             this.CopyRes.Name = "CopyRes";
             this.CopyRes.Size = new System.Drawing.Size(40, 23);
             this.CopyRes.TabIndex = 11;
             this.CopyRes.Text = "Copy";
             this.CopyRes.UseVisualStyleBackColor = true;
+            this.CopyRes.Click += new System.EventHandler(this.CopyRes_Click);
             // 
             // PasteRes
             // 
             this.PasteRes.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.PasteRes.Enabled = false;
             this.PasteRes.Location = new System.Drawing.Point(149, 435);
             this.PasteRes.Name = "PasteRes";
             this.PasteRes.Size = new System.Drawing.Size(50, 23);
             this.PasteRes.TabIndex = 10;
             this.PasteRes.Text = "Paste";
             this.PasteRes.UseVisualStyleBackColor = true;
+            this.PasteRes.Click += new System.EventHandler(this.PasteRes_Click);
             // 
             // DeleteRes
             // 

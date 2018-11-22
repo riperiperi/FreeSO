@@ -14,6 +14,7 @@ namespace FSO.Server.Protocol.Electron.Packets
         public ushort LotLocation_Y;
         public string Name;
         public bool StartFresh;
+        public bool MayorMode;
 
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
@@ -21,6 +22,7 @@ namespace FSO.Server.Protocol.Electron.Packets
             LotLocation_Y = input.GetUInt16();
             Name = input.GetPascalString();
             StartFresh = input.GetBool();
+            MayorMode = input.GetBool();
         }
 
         public override ElectronPacketType GetPacketType()
@@ -34,6 +36,7 @@ namespace FSO.Server.Protocol.Electron.Packets
             output.PutUInt16(LotLocation_Y);
             output.PutPascalString(Name);
             output.PutBool(StartFresh);
+            output.PutBool(MayorMode);
         }
     }
 }

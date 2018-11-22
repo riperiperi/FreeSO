@@ -1,6 +1,7 @@
 ﻿using FSO.Common.DataService.Framework;
 using FSO.Common.Domain;
 using FSO.Common.Utils;
+using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.DataService;
 using FSO.Server.Debug;
@@ -41,11 +42,10 @@ namespace FSO.Server
         private bool Running;
         private List<AbstractServer> Servers;
         private List<CityServer> CityServers;
-        private ApiServer ActiveApiServer;
         private UserApi ActiveUApiServer;
         private TaskServer ActiveTaskServer;
         private RunServerOptions Options;
-        private Protocol.Gluon.Model.ShutdownType ShutdownMode;
+        private ShutdownType ShutdownMode;
 
         private IGluonHostPool HostPool;
 
@@ -78,7 +78,8 @@ namespace FSO.Server
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Lots/"));
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/"));
 
-            Content.Model.AbstractTextureRef.ImageFetchFunction = Utils.SoftwareImageLoader.SoftImageFetch;
+            if (Content.Model.AbstractTextureRef.ImageFetchFunction == null)
+                Content.Model.AbstractTextureRef.ImageFetchFunction = Utils.CoreImageLoader.SoftImageFetch;
 
             //TODO: Some content preloading
             LOG.Info("Scanning content");
@@ -315,7 +316,7 @@ namespace FSO.Server
             }
         }
 
-        private async void RequestedShutdown(uint time, Protocol.Gluon.Model.ShutdownType type)
+        private async void RequestedShutdown(uint time, ShutdownType type)
         {
             //TODO: select which shards to operate on
             ShutdownMode = type;
@@ -332,7 +333,7 @@ namespace FSO.Server
 
                 string timeString = (remaining % 60 == 0 && remaining > 60) ? ((remaining / 60) + " minutes") : (remaining + " seconds");
                 LOG.Info("Shutdown in " + timeString);
-                BroadcastMessage("FreeSO Server", "Shutting down", "The game server will go down for maintainance in " + timeString + ".");
+                BroadcastMessage("FreeSO Server", "Shutting down", "The game server will go down for maintenance in " + timeString + ".");
             }
 
             await Task.Delay((int)remaining * 1000);
@@ -347,11 +348,6 @@ namespace FSO.Server
             LOG.Info("Successfully shut down all city servers!");
             lock (Servers)
             {
-                if (ActiveApiServer != null)
-                {
-                    ActiveApiServer.Shutdown();
-                    Servers.Remove(ActiveApiServer);
-                }
                 if (ActiveUApiServer != null)
                 {
                     ActiveUApiServer.Shutdown();
@@ -365,7 +361,7 @@ namespace FSO.Server
             }
         }
 
-        private void ServerInternalShutdown(AbstractServer server, Protocol.Gluon.Model.ShutdownType data)
+        private void ServerInternalShutdown(AbstractServer server, ShutdownType data)
         {
             lock (Servers)
             {

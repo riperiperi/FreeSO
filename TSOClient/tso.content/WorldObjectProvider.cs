@@ -160,11 +160,18 @@ namespace FSO.Content
         public short Group;
         public short SubIndex;
 
+        public bool GlobalSimObject;
+
         private AbstractObjectProvider Provider;
 
         public GameObjectReference(AbstractObjectProvider provider)
         {
             this.Provider = provider;
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
 
         #region IContentReference<GameObject> Members

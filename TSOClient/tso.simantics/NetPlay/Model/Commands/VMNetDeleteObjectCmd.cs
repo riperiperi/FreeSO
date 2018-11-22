@@ -13,6 +13,7 @@ using FSO.LotView.Model;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.Model.Platform;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -23,9 +24,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public bool CleanupAll;
         public bool Verified;
         public bool Success;
+
+        public DeleteMode Mode = DeleteMode.Delete;
+
         public override bool Execute(VM vm, VMAvatar caller)
         {
-            if (ObjectPID == 0) //only has value when this is an inventory move.
+            if (Mode == DeleteMode.Delete)//ObjectPID == 0) //only has value when this is an inventory move.
             {
                 VMEntity obj = vm.GetObjectById(ObjectID);
                 if (obj == null || (!vm.TS1 && caller == null)) return false;
@@ -95,12 +99,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Verified) return true;
             ObjectPID = 0;
             VMEntity obj = vm.GetObjectById(ObjectID);
-            if (!vm.TS1)
+            
+            if (!vm.TS1) 
             {
-                if (caller == null) return false;
-                var permissions = caller.AvatarState.Permissions;
-                if (permissions < VMTSOAvatarPermissions.Roommate) return false;
-                if (obj != null && obj is VMGameObject && permissions == VMTSOAvatarPermissions.Admin)
+                Mode = vm.PlatformState.Validator.GetDeleteMode(Mode, caller, obj);
+                if (Mode == DeleteMode.Disallowed) return false;
+                if (caller.AvatarState.Permissions == VMTSOAvatarPermissions.Admin)
                 {
                     VMNetLockCmd.LockObj(vm, obj);
                     return true; //admins can always deete
@@ -110,8 +114,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if ((((VMGameObject)obj).Disabled & VMGameObjectDisableFlags.TransactionIncomplete) > 0) return false; //can't delete objects mid trasaction...
             VMNetLockCmd.LockObj(vm, obj);
 
-            var canDelete = vm.TS1 || obj.PersistID == 0 || ((VMTSOObjectState)obj.TSOState).OwnerID == caller.PersistID;
-            if (canDelete)
+            if (Mode == DeleteMode.Delete)
             {
                 //straight up delete this object. another check will be done at the execution stage.
                 return true;
@@ -138,6 +141,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             writer.Write(ObjectPID);
             writer.Write(CleanupAll);
             writer.Write(Success);
+
+            writer.Write((byte)Mode);
         }
 
         public override void Deserialize(BinaryReader reader)
@@ -147,6 +152,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             ObjectPID = reader.ReadUInt32();
             CleanupAll = reader.ReadBoolean();
             Success = reader.ReadBoolean();
+
+            Mode = (DeleteMode)reader.ReadByte();
         }
 
         #endregion

@@ -25,6 +25,12 @@ namespace FSO.Client.Rendering.City
         private Point LastMouse;
         private bool MouseWasDown;
         private UILotControlTouchHelper Touch;
+        public CityCameraCenter CenterCam { get; set; }
+
+        public float FarUIFade
+        {
+            get { return Math.Max(0, Math.Min(1, 6.5f - Zoom3D)); }
+        }
 
         public float LotZoomProgress
         {
@@ -54,7 +60,7 @@ namespace FSO.Client.Rendering.City
                 float m;
                 if (HideUI) m = Math.Min(1, Math.Max(1, FPCamHeight) / 50f);
                 else m = (Zoom3D + 1f) / 21f;
-                return 1-(float)Math.Pow(1-m, 1/3f);
+                return 1 - (float)Math.Pow(1 - m, 1 / 3f);
             }
         }
 
@@ -159,10 +165,11 @@ namespace FSO.Client.Rendering.City
                     {
                         RotationX += (TargRX - RotationX) / 10;
                         RotationY += (TargRY - RotationY) / 10;
-                    } else
+                    }
+                    else
                     {
                         RotationX = TargRX;
-                        RotationY = TargRY * (1.10f/(float)(Math.PI/2)) + 1.10f;
+                        RotationY = TargRY * (1.10f / (float)(Math.PI / 2)) + 1.10f;
                     }
 
                     TargetZoom += (1.8f - TargetZoom) / 3;
@@ -272,6 +279,7 @@ namespace FSO.Client.Rendering.City
 
             if (RMBScroll && inCity)
             {
+                ClearCenter();
                 Vector2 scrollBy = new Vector2();
                 if (state.TouchMode)
                 {
@@ -313,10 +321,12 @@ namespace FSO.Client.Rendering.City
 
             terrainHeight = (city.InterpElevationAt(CenterTile));
             var targHeight = terrainHeight;
-            targHeight = Math.Max(city.InterpElevationAt(new Vector2(Position.X, Position.Z)), terrainHeight);
+            var heightAtCam = city.InterpElevationAt(new Vector2(Position.X, Position.Z));
+            if (Position.Y < heightAtCam) targHeight = heightAtCam;
+            //targHeight = Math.Max(heightAtCam, terrainHeight);
             CamHeight += (targHeight - CamHeight) * (1f - (float)Math.Pow(0.8f, 60f / FSOEnvironment.RefreshRate));
 
-            if (inCity && state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))
+            if (inCity && state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab) && !state.AltDown)
             {
                 CameraMode = !CameraMode;
             }
@@ -341,7 +351,7 @@ namespace FSO.Client.Rendering.City
                     Mouse.SetPosition(mx, my);
 
                     var speed = (state.KeyboardState.IsKeyDown(Keys.LeftShift)) ? 1.5f : 0.5f;
-                    speed *= 1+FPCamHeight/10f;
+                    speed *= 1 + FPCamHeight / 10f;
 
                     if (state.KeyboardState.IsKeyDown(Keys.W))
                         FPCamVelocity.Z -= speed;
@@ -352,16 +362,16 @@ namespace FSO.Client.Rendering.City
                     if (state.KeyboardState.IsKeyDown(Keys.D))
                         FPCamVelocity.X += speed;
                     if (state.KeyboardState.IsKeyDown(Keys.Q))
-                        FPCamVelocity.Y -= speed/2;
+                        FPCamVelocity.Y -= speed / 2;
                     if (state.KeyboardState.IsKeyDown(Keys.E))
-                        FPCamVelocity.Y += speed/2;
+                        FPCamVelocity.Y += speed / 2;
                     LastFP = true;
                 }
                 else
                 {
                     LastFP = false;
                 }
-                
+
                 Scroll(new Vector2(FPCamVelocity.X / FSOEnvironment.RefreshRate, FPCamVelocity.Z / FSOEnvironment.RefreshRate), false);
                 FPCamHeight = Math.Min(600, Math.Max((terrainHeight - CamHeight) - 0.25f, FPCamHeight + (FPCamVelocity.Y * 3) / FSOEnvironment.RefreshRate));
                 for (int i = 0; i < FSOEnvironment.RefreshRate / 60; i++)
@@ -396,6 +406,7 @@ namespace FSO.Client.Rendering.City
                     var mpos = state.MouseState.Position;
                     RotationX += (mpos.X - LastMouse.X) / 250f;
                     RotationY += (mpos.Y - LastMouse.Y) / 150f;
+                    ClearCenter();
                 }
 
                 UserModZoom = false;
@@ -415,6 +426,17 @@ namespace FSO.Client.Rendering.City
                 LotZoomProgress = Math.Min(1, LotZoomProgress);
             }
             else LotZoomProgress += (0 - LotZoomProgress) * (float)(1 - Math.Pow(8f / 10.0f, rScale));
+
+            if (CenterCam != null)
+            {
+                CenterTile += (CenterCam.Center - CenterTile) * (float)(1 - Math.Pow(9f / 10.0f, rScale));
+                TargetZoom += (CenterCam.Dist - TargetZoom) * (float)(1 - Math.Pow(9f / 10.0f, rScale));
+                RotationY += (CenterCam.YAngle - RotationY) * (float)(1 - Math.Pow(9f / 10.0f, rScale));
+                RotationX += 0.2f / FSOEnvironment.RefreshRate;
+                if (TargetZoom > 0.75f && (CenterCam.Center - CenterTile).Length() < 5f) _Zoomed = TerrainZoomMode.Near;
+                else _Zoomed = TerrainZoomMode.Far;
+                InvalidateCamera();
+            }
         }
 
         public void Scroll(Vector2 dir, bool multiply)
@@ -435,7 +457,7 @@ namespace FSO.Client.Rendering.City
             CenterTile = new Vector2(trans.X - trans.Y, trans.X + trans.Y);
         }
 
-        private float _RotationX = -(float)(Math.PI*3 / 4);
+        private float _RotationX = -(float)(Math.PI * 3 / 4);
         private float _RotationY = 0f;
         private float _Zoom3D = 3.7f;
 
@@ -571,7 +593,7 @@ namespace FSO.Client.Rendering.City
             var panMatFar = Matrix.CreateRotationZ(rotY / 2);
             var z = Zoom3D * Zoom3D;
             var baseDist = 3.5f;
-            if (TargetZoom > 2f) baseDist -= (TargetZoom-2)*2;
+            if (TargetZoom > 2f) baseDist -= (TargetZoom - 2) * 2;
 
             return Vector3.Transform(
                 Vector3.Transform(new Vector3(baseDist, 0, 0), panMat) +
@@ -588,6 +610,18 @@ namespace FSO.Client.Rendering.City
         public void Scroll(Vector2 vec)
         {
             Scroll(vec, true);
+            ClearCenter();
+        }
+
+        public void CenterCamera(CityCameraCenter center)
+        {
+            center.RotAngle = RotationX;
+            CenterCam = center;
+        }
+
+        public void ClearCenter()
+        {
+            CenterCam = null;
         }
     }
 }

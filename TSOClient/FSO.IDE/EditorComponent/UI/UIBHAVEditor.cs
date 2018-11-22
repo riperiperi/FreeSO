@@ -87,6 +87,7 @@ namespace FSO.IDE.EditorComponent.UI
             PlacingName.Size = new Vector2(1, 1);
             PlacingName.CaptionStyle = TextStyle.DefaultLabel.Clone();
             PlacingName.CaptionStyle.Font = FSO.Client.GameFacade.EdithFont;
+            PlacingName.CaptionStyle.VFont = FSO.Client.GameFacade.EdithVectorFont;
             PlacingName.CaptionStyle.Size = 15;
             PlacingName.CaptionStyle.Color = new Color(0, 102, 26);
 
@@ -97,6 +98,7 @@ namespace FSO.IDE.EditorComponent.UI
             PlacingDesc.Size = new Vector2(1, 1);
             PlacingDesc.CaptionStyle = TextStyle.DefaultLabel.Clone();
             PlacingDesc.CaptionStyle.Font = FSO.Client.GameFacade.EdithFont;
+            PlacingDesc.CaptionStyle.VFont = FSO.Client.GameFacade.EdithVectorFont;
             PlacingDesc.CaptionStyle.Size = 12;
             PlacingDesc.CaptionStyle.Color = new Color(0, 102, 26);
 
@@ -164,6 +166,7 @@ namespace FSO.IDE.EditorComponent.UI
                 DebugLabel = new UILabel();
                 DebugLabel.CaptionStyle = TextStyle.DefaultLabel.Clone();
                 DebugLabel.CaptionStyle.Font = FSO.Client.GameFacade.EdithFont;
+                DebugLabel.CaptionStyle.VFont = FSO.Client.GameFacade.EdithVectorFont;
                 DebugLabel.CaptionStyle.Size = 12;
                 DebugLabel.CaptionStyle.Color = Color.White;
                 DebugLabel.Caption = "Breakpoint Hit.";

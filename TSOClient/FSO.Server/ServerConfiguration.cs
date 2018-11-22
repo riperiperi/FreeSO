@@ -4,6 +4,7 @@ using FSO.Server.Servers.Api.JsonWebToken;
 using FSO.Server.Servers.City;
 using FSO.Server.Servers.Lot;
 using FSO.Server.Servers.Tasks;
+using FSO.Server.Servers.UserApi;
 using Ninject.Activation;
 using Ninject.Modules;
 using System;
@@ -33,7 +34,6 @@ namespace FSO.Server
 
     public class ServerConfigurationservices
     {
-        public ApiServerConfiguration Api;
         public ApiServerConfiguration UserApi;
         public TaskServerConfiguration Tasks;
         public List<CityServerConfiguration> Cities;

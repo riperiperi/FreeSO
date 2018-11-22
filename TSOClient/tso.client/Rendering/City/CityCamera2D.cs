@@ -23,6 +23,12 @@ namespace FSO.Client.Rendering.City
         public float LotZoomProgress { get; set; } = 0;
         public float ZoomProgress { get; set; } //settable to avoid discontinuities
         public float m_LotZoomSize = 72 * 128; //near zoom, set by world
+        public CityCameraCenter CenterCam { get; set; }
+
+        public float FarUIFade
+        {
+            get { return ZoomProgress; }
+        }
 
         public float LotSquish
         {
@@ -44,7 +50,7 @@ namespace FSO.Client.Rendering.City
         {
             get
             {
-                return 0.1f;
+                return 0.01f;
             }
         }
 
@@ -327,6 +333,17 @@ namespace FSO.Client.Rendering.City
                     m_WheelZoomTarg = Math.Max(0.33f, Math.Min(1f, m_WheelZoomTarg - (m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) / 1000f));
             }
 
+            if (CenterCam != null)
+            {
+                Zoomed = TerrainZoomMode.Near;
+                var c2d = CenterCam.Center;
+                var c3d = new Vector3(c2d.X, city.InterpElevationAt(c2d), c2d.Y);
+                var pos = Vector3.Transform(c3d, CalculateView());
+                m_TargVOffX = pos.X;
+                m_TargVOffY = pos.Y;
+                m_WheelZoomTarg = 0.10f / (2 - CenterCam.Dist);
+            }
+
             var m_MouseState = Mouse.GetState();
             if (m_MouseState.RightButton == ButtonState.Pressed && !WasRMBDown)
             {
@@ -345,6 +362,7 @@ namespace FSO.Client.Rendering.City
                 var m_MouseMove = (m_MouseState.RightButton == ButtonState.Pressed);
                 if (m_MouseMove)
                 {
+                    ClearCenter();
                     m_TargVOffX += (m_MouseState.X - m_MouseStart.X) * (float)(1 - Math.Pow(999 / 1000.0f, rScale)); //move by fraction of distance between the mouse and where it started in both axis
                     m_TargVOffY -= (m_MouseState.Y - m_MouseStart.Y) * (float)(1 - Math.Pow(999 / 1000.0f, rScale));
 
@@ -385,7 +403,10 @@ namespace FSO.Client.Rendering.City
                         CursorManager.INSTANCE.SetCursor(CursorType.Normal);
                     }
                     else
+                    {
+                        ClearCenter();
                         m_ScrollSpeed += 0.005f; //if edge scrolling make the speed increase the longer the mouse is at the edge.
+                    }
                 }
 
                 m_TargVOffX = Math.Max(-135, Math.Min(m_TargVOffX, 138)); //maximum offsets for zoomed camera. Need adjusting for other screen sizes...
@@ -403,12 +424,25 @@ namespace FSO.Client.Rendering.City
 
             m_WheelZoom += (m_WheelZoomTarg - m_WheelZoom) * (float)(1 - Math.Pow(9 / 10.0f, rScale));
             m_LastWheelPos = state.MouseState.ScrollWheelValue;
-
             m_ViewOffX = (m_TargVOffX) * ZoomProgress;
             m_ViewOffY = (m_TargVOffY) * ZoomProgress;
             WasRMBDown = m_MouseState.RightButton == ButtonState.Pressed;
 
             PDirty = true;
+        }
+
+        public void CenterCamera(CityCameraCenter center)
+        {
+            if (Zoomed == TerrainZoomMode.Far)
+            {
+                m_WheelZoom = 0.10f / (2 - center.Dist);
+            }
+            CenterCam = center;
+        }
+
+        public void ClearCenter()
+        {
+            CenterCam = null;
         }
     }
 }

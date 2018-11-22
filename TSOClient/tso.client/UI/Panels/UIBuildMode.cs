@@ -60,6 +60,7 @@ namespace FSO.Client.UI.Panels
 
         private UILabel ObjLimitLabel;
         private int LastObjCount = -1;
+        private bool LastDonator;
 
         public UICatalog Catalog;
         public UIObjectHolder Holder;
@@ -396,18 +397,24 @@ namespace FSO.Client.UI.Panels
         {
             CategoryMap[TerrainButton] = (state.ShiftDown && (LotController?.ActiveEntity?.TSOState as VMTSOAvatarState)?.Permissions >= VMTSOAvatarPermissions.Admin) ? 29 : 10;
             var objCount = LotController.vm.Context.ObjectQueries.NumUserObjects;
-            if (LastObjCount != objCount)
+            if (LastObjCount != objCount || LastDonator != LotController.ObjectHolder.DonateMode)
             {
-                var limit = LotController.vm.TSOState.ObjectLimit;
-                ObjLimitLabel.Caption = objCount + "/" + limit + " Objects";
-                var lerp = objCount / (float)limit;
-                if (lerp < 0.5)
-                    ObjLimitLabel.CaptionStyle.Color = Color.White;
-                if (lerp < 0.75)
-                    ObjLimitLabel.CaptionStyle.Color = Color.Lerp(Color.White, new Color(255, 201, 38), lerp * 4 - 2);
-                else
-                    ObjLimitLabel.CaptionStyle.Color = Color.Lerp(new Color(255, 201, 38), Color.Red, lerp * 4 - 3);
+                if (LotController.ObjectHolder.DonateMode) {
+                    ObjLimitLabel.Caption = GameFacade.Strings.GetString("f114", "4");
+                    ObjLimitLabel.CaptionStyle.Color = new Color(255, 201, 38);
+                } else {
+                    var limit = LotController.vm.TSOState.ObjectLimit;
+                    ObjLimitLabel.Caption = objCount + "/" + limit + " Objects";
+                    var lerp = objCount / (float)limit;
+                    if (lerp < 0.5)
+                        ObjLimitLabel.CaptionStyle.Color = Color.White;
+                    if (lerp < 0.75)
+                        ObjLimitLabel.CaptionStyle.Color = Color.Lerp(Color.White, new Color(255, 201, 38), lerp * 4 - 2);
+                    else
+                        ObjLimitLabel.CaptionStyle.Color = Color.Lerp(new Color(255, 201, 38), Color.Red, lerp * 4 - 3);
+                }
                 LastObjCount = objCount;
+                LastDonator = LotController.ObjectHolder.DonateMode;
             }
 
             if (LotController.ActiveEntity != null) Catalog.Budget = (int)LotController.ActiveEntity.TSOState.Budget.Value;

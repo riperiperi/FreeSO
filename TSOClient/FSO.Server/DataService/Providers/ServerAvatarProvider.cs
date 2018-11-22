@@ -140,8 +140,16 @@ namespace FSO.Server.DataService.Providers
 
                     using (var db = DAFactory.Get())
                     { //filters baby! YES! about time i get a fucking break in this game
-                        var filter = db.LotClaims.Top100Filter(ShardId, cat, 10);
-                        avatar.Avatar_Top100ListFilter.Top100ListFilter_ResultsVec = ImmutableList.ToImmutableList(filter.Select(x => x.location));
+                        if (cat == LotCategory.recent)
+                        {
+                            var filter = db.LotClaims.RecentsFilter(avatar.Avatar_Id, 10);
+                            avatar.Avatar_Top100ListFilter.Top100ListFilter_ResultsVec = ImmutableList.ToImmutableList(filter);
+                        }
+                        else
+                        {
+                            var filter = db.LotClaims.Top100Filter(ShardId, cat, 10);
+                            avatar.Avatar_Top100ListFilter.Top100ListFilter_ResultsVec = ImmutableList.ToImmutableList(filter.Select(x => x.location));
+                        }
                     }
 
                     break;
@@ -232,6 +240,25 @@ namespace FSO.Server.DataService.Providers
             }
         }
 
+        public ImmutableList<uint> RatingProvider(uint avatarID)
+        {
+            using (var db = DAFactory.Get())
+            {
+                List<uint> levels = db.Elections.GetRatings(avatarID);
+                return ImmutableList.ToImmutableList(levels);
+            }
+        }
+
+        public uint AvgRatingProvider(uint avatarID)
+        {
+            using (var db = DAFactory.Get())
+            {
+                float? rating = db.Elections.GetAvgRating(avatarID);
+                if (rating == null) return uint.MaxValue;
+                return (uint)((rating / 2) * 100);
+            }
+        }
+
         public ImmutableList<Bookmark> BookmarkProvider(uint avatarId)
         {
             using (var db = DAFactory.Get())
@@ -253,7 +280,20 @@ namespace FSO.Server.DataService.Providers
 
         protected override bool RequiresReload(uint key, Avatar value)
         {
-            return (value != null && value.Avatar_IsOnline && Epoch.Now - value.FetchTime > AVATAR_RECACHE_SECONDS);
+            return (value != null && (value.Invalidated || (value.Avatar_IsOnline && Epoch.Now - value.FetchTime > AVATAR_RECACHE_SECONDS)));
+        }
+
+        public override void Invalidate(object key)
+        {
+            if (!(key is uint)) return;
+            var castKey = (uint)key;
+            lock (Values) {
+                var val = Values[castKey];
+                if (val.Ready)
+                {
+                    ((Avatar)val.GetReady()).Invalidated = true;
+                }
+            }
         }
 
         private Avatar HydrateOne(DbAvatar dbAvatar, DbLot dbLot)
@@ -289,8 +329,12 @@ namespace FSO.Server.DataService.Providers
             };
             result.Avatar_PrivacyMode = dbAvatar.privacy_mode;
             result.Avatar_SkillsLockPoints = (ushort)(20 + result.Avatar_Age/7);
+            result.Avatar_ModerationStatus = dbAvatar.moderation_level;
+            result.Avatar_MayorNhood = (uint)(dbAvatar.mayor_nhood ?? 0);
 
             result.JobLevelProvider = JobLevelProvider;
+            result.RatingProvider = RatingProvider;
+            result.AvgRatingProvider = AvgRatingProvider;
             result.Avatar_CurrentJob = dbAvatar.current_job;
 
             result.Avatar_Top100ListFilter = new Top100ListFilter()

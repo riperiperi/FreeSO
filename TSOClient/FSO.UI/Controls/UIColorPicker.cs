@@ -208,6 +208,11 @@ namespace FSO.UI.Controls
             }
         }
 
+        public override Rectangle GetBounds()
+        {
+            return new Rectangle(0, 0, 272, 148);
+        }
+
         public override void Draw(UISpriteBatch batch)
         {
             var col = TextureGenerator.GetHSMatrix(batch.GraphicsDevice);

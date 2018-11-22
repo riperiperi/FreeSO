@@ -148,7 +148,7 @@ namespace FSO.LotView.Facade
                     effect.CurrentTechnique = effect.Techniques["Draw"];
 
                     var objs = bp.Objects.Where(x => x.Level >= wall.Room.Floor - 5 && frustrum.Intersects(((ObjectComponentRC)x).GetBounds()))
-                        .OrderBy(x => ((ObjectComponentRC)x).SortDepth(vp));
+                        .OrderBy(x => ((ObjectComponentRC)x).SortDepth(lookat));
                     foreach (var obj in objs)
                     {
                         obj.Draw(gd, world.State);
@@ -283,7 +283,7 @@ namespace FSO.LotView.Facade
 
                     effect.CurrentTechnique = effect.Techniques["Draw"];
 
-                    var objs = bp.Objects.Where(o => o.Level == 1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(vp));
+                    var objs = bp.Objects.Where(o => o.Level == 1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(lookat));
                     foreach (var obj in objs)
                     {
                         obj.Draw(gd, world.State);
@@ -305,7 +305,7 @@ namespace FSO.LotView.Facade
 
                     effect.CurrentTechnique = effect.Techniques["Draw"];
 
-                    var objs = bp.Objects.Where(o => o.Level == i+1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(vp));
+                    var objs = bp.Objects.Where(o => o.Level == i+1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(lookat));
                     foreach (var obj in objs)
                     {
                         obj.Draw(gd, world.State);

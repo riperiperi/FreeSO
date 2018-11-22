@@ -11,6 +11,7 @@ namespace FSO.Common.Domain.RealestateDomain
     {
         int GetPurchasePrice(ushort x, ushort y);
         bool IsPurchasable(ushort x, ushort y);
+        int GetSlope(ushort x, ushort y);
         CityMap GetMap();
     }
 }

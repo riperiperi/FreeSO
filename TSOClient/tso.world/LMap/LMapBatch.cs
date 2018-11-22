@@ -655,14 +655,14 @@ namespace FSO.LotView.LMap
             //this can get a bit weird!
             //we need to create a frustrum that starts at the light's position, and with all edges on the edge of the lightmap
 
-            var height = 2.95f * 3/4f; //lights are assumed to be in the middle
+            var height = pointLight.Height; //lights are assumed to be in the middle
 
             var tan = ((Blueprint.Width- borderSize) /2f) / height;
             var fov = (float)Math.Atan(tan);
             var lpos = new Vector2(pointLight.LightPos.X / 16f, pointLight.LightPos.Y / 16f);
 
             //return Matrix.CreateTranslation(-lpos.X, -lpos.Y, height) * Matrix.CreatePerspectiveFieldOfView(fov, 1, 0.01f, 3f) * Matrix.CreateTranslation(lpos.X, lpos.Y, 0);
-            var mat = Matrix.CreateTranslation(-(lpos.X), -(lpos.Y), -height) * ProjFromTan(tan, 1, 0.01f, 3f) * Matrix.CreateScale(1, -1f, 1) * Matrix.CreateTranslation(lpos.X / (Blueprint.Width - borderSize) *2 - 1f, -(lpos.Y / ((Blueprint.Height - borderSize) /2f) - 1f), 0);
+            var mat = Matrix.CreateTranslation(-(lpos.X), -(lpos.Y), -height) * ProjFromTan(tan, 1, 0.01f, height) * Matrix.CreateScale(1, -1f, 1) * Matrix.CreateTranslation(lpos.X / (Blueprint.Width - borderSize) *2 - 1f, -(lpos.Y / ((Blueprint.Height - borderSize) /2f) - 1f), 0);
             return mat;
         }
 

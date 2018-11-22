@@ -40,6 +40,7 @@
             this.AllList = new System.Windows.Forms.ListBox();
             this.MyList = new System.Windows.Forms.ListBox();
             this.RemoveButton = new System.Windows.Forms.Button();
+            this.FBXButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -145,11 +146,22 @@
             this.RemoveButton.UseVisualStyleBackColor = true;
             this.RemoveButton.Click += new System.EventHandler(this.RemoveButton_Click);
             // 
+            // FBXButton
+            // 
+            this.FBXButton.Location = new System.Drawing.Point(133, 2);
+            this.FBXButton.Name = "FBXButton";
+            this.FBXButton.Size = new System.Drawing.Size(75, 23);
+            this.FBXButton.TabIndex = 12;
+            this.FBXButton.Text = "FBX Test";
+            this.FBXButton.UseVisualStyleBackColor = true;
+            this.FBXButton.Click += new System.EventHandler(this.FBXButton_Click);
+            // 
             // VarAnimSelect
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(584, 461);
+            this.Controls.Add(this.FBXButton);
             this.Controls.Add(this.RemoveButton);
             this.Controls.Add(this.MyList);
             this.Controls.Add(this.AllList);
@@ -183,5 +195,6 @@
         private System.Windows.Forms.ListBox AllList;
         private System.Windows.Forms.ListBox MyList;
         private System.Windows.Forms.Button RemoveButton;
+        private System.Windows.Forms.Button FBXButton;
     }
 }

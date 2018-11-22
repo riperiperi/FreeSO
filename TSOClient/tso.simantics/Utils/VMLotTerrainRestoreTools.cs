@@ -1026,19 +1026,20 @@ namespace FSO.SimAntics.Utils
                         subworld.InitBlueprint(blueprint);
                         tempVM.Context.Architecture = new VMArchitecture(size, size, blueprint, tempVM.Context);
 
-                        tempVM.Context.Architecture.RegenRoomMap();
+                        tempVM.Context.Architecture.EmptyRoomMap();
                         tempVM.Context.RegeneratePortalInfo();
 
                         var terrainC = new TerrainComponent(new Rectangle(0, 0, size, size), blueprint);
                         terrainC.Initialize(subworld.State.Device, subworld.State);
                         blueprint.Terrain = terrainC;
 
+                        tempVM.Context.Architecture.Terrain.LowQualityGrassState = true;
                         RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y]);
                         height = RestoreHeight(tempVM, terrain, x, y);
                         tempVM.Context.Blueprint.BaseAlt = (int)((baseHeight - height));
 
                         PopulateBlankTerrain(tempVM);
-
+                        tempVM.Context.Architecture.ClearDirty();
                         tempVM.Tick();
                     }
 

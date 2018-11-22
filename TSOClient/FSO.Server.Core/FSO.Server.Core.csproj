@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore" Version="2.1.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Owin" Version="2.1.1" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Ninject" Version="3.3.4" />
+    <PackageReference Include="Portable.JWT" Version="1.0.5" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0004" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
+    <PackageReference Include="System.Management" Version="4.5.0" />
+    <PackageReference Include="System.Runtime.Caching" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FSO.Server.Api.Core\FSO.Server.Api.Core.csproj" />
+    <ProjectReference Include="..\FSO.Server\FSO.Server.csproj" />
+  </ItemGroup>
+
+</Project>

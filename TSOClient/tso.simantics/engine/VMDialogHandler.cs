@@ -13,6 +13,7 @@ using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics.Primitives;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.Engine
 {
@@ -144,7 +145,21 @@ namespace FSO.SimAntics.Engine
                             {
                                 case "Object":
                                 case "DynamicObjectName":
-                                    output.Append(context.StackObject.ToString()); break;
+                                    //hack: if stack object doesn't exist and should contain owner's id,
+                                    //try output the callee's owner id instead for tip jar.
+                                    //special id for this is -1.
+                                    if (context.StackObjectID == -1 && !context.VM.TS1)
+                                    {
+                                        //StackObjectOwnerID call sets the id to -1 if no owner found. (null is usually 0)
+                                        output.Append(context.VM.TSOState.Names.GetNameForID(
+                                            context.VM, 
+                                            (context.Callee.TSOState as VMTSOObjectState)?.OwnerID ?? 0
+                                            ));
+                                    } else
+                                    {
+                                        output.Append(context.StackObject.ToString());
+                                    }
+                                    break;
                                 case "Me":
                                     output.Append(context.Caller.ToString()); break;
                                 case "TempXL:":

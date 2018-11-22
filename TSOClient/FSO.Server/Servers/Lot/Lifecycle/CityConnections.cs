@@ -76,16 +76,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
         public void Stop()
         {
             _Running = false;
-            if (ConnectionWatcher != null)
-            {
-                try
-                {
-                    ConnectionWatcher.Abort();
-                }
-                catch (Exception ex)
-                {
-                }
-            }
+            ConnectionChanged.Set(); //wakes the thread a bit quicker
         }
 
         private void CheckConnections()

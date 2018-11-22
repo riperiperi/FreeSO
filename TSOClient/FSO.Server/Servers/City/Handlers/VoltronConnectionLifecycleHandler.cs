@@ -25,9 +25,10 @@ namespace FSO.Server.Servers.City.Handlers
         private LotServerPicker LotServers;
         private CityLivenessEngine Liveness;
         private EventSystem Events;
+        private Neighborhoods Neigh;
 
         public VoltronConnectionLifecycleHandler(ISessions sessions, IDataService dataService, IDAFactory da, CityServerContext context, LotServerPicker lotServers, CityLivenessEngine engine,
-            EventSystem events)
+            EventSystem events, Neighborhoods neigh)
         {
             this.VoltronSessions = sessions.GetOrCreateGroup(Groups.VOLTRON);
             this.Sessions = sessions;
@@ -37,6 +38,7 @@ namespace FSO.Server.Servers.City.Handlers
             this.LotServers = lotServers;
             this.Liveness = engine;
             this.Events = events;
+            this.Neigh = neigh;
         }
 
         public void Handle(IVoltronSession session, ClientByePDU packet)
@@ -118,11 +120,12 @@ namespace FSO.Server.Servers.City.Handlers
             }
 
             //New avatar, enroll in voltron group
-            var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId);
+            var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId); //can throw?
             //Mark as online
             avatar.Avatar_IsOnline = true;
             VoltronSessions.Enroll(newSession);
             Events.UserJoined(voltronSession);
+            Neigh.UserJoined(voltronSession);
 
             //TODO: Somehow alert people this sim is online?
         }

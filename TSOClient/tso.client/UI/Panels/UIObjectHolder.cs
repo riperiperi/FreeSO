@@ -24,6 +24,7 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Common;
 using FSO.Client.UI.Controls;
 using FSO.Common.Rendering.Framework;
+using FSO.SimAntics.Model.Platform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -46,6 +47,8 @@ namespace FSO.Client.UI.Panels
         public bool DirChanged;
         public bool ShowTooltip;
         public bool Roommate;
+
+        public bool DonateMode;
 
         public event HolderEventHandler OnPickup;
         public event HolderEventHandler OnDelete;
@@ -225,7 +228,9 @@ namespace FSO.Client.UI.Panels
                             dir = Holding.Dir,
                             level = pos.Level,
                             x = pos.x,
-                            y = pos.y
+                            y = pos.y,
+
+                            Mode = (DonateMode) ? PurchaseMode.Donate : PurchaseMode.Normal
                         });
                     }
                     else
@@ -237,7 +242,9 @@ namespace FSO.Client.UI.Panels
                             dir = Holding.Dir,
                             level = pos.Level,
                             x = pos.x,
-                            y = pos.y
+                            y = pos.y,
+
+                            Mode = (DonateMode) ? PurchaseMode.Donate : PurchaseMode.Normal
                         });
                     }
                     ClearSelected();
@@ -274,7 +281,7 @@ namespace FSO.Client.UI.Panels
                     HITVM.Get().PlaySoundEvent(UISounds.MoneyBack);
                 } else
                 {
-                    ShowErrorAtMouse(LastState, VMPlacementError.CannotDeleteObject);
+                    ShowErrorAtMouse(LastState, Holding.DeleteError);
                     return;
                 }
             }
@@ -299,7 +306,7 @@ namespace FSO.Client.UI.Panels
                     }
                 } else
                 {
-                    ShowErrorAtMouse(LastState, VMPlacementError.CannotDeleteObject);
+                    ShowErrorAtMouse(LastState, Holding.DeleteError);
                     return;
                 }
             }
@@ -484,17 +491,22 @@ namespace FSO.Client.UI.Panels
                 {
                     var objGroup = vm.GetObjectById(newHover).MultitileGroup;
                     var objBasePos = objGroup.BaseObject.Position;
+                    var allowMove = vm.PlatformState.Validator.CanMoveObject((VMAvatar)ParentControl.ActiveEntity, objGroup.BaseObject);
                     var success = (Roommate || objGroup.SalePrice > -1)?objGroup.BaseObject.IsUserMovable(vm.Context, false): VMPlacementError.ObjectNotOwnedByYou;
                     if (GameFacade.EnableMod) success = VMPlacementError.Success;
                     if (objBasePos.Level != World.State.Level) success = VMPlacementError.CantEffectFirstLevelFromSecondLevel;
                     if (success == VMPlacementError.Success)
                     {
                         var ghostGroup = vm.Context.GhostCopyGroup(objGroup);
-                        var canDelete = GameFacade.EnableMod || (objGroup.BaseObject.IsUserMovable(vm.Context, true)) == VMPlacementError.Success;
+                        var deleteAllowed = vm.PlatformState.Validator.GetDeleteMode(
+                            DeleteMode.Delete, (VMAvatar)ParentControl.ActiveEntity, ghostGroup.BaseObject) != DeleteMode.Disallowed;
+                        var canDelete = deleteAllowed && (objGroup.BaseObject.IsUserMovable(vm.Context, true)) == VMPlacementError.Success;
+                        if (GameFacade.EnableMod) canDelete = true;
                         SetSelected(ghostGroup);
 
                         Holding.RealEnt = objGroup.BaseObject;
                         Holding.CanDelete = canDelete;
+                        Holding.DeleteError = canDelete ? VMPlacementError.CannotDeleteObject : VMPlacementError.ObjectNotOwnedByYou;
                         Holding.MoveTarget = newHover;
                         Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
                         if (OnPickup != null) OnPickup(Holding, state);
@@ -547,6 +559,7 @@ namespace FSO.Client.UI.Panels
         public int Price;
         public uint InventoryPID = 0;
         public bool CanDelete;
+        public VMPlacementError DeleteError;
         public VMEntity RealEnt;
 
         public bool IsBought

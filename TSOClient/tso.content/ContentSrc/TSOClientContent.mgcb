@@ -10,32 +10,33 @@
 
 #-------------------------------- References --------------------------------#
 
+/reference:..\..\..\other\libs\MSDFExtension\bin\Debug\MSDFExtension.dll
 
 #---------------------------------- Content ---------------------------------#
 
-#begin Fonts/FreeSO_12px.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Color
-/build:Fonts/FreeSO_12px.spritefont
+#begin Fonts/simdialogue.ini
+/importer:FieldFontImporter
+/processor:FieldFontProcessor
+/processorParam:ExternalPath=msdfgen.exe
+/processorParam:Resolution=32
+/processorParam:Range=4
+/build:Fonts/simdialogue.ini
 
-#begin Fonts/FreeSO_14px.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Color
-/build:Fonts/FreeSO_14px.spritefont
+#begin Fonts/mobile.ini
+/importer:FieldFontImporter
+/processor:FieldFontProcessor
+/processorParam:ExternalPath=msdfgen.exe
+/processorParam:Resolution=32
+/processorParam:Range=4
+/build:Fonts/mobile.ini
 
-#begin Fonts/FreeSO_16px.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Color
-/build:Fonts/FreeSO_16px.spritefont
-
-#begin Fonts/FreeSO_10px.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Color
-/build:Fonts/FreeSO_10px.spritefont
+#begin Fonts/trebuchet.ini
+/importer:FieldFontImporter
+/processor:FieldFontProcessor
+/processorParam:ExternalPath=msdfgen.exe
+/processorParam:Resolution=32
+/processorParam:Range=4
+/build:Fonts/trebuchet.ini
 
 #begin Effects/2DWorldBatch.fx
 /importer:EffectImporter
@@ -67,18 +68,6 @@
 /processorParam:DebugMode=Auto
 /build:Effects/Vitaboy.fx
 
-#begin Fonts/Trebuchet_12px.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Color
-/build:Fonts/Trebuchet_12px.spritefont
-
-#begin Fonts/Trebuchet_14px.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Color
-/build:Fonts/Trebuchet_14px.spritefont
-
 #begin Effects/GrassShader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -109,30 +98,6 @@
 /processorParam:DebugMode=Auto
 /build:Effects/LightMap2D.fx
 
-#begin Fonts/Mobile_15px.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:Fonts/Mobile_15px.spritefont
-
-#begin Fonts/Mobile_20px.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:Fonts/Mobile_20px.spritefont
-
-#begin Fonts/Mobile_25px.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:Fonts/Mobile_25px.spritefont
-
-#begin Fonts/Mobile_50px.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:Fonts/Mobile_50px.spritefont
-
 #begin Effects/RCObject.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -162,4 +127,10 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/ParticleShader.fx
+
+#begin Effects/MSDFFont.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/MSDFFont.fx
 

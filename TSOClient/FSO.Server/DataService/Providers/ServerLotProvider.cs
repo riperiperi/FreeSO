@@ -22,6 +22,7 @@ using FSO.Server.Database.DA.LotAdmit;
 using System.Collections.Immutable;
 using FSO.Common.Enum;
 using FSO.Server.Common;
+using FSO.Server.Database.DA.Neighborhoods;
 
 namespace FSO.Server.DataService.Providers
 {
@@ -71,10 +72,11 @@ namespace FSO.Server.DataService.Providers
             using (var db = DAFactory.Get())
             {
                 var all = db.Lots.All(ShardId);
+                var nhoods = db.Neighborhoods.All(ShardId);
                 foreach(var item in all){
                     var roommates = db.Roommates.GetLotRoommates(item.lot_id);
                     var admit = db.LotAdmit.GetLotInfo(item.lot_id);
-                    var converted = HydrateOne(item, roommates, admit);
+                    var converted = HydrateOne(item, roommates, admit, nhoods.FirstOrDefault(x => item.neighborhood_id == x.neighborhood_id));
                     var intId = MapCoordinates.Pack(converted.Lot_Location.Location_X, converted.Lot_Location.Location_Y);
                     appender(intId, converted);
                 }
@@ -91,7 +93,8 @@ namespace FSO.Server.DataService.Providers
                 {
                     var roommates = db.Roommates.GetLotRoommates(lot.lot_id);
                     var admit = db.LotAdmit.GetLotInfo(lot.lot_id);
-                    return HydrateOne(lot, roommates, admit);
+                    var nhood = db.Neighborhoods.Get(lot.neighborhood_id);
+                    return HydrateOne(lot, roommates, admit, null);
                 }
             }
         }
@@ -116,7 +119,7 @@ namespace FSO.Server.DataService.Providers
             return value;
         }
 
-        protected Lot HydrateOne(DbLot lot, List<DbRoommate> roommates, List<DbLotAdmit> admit)
+        protected Lot HydrateOne(DbLot lot, List<DbRoommate> roommates, List<DbLotAdmit> admit, DbNeighborhood nhood)
         {
             var location = MapCoordinates.Unpack(lot.location);
 
@@ -158,6 +161,8 @@ namespace FSO.Server.DataService.Providers
                 Lot_LastCatChange = lot.category_change_date,
                 Lot_Description = lot.description,
                 Lot_Thumbnail = new cTSOGenericData(new byte[0]),
+                Lot_NeighborhoodID = (uint)(nhood?.neighborhood_id ?? 0),
+                Lot_NeighborhoodName = nhood?.name ?? ""
             };
 
             foreach (var roomie in roommates)
@@ -292,6 +297,10 @@ namespace FSO.Server.DataService.Providers
                     context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
 
                     if (lot.Lot_IsOnline) throw new SecurityException("Lot must be offline to change category!");
+                    if ((LotCategory)((byte)value) >= LotCategory.community)
+                        throw new SecurityException("Invalid lot category!");
+                    if (lot.Lot_Category == (byte)LotCategory.community)
+                        throw new SecurityException("You cannot change the lot category for a community lot.");
 
                     //7 days
                     if (((Epoch.Now - lot.Lot_LastCatChange) / (60 * 60)) < 168){

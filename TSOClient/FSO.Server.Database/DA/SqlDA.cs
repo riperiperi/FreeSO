@@ -24,6 +24,8 @@ using FSO.Server.Database.DA.Tuning;
 using FSO.Server.Database.DA.Transactions;
 using FSO.Server.Database.DA.DynPayouts;
 using FSO.Server.Database.DA.EmailConfirmation;
+using FSO.Server.Database.DA.Neighborhoods;
+using FSO.Server.Database.DA.Elections;
 
 namespace FSO.Server.Database.DA
 {
@@ -174,6 +176,32 @@ namespace FSO.Server.Database.DA
                     _LotClaims = new SqlLotClaims(Context);
                 }
                 return _LotClaims;
+            }
+        }
+
+        private INeighborhoods _Neighborhoods;
+        public INeighborhoods Neighborhoods
+        {
+            get
+            {
+                if (_Neighborhoods == null)
+                {
+                    _Neighborhoods = new SqlNeighborhoods(Context);
+                }
+                return _Neighborhoods;
+            }
+        }
+
+        private IElections _Elections;
+        public IElections Elections
+        {
+            get
+            {
+                if (_Elections == null)
+                {
+                    _Elections = new SqlElections(Context);
+                }
+                return _Elections;
             }
         }
 

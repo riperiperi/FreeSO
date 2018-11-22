@@ -73,6 +73,7 @@ namespace FSO.LotView
         public GPURoomMaps Rooms;
         public Color OutsideColor; //temporary to give this to terrain component. in future it will use ambient light texture
         public bool DynamicCutaway;
+        public float SimSpeed = 1f;
 
         public bool ThisFrameImmediate;
 

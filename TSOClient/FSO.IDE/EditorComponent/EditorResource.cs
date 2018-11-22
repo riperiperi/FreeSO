@@ -103,6 +103,7 @@ namespace FSO.IDE.EditorComponent
             {
                 var img = ImageLoader.FromStream(gd, file);
 
+                /*
                 var data = new byte[img.Width * img.Height * 4];
                 img.GetData<byte>(data);
                 for (int i=0; i<data.Length; i+=4)
@@ -113,6 +114,7 @@ namespace FSO.IDE.EditorComponent
                     data[i+2] = (byte)((data[i+2] * a) / 255);
                 }
                 img.SetData<byte>(data);
+                */
                 return img;
             }
         }

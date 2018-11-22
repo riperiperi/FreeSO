@@ -14,6 +14,8 @@ using System.Reflection;
 using System.Threading;
 using FSO.IDE.EditorComponent;
 using FSO.IDE.ResourceBrowser.ResourceEditors;
+using System.IO;
+using FSO.Files.Utils;
 
 namespace FSO.IDE.ResourceBrowser
 {
@@ -332,14 +334,20 @@ namespace FSO.IDE.ResourceBrowser
             ResList.SelectedIndex = destination.ToList().FindIndex(x => ((ObjectResourceEntry)x).ID == ID);
         }
 
-        private void DeleteRes_Click(object sender, EventArgs e)
+        private IffChunk GetChunk()
         {
-            if (ResList.SelectedItem == null) return;
+            if (ResList.SelectedItem == null) return null;
             var selectedType = (ComboChunkType)ResTypeCombo.SelectedItem;
 
             MethodInfo method = typeof(GameIffResource).GetMethod("Get");
             MethodInfo generic = method.MakeGenericMethod(selectedType.ChunkType);
             var chunk = (IffChunk)generic.Invoke(ActiveIff, new object[] { ((ObjectResourceEntry)ResList.SelectedItem).ID });
+            return chunk;
+        }
+
+        private void DeleteRes_Click(object sender, EventArgs e)
+        {
+            var chunk = GetChunk();
             if (chunk == null) return;
 
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
@@ -347,6 +355,78 @@ namespace FSO.IDE.ResourceBrowser
                 chunk.ChunkParent.FullRemoveChunk(chunk);
                 Content.Content.Get().Changes.ChunkChanged(chunk);
             }));
+        }
+
+        private void CopyRes_Click(object sender, EventArgs e)
+        {
+            var data = new DataObject();
+            var chunk = GetChunk();
+            if (chunk == null) return;
+
+            using (var memStream = new MemoryStream())
+            {
+                using (var io = IoWriter.FromStream(memStream, ByteOrder.BIG_ENDIAN))
+                    chunk.ChunkParent.WriteChunk(io, chunk);
+
+                data.SetData("rawbinary", false, memStream);
+
+                StaExecute(() =>
+                {
+                    Clipboard.SetDataObject(data, true);
+                });
+            }
+        }
+
+        private void PasteRes_Click(object sender, EventArgs e)
+        {
+            //try to paste this into the iff file.
+
+            DataObject retrievedData = null;
+            IffChunk chunk = null;
+            StaExecute(() =>
+            {
+                retrievedData = Clipboard.GetDataObject() as DataObject;
+                if (retrievedData == null || !retrievedData.GetDataPresent("rawbinary"))
+                    return;
+                MemoryStream memStream = retrievedData.GetData("rawbinary") as MemoryStream;
+                if (memStream == null)
+                    return;
+
+                memStream.Seek(0, SeekOrigin.Begin);
+                try
+                {
+                    using (var io = IoBuffer.FromStream(memStream, ByteOrder.BIG_ENDIAN))
+                        chunk = ActiveIff.MainIff.AddChunk(memStream, io, false);
+                }
+                catch (Exception)
+                {
+
+                }
+            });
+
+            if (chunk != null)
+            {
+                chunk.ChunkParent = ActiveIff.MainIff;
+                var dialog = new IffNameDialog(chunk, true);
+                dialog.ShowDialog();
+            }
+
+            RefreshResList();
+        }
+
+
+        private void StaExecute(Action action)
+        {
+            // ༼ つ ◕_◕ ༽つ IMPEACH STAThread ༼ つ ◕_◕ ༽つ
+            var wait = new AutoResetEvent(false);
+            var thread = new Thread(() => {
+                action();
+                wait.Set();
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            wait.WaitOne();
+            return;
         }
     }
     public class ObjectResourceEntry

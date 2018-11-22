@@ -17,6 +17,7 @@ namespace FSO.Content.TS1
         private TS1SubProvider<IffFile> GameObjects;
         private static List<ObjectCatalogItem>[] ItemsByCategory;
         private static Dictionary<uint, ObjectCatalogItem> ItemsByGUID;
+        public HashSet<uint> PersonGUIDs = new HashSet<uint>();
 
         public TS1ObjectProvider(Content contentManager, TS1Provider provider) : base(contentManager)
         {
@@ -51,8 +52,10 @@ namespace FSO.Content.TS1
                             Name = obj.ChunkLabel,
                             Source = GameObjectSource.Far,
                             Group = (short)obj.MasterID,
-                            SubIndex = obj.SubIndex
+                            SubIndex = obj.SubIndex,
+                            GlobalSimObject = obj.ObjectType == OBJDType.SimType && obj.Global == 1
                         };
+                        if (obj.ObjectType == OBJDType.Person) PersonGUIDs.Add(obj.GUID);
 
                         //does this object appear in the catalog?
                         if ((obj.FunctionFlags > 0 || obj.BuildModeType > 0) && obj.Disabled == 0 && (obj.MasterID == 0 || obj.SubIndex == -1))
@@ -82,6 +85,10 @@ namespace FSO.Content.TS1
                     }
                 }
             }
+
+            var globalSims = Entries.Values.Where(x => x.GlobalSimObject);
+            ControllerObjects.Clear();
+            ControllerObjects.AddRange(globalSims);
 
             ContentManager.Neighborhood.LoadCharacters(false);
         }

@@ -22,6 +22,7 @@ namespace FSO.Server.Protocol.Gluon
 
         NotifyLotRoommateChange,
         MatchmakerNotify,
+        CityNotify,
 
         Unknown
     }
@@ -56,6 +57,8 @@ namespace FSO.Server.Protocol.Gluon
                     return GluonPacketType.NotifyLotRoommateChange;
                 case 0x0012:
                     return GluonPacketType.MatchmakerNotify;
+                case 0x0013:
+                    return GluonPacketType.CityNotify;
                 default:
                     return GluonPacketType.Unknown;
             }
@@ -89,6 +92,8 @@ namespace FSO.Server.Protocol.Gluon
                     return 0x0011;
                 case GluonPacketType.MatchmakerNotify:
                     return 0x0012;
+                case GluonPacketType.CityNotify:
+                    return 0x0013;
             }
 
             return 0xFFFF;

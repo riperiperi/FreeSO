@@ -38,7 +38,7 @@ namespace FSO.Client.UI.Controls
         {
             if (string.IsNullOrEmpty(Text) || !Visible) { return; }
             
-            var wrapped = UIUtils.WordWrap(Text, MaxWidth - (PaddingX*2), TextStyle, new Vector2(TextStyle.Scale));
+            var wrapped = UIUtils.WordWrap(Text, MaxWidth - (PaddingX*2), TextStyle);
             int width = wrapped.MaxWidth + (PaddingX*2);
             int height = (LineHeight * wrapped.Lines.Count) + (PaddingY*2);
 
@@ -53,7 +53,7 @@ namespace FSO.Client.UI.Controls
             for (int i = 0; i < wrapped.Lines.Count; i++)
             {
                 var line = wrapped.Lines[i];
-                var lineWidth = TextStyle.SpriteFont.MeasureString(line).X * TextStyle.Scale;
+                var lineWidth = TextStyle.MeasureString(line).X;
                 DrawLocalString(batch, line, new Vector2((width - lineWidth) / 2.0f, y), TextStyle);
                 y += LineHeight;
             }

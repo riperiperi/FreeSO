@@ -27,7 +27,7 @@ namespace FSO.Files
 
         public float GetNum(string key)
         {
-            CultureInfo floatParse = new CultureInfo("en-US");
+            CultureInfo floatParse = CultureInfo.InvariantCulture;
             return float.Parse(KeyValues[key], floatParse);
         }
     }

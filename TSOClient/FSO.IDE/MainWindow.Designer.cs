@@ -75,6 +75,7 @@
             this.Browser = new FSO.IDE.ObjectBrowser();
             this.InspectorTab = new System.Windows.Forms.TabPage();
             this.entityInspector1 = new FSO.IDE.EntityInspector();
+            this.dataServiceEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.UtilityTabs.SuspendLayout();
             this.OverviewTab.SuspendLayout();
@@ -156,6 +157,8 @@
             // 
             // toolsToolStripMenuItem
             // 
+            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.dataServiceEditorToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
@@ -437,6 +440,13 @@
             this.entityInspector1.Size = new System.Drawing.Size(724, 452);
             this.entityInspector1.TabIndex = 0;
             // 
+            // dataServiceEditorToolStripMenuItem
+            // 
+            this.dataServiceEditorToolStripMenuItem.Name = "dataServiceEditorToolStripMenuItem";
+            this.dataServiceEditorToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.dataServiceEditorToolStripMenuItem.Text = "Data Service Editor";
+            this.dataServiceEditorToolStripMenuItem.Click += new System.EventHandler(this.dataServiceEditorToolStripMenuItem_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -497,5 +507,6 @@
         private System.Windows.Forms.Button ChunkDiscard;
         private EntityInspector entityInspector1;
         private System.Windows.Forms.Button NewOBJButton;
+        private System.Windows.Forms.ToolStripMenuItem dataServiceEditorToolStripMenuItem;
     }
 }

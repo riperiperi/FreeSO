@@ -52,7 +52,7 @@ namespace FSO.Common.Utils
             if (color == Backbuffer && depth == null && BackbufferDepth != null) depth = BackbufferDepth;
             ActiveDepth = depth;
 
-            if (color != null && depth != null) depth.InheritDepthStencil(color);
+            //if (color != null && depth != null) depth.InheritDepthStencil(color);
             var gd = GD;
             gd.SetRenderTarget(color); //can be null
             if (clear)

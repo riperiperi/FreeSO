@@ -17,7 +17,7 @@ namespace FSO.Windows
             
             var clipThread = new Thread(x =>
             {
-                clipboardText = System.Windows.Forms.Clipboard.GetText(System.Windows.Forms.TextDataFormat.Text);
+                clipboardText = System.Windows.Forms.Clipboard.GetText(System.Windows.Forms.TextDataFormat.UnicodeText);
                 wait.Set();
             });
             clipThread.SetApartmentState(ApartmentState.STA);

@@ -38,5 +38,14 @@ namespace FSO.Common.DataService.Model
                 NotifyPropertyChanged("AvatarAppearance_HeadOutfitID");
             }
         }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as AvatarAppearance;
+            return (other != null
+                && AvatarAppearance_BodyOutfitID == other.AvatarAppearance_BodyOutfitID
+                && AvatarAppearance_SkinTone == other.AvatarAppearance_SkinTone
+                && AvatarAppearance_HeadOutfitID == other.AvatarAppearance_HeadOutfitID);
+        }
     }
 }

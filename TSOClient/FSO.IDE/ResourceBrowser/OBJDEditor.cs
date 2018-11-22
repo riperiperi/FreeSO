@@ -68,7 +68,12 @@ namespace FSO.IDE.ResourceBrowser
                 { ShadowEntry, "ShadowBrightness" },
                 { DeprInitial, "InitialDepreciation" },
                 { DeprDaily, "DailyDepreciation" },
-                { DeprLimit, "DepreciationLimit" }
+                { DeprLimit, "DepreciationLimit" },
+
+                { FootprintNorth, "FootprintNorth" },
+                { FootprintEast, "FootprintEast" },
+                { FootprintSouth, "FootprintSouth" },
+                { FootprintWest, "FootprintWest" },
             };
 
             OBJDFlagEntries = new Dictionary<CheckBox, PropFlagCombo>()
@@ -217,12 +222,6 @@ namespace FSO.IDE.ResourceBrowser
                 .Where(x => x.MasterID == ActiveObj.OBJ.MasterID)
                 .OrderBy(x => x.SubIndex)
                 .ToArray());
-
-            //set up collision
-            FootprintNorth.Value = ActiveObj.OBJ.FootprintMask & 15;
-            FootprintEast.Value = (ActiveObj.OBJ.FootprintMask >> 4) & 15;
-            FootprintSouth.Value = (ActiveObj.OBJ.FootprintMask >> 8) & 15;
-            FootprintWest.Value = (ActiveObj.OBJ.FootprintMask >> 12) & 15;
 
             var isMultitileMaster = ActiveObj.OBJ.MasterID > 0 && ActiveObj.OBJ.SubIndex == -1;
             if (isMaster)

@@ -114,3 +114,33 @@ float4 lightProcessDirectionLevel(float4 inPosition, float3 normal, float level)
 float4 lightProcessDirection(float4 inPosition, float3 normal) {
 	return lightProcessDirectionLevel(inPosition, normal, Level);
 }
+
+//coeffs from http://chilliant.blogspot.com/2012/08/srgb-approximations-for-hlsl.html.
+float4 LinearToSRGB(float4 col) {
+	float3 s1 = sqrt(col.rgb);
+	float3 s2 = sqrt(s1);
+	float3 s3 = sqrt(s2);
+	col.rgb = 0.662002687 * s1 + 0.684122060 * s2 - 0.323583601 * s3 - 0.0225411470 * col.rgb;
+	return col;
+}
+
+float4 SRGBToLinear(float4 col) {
+	col.rgb = col.rgb * (col.rgb * (col.rgb * 0.305306011 + 0.682171111) + 0.012522878);
+	return col;
+}
+
+float4 gammaMul(float4 baseCol, float4 lighting) {
+	return LinearToSRGB(SRGBToLinear(baseCol)*lighting);
+}
+
+float4 gammaMad(float4 baseCol, float4 lighting, float4 add) {
+	return LinearToSRGB(SRGBToLinear(baseCol)*lighting + add);
+}
+
+float4 gammaMul1(float4 baseCol, float lighting) {
+	return LinearToSRGB(float4(SRGBToLinear(baseCol).rgb*lighting, baseCol.a));
+}
+
+float4 gammaMad1(float4 baseCol, float lighting, float4 add) {
+	return LinearToSRGB(float4(SRGBToLinear(baseCol).rgb*lighting, 1) + add);
+}

@@ -117,10 +117,12 @@ namespace FSO.IDE.EditorComponent.UI
             this.Add(Title);
             Title.CaptionStyle = TextStyle.DefaultLabel.Clone();
             Title.CaptionStyle.Font = FSO.Client.GameFacade.EdithFont;
+            Title.CaptionStyle.VFont = FSO.Client.GameFacade.EdithVectorFont;
             Title.CaptionStyle.Size = 14;
 
             BodyTextStyle = TextStyle.DefaultLabel.Clone();
             BodyTextStyle.Font = FSO.Client.GameFacade.EdithFont;
+            BodyTextStyle.VFont = FSO.Client.GameFacade.EdithVectorFont;
             BodyTextStyle.Size = 12;
 
             this.Add(Nodes[0]);

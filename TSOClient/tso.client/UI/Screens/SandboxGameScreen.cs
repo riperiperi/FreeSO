@@ -85,7 +85,7 @@ namespace FSO.Client.UI.Screens
                     else
                     {
                         var targ = (WorldZoom)(4 - value); //near is 3 for some reason... will probably revise
-                        HITVM.Get().PlaySoundEvent(UIMusic.None);
+                        if (!ucp.SpecialMusic) HITVM.Get().PlaySoundEvent(UIMusic.None);
                         LotControl.Visible = true;
                         World.Visible = true;
                         ucp.SetMode(UIUCP.UCPMode.LotMode);
@@ -187,6 +187,19 @@ namespace FSO.Client.UI.Screens
                 };
                 Add(TS1NeighPanel);
             }
+
+            GameThread.NextUpdate(x =>
+            {
+                var alert = GlobalShowAlert(new Controls.UIAlertOptions()
+                {
+                    Width = 600,
+                    Title = "Vote for your Mayor!",
+                    Message = "The nominations are in; this ballot shows the top nominated candidates for your neighborhood. It's up to you to decide which one should be your Mayor, " +
+                    "based on their plans, ratings from past terms and your personal experience with them! \n\nChoose carefully, as your vote cannot be changed once cast. NOTE: You can only vote " +
+                    "in each election once - across your 3 sims AND related (same household) accounts.\n\n\n\n\n\n\n\n\n\n"
+                }, false);
+                alert.Opacity = 1;
+            });
         }
 
         public override void GameResized()
@@ -431,6 +444,7 @@ namespace FSO.Client.UI.Screens
                 SkinTone = (byte)settings.DebugSkin,
                 Gender = (short)(settings.DebugGender ? 0 : 1),
                 Permissions = SimAntics.Model.TSOPlatform.VMTSOAvatarPermissions.Admin,
+                //CustomGUID = 0x396CD3D1,
                 Budget = 1000000,
             };
 
@@ -526,7 +540,8 @@ namespace FSO.Client.UI.Screens
                 });
                 vm.ForwardCommand(new VMNetTuningCmd { Tuning = experimentalTuning });
 
-                vm.TSOState.PropertyCategory = 255;
+                vm.TSOState.PropertyCategory = 11;
+                vm.TSOState.ActivateValidator(vm);
                 vm.Context.Clock.Hours = 0;
                 vm.TSOState.Size = (10) | (3 << 8);
                 vm.Context.UpdateTSOBuildableArea();

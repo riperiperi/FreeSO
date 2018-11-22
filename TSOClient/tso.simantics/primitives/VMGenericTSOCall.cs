@@ -15,6 +15,7 @@ using System.IO;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Drivers;
 using Microsoft.Xna.Framework;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -84,9 +85,10 @@ namespace FSO.SimAntics.Primitives
                     //todo: set interaction result to value of temp 0. UNUSED.
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.DoIOwnThisObject: //19
-                    context.Thread.TempRegisters[0] = (context.StackObject is VMAvatar
-                    || ((VMTSOObjectState)context.StackObject.TSOState).OwnerID != context.Caller.PersistID)
-                    ? (short)0 : (short)1;
+                    uint ownerID = GetOwnerID(context.StackObject, context);
+
+                    context.Thread.TempRegisters[0] = (ownerID != context.Caller.PersistID)
+                        ? (short)0 : (short)1;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.DoesTheLocalMachineSimOwnMe: //20
                     context.Thread.TempRegisters[1] = 1; //TODO
@@ -123,6 +125,16 @@ namespace FSO.SimAntics.Primitives
 
                 // 26. UNUSED
                 case VMGenericTSOCallMode.KickoutRoommate:
+                    if (context.VM.TSOState.CommunityLot)
+                    {
+                        //remove their donator status. don't tell the database.
+                        context.VM.SendCommand(new VMChangePermissionsCmd()
+                        {
+                            TargetUID = context.StackObject.PersistID,
+                            Level = VMTSOAvatarPermissions.Visitor
+                        });
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
                     if (context.VM.GlobalLink != null) context.VM.GlobalLink.RemoveRoommate(context.VM, (VMAvatar)context.StackObject);
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
@@ -140,8 +152,9 @@ namespace FSO.SimAntics.Primitives
                     if (context.StackObject is VMAvatar) context.Thread.TempRegisters[0] = 0;
                     else
                     {
-                        var owner = context.VM.GetObjectByPersist(((VMTSOObjectState)context.StackObject.TSOState).OwnerID);
-                        context.Thread.TempRegisters[0] = (owner == null) ? (short)0 : owner.ObjectID;
+                        var ownerid = GetOwnerID(context.StackObject, context);
+                        var owner = context.VM.GetObjectByPersist(ownerid);
+                        context.Thread.TempRegisters[0] = (owner == null) ? (short)-1 : owner.ObjectID;
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
@@ -197,12 +210,14 @@ namespace FSO.SimAntics.Primitives
                     // - Avatar we're asking must be resident of less lots than the maximum (currently 1)
                     // - This lot must have less than (MAX_ROOMIES) roommates. (currently 8)
                     // - Caller must be lot owner.
+                    // - This must not be a community lot.
                     short result = 0;
                     if (context.Caller is VMAvatar && context.Callee is VMAvatar)
                     {
                         var caller = (VMAvatar)context.Caller;
                         var callee = (VMAvatar)context.Callee;
-                        if (caller.AvatarState.Permissions == VMTSOAvatarPermissions.Owner && context.VM.TSOState.Roommates.Count < 8
+                        if (caller.AvatarState.Permissions == VMTSOAvatarPermissions.Owner && !context.VM.TSOState.CommunityLot
+                            && context.VM.TSOState.Roommates.Count < 8
                             && (((VMTSOAvatarState)callee.TSOState).Flags & VMTSOAvatarFlags.CanBeRoommate) > 0)
                         {
                             result = 2;
@@ -212,8 +227,7 @@ namespace FSO.SimAntics.Primitives
                     // 2 is "true". not sure what 1 is. (interaction shows up, but fails on trying to run it. likely "guessed" state for client)
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.ReturnLotCategory: //39
-                    context.Thread.TempRegisters[0] = context.VM.TSOState.PropertyCategory; //skills lot. see #Lot Types in global.iff
-                    //TODO: set based on lot state
+                    context.Thread.TempRegisters[0] = context.VM.TSOState.PropertyCategory;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.TestStackObject: //40
                     return (context.StackObject != null) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
@@ -231,8 +245,7 @@ namespace FSO.SimAntics.Primitives
                 //44. Is Full Refund (TODO: small grace period after purchase/until user exits buy mode)
                 //45. Refresh buy/build (TODO? we probably don't need this)
                 case VMGenericTSOCallMode.GetLotOwner: //46
-                    // TODO! global lot state not in yet
-                    context.Thread.TempRegisters[0] = context.Caller.ObjectID;
+                    context.Thread.TempRegisters[0] = context.VM.GetAvatarByPersist(context.VM.TSOState.OwnerID)?.ObjectID ?? 0;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.CopyDynObjNameFromTemp0ToTemp1: //47
                     var obj1 = context.VM.GetObjectById(context.Thread.TempRegisters[0]);
@@ -307,6 +320,20 @@ namespace FSO.SimAntics.Primitives
                 //TODO: may need to update in global server
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
+            }
+        }
+
+        private uint GetOwnerID(VMEntity obj, VMStackFrame context)
+        {
+            if (obj is VMAvatar)
+                return 0;
+            else
+            {
+                var objState = (obj.TSOState as VMTSOObjectState);
+                if (objState.ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated))
+                    return context.VM.TSOState.OwnerID;
+                else
+                    return objState.OwnerID;
             }
         }
     }

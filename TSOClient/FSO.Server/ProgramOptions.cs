@@ -16,6 +16,10 @@ namespace FSO.Server
         [VerbOption("db-init", HelpText = "Initialize the database.")]
         public DatabaseInitOptions DatabaseMaintenanceVerb { get; set; }
 
+        [VerbOption("import-nhood",
+            HelpText = "Import the neighborhood stored in the given JSON file to the specified shard.")]
+        public ImportNhoodOptions ImportNhoodVerb { get; set; }
+
         [HelpVerbOption]
         public string GetUsage(string verb)
         {
@@ -32,5 +36,13 @@ namespace FSO.Server
     {
         [Option('d', "debug", DefaultValue = false, HelpText = "Launches a network debug interface")]
         public bool Debug { get; set; }
+    }
+
+    public class ImportNhoodOptions
+    {
+        [ValueOption(0)]
+        public int ShardId { get; set; }
+        [ValueOption(1)]
+        public string JSON { get; set; }
     }
 }

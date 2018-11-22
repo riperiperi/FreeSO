@@ -246,6 +246,11 @@ namespace FSO.HIT
                 }
                 else if (evtent.EventType == HITEvents.kSetMusicMode)
                 {
+                    if (evtent.TrackID == 0)
+                    {
+                        if (evtent.Name == "bkground_buy1") evtent.TrackID = 1;
+                        else if (evtent.Name == "bkground_build") evtent.TrackID = 2;
+                    }
                     var thread = new HITTVOn(evtent.TrackID, this, true);
                     thread.VolGroup = HITVolumeGroup.MUSIC;
                     ActiveEvents.Add(evt, thread);

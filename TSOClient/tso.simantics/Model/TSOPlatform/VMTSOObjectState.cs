@@ -23,6 +23,8 @@ namespace FSO.SimAntics.Model.TSOPlatform
             }
         }
 
+        public VMTSOObjectFlags ObjectFlags;
+
         public VMTSOObjectState() { }
 
         public VMTSOObjectState(int version) : base(version) { }
@@ -37,6 +39,11 @@ namespace FSO.SimAntics.Model.TSOPlatform
                 Wear = reader.ReadUInt16();
                 QtrDaysSinceLastRepair = reader.ReadByte();
             }
+
+            if (Version > 30)
+            {
+                ObjectFlags = (VMTSOObjectFlags)reader.ReadByte();
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -46,6 +53,8 @@ namespace FSO.SimAntics.Model.TSOPlatform
 
             writer.Write(Wear);
             writer.Write(QtrDaysSinceLastRepair);
+
+            writer.Write((byte)ObjectFlags);
         }
 
         public override void Tick(VM vm, object owner)
@@ -83,5 +92,21 @@ namespace FSO.SimAntics.Model.TSOPlatform
                 }
             }
         }
+
+        public void Donate(VM vm, VMEntity owner)
+        {
+            //remove all sellback value and set it as donated.
+            owner.MultitileGroup.InitialPrice = 0;
+            foreach (var obj in owner.MultitileGroup.Objects)
+            {
+                (obj.TSOState as VMTSOObjectState).ObjectFlags |= VMTSOObjectFlags.FSODonated;
+            }
+            VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
+        }
+    }
+
+    public enum VMTSOObjectFlags : byte
+    {
+        FSODonated = 1
     }
 }

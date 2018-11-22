@@ -31,6 +31,7 @@ namespace FSO.Server.Servers.Tasks
             Engine.AddTask(DbTaskType.bonus.ToString(), typeof(BonusTask));
             Engine.AddTask(DbTaskType.shutdown.ToString(), typeof(ShutdownTask));
             Engine.AddTask(DbTaskType.job_balance.ToString(), typeof(JobBalanceTask));
+            Engine.AddTask(DbTaskType.neighborhood_tick.ToString(), typeof(NeighborhoodsTask));
         }
 
         public override void Start()

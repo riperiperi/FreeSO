@@ -25,6 +25,7 @@ using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.Server.Protocol.Gluon.Packets;
 using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Servers.Lot.Lifecycle;
+using FSO.Server.Common;
 
 namespace FSO.Server.Servers.Lot.Domain
 {
@@ -125,6 +126,7 @@ namespace FSO.Server.Servers.Lot.Domain
                                     Level = VMTSOAvatarPermissions.Roommate,
                                     Verified = true
                                 });
+                                db.Avatars.UpdateMoveDate(avatarID, Epoch.Now);
                             }
                             break;
                         //the following code enables pending requests, like in the original game. I decided they only really make sense for requests initiated from city.
@@ -843,6 +845,10 @@ namespace FSO.Server.Servers.Lot.Domain
                                 if (lot.owner_id != myP.PlayerPersist && (i == 0 || lot1 == null))
                                 {
                                     failState = VMEODSecureTradeError.WRONG_OWNER_LOT;
+                                    return false;
+                                } if (lot.category == FSO.Common.Enum.LotCategory.community)
+                                {
+                                    failState = VMEODSecureTradeError.CANNOT_TRADE_COMMUNITY_LOT;
                                     return false;
                                 }
                                 if (lot.owner_id != null) db.Roommates.RemoveRoommate(lot.owner_id.Value, lot.lot_id);

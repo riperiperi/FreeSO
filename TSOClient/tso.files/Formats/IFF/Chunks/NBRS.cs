@@ -86,6 +86,19 @@ namespace FSO.Files.Formats.IFF.Chunks
             NeighbourByID.Add(nb.NeighbourID, nb);
             DefaultNeighbourByGUID[nb.GUID] = nb.NeighbourID;
         }
+
+        public short GetFreeID()
+        {
+            //find the lowest id that is free
+            short newID = 1;
+            for (int i = 0; i < Entries.Count; i++)
+            {
+                if (Entries[i].NeighbourID == newID) newID++;
+                else if (Entries[i].NeighbourID < newID) continue;
+                else break;
+            }
+            return newID;
+        }
     }
 
     public class Neighbour
@@ -160,6 +173,11 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
                 Relationships.Add(key, values);
             }
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
 
         public void Save(IoWriter io)

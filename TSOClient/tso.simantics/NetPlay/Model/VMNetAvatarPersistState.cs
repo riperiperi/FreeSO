@@ -18,7 +18,7 @@ namespace FSO.SimAntics.NetPlay.Model
         // some of these attributes must be saved in the database, so they must be re-initialized by the server.
         // a lot of them are not in the database, so this state storage is the only way you're getting them.
 
-        public static int CURRENT_VERSION = 4;
+        public static int CURRENT_VERSION = 5;
         public int Version = CURRENT_VERSION;
 
         public string Name;
@@ -32,6 +32,7 @@ namespace FSO.SimAntics.NetPlay.Model
         public ulong HeadOutfit;
         public byte SkinTone; //ALSO person data 60
         public bool IsWorker;
+        public uint CustomGUID = 0; //if this is 0, use template person. else create a special object for this sim.
 
         public short[] MotiveData = new short[16]; //lots of this is garbage data. Copy relevant motives from DB.
         private short[] PersonData = new short[27]; //special selection of things which should persist.
@@ -134,6 +135,7 @@ namespace FSO.SimAntics.NetPlay.Model
             writer.Write(HeadOutfit);
             writer.Write(SkinTone); //ALSO person data 60
             writer.Write(IsWorker);
+            writer.Write(CustomGUID);
 
             writer.Write(VMSerializableUtils.ToByteArray(MotiveData));
             writer.Write(VMSerializableUtils.ToByteArray(PersonData));
@@ -172,6 +174,7 @@ namespace FSO.SimAntics.NetPlay.Model
             HeadOutfit = reader.ReadUInt64();
             SkinTone = reader.ReadByte();
             if (Version > 2) IsWorker = reader.ReadBoolean();
+            if (Version > 4) CustomGUID = reader.ReadUInt32();
 
             for (int i = 0; i < MotiveData.Length; i++) MotiveData[i] = reader.ReadInt16();
             for (int i = 0; i < PersonData.Length; i++) PersonData[i] = reader.ReadInt16();
@@ -209,13 +212,18 @@ namespace FSO.SimAntics.NetPlay.Model
             for (int i = 0; i < PersonDataMap.Length; i++)
             {
                 avatar.ForceEnableSkill = true;
-                avatar.SetPersonData((VMPersonDataVariable)PersonDataMap[i], PersonData[i]);
+                if (CustomGUID == 0 || (VMPersonDataVariable)PersonDataMap[i] != VMPersonDataVariable.Gender)
+                    avatar.SetPersonData((VMPersonDataVariable)PersonDataMap[i], PersonData[i]);
                 avatar.ForceEnableSkill = false;
             }
-            avatar.SetPersonData(VMPersonDataVariable.SkinColor, SkinTone);
-            avatar.DefaultSuits = DefaultSuits;
-            avatar.BodyOutfit = new VMOutfitReference(BodyOutfit);
-            avatar.HeadOutfit = new VMOutfitReference(HeadOutfit);
+            
+            if (CustomGUID == 0) //spawning in as the template person?
+            {
+                avatar.SetPersonData(VMPersonDataVariable.SkinColor, SkinTone);
+                avatar.DefaultSuits = DefaultSuits;
+                avatar.BodyOutfit = new VMOutfitReference(BodyOutfit);
+                avatar.HeadOutfit = new VMOutfitReference(HeadOutfit);
+            }
             avatar.Name = Name;
             avatar.AvatarState.Permissions = Permissions;
             ((VMTSOAvatarState)avatar.TSOState).Flags = AvatarFlags;

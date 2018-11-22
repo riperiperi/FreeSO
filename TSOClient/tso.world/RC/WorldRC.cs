@@ -224,6 +224,11 @@ namespace FSO.LotView.RC
             {
                 particle.Draw(device, State);
             }
+
+            foreach (var debug in Blueprint.DebugLines)
+            {
+                debug.Draw(device, State);
+            }
         }
 
         public override ObjectComponent MakeObjectComponent(Content.GameObject obj)

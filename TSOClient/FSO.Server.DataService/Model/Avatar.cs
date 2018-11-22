@@ -16,6 +16,7 @@ namespace FSO.Common.DataService.Model
         public uint Avatar_Id { get; set; }
 
         public uint FetchTime;
+        public bool Invalidated;
 
         private bool _Avatar_IsFounder;
         public bool Avatar_IsFounder {
@@ -204,5 +205,60 @@ namespace FSO.Common.DataService.Model
         {
             get { return Avatar_Name == "Retrieving..."; }
         }
+
+        #region FSO Data Service
+
+        private uint _Avatar_ModerationStatus;
+        public uint Avatar_ModerationStatus
+        {
+            get { return _Avatar_ModerationStatus; }
+            set { _Avatar_ModerationStatus = value; NotifyPropertyChanged("Avatar_ModerationStatus"); }
+        }
+
+        private uint _Avatar_MayorNhood;
+        public uint Avatar_MayorNhood
+        {
+            get { return _Avatar_MayorNhood; }
+            set { _Avatar_MayorNhood = value; NotifyPropertyChanged("Avatar_MayorNhood"); }
+        }
+
+        public Func<uint, ImmutableList<uint>> RatingProvider;
+        private ImmutableList<uint> _Avatar_ReviewIDs;
+        public ImmutableList<uint> Avatar_ReviewIDs
+        {
+            get {
+                if (_Avatar_ReviewIDs == null && RatingProvider != null)
+                {
+                    lock (this)
+                    {
+                        if (_Avatar_ReviewIDs == null) //lock to prevent getting the same data twice
+                            _Avatar_ReviewIDs = RatingProvider(this.Avatar_Id);
+                    }
+                }
+                return _Avatar_ReviewIDs;
+            }
+            set { _Avatar_ReviewIDs = value; NotifyPropertyChanged("Avatar_ReviewIDs"); }
+        }
+
+        public Func<uint, uint> AvgRatingProvider;
+        private uint _Avatar_MayorRatingHundredth = uint.MaxValue;
+        public uint Avatar_MayorRatingHundredth
+        {
+            get
+            {
+                if (_Avatar_MayorRatingHundredth == uint.MaxValue && AvgRatingProvider != null)
+                {
+                    lock (this)
+                    {
+                        if (_Avatar_MayorRatingHundredth == uint.MaxValue) //lock to prevent getting the same data twice
+                            _Avatar_MayorRatingHundredth = AvgRatingProvider(this.Avatar_Id);
+                    }
+                }
+                return _Avatar_MayorRatingHundredth;
+            }
+            set { _Avatar_MayorRatingHundredth = value; NotifyPropertyChanged("Avatar_MayorRatingHundredth"); }
+        }
+
+        #endregion
     }
 }

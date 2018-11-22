@@ -23,7 +23,7 @@ namespace FSO.Common.Utils
             var refs = assembly.GetReferencedAssemblies();
             foreach (var refAsm in refs)
             {
-                if ((refAsm.Name.StartsWith("FSO.") || refAsm.Name.Equals("FreeSO")) && !map.ContainsKey(refAsm.Name))
+                if ((refAsm.Name.StartsWith("FSO.") || refAsm.Name.Equals("FreeSO") || refAsm.Name.Equals("server")) && !map.ContainsKey(refAsm.Name))
                 {
                     var loadedAssembly = Assembly.Load(refAsm);
                     map.Add(refAsm.Name, loadedAssembly);

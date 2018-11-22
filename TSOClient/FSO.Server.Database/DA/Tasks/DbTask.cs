@@ -24,7 +24,8 @@ namespace FSO.Server.Database.DA.Tasks
         shutdown,
         job_balance,
         multi_check,
-        prune_abandoned_lots
+        prune_abandoned_lots,
+        neighborhood_tick
     }
 
     public enum DbTaskStatus

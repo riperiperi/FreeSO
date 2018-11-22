@@ -27,6 +27,8 @@ using FSO.Common.Utils;
 using FSO.Common.Rendering.Framework;
 using FSO.LotView.RC;
 using FSO.Client.UI.Hints;
+using FSO.HIT;
+using FSO.Client.UI.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -117,6 +119,7 @@ namespace FSO.Client.UI.Panels
 
         private int InboxFlashTime;
         private bool InboxFlashing;
+        public bool SpecialMusic;
 
         public UIUCP(UIScreen owner)
         {
@@ -530,6 +533,14 @@ namespace FSO.Client.UI.Panels
             SetPanel(5);
         }
 
+        public bool SpecialMusicTrigger()
+        {
+            if (Game.LotControl == null) return false;
+            return Game.vm.TSOState?.PropertyCategory == 11 &&
+                ((Game.LotControl.ActiveEntity?.PlatformState as VMTSOAvatarState)?.Permissions ?? VMTSOAvatarPermissions.Visitor)
+                >= VMTSOAvatarPermissions.Roommate;
+        }
+
         public void SetPanel(int newPanel) {
             GameFacade.Cursor.SetCursor(CursorType.Hourglass);
 
@@ -553,17 +564,41 @@ namespace FSO.Client.UI.Panels
                 {
                     case 3:
                     case 2:
-                        if (Game.InLot && Game.vm.TSOState.Roommates.Contains(Game.vm.MyUID)) FindController<CoreGameScreenController>().UploadLotThumbnail();
+                        if (Game.InLot && Game.vm.TSOState.Roommates.Contains(Game.vm.MyUID)) FindController<CoreGameScreenController>()?.UploadLotThumbnail();
                         break;
                 }
                 DynamicOverlay.Remove(Panel);
                 Panel = null;
 
-                if (Game.InLot) Game.LotControl.PanelActive = false;
+                if (Game.InLot)
+                {
+                    Game.LotControl.SetDonatorDialogVisible(false);
+                    Game.LotControl.PanelActive = false;
+                }
             }
             if (newPanel != CurrentPanel)
             {
-                if (Game.InLot) Game.LotControl.PanelActive = true;
+                if (SpecialMusic || SpecialMusicTrigger())
+                {
+                    if (newPanel == 2)
+                    {
+                        HITVM.Get().PlaySoundEvent(UIMusic.Buy);
+                    }
+                    else if (newPanel == 3 || newPanel == 4)
+                    {
+                        HITVM.Get().PlaySoundEvent(UIMusic.Build);
+                    }
+                    else if (newPanel != 5)
+                    {
+                        HITVM.Get().PlaySoundEvent(UIMusic.None);
+                    }
+                }
+                
+                if (Game.InLot)
+                {
+                    Game.LotControl.SetDonatorDialogVisible(newPanel > 1 && newPanel < 4);
+                    Game.LotControl.PanelActive = true;
+                }
                 switch (newPanel)
                 {
                     case 5:

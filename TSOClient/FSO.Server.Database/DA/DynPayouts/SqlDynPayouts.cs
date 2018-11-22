@@ -18,7 +18,7 @@ namespace FSO.Server.Database.DA.DynPayouts
 
         public List<DbDynPayout> GetPayoutHistory(int limitDay)
         {
-            return Context.Connection.Query<DbDynPayout>("SELECT * FROM fso.fso_dyn_payouts ORDER BY day DESC LIMIT 56", new { limitDay = limitDay }).ToList();
+            return Context.Connection.Query<DbDynPayout>("SELECT * FROM fso_dyn_payouts ORDER BY day DESC LIMIT 56", new { limitDay = limitDay }).ToList();
         }
 
         public List<DbTransSummary> GetSummary(int limitDay)

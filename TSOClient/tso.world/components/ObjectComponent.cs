@@ -196,7 +196,7 @@ namespace FSO.LotView.Components
             }
         }
 
-        protected float RadianDirection
+        public float RadianDirection
         {
             get
             {
@@ -275,6 +275,16 @@ namespace FSO.LotView.Components
             { WallSegments.TopRight, new Point(0,-1)},
             { WallSegments.BottomRight, new Point(1,0) }
         };
+
+        public EntityComponent GetBottomContainer()
+        {
+            EntityComponent current = this;
+            while (current.Container != null)
+            {
+                current = current.Container;
+            }
+            return current;
+        }
 
         public override void Update(GraphicsDevice device, WorldState world)
         {

@@ -213,9 +213,19 @@ namespace FSO.Content
                 AllFiles = allFiles.ToArray();
                 UIGraphics?.Init();
                 DataDefinition = new TSODataDefinition();
-                using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
+                try
                 {
-                    DataDefinition.Read(stream);
+                    using (var stream = File.Open("Content/FSODataDefinition.dat", FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        DataDefinition.Read(stream);
+                    }
+                }
+                catch
+                {
+                    using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
+                    {
+                        DataDefinition.Read(stream);
+                    }
                 }
             }
         }

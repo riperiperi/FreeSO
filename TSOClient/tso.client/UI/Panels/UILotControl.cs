@@ -41,6 +41,11 @@ using System.IO;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.LotView.Facade;
 using FSO.Common.Enum;
+using FSO.Client.UI.Screens;
+using Ninject;
+using FSO.Client.Network;
+using FSO.Client.UI.Panels.Neighborhoods;
+using FSO.UI.Controls;
 
 namespace FSO.Client.UI.Panels
 {
@@ -80,6 +85,7 @@ namespace FSO.Client.UI.Panels
 
         public UIObjectHolder ObjectHolder;
         public UIQueryPanel QueryPanel;
+        public UIDonatorDialog DonatorDialog;
 
         public UICustomLotControl CustomControl;
         public UIEODController EODs;
@@ -168,6 +174,21 @@ namespace FSO.Client.UI.Panels
             this.Add(Cheats);
             AvatarDS = new UIAvatarDataServiceUpdater(this);
             EODs = new UIEODController(this);
+            this.Add(DonatorDialog);
+        }
+
+        public void SetDonatorDialogVisible(bool visible)
+        {
+            if (vm.TSOState?.CommunityLot == true)
+            {
+                if (DonatorDialog == null)
+                {
+                    if (!visible) return;
+                    DonatorDialog = new UIDonatorDialog(this);
+                    Add(DonatorDialog);
+                }
+                DonatorDialog.Visible = visible;
+            }
         }
 
         public void SetupQuery()
@@ -178,7 +199,7 @@ namespace FSO.Client.UI.Panels
                 parent = QueryPanel.Parent;
             }
 
-            QueryPanel = new UIQueryPanel(World);
+            QueryPanel = new UIQueryPanel(this, World);
             QueryPanel.OnSellBackClicked += ObjectHolder.SellBack;
             QueryPanel.OnInventoryClicked += ObjectHolder.MoveToInventory;
             QueryPanel.OnAsyncBuyClicked += ObjectHolder.AsyncBuy;
@@ -299,7 +320,7 @@ namespace FSO.Client.UI.Panels
                     return;
                 case VMDialogType.FSOColor:
                     options.Buttons = new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, b0Event, info.Yes), new UIAlertButton(UIAlertButtonType.Cancel, b1Event, info.Cancel) };
-                    options.Color = true;
+                    options.GenericAddition = new UIColorPicker();
                     break;
             }
 
@@ -698,6 +719,16 @@ namespace FSO.Client.UI.Panels
                 !(vm.TSOState.PropertyCategory == (byte)LotCategory.welcome 
                 && ((ActiveEntity?.TSOState as VMTSOAvatarState)?.Flags ?? 0).HasFlag(VMTSOAvatarFlags.NewPlayer)))
                 hints.TriggerHint("land:skilldisabled");
+
+            //cache all roommate names
+            if (UIScreen.Current is CoreGameScreen)
+                vm.TSOState.Names = new VMDataServiceNameCache(FSOFacade.Kernel.Get<Common.DataService.IClientDataService>());
+            foreach (var roomie in vm.TSOState.Roommates)
+            {
+                vm.TSOState.Names.Precache(vm, roomie);
+            }
+            vm.TSOState.Names.Precache(vm, vm.TSOState.OwnerID);
+
             HasLanded = true;
         }
 
@@ -1142,6 +1173,10 @@ namespace FSO.Client.UI.Panels
         public void Dispose()
         {
             AvatarDS.ReleaseAvatars();
+        }
+
+        public void ClearCenter()
+        {
         }
     }
 }

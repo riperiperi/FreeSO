@@ -122,7 +122,7 @@ namespace FSO.LotView.Model
             {
                 rand.Next();
             }
-            return Math.Max(3, rand.Next(7)-4);
+            return Math.Max(3, rand.Next(10)-4);
         }
         
     }

@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="MailTemplates\MailBan.html" />
+    <None Remove="MailTemplates\MailBase.html" />
+    <None Remove="MailTemplates\MailPasswordReset.html" />
+    <None Remove="MailTemplates\MailPasswordResetOK.html" />
+    <None Remove="MailTemplates\MailRegistrationOK.html" />
+    <None Remove="MailTemplates\MailRegistrationToken.html" />
+    <None Remove="MailTemplates\MailUnban.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="MailTemplates\MailBan.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MailTemplates\MailBase.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MailTemplates\MailPasswordReset.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MailTemplates\MailPasswordResetOK.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MailTemplates\MailRegistrationOK.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MailTemplates\MailRegistrationToken.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MailTemplates\MailUnban.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FSO.Server.Database\FSO.Server.Database.csproj" />
+    <ProjectReference Include="..\FSO.Server.Domain\FSO.Server.Domain.csproj" />
+    <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj" />
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj" />
+  </ItemGroup>
+
+</Project>

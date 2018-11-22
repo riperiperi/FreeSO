@@ -53,7 +53,8 @@ namespace FSO.Client.Regulators
                         LotLocation_X = CurrentRequest.X,
                         LotLocation_Y = CurrentRequest.Y,
                         Name = CurrentRequest.Name,
-                        StartFresh = CurrentRequest.StartFresh
+                        StartFresh = CurrentRequest.StartFresh,
+                        MayorMode = CurrentRequest.Mayor
                     });
                     break;
                 case "ReceivedPurchaseResponse":
@@ -96,5 +97,6 @@ namespace FSO.Client.Regulators
         public ushort Y;
         public string Name;
         public bool StartFresh;
+        public bool Mayor;
     }
 }

@@ -426,7 +426,7 @@ namespace FSO.LotView.Components
             Effect.Parameters["World"].SetValue(worldmat);
             if ((world as RC.WorldStateRC)?.Use2DCam == false) Effect.Parameters["CamPos"]?.SetValue(world.Camera.Position + world.Camera.Translation);
             else Effect.Parameters["CamPos"]?.SetValue(new Vector3(0, 9999, 0));
-            Effect.Parameters["GrassShininess"].SetValue((float)0.25);
+            Effect.Parameters["GrassShininess"].SetValue(0.02f);// (float)0.25);
             Effect.Parameters["DiffuseColor"].SetValue(world.OutsideColor.ToVector4() * Color.Lerp(LightGreen, Color.White, 0.25f).ToVector4());
 
             device.SetVertexBuffer(VertexBuffer);

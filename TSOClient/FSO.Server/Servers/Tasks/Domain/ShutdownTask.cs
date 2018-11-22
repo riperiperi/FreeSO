@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Server.Common;
 using FSO.Server.Database.DA.Tasks;
 
 namespace FSO.Server.Servers.Tasks.Domain
 {
     public class ShutdownTask : ITask
     {
-        public static Action<uint, Protocol.Gluon.Model.ShutdownType> ShutdownHook;
+        public static Action<uint, ShutdownType> ShutdownHook;
         public static TaskTuning Tuning;
 
         public ShutdownTask(TaskTuning tuning)
@@ -30,7 +31,7 @@ namespace FSO.Server.Servers.Tasks.Domain
         {
             var sdTune = Tuning.Shutdown;
             if (sdTune == null) sdTune = new ShutdownTaskTuning();
-            if (ShutdownHook != null) ShutdownHook(sdTune.warning_period, Protocol.Gluon.Model.ShutdownType.RESTART);
+            if (ShutdownHook != null) ShutdownHook(sdTune.warning_period, ShutdownType.RESTART);
         }
     }
 

@@ -57,6 +57,8 @@ namespace FSO.LotView.Model
         public List<ParticleComponent> Particles = new List<ParticleComponent>();
         public List<ParticleComponent> ObjectParticles = new List<ParticleComponent>();
 
+        public List<DebugLinesComponent> DebugLines = new List<DebugLinesComponent>();
+
         /// <summary>
         /// Walls Cutaway sections. Remember to manage these correctly - i.e remove when you're finished with them!
         /// </summary>
@@ -74,10 +76,22 @@ namespace FSO.LotView.Model
             set
             {
                 _OutsideColor = value;
-                MinOut = value * (150 / 400f);
+                MinOut = value * (150 / 400f);//PowColor(PowColor(value, 1/2.2f) * (150 / 400f), 2.2f);//(150 / 400f);
                 //MinOut = value * (float)(150 / Math.Sqrt(value.R * value.R + value.G * value.G + value.B * value.B));
             }
         }
+
+        private Color PowColor(Color col, float pow)
+        {
+            var vec = col.ToVector4();
+            vec.X = (float)Math.Pow(vec.X, pow);
+            vec.Y = (float)Math.Pow(vec.Y, pow);
+            vec.Z = (float)Math.Pow(vec.Z, pow);
+            vec.W = (float)Math.Pow(vec.W, pow);
+
+            return new Color(vec);
+        }
+
         public double OutsideTime;
         public float OutsideSkyP;
         public Color OutsideWeatherTint;

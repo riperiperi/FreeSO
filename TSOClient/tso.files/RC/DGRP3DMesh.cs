@@ -551,10 +551,7 @@ namespace FSO.Files.RC
                         var verts = new List<Vector3>();
                         foreach (var tri in obj.Value)
                         {
-                            foreach (var ind in tri)
-                            {
-                                verts.Add(source.Vertices[ind]);
-                            }
+                            verts.Add(source.Vertices[tri[0] - 1]);
                         }
                         Bounds = BoundingBox.CreateFromPoints(verts);
                     }

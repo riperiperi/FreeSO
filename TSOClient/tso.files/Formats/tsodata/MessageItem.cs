@@ -77,4 +77,15 @@ namespace FSO.Files.Formats.tsodata
             }
         }
     }
+
+    public enum MessageSpecialType
+    {
+        Normal = 0,
+
+        //neighbourhoods
+        Nominate = 1,
+        Vote = 2,
+
+        AcceptNomination = 3
+    }
 }

@@ -1,0 +1,9 @@
+//Community Lots
+
+1 ^Donated by: %s^
+2 ^WARNING!!!^
+3 ^You've entered your inventory on a Community Lot. If you donate an object from your inventory, YOU WILL NOT BE ABLE TO TAKE IT BACK OR SELL IT! Make sure you really know what you're doing. If you are the mayor, you should put important objects down with "Normal" mode so you can reclaim them whenever.^
+4 ^DONATING: OBJECTS 66% OFF, BUT CAN'T RETURN TO INVENTORY OR BE SOLD ONCE PLACED!^
+5 ^Donators: (add using search above)^
+6 ^Manage Donators^
+7 ^Are you sure you want to add %s as a Donator? They will be able to place objects on this lot (not delete) and can use roommate interactions on all objects. If you give them build permissions, they will be able to delete build mode objects.^

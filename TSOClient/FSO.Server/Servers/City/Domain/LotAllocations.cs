@@ -211,7 +211,8 @@ namespace FSO.Server.Servers.City.Domain
 
                                     try
                                     {
-                                        if (lot.admit_mode < 4 && modState == 0) security.DemandAvatars(avatars, AvatarPermissions.WRITE);
+                                        if (lot.admit_mode < 4 && modState == 0 && lot.category != FSO.Common.Enum.LotCategory.community)
+                                            security.DemandAvatars(avatars, AvatarPermissions.WRITE);
                                     }
                                     catch (Exception ex)
                                     {

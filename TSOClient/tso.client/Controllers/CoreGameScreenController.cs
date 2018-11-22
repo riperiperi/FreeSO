@@ -19,6 +19,7 @@ using Ninject;
 using Ninject.Parameters;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -40,6 +41,7 @@ namespace FSO.Client.Controllers
         public uint ReconnectLotID = 0;
 
         public TerrainController Terrain;
+        public NeighborhoodActionController NeighborhoodProtocol;
 
         public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService, IKernel kernel, LotConnectionRegulator joinLotRegulator)
         {
@@ -49,6 +51,7 @@ namespace FSO.Client.Controllers
             this.Chat = new MessagingController(this, view.MessageTray, network, dataService);
             this.JoinLotRegulator = joinLotRegulator;
             this.RoommateProtocol = new RoommateRequestController(this, network, dataService);
+            this.NeighborhoodProtocol = kernel.Get<NeighborhoodActionController>();
 
             joinLotRegulator.OnTransition += JoinLotRegulator_OnTransition;
 
@@ -286,7 +289,13 @@ namespace FSO.Client.Controllers
 
         public void ShowLotPage(uint lotId)
         {
+            if (lotId == 0) return;
             ((LotPageController)Screen.LotPage.Controller).Show(lotId);
+        }
+
+        public void ShowNeighPage(uint neighId)
+        {
+            ((NeighPageController)Screen.NeighPage.Controller).Show(neighId);
         }
 
         public void SendVMMessage(byte[] data)
@@ -318,6 +327,46 @@ namespace FSO.Client.Controllers
                     {
                         callback(x.Result);
                     });
+                }
+            });
+        }
+
+        public void FindMyNhood(Action<uint> callback)
+        {
+            DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
+            {
+                if (x.Result != null)
+                {
+                    x.Result.Avatar_LotGridXY = uint.MaxValue;
+                    PropertyChangedEventHandler handler = null;
+                    handler = (obj, evt) =>
+                    {
+                        if (evt.PropertyName == "Avatar_LotGridXY")
+                        {
+                            x.Result.PropertyChanged -= handler;
+                            DataService.Get<Lot>(x.Result.Avatar_LotGridXY).ContinueWith(y =>
+                            {
+                                y.Result.Lot_NeighborhoodID = 0;
+                                PropertyChangedEventHandler handler2 = null;
+                                handler2 = (obj2, evt2) =>
+                                {
+                                    if (evt2.PropertyName == "Lot_NeighborhoodID")
+                                    {
+                                        y.Result.PropertyChanged -= handler2;
+                                        GameThread.InUpdate(() =>
+                                        {
+                                            callback(y.Result.Lot_NeighborhoodID);
+                                        });
+                                    }
+                                };
+                                y.Result.PropertyChanged += handler2;
+                                DataService.Request(Server.DataService.Model.MaskedStruct.PropertyPage_LotInfo, y.Result.Id);
+                            });
+                        }
+                    };
+                    x.Result.PropertyChanged += handler;
+
+                    DataService.Request(Server.DataService.Model.MaskedStruct.SimPage_Main, Network.MyCharacter);
                 }
             });
         }

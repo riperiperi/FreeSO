@@ -652,12 +652,12 @@ namespace FSO.SimAntics
                         {
                             if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
                             {
-                                if (true) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), true, 160, room, info.Room.Floor, ent.LightColor));
+                                if (true) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), true, 160, room, info.Room.Floor, ent.LightColor, ent.WorldUI as ObjectComponent));
                                 outside += (ushort)cont;
                             }
                             else
                             {
-                                if (mainSource) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 160, room, info.Room.Floor, ent.LightColor));
+                                if (mainSource) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 160, room, info.Room.Floor, ent.LightColor, ent.WorldUI as ObjectComponent));
                                 inside += (ushort)cont;
                             }
                         }
@@ -1019,10 +1019,11 @@ namespace FSO.SimAntics
             {
                 if (obj.MultitileGroup == target.MultitileGroup) continue;
                 var oFoot = obj.Footprint;
+                var ghost = (short)((target.GhostImage || obj.GhostImage) ? 1 : 0);
 
                 if (oFoot != null && oFoot.Intersects(footprint)
-                        && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, 0, 0, 0 })
-                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, 0, 0, 0 })))
+                        && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, ghost, 0, 0 })
+                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, ghost, 0, 0 })))
                     )
                 {
                     var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
@@ -1070,10 +1071,11 @@ namespace FSO.SimAntics
                 if (obj.MultitileGroup == target.MultitileGroup || (obj is VMAvatar && allowAvatars) 
                     || (target.IgnoreIntersection != null && target.IgnoreIntersection.Objects.Contains(obj))) continue;
                 var oFoot = obj.Footprint;
+                var ghost = (short)((target.GhostImage || obj.GhostImage) ? 1 : 0);
 
                 if (oFoot != null && oFoot.Intersects(footprint)
-                    && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, 0, 0, 0 })
-                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, 0, 0, 0 })))
+                    && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, ghost, 0, 0 })
+                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, ghost, 0, 0 })))
                     )
                 {
                     statusObj = obj; 

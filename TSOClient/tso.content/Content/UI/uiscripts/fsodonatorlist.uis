@@ -1,0 +1,78 @@
+# UI properties for Donator Management window
+
+<Begin>
+
+    # Images ------------------------------------------------------------------------------------------------
+
+    <DefineImage "RoommateBackImage"                assetID="0x000000AD00000002">   #./uigraphics/bookmarks/bookmarks_bookmarkback.tga
+    <DefineImage "CloseBtnImage"                    assetID="0x000001A100000001">   #./uigraphics/bookmarks/bookmarks_closebtn.bmp
+    <DefineImage "IgnoreTabBtnImage"                assetID="0x000001A700000001">   #./uigraphics/bookmarks/bookmarks_ignoredtabbtn.bmp
+    <DefineImage "SimsTabBtnImage"                  assetID="0x000001AC00000001">   #./uigraphics/bookmarks/bookmarks_peopletabbtn.bmp
+    <DefineImage "ListBoxBackImage"                 assetID="0x000001AE00000001">   #./uigraphics/bookmarks/bookmarks_textboxback.bmp
+    <DefineImage "BellIconImage"                    assetID="0x000001AA00000001">   #./uigraphics/bookmarks/bookmarks_onlinealerticon.bmp
+    <DefineImage "ScrollbarImage"                   assetID="0x0000031000000001">   #./uigraphics/gizmo/gizmo_scrollbarimg.bmp
+    <DefineImage "ScrollDownButtonImage"            assetID="0x0000031100000001">   #./uigraphics/gizmo/gizmo_scrolldownbtn.bmp
+    <DefineImage "ScrollUpButtonImage"              assetID="0x0000031200000001">   #./uigraphics/gizmo/gizmo_scrollupbtn.bmp
+    <DefineImage "TabBackground1Image"              assetID="0x0000015000000002">   #./uigraphics/bookmarks/bookmarks_tab1back.tga
+    <DefineImage "TabBackground2Image"              assetID="0x0000015100000002">   #./uigraphics/bookmarks/bookmarks_tab2back.tga
+    <DefineImage "Tab1Image"                        assetID="0x000007CF00000001">   #./uigraphics/bookmarks/bookmarks_tab1.bmp
+    <DefineImage "Tab2Image"                        assetID="0x000007D000000001">   #./uigraphics/bookmarks/bookmarks_tab2.bmp
+    <DefineImage "BuildIconImage" assetID="0x00000CC000000001"> #path = "UIGraphics\UCP\HousePanel\hpanel_buildicon.bmp"   >
+        
+    # Strings -----------------------------------------------------------------------------------------------
+
+    <Begin><SetSharedProperties stringDir = "UIText" stringTable = 194>
+
+        <DefineString "SimsTabButtonTooltip"            stringIndex = 1>
+        <DefineString "IgnoreTabButtonTooltip"          stringIndex = 2>
+        <DefineString "SimPageOption"                      stringIndex = 3>
+        <DefineString "RoommateDeleteOption"            stringIndex = 4>
+        <DefineString "MessageOption"                      stringIndex = 5>
+        <DefineString "CloseButtonTooltip"              stringIndex = 6>
+        <DefineString "ScrollUpTooltip"                 stringIndex = 7>
+        <DefineString "ScrollDownTooltip"               stringIndex = 8>
+        <DefineString "IgnoreDeleteOption"              stringIndex = 11>
+      <DefineString "PCLockUnbookmarkFailTitle"    stringIndex = 12>
+      <DefineString "PCLockUnbookmarkFailMsg"      stringIndex = 13>
+
+    <End>
+
+
+    <Begin><SetSharedProperties stringDir = "UIText" stringTable = f114>
+        <DefineString "DonatorsLabelText"            stringIndex = 5>
+    <End>
+
+    # Background Images -----------------------------------------------------------------------------------------
+
+    <SetControlProperties "RoommateBackground"  image="RoommateBackImage"   position=(0,9)    >
+    <SetControlProperties "ListBoxBackground"   image="ListBoxBackImage"    position=(16,92)  >
+
+    <SetControlProperties "BuildIcon"   image="BuildIconImage"    position=(271,73)  >
+    <AddText "DonatorsLabel" id = 1 font=10 color=(255,249,157) highlighted=1 alignment=0 opaque=0 position=(27,70) text="DonatorsLabelText">
+
+    # Pull Down Menu ----------------------------------------------------------------------------------------------
+
+    <SetControlProperties "PullDownMenuSetup" position=(31,32)>
+        
+    # Roommate Listbox --------------------------------------------------------------------------------------
+
+    <SetControlProperties "RoommateListBoxColors"  normal=(247,232,145) selected=(0,0,0) highlighted=(255,255,255) disabled=(150,150,150)>
+
+    <AddListBox "RoommateListBox" 
+    
+        id                  = 4 
+        position            = (26,102)
+        size                = (336,240)
+        font                = 9 
+        rowHeight           = 24
+        transparent         = 1 
+        columns             = "30|211|27|67"
+        alignments          = "2|0|2|2"
+        selectionFillColor  = (250,200,140)
+    >
+
+    <AddSlider "RoommateListSlider"         id = 5 image = "ScrollbarImage"         position=(377,102)   minValue=0 maxValue=10 size=(10,240) orientation=1 >
+    <AddButton "RoommateListScrollUpButton" id = 6 image = "ScrollUpButtonImage"    position=(373,92)   tooltip="ScrollUpTooltip">
+    <AddButton "RoommateScrollDownButton"   id = 7 image = "ScrollDownButtonImage"  position=(373,344)  tooltip="ScrollDownTooltip">
+
+<End>

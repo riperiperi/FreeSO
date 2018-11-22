@@ -153,7 +153,7 @@ namespace FSO.Vitaboy
                             list.Items = new TimePropertyListItem[timePropsCount];
                             for (var y = 0; y < timePropsCount; y++)
                             {
-                                var id = io.ReadUInt32();
+                                var id = io.ReadInt32();
                                 list.Items[y] = new TimePropertyListItem {
                                     ID = id,
                                     Properties = ReadPropertyList(io, bcf)
@@ -262,7 +262,7 @@ namespace FSO.Vitaboy
     /// </summary>
     public class TimePropertyListItem
     {
-        public uint ID;
+        public int ID;
         public PropertyList Properties;
     }
 }

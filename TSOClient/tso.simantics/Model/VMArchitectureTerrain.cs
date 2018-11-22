@@ -13,6 +13,7 @@ namespace FSO.SimAntics.Model
     {
         public int Width;
         public int Height;
+        public bool LowQualityGrassState;
 
         public short[] Heights;
         public short[] Centers;
@@ -163,6 +164,13 @@ namespace FSO.SimAntics.Model
             //right now only works for square lots, but that's all tso has!
             var random = new Random();
             int width = Width;
+
+            if (LowQualityGrassState)
+            {
+                GrassState = new byte[Width * Height];
+                return;
+            }
+
             float[] result = new float[Width * Height];
             int initial = width / 4; //divide by more for less noisyness!
             float factor = 0.42f / ((int)Math.Log(initial, 2));

@@ -866,9 +866,12 @@ namespace FSO.Client.UI.Controls
                 var thisLineWidth = segments.Sum(x => x.Size.X);
 
                 /** Alignment **/
-                if (Alignment == TextAlignment.Center)
+                if (Alignment.HasFlag(TextAlignment.Center))
                 {
                     xPosition += (int)Math.Round((lineWidth - thisLineWidth) / 2);
+                } else if (Alignment.HasFlag(TextAlignment.Right))
+                {
+                    xPosition += (int)Math.Round((lineWidth - thisLineWidth));
                 }
                 line.LineStartX = (int)xPosition;
 
@@ -1465,15 +1468,42 @@ namespace FSO.Client.UI.Controls
         #region ITextDrawCmd Members
         public virtual void Draw(UIElement ui, SpriteBatch batch)
         {
-            if (Selected)
+            if (Style.VFont != null)
             {
-                batch.DrawString(Style.SpriteFont, Text, Position, Style.SelectedColor, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+                batch.End();
+                Matrix? mat = null;
+                var uib = (batch as UISpriteBatch);
+                if (uib != null && uib.BatchMatrixStack.Count > 0)
+                    mat = uib.BatchMatrixStack.Peek();
+
+                if (Selected)
+                {
+                    Style.VFont.Draw(batch.GraphicsDevice, Text, Position, Style.SelectedColor, Scale, mat);
+                }
+                else
+                {
+                    if (Style.Shadow)
+                        Style.VFont.Draw(batch.GraphicsDevice, Text, Position + new Vector2(0, 1), Color.Black, Scale, mat);
+                    Style.VFont.Draw(batch.GraphicsDevice, Text, Position, Style.Color, Scale, mat);
+                }
+
+                if (mat != null)
+                    batch.Begin(transformMatrix: mat);
+                else
+                    batch.Begin();
             }
             else
             {
-                if (Style.Shadow)
-                    batch.DrawString(Style.SpriteFont, Text, Position + new Vector2(0, 1), Color.Black, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
-                batch.DrawString(Style.SpriteFont, Text, Position, Style.Color, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+                if (Selected)
+                {
+                    batch.DrawString(Style.SpriteFont, Text, Position, Style.SelectedColor, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+                }
+                else
+                {
+                    if (Style.Shadow)
+                        batch.DrawString(Style.SpriteFont, Text, Position + new Vector2(0, 1), Color.Black, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+                    batch.DrawString(Style.SpriteFont, Text, Position, Style.Color, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+                }
             }
         }
         #endregion

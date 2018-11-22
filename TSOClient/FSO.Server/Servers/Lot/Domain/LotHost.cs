@@ -435,8 +435,9 @@ namespace FSO.Server.Servers.Lot.Domain
         /// </summary>
         public void Abort()
         {
+            BgAlive = false;
             BgKilled = true;
-            BackgroundThread?.Abort();
+            BackgroundNotify.Set();
         }
 
         public void Bootstrap(LotContext context)
@@ -478,92 +479,10 @@ namespace FSO.Server.Servers.Lot.Domain
         private bool BgKilled;
         private void _DigestBackground()
         {
-            try
+            while (BgAlive)
             {
-                while (BgAlive)
-                {
-                    if (LastTaskRecv == 0) LastTaskRecv = Epoch.Now;
-                    var notified = BackgroundNotify.WaitOne(BACKGROUND_NOTIFY_TIMEOUT);
-                    List<Callback> tasks = new List<Callback>();
-                    lock (BackgroundTasks)
-                    {
-                        tasks.AddRange(BackgroundTasks);
-                        BackgroundTasks.Clear();
-                    }
-
-                    if (tasks.Count > 1000) LOG.Error("Surprising number of background tasks for lot with dbid = " + Context.DbId + ": "+tasks.Count);
-
-                    if (tasks.Count > 0) LastTaskRecv = Epoch.Now; //BgTimeoutExpiredCount = 0;
-                    else if (Epoch.Now - LastTaskRecv > BACKGROUND_TIMEOUT_SECONDS) //++BgTimeoutExpiredCount > BACKGROUND_TIMEOUT_ABANDON_COUNT)
-                    {
-                        BgTimeoutExpiredCount = int.MinValue;
-
-                        //Background tasks stop when we shut down
-                        if (!ShuttingDown)
-                        {
-                            LOG.Error("Main thread for lot with dbid = " + Context.DbId + " entered an infinite loop and had to be terminated!");
-
-                            bool IsRunningOnMono = (Type.GetType("Mono.Runtime") != null);
-
-                            //suspend and resume are deprecated, but we need to use them to analyse the stack of stuck main threads
-                            //sorry microsoft
-                            if (!IsRunningOnMono)
-                            {
-                                MainThread.Suspend();
-                                var trace = new StackTrace(MainThread, false);
-                                MainThread.Resume();
-
-                                LOG.Error("Trace (immediately when aborting): " + trace.ToString());
-                            }
-                            else
-                            {
-                                LOG.Error("on mono, so can't obtain immediate trace.");
-                            }
-
-                            MainThread.Priority = ThreadPriority.BelowNormal;
-                            LOG.Error(Container.AbortVM());
-                            //MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
-                            Shutdown(); //it also doesnt tend to work too nicely on release builds. immediately free the lot.
-                            return;
-                        }
-                    }
-
-                    foreach (var task in tasks)
-                    {
-                        try
-                        {
-                            task?.Invoke();
-                            if (task == null) LastActivity = Epoch.Now;
-                        }
-                        catch (ThreadAbortException ex)
-                        {
-                            if (BgKilled) { 
-                                LOG.Error("Background thread locked for lot with dbid = " + Context.DbId + "! TERMINATING! " + ex.ToString());
-                                MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
-                                return;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            LOG.Info("Background task failed on lot with dbid = " + Context.DbId + "! (continuing)" + ex.ToString());
-                        }
-                        if (Epoch.Now - LastTaskRecv > 10)
-                        {
-                            LOG.Info("WARNING: Unusually long background task for dbid = " + Context.DbId + "! " + (Epoch.Now - LastTaskRecv) + "seconds");
-                        }
-                        LastTaskRecv = Epoch.Now;
-                    }
-                }
-            }
-            catch (ThreadAbortException ex2) {
-                if (BgKilled)
-                {
-                    LOG.Error("Background thread locked for lot with dbid = " + Context.DbId + "! TERMINATING! " + ex2.ToString());
-                    MainThread.Abort(); //this will jolt the thread out of its infinite loop... into immediate lot shutdown
-                    return;
-                }
-                //complete remaining tasks
-                LastActivity = Epoch.Now;
+                if (LastTaskRecv == 0) LastTaskRecv = Epoch.Now;
+                var notified = BackgroundNotify.WaitOne(BACKGROUND_NOTIFY_TIMEOUT);
                 List<Callback> tasks = new List<Callback>();
                 lock (BackgroundTasks)
                 {
@@ -571,16 +490,66 @@ namespace FSO.Server.Servers.Lot.Domain
                     BackgroundTasks.Clear();
                 }
 
+                if (tasks.Count > 1000) LOG.Error("Surprising number of background tasks for lot with dbid = " + Context.DbId + ": " + tasks.Count);
+
+                if (tasks.Count > 0) LastTaskRecv = Epoch.Now; //BgTimeoutExpiredCount = 0;
+                else if (Epoch.Now - LastTaskRecv > BACKGROUND_TIMEOUT_SECONDS) //++BgTimeoutExpiredCount > BACKGROUND_TIMEOUT_ABANDON_COUNT)
+                {
+                    BgTimeoutExpiredCount = int.MinValue;
+
+                    //Background tasks stop when we shut down
+                    if (!ShuttingDown)
+                    {
+                        LOG.Error("Main thread for lot with dbid = " + Context.DbId + " entered an infinite loop and had to be terminated!");
+
+                        bool IsRunningOnMono = (Type.GetType("Mono.Runtime") != null);
+
+                        //suspend and resume are deprecated, but we need to use them to analyse the stack of stuck main threads
+                        //sorry microsoft
+                        /*
+                        if (!IsRunningOnMono)
+                        {
+                            MainThread.Suspend();
+                            var trace = new StackTrace(MainThread, false);
+                            MainThread.Resume();
+
+                            LOG.Error("Trace (immediately when aborting): " + trace.ToString());
+                        }
+                        else
+                        {
+                            LOG.Error("on mono, so can't obtain immediate trace.");
+                        }
+                        */
+
+                        MainThread.Priority = ThreadPriority.BelowNormal;
+                        LOG.Error(Container.AbortVM());
+                        Shutdown(); //immediately free the lot.
+                        return;
+                    }
+                }
+
                 foreach (var task in tasks)
                 {
                     try
                     {
-                        task.Invoke();
+                        task?.Invoke();
+                        if (task == null) LastActivity = Epoch.Now;
+                        if (BgKilled)
+                        {
+                            LOG.Error("Background thread locked for lot with dbid = " + Context.DbId + "! TERMINATING! ");
+                            LOG.Error(Container.AbortVM());
+                            return;
+                        }
                     }
                     catch (Exception ex)
                     {
-                        LOG.Info("Background task failed on lot " + Context.DbId + "! (when ending)" + ex.ToString());
+                        LOG.Info("Background task failed on lot with dbid = " + Context.DbId + "! (continuing)" + ex.ToString());
                     }
+                    if (Epoch.Now - LastTaskRecv > 10)
+                    {
+                        LOG.Info("WARNING: Unusually long background task for dbid = " + Context.DbId + "! " + (Epoch.Now - LastTaskRecv) + "seconds");
+                    }
+                    LastTaskRecv = Epoch.Now;
                 }
             }
         }

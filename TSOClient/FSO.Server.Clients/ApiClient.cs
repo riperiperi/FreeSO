@@ -24,7 +24,7 @@ namespace FSO.Server.Clients
 
         public void GetThumbnailAsync(uint shardID, uint location, Action<byte[]> callback)
         {
-            var client = Client();
+            //var client = Client();
             var request = new RestRequest("userapi/city/" + shardID + "/" + location + ".png");
 
             client.ExecuteAsync(request, (resp, h) =>
@@ -41,7 +41,7 @@ namespace FSO.Server.Clients
 
         public void GetFacadeAsync(uint shardID, uint location, Action<byte[]> callback)
         {
-            var client = Client();
+            //var client = Client();
             var request = new RestRequest("userapi/city/" + shardID + "/" + location + ".fsof");
 
             client.ExecuteAsync(request, (resp, h) =>

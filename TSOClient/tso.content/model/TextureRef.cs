@@ -84,6 +84,25 @@ namespace FSO.Content.Model
         }
     }
 
+    public class LoadedTextureRef : ITextureRef
+    {
+        private Texture2D Loaded;
+        public LoadedTextureRef(Texture2D tex)
+        {
+            Loaded = tex;
+        }
+
+        public Texture2D Get(GraphicsDevice device)
+        {
+            return Loaded;
+        }
+
+        public TexBitmap GetImage()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public abstract class AbstractTextureRef : ITextureRef
     {
         public delegate TexBitmap SimpleBitmapProvider(Stream stream, AbstractTextureRef texRef);

@@ -22,15 +22,21 @@ namespace FSO.SimAntics.Engine.Routing
             Map = map;
         }
 
-        public LinkedList<Point> Route(Point from, Point to)
+        public LinkedList<VMWalkableRect> Route(Point from, Point to, int startCardinal)
         {
             var openSet = new List<VMWalkableRect>();
 
             var startRect = new VMWalkableRect(from.X, from.Y, from.X, from.Y);
             ConstructFirstFree(startRect);
+            startRect.Start = true;
+            ExtendFrom(startRect, startCardinal);
+            startRect = startRect.Adj.FirstOrDefault() ?? startRect;
+            startRect.Adj.Clear();
+            startCardinal = 0;
 
             startRect.Start = true;
             startRect.ParentSource = from;
+            startRect.ParentSourceHiP = new Point(from.X * 0x8000, from.Y * 0x8000);
             startRect.OriginalG = 0;
 
             openSet.Add(startRect);
@@ -42,14 +48,13 @@ namespace FSO.SimAntics.Engine.Routing
 
                 if (current.Contains(to))
                 {
-                    var result = new LinkedList<Point>();
-                    result.AddFirst(to);
-                    if (!to.Equals(current.ParentSource)) result.AddFirst(current.ParentSource);
+                    var result = new LinkedList<VMWalkableRect>();
+                    if (!to.Equals(current.ParentSource)) result.AddFirst(current);
                     Point last = current.ParentSource;
                     while (current != startRect)
                     {
                         current = current.Parent;
-                        if (!last.Equals(current.ParentSource)) result.AddFirst(current.ParentSource);
+                        if (!last.Equals(current.ParentSource)) result.AddFirst(current);
                         last = current.ParentSource;
                     }
                     return result;
@@ -58,10 +63,12 @@ namespace FSO.SimAntics.Engine.Routing
                 current.State = 2; //this rectangle is now closed
 
                 //generate all adj
-                ExtendFrom(current, 0);
-                ExtendFrom(current, 1);
-                ExtendFrom(current, 2);
-                ExtendFrom(current, 3);
+                ExtendFrom(current, (startCardinal++));
+                ExtendFrom(current, (startCardinal++) % 4);
+                ExtendFrom(current, (startCardinal++) % 4);
+                ExtendFrom(current, (startCardinal++) % 4);
+
+                startCardinal = 0;
 
                 foreach (VMWalkableRect r in current.Adj)
                 {
@@ -77,6 +84,7 @@ namespace FSO.SimAntics.Engine.Routing
                     {
                         r.State = 1;
                         r.ParentSource = parentPt;
+                        r.ParentSourceHiP = new Point(parentPt.X*0x8000, parentPt.Y*0x8000);
                         r.Parent = current;
                         r.OriginalG = originalG;
                         r.GScore = newGScore;
@@ -95,6 +103,118 @@ namespace FSO.SimAntics.Engine.Routing
                 }
             }
             return null; //failed
+        }
+
+        public void OptimizeLines(LinkedList<VMWalkableRect> route, Point to, float? dirIn) {
+            if ((route?.Count ?? 0) == 0) return;
+            var node = route.First;
+            to = new Point(to.X * 0x8000, to.Y * 0x8000);
+
+            if (dirIn != null && node.Next != null)
+            {
+                var next = node.Next;
+                var dirVec = new Vector2((float)Math.Sin(dirIn.Value), (float)-Math.Cos(dirIn.Value));
+                var previousDist = Math.Max(0, Vector2.Dot((next.Value.ParentSource - node.Value.ParentSource).ToVector2(), dirVec));
+                var dist = 8 - previousDist;
+                if (dist > 0)
+                {
+                    var newPt = next.Value.ClosestOnSharedEdge(node.Value, next.Value.ParentSource + (dirVec * dist).ToPoint());
+                    next.Value.ParentSource = newPt;
+                    next.Value.ParentSourceHiP = new Point(newPt.X * 0x8000, newPt.Y * 0x8000);
+                }
+                node = node.Next;
+            }
+
+            int lineID = 0;
+            while (node?.Next != null)
+            {
+                //from the point starting at node...
+                //and points after the next point
+                //see if we can cut the corner (WITHOUT leaving free rects)
+
+                var start = node.Value.ParentSourceHiP;
+
+                var success = false;
+                var beforeDest = node.Next;
+                var destPoint = beforeDest.Next;
+                var setNext = false;
+                while (true)
+                {
+                    //verify that the line between start and end is within the relevant free rects
+
+                    //raycast through the free rects in order.
+                    //remember the point we left the rectangle so we can test if that point is within the next
+                    //this is our main tell to see if the line left the rectangle.
+                    
+                    var goodLine = true;
+                    var lastLeftPt = start;
+                    if (beforeDest != null)
+                    {
+                        var rect = node;
+                        var end = (destPoint == null)?to:destPoint.Value.ParentSourceHiP;
+                        while (rect != destPoint)
+                        {
+                            if (!rect.Value.ContainsHiP(lastLeftPt))
+                            {
+                                //the line didn't leave the last rectangle into this one,
+                                //it left it into an empty space.
+                                goodLine = false;
+                                break;
+                            }
+                            var lineTest = rect.Value.RaycastLineHiP(start, end);
+                            if (lineTest == null)
+                            {
+                                //we didn't hit this rectangle at all... 
+                                goodLine = false;
+                                break;
+                            }
+                            lastLeftPt = lineTest.Value;
+                            rect = rect.Next;
+                        }
+                    }
+                    else goodLine = false;
+                    
+                    if (goodLine && destPoint != null)
+                    {
+                        goodLine = destPoint.Value.ContainsHiP(lastLeftPt);
+                    }
+
+                    if (goodLine)
+                    {
+                        //yes? keep going
+                        success = true;
+                        beforeDest = destPoint;
+                        destPoint = destPoint?.Next;
+                    }
+                    else
+                    {
+                        if (!success) break;
+                        //no? if we succeeded, take our last result.
+                        //update entry points for each of the 
+                        var rect = node;
+                        var end = (beforeDest == null)?to:beforeDest.Value.ParentSourceHiP;
+                        lastLeftPt = start;
+                        while (rect != beforeDest)
+                        {
+                            //don't change node's entry.
+                            if (rect != node)
+                            {
+                                if (rect.Next != beforeDest) rect.Value.LineID = lineID;
+                                rect.Value.ParentSourceHiP = lastLeftPt;
+                                rect.Value.ParentSource = new Point(lastLeftPt.X / 0x8000, lastLeftPt.Y / 0x8000);
+                            }
+                            
+                            lastLeftPt = rect.Value.RaycastLineHiP(start, end).Value;
+                            rect = rect.Next;
+                        }
+                        setNext = true;
+                        node = beforeDest; //new start is where we ended
+                        lineID++;
+                        break;
+                    }
+                }
+                if (!setNext) node = node.Next;
+            }
         }
 
         private int PointDist(Point pt1, Point pt2)
@@ -184,7 +304,6 @@ namespace FSO.SimAntics.Engine.Routing
                         newRect.Adj.Add(w);
                     }
                 }
-
 
                 newRect.Free[dir] = free2;
                 newRect.Free[(dir + 2) % 4] = new VMFreeList(0, 0);

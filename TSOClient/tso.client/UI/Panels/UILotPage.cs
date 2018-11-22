@@ -69,6 +69,7 @@ namespace FSO.Client.UI.Panels
         public Texture2D HouseCategory_EntertainmentButtonImage { get; set; }
         public Texture2D HouseCategory_ResidenceButtonImage { get; set; }
         public Texture2D HouseCategory_NoCategoryButtonImage { get; set; }
+        public Texture2D HouseCategory_CommunityButtonImage;
         public Texture2D RoommateThumbButtonImage { get; set; }
         public Texture2D VisitorThumbButtonImage { get; set; }
 
@@ -154,8 +155,18 @@ namespace FSO.Client.UI.Panels
             HouseNameButton.OnButtonClick += ChangeName;
             LotThumbnail.OnLotClick += JoinLot;
 
+            NeighborhoodNameButton.OnButtonClick += (btn) =>
+            {
+                if (CurrentLot != null && CurrentLot.Value != null && CurrentLot.Value.Lot_NeighborhoodID != 0)
+                    FindController<CoreGameScreenController>().ShowNeighPage(CurrentLot.Value.Lot_NeighborhoodID);
+            };
+
+            var ui = Content.Content.Get().CustomUI;
+            HouseCategory_CommunityButtonImage = ui.Get("lotp_community_small.png").Get(GameFacade.GraphicsDevice);
+
             CurrentLot = new Binding<Lot>()
                 .WithBinding(HouseNameButton, "Caption", "Lot_Name")
+                .WithBinding(NeighborhoodNameButton, "Caption", "Lot_NeighborhoodName")
                 .WithBinding(HouseValueLabel, "Caption", "Lot_Price", x => MoneyFormatter.Format((uint)x))
                 .WithBinding(OccupantsNumberLabel, "Caption", "Lot_NumOccupants", x => x.ToString())
                 .WithBinding(OwnerButton, "AvatarId", "Lot_LeaderID")
@@ -186,6 +197,8 @@ namespace FSO.Client.UI.Panels
                             return HouseCategory_ShoppingButtonImage;
                         case LotCategory.skills:
                             return HouseCategory_SkillsButtonImage;
+                        case LotCategory.community:
+                            return HouseCategory_CommunityButtonImage;
                         default:
                             return null;
                     }
@@ -196,7 +209,8 @@ namespace FSO.Client.UI.Panels
                 .WithMultiBinding(x => RefreshUI(), "Lot_LeaderID", "Lot_IsOnline", "Lot_Thumbnail", "Lot_Description", "Lot_RoommateVec");
 
             RefreshUI();
-            NeighborhoodNameButton.Visible = false;
+            
+            //NeighborhoodNameButton.Visible = false;
 
             Size = BackgroundExpandedImage.Size.ToVector2();
 
@@ -276,6 +290,10 @@ namespace FSO.Client.UI.Panels
                 if (CurrentLot.Value.Lot_IsOnline)
                 {
                     error = GameFacade.Strings.GetString("190", "30");
+                }
+                if (CurrentLot.Value.Lot_Category == (byte)LotCategory.community)
+                {
+                    error = GameFacade.Strings.GetString("f115", "93");
                 }
             }
             if (error != null)
@@ -373,11 +391,15 @@ namespace FSO.Client.UI.Panels
             var isMyProperty = false;
             var isRoommate = false;
             var isOnline = false;
+            var isCommunity = false;
 
-            if(CurrentLot != null && CurrentLot.Value != null)
+            NeighborhoodNameButton.Size = new Vector2(173, 18);
+
+            if (CurrentLot != null && CurrentLot.Value != null)
             {
                 isOnline = CurrentLot.Value.Lot_IsOnline || (CurrentLot.Value.Lot_LotAdmitInfo?.LotAdmitInfo_AdmitMode >= 4);
                 isMyProperty = FindController<CoreGameScreenController>().IsMe(CurrentLot.Value.Lot_LeaderID);
+                isCommunity = CurrentLot.Value.Lot_Category == 11;
                     
                 var roomies = new List<uint>();
                 if (CurrentLot.Value.Lot_RoommateVec != null) roomies.AddRange(CurrentLot.Value.Lot_RoommateVec);
@@ -401,7 +423,7 @@ namespace FSO.Client.UI.Panels
                 }
             }
 
-            var canJoin = isMyProperty || isRoommate || isOnline || GameFacade.EnableMod;
+            var canJoin = isMyProperty || isRoommate || isOnline || GameFacade.EnableMod || isCommunity;
 
             HouseNameButton.Disabled = !isMyProperty;
 
@@ -528,9 +550,12 @@ namespace FSO.Client.UI.Panels
         {
             //if (Thumbnail.Texture != thumbnail && CurrentLotThumb != 0) Thumbnail.Texture.Dispose(); 
             Thumbnail.Texture = thumbnail;
-            Thumbnail.SetSize((thumbnail.Width > 144) ? thumbnail.Width / 2 : thumbnail.Width, (thumbnail.Height > 144) ? thumbnail.Height / 2 : thumbnail.Height);
-            Thumbnail.Y = (95 - Thumbnail.Height) / 2.0f;
-            Thumbnail.X = (4+128 - Thumbnail.Width) / 2.0f;
+            if (thumbnail != null)
+            {
+                Thumbnail.SetSize((thumbnail.Width > 144) ? thumbnail.Width / 2 : thumbnail.Width, (thumbnail.Height > 144) ? thumbnail.Height / 2 : thumbnail.Height);
+                Thumbnail.Y = (95 - Thumbnail.Height) / 2.0f;
+                Thumbnail.X = (4 + 128 - Thumbnail.Width) / 2.0f;
+            }
             CurrentLotThumb = lot;
         }
 

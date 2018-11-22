@@ -15,6 +15,7 @@ using Microsoft.Xna.Framework;
 using FSO.Client.Utils;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
+using FSO.Common;
 
 namespace FSO.Client.UI.Framework
 {
@@ -186,7 +187,10 @@ namespace FSO.Client.UI.Framework
         /// <param name="uiScript"></param>
         public UIScript RenderScript(string uiScript)
         {
-            var path = Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uiscripts/" + uiScript);
+            var path = Path.Combine(FSOEnvironment.ContentDir, @"UI/uiscripts/" + uiScript);
+            if (!File.Exists(path))
+                path = Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uiscripts/" + uiScript);
+            
             var script = new UIScript(GameFacade.GraphicsDevice, this);
             script.Parse(path);
             return script;
