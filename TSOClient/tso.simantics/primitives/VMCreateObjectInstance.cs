@@ -111,6 +111,14 @@ namespace FSO.SimAntics.Engine.Primitives
                 guid = neigh.GUID;
             }
 
+            if (operand.NoDuplicate && operand.Position != VMCreateObjectPosition.InMyHand && operand.Position != VMCreateObjectPosition.InSlot0OfStackObject) {
+                var objs = context.VM.Context.ObjectQueries.GetObjectsAt(tpos);
+                if (objs != null && objs.Any(x => x.Object.GUID == guid))
+                {
+                    return VMPrimitiveExitCode.GOTO_FALSE;
+                }
+            }
+
             var mobj = context.VM.Context.CreateObjectInstance(guid, tpos, dir,
                 (operand.PassObjectIds && context.StackObject != null) ? (context.StackObject.ObjectID) : (short)0,
                 (operand.PassTemp0) ? (context.Thread.TempRegisters[0]) : (operand.PassObjectIds ? context.Caller.ObjectID : (short)0) , false);
@@ -132,6 +140,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 obj.Delete(true, context.VM.Context);
                 return VMPrimitiveExitCode.GOTO_FALSE;
             }
+            var cont = false;
             if (operand.ReturnImmediately)
             {
                 short interaction = operand.InteractionCallback;
@@ -145,9 +154,9 @@ namespace FSO.SimAntics.Engine.Primitives
                     interaction = context.Thread.TempRegisters[0];
                 }
                 //target is existing stack object. (where we get the interaction/tree from)
-                var callback = new VMActionCallback(context.VM, interaction, context.StackObject, context.StackObject, 
+                var callback = new VMActionCallback(context.VM, interaction, context.StackObject ?? obj, context.StackObject ?? obj, 
                     context.Caller, true, (operand.InteractionCallback == 252));
-                callback.Run(obj);
+                cont = callback.Run(obj);
             }
             else context.StackObject = obj;
 
@@ -170,7 +179,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 ((VMAvatar)(obj)).InheritNeighbor(neigh, context.VM.TS1State.CurrentFamily);
             }
 
-            return VMPrimitiveExitCode.GOTO_TRUE;
+            return cont?VMPrimitiveExitCode.CONTINUE:VMPrimitiveExitCode.GOTO_TRUE;
         }
     }
 
@@ -203,6 +212,20 @@ namespace FSO.SimAntics.Engine.Primitives
                 io.Write(Flags);
                 io.Write(LocalToUse);
                 io.Write(InteractionCallback);
+            }
+        }
+
+
+        public bool NoDuplicate
+        {
+            get
+            {
+                return (Flags & 1) == 1;
+            }
+            set
+            {
+                if (value) Flags |= 1;
+                else Flags &= unchecked((byte)~1);
             }
         }
 

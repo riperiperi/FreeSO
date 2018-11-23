@@ -175,6 +175,7 @@
     <Compile Include="UI\Panels\EODs\UIGameCompDrawACardPluginEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDebugEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDresserEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIHoldEmCasinoEOD.cs" />
     <Compile Include="UI\Panels\EODs\UINCDanceFloorEOD.cs" />
     <Compile Include="UI\Panels\EODs\UINewspaperEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIPaperChaseEOD.cs" />
@@ -188,6 +189,7 @@
     <Compile Include="UI\Panels\EODs\UISlotsEOD.cs" />
     <Compile Include="UI\Panels\EODs\UITimerPluginEOD.cs" />
     <Compile Include="UI\Panels\EODs\UITrunkEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UITwoPersonJobObjectMazeEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIWarGameEOD.cs" />
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobby.cs" />
     <Compile Include="UI\Panels\EODs\Utils\UIEODLobbyController.cs" />

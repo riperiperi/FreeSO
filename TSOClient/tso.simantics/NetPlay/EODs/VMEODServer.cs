@@ -47,6 +47,7 @@ namespace FSO.SimAntics.NetPlay.EODs
             { 0x0B2A6B83, typeof(VMEODRoulettePlugin) },
             { 0x897f82f5, typeof(VMEODSecureTradePlugin) },
             { 0x2B2FC514, typeof(VMEODBlackjackPlugin) },
+            { 0x4A245A22, typeof(VMEODTwoPersonJobObjectMazePlugin) },
 
             { 0x6D113845, typeof(VMEODNCDanceFloorPlugin) },
             { 0xEC55D705, typeof(VMEODDancePlatformPlugin) },
@@ -54,7 +55,8 @@ namespace FSO.SimAntics.NetPlay.EODs
             { 0xCCC5BC43, typeof(VMEODNightclubControllerPlugin) },
 
             //freeso specific
-            { 0x00001000, typeof(VMEODFNewspaperPlugin)}
+            { 0x00001000, typeof(VMEODFNewspaperPlugin) },
+            { 0x00001001, typeof(VMEODHoldEmCasinoPlugin) }
         };
 
         public List<VMEODClient> Clients;

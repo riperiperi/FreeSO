@@ -41,19 +41,25 @@ namespace FSO.IDE.EditorComponent
 
         public void RefreshAllList()
         {
-            var searchString = new Regex(".*" + SearchBox.Text.ToLowerInvariant() + ".*");
-
-            AllList.Items.Clear();
-            var anims = (Content.Content.Get().AvatarAnimations as AvatarAnimationProvider)?.AnimationsByName.Keys.ToList();
-            if (anims == null)
-                anims = (Content.Content.Get().AvatarAnimations as Content.TS1.TS1BCFAnimationProvider)?.BaseProvider.ListAllAnimations();
-            if (anims != null)
+            try
             {
-                foreach (var anim in anims)
+                var searchString = new Regex(".*" + SearchBox.Text.ToLowerInvariant() + ".*");
+
+                AllList.Items.Clear();
+                var anims = (Content.Content.Get().AvatarAnimations as AvatarAnimationProvider)?.AnimationsByName.Keys.ToList();
+                if (anims == null)
+                    anims = (Content.Content.Get().AvatarAnimations as Content.TS1.TS1BCFAnimationProvider)?.BaseProvider.ListAllAnimations();
+                if (anims != null)
                 {
-                    var name = anim.Substring(0, anim.Length - 5).ToLowerInvariant();
-                    if (searchString.IsMatch(name)) AllList.Items.Add(name); //keys are names
+                    foreach (var anim in anims)
+                    {
+                        var name = anim.Substring(0, anim.Length - 5).ToLowerInvariant();
+                        if (searchString.IsMatch(name)) AllList.Items.Add(name); //keys are names
+                    }
                 }
+            } catch (Exception)
+            {
+
             }
         }
         

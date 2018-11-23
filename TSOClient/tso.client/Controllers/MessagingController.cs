@@ -72,6 +72,11 @@ namespace FSO.Client.Controllers
             });
         }
 
+        public void ChangeOpacity(Message message, float opacity)
+        {
+            var window = GetWindow(message);
+            window.Opacity = opacity;
+        }
 
         public void ToggleWindow(Message message) {
             var window = GetWindow(message);

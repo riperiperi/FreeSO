@@ -25,7 +25,7 @@ using FSO.Server.Protocol.Electron.Packets;
 
 namespace FSO.Client.UI.Panels
 {
-    public class UIMessageWindow : UIContainer
+    public class UIMessageWindow : UICachedContainer
     {
         public Texture2D backgroundMessageImage { get; set; }
         public Texture2D backgroundLetterComposeImage { get; set; }
@@ -111,8 +111,7 @@ namespace FSO.Client.UI.Panels
             SendMessageButton.OnButtonClick += new ButtonClickDelegate(SendMessage);
 
             var emojis = new UIEmojiSuggestions(MessageTextEdit);
-            Add(emojis);
-            emojis.Parent = this;
+            DynamicOverlay.Add(emojis);
             MessageTextEdit.OnEnterPress += new KeyPressDelegate(SendMessageEnter);
 
             SendMessageButton.Disabled = true;
@@ -122,8 +121,7 @@ namespace FSO.Client.UI.Panels
             LetterTextEdit.MaxChars = 1000;
 
             var emojis2 = new UIEmojiSuggestions(LetterTextEdit);
-            Add(emojis2);
-            emojis2.Parent = this;
+            DynamicOverlay.Add(emojis2);
 
             RespondLetterButton.OnButtonClick += new ButtonClickDelegate(RespondLetterButton_OnButtonClick);
             SendLetterButton.OnButtonClick += new ButtonClickDelegate(SendLetter);
@@ -155,6 +153,17 @@ namespace FSO.Client.UI.Panels
 
             User.ValueChanged += (x) => PersonButton.User.Value = x;
             Size = Background.Size.ToVector2();
+
+
+            this.Opacity = GlobalSettings.Default.ChatWindowsOpacity;
+            this.AddUpdateHook(ChatOpacityChangedListener);
+        }
+
+        private void ChatOpacityChangedListener(UpdateState state)
+        {
+            if (this.Opacity == GlobalSettings.Default.ChatWindowsOpacity) return;
+
+            FindController<MessagingWindowController>().UpdateOpacity();
         }
 
         private void SpecialButton_OnButtonClick(UIElement button)

@@ -218,7 +218,12 @@ namespace FSO.SimAntics.Primitives
     public class VMTransferFundsOperand : VMPrimitiveOperand
     {
         public VMTransferFundsOldOwner OldAmountOwner { get; set; }
-        public VMVariableScope AmountOwner { get; set; }
+        private VMVariableScope _AmountOwner;
+        public VMVariableScope AmountOwner
+        {
+            get => GetAmountOwner();
+            set { _AmountOwner = value; OldAmountOwner = VMTransferFundsOldOwner.Normal; }
+        }
         public ushort AmountData { get; set; }
         public VMTransferFundsFlags Flags;
         public VMTransferFundsExpenseType ExpenseType { get; set; }
@@ -256,7 +261,7 @@ namespace FSO.SimAntics.Primitives
         {
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
                 OldAmountOwner = (VMTransferFundsOldOwner)io.ReadByte();
-                AmountOwner = (VMVariableScope)io.ReadByte();
+                _AmountOwner = (VMVariableScope)io.ReadByte();
                 AmountData = io.ReadUInt16();
                 Flags = (VMTransferFundsFlags)io.ReadByte();
                 io.ReadByte();
@@ -268,7 +273,7 @@ namespace FSO.SimAntics.Primitives
             using (var io = new BinaryWriter(new MemoryStream(bytes)))
             {
                 io.Write((byte)OldAmountOwner);
-                io.Write((byte)AmountOwner);
+                io.Write((byte)_AmountOwner);
                 io.Write((ushort)AmountData);
                 io.Write((byte)Flags);
                 io.Write((byte)0);
@@ -290,7 +295,7 @@ namespace FSO.SimAntics.Primitives
 
                 default:
                 case VMTransferFundsOldOwner.Normal:
-                    return AmountOwner;
+                    return _AmountOwner;
             }
         }
     }

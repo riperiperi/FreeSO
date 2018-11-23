@@ -119,7 +119,7 @@ namespace FSO.Client.UI.Panels.LotControls
             var cmd = msg.Substring(1, spaceIndex - 1);
             var args = msg.Substring(Math.Min(msg.Length, spaceIndex + 1), Math.Max(0, msg.Length - (spaceIndex + 1)));
             string response = "("+msg+") ";
-            var tilePos = vm.Context.World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+            var tilePos = vm.Context.World.EstTileAtPosWithScroll(Control.GetScaledPoint(state.MouseState.Position).ToVector2() / FSOEnvironment.DPIScaleFactor);
             try {
                 switch (cmd.ToLowerInvariant())
                 {

@@ -53,7 +53,7 @@ namespace FSO.Client
             {
                 Graphics.PreferredBackBufferWidth = (int)(GlobalSettings.Default.GraphicsWidth * FSOEnvironment.DPIScaleFactor);
                 Graphics.PreferredBackBufferHeight = (int)(GlobalSettings.Default.GraphicsHeight * FSOEnvironment.DPIScaleFactor);
-                Graphics.PreferMultiSampling = true;
+                //Graphics.PreferMultiSampling = true;
                 Graphics.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
                 TargetElapsedTime = new TimeSpan(10000000 / GlobalSettings.Default.TargetRefreshRate);
                 FSOEnvironment.RefreshRate = GlobalSettings.Default.TargetRefreshRate;
@@ -66,6 +66,7 @@ namespace FSO.Client
 
             try
             {
+                GameThread.Game = Thread.CurrentThread;
                 Thread.CurrentThread.Name = "Game";
             } catch
             {
@@ -105,7 +106,7 @@ namespace FSO.Client
         /// </summary>
         protected override void Initialize()
         {
-            System.Net.ServicePointManager.DefaultConnectionLimit = 50;
+            System.Net.ServicePointManager.DefaultConnectionLimit = 32;
             var kernel = new StandardKernel(
                 new RegulatorsModule(),
                 new NetworkModule(),
@@ -135,6 +136,10 @@ namespace FSO.Client
                 settings.Save();
             }
 
+            FeatureLevelTest.UpdateFeatureLevel(GraphicsDevice);
+            if (!FSOEnvironment.MSAASupport)
+                settings.AntiAlias = false;
+
             LotView.WorldConfig.Current = new LotView.WorldConfig()
             {
                 LightingMode = settings.LightingMode,
@@ -142,8 +147,6 @@ namespace FSO.Client
                 SurroundingLots = settings.SurroundingLotMode,
                 AA = settings.AntiAlias,
             };
-
-            FeatureLevelTest.UpdateFeatureLevel(GraphicsDevice);
 
             if (!FSOEnvironment.TexCompressSupport) settings.TexCompression = 0;
             else if ((settings.TexCompression & 2) == 0)

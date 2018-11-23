@@ -17,6 +17,7 @@ namespace FSO.SimAntics.NetPlay.Model
         public bool HadAvatar;
         public int InactivityTicks;
         public object NetHandle;
+        public string FatalDCMessage;
 
         private Queue<VMNetMessage> Messages = new Queue<VMNetMessage>();
 

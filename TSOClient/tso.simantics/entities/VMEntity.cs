@@ -100,6 +100,11 @@ namespace FSO.SimAntics
         /** Relationship variables **/
         public Dictionary<ushort, List<short>> MeToObject;
         public Dictionary<uint, List<short>> MeToPersist;
+        //a runtime cache for objects that have relationships to us. Used to get a quick reference to objects
+        //that may need to delete a relationship to us.
+        //note this can point to false positives, but the worst case is a slow deletion if somehow every object is added.
+        public HashSet<ushort> MayHaveRelToMe = new HashSet<ushort>();
+
         //signals which relationships have changed since the last time this was reset
         //used to partial update relationships when doing an avatar save to db
         public HashSet<uint> ChangedRels = new HashSet<uint>();
@@ -209,10 +214,6 @@ namespace FSO.SimAntics
         public VMEntity(GameObject obj)
         {
             this.Object = obj;
-            /** 
-             * For some reason, in the aquarium object (maybe others) the numAttributes is set to 0
-             * but it should be 4. There are 4 entries in the label table. Go figure?
-             */
             ObjectData = new short[80];
             MeToObject = new Dictionary<ushort, List<short>>();
             MeToPersist = new Dictionary<uint, List<short>>();
@@ -727,6 +728,8 @@ namespace FSO.SimAntics
                     var count = ObjectData[(short)var];
                     if (TimestampLockoutCount > Thread.Context.VM.Scheduler.CurrentTickID) TimestampLockoutCount = 0; //lockout counts in the future are invalid.
                     return (short)((Thread == null) ? count : Math.Max((long)count - (Thread.Context.VM.Scheduler.CurrentTickID - TimestampLockoutCount), 0));
+                case VMStackObjectVariable.CurrentValue:
+                    return (short)MultitileGroup.InitialPrice;
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
@@ -767,6 +770,9 @@ namespace FSO.SimAntics
                         Thread.Context.ObjectQueries.RemoveCategory(this, ObjectData[(short)var]);
                         Thread.Context.ObjectQueries.RegisterCategory(this, value);
                     }
+                    break;
+                case VMStackObjectVariable.CurrentValue:
+                    MultitileGroup.InitialPrice = value;
                     break;
             }
 
@@ -887,7 +893,7 @@ namespace FSO.SimAntics
         {
             var ttab = global ? context.GlobalTreeTable : TreeTable;
             var ttas = global ? context.GlobalTTAs : TreeTableStrings;
-            if (!ttab.InteractionByIndex.ContainsKey((uint)interaction)) return null;
+            if (ttab?.InteractionByIndex?.ContainsKey((uint)interaction) != true) return null;
             var Action = ttab.InteractionByIndex[(uint)interaction];
 
             ushort actionID = Action.ActionFunction;
@@ -1069,7 +1075,10 @@ namespace FSO.SimAntics
 
             //we've passed the wall test, now check if we intersect any objects.
             if ((flags & VMPlaceRequestFlags.AllowIntersection) > 0) return new VMPlacementResult(VMPlacementError.Success);
-            var valid = (this is VMAvatar)? context.GetAvatarPlace(this, pos, direction, flags) : context.GetObjPlace(this, pos, direction, flags);
+            var oldRadDir = RadianDirection;
+            Direction = direction; //allow intersect tree may need the new direction
+            var valid = (this is VMAvatar) ? context.GetAvatarPlace(this, pos, direction, flags) : context.GetObjPlace(this, pos, direction, flags);
+            RadianDirection = oldRadDir;
             if (valid.Object != null && ((flags & VMPlaceRequestFlags.AcceptSlots) == 0))
                 valid.Status = VMPlacementError.CantIntersectOtherObjects;
             return valid;
@@ -1164,16 +1173,21 @@ namespace FSO.SimAntics
             int rotate = (8 - (DirectionToWallOff(Direction) + 1)) % 4;
             byte rotPart = (byte)RotateWallSegs((WallSegments)((int)placeFlags % 15), rotate);
 
+            if (EntryPoints[6].ActionFunction != 0)
+            {
+                var mainSegs = (WallSegments)RotateWallSegs(wall.Segments, (4 - rotate) % 4);
+                var wallAdj = (VMWallAdjacencyFlags)0; //wall adjacency uses a weird bit order. TODO: Wall in front of left/right (used by stairs)
+                if ((mainSegs & WallSegments.TopLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallInFront;
+                if ((mainSegs & WallSegments.TopRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnRight;
+                if ((mainSegs & WallSegments.BottomRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallBehind;
+                if ((mainSegs & WallSegments.BottomLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnLeft;
+
+                SetValue(VMStackObjectVariable.WallAdjacencyFlags, (short)wallAdj);
+
+                if (Thread != null) ExecuteEntryPoint(6, Thread.Context, true, this);
+            }
+
             if (rotPart == 0) return;
-
-            var mainSegs = (WallSegments)RotateWallSegs(wall.Segments, (4 - rotate) % 4);
-            var wallAdj = (VMWallAdjacencyFlags)0; //wall adjacency uses a weird bit order. TODO: Wall in front of left/right (used by stairs)
-            if ((mainSegs & WallSegments.TopLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnLeft;
-            if ((mainSegs & WallSegments.TopRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallInFront;
-            if ((mainSegs & WallSegments.BottomRight) > 0) wallAdj |= VMWallAdjacencyFlags.WallOnRight;
-            if ((mainSegs & WallSegments.BottomLeft) > 0) wallAdj |= VMWallAdjacencyFlags.WallBehind;
-
-            SetValue(VMStackObjectVariable.WallAdjacencyFlags, (short)wallAdj);
 
             if (exclusive)
             {
@@ -1201,6 +1215,14 @@ namespace FSO.SimAntics
                 }
                 Dead = true; //if a reset tries to delete this object it is wasting its time
                 var threads = SoundThreads;
+
+                //clear any short term relations the target object has to us
+                foreach (var objID in MayHaveRelToMe)
+                {
+                    var obj = context.VM.GetObjectById((short)objID);
+                    if (obj != null)
+                        obj.MeToObject.Remove((ushort)ObjectID);
+                }
 
                 for (int i = 0; i < threads.Count; i++)
                 {
@@ -1236,6 +1258,8 @@ namespace FSO.SimAntics
                     {
                         this.Position = obj.Position;
                         obj.SetPosition(LotTilePos.OUT_OF_WORLD, obj.Direction, context);
+                        if (obj.GetValue(VMStackObjectVariable.Hidden) > 0)
+                            obj.SetValue(VMStackObjectVariable.Hidden, 0); //failsafe: hidden held objects (replaced by mesh) should unhide on forced drop.
                         if (this.Position != LotTilePos.OUT_OF_WORLD) VMFindLocationFor.FindLocationFor(obj, this, context, VMPlaceRequestFlags.Default);
                     }
                 }
@@ -1494,6 +1518,14 @@ namespace FSO.SimAntics
             {
                 Headline = new VMRuntimeHeadline(input.Headline, context);
                 HeadlineRenderer = context.VM.Headline.Get(Headline);
+            }
+
+            var keyCopy = MeToObject.Keys.ToList();
+            foreach (var objID in keyCopy)
+            {
+                var obj = context.VM.GetObjectById((short)objID);
+                if (obj != null) obj.MayHaveRelToMe.Add((ushort)ObjectID);
+                else MeToObject.Remove(objID); //cleanup refs to missing objects
             }
         }
         #endregion

@@ -283,8 +283,6 @@ namespace FSO.Vitaboy
             Effect.Parameters["World"].SetValue(World);
             Effect.Parameters["AmbientLight"].SetValue(AmbientLight);
 
-            var test = Vector4.Transform(new Vector4(0, 5.2f, 0, 1), World * View * Projection);
-
             DrawGeometry(device, Effect);
         }
 

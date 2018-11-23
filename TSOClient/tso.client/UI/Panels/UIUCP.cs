@@ -462,11 +462,11 @@ namespace FSO.Client.UI.Panels
                         if (keys.Contains(Keys.OemMinus) && !state.CtrlDown && !ZoomOutButton.Disabled) { Game.ZoomLevel += 1; UpdateZoomButton(); }
                         if (keys.Contains(Keys.OemComma)) RotateCounterClockwise(null);
                         if (keys.Contains(Keys.OemPeriod)) RotateClockwise(null);
-                        if (keys.Contains(Keys.PageDown)) FirstFloor(null);
-                        if (keys.Contains(Keys.PageUp)) SecondFloor(null);
-                        if (keys.Contains(Keys.Home)) UpdateWallsViewKeyHandler(1);
-                        if (keys.Contains(Keys.End)) UpdateWallsViewKeyHandler(0);
                     }
+                    if (keys.Contains(Keys.PageDown)) FirstFloor(null);
+                    if (keys.Contains(Keys.PageUp)) SecondFloor(null);
+                    if (keys.Contains(Keys.Home)) UpdateWallsViewKeyHandler(1);
+                    if (keys.Contains(Keys.End)) UpdateWallsViewKeyHandler(0);
                 }
             }
             if (keys.Contains(Keys.F5)) SetPanel(5); // Options Mode Panel

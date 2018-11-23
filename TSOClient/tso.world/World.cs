@@ -51,6 +51,7 @@ namespace FSO.LotView
         public static bool DirectX = false;
         public float Opacity = 1f;
         public float BackbufferScale = 1f;
+        public bool ForceAdvLight;
 
         public float SmoothZoomTimer = -1;
         public float SmoothZoomFrom = 1f;
@@ -783,6 +784,10 @@ namespace FSO.LotView
             //destroy any features that are no longer enabled.
 
             var config = WorldConfig.Current;
+            if (ForceAdvLight)
+            {
+                config.LightingMode = Math.Max(config.LightingMode, 1);
+            }
 
             if (config.AdvancedLighting)
             {
@@ -830,6 +835,13 @@ namespace FSO.LotView
                     Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
                 }
             }
+
+            if (!FSOEnvironment.Enable3D)
+            {
+                var last = PPXDepthEngine.MSAA;
+                PPXDepthEngine.MSAA = (WorldConfig.Current.AA ? 4 : 0);
+                if (last != PPXDepthEngine.MSAA) PPXDepthEngine.InitScreenTargets();
+            }
         }
 
         public virtual ObjectComponent MakeObjectComponent(Content.GameObject obj)
@@ -856,16 +868,18 @@ namespace FSO.LotView
             watch.Start();
 
             if (PreloadProgress == 0) {
+                var done = 0;
                 for (int i = PreloadObjProgress; i < Blueprint.Objects.Count; i++)
                 {
                     var obj = Blueprint.Objects[i];
                     obj.Preload(gd, State);
                     PreloadObjProgress++;
-                    if (watch.ElapsedMilliseconds > 16)
+                    if (watch.ElapsedMilliseconds > 16 && done >= 6)
                     {
                         watch.Stop();
                         return false;
                     }
+                    done++;
                 }
 
                 for (int i=0; i<Blueprint.Avatars.Count; i++)

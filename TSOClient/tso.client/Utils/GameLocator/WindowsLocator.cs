@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -26,11 +27,16 @@ namespace FSO.Client.Utils.GameLocator
                     {
                         RegistryKey tsoKey = maxisKey.OpenSubKey("The Sims Online");
                         string installDir = (string)tsoKey.GetValue("InstallDir");
-                        installDir += "\\TSOClient\\";
+                        installDir += @"\TSOClient\";
                         return installDir.Replace('\\', '/');
                     }
                 }
             }
+            // Search relative directory similar to how macOS and Linux works; allows portability
+            string localDir = @"The Sims Online\TSOClient\";
+            if (File.Exists(Path.Combine(localDir, "tuning.dat"))) return localDir.Replace("\\", "/");
+
+            // Fall back to the default install location if the other two checks fail
             return @"C:\Program Files\Maxis\The Sims Online\TSOClient\".Replace('\\', '/');
         }
 

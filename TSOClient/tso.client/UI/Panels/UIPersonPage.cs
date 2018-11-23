@@ -7,6 +7,7 @@ using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.Electron.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.UI.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -666,6 +667,7 @@ namespace FSO.Client.UI.Panels
                             if (CurrentAvatar.Value != null) {
                                 CurrentAvatar.Value.Avatar_PrivacyMode = toggleValue;
                                 FindController<PersonPageController>().SaveValue(CurrentAvatar.Value, "Avatar_PrivacyMode");
+                                UpdatePresence(toggleValue > 0);
                             }
                             UIScreen.RemoveDialog(alert);
                             }),
@@ -673,6 +675,23 @@ namespace FSO.Client.UI.Panels
                         },
                 }, true);
             }
+        }
+
+        private void UpdatePresence( bool enabled)
+        {
+            var vm = FindController<CoreGameScreenController>().Screen.vm;
+            var avatarName = CurrentAvatar.Value.Avatar_Name;
+            if (vm != null) {
+                DiscordRpcEngine.SendFSOPresence(
+                    avatarName,
+                    vm.LotName,
+                    (int)FindController<CoreGameScreenController>().GetCurrentLotID(),
+                    vm.Entities.Count(x => x is SimAntics.VMAvatar && x.PersistID != 0),
+                    vm.LotName.StartsWith("{job:") ? 4 : 24,
+                    vm.TSOState.PropertyCategory,
+                    enabled);
+            }
+            else DiscordRpcEngine.SendFSOPresence(avatarName, null, 0, 0, 0, 0, enabled);
         }
 
         private void ShowJobInfo(UIElement button)

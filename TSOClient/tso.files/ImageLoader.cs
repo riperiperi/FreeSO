@@ -60,7 +60,8 @@ namespace FSO.Files
                         if (bmp == null) return null;
                         tex = new Texture2D(gd, bmp.Item2, bmp.Item3);
                         tex.SetData(bmp.Item1);
-                    } else
+                    }
+                    else
                     {
                         tex = Texture2D.FromStream(gd, str);
                     }
@@ -92,7 +93,8 @@ namespace FSO.Files
                     {
                         return null; //bad tga
                     }
-                } else
+                }
+                else
                 {
                     //anything else
                     try
@@ -128,7 +130,8 @@ namespace FSO.Files
                                 buffer[i] = new Color((byte)((buffer[i].R * a) / 255), (byte)((buffer[i].G * a) / 255), (byte)((buffer[i].B * a) / 255), a);
                             }
                             tex.SetData(buffer);
-                        } else if (premult == -1) //divide out a premultiply... currently needed for dx since it premultiplies pngs without reason
+                        }
+                        else if (premult == -1) //divide out a premultiply... currently needed for dx since it premultiplies pngs without reason
                         {
                             if (buffer == null)
                             {
@@ -138,7 +141,7 @@ namespace FSO.Files
 
                             for (int i = 0; i < buffer.Length; i++)
                             {
-                                var a = buffer[i].A/255f;
+                                var a = buffer[i].A / 255f;
                                 buffer[i] = new Color((byte)(buffer[i].R / a), (byte)(buffer[i].G / a), (byte)(buffer[i].B / a), buffer[i].A);
                             }
                             tex.SetData(buffer);
@@ -154,32 +157,32 @@ namespace FSO.Files
             }
         }
 
-		public static void ManualTextureMaskSingleThreaded(ref Texture2D Texture, uint[] ColorsFrom)
-		{
-			var ColorTo = Microsoft.Xna.Framework.Color.Transparent.PackedValue;
+        public static void ManualTextureMaskSingleThreaded(ref Texture2D Texture, uint[] ColorsFrom)
+        {
+            var ColorTo = Microsoft.Xna.Framework.Color.Transparent.PackedValue;
 
-			var size = Texture.Width * Texture.Height*4;
-			byte[] buffer = new byte[size];
+            var size = Texture.Width * Texture.Height * 4;
+            byte[] buffer = new byte[size];
 
-			Texture.GetData<byte>(buffer);
+            Texture.GetData<byte>(buffer);
 
-			var didChange = false;
+            var didChange = false;
 
-			for (int i = 0; i < size; i+=4)
-			{
-                if (buffer[i] >= 248 && buffer[i+2] >= 248 && buffer[i+1] <= 4)
+            for (int i = 0; i < size; i += 4)
+            {
+                if (buffer[i] >= 248 && buffer[i + 2] >= 248 && buffer[i + 1] <= 4)
                 {
                     buffer[i] = buffer[i + 1] = buffer[i + 2] = buffer[i + 3] = 0;
                     didChange = true;
                 }
-			}
+            }
 
-			if (didChange)
-			{
-				Texture.SetData(buffer);
-			}
-			else return;
-		}
+            if (didChange)
+            {
+                Texture.SetData(buffer);
+            }
+            else return;
+        }
 
-	}
+    }
 }

@@ -31,6 +31,7 @@ namespace FSO.Common
         public static bool EnableNPOTMip = true;
         public static bool TexCompress = true;
         public static bool TexCompressSupport = true;
+        public static bool MSAASupport = true;
 
         public static string Args = "";
     }

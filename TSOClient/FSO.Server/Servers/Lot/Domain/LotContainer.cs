@@ -300,6 +300,11 @@ namespace FSO.Server.Servers.Lot.Domain
                         Lot.Load(marshal);
                         CleanLot();
                         Lot.Reset();
+
+                        if (File.GetCreationTimeUtc(path) < new DateTime(2018, 10, 23, 12, 00, 00))
+                        {
+                            ResetObjectValues();
+                        } 
                     }
 
                     using (var db = DAFactory.Get())
@@ -372,6 +377,38 @@ namespace FSO.Server.Servers.Lot.Domain
                 LOG.Warn(e, "Failed to save lot with dbid = " + Context.DbId);
                 LOG.Warn(e.StackTrace);
                 return false;
+            }
+        }
+
+        private void ResetObjectValues()
+        {
+            //the values of the objects on this lot may be invalid.
+
+            var catalog = Content.Content.Get().WorldCatalog;
+            var store = Lot.TSOState.PropertyCategory == 5;
+            foreach (var obj in Lot.Entities)
+            {
+                if (obj is VMGameObject && obj.MultitileGroup.BaseObject == obj)
+                {
+                    //calculate this object's intended value
+                    //statues may have set themselves to be worth a very low value (update 71)
+                    //though we don't want to return value to objects with 0
+                    //the best we can do is reset them to maximum sale price
+                    
+                    
+                    var item = catalog.GetItemByGUID((obj.MasterDefinition ?? obj.Object.OBJ).GUID);
+                    if (item != null)
+                    {
+                        var price = (int)item.Value.Price;
+                        var minValue = (price * (100 - 60)) / 100;
+
+                        if (obj.MultitileGroup.InitialPrice < minValue && obj.MultitileGroup.InitialPrice != 0)
+                        {
+                            obj.MultitileGroup.InitialPrice = minValue;
+                        }
+                    }
+
+                }
             }
         }
 
@@ -686,10 +723,13 @@ namespace FSO.Server.Servers.Lot.Domain
                 UTCStart = DateTime.UtcNow.Ticks
             });
 
-            Lot.ForwardCommand(new VMNetTuningCmd()
+            if (Lot.Tuning == null || (Lot.Tuning.GetTuning("forcedTuning", 0, 0) ?? 0f) == 0f)
             {
-                Tuning = Tuning
-            });
+                Lot.ForwardCommand(new VMNetTuningCmd()
+                {
+                    Tuning = Tuning
+                });
+            }
 
             Lot.Context.UpdateTSOBuildableArea();
 
@@ -700,6 +740,8 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.TransactionIncomplete;
                     ((VMGameObject)ent).DisableIfTSOCategoryWrong(Lot.Context);
+                    if (ent.Object.OBJ.GUID == 0x34D777C3 && ent.GetValue(VMStackObjectVariable.Hidden) > 0)
+                        ent.SetValue(VMStackObjectVariable.Hidden, 0);
                     if (PetCrateGUIDs.Contains(ent.Object.OBJ.GUID) && ent.GetAttribute(1) == 0)
                     {
                         //if this pet isn't out, but their crate is out of world, place it near the mailbox.

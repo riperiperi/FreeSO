@@ -244,6 +244,7 @@
     <Compile Include="EditorComponent\OperandForms\OpUnknownControl.Designer.cs">
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditorComponent\Primitives\ChangeActionStringDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\ChangeSuitDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\DialogDescriptors.cs" />

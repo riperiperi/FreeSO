@@ -69,7 +69,7 @@ namespace FSO.Client.UI.Panels.LotControls
             {
                 HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolDown);
 
-                var tilePos = World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+                var tilePos = World.EstTileAtPosWithScroll(Parent.GetScaledPoint(state.MouseState.Position).ToVector2() / FSOEnvironment.DPIScaleFactor);
                 StartPosition = new Point((int)Math.Round(tilePos.X), (int)Math.Round(tilePos.Y));
                 var terrain = vm.Context.Architecture.Terrain;
 
@@ -121,7 +121,7 @@ namespace FSO.Client.UI.Panels.LotControls
 
         public void Update(UpdateState state, bool scrolled)
         {
-            var tilePos = World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+            var tilePos = World.EstTileAtPosWithScroll(Parent.GetScaledPoint(state.MouseState.Position).ToVector2() / FSOEnvironment.DPIScaleFactor);
             Point cursor = new Point((int)Math.Round(tilePos.X), (int)Math.Round(tilePos.Y));
 
             var cmds = vm.Context.Architecture.Commands;

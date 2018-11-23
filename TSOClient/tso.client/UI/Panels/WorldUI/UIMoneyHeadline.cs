@@ -19,6 +19,8 @@ namespace FSO.Client.UI.Panels.WorldUI
         private bool Inited;
         private VMRuntimeHeadline Runtime;
 
+        public override bool IsMoney { get => true; }
+
         public UIMoneyHeadline(VMRuntimeHeadline headline) : base(headline)
         {
             Runtime = headline;

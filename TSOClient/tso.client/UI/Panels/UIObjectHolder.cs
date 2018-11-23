@@ -74,6 +74,7 @@ namespace FSO.Client.UI.Panels
             for (int i = 0; i < Group.Objects.Count; i++)
             {
                 var target = Group.Objects[i];
+                target.ExecuteEntryPoint(10, vm.Context, true, target);
                 target.SetRoom(65534);
                 if (target is VMGameObject) ((ObjectComponent)target.WorldUI).ForceDynamic = true;
                 CursorTiles[i] = vm.Context.CreateObjectInstance(0x00000437, new LotTilePos(target.Position), FSO.LotView.Model.Direction.NORTH, true).Objects[0];
@@ -486,7 +487,8 @@ namespace FSO.Client.UI.Panels
             else if (MouseClicked)
             {
                 //not holding an object, but one can be selected
-                var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
+                var scaled = GetScaledPoint(state.MouseState.Position);
+                var newHover = World.GetObjectIDAtScreenPos(scaled.X, scaled.Y, GameFacade.GraphicsDevice);
                 if (MouseClicked && (newHover != 0) && (vm.GetObjectById(newHover) is VMGameObject))
                 {
                     var objGroup = vm.GetObjectById(newHover).MultitileGroup;
@@ -508,7 +510,7 @@ namespace FSO.Client.UI.Panels
                         Holding.CanDelete = canDelete;
                         Holding.DeleteError = canDelete ? VMPlacementError.CannotDeleteObject : VMPlacementError.ObjectNotOwnedByYou;
                         Holding.MoveTarget = newHover;
-                        Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.EstTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+                        Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.EstTileAtPosWithScroll(GetScaledPoint(state.MouseState.Position).ToVector2() / FSOEnvironment.DPIScaleFactor);
                         if (OnPickup != null) OnPickup(Holding, state);
                         //ExecuteEntryPoint(12); //User Pickup
                     }

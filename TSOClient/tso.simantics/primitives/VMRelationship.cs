@@ -115,6 +115,7 @@ namespace FSO.SimAntics.Primitives
                     else rels.Add(targId, new List<short>());
                 }
                 relToTarg = rels[targId];
+                obj2.MayHaveRelToMe.Add((ushort)obj1.ObjectID);
             }
 
             if (relToTarg.Count <= operand.RelVar)
@@ -271,7 +272,7 @@ namespace FSO.SimAntics.Primitives
             set
             {
                 Flags &= unchecked((byte)~36);
-                Flags |= (byte)((value&1) << 1);
+                Flags |= (byte)((value&1) << 2);
                 Flags |= (byte)((value & 2) << 4);
             }
         }

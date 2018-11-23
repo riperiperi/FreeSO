@@ -78,6 +78,7 @@ namespace FSO.SimAntics
         public int KillTimeout = -1;
         private static readonly int FORCE_DELETE_TIMEOUT = 60 * 30;
         private readonly ushort LEAVE_LOT_TREE = 8373;
+        private readonly ushort LEAVE_LOT_ACTION = 173;
 
         /*
             APPEARANCE DATA
@@ -404,7 +405,8 @@ namespace FSO.SimAntics
             }
 
             SetMotiveData(VMMotive.SleepState, 0); //max all motives except sleep state
-            if (!context.VM.TS1 && Object.GUID != 0x7fd96b54 && context.VM.GetGlobalValue(11) > -1) SetFlag(VMEntityFlags.AllowPersonIntersection, true);
+            if (context.DisableAvatarCollision || (!context.VM.TS1 && Object.GUID != 0x7fd96b54 && context.VM.GetGlobalValue(11) > -1))
+                SetFlag(VMEntityFlags.AllowPersonIntersection, true);
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
         }
 
@@ -631,20 +633,10 @@ namespace FSO.SimAntics
             var tree = GetRoutineWithOwner(LEAVE_LOT_TREE, Thread.Context);
             var routine = tree.routine;
 
-            Thread.EnqueueAction(
-                new FSO.SimAntics.Engine.VMQueuedAction
-                {
-                    Callee = this,
-                    CodeOwner = tree.owner,
-                    ActionRoutine = routine,
-                    Name = "Leave Lot",
-                    StackObject = this,
-                    Args = new short[4],
-                    InteractionNumber = -1,
-                    Priority = short.MaxValue,
-                    Flags = TTABFlags.MustRun
-                }
-            );
+            var qaction = GetAction(LEAVE_LOT_ACTION, this, Thread.Context, false);
+            qaction.Flags |= TTABFlags.FSOSkipPermissions;
+            if (qaction != null) Thread.EnqueueAction(qaction);
+
             if (KillTimeout == -1) KillTimeout = 0;
         }
 
@@ -830,7 +822,7 @@ namespace FSO.SimAntics
                     else if (skillMul != 1)
                     {
                         var delta = value - PersonData[(ushort)variable];
-                        if (delta > 0)
+                        if (delta > 0 && (skillMul != 0 || delta == 1)) //only improve gradual increases. do not affect decreases.
                         {
                             delta *= skillMul;
                             value = (short)(PersonData[(ushort)variable] + delta);

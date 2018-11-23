@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -24,7 +25,7 @@ namespace FSO.Common
                 try
                 {
                     if (prop.PropertyType != typeof(string))
-                        prop.SetValue(this, Convert.ChangeType(value, prop.PropertyType));
+                        prop.SetValue(this, Convert.ChangeType(value, prop.PropertyType, CultureInfo.InvariantCulture));
                     else prop.SetValue(this, value);
                 }
                 catch (Exception) { }
@@ -76,7 +77,7 @@ namespace FSO.Common
                     foreach (var prop in props)
                     {
                         if (prop.Name == "Default" || prop.Name == "DefaultValues") continue;
-                        stream.WriteLine(prop.Name + "=" + prop.GetValue(this).ToString());
+                        stream.WriteLine(prop.Name + "=" + Convert.ToString(prop.GetValue(this), CultureInfo.InvariantCulture));
                     }
                 }
             }

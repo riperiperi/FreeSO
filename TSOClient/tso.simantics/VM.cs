@@ -408,6 +408,7 @@ namespace FSO.SimAntics
         public void UpdateTuning()
         {
             TuningCache.UpdateTuning(this);
+            Context.InitSpecialTuning();
         }
 
         /// <summary>

@@ -36,7 +36,7 @@ namespace FSO.SimAntics.Primitives
         public static VMPrimitiveExitCode ExecuteGeneric(VMStackFrame context, VMPrimitiveOperand args, STR table)
         {
             var operand = (VMDialogOperand)args;
-            var curDialog = (VMDialogResult)context.Thread.BlockingState;
+            var curDialog = context.Thread.BlockingState as VMDialogResult;
             if (curDialog == null)
             {
                 //in ts1, it's possible for a lot of blocking dialogs to come in one frame. due to the way our engine works,
