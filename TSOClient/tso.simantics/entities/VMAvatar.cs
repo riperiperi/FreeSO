@@ -78,6 +78,7 @@ namespace FSO.SimAntics
         public int KillTimeout = -1;
         private static readonly int FORCE_DELETE_TIMEOUT = 60 * 30;
         private readonly ushort LEAVE_LOT_TREE = 8373;
+        private readonly ushort LEAVE_LOT_ACTION = 173;
 
         /*
             APPEARANCE DATA
@@ -616,20 +617,10 @@ namespace FSO.SimAntics
             var tree = GetRoutineWithOwner(LEAVE_LOT_TREE, Thread.Context);
             var routine = tree.routine;
 
-            Thread.EnqueueAction(
-                new FSO.SimAntics.Engine.VMQueuedAction
-                {
-                    Callee = this,
-                    CodeOwner = tree.owner,
-                    ActionRoutine = routine,
-                    Name = "Leave Lot",
-                    StackObject = this,
-                    Args = new short[4],
-                    InteractionNumber = -1,
-                    Priority = short.MaxValue,
-                    Flags = TTABFlags.MustRun
-                }
-            );
+            var qaction = GetAction(LEAVE_LOT_ACTION, this, Thread.Context, false);
+            qaction.Flags |= TTABFlags.FSOSkipPermissions;
+            if (qaction != null) Thread.EnqueueAction(qaction);
+
             if (KillTimeout == -1) KillTimeout = 0;
         }
 
