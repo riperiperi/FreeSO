@@ -13,6 +13,8 @@ namespace FSO.Common.Audio
 {
     public class MP3Player : ISFXInstanceLike
     {
+        public static bool NewMode = true;
+
         private Mp3Stream Stream;
         public DynamicSoundEffectInstance Inst;
         private int LastChunkSize = 1; //don't die immediately..
@@ -255,7 +257,7 @@ namespace FSO.Common.Audio
                         return;
                     } else
                     {
-                        BufferDone.WaitOne(128);
+                        if (NewMode) BufferDone.WaitOne(128);
                     }
 
                     if (EndOfStream) return;

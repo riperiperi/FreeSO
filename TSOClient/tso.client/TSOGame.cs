@@ -30,6 +30,7 @@ using FSO.Files.Formats.IFF;
 using FSO.SimAntics;
 using FSO.UI.Framework;
 using MSDFData;
+using FSO.Common.Audio;
 
 namespace FSO.Client
 {
@@ -233,6 +234,8 @@ namespace FSO.Client
             {
                 GameFacade.GraphicsDeviceManager.ToggleFullScreen();
             }
+
+            if (GameFacade.Linux) MP3Player.NewMode = false;
 
             //(new Utils.PalMapper()).DoIt();
         }
