@@ -65,8 +65,7 @@ namespace FSO.Server.Api.Core
             {
                 ConnectionString = appSettings["connectionString"]
             });
-
-
+            
             Shards = new Shards(DAFactory);
             Shards.AutoUpdate();
         }

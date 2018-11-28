@@ -145,6 +145,11 @@ namespace FSO.Server.DataService.Providers
                             var filter = db.LotClaims.RecentsFilter(avatar.Avatar_Id, 10);
                             avatar.Avatar_Top100ListFilter.Top100ListFilter_ResultsVec = ImmutableList.ToImmutableList(filter);
                         }
+                        else if (cat == LotCategory.community)
+                        {
+                            var filter = db.Lots.GetCommunityLocations(ShardId);
+                            avatar.Avatar_Top100ListFilter.Top100ListFilter_ResultsVec = ImmutableList.ToImmutableList(filter);
+                        }
                         else
                         {
                             var filter = db.LotClaims.Top100Filter(ShardId, cat, 10);

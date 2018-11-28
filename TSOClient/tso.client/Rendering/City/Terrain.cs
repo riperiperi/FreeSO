@@ -242,9 +242,9 @@ namespace FSO.Client.Rendering.City
 
         public override void DeviceReset(GraphicsDevice Device)
         {
-            Dispose();
-            LoadContent(m_GraphicsDevice);
-            RegenData = true;
+            //Dispose();
+            //LoadContent(m_GraphicsDevice);
+            //RegenData = true;
         }
 
         public void Initialize(int mapId)
@@ -1206,7 +1206,7 @@ namespace FSO.Client.Rendering.City
             Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))+1]; //second colour
             double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
 
-            m_TintColor = PowColor(Color.Lerp(col1, col2, (float)Progress), 1f); //linearly interpolate between the two colours for this specific time.
+            m_TintColor = PowColor(Color.Lerp(col1, col2, (float)Progress), 2.2f); //linearly interpolate between the two colours for this specific time.
             if (Weather.Darken > 0)
             {
                 //tint the outside colour, usually with some darkening effect.

@@ -226,7 +226,7 @@ float4 MainPS(ParticleOutput input) : COLOR
 {
 	float level = (input.ModelPos.y) / (2.95*3);
 	if (level >= ClipLevel || round(dpth(tex2D(IndoorsSampler, input.ModelPos.xz / BpSize))*Stories) > level) discard;
-	return tex2D(TexSampler, input.TexCoord)*input.Color*lightInterp(input.ModelPos) * Color - SubColor; 
+	return gammaMul(tex2D(TexSampler, input.TexCoord)*input.Color * Color, lightInterp(input.ModelPos)) - SubColor;
 }
 
 float4 SimplePS(ParticleOutput input) : COLOR
@@ -238,7 +238,7 @@ float4 RainPS(ParticleOutput input) : COLOR
 {
 	float level = (input.ModelPos.y) / (2.95 * 3);
 	if (level >= ClipLevel || round(dpth(tex2D(IndoorsSampler, input.ModelPos.xz / BpSize))*Stories) > level) discard;
-	return ((1-cos(input.TexCoord.y*3.1415*2)) * (1 - cos(input.TexCoord.x*3.1415 * 2))/4) *input.Color*lightInterp(input.ModelPos) - SubColor;
+	return gammaMul(((1-cos(input.TexCoord.y*3.1415*2)) * (1 - cos(input.TexCoord.x*3.1415 * 2))/4) *input.Color, lightInterp(input.ModelPos)) - SubColor;
 }
 
 float4 RainSimplePS(ParticleOutput input) : COLOR
@@ -249,7 +249,7 @@ float4 RainSimplePS(ParticleOutput input) : COLOR
 float4 ParticlePS(ParticleOutput input) : COLOR
 {
 	if (input.Color.a == 0) discard;
-	return tex2D(TexSampler, input.TexCoord)*input.Color*lightProcess(input.ModelPos) - SubColor;
+	return gammaMul(tex2D(TexSampler, input.TexCoord)*input.Color, lightProcess(input.ModelPos)) - SubColor;
 }
 
 //snow particles that follow the camera

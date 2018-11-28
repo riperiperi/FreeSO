@@ -31,10 +31,10 @@ namespace FSO.Server.Servers.City.Domain
 
         //if a neighbourhood with no elections is within this number from the top in activity (and not reserved),
         //we should start an election cycle anyways.
-        private int MayorElegibilityLimit = 2;
+        private int MayorElegibilityLimit = 999;
         //if a neighbourhood that had elections is no longer within the falloff range in popularity,
         //elections are disabled.
-        private int MayorElegililityFalloff = 4; 
+        private int MayorElegililityFalloff = 999; 
 
         public Neighborhoods(IDAFactory daFactory, CityServerContext context, IKernel kernel, ISessions sessions)
         {
@@ -109,19 +109,22 @@ namespace FSO.Server.Servers.City.Domain
                 return;
             }
 
+            var endDate = cycle.end_date;
             switch (cycle.current_state)
             {
                 case DbElectionCycleState.nomination:
+                    //! IMPORTANT ! TODO ! MUST BE 3
+                    endDate -= 60 * 60 * 24 * 2; //nomination ends 3 days before end of cycle
                     mail.SendSystemEmail("f116", (int)NeighMailStrings.NominateSubject, (int)NeighMailStrings.Nominate,
-                        1, MessageSpecialType.Nominate, cycle.end_date, avatarID, nhood.name, cycle.end_date.ToString());
+                        1, MessageSpecialType.Nominate, endDate, avatarID, nhood.name, endDate.ToString());
                     break;
                 case DbElectionCycleState.election:
                     mail.SendSystemEmail("f116", (int)NeighMailStrings.VoteSubject, (int)NeighMailStrings.Vote,
-                        1, MessageSpecialType.Vote, cycle.end_date, avatarID, nhood.name, cycle.end_date.ToString());
+                        1, MessageSpecialType.Vote, endDate, avatarID, nhood.name, endDate.ToString());
                     break;
                 case DbElectionCycleState.failsafe:
                     mail.SendSystemEmail("f116", (int)NeighMailStrings.FailsafeSubject, (int)NeighMailStrings.Failsafe,
-                        1, MessageSpecialType.Normal, cycle.end_date, avatarID, nhood.name);
+                        1, MessageSpecialType.Normal, endDate, avatarID, nhood.name);
                     break;
 
                 case DbElectionCycleState.ended:
@@ -129,7 +132,7 @@ namespace FSO.Server.Servers.City.Domain
                     if (winner == null) return;
 
                     mail.SendSystemEmail("f116", (int)NeighMailStrings.ElectionOverSubject, (int)NeighMailStrings.ElectionOver,
-                        1, MessageSpecialType.Normal, cycle.end_date, avatarID, winner, nhood.name, "someone else idk");
+                        1, MessageSpecialType.Normal, endDate, avatarID, winner, nhood.name, "someone else idk");
                     break;
             }
         }
@@ -219,7 +222,8 @@ namespace FSO.Server.Servers.City.Domain
                                 DbElectionCycleState targetState;
                                 if (timeToEnd < 0)
                                     targetState = DbElectionCycleState.ended;
-                                else if (timeToEnd < 60 * 60 * 24 * 3) //last 3 days are the full election
+                                //! IMPORTANT ! TODO ! MUST BE 3
+                                else if (timeToEnd <= 60 * 60 * 24 * 2) //last 3 days are the full election
                                     targetState = DbElectionCycleState.election;
                                 else //all other time is the nomination
                                     targetState = DbElectionCycleState.nomination;
@@ -305,6 +309,14 @@ namespace FSO.Server.Servers.City.Domain
                                 ElectionCycle_EndDate = dbCycle.end_date
                             };
                             da.Neighborhoods.UpdateCycle((uint)nhood.neighborhood_id, cycleID);
+
+                            //notify current mayor
+                            if (nhood.mayor_id != null)
+                            {
+                                var mail = Kernel.Get<MailHandler>();
+                                mail.SendSystemEmail("f116", (int)NeighMailStrings.TermLengthSubject, (int)NeighMailStrings.TermLength,
+                                    1, MessageSpecialType.Nominate, dbCycle.end_date, nhood.mayor_id.Value, nhood.name, dbCycle.end_date.ToString());
+                            }
                         }
                     }
                 }

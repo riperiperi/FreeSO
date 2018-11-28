@@ -486,6 +486,11 @@ namespace FSO.Client.UI.Panels
                 price = (int)item.Value.Price;
                 dcPercent = VMBuildableAreaInfo.GetDiscountFor(item.Value, vm);
                 finalPrice = (price * (100-dcPercent)) / 100;
+                if (LotParent.ObjectHolder.DonateMode)
+                {
+                    finalPrice -= (finalPrice * 2) / 3;
+                    dcPercent = 66;
+                }
             }
 
             StringBuilder motivesString = new StringBuilder();

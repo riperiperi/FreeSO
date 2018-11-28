@@ -150,6 +150,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 var price = (int)item.Value.Price;
                 var dcPercent = VMBuildableAreaInfo.GetDiscountFor(item.Value, vm);
                 value = (price * (100 - dcPercent)) / 100;
+                if (Mode == PurchaseMode.Donate) value -= (value * 2) / 3;
             }
 
             //TODO: fine grained purchase control based on user status

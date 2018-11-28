@@ -1,4 +1,5 @@
-﻿using FSO.Client.UI.Controls;
+﻿using FSO.Client.Controllers.Panels;
+using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Common;
 using FSO.Common.DataService.Model;
@@ -13,12 +14,12 @@ using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Panels.Neighborhoods
 {
-    public class UIRatingSummaryPanel : UICachedContainer
+    public class UIRatingSummaryPanel : UICachedContainer, IUIAbstractRating
     {
         public UITextEdit Body;
         public UILabel NameLabel;
         public UIRatingDisplay Rating;
-        public Binding<MayorRating> CurrentRating;
+        public Binding<MayorRating> CurrentRating { get; set; }
 
         private string NextMessage;
         private string NextName;
@@ -34,7 +35,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             }
             set
             {
-                NextMessage = GameFacade.Emojis.EmojiToBB(value);
+                NextMessage = GameFacade.Emojis.EmojiToBB(BBCodeParser.SanitizeBB(value));
                 SwitchToNext = true;
             }
         }

@@ -135,15 +135,21 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             var roomiesNoOwner = new HashSet<uint>(roomies);
             roomiesNoOwner.Remove(LotControl.vm.TSOState.OwnerID);
 
+            var canChange = (LotControl.ActiveEntity as VMAvatar)?.AvatarState?.Permissions >= VMTSOAvatarPermissions.Owner;
+
             var ui = Content.Content.Get().CustomUI;
             var btnTex = ui.Get("chat_cat.png").Get(GameFacade.GraphicsDevice);
             var btnCaption = TextStyle.DefaultLabel.Clone();
             var checkTex = GetTexture(0x0000083600000001);
             btnCaption.Size = 8;
             btnCaption.Shadow = true;
+
+            Dropdown.DropDownButton.Disabled = !canChange;
+            Dropdown.MenuTextEdit.Mode = canChange ? UITextEditMode.Editor : UITextEditMode.ReadOnly;
             RoommateListBox.Items = roomiesNoOwner.Select(x => {
                 var check = new UIButton(checkTex);
                 check.Selected = LotControl.vm.TSOState.BuildRoommates.Contains(x);
+                check.Disabled = !canChange;
                 check.OnButtonClick += (btn) =>
                 {
                     check.Selected = !check.Selected;

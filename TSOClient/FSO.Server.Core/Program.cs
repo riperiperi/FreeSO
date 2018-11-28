@@ -9,6 +9,7 @@ using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Text;
 using System.Threading;
 
 namespace FSO.Server.Core
@@ -19,6 +20,9 @@ namespace FSO.Server.Core
         {
             Content.Model.AbstractTextureRef.ImageFetchFunction = CoreImageLoader.SoftImageFetch;
             UserApi.CustomStartup = StartWebApi;
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            var enc1252 = Encoding.GetEncoding(1252);
 
             FSO.Server.Program.Main(args);
         }
@@ -41,12 +45,12 @@ namespace FSO.Server.Core
             settings.Add("smtpPassword", userApiConfig.SmtpPassword);
             settings.Add("smtpPort", userApiConfig.SmtpPort.ToString());
             settings.Add("useProxy", userApiConfig.UseProxy.ToString());
-
+            
             var api2 = new FSO.Server.Api.Core.Api();
             api2.Init(settings);
             api.SetupInstance(api2);
             api2.HostPool = api.GetGluonHostPool();
-
+            
             return FSO.Server.Api.Core.Program.RunAsync(new string[] { url });
         }
     }

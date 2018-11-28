@@ -1,4 +1,5 @@
 ﻿using FSO.Client.UI.Framework;
+using FSO.Client.UI.Panels.Neighborhoods;
 using FSO.Client.Utils;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
@@ -39,6 +40,8 @@ namespace FSO.Client.UI.Controls
         public Color InsetColor = Color.Black * 0.33f;
 
         public event Action<int> OnStarChange;
+
+        public uint LinkAvatar = 0;
 
         private UIMouseEventRef ClickHandler;
         private UITooltipHandler m_TooltipHandler;
@@ -107,6 +110,17 @@ namespace FSO.Client.UI.Controls
                     break;
 
                 case UIMouseEventType.MouseDown:
+                    if (LinkAvatar > 0)
+                    {
+                        var ratingList = new UIRatingList(LinkAvatar);
+                        UIScreen.GlobalShowAlert(new UIAlertOptions()
+                        {
+                            Title = GameFacade.Strings.GetString("f118", "23", new string[] { "Retrieving..." }),
+                            Message = GameFacade.Strings.GetString("f118", "24", new string[] { "Retrieving..." }),
+                            GenericAddition = ratingList,
+                            Width = 530
+                        }, true);
+                    }
                     if (Settable)
                     {
                         HalfStars = HoverHalfStars;
@@ -122,10 +136,13 @@ namespace FSO.Client.UI.Controls
 
         public override void Update(UpdateState state)
         {
-            if (IsOver && Settable)
+            if (IsOver)
             {
-                HoverHalfStars = Math.Min(10, Math.Max(0, (int)Math.Round((GlobalPoint(state.MouseState.Position.ToVector2()).X / StarStride) * 2)));
-                Invalidate();
+                if (Settable)
+                {
+                    HoverHalfStars = Math.Min(10, Math.Max(0, (int)Math.Round((GlobalPoint(state.MouseState.Position.ToVector2()).X / StarStride) * 2)));
+                    Invalidate();
+                }
             } else
             {
                 HoverHalfStars = 0;
@@ -156,9 +173,11 @@ namespace FSO.Client.UI.Controls
                 }
             }
 
-            if (HoverHalfStars > 0)
+            var hoverHalf = HoverHalfStars;
+            if (LinkAvatar != 0 && IsOver) hoverHalf = 10;
+            if (hoverHalf > 0)
             {
-                var hoverStars = HoverHalfStars / 2f;
+                var hoverStars = hoverHalf / 2f;
                 for (int i = 0; i < hoverStars; i++)
                 {
                     if (i <= hoverStars - 1f)

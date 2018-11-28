@@ -4,7 +4,6 @@ using FSO.Common.Utils;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.DataService;
-using FSO.Server.Debug;
 using FSO.Server.Domain;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Servers;
@@ -28,7 +27,6 @@ using System.Runtime.Caching;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace FSO.Server
 {
@@ -182,6 +180,7 @@ namespace FSO.Server
             LOG.Info("Starting services");
             foreach (AbstractServer server in Servers)
             {
+                LOG.Info("Starting " + server.GetType().ToString() + "...");
                 server.Start();
             }
 

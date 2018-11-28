@@ -171,6 +171,9 @@
     <Content Include="Content\uigraphics\lotp\lotp_community_small.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\uigraphics\neighp\mayor_icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\uigraphics\neighp\neighp_banner9s.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -496,6 +499,7 @@
     <Content Include="ContentSrc\Effects\VerShader.fx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="ContentSrc\Effects\SpriteEffects.fx" />
     <None Include="ContentSrc\Effects\VerShader.mgfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -634,6 +638,9 @@
     <Content Include="Content\Fonts\trebuchet.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\DX\Effects\SpriteEffects.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Content\FSODataDefinition.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -681,6 +688,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\OGL\Effects\MSDFFont.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\OGL\Effects\SpriteEffects.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Content\UI\uiscripts\fsoneighpage.uis">

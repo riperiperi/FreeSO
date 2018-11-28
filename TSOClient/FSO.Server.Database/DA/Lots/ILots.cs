@@ -11,6 +11,7 @@ namespace FSO.Server.Database.DA.Lots
     {
         IEnumerable<DbLot> All(int shard_id);
         List<uint> GetLocationsInNhood(uint nhood_id);
+        List<uint> GetCommunityLocations(int shard_id);
         List<DbLot> AllLocations(int shard_id);
         DbLot GetByLocation(int shard_id, uint location);
         List<DbLot> GetAdjToLocation(int shard_id, uint location);

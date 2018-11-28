@@ -241,8 +241,6 @@ namespace FSO.Server.DataService.Providers
                 Neighborhood_MayorID = nhood.mayor_id ?? 0,
                 Neighborhood_Name = nhood.name,
                 Neighborhood_TownHallXY = townHallLoc,
-
-                Neighborhood_TopAvatarActivity = ImmutableList.Create<uint>(SelectRandom(avatars, 10, rand).ToArray()),
             };
 
             SetElectionCycle(result, cycle);

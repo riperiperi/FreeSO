@@ -5,6 +5,7 @@
  */
 
 using FSO.Common;
+using FSO.Common.Utils;
 using FSO.LotView.Components;
 using FSO.LotView.Model;
 using FSO.LotView.RC;
@@ -27,6 +28,8 @@ namespace FSO.LotView.LMap
         public RenderTarget2D ShadowTarg;
         public RenderTarget2D ObjShadowTarg;
         public RenderTarget2D OutsideShadowTarg;
+        public RenderTarget2D OutsideShadowTargPost;
+        private SpriteBatch ShadowTargBlit;
         private int OutShadowFloor = -1;
 
         public RenderTarget2D LightMap;
@@ -158,6 +161,7 @@ namespace FSO.LotView.LMap
             ShadowTarg = new RenderTarget2D(GD, wl, wh, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             ObjShadowTarg = new RenderTarget2D(GD, (ultra)?(wl*2):wl, (ultra)?(wh*2):wh, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             LightMap = new RenderTarget2D(GD, (wl * 3), (wh * 2), false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents); //just ground floor for now.
+            ShadowTargBlit = new SpriteBatch(GD);
             Projection = Matrix.CreateOrthographicOffCenter(new Rectangle(0, 0, (w - borderSize) * 16, (h - borderSize) * 16), -10, 10);
             if (directional) LightMapDirection = new RenderTarget2D(GD, (w - borderSize)*3*4, (h - borderSize)*2*4, false, SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 
@@ -169,7 +173,7 @@ namespace FSO.LotView.LMap
             LightEffect.Parameters["TileSize"].SetValue(new Vector2(1f / w, 1f / h));
 
             LightEffect.Parameters["Projection"].SetValue(Matrix.CreateOrthographicOffCenter(new Rectangle(0, 0, 1, 1), -10, 10));
-            LightEffect.Parameters["LightPower"].SetValue(2.0f);
+            LightEffect.Parameters["LightPower"].SetValue(2.2f);
             LightEffect.Parameters["RoomUVRescale"].SetValue(new Vector2((w - borderSize) / (float)w, (h - borderSize) / (float)h));
             LightEffect.Parameters["RoomUVOff"].SetValue(new Vector2(0, 0));
             LightEffect.Parameters["SSAASize"].SetValue(new Vector2(1f / 600));
@@ -720,6 +724,7 @@ namespace FSO.LotView.LMap
             if (OutsideShadowTarg == null || OutsideShadowTarg.IsDisposed)
             {
                 OutsideShadowTarg = new RenderTarget2D(GD, ShadowTarg.Width * 2, ShadowTarg.Height * 2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                OutsideShadowTargPost = new RenderTarget2D(GD, ShadowTarg.Width * 2, ShadowTarg.Height * 2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
                 LightEffect.Parameters["SSAASize"].SetValue(new Vector2(1f / OutsideShadowTarg.Width, 1f / OutsideShadowTarg.Height));
             }
         }
@@ -729,7 +734,7 @@ namespace FSO.LotView.LMap
             if (pointLight.LightType == LightType.OUTDOORS && WallComp != null)
             {
                 CreateOutsideIfMissing();
-                LightEffect.Parameters["shadowMap"].SetValue(OutsideShadowTarg);
+                LightEffect.Parameters["shadowMap"].SetValue(OutsideShadowTargPost ?? OutsideShadowTarg);
 
                 if (OutShadowFloor == pointLight.Level) return;
                 OutShadowFloor = pointLight.Level;
@@ -754,6 +759,26 @@ namespace FSO.LotView.LMap
                 passes[2].Apply();
 
                 if (WorldConfig.Current.UltraLighting) Draw3DObjShadows(pointLight, false);
+
+                //blit outside shadows onto post target (for blur)
+
+                if (OutsideShadowTargPost != null)
+                {
+                    var blend = GD.BlendState;
+                    var rast = GD.RasterizerState;
+                    GD.SetRenderTarget(OutsideShadowTargPost);
+                    var seffect = WorldContent.SpriteEffect;
+                    ShadowTargBlit.Begin(blendState: BlendState.Opaque, effect: seffect);
+                    seffect.CurrentTechnique = seffect.Techniques["ShadowBlurBlit"];
+                    seffect.Parameters["blurAmount"].SetValue(0.7f / Blueprint.Width);
+                    seffect.Parameters["heightMultiplier"].SetValue(pointLight.FalloffMultiplier);
+                    seffect.Parameters["noiseTexture"]?.SetValue(TextureGenerator.GetUniformNoise(GD));
+                    ShadowTargBlit.Draw(OutsideShadowTarg, new Rectangle(0, 0, OutsideShadowTarg.Width, OutsideShadowTarg.Height), Color.White);
+                    ShadowTargBlit.End();
+                    GD.SetRenderTarget(OutsideShadowTarg);
+                    GD.RasterizerState = rast;
+                    GD.BlendState = blend;
+                }
             }
             else
             {
@@ -862,6 +887,7 @@ namespace FSO.LotView.LMap
             ShadowTarg?.Dispose();
             ObjShadowTarg?.Dispose();
             OutsideShadowTarg?.Dispose();
+            OutsideShadowTargPost?.Dispose();
             LightMap?.Dispose();
             LightMapDirection?.Dispose();
         }

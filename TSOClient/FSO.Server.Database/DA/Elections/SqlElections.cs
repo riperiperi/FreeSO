@@ -232,10 +232,10 @@ namespace FSO.Server.Database.DA.Elections
         public DbElectionWin FindLastWin(uint avatar_id)
         {
             return Context.Connection.Query<DbElectionWin>("SELECT n.neighborhood_id AS nhood_id, n.name AS nhood_name " +
-                "FROM (fso_election_candidates e JOIN fso_cycles c ON e.election_cycle_id = c.cycle_id) " +
-                "JOIN fso_neighborhoods n WHERE c.neighborhood_id = n.neighborhood_id" +
-                "WHERE candidate_avatar_id = @avatar_id AND state = 'won' " +
-                "ORDER BY election_cycle_id DESC LIMIT 1",
+                "FROM (fso_election_candidates e JOIN fso_election_cycles c ON e.election_cycle_id = c.cycle_id) " +
+                "JOIN fso_neighborhoods n ON c.neighborhood_id = n.neighborhood_id " +
+                "WHERE e.candidate_avatar_id = @avatar_id AND state = 'won' " +
+                "ORDER BY e.election_cycle_id DESC LIMIT 1",
                 new { avatar_id = avatar_id }).FirstOrDefault();
         }
     }

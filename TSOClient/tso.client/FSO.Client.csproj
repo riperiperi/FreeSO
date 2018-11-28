@@ -115,6 +115,7 @@
     <Compile Include="Controllers\Panels\LotPageController.cs" />
     <Compile Include="Controllers\Panels\NeighPageController.cs" />
     <Compile Include="Controllers\Panels\PersonPageController.cs" />
+    <Compile Include="Controllers\Panels\RatingListController.cs" />
     <Compile Include="Controllers\Panels\RatingSummaryController.cs" />
     <Compile Include="Controllers\Panels\RelationshipDialogController.cs" />
     <Compile Include="Controllers\Panels\SecureTradeController.cs" />
@@ -203,11 +204,13 @@
     <Compile Include="UI\Panels\MessageStore\UIMessageStore.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIBigPersonButton.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIDonatorDialog.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIFullRatingItem.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIManageDonatorDialog.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UINeighBanner.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UINeighPage.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UINominationSelectContainer.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIRatingContainer.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIRatingList.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIRatingSummaryPanel.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UITop10Pedestal.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIVoteCandidate.cs" />

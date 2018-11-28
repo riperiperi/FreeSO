@@ -846,7 +846,8 @@ namespace FSO.Server.Servers.Lot.Domain
                                 {
                                     failState = VMEODSecureTradeError.WRONG_OWNER_LOT;
                                     return false;
-                                } if (lot.category == FSO.Common.Enum.LotCategory.community)
+                                }
+                                if (lot.category == FSO.Common.Enum.LotCategory.community)
                                 {
                                     failState = VMEODSecureTradeError.CANNOT_TRADE_COMMUNITY_LOT;
                                     return false;

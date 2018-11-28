@@ -47,7 +47,7 @@ namespace FSO.Client.UI.Controls
         public Rectangle CaptionMargin = new Rectangle(0, 3, 0, 0);
 
         //if dialog type does not specify these, they do not exist
-        private UIImage CloseBg;
+        public UIImage CloseBg;
         private UIImage OKBg;
         public UIButton OKButton;
         public UIButton CloseButton;

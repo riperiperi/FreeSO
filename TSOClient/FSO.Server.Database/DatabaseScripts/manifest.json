@@ -218,6 +218,11 @@
       "id": "b390f324-74f1-4a75-992e-e5a81ec3967a",
       "script": "changes/0022_lastlogin.sql",
       "idempotent": false
+    },
+    {
+      "id": "3b87e93a-5fae-437b-8ba5-1e46ebb4cd15",
+      "script": "changes/0023_neighborhoods.sql",
+      "idempotent": false
     }
   ]
 }

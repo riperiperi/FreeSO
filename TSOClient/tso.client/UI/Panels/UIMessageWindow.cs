@@ -169,6 +169,7 @@ namespace FSO.Client.UI.Panels
         private void SpecialButton_OnButtonClick(UIElement button)
         {
             if (SpecialType == MessageSpecialType.Normal) return;
+            SpecialButton.Disabled = true;
 
             var controller = FindController<CoreGameScreenController>();
             controller?.FindMyNhood((nhoodID) =>
@@ -190,7 +191,26 @@ namespace FSO.Client.UI.Panels
 
         private void SpecialResult(NhoodResponseCode code)
         {
+            SpecialButton.Disabled = false;
+            if (code == NhoodResponseCode.SUCCESS)
+            {
+                string title = GameFacade.Strings.GetString("f118", "1");
+                string message = "";
+                switch (SpecialType)
+                {
+                    case MessageSpecialType.Nominate:
+                        message = GameFacade.Strings.GetString("f118", "16");
+                        break;
+                    case MessageSpecialType.Vote:
+                        message = GameFacade.Strings.GetString("f118", "11");
+                        break;
+                    case MessageSpecialType.AcceptNomination:
+                        message = GameFacade.Strings.GetString("f118", "19");
+                        break;
+                }
 
+                UIAlert.Alert(title, message, true);
+            }
         }
 
         private void MinimizeButton_OnButtonClick(UIElement button)

@@ -30,6 +30,9 @@ namespace FSO.SimAntics.Model.Routing
             this.y2 = y2;
         }
 
+        public VMObstacle(Point source, Point dest) : this(source.X, source.Y, dest.X, dest.Y) { 
+        }
+
         public bool Contains(Point pt)
         {
             return (pt.X >= x1 && pt.X <= x2) && (pt.Y >= y1 && pt.Y <= y2);

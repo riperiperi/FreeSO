@@ -47,6 +47,15 @@ namespace FSO.LotView.Model
         public int LastHour = -1;
         public bool LastEnabled;
 
+        private Vector4 LinearToSRGB(Vector4 col)
+        {
+            return new Vector4(
+                (float)Math.Pow(col.X, 1 / 2.2f),
+                (float)Math.Pow(col.Y, 1 / 2.2f),
+                (float)Math.Pow(col.Z, 1 / 2.2f),
+                col.W);
+        }
+
         public void Update()
         {
             var now = DateTime.UtcNow;

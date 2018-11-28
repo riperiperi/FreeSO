@@ -34,7 +34,7 @@ namespace FSO.Common.Utils
             if (Backbuffer != null) Backbuffer.Dispose();
             var scale = 1;//FSOEnvironment.DPIScaleFactor;
             if (!FSOEnvironment.Enable3D)
-                BackbufferDepth = CreateRenderTarget(GD, 1, (FSOEnvironment.DirectX)?0:MSAA, SurfaceFormat.Color, SSAA*GD.Viewport.Width/scale, SSAA * GD.Viewport.Height / scale, DepthFormat.None);
+                BackbufferDepth = CreateRenderTarget(GD, 1, MSAA, SurfaceFormat.Color, SSAA*GD.Viewport.Width/scale, SSAA * GD.Viewport.Height / scale, DepthFormat.None);
             Backbuffer = CreateRenderTarget(GD, 1, MSAA, SurfaceFormat.Color, SSAA * GD.Viewport.Width / scale, SSAA * GD.Viewport.Height / scale, DepthFormat.Depth24Stencil8);
         }
 

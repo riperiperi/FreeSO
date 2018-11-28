@@ -110,17 +110,32 @@ namespace FSO.SimAntics.Engine.Routing
             var node = route.First;
             to = new Point(to.X * 0x8000, to.Y * 0x8000);
 
+            //remove dupes
+            node = node?.Next;
+            while (node?.Next != null)
+            {
+                var next = node.Next;
+                if (node.Value.ParentSource == node.Next.Value.ParentSource) route.Remove(node);
+                node = next;
+            }
+            node = route.First;
+
             if (dirIn != null && node.Next != null)
             {
+                var node2 = node;
                 var next = node.Next;
                 var dirVec = new Vector2((float)Math.Sin(dirIn.Value), (float)-Math.Cos(dirIn.Value));
                 var previousDist = Math.Max(0, Vector2.Dot((next.Value.ParentSource - node.Value.ParentSource).ToVector2(), dirVec));
                 var dist = 8 - previousDist;
-                if (dist > 0)
+                while (next != route.Last && dist > 0)
                 {
-                    var newPt = next.Value.ClosestOnSharedEdge(node.Value, next.Value.ParentSource + (dirVec * dist).ToPoint());
+                    var newPt = next.Value.ClosestOnSharedEdge(node2.Value, next.Value.ParentSource + (dirVec * dist).ToPoint());
+                    var diff = newPt - next.Value.ParentSource;
+                    dist = (float)Math.Sqrt(diff.X * diff.X + diff.Y * diff.Y);
                     next.Value.ParentSource = newPt;
                     next.Value.ParentSourceHiP = new Point(newPt.X * 0x8000, newPt.Y * 0x8000);
+                    node2 = next;
+                    next = node2.Next;
                 }
                 node = node.Next;
             }

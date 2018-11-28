@@ -94,6 +94,7 @@ namespace FSO.Client.UI.Panels
                 var price = (int)catalogItem.Value.Price;
                 var dcPercent = VMBuildableAreaInfo.GetDiscountFor(catalogItem.Value, vm);
                 var finalPrice = (price * (100 - dcPercent)) / 100;
+                if (DonateMode) finalPrice -= (finalPrice * 2) / 3;
                 Holding.Price = finalPrice;
             }
         }

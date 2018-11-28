@@ -180,6 +180,10 @@ namespace FSO.Client.Controllers
                 switch (state)
                 {
                     case "Idle":
+                        if (Callbacks.Count > 0)
+                        {
+                            ResolveCallbacks(NhoodResponseCode.CANCEL);
+                        }
                         if (BlockingDialog != null)
                         {
                             UIScreen.RemoveDialog(BlockingDialog);
@@ -205,7 +209,17 @@ namespace FSO.Client.Controllers
                                     Buttons = new UIAlertButton[] {
                                         new UIAlertButton(UIAlertButtonType.OK, (btn2) => {
                                             var newReq = nomCont.GetRequest(req);
-                                            if (newReq != null) ConnectionReg.MakeRequest(newReq);
+                                            if (newReq != null) {
+                                                UIAlert.YesNo(
+                                                    GameFacade.Strings.GetString("f118", "14"),
+                                                    GameFacade.Strings.GetString("f118", "15", new string[] { nomCont.SelectedCandidate.Name }),
+                                                    true,
+                                                    (result) =>
+                                                    {
+                                                        if (result) ConnectionReg.MakeRequest(newReq);
+                                                    }
+                                                    );
+                                            }
                                             else
                                             {
                                                 //tell user they should select a nominee
@@ -219,22 +233,52 @@ namespace FSO.Client.Controllers
                                 BlockingDialog.Opacity = 1;
                                 break;
                             case NhoodRequestType.CAN_VOTE:
-                                //rating dialog
-                                var votingCont = new UIVoteContainer(ConnectionReg.CandidateList);
+                                //voting dialog
                                 BlockingDialog = UIScreen.GlobalShowAlert(new UIAlertOptions()
                                 {
-                                    Title = GameFacade.Strings.GetString("f118", "4"),
-                                    Message = GameFacade.Strings.GetString("f118", "5"),
-                                    Width = 600,
-                                    GenericAddition = votingCont,
-                                    Buttons = new UIAlertButton[0]
-                                }, true);
+                                    Title = GameFacade.Strings.GetString("f118", "2"),
+                                    Message = GameFacade.Strings.GetString("f118", "3"),
+                                    Width = 500,
 
-                                BlockingDialog.Opacity = 1;
+                                    Buttons = UIAlertButton.Ok((btn) =>
+                                    {
+                                        GameScreen.RemoveDialog(BlockingDialog);
+                                        var votingCont = new UIVoteContainer(ConnectionReg.CandidateList);
+                                        votingCont.OnVote += (id) =>
+                                        {
+                                            if (id == 0) ConnectionReg.AsyncReset();
+                                            else
+                                            {
+                                                UIAlert.YesNo(
+                                                    GameFacade.Strings.GetString("f118", "9"),
+                                                    GameFacade.Strings.GetString("f118", "10", new string[] { votingCont.SelectedName }),
+                                                    true,
+                                                    (result) =>
+                                                    {
+                                                        if (result) ConnectionReg.MakeRequest(votingCont.MakeRequest(req));
+                                                    }
+                                                    );
+                                            }
+                                        };
+                                        BlockingDialog = UIScreen.GlobalShowAlert(new UIAlertOptions()
+                                        {
+                                            Title = GameFacade.Strings.GetString("f118", "4"),
+                                            Message = GameFacade.Strings.GetString("f118", "5"),
+                                            Width = 600,
+                                            GenericAddition = votingCont,
+                                            Buttons = new UIAlertButton[0]
+                                        }, false);
+
+                                        votingCont.InjectClose();
+
+                                        BlockingDialog.Opacity = 1;
+                                    })
+                                    }, true);
                                 break;
 
                             case NhoodRequestType.CAN_RATE:
                                 //rating dialog
+
                                 var ratingCont = new UIRatingContainer(true);
                                 BlockingDialog = UIScreen.GlobalShowAlert(new UIAlertOptions()
                                 {
@@ -243,15 +287,14 @@ namespace FSO.Client.Controllers
                                     Width = 450,
                                     GenericAddition = ratingCont,
                                     Buttons = new UIAlertButton[] {
-                                        new UIAlertButton(UIAlertButtonType.OK, (btn2) => {
-                                            ConnectionReg.MakeRequest(ratingCont.GetRequest(req));
-                                        }),
-                                        new UIAlertButton(UIAlertButtonType.Cancel, (btn2) => {
-                                            ConnectionReg.AsyncReset();
-                                        })
-                                    }
+                                                new UIAlertButton(UIAlertButtonType.OK, (btn2) => {
+                                                    ConnectionReg.MakeRequest(ratingCont.GetRequest(req));
+                                                }),
+                                                new UIAlertButton(UIAlertButtonType.Cancel, (btn2) => {
+                                                    ConnectionReg.AsyncReset();
+                                                })
+                                            }
                                 }, true);
-
                                 BlockingDialog.Opacity = 1;
                                 break;
 

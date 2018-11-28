@@ -100,7 +100,9 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 LastDonatedObj = donatedCount;
             }
 
-            var force = LotParent.vm.PlatformState.Validator.GetPurchaseMode(PurchaseMode.Normal, (VMAvatar)LotParent.ActiveEntity, 0, true) == PurchaseMode.Donate;
+            var mode = LotParent.vm.PlatformState.Validator.GetPurchaseMode(PurchaseMode.Normal, (VMAvatar)LotParent.ActiveEntity, 0, true);
+            if (Visible && mode == PurchaseMode.Disallowed) Visible = false;
+            var force = mode == PurchaseMode.Donate;
             if (force)
             {
                 LotParent.ObjectHolder.DonateMode = force;

@@ -306,18 +306,6 @@ namespace FSO.Client.UI.Screens
             Inbox.Visible = false;
             ControllerUtils.BindController<InboxController>(Inbox);
             WindowContainer.Add(Inbox);
-
-            GameThread.NextUpdate(x =>
-            {
-                var test = new UIVoteContainer();
-                UIScreen.GlobalShowAlert(new UIAlertOptions()
-                {
-                    Title = "Vote for your mayor!",
-                    GenericAddition = test,
-                    Width = 600,
-                    Message = "Please select which candidate you want to vote for."
-                }, false);
-            });
         }
 
         public override void GameResized()

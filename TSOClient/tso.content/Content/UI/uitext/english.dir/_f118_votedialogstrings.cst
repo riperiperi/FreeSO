@@ -50,3 +50,7 @@ Before running, please review the rules on http://freeso.org/nhoodrules . Specif
 20 ^Nominate^
 21 ^    VOTE^
 22 ^42^ //X offset for voting icon. feel free to localise. (MUST be a number)
+
+//ratings dialog
+23 ^Ratings for %s^
+24 ^Listed are ratings for avatar %s, from best to worst. Ratings were given when this user was mayor of a neighborhood, either now or any time in the past.^

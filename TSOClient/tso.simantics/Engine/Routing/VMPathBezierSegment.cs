@@ -130,6 +130,9 @@ namespace FSO.SimAntics.Engine.Routing
         {
             //find average direction line
 
+            var fromSlice = new VMObstacle(from.x1 * 0x8000, from.y1 * 0x8000, from.x2 * 0x8000, from.y2 * 0x8000);//new VMObstacle(fromSegI.Source, fromSegI.Destination);
+            var toSlice = new VMObstacle(to.x1 * 0x8000, to.y1 * 0x8000, to.x2 * 0x8000, to.y2 * 0x8000);//new VMObstacle(toSegI.Source, toSegI.Destination);
+
             if (fromSegI is VMPathBezierSegment)
             {
                 var fromSeg = (VMPathBezierSegment)fromSegI;
@@ -162,7 +165,7 @@ namespace FSO.SimAntics.Engine.Routing
                         if (testTo)
                         {
                             //make sure to is within rect bounds
-                            var n = to.ClosestHiP(toSeg.B.X, toSeg.B.Y);
+                            var n = toSlice.Closest(toSeg.B.X, toSeg.B.Y);
                             if (n != toSeg.B)
                             {
                                 //if we changed, we'll need to check the other side again.
@@ -186,7 +189,7 @@ namespace FSO.SimAntics.Engine.Routing
                         else
                         {
                             //make sure from is within rect bounds
-                            var n = from.ClosestHiP(fromSeg.C.X, fromSeg.C.Y);
+                            var n = fromSlice.Closest(fromSeg.C.X, fromSeg.C.Y);
                             if (n != fromSeg.C)
                             {
                                 //if we changed, we'll need to check the other side again.
@@ -221,7 +224,7 @@ namespace FSO.SimAntics.Engine.Routing
 
                     //our control points should create a line with average direction between its bordering lines.
                     fromSeg.C = fromSeg.D - (toDiff * fromLength / 3).ToPoint();
-                    fromSeg.C = from.ClosestHiP(fromSeg.C.X, fromSeg.C.Y);
+                    fromSeg.C = fromSlice.Closest(fromSeg.C.X, fromSeg.C.Y);
                 }
             } else if (toSegI is VMPathBezierSegment)
             {
@@ -237,7 +240,7 @@ namespace FSO.SimAntics.Engine.Routing
 
                 //our control points should create a line with average direction between its bordering lines.
                 toSeg.B = toSeg.A + (fromDiff * toLength / 3).ToPoint();
-                toSeg.B = to.ClosestHiP(toSeg.B.X, toSeg.B.Y);
+                toSeg.B = toSlice.Closest(toSeg.B.X, toSeg.B.Y);
             }
         }
 

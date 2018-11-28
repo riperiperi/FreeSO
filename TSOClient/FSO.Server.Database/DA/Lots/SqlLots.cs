@@ -91,7 +91,7 @@ namespace FSO.Server.Database.DA.Lots
 
         public DbLot GetByOwner(uint owner_id)
         {
-            return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE owner_id = @id && category != 'community'", new { id = owner_id }).FirstOrDefault();
+            return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE owner_id = @id AND category != 'community'", new { id = owner_id }).FirstOrDefault();
         }
 
         public IEnumerable<DbLot> All(int shard_id)
@@ -107,6 +107,11 @@ namespace FSO.Server.Database.DA.Lots
         public List<uint> GetLocationsInNhood(uint nhood_id)
         {
             return Context.Connection.Query<uint>("SELECT location FROM fso_lots WHERE neighborhood_id = @nhood_id", new { nhood_id = nhood_id }).ToList();
+        }
+
+        public List<uint> GetCommunityLocations(int shard_id)
+        {
+            return Context.Connection.Query<uint>("SELECT location FROM fso_lots WHERE shard_id = @shard_id AND category = 'community'", new { shard_id = shard_id }).ToList();
         }
 
         public List<string> AllNames(int shard_id)

@@ -100,7 +100,7 @@ namespace FSO.Client.UI.Panels
             this.AddAt(2, SubToolBg);
 
             Catalog = new UICatalog(useSmall ? 10 : 20);
-            Catalog.ActiveVM = lotController.vm;
+            Catalog.LotControl = lotController;
             Catalog.OnSelectionChange += new CatalogSelectionChangeDelegate(Catalog_OnSelectionChange);
             Catalog.Position = new Vector2(364, 7);
             this.Add(Catalog);
@@ -399,6 +399,10 @@ namespace FSO.Client.UI.Panels
             var objCount = LotController.vm.Context.ObjectQueries.NumUserObjects;
             if (LastObjCount != objCount || LastDonator != LotController.ObjectHolder.DonateMode)
             {
+                if (LastDonator != LotController.ObjectHolder.DonateMode)
+                {
+                    Catalog.SetPage(Catalog.Page); //update prices
+                }
                 if (LotController.ObjectHolder.DonateMode) {
                     ObjLimitLabel.Caption = GameFacade.Strings.GetString("f114", "4");
                     ObjLimitLabel.CaptionStyle.Color = new Color(255, 201, 38);

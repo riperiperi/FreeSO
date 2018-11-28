@@ -126,6 +126,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                     rating = new UIRatingDisplay(true);
                     rating.LogicalParent = this;
                     rating.DisplayStars = x.Rating / 100f;
+                    rating.LinkAvatar = x.ID;
                 }
                 return new UIListBoxItem(
                     x,

@@ -255,7 +255,6 @@ sampler2D ObjSampler = sampler_state
 float4 GetObjColor(ObjVertexOut Input) {
 	float4 objCol = tex2D(ObjSampler, Input.texCoord);
 	objCol.xyz /= objCol.w;
-	objCol.xyz *= LightCol;
 	return objCol;
 }
 
@@ -267,7 +266,7 @@ float4 CityObjPS(ObjVertexOut Input) : COLOR0
 	float diffuse = 1;//dot(normalize(Input.normal.xyz), LightVec.xyz);
 	if (diffuse < 0) diffuse *= 0.5;
 
-	return gammaMul1(float4(BCol.xyz, 1), lerp(ShadowMult, 1, min(diffuse, shadowLerp(ShadSampler, ShadSize, Input.shadPos.xy, depth + 0.003*(2048.0 / ShadSize.x))))) * BCol.a;
+	return gammaMul(float4(BCol.xyz, 1), float4(LightCol.xyz*lerp(ShadowMult, 1, min(diffuse, shadowLerp(ShadSampler, ShadSize, Input.shadPos.xy, depth + 0.003*(2048.0 / ShadSize.x)))), 1)) * BCol.a;
 }
 
 float4 CityObjPSNoShad(ObjVertexOut Input) : COLOR0
@@ -276,7 +275,7 @@ float4 CityObjPSNoShad(ObjVertexOut Input) : COLOR0
 	if (BCol.a < 0.1) discard;
 	float diffuse = 1;//dot(normalize(Input.normal.xyz), LightVec.xyz);
 	if (diffuse < 0) diffuse *= 0.5;
-	return float4(gammaMul1(float4(BCol.xyz, 1), lerp(ShadowMult, 1, diffuse)).rgb*BCol.a, BCol.a);
+	return float4(gammaMul(float4(BCol.xyz, 1), float4(LightCol.xyz*lerp(ShadowMult, 1, diffuse),1)).rgb*BCol.a, BCol.a);
 }
 
 float4 CityObjPSFog(ObjVertexOut Input) : COLOR0
@@ -287,7 +286,7 @@ float4 CityObjPSFog(ObjVertexOut Input) : COLOR0
 	if (diffuse < 0) diffuse *= 0.5;
 
 	float fogDistance = min(1, length(Input.vPos) / FogMaxDist);
-	BCol = float4(gammaMul1(float4(BCol.xyz, 1), lerp(ShadowMult, 1, diffuse)).rgb, BCol.a);
+	BCol = float4(gammaMul(float4(BCol.xyz, 1), float4(LightCol.xyz*lerp(ShadowMult, 1, diffuse), 1)).rgb, BCol.a);
 	BCol.xyz = lerp(BCol.xyz, FogColor.xyz, fogDistance) * BCol.a;
 	return BCol;
 }
@@ -300,7 +299,7 @@ float4 CityObjPSFogShad(ObjVertexOut Input) : COLOR0
 	float diffuse = 1;//dot(normalize(Input.normal.xyz), LightVec.xyz);
 	if (diffuse < 0) diffuse *= 0.5;
 
-	BCol = float4(gammaMul1(float4(BCol.xyz, 1), lerp(ShadowMult, 1, min(diffuse, shadowLerp(ShadSampler, ShadSize, Input.shadPos.xy, depth + 0.003*(2048.0 / ShadSize.x))))).rgb, BCol.a);
+	BCol = float4(gammaMul(float4(BCol.xyz, 1), float4(LightCol.xyz * lerp(ShadowMult, 1, min(diffuse, shadowLerp(ShadSampler, ShadSize, Input.shadPos.xy, depth + 0.003*(2048.0 / ShadSize.x)))), 1)).rgb, BCol.a);
 
 	float fogDistance = min(1, length(Input.vPos) / FogMaxDist);
 	BCol.xyz = lerp(BCol.xyz, FogColor.xyz, fogDistance) * BCol.a;
@@ -388,12 +387,15 @@ float4 GetNCityColor(CityVertexOut Input)
 		Base *= tex2D(USampler, Input.VertexCoord.xy);
 	}
 	float InvA = 1.0 - A;
-	return float4(Base.xyz*LightCol.xyz, A*Base.w);
+	return float4(Base.xyz, A*Base.w);
 }
 
 float Diffuse(CityVertexOut Input) {
 	float diffuse = dot(normalize(Input.NormalTrans.xyz), LightVec.xyz);
-	if (diffuse < 0) diffuse *= 0.5;
+	if (diffuse < 0) {
+		diffuse *= 0.7;
+		diffuse *= -diffuse;
+	}
 	return diffuse;
 }
 
@@ -407,7 +409,7 @@ float4 Fog(float4 BCol, CityVertexOut Input) {
 float4 ShadLight(float4 BCol, CityVertexOut Input) {
 	float depth = Input.shadPos.z;
 
-	return float4(gammaMul1(float4(BCol.xyz, 1), lerp(ShadowMult, 1, min(Diffuse(Input), shadowLerp(ShadSampler, ShadSize, Input.shadPos.xy, depth + 0.003*(2048.0 / ShadSize.x))))).rgb, BCol.w);
+	return float4(gammaMul(float4(BCol.xyz, 1), float4(LightCol.xyz * lerp(ShadowMult, 1, min(Diffuse(Input), shadowLerp(ShadSampler, ShadSize, Input.shadPos.xy, depth + 0.003*(2048.0 / ShadSize.x)))), 1)).rgb, BCol.w);
 }
 
 float4 NCityPS(CityVertexOut Input) : COLOR0
@@ -421,13 +423,13 @@ float4 NCityPS(CityVertexOut Input) : COLOR0
 float4 NCityPSNoShad(CityVertexOut Input) : COLOR0
 {
 	float4 BCol = GetNCityColor(Input);
-	return gammaMul1(float4(BCol.xyz, 1), lerp(ShadowMult, 1, Diffuse(Input))) * BCol.w;
+	return gammaMul(float4(BCol.xyz, 1), float4(LightCol.xyz * lerp(ShadowMult, 1, Diffuse(Input)), 1)) * BCol.w;
 }
 
 float4 NCityPSFog(CityVertexOut Input) : COLOR0
 {
 	float4 BCol = GetNCityColor(Input);
-	BCol = float4(gammaMul1(float4(BCol.xyz, 1), lerp(ShadowMult, 1, Diffuse(Input))).rgb, BCol.w);
+	BCol = float4(gammaMul(float4(BCol.xyz, 1), float4(LightCol.xyz * lerp(ShadowMult, 1, Diffuse(Input)), 1)).rgb, BCol.w);
 
 	return Fog(BCol, Input);
 }
@@ -543,7 +545,7 @@ float4 WSpecular(CityVertexOut Input) {
 
 	float cosan = abs(dot(camVec, normal));
 
-	return float4(LightCol.xyz, 1) * SpecularIntensity * (pow(max(dotProduct, 0), SunShininess) * 0.6*SunStrength + (1 - pow(cosan, SkyShininess))*0.65);
+	return LinearToSRGB(float4(LightCol.xyz, 1)) * SpecularIntensity * (pow(max(dotProduct, 0), SunShininess) * 0.6*SunStrength + (1 - pow(cosan, SkyShininess))*0.65);
 }
 
 float4 GetWCityColor(CityVertexOut Input) {
@@ -562,7 +564,7 @@ float4 GetWCityColor(CityVertexOut Input) {
 	float startEnd = 1 - smoothstep(0.4, 0.5, max(abs(waveTime-0.5), abs(waveScale-0.5)));
 	float a = closeness*startEnd * (1.0-step(0.499, abs(baseCol.a - 0.5)));
 
-	return lerp(baseCol + float4(WSpecular(Input).xyz, 0), float4(LightCol.xyz, 1.0), a);
+	return lerp(baseCol + float4(WSpecular(Input).xyz, 0), LinearToSRGB(float4(LightCol.xyz, 1.0)), a);
 }
 
 float4 WCityPS(CityVertexOut Input) : COLOR0
@@ -576,13 +578,13 @@ float4 WCityPS(CityVertexOut Input) : COLOR0
 float4 WCityPSNoShad(CityVertexOut Input) : COLOR0
 {
 	float4 BCol = GetWCityColor(Input);
-	return gammaMul1(float4(BCol.xyz, 1), lerp(ShadowMult, 1, Diffuse(Input))) * BCol.w;
+	return gammaMul(float4(BCol.xyz, 1), float4(LightCol.xyz * lerp(ShadowMult, 1, Diffuse(Input)), 1)) * BCol.w;
 }
 
 float4 WCityPSFog(CityVertexOut Input) : COLOR0
 {
 	float4 BCol = GetWCityColor(Input);
-	BCol = float4(gammaMul1(float4(BCol.xyz, 1), lerp(ShadowMult, 1, Diffuse(Input))).rgb, BCol.w);
+	BCol = float4(gammaMul(float4(BCol.xyz, 1), float4(LightCol.xyz * lerp(ShadowMult, 1, Diffuse(Input)), 1)).rgb, BCol.w);
 
 	return Fog(BCol, Input);
 }

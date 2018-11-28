@@ -26,6 +26,7 @@ namespace FSO.Client.UI.Controls
         private Texture2D Overlay;
         private Texture2D Icon;
         private Texture2D Target;
+        private Texture2D MayorIcon;
         private bool RMB;
 
         public UIVMPersonButton(VMAvatar ava, VM vm, bool small)
@@ -34,6 +35,10 @@ namespace FSO.Client.UI.Controls
             this.vm = vm;
 
             Small = small;
+            if (((VMTSOAvatarState)Avatar.TSOState).Flags.HasFlag(VMTSOAvatarFlags.Mayor))
+            {
+                MayorIcon = Content.Content.Get().CustomUI.Get("mayor_icon.png").Get(GameFacade.GraphicsDevice);
+            }
             UpdateAvatarState(((VMTSOAvatarState)Avatar.TSOState).Permissions);
             OnButtonClick += CenterPerson;
         }
@@ -131,7 +136,12 @@ namespace FSO.Client.UI.Controls
                 }
             }
 
-            return GameFacade.Strings.GetString("217", prefixNum.ToString()) + ava.ToString();
+            var result = GameFacade.Strings.GetString("217", prefixNum.ToString()) + ava.ToString();
+            if (MayorIcon != null)
+            {
+                result += GameFacade.Strings.GetString("f114", "8");
+            }
+            return result;
         }
 
         public override void Draw(UISpriteBatch SBatch)
@@ -156,6 +166,11 @@ namespace FSO.Client.UI.Controls
             if (Icon != null && vm.Context.World.State.ScrollAnchor == Avatar?.WorldUI)
             {
                 DrawLocalTexture(SBatch, Target, new Vector2(Icon.Width-Target.Width, Icon.Height-Target.Height));
+            }
+
+            if (MayorIcon != null)
+            {
+                DrawLocalTexture(SBatch, MayorIcon, new Vector2(1));
             }
             //draw the icon over the button
         }

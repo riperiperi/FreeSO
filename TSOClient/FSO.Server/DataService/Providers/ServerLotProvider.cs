@@ -94,7 +94,7 @@ namespace FSO.Server.DataService.Providers
                     var roommates = db.Roommates.GetLotRoommates(lot.lot_id);
                     var admit = db.LotAdmit.GetLotInfo(lot.lot_id);
                     var nhood = db.Neighborhoods.Get(lot.neighborhood_id);
-                    return HydrateOne(lot, roommates, admit, null);
+                    return HydrateOne(lot, roommates, admit, nhood);
                 }
             }
         }
@@ -320,7 +320,8 @@ namespace FSO.Server.DataService.Providers
                     break;
                 //roommate only
                 case "Lot_Thumbnail":
-                    context.DemandAvatars(roomies, AvatarPermissions.WRITE);
+                    if (lot.Lot_Category == 11) context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                    else context.DemandAvatars(roomies, AvatarPermissions.WRITE);
                     //TODO: needs to be generic data, png, size 288x288, less than 1MB
                     break;
                 case "Lot_IsOnline":

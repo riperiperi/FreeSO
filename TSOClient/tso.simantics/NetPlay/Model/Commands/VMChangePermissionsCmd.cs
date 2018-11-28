@@ -29,7 +29,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 var ownerSwitch = Mode == VMChangePermissionsMode.OWNER_SWITCH || Mode == VMChangePermissionsMode.OWNER_SWITCH_WITH_OBJECTS;
                 if (ownerSwitch)
                 {
-                    ChangeUserLevel(vm, ReplaceUID, VMTSOAvatarPermissions.Visitor);
+                    ChangeUserLevel(vm, vm.TSOState.OwnerID, VMTSOAvatarPermissions.Visitor);
+                    if (vm.TSOState.CommunityLot)
+                    {
+                        vm.TSOState.Roommates.Clear();
+                        vm.TSOState.BuildRoommates.Clear();
+                    }
                 }
                 roomieChange = ChangeUserLevel(vm, TargetUID, Level);
                 if (ownerSwitch) roomieChange = true;
@@ -39,13 +44,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (roomieChange)
             {
                 VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
-                var roomies = vm.TSOState.Roommates;
+                var roomies = (vm.TSOState.CommunityLot)?new HashSet<uint>() { vm.TSOState.OwnerID }:vm.TSOState.Roommates;
                 foreach (var ent in vm.Entities)
                 {
                     if (ent is VMGameObject && ent.PersistID > 0)
                     {
                         var owner = ((VMTSOObjectState)ent.TSOState).OwnerID;
-                        if (owner == ReplaceUID && ReplaceUID != 0)
+                        if (Mode == VMChangePermissionsMode.OWNER_SWITCH_WITH_OBJECTS && owner == ReplaceUID && ReplaceUID != 0)
                         {
                             ((VMTSOObjectState)ent.TSOState).OwnerID = TargetUID;
                             owner = TargetUID;

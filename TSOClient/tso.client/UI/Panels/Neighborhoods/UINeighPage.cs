@@ -145,6 +145,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 {
                     Ratings = null;
                     FindController<NeighPageController>()?.GetMayorInfo(value);
+                    RatingStars.LinkAvatar = value;
                 }
                 _MayorID = value;
             }
@@ -228,12 +229,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 Caption = GameFacade.Strings.GetString("f115", "14")
             };
 
-            MayorRatingBox1 = new UIRatingSummaryPanel()
-            {
-                Name = "Raeven",
-                Message = "if only he had 17803 days he could have turned it all around... :frowning:",
-                HalfStars = 3
-            };
+            MayorRatingBox1 = new UIRatingSummaryPanel();
             MayorRatingBox2 = new UIRatingSummaryPanel();
 
             RatingStars = new UIRatingDisplay(false);
@@ -267,7 +263,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             TextureUtils.ManualTextureMask(ref DefaultThumb, new uint[] { 0xFF000000 });
             LotThumbnail.SetThumbnail(DefaultThumb, 0);
             LotThumbnail.OnLotClick += (btn) => {
-                FindController<CoreGameScreenController>()?.ShowLotPage(LotThumbnail.CurrentLotThumb);
+                FindController<CoreGameScreenController>()?.ShowLotPage(CurrentNeigh.Value?.Neighborhood_TownHallXY ?? 0);
             };
             Add(LotThumbnail);
 
@@ -846,7 +842,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                     if (hasElect && CurrentNeigh.Value.Neighborhood_ElectionCycle != null)
                     {
                         var electionOver = ClientEpoch.Now > CurrentNeigh.Value.Neighborhood_ElectionCycle.ElectionCycle_EndDate;
-                        var currentMayorDate = ClientEpoch.ToDate(CurrentNeigh.Value.Neighborhood_ElectionCycle.ElectionCycle_EndDate);
+                        var currentMayorDate = ClientEpoch.ToDate(CurrentNeigh.Value.Neighborhood_ElectedDate);
                         MayorStatusLabel.Caption = GameFacade.Strings.GetString("f115", electionOver ? "29" : "30", new string[] { currentMayorDate.ToShortDateString() });
 
                         var electionDay = CurrentNeigh.Value.Neighborhood_ElectionCycle.ElectionCycle_EndDate;

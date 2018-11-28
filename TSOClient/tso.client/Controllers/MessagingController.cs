@@ -114,7 +114,7 @@ namespace FSO.Client.Controllers
             var split = data.Substring(1).Split(';');
             if (split.Length < (hasExpire ? 3 : 2)) return data;
 
-            var args = split.Skip((hasExpire)?3:2).ToArray();
+            var args = split.Skip((hasExpire)?3:2).Select(x => BBCodeParser.SanitizeBB(x)).ToArray();
             if (hasExpire)
             {
                 uint expire;

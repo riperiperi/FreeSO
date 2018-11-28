@@ -467,10 +467,11 @@ namespace FSO.Client.Rendering.City
             if (City.m_Zoomed == TerrainZoomMode.Far) {
                 //find the nhood we're hovering
                 var pos = City.EstTileAtPosWithScroll(state.MouseState.Position.ToVector2(), null);
-
+                
                 if (City.HandleMouse)
                 {
                     HoverNHood = NhoodNearest(pos);
+                    Console.WriteLine(HoverNHood);
                     if (HoverNHood > -1 && !HoverPct.ContainsKey(HoverNHood))
                         HoverPct.Add(HoverNHood, 0f);
                 } else
@@ -540,6 +541,7 @@ namespace FSO.Client.Rendering.City
         {
             var nhoodID = ToID(nhoodDBID);
             var nhood = Data[nhoodID];
+            if (Cells.Count == 0) return;
             var cell = Cells[NHoodToCell[nhoodID]];
             var camSize = 2 - (float)Math.Sqrt(cell.Size) / 7;
             var center = new CityCameraCenter()

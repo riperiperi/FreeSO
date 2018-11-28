@@ -28,8 +28,7 @@ namespace FSO.Server.Api.Core.Controllers
 
         #region Registration
         [HttpPost]
-        [Route("userapi/registration")]
-        public IActionResult CreateUser(RegistrationModel user)
+        public IActionResult CreateUser([FromForm] RegistrationModel user)
         {
             var api = Api.INSTANCE;
 
@@ -47,7 +46,7 @@ namespace FSO.Server.Api.Core.Controllers
             user.username = user.username ?? "";
             user.username = user.username.ToLowerInvariant();
             user.email = user.email ?? "";
-            user.key = user.key ?? "";
+            //user.key = user.key ?? "";
 
             string failReason = null;
             if (user.username.Length < 3) failReason = "user_short";
@@ -73,6 +72,7 @@ namespace FSO.Server.Api.Core.Controllers
                 });
             }
 
+            /*
             if (!string.IsNullOrEmpty(api.Config.Regkey) && api.Config.Regkey != user.key)
             {
                 return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
@@ -81,6 +81,7 @@ namespace FSO.Server.Api.Core.Controllers
                     error_description = failReason
                 });
             }
+            */
 
             using (var da = api.DAFactory.Get())
             {
@@ -558,7 +559,6 @@ namespace FSO.Server.Api.Core.Controllers
         public string username { get; set; }
         public string email { get; set; }
         public string password { get; set; }
-        public string key { get; set; }
     }
 
     /// <summary>

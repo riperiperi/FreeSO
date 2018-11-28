@@ -77,7 +77,8 @@ namespace FSO.LotView.Model
             set
             {
                 _OutsideColor = value;
-                MinOut = value * MinOutMul;
+                var aFactor = 1f - ((value.R + value.G + value.B) - 115) / (512f*2);
+                MinOut = value * MinOutMul * aFactor;
                 if (MinOut.R == 0) MinOut.R = 1;
                 if (MinOut.G == 0) MinOut.G = 1;
                 if (MinOut.B == 0) MinOut.B = 1;

@@ -21,14 +21,21 @@ using FSO.Common;
 using FSO.SimAntics;
 using FSO.SimAntics.Model;
 using FSO.Content.Interfaces;
+using FSO.Client.UI.Panels;
 
 namespace FSO.Client.UI.Controls.Catalog
 {
     public class UICatalog : UIContainer
     {
-        private int Page;
+        private int _Page;
+        public int Page { get => _Page; }
         private int _Budget;
-        public VM ActiveVM;
+        public UILotControl LotControl;
+        public VM ActiveVM { get
+            {
+                return LotControl.vm;
+            }
+        }
         public int Budget
         {
             get { return _Budget; }
@@ -279,7 +286,7 @@ namespace FSO.Client.UI.Controls.Catalog
         }
 
         public void SetActive(int selection, bool active) {
-            int index = selection - Page * PageSize;
+            int index = selection - _Page * PageSize;
             if (index >= 0 && index < CatalogItems.Length) CatalogItems[index].SetActive(active);
         }
 
@@ -296,7 +303,7 @@ namespace FSO.Client.UI.Controls.Catalog
 
         public int GetPage()
         {
-            return Page;
+            return _Page;
         }
 
         public void SetPage(int page) {
@@ -326,6 +333,7 @@ namespace FSO.Client.UI.Controls.Catalog
                     var price = (int)elem.Info.Item.Price;
                     var dcPercent = VMBuildableAreaInfo.GetDiscountFor(elem.Info.Item, ActiveVM);
                     var finalPrice = (price * (100 - dcPercent)) / 100;
+                    if (LotControl.ObjectHolder.DonateMode) finalPrice -= (finalPrice * 2) / 3;
                     elem.Info.CalcPrice = finalPrice;
                 }
 
@@ -338,7 +346,7 @@ namespace FSO.Client.UI.Controls.Catalog
                 CatalogItems[i] = elem;
                 this.Add(elem);
             }
-            Page = page;
+            _Page = page;
         }
 
         void InnerSelect(UIElement button)

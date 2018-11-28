@@ -10,9 +10,7 @@
 
 //elections over [sent to voters] (winner, nhood name, other placements)
 5 ^Your new Mayor!^
-6 ^The votes are in - %s is now the mayor of %s! Why not celebrate at your town hall? Your new mayor should be getting set up there. 
-The runners up: 
-%s^
+6 ^The votes are in - %s is now the mayor of %s! Why not celebrate at your town hall? Your new mayor should be getting set up there. ^ //todo: runners up?
 
 //player nominated [sent to nominated player] (nhood name, deadline)
 7 ^Nominated for Mayor^
@@ -37,9 +35,9 @@ Reason: %s
 Duration: %s
 For more information on the rules surrounding neighborhood gameplay, see http://freeso.org/nhoodrules.^
 
-//mayor term ending warning (sim name, nhood name)
+//mayor term ending warning (nhood name, end date)
 17 ^Term Length Reminder^
-18 ^Hello Mayor %s! This message is just to inform you that another election cycle is starting in %s. If you wish to continue being the mayor of this neighborhood, you should run for re-election. You'll lose control of the Town Hall if you don't get re-elected, so make sure you've done everything you want to!^
+18 ^Good morning, mayor! This message is just to inform you that another election cycle is starting in %s, that will end on %s. If you wish to continue being the mayor of this neighborhood, you should run for re-election. You'll lose control of the Town Hall if you don't get re-elected, so make sure you've done everything you want to!^
 
 //mayor term ended
 19 ^Out with the Old^ (new mayor name, nhood name)

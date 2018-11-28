@@ -12,14 +12,20 @@ using System.Threading.Tasks;
 
 namespace FSO.Client.Controllers.Panels
 {
+    public interface IUIAbstractRating
+    {
+        Binding<MayorRating> CurrentRating { get; set; }
+        uint HalfStars { get; set; }
+    }
+
     public class RatingSummaryController : IDisposable
     {
         private Network.Network Network;
         private IClientDataService DataService;
-        private UIRatingSummaryPanel View;
+        private IUIAbstractRating View;
         private BookmarkType CurrentType = BookmarkType.AVATAR;
 
-        public RatingSummaryController(UIRatingSummaryPanel view, IClientDataService dataService, Network.Network network)
+        public RatingSummaryController(IUIAbstractRating view, IClientDataService dataService, Network.Network network)
         {
             this.Network = network;
             this.DataService = dataService;
@@ -39,11 +45,6 @@ namespace FSO.Client.Controllers.Panels
                     View.CurrentRating.Value = (x.Result as MayorRating);
                 });
             }
-        }
-
-        public void ChangeType(BookmarkType type)
-        {
-            CurrentType = type;
         }
 
         public void Dispose()

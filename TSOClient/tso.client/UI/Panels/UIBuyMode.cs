@@ -128,7 +128,7 @@ namespace FSO.Client.UI.Panels
             this.AddAt(5, InventoryCatalogVisitorIcon);
 
             Catalog = new UICatalog(useSmall ? 14 : 24);
-            Catalog.ActiveVM = lotController.vm;
+            Catalog.LotControl = lotController;
             Catalog.OnSelectionChange += new CatalogSelectionChangeDelegate(Catalog_OnSelectionChange);
             Catalog.Position = new Microsoft.Xna.Framework.Vector2(275, 7);
             this.Add(Catalog);
@@ -251,6 +251,12 @@ namespace FSO.Client.UI.Panels
             var objCount = LotController.vm.Context.ObjectQueries.NumUserObjects;
             if (LastObjCount != objCount || LastDonator != LotController.ObjectHolder.DonateMode)
             {
+                if (LastDonator != LotController.ObjectHolder.DonateMode)
+                {
+                    if (CurrentInventory != null && CurrentCategory == CurrentInventory && LotController.ObjectHolder.DonateMode)
+                        UIAlert.Alert(GameFacade.Strings.GetString("f114", "2"), GameFacade.Strings.GetString("f114", "3"), true);
+                    Catalog.SetPage(Catalog.Page); //update prices
+                }
                 if (LotController.ObjectHolder.DonateMode)
                 {
                     ObjLimitLabel.Caption = GameFacade.Strings.GetString("f114", "4");
@@ -433,7 +439,14 @@ namespace FSO.Client.UI.Panels
             UIButton button = (UIButton)elem;
             button.Selected = true;
             SetMode((elem == InventoryButton) ? 2 : 1);
-            if (elem == InventoryButton) CurrentCategory = CurrentInventory;
+            if (elem == InventoryButton)
+            {
+                if (CurrentCategory != CurrentInventory && LotController.ObjectHolder.DonateMode)
+                {
+                    UIAlert.Alert(GameFacade.Strings.GetString("f114", "2"), GameFacade.Strings.GetString("f114", "3"), true);
+                }
+                CurrentCategory = CurrentInventory;
+            }
             else
             {
                 if (!CategoryMap.ContainsKey(button)) return;

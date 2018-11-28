@@ -81,6 +81,14 @@ namespace FSO.LotView
             }
         }
 
+        public static Effect SpriteEffect
+        {
+            get
+            {
+                return ContentManager.Load<Effect>("Effects/SpriteEffects");
+            }
+        }
+
         public static Effect ParticleEffect
         {
             get

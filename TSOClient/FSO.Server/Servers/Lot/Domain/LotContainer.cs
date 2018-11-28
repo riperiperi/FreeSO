@@ -683,6 +683,8 @@ namespace FSO.Server.Servers.Lot.Domain
                     Lot.TSOState.BuildRoommates.Add(owner);
                     Lot.TSOState.OwnerID = owner;
                 }
+
+                EnsureCommunityObjects();
             }
             else
             {
@@ -790,6 +792,25 @@ namespace FSO.Server.Servers.Lot.Domain
                     State = Lot.Save(),
                     Run = false,
                 });
+            }
+        }
+
+        private static uint PAYPHONE_GUID = 0x313D2F9A;
+        private static uint NHOOD_PAYPHONE_GUID = 0x303CD603;
+
+        private void EnsureCommunityObjects()
+        {
+            var payphones = Lot.Context.ObjectQueries.GetObjectsByGUID(PAYPHONE_GUID)?.ToList(); //clone as we will be removing them
+            if (payphones != null)
+            {
+                foreach (var phone in payphones)
+                {
+                    var pos = phone.Position;
+                    var dir = phone.Direction;
+                    phone.Delete(true, Lot.Context);
+
+                    Lot.Context.CreateObjectInstance(NHOOD_PAYPHONE_GUID, pos, dir);
+                }
             }
         }
 
@@ -1245,6 +1266,9 @@ namespace FSO.Server.Servers.Lot.Domain
                     StatusFlags = (short)job.job_statusflags
                 };
             }
+
+            if (avatar.mayor_nhood == LotPersist.neighborhood_id)
+                state.AvatarFlags |= VMTSOAvatarFlags.Mayor; //we're not roommate anywhere, so we can be here.
 
             if (myRoomieLots.Count == 0 && LotPersist.category != LotCategory.community)
                 state.AvatarFlags |= VMTSOAvatarFlags.CanBeRoommate; //we're not roommate anywhere, so we can be here.

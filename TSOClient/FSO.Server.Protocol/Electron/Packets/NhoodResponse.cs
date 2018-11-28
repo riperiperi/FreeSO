@@ -69,6 +69,7 @@ namespace FSO.Server.Protocol.Electron.Packets
         CANDIDATE_NHOOD_GAMEPLAY_BAN = 0x14,
         MISSING_ENTITY = 0x15, //missing someone
         
+        CANCEL = 0xFE,
         UNKNOWN_ERROR = 0xFF
     };
 }
