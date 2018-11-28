@@ -122,7 +122,7 @@ namespace FSO.Client.UI.Framework
             {
                 Children.Remove(child);
                 child?.Removed();
-                if (child?.Parent == this) child.Parent = null;
+                //if (child?.Parent == this) child.Parent = null;
             }
         }
 

@@ -117,7 +117,10 @@ namespace FSO.Client.UI.Screens
                         CityRenderer.Camera.ClearCenter();
                         var childClone = CityFloatingContainer.GetChildren().ToList();
                         foreach (var child in childClone)
+                        {
                             CityFloatingContainer.Remove(child);
+                            child.Parent = null;
+                        }
                         
                         CityTooltipHitArea.HideTooltip();
                         SetTitle();
