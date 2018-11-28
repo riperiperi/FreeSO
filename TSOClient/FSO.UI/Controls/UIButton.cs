@@ -243,8 +243,8 @@ namespace FSO.Client.UI.Controls
                 /** Measure the text **/
                 var size = m_CaptionStyle.MeasureString(m_Caption);
 
-                if (m_AutoMargins == -1) Width = (m_WidthDiv3 * 2) + size.X;
-                else Width = m_AutoMargins*2 + size.X;
+                if (m_AutoMargins == -1) Width = (m_WidthDiv3 * 2) + (int)size.X;
+                else Width = m_AutoMargins*2 + (int)size.X;
             }
         }
 

@@ -1488,9 +1488,9 @@ namespace FSO.Client.UI.Controls
                 }
 
                 if (mat != null)
-                    batch.Begin(transformMatrix: mat);
+                    batch.Begin(transformMatrix: mat, rasterizerState: RasterizerState.CullNone);
                 else
-                    batch.Begin();
+                    batch.Begin(rasterizerState: RasterizerState.CullNone);
             }
             else
             {

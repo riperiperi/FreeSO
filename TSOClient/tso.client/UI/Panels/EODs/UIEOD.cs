@@ -15,13 +15,13 @@ namespace FSO.Client.UI.Panels.EODs
         public Dictionary<string, EODDirectPlaintextEventHandler> PlaintextHandlers;
         public Dictionary<string, EODDirectBinaryEventHandler> BinaryHandlers;
 
-        public UIEODController Controller;
+        public UIEODController EODController;
 
         public UIEOD(UIEODController controller)
         {
             PlaintextHandlers = new Dictionary<string, EODDirectPlaintextEventHandler>();
             BinaryHandlers = new Dictionary<string, EODDirectBinaryEventHandler>();
-            Controller = controller;
+            EODController = controller;
         }
 
         public UILotControl LotController
@@ -47,28 +47,28 @@ namespace FSO.Client.UI.Panels.EODs
 
         public virtual void OnClose()
         {
-            Controller.CloseEOD();
+            EODController.CloseEOD();
         }
 
         public void SetTip(string txt)
         {
-            Controller.EODMessage = txt;
+            EODController.EODMessage = txt;
         }
 
         public void SetTime(int time)
         {
-            Controller.EODTime = " "+((time<0)?"":((time/60)+":"+((time%60).ToString().PadLeft(2, '0'))));
+            EODController.EODTime = " "+((time<0)?"":((time/60)+":"+((time%60).ToString().PadLeft(2, '0'))));
         }
 
         public void CloseInteraction()
         {
-            var me = Controller.Lot.ActiveEntity;
+            var me = EODController.Lot.ActiveEntity;
             if (me != null)
             {
                 var action = me.Thread.Queue.FirstOrDefault(x => x.Mode != SimAntics.Engine.VMQueueMode.Idle);
                 if (action != null)
                 {
-                    Controller.Lot.vm.SendCommand(new VMNetInteractionCancelCmd
+                    EODController.Lot.vm.SendCommand(new VMNetInteractionCancelCmd
                     {
                         ActionUID = action.UID
                     });
@@ -79,9 +79,9 @@ namespace FSO.Client.UI.Panels.EODs
         public void Send(string evt, string data)
         {
             if (data == null) return;
-            Controller.Lot.vm.SendCommand(new VMNetEODMessageCmd
+            EODController.Lot.vm.SendCommand(new VMNetEODMessageCmd
             {
-                PluginID = Controller.ActivePID,
+                PluginID = EODController.ActivePID,
                 EventName = evt,
                 Binary = false,
                 TextData = data
@@ -91,9 +91,9 @@ namespace FSO.Client.UI.Panels.EODs
         public void Send(string evt, byte[] data)
         {
             if (data == null) return;
-            Controller.Lot.vm.SendCommand(new VMNetEODMessageCmd
+            EODController.Lot.vm.SendCommand(new VMNetEODMessageCmd
             {
-                PluginID = Controller.ActivePID,
+                PluginID = EODController.ActivePID,
                 EventName = evt,
                 Binary = true,
                 BinData = data

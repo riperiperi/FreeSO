@@ -72,7 +72,7 @@ namespace FSO.Client.UI.Framework
 
                 batch.BatchMatrixStack.Push(mat);
 
-                batch.Begin(transformMatrix: mat, blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
+                batch.Begin(transformMatrix: mat, blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred, rasterizerState: RasterizerState.CullNone);
                 batch.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
                 if (InternalBefore) InternalDraw(batch);
                 lock (Children)

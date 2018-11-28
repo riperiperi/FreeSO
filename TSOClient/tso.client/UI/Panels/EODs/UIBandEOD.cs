@@ -529,7 +529,7 @@ namespace FSO.Client.UI.Panels.EODs
             Player3Wait.Visible = true;
             Player4Wait.Visible = true;
 
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Expandable = false,
@@ -575,7 +575,7 @@ namespace FSO.Client.UI.Panels.EODs
             Player3Wait.Visible = false;
             Player4Wait.Visible = false;
 
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 2,
                 Expandable = false,

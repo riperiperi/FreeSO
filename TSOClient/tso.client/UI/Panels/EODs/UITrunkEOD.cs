@@ -42,7 +42,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void FillUIHandler(string evt, string collectionPath)
         {
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 1,
                 Height = EODHeight.Tall,

@@ -809,7 +809,6 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
             MayorElectionLabel.Visible = isMayor;
             MayorNominationLabel.Visible = isMayor;
-            MayorStatusLabel.Visible = isMayor;
             
             var now = ClientEpoch.Now;
             bool hasMayor = false;
@@ -867,11 +866,11 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 if (!canUseExtraTools) CurrentMayorTab = UINeighMayorTabMode.Rate;
             }
 
-            MayorRatingFlairLabel.Visible = isMayor;
+            MayorStatusLabel.Visible = isMayor && hasMayor;
 
-            bool isRating = isMayor && CurrentMayorTab == UINeighMayorTabMode.Rate;
+            bool isRating = isMayor && CurrentMayorTab == UINeighMayorTabMode.Rate && hasMayor;
             MayorTabRateImage.Visible = isRating;
-            RateButton.Visible = isRating;
+            RateButton.Visible = isRating || GameFacade.EnableMod;
             MayorRatingBox1.Visible = isRating;
             MayorRatingBox2.Visible = isRating;
 
@@ -886,6 +885,8 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             MayorActionReturn.Visible = isMayorAction;
 
             bool isModAction = isMayor && CurrentMayorTab == UINeighMayorTabMode.ModActions;
+
+            MayorRatingFlairLabel.Visible = isRating || isMayorAction || isModAction;
 
             ModActionManageRatings.Visible = isModAction;
             ModActionReserved.Visible = isModAction;

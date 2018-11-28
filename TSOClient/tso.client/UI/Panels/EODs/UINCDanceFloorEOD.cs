@@ -97,7 +97,7 @@ namespace FSO.Client.UI.Panels.EODs
             if (TeamNumber < 0 || TeamNumber > 3) TeamNumber = 0;
             TeamMedallion.Texture = (new Texture2D[] { DancerRedImage, DancerBlueImage, DancerGreenImage, DancerYellowImage })[TeamNumber];
 
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Expandable = false,

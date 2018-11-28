@@ -743,9 +743,9 @@ namespace FSO.Client.UI.Framework
                 style.VFont.Draw(batch.GraphicsDevice, text, pos, style.GetColor(state) * Opacity, scale, mat);
                 
                 if (mat != null)
-                    batch.Begin(transformMatrix: mat);
+                    batch.Begin(transformMatrix: mat, rasterizerState: RasterizerState.CullNone);
                 else
-                    batch.Begin();
+                    batch.Begin(rasterizerState: RasterizerState.CullNone);
             } else
             {
                 if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);

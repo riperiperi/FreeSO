@@ -187,7 +187,6 @@ namespace FSO.Client.UI.Panels.WorldUI
                 if (DrawSkill)
                 {
                     batch.Draw(WhitePx, new Rectangle(88, 4, 71, 41), new Color(92, 92, 92));
-                    var font = GameFacade.MainFont.GetNearest(14).Font;
                     var vfont = GameFacade.VectorFont;
                     batch.End();
 

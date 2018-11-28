@@ -114,6 +114,11 @@ namespace FSO.Client.UI.Screens
                     if (vm == null) ZoomLevel = 4; //call this again but set minimum cityrenderer view
                     else
                     {
+                        CityRenderer.Camera.ClearCenter();
+                        var childClone = CityFloatingContainer.GetChildren().ToList();
+                        foreach (var child in childClone)
+                            CityFloatingContainer.Remove(child);
+                        
                         CityTooltipHitArea.HideTooltip();
                         SetTitle();
                         var targ = (WorldZoom)(4 - value); //near is 3 for some reason... will probably revise
@@ -247,6 +252,9 @@ namespace FSO.Client.UI.Screens
             SaveHouseButton.OnButtonClick += new ButtonClickDelegate(SaveHouseButton_OnButtonClick);
             this.Add(SaveHouseButton);*/
 
+            CityFloatingContainer = new UISortedContainer();
+            Add(CityFloatingContainer);
+
             ucp = new UIUCP(this);
             ucp.Y = ScreenHeight - 210;
             ucp.SetInLot(false);
@@ -270,9 +278,6 @@ namespace FSO.Client.UI.Screens
             MessageTray.X = ScreenWidth - 70;
             MessageTray.Y = 12;
             this.Add(MessageTray);
-
-            CityFloatingContainer = new UISortedContainer();
-            Add(CityFloatingContainer);
 
             WindowContainer = new UIContainer();
             Add(WindowContainer);

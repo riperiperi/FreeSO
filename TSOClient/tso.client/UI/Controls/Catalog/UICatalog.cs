@@ -33,7 +33,7 @@ namespace FSO.Client.UI.Controls.Catalog
         public UILotControl LotControl;
         public VM ActiveVM { get
             {
-                return LotControl.vm;
+                return LotControl?.vm;
             }
         }
         public int Budget

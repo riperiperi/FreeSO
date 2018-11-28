@@ -131,7 +131,7 @@ namespace FSO.Client.UI.Panels.EODs
             SecTextEntry.CurrentText = (CurrentSeconds > 9) ? CurrentSeconds + "" : "0" + CurrentSeconds;
             SecTextEntry.Alignment = TextAlignment.Center;
 
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Height = EODHeight.Normal,

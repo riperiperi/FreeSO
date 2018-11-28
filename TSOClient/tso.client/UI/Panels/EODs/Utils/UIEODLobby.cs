@@ -46,9 +46,9 @@ namespace FSO.Client.UI.Panels.EODs.Utils
 
         public UIVMPersonButton GetAvatarButton(short objectID, bool small)
         {
-            var avatar = (VMAvatar)EOD.Controller.Lot.vm.GetObjectById((short)objectID);
+            var avatar = (VMAvatar)EOD.EODController.Lot.vm.GetObjectById((short)objectID);
             if (avatar != null)
-                return new UIVMPersonButton((VMAvatar)avatar, EOD.Controller.Lot.vm, small);
+                return new UIVMPersonButton((VMAvatar)avatar, EOD.EODController.Lot.vm, small);
             return null;
         }
 
@@ -62,7 +62,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 var ui = PlayerUI[i];
                 var playerId = players[ui.Slot];
 
-                var avatar = (VMAvatar)EOD.Controller.Lot.vm.GetObjectById((short)playerId);
+                var avatar = (VMAvatar)EOD.EODController.Lot.vm.GetObjectById((short)playerId);
 
                 if (avatar == null)
                 {
@@ -84,7 +84,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
                 player.PersonButton = null;
             }
 
-            player.PersonButton = new UIVMPersonButton((VMAvatar)avatar, EOD.Controller.Lot.vm, true);
+            player.PersonButton = new UIVMPersonButton((VMAvatar)avatar, EOD.EODController.Lot.vm, true);
             player.PersonButton.Position = player.Image.Position + new Microsoft.Xna.Framework.Vector2(2, 2);
             Add(player.PersonButton);
 

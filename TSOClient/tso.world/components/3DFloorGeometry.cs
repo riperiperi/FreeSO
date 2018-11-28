@@ -271,9 +271,11 @@ namespace FSO.LotView.Components
                     {
                         e.Parameters["UseTexture"].SetValue(false);
                         e.Parameters["IgnoreColor"].SetValue(false);
+                        e.Parameters["GrassShininess"].SetValue(0.02f);// (float)0.25);
                     }
                     else
                     {
+                        e.Parameters["GrassShininess"].SetValue((id >= 65503)?0.02f:0f);
                         if (id >= 65503)
                         {
                             if (id == 65503)

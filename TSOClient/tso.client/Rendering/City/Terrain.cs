@@ -1527,7 +1527,7 @@ namespace FSO.Client.Rendering.City
                 }
             }
             
-            NeighGeom.DrawHover(m_GraphicsDevice, m_Batch, VertexShader, PixelShader, Content);
+            if (Camera.Zoomed != TerrainZoomMode.Lot) NeighGeom.DrawHover(m_GraphicsDevice, m_Batch, VertexShader, PixelShader, Content);
             if (Plugin is NeighbourhoodEditPlugin) NeighGeom.Draw(m_GraphicsDevice, VertexShader, PixelShader, Content);
 
             m_2DVerts = new ArrayList(); //refresh list for spotlights

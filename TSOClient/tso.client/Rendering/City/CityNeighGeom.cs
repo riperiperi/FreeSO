@@ -294,6 +294,11 @@ namespace FSO.Client.Rendering.City
             if (screenCtr.Z > 0)
             {
                 var banner = Banners.FirstOrDefault(x => x.DataID == cell.Ind);
+                if (banner != null && banner.Parent == null)
+                {
+                    Banners.Remove(banner);
+                    banner = null;
+                }
 
                 if (banner == null)
                 {
@@ -310,7 +315,7 @@ namespace FSO.Client.Rendering.City
 
                 var mulFactor = 120f;
                 if (City.Camera is CityCamera2D) mulFactor = 0.5f;
-                banner.ScaleX = banner.ScaleY = (mulFactor / screenCtr.W);
+                banner.ScaleX = banner.ScaleY = Math.Min(2.75f, (mulFactor / screenCtr.W));
                 banner.Position = new Vector2(screenCtr.X, screenCtr.Y);
                 banner.Opacity = f;
                 banner.Z = -screenCtr.Z;
