@@ -67,8 +67,10 @@ namespace FSO.Client.UI.Framework
                 var pos = LocalPoint(0, 0);
 
                 var mat = Microsoft.Xna.Framework.Matrix.CreateTranslation(-(pos.X), -(pos.Y), 0) *
-                    Microsoft.Xna.Framework.Matrix.CreateScale(1f / FSOEnvironment.DPIScaleFactor) *
-                    Microsoft.Xna.Framework.Matrix.CreateTranslation(BackOffset.X, BackOffset.Y, 0);
+                    Microsoft.Xna.Framework.Matrix.CreateScale(1f) *
+                    Microsoft.Xna.Framework.Matrix.CreateTranslation(
+                        BackOffset.X / FSOEnvironment.DPIScaleFactor, 
+                        BackOffset.Y / FSOEnvironment.DPIScaleFactor, 0);
 
                 batch.BatchMatrixStack.Push(mat);
 
@@ -119,7 +121,7 @@ namespace FSO.Client.UI.Framework
             if (!Visible) return;
             if (Target != null)
             {
-                DrawLocalTexture(batch, Target, null, -BackOffset.ToVector2(), new Vector2(1/(ScaleX), 1/(ScaleY)));
+                DrawLocalTexture(batch, Target, null, -BackOffset.ToVector2(), new Vector2(1/(Scale.X), 1/(Scale.Y)));
             }
             DynamicOverlay.Draw(batch);
         }

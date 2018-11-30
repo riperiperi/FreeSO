@@ -19,6 +19,7 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Content;
+using FSO.Common;
 
 namespace FSO.Client.UI.Framework
 {
@@ -119,7 +120,7 @@ namespace FSO.Client.UI.Framework
         /// 
         /// It is used to convert local coordinates into absolute screen coordinates for drawing.
         /// </summary>
-        protected float[] _Mtx = Matrix2D.IDENTITY;
+        protected float[] _Mtx = Matrix2D.IDENTITY.CloneMatrix();
 
         /// <summary>
         /// This is the absolute scale of this UIElement, Aka it is all the parent
@@ -343,7 +344,7 @@ namespace FSO.Client.UI.Framework
             else
             {
                 _ScaleParent = Vector2.One;
-                _Mtx = Matrix2D.IDENTITY;
+                _Mtx = Matrix2D.IDENTITY.CloneMatrix();
             }
 
             //Translate by our x and y coordinates
@@ -739,7 +740,7 @@ namespace FSO.Client.UI.Framework
                     mat = ui.BatchMatrixStack.Peek();
 
                 if (style.Shadow)
-                    style.VFont.Draw(batch.GraphicsDevice, text, pos + new Vector2(1, 1), Color.Black, scale, mat);
+                    style.VFont.Draw(batch.GraphicsDevice, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black, scale, mat);
                 style.VFont.Draw(batch.GraphicsDevice, text, pos, style.GetColor(state) * Opacity, scale, mat);
                 
                 if (mat != null)
@@ -748,11 +749,25 @@ namespace FSO.Client.UI.Framework
                     batch.Begin(rasterizerState: RasterizerState.CullNone);
             } else
             {
-                if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+                if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
                 batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state) * Opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
             }
 
 
+        }
+
+        private void DPISwitch(ref Texture2D texture, ref Vector2 scale, ref Rectangle? rect)
+        {
+            if (texture.Tag is Texture2D)
+            {
+                var tex2 = (Texture2D)texture.Tag;
+                scale *= new Vector2(texture.Width / (float)tex2.Width, texture.Height / (float)tex2.Height);
+
+                var rscale = 2;
+                rect = new Rectangle(rect.Value.X * rscale, rect.Value.Y * rscale, rect.Value.Width * rscale, rect.Value.Height * rscale);
+
+                texture = tex2;
+            }
         }
 
         /// <summary>
@@ -764,10 +779,11 @@ namespace FSO.Client.UI.Framework
         /// <param name="to"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Vector2 to)
         {
+            DrawLocalTexture(batch, texture, null, to, Vector2.One);
             //if (!m_IsInvalidated)
             //{
-            batch.Draw(texture, FlooredLocalPoint(to), null, _BlendColor, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale, SprEffects, 0.0f);
+            //batch.Draw(DPISwitch(texture), FlooredLocalPoint(to), null, _BlendColor, 0.0f,
+            //            new Vector2(0.0f, 0.0f), TexScale(texture, _Scale), SprEffects, 0.0f);
             //}
         }
 
@@ -781,10 +797,11 @@ namespace FSO.Client.UI.Framework
         /// <param name="to"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Rectangle from, Vector2 to)
         {
+            DrawLocalTexture(batch, texture, from, to, Vector2.One);
             //if (!m_IsInvalidated)
             //{
-            batch.Draw(texture, FlooredLocalPoint(to), from, _BlendColor, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale, SprEffects, 0.0f);
+            //batch.Draw(DPISwitch(texture), FlooredLocalPoint(to), RectScale(texture, from), _BlendColor, 0.0f,
+            //            new Vector2(0.0f, 0.0f), TexScale(texture, _Scale), SprEffects, 0.0f);
             //}
         }
 
@@ -801,45 +818,11 @@ namespace FSO.Client.UI.Framework
         {
             //if (!m_IsInvalidated)
             //{
+            DPISwitch(ref texture, ref scale, ref from);
             batch.Draw(texture, FlooredLocalPoint(to), from, _BlendColor, 0.0f,
                         new Vector2(0.0f, 0.0f), _Scale * scale, SprEffects, 0.0f);
             //}
         }
-
-        /// <summary>
-        /// Draws a texture to the UIElement. This method will deal with
-        /// the matrix calculations
-        /// </summary>
-        /// <param name="batch"></param>
-        /// <param name="texture"></param>
-        /// <param name="from"></param>
-        /// <param name="to"></param>
-        /// <param name="scale"></param>
-        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation)
-        {
-            //if (!m_IsInvalidated)
-            //{
-            batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, SprEffects, 0.0f);
-            //}
-        }
-
-        /// <summary>
-        /// Draws a texture to the UIElement. This method will deal with
-        /// the matrix calculations
-        /// </summary>
-        /// <param name="batch"></param>
-        /// <param name="texture"></param>
-        /// <param name="from"></param>
-        /// <param name="to"></param>
-        /// <param name="scale"></param>
-        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation, Vector2 origin)
-        {
-            batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
-                        origin, _Scale * scale, SprEffects, 0.0f);
-        }
-
-        protected SpriteEffects SprEffects = SpriteEffects.None;
 
         /// <summary>
         /// Draws a texture to the UIElement. This method will deal with
@@ -855,26 +838,68 @@ namespace FSO.Client.UI.Framework
         {
             //if (!m_IsInvalidated)
             //{
-            batch.Draw(texture, FlooredLocalPoint(to), from, new Color(_BlendColor.ToVector4()*blend.ToVector4()), 0.0f,
+            DPISwitch(ref texture, ref scale, ref from);
+            batch.Draw(texture, FlooredLocalPoint(to), from, new Color(_BlendColor.ToVector4() * blend.ToVector4()), 0.0f,
                         new Vector2(0.0f, 0.0f), _Scale * scale, SprEffects, 0.0f);
             //}
         }
+
+        /// <summary>
+        /// Draws a texture to the UIElement. This method will deal with
+        /// the matrix calculations
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="texture"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="scale"></param>
+        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation)
+        {
+            DrawLocalTexture(batch, texture, from, to, scale, color, 0, Vector2.Zero);
+            //if (!m_IsInvalidated)
+            //{
+            //batch.Draw(DPISwitch(texture), FlooredLocalPoint(to), RectScale(texture, from), color, rotation,
+            //            new Vector2(0.0f, 0.0f), TexScale(texture, _Scale * scale), SprEffects, 0.0f);
+            //}
+        }
+
+        /// <summary>
+        /// Draws a texture to the UIElement. This method will deal with
+        /// the matrix calculations
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="texture"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="scale"></param>
+        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation, Vector2 origin)
+        {
+            DPISwitch(ref texture, ref scale, ref from);
+            batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
+                        origin, _Scale * scale, SprEffects, 0.0f);
+        }
+
+        protected SpriteEffects SprEffects = SpriteEffects.None;
+
 
         public void DrawTiledTexture(SpriteBatch batch, Texture2D texture, Rectangle dest, Color blend)
         {
             //if (!m_IsInvalidated)
             //{
+            
             var col = new Color(_BlendColor.ToVector4() * blend.ToVector4());
             for (int x = 0; x < dest.Width; x+=texture.Width)
             {
                 for (int y= 0; y<dest.Height; y += texture.Height)
                 {
-                    batch.Draw(texture, FlooredLocalPoint(new Vector2(dest.X+x, dest.Y+y)), new Rectangle(0, 0, Math.Min(texture.Width, dest.Width-x), Math.Min(texture.Height, dest.Height - y)), col, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
+                    var scale = _Scale;
+                    var tex = texture;
+                    Rectangle? from = new Rectangle(0, 0, Math.Min(texture.Width, dest.Width - x), Math.Min(texture.Height, dest.Height - y));
+                    DPISwitch(ref tex, ref scale, ref from);
+                    batch.Draw(texture, FlooredLocalPoint(new Vector2(dest.X+x, dest.Y+y)), from, col, 0.0f,
+                        new Vector2(0.0f, 0.0f), scale, SpriteEffects.None, 0.0f);
                 }
             }
-
-
             //}
         }
 

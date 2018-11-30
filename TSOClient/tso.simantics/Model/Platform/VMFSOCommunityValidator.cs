@@ -29,7 +29,7 @@ namespace FSO.SimAntics.Model.Platform
             if (desired > DeleteMode.Delete) return DeleteMode.Disallowed;
             if (obj == null || ava == null) return DeleteMode.Disallowed;
             if (desired == DeleteMode.Sendback && 
-                (obj is VMAvatar || !CanSendbackObject(ava, (VMGameObject)obj))) return DeleteMode.Disallowed;
+                (obj.PersistID == 0 || obj is VMAvatar || !CanSendbackObject(ava, (VMGameObject)obj))) return DeleteMode.Disallowed;
 
             if (obj is VMAvatar && ava.AvatarState.Permissions < VMTSOAvatarPermissions.Admin) return DeleteMode.Disallowed;
 

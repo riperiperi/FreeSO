@@ -121,22 +121,37 @@ namespace FSO.Client.UI.Controls
         private string GetAvatarString(VMAvatar ava)
         {
             int prefixNum = 3;
+            string prefixSrc = "217";
             if (ava.IsPet) prefixNum = 5;
             else if (ava.PersistID == 0) prefixNum = 4;
             else
             {
                 var permissionsLevel = ((VMTSOAvatarState)ava.TSOState).Permissions;
-                switch (permissionsLevel)
+                if (vm.TSOState.CommunityLot)
                 {
-                    case VMTSOAvatarPermissions.Visitor: prefixNum = 3; break;
-                    case VMTSOAvatarPermissions.Roommate:
-                    case VMTSOAvatarPermissions.BuildBuyRoommate: prefixNum = 2; break;
-                    case VMTSOAvatarPermissions.Admin:
-                    case VMTSOAvatarPermissions.Owner: prefixNum = 1; break;
+                    switch (permissionsLevel)
+                    {
+                        case VMTSOAvatarPermissions.Visitor: prefixNum = 3; break;
+                        case VMTSOAvatarPermissions.Roommate: prefixSrc = "f114"; prefixNum = 11; break;
+                        case VMTSOAvatarPermissions.BuildBuyRoommate: prefixSrc = "f114"; prefixNum = 10; break;
+                        case VMTSOAvatarPermissions.Admin:
+                        case VMTSOAvatarPermissions.Owner: prefixNum = 1; break;
+                    }
+                }
+                else
+                {
+                    switch (permissionsLevel)
+                    {
+                        case VMTSOAvatarPermissions.Visitor: prefixNum = 3; break;
+                        case VMTSOAvatarPermissions.Roommate:
+                        case VMTSOAvatarPermissions.BuildBuyRoommate: prefixNum = 2; break;
+                        case VMTSOAvatarPermissions.Admin:
+                        case VMTSOAvatarPermissions.Owner: prefixNum = 1; break;
+                    }
                 }
             }
 
-            var result = GameFacade.Strings.GetString("217", prefixNum.ToString()) + ava.ToString();
+            var result = GameFacade.Strings.GetString(prefixSrc, prefixNum.ToString()) + ava.ToString();
             if (MayorIcon != null)
             {
                 result += GameFacade.Strings.GetString("f114", "8");

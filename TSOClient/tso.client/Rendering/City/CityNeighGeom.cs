@@ -471,7 +471,7 @@ namespace FSO.Client.Rendering.City
         {
             if (City.m_Zoomed == TerrainZoomMode.Far) {
                 //find the nhood we're hovering
-                var pos = City.EstTileAtPosWithScroll(state.MouseState.Position.ToVector2(), null);
+                var pos = City.EstTileAtPosWithScroll(state.MouseState.Position.ToVector2() / FSOEnvironment.DPIScaleFactor, null);
                 
                 if (City.HandleMouse)
                 {

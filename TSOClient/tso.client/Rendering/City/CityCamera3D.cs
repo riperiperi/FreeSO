@@ -319,10 +319,11 @@ namespace FSO.Client.Rendering.City
 
             float terrainHeight = 0;
 
+            var relative = ComputeCenterRelative();
             terrainHeight = (city.InterpElevationAt(CenterTile));
             var targHeight = terrainHeight;
             var heightAtCam = city.InterpElevationAt(new Vector2(Position.X, Position.Z));
-            if (Position.Y < heightAtCam) targHeight = heightAtCam;
+            if (relative.Y + targHeight < heightAtCam + 0.5f) targHeight = (heightAtCam + 0.5f) - relative.Y;
             //targHeight = Math.Max(heightAtCam, terrainHeight);
             CamHeight += (targHeight - CamHeight) * (1f - (float)Math.Pow(0.8f, 60f / FSOEnvironment.RefreshRate));
 

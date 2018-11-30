@@ -161,6 +161,8 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             Sim.TimeOffset = X*10000000;
             base.Update(state);
 
+            if (!WillDraw()) return;
+
             if (Hovered)
             {
                 if (!ShowTooltip && (AvatarId > 0 || LotId > 0))

@@ -870,7 +870,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
             bool isRating = isMayor && CurrentMayorTab == UINeighMayorTabMode.Rate && hasMayor;
             MayorTabRateImage.Visible = isRating;
-            RateButton.Visible = isRating || GameFacade.EnableMod;
+            RateButton.Visible = isRating || GameFacade.EnableMod && isMayor;
             MayorRatingBox1.Visible = isRating;
             MayorRatingBox2.Visible = isRating;
 

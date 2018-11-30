@@ -24,10 +24,18 @@ namespace FSO.Server.Core
             stream.Close();
             
             if (result == null) return null;
+            var data = result.SavePixelData();
+
+            for (int i = 0; i < data.Length; i += 4)
+            {
+                var temp = data[i];
+                data[i] = data[i + 2];
+                data[i + 2] = temp;
+            }
 
             return new TexBitmap
             {
-                Data = result.SavePixelData(),
+                Data = data,
                 Width = result.Width,
                 Height = result.Height,
                 PixelSize = 4

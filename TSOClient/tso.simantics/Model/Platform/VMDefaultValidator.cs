@@ -70,7 +70,7 @@ namespace FSO.SimAntics.Model.Platform
             if (obj == null || ava == null) return DeleteMode.Disallowed;
             if (desired == DeleteMode.Sendback)
             {
-                if (obj is VMAvatar || !CanSendbackObject(ava, (VMGameObject)obj)) desired = DeleteMode.Disallowed;
+                if (obj.PersistID == 0 || obj is VMAvatar || !CanSendbackObject(ava, (VMGameObject)obj)) desired = DeleteMode.Disallowed;
             }
             else if (desired == DeleteMode.Delete)
             {
@@ -78,7 +78,7 @@ namespace FSO.SimAntics.Model.Platform
                     return (ava.AvatarState.Permissions < VMTSOAvatarPermissions.Admin) ? DeleteMode.Disallowed : DeleteMode.Delete;
                 if (ava.AvatarState.Permissions < VMTSOAvatarPermissions.Roommate)
                     desired = DeleteMode.Disallowed;
-                else if (ava.PersistID != (obj.TSOState as VMTSOObjectState).OwnerID)
+                else if (obj.PersistID != 0 && ava.PersistID != (obj.TSOState as VMTSOObjectState).OwnerID)
                     desired = DeleteMode.Sendback;
             }
             return desired;

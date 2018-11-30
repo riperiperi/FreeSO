@@ -1,9 +1,12 @@
-﻿using FSO.Client.Controllers.Panels;
+﻿using FSO.Client.Controllers;
+using FSO.Client.Controllers.Panels;
 using FSO.Client.Model;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Client.UI.Screens;
 using FSO.Client.Utils;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Server.Protocol.Electron.Model;
 using FSO.SimAntics;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Model.Commands;
@@ -32,12 +35,15 @@ namespace FSO.Client.UI.Panels.Neighborhoods
         private HashSet<uint> LastRoommates;
         private HashSet<uint> LastBuildRoommates;
 
+        public bool Community;
+
         //listbox
         //smallThumb | avatarName | buildCheckbox | deleteButton
 
         public UIManageDonatorDialog(UILotControl lotControl) : base(UIDialogStyle.Standard | UIDialogStyle.OK, true)
         {
             this.LotControl = lotControl;
+            Community = lotControl.vm.TSOState.CommunityLot;
 
             BuildIcon = new UIImage();
             var ui = RenderScript("fsodonatorlist.uis");
@@ -62,11 +68,12 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             RoommateListBox.AttachSlider(RoommateListSlider);
             RoommateListBox.Columns[1].Alignment = Framework.TextAlignment.Left | Framework.TextAlignment.Middle;
 
-            Caption = GameFacade.Strings.GetString("f114", "6");
+            Caption = GameFacade.Strings.GetString("f114", (Community)?"6":"12");
             SetSize(405, 400);
 
             DonatorsLabel.CaptionStyle = DonatorsLabel.CaptionStyle.Clone();
             DonatorsLabel.CaptionStyle.Shadow = true;
+            DonatorsLabel.Caption = GameFacade.Strings.GetString("f114", (Community) ? "5" : "13");
             AddAt(5, BuildIcon);
 
             var ctr = ControllerUtils.BindController<GenericSearchController>(this);
@@ -80,22 +87,51 @@ namespace FSO.Client.UI.Panels.Neighborhoods
         private void AddDonator(uint donator, string name)
         {
             LotControl.vm.TSOState.Names.Precache(LotControl.vm, donator);
-            UIAlert alert = null;
-            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+
+            if (Community)
             {
-                Message = GameFacade.Strings.GetString("f114", "7", new string[] { name }),
-                Buttons = UIAlertButton.YesNo(
-                    (btn) => {
-                        LotControl.vm.SendCommand(new VMChangePermissionsCmd
+                UIAlert alert = null;
+                alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Message = GameFacade.Strings.GetString("f114", "7", new string[] { name }),
+                    Buttons = UIAlertButton.YesNo(
+                        (btn) =>
                         {
-                            TargetUID = donator,
-                            Level = VMTSOAvatarPermissions.Roommate,
-                        });
-                        UIScreen.RemoveDialog(alert);
-                    },
-                    (btn) => { UIScreen.RemoveDialog(alert); }
-                    )
-            }, true);
+                            LotControl.vm.SendCommand(new VMChangePermissionsCmd
+                            {
+                                TargetUID = donator,
+                                Level = VMTSOAvatarPermissions.Roommate,
+                            });
+                            UIScreen.RemoveDialog(alert);
+                        },
+                        (btn) => { UIScreen.RemoveDialog(alert); }
+                        )
+                }, true);
+            }
+            else
+            {
+                UIAlert alert = null;
+                alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Title = GameFacade.Strings.GetString("208", "5"),
+                    Message = GameFacade.Strings.GetString("208", "6"),
+                    Buttons = new UIAlertButton[] {
+                        new UIAlertButton(UIAlertButtonType.Yes, (btn) => {
+                            var screen = UIScreen.Current as CoreGameScreen;
+                            if (screen != null)
+                            {
+                                screen.PersonPage.FindController<PersonPageController>().ChangeRoommate(
+                                    ChangeRoommateType.INVITE,
+                                    donator,
+                                    screen.FindController<CoreGameScreenController>().GetCurrentLotID());
+                            }
+
+                            UIScreen.RemoveDialog(alert);
+                            }),
+                        new UIAlertButton(UIAlertButtonType.No, (btn) => UIScreen.RemoveDialog(alert))
+                        },
+                }, true);
+            }
         }
 
         public override void Update(UpdateState state)

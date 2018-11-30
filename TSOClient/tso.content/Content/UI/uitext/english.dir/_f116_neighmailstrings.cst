@@ -13,7 +13,7 @@
 6 ^The votes are in - %s is now the mayor of %s! Why not celebrate at your town hall? Your new mayor should be getting set up there. ^ //todo: runners up?
 
 //player nominated [sent to nominated player] (nhood name, deadline)
-7 ^Nominated for Mayor^
+7 ^Run for Election!^
 8 ^Congratulations! You have been nominated by 3 or more players to become the Mayor of the neighborhood you are a resident of: %s. If you wish to run in the election, click the button below before the end of nominations on %s - when the top nominated sims will run for election. If not, simply ignore this message.^
 
 //nomination accepted [after accepting a nomination] (nhood name, end date)

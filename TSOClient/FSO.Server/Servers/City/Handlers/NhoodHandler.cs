@@ -313,7 +313,7 @@ namespace FSO.Server.Servers.City.Handlers
                                     }
 
                                     mail.SendSystemEmail("f116", (int)NeighMailStrings.VoteCountedSubject, (int)NeighMailStrings.VoteCounted,
-                                        1, MessageSpecialType.Normal, cycle.end_date, packet.TargetAvatar, targetAva.name, nhood.name);
+                                        1, MessageSpecialType.Normal, cycle.end_date, session.AvatarId, targetAva.name, nhood.name);
                                     session.Write(Code(NhoodResponseCode.SUCCESS));
                                 }
                                 else
@@ -385,7 +385,7 @@ namespace FSO.Server.Servers.City.Handlers
                                     }
 
                                     mail.SendSystemEmail("f116", (int)NeighMailStrings.NominationCountedSubject, (int)NeighMailStrings.NominationCounted,
-                                        1, MessageSpecialType.Normal, cycle.end_date, packet.TargetAvatar, targetAva.name, nhood.name);
+                                        1, MessageSpecialType.Normal, cycle.end_date, session.AvatarId, targetAva.name, nhood.name);
 
                                     session.Write(Code(NhoodResponseCode.SUCCESS));
                                 }

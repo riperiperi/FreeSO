@@ -368,9 +368,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
-      <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>
-      <Name>TargaImage</Name>
+    <ProjectReference Include="..\..\Other\libs\TargaImagePCL\TargaImagePCL.csproj">
+      <Project>{d8232422-9d79-4200-a981-eb70ed82ccf3}</Project>
+      <Name>TargaImagePCL</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>

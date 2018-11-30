@@ -171,28 +171,31 @@ namespace FSO.Client.Model
 
         private void RefreshHead()
         {
-            var avatar = CurrentAvatar.Value;
-            if (avatar != null)
+            GameThread.NextUpdate(x =>
             {
-                var content = FSO.Content.Content.Get();
-                var outfit = content.AvatarOutfits.Get(_HeadOutfitId);
-                var appearanceId = outfit.GetAppearance((Vitaboy.AppearanceType)avatar.Avatar_Appearance.AvatarAppearance_SkinTone);
-                var appearance = content.AvatarAppearances.Get(appearanceId);
-                if (appearance.ThumbnailID.FileID == 0)
+                var avatar = CurrentAvatar.Value;
+                if (avatar != null)
                 {
-                    var tex = UI.Model.UIIconCache.GenHeadTex(_HeadOutfitId, 0);
-                    Icon = new LoadedTextureRef(tex);
+                    var content = FSO.Content.Content.Get();
+                    var outfit = content.AvatarOutfits.Get(_HeadOutfitId);
+                    var appearanceId = outfit.GetAppearance((Vitaboy.AppearanceType)avatar.Avatar_Appearance.AvatarAppearance_SkinTone);
+                    var appearance = content.AvatarAppearances.Get(appearanceId);
+                    if (appearance.ThumbnailID.FileID == 0)
+                    {
+                        var tex = UI.Model.UIIconCache.GenHeadTex(_HeadOutfitId, 0);
+                        Icon = new LoadedTextureRef(tex);
+                    }
+                    else
+                    {
+                        var thumbnail = content.AvatarThumbnails.Get(appearance.ThumbnailID);
+                        Icon = thumbnail;
+                    }
                 }
                 else
                 {
-                    var thumbnail = content.AvatarThumbnails.Get(appearance.ThumbnailID);
-                    Icon = thumbnail;
+                    Icon = null;
                 }
-            }
-            else
-            {
-                Icon = null;
-            }
+            });
         }
 
         public override UserReferenceType Type

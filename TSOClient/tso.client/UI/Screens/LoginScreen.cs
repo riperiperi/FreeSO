@@ -156,6 +156,7 @@ namespace FSO.Client.UI.Screens
             GameThread.NextUpdate(x =>
             {
                 FSOFacade.Hints.TriggerHint("screen:login");
+                //Content.Content.Get().UIGraphics.ExportAll(GameFacade.GraphicsDevice);
             });
         }
 

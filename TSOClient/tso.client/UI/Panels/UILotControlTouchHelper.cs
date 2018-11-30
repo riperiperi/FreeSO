@@ -83,14 +83,15 @@ namespace FSO.Client.UI.Panels
             base.Update(state);
             bool rotated = false;
 
-            ScrollWheelInvalid = !Master.TVisible || !UIScreen.Current.Visible || !state.ProcessMouseEvents || state.MouseState.ScrollWheelValue == 0;
+            var invalidNow = !Master.TVisible || !UIScreen.Current.Visible || !state.ProcessMouseEvents || state.MouseState.ScrollWheelValue == 0;
+            if (invalidNow) ScrollWheelInvalid = invalidNow;
 
             if (!FSOEnvironment.SoftwareKeyboard)
             {
                 //if (!state.WindowFocused) ScrollWheelInvalid = true;
                 if (ScrollWheelInvalid)
                 {
-                    //LastMouseWheel = state.MouseState.ScrollWheelValue;
+                    LastMouseWheel = state.MouseState.ScrollWheelValue;
                     //ScrollWheelInvalid = false;
                 }
                 else if (state.WindowFocused && state.MouseState.ScrollWheelValue != LastMouseWheel)
@@ -103,6 +104,7 @@ namespace FSO.Client.UI.Panels
                     ZoomFreezeTime = (10 * FSOEnvironment.RefreshRate) / 60;
                     Master.ClearCenter();
                 }
+                ScrollWheelInvalid = invalidNow;
             }
 
             MiceDown = new HashSet<int>(MiceDown.Intersect(state.MouseStates.Select(x => x.ID)));

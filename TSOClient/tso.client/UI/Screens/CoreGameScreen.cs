@@ -319,6 +319,9 @@ namespace FSO.Client.UI.Screens
         public override void GameResized()
         {
             base.GameResized();
+            CalculateMatrix();
+            CityFloatingContainer.ScaleX = 1f / Scale.X;
+            CityFloatingContainer.ScaleY = 1f / Scale.Y;
             CityRenderer.Camera.ProjectionDirty();
             Title.SetTitle(Title.Label.Caption);
             ucp.Y = ScreenHeight - 210;
@@ -334,6 +337,10 @@ namespace FSO.Client.UI.Screens
 
         public void Initialize(string cityName, int cityMap, TerrainController terrainController)
         {
+            CalculateMatrix();
+            CityFloatingContainer.ScaleX = 1f / Scale.X;
+            CityFloatingContainer.ScaleY = 1f / Scale.Y;
+
             Title.SetTitle(cityName);
             GameFacade.CurrentCityName = cityName;
             InitializeMap(cityMap);

@@ -1483,7 +1483,7 @@ namespace FSO.Client.UI.Controls
                 else
                 {
                     if (Style.Shadow)
-                        Style.VFont.Draw(batch.GraphicsDevice, Text, Position + new Vector2(0, 1), Color.Black, Scale, mat);
+                        Style.VFont.Draw(batch.GraphicsDevice, Text, Position + new Vector2(0, FSOEnvironment.DPIScaleFactor), Color.Black, Scale, mat);
                     Style.VFont.Draw(batch.GraphicsDevice, Text, Position, Style.Color, Scale, mat);
                 }
 

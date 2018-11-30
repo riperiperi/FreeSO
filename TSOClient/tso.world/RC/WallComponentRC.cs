@@ -328,6 +328,22 @@ namespace FSO.LotView.RC
             if (!gd.RasterizerState.ScissorTestEnable) gd.RasterizerState = RasterizerState.CullNone;
         }
 
+        public BlendState MaxBlendRed = new BlendState()
+        {
+            AlphaBlendFunction = BlendFunction.Max,
+            ColorBlendFunction = BlendFunction.Max,
+            ColorDestinationBlend = Blend.One,
+            ColorWriteChannels = ColorWriteChannels.Red | ColorWriteChannels.Alpha
+        };
+
+        public BlendState MaxBlendGreen = new BlendState()
+        {
+            AlphaBlendFunction = BlendFunction.Max,
+            ColorBlendFunction = BlendFunction.Max,
+            ColorDestinationBlend = Blend.One,
+            ColorWriteChannels = ColorWriteChannels.Green | ColorWriteChannels.Alpha
+        };
+
         public void DrawLMap(GraphicsDevice gd, LightData light, Matrix projection, Matrix lightTransform)
         {
             var effect = WorldContent.RCObject;
@@ -358,6 +374,7 @@ namespace FSO.LotView.RC
 
                     if (lastSideMask != g.UseOffset)
                     {
+                        gd.BlendState = (g.UseOffset) ? MaxBlendRed : MaxBlendGreen;
                         effect.Parameters["SideMask"].SetValue(g.UseOffset ? 1f : 0f);
                         lastSideMask = g.UseOffset;
                     }

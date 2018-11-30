@@ -417,7 +417,8 @@ namespace FSO.Client.UI.Controls
                 gd.Clear(Color.Transparent);
                 var pos = LocalPoint(0, 0);
 
-                var trans = Microsoft.Xna.Framework.Matrix.CreateTranslation(-pos.X, -pos.Y, 0);
+                var trans = Microsoft.Xna.Framework.Matrix.CreateTranslation(-pos.X, -pos.Y, 0)
+                    * Microsoft.Xna.Framework.Matrix.CreateScale(1/Scale.X, 1/Scale.Y, 1f);
                 batch.BatchMatrixStack.Push(trans);
                 batch.Begin(transformMatrix: trans, blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
                 batch.GraphicsDevice.RasterizerState = RasterizerState.CullNone;

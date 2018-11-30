@@ -382,7 +382,7 @@ namespace FSO.Client.Rendering.City
 
         public Vector2? GetHoverSquare(double[] bounds)
         {
-            return EstTileAtPosWithScroll(m_MouseState.Position.ToVector2(), null);
+            return EstTileAtPosWithScroll(m_MouseState.Position.ToVector2() / FSOEnvironment.DPIScaleFactor, null);
 
             var isoScale = GetIsoScale();
             double width = m_ScrWidth;

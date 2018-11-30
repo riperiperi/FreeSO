@@ -131,7 +131,8 @@ namespace FSO.Client.UI.Panels
             HistoryTextEdit.BBCodeEnabled = true;
             HistoryTextEdit.TextStyle = HistoryTextEdit.TextStyle.Clone();
             HistoryTextEdit.TextStyle.Size = 8;
-            HistoryTextEdit.TextMargin = new Microsoft.Xna.Framework.Rectangle(3, 3, 3, 3);
+            HistoryTextEdit.TextMargin = new Microsoft.Xna.Framework.Rectangle(3, 1, 3, 3);
+            HistoryTextEdit.TextStyle.LineHeightModifier = -1;
             HistoryTextEdit.SetSize(333, 100);
 
             CloseButton.OnButtonClick += new ButtonClickDelegate(CloseButton_OnButtonClick);

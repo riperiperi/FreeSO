@@ -151,6 +151,7 @@ namespace FSO.SimAntics.Marshals.Threads
             }
 
             CurrentPath.CalculateTotalFrames();
+            CurrentPath.UpdateTotalFrames(MoveTotalFrames);
             CurrentPath.ResetToFrame(MoveFrames);
 
             RoomRouteInvalid = reader.ReadBoolean();

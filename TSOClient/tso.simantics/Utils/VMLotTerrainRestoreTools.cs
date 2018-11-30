@@ -714,6 +714,7 @@ namespace FSO.SimAntics.Utils
             new GUIDToPosition(0x39CCF441, -1, 0, 0), //mailbox (2tile)
             new GUIDToPosition(0xA4258067, 1, 1, 0), //bin
             new GUIDToPosition(0x313D2F9A, 4, 1, 0), //phone
+            new GUIDToPosition(0x303CD603, 4, 1, 0), //phone (nhood)
             new GUIDToPosition(0x865A6812, 0, 3, 2), //car portal 1
             new GUIDToPosition(0xD564C66B, -5, 3, 2), //car portal 2
         };

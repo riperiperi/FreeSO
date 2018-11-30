@@ -79,7 +79,7 @@ namespace FSO.Server.Database.DA.Elections
                     + "VALUES (@election_cycle_id, @candidate_avatar_id, @comment)", candidate);
                 return (result > 0);
             }
-            catch (SqlException)
+            catch (Exception)
             {
                 return false;
             }
@@ -95,7 +95,7 @@ namespace FSO.Server.Database.DA.Elections
                             candidate.election_cycle_id, candidate.candidate_avatar_id});
                 return (result > 0);
             }
-            catch (SqlException)
+            catch (Exception)
             {
                 return false;
             }
@@ -110,7 +110,7 @@ namespace FSO.Server.Database.DA.Elections
                     new { election_cycle_id = election_cycle_id, candidate_avatar_id = candidate_avatar_id });
                 return (result > 0);
             }
-            catch (SqlException)
+            catch (Exception)
             {
                 return false;
             }
@@ -141,7 +141,7 @@ namespace FSO.Server.Database.DA.Elections
                     });
                 return (result > 0);
             }
-            catch (SqlException)
+            catch (Exception)
             {
                 return false;
             }
@@ -213,14 +213,16 @@ namespace FSO.Server.Database.DA.Elections
 
         public bool EmailRegistered(DbElectionCycleMail p)
         {
-            return Context.Connection.Query<int>("SELECT count(*) FROM fso_election_cyclemail WHERE cycle_id = @cycle_id AND avatar_id = @avatar_id AND cycle_state = @cycle_state", p).First() > 0;
+            return Context.Connection.Query<int>("SELECT count(*) FROM fso_election_cyclemail WHERE cycle_id = @cycle_id AND avatar_id = @avatar_id AND cycle_state = @cycle_state", 
+                new { p.avatar_id, p.cycle_id, cycle_state = p.cycle_state.ToString() }).First() > 0;
         }
 
         public bool TryRegisterMail(DbElectionCycleMail p)
         {
             try
             {
-                return (Context.Connection.Execute("INSERT INTO fso_election_cyclemail (cycle_id, avatar_id, cycle_state) VALUES (@cycle_id, @avatar_id, @cycle_state)", p) > 0);
+                return (Context.Connection.Execute("INSERT INTO fso_election_cyclemail (cycle_id, avatar_id, cycle_state) VALUES (@cycle_id, @avatar_id, @cycle_state)",
+                    new { p.avatar_id, p.cycle_id, cycle_state = p.cycle_state.ToString() }) > 0);
             }
             catch
             {

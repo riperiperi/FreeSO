@@ -124,7 +124,7 @@ namespace FSO.Client.UI.Controls
             var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;
             var pos = terrain.transformSpr4(new Vector3(xp+0.5f, terrain.InterpElevationAt(new Vector2(xp + 0.5f, yp + 0.5f))+2f, yp+0.5f));
         
-            Position = new Vector2(pos.X-40, pos.Y-110);
+            Position = new Vector2(pos.X-40, pos.Y-110) / FSOEnvironment.DPIScaleFactor;
             ZOrder = pos.Z;
             Visible = (pos.Z < 0);
             //AvoidOther();
@@ -269,7 +269,9 @@ namespace FSO.Client.UI.Controls
             var ThumbImg = Thumb.LotTexture;
             if (ThumbImg != null && BgImg != null && HoverImg != null)
             {
-                UITerrainHighlight.DrawArrow(batch, ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer, Position + new Vector2(40, 25), (int)LotId);
+                UITerrainHighlight.DrawArrow(batch, 
+                    ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer, 
+                    (Position + new Vector2(40, 25)) * FSOEnvironment.DPIScaleFactor, (int)LotId);
                 DrawLocalTexture(batch, (m_isOver && !m_isDown) ? HoverImg : BgImg, new Vector2());
 
                 var scale = new Vector2(0.25f, 0.25f);

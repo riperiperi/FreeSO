@@ -131,7 +131,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 Rating.LinkAvatar = cand.ID;
                 Rating.DisplayStars = cand.Rating / 100f;
                 if (Alignment)
-                    Rating.X = 495 - (SubtitleLabel.CaptionStyle.MeasureString(SubtitleLabel.Caption).X + 7);
+                    Rating.X = (495-60) - (SubtitleLabel.CaptionStyle.MeasureString(SubtitleLabel.Caption).X + 7);
                 else
                     Rating.X = SubtitleLabel.CaptionStyle.MeasureString(SubtitleLabel.Caption).X + 81 + 7;
             }

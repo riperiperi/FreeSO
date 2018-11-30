@@ -723,18 +723,32 @@ namespace FSO.LotView.LMap
         {
             if (OutsideShadowTarg == null || OutsideShadowTarg.IsDisposed)
             {
-                OutsideShadowTarg = new RenderTarget2D(GD, ShadowTarg.Width * 2, ShadowTarg.Height * 2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-                OutsideShadowTargPost = new RenderTarget2D(GD, ShadowTarg.Width * 2, ShadowTarg.Height * 2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-                LightEffect.Parameters["SSAASize"].SetValue(new Vector2(1f / OutsideShadowTarg.Width, 1f / OutsideShadowTarg.Height));
+                OutsideShadowTarg = new RenderTarget2D(GD, ShadowTarg.Width, ShadowTarg.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                OutsideShadowTargPost = new RenderTarget2D(GD, ShadowTarg.Width, ShadowTarg.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                LightEffect.Parameters["SSAASize"].SetValue(new Vector2(0f / OutsideShadowTarg.Width, 0f / OutsideShadowTarg.Height));
             }
         }
+
+        public static BlendState OpaqueBA = new BlendState()
+        {
+            ColorBlendFunction = BlendFunction.Add,
+            AlphaBlendFunction = BlendFunction.Add,
+
+            ColorDestinationBlend = Blend.Zero,
+            ColorSourceBlend = Blend.One,
+
+            AlphaDestinationBlend = Blend.Zero,
+            AlphaSourceBlend = Blend.One,
+
+            ColorWriteChannels = ColorWriteChannels.Blue | ColorWriteChannels.Alpha
+        };
 
         public void DrawWallShadows(List<Vector2[]> walls, LightData pointLight)
         {
             if (pointLight.LightType == LightType.OUTDOORS && WallComp != null)
             {
                 CreateOutsideIfMissing();
-                LightEffect.Parameters["shadowMap"].SetValue(OutsideShadowTargPost ?? OutsideShadowTarg);
+                LightEffect.Parameters["shadowMap"].SetValue(OutsideShadowTarg);
 
                 if (OutShadowFloor == pointLight.Level) return;
                 OutShadowFloor = pointLight.Level;
@@ -751,6 +765,8 @@ namespace FSO.LotView.LMap
                 GD.BlendState = MaxBlendRed;
 
                 WallComp.DrawLMap(GD, pointLight, Projection, mat);
+
+                GD.BlendState = MaxBlendRed;
                 Blueprint.Terrain.DrawLMap(GD, pointLight, Projection, mat);
                 Blueprint.RoofComp.DrawLMap(GD, pointLight, Projection, mat);
 
@@ -766,8 +782,40 @@ namespace FSO.LotView.LMap
                 {
                     var blend = GD.BlendState;
                     var rast = GD.RasterizerState;
-                    GD.SetRenderTarget(OutsideShadowTargPost);
                     var seffect = WorldContent.SpriteEffect;
+
+                    //seffect.Parameters["blurAmount"].SetValue(0.7f / Blueprint.Width);
+                    //seffect.Parameters["blurAmount"].SetValue(0.4f / Blueprint.Width);
+                    //seffect.Parameters["heightMultiplier"].SetValue(pointLight.FalloffMultiplier);
+
+                    var blur = (0.2f / Blueprint.Width) * (float)Math.Pow(pointLight.FalloffMultiplier, 0.8f);
+                    var height = Math.Max(pointLight.FalloffMultiplier / 1.5f, 1);
+                    var harden = 0.03f * (float)Math.Sqrt(pointLight.FalloffMultiplier);
+
+                    seffect.Parameters["blurAmount"].SetValue(new Vector2(blur, blur * 2 / 5f));
+                    seffect.Parameters["heightMultiplier"].SetValue(new Vector2(height, height * 5 / 2f));
+                    seffect.Parameters["hardenBias"].SetValue(new Vector2(harden, harden * 0.5f));
+                    seffect.Parameters["noiseTexture"]?.SetValue(TextureGenerator.GetUniformNoise(GD));
+
+                    for (int i=0; i<4; i++)
+                    {
+                        seffect.CurrentTechnique = seffect.Techniques["ShadowSeparableBlit"+(i+1)];
+                        RenderTarget2D tex;
+                        if (i%2 == 0)
+                        {
+                            GD.SetRenderTarget(OutsideShadowTargPost);
+                            tex = OutsideShadowTarg;
+                        } else
+                        {
+                            GD.SetRenderTarget(OutsideShadowTarg);
+                            tex = OutsideShadowTargPost;
+                        }
+
+                        ShadowTargBlit.Begin(blendState: (i == 1)? OpaqueBA : BlendState.Opaque, effect: seffect, samplerState: SamplerState.PointClamp);
+                        ShadowTargBlit.Draw(tex, new Rectangle(0, 0, tex.Width, tex.Height), Color.White);
+                        ShadowTargBlit.End();
+                    }
+                    /*
                     ShadowTargBlit.Begin(blendState: BlendState.Opaque, effect: seffect);
                     seffect.CurrentTechnique = seffect.Techniques["ShadowBlurBlit"];
                     seffect.Parameters["blurAmount"].SetValue(0.7f / Blueprint.Width);
@@ -775,6 +823,8 @@ namespace FSO.LotView.LMap
                     seffect.Parameters["noiseTexture"]?.SetValue(TextureGenerator.GetUniformNoise(GD));
                     ShadowTargBlit.Draw(OutsideShadowTarg, new Rectangle(0, 0, OutsideShadowTarg.Width, OutsideShadowTarg.Height), Color.White);
                     ShadowTargBlit.End();
+                    */
+
                     GD.SetRenderTarget(OutsideShadowTarg);
                     GD.RasterizerState = rast;
                     GD.BlendState = blend;

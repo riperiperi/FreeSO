@@ -87,7 +87,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
         {
             base.PreDraw(batch);
             if (Z > 0) return;
-            var newIntScale = (float)((Scale.X > 1) ? Math.Round(Scale.X) : 1 / (Math.Round((1 / Scale.X))));
+            var newIntScale = (float)((ScaleX > 1) ? Math.Round(ScaleX) : 1 / (Math.Round((1 / ScaleX))));
             if (newIntScale > 5) newIntScale = 5;
 
             if (IntScale != newIntScale)
@@ -162,14 +162,14 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
         public void DrawGlobalString(SpriteBatch batch, string text, Vector2 to, TextStyle style, Rectangle bounds, TextAlignment align)
         {
-            var scale = _Scale;
-            _Scale = Vector2.One;
-            _ScaleX = 1;
-            _ScaleY = 1;
+            var scale = new Vector2(_ScaleX, _ScaleY);
+            _ScaleX = 1 / Parent.Scale.X;
+            _ScaleY = 1 / Parent.Scale.Y;
+            
             CalculateMatrix();
             var pos = FlooredLocalPoint(Vector2.Zero);
             DrawLocalString(batch, text, to - pos, style, bounds, align);
-            _Scale = scale;
+            //_Scale = scale;
             _ScaleX = scale.X;
             _ScaleY = scale.Y;
             CalculateMatrix();

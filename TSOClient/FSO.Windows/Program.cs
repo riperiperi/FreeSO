@@ -42,6 +42,7 @@ namespace FSO.Windows
             //initialize some platform specific stuff
             FSO.Files.ImageLoaderHelpers.BitmapFunction = BitmapReader;
             ClipboardHandler.Default = new WinFormsClipboard();
+            FSO.Files.ImageLoaderHelpers.SavePNGFunc = SavePNG;
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
@@ -91,6 +92,34 @@ namespace FSO.Windows
                     MessageBox.Show(e.ExceptionObject.ToString(), "A fatal error occured! Screenshot this dialog and post it on Discord.");
                 }
             }
+        }
+
+        public static void SavePNG(byte[] data, int width, int height, Stream str)
+        {
+            Bitmap image = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+
+            // Fix up the Image to match the expected format
+            //image = (Bitmap)image.RGBToBGR();
+
+            BitmapData bitmapData = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
+                ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            if (bitmapData.Stride != image.Width * 4)
+                throw new NotImplementedException();
+
+            
+            for (int i = 0; i < data.Length; i += 4)
+            {
+                //if (data[i+3] == 0) { }
+                //var temp = data[i];
+                //data[i] = data[i + 2];
+                //data[i + 2] = temp;
+            }
+
+            Marshal.Copy(data, 0, bitmapData.Scan0, data.Length);
+            image.UnlockBits(bitmapData);
+
+            image.Save(str, ImageFormat.Png);
         }
 
         public static Tuple<byte[], int, int> BitmapReader(Stream str)

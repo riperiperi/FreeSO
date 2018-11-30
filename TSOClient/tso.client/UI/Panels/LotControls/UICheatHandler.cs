@@ -108,6 +108,16 @@ namespace FSO.Client.UI.Panels.LotControls
             {
                 DrawLocalTexture(batch, DebugTexture, new Vector2(20, 20));
             }
+
+            /*
+            var shadTex = vm.Context.World.State.Light.OutsideShadowTarg;
+            var shadPost = vm.Context.World.State.Light.OutsideShadowTargPost;
+            if (shadTex != null)
+                DrawLocalTexture(batch, shadTex, null, new Vector2(20, 20), new Vector2(0.3f));
+
+            if (shadPost != null)
+                DrawLocalTexture(batch, shadPost, null, new Vector2(768, 20), new Vector2(0.3f));
+                */
         }
 
         public void SubmitCommand(string msg)
