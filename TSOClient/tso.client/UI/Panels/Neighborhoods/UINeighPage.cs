@@ -631,7 +631,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
         public void TrySaveDescription()
         {
             if (CurrentNeigh != null && CurrentNeigh.Value != null && GameFacade.EnableMod
-                && DescriptionText.CurrentText != CurrentNeigh.Value.Neighborhood_Description)
+                && DescriptionText.CurrentText != CurrentNeigh.Value.Neighborhood_Description && DescriptionChanged)
             {
                 CurrentNeigh.Value.Neighborhood_Description = DescriptionText.CurrentText;
                 FindController<NeighPageController>().SaveDescription(CurrentNeigh.Value);
@@ -842,7 +842,8 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                     {
                         var electionOver = ClientEpoch.Now > CurrentNeigh.Value.Neighborhood_ElectionCycle.ElectionCycle_EndDate;
                         var currentMayorDate = ClientEpoch.ToDate(CurrentNeigh.Value.Neighborhood_ElectedDate);
-                        MayorStatusLabel.Caption = GameFacade.Strings.GetString("f115", electionOver ? "29" : "30", new string[] { currentMayorDate.ToShortDateString() });
+                        var awaitingResult = electionOver && CurrentNeigh.Value.Neighborhood_ElectedDate < CurrentNeigh.Value.Neighborhood_ElectionCycle.ElectionCycle_EndDate;
+                        MayorStatusLabel.Caption = GameFacade.Strings.GetString("f115", awaitingResult ? "29" : "30", new string[] { currentMayorDate.ToShortDateString() });
 
                         var electionDay = CurrentNeigh.Value.Neighborhood_ElectionCycle.ElectionCycle_EndDate;
 

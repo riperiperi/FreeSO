@@ -117,8 +117,16 @@ namespace FSO.Client.UI.Panels
             //rotate through to try all configurations
             var dir = Holding.Dir;
             VMPlacementError status = VMPlacementError.Success;
-            if (!Holding.IsBought && !vm.TSOState.CanPlaceNewUserObject(vm)) status = VMPlacementError.TooManyObjectsOnTheLot;
-            else
+
+            if (!Holding.IsBought)
+            {
+                if (DonateMode && !vm.TSOState.CanPlaceNewDonatedObject(vm))
+                    status = VMPlacementError.TooManyObjectsOnTheLot;
+                else if (!DonateMode && !vm.TSOState.CanPlaceNewUserObject(vm))
+                    status = VMPlacementError.TooManyObjectsOnTheLot;
+            }
+            
+            if (status == VMPlacementError.Success)
             {
                 for (int i = 0; i < 4; i++)
                 {

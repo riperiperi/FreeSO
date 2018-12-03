@@ -37,12 +37,16 @@ namespace FSO.Client.UI.Panels.Neighborhoods
         public ImmutableList<uint> RatingIDs {
             set
             {
-                RatingList.Items = value.Reverse().Select(x =>
+                var items = value.Reverse();
+                RatingList.Items = items.Select(x =>
                     new UIListBoxItem(x, new UIFullRatingItem(x))
                     ).ToList();
+                if (items.Count > 5)
+                    RatingList.ScrollOffset = Math.Max(0, Math.Min(items.IndexOf(FocusID), items.Count - 5));
             }
         }
 
+        private uint FocusID;
         private uint AvatarID;
 
         public UIRatingList(uint avatarID)
@@ -66,6 +70,11 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             AvatarID = avatarID;
 
             ControllerUtils.BindController<RatingListController>(this);
+        }
+
+        public void Focus(uint focus)
+        {
+            FocusID = focus;
         }
 
         public override Rectangle GetBounds()

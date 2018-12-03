@@ -28,6 +28,7 @@ using System.Collections.Immutable;
 using FSO.Common.DataService.Model;
 using FSO.Common.Serialization.Primitives;
 using FSO.UI.Model;
+using MSDFData;
 
 namespace FSO.Client
 {
@@ -140,6 +141,7 @@ namespace FSO.Client
             var purch = new Regulators.PurchaseLotRegulator(null);
             var conn = new Regulators.LotConnectionRegulator(null, null, null);
             var t2 = new Regulators.CityConnectionRegulator(null, null, null, null, Kernel, null);
+            var neigh = new Regulators.NeighborhoodActionRegulator(null);
             var regu = new Regulators.RegulatorsModule();
 
             var prov = new CacheProvider();
@@ -155,6 +157,13 @@ namespace FSO.Client
             var arp = new Server.Protocol.Aries.AriesProtocolDecoder(null);
             var are = new Server.Protocol.Aries.AriesProtocolEncoder(null);
             var serc = new Common.Serialization.SerializationContext(null, null);
+
+            var ff = new FieldFont();
+            var fa = new FieldAtlas();
+            var fg = new FieldGlyph();
+            var kp = new KerningPair();
+            var met = new Metrics();
+            var dict = new Dictionary<char, FieldGlyph>();
 
             var packets = new object[]
             {
@@ -188,6 +197,11 @@ namespace FSO.Client
                 new InboxController(null, null, null, null),
                 new JoinLotProgressController(null, null),
                 new DisconnectController(null, null, null, null, null),
+                new GenericSearchController(null, null),
+                new NeighPageController(null, null),
+                new RatingListController(null, null, null),
+                new RatingSummaryController(null, null, null),
+                new NeighborhoodActionController(null),
 
                 ImmutableList.Create<uint>(),
                 ImmutableList.Create<JobLevel>(),

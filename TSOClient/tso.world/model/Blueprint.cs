@@ -236,6 +236,7 @@ namespace FSO.LotView.Model
         public void RemoveAvatar(AvatarComponent avatar)
         {
             this.Avatars.Remove(avatar);
+            HeadlineObjects.Remove(avatar);
         }
 
         public void SignalWallChange()

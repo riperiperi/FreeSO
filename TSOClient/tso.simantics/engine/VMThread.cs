@@ -883,8 +883,18 @@ namespace FSO.SimAntics.Engine
 
                 if ((action.Flags & TTABFlags.TSOIsRepair) > 0 != ((action.Callee.MultitileGroup.BaseObject?.TSOState as VMTSOObjectState)?.Broken ?? false)) return null;
 
+                uint ownerID = 0;
+                if (action.Callee is VMGameObject) {
+                    var state = ((VMTSOObjectState)action.Callee.TSOState);
+                    ownerID = state?.OwnerID ?? 0;
+                    if (ownerID != 0 && state.ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated))
+                    {
+                        ownerID = Context.VM.TSOState.OwnerID; //owner rewrite to mayor
+                    }
+                }
+
                 TSOFlags tsoState =
-                    ((!(action.Callee is VMGameObject) || avatar.PersistID == ((VMTSOObjectState)action.Callee.TSOState).OwnerID)
+                    ((!(action.Callee is VMGameObject) || avatar.PersistID == ownerID)
                     ? TSOFlags.AllowObjectOwner : 0)
                     | ((avatar.AvatarState.Permissions == VMTSOAvatarPermissions.Visitor) ? TSOFlags.AllowVisitors : 0)
                     | ((avatar.AvatarState.Permissions >= VMTSOAvatarPermissions.Roommate) ? TSOFlags.AllowRoommates : 0)

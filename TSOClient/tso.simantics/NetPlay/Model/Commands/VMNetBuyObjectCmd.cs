@@ -91,7 +91,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         private bool TryPlace(VM vm, VMAvatar caller)
         {
-            if (!vm.PlatformState.CanPlaceNewUserObject(vm)) return false;
+            if (Mode != PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewUserObject(vm)) return false;
+            if (Mode == PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewDonatedObject(vm)) return false;
+
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
 

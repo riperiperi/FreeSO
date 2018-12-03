@@ -47,7 +47,7 @@ namespace FSO.Server.Database.DA.LotVisits
         /// </summary>
         public static DateTime Midnight()
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             return new DateTime(now.Year, now.Month, now.Day, 0, 0, 0) + new TimeSpan(24, 0, 0);
         }
     }

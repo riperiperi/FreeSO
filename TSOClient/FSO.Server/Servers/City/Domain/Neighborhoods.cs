@@ -14,6 +14,7 @@ using FSO.Server.Servers.City.Handlers;
 using Ninject;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -113,8 +114,7 @@ namespace FSO.Server.Servers.City.Domain
             switch (cycle.current_state)
             {
                 case DbElectionCycleState.nomination:
-                    //! IMPORTANT ! TODO ! MUST BE 3
-                    endDate -= 60 * 60 * 24 * 2; //nomination ends 3 days before end of cycle
+                    endDate -= 60 * 60 * 24 * 3; //nomination ends 3 days before end of cycle
                     mail.SendSystemEmail("f116", (int)NeighMailStrings.NominateSubject, (int)NeighMailStrings.Nominate,
                         1, MessageSpecialType.Nominate, endDate, avatarID, nhood.name, endDate.ToString());
                     break;
@@ -145,7 +145,40 @@ namespace FSO.Server.Servers.City.Domain
 
         public Task TickNeighborhoods()
         {
-            return TickNeighborhoods(DateTime.UtcNow);
+            return TickNeighborhoods(DateTime.UtcNow.AddSeconds(LoadCheatOffset()));
+        }
+
+        public void SaveCheatOffset(uint offset)
+        {
+            try
+            {
+                using (var str = File.Open("nhoodCheat.txt", FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    var writer = new StreamWriter(str);
+                    writer.Write(offset.ToString());
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
+        public uint LoadCheatOffset()
+        {
+            uint offset = 0;
+            try
+            {
+                if (File.Exists("nhoodCheat.txt"))
+                {
+                    uint.TryParse(File.ReadAllText("nhoodCheat.txt"), out offset);
+                }
+            }
+            catch
+            {
+
+            }
+            return offset;
         }
 
         public async Task TickNeighborhoods(DateTime now)
@@ -206,7 +239,7 @@ namespace FSO.Server.Servers.City.Domain
                             if (cycle.current_state == DbElectionCycleState.shutdown 
                                 || cycle.current_state == DbElectionCycleState.failsafe)
                             {
-                                var timeToEnd = cycle.end_date - epochNow;
+                                long timeToEnd = (long)cycle.end_date - epochNow;
                                 if (timeToEnd < 0 && nhood.mayor_id != null)
                                 {
                                     await SetMayor(da, 0, (uint)nhood.neighborhood_id);
@@ -217,13 +250,12 @@ namespace FSO.Server.Servers.City.Domain
                             { 
                                 var active = (epochNow >= cycle.start_date && epochNow < cycle.end_date);
 
-                                var timeToEnd = cycle.end_date - epochNow;
+                                long timeToEnd = (long)cycle.end_date - epochNow;
 
                                 DbElectionCycleState targetState;
                                 if (timeToEnd < 0)
                                     targetState = DbElectionCycleState.ended;
-                                //! IMPORTANT ! TODO ! MUST BE 3
-                                else if (timeToEnd <= 60 * 60 * 24 * 2) //last 3 days are the full election
+                                else if (timeToEnd <= 60 * 60 * 24 * 3) //last 3 days are the full election
                                     targetState = DbElectionCycleState.election;
                                 else //all other time is the nomination
                                     targetState = DbElectionCycleState.nomination;

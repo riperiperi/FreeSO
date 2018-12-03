@@ -32,6 +32,54 @@ namespace FSO.Vitaboy
         public AdultVitaboyModel(AdultVitaboyModel old) : base(old) {
         }
 
+        public bool SetSkeletonByOFTName(string name)
+        {
+            bool pet = false;
+            if (name != null)
+            {
+
+                var skels = Content.Content.Get().AvatarSkeletons;
+                Skeleton skel = null;
+                string newSkel;
+
+                if (name.StartsWith("uaa"))
+                {
+                    //pet
+                    if (name.Contains("cat")) newSkel = "cat.skel";
+                    else newSkel = "dog.skel";
+                    pet = true;
+                }
+                else
+                {
+                    newSkel = "adult.skel";
+                }
+
+                if (newSkel != SkelName)
+                {
+                    skel = skels.Get(newSkel);
+                    Skeleton = skel.Clone();
+                    BaseSkeleton = skel.Clone();
+                    ReloadSkeleton();
+                    SkelName = newSkel;
+                }
+            }
+            return pet;
+        }
+
+        public override ulong HeadOutfitId
+        {
+            get => base.HeadOutfitId;
+            set
+            {
+                //reload the correct skeleton
+                var ofts = Content.Content.Get().AvatarOutfits;
+                var name = ofts?.GetNameByID(value) ?? "";
+                var pet = SetSkeletonByOFTName(name);
+
+                base.HeadOutfitId = value;
+            }
+        }
+
         public override ulong BodyOutfitId
         {
             get => base.BodyOutfitId;
@@ -39,35 +87,9 @@ namespace FSO.Vitaboy
             {
                 //reload the correct skeleton
                 var ofts = Content.Content.Get().AvatarOutfits;
-                var name = ofts.GetNameByID(value);
-                bool pet = false;
-                if (name != null) { 
+                var name = ofts?.GetNameByID(value) ?? "";
+                var pet = SetSkeletonByOFTName(name);
 
-                    var skels = Content.Content.Get().AvatarSkeletons;
-                    Skeleton skel = null;
-                    string newSkel;
-                    
-                    if (name.StartsWith("uaa"))
-                    {
-                        //pet
-                        if (name.Contains("cat")) newSkel = "cat.skel";
-                        else newSkel = "dog.skel";
-                        pet = true;
-                    }
-                    else
-                    {
-                        newSkel = "adult.skel";
-                    }
-                    
-                    if (newSkel != SkelName)
-                    {
-                        skel = skels.Get(newSkel);
-                        Skeleton = skel.Clone();
-                        BaseSkeleton = skel.Clone();
-                        ReloadSkeleton();
-                        SkelName = newSkel;
-                    }
-                }
                 base.BodyOutfitId = value;
                 if (pet) Handgroup = null;
             }

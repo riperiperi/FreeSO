@@ -544,6 +544,8 @@ namespace FSO.Server.Servers.City.Handlers
                         case NhoodRequestType.PRETEND_DATE:
                             try
                             {
+                                uint day = 60 * 60 * 24;
+                                Nhoods.SaveCheatOffset((((packet.Value - Epoch.Now) + day-1)/day) * day);
                                 await Nhoods.TickNeighborhoods(Epoch.ToDate(packet.Value));
                                 session.Write(Code(NhoodResponseCode.SUCCESS));
                             }

@@ -750,6 +750,15 @@ namespace FSO.Client.UI.Panels
             }
             vm.TSOState.Names.Precache(vm, vm.TSOState.OwnerID);
 
+            var objOwners = new HashSet<uint>();
+            foreach (var ent in vm.Context.ObjectQueries.MultitileByPersist)
+            {
+                var owner = (ent.Value.BaseObject?.TSOState as VMTSOObjectState)?.OwnerID;
+                if (owner != null) objOwners.Add(owner.Value);
+            }
+            foreach (var owner in objOwners)
+                vm.TSOState.Names.Precache(vm, owner);
+
             HasLanded = true;
         }
 

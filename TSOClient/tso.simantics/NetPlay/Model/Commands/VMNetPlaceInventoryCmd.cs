@@ -77,7 +77,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         private bool TryPlace(VM vm, VMAvatar caller)
         {
-            if (!vm.TSOState.CanPlaceNewUserObject(vm)) return false;
+            if (Mode != PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewUserObject(vm)) return false;
+            if (Mode == PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewDonatedObject(vm)) return false;
+
             VMStandaloneObjectMarshal state;
 
             if ((Data?.Length ?? 0) == 0) state = null;

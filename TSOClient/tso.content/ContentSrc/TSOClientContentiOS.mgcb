@@ -134,3 +134,9 @@
 /processorParam:DebugMode=Auto
 /build:Effects/MSDFFont.fx
 
+#begin Effects/SpriteEffectsiOS.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/SpriteEffectsiOS.fx
+

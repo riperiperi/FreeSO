@@ -85,7 +85,7 @@ namespace FSO.LotView
         {
             get
             {
-                return ContentManager.Load<Effect>("Effects/SpriteEffects");
+                return ContentManager.Load<Effect>("Effects/SpriteEffects" + EffectSuffix);
             }
         }
 

@@ -784,8 +784,13 @@ namespace FSO.SimAntics
             {
                 ((VMTS1LotState)input.PlatformState).CurrentFamily = TS1State.CurrentFamily;
             }
+            var lastPlatformState = PlatformState;
             PlatformState = input.PlatformState;
             PlatformState.ActivateValidator(this);
+            if (lastPlatformState != null && lastPlatformState is VMTSOLotState)
+            {
+                TSOState.Names = ((VMTSOLotState)lastPlatformState).Names;
+            }
             ObjectId = input.ObjectId;
 
             //just a few final changes to refresh everything, and avoid signalling objects

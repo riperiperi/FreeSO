@@ -185,8 +185,13 @@ float4 OutdoorsPCFStage1(float4 position : SV_Position, float4 color : COLOR0, f
 	float2 sumSamples = 0;
 	{
 		for (int i = -11; i < 12; i++) {
+#if SIMPLE
+			float shad = tex2D(TextureSampler, uv + float2(blurAmount.x*i, 0)).x;
+			float shad2 = tex2D(TextureSampler, uv + float2(blurAmount.y*i, 0)).y;
+#else
 			float shad = tex2D(TextureSampler, uv + float2(blurAmount.x*i, 0), 0, 0).x;
 			float shad2 = tex2D(TextureSampler, uv + float2(blurAmount.y*i, 0), 0, 0).y;
+#endif
 			float effect = Gaussian23[i + 11] / 0.132384;
 			if (shad > 0) {
 				numSamples.x += effect;
@@ -216,8 +221,13 @@ float4 OutdoorsPCFStage2(float4 position : SV_Position, float4 color : COLOR0, f
 	{
 		for (int i = -11; i < 12; i++) {
 			float4 shad;
+#if SIMPLE
+			shad.xz = tex2D(TextureSampler, uv + float2(0, blurAmount.x*i)).xz;
+			shad.yw = tex2D(TextureSampler, uv + float2(0, blurAmount.y*i)).yw;
+#else
 			shad.xz = tex2D(TextureSampler, uv + float2(0, blurAmount.x*i), 0, 0).xz;
 			shad.yw = tex2D(TextureSampler, uv + float2(0, blurAmount.y*i), 0, 0).yw;
+#endif
 			shad.zw *= 23;
 			numSamples += shad.zw;
 			sumSamples += shad.xy * shad.zw;
@@ -233,7 +243,7 @@ float4 OutdoorsPCFStage3(float4 position : SV_Position, float4 color : COLOR0, f
 {
 	//rg, ba (unfiltered wall/object, wall/object avg 2d) -> rg, ba (wall/object 1d filtered, wall/object avg 2d)
 
-	float4 info = tex2D(TextureSampler, uv, 0, 0);
+	float4 info = tex2D(TextureSampler, uv);
 
 	if (info.z == 0 && info.w == 0) return float4(0, 0, info.zw);
 	if (info.z == 1 && info.w == 1) return float4(1, 1, info.zw);
@@ -244,7 +254,7 @@ float4 OutdoorsPCFStage3(float4 position : SV_Position, float4 color : COLOR0, f
 	blurStrength *= blurAmount;
 	float2 sum = 0;
 
-	float noiseOff = ((tex2D(NoiseSampler, uv * 8, 0, 0).x) - 0.5);
+	float noiseOff = ((tex2D(NoiseSampler, uv * 8).x) - 0.5);
 	float2 bluruvx = uv + float2(noiseOff * blurStrength.x, 0);
 	float2 bluruvy = uv + float2(noiseOff * blurStrength.y, 0);
 	/*
@@ -256,8 +266,13 @@ float4 OutdoorsPCFStage3(float4 position : SV_Position, float4 color : COLOR0, f
 	{
 		for (int i = -11; i < 12; i++) {
 			float2 shad;
+#if SIMPLE
+			shad.x = tex2D(TextureSampler, bluruvx + float2(i*blurStrength.x, 0)).x;
+			shad.y = tex2D(TextureSampler, bluruvy + float2(i*blurStrength.y, 0)).y;
+#else
 			shad.x = tex2D(TextureSampler, bluruvx + float2(i*blurStrength.x, 0), 0, 0).x;
 			shad.y = tex2D(TextureSampler, bluruvy + float2(i*blurStrength.y, 0), 0, 0).y;
+#endif
 			sum += Gaussian23[i+11] * ceil(shad);
 		}
 	}
@@ -269,7 +284,7 @@ float4 OutdoorsPCFStage4(float4 position : SV_Position, float4 color : COLOR0, f
 {
 	//rg, ba (unfiltered wall/object, wall/object avg 2d) -> rg, ba (wall/object 1d filtered, wall/object avg 2d)
 
-	float4 info = tex2D(TextureSampler, uv, 0, 0);
+	float4 info = tex2D(TextureSampler, uv);
 
 	if (info.z == 0 && info.w == 0) return float4(0, 0, info.zw);
 	if (info.z == 1 && info.w == 1) return float4(1, 1, info.zw);
@@ -285,15 +300,20 @@ float4 OutdoorsPCFStage4(float4 position : SV_Position, float4 color : COLOR0, f
 	result.r = ceil(result.r);
 	return result;
 	}*/
-	float noiseOff = ((tex2D(NoiseSampler, uv * 8, 0, 0).y) - 0.5);
+	float noiseOff = ((tex2D(NoiseSampler, uv * 8).y) - 0.5);
 	float2 bluruvx = uv + float2(0, noiseOff * blurStrength.x);
 	float2 bluruvy = uv + float2(0, noiseOff * blurStrength.y);
 
 	{
 		for (int i = -11; i < 12; i++) {
 			float2 shad;
+#if SIMPLE
+			shad.x = tex2D(TextureSampler, bluruvx + float2(0, i*blurStrength.x)).x;
+			shad.y = tex2D(TextureSampler, bluruvy + float2(0, i*blurStrength.y)).y;
+#else
 			shad.x = tex2D(TextureSampler, bluruvx + float2(0, i*blurStrength.x), 0, 0).x;
 			shad.y = tex2D(TextureSampler, bluruvy + float2(0, i*blurStrength.y), 0, 0).y;
+#endif
 			sum += Gaussian23[i + 11] * (shad);
 		}
 	}

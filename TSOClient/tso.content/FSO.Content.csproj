@@ -500,6 +500,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="ContentSrc\Effects\SpriteEffects.fx" />
+    <None Include="ContentSrc\Effects\SpriteEffectsiOS.fx" />
     <None Include="ContentSrc\Effects\VerShader.mgfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
