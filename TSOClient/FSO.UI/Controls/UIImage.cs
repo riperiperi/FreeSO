@@ -227,7 +227,10 @@ namespace FSO.Client.UI.Controls
 
                 if (m_Width != 0 && m_Height != 0)
                 {
-                    DrawLocalTexture(SBatch, m_Texture, null, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height));
+                    if (ApplyRotation)
+                        DrawLocalTexture(SBatch, m_Texture, null, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height), _BlendColor, Rotation);
+                    else
+                        DrawLocalTexture(SBatch, m_Texture, null, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height));
                 }
                 else
                 {
