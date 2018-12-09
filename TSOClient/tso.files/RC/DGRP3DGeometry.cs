@@ -147,17 +147,24 @@ namespace FSO.Files.RC
 
             SVerts = new List<DGRP3DVert>();
             SIndices = new List<int>();
-            var dict = new Dictionary<Tuple<int, int>, int>();
+            var dict = new Dictionary<Tuple<int, int, int>, int>();
+            var hasNormals = false;
 
             foreach (var ind in indices)
             {
-                var tup = new Tuple<int, int>(ind[0], ind[1]);
+                var tup = new Tuple<int, int, int>(ind[0], ind[1], (ind.Length > 2)?ind[2]:-1);
                 int targ;
                 if (!dict.TryGetValue(tup, out targ))
                 {
                     //add a vertex
                     targ = SVerts.Count;
-                    var vert = new DGRP3DVert(obj.Vertices[ind[0] - 1], Vector3.Zero, obj.TextureCoords[ind[1] - 1]);
+                    Vector3 normal = Vector3.Zero;
+                    if (tup.Item3 > -1)
+                    {
+                        normal = obj.Normals[tup.Item3 - 1];
+                        hasNormals = true;
+                    }
+                    var vert = new DGRP3DVert(obj.Vertices[ind[0] - 1], normal, obj.TextureCoords[ind[1] - 1]);
                     vert.TextureCoordinate.Y = 1 - vert.TextureCoordinate.Y;
                     SVerts.Add(vert);
                     dict[tup] = targ;
@@ -165,7 +172,7 @@ namespace FSO.Files.RC
                 SIndices.Add(targ);
             }
 
-            GenerateNormals(false);
+            if (!hasNormals) GenerateNormals(false);
             
             /*
             var triBase = new int[SIndices.Count / 3][];
@@ -229,13 +236,18 @@ namespace FSO.Files.RC
             {
                 io.WriteLine("vt " + vert.TextureCoordinate.X.ToString(CultureInfo.InvariantCulture) + " " + (1-vert.TextureCoordinate.Y).ToString(CultureInfo.InvariantCulture));
             }
+            foreach (var vert in SVerts)
+            {
+                io.WriteLine("vn " + vert.Normal.X.ToString(CultureInfo.InvariantCulture) + " " + vert.Normal.Y.ToString(CultureInfo.InvariantCulture) + " " + vert.Normal.Z.ToString(CultureInfo.InvariantCulture));
+            }
+
             io.Write("f ");
             var ticker = 0;
             var j = 0;
             foreach (var ind in SIndices)
             {
                 var i = ind + baseInd;
-                io.Write(i+"/"+i + " ");
+                io.Write(i+"/"+i+"/"+i + " ");
                 if (++ticker == 3)
                 {
                     io.WriteLine("");
