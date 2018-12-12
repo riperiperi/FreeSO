@@ -451,10 +451,18 @@ namespace FSO.Client.Rendering.City
             {
                 LayerIndices[i]?.Dispose();
                 LayerVertices[i]?.Dispose();
-                LayerIndices[i] = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, indices[i].Count, BufferUsage.None);
-                LayerIndices[i].SetData(indices[i].ToArray());
-                LayerVertices[i] = new VertexBuffer(gd, typeof(TLayerVertex), vertices[i].Count, BufferUsage.None);
-                LayerVertices[i].SetData(vertices[i].ToArray());
+                if (vertices[i].Count == 0)
+                {
+                    LayerIndices[i] = null;
+                    LayerVertices[i] = null;
+                }
+                else
+                {
+                    LayerIndices[i] = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, indices[i].Count, BufferUsage.None);
+                    LayerIndices[i].SetData(indices[i].ToArray());
+                    LayerVertices[i] = new VertexBuffer(gd, typeof(TLayerVertex), vertices[i].Count, BufferUsage.None);
+                    LayerVertices[i].SetData(vertices[i].ToArray());
+                }
                 LayerPrims[i] = indices[i].Count / 3;
             }
 
@@ -874,6 +882,7 @@ namespace FSO.Client.Rendering.City
 
             for (int i = 0; i < 5; i++)
             {
+                if (LayerVertices[i] == null) continue;
                 ps.Parameters["TextureAtlasTex"].SetValue(content.TerrainTextures[i]);
                 var trans = (1 - (i - 1) / 2) * 2 + ((4 - i) % 2);
                 ps.Parameters["TransAtlasTex"].SetValue((i == 0) ? null : content.TransAtlas[trans]);
