@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using FSO.Content;
 using FSO.IDE.Common;
 using FSO.Files.Formats.IFF.Chunks;
@@ -80,14 +81,23 @@ namespace FSO.IDE.ResourceBrowser
 
         private string GenerateXML()
         {
-            string comment = $"<!-- {IFFFilenameTextBox.Text} -->\r\n";
-            if (!CommentCheckbox.Checked || IFFFilenameTextBox.Text.Length == 0)
+            XDocument fullEntry = new XDocument();
+
+            if (CommentCheckbox.Checked && IFFFilenameTextBox.Text.Length > 0)
             {
-                comment = "";
+                XComment comment = new XComment($" {IFFFilenameTextBox.Text} ");
+                fullEntry.Add(comment);
             }
 
-            return $"{comment}" +
-                $"<P g = \"{GUIDTextBox.Text}\" s = \"{CategoryComboBox.SelectedValue}\" p = \"{SalePriceUpDown.Value}\" n = \"{NameTextBox.Text}\" />";
+            XElement entry = new XElement("P");
+            entry.SetAttributeValue("g", GUIDTextBox.Text);
+            entry.SetAttributeValue("s", CategoryComboBox.SelectedValue);
+            entry.SetAttributeValue("p", SalePriceUpDown.Value);
+            entry.SetAttributeValue("n", NameTextBox.Text);
+
+            fullEntry.Add(entry);
+
+            return fullEntry.ToString();
         }
 
         private void UpdateXMLTextBox(object sender, EventArgs e)
@@ -117,7 +127,6 @@ namespace FSO.IDE.ResourceBrowser
             {
                 CopyXML();
             }
-
         }
 
         private void CommentCheckbox_CheckedChanged(object sender, EventArgs e)
