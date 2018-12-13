@@ -511,6 +511,19 @@ namespace FSO.IDE.ResourceBrowser
             return;
         }
 
+        // MouseDown instead of MouseClick for right-click handling
+        private void GUIDButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                Thread staThread = new Thread(() =>
+                {
+                    Clipboard.SetText((sender as Button).Text);
+                });
+                staThread.SetApartmentState(ApartmentState.STA);
+                staThread.Start();
+            }
+        }
     }
     public class NameValueCombo
     {
