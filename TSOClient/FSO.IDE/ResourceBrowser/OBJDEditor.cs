@@ -14,6 +14,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using System.IO;
 using FSO.UI.Utils;
 using FSO.Client;
+using FSO.Windows;
 using System.Runtime.InteropServices;
 using FSO.Files.Formats.IFF;
 using System.Threading;
@@ -516,12 +517,8 @@ namespace FSO.IDE.ResourceBrowser
         {
             if (e.Button == MouseButtons.Right)
             {
-                Thread staThread = new Thread(() =>
-                {
-                    Clipboard.SetText((sender as Button).Text);
-                });
-                staThread.SetApartmentState(ApartmentState.STA);
-                staThread.Start();
+                WinFormsClipboard clipboard = new WinFormsClipboard();
+                clipboard.Set((sender as Button).Text);
             }
         }
     }
