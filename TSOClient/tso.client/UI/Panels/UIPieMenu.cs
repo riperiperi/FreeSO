@@ -310,7 +310,6 @@ namespace FSO.Client.UI.Panels
             var uiB = (UIButton)button;
             int index = m_PieButtons.IndexOf(uiB);
             currentTarget = button.Position + new Vector2(uiB.Width/2f, uiB.Size.Y/2f);
-            //todo, make sim look at button
             HITVM.Get().PlaySoundEvent(UISounds.PieMenuHighlight);
         }
 
