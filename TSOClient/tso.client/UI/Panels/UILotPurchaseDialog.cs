@@ -16,10 +16,10 @@ namespace FSO.Client.UI.Panels
     public class UILotPurchaseDialog : UIDialog
     {
         private Regex VALIDATE_NUMERIC = new Regex("[0-9]");
-        private Regex VALIDATE_SPECIAL_CHARS = new Regex("[^a-zA-Z '-]");
+        private Regex VALIDATE_SPECIAL_CHARS = new Regex(@"[^\p{L} '-]");
         private Regex VALIDATE_APOSTROPHES = new Regex("^[^']*'?[^']*$");
         private Regex VALIDATE_DASHES = new Regex("^[^-]*-?[^-]*$");
-        private Regex VALIDATE_SPACES = new Regex("^[^ ]* ?[^ ]+ ?[^ ]*$");
+        private Regex VALIDATE_SPACES = new Regex("^[^ ]+( [^ ]+)?( [^ ]+)?$");
 
         public UITextEdit NameTextEdit { get; set; }
         public UIValidationMessages<string> NameTextEditValidation { get; set; }
