@@ -36,6 +36,10 @@ namespace FSO.Client.UI.Panels
         public UILotControl m_Parent;
         public UIImage m_Bg;
 
+        private Vector2 currentTarget;
+        private Vector2 curRot;
+        private float lerpSpeed;
+
         private _3DTargetScene HeadScene;
         private BasicCamera HeadCamera;
         private double m_BgGrow;
@@ -70,6 +74,7 @@ namespace FSO.Client.UI.Panels
             HighlightStyle = ButtonStyle.Clone();
             HighlightStyle.Color = Color.Yellow;
 
+            lerpSpeed = 0.125f * (60.0f / FSOEnvironment.RefreshRate);
             m_Bg = new UIImage(TextureGenerator.GetPieBG(GameFacade.GraphicsDevice));
             m_Bg.SetSize(0, 0); //is scaled up later
             this.AddAt(0, m_Bg);
@@ -158,8 +163,9 @@ namespace FSO.Client.UI.Panels
 
         public void RotateHeadCam(Vector2 point)
         {
-            double xdir = Math.Atan(-point.X / 100.0);
-            double ydir = Math.Atan(-point.Y / 100.0);
+            curRot = Vector2.Lerp(curRot, currentTarget, lerpSpeed);
+            double xdir = Math.Atan(-curRot.X / 100.0);
+            double ydir = Math.Atan(-curRot.Y / 100.0);
 
             Vector3 off = new Vector3(0, 0, 13.5f);
             Matrix mat = Microsoft.Xna.Framework.Matrix.CreateRotationY((float)xdir) * Microsoft.Xna.Framework.Matrix.CreateRotationX((float)ydir);
@@ -245,6 +251,7 @@ namespace FSO.Client.UI.Panels
                 m_PieButtons.Add(but);
                 but.OnButtonClick += new ButtonClickDelegate(PieButtonClick);
                 but.OnButtonHover += new ButtonClickDelegate(PieButtonHover);
+                but.OnButtonExit += new ButtonClickDelegate(PieButtonExit);
             }
 
             bool top = true;
@@ -274,7 +281,7 @@ namespace FSO.Client.UI.Panels
                 m_PieButtons.Add(but);
                 but.OnButtonClick += new ButtonClickDelegate(PieButtonClick);
                 but.OnButtonHover += new ButtonClickDelegate(PieButtonHover);
-
+                but.OnButtonExit += new ButtonClickDelegate(PieButtonExit);
                 top = !top;
             }
 
@@ -300,9 +307,15 @@ namespace FSO.Client.UI.Panels
 
         void PieButtonHover(UIElement button)
         {
-            int index = m_PieButtons.IndexOf((UIButton)button);
-            //todo, make sim look at button
+            var uiB = (UIButton)button;
+            int index = m_PieButtons.IndexOf(uiB);
+            currentTarget = button.Position + new Vector2(uiB.Width/2f, uiB.Size.Y/2f);
             HITVM.Get().PlaySoundEvent(UISounds.PieMenuHighlight);
+        }
+
+        void PieButtonExit(UIElement button)
+        {
+            currentTarget = Vector2.Zero;
         }
 
         void BackButtonPress(UIElement button)
