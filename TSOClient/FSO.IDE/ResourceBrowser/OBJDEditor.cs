@@ -14,6 +14,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using System.IO;
 using FSO.UI.Utils;
 using FSO.Client;
+using FSO.Windows;
 using System.Runtime.InteropServices;
 using FSO.Files.Formats.IFF;
 using System.Threading;
@@ -511,6 +512,15 @@ namespace FSO.IDE.ResourceBrowser
             return;
         }
 
+        // MouseDown instead of MouseClick for right-click handling
+        private void GUIDButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                WinFormsClipboard clipboard = new WinFormsClipboard();
+                clipboard.Set((sender as Button).Text);
+            }
+        }
     }
     public class NameValueCombo
     {

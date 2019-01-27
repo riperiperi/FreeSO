@@ -113,6 +113,7 @@ namespace FSO.IDE
             FuncEditor.SetActiveObject(ActiveObj);
             DrawgroupEdit.SetActiveObject(ActiveObj);
             FSOMEdit.SetActiveObject(ActiveObj);
+            XMLEdit.SetActiveObject(ActiveObj);
 
             //update top var
 
