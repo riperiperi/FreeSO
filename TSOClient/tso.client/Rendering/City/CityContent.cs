@@ -86,7 +86,7 @@ namespace FSO.Client.Rendering.City
 
             //DECEMBER TEMP: snow replace
             //TODO: tie to tuning, or serverside weather system.
-            ForceSnow();
+            //ForceSnow();
 
             //grass, sand, rock, snow, water
             TerrainTextures[0] = RTToMip(LoadTex(gamepath + "gamedata/terrain/newformat/gr.tga"), gd);
