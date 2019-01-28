@@ -272,6 +272,7 @@ namespace FSO.Client.UI.Controls
         public event ButtonClickDelegate OnButtonClick;
         public event ButtonClickDelegate OnButtonHover;
         public event ButtonClickDelegate OnButtonDown;
+        public event ButtonClickDelegate OnButtonExit;
 
         public bool Highlight
         {
@@ -351,6 +352,10 @@ namespace FSO.Client.UI.Controls
                     if (!m_isDown)
                     {
                         CurrentFrame = 0;
+                        if (OnButtonExit != null)
+                        {
+                            OnButtonExit(this);
+                        }
                     }
                     break;
 

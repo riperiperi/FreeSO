@@ -27,13 +27,14 @@ namespace FSO.IDE.EditorComponent.OperandForms
             InitializeComponent();
         }
 
-        public OpValueControl(BHAVEditor master, EditorScope scope, VMPrimitiveOperand operand, string title, string property, OpValueBoundsProvider bounds)
+        public OpValueControl(BHAVEditor master, EditorScope scope, VMPrimitiveOperand operand, string title, string property, OpValueBoundsProvider bounds, bool isHex = false)
         {
             InitializeComponent();
             Master = master;
             Scope = scope;
             Operand = operand;
             TitleLabel.Text = title;
+            ValueEntry.Hexadecimal = isHex;
             Property = property;
             BoundsProvider = bounds;
             this.Dock = DockStyle.Fill;

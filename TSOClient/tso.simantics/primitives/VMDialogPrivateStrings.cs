@@ -96,6 +96,7 @@ namespace FSO.SimAntics.Primitives
                             context.StackObject.MyList.Clear();
                             var charR = (curDialog.ResponseText ?? "");
                             if (charR != "") {
+                                charR = charR.Replace("\\n", "\n");
                                 context.StackObject.MyList.Clear();
                                 foreach (var c in charR)
                                     context.StackObject.MyList.AddLast((short)c);
