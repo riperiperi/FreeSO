@@ -25,7 +25,7 @@ namespace FSO.Content.Interfaces
 
         private bool WithSprites;
 
-        private TimedReferenceCache<string, GameObjectResource> ProcessedFiles = new TimedReferenceCache<string, GameObjectResource>();
+        protected TimedReferenceCache<string, GameObjectResource> ProcessedFiles = new TimedReferenceCache<string, GameObjectResource>();
 
         #region IContentProvider<GameObject> Members
 

@@ -21,6 +21,7 @@ namespace FSO.Client.Controllers
 
             Loader.MainContentAction = (Action donePart) =>
             {
+                VMContext.BindAssembler();
                 FSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GameFacade.GraphicsDevice);
                 VMContext.InitVMConfig();
             };

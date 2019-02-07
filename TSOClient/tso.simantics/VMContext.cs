@@ -90,6 +90,11 @@ namespace FSO.SimAntics
                 Clock.TicksPerMinute = 30 * 5; //1 minute per 5 irl second
         }
 
+        public static void BindAssembler()
+        {
+            GameObjectResource.BHAVAssembler = VMTranslator.Assemble;
+        }
+
         public static void InitVMConfig()
         {
             AddPrimitive(new VMPrimitiveRegistration(new VMSleep())
@@ -507,8 +512,7 @@ namespace FSO.SimAntics
                     OperandModel = typeof(VMTransferFundsOperand)
                 });
             }
-
-            GameObjectResource.BHAVAssembler = VMTranslator.Assemble;
+            BindAssembler();
         }
 
         /// <summary>

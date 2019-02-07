@@ -179,8 +179,8 @@ namespace FSO.Content
             LoadProgress = ContentLoadingProgress.InitObjects;
             if (TS1)
             {
-                ((TS1ObjectProvider)WorldObjects).Init();
                 WorldObjectGlobals.Init();
+                ((TS1ObjectProvider)WorldObjects).Init();
                 LoadProgress = ContentLoadingProgress.InitArch;
 
                 WorldWalls.InitTS1();
@@ -188,9 +188,9 @@ namespace FSO.Content
             }
             else
             {
+                WorldObjectGlobals.Init();
                 ((WorldObjectProvider)WorldObjects).Init((Device != null));
                 ((WorldObjectCatalog)WorldCatalog).Init(this);
-                WorldObjectGlobals.Init();
                 LoadProgress = ContentLoadingProgress.InitArch;
 
                 WorldWalls.Init();

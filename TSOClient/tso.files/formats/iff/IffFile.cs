@@ -458,6 +458,7 @@ namespace FSO.Files.Formats.IFF
                     { 
                         var type = CHUNK_TYPES[e.Type];
                         if (!(type.IsAssignableFrom(chunk.GetType())) || e.ChunkID != chunk.ChunkID) continue;
+                        if (chunk.RuntimeInfo == ChunkRuntimeState.Patched) continue;
 
                         chunk.ChunkData = e.Apply(chunk.ChunkData);
                         chunk.RuntimeInfo = ChunkRuntimeState.Patched;
