@@ -606,7 +606,7 @@ namespace FSO.Server.Servers.Lot.Domain
             if (Container.IsAvatarOnLot(session.AvatarId)) return false; //already on the lot.
             lock (_Visitors)
             {
-                if (ShuttingDown || (_Visitors.Count >= ((Context.HighMax)?128:24)))
+                if (ShuttingDown || (_Visitors.Count >= ((Context.HighMax)?256:24)))
                 {
                     if (ShuttingDown) return false; //cannot join
 
