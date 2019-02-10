@@ -95,7 +95,7 @@ namespace FSO.SimAntics
             GameObjectResource.BHAVAssembler = VMTranslator.Assemble;
         }
 
-        public static void InitVMConfig()
+        public static void InitVMConfig(bool ts1)
         {
             AddPrimitive(new VMPrimitiveRegistration(new VMSleep())
             {
@@ -451,7 +451,7 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMInventoryOperationsOperand)
             });
 
-            if (Content.Content.Get().TS1)
+            if (ts1)
             {
                 AddPrimitive(new VMPrimitiveRegistration(new VMFindBestAction())
                 {
