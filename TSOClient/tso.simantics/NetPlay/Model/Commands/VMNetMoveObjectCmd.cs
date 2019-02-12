@@ -28,7 +28,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             VMEntity obj = vm.GetObjectById(ObjectID);
             if (!vm.TS1) {
                 if (obj == null || caller == null || (obj is VMAvatar) ||
-                    (caller.AvatarState.Permissions < VMTSOAvatarPermissions.Owner
+                    (caller.AvatarState.Permissions < VMTSOAvatarPermissions.Admin
                     && obj.IsUserMovable(vm.Context, false) != VMPlacementError.Success))
                     return false;
                 if (caller.AvatarState.Permissions < VMTSOAvatarPermissions.Roommate) return false;
